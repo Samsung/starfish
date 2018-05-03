@@ -160,6 +160,22 @@ static float positionFromSideValue(const Unit::Rect& rect, FrameBox* owner,
     return origin + sign * offset.specifiedValue(edgeDistance, owner);
 }
 
+void GradientData::setHorizontalSide(SideValue side)
+{
+    STARFISH_ASSERT(side == SideValue::CenterSideValue ||
+                    side == SideValue::LeftSideValue ||
+                    side == SideValue::RightSideValue);
+    m_horizentalSide = side;
+}
+
+void GradientData::setVerticalSide(SideValue side)
+{
+    STARFISH_ASSERT(side == SideValue::CenterSideValue ||
+                    side == SideValue::TopSideValue ||
+                    side == SideValue::BottomSideValue);
+    m_verticalSide = side;
+}
+
 LinearGradientData* GradientData::asLinearGradientData()
 {
     STARFISH_ASSERT(m_type == GradientType::LinearGradient);
@@ -187,7 +203,6 @@ void GradientData::checkComputed(Length curFontSize, Length rootFontSize,
 LinearGradientData::LinearGradientData(float angleDeg)
     : GradientData(GradientType::LinearGradient)
     , m_angleDeg(angleDeg)
-    , m_sc(0)
 {
 }
 
@@ -345,88 +360,124 @@ void GradientData::makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
     }
 }
 
-bool LinearGradientData::computeEndPoints(const Unit::Rect& rect, float& x1,
-                                          float& y1, float& x2, float& y2)
+bool LinearGradientData::computeEndPointsFromAngle(const Unit::Rect& rect,
+                                                   const float angleDeg,
+                                                   float& x1, float& y1,
+                                                   float& x2, float& y2)
 {
     int x = rect.x();
     int y = rect.y();
     int maxX = rect.maxX();
     int maxY = rect.maxY();
 
-    if (m_sc == 0) {
-        float angle = fmodf(m_angleDeg, 360);
-        if (angle < 0)
-            angle += 360;
+    float angle = fmodf(angleDeg, 360);
 
-        if (!angle) {
-            x1 = x;
-            y1 = maxY;
-            x2 = x;
-            y2 = y;
-            return true;
-        }
+    if (angle < 0)
+        angle += 360;
 
-        if (angle == 90) {
-            x1 = x;
-            y1 = y;
-
-            x2 = maxX;
-            y2 = y;
-            return true;
-        }
-
-        if (angle == 180) {
-            x1 = x;
-            y1 = y;
-            x2 = x;
-            y2 = maxY;
-            return true;
-        }
-
-        if (angle == 270) {
-            x1 = maxX;
-            y1 = y;
-            x2 = x;
-            y2 = y;
-            return true;
-        }
-
-        float slope = tan(convertFromDegToRad(90 - angle));
-
-        float perpendicularSlope = -1 / slope;
-
-        float halfHeight = rect.height() / 2;
-        float halfWidth = rect.width() / 2;
-
-        float cx, cy;
-
-        if (angle < 90) {
-            cx = halfWidth;
-            cy = halfHeight;
-        } else if (angle < 180) {
-            cx = halfWidth;
-            cy = -halfHeight;
-        } else if (angle < 270) {
-            cx = -halfWidth;
-            cy = -halfHeight;
-        } else {
-            cx = -halfWidth;
-            cy = halfHeight;
-        }
-
-        // Compute c (of y = mx + c) using the corner point.
-        float c = cy - perpendicularSlope * cx;
-        float ex = c / (slope - perpendicularSlope);
-        float ey = perpendicularSlope * ex + c;
-
-        x2 = x + halfWidth + ex;
-        y2 = y + halfHeight - ey;
-
-        x1 = x + halfWidth - ex;
-        y1 = y + halfHeight + ey;
+    if (!angle) {
+        x1 = x;
+        y1 = maxY;
+        x2 = x;
+        y2 = y;
         return true;
+    }
+
+    if (angle == 90) {
+        x1 = x;
+        y1 = y;
+
+        x2 = maxX;
+        y2 = y;
+        return true;
+    }
+
+    if (angle == 180) {
+        x1 = x;
+        y1 = y;
+        x2 = x;
+        y2 = maxY;
+        return true;
+    }
+
+    if (angle == 270) {
+        x1 = maxX;
+        y1 = y;
+        x2 = x;
+        y2 = y;
+        return true;
+    }
+
+    float slope = tan(convertFromDegToRad(90 - angle));
+
+    float perpendicularSlope = -1 / slope;
+
+    float halfHeight = rect.height() / 2;
+    float halfWidth = rect.width() / 2;
+
+    float cx, cy;
+
+    if (angle < 90) {
+        cx = halfWidth;
+        cy = halfHeight;
+    } else if (angle < 180) {
+        cx = halfWidth;
+        cy = -halfHeight;
+    } else if (angle < 270) {
+        cx = -halfWidth;
+        cy = -halfHeight;
     } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        cx = -halfWidth;
+        cy = halfHeight;
+    }
+
+    // Compute c (of y = mx + c) using the corner point.
+    float c = cy - perpendicularSlope * cx;
+    float ex = c / (slope - perpendicularSlope);
+    float ey = perpendicularSlope * ex + c;
+
+    x2 = x + halfWidth + ex;
+    y2 = y + halfHeight - ey;
+
+    x1 = x + halfWidth - ex;
+    y1 = y + halfHeight + ey;
+    return true;
+}
+
+bool LinearGradientData::computeEndPoints(const Unit::Rect& rect, float& x1,
+                                          float& y1, float& x2, float& y2)
+{
+    x1 = y1 = x2 = y2 = 0.0f;
+    if (m_horizentalSide == SideValue::NoneSideValue &&
+        m_verticalSide == SideValue::NoneSideValue) {
+        return computeEndPointsFromAngle(rect, m_angleDeg, x1, y1, x2, y2);
+    } else {
+        if (m_horizentalSide != SideValue::NoneSideValue &&
+            m_verticalSide != SideValue::NoneSideValue) {
+            float rise = rect.width();
+            float run = rect.height();
+            if (m_horizentalSide == SideValue::LeftSideValue) {
+                run *= -1;
+            }
+            if (m_verticalSide == SideValue::BottomSideValue) {
+                rise *= -1;
+            }
+            float angleDeg = 90 - convertFromRadToDeg(atan2(rise, run));
+
+            return computeEndPointsFromAngle(rect, angleDeg, x1, y1, x2, y2);
+
+        } else if (m_horizentalSide != SideValue::NoneSideValue ||
+                   m_verticalSide != SideValue::NoneSideValue) {
+            float angleDeg = 0;
+            if (m_horizentalSide == SideValue::RightSideValue) {
+                angleDeg = 90;
+            } else if (m_verticalSide == SideValue::BottomSideValue) {
+                angleDeg = 180;
+            } else if (m_horizentalSide == SideValue::LeftSideValue) {
+                angleDeg = 270;
+            }
+            return computeEndPointsFromAngle(rect, angleDeg, x1, y1, x2, y2);
+        }
         return false;
     }
 }
@@ -458,10 +509,24 @@ CSSGradientValue* LinearGradientData::convertToCSSGradientValue()
 {
     CSSLinearGradientValue* gradient = new CSSLinearGradientValue();
 
-    if (m_sc == 0) {
-        gradient->setAngle(CSSAngle(m_angleDeg));
+    if (m_horizentalSide != SideValue::NoneSideValue ||
+        m_verticalSide != SideValue::NoneSideValue) {
+        if (m_horizentalSide != SideValue::NoneSideValue) {
+            CSSStyleValuePair leftOrRight;
+            leftOrRight.setValueKind(
+                CSSStyleValuePair::ValueKind::SideValueKind);
+            leftOrRight.setValue(m_horizentalSide);
+            gradient->setLeftOrRight(leftOrRight);
+        }
+        if (m_verticalSide != SideValue::NoneSideValue) {
+            CSSStyleValuePair topOrBottom;
+            topOrBottom.setValueKind(
+                CSSStyleValuePair::ValueKind::SideValueKind);
+            topOrBottom.setValue(m_verticalSide);
+            gradient->setTopOrBottom(topOrBottom);
+        }
     } else {
-        gradient->setSideOrConter(m_sc);
+        gradient->setAngle(CSSAngle(m_angleDeg));
     }
 
     convertColorStopsToCSSColorStops(gradient->cssColorStopList());
@@ -480,22 +545,6 @@ void LinearGradientData::checkComputed(Length curFontSize, Length rootFontSize,
 RadialGradientData::RadialGradientData()
     : GradientData(GradientType::RadialGradient)
 {
-}
-
-void RadialGradientData::setHorizontalSide(SideValue side)
-{
-    STARFISH_ASSERT(side == SideValue::CenterSideValue ||
-                    side == SideValue::LeftSideValue ||
-                    side == SideValue::RightSideValue);
-    m_horizentalSide = side;
-}
-
-void RadialGradientData::setVerticalSide(SideValue side)
-{
-    STARFISH_ASSERT(side == SideValue::CenterSideValue ||
-                    side == SideValue::TopSideValue ||
-                    side == SideValue::BottomSideValue);
-    m_verticalSide = side;
 }
 
 CSSGradientValue* RadialGradientData::convertToCSSGradientValue()
@@ -727,9 +776,6 @@ void RadialGradientData::computeEndPointsFromSideValue(const Unit::Rect& rect,
                                                        FrameBox* owner,
                                                        float& x, float& y)
 {
-    // STARFISH_ASSERT(m_horizentalSide != SideValue::NoneSideValue);
-    // STARFISH_ASSERT(m_verticalSide != SideValue::NoneSideValue);
-
     x = positionFromSideValue(rect, owner, m_horizentalSide,
                               m_horizentalSideOffset, true);
     y = positionFromSideValue(rect, owner, m_verticalSide, m_verticalSideOffset,
@@ -738,7 +784,9 @@ void RadialGradientData::computeEndPointsFromSideValue(const Unit::Rect& rect,
 
 bool GradientData::equals(GradientData* other) const
 {
-    if (m_type != other->m_type) {
+    if ((m_type != other->m_type) ||
+        (m_horizentalSide != other->m_horizentalSide) ||
+        (m_verticalSide != other->m_verticalSide)) {
         return false;
     }
 
@@ -762,7 +810,7 @@ bool LinearGradientData::equals(GradientData* other) const
     }
 
     LinearGradientData* r = other->asLinearGradientData();
-    if ((m_angleDeg != r->m_angleDeg) || (m_sc != r->m_sc)) {
+    if ((m_angleDeg != r->m_angleDeg)) {
         return false;
     }
     return true;
@@ -774,9 +822,8 @@ bool RadialGradientData::equals(GradientData* other) const
         return false;
     }
     RadialGradientData* r = other->asRadialGradientData();
-    if ((m_shape != r->m_shape) || (m_horizentalSide != r->m_horizentalSide) ||
+    if ((m_shape != r->m_shape) ||
         (m_horizentalSideOffset != r->m_horizentalSideOffset) ||
-        (m_verticalSide != r->m_verticalSide) ||
         (m_verticalSideOffset != r->m_verticalSideOffset) ||
         (m_firstRadius != r->m_firstRadius) ||
         (m_secondRadius != r->m_secondRadius) ||

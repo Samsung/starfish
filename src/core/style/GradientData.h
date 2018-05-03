@@ -107,6 +107,8 @@ class GradientData : public gc {
 public:
     GradientData(GradientType gradientType)
         : m_type(gradientType)
+        , m_horizentalSide()
+        , m_verticalSide()
         , m_colorStopList()
     {
     }
@@ -118,6 +120,20 @@ public:
 
     LinearGradientData* asLinearGradientData();
     RadialGradientData* asRadialGradientData();
+
+    SideValue horizontalSide()
+    {
+        return m_horizentalSide;
+    }
+
+    void setHorizontalSide(SideValue side);
+
+    SideValue verticalSide()
+    {
+        return m_verticalSide;
+    }
+
+    void setVerticalSide(SideValue side);
 
     GCVector<ColorStop*>& colorStopList()
     {
@@ -143,7 +159,10 @@ protected:
     }
 
     void convertColorStopsToCSSColorStops(GCVector<CSSColorStop*>& out);
+
     GradientType m_type;
+    SideValue m_horizentalSide;
+    SideValue m_verticalSide;
     GCVector<ColorStop*> m_colorStopList;
 };
 
@@ -161,16 +180,8 @@ public:
         m_angleDeg = val;
     }
 
-    void setSideOrConter(uint8_t sc)
-    {
-        m_sc = sc;
-    }
-
-    uint8_t SideOrConer()
-    {
-        return m_sc;
-    }
-
+    bool computeEndPointsFromAngle(const Unit::Rect& rect, const float angleDeg,
+                                   float& x1, float& y1, float& x2, float& y2);
     bool computeEndPoints(const Unit::Rect& rect, float& x1, float& y1,
                           float& x2, float& y2);
 
@@ -202,7 +213,6 @@ public:
 
 private:
     float m_angleDeg;
-    uint8_t m_sc;
 };
 
 class RadialGradientData : public GradientData {
@@ -219,13 +229,6 @@ public:
         m_shape = shape;
     }
 
-    SideValue horizontalSide()
-    {
-        return m_horizentalSide;
-    }
-
-    void setHorizontalSide(SideValue side);
-
     Length horizentalSideOffset()
     {
         return m_horizentalSideOffset;
@@ -236,13 +239,6 @@ public:
         m_horizentalSideOffset = offset;
     }
 
-    SideValue verticalSide()
-    {
-        return m_verticalSide;
-    }
-
-    void setVerticalSide(SideValue side);
-
     Length verticalSideOffset()
     {
         return m_verticalSideOffset;
@@ -252,7 +248,6 @@ public:
     {
         m_verticalSideOffset = offset;
     }
-
     Length firstRadius()
     {
         return m_firstRadius;
@@ -333,9 +328,7 @@ private:
     RadialGradientShape m_shape;
 
     // Position of gradient center
-    SideValue m_horizentalSide;
     Length m_horizentalSideOffset;
-    SideValue m_verticalSide;
     Length m_verticalSideOffset;
 
     // size of the gradient's ending shape

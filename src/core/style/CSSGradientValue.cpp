@@ -74,18 +74,21 @@ String* CSSLinearGradientValue::toString()
     if (linear->angle().toDegreeValue() != 180) {
         result.appendString(linear->angle().toString());
         result.appendString(", ");
-    } else if (m_sc) {
-        result.appendString("to ");
-        if (m_sc & toLeft) {
-            result.appendString("left ");
-        } else if (m_sc & toRight) {
-            result.appendString("right ");
+    } else if (m_leftOrRight.valueKind() ==
+                   CSSStyleValuePair::ValueKind::SideValueKind ||
+               m_topOrBottom.valueKind() ==
+                   CSSStyleValuePair::ValueKind::SideValueKind) {
+        result.appendString("to");
+        if (m_leftOrRight.valueKind() ==
+            CSSStyleValuePair::ValueKind::SideValueKind) {
+            result.appendChar(' ');
+            result.appendString(m_leftOrRight.toString());
         }
 
-        if (m_sc & toTop) {
-            result.appendString("top");
-        } else if (m_sc & toBottom) {
-            result.appendString("bottom");
+        if (m_topOrBottom.valueKind() ==
+            CSSStyleValuePair::ValueKind::SideValueKind) {
+            result.appendChar(' ');
+            result.appendString(m_topOrBottom.toString());
         }
         result.appendString(", ");
     }
@@ -100,10 +103,22 @@ GradientData* CSSLinearGradientValue::convertToGradientData()
 {
     LinearGradientData* gradient = new LinearGradientData();
 
-    if (m_sc == 0) {
-        gradient->setAngle(m_angle.toDegreeValue());
+    if (m_leftOrRight.valueKind() ==
+            CSSStyleValuePair::ValueKind::SideValueKind ||
+        m_topOrBottom.valueKind() ==
+            CSSStyleValuePair::ValueKind::SideValueKind) {
+        if (m_leftOrRight.valueKind() ==
+            CSSStyleValuePair::ValueKind::SideValueKind) {
+            gradient->setHorizontalSide(m_leftOrRight.sideValue());
+        }
+
+        if (m_topOrBottom.valueKind() ==
+            CSSStyleValuePair::ValueKind::SideValueKind) {
+            gradient->setVerticalSide(m_topOrBottom.sideValue());
+        }
+
     } else {
-        gradient->setSideOrConter(m_sc);
+        gradient->setAngle(m_angle.toDegreeValue());
     }
 
     convertCSSColorStopsToColorStops(gradient->colorStopList());
