@@ -1102,6 +1102,8 @@ String* ReferrerURL::referrerString(ResourceURL* url)
     default:
         STARFISH_ASSERT_NOT_REACHED();
     }
+
+    return nullptr;
 }
 
 ReferrerURL::ReferrerPolicy ReferrerURL::policy()

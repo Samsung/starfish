@@ -73,8 +73,10 @@
         ],
         'cflags_default': [
             '-std=c++11',
+            '-g3',
             '-Wall',
             '-Wextra',
+            '-Werror',
             '-Wno-unused-but-set-variable',
             '-Wno-unused-but-set-parameter',
             '-Wno-unused-parameter',
@@ -96,13 +98,10 @@
         ],
         'cflags_debug': [
             '-O0',
-            '-g3',
-            '-Werror',
             # '-fsanitize=address',
         ],
         'cflags_release': [
             '-O2',
-            '-g3',
         ],
         'libraries_default': [
             '<!@(pkg-config --libs-only-l <(third_party_libs))',
