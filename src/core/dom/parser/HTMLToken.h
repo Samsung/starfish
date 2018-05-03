@@ -112,6 +112,8 @@ public:
     HTMLToken()
     {
         m_doctypeData = nullptr;
+        m_selfClosing = false;
+        m_currentAttribute = nullptr;
         clear();
     }
 
