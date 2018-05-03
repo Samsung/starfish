@@ -586,8 +586,11 @@ section are supported.
 | [HTMLScriptElement](https://html.spec.whatwg.org/multipage/scripting.html#the-script-element) | interface | HTMLScriptElement | The script element allows authors to include dynamic script and data blocks in their documents. |
 |  | attribute | src | Address of the resource.<br>&lt;URL&gt; must be a local path. |
 |  | attribute | type | Type of embedded resource.<br>Allowed value: text/javascript |
+|  | attribute | noModule | Stops the script's execution in browsers. |
 |  | attribute | charset | Character encoding of the external script resource.<br>Allowed value: UTF-8 |
 |  | attribute | text | Return the child text content of the script element |
+|  | attribute | event | An old, quirky way of registering event handlers on elements in an HTML document. |
+|  | attribute | htmlFor | Use DOM events mechanisms to register event listeners. |
 | [HTMLSelectElement](https://html.spec.whatwg.org/#the-select-element) | interface | HTMLSelectElement |  The select element represents a control for selecting amongst a set of options. |
 |  | attribute | disabled | Returns whether the select element is disabled. |
 |  | attribute | form | Returns the element's form owner, or null if there is not one. |

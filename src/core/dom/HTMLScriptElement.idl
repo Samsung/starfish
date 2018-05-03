@@ -5,13 +5,19 @@
 interface HTMLScriptElement : HTMLElement {
   [CEReactions] attribute DOMString src;
   [CEReactions] attribute DOMString type;
-  [Unimplemented, CEReactions] attribute boolean noModule;
+  [CEReactions, Reflect] attribute boolean noModule;
   [CEReactions] attribute DOMString charset;
   [CEReactions] attribute boolean async;
   [CEReactions] attribute boolean defer;
   [Unimplemented, CEReactions] attribute DOMString? crossOrigin;
   [CEReactions] attribute DOMString text;
-  [Unimplemented, CEReactions] attribute DOMString nonce;
-  [Unimplemented, CEReactions] attribute DOMString integrity;
 
+  // obsolete members
+  // https://html.spec.whatwg.org/#HTMLScriptElement-partial
+  [CEReactions, Reflect] attribute DOMString event;
+  [CEReactions, Reflect=for] attribute DOMString htmlFor;
+
+  // Subresource Integrity
+  // https://w3c.github.io/webappsec-subresource-integrity/#HTMLScriptElement
+  [Unimplemented, CEReactions, Reflect] attribute DOMString integrity;
 };

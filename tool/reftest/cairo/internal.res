@@ -281,6 +281,15 @@ test/cairo/internal-test/dom/HTMLAnchorElement08.html
 test/cairo/internal-test/dom/HTMLAnchorElement09.html
 test/cairo/internal-test/dom/Text01.html
 test/cairo/internal-test/dom/Text02.html
+test/cairo/internal-test/dom/HTMLScriptElement01.html
+test/cairo/internal-test/dom/HTMLScriptElement02.html
+test/cairo/internal-test/dom/HTMLScriptElement03.html
+test/cairo/internal-test/dom/HTMLScriptElement04.html
+test/cairo/internal-test/dom/HTMLScriptElement05.html
+test/cairo/internal-test/dom/HTMLScriptElement06.html
+test/cairo/internal-test/dom/HTMLScriptElement07.html
+test/cairo/internal-test/dom/HTMLScriptElement08.html
+test/cairo/internal-test/dom/HTMLScriptElement09.html
 test/cairo/internal-test/css/background/background_lineargradient1.html
 test/cairo/internal-test/css/background/background_lineargradient2.html
 test/cairo/internal-test/css/background/background_lineargradient3.html

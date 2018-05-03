@@ -98,6 +98,12 @@ public:
         m_didScriptExecuted = true;
     }
 
+    bool isValidClassicScriptType();
+    bool isValidScriptType();
+    bool isEventForSupported();
+
+    bool blockForNoModule();
+
 protected:
     bool m_isAlreadyStarted;
     bool m_isParserInserted;
