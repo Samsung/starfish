@@ -2107,7 +2107,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
-    auto oldClip = newStyle->clip();
+    auto oldClip = oldStyle->clip();
     auto newClip = newStyle->clip();
     if (oldClip == nullptr && newClip == nullptr) {
     } else if (oldClip == nullptr || newClip == nullptr) {
