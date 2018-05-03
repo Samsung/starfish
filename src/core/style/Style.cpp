@@ -7554,32 +7554,53 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             parser.consumeString(CSSPropertyParser::AllowNegative);
             const CSSTokenValue& str = parser.parsedString();
             if (str == "to") {
-                CSSAngle lr;
-                CSSAngle tb;
-                bool hasLR = false;
-                bool hasTB = false;
+                CSSStyleValuePair leftOrRight;
+                CSSStyleValuePair topOrBottom;
                 uint8_t sideOrConer = 0;
                 while (parser.consumeWhitespaces() &&
                        *(parser.curPos()) != ',') {
                     parser.consumeString(0);
                     const CSSTokenValue& ps = parser.parsedString();
-                    if (!hasTB && ps == "top") {
-                        hasTB = true;
-                        sideOrConer |= SideOrConer::toTop;
-                    } else if (!hasLR && ps == "right") {
-                        hasLR = true;
-                        sideOrConer |= SideOrConer::toRight;
-                    } else if (!hasTB && ps == "bottom") {
-                        hasTB = true;
-                        sideOrConer |= SideOrConer::toBottom;
-                    } else if (!hasLR && ps == "left") {
-                        hasLR = true;
-                        sideOrConer |= SideOrConer::toLeft;
+                    if (topOrBottom.valueKind() !=
+                            CSSStyleValuePair::ValueKind::SideValueKind &&
+                        ps == "top") {
+                        topOrBottom.setValueKind(
+                            CSSStyleValuePair::ValueKind::SideValueKind);
+                        topOrBottom.setValue(SideValue::TopSideValue);
+                    } else if (leftOrRight.valueKind() !=
+                                   CSSStyleValuePair::ValueKind::
+                                       SideValueKind &&
+                               ps == "right") {
+                        leftOrRight.setValueKind(
+                            CSSStyleValuePair::ValueKind::SideValueKind);
+                        leftOrRight.setValue(SideValue::RightSideValue);
+                    } else if (topOrBottom.valueKind() !=
+                                   CSSStyleValuePair::ValueKind::
+                                       SideValueKind &&
+                               ps == "bottom") {
+                        topOrBottom.setValueKind(
+                            CSSStyleValuePair::ValueKind::SideValueKind);
+                        topOrBottom.setValue(SideValue::BottomSideValue);
+                    } else if (leftOrRight.valueKind() !=
+                                   CSSStyleValuePair::ValueKind::
+                                       SideValueKind &&
+                               ps == "left") {
+                        leftOrRight.setValueKind(
+                            CSSStyleValuePair::ValueKind::SideValueKind);
+                        leftOrRight.setValue(SideValue::LeftSideValue);
                     } else {
                         return false;
                     }
                 }
-                linearGradientValue->setSideOrConter(sideOrConer);
+
+                if (leftOrRight.valueKind() ==
+                    CSSStyleValuePair::ValueKind::SideValueKind) {
+                    linearGradientValue->setLeftOrRight(leftOrRight);
+                }
+                if (topOrBottom.valueKind() ==
+                    CSSStyleValuePair::ValueKind::SideValueKind) {
+                    linearGradientValue->setTopOrBottom(topOrBottom);
+                }
                 parser.consumeIfNext(',');
             } else if (parser.parseAngle(
                            str.c_str(), CSSPropertyParser::AllowNegative, &s)) {

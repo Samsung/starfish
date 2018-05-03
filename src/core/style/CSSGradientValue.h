@@ -103,7 +103,8 @@ public:
     CSSLinearGradientValue(CSSAngle angle = CSSAngle(180))
         : CSSGradientValue(GradientType::LinearGradient)
         , m_angle(angle)
-        , m_sc(0)
+        , m_leftOrRight()
+        , m_topOrBottom()
     {
     }
 
@@ -117,21 +118,33 @@ public:
         m_angle = val;
     }
 
-    void setSideOrConter(uint8_t sc)
+    CSSStyleValuePair leftOrRight()
     {
-        m_sc = sc;
+        return m_leftOrRight;
     }
 
-    uint8_t SideOrConer()
+    void setLeftOrRight(CSSStyleValuePair& leftOrRight)
     {
-        return m_sc;
+        m_leftOrRight = leftOrRight;
     }
+
+    CSSStyleValuePair topOrBottom()
+    {
+        return m_topOrBottom;
+    }
+
+    void setTopOrBottom(CSSStyleValuePair& topOrBottom)
+    {
+        m_topOrBottom = topOrBottom;
+    }
+
     virtual String* toString() override;
     virtual GradientData* convertToGradientData() override;
 
 private:
     CSSAngle m_angle;
-    uint8_t m_sc;
+    CSSStyleValuePair m_leftOrRight;
+    CSSStyleValuePair m_topOrBottom;
 };
 
 enum class RadialGradientSizeKeyword {
