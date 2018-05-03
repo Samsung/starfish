@@ -106,19 +106,27 @@ public:
         CSSAngle m_angleData;
         CSSTime m_timeData;
 
-        CalcValueData(float data)
-            : m_numberData(data)
+        CalcValueData()
+            : m_timeData(0)
         {
+        }
+
+        CalcValueData(float data)
+        {
+            m_timeData = 0; // initialize this union first
+            m_numberData = data;
         }
 
         CalcValueData(CSSLength data)
-            : m_lengthData(data)
         {
+            m_timeData = 0; // initialize this union first
+            m_lengthData = data;
         }
 
         CalcValueData(CSSAngle data)
-            : m_angleData(data)
         {
+            m_timeData = 0; // initialize this union first
+            m_angleData = data;
         }
 
         CalcValueData(CSSTime data)

@@ -175,6 +175,11 @@ class RareComputedStyleData : public gc {
         WillChangeData* m_willChange;
         ValueList* m_textDecorationLine;
 
+        RareComputedStyleValue()
+            : m_int32Value(0)
+        {
+        }
+
         RareComputedStyleValue(int32_t int32Value)
             : m_int32Value(int32Value)
         {
@@ -385,13 +390,13 @@ public:
         m_styles.erase(it);         \
     }
 
-#define GETTER_VALUE(RETURN_TYPE, VALUE_NAME, name, Name)           \
+#define GETTER_VALUE(RETURN_TYPE, VALUE_NAME, name, Name, initVal)  \
     RETURN_TYPE* ensure##Name()                                     \
     {                                                               \
         FIND_VALUE(Name);                                           \
                                                                     \
         if (it == m_styles.end()) {                                 \
-            RETURN_TYPE name;                                       \
+            RETURN_TYPE name = initVal;                             \
             m_styles.emplace_back(KeyKind::Name, name);             \
             return &m_styles.back().m_value.m_##VALUE_NAME;         \
         }                                                           \
@@ -410,18 +415,20 @@ public:
         return Nullable<RETURN_TYPE>((*it).m_value.m_##VALUE_NAME); \
     }
 
-    GETTER_VALUE(int32_t, int32Value, order, Order);
-    GETTER_VALUE(int32_t, int32Value, zIndex, ZIndex);
-    GETTER_VALUE(float, floatValue, flexGrow, FlexGrow);
-    GETTER_VALUE(float, floatValue, flexShrink, FlexShrink);
-    GETTER_VALUE(float, floatValue, opacity, Opacity);
-    GETTER_VALUE(String*, stringValue, d, D);
-    GETTER_VALUE(String*, stringValue, gridTemplateAreas, GridTemplateAreas);
+    GETTER_VALUE(int32_t, int32Value, order, Order, 0);
+    GETTER_VALUE(int32_t, int32Value, zIndex, ZIndex, 0);
+    GETTER_VALUE(float, floatValue, flexGrow, FlexGrow, 0);
+    GETTER_VALUE(float, floatValue, flexShrink, FlexShrink, 0);
+    GETTER_VALUE(float, floatValue, opacity, Opacity, 0);
+    GETTER_VALUE(String*, stringValue, d, D, nullptr);
+    GETTER_VALUE(String*, stringValue, gridTemplateAreas, GridTemplateAreas,
+                 nullptr);
 
-    GETTER_VALUE(String*, stringValue, gridRowStart, GridRowStart);
-    GETTER_VALUE(String*, stringValue, gridRowEnd, GridRowEnd);
-    GETTER_VALUE(String*, stringValue, gridColumnStart, GridColumnStart);
-    GETTER_VALUE(String*, stringValue, gridColumnEnd, GridColumnEnd);
+    GETTER_VALUE(String*, stringValue, gridRowStart, GridRowStart, nullptr);
+    GETTER_VALUE(String*, stringValue, gridRowEnd, GridRowEnd, nullptr);
+    GETTER_VALUE(String*, stringValue, gridColumnStart, GridColumnStart,
+                 nullptr);
+    GETTER_VALUE(String*, stringValue, gridColumnEnd, GridColumnEnd, nullptr);
 
     LengthData* ensureOffset()
     {
@@ -447,31 +454,36 @@ public:
         return (*it).m_value.m_lengthData;
     }
 
-    GETTER_VALUE(Length, length, width, Width);
-    GETTER_VALUE(Length, length, height, Height);
-    GETTER_VALUE(Length, length, minWidth, MinWidth);
-    GETTER_VALUE(Length, length, maxWidth, MaxWidth);
-    GETTER_VALUE(Length, length, minHeight, MinHeight);
-    GETTER_VALUE(Length, length, maxHeight, MaxHeight);
-    GETTER_VALUE(Length, length, verticalAlignLength, VerticalAlignLength);
-    GETTER_VALUE(Length, length, x, X);
-    GETTER_VALUE(Length, length, y, Y);
-    GETTER_VALUE(Length, length, r, R);
-    GETTER_VALUE(Length, length, cx, CX);
-    GETTER_VALUE(Length, length, cy, CY);
-    GETTER_VALUE(Length, length, rx, RX);
-    GETTER_VALUE(Length, length, ry, RY);
-    GETTER_VALUE(Length, length, gridRowGap, GridRowGap);
-    GETTER_VALUE(Length, length, gridColumnGap, GridColumnGap);
-    GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect);
-    GETTER_VALUE(LineBreakValue, lineBreak, lineBreak, LineBreak);
-    GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor);
+    GETTER_VALUE(Length, length, width, Width, 0);
+    GETTER_VALUE(Length, length, height, Height, 0);
+    GETTER_VALUE(Length, length, minWidth, MinWidth, 0);
+    GETTER_VALUE(Length, length, maxWidth, MaxWidth, 0);
+    GETTER_VALUE(Length, length, minHeight, MinHeight, 0);
+    GETTER_VALUE(Length, length, maxHeight, MaxHeight, 0);
+    GETTER_VALUE(Length, length, verticalAlignLength, VerticalAlignLength, 0);
+    GETTER_VALUE(Length, length, x, X, 0);
+    GETTER_VALUE(Length, length, y, Y, 0);
+    GETTER_VALUE(Length, length, r, R, 0);
+    GETTER_VALUE(Length, length, cx, CX, 0);
+    GETTER_VALUE(Length, length, cy, CY, 0);
+    GETTER_VALUE(Length, length, rx, RX, 0);
+    GETTER_VALUE(Length, length, ry, RY, 0);
+    GETTER_VALUE(Length, length, gridRowGap, GridRowGap, 0);
+    GETTER_VALUE(Length, length, gridColumnGap, GridColumnGap, 0);
+    GETTER_VALUE(UserSelectValue, userSelect, userSelect, UserSelect,
+                 NoneUserSelectValue);
+    GETTER_VALUE(LineBreakValue, lineBreak, lineBreak, LineBreak,
+                 NormalLineBreakValue);
+    GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor,
+                 Unit::Color());
     GETTER_VALUE(TextDecorationStyleValue, textDecorationStyle,
-                 textDecorationStyle, TextDecorationStyle);
-    GETTER_VALUE(ResizeValue, resize, resize, Resize);
-    GETTER_VALUE(QuoteValue, quote, quote, Quote);
+                 textDecorationStyle, TextDecorationStyle,
+                 SolidTextDecorationStyleValue);
+    GETTER_VALUE(ResizeValue, resize, resize, Resize, NoneResizeValue);
+    GETTER_VALUE(QuoteValue, quote, quote, Quote, OpenQuoteValue);
     GETTER_VALUE(BoxDecorationBreakValue, boxDecorationBreak,
-                 boxDecorationBreak, BoxDecorationBreak);
+                 boxDecorationBreak, BoxDecorationBreak,
+                 SliceBoxDecorationBreakValue);
 
 #undef GETTER_VALUE
 
