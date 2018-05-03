@@ -136,6 +136,7 @@ public:
         : m_starFish(sf)
         , m_type(token.type())
         , m_name(AtomicString::emptyAtomicString())
+        , m_selfClosing(false)
     {
         m_data = String::emptyString;
         m_doctypeData = nullptr;

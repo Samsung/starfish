@@ -193,9 +193,6 @@ public:
                                         if (c == '/') {
                                             continue;
                                         }
-                                        if (c == '/') {
-                                            continue;
-                                        }
                                         attr += c;
                                     }
 
