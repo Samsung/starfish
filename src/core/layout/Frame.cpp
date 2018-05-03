@@ -1727,11 +1727,7 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
         }
 
         if (isFrameTableBox()) {
-            damager.m_canPercentDamage = false;
-            if (isLayoutDamaged(damager, style->horizontalBorderSpacing()) ||
-                isLayoutDamaged(damager, style->verticalBorderSpacing())) {
-                return true;
-            }
+            return true;
         }
 
         if (isFrameTableCellBox()) {
