@@ -225,6 +225,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Position
         // Overflow
         // Grid-Gap
+        // Grid-Row
         switch (data[0]) {
         case 'p':
             if (memcmp(data, "position", 8) == 0) {
@@ -239,6 +240,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'g':
             if (memcmp(data, "grid-gap", 8) == 0) {
                 return CSSStyleValuePair::KeyKind::GridGap;
+            }
+            if (memcmp(data, "grid-row", 8) == 0) {
+                return CSSStyleValuePair::KeyKind::GridRow;
             }
             break;
         }
@@ -425,6 +429,7 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // User-Select
         // Caret-Color
         // Will-Change
+        // Grid-Column
         switch (data[0]) {
         case 'a':
             if (memcmp(data, "align-items", 11) == 0) {
@@ -491,6 +496,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             }
             if (memcmp(data, "white-space", 11) == 0) {
                 return CSSStyleValuePair::KeyKind::WhiteSpace;
+            }
+            break;
+        case 'g':
+            if (memcmp(data, "grid-column", 11) == 0) {
+                return CSSStyleValuePair::KeyKind::GridColumn;
             }
             break;
         }
@@ -1190,6 +1200,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
             if (memcmp(data, "gridGap", 7) == 0) {
                 return CSSStyleValuePair::KeyKind::GridGap;
             }
+            if (memcmp(data, "gridRow", 7) == 0) {
+                return CSSStyleValuePair::KeyKind::GridRow;
+            }
             break;
         }
         break;
@@ -1371,6 +1384,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
             }
             if (memcmp(data, "gridRowGap", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::GridRowGap;
+            }
+            if (memcmp(data, "gridColumn", 10) == 0) {
+                return CSSStyleValuePair::KeyKind::GridColumn;
             }
             break;
         case 'l':

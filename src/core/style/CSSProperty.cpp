@@ -320,6 +320,10 @@ const char* CSSPropertyHelper::toString(CSSStyleValuePair::KeyKind property)
         return "grid-template-columns";
     case CSSStyleValuePair::GridTemplateRows:
         return "grid-template-rows";
+    case CSSStyleValuePair::GridRow:
+        return "grid-row";
+    case CSSStyleValuePair::GridColumn:
+        return "grid-column";
     case CSSStyleValuePair::Height:
         return "height";
     case CSSStyleValuePair::Hyphens:
@@ -688,6 +692,10 @@ const char* CSSPropertyHelper::toCamelCaseString(
         return "gridColumnStart";
     case CSSStyleValuePair::GridGap:
         return "gridGap";
+    case CSSStyleValuePair::GridRow:
+        return "gridRow";
+    case CSSStyleValuePair::GridColumn:
+        return "gridColumn";
     case CSSStyleValuePair::GridRowEnd:
         return "gridRowEnd";
     case CSSStyleValuePair::GridRowGap:
