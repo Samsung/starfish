@@ -382,6 +382,8 @@ public:
     QualifiedName m_rules;
     QualifiedName m_summary;
     QualifiedName m_referrerpolicy;
+    QualifiedName m_event;
+    QualifiedName m_nomodule;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

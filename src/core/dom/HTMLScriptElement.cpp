@@ -201,24 +201,20 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
     if (m_isParserInserted) {
         return false;
     }
-
     if (!m_isAlreadyStarted &&
         isInDocumentScopeAndDocumentParticipateInRendering()) {
-        Nullable<String*> typeStr =
-            getAttribute(starFish()->staticStrings()->m_type);
-        if (typeStr.hasValue()) {
-            auto utf8Data =
-                typeStr.getValue()->toASCIILower()->toUTF8NonGCString();
-
-            auto mime = MimeType::parseFromString(typeStr.getValue());
-            if (!mime.isValid() || mime.hasParameter()) {
-                return false;
-            }
-
-            if (!isJavaScriptType(utf8Data.data(), utf8Data.length())) {
-                return false;
-            }
+        if (!isValidScriptType()) {
+            return false;
         }
+
+        if (!isEventForSupported()) {
+            return false;
+        }
+
+        if (blockForNoModule()) {
+            return false;
+        }
+
         Nullable<String*> srcStr =
             getAttribute(starFish()->staticStrings()->m_src);
         if (!srcStr.hasValue()) {
@@ -398,5 +394,68 @@ Node* HTMLScriptElement::clone()
     n->m_isAlreadyStarted = m_isAlreadyStarted;
     n->m_didScriptExecuted = m_didScriptExecuted;
     return n;
+}
+
+bool HTMLScriptElement::isValidScriptType()
+{
+    if (isValidClassicScriptType()) {
+        return true;
+    }
+
+    /* TODO 'module' is not supported yet.
+    String* typeStr =
+        getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    if (type->equalsIgnoreCase("module")) {
+        return true;
+    }
+    */
+    return false;
+}
+
+bool HTMLScriptElement::isValidClassicScriptType()
+{
+    Nullable<String*> typeStr =
+        getAttribute(starFish()->staticStrings()->m_type);
+    if (typeStr.hasValue()) {
+        auto utf8Data = typeStr.getValue()->toASCIILower()->toUTF8NonGCString();
+
+        auto mime = MimeType::parseFromString(typeStr.getValue());
+        if (!mime.isValid() || mime.hasParameter()) {
+            return false;
+        }
+
+        if (!isJavaScriptType(utf8Data.data(), utf8Data.length())) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool HTMLScriptElement::isEventForSupported()
+{
+    String* event = getAttributeOrEmpty(starFish()->staticStrings()->m_event);
+    String* htmlFor = getAttributeOrEmpty(starFish()->staticStrings()->m_for);
+
+    if (!isValidClassicScriptType() || event->isEmpty() || htmlFor->isEmpty()) {
+        return true;
+    }
+
+    event = event->trim();
+    if (!event->equalsIgnoreCase("onload") &&
+        !event->equalsIgnoreCase("onload()")) {
+        return false;
+    }
+
+    htmlFor = htmlFor->trim();
+    if (!htmlFor->equalsIgnoreCase("window")) {
+        return false;
+    }
+    return true;
+}
+
+bool HTMLScriptElement::blockForNoModule()
+{
+    return isValidClassicScriptType() &&
+           hasAttribute(starFish()->staticStrings()->m_nomodule) != SIZE_MAX;
 }
 }
