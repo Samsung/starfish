@@ -698,8 +698,7 @@ void RadialGradientData::radiusToCorner(const float x2, const float y2,
     float distance =
         hypotf(x2 - coners[cornerIndex].x, y2 - coners[cornerIndex].y);
     for (unsigned i = 1; i < 4; ++i) {
-        float newDistance =
-            hypotf(x2 - coners[cornerIndex].x, y2 - coners[cornerIndex].y);
+        float newDistance = hypotf(x2 - coners[i].x, y2 - coners[i].y);
         if (compare(newDistance, distance)) {
             cornerIndex = i;
             distance = newDistance;
