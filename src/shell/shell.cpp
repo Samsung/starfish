@@ -51,8 +51,6 @@ extern bool g_MainLoopAlive;
 #include <Ecore.h>
 #endif
 
-using namespace StarFish;
-
 bool hasEnding(std::string const& fullString, std::string const& ending)
 {
     if (fullString.length() >= ending.length()) {
@@ -624,8 +622,8 @@ int main(int argc, char* argv[])
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
-    StarFishTestCompatibleMode testCompatibleMode =
-        StarFishTestCompatibleMode::Normal;
+    StarFish::StarFishTestCompatibleMode testCompatibleMode =
+        StarFish::StarFishTestCompatibleMode::Normal;
 #endif
 
     int flag = 0;
@@ -660,7 +658,7 @@ int main(int argc, char* argv[])
             flag |= StarFish::enableHitTestDump;
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
 #ifdef STARFISH_ENABLE_TEST
-            g_enablePixelTest = true;
+            StarFish::g_enablePixelTest = true;
             setenv("PIXEL_TEST", "1", 1);
 #endif
         } else if (strstr(argv[i], "--width=") == argv[i]) {
@@ -683,7 +681,7 @@ int main(int argc, char* argv[])
             setenv("HIDE_WINDOW", "1", 1);
         } else if (strcmp(argv[i], "--mem-log-dump") == 0) {
 #ifdef STARFISH_ENABLE_TEST
-            g_memLogDump = true;
+            StarFish::g_memLogDump = true;
 #endif
         } else if (strcmp(argv[i], "--network-log-verbose") == 0) {
             setenv("NETWORK_LOG_VERBOSE", "1", 1);
@@ -699,7 +697,8 @@ int main(int argc, char* argv[])
             builtinPolyfillPathString = argv[i] + strlen("--polyfill=");
         } else if (strstr(argv[i], "--enable-chromium-test") == argv[i]) {
 #ifdef STARFISH_ENABLE_TEST
-            testCompatibleMode = StarFishTestCompatibleMode::ChromiumLayout;
+            testCompatibleMode =
+                StarFish::StarFishTestCompatibleMode::ChromiumLayout;
 #endif
         }
     }
@@ -739,7 +738,7 @@ int main(int argc, char* argv[])
 
     // TODO: Need to get screen info from X11.
     // Temporally, rect's width and height are set to window size.
-    ScreenInfo info;
+    StarFish::ScreenInfo info;
     info.rect.setWidth(width);
     info.rect.setHeight(height);
     info.availableRect.setWidth(width);
@@ -752,10 +751,12 @@ int main(int argc, char* argv[])
     cacheDir += "/Starfish-cache";
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
-        width, height, x, y, 1, String::createASCIIString("sans-serif"), info,
+        width, height, x, y, 1,
+        StarFish::String::createASCIIString("sans-serif"), info,
         "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
-        cacheDir.data(), String::fromUTF8(customUserAgentString.data()),
-        String::fromUTF8(builtinPolyfillPathString.data()));
+        cacheDir.data(),
+        StarFish::String::fromUTF8(customUserAgentString.data()),
+        StarFish::String::fromUTF8(builtinPolyfillPathString.data()));
 
     LWE::WebView* webView = LWE::WebView::Create(sf);
 
@@ -807,9 +808,9 @@ int main(int argc, char* argv[])
                                        exit(-1);
                                    }
 
-                                   StarFishEnterer enter(p->sf);
-                                   String* str = p->sf->evaluate(
-                                       String::fromUTF8(p->buf));
+                                   StarFish::StarFishEnterer enter(p->sf);
+                                   StarFish::String* str = p->sf->evaluate(
+                                       StarFish::String::fromUTF8(p->buf));
                                    auto s = str->toUTF8NonGCString();
                                    puts(s.data());
 
