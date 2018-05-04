@@ -67,7 +67,7 @@ public:
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                        HitTestStage stage)
     {
-        return this;
+        return hitTest(x, y, stage);
     }
 
     virtual IntrinsicSize intrinsicSize();
