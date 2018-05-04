@@ -53,6 +53,9 @@ public:
 
 class Demuxer : public gc {
 public:
+    virtual ~Demuxer()
+    {
+    }
     static Demuxer* createDemuxer(String* mimeTypeOfContainer);
     static Demuxer* createWebMDemuxer();
     static Demuxer* createMP4Demuxer();

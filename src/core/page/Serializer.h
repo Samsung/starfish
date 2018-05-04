@@ -45,6 +45,9 @@ typedef GCUnorderedMap<void*, SerializedTypedData*> SerializingMap;
 typedef GCUnorderedMap<void*, ScriptValue> DeserializingMap;
 class Serializable {
 public:
+    virtual ~Serializable()
+    {
+    }
     virtual SerializedData* serialize(SerializingMap& memory) = 0;
     virtual void deserialize(SerializedData* serialized,
                              DeserializingMap& memory) const = 0;
@@ -52,6 +55,9 @@ public:
 
 class SerializedData : public gc {
 public:
+    virtual ~SerializedData()
+    {
+    }
     virtual bool isSerializedValueData() const
     {
         return false;
@@ -317,6 +323,9 @@ public:
         , m_data(data)
     {
     }
+    virtual ~SerializedTypedData()
+    {
+    }
 
     virtual bool isTransferedTypedData() const
     {
@@ -481,6 +490,10 @@ public:
         : m_detached(false)
     {
     }
+    virtual ~Transferable()
+    {
+    }
+
     bool isDetached()
     {
         return m_detached;

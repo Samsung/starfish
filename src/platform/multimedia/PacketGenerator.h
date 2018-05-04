@@ -35,6 +35,10 @@ public:
         : PacketGenerator(MediaCodecUnknown)
     {
     }
+    virtual ~PacketGenerator()
+    {
+    }
+
     virtual bool generate(DemuxerSource* from, size_t validLength,
                           MediaPacket& packet) = 0;
     bool isCodec(MediaCodec codec)

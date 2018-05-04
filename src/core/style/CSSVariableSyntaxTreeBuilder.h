@@ -29,6 +29,9 @@ namespace StarFish {
 class CSSVariableSyntaxTreeBuilder : public gc {
     class Block : public gc {
     public:
+        virtual ~Block()
+        {
+        }
         virtual bool isVariableBlock() = 0;
         virtual bool isVariable() = 0;
         virtual bool isRawValue() = 0;

@@ -28,6 +28,9 @@ static String* decodeURL(String* src, size_t idx);
 
 class ResourceRequestJobInterface {
 public:
+    virtual ~ResourceRequestJobInterface()
+    {
+    }
     // Currently, only 'send' is chosen as a common interface, but more
     // interfaces can be added later.
     virtual void send(String* body = String::emptyString,

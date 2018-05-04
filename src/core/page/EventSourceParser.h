@@ -26,6 +26,9 @@ class EventSourceParser : public gc {
 public:
     class Client : public gc {
     public:
+        virtual ~Client()
+        {
+        }
         virtual void onMessageEvent(String* type, String* data,
                                     String* lastEventId) = 0;
         virtual void onReconnectionTimeSet(

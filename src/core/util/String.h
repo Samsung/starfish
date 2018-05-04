@@ -560,6 +560,9 @@ protected:
     {
         m_hashValue = 0;
     }
+    virtual ~String()
+    {
+    }
 
     size_t hashValueSlowCase() const;
 
