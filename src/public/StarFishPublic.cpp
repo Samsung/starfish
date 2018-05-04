@@ -571,8 +571,6 @@ void starfishCreate_internal(uv_async_t* handle)
 
 #endif
 
-using namespace StarFish;
-
 namespace StarFish {
 
 typedef FILE* (*sfopen_cb)(const char* filename);
@@ -678,7 +676,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
 #else
     // TODO: Need to get screen info from X11.
     // Temporally, rect's width and height are set to window size.
-    ScreenInfo info;
+    StarFish::ScreenInfo info;
     info.rect.setWidth(windowWidth);
     info.rect.setHeight(windowHeight);
     info.availableRect.setWidth(windowWidth);
@@ -688,7 +686,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     instance->m_starfish = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)0, locale, timezoneID, window,
         windowWidth, windowHeight, windowX, windowY, defaultFontSizeMultiplier,
-        String::fromUTF8(defaultFont), info, "", "", nullptr);
+        StarFish::String::fromUTF8(defaultFont), info, "", "", nullptr);
 #if defined(STARFISH_ENABLE_INSPECTOR)
     TO_STARFISH(instance)->setupInspector();
 #endif
@@ -733,7 +731,7 @@ extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(
             },
             d);
 #else
-    TO_STARFISH(instance)->loadHTMLDocument(String::fromUTF8(path));
+    TO_STARFISH(instance)->loadHTMLDocument(StarFish::String::fromUTF8(path));
 #endif
 }
 
@@ -750,29 +748,29 @@ extern "C" STARFISH_EXPORT void starfishNotifyResume(StarFishInstance* instance)
 extern "C" STARFISH_EXPORT void registerFileOpenCB(
     FILE* (*cb)(const char* fileName))
 {
-    open_cb = cb;
+    StarFish::open_cb = cb;
 }
 
 extern "C" STARFISH_EXPORT void registerFileLengthCB(long int (*cb)(FILE* fp))
 {
-    length_cb = cb;
+    StarFish::length_cb = cb;
 }
 
 extern "C" STARFISH_EXPORT void registerFileReadCB(
     size_t (*cb)(void* buf, size_t size, size_t count, FILE* fp))
 {
-    read_cb = cb;
+    StarFish::read_cb = cb;
 }
 
 extern "C" STARFISH_EXPORT void registerFileCloseCB(int (*cb)(FILE* fp))
 {
-    close_cb = cb;
+    StarFish::close_cb = cb;
 }
 
 extern "C" STARFISH_EXPORT void registerFileMatchLocationCB(
     const char* (*cb)(const char* fileName))
 {
-    matchLocation_cb = cb;
+    StarFish::matchLocation_cb = cb;
 }
 
 #if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
