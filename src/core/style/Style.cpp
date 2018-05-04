@@ -7551,7 +7551,9 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
         parser.consumeWhitespaces();
         if (*(parser.curPos()) == 't' || *(parser.curPos()) == '-' ||
             isDigit(*(parser.curPos()))) {
-            parser.consumeString(CSSPropertyParser::AllowNegative);
+            if (!parser.consumeString(CSSPropertyParser::AllowNegative)) {
+                return false;
+            }
             const CSSTokenValue& str = parser.parsedString();
             if (str == "to") {
                 CSSStyleValuePair leftOrRight;
@@ -7632,8 +7634,11 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             CSSTokenVector tokens;
             bool inPositionStr = false;
             while (parser.consumeWhitespaces() && *(parser.curPos()) != ',') {
-                parser.consumeString(CSSPropertyParser::AllowNegative |
-                                     CSSPropertyParser::AllowPercent);
+                if (!parser.consumeString(CSSPropertyParser::AllowNegative |
+                                          CSSPropertyParser::AllowPercent |
+                                          CSSPropertyParser::AllowDot)) {
+                    return false;
+                }
                 const CSSTokenValue& value = parser.parsedString();
                 CSSStyleValuePair temp;
                 if (!inPositionStr && value == "circle") {
@@ -7737,7 +7742,8 @@ bool CSSStyleValuePair::updateValueUnitGradient(const CSSTokenValue& value)
             cs->setColor(color);
 
             uint32_t option = CSSPropertyParser::AllowNegative |
-                              CSSPropertyParser::AllowPercent;
+                              CSSPropertyParser::AllowPercent |
+                              CSSPropertyParser::AllowDot;
             parser.consumeWhitespaces();
             if (*(parser.curPos()) != ',' && *(parser.curPos()) != ')') {
                 parser.consumeString(option);
