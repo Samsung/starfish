@@ -52,6 +52,9 @@ class Window;
 
 class MediaPlayer : public gc {
 public:
+    virtual ~MediaPlayer()
+    {
+    }
     enum PlaybackState {
         PLAYBACK_STATE_NONE = 1 << 0,
         PLAYBACK_STATE_PLAYING = 1 << 1,

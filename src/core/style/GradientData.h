@@ -113,6 +113,10 @@ public:
     {
     }
 
+    virtual ~GradientData()
+    {
+    }
+
     GradientType type()
     {
         return m_type;

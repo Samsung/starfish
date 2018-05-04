@@ -60,6 +60,10 @@ public:
     {
     }
 
+    virtual ~RareNodeMembers()
+    {
+    }
+
     virtual bool isRareElementMembers() const
     {
         return false;

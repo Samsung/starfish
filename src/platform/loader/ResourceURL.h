@@ -74,6 +74,7 @@ public:
         m_protocol = src.m_protocol;
         m_isValid = src.m_isValid;
     }
+    virtual ~ResourceURL(){};
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

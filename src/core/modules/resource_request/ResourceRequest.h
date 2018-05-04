@@ -67,6 +67,9 @@ class ResourceRequest : public gc,
     friend class EventSource;
 
 public:
+    virtual ~ResourceRequest()
+    {
+    }
     enum MethodType {
         UNKNOWN_METHOD,
         GET_METHOD,

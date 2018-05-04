@@ -389,8 +389,10 @@ bool DOMTokenList::validateTokenValue(String* token)
         return supportedTokensOfAnchorAndArea(lowerToken);
     } else if (m_element->isHTMLLinkElement()) {
         return supportedTokensOfLink(lowerToken);
+#ifdef STARFISH_ENABLE_MULTIMEDIA
     } else if (m_element->isHTMLMediaElement()) {
         return supportedTokensOfMedia(lowerToken);
+#endif
     } else {
         throw new DOMException(m_element->document(),
                                DOMException::Code::SCRIPT_TYPE_ERR,

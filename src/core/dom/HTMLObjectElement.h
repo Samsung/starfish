@@ -66,6 +66,9 @@ protected:
 
 class HTMLObjectElementContent : public gc {
 public:
+    virtual ~HTMLObjectElementContent()
+    {
+    }
     HTMLObjectElementContent(HTMLObjectElement* element)
         : m_element(element)
     {

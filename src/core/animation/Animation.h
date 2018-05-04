@@ -184,6 +184,9 @@ public:
     AnimationTask(Element* target, CSSStyleValuePair::KeyKind targetProperty,
                   AnimatedValue from, AnimatedValue to, float durationInms,
                   float delayInms, AnimationTimingFunction* timingFunction);
+    virtual ~AnimationTask()
+    {
+    }
     float computeProgress(uint64_t tickCount);
     bool canExecute();
     void fireStartEvent();

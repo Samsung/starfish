@@ -77,6 +77,10 @@ public:
     {
     }
 
+    virtual ~CSSGradientValue()
+    {
+    }
+
     GradientType type()
     {
         return m_gradientType;
