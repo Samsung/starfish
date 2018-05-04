@@ -3402,7 +3402,6 @@ protected:
     bool m_seenPseudoElementFirstLetter : 1;
     bool m_seenPseudoElementBefore : 1;
     bool m_seenPseudoElementAfter : 1;
-    bool m_seenPseudoElementFirstLineInherited : 1;
     bool m_gotInheritedColor : 1;
     bool m_usedInAnimator : 1;
     bool m_someNonInheritMemberExplicitlyInherited : 1;
@@ -3424,9 +3423,9 @@ protected:
     bool m_alignSelfSpecifiedByUser : 1;
     AlignItemValue m_alignSelf : 3;
     AlignContentValue m_alignContent : 3;
-    StyleResolver::PseudoElementType m_pseudoId : 6;
+    StyleResolver::PseudoElementType m_pseudoId : 3;
     StyleResolver::StyleDamageSource m_styleDamageSource : 5;
-    int m_styleDamageSourceNodeStateMap : 4;
+    int m_styleDamageSourceNodeStateMap : 5;
     bool m_zIndexSpecifiedByUser : 1;
 
     Font* m_font;

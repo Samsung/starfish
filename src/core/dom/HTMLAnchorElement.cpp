@@ -61,10 +61,18 @@ void HTMLAnchorElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
                                      attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_tabindex) {
+    StaticStrings* ss = starFish()->staticStrings();
+    if (name == ss->m_tabindex) {
         m_tabIndexWasSetExplicitly = true;
         if (m_tabIndex == -1)
             m_tabIndex = 0;
+    } else if (name == ss->m_href) {
+        if (attributeCreated) {
+            setState(NodeStateLink, true);
+        }
+        if (attributeRemoved) {
+            setState(NodeStateLink, false);
+        }
     }
 }
 

@@ -302,13 +302,15 @@ public:
     /* Other methods (not in Node Interface) */
 
     // When you want to add State,
-    // You need to update ComputedStyle::m_styleDamageSourceNodeStateMap
+    // You need to update ComputedStyle::m_styleDamageSourceNodeStateMap and
+    // Node::m_state
     enum NodeState {
         NodeStateNormal = 0,
         NodeStateActive = 1 << 0,
         NodeStateFocused = 1 << 1,
         NodeStateHovered = 1 << 2,
         NodeStateTarget = 1 << 3,
+        NodeStateLink = 1 << 4,
     };
 
     virtual void init(ScriptBindingInstance* instance,
@@ -711,7 +713,7 @@ protected:
     bool m_canBeCountingRoot : 1;
     bool m_canBeQuoteRoot : 1;
 
-    int m_state : 8;
+    int m_state : 5;
 
     RareNodeMembers* m_rareNodeMembers;
 
