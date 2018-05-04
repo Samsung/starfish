@@ -1307,7 +1307,8 @@ This section describes the complete list of supported selectors by LWE.
 | | ID selector | element#id | div#firstname | Selects an \<div\> element with id="firstname" |
 | [Linguistic pseudo-classes](https://www.w3.org/TR/selectors/#linguistic-pseudos) | The directionality pseudo-class | :dir() | :dir(ltr) | Selects any element with left-to-right text <br> NOTE: 'rtl' value is not supported yet |
 | | The language pseudo-class | :lang() | p:lang(it) | Selects every \<p\> element with a lang attribute equal to "it" (Italian) |
-| [Location pseudo-classes](https://www.w3.org/TR/selectors/#location) | The target pseudo-class | :target | #news:target | Selects the current active #news element (clicked on a URL containing that anchor name) |
+| [Location pseudo-classes](https://www.w3.org/TR/selectors/#location) | The link pseudo-class | :link | a:link | Selects an element that has not yet been visited |
+| | The target pseudo-class | :target | #news:target | Selects the current active #news element (clicked on a URL containing that anchor name) |
 | [User action pseudo-classes](https://www.w3.org/TR/selectors/#useraction-pseudos) | The pointer hover pseudo-class | :hover | a:hover | Selects links on mouse over |
 | | The activation pseudo-class | :active | a:active | Selects the active link |
 | | The input focus pseudo-class | :focus | input:focus | Selects the input element which has focus |

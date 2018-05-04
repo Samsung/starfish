@@ -5640,9 +5640,6 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
                     } else if (result.pseudoType ==
                                PseudoElementType::PseudoElementAfter) {
                         ret->m_seenPseudoElementAfter = true;
-                    } else if (result.pseudoType ==
-                               PseudoElementType::PseudoElementFirstLine) {
-                        ret->m_seenPseudoElementFirstLine = true;
                     }
                 }
             } else if (pseudoElementType ==
@@ -6142,6 +6139,12 @@ bool StyleResolver::checkPseudoClass(Element* element,
         result.styleDamageSourceNodeStateMap =
             result.styleDamageSourceNodeStateMap | Node::NodeStateTarget;
         return element->state() & Node::NodeState::NodeStateTarget;
+    case CSSSelector::PseudoType::PseudoLink:
+        result.styleDamageFrom = (StyleDamageSource)(
+            result.styleDamageFrom | StyleDamageFromElementState);
+        result.styleDamageSourceNodeStateMap =
+            result.styleDamageSourceNodeStateMap | Node::NodeStateLink;
+        return element->state() & Node::NodeState::NodeStateLink;
     case CSSSelector::PseudoType::PseudoRoot:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
@@ -6187,25 +6190,25 @@ bool StyleResolver::checkPseudoClass(Element* element,
                                                      StyleDamageFromDOMTree);
         result.seenCombinator = true;
         return isEmpty(element);
-    case CSSSelector::PseudoNthChild:
+    case CSSSelector::PseudoType::PseudoNthChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         result.seenCombinator = true;
         return element->parentElement() &&
                selector->matchNth(nthChildIndex(element));
-    case CSSSelector::PseudoNthOfType:
+    case CSSSelector::PseudoType::PseudoNthOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         result.seenCombinator = true;
         return element->parentElement() &&
                selector->matchNth(nthOfTypeIndex(element));
-    case CSSSelector::PseudoNthLastChild:
+    case CSSSelector::PseudoType::PseudoNthLastChild:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         result.seenCombinator = true;
         return element->parentElement() &&
                selector->matchNth(nthLastChildIndex(element));
-    case CSSSelector::PseudoNthLastOfType:
+    case CSSSelector::PseudoType::PseudoNthLastOfType:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromDOMTree);
         result.seenCombinator = true;
@@ -6248,7 +6251,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         return !checkOne(element, elementName, elementId, elementClasses,
                          selector->pseudoSelectorList()[0], result);
     }
-    case CSSSelector::PseudoEnabled: {
+    case CSSSelector::PseudoType::PseudoEnabled: {
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromAttribute);
         if (element->isHTMLAnchorElement()) {
@@ -6263,7 +6266,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         }
         return false;
     }
-    case CSSSelector::PseudoDisabled: {
+    case CSSSelector::PseudoType::PseudoDisabled: {
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromAttribute);
         if (element->isHTMLElement()) {
@@ -6275,7 +6278,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         }
         return false;
     }
-    case CSSSelector::PseudoChecked: {
+    case CSSSelector::PseudoType::PseudoChecked: {
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromAttribute);
         if (element->isHTMLElement()) {

@@ -315,13 +315,15 @@
 "}"
 #if !defined(STARFISH_ENABLE_TEST)
 // old test expect images are doesn't consider this rule
-"a {"
-"     color: blue"
-"}"
-#endif
-"a:hover {"
+"a:link {"
+"    color: rgb(0, 0, 238);"
 "    text-decoration: underline;"
 "}"
+"a:active {"
+"    color: rgb(255, 0, 0);"
+"    text-decoration: underline;"
+"}"
+#endif
 "map {"
 "    display: inline;"
 "}"
