@@ -46,6 +46,7 @@
 #include "core/dom/HTMLObjectElement.h"
 #include "core/dom/HTMLOptGroupElement.h"
 #include "core/dom/HTMLOptionElement.h"
+#include "core/dom/HTMLOutputElement.h"
 #include "core/dom/HTMLParagraphElement.h"
 #include "core/dom/HTMLHRElement.h"
 #include "core/dom/HTMLPreElement.h"
@@ -206,6 +207,8 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
         return new HTMLMapElement(document);
     } else if (name == str->m_areaTagName.localNameAtomic()) {
         return new HTMLAreaElement(document);
+    } else if (name == str->m_outputTagName.localNameAtomic()) {
+        return new HTMLOutputElement(document);
     }
 #define DEFINE_KNOWN_ELEMENT(tagName)                               \
     else if (name == str->m_##tagName##TagName.localNameAtomic())   \
