@@ -24,6 +24,15 @@
 
 namespace StarFish {
 
+ScriptValue TreeWalker::filter()
+{
+    if (!m_filter) {
+        return scriptNull();
+    }
+
+    return m_filter;
+}
+
 Node* TreeWalker::parentNode()
 {
     Node* node = m_current;
@@ -258,6 +267,11 @@ unsigned TreeWalker::acceptNode(Node* node)
         return NodeFilter::FILTERSKIP;
     }
 
+    if (!m_filter) {
+        return NodeFilter::FILTERACCEPT;
+    }
+
+    // TODO : Implement the real filter.
     return NodeFilter::FILTERACCEPT;
 }
 }
