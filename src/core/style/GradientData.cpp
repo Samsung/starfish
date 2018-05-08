@@ -544,6 +544,8 @@ void LinearGradientData::checkComputed(Length curFontSize, Length rootFontSize,
 
 RadialGradientData::RadialGradientData()
     : GradientData(GradientType::RadialGradient)
+    , m_shape(RadialGradientShape::None)
+    , m_gradientSizeKeyword(RadialGradientSizeKeyword::None)
 {
 }
 
