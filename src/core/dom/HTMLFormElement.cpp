@@ -391,7 +391,7 @@ bool HTMLFormControl::isLabelable() const
             return true;
         }
     } else if (isHTMLButtonElement() || isHTMLSelectElement() ||
-               isHTMLTextAreaElement()) {
+               isHTMLTextAreaElement() || isHTMLOutputElement()) {
         return true;
     }
 
