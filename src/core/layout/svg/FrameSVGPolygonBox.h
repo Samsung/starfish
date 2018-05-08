@@ -31,17 +31,12 @@ public:
     {
     }
 
-    virtual bool isFrameSVGCircleBox()
-    {
-        return true;
-    }
-
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameSVGPolygonBox";
     }
 
-    virtual void paintSVG(PaintingContext& ctx);
+    virtual void paintSVG(PaintingContext& ctx) override;
 
 protected:
 };

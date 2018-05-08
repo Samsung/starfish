@@ -55,7 +55,7 @@ public:
     {
     }
 
-    virtual bool isFrameReplaced()
+    virtual bool isFrameReplaced() override
     {
         return true;
     }
@@ -119,15 +119,15 @@ public:
         LayoutUnit parentHeight, bool hasAspectRatio,
         bool parentHeightHasFixedValue);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameReplaced";
     }
 
     virtual void layout(LayoutContext& ctx,
-                        Frame::LayoutWantToResolve resolveWhat);
-    virtual void computePreferredWidth(PreferredWidthContext& ctx);
-    virtual void layoutInline(LineFormattingContext& ctx);
+                        Frame::LayoutWantToResolve resolveWhat) override;
+    virtual void computePreferredWidth(PreferredWidthContext& ctx) override;
+    virtual void layoutInline(LineFormattingContext& ctx) override;
     void computeIntrinsicSize(LayoutContext& ctx, LayoutUnit& intrinsicWidth,
                               LayoutUnit& intrinsicHeight, bool& hasAspectRatio,
                               LayoutUnit parentContentWidth,
@@ -145,21 +145,22 @@ public:
         }
     }
 
-    virtual void paintContent(PaintingContext& ctx);
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+    virtual void paintContent(PaintingContext& ctx) override;
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
+                           HitTestStage stage) override;
 
-    virtual void paintStackingContextContent(Canvas* canvas)
+    virtual void paintStackingContextContent(Canvas* canvas) override
     {
         paintReplaced(canvas);
     }
 
 protected:
-    virtual bool hasFrameTreeItemModel()
+    virtual bool hasFrameTreeItemModel() override
     {
         return true;
     }
 
-    virtual FrameTreeItemModel* frameTreeItemModel()
+    virtual FrameTreeItemModel* frameTreeItemModel() override
     {
         return &m_treeItemModel;
     }

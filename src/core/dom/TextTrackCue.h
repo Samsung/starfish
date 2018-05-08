@@ -104,17 +104,6 @@ public:
 #undef VIRTUAL
 #undef OVERRIDE
 
-#ifndef NDEBUG
-    virtual void dump()
-    {
-        printf("[TextTrackCue]\n");
-        printf("    StartTime : %lf\n", m_timeRange.start());
-        printf("    EndTime : %lf\n", m_timeRange.end());
-        auto s = m_payload->toUTF8NonGCString();
-        printf("    text : \"%s\"\n", s.data());
-    }
-#endif
-
     String* getPayload()
     {
         return m_payload;

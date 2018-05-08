@@ -36,14 +36,14 @@ public:
     virtual bool isHTMLOListElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues) override;
 
     virtual int32_t startNumber() override;
 

@@ -43,7 +43,7 @@ public:
         m_contentType = String::createASCIIString("text/html");
     }
 
-    Node* clone()
+    Node* clone() override
     {
         return new XMLDocument(*this);
     }

@@ -31,21 +31,21 @@ public:
     {
     }
 
-    virtual bool isFrameLineBreak()
+    virtual bool isFrameLineBreak() override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameLineBreak";
     }
 
-    virtual void computePreferredWidth(PreferredWidthContext& ctx);
-    virtual void layoutInline(LineFormattingContext& ctx);
+    virtual void computePreferredWidth(PreferredWidthContext& ctx) override;
+    virtual void layoutInline(LineFormattingContext& ctx) override;
 
 #ifdef STARFISH_ENABLE_TEST
-    virtual void dump(int depth)
+    virtual void dump(int depth) override
     {
         Frame::dump(depth);
     }
@@ -77,12 +77,12 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    virtual bool hasFrameTreeItemModel()
+    virtual bool hasFrameTreeItemModel() override
     {
         return true;
     }
 
-    virtual FrameTreeItemModel* frameTreeItemModel()
+    virtual FrameTreeItemModel* frameTreeItemModel() override
     {
         return &m_treeItemModel;
     }

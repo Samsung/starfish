@@ -31,12 +31,12 @@ class FrameTableRowBox : public FrameTableObjectBox {
 public:
     FrameTableRowBox(Node* node, ComputedStyle* style);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameTableRow";
     }
 
-    virtual bool isFrameTableRowBox()
+    virtual bool isFrameTableRowBox() override
     {
         return true;
     }
@@ -60,13 +60,13 @@ public:
         return parent()->asFrameTableSectionBox();
     }
 
-    virtual bool hasBlockFlow()
+    virtual bool hasBlockFlow() override
     {
         // FIXME: TableRow always contains a blockflow
         return true;
     }
 
-    virtual void paintBackgroundAndBorders(Canvas* canvas);
+    virtual void paintBackgroundAndBorders(Canvas* canvas) override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

@@ -118,12 +118,6 @@
 #include <GCUtil.h>
 #undef ESCARGOT
 
-template <const int siz>
-inline void __attribute__((optimize("O0"))) clearStack()
-{
-    volatile char a[siz] = { 0 };
-}
-
 #include <SkMatrix.h>
 
 #include <unicode/locid.h>
@@ -143,13 +137,14 @@ inline void __attribute__((optimize("O0"))) clearStack()
 /* COMPILER() - the compiler being used to build the project */
 #define COMPILER(FEATURE) (defined COMPILER_##FEATURE && COMPILER_##FEATURE)
 
-/* COMPILER(MSVC) - Microsoft Visual C++ */
-#if defined(_MSC_VER)
+#if defined(__clang__)
+#define COMPILER_CLANG 1
+#elif defined(_MSC_VER)
 #define COMPILER_MSVC 1
-
-/* Specific compiler features */
-#if !COMPILER(CLANG) && _MSC_VER >= 1600
-#define COMPILER_SUPPORTS_CXX_NULLPTR 1
+#elif (__GNUC__)
+#define COMPILER_GCC 1
+#else
+#error "Compiler dectection failed"
 #endif
 
 #if COMPILER(CLANG)
@@ -162,25 +157,10 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #define COMPILER_QUIRK_FINAL_IS_CALLED_SEALED 1
 #endif
 
-#endif
-
-/* COMPILER(GCC) - GNU Compiler Collection */
-#if defined(__GNUC__)
-#define COMPILER_GCC 1
-#define GCC_VERSION \
-    (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
-#define GCC_VERSION_AT_LEAST(major, minor, patch) \
-    (GCC_VERSION >= (major * 10000 + minor * 100 + patch))
-#else
-/* Define this for !GCC compilers, just so we can write things like
- * GCC_VERSION_AT_LEAST(4, 1, 0). */
-#define GCC_VERSION_AT_LEAST(major, minor, patch) 0
-#endif
-
 /* ALWAYS_INLINE */
 #ifndef ALWAYS_INLINE
-#if COMPILER(GCC) && defined(NDEBUG) && !COMPILER(MINGW)
-#define ALWAYS_INLINE inline
+#if (COMPILER(GCC) || COMPILER(CLANG)) && defined(NDEBUG) && !COMPILER(MINGW)
+#define ALWAYS_INLINE inline __attribute__((__always_inline__))
 #elif COMPILER(MSVC) && defined(NDEBUG)
 #define ALWAYS_INLINE __forceinline
 #else
@@ -190,7 +170,7 @@ inline void __attribute__((optimize("O0"))) clearStack()
 
 /* NEVER_INLINE */
 #ifndef NEVER_INLINE
-#if COMPILER(GCC)
+#if COMPILER(GCC) || COMPILER(CLANG)
 #define NEVER_INLINE __attribute__((__noinline__))
 #else
 #define NEVER_INLINE
@@ -199,7 +179,7 @@ inline void __attribute__((optimize("O0"))) clearStack()
 
 /* UNLIKELY */
 #ifndef UNLIKELY
-#if COMPILER(GCC)
+#if COMPILER(GCC) || COMPILER(CLANG)
 #define UNLIKELY(x) __builtin_expect((x), 0)
 #else
 #define UNLIKELY(x) (x)
@@ -208,7 +188,7 @@ inline void __attribute__((optimize("O0"))) clearStack()
 
 /* LIKELY */
 #ifndef LIKELY
-#if COMPILER(GCC)
+#if COMPILER(GCC) || COMPILER(CLANG)
 #define LIKELY(x) __builtin_expect((x), 1)
 #else
 #define LIKELY(x) (x)
@@ -217,7 +197,7 @@ inline void __attribute__((optimize("O0"))) clearStack()
 
 /* NO_RETURN */
 #ifndef NO_RETURN
-#if COMPILER(GCC)
+#if COMPILER(GCC) || COMPILER(CLANG)
 #define NO_RETURN __attribute((__noreturn__))
 #elif COMPILER(MSVC)
 #define NO_RETURN __declspec(noreturn)
@@ -226,8 +206,20 @@ inline void __attribute__((optimize("O0"))) clearStack()
 #endif
 #endif
 
-#if !COMPILER(GCC)
-#include <codecvt>
+#if COMPILER(GCC)
+template <const int siz>
+inline void __attribute__((optimize("O0"))) clearStack()
+{
+    volatile char a[siz] = { 0 };
+}
+#elif COMPILER(CLANG)
+template <const int siz>
+[[clang::optnone]] inline void clearStack()
+{
+    volatile char a[siz] = { 0 };
+}
+#else
+#error
 #endif
 
 #if INTPTR_MAX == INT32_MAX
@@ -493,21 +485,21 @@ class GCDeque : public GCDequeT<T, Allocator>, public gc {
 template <typename Key, typename Value, typename Hasher = std::hash<Key>,
           typename Predicate = std::equal_to<Key>,
           typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
-              std::pair<Key, Value>>>
+              std::pair<Key const, Value>>>
 using GCUnorderedMap =
     std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
 
 template <typename Key, typename Value, typename Hasher = std::hash<Key>,
           typename Predicate = std::equal_to<Key>,
           typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
-              std::pair<Key, Value>>>
+              std::pair<Key const, Value>>>
 using GCUnorderedMultiMap =
     std::unordered_multimap<Key, Value, Hasher, Predicate, Allocator>;
 
 // typedef of GC-aware map
 template <typename Key, typename Value, typename Comparator,
           typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
-              std::pair<Key, Value>>>
+              std::pair<Key const, Value>>>
 using GCMap = std::map<Key, Value, Comparator, Allocator>;
 
 // typedef of GC-aware unordered_set

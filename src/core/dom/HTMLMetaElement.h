@@ -45,15 +45,15 @@ public:
     virtual bool isHTMLMetaElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
-    virtual void didNodeInsertedToDocumentTree();
-    virtual void didNodeRemovedFromDocumentTree();
+                                     bool attributeRemoved) override;
+    virtual void didNodeInsertedToDocumentTree() override;
+    virtual void didNodeRemovedFromDocumentTree() override;
     void checkPlatformFlags();
 
 protected:

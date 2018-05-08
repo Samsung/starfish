@@ -4699,12 +4699,12 @@ void FrameBlockBox::paintChildrenWith(PaintingContext& ctx)
         FrameBox::paintChildrenWith(ctx);
     } else {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
-            paintInlineContent(ctx.m_canvas);
+            paintInlineContentBlock(ctx.m_canvas);
         }
     }
 }
 
-void FrameBlockBox::paintInlineContent(Canvas* canvas)
+void FrameBlockBox::paintInlineContentBlock(Canvas* canvas)
 {
     PaintingInlineStage stage = PaintingInlineBox;
 
@@ -4789,7 +4789,7 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
         }
     } else if (!hasBlockFlow()) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
-            paintInlineContent(ctx.m_canvas);
+            paintInlineContentBlock(ctx.m_canvas);
             paintOutline(ctx.m_canvas);
         }
     } else {

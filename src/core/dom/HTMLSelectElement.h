@@ -43,8 +43,8 @@ public:
 
     virtual void didNodeInserted(Node* parent, Node* newChild) override;
 
-    virtual String* value();
-    virtual void setValue(String* value);
+    virtual String* value() override;
+    virtual void setValue(String* value) override;
 
     size_t selectedIndex();
     void setSelectedIndex(size_t index);
@@ -68,7 +68,7 @@ public:
     bool defaultIndexedSetter(unsigned index, HTMLOptionElement* option);
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     HTMLCollection* selectedOptions();
     HTMLCollection* ensureSelectedOptions();
@@ -80,9 +80,9 @@ public:
                                      GCVector<HTMLOptionElement*>& list);
 
     void fireSelectUpdateNotification();
-    bool handleDefaultEvent(Event* event);
+    bool handleDefaultEvent(Event* event) override;
 
-    void reset(HTMLOptionElement* resetFrom);
+    void resetFromOption(HTMLOptionElement* resetFrom);
 
     int displaySize();
 

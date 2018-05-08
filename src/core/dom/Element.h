@@ -177,10 +177,10 @@ public:
     }
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle);
+                                         ComputedStyle* newStyle) override;
 
 #ifdef STARFISH_ENABLE_TEST
-    virtual void dump()
+    virtual void dump() override
     {
         Node::dump();
 
@@ -214,7 +214,7 @@ public:
         return true;
     }
 
-    NamedNodeMap* attributes();
+    virtual NamedNodeMap* attributes() override;
     DOMStringMap* dataset();
 
     // https://drafts.csswg.org/cssom-view/#extension-to-the-element-interface

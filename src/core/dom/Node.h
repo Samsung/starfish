@@ -192,7 +192,7 @@ public:
         return m_parentNode;
     }
 
-    Element* parentElement()
+    virtual Element* parentElement()
     {
         Node* parent = parentNode();
         if (parent && parent->nodeType() == ELEMENT_NODE) {

@@ -46,6 +46,7 @@
            ['OS=="linux"', {
                'cflags' : [
                    '<@(cflags_default)',
+                   '<@(cflags_compiler)',
                    '<@(cflags_extra)',
                ],
                'ldflags' : [
@@ -82,6 +83,7 @@
                    ],
                    'libraries': [
                        '<@(libraries_default)',
+                       '<@(libraries_compiler)',
                        '<@(libraries_extra)',
                    ],
                    'configurations': {

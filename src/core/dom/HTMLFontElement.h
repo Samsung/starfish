@@ -39,14 +39,14 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLFontElement() const override;
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues) override;
 
     /* DOM APIs */
     String* color();

@@ -76,7 +76,7 @@ inline CSSAngle operator+(const CSSAngle& a, const CSSAngle& b)
 
 inline CSSAngle& operator+=(CSSAngle& a, const CSSAngle& b)
 {
-    a += b;
+    a = a + b;
     return a;
 }
 
@@ -97,7 +97,7 @@ inline CSSAngle operator*(const CSSAngle& a, const float b)
 
 inline CSSAngle& operator*=(CSSAngle& a, float b)
 {
-    a *= b;
+    a = a * b;
     return a;
 }
 
@@ -108,7 +108,7 @@ inline CSSAngle operator/(const CSSAngle& a, const float b)
 
 inline CSSAngle& operator/=(CSSAngle& a, float b)
 {
-    a /= b;
+    a = a / b;
     return a;
 }
 }

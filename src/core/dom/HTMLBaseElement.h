@@ -36,7 +36,7 @@ public:
     virtual bool isHTMLBaseElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     String* href() const;
     void setHref(String* href);
@@ -47,7 +47,7 @@ public:
     /* Other methods (not in DOM API) */
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
 };
 }
 

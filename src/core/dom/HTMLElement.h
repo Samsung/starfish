@@ -42,10 +42,10 @@ public:
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues) override;
 
     int tabIndex() override;
 
@@ -184,7 +184,7 @@ public:
     HTMLKnownElement(Document* document, AtomicString localName);
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name()
+    virtual QualifiedName name() override
     {
         return m_name;
     }

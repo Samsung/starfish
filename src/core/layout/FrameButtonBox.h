@@ -31,17 +31,12 @@ class FrameButtonBox : public FrameBlockBox {
 public:
     FrameButtonBox(Node* node, ComputedStyle* style);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameButtonBox";
     }
 
-    virtual bool isFrameButtonBox()
-    {
-        return true;
-    }
-
-    virtual void inlineLayoutAdditionalPath(LayoutContext& ctx);
+    virtual void inlineLayoutAdditionalPath(LayoutContext& ctx) override;
 };
 }
 

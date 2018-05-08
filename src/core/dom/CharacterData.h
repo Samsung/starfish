@@ -59,7 +59,7 @@ public:
         return m_data->length();
     }
 
-    bool isContainerNode()
+    bool isContainerNode() override
     {
         return false;
     }
@@ -89,7 +89,7 @@ public:
         return result;
     }
 #ifdef STARFISH_ENABLE_TEST
-    virtual void dump()
+    virtual void dump() override
     {
         Node::dump();
 

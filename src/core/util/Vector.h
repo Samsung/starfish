@@ -47,8 +47,9 @@ public:
     typedef typename TAllocType::difference_type difference_type;
     typedef typename TAllocType::pointer pointer;
     typedef typename TAllocType::const_pointer const_pointer;
-    typedef __gnu_cxx::__normal_iterator<pointer, Vector> iterator;
-    typedef __gnu_cxx::__normal_iterator<const_pointer, Vector> const_iterator;
+
+    typedef T* iterator;
+    typedef const T* const_iterator;
     typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
     typedef std::reverse_iterator<iterator> reverse_iterator;
 
@@ -198,6 +199,20 @@ public:
     _Iterator erase(_Iterator pos)
     {
         return erase(pos, pos + 1);
+    }
+
+    void erase(reverse_iterator pos)
+    {
+        size_t start = size() - std::distance(rbegin(), pos) - 1;
+        size_t end = start + 1;
+        erase(start, end);
+    }
+
+    void erase(reverse_iterator pos, reverse_iterator pos2)
+    {
+        size_t start = size() - std::distance(rbegin(), pos) - 1;
+        size_t end = size() - std::distance(rbegin(), pos2) - 1;
+        erase(start, end);
     }
 
     size_t size() const
@@ -365,7 +380,7 @@ protected:
         deallocate();
     }
 
-    constexpr size_t toCapacity(size_t size) const
+    size_t toCapacity(size_t size) const
     {
         if (size == 0) {
             return 1;
@@ -392,12 +407,12 @@ protected:
     template <typename _InputIterator>
     void construct(_InputIterator start, _InputIterator end)
     {
-        typedef typename std::__is_integer<_InputIterator>::__type _Integral;
+        typedef typename std::is_integral<_InputIterator> _Integral;
         _construct(start, end, _Integral());
     }
 
     template <class _InIterator>
-    void _construct(_InIterator start, _InIterator end, std::__false_type)
+    void _construct(_InIterator start, _InIterator end, std::false_type)
     {
         typedef
             typename std::iterator_traits<_InIterator>::iterator_category _Tag;
@@ -408,7 +423,6 @@ protected:
     void _construct(_InIterator start, _InIterator end,
                     std::forward_iterator_tag)
     {
-        STARFISH_ASSERT(!(__gnu_cxx::__is_null_pointer(start) && start != end));
         const size_t distance = static_cast<size_t>(std::distance(start, end));
         VectorAllocInfo<T> allocInfo = allocate(distance);
         resetBuffer(allocInfo);

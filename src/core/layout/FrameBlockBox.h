@@ -70,22 +70,23 @@ public:
         m_flags.m_direction = run.m_direction;
     }
 
-    virtual bool isInlineBox() const
+    virtual bool isInlineBox() const override
     {
         return true;
     }
 
-    virtual bool isInlineTextBox() const
+    virtual bool isInlineTextBox() const override
     {
         return true;
     }
 
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
-                                    LayoutUnit dx, LayoutUnit dy);
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+                                    LayoutUnit dx, LayoutUnit dy) override;
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
+                           HitTestStage stage) override;
 
 #ifdef STARFISH_ENABLE_TEST
-    virtual void dump(int depth)
+    virtual void dump(int depth) override
     {
         FrameBox::dump(depth);
         StringView tv = text();
@@ -94,7 +95,7 @@ public:
                (int)charDirection(), (int)tv.start(), (int)tv.end());
     }
 #endif
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "InlineTextBox";
     }
@@ -166,7 +167,8 @@ public:
         return Frame::style(parent, parent->style(), m_flags.m_isFirstLine);
     }
 
-    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    virtual void iterateChildFrameBox(
+        const std::function<void(FrameBox*)>& fn) override
     {
         fn(this);
     }
@@ -240,7 +242,7 @@ public:
     {
     }
 
-    virtual bool isInlineBoxLayoutParentBox() const
+    virtual bool isInlineBoxLayoutParentBox() const override
     {
         return true;
     }
@@ -250,14 +252,15 @@ public:
         return m_boxes;
     }
 
-    virtual void establishesStackingContextIfNeeds()
+    virtual void establishesStackingContextIfNeeds() override
     {
         for (size_t i = 0; i < m_boxes.size(); i++) {
             m_boxes[i]->establishesStackingContextIfNeeds();
         }
     }
 
-    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
+    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(
+        FrameInline* f) override
     {
         InlineNonReplacedBox* ret = nullptr;
         for (size_t i = 0; i < m_boxes.size(); i++) {
@@ -269,7 +272,8 @@ public:
         return ret;
     }
 
-    virtual void computeVisibleRect(Frame::ComputeVisibleRectContext& ctx);
+    virtual void computeVisibleRect(
+        Frame::ComputeVisibleRectContext& ctx) override;
 
     FrameBox* firstInlineBox();
     FrameBox* lastInlineBox();
@@ -283,8 +287,8 @@ public:
         box->setLayoutParent(this);
     }
     void layoutInlineBoxes(LineFormattingContext* ctx, LayoutUnit start);
-    virtual void coordinateVerticalProperties(LineFormattingContext* ctx,
-                                              LayoutUnit yOffset);
+    void coordinateVerticalProperties(LineFormattingContext* ctx,
+                                      LayoutUnit yOffset);
     void registerRelativePositionedBoxesAndMarkPaintFlag(LayoutContext& ctx);
 
     void moveToNewLineBox(LineFormattingContext* ctx, FrameBox* box,
@@ -297,7 +301,8 @@ public:
     void restoreChildrenVerticalPositions(std::vector<LayoutUnit>& positions);
     void quickInlineLayout(LineFormattingContext* ctx);
 
-    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    virtual void iterateChildFrameBox(
+        const std::function<void(FrameBox*)>& fn) override
     {
         fn(this);
         for (size_t i = 0; i < m_boxes.size(); i++) {
@@ -306,7 +311,7 @@ public:
     }
 
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
-                                       HitTestStage stage)
+                                       HitTestStage stage) override
     {
         Frame* result = nullptr;
         for (size_t i = 0; i < m_boxes.size(); i++) {
@@ -325,7 +330,7 @@ public:
     void* operator new[](size_t size) = delete;
 
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
-                                    LayoutUnit dx, LayoutUnit dy);
+                                    LayoutUnit dx, LayoutUnit dy) override;
 
     void seenInlineBox(PaintingInlineStage stage)
     {
@@ -404,43 +409,46 @@ public:
     InlineNonReplacedBox(LineFormattingContext* ctx, FrameInline* frame,
                          bool isFirstLine);
 
-    virtual bool isInlineBox() const
+    virtual bool isInlineBox() const override
     {
         return true;
     }
 
-    virtual bool isInlineNonReplacedBox() const
+    virtual bool isInlineNonReplacedBox() const override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "InlineNonReplacedBox";
     }
 
-    virtual void layoutInline(LineFormattingContext& lineFormattingContext);
-    virtual void paintStackingContextContent(Canvas* canvas);
+    virtual void layoutInline(
+        LineFormattingContext& lineFormattingContext) override;
+    virtual void paintStackingContextContent(Canvas* canvas) override;
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
-                                    LayoutUnit dx, LayoutUnit dy);
-    virtual void paintChildrenWith(PaintingContext& ctx);
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+                                    LayoutUnit dx, LayoutUnit dy) override;
+    virtual void paintChildrenWith(PaintingContext& ctx) override;
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
+                           HitTestStage stage) override;
 
     ComputedStyle* style()
     {
         return Frame::style(this, Frame::style(), m_flags.m_isFirstLine);
     }
 #ifdef STARFISH_ENABLE_TEST
-    virtual void dump(int depth);
+    virtual void dump(int depth) override;
 #endif
-    virtual void establishesStackingContextIfNeeds()
+    virtual void establishesStackingContextIfNeeds() override
     {
         FrameBox::establishesStackingContextIfNeeds();
 
         InlineBoxLayoutParentBox::establishesStackingContextIfNeeds();
     }
 
-    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
+    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(
+        FrameInline* f) override
     {
         if (origin() == f) {
             return this;
@@ -449,7 +457,8 @@ public:
         return InlineBoxLayoutParentBox::firstInlineNonReplacedBox(f);
     }
 
-    virtual void computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
+    virtual void computeVisibleRect(
+        Frame::ComputeVisibleRectContext& ctx) override
     {
         if (!tryUniteVisibleRect(ctx)) {
             return;
@@ -458,7 +467,7 @@ public:
         InlineBoxLayoutParentBox::computeVisibleRect(ctx);
     }
 
-    virtual void paintBackgroundAndBorders(Canvas* canvas);
+    virtual void paintBackgroundAndBorders(Canvas* canvas) override;
 
     FrameInline* origin()
     {
@@ -570,12 +579,12 @@ public:
         setLayoutParent(parent);
     }
 
-    virtual bool isLineBox()
+    virtual bool isLineBox() override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "LineBox";
     }
@@ -637,12 +646,12 @@ public:
     virtual LayoutUnit scrollLeft();
     virtual LayoutUnit scrollTop();
 
-    virtual bool isFrameBlockBox()
+    virtual bool isFrameBlockBox() override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameBlockBox";
     }
@@ -689,25 +698,28 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void quickLayout(LayoutContext& ctx) override;
-    virtual void computePreferredWidth(PreferredWidthContext& ctx);
-    virtual void layoutInline(LineFormattingContext& ctx);
+    virtual void computePreferredWidth(PreferredWidthContext& ctx) override;
+    virtual void layoutInline(LineFormattingContext& ctx) override;
     void computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                              LayoutUnit containgBlockContentWidth);
     void computeContentHeight(LayoutContext& ctx, LayoutUnit contentHeight);
 
 #ifdef STARFISH_ENABLE_TEST
-    virtual void dump(int depth);
+    virtual void dump(int depth) override;
 #endif
     virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintChildrenWith(PaintingContext& ctx) override;
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
+                           HitTestStage stage) override;
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
-                                       HitTestStage stage);
+                                       HitTestStage stage) override;
 
-    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f);
+    virtual InlineNonReplacedBox* firstInlineNonReplacedBox(
+        FrameInline* f) override;
 
-    virtual void establishesStackingContextIfNeeds();
-    virtual void computeVisibleRect(FrameBox::ComputeVisibleRectContext& ctx);
+    virtual void establishesStackingContextIfNeeds() override;
+    virtual void computeVisibleRect(
+        FrameBox::ComputeVisibleRectContext& ctx) override;
 
     virtual bool hasBlockFlow()
     {
@@ -718,13 +730,14 @@ public:
         return (child->isBlockLevel() && child->isNormalFlow());
     }
 
-    virtual bool isSelfCollapsingBlock(LayoutContext& ctx);
+    virtual bool isSelfCollapsingBlock(LayoutContext& ctx) override;
     GCVector<LineBox*>& lineBoxes()
     {
         return m_lineBoxes;
     }
 
-    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    virtual void iterateChildFrameBox(
+        const std::function<void(FrameBox*)>& fn) override
     {
         fn(this);
         if (hasBlockFlow()) {
@@ -772,7 +785,7 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    virtual void paintInlineContent(Canvas* canvas);
+    virtual void paintInlineContentBlock(Canvas* canvas);
     void updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
                                            OverflowValue overflowY);
     void updateScrollWidthAndHeightIfNeeds();
@@ -782,17 +795,17 @@ protected:
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
     void registerRelativePositionIfNeeds(LayoutContext& ctx);
 
-    virtual bool hasFrameTreeItemModel()
+    virtual bool hasFrameTreeItemModel() override
     {
         return true;
     }
 
-    virtual FrameTreeItemModel* frameTreeItemModel()
+    virtual FrameTreeItemModel* frameTreeItemModel() override
     {
         return &m_treeItemModel;
     }
 
-    virtual FrameBlockBoxRareData* createRareData()
+    virtual FrameBlockBoxRareData* createRareData() override
     {
         return new FrameBlockBoxRareData(m_layoutParent);
     }

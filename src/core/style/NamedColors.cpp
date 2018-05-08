@@ -379,13 +379,13 @@ String* NamedColor::namedColorToString(NamedColorValue namedColor)
 Unit::Color NamedColor::namedColorToColor(NamedColorValue namedColor)
 {
     switch (namedColor) {
-#define ADD_COLOR_ITEM(name, value)           \
-    case NamedColorValue::name##NamedColor: { \
-        char r = (value & 0xff0000) >> 16;    \
-        char g = (value & 0xff00) >> 8;       \
-        char b = (value & 0xff);              \
-        char a = 255;                         \
-        return Unit::Color(r, g, b, a);       \
+#define ADD_COLOR_ITEM(name, value)                 \
+    case NamedColorValue::name##NamedColor: {       \
+        unsigned char r = (value & 0xff0000) >> 16; \
+        unsigned char g = (value & 0xff00) >> 8;    \
+        unsigned char b = (value & 0xff);           \
+        unsigned char a = 255;                      \
+        return Unit::Color(r, g, b, a);             \
     }
 
         NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)

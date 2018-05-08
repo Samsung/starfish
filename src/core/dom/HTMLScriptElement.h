@@ -48,7 +48,7 @@ public:
     virtual bool isHTMLScriptElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 
@@ -70,14 +70,15 @@ public:
     bool defer();
     void setDefer(bool b);
 
-    virtual void didCharacterDataModified(String* before, String* after);
-    virtual void didNodeInserted(Node* parent, Node* newChild);
+    virtual void didCharacterDataModified(String* before,
+                                          String* after) override;
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
 
-    virtual void didNodeInsertedToDocumentTree();
-    virtual Node* clone();
+    virtual void didNodeInsertedToDocumentTree() override;
+    virtual Node* clone() override;
     void markParserInserted()
     {
         m_isParserInserted = true;

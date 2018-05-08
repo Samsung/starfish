@@ -68,7 +68,7 @@ public:
     virtual bool isBlob() const override;
     virtual bool isSerializable() const override;
     virtual Serializable* toSerializable() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance();
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     virtual SerializedData* serialize(SerializingMap& memory) override;
     virtual void deserialize(SerializedData* serialized,

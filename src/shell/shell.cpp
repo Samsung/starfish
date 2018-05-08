@@ -583,7 +583,7 @@ int main(int argc, char* argv[])
     sa.sa_flags = SA_RESTART;
 
     sigaction(SIGSEGV, &sa, NULL);
-    sigaction(SIGUSR1, &sa, NULL);
+    sigaction(SIGABRT, &sa, NULL);
 #endif
 
 #ifndef NDEBUG

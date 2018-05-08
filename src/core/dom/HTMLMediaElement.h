@@ -106,7 +106,7 @@ public:
     {
     }
 
-    virtual void processOperationQueue();
+    virtual void processOperationQueue() override;
 };
 
 class MediaOperationQueueDataRequestPrepare : public MediaOperationQueueData {
@@ -117,8 +117,8 @@ public:
     {
     }
 
-    virtual void processOperationQueue();
-    virtual void cancelOperation();
+    virtual void processOperationQueue() override;
+    virtual void cancelOperation() override;
 
     ResourceURL* m_url;
 };
@@ -127,9 +127,9 @@ class MediaOperationQueueDataRequestPlay : public MediaOperationQueueData {
 public:
     MediaOperationQueueDataRequestPlay(HTMLMediaElement* p,
                                        Promise* pm = nullptr);
-    virtual void processOperationQueue();
-    void cancelOperation(DOMException* exception);
-    virtual bool isPlayRequest()
+    virtual void processOperationQueue() override;
+    void cancelOperationWithException(DOMException* exception);
+    virtual bool isPlayRequest() override
     {
         return true;
     }
@@ -144,7 +144,7 @@ public:
     {
     }
 
-    virtual void processOperationQueue();
+    virtual void processOperationQueue() override;
 };
 
 class MediaOperationQueueDataRequestSeek : public MediaOperationQueueData {
@@ -155,7 +155,7 @@ public:
     {
     }
 
-    virtual void processOperationQueue();
+    virtual void processOperationQueue() override;
 
     double m_seekPosition;
 };
@@ -168,7 +168,7 @@ public:
     {
     }
 
-    virtual void processOperationQueue();
+    virtual void processOperationQueue() override;
 };
 
 class MediaOperationQueueDataRequestDispatchEvent
@@ -182,7 +182,7 @@ public:
     {
     }
 
-    virtual void processOperationQueue();
+    virtual void processOperationQueue() override;
     EventTarget* m_target;
     Event* m_event;
 };
@@ -231,14 +231,14 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLMediaElement() const override;
 
-    virtual void didNodeInserted(Node* parent, Node* newChild);
-    virtual void didNodeRemoved(Node* parent, Node* oldChild);
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
-    virtual void didNodeInsertedToDocumentTree();
-    virtual void didNodeRemovedFromDocumentTree();
-    virtual void onDOMContentLoaded();
+                                     bool attributeRemoved) override;
+    virtual void didNodeInsertedToDocumentTree() override;
+    virtual void didNodeRemovedFromDocumentTree() override;
+    void onDOMContentLoaded();
 
     TextTrackList* textTracks()
     {

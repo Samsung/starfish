@@ -44,13 +44,13 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLTrackElement() const override;
 
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
-    virtual void didNodeInsertedToDocumentTree();
-    virtual void didNodeRemovedFromDocumentTree();
+                                     bool attributeRemoved) override;
+    virtual void didNodeInsertedToDocumentTree() override;
+    virtual void didNodeRemovedFromDocumentTree() override;
 
     void load();
     void load(String* srcURL);

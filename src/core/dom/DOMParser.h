@@ -37,7 +37,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isDOMParser() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance();
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     Document* parseFromString(String* str, String* type);
 };

@@ -47,7 +47,7 @@ public:
     virtual bool isHTMLObjectElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 
@@ -58,7 +58,7 @@ public:
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
 
 protected:
     HTMLObjectElementContent* m_content;
@@ -117,7 +117,7 @@ public:
     }
 
     virtual void drawContent(Compositor* canvas, const LayoutRect& contentRect,
-                             const LayoutRect& absContentRect);
+                             const LayoutRect& absContentRect) override;
 };
 
 #ifdef STARFISH_ENABLE_AVPLAY
@@ -128,7 +128,7 @@ public:
     {
     }
 
-    virtual bool needsGraphicsBuffer()
+    virtual bool needsGraphicsBuffer() override
     {
         return true;
     }

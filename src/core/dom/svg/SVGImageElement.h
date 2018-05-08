@@ -45,19 +45,19 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGImageElement() const override;
 
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
-    virtual bool needsGeometryAttributes()
+    virtual bool needsGeometryAttributes() override
     {
         return true;
     }
 
-    virtual bool needsSizingAttributes()
+    virtual bool needsSizingAttributes() override
     {
         return true;
     }
 
-    virtual bool needsPreserveAspectRatioValue()
+    virtual bool needsPreserveAspectRatioValue() override
     {
         return true;
     }

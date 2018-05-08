@@ -1215,7 +1215,7 @@ public:
         if (m_valueKind == Length) {
             return m_value.m_length.toLength();
         } else {
-            STARFISH_ASSERT(m_valueKind == Calc);
+            STARFISH_ASSERT(m_valueKind == CalcValueKind);
             return ::StarFish::Length(calcValue());
         }
     }
@@ -1228,7 +1228,7 @@ public:
             return ::StarFish::Length(::StarFish::Length::Percent,
                                       percentageValue());
         } else {
-            STARFISH_ASSERT(m_valueKind == Calc);
+            STARFISH_ASSERT(m_valueKind == CalcValueKind);
             return ::StarFish::Length(calcValue());
         }
     }

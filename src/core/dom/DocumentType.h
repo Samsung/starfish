@@ -66,7 +66,7 @@ public:
         return new DocumentType(document(), m_name, m_publicId, m_systemId);
     }
 
-    virtual Element* parentElement()
+    virtual Element* parentElement() override
     {
         return nullptr;
     }
@@ -88,7 +88,7 @@ public:
         // TODO
     }
 
-    bool isContainerNode()
+    bool isContainerNode() override
     {
         return false;
     }

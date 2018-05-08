@@ -110,17 +110,17 @@ class FrameFlexibleBox : public FrameBlockBox {
 public:
     FrameFlexibleBox(Node* node, ComputedStyle* style);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameFlexibleBox";
     }
 
-    virtual bool isFrameFlexibleBox()
+    virtual bool isFrameFlexibleBox() override
     {
         return true;
     }
 
-    virtual bool hasBlockFlow()
+    virtual bool hasBlockFlow() override
     {
         return true;
     }
@@ -132,7 +132,7 @@ public:
     bool isLtrDirection();
     bool isTtbDirection();
 
-    virtual void computePreferredWidth(PreferredWidthContext& ctx);
+    virtual void computePreferredWidth(PreferredWidthContext& ctx) override;
     void layoutFlex(LayoutContext& ctx);
 };
 }

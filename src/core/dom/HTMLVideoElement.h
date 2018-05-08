@@ -36,11 +36,11 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLVideoElement() const override;
 
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
 
     uint32_t width();
     void setWidth(uint32_t width);

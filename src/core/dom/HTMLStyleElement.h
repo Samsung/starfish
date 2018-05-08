@@ -41,19 +41,20 @@ public:
     virtual bool isHTMLStyleElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
-    bool disabled();
+    virtual bool disabled() override;
     void setDisabled(bool disabled);
     StyleSheet* sheet();
 
     /* Other methods (not in DOM API) */
-    virtual void didCharacterDataModified(String* before, String* after);
-    virtual void didNodeInsertedToDocumentTree();
-    virtual void didNodeRemovedFromDocumentTree();
-    virtual void didNodeInserted(Node* parent, Node* newChild);
-    virtual void didNodeRemoved(Node* parent, Node* oldChild);
-    virtual void finishParsing()
+    virtual void didCharacterDataModified(String* before,
+                                          String* after) override;
+    virtual void didNodeInsertedToDocumentTree() override;
+    virtual void didNodeRemovedFromDocumentTree() override;
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
+    virtual void finishParsing() override
     {
         HTMLElement::finishParsing();
         if (isInDocumentScopeAndDocumentParticipateInRendering()) {

@@ -47,19 +47,20 @@ public:
     virtual bool isHTMLOptionElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     // Interface Option
-    virtual String* value();
-    virtual void setValue(String* value);
+    virtual String* value() override;
+    virtual void setValue(String* value) override;
     String* text();
     void setText(String* value);
     int index();
 
     // Other methods
-    bool handleDefaultEvent(Event* event);
+    bool handleDefaultEvent(Event* event) override;
     void didAttributeChanged(QualifiedName name, String* old, String* val,
-                             bool attributeCreated, bool attributeRemoved);
+                             bool attributeCreated,
+                             bool attributeRemoved) override;
     HTMLSelectElement* selectElement();
 
     bool selected();
@@ -71,7 +72,7 @@ public:
     bool selectedness();
     void setSelectedness(bool selectedness);
 
-    bool isDisabled();
+    bool isDisabled() override;
 
     bool defaultSelected();
 

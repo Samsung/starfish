@@ -447,8 +447,7 @@ public:
                 int code = gatherEscape();
                 if (code == -1) {
                     return CSSToken::createStringValueToken(
-                        m_parser, CSSToken::STRING_TYPE,
-                        std::move(CSSTokenString()));
+                        m_parser, CSSToken::STRING_TYPE, CSSTokenString());
                 } else {
                     builder.appendChar((char32_t)code);
                 }
@@ -624,8 +623,9 @@ public:
 
     RefPtr<CSSToken> parseAtKeyword(int c)
     {
+        auto s = gatherIdent(c);
         return CSSToken::createStringValueToken(m_parser, CSSToken::ATRULE_TYPE,
-                                                std::move(gatherIdent(c)));
+                                                std::move(s));
     }
 
     RefPtr<CSSToken> nextToken(bool isURL = false)

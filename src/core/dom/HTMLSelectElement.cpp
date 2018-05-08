@@ -331,7 +331,7 @@ void HTMLSelectElement::setSelectedIndex(size_t index)
     }
 }
 
-void HTMLSelectElement::reset(HTMLOptionElement* resetFrom)
+void HTMLSelectElement::resetFromOption(HTMLOptionElement* resetFrom)
 {
     Nullable<String*> val =
         getAttribute(starFish()->staticStrings()->m_multiple);

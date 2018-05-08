@@ -37,8 +37,8 @@ public:
 
     // 4.4 Interface Node
 
-    virtual String* localName();
-    virtual QualifiedName name();
+    virtual String* localName() override;
+    virtual QualifiedName name() override;
 
     // 4.10.6 Interface Button
     String* type() override;

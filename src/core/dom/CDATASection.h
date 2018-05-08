@@ -35,8 +35,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isCDATASection() const override;
 
-    virtual String* nodeName();
-    virtual String* localName();
+    virtual String* nodeName() override;
+    virtual String* localName() override;
 
     virtual Node* clone() override
     {

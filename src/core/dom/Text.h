@@ -42,9 +42,9 @@ public:
         return Node::TEXT_NODE;
     }
 
-    virtual String* nodeName();
+    virtual String* nodeName() override;
 
-    virtual String* localName();
+    virtual String* localName() override;
 
     /* 4.10 Interface Text */
 

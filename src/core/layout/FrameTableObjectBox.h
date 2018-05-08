@@ -30,8 +30,7 @@ namespace StarFish {
 class FrameTableObjectBox : public FrameBlockBox {
 public:
     FrameTableObjectBox(Node* node, ComputedStyle* style);
-    virtual const char* name() = 0;
-    virtual bool isFrameTableObjectBox()
+    virtual bool isFrameTableObjectBox() override
     {
         return true;
     }

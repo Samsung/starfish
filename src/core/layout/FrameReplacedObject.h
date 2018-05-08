@@ -32,20 +32,16 @@ public:
         computeStyleFlags();
     }
 
-    virtual void computeStyleFlags();
-    virtual bool isFrameReplacedObject()
-    {
-        return true;
-    }
+    virtual void computeStyleFlags() override;
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameReplacedObject";
     }
 
-    virtual IntrinsicSize intrinsicSize();
+    virtual IntrinsicSize intrinsicSize() override;
 
-    virtual void didCompsiteStackingContext(Compositor* c);
+    virtual void didCompsiteStackingContext(Compositor* c) override;
 
     void* operator new(size_t size)
     {

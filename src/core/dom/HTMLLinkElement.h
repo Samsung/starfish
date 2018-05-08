@@ -65,7 +65,7 @@ public:
     void setReferrerPolicy(String* policy);
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
     StyleSheet* sheet();
@@ -74,9 +74,9 @@ public:
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
-    virtual void didNodeInsertedToDocumentTree();
-    virtual void didNodeRemovedFromDocumentTree();
+                                     bool attributeRemoved) override;
+    virtual void didNodeInsertedToDocumentTree() override;
+    virtual void didNodeRemovedFromDocumentTree() override;
     void checkLoadStyleSheet();
     void loadStyleSheet();
     void unloadStyleSheetIfExists();

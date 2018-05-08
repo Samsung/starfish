@@ -418,9 +418,9 @@ void FrameInputBox::paintCaret(Canvas* canvas)
     canvas->restore();
 }
 
-void FrameInputBox::paintInlineContent(Canvas* canvas)
+void FrameInputBox::paintInlineContentBlock(Canvas* canvas)
 {
-    FrameBlockBox::paintInlineContent(canvas);
+    FrameBlockBox::paintInlineContentBlock(canvas);
     paintCaret(canvas);
 }
 

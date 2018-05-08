@@ -76,8 +76,6 @@
             '-Wall',
             '-Wextra',
             '-Werror',
-            '-Wno-unused-but-set-variable',
-            '-Wno-unused-but-set-parameter',
             '-Wno-unused-parameter',
             '-Wno-unused-result',
             '-Wno-unused-variable',
@@ -87,8 +85,6 @@
             '-fno-math-errno',
             '-fdata-sections',
             '-ffunction-sections',
-            '-frounding-math',
-            '-fsignaling-nans',
             '-Wno-invalid-offsetof',
             '-fvisibility=hidden',
             '-fno-omit-frame-pointer',
@@ -127,6 +123,7 @@
                 'custom%': 'none',
                 'touchUi%': '1',
                 'deplib%': 'shared_library',
+                'compiler%': 'gcc',
             },
             'component%':'<(component)',
             'backend%': '<(backend)',
@@ -138,6 +135,29 @@
             'deplib%': '<(deplib)',
 
             'conditions': [
+                ['compiler=="gcc"', {
+                    'cflags_compiler': [
+                        '-frounding-math',
+                        '-fsignaling-nans',
+                        '-Wno-unused-but-set-variable',
+                        '-Wno-unused-but-set-parameter',
+                    ],
+                    'libraries_compiler': [
+                    ]
+                }],
+                ['compiler=="clang"', {
+                    'cflags_compiler': [
+                        '-fno-fast-math',
+                        '-fno-unsafe-math-optimizations',
+                        '-fdenormal-fp-math=ieee',
+                        '-stdlib=libc++',
+                        '-Wno-expansion-to-defined',
+                        '-Wno-dynamic-class-memaccess',
+                    ],
+                    'libraries_compiler': [
+                        '-stdlib=libc++',
+                    ],
+                }],
                 ['platform=="linux"', {
                     'cflags_extra': [
                     ],
@@ -250,6 +270,8 @@
         'platform%': '<(platform)',
         'custom%': '<(custom)',
         'deplib%': '<(deplib)',
+        'libraries_compiler%': '<(libraries_compiler)',
+        'cflags_compiler%': '<(cflags_compiler)',
         'include_dirs_extra%': '<(include_dirs_extra)',
         'sources_extra%': '<(sources_extra)',
         'libraries_extra%': '<(libraries_extra)',

@@ -121,7 +121,6 @@ public:
     GridLine(LayoutUnit fr, bool computed)
         : m_offset(0)
         , m_fr(fr)
-        , m_lineName(nullptr)
         , m_computed(computed)
         , m_fixed(true)
         , m_newLine(false)
@@ -133,7 +132,6 @@ public:
     GridLine(LayoutUnit offset)
         : m_offset(offset)
         , m_fr(0)
-        , m_lineName(nullptr)
         , m_computed(true)
         , m_fixed(true)
         , m_newLine(false)
@@ -145,7 +143,6 @@ public:
 private:
     LayoutUnit m_offset;
     LayoutUnit m_fr;
-    String* m_lineName;
     bool m_computed;
     bool m_fixed;
     bool m_newLine;
@@ -259,23 +256,23 @@ class FrameGridBox : public FrameBlockBox {
 public:
     FrameGridBox(Node* node, ComputedStyle* style);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameGridBox";
     }
 
-    virtual bool isFrameGridBox()
+    virtual bool isFrameGridBox() override
     {
         return true;
     }
 
-    virtual bool hasBlockFlow()
+    virtual bool hasBlockFlow() override
     {
         return true;
     }
 
     void layoutGrid(LayoutContext& ctx);
-    void computePreferredWidth(PreferredWidthContext& ctx);
+    void computePreferredWidth(PreferredWidthContext& ctx) override;
 };
 
 template <typename dataType>

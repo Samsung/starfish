@@ -42,18 +42,14 @@ public:
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
 
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues) override;
 
     HTMLTableElement* tableElement();
 
-    // 4.4 Interface Node
-    virtual QualifiedName name() = 0;
-
     // table cell related
-
     uint32_t colSpan();
     void setColSpan(uint32_t colSpan);
 

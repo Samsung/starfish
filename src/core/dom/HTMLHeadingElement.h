@@ -36,7 +36,7 @@ public:
     virtual bool isHTMLHeadingElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name()
+    virtual QualifiedName name() override
     {
         return m_name;
     }
@@ -45,9 +45,9 @@ public:
     void setAlign(String* align);
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
     virtual void styleForPresentationAttribute(
-        CSSStyleValuePairVectorHolder& cssValues);
+        CSSStyleValuePairVectorHolder& cssValues) override;
 
 protected:
     QualifiedName m_name;

@@ -31,18 +31,18 @@ public:
     {
     }
 
-    virtual bool isFrameInline()
+    virtual bool isFrameInline() override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameInline";
     }
 
-    virtual void computePreferredWidth(PreferredWidthContext& ctx);
-    virtual void layoutInline(LineFormattingContext& ctx);
+    virtual void computePreferredWidth(PreferredWidthContext& ctx) override;
+    virtual void layoutInline(LineFormattingContext& ctx) override;
     virtual FrameInline* firstFrameInline(Node* n) override
     {
         if (n == node()) {
@@ -62,7 +62,7 @@ public:
     }
 
 #ifdef STARFISH_ENABLE_TEST
-    virtual void dump(int depth)
+    virtual void dump(int depth) override
     {
         Frame::dump(depth);
     }
@@ -72,12 +72,12 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    virtual bool hasFrameTreeItemModel()
+    virtual bool hasFrameTreeItemModel() override
     {
         return true;
     }
 
-    virtual FrameTreeItemModel* frameTreeItemModel()
+    virtual FrameTreeItemModel* frameTreeItemModel() override
     {
         return &m_treeItemModel;
     }

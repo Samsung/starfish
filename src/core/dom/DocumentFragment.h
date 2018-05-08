@@ -41,9 +41,9 @@ public:
         return Node::NodeType::DOCUMENT_FRAGMENT_NODE;
     }
 
-    virtual String* nodeName();
+    virtual String* nodeName() override;
 
-    virtual Node* clone();
+    virtual Node* clone() override;
 
     Element* getElementById(String* id);
 };

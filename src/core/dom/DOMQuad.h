@@ -33,9 +33,8 @@ class DOMQuad : public ScriptWrappable {
 public:
     DOMQuad(Document* document, const DOMPointInit&, const DOMPointInit&,
             const DOMPointInit&, const DOMPointInit&);
-    DOMQuad(const DOMRectInit&);
 
-    virtual ScriptBindingInstance* scriptBindingInstance()
+    virtual ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_scriptBindingInstance;
     }

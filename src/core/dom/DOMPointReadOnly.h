@@ -28,7 +28,7 @@ class DOMPointReadOnly : public ScriptWrappable {
 public:
     DOMPointReadOnly(Document* document, double x, double y, double z,
                      double w);
-    virtual ScriptBindingInstance* scriptBindingInstance()
+    virtual ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_scriptBindingInstance;
     }

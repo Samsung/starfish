@@ -28,12 +28,12 @@ class FrameQuoteText : public FrameText {
 public:
     FrameQuoteText(Node* node, QuoteValue val);
 
-    bool isFrameQuoteText() const
+    bool isFrameQuoteText() const override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameQuoteText";
     }

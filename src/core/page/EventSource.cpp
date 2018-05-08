@@ -48,7 +48,6 @@ public:
     EventSourceResourceRequestClient(EventSource* es)
         : m_eventSource(es)
         , m_isResponseValid(false)
-        , m_lastResponseReadingPosition(0)
         , m_textConverter(nullptr)
     {
     }
@@ -73,7 +72,8 @@ public:
         }
     }
 
-    void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
+    void onReadyStateChange(ResourceRequest* request,
+                            bool fromExplicit) override
     {
         if (request->readyState() == ResourceRequest::HEADERS_RECEIVED) {
             uint16_t statusCode = request->status();
@@ -179,7 +179,6 @@ public:
 private:
     EventSource* m_eventSource;
     bool m_isResponseValid;
-    size_t m_lastResponseReadingPosition;
     TextConverter* m_textConverter;
 };
 

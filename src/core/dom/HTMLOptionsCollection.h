@@ -40,7 +40,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLOptionsCollection() const;
+    virtual bool isHTMLOptionsCollection() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     size_t length() const;

@@ -32,17 +32,17 @@ class FrameTableColBox : public FrameTableCellBox {
 public:
     FrameTableColBox(Node* node, ComputedStyle* style);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameTableColBox";
     }
 
-    virtual bool isFrameTableCellBox()
+    virtual bool isFrameTableCellBox() override
     {
         return false;
     }
 
-    virtual bool isFrameTableColBox()
+    virtual bool isFrameTableColBox() override
     {
         return true;
     }
@@ -53,7 +53,7 @@ public:
 private:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
-    virtual void paintContent(PaintingContext& ctx);
+    virtual void paintContent(PaintingContext& ctx) override;
 };
 }
 
