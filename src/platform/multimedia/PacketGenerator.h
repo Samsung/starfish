@@ -24,7 +24,7 @@
 
 namespace StarFish {
 
-class MediaPacket;
+struct MediaPacket;
 class PacketGenerator : public gc {
 public:
     PacketGenerator(MediaCodec codec)

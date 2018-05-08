@@ -33,7 +33,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLTableSectionElement() const;
+    virtual bool isHTMLTableSectionElement() const override;
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
@@ -43,9 +43,6 @@ public:
     HTMLElement* insertRow(long index = -1);
 
     void deleteRow(long index);
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() = 0;
 
     // only for DOM conformance test
     String* ch();

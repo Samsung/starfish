@@ -183,8 +183,8 @@ public:
         return DOCUMENT_NODE;
     }
 
-    virtual String* nodeName();
-    virtual String* localName();
+    virtual String* nodeName() override;
+    virtual String* localName() override;
 
     Element* documentElement();
 
@@ -350,8 +350,8 @@ public:
         return m_documentBuilder;
     }
 
-    virtual void didNodeInserted(Node* parent, Node* newChild);
-    virtual void didNodeRemoved(Node* parent, Node* oldChild);
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
 
     ScriptWrappable* defaultNamedGetter(String* name);
     HTMLCollection* namedAccess(String* name);

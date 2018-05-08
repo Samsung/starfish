@@ -47,9 +47,9 @@ public:
     typedef typename TAllocType::difference_type difference_type;
     typedef typename TAllocType::pointer pointer;
     typedef typename TAllocType::const_pointer const_pointer;
-    typedef __gnu_cxx::__normal_iterator<pointer, BasicString> iterator;
-    typedef __gnu_cxx::__normal_iterator<const_pointer, BasicString>
-        const_iterator;
+
+    typedef T* iterator;
+    typedef const T* const_iterator;
     typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
     typedef std::reverse_iterator<iterator> reverse_iterator;
 
@@ -192,7 +192,7 @@ public:
                                        _InputIterator startToInsert,
                                        _InputIterator endToInsert)
     {
-        typedef typename std::__is_integer<_InputIterator>::__type _Integral;
+        typedef typename std::is_integral<_InputIterator>::__type _Integral;
         return replace_dispatch(startToErase, endToErase, startToInsert,
                                 endToInsert, _Integral());
     }
@@ -351,7 +351,7 @@ protected:
         setLen(0);
     }
 
-    constexpr size_t toCapacity(size_t size) const
+    size_t toCapacity(size_t size) const
     {
         if (size == 0) {
             return 1;
@@ -378,12 +378,12 @@ protected:
     template <typename _InputIterator>
     void construct(_InputIterator start, _InputIterator end)
     {
-        typedef typename std::__is_integer<_InputIterator>::__type _Integral;
+        typedef typename std::is_integral<_InputIterator> _Integral;
         _construct(start, end, _Integral());
     }
 
     template <class _Integer>
-    void _construct(_Integer start, _Integer end, std::__true_type)
+    void _construct(_Integer start, _Integer end, std::true_type)
     {
         _construct(static_cast<size_t>(start), static_cast<T>(end));
     }
@@ -397,7 +397,7 @@ protected:
     }
 
     template <class _InIterator>
-    void _construct(_InIterator start, _InIterator end, std::__false_type)
+    void _construct(_InIterator start, _InIterator end, std::false_type)
     {
         typedef
             typename std::iterator_traits<_InIterator>::iterator_category _Tag;
@@ -408,7 +408,6 @@ protected:
     void _construct(_InIterator start, _InIterator end,
                     std::forward_iterator_tag)
     {
-        STARFISH_ASSERT(!(__gnu_cxx::__is_null_pointer(start) && start != end));
         const size_t distance = static_cast<size_t>(std::distance(start, end));
         AllocInfo<T> allocInfo = allocate(distance + 1);
         resetBuffer(allocInfo);
@@ -478,7 +477,7 @@ protected:
     BasicString<T, Allocator>& replace_dispatch(_Iterator startToErase,
                                                 _Iterator endToErase,
                                                 _Integer n, _Integer val,
-                                                std::__true_type)
+                                                std::true_type)
     {
         return replace(startToErase - begin(), endToErase - startToErase, n,
                        val);
@@ -489,7 +488,7 @@ protected:
                                                 _Iterator endToErase,
                                                 _InputIterator startToInsert,
                                                 _InputIterator endToInsert,
-                                                std::__false_type);
+                                                std::false_type);
 
     // Important! `m_size` update should follow `deallocate()`
     void deallocate()
@@ -506,10 +505,10 @@ protected:
     {
         const difference_type d = difference_type(n1 - n2);
 
-        if (d > __gnu_cxx::__numeric_traits<int>::__max) {
-            return __gnu_cxx::__numeric_traits<int>::__max;
-        } else if (d < __gnu_cxx::__numeric_traits<int>::__min) {
-            return __gnu_cxx::__numeric_traits<int>::__min;
+        if (d > std::numeric_limits<int>::max()) {
+            return std::numeric_limits<int>::max();
+        } else if (d < std::numeric_limits<int>::min()) {
+            return std::numeric_limits<int>::min();
         } else {
             return int(d);
         }

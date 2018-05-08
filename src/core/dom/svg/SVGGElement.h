@@ -37,8 +37,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGGElement() const override;
 
-    virtual QualifiedName name();
-    virtual bool needsGeometryAttributes()
+    virtual QualifiedName name() override;
+    virtual bool needsGeometryAttributes() override
     {
         return false;
     }

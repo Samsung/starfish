@@ -106,8 +106,7 @@ class CSSVariableSyntaxTreeBuilder : public gc {
 
 public:
     CSSVariableSyntaxTreeBuilder()
-        : m_data(nullptr)
-        , m_valid(true)
+        : m_valid(true)
     {
         m_variableContainers.clear();
     }
@@ -126,7 +125,6 @@ public:
     }
 
 private:
-    const CSSTokenValue* m_data;
     bool m_valid;
     GCVector<VariableContainer> m_variableContainers;
 };

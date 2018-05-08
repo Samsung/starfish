@@ -22,7 +22,7 @@
 
 namespace StarFish {
 class PlatformKeyEventData {
-    friend class KeyboardEventInit;
+    friend struct KeyboardEventInit;
     STARFISH_MAKE_STACK_ALLOCATED()
 public:
     PlatformKeyEventData()

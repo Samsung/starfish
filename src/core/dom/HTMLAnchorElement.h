@@ -39,7 +39,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLAnchorElement() const;
+    virtual bool isHTMLAnchorElement() const override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* val, bool attributeCreated,
@@ -51,7 +51,7 @@ public:
     void setReferrerPolicy(String* policy);
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
     virtual bool handleDefaultEvent(Event* event) override;

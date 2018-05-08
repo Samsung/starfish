@@ -51,7 +51,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isGeoposition() const override;
 
-    virtual ScriptBindingInstance* scriptBindingInstance()
+    virtual ScriptBindingInstance* scriptBindingInstance() override
     {
         return DocumentHoldable::scriptBindingInstance();
     }

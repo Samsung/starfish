@@ -99,7 +99,7 @@ void HTMLOptionElement::setSelected(bool selected)
 
     HTMLSelectElement* select = selectElement();
     if (select) {
-        select->reset(this);
+        select->resetFromOption(this);
     }
 }
 
@@ -255,7 +255,7 @@ void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
         setSelectedness(!attributeRemoved);
         HTMLSelectElement* select = selectElement();
         if (select) {
-            select->reset(this);
+            select->resetFromOption(this);
         }
         return;
     }

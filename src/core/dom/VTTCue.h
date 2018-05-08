@@ -48,17 +48,6 @@ public:
     {
         setPayload(text);
     }
-
-#ifndef NDEBUG
-    virtual void dump()
-    {
-        printf("[VTTCue]\n");
-        printf("    StartTime : %lf\n", m_timeRange.start());
-        printf("    EndTime : %lf\n", m_timeRange.end());
-        auto s = m_payload->toUTF8NonGCString();
-        printf("    text : \n\"%s\"\n", s.data());
-    }
-#endif
 };
 }
 

@@ -96,19 +96,19 @@ public:
     void increaseRowHeightBy(LayoutUnit rowHeightOffset);
     void applyVerticalAlign(LayoutContext& ctx);
 
-    virtual void paintBackgroundAndBorders(Canvas* canvas);
+    virtual void paintBackgroundAndBorders(Canvas* canvas) override;
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameTableSection";
     }
 
-    virtual bool isFrameTableSectionBox()
+    virtual bool isFrameTableSectionBox() override
     {
         return true;
     }
 
-    virtual bool hasBlockFlow()
+    virtual bool hasBlockFlow() override
     {
         // FrameTableSection always contains blockflow
         return true;
@@ -133,7 +133,8 @@ public:
     void* operator new[](size_t size) = delete;
 
 private:
-    void layout(LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat);
+    void layout(LayoutContext& ctx,
+                Frame::LayoutWantToResolve resolveWhat) override;
 
     void calAbsoluteColumnIndicesForCellsAffectedByColspan(
         FrameTableCellBox* cell, size_t rowId);

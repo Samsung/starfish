@@ -33,10 +33,10 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLBodyElement() const;
+    virtual bool isHTMLBodyElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
 /* Other methods (not in DOM API) */
 
@@ -74,11 +74,11 @@ public:
 #undef OVERRIDE
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle);
+                                         ComputedStyle* newStyle) override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
+                                     bool attributeRemoved) override;
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;

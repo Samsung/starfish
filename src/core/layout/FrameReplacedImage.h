@@ -31,18 +31,18 @@ public:
     {
     }
 
-    virtual bool isFrameReplacedImage()
+    virtual bool isFrameReplacedImage() override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameReplacedImage";
     }
 
-    virtual void paintReplaced(Canvas* canvas);
-    virtual IntrinsicSize intrinsicSize();
+    virtual void paintReplaced(Canvas* canvas) override;
+    virtual IntrinsicSize intrinsicSize() override;
 
     void* operator new(size_t size)
     {

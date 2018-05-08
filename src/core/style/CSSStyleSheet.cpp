@@ -41,7 +41,7 @@ public:
     {
     }
 
-    ScriptBindingInstance* scriptBindingInstance()
+    ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_styleSheet->scriptBindingInstance();
     }
@@ -167,8 +167,8 @@ static unsigned calcSpecificity(CSSSelectorList& selectorList)
     return total;
 }
 
-static bool compareSpecificity(std::pair<StyleRule*, ResourceURL*> r1,
-                               std::pair<StyleRule*, ResourceURL*> r2)
+static bool compareSpecificity(const std::pair<StyleRule*, ResourceURL*>& r1,
+                               const std::pair<StyleRule*, ResourceURL*>& r2)
 {
     return calcSpecificity(r1.first->selectorList()) <
            calcSpecificity(r2.first->selectorList());

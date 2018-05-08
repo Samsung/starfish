@@ -169,7 +169,7 @@ public:
     virtual bool isHTMLFormElement() const override;
 
     // 4.4 Interface Node
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     // 4.10 Interface Form
     String* action();

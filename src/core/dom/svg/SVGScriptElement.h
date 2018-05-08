@@ -35,7 +35,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGScriptElement() const override;
 
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
 protected:
 };

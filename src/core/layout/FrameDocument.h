@@ -35,12 +35,12 @@ public:
     {
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameDocument";
     }
 
-    virtual bool isFrameDocument()
+    virtual bool isFrameDocument() override
     {
         return true;
     }
@@ -48,7 +48,8 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void paintContent(PaintingContext& ctx) override;
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage);
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
+                           HitTestStage stage) override;
 
     virtual LayoutUnit scrollLeft() override
     {

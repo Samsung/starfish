@@ -75,7 +75,7 @@ public:
         }
     }
 
-    Nullable<String*> prefix()
+    Nullable<String*> prefix() override
     {
         auto v = m_name.prefix();
         if (v.hasValue()) {
@@ -106,12 +106,12 @@ public:
         return ATTRIBUTE_NODE;
     }
 
-    virtual String* nodeName()
+    virtual String* nodeName() override
     {
         return name();
     }
 
-    virtual String* localName()
+    virtual String* localName() override
     {
         return m_name.localName();
     }
@@ -134,7 +134,7 @@ public:
         m_standAloneValue = attachedLocalName;
     }
 
-    bool isContainerNode()
+    bool isContainerNode() override
     {
         return false;
     }

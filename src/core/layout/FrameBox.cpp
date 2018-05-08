@@ -1217,8 +1217,8 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                 Unit::Rect paddingRect = makeRect(BoxValue::PaddingBoxBoxValue);
                 Unit::Rect shadowRect(
                     paddingRect.x(), paddingRect.y(),
-                    paddingRect.width() + abs(shadow->offsetX()),
-                    paddingRect.height() + abs(shadow->offsetY()));
+                    paddingRect.width() + std::abs(shadow->offsetX()),
+                    paddingRect.height() + std::abs(shadow->offsetY()));
 
                 int ix = 0, iy = 0, iw = 0, ih = 0;
                 LayoutUnit x = ((shadow->offsetX() < 0)

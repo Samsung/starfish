@@ -182,10 +182,10 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual void postInit(ScriptBindingInstance* instance) override;
-    virtual bool isWindow() const;
+    virtual bool isWindow() const override;
     virtual void onGlobalPointingEvent(float x, float y,
                                        GlobalPointingEventKind kind) override;
-    virtual bool handleDefaultEvent(Event* event);
+    virtual bool handleDefaultEvent(Event* event) override;
     void deleteScriptBindingInstance();
     void dispose();
 

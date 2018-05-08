@@ -80,7 +80,7 @@ enum HitTestStage {
 class LineBox;
 class MarginInfo;
 class FloatingBoxInfo;
-class TextToken;
+struct TextToken;
 
 struct MarginCollapseResult {
     LayoutUnit m_advanceY;

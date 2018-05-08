@@ -28,12 +28,12 @@ class FrameTableCaptionBox : public FrameTableObjectBox {
 public:
     FrameTableCaptionBox(Node* node, ComputedStyle* style);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameTableCaption";
     }
 
-    virtual bool isFrameTableCaptionBox()
+    virtual bool isFrameTableCaptionBox() override
     {
         return true;
     }

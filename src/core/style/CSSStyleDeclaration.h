@@ -273,13 +273,13 @@ public:
 
     virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    CSSRule* parentRule() const
+    virtual CSSRule* parentRule() const override
     {
         return m_parentRule;
     }
 
     CSSStyleSheet* parentStyleSheet() const;
-    void setCssText(String* text);
+    void setCssText(String* text) override;
 
 protected:
     CSSRule* m_parentRule;

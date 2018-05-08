@@ -31,7 +31,7 @@ class FrameOptGroupBox : public FrameBlockBox {
 public:
     FrameOptGroupBox(Node* node, ComputedStyle* style);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameOptGroupBox";
     }

@@ -75,13 +75,4 @@ DOMQuad::DOMQuad(Document* document, const DOMPointInit& p1,
 {
     m_bounds = nullptr;
 }
-
-DOMQuad::DOMQuad(const DOMRectInit& rect)
-    : DOMQuad(m_scriptBindingInstance->ownerDocument(),
-              DOMPointInit(rect.x, rect.y),
-              DOMPointInit(rect.x + rect.width, rect.y),
-              DOMPointInit(rect.x + rect.width, rect.y + rect.height),
-              DOMPointInit(rect.x, rect.y + rect.height))
-{
-}
 }

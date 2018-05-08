@@ -36,7 +36,7 @@ public:
     void layoutWidth(LayoutContext& ctx);
     void layoutHeight(LayoutContext& ctx);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameTableCell";
     }
@@ -53,7 +53,7 @@ public:
     void updateColspanForLayout(size_t colspan);
     void resetColspanForLayout();
 
-    virtual bool isFrameTableCellBox()
+    virtual bool isFrameTableCellBox() override
     {
         return true;
     }
@@ -90,7 +90,7 @@ public:
         m_maxCellWidth = maxCellWidth;
     }
 
-    void paintBackgroundAndBorders(Canvas* canvas);
+    void paintBackgroundAndBorders(Canvas* canvas) override;
 
     void applyVerticalAlign(LayoutContext& ctx);
     LayoutUnit calBaseline(LayoutContext& ctx);

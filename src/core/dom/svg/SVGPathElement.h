@@ -35,9 +35,9 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGPathElement() const override;
 
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
-    virtual bool needsGeometryAttributes()
+    virtual bool needsGeometryAttributes() override
     {
         return false;
     }

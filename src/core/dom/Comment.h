@@ -41,15 +41,15 @@ public:
         return Node::COMMENT_NODE;
     }
 
-    virtual String* nodeName();
-    virtual String* localName();
+    virtual String* nodeName() override;
+    virtual String* localName() override;
 
     virtual Node* clone() override
     {
         return new Comment(document(), data());
     }
 
-    bool isContainerNode()
+    bool isContainerNode() override
     {
         return false;
     }

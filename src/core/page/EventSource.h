@@ -101,8 +101,10 @@ public:
     void didHeaderReceived(const HeaderMap& headrs);
     void didDataReceived(const char*, size_t length);
 
-    void onMessageEvent(String* type, String* data, String* lastEventId);
-    void onReconnectionTimeSet(unsigned long long reconnectionTime);
+    virtual void onMessageEvent(String* type, String* data,
+                                String* lastEventId) override;
+    virtual void onReconnectionTimeSet(
+        unsigned long long reconnectionTime) override;
     void scheduleReconnect();
 
     void failed();

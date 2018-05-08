@@ -116,7 +116,7 @@ public:
     CSSMediaRule(StyleRuleMedia*, CSSStyleSheet*);
 
     String* cssText() override;
-    String* conditionText() const;
+    String* conditionText() const override;
     MediaList* media();
 
 private:

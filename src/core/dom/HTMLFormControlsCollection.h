@@ -33,7 +33,7 @@ public:
                                NodeListImpl::FilterFunctionType filterType);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLFormControlsCollection() const;
+    virtual bool isHTMLFormControlsCollection() const override;
 
     // Note : inherits length and item()
 

@@ -33,7 +33,7 @@ public:
     {
     }
 
-    float getValue(float t)
+    float getValue(float t) override
     {
         if (m_isEndDirection)
             return floor(m_numberOfSteps * t) / m_numberOfSteps;

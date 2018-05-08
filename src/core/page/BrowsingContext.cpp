@@ -1152,8 +1152,8 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
             targetY = touchData.clientY();
         }
         if (checkRelease &&
-            ((abs(m_touchDownPoint.x() - touchData.clientX()) > 30) ||
-             (abs(m_touchDownPoint.y() - touchData.clientY()) > 30))) {
+            ((std::abs(m_touchDownPoint.x() - touchData.clientX()) > 30) ||
+             (std::abs(m_touchDownPoint.y() - touchData.clientY()) > 30))) {
             releaseActiveNode();
             checkRelease = false;
         }

@@ -33,10 +33,10 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLParagraphElement() const;
+    virtual bool isHTMLParagraphElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 };
 }
 

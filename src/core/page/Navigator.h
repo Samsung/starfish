@@ -35,7 +35,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isNavigator() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance();
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     String* appCodeName()
     {

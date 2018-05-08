@@ -37,27 +37,27 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGStyleElement() const override;
 
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    virtual bool needsGeometryAttributes()
+    virtual bool needsGeometryAttributes() override
     {
         return false;
     }
 
-    virtual bool needsFillAttributes()
+    virtual bool needsFillAttributes() override
     {
         return false;
     }
 
-    virtual bool needsStrokeAttributes()
+    virtual bool needsStrokeAttributes() override
     {
         return false;
     }
 
-    virtual bool needsTransformAttributes()
+    virtual bool needsTransformAttributes() override
     {
         return false;
     }
@@ -70,12 +70,13 @@ public:
     String* media();
     void setMedia(String* media);
 
-    virtual void didCharacterDataModified(String* before, String* after);
-    virtual void didNodeInsertedToDocumentTree();
-    virtual void didNodeRemovedFromDocumentTree();
-    virtual void didNodeInserted(Node* parent, Node* newChild);
-    virtual void didNodeRemoved(Node* parent, Node* oldChild);
-    virtual void finishParsing()
+    virtual void didCharacterDataModified(String* before,
+                                          String* after) override;
+    virtual void didNodeInsertedToDocumentTree() override;
+    virtual void didNodeRemovedFromDocumentTree() override;
+    virtual void didNodeInserted(Node* parent, Node* newChild) override;
+    virtual void didNodeRemoved(Node* parent, Node* oldChild) override;
+    virtual void finishParsing() override
     {
         SVGElement::finishParsing();
         if (isInDocumentScopeAndDocumentParticipateInRendering()) {

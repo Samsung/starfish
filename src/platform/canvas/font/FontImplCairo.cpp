@@ -183,8 +183,8 @@ FontImplCairo::loadGlyph(char32_t ch)
         return result;
     }
     FcChar8* filePath = NULL;
-    if (!FcPatternGetString(resultPattern, FC_FILE, 0, &filePath) ==
-        FcResultMatch) {
+    if (!(FcPatternGetString(resultPattern, FC_FILE, 0, &filePath) ==
+          FcResultMatch)) {
         return result;
     }
 

@@ -37,14 +37,14 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGRectElement() const override;
 
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
-    virtual bool needsGeometryAttributes()
+    virtual bool needsGeometryAttributes() override
     {
         return true;
     }
 
-    virtual bool needsSizingAttributes()
+    virtual bool needsSizingAttributes() override
     {
         return true;
     }

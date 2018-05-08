@@ -32,18 +32,18 @@ public:
         computeStyleFlags();
     }
 
-    virtual void computeStyleFlags()
+    virtual void computeStyleFlags() override
     {
         FrameReplaced::computeStyleFlags();
         m_flags.m_isEstablishesStackingContext = true;
     }
 
-    virtual bool isFrameReplacedIFrame()
+    virtual bool isFrameReplacedIFrame() override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameReplacedIFrame";
     }
@@ -55,7 +55,8 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
 
-    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
+    virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
+                           HitTestStage stage) override
     {
         if (x >= 0 && x < m_frameRect.width() && y >= 0 &&
             y < m_frameRect.height()) {
@@ -65,28 +66,17 @@ public:
     }
 
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
-                                       HitTestStage stage)
+                                       HitTestStage stage) override
     {
         return hitTest(x, y, stage);
     }
 
-    virtual IntrinsicSize intrinsicSize();
+    virtual IntrinsicSize intrinsicSize() override;
 
-    virtual void willCompsiteStackingContext(Canvas* c)
-    {
-    }
+    virtual void computeVisibleRect(
+        FrameBox::ComputeVisibleRectContext& ctx) override;
 
-    virtual void didCompsiteStackingContext(Canvas* c)
-    {
-    }
-
-    virtual void compsitingStackingContext(Canvas* c)
-    {
-    }
-
-    virtual void computeVisibleRect(FrameBox::ComputeVisibleRectContext& ctx);
-
-    virtual void establishesStackingContextIfNeeds();
+    virtual void establishesStackingContextIfNeeds() override;
 
     void* operator new(size_t size)
     {

@@ -132,7 +132,7 @@ public:
     }
 
     void setOwnerRule(CSSRule* ownerRule);
-    CSSStyleSheet* parentStyleSheet() const;
+    CSSStyleSheet* parentStyleSheet() const override;
     void sortStyleRulesBySpecificity();
     bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
                              MediaQuerySet* mediaQueres,
@@ -175,7 +175,7 @@ public:
     }
 
     void setMediaQuerySet(MediaQuerySet* mediaQuerySet);
-    MediaList* media();
+    MediaList* media() override;
 
     CSSRuleList* cssRules();
     CSSRuleList* rules()

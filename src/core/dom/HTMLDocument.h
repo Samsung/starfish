@@ -47,7 +47,7 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    Node* clone()
+    Node* clone() override
     {
         return new HTMLDocument(*this);
     }

@@ -37,17 +37,12 @@ public:
     {
     }
 
-    virtual bool isFrameSVGRectBox()
-    {
-        return true;
-    }
-
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameSVGRectBox";
     }
 
-    virtual void layoutSVG()
+    virtual void layoutSVG() override
     {
         auto styleRX = style()->rx();
         auto styleRY = style()->ry();
@@ -64,7 +59,7 @@ public:
         }
     }
 
-    virtual void paintSVG(PaintingContext& ctx)
+    virtual void paintSVG(PaintingContext& ctx) override
     {
         float rx = m_rx, ry = m_ry;
 
@@ -121,6 +116,9 @@ public:
         ctx.m_canvas->setColor(style()->stroke().color());
         ctx.m_canvas->stroke();
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
 protected:
     float m_rx, m_ry;

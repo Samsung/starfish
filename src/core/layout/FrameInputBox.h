@@ -34,12 +34,12 @@ public:
                                          FrameTreeBuilderContext& ctx,
                                          bool force);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameInputBox";
     }
 
-    virtual bool isFrameInputBox()
+    virtual bool isFrameInputBox() override
     {
         return true;
     }
@@ -53,7 +53,7 @@ public:
 
 protected:
     void paintCaret(Canvas* canvas);
-    virtual void paintInlineContent(Canvas* canvas) override;
+    virtual void paintInlineContentBlock(Canvas* canvas) override;
     static ComputedStyle* createInputElementStyleFrom(Node* parent);
 };
 }

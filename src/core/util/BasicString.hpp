@@ -113,7 +113,7 @@ template <typename T, typename Allocator>
 template <class _Iterator, class _InputIterator>
 BasicString<T, Allocator>& BasicString<T, Allocator>::replace_dispatch(
     _Iterator startToErase, _Iterator endToErase, _InputIterator startToInsert,
-    _InputIterator endToInsert, std::__false_type)
+    _InputIterator endToInsert, std::false_type)
 {
     const BasicString s(startToInsert, endToInsert);
     const size_t sizeToErase = endToErase - startToErase;

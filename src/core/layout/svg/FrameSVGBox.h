@@ -33,12 +33,12 @@ public:
     {
     }
 
-    virtual bool isFrameSVGBox()
+    virtual bool isFrameSVGBox() override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameSVGBox";
     }
@@ -49,7 +49,7 @@ public:
     virtual void layoutSVG()
     {
     }
-    virtual void paintContent(PaintingContext& ctx);
+    virtual void paintContent(PaintingContext& ctx) override;
     virtual void paintSVG(PaintingContext& ctx)
     {
     }
@@ -61,12 +61,12 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    virtual bool hasFrameTreeItemModel()
+    virtual bool hasFrameTreeItemModel() override
     {
         return true;
     }
 
-    virtual FrameTreeItemModel* frameTreeItemModel()
+    virtual FrameTreeItemModel* frameTreeItemModel() override
     {
         return &m_treeItemModel;
     }

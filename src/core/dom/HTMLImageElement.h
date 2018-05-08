@@ -59,7 +59,7 @@ public:
     virtual bool isHTMLImageElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     /* HTMLImageElement related */
 
@@ -87,8 +87,8 @@ public:
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
-                                     bool attributeRemoved);
-    virtual void didNodeAdopted();
+                                     bool attributeRemoved) override;
+    virtual void didNodeAdopted() override;
 
 private:
     void unloadImage();

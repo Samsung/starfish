@@ -33,29 +33,29 @@ public:
         computeStyleFlags();
     }
 
-    virtual void computeStyleFlags()
+    virtual void computeStyleFlags() override
     {
         FrameReplaced::computeStyleFlags();
         m_flags.m_isEstablishesStackingContext = true;
         m_flags.m_needsGraphicsBuffer = true;
     }
 
-    virtual bool isFrameReplacedVideo()
+    virtual bool isFrameReplacedVideo() override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameReplacedVideo";
     }
 
-    virtual IntrinsicSize intrinsicSize();
-    virtual void didCompsiteStackingContext(Compositor* c);
+    virtual IntrinsicSize intrinsicSize() override;
+    virtual void didCompsiteStackingContext(Compositor* c) override;
     virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
                                       size_t visibleWidth,
-                                      size_t visibleHeight);
-    virtual bool hasOwnGraphicsBufferMethod()
+                                      size_t visibleHeight) override;
+    virtual bool hasOwnGraphicsBufferMethod() override
     {
         return true;
     }

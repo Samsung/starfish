@@ -24,12 +24,14 @@
            ['OS=="linux"', {
                'cflags' : [
                    '<@(cflags_default)',
+                   '<@(cflags_compiler)',
                    '<@(cflags_extra)',
                ],
                'cflags!' : [
                    '-fvisibility=hidden',
                ],
                'ldflags' : [
+                   '<@(libraries_compiler)',
                ],
                'defines': [
                ],

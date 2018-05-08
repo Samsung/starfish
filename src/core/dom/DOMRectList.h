@@ -42,7 +42,7 @@ public:
     uint32_t length() const;
     DOMRect* item(uint32_t index);
 
-    virtual ScriptBindingInstance* scriptBindingInstance()
+    virtual ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_scriptBindingInstance;
     }

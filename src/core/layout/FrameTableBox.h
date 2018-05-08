@@ -219,18 +219,18 @@ class FrameTableBox : public FrameTableObjectBox {
 public:
     FrameTableBox(Node* node, ComputedStyle* style);
 
-    virtual void computePreferredWidth(PreferredWidthContext& ctx);
-    virtual const char* name()
+    virtual void computePreferredWidth(PreferredWidthContext& ctx) override;
+    virtual const char* name() override
     {
         return "FrameTable";
     }
 
-    virtual bool isFrameTableBox()
+    virtual bool isFrameTableBox() override
     {
         return true;
     }
 
-    virtual bool hasBlockFlow()
+    virtual bool hasBlockFlow() override
     {
         // FrameTable always contains blockflow
         return true;
@@ -253,7 +253,7 @@ public:
         return m_tableRect;
     }
 
-    virtual void paintBackgroundAndBorders(Canvas* canvas);
+    virtual void paintBackgroundAndBorders(Canvas* canvas) override;
     virtual Unit::Rect makeRect(BoxValue box) override;
 
     void computeTableWidth(LayoutContext& ctx);
@@ -268,7 +268,8 @@ public:
     bool isCellWidthAuto(unsigned i);
 
     virtual void resetIfNeeds(LayoutContext& ctx);
-    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    virtual void iterateChildFrameBox(
+        const std::function<void(FrameBox*)>& fn) override
     {
         fn(this);
         Frame* box = firstChild();

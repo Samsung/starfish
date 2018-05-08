@@ -47,7 +47,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isCoordinates() const override;
 
-    virtual ScriptBindingInstance* scriptBindingInstance()
+    virtual ScriptBindingInstance* scriptBindingInstance() override
     {
         return DocumentHoldable::scriptBindingInstance();
     }

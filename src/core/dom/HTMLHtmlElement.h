@@ -36,12 +36,12 @@ public:
     virtual bool isHTMLHtmlElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 
     virtual void didComputedStyleChanged(ComputedStyle* oldStyle,
-                                         ComputedStyle* newStyle);
+                                         ComputedStyle* newStyle) override;
 
     HTMLBodyElement* body()
     {

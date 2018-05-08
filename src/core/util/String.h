@@ -321,6 +321,9 @@ struct StringBufferAccessData {
 
 class String : public gc {
 public:
+    virtual ~String()
+    {
+    }
     static const unsigned defaultLengthLimit = 1 << 16;
 
     static String* const emptyString;

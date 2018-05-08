@@ -42,7 +42,7 @@ public:
         return Node::PROCESSING_INSTRUCTION_NODE;
     }
 
-    virtual String* nodeName();
+    virtual String* nodeName() override;
 
     virtual Node* clone() override
     {

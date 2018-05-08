@@ -37,12 +37,12 @@ public:
 
     FrameCounterText(Node* node, CounterType type);
 
-    bool isFrameCounterText() const
+    bool isFrameCounterText() const override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameCounterText";
     }

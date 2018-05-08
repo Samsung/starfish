@@ -34,7 +34,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGLength() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance();
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     unsigned short unitType();
     float value();

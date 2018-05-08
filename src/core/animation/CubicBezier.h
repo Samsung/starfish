@@ -27,7 +27,7 @@ namespace StarFish {
 class CubicBezier : public AnimationTimingFunction {
 public:
     CubicBezier(float X1, float Y1, float X2, float Y2);
-    float getValue(float x);
+    float getValue(float x) override;
 
     static void* operator new(size_t size)
     {

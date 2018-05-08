@@ -45,7 +45,7 @@ private:
     std::unordered_map<SecurityOriginData*, StorageImpl*,
                        SecurityOriginDataHash, SecurityOriginDataEqual,
                        gc_allocator_ignore_off_page<
-                           std::pair<SecurityOriginData*, StorageImpl*>>>
+                           std::pair<SecurityOriginData* const, StorageImpl*>>>
         m_originToStorage;
 };
 }

@@ -34,12 +34,12 @@ public:
     {
     }
 
-    virtual bool isFrameSVGSVGBox()
+    virtual bool isFrameSVGSVGBox() override
     {
         return true;
     }
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameSVGSVGBox";
     }

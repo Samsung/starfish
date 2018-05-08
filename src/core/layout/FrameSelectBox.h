@@ -31,7 +31,7 @@ class FrameSelectBox : public FrameBlockBox {
 public:
     FrameSelectBox(Node* node, ComputedStyle* style);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameSelectBox";
     }

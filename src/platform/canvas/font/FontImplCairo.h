@@ -387,8 +387,8 @@ public:
         }
 
         FcChar8* filePath = NULL;
-        if (!FcPatternGetString(resultPattern, FC_FILE, 0, &filePath) ==
-            FcResultMatch) {
+        if (!(FcPatternGetString(resultPattern, FC_FILE, 0, &filePath) ==
+              FcResultMatch)) {
             return UTF8StringDataNonGCStd();
         }
         std::string u8FilePath = (char*)filePath;

@@ -137,7 +137,7 @@ void HTMLFormattingElementList::remove(Element* element)
     auto iter = m_entries.rbegin();
     for (; iter != m_entries.rend(); iter++) {
         if (iter->element() == element) {
-            m_entries.erase(--(iter.base()));
+            m_entries.erase(iter);
             return;
         }
     }

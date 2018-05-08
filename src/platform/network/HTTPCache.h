@@ -24,7 +24,7 @@
 
 namespace StarFish {
 typedef GCVector<String*> HTTPCacheLRUList;
-class NetworkURLWorkerData;
+struct NetworkURLWorkerData;
 class File;
 class HTTPCache;
 

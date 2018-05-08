@@ -278,10 +278,11 @@ public:
         m_element = element;
     }
 
-    virtual void init(ScriptBindingInstance* instance, void* domObjectPointer)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override
     {
     }
-    virtual ScriptBindingInstance* scriptBindingInstance()
+    virtual ScriptBindingInstance* scriptBindingInstance() override
     {
         return nullptr;
     }

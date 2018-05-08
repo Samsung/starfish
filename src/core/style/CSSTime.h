@@ -92,7 +92,7 @@ inline CSSTime operator+(const CSSTime& a, const CSSTime& b)
 
 inline CSSTime& operator+=(CSSTime& a, const CSSTime& b)
 {
-    a += b;
+    a = a + b;
     return a;
 }
 
@@ -113,7 +113,7 @@ inline CSSTime operator*(const CSSTime& a, const float b)
 
 inline CSSTime& operator*=(CSSTime& a, float b)
 {
-    a *= b;
+    a = a * b;
     return a;
 }
 
@@ -124,7 +124,7 @@ inline CSSTime operator/(const CSSTime& a, const float b)
 
 inline CSSTime& operator/=(CSSTime& a, float b)
 {
-    a /= b;
+    a = a / b;
     return a;
 }
 } // namespace StarFish

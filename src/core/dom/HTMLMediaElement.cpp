@@ -1129,7 +1129,7 @@ void HTMLMediaElement::abortEveryPendingOperation(
 
     while (m_playOperationQueue.size()) {
         ((MediaOperationQueueDataRequestPlay*)m_playOperationQueue.front())
-            ->cancelOperation(exceptionForPlayPromise);
+            ->cancelOperationWithException(exceptionForPlayPromise);
         m_playOperationQueue.pop_front();
     }
 
@@ -1500,7 +1500,7 @@ void MediaOperationQueueDataRequestPlay::processOperationQueue()
     }
 }
 
-void MediaOperationQueueDataRequestPlay::cancelOperation(
+void MediaOperationQueueDataRequestPlay::cancelOperationWithException(
     DOMException* exception)
 {
     m_promise->reject(exception->scriptValue());

@@ -46,7 +46,7 @@ public:
     bool isPlaceholderVisible() override;
 
     // 4.4 Interface Node
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     // 4.10 Interface Input
     String* type() override;

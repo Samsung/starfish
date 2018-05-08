@@ -46,7 +46,7 @@ class FrameText : public Frame {
 public:
     FrameText(Node* node, ComputedStyle* style);
 
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameText";
     }
@@ -80,7 +80,7 @@ public:
     char32_t previousChar();
     bool isFrameInlineOrEmptyText(Frame* f);
 
-    virtual bool isSelfCollapsingBlock(LayoutContext& ctx);
+    virtual bool isSelfCollapsingBlock(LayoutContext& ctx) override;
 #ifndef NDEBUG
     static std::string replaceAll(const std::string& str,
                                   const std::string& pattern,
@@ -99,12 +99,12 @@ public:
         return result;
     }
 #endif
-    virtual void computePreferredWidth(PreferredWidthContext& ctx);
-    virtual void layoutInline(LineFormattingContext& ctx);
+    virtual void computePreferredWidth(PreferredWidthContext& ctx) override;
+    virtual void layoutInline(LineFormattingContext& ctx) override;
 
 #ifdef STARFISH_ENABLE_TEST
 #ifndef NDEBUG
-    virtual void dump(int depth)
+    virtual void dump(int depth) override
     {
         UTF8StringDataNonGCStd str = text()->toUTF8NonGCString();
         str = replaceAll(str, "\n", "\\n");
@@ -147,12 +147,12 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    virtual bool hasFrameTreeItemModel()
+    virtual bool hasFrameTreeItemModel() override
     {
         return true;
     }
 
-    virtual FrameTreeItemModel* frameTreeItemModel()
+    virtual FrameTreeItemModel* frameTreeItemModel() override
     {
         return &m_treeItemModel;
     }

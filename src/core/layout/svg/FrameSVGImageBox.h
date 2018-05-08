@@ -32,17 +32,12 @@ public:
     {
     }
 
-    virtual bool isFrameSVGImageBox()
-    {
-        return true;
-    }
-
-    virtual const char* name()
+    virtual const char* name() override
     {
         return "FrameSVGImageBox";
     }
 
-    virtual void paintSVG(PaintingContext& ctx)
+    virtual void paintSVG(PaintingContext& ctx) override
     {
         SVGImageElement* e = node()->asSVGImageElement();
         if (e->imageData()) {

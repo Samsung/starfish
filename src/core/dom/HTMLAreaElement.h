@@ -37,7 +37,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isHTMLAreaElement() const;
+    virtual bool isHTMLAreaElement() const override;
 
     DOMTokenList* relList();
 
@@ -45,7 +45,7 @@ public:
     void setReferrerPolicy(String* policy);
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
 private:
     DOMTokenList* m_relList;

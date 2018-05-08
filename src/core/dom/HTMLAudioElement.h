@@ -42,7 +42,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLAudioElement() const override;
 
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 };
 }
 

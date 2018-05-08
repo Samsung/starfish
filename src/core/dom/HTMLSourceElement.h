@@ -37,7 +37,7 @@ public:
     virtual bool isHTMLSourceElement() const override;
 
     /* 4.4 Interface Node */
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 

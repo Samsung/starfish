@@ -44,7 +44,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGSVGElement() const override;
 
-    virtual QualifiedName name();
+    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
@@ -53,7 +53,7 @@ public:
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
-    virtual bool needsPreserveAspectRatioValue()
+    virtual bool needsPreserveAspectRatioValue() override
     {
         return true;
     }
