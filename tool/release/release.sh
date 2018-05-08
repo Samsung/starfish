@@ -41,7 +41,7 @@ cd $ROOT
 python binding_generator/scripts/starfish_code_generator.py src/ src/binding/
 rsync -av --delete --delete-excluded --filter="merge tool/release/filter.txt" --filter="merge tool/release/filter_starfish.txt" . ../$repo
 
-hash=`git log | head -1 | cut -f2 -d' ' | cut -c 1-6`
+hash=`git log | head -1 | cut -f2 -d' ' | cut -c 1-7`
 today=`date +%y%m%d`
 
 cd ../$repo
