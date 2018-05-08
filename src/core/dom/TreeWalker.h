@@ -77,10 +77,7 @@ public:
 
     unsigned acceptNode(Node*);
 
-    ScriptValue filter()
-    {
-        return m_filter;
-    }
+    ScriptValue filter();
 
     virtual ScriptBindingInstance* scriptBindingInstance()
     {
