@@ -62,7 +62,7 @@ interface Document : Node {
 
   // NodeFilter.SHOW_ALL = 0xFFFFFFFF
   [Unimplemented, NewObject] NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
-  [Unimplemented, NewObject] TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
+  [NewObject] TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional any filter = null);
 
 
 
