@@ -507,7 +507,7 @@ static void matrixInterpolationPreprocessing(MatrixDecomposed2D& a,
         if (a.angle > b.angle) {
             a.angle -= 360;
         } else {
-            a.angle -= 360;
+            b.angle -= 360;
         }
     }
 }
