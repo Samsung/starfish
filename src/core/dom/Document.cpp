@@ -54,6 +54,8 @@
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/WebOrigin.h"
 #include "core/dom/Range.h"
+#include "core/dom/TreeWalker.h"
+#include "core/dom/NodeFilter.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
 #include "platform/loader/ImageResource.h"
@@ -187,6 +189,12 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     auto df = new FrameDocument(this);
     setFrame(df);
     loadBuiltinPolyfill(window->starFish()->builtinPolyfillPathString());
+}
+
+TreeWalker* Document::createTreeWalker(Node* root, unsigned whatToShow,
+                                       ScriptValue filter)
+{
+    return new TreeWalker(this, root, whatToShow, filter);
 }
 
 BrowsingContext* Document::browsingContext() const

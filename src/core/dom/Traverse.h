@@ -255,6 +255,30 @@ public:
         return node;
     }
 };
+
+class NextNodeTraversalStrategy {
+public:
+    static Node* startNode(const Node& parent)
+    {
+        return parent.firstChild();
+    }
+    static Node* nextNode(const Node& current)
+    {
+        return current.nextSibling();
+    }
+};
+
+class PreviousNodeTraversalStrategy {
+public:
+    static Node* startNode(const Node& parent)
+    {
+        return parent.lastChild();
+    }
+    static Node* nextNode(const Node& current)
+    {
+        return current.previousSibling();
+    }
+};
 }
 
 #endif

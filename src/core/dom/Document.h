@@ -177,6 +177,9 @@ public:
 
     DOMImplementation* implementation();
 
+    TreeWalker* createTreeWalker(Node* root, unsigned whatToShow,
+                                 ScriptValue filter);
+
     /* Other methods */
     virtual NodeType nodeType() const override
     {

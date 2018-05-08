@@ -1,0 +1,15 @@
+[Exposed=Window]
+interface TreeWalker {
+    [SameObject] readonly attribute Node root;
+    readonly attribute unsigned long whatToShow;
+    readonly attribute any filter;
+    attribute Node currentNode;
+
+    [RaisesException] Node? parentNode();
+    [RaisesException] Node? firstChild();
+    [RaisesException] Node? lastChild();
+    [RaisesException] Node? previousSibling();
+    [RaisesException] Node? nextSibling();
+    [RaisesException] Node? previousNode();
+    [RaisesException] Node? nextNode();
+};
