@@ -143,6 +143,23 @@ public:
         return nextAncestorSibling(current, stayWithin);
     }
 
+    static Node* previous(Node* current, const Node* stayWithin)
+    {
+        if (current == stayWithin) {
+            return nullptr;
+        }
+
+        if (current->previousSibling()) {
+            Node* previous = current->previousSibling();
+            while (Node* child = previous->lastChild()) {
+                previous = child;
+            }
+            return previous;
+        }
+
+        return current->parentNode();
+    }
+
     static Element* nextElement(Node* current, const Node* stayWithin)
     {
         Node* node = next(current, stayWithin);

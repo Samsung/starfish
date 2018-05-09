@@ -2,6 +2,8 @@
 interface TreeWalker {
     [SameObject] readonly attribute Node root;
     readonly attribute unsigned long whatToShow;
+    // This attribute is 'any' instead of NodeFilter type,
+    // because this attribute can get anyting else such as 'object' and 'function'.
     readonly attribute any filter;
     attribute Node currentNode;
 

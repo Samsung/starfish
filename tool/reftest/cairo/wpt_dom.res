@@ -98,3 +98,4 @@ test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-traversal-reject.
 test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-traversal-skip-most.html
 test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-traversal-skip.html
 test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-walking-outside-a-tree.html
+test/cairo/reftest/web-platform-tests/dom/traversal/NodeIterator-removal.html

@@ -308,10 +308,10 @@ public:
             std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
                 s6 = new std::unordered_map<FrameBlockBox*,
                                             std::pair<LineBox*, LayoutUnit>>();
-            std::unordered_map<FrameTableCellBox*,
-                               std::pair<LineBox*, LayoutUnit>>* s7 =
-                new std::unordered_map<FrameTableCellBox*,
-                                       std::pair<LineBox*, LayoutUnit>>();
+            GCUnorderedMap<FrameTableCellBox*, std::pair<LineBox*, LayoutUnit>>*
+                s7 = new (NoGC)
+                    GCUnorderedMap<FrameTableCellBox*,
+                                   std::pair<LineBox*, LayoutUnit>>();
             std::unordered_map<PreferredWidthKey, PreferredWidthValue>* s8 =
                 new std::unordered_map<PreferredWidthKey,
                                        PreferredWidthValue>();
@@ -342,7 +342,10 @@ public:
             delete m_blockFormattingContextInfo.back()
                 .m_blockBoxAligningAtFirstBaselineStack;
             delete m_blockFormattingContextInfo.back().m_firstLineAscenders;
-            delete m_blockFormattingContextInfo.back().m_tempAscenders;
+            m_blockFormattingContextInfo.back()
+                .m_tempAscenders->~GCUnorderedMap<
+                    FrameTableCellBox*, std::pair<LineBox*, LayoutUnit>>();
+            GC_FREE(m_blockFormattingContextInfo.back().m_tempAscenders);
             delete m_blockFormattingContextInfo.back().m_preferredWidthValues;
             delete m_blockFormattingContextInfo.back().m_contentHeights;
         }
@@ -587,8 +590,8 @@ private:
             std::vector<FrameBlockBox*>* blockBoxAligningFirstLineStack,
             std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
                 firstLineAscenders,
-            std::unordered_map<FrameTableCellBox*,
-                               std::pair<LineBox*, LayoutUnit>>* tempAscenders,
+            GCUnorderedMap<FrameTableCellBox*, std::pair<LineBox*, LayoutUnit>>*
+                tempAscenders,
             std::unordered_map<PreferredWidthKey, PreferredWidthValue>*
                 preferredWidthValues,
             std::unordered_map<FrameBox*, LayoutUnit>* contentHeights)
@@ -621,7 +624,7 @@ private:
         std::vector<FrameBlockBox*>* m_blockBoxAligningAtFirstBaselineStack;
         std::unordered_map<FrameBlockBox*, std::pair<LineBox*, LayoutUnit>>*
             m_firstLineAscenders;
-        std::unordered_map<FrameTableCellBox*, std::pair<LineBox*, LayoutUnit>>*
+        GCUnorderedMap<FrameTableCellBox*, std::pair<LineBox*, LayoutUnit>>*
             m_tempAscenders;
         std::unordered_map<PreferredWidthKey, PreferredWidthValue>*
             m_preferredWidthValues;
@@ -633,7 +636,8 @@ private:
 
     // NOTE. we don't need gc_allocator here. because, FrameTree already has
     // a reference for Frames
-    std::vector<BlockFormattingContext> m_blockFormattingContextInfo;
+    std::vector<BlockFormattingContext, gc_allocator<BlockFormattingContext>>
+        m_blockFormattingContextInfo;
     std::map<FrameBlockBox*, std::vector<FrameBox*>> m_absolutePositionedBoxes;
     std::map<FrameBlockBox*, std::vector<std::pair<FrameBox*, bool>>>
         m_relativePositionedBoxes;
