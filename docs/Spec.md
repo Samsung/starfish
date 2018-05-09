@@ -906,8 +906,9 @@ section are supported.
 | | attribute | type | Specifies the style sheet language for this style sheet. |
 | | attribute | href | If the style sheet is a linked style sheet, the value of its attribute is its location. |
 | | attribute | parentStyleSheet | Returns the parent CSS style sheet. |
-| | attribute | ownerNode | The node that associates this style sheet with the document. |
+| | attribute | title | Returns the advisory title of the current style sheet. |
 | | attribute | media | Returns the MediaList object that is associated with the CSS style sheet. |
+| | attribute | disabled | Indicates whether the style sheet is prevented from applying to the document. A style sheet may be disabled by manually setting this property to true. |
 | | attribute | ownerNode | Returns a Node associating this style sheet with the current document. |
 | [StyleSheetList](https://drafts.csswg.org/cssom/#the-stylesheetlist-interface) | interface | StyleSheetList | The StyleSheetList interface represents an ordered collection of CSS style sheets. |
 | | method | getter StyleSheet? item(unsigned long index) | Return the indexth CSS style sheet in the collection. |

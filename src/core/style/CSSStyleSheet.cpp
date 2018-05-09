@@ -287,6 +287,18 @@ String* CSSStyleSheet::href() const
     return String::emptyString;
 }
 
+String* CSSStyleSheet::title() const
+{
+    if (m_origin->isElement()) {
+        auto title = m_origin->asElement()->getAttribute(
+            m_origin->starFish()->staticStrings()->m_title);
+        if (title.hasValue()) {
+            return title.getValue();
+        }
+    }
+    return String::emptyString;
+}
+
 void CSSStyleSheet::setMediaQuerySet(MediaQuerySet* mediaQuerySet)
 {
     m_mediaQuerySet = mediaQuerySet;
