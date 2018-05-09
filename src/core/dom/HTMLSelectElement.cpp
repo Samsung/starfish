@@ -188,6 +188,27 @@ int HTMLSelectElement::displaySize()
     return multiple() ? 4 : 1;
 }
 
+void HTMLSelectElement::reset()
+{
+    auto collection = options();
+
+    for (size_t i = 0; i < collection->length(); ++i) {
+        auto e = collection->item(i);
+        if (e->isHTMLOptionElement()) {
+            auto o = e->asHTMLOptionElement();
+            o->setSelectedness(o->defaultSelected());
+            o->setDirtiness(false);
+        }
+    }
+    for (size_t i = 0; i < collection->length(); ++i) {
+        auto e = collection->item(i);
+        if (e->isHTMLOptionElement()) {
+            auto o = e->asHTMLOptionElement();
+            resetFromOption(o); // FIXME
+        }
+    }
+}
+
 HTMLOptionsCollection* HTMLSelectElement::options()
 {
     if (!m_options) {

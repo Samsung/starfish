@@ -86,6 +86,18 @@ public:
 
     int displaySize();
 
+    virtual void reset() override;
+
+    virtual bool isListedElement() override
+    {
+        return true;
+    }
+
+    virtual bool isResettableElement() override
+    {
+        return true;
+    }
+
 private:
     HTMLCollection* m_selectedOptions;
     HTMLOptionsCollection* m_options;

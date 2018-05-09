@@ -45,6 +45,16 @@ public:
 
     // Other methods
     bool handleDefaultEvent(Event* event) override;
+
+    virtual bool isListedElement() override
+    {
+        return true;
+    }
+
+    virtual bool isResettableElement() override
+    {
+        return false;
+    }
 };
 }
 

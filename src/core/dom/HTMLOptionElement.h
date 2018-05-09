@@ -75,6 +75,15 @@ public:
     bool isDisabled() override;
 
     bool defaultSelected();
+    virtual bool isListedElement() override
+    {
+        return false;
+    }
+
+    virtual bool isResettableElement() override
+    {
+        return false;
+    }
 
 private:
     bool m_dirtiness;

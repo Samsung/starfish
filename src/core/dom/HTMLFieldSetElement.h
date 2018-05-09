@@ -41,6 +41,16 @@ public:
     /* 4.4 Interface Node */
     virtual QualifiedName name() override;
     virtual String* type() override;
+
+    virtual bool isListedElement() override
+    {
+        return true;
+    }
+
+    virtual bool isResettableElement() override
+    {
+        return false;
+    }
 };
 }
 

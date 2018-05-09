@@ -38,7 +38,7 @@ public:
                              bool attributeRemoved) override;
     void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
-    void reset() override;
+    virtual void reset() override;
     bool supportsFocus() override;
     bool isHTMLTextAreaElement() const override;
     bool isPlaceholderVisible() override;
@@ -61,6 +61,16 @@ public:
 
     uint32_t rows();
     void setRows(uint32_t value);
+
+    virtual bool isListedElement() override
+    {
+        return true;
+    }
+
+    virtual bool isResettableElement() override
+    {
+        return true;
+    }
 };
 }
 

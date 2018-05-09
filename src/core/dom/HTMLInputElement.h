@@ -20,11 +20,11 @@
 #ifndef __StarFishHTMLInputElement__
 #define __StarFishHTMLInputElement__
 
-#include "core/dom/HTMLFormElement.h"
+#include "core/dom/HTMLTextEditable.h"
 
 namespace StarFish {
 class Event;
-class HTMLInputElement : public HTMLFormControl {
+class HTMLInputElement : public HTMLTextEditable {
     const int DEFAULT_SIZE = 20;
     const int CARET_THICKNESS = 2;
     friend class FrameInputBox;
@@ -42,7 +42,6 @@ public:
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
-    virtual void didStateChanged(int oldState, int newState) override;
     bool isPlaceholderVisible() override;
 
     // 4.4 Interface Node
@@ -66,12 +65,6 @@ public:
     bool canHaveValue();
     bool supportsFocus() override;
 
-    LayoutUnit caretThickness() const;
-    LayoutLocation& currentCaretLayoutLocation()
-    {
-        return m_currentCaretLayoutLocation;
-    }
-
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
 
@@ -79,14 +72,14 @@ public:
     static String* checkboxTickSymbol();
 
     String* visibleValue();
-    bool isEditableType();
+    virtual bool isEditableType() override;
 
     bool firstDefaultValue();
     void setFirstDefaultValue(bool firstDefaultValue);
 
     String* defaultValue();
     void setDefaultValue(String* defaultValue);
-    String* value() override;
+    virtual String* value() override;
     void setValue(String* value) override;
 
     String* max();
@@ -101,6 +94,15 @@ public:
     void activationBehavior() override;
     void legacyPreActivationBehavior() override;
     void legacyCanceledActivationBehavior() override;
+
+    virtual void reset() override;
+
+    virtual bool isListedElement() override;
+
+    virtual bool isResettableElement() override
+    {
+        return true;
+    }
 
 protected:
 private:
@@ -129,18 +131,10 @@ private:
     bool m_dirtyCheckness;
     bool m_previousCheckness;
 
-    bool m_shouldDrawCaret;
-    size_t m_caretBlinkingIntervalId;
-    size_t m_currentCaretPosition;
-    LayoutLocation m_currentCaretLayoutLocation;
-    String* m_currentEditingText;
-
     int32_t m_defaultMinimum;
     int32_t m_defaultMaximum;
     int32_t m_defaultStep;
     int32_t m_stepScaleFactor;
-
-    int32_t m_maxlength;
 
     HTMLInputElement* m_previousCheckedRadioButton;
 };

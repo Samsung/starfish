@@ -28,15 +28,6 @@ class HTMLTextEditable : public HTMLFormControl {
     const int CARET_THICKNESS = 2;
 
 public:
-    HTMLTextEditable(Document* document);
-
-    static inline void fillGCDescriptor(GC_word* desc)
-    {
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(HTMLTextEditable, m_currentEditingText));
-        HTMLFormControl::fillGCDescriptor(desc);
-    }
-
     virtual bool isHTMLTextEditable() const override
     {
         return true;
@@ -90,6 +81,15 @@ public:
     String* placeholder();
 
 protected:
+    HTMLTextEditable(Document* document);
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(HTMLTextEditable, m_currentEditingText));
+        HTMLFormControl::fillGCDescriptor(desc);
+    }
+
     bool m_dirtyValueFlag;
     bool m_shouldDrawCaret;
     size_t m_caretBlinkingIntervalId;
