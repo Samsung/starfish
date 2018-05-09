@@ -128,6 +128,8 @@ public:
     virtual bool isPlaceholderVisible();
 
     virtual bool isLabelable() const override;
+    virtual bool isListedElement() = 0;
+    virtual bool isResettableElement() = 0;
 
 protected:
     HTMLFormControl(Document* document, bool supportTabIndex = true);
@@ -139,7 +141,6 @@ protected:
     virtual bool isDisabled();
 
     HTMLFormElement* formOwner();
-    HTMLSelectElement* select();
     virtual bool isButton(HTMLFormControl* node);
 
     static inline void fillGCDescriptor(GC_word* desc)
@@ -189,6 +190,8 @@ public:
 
     void submit();
 
+    void reset();
+
     HTMLFormControlsCollection* elements();
     uint32_t length();
     Element* defaultIndexedGetter(uint32_t idx);
@@ -196,6 +199,16 @@ public:
 
     // Other methods
     bool handleDefaultEvent(Event* event) override;
+
+    virtual bool isListedElement() override
+    {
+        return false;
+    }
+
+    virtual bool isResettableElement() override
+    {
+        return false;
+    }
 
 private:
     void submit(HTMLElement* submitter);
@@ -212,6 +225,7 @@ private:
     HTMLFormControlsCollection* m_elements;
 
     size_t m_plannedNavigationTaskId;
+    bool m_isLockedForReset;
 };
 }
 

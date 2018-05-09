@@ -29,6 +29,8 @@ class DOMTokenList;
 
 class HTMLOutputElement : public HTMLFormControl {
 public:
+    enum ValueModeFlag { defaultMode, valueMode };
+
     HTMLOutputElement(Document* document);
 
     void* operator new(size_t size);
@@ -41,12 +43,28 @@ public:
     /* 4.4 Interface Node */
     virtual QualifiedName name();
     DOMTokenList* htmlFor();
+    virtual String* value() override;
+    virtual void setValue(String* v) override;
     String* defaultValue();
     void setDefaultValue(String* defaultValue);
 
+    virtual void reset() override;
+
+    virtual bool isListedElement() override
+    {
+        return true;
+    }
+
+    virtual bool isResettableElement() override
+    {
+        return true;
+    }
+
 private:
     DOMTokenList* m_htmlForList;
+    ValueModeFlag m_valueModeFlag : 1;
+    String* m_defaultValue;
 };
-}
+} // namespace StarFish
 
 #endif

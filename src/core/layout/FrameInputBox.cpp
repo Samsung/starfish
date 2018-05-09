@@ -123,7 +123,7 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
                                              FrameTreeBuilderContext& ctx,
                                              bool force)
 {
-    if (current->isHTMLTextEditable()) {
+    if (current->isHTMLTextEditable() && current->isHTMLTextAreaElement()) {
         return buildFrameTreeForTextEditable(current, ctx, force);
     }
 
@@ -281,7 +281,7 @@ void FrameInputBox::layoutForTextEditable(
 void FrameInputBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
-    if (node()->isHTMLTextEditable()) {
+    if (node()->isHTMLTextEditable() && node()->isHTMLTextAreaElement()) {
         layoutForTextEditable(ctx, resolveWhat);
         return;
     }

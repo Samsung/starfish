@@ -20,7 +20,7 @@ interface HTMLFormElement : HTMLElement {
     [NotEnumerable] getter Element (DOMString name);
 
     void submit();
-    [Unimplemented, CEReactions] void reset();
+    [CEReactions] void reset();
     [Unimplemented] boolean checkValidity();
     [Unimplemented] boolean reportValidity();
 };

@@ -289,18 +289,10 @@ bool isFormElements(Node* node, void* data, GCVector<Node*>* collection)
     // Filter matches listed elements whose form owner is the form element
     // Listed elements is button,fieldset,input,object,output,select,textarea
     if (node->isHTMLElement()) {
-        if (node->isHTMLButtonElement() || node->isHTMLFieldSetElement() ||
-            node->isHTMLObjectElement() || node->isHTMLSelectElement() ||
-            node->isHTMLTextAreaElement()) {
+        if (node->isHTMLFormControl() &&
+            node->asHTMLFormControl()->isListedElement()) {
             return true;
         }
-        if (node->isHTMLInputElement()) {
-            if (!node->asHTMLInputElement()->type()->equalsIgnoreCase(
-                    "image")) {
-                return true;
-            }
-        }
-        // TODO : output element
     }
     return false;
 }

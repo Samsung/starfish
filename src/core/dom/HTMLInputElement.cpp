@@ -45,20 +45,15 @@ namespace StarFish {
 static const int INITIAL_MAXLENGTH = 524288;
 
 HTMLInputElement::HTMLInputElement(Document* document)
-    : HTMLFormControl(document)
+    : HTMLTextEditable(document)
     , m_dirtiness(false)
     , m_checkness(false)
     , m_dirtyCheckness(false)
     , m_previousCheckness(false)
-    , m_shouldDrawCaret(false)
-    , m_caretBlinkingIntervalId(SIZE_MAX)
-    , m_currentCaretPosition(0)
-    , m_currentEditingText(String::emptyString)
     , m_defaultMinimum(0)
     , m_defaultMaximum(0)
     , m_defaultStep(0)
     , m_stepScaleFactor(0)
-    , m_maxlength(INITIAL_MAXLENGTH)
     , m_previousCheckedRadioButton(nullptr)
 {
 }
@@ -73,7 +68,7 @@ void* HTMLInputElement::operator new(size_t size)
                    GC_WORD_OFFSET(HTMLInputElement, m_currentEditingText));
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLInputElement,
                                         m_previousCheckedRadioButton));
-        HTMLFormControl::fillGCDescriptor(desc);
+        HTMLTextEditable::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLInputElement));
         typeInited = true;
     }
@@ -172,6 +167,7 @@ void HTMLInputElement::setValue(String* val)
 
     if (!oldValue->equals(val) && m_currentCaretPosition > 0) {
         m_currentCaretPosition = val->length();
+        setNeedsFrameTreeBuildWithoutSelf();
     }
 }
 
@@ -447,6 +443,15 @@ void HTMLInputElement::activationBehavior()
     setNeedsFrameTreeBuildWithoutSelf();
 }
 
+void HTMLInputElement::reset()
+{
+    m_dirtyValueFlag = m_dirtyCheckness = false;
+
+    m_value = defaultValue();
+    m_checkness = defaultChecked();
+    sanitizeValue();
+}
+
 void HTMLInputElement::legacyPreActivationBehavior()
 {
     if (type()->equals("checkbox")) {
@@ -475,6 +480,15 @@ void HTMLInputElement::legacyCanceledActivationBehavior()
         m_checkness = false;
     }
     setNeedsFrameTreeBuildWithoutSelf();
+}
+
+bool HTMLInputElement::isListedElement()
+{
+    auto typeString = type();
+    if (!typeString->equals("image")) {
+        return true;
+    }
+    return false;
 }
 
 bool HTMLInputElement::isSizableType()
@@ -609,8 +623,8 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
     } else {
         if (document()->browsingContext()->focusedNode() == this &&
             isEditableType()) {
-            String* value =
-                getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+            String* value = this->value();
+
             m_currentCaretPosition =
                 std::min(m_currentCaretPosition, value->length());
 
@@ -666,8 +680,7 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
 
                 if (isUseful) {
                     if (!value->equals(oldValue)) {
-                        setAttribute(starFish()->staticStrings()->m_value,
-                                     value);
+                        setValue(value);
                     }
                     return true;
                 }
@@ -702,41 +715,6 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
     return false;
 }
 
-void HTMLInputElement::didStateChanged(int oldState, int newState)
-{
-    HTMLElement::didStateChanged(oldState, newState);
-
-    if (disabled()) {
-        return;
-    }
-
-    bool oldGotFocus = oldState & Node::NodeStateFocused;
-    bool newGotFocus = newState & Node::NodeStateFocused;
-
-    if (isEditableType()) {
-        if (!oldGotFocus && newGotFocus) {
-            String* value = visibleValue();
-            m_currentCaretPosition =
-                shouldUsePlaceholder() ? 0 : value->length();
-            m_caretBlinkingIntervalId = window()->setInterval(
-                [](Window* window, void* data) {
-                    HTMLInputElement* e = (HTMLInputElement*)data;
-                    e->m_shouldDrawCaret = !e->m_shouldDrawCaret;
-                    e->setNeedsPainting();
-                },
-                500, this);
-            starFish()->platformWindow()->showSoftwareKeyboardIfPossible();
-            setNeedsFrameTreeBuildWithoutSelf();
-        } else if (oldGotFocus && !newGotFocus) {
-            starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
-            m_shouldDrawCaret = false;
-            m_currentCaretPosition = 0;
-            m_currentEditingText = String::emptyString;
-            window()->clearInterval(m_caretBlinkingIntervalId);
-        }
-    }
-}
-
 bool HTMLInputElement::isPlaceholderVisible()
 {
     return shouldUsePlaceholder();
@@ -745,11 +723,6 @@ bool HTMLInputElement::isPlaceholderVisible()
 bool HTMLInputElement::supportsFocus()
 {
     return !type()->equals("hidden");
-}
-
-LayoutUnit HTMLInputElement::caretThickness() const
-{
-    return LayoutUnit(CARET_THICKNESS / window()->devicePixelRatio());
 }
 
 bool HTMLInputElement::isEditableType()

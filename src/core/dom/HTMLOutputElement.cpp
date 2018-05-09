@@ -25,6 +25,8 @@
 namespace StarFish {
 HTMLOutputElement::HTMLOutputElement(Document* document)
     : HTMLFormControl(document)
+    , m_valueModeFlag(ValueModeFlag::defaultMode)
+    , m_defaultValue(String::emptyString)
 {
 }
 
@@ -35,6 +37,7 @@ void* HTMLOutputElement::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(HTMLOutputElement)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(HTMLOutputElement, m_htmlForList));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLOutputElement, m_defaultValue));
         HTMLFormControl::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLOutputElement));
         typeInited = true;
@@ -56,13 +59,46 @@ DOMTokenList* HTMLOutputElement::htmlFor()
     return m_htmlForList;
 }
 
+String* HTMLOutputElement::value()
+{
+    auto nullable = textContent();
+    if (nullable.hasValue()) {
+        return nullable.getValue();
+    }
+    return String::emptyString;
+}
+
+void HTMLOutputElement::setValue(String* v)
+{
+    m_valueModeFlag = ValueModeFlag::valueMode;
+    if (v->equals(value())) {
+        return;
+    }
+    setTextContent(v);
+}
+
 String* HTMLOutputElement::defaultValue()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+    return m_defaultValue;
 }
 
 void HTMLOutputElement::setDefaultValue(String* defaultValue)
 {
-    setAttribute(starFish()->staticStrings()->m_value, defaultValue);
+    if (m_defaultValue->equals(defaultValue)) {
+        return;
+    }
+    m_defaultValue = defaultValue;
+    if (m_valueModeFlag == ValueModeFlag::defaultMode) {
+        setTextContent(defaultValue);
+    }
+}
+
+void HTMLOutputElement::reset()
+{
+    if (m_defaultValue->equals(value())) {
+        return;
+    }
+    setTextContent(m_defaultValue);
+    m_valueModeFlag = ValueModeFlag::defaultMode;
 }
 }

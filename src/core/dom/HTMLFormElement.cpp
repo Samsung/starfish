@@ -117,6 +117,7 @@ HTMLFormElement::HTMLFormElement(Document* document)
     : HTMLFormControl(document, false)
     , m_elements(nullptr)
     , m_plannedNavigationTaskId((size_t)-1)
+    , m_isLockedForReset(false)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
@@ -638,6 +639,29 @@ bool HTMLFormElement::handleDefaultEvent(Event* event)
 void HTMLFormElement::submit()
 {
     return submit(nullptr);
+}
+
+void HTMLFormElement::reset()
+{
+    if (m_isLockedForReset) {
+        return;
+    }
+    m_isLockedForReset = true;
+
+    String* eventType = starFish()->staticStrings()->m_reset.localName();
+    Event* e = new Event(document(), eventType, EventInit(true, true));
+
+    if (dispatchEventByUA(this, e, true)) {
+        auto elms = elements();
+        for (size_t i = 0; i < elms->length(); ++i) {
+            auto elm = elms->item(i);
+            if (elm->isHTMLFormControl() &&
+                elm->asHTMLFormControl()->isResettableElement()) {
+                elm->asHTMLFormControl()->reset();
+            }
+        }
+    }
+    m_isLockedForReset = false;
 }
 
 // https://html.spec.whatwg.org/multipage/form-control-infrastructure.html#concept-form-submit

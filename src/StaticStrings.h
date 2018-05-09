@@ -479,6 +479,7 @@ public:
     QualifiedName m_onfocusin;
     QualifiedName m_focusout;
     QualifiedName m_onfocusout;
+    QualifiedName m_reset;
     QualifiedName m_resize;
     QualifiedName m_onresize;
     QualifiedName m_message;
