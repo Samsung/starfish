@@ -54,6 +54,7 @@
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/WebOrigin.h"
 #include "core/dom/Range.h"
+#include "core/dom/NodeIterator.h"
 #include "core/dom/TreeWalker.h"
 #include "core/dom/NodeFilter.h"
 #include "core/extra/Console.h"
@@ -191,6 +192,12 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     auto df = new FrameDocument(this);
     setFrame(df);
     loadBuiltinPolyfill(window->starFish()->builtinPolyfillPathString());
+}
+
+NodeIterator* Document::createNodeIterator(Node* root, unsigned whatToShow,
+                                           ScriptValue filter)
+{
+    return new NodeIterator(this, root, whatToShow, filter);
 }
 
 TreeWalker* Document::createTreeWalker(Node* root, unsigned whatToShow,
@@ -1189,6 +1196,20 @@ void Document::updateDOMVersion()
 {
     m_domVersion++;
     invalidFocusRingCacheIfNeeded();
+}
+
+void Document::attachNodeIterator(NodeIterator* ni)
+{
+    m_nodeIterators.push_back(ni);
+}
+
+void Document::willNodeBeRemoved(Node* parent, Node* oldChild)
+{
+    if (m_nodeIterators.size()) {
+        for (NodeIterator* ni : m_nodeIterators) {
+            ni->willNodeBeRemoved(oldChild);
+        }
+    }
 }
 
 void Document::didNodeInserted(Node* parent, Node* newChild)

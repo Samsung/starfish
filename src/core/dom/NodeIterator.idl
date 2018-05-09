@@ -1,0 +1,15 @@
+interface NodeIterator {
+    [SameObject] readonly attribute Node root;
+    readonly attribute Node referenceNode;
+    readonly attribute boolean pointerBeforeReferenceNode;
+    readonly attribute unsigned long whatToShow;
+    // This attribute is 'any' instead of NodeFilter type,
+    // because this attribute can get anyting else such as 'object' and 'function'.
+    readonly attribute any filter;
+
+    [RaisesException] Node? nextNode();
+    [RaisesException] Node? previousNode();
+
+    // This is now a no-op as per the DOM specification.
+    //[MeasureAs=NodeIteratorDetach] void detach();
+};

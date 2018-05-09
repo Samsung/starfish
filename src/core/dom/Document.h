@@ -178,6 +178,8 @@ public:
 
     DOMImplementation* implementation();
 
+    NodeIterator* createNodeIterator(Node* root, unsigned whatToShow,
+                                     ScriptValue filter);
     TreeWalker* createTreeWalker(Node* root, unsigned whatToShow,
                                  ScriptValue filter);
 
@@ -463,6 +465,9 @@ public:
         m_ranges.erase(m_ranges.begin() + idx);
     }
 
+    void attachNodeIterator(NodeIterator* ni);
+    void willNodeBeRemoved(Node* parent, Node* oldChild);
+
     bool onLoadFired() const
     {
         return m_onLoadFired;
@@ -590,6 +595,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_currentScripts));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_focusRingCache));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_ranges));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_nodeIterators));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentLanguage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
@@ -649,6 +655,7 @@ protected:
     GCAtomicVector<Element*>
         m_focusRingCache; // using atomic vector is not accident
     GCVector<Range*> m_ranges;
+    GCVector<NodeIterator*> m_nodeIterators;
     // each element has strong reference by DOM tree already
     size_t m_pendingDocumentParsingIdlerHandle;
     String* m_contentLanguage;

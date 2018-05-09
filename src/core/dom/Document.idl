@@ -61,7 +61,9 @@ interface Document : Node {
   [NewObject] Range createRange();
 
   // NodeFilter.SHOW_ALL = 0xFFFFFFFF
-  [Unimplemented, NewObject] NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional NodeFilter? filter = null);
+  // A argument's type is 'any' instead of NodeFilter type into functions named 'createNodeIterator' and 'createTreeWalker',
+  // because this arguemnt can get anyting else such as 'object' and 'function'. 
+  [NewObject] NodeIterator createNodeIterator(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional any filter = null);
   [NewObject] TreeWalker createTreeWalker(Node root, optional unsigned long whatToShow = 0xFFFFFFFF, optional any filter = null);
 
 

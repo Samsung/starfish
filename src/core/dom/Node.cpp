@@ -1491,6 +1491,10 @@ Node* Node::removeChild(Node* child)
         child->setNeedsFrameTreeBuild();
     }
 
+    if (document()) {
+        document()->willNodeBeRemoved(this, child);
+    }
+
     Node* prevChild = child->previousSibling();
     Node* nextChild = child->nextSibling();
 
