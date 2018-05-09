@@ -90,3 +90,11 @@ test/cairo/reftest/web-platform-tests/dom/nodes/Node-removeChild.html
 test/cairo/reftest/web-platform-tests/dom/nodes/Node-replaceChild.html
 test/cairo/reftest/web-platform-tests/dom/nodes/Node-textContent.html
 test/cairo/reftest/web-platform-tests/dom/nodes/ParentNode-querySelector-All.html
+test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-basic.html
+test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-currentNode.html
+test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-previousNodeLastChildReject.html
+test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-previousSiblingLastChildSkip.html
+test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-traversal-reject.html
+test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-traversal-skip-most.html
+test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-traversal-skip.html
+test/cairo/reftest/web-platform-tests/dom/traversal/TreeWalker-walking-outside-a-tree.html

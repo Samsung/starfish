@@ -60,6 +60,11 @@ bool scriptValueAsBoolean(ScriptValue v)
     return v->asBoolean();
 }
 
+unsigned scriptValueAsNumber(ScriptValue v)
+{
+    return v->asNumber();
+}
+
 ScriptObject scriptError(ScriptBindingInstance* instance, String* msg)
 {
     ContextRef* ctx = instance->scriptContext();
@@ -480,7 +485,62 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
         }
     }
 
-    clearStack<102400>();
+    clearStack<CLEAR_STACK_SIZE>();
+
+    return result;
+}
+
+ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
+                                        ScriptValue fn, ScriptValue* argv,
+                                        size_t argc, ScriptValue thisValue,
+                                        bool& error)
+{
+    ScriptValue result = ValueRef::createUndefined();
+    if (fn->isFunction()) {
+        ContextRef* ctx = instance->scriptContext();
+        SandBoxRef* sb = SandBoxRef::create(ctx);
+        auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
+            return fn->asFunction()->call(state, thisValue, argc, argv);
+        });
+        sb->destroy();
+        if (!sbresult.error->isEmpty()) {
+            // Dispatch error event to window
+            ErrorEventInit errorInfo;
+            errorInfo.setMessage(toBrowserString(instance, sbresult.error));
+            if (sbresult.stackTraceData.size() > 0) {
+                size_t lastIndex = sbresult.stackTraceData.size() - 1;
+                errorInfo.setFilename(toBrowserString(
+                    instance,
+                    ValueRef::create(
+                        sbresult.stackTraceData[lastIndex].fileName)));
+                errorInfo.setLineno(
+                    sbresult.stackTraceData[lastIndex].loc.line);
+                errorInfo.setColno(
+                    sbresult.stackTraceData[lastIndex].loc.column);
+            }
+            errorInfo.setError(sbresult.error);
+            instance->ownerWindow()->dispatchErrorEvent(errorInfo);
+
+            STARFISH_LOG_ERROR("Uncaught %s\n",
+                               errorInfo.message()->toUTF8NonGCString().data());
+            for (size_t i = 0; i < sbresult.stackTraceData.size(); i++) {
+                STARFISH_LOG_ERROR(
+                    "at %s(%d:%d)\n",
+                    toBrowserString(
+                        instance,
+                        ValueRef::create(sbresult.stackTraceData[i].fileName))
+                        ->toUTF8NonGCString()
+                        .data(),
+                    (int)sbresult.stackTraceData[i].loc.line,
+                    (int)sbresult.stackTraceData[i].loc.column);
+            }
+            error = true;
+        } else {
+            result = sbresult.result;
+        }
+    }
+
+    clearStack<CLEAR_STACK_SIZE>();
 
     return result;
 }
@@ -513,6 +573,36 @@ ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
     return result;
 }
 
+ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
+                                         ScriptValue obj, ScriptValue* argv,
+                                         size_t argc, ScriptValue thisValue,
+                                         bool& error)
+{
+    ScriptValue result = ValueRef::createUndefined();
+    ContextRef* ctx = instance->scriptContext();
+    SandBoxRef* sb = SandBoxRef::create(ctx);
+    auto sbresult = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
+        ValueRef* v = obj->asObject()->get(
+            state, ValueRef::create(StringRef::fromASCII("acceptNode")));
+        return v;
+    });
+    sb->destroy();
+
+    if (!sbresult.error->isEmpty()) {
+        STARFISH_LOG_ERROR(
+            "Uncaught %s\n",
+            toBrowserString(instance, ValueRef::create(sbresult.error))
+                ->toUTF8NonGCString()
+                .data());
+        error = true;
+    } else {
+        return callScriptFunctionWithError(instance, sbresult.result, argv,
+                                           argc, thisValue, error);
+    }
+
+    return result;
+}
+
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName, bool* result)
 {
@@ -536,7 +626,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
         return scriptRef.m_script->execute(state);
     });
 
-    clearStack<102400>();
+    clearStack<CLEAR_STACK_SIZE>();
 
     sb->destroy();
     if (!sbresult.error->isEmpty()) {
@@ -708,6 +798,31 @@ bool isObjectScriptValue(ScriptValue v)
     if (v->isObject()) {
         return true;
     }
+    return false;
+}
+
+bool isNumberScriptValue(ScriptValue v)
+{
+    if (v->isNumber()) {
+        return true;
+    }
+    return false;
+}
+
+bool isBooleanScriptValue(ScriptValue v)
+{
+    if (v->isBoolean()) {
+        return true;
+    }
+    return false;
+}
+
+bool isNullOrUndefinedScriptValue(ScriptValue v)
+{
+    if (v->isNull() || v->isUndefined()) {
+        return true;
+    }
+
     return false;
 }
 
