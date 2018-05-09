@@ -30,6 +30,9 @@ class Serializable;
 class StaticStrings;
 class Transferable;
 
+// TODO : This value should be reduced.
+#define CLEAR_STACK_SIZE 102400
+
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
 
@@ -47,6 +50,7 @@ ScriptValue scriptUndefined();
 ScriptValue scriptStringToScriptValue(ScriptString s);
 bool scriptValueIsBoolean(ScriptValue v);
 bool scriptValueAsBoolean(ScriptValue v);
+unsigned scriptValueAsNumber(ScriptValue v);
 
 ScriptObject scriptError(ScriptBindingInstance*, String* msg);
 ScriptObject scriptEvalError(ScriptBindingInstance*, String* msg);
@@ -100,9 +104,17 @@ ScriptValue createAttributeStringEventFunction(Element* target,
 ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
                                ScriptValue* argv, size_t argc,
                                ScriptValue thisValue);
+ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
+                                        ScriptValue fn, ScriptValue* argv,
+                                        size_t argc, ScriptValue thisValue,
+                                        bool& error);
 ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
                                     ScriptValue obj, ScriptValue* argv,
                                     size_t argc, ScriptValue thisValue);
+ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
+                                         ScriptValue obj, ScriptValue* argv,
+                                         size_t argc, ScriptValue thisValue,
+                                         bool& error);
 ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            String* fileName = String::emptyString,
                            bool* result = nullptr);
@@ -129,6 +141,9 @@ void throwScriptTypeError(String* message);
 
 bool isCallableScriptValue(ScriptValue v);
 bool isObjectScriptValue(ScriptValue v);
+bool isNumberScriptValue(ScriptValue v);
+bool isBooleanScriptValue(ScriptValue v);
+bool isNullOrUndefinedScriptValue(ScriptValue v);
 
 uint8_t* arrayBufferRawData(ScriptArrayBuffer buffer);
 uint8_t* arrayBufferViewRawData(ScriptArrayBufferView buffer);

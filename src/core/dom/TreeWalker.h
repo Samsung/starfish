@@ -20,6 +20,7 @@
 #ifndef __StarFishTreeWalker__
 #define __StarFishTreeWalker__
 
+#include "binding/DocumentHoldable.h"
 #include "core/dom/Document.h"
 #include "binding/ScriptWrappable.h"
 
@@ -75,7 +76,7 @@ public:
         return m_whatToShow;
     }
 
-    unsigned acceptNode(Node*);
+    unsigned acceptNode(Node*, bool&);
 
     ScriptValue filter();
 

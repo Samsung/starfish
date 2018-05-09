@@ -18,9 +18,11 @@
  */
 
 #include "StarFishConfig.h"
+#include "StarFish.h"
 #include "core/dom/TreeWalker.h"
 #include "core/dom/NodeFilter.h"
 #include "core/dom/Traverse.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
@@ -43,7 +45,11 @@ Node* TreeWalker::parentNode()
             return nullptr;
         }
 
-        unsigned acceptNodeResult = acceptNode(node);
+        bool result = false;
+        unsigned acceptNodeResult = acceptNode(node, result);
+        if (result) {
+            return nullptr;
+        }
 
         if (acceptNodeResult == NodeFilter::FILTERACCEPT) {
             m_current = node;
@@ -57,7 +63,12 @@ Node* TreeWalker::parentNode()
 Node* TreeWalker::firstChild()
 {
     for (Node* node = m_current->firstChild(); node;) {
-        unsigned acceptNodeResult = acceptNode(node);
+        bool result = false;
+        unsigned acceptNodeResult = acceptNode(node, result);
+        if (result) {
+            return nullptr;
+        }
+
         switch (acceptNodeResult) {
         case NodeFilter::FILTERACCEPT:
             m_current = node;
@@ -93,7 +104,12 @@ Node* TreeWalker::firstChild()
 Node* TreeWalker::lastChild()
 {
     for (Node* node = m_current->lastChild(); node;) {
-        unsigned acceptNodeResult = acceptNode(node);
+        bool result = false;
+        unsigned acceptNodeResult = acceptNode(node, result);
+        if (result) {
+            return nullptr;
+        }
+
         switch (acceptNodeResult) {
         case NodeFilter::FILTERACCEPT:
             m_current = node;
@@ -132,7 +148,11 @@ Node* TreeWalker::previousNode()
     while (node != root()) {
         while (Node* previousSibling = node->previousSibling()) {
             node = previousSibling;
-            unsigned acceptNodeResult = acceptNode(node);
+            bool result = false;
+            unsigned acceptNodeResult = acceptNode(node, result);
+            if (result) {
+                return nullptr;
+            }
 
             if (acceptNodeResult == NodeFilter::FILTERREJECT) {
                 continue;
@@ -140,7 +160,10 @@ Node* TreeWalker::previousNode()
 
             while (Node* lastChild = node->lastChild()) {
                 node = lastChild;
-                acceptNodeResult = acceptNode(node);
+                acceptNodeResult = acceptNode(node, result);
+                if (result) {
+                    return nullptr;
+                }
 
                 if (acceptNodeResult == NodeFilter::FILTERREJECT) {
                     break;
@@ -164,7 +187,11 @@ Node* TreeWalker::previousNode()
         }
 
         node = parent;
-        unsigned acceptNodeResult = acceptNode(node);
+        bool result = false;
+        unsigned acceptNodeResult = acceptNode(node, result);
+        if (result) {
+            return nullptr;
+        }
 
         if (acceptNodeResult == NodeFilter::FILTERACCEPT) {
             m_current = node;
@@ -181,7 +208,11 @@ Node* TreeWalker::nextNode()
 Again:
     while (Node* firstChild = node->firstChild()) {
         node = firstChild;
-        unsigned acceptNodeResult = acceptNode(node);
+        bool result = false;
+        unsigned acceptNodeResult = acceptNode(node, result);
+        if (result) {
+            return nullptr;
+        }
 
         if (acceptNodeResult == NodeFilter::FILTERACCEPT) {
             m_current = node;
@@ -194,7 +225,11 @@ Again:
 
     while (Node* nextSibling = Traverse::nextSkippingChildren(node, root())) {
         node = nextSibling;
-        unsigned acceptNodeResult = acceptNode(node);
+        bool result = false;
+        unsigned acceptNodeResult = acceptNode(node, result);
+        if (result) {
+            return nullptr;
+        }
         if (acceptNodeResult == NodeFilter::FILTERACCEPT) {
             m_current = node;
             return m_current;
@@ -220,7 +255,11 @@ Node* TreeWalker::TraverseSiblings()
         Node* sibling = Strategy::nextNode(*node);
         while (sibling) {
             node = sibling;
-            unsigned acceptNodeResult = acceptNode(node);
+            bool result = false;
+            unsigned acceptNodeResult = acceptNode(node, result);
+            if (result) {
+                return nullptr;
+            }
 
             if (acceptNodeResult == NodeFilter::FILTERACCEPT) {
                 m_current = node;
@@ -239,7 +278,12 @@ Node* TreeWalker::TraverseSiblings()
             return nullptr;
         }
 
-        unsigned acceptNodeResult = acceptNode(node);
+        bool result = false;
+        unsigned acceptNodeResult = acceptNode(node, result);
+        if (result) {
+            return nullptr;
+        }
+
         if (acceptNodeResult == NodeFilter::FILTERACCEPT) {
             return nullptr;
         }
@@ -256,7 +300,7 @@ Node* TreeWalker::nextSibling()
     return TraverseSiblings<NextNodeTraversalStrategy>();
 }
 
-unsigned TreeWalker::acceptNode(Node* node)
+unsigned TreeWalker::acceptNode(Node* node, bool& error)
 {
     if (!node) {
         return NodeFilter::FILTERREJECT;
@@ -267,11 +311,67 @@ unsigned TreeWalker::acceptNode(Node* node)
         return NodeFilter::FILTERSKIP;
     }
 
-    if (!m_filter) {
+    if (!m_filter || isNullOrUndefinedScriptValue(m_filter)) {
         return NodeFilter::FILTERACCEPT;
     }
 
-    // TODO : Implement the real filter.
-    return NodeFilter::FILTERACCEPT;
+    if (!scriptBindingInstance()) {
+        return NodeFilter::FILTERREJECT;
+    }
+
+    if (isCallableScriptValue(m_filter)) {
+        ScriptValue* argv;
+        argv = (ScriptValue*)alloca(sizeof(ScriptValue) * 1);
+        argv[0] = node->scriptValue();
+        ScriptValue thisValue = node->window()->scriptValue();
+        ScriptValue ret = callScriptFunctionWithError(
+            scriptBindingInstance(), m_filter, argv, 1, thisValue, error);
+
+        if (isBooleanScriptValue(ret)) {
+            if (scriptValueAsBoolean(ret)) {
+                return NodeFilter::FILTERACCEPT;
+            } else {
+                return NodeFilter::FILTERREJECT;
+            }
+        } else if (isNumberScriptValue(ret)) {
+            unsigned number = scriptValueAsNumber(ret);
+            if (number == NodeFilter::FILTERACCEPT ||
+                number == NodeFilter::FILTERREJECT ||
+                number == NodeFilter::FILTERSKIP) {
+                return number;
+            } else {
+                return NodeFilter::FILTERREJECT;
+            }
+        } else if (!ret || isNullOrUndefinedScriptValue(ret)) {
+            return NodeFilter::FILTERREJECT;
+        }
+    } else if (isObjectScriptValue(m_filter)) {
+        ScriptValue* argv;
+        argv = (ScriptValue*)alloca(sizeof(ScriptValue) * 1);
+        argv[0] = node->scriptValue();
+        ScriptValue thisValue = node->window()->scriptValue();
+        ScriptValue ret = callHandleNodeFilterFunction(
+            scriptBindingInstance(), m_filter, argv, 1, thisValue, error);
+        if (isBooleanScriptValue(ret)) {
+            if (scriptValueAsBoolean(ret)) {
+                return NodeFilter::FILTERACCEPT;
+            } else {
+                return NodeFilter::FILTERREJECT;
+            }
+        } else if (isNumberScriptValue(ret)) {
+            unsigned number = scriptValueAsNumber(ret);
+            if (number == NodeFilter::FILTERACCEPT ||
+                number == NodeFilter::FILTERREJECT ||
+                number == NodeFilter::FILTERSKIP) {
+                return number;
+            } else {
+                return NodeFilter::FILTERREJECT;
+            }
+        } else if (!ret || isNullOrUndefinedScriptValue(ret)) {
+            return NodeFilter::FILTERREJECT;
+        }
+    }
+
+    return NodeFilter::FILTERREJECT;
 }
 }
