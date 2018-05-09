@@ -132,7 +132,6 @@ public:
     }
 
     void setOwnerRule(CSSRule* ownerRule);
-    CSSStyleSheet* parentStyleSheet() const override;
     void sortStyleRulesBySpecificity();
     bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,
                              MediaQuerySet* mediaQueres,
@@ -156,6 +155,10 @@ public:
     }
 
     String* href() const override;
+
+    CSSStyleSheet* parentStyleSheet() const override;
+
+    String* title() const override;
 
     Node* ownerNode() const override
     {
@@ -185,8 +188,8 @@ public:
     unsigned insertRule(String* ruleString, unsigned index);
     void deleteRule(unsigned index);
 
-    bool disabled();
-    void setDisabled(bool disabled);
+    bool disabled() override;
+    void setDisabled(bool disabled) override;
 
 protected:
     // m_stringString != String::emptyString means we need to parse style sheet

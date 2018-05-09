@@ -24,6 +24,7 @@ test/cairo/reftest/web-platform-tests/html/semantics/scripting-1/the-script-elem
 test/cairo/reftest/web-platform-tests/html/semantics/scripting-1/the-script-element/script-onload-string.html
 test/cairo/reftest/web-platform-tests/html/semantics/document-metadata/the-base-element/base_href_empty.html
 test/cairo/reftest/web-platform-tests/html/semantics/document-metadata/the-base-element/base_href_unspecified.html
+test/cairo/reftest/web-platform-tests/html/semantics/document-metadata/the-style-element/style_disabled.html
 test/cairo/reftest/web-platform-tests/html/semantics/scripting-1/the-script-element/fetch-src/alpha/base.html
 test/cairo/reftest/web-platform-tests/html/webappapis/animation-frames/callback-invoked.html
 test/cairo/reftest/web-platform-tests/html/webappapis/animation-frames/callback-multicalls.html

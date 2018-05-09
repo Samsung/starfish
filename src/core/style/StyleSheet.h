@@ -44,7 +44,10 @@ public:
     {
         return nullptr;
     }
+    virtual String* title() const = 0;
     virtual MediaList* media() = 0;
+    virtual bool disabled() = 0;
+    virtual void setDisabled(bool disabled) = 0;
 };
 
 } /* namespace StarFish */
