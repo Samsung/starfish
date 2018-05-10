@@ -27,6 +27,32 @@
 
 namespace StarFish {
 
+void* CellStruct::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(CellStruct)] = { 0 };
+        CellStruct::fillGCDescriptor(obj_bitmap);
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(CellStruct));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+void* RowStruct::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(RowStruct)] = { 0 };
+        RowStruct::fillGCDescriptor(obj_bitmap);
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(RowStruct));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 RowStruct::RowStruct(FrameTableRowBox* tableRow)
     : m_tableRow(tableRow)
 {
@@ -44,14 +70,14 @@ unsigned RowStruct::logicalColumnSize()
 FrameTableCellBox* RowStruct::physicalCellAtLogicalColumn(size_t id)
 {
     if (id < m_cells.size()) {
-        if (m_cells[id].cell()->absoluteColumnIndex() == id) {
-            return m_cells[id].cell();
+        if (m_cells[id]->cell()->absoluteColumnIndex() == id) {
+            return m_cells[id]->cell();
         }
     }
 
     for (size_t i = id; i <= id; i--) {
         if (i < m_cells.size()) {
-            FrameTableCellBox* cell = m_cells[i].cell();
+            FrameTableCellBox* cell = m_cells[i]->cell();
             if (cell->absoluteColumnIndex() <= id) {
                 return cell;
             }
@@ -80,24 +106,7 @@ void* FrameTableSectionBox::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableSectionBox)] = { 0 };
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox, m_node));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableSectionBox, m_layoutParent));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
-                                              m_treeItemModel.m_parent));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
-                                              m_treeItemModel.m_previous));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
-                                              m_treeItemModel.m_next));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
-                                              m_treeItemModel.m_firstChild));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox,
-                                              m_treeItemModel.m_lastChild));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableSectionBox, m_lineBoxes));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox, m_grid));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableSectionBox, m_columnWidths));
+        FrameTableSectionBox::fillGCDescriptor(obj_bitmap);
         descr =
             GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableSectionBox));
         typeInited = true;
@@ -110,30 +119,30 @@ void FrameTableSectionBox::paintBackgroundAndBorders(Canvas* canvas)
     FrameBox fakeSection(node(), style());
     paintBoxShadows(canvas);
     for (auto& rowStruct : m_grid) {
-        for (auto& cellStruct : rowStruct.cells()) {
+        for (auto& cellStruct : rowStruct->cells()) {
             canvas->save();
             canvas->translate(
-                rowStruct.tableRow()->x() + cellStruct.cell()->x(),
-                rowStruct.tableRow()->y() + cellStruct.cell()->y());
+                rowStruct->tableRow()->x() + cellStruct->cell()->x(),
+                rowStruct->tableRow()->y() + cellStruct->cell()->y());
 
             FrameTableColBox* col = tableBox()->columnAtAbsoluteColumnIndex(
-                cellStruct.cell()->absoluteColumnIndex());
+                cellStruct->cell()->absoluteColumnIndex());
             if (col) {
                 // Paint background using column-group style
                 if (col->parent()->isFrameTableColBox()) {
                     FrameBox fakeColGroup(col->parent()->node(),
                                           col->parent()->style());
-                    fakeColGroup.copyFrom(cellStruct.cell(),
+                    fakeColGroup.copyFrom(cellStruct->cell(),
                                           FrameBox::BorderBoxCopy);
                     paintBackground(canvas, &fakeColGroup, nullptr);
                 }
                 // Paint background using column style
                 FrameBox fakeCol(col->node(), col->style());
-                fakeCol.copyFrom(cellStruct.cell(), FrameBox::BorderBoxCopy);
+                fakeCol.copyFrom(cellStruct->cell(), FrameBox::BorderBoxCopy);
                 paintBackground(canvas, &fakeCol, nullptr);
             }
             // Paint background using section style
-            fakeSection.copyFrom(cellStruct.cell(), FrameBox::BorderBoxCopy);
+            fakeSection.copyFrom(cellStruct->cell(), FrameBox::BorderBoxCopy);
             paintBackground(canvas, &fakeSection, nullptr);
 
             canvas->restore();
@@ -157,25 +166,25 @@ void FrameTableSectionBox::collectCellWidthInfo(LayoutContext& ctx)
     // 1. get max logical column size
     size_t logicalColSize = 0;
     for (size_t i = 0; i < m_grid.size(); i++) {
-        RowStruct& row = m_grid[i];
-        unsigned colSize = row.logicalColumnSize();
+        RowStruct* row = m_grid[i];
+        unsigned colSize = row->logicalColumnSize();
         logicalColSize = std::max<size_t>(logicalColSize, colSize);
     }
 
     // 2. get min/max preferred column width for each column.
     m_columnWidths.clear();
     for (size_t i = 0; i < logicalColSize; i++) {
-        ColSizeStruct col;
-        col.id = i;
+        ColSizeStruct* col = new ColSizeStruct();
+        col->id = i;
         m_columnWidths.push_back(col);
     }
 
     for (auto& rowStruct : m_grid) {
-        for (auto& cellStruct : rowStruct.cells()) {
-            FrameTableCellBox* cell = cellStruct.cell();
+        for (auto& cellStruct : rowStruct->cells()) {
+            FrameTableCellBox* cell = cellStruct->cell();
             size_t index = cell->absoluteColumnIndex();
             STARFISH_ASSERT(index < m_columnWidths.size());
-            ColSizeStruct* col = &m_columnWidths[index];
+            ColSizeStruct* col = m_columnWidths[index];
 
             if (cell->updatedColspan() == 1) {
                 col->minCellWidth =
@@ -208,8 +217,8 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCells()
     // 1. Set to normal indices
     for (auto& rowStruct : grid()) {
         size_t colId = 0;
-        for (auto& cellStruct : rowStruct.cells()) {
-            FrameTableCellBox* cell = cellStruct.cell();
+        for (auto& cellStruct : rowStruct->cells()) {
+            FrameTableCellBox* cell = cellStruct->cell();
             cell->setAbsoluteColumnIndex(colId);
             colId++;
         }
@@ -218,10 +227,10 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCells()
     // 2. Cal indices
     size_t rowId = 0;
     for (auto& rowStruct : grid()) {
-        FrameTableRowBox* row = rowStruct.tableRow();
+        FrameTableRowBox* row = rowStruct->tableRow();
 
-        for (auto& cellStruct : rowStruct.cells()) {
-            FrameTableCellBox* cell = cellStruct.cell();
+        for (auto& cellStruct : rowStruct->cells()) {
+            FrameTableCellBox* cell = cellStruct->cell();
             if (cell->updatedColspan() > 1) {
                 calAbsoluteColumnIndicesForCellsAffectedByColspan(cell, rowId);
             }
@@ -238,10 +247,10 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByColspan(
 {
     size_t shiftCellBy = cell->updatedColspan() - 1;
     size_t colId = cell->absoluteColumnIndex();
-    RowStruct& rowStruct = grid()[rowId];
-    for (size_t i = 0; i < rowStruct.cells().size(); i++) {
-        CellStruct& cellStruct = rowStruct.cells()[i];
-        FrameTableCellBox* curCell = cellStruct.cell();
+    RowStruct* rowStruct = grid()[rowId];
+    for (size_t i = 0; i < rowStruct->cells().size(); i++) {
+        CellStruct* cellStruct = rowStruct->cells()[i];
+        FrameTableCellBox* curCell = cellStruct->cell();
 
         if (curCell->absoluteColumnIndex() > colId) {
             curCell->setAbsoluteColumnIndex(curCell->absoluteColumnIndex() +
@@ -257,11 +266,11 @@ void FrameTableSectionBox::calAbsoluteColumnIndicesForCellsAffectedByRowspan(
     size_t colId = cell->absoluteColumnIndex();
     for (size_t curRowId = rowId + 1; curRowId < rowEnd; curRowId++) {
         if (curRowId < grid().size()) {
-            RowStruct& rowStruct = grid()[curRowId];
+            RowStruct* rowStruct = grid()[curRowId];
 
-            for (size_t i = 0; i < rowStruct.cells().size(); i++) {
-                CellStruct& cellStruct = rowStruct.cells()[i];
-                FrameTableCellBox* curCell = cellStruct.cell();
+            for (size_t i = 0; i < rowStruct->cells().size(); i++) {
+                CellStruct* cellStruct = rowStruct->cells()[i];
+                FrameTableCellBox* curCell = cellStruct->cell();
 
                 if (curCell->absoluteColumnIndex() >= colId) {
                     curCell->setAbsoluteColumnIndex(
@@ -280,8 +289,8 @@ void FrameTableSectionBox::calCellWidthsWithColspans()
                                                                       this);
 
     for (auto& rowStruct : grid()) {
-        for (auto& cellStruct : rowStruct.cells()) {
-            FrameTableCellBox* cell = cellStruct.cell();
+        for (auto& cellStruct : rowStruct->cells()) {
+            FrameTableCellBox* cell = cellStruct->cell();
 
             if (cell->updatedColspan() > 1) {
                 LayoutUnit maxCellWidth = 0;
@@ -291,15 +300,15 @@ void FrameTableSectionBox::calCellWidthsWithColspans()
                 for (size_t i = colId; i < colId + cell->updatedColspan();
                      i++) {
                     STARFISH_ASSERT(i < tableBox()->columnWidths().size());
-                    if (tableBox()->columnWidths()[i].hasSpecifiedWidth()) {
+                    if (tableBox()->columnWidths()[i]->hasSpecifiedWidth()) {
                         maxCellWidth +=
-                            tableBox()->columnWidths()[i].maxSpecifiedWidth;
+                            tableBox()->columnWidths()[i]->maxSpecifiedWidth;
                     } else {
                         maxCellWidth +=
-                            tableBox()->columnWidths()[i].maxCellWidth;
+                            tableBox()->columnWidths()[i]->maxCellWidth;
                     }
 
-                    minCellWidth += tableBox()->columnWidths()[i].minCellWidth;
+                    minCellWidth += tableBox()->columnWidths()[i]->minCellWidth;
 
                     if (i < colId + cell->updatedColspan() - 1) {
                         maxCellWidth += borderSpacing;
@@ -321,8 +330,8 @@ void FrameTableSectionBox::calCellHeightsWithRowspans()
     size_t rowId = 0;
     for (auto& rowStruct : grid()) {
         size_t colId = 0;
-        for (auto& cellStruct : rowStruct.cells()) {
-            FrameTableCellBox* cell = cellStruct.cell();
+        for (auto& cellStruct : rowStruct->cells()) {
+            FrameTableCellBox* cell = cellStruct->cell();
 
             // increase the height of the cell if the cell's height
             // is smaller than the row's height
@@ -351,9 +360,9 @@ LayoutUnit FrameTableSectionBox::calCellHeightWithRowspan(
     size_t rowEnd = rowId + rowspan;
     for (size_t curRowId = rowId; curRowId < rowEnd; curRowId++) {
         if (curRowId < grid().size()) {
-            RowStruct& rowStruct = grid()[curRowId];
+            RowStruct* rowStruct = grid()[curRowId];
 
-            cellHeight += rowStruct.tableRow()->height();
+            cellHeight += rowStruct->tableRow()->height();
             if (curRowId < rowEnd - 1) {
                 cellHeight += borderSpacing;
             }
@@ -430,7 +439,7 @@ void FrameTableSectionBox::layoutHeight(LayoutContext& ctx)
         size_t rowId = 0;
         for (auto& rowStruct : grid()) {
             FrameTableCellBox* cell =
-                rowStruct.physicalCellAtLogicalColumn(colId);
+                rowStruct->physicalCellAtLogicalColumn(colId);
 
             if (cell && cell->absoluteColumnIndex() == colId) {
                 sumOfCellHeightsSoFar[colId] += cell->height();

@@ -50,6 +50,15 @@ public:
     uint32_t span();
     bool hasChildColBox();
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        FrameTableCellBox::fillGCDescriptor(obj_bitmap);
+    }
+
 private:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;

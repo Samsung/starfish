@@ -834,7 +834,16 @@ public:
     void applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
                            float spreadDistance = 0, bool inset = false);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        Frame::fillGCDescriptor(obj_bitmap);
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameBox, m_layoutParent));
+    }
+
     static void paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                       HTMLElement* rootOrBodyelement,
                                       ComputedStyle* style);

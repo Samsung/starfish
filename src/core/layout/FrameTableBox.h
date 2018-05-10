@@ -178,7 +178,7 @@ private:
     GCVector<ColGroup*> m_colGroups;
 };
 
-class ColSizeStruct {
+class ColSizeStruct : public gc {
 public:
     ColSizeStruct()
         : id(0)
@@ -213,6 +213,14 @@ public:
     LayoutUnit maxCellWidth;
     LayoutUnit cellWidth;
     bool isNullCell;
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+    }
 };
 
 class FrameTableBox : public FrameTableObjectBox {
@@ -236,7 +244,7 @@ public:
         return true;
     }
 
-    GCAtomicVector<ColSizeStruct>& columnWidths()
+    GCAtomicVector<ColSizeStruct*>& columnWidths()
     {
         return m_columnWidths;
     }
@@ -312,6 +320,19 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        FrameTableObjectBox::fillGCDescriptor(obj_bitmap);
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_table));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_captions));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_colObjects));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_columnWidths));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableBox, m_cellsInTheFirstRow));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_colBoxes));
+    }
+
 private:
     void formingATable();
     void processRow(FrameTableRowBox* rowBox, size_t& yCurrent, size_t& xWidtht,
@@ -349,8 +370,8 @@ private:
     FrameTableCellBox* cellFromFirstRowOrColGroup(bool tableLayoutFixed,
                                                   size_t i);
 
-    void collectColumnWidths(GCAtomicVector<ColSizeStruct>& columnWidthsSoFar,
-                             GCAtomicVector<ColSizeStruct>& columnWidths);
+    void collectColumnWidths(GCAtomicVector<ColSizeStruct*>& columnWidthsSoFar,
+                             GCAtomicVector<ColSizeStruct*>& columnWidths);
 
     bool resetColspanIfPossible();
 
@@ -368,7 +389,7 @@ private:
 
     GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<FrameTableColBox*> m_colObjects;
-    GCAtomicVector<ColSizeStruct> m_columnWidths;
+    GCAtomicVector<ColSizeStruct*> m_columnWidths;
 
     GCVector<FrameTableCellBox*> m_cellsInTheFirstRow;
     GCVector<FrameTableColBox*> m_colBoxes;

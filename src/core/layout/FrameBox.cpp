@@ -59,6 +59,19 @@ void* FrameBoxRareData::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void* FrameBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameBox)] = { 0 };
+        FrameBox::fillGCDescriptor(obj_bitmap);
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 LayoutLocation FrameBox::absolutePointIncludingScroll(FrameBox* top)
 {
     LayoutLocation l(0, 0);

@@ -46,6 +46,15 @@ public:
         return m_cell;
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(CellStruct, m_cell));
+    }
+
 private:
     FrameTableCellBox* m_cell;
 };
@@ -60,7 +69,7 @@ public:
 
     CellStruct* lastCell()
     {
-        return m_cells.size() > 0 ? &m_cells[m_cells.size() - 1] : nullptr;
+        return m_cells.size() > 0 ? m_cells[m_cells.size() - 1] : nullptr;
     }
 
     unsigned logicalColumnSize();
@@ -72,14 +81,24 @@ public:
         return m_tableRow;
     }
 
-    GCVector<CellStruct>& cells()
+    GCVector<CellStruct*>& cells()
     {
         return m_cells;
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(RowStruct, m_tableRow));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(RowStruct, m_cells));
+    }
+
 private:
     FrameTableRowBox* m_tableRow;
-    GCVector<CellStruct> m_cells;
+    GCVector<CellStruct*> m_cells;
 };
 
 class FrameTableSectionBox : public FrameTableObjectBox {
@@ -119,18 +138,27 @@ public:
         return parent()->asFrameTableBox();
     }
 
-    GCVector<RowStruct>& grid()
+    GCVector<RowStruct*>& grid()
     {
         return m_grid;
     }
 
-    GCAtomicVector<ColSizeStruct>& columnWidths()
+    GCAtomicVector<ColSizeStruct*>& columnWidths()
     {
         return m_columnWidths;
     }
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        FrameTableObjectBox::fillGCDescriptor(obj_bitmap);
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableSectionBox, m_grid));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameTableSectionBox, m_columnWidths));
+    }
 
 private:
     void layout(LayoutContext& ctx,
@@ -144,8 +172,8 @@ private:
     LayoutUnit calCellHeightWithRowspan(FrameTableCellBox* cell, size_t rowId,
                                         size_t colId);
 
-    GCVector<RowStruct> m_grid; // cells in a 2D table for easier traversal
-    GCAtomicVector<ColSizeStruct> m_columnWidths;
+    GCVector<RowStruct*> m_grid; // cells in a 2D table for easier traversal
+    GCAtomicVector<ColSizeStruct*> m_columnWidths;
 };
 }
 

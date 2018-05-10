@@ -1969,7 +1969,15 @@ public:
     bool hasFrameBorderRadius();
     BorderRadiusData frameBorderRadius();
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Frame, m_node));
+    }
+
     virtual bool hasFrameTreeItemModel()
     {
         return false;

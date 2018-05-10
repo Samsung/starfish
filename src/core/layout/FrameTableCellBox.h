@@ -98,6 +98,12 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        FrameTableObjectBox::fillGCDescriptor(obj_bitmap);
+    }
+
 private:
     bool emptyContent();
 

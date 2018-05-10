@@ -39,33 +39,26 @@ FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     m_table = new Table();
 }
 
+void* ColSizeStruct::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(ColSizeStruct)] = { 0 };
+        ColSizeStruct::fillGCDescriptor(obj_bitmap);
+        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ColSizeStruct));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void* FrameTableBox::operator new(size_t size)
 {
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableBox)] = { 0 };
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_node));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_layoutParent));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_parent));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_previous));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_next));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_firstChild));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableBox, m_treeItemModel.m_lastChild));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_lineBoxes));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_table));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_captions));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_colObjects));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_columnWidths));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableBox, m_cellsInTheFirstRow));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableBox, m_colBoxes));
-
+        FrameTableBox::fillGCDescriptor(obj_bitmap);
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableBox));
         typeInited = true;
     }
@@ -369,7 +362,7 @@ void FrameTableBox::resetIfNeeds(LayoutContext& ctx)
             while (rowChild) {
                 if (rowChild->isFrameTableRowBox()) {
                     FrameTableRowBox* row = rowChild->asFrameTableRowBox();
-                    RowStruct rowStruct(row);
+                    RowStruct* rowStruct = new RowStruct(row);
 
                     Frame* cellChild = row->firstChild();
                     unsigned lastAbsoluteColumnIndex = 0;
@@ -380,7 +373,7 @@ void FrameTableBox::resetIfNeeds(LayoutContext& ctx)
                             cell->setAbsoluteColumnIndex(
                                 lastAbsoluteColumnIndex);
                             lastAbsoluteColumnIndex += cell->colspan();
-                            rowStruct.cells().push_back(CellStruct(cell));
+                            rowStruct->cells().push_back(new CellStruct(cell));
                         }
                         cellChild = cellChild->next();
                     }
@@ -480,14 +473,14 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     std::vector<ColSizeStruct*> cellsWithAutoWidths;
     std::vector<ColSizeStruct*> cellsWithSpecifiedWidths;
     for (auto& col : m_columnWidths) {
-        if (isCellWidthAuto(col.id)) {
-            cellsWithAutoWidths.push_back(&col);
+        if (isCellWidthAuto(col->id)) {
+            cellsWithAutoWidths.push_back(col);
         } else {
-            cellsWithSpecifiedWidths.push_back(&col);
+            cellsWithSpecifiedWidths.push_back(col);
         }
 
-        minTableWidth += col.minCellWidth + borderSpacing;
-        maxTableWidth += col.maxCellWidth + borderSpacing;
+        minTableWidth += col->minCellWidth + borderSpacing;
+        maxTableWidth += col->maxCellWidth + borderSpacing;
     }
 
     // https://www.w3.org/TR/CSS2/tables.html#width-layout
@@ -536,8 +529,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
 
     // The values from <col> have higher priority
     for (auto& col : m_columnWidths) {
-        if (tableLayoutFixed && !isCellWidthAuto(col.id) && hasColBox(col.id)) {
-            FrameTableColBox* colBox = m_colBoxes[col.id];
+        if (tableLayoutFixed && !isCellWidthAuto(col->id) &&
+            hasColBox(col->id)) {
+            FrameTableColBox* colBox = m_colBoxes[col->id];
             Length width = colBox->style()->width();
 
             if (width.isDefinite(false)) {
@@ -545,9 +539,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 LayoutUnit specifiedWidth = width.specifiedValue(unused, this);
                 specifiedWidth +=
                     colBox->borderWidth() + colBox->paddingWidth();
-                col.maxSpecifiedWidth = specifiedWidth;
+                col->maxSpecifiedWidth = specifiedWidth;
             } else if (width.isPercent()) {
-                col.maxPercentageWidth = width.percent();
+                col->maxPercentageWidth = width.percent();
             }
         }
     }
@@ -630,7 +624,7 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                     for (auto& col : m_columnWidths) {
                         LayoutUnit specifiedWidth = 0;
                         FrameTableCellBox* cellBox = cellFromFirstRowOrColGroup(
-                            tableLayoutFixed, col.id);
+                            tableLayoutFixed, col->id);
                         Length width = cellBox->style()->width();
 
                         if (width.isDefinite(false)) {
@@ -648,9 +642,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 }
 
                 for (auto& col : m_columnWidths) {
-                    FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
+                    FrameTableCellBox* cell = cellInTheFirstRowAt(col->id);
                     Length width =
-                        cellFromFirstRowOrColGroup(tableLayoutFixed, col.id)
+                        cellFromFirstRowOrColGroup(tableLayoutFixed, col->id)
                             ->style()
                             ->width();
 
@@ -667,9 +661,9 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                             LayoutUnit(cellWidth.toDouble() /
                                        sumOfSpecifiedCellWidths.toDouble() *
                                        availableWidth.toDouble());
-                        col.cellWidth = newCellWidth;
+                        col->cellWidth = newCellWidth;
                         if (tableLayoutFixed && newCellWidth < cellWidth) {
-                            col.cellWidth = cellWidth;
+                            col->cellWidth = cellWidth;
                         }
                     }
                 }
@@ -683,14 +677,14 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                     LayoutUnit newCellWidth = LayoutUnit(
                         remainingWidth.toDouble() / cellsWithAutoWidths.size());
                     for (auto& c : cellsWithAutoWidths) {
-                        ColSizeStruct& col = *c;
+                        ColSizeStruct* col = c;
 
                         if ((sumOfSpecifiedCellWidths + LayoutUnit::epsilon() >=
                              availableWidth) &&
                             tableLayoutFixed) {
-                            col.cellWidth = 0;
+                            col->cellWidth = 0;
                         } else {
-                            col.cellWidth = newCellWidth;
+                            col->cellWidth = newCellWidth;
                         }
                     }
                 } else {
@@ -808,28 +802,28 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 LayoutUnit widthToAdjust = sumOfAutoCellPreferredWidths;
                 for (auto& c : cellsWithAutoWidths) {
                     STARFISH_ASSERT(c->id < m_columnWidths.size());
-                    ColSizeStruct& col = m_columnWidths[c->id];
+                    ColSizeStruct* col = m_columnWidths[c->id];
 
                     if (secondRunOrMore &&
-                        (col.cellWidth == col.minCellWidth)) {
+                        (col->cellWidth == col->minCellWidth)) {
                         continue;
                     }
 
-                    col.cellWidth =
-                        LayoutUnit(col.maxCellWidth.toDouble() /
+                    col->cellWidth =
+                        LayoutUnit(col->maxCellWidth.toDouble() /
                                    sumOfAutoCellPreferredWidths.toDouble() *
                                    remainingWidth.toDouble());
 
-                    if (col.cellWidth < col.minCellWidth) {
-                        col.cellWidth = col.minCellWidth;
-                        columnsAdjustedToMinWidths.push_back(&col);
+                    if (col->cellWidth < col->minCellWidth) {
+                        col->cellWidth = col->minCellWidth;
+                        columnsAdjustedToMinWidths.push_back(col);
                         numOfReducedToMinWidths++;
-                        sumOfAutoCellMinWidths += col.cellWidth;
-                        widthToAdjust -= col.maxCellWidth;
+                        sumOfAutoCellMinWidths += col->cellWidth;
+                        widthToAdjust -= col->maxCellWidth;
                         reducedToMinWidth = true;
                     } else {
-                        col.cellWidth =
-                            std::min(col.cellWidth, col.maxCellWidth);
+                        col->cellWidth =
+                            std::min(col->cellWidth, col->maxCellWidth);
                     }
                 }
 
@@ -926,7 +920,7 @@ void FrameTableBox::forEachRowStruct(Func filter)
 
             size_t rowId = 0;
             for (auto& row : section->grid()) {
-                filter(&row, rowId);
+                filter(row, rowId);
                 rowId++;
             }
         }
@@ -937,7 +931,7 @@ bool FrameTableBox::resetColspanIfPossible()
 {
     bool colspanUpdated = false;
     for (size_t i = 0; i < m_columnWidths.size(); i++) {
-        if (m_columnWidths[i].isNullCell) {
+        if (m_columnWidths[i]->isNullCell) {
             forEachRowStruct(
                 [i, &colspanUpdated](RowStruct* rowStruct, size_t _rowId) {
                     FrameTableCellBox* cell =
@@ -965,37 +959,37 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
         style()->horizontalBorderSpacing().specifiedValue(unused, this);
 
     for (auto& col : m_columnWidths) {
-        STARFISH_ASSERT(col.id < m_columnWidths.size());
-        FrameTableCellBox* cell = cellInTheFirstRowAt(col.id);
+        STARFISH_ASSERT(col->id < m_columnWidths.size());
+        FrameTableCellBox* cell = cellInTheFirstRowAt(col->id);
 
         if (!cell) {
             continue;
         }
 
         if (cell->updatedColspan() > 1) {
-            if (col.hasSpecifiedWidth()) {
-                col.cellWidth = col.maxSpecifiedWidth;
+            if (col->hasSpecifiedWidth()) {
+                col->cellWidth = col->maxSpecifiedWidth;
             } else {
-                col.cellWidth = col.maxCellWidth;
+                col->cellWidth = col->maxCellWidth;
             }
 
-            *sumOfColWidths += col.cellWidth;
-            if (isCellWidthAuto(col.id)) {
-                *sumOfAutoCellPreferredWidths += col.cellWidth;
-                if (m_cellsInTheFirstRow[col.id] != cell) {
+            *sumOfColWidths += col->cellWidth;
+            if (isCellWidthAuto(col->id)) {
+                *sumOfAutoCellPreferredWidths += col->cellWidth;
+                if (m_cellsInTheFirstRow[col->id] != cell) {
                     *sumOfAutoCellPreferredWidths += borderSpacing;
                 }
             }
             continue;
         }
 
-        if (isCellWidthAuto(col.id)) {
-            col.cellWidth = col.maxCellWidth;
-            *sumOfAutoCellPreferredWidths += col.cellWidth;
+        if (isCellWidthAuto(col->id)) {
+            col->cellWidth = col->maxCellWidth;
+            *sumOfAutoCellPreferredWidths += col->cellWidth;
         } else {
             LayoutUnit specifiedWidth = 0;
             FrameTableCellBox* cellBox =
-                cellFromFirstRowOrColGroup(tableLayoutFixed, col.id);
+                cellFromFirstRowOrColGroup(tableLayoutFixed, col->id);
             Length width = cellBox->style()->width();
 
             if (width.isDefinite(false)) {
@@ -1003,28 +997,28 @@ void FrameTableBox::setCandidateCellWidthsAndReturnCellInfo(
                 specifiedWidth = width.specifiedValue(unused, this);
                 specifiedWidth +=
                     cellBox->borderWidth() + cellBox->paddingWidth();
-                col.cellWidth = specifiedWidth;
+                col->cellWidth = specifiedWidth;
             } else if (width.isPercent()) {
-                col.cellWidth = remainingWidth * width.percent();
+                col->cellWidth = remainingWidth * width.percent();
             } else {
-                col.cellWidth = col.maxSpecifiedWidth;
+                col->cellWidth = col->maxSpecifiedWidth;
             }
 
             // A cell width cannot be smaller than the min width of the cell
-            if (!tableLayoutFixed && col.cellWidth < col.minCellWidth) {
-                col.cellWidth = col.minCellWidth;
-                columnsAdjustedToMinWidths->push_back(&col);
+            if (!tableLayoutFixed && col->cellWidth < col->minCellWidth) {
+                col->cellWidth = col->minCellWidth;
+                columnsAdjustedToMinWidths->push_back(col);
             } else {
-                columnsMayNeedToAdjustWidths->push_back(&col);
+                columnsMayNeedToAdjustWidths->push_back(col);
             }
 
-            if (col.hasSpecifiedWidth() ||
-                (hasTableWidth && col.hasPercentageWidth())) {
-                *sumOfAdjustedSpecifiedCellWidths += col.cellWidth;
+            if (col->hasSpecifiedWidth() ||
+                (hasTableWidth && col->hasPercentageWidth())) {
+                *sumOfAdjustedSpecifiedCellWidths += col->cellWidth;
             }
         }
 
-        *sumOfColWidths += col.cellWidth;
+        *sumOfColWidths += col->cellWidth;
     }
 }
 
@@ -1125,7 +1119,7 @@ void FrameTableBox::calCellWidthsWithColspans()
     forEachRowStruct(
         [this, borderSpacing](RowStruct* rowStruct, size_t _rowId) {
             for (auto& cellStruct : rowStruct->cells()) {
-                FrameTableCellBox* cell = cellStruct.cell();
+                FrameTableCellBox* cell = cellStruct->cell();
 
                 if (cell->updatedColspan() > 1) {
                     LayoutUnit sumOfCellWidth = 0;
@@ -1135,16 +1129,16 @@ void FrameTableBox::calCellWidthsWithColspans()
                     for (size_t i = colId; i < colId + cell->updatedColspan();
                          i++) {
                         STARFISH_ASSERT(i < m_columnWidths.size());
-                        sumOfCellWidth += m_columnWidths[i].cellWidth;
+                        sumOfCellWidth += m_columnWidths[i]->cellWidth;
                         if (i < colId + cell->updatedColspan() - 1) {
                             sumOfCellWidth += borderSpacing;
                         }
                     }
 
-                    if (m_columnWidths[colId].hasSpecifiedWidth()) {
+                    if (m_columnWidths[colId]->hasSpecifiedWidth()) {
                         LayoutUnit cellWidth =
                             std::max(sumOfCellWidth,
-                                     m_columnWidths[colId].maxSpecifiedWidth);
+                                     m_columnWidths[colId]->maxSpecifiedWidth);
                         cell->setWidth(cellWidth);
                     } else {
                         cell->setWidth(sumOfCellWidth);
@@ -1361,36 +1355,36 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
 }
 
 void FrameTableBox::collectColumnWidths(
-    GCAtomicVector<ColSizeStruct>& columnWidthsSoFar,
-    GCAtomicVector<ColSizeStruct>& columnWidths)
+    GCAtomicVector<ColSizeStruct*>& columnWidthsSoFar,
+    GCAtomicVector<ColSizeStruct*>& columnWidths)
 {
     if (columnWidthsSoFar.empty()) {
         for (auto& col : columnWidths) {
             // Add empty ColSizeStruct as place holders
-            while (columnWidthsSoFar.size() < col.id) {
-                columnWidthsSoFar.push_back(ColSizeStruct());
+            while (columnWidthsSoFar.size() < col->id) {
+                columnWidthsSoFar.push_back(new ColSizeStruct());
             }
             columnWidthsSoFar.push_back(col);
         }
 
     } else {
         for (unsigned i = 0; i < columnWidths.size(); i++) {
-            ColSizeStruct& col = columnWidths[i];
+            ColSizeStruct* col = columnWidths[i];
 
             // Add empty ColSizeStruct as place holders
-            while (columnWidthsSoFar.size() <= col.id) {
-                columnWidthsSoFar.push_back(ColSizeStruct());
+            while (columnWidthsSoFar.size() <= col->id) {
+                columnWidthsSoFar.push_back(new ColSizeStruct());
             }
 
-            ColSizeStruct& colSoFar = columnWidthsSoFar[i];
-            colSoFar.maxCellWidth =
-                std::max(colSoFar.maxCellWidth, col.maxCellWidth);
-            colSoFar.minCellWidth =
-                std::max(colSoFar.minCellWidth, col.minCellWidth);
-            colSoFar.cellWidth = colSoFar.maxCellWidth;
+            ColSizeStruct* colSoFar = columnWidthsSoFar[i];
+            colSoFar->maxCellWidth =
+                std::max(colSoFar->maxCellWidth, col->maxCellWidth);
+            colSoFar->minCellWidth =
+                std::max(colSoFar->minCellWidth, col->minCellWidth);
+            colSoFar->cellWidth = colSoFar->maxCellWidth;
 
-            if (!col.isNullCell) {
-                colSoFar.isNullCell = false;
+            if (!col->isNullCell) {
+                colSoFar->isNullCell = false;
             }
         }
     }
@@ -1423,13 +1417,13 @@ bool FrameTableBox::isCellWidthAuto(unsigned i)
 
         // matching cell is empty because of colspan of previous cell
         if (m_cellsInTheFirstRow[i] == nullptr) {
-            return !m_columnWidths[i].hasSpecifiedWidth();
+            return !m_columnWidths[i]->hasSpecifiedWidth();
         }
 
         if (i < m_cellsInTheFirstRow.size()) {
             STARFISH_ASSERT(i < m_columnWidths.size());
             if (m_cellsInTheFirstRow[i]->style()->width().isAuto() &&
-                !(m_columnWidths[i].hasSpecifiedWidth())) {
+                !(m_columnWidths[i]->hasSpecifiedWidth())) {
                 return true;
             } else {
                 return false;
@@ -1583,11 +1577,11 @@ LayoutUnit FrameTableBox::calBaseline(LayoutContext& ctx)
         return height();
     }
 
-    RowStruct& firstRS = firstSection->grid()[0];
+    RowStruct* firstRS = firstSection->grid()[0];
     LineBox* tallestLB = nullptr;
     bool isBaseLine = false;
-    for (size_t i = 0; i < firstRS.cells().size(); ++i) {
-        FrameTableCellBox* c = firstRS.cells()[i].cell();
+    for (size_t i = 0; i < firstRS->cells().size(); ++i) {
+        FrameTableCellBox* c = firstRS->cells()[i]->cell();
         auto it = ctx.tempFirstLineAscender(c);
 
         if (it.hasValue() && (!tallestLB || (tallestLB->height() <
@@ -1600,17 +1594,17 @@ LayoutUnit FrameTableBox::calBaseline(LayoutContext& ctx)
 
     if (tallestLB) {
         if (isBaseLine) {
-            return firstRS.tableRow()->absolutePoint(this).y() +
-                   firstRS.tableRow()->baseline();
+            return firstRS->tableRow()->absolutePoint(this).y() +
+                   firstRS->tableRow()->baseline();
         }
         return tallestLB->absolutePoint(this).y() + tallestLB->height();
-    } else if (firstRS.cells().size()) {
+    } else if (firstRS->cells().size()) {
         // Empty cell
-        return firstRS.cells()[0].cell()->absolutePoint(this).y() +
-               (firstRS.cells()[0].cell()->height().toDouble() / 2);
+        return firstRS->cells()[0]->cell()->absolutePoint(this).y() +
+               (firstRS->cells()[0]->cell()->height().toDouble() / 2);
     }
     // Empty first row
-    return firstRS.tableRow()->absolutePoint(this).y();
+    return firstRS->tableRow()->absolutePoint(this).y();
 }
 
 FrameTableColBox* FrameTableBox::columnAtAbsoluteColumnIndex(unsigned index)

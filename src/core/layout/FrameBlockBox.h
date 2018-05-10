@@ -785,6 +785,22 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    {
+        FrameBox::fillGCDescriptor(obj_bitmap);
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_parent));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_previous));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_next));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_firstChild));
+        GC_set_bit(obj_bitmap,
+                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_lastChild));
+        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameBlockBox, m_lineBoxes));
+    }
+
     virtual void paintInlineContentBlock(Canvas* canvas);
     void updateScrollWidthAndHeightIfNeeds(OverflowValue overflowX,
                                            OverflowValue overflowY);

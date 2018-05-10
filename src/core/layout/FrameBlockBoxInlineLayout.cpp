@@ -4677,8 +4677,8 @@ void FrameTableBox::computePreferredWidth(PreferredWidthContext& ctx)
         tablePreferredWidth += borderSpacing;
         tablePreferredMinWidth += borderSpacing;
         for (auto& col : columnWidths()) {
-            tablePreferredWidth += col.maxCellWidth;
-            tablePreferredMinWidth += col.minCellWidth;
+            tablePreferredWidth += col->maxCellWidth;
+            tablePreferredMinWidth += col->minCellWidth;
             tablePreferredWidth += borderSpacing;
             tablePreferredMinWidth += borderSpacing;
         }
