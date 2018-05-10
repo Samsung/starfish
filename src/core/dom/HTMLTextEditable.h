@@ -33,12 +33,12 @@ public:
         return true;
     }
 
-    virtual bool hasTextValue()
+    virtual bool shouldCreateFrameText()
     {
         return true;
     }
 
-    virtual String* textValue()
+    virtual String* visibleValue()
     {
         return m_value;
     }
@@ -64,6 +64,11 @@ public:
     }
 
     virtual bool ignoreLineBreaks()
+    {
+        return false;
+    }
+
+    virtual bool shouldUsePlaceholder()
     {
         return false;
     }

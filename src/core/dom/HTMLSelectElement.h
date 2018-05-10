@@ -99,6 +99,9 @@ public:
     }
 
 private:
+    void resetFromOption(GCVector<HTMLOptionElement*>& list,
+                         HTMLOptionElement* resetFrom);
+
     HTMLCollection* m_selectedOptions;
     HTMLOptionsCollection* m_options;
 };
