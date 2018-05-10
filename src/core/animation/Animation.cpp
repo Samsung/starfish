@@ -36,11 +36,42 @@
 
 namespace StarFish {
 
+#define STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT()              \
+    STARFISH_ASSERT(m_fromValue.isLength() && m_toValue.isLength()); \
+    STARFISH_ASSERT((m_fromValue.getLength().isFixed() &&            \
+                     m_toValue.getLength().isFixed()) ||             \
+                    (m_fromValue.getLength().isPercent() &&          \
+                     m_toValue.getLength().isPercent()));
+
+template <typename T>
+static float interpolate(const T from, const T to, float progress)
+{
+    if (from < to) {
+        return from + (to - from) * progress;
+    }
+    return from - (from - to) * progress;
+}
+
+static bool shouldCancelPrevious(const AnimationTask* oldTask,
+                                 const AnimationTask* newTask)
+{
+    CSSStyleValuePair::KeyKind type = oldTask->propertyType();
+    bool matchBasic = type == newTask->propertyType() &&
+                      oldTask->targetElement() == newTask->targetElement();
+    if (type == CSSStyleValuePair::BackgroundPositionX ||
+        type == CSSStyleValuePair::BackgroundPositionY ||
+        type == CSSStyleValuePair::BackgroundSize) {
+        return matchBasic && oldTask->extraData() == newTask->extraData();
+    }
+    return matchBasic;
+}
+
 AnimationTask::AnimationTask(Element* target,
                              CSSStyleValuePair::KeyKind targetProperty,
                              AnimatedValue from, AnimatedValue to,
                              float durationInms, float delayInms,
-                             AnimationTimingFunction* timingFunction)
+                             AnimationTimingFunction* timingFunction,
+                             void* data)
 {
     m_isStartEventFired = false;
     m_targetElement = target;
@@ -52,6 +83,7 @@ AnimationTask::AnimationTask(Element* target,
     m_property = targetProperty;
     m_timingFunction = timingFunction;
     m_targetPropertyString = CSSPropertyHelper::toGCString(targetProperty);
+    m_extraData = data;
 }
 
 void AnimationTask::attachedToElement()
@@ -274,6 +306,18 @@ void LengthAnimationTask::attachedToElement()
 {
     AnimationTask::attachedToElement();
 
+    if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
+        targetElement()->style()->setBackgroundPositionX(
+            m_fromValue.getLength(), (size_t)m_extraData);
+        return;
+    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
+        targetElement()->style()->setBackgroundPositionY(
+            m_fromValue.getLength(), (size_t)m_extraData);
+        return;
+    }
+
     if (m_toValue.getLength().isDefinite(false)) {
         m_toFixedValue =
             m_toValue.getLength().specifiedValue(0, targetElement()->frame());
@@ -314,31 +358,97 @@ void LengthAnimationTask::attachedToElement()
     }
 }
 
+Length LengthAnimationTask::interpolateFixed(float progress) const
+{
+    return Length(Length::Fixed, interpolate(m_fromValue.getLayoutUnit(),
+                                             m_toFixedValue, progress));
+}
+
+Length LengthAnimationTask::interpolateFixedOrPercent(float progress) const
+{
+    STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
+    const Length& from = m_fromValue.getLength();
+    const Length& to = m_toValue.getLength();
+    return Length(from.type(),
+                  interpolate(from.numberData(), to.numberData(), progress));
+}
+
 void LengthAnimationTask::execute(float progress)
 {
-    LayoutUnit from = m_fromValue.getLayoutUnit();
-    LayoutUnit to = m_toFixedValue;
-
     Element* current = targetElement();
     ComputedStyle* style = current->style();
-    float newLength;
-    if (from < to) {
-        newLength = from + (to - from) * progress;
-    } else {
-        newLength = from - (from - to) * progress;
-    }
     if (m_property == CSSStyleValuePair::KeyKind::Width) {
-        style->setWidth(Length(Length::Fixed, newLength));
+        style->setWidth(interpolateFixed(progress));
     } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
-        style->setHeight(Length(Length::Fixed, newLength));
+        style->setHeight(interpolateFixed(progress));
     } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
-        style->setMinWidth(Length(Length::Fixed, newLength));
+        style->setMinWidth(interpolateFixed(progress));
     } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
-        style->setMinHeight(Length(Length::Fixed, newLength));
+        style->setMinHeight(interpolateFixed(progress));
     } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
-        style->setMaxWidth(Length(Length::Fixed, newLength));
+        style->setMaxWidth(interpolateFixed(progress));
     } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
-        style->setMaxHeight(Length(Length::Fixed, newLength));
+        style->setMaxHeight(interpolateFixed(progress));
+    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
+        style->setBackgroundPositionX(interpolateFixedOrPercent(progress),
+                                      (size_t)m_extraData);
+    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
+        style->setBackgroundPositionY(interpolateFixedOrPercent(progress),
+                                      (size_t)m_extraData);
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    current->setNeedsLayout();
+}
+
+void LengthSizeAnimationTask::attachedToElement()
+{
+    STARFISH_ASSERT(m_fromValue.isLengthSize() && m_toValue.isLengthSize());
+    STARFISH_ASSERT(m_fromValue.getLengthSize().width().type() ==
+                    m_toValue.getLengthSize().width().type());
+    STARFISH_ASSERT(m_fromValue.getLengthSize().height().type() ==
+                    m_toValue.getLengthSize().height().type());
+
+    AnimationTask::attachedToElement();
+    if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
+        targetElement()->style()->setBackgroundSize(m_fromValue.getLengthSize(),
+                                                    (size_t)m_extraData);
+        return;
+    }
+}
+
+LengthSize LengthSizeAnimationTask::interpolateFixedOrPercent(
+    float progress) const
+{
+#define INTERPOLATE_LENGTHSIZE(WH)                               \
+    Length(from.WH().type(), interpolate(from.WH().numberData(), \
+                                         to.WH().numberData(), progress))
+
+    const LengthSize& from = m_fromValue.getLengthSize();
+    const LengthSize& to = m_toValue.getLengthSize();
+    STARFISH_ASSERT(from.width().type() != Length::Auto ||
+                    from.height().type() != Length::Auto);
+    STARFISH_ASSERT(to.width().type() != Length::Auto ||
+                    to.height().type() != Length::Auto);
+
+    if (from.width().type() == Length::Auto) {
+        return LengthSize(Length(), INTERPOLATE_LENGTHSIZE(height));
+    } else if (from.height().type() == Length::Auto) {
+        return LengthSize(INTERPOLATE_LENGTHSIZE(width), Length());
+    }
+    return LengthSize(INTERPOLATE_LENGTHSIZE(width),
+                      INTERPOLATE_LENGTHSIZE(height));
+#undef INTERPOLATE_LENGTHSIZE
+}
+
+void LengthSizeAnimationTask::execute(float progress)
+{
+    Element* current = targetElement();
+    ComputedStyle* style = current->style();
+    if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
+        style->setBackgroundSize(interpolateFixedOrPercent(progress),
+                                 (size_t)m_extraData);
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -348,9 +458,10 @@ void LengthAnimationTask::execute(float progress)
 
 OpacityAnimationTask::OpacityAnimationTask(
     Element* target, AnimatedValue fromValue, AnimatedValue toValue,
-    float duration, float delay, AnimationTimingFunction* timingFunction)
+    float duration, float delay, AnimationTimingFunction* timingFunction,
+    void* data)
     : AnimationTask(target, CSSStyleValuePair::KeyKind::Opacity, fromValue,
-                    toValue, duration, delay, timingFunction)
+                    toValue, duration, delay, timingFunction, data)
 {
 }
 
@@ -698,7 +809,7 @@ void TransformAnimationTask::execute(float progress)
 void AnimationExecutor::registerAnimation(AnimationTask* newTask)
 {
     startIfNeeds();
-    cancelPreviousAnimation(newTask->targetElement(), newTask->propertyType());
+    cancelPreviousAnimationIfNeeded(newTask);
     newTask->attachedToElement();
     m_animationList.push_back(newTask);
 }
@@ -706,15 +817,13 @@ void AnimationExecutor::registerAnimation(AnimationTask* newTask)
 // This function cancel previous animation
 // which is related taget node and its property.
 // * This function is called when we need new animation.
-void AnimationExecutor::cancelPreviousAnimation(
-    Element* target, CSSStyleValuePair::KeyKind cssType)
+void AnimationExecutor::cancelPreviousAnimationIfNeeded(AnimationTask* newTask)
 {
     // fire end event
     m_animationList.erase(
         std::remove_if(m_animationList.begin(), m_animationList.end(),
-                       [&target, cssType](AnimationTask* current) {
-                           if (current->targetElement() == target &&
-                               current->propertyType() == cssType) {
+                       [&newTask](AnimationTask* current) {
+                           if (shouldCancelPrevious(current, newTask)) {
                                current->fireCancelEvent();
                                return true;
                            }
@@ -891,3 +1000,5 @@ void AnimationExecutor::addPendingAnimation(Element* element,
     m_pendingAnimationInfoList.push_back(info);
 }
 }
+
+#undef STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT

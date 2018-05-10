@@ -22,6 +22,7 @@
 
 #include "core/animation/AnimationTimingFunction.h"
 #include "core/style/Style.h"
+#include "core/style/StyleBackgroundData.h"
 
 namespace StarFish {
 
@@ -34,6 +35,7 @@ class AnimatedValue : public gc {
         COLOR,
         LAYOUT_UNIT,
         LENGTH,
+        LENGTH_SIZE,
         FLOAT,
         INT,
         MATRIX
@@ -55,6 +57,12 @@ public:
     {
         m_data.m_length = lengthValue;
         m_type = LENGTH;
+    }
+
+    AnimatedValue(LengthSize size)
+    {
+        m_data.m_lengthSize = size;
+        m_type = LENGTH_SIZE;
     }
 
     AnimatedValue(LayoutUnit v)
@@ -81,67 +89,78 @@ public:
         m_type = MATRIX;
     }
 
-    bool isColor()
+    bool isColor() const
     {
         return m_type == COLOR;
     }
 
-    bool isLength()
+    bool isLength() const
     {
         return m_type == LENGTH;
     }
 
-    bool isFloat()
+    bool isLengthSize() const
+    {
+        return m_type == LENGTH_SIZE;
+    }
+
+    bool isFloat() const
     {
         return m_type == FLOAT;
     }
 
-    bool isInt()
+    bool isInt() const
     {
         return m_type == INT;
     }
 
-    bool isMatrix()
+    bool isMatrix() const
     {
         return m_type == MATRIX;
     }
 
-    bool isLayoutUnit()
+    bool isLayoutUnit() const
     {
         return m_type == LAYOUT_UNIT;
     }
 
-    Unit::Color getColor()
+    Unit::Color getColor() const
     {
         STARFISH_ASSERT(m_type == COLOR);
         return m_data.m_color;
     }
 
-    Length getLength()
+    Length getLength() const
     {
         STARFISH_ASSERT(m_type == LENGTH);
         return m_data.m_length;
     }
 
-    LayoutUnit getLayoutUnit()
+    LengthSize getLengthSize() const
+    {
+        STARFISH_ASSERT(m_type == LENGTH_SIZE);
+        return m_data.m_lengthSize;
+    }
+
+    LayoutUnit getLayoutUnit() const
     {
         STARFISH_ASSERT(m_type == LAYOUT_UNIT);
         return m_data.m_layoutUnit;
     }
 
-    float getFloat()
+    float getFloat() const
     {
         STARFISH_ASSERT(m_type == FLOAT);
         return m_data.m_float;
     }
 
-    int getInt()
+    int getInt() const
     {
         STARFISH_ASSERT(m_type == INT);
         return m_data.m_int;
     }
 
-    SkMatrix getMatrix()
+    SkMatrix getMatrix() const
     {
         STARFISH_ASSERT(m_type == MATRIX);
         return m_data.m_matrix;
@@ -165,6 +184,7 @@ protected:
     union ValueData {
         Unit::Color m_color;
         Length m_length;
+        LengthSize m_lengthSize;
         LayoutUnit m_layoutUnit;
         float m_float;
         int m_int;
@@ -183,7 +203,8 @@ class AnimationTask : public gc {
 public:
     AnimationTask(Element* target, CSSStyleValuePair::KeyKind targetProperty,
                   AnimatedValue from, AnimatedValue to, float durationInms,
-                  float delayInms, AnimationTimingFunction* timingFunction);
+                  float delayInms, AnimationTimingFunction* timingFunction,
+                  void* data = nullptr);
     virtual ~AnimationTask()
     {
     }
@@ -199,7 +220,7 @@ public:
     virtual void detachedFromElement()
     {
     }
-    CSSStyleValuePair::KeyKind propertyType()
+    CSSStyleValuePair::KeyKind propertyType() const
     {
         return m_property;
     }
@@ -209,10 +230,16 @@ public:
         return m_targetElement;
     }
 
+    void* extraData() const
+    {
+        return m_extraData;
+    }
+
 protected:
     AnimatedValue m_fromValue;
     AnimatedValue m_toValue;
     CSSStyleValuePair::KeyKind m_property;
+    void* m_extraData;
 
 private:
     bool m_isStartEventFired;
@@ -230,9 +257,10 @@ public:
                        CSSStyleValuePair::KeyKind targetProperty,
                        AnimatedValue fromValue, AnimatedValue toValue,
                        float duration, float delay,
-                       AnimationTimingFunction* timingFunction)
+                       AnimationTimingFunction* timingFunction,
+                       void* data = nullptr)
         : AnimationTask(target, targetProperty, fromValue, toValue, duration,
-                        delay, timingFunction)
+                        delay, timingFunction, data)
     {
     }
     void execute(float progress) override;
@@ -244,9 +272,10 @@ public:
                         CSSStyleValuePair::KeyKind targetProperty,
                         AnimatedValue fromValue, AnimatedValue toValue,
                         float duration, float delay,
-                        AnimationTimingFunction* timingFunction)
+                        AnimationTimingFunction* timingFunction,
+                        void* data = nullptr)
         : AnimationTask(target, targetProperty, fromValue, toValue, duration,
-                        delay, timingFunction)
+                        delay, timingFunction, data)
     {
     }
     void execute(float progress) override;
@@ -254,14 +283,38 @@ public:
     void computeToValue();
 
 protected:
+    Length interpolateFixed(float progress) const;
+    Length interpolateFixedOrPercent(float progress) const;
+
+protected:
     LayoutUnit m_toFixedValue;
+};
+
+class LengthSizeAnimationTask : public AnimationTask {
+public:
+    LengthSizeAnimationTask(Element* target,
+                            CSSStyleValuePair::KeyKind targetProperty,
+                            AnimatedValue fromValue, AnimatedValue toValue,
+                            float duration, float delay,
+                            AnimationTimingFunction* timingFunction,
+                            void* data = nullptr)
+        : AnimationTask(target, targetProperty, fromValue, toValue, duration,
+                        delay, timingFunction, data)
+    {
+    }
+    void execute(float progress) override;
+    void attachedToElement() override;
+
+protected:
+    LengthSize interpolateFixedOrPercent(float progress) const;
 };
 
 class OpacityAnimationTask : public AnimationTask {
 public:
     OpacityAnimationTask(Element* target, AnimatedValue fromValue,
                          AnimatedValue toValue, float duration, float delay,
-                         AnimationTimingFunction* timingFunction);
+                         AnimationTimingFunction* timingFunction,
+                         void* data = nullptr);
     void execute(float progress) override;
     void detachedFromElement() override;
 
@@ -336,9 +389,8 @@ public:
         return m_window;
     }
 
-    void registerAnimation(AnimationTask* newtask);
-    void cancelPreviousAnimation(Element* target,
-                                 CSSStyleValuePair::KeyKind cssType);
+    void registerAnimation(AnimationTask* newTask);
+    void cancelPreviousAnimationIfNeeded(AnimationTask* newTask);
     void cancelAnimation(Element* target);
     void startIfNeeds();
     void stop();

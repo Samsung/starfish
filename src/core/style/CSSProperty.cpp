@@ -28,7 +28,7 @@ bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
     case CSSStyleValuePair::All:
     case CSSStyleValuePair::Background:
     case CSSStyleValuePair::BackgroundColor:
-    case CSSStyleValuePair::BackgroundImage:
+    case CSSStyleValuePair::BackgroundPosition:
     case CSSStyleValuePair::BackgroundPositionX:
     case CSSStyleValuePair::BackgroundPositionY:
     case CSSStyleValuePair::BackgroundSize:

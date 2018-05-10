@@ -20,6 +20,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/animation/Animation.h"
+#include "core/animation/AnimationUtil.h"
 #include "core/animation/CubicBezier.h"
 #include "core/animation/Steps.h"
 #include "core/dom/Node.h"
@@ -984,6 +985,8 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
 
 bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
 {
+    STARFISH_ASSERT(newStyle->display() != NoneDisplayValue);
+
     StyleTransitionData* data = newStyle->transition();
     for (size_t i = 0; i < data->size(); i++) {
         if (!data->at(i).duration().toTimeValue()) {
@@ -994,6 +997,14 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
 
         // e.g. BackgroundColor = BackgroundColor | Background | All
         RETURN_NEED_TRANSITION(CSSStyleValuePair::BackgroundColor,
+                               CSSStyleValuePair::Background);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionX,
+                               CSSStyleValuePair::BackgroundPosition,
+                               CSSStyleValuePair::Background);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionY,
+                               CSSStyleValuePair::BackgroundPosition,
+                               CSSStyleValuePair::Background);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::BackgroundSize,
                                CSSStyleValuePair::Background);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::BorderBottomColor,
                                CSSStyleValuePair::BorderColor,
@@ -1025,6 +1036,9 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
 void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                      ComputedStyle* newStyle, const bool* damagedKeys)
 {
+    STARFISH_ASSERT(newStyle->display() != NoneDisplayValue);
+    STARFISH_ASSERT(oldFrame);
+
     AnimationExecutor* executor = element->document()->animationExecutor();
     StyleTransitionData* data = newStyle->transition();
     for (size_t i = 0; i < data->size(); i++) {
@@ -1040,16 +1054,93 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
 
         if (NEED_TRANSITION(CSSStyleValuePair::BackgroundColor,
                             CSSStyleValuePair::Background)) {
-            if (oldStyle->backgroundColor() != newStyle->backgroundColor()) {
-                // We need double-check because function compareStyle doesn't
-                // provide correct information about each keys yet.
-                Unit::Color oldColor = oldStyle->backgroundColor();
-                executor->registerAnimation(new ColorAnimationTask(
-                    element, CSSStyleValuePair::BackgroundColor,
-                    AnimatedValue(oldColor),
-                    AnimatedValue(newStyle->backgroundColor()), duration, delay,
-                    timingFunction));
-                newStyle->setBackgroundColor(oldColor);
+            Unit::Color oldColor = oldStyle->backgroundColor();
+            executor->registerAnimation(new ColorAnimationTask(
+                element, CSSStyleValuePair::BackgroundColor,
+                AnimatedValue(oldColor),
+                AnimatedValue(newStyle->backgroundColor()), duration, delay,
+                timingFunction));
+            newStyle->setBackgroundColor(oldColor);
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionX,
+                            CSSStyleValuePair::BackgroundPosition,
+                            CSSStyleValuePair::Background)) {
+            if (!oldStyle->hasBlockLikeDisplay() ||
+                !newStyle->hasBlockLikeDisplay()) {
+                // TODO Inline Element
+                continue;
+            }
+            FrameBox* oldPaintingBox = oldFrame->asFrameBox();
+            size_t layerSize = newStyle->backgroundLayerSize();
+            GCVector<LengthAnimationTask*> tasks;
+            for (size_t i = 0; i < layerSize; i++) {
+                AnimatedValue pos1, pos2;
+                if (AnimationUtil::backgroundPosXToAnimatedValue(
+                        oldStyle, newStyle, oldPaintingBox, element, pos1, pos2,
+                        i)) {
+                    // NOTE Do not register animation directly here
+                    // Because registerAnimation can effect next layer style
+                    tasks.push_back(new LengthAnimationTask(
+                        element, CSSStyleValuePair::BackgroundPositionX, pos1,
+                        pos2, duration, delay, timingFunction, (void*)i));
+                }
+            }
+            for (size_t i = 0; i < tasks.size(); i++) {
+                executor->registerAnimation(tasks[i]);
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionY,
+                            CSSStyleValuePair::BackgroundPosition,
+                            CSSStyleValuePair::Background)) {
+            if (!oldStyle->hasBlockLikeDisplay() ||
+                !newStyle->hasBlockLikeDisplay()) {
+                // TODO Inline Element
+                continue;
+            }
+            FrameBox* oldPaintingBox = oldFrame->asFrameBox();
+            size_t layerSize = newStyle->backgroundLayerSize();
+            GCVector<LengthAnimationTask*> tasks;
+            for (size_t i = 0; i < layerSize; i++) {
+                AnimatedValue pos1, pos2;
+                if (AnimationUtil::backgroundPosYToAnimatedValue(
+                        oldStyle, newStyle, oldPaintingBox, element, pos1, pos2,
+                        i)) {
+                    // NOTE Do not register animation directly here
+                    // Because registerAnimation can effect next layer style
+                    tasks.push_back(new LengthAnimationTask(
+                        element, CSSStyleValuePair::BackgroundPositionY, pos1,
+                        pos2, duration, delay, timingFunction, (void*)i));
+                }
+            }
+            for (size_t i = 0; i < tasks.size(); i++) {
+                executor->registerAnimation(tasks[i]);
+            }
+        }
+        // NOTE background-size should come after background-position
+        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundSize,
+                            CSSStyleValuePair::Background)) {
+            if (!oldStyle->hasBlockLikeDisplay() ||
+                !newStyle->hasBlockLikeDisplay()) {
+                // TODO Inline Element
+                continue;
+            }
+            FrameBox* oldPaintingBox = oldFrame->asFrameBox();
+            size_t layerSize = newStyle->backgroundLayerSize();
+            GCVector<LengthSizeAnimationTask*> tasks;
+            for (size_t i = 0; i < layerSize; i++) {
+                AnimatedValue size1, size2;
+                if (AnimationUtil::backgroundSizeToAnimatedValue(
+                        oldStyle, newStyle, oldPaintingBox, element, size1,
+                        size2, i)) {
+                    // NOTE Do not register animation directly here
+                    // Because registerAnimation can effect next layer style
+                    tasks.push_back(new LengthSizeAnimationTask(
+                        element, CSSStyleValuePair::BackgroundSize, size1,
+                        size2, duration, delay, timingFunction, (void*)i));
+                }
+            }
+            for (size_t i = 0; i < tasks.size(); i++) {
+                executor->registerAnimation(tasks[i]);
             }
         }
         if (NEED_TRANSITION(CSSStyleValuePair::BorderBottomColor,
@@ -1113,7 +1204,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
             newStyle->setColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::Height)) {
-            if (oldFrame && oldStyle->height().isDefinite(true) &&
+            if (oldStyle->height().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
                 newStyle->height().isDefinite(true) &&
                 newStyle->hasBlockLikeDisplay()) {
@@ -1130,7 +1221,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
             }
         }
         if (NEED_TRANSITION(CSSStyleValuePair::MaxHeight)) {
-            if (oldFrame && oldStyle->maxHeight().isDefinite(true) &&
+            if (oldStyle->maxHeight().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
                 newStyle->maxHeight().isDefinite(true) &&
                 newStyle->hasBlockLikeDisplay()) {
@@ -1146,7 +1237,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
             }
         }
         if (NEED_TRANSITION(CSSStyleValuePair::MaxWidth)) {
-            if (oldFrame && oldStyle->maxWidth().isDefinite(true) &&
+            if (oldStyle->maxWidth().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
                 newStyle->maxWidth().isDefinite(true) &&
                 newStyle->hasBlockLikeDisplay()) {
@@ -1162,7 +1253,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
             }
         }
         if (NEED_TRANSITION(CSSStyleValuePair::MinHeight)) {
-            if (oldFrame && oldStyle->minHeight().isDefinite(true) &&
+            if (oldStyle->minHeight().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
                 newStyle->minHeight().isDefinite(true) &&
                 newStyle->hasBlockLikeDisplay()) {
@@ -1178,7 +1269,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
             }
         }
         if (NEED_TRANSITION(CSSStyleValuePair::MinWidth)) {
-            if (oldFrame && oldStyle->minWidth().isDefinite(true) &&
+            if (oldStyle->minWidth().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
                 newStyle->minWidth().isDefinite(true) &&
                 newStyle->hasBlockLikeDisplay()) {
@@ -1220,7 +1311,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
             newStyle->setTextDecorationColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::Transform)) {
-            if (oldFrame && oldFrame->isTransformable()) {
+            if (oldFrame->isTransformable()) {
                 STARFISH_ASSERT(oldFrame->isFrameBox());
                 FrameBox* box = oldFrame->asFrameBox();
                 SkMatrix matrixBefore = oldStyle->transformsToMatrix(
@@ -1233,7 +1324,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
             }
         }
         if (NEED_TRANSITION(CSSStyleValuePair::Width)) {
-            if (oldFrame && oldStyle->width().isDefinite(true) &&
+            if (oldStyle->width().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
                 newStyle->width().isDefinite(true) &&
                 newStyle->hasBlockLikeDisplay()) {
@@ -1810,29 +1901,23 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
-    StyleBackgroundData* oldBackground =
-        oldStyle->hasRareComputeStyleData()
-            ? oldStyle->rareComputedStyleData()->background()
-            : nullptr;
-    StyleBackgroundData* newBackground =
-        newStyle->hasRareComputeStyleData()
-            ? newStyle->rareComputedStyleData()->background()
-            : nullptr;
-
-    if (newBackground == nullptr && oldBackground == nullptr) {
-    } else if ((newBackground == nullptr || oldBackground == nullptr) ||
-               (*newBackground != *oldBackground)) {
-        // TODO seprate this
-        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundAttachment] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundClip] = true;
+    if (newStyle->backgroundColor() != oldStyle->backgroundColor()) {
         damagedKeys[CSSStyleValuePair::KeyKind::BackgroundColor] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundImage] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundOrigin] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundPositionX] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundPositionY] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundRepeatX] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundRepeatY] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::BackgroundSize] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
+    if (StyleBackgroundData::damaged(
+            oldStyle->background(), newStyle->background(),
+            damagedKeys[CSSStyleValuePair::KeyKind::BackgroundAttachment],
+            damagedKeys[CSSStyleValuePair::KeyKind::BackgroundClip],
+            damagedKeys[CSSStyleValuePair::KeyKind::BackgroundImage],
+            damagedKeys[CSSStyleValuePair::KeyKind::BackgroundOrigin],
+            damagedKeys[CSSStyleValuePair::KeyKind::BackgroundSize],
+            damagedKeys[CSSStyleValuePair::KeyKind::BackgroundRepeatX],
+            damagedKeys[CSSStyleValuePair::KeyKind::BackgroundRepeatY],
+            damagedKeys[CSSStyleValuePair::KeyKind::BackgroundPositionX],
+            damagedKeys[CSSStyleValuePair::KeyKind::BackgroundPositionY])) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }

@@ -21,6 +21,7 @@
 #define __StarFishLength__
 
 #include "core/layout/LayoutUtil.h"
+#include "core/style/Unit.h"
 
 namespace StarFish {
 
@@ -321,12 +322,28 @@ public:
     {
     }
 
+    LengthSize(const Unit::Size& size)
+        : m_width(Length::Fixed, size.width())
+        , m_height(Length::Fixed, size.height())
+    {
+    }
+
     Length width()
     {
         return m_width;
     }
 
     Length height()
+    {
+        return m_height;
+    }
+
+    const Length& width() const
+    {
+        return m_width;
+    }
+
+    const Length& height() const
     {
         return m_height;
     }
