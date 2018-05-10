@@ -66,7 +66,9 @@ void HTMLTextEditable::didStateChanged(int oldState, int newState)
 
     if (isEditableType()) {
         if (!oldGotFocus && newGotFocus) {
-            m_currentCaretPosition = textValue()->length();
+            if (!shouldUsePlaceholder()) {
+                m_currentCaretPosition = visibleValue()->length();
+            }
             m_caretBlinkingIntervalId = window()->setInterval(
                 [](Window* window, void* data) {
                     HTMLTextEditable* e = (HTMLTextEditable*)data;
@@ -115,7 +117,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
         return false;
     }
 
-    String* value = textValue();
+    String* value = visibleValue();
     m_currentCaretPosition = std::min(m_currentCaretPosition, value->length());
 
     String* oldValue = value;
@@ -152,7 +154,8 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
             }
         } break;
         case KeyValue::EnterKey: {
-            if (m_currentCaretPosition < (size_t)maxLength()) {
+            if (!ignoreLineBreaks() &&
+                m_currentCaretPosition < (size_t)maxLength()) {
                 value = value->concat('\n');
                 m_currentCaretPosition++;
                 m_shouldDrawCaret = true;

@@ -190,21 +190,20 @@ int HTMLSelectElement::displaySize()
 
 void HTMLSelectElement::reset()
 {
-    auto collection = options();
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
 
-    for (size_t i = 0; i < collection->length(); ++i) {
-        auto e = collection->item(i);
-        if (e->isHTMLOptionElement()) {
-            auto o = e->asHTMLOptionElement();
+    for (auto item : list) {
+        if (item->isHTMLOptionElement()) {
+            auto o = item->asHTMLOptionElement();
             o->setSelectedness(o->defaultSelected());
             o->setDirtiness(false);
         }
     }
-    for (size_t i = 0; i < collection->length(); ++i) {
-        auto e = collection->item(i);
-        if (e->isHTMLOptionElement()) {
-            auto o = e->asHTMLOptionElement();
-            resetFromOption(o); // FIXME
+    for (auto item : list) {
+        if (item->isHTMLOptionElement()) {
+            auto o = item->asHTMLOptionElement();
+            resetFromOption(list, o);
         }
     }
 }
@@ -352,13 +351,11 @@ void HTMLSelectElement::setSelectedIndex(size_t index)
     }
 }
 
-void HTMLSelectElement::resetFromOption(HTMLOptionElement* resetFrom)
+void HTMLSelectElement::resetFromOption(GCVector<HTMLOptionElement*>& list,
+                                        HTMLOptionElement* resetFrom)
 {
     Nullable<String*> val =
         getAttribute(starFish()->staticStrings()->m_multiple);
-    GCVector<HTMLOptionElement*> list;
-    computeListOfOptionElements(this, list);
-
     if (!val.hasValue()) {
         // single selection
         int selectedOptions = 0;
@@ -385,6 +382,13 @@ void HTMLSelectElement::resetFromOption(HTMLOptionElement* resetFrom)
     } else {
         // Todo
     }
+}
+
+void HTMLSelectElement::resetFromOption(HTMLOptionElement* resetFrom)
+{
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
+    resetFromOption(list, resetFrom);
 }
 
 void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)

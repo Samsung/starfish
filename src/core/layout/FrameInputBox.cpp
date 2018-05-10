@@ -36,13 +36,6 @@
 
 namespace StarFish {
 
-// TODO <textarea> & <input> could share same layout code
-// Below methods will be removed eventually
-//
-// * buildFrameTreeForTextEditable -> buildFrameTree
-// * layoutForTextEditable -> layout
-// * paintCarretForTextEditable -> paintCaret
-
 static ComputedStyle* createStyle(Node* from)
 {
     ComputedStyle* childStyle = new ComputedStyle(from->style());
@@ -62,15 +55,14 @@ static FrameText* createFrameText(HTMLTextEditable* from)
 
     // Set style
     ComputedStyle* pseudoStyle = createStyle(from);
-    if (from->ignoreLineBreaks()) {
-        pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
-    }
+    pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
     textElement->setStyle(pseudoStyle);
 
     // Edit text value to show
-    String* textValue = from->textValue();
-    if (!textValue->length()) {
-        if (from->isEditableType()) {
+    String* textValue = from->visibleValue();
+    if (textValue->length() == 0) {
+        if (from->isHTMLTextAreaElement() ||
+            (from->isEditableType() && from->placeholder()->length() != 0)) {
             textValue = from->placeholder();
         } else {
             // To prevent height shrink
@@ -95,39 +87,12 @@ FrameInputBox::FrameInputBox(Node* node, ComputedStyle* style)
 {
 }
 
-static FrameInputBox* buildFrameTreeForTextEditable(
-    Node* current, FrameTreeBuilderContext& ctx, bool force)
-{
-    STARFISH_ASSERT(current->isHTMLTextEditable());
-    FrameInputBox* currentFrame = nullptr;
-    FrameBlockBox* parent = ctx.currentBlockContainer();
-    if (current->needsFrameTreeBuild() || force) {
-        currentFrame = new FrameInputBox(current, nullptr);
-        force = true;
-    } else {
-        currentFrame = current->frame()->asFrameInputBox();
-    }
-    STARFISH_ASSERT(currentFrame);
-
-    ctx.setCurrentBlockContainer(currentFrame);
-
-    HTMLTextEditable* textEditable = current->asHTMLTextEditable();
-    if (textEditable->hasTextValue()) {
-        currentFrame->appendChild(createFrameText(textEditable));
-    }
-    ctx.setCurrentBlockContainer(parent);
-    return currentFrame;
-}
-
 FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
                                              FrameTreeBuilderContext& ctx,
                                              bool force)
 {
-    if (current->isHTMLTextEditable() && current->isHTMLTextAreaElement()) {
-        return buildFrameTreeForTextEditable(current, ctx, force);
-    }
-
-    if (current->asHTMLInputElement()->type()->equals("hidden")) {
+    if (current->isHTMLInputElement() &&
+        current->asHTMLInputElement()->type()->equals("hidden")) {
         return nullptr;
     }
 
@@ -142,39 +107,11 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
 
     ctx.setCurrentBlockContainer(currentFrame);
 
-    STARFISH_ASSERT(current->isHTMLInputElement());
+    STARFISH_ASSERT(current->isHTMLTextEditable());
 
-    HTMLInputElement* inputNode = current->asHTMLInputElement();
-    if (inputNode->canHaveValue()) {
-        // NOTE: Input boxes display the text value assigned to "value"
-        // attribute. To integrate with current layout, a tmp pseudo element is
-        // created to display the text value.
-        PseudoElement* textElement = new PseudoElement(
-            current->document(),
-            StyleResolver::PseudoElementType::PseudoElementFormOnly);
-        textElement->setParentNode(current);
-        ComputedStyle* pseudoStyle = createInputElementStyleFrom(current);
-        pseudoStyle->setWhiteSpace(WhiteSpaceValue::PreWhiteSpaceValue);
-        textElement->setStyle(pseudoStyle);
-
-        String* visibleValue = inputNode->visibleValue();
-        if (visibleValue->length() == 0) {
-            // replace emptyString to spaceString for preventing shrink linebox
-            // height
-            visibleValue = String::createUTF32String(0x202F);
-        }
-
-        Text* textNode = new Text(current->document(), visibleValue);
-        textNode->setParentNode(textElement);
-        ComputedStyle* textStyle = createInputElementStyleFrom(textElement);
-        if (inputNode->type()->equalsIgnoreCase("checkbox")) {
-            textStyle->setTextAlign(TextAlignValue::CenterTextAlignValue);
-        }
-        textNode->setStyle(textStyle);
-
-        FrameText* frameText = new FrameText(textNode, textStyle);
-        textNode->setFrame(frameText);
-        currentFrame->appendChild(frameText);
+    HTMLTextEditable* textEditable = current->asHTMLTextEditable();
+    if (textEditable->shouldCreateFrameText()) {
+        currentFrame->appendChild(createFrameText(textEditable));
     }
 
     ctx.setCurrentBlockContainer(parent);
@@ -192,14 +129,40 @@ ComputedStyle* FrameInputBox::createInputElementStyleFrom(Node* parent)
     return childStyle;
 }
 
-void FrameInputBox::layoutForTextEditable(
-    LayoutContext& ctx, Frame::LayoutWantToResolve resolveWhat)
+void FrameInputBox::layout(LayoutContext& ctx,
+                           Frame::LayoutWantToResolve resolveWhat)
 {
-    FrameBlockBox::layout(ctx, resolveWhat);
     HTMLTextEditable* textEditable = node()->asHTMLTextEditable();
+    if (textEditable->isHTMLInputElement() &&
+        (textEditable->asHTMLInputElement()->type()->equals("checkbox"))) {
+        Length fontSize;
+        bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
+        if (style()->width().isAuto() || style()->height().isAuto() ||
+            !style()->height().isDefinite(parentHasFixedHeight)) {
+            fontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
+        } else {
+            LayoutUnit parentContentHeight;
+            if (parentHasFixedHeight) {
+                parentContentHeight = ctx.parentFixedHeight(this);
+            }
+
+            LayoutUnit width = style()->width().specifiedValue(
+                ctx.parentContentWidth(this), this);
+            LayoutUnit height =
+                style()->height().specifiedValue(parentContentHeight, this);
+            fontSize = Length(Length::Fixed, std::min(width, height));
+        }
+
+        style()->setFontSize(fontSize);
+        style()->loadFont(textEditable);
+        // TODO: propagate fontsize
+    }
+
+    FrameBlockBox::layout(ctx, resolveWhat);
 
     // Align text to center vertically if necessary
-    if (textEditable->ignoreLineBreaks()) {
+    if (textEditable->shouldCreateFrameText() &&
+        textEditable->ignoreLineBreaks()) {
         if (lineBoxes().size() > 0) {
             LineBox* lb = *lineBoxes().begin();
             LayoutUnit availableHeight = contentHeight() - lb->height();
@@ -212,9 +175,9 @@ void FrameInputBox::layoutForTextEditable(
     LayoutUnit fontHeight =
         textEditable->style()->font()->metrics().m_fontHeight;
     bool isLTR = style()->direction() == DirectionValue::LtrDirectionValue;
-    size_t caret = textEditable->currentCaretPosition();
+    size_t cPos = textEditable->currentCaretPosition();
 
-    if (!caret) {
+    if (!cPos) {
         y = paddingTop() + borderTop();
         if (isLTR) {
             x = paddingLeft() + borderLeft();
@@ -225,6 +188,7 @@ void FrameInputBox::layoutForTextEditable(
         bool found = false;
         size_t lastEndIndex = 0;
         LayoutUnit lastY = 0;
+
         // Find textBox put caret inside
         iterateChildFrameBox([&](FrameBox* box) {
             if (!box->isInlineTextBox()) {
@@ -234,13 +198,13 @@ void FrameInputBox::layoutForTextEditable(
             auto absPoint = box->absolutePoint(this);
             lastEndIndex = stringView.end();
             lastY = absPoint.y();
-            if (!found && stringView.start() < caret &&
-                stringView.end() >= caret) {
+            if (!found && stringView.start() < cPos &&
+                stringView.end() >= cPos) {
                 found = true;
                 x = absPoint.x();
                 y = absPoint.y();
                 StringView newStringView(stringView);
-                newStringView.setEnd(caret);
+                newStringView.setEnd(cPos);
                 LayoutUnit offset = style()->font()->measureText(newStringView);
                 if (isLTR) {
                     x += offset;
@@ -250,10 +214,9 @@ void FrameInputBox::layoutForTextEditable(
                 }
             }
         });
-        if (!found) {
+        if (!found && !textEditable->ignoreLineBreaks()) {
             // Last Linebox were removed while processing layout
-            STARFISH_ASSERT(lastEndIndex < caret);
-            STARFISH_ASSERT(!textEditable->ignoreLineBreaks());
+            STARFISH_ASSERT(lastEndIndex < cPos);
             x = paddingLeft() + borderLeft();
             y = lastY;
         }
@@ -278,107 +241,10 @@ void FrameInputBox::layoutForTextEditable(
     }
 }
 
-void FrameInputBox::layout(LayoutContext& ctx,
-                           Frame::LayoutWantToResolve resolveWhat)
+void FrameInputBox::paintCaret(Canvas* canvas)
 {
-    if (node()->isHTMLTextEditable() && node()->isHTMLTextAreaElement()) {
-        layoutForTextEditable(ctx, resolveWhat);
-        return;
-    }
-
-    if ((node()->asHTMLInputElement()->type()->equals("checkbox"))) {
-        Length fontSize;
-        bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
-        if (style()->width().isAuto() || style()->height().isAuto() ||
-            !style()->height().isDefinite(parentHasFixedHeight)) {
-            fontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
-        } else {
-            LayoutUnit parentContentHeight;
-            if (parentHasFixedHeight) {
-                parentContentHeight = ctx.parentFixedHeight(this);
-            }
-
-            LayoutUnit width = style()->width().specifiedValue(
-                ctx.parentContentWidth(this), this);
-            LayoutUnit height =
-                style()->height().specifiedValue(parentContentHeight, this);
-            fontSize = Length(Length::Fixed, std::min(width, height));
-        }
-
-        style()->setFontSize(fontSize);
-        style()->loadFont(node());
-        // TODO: propagate fontsize
-    }
-
-    FrameBlockBox::layout(ctx, resolveWhat);
-
-    if (node()->asHTMLInputElement()->canHaveValue()) {
-        if (lineBoxes().size() > 0) {
-            LineBox* lb = *lineBoxes().begin();
-            LayoutUnit availableHeight = contentHeight() - lb->height();
-            lb->setY(availableHeight / 2 + paddingTop() + borderTop());
-        }
-    }
-
-    HTMLInputElement* e = node()->asHTMLInputElement();
-    size_t cPos = e->m_currentCaretPosition;
-
-    bool found = false;
-    bool isLTR = style()->direction() == DirectionValue::LtrDirectionValue;
-    LayoutUnit caretThickness = e->caretThickness();
-    LayoutUnit mostRight;
-    LayoutUnit mostLeft;
-    LayoutUnit mostTop = borderTop() + paddingTop();
-    LayoutUnit x, y;
-    iterateChildFrameBox([&](FrameBox* box) {
-        if (box->isInlineTextBox()) {
-            auto absPoint = box->absolutePoint(this);
-            mostRight =
-                std::max(mostRight, box->asInlineTextBox()->x() +
-                                        box->asInlineTextBox()->width());
-            mostLeft = std::max(mostLeft, box->asInlineTextBox()->x());
-            mostTop = std::max(absPoint.y(), mostTop);
-            if (!found && box->asInlineTextBox()->text().end() == cPos) {
-                found = true;
-
-                x = absPoint.x();
-                y = absPoint.y();
-                if (isLTR) {
-                    x += box->width();
-                }
-            }
-        }
-    });
-
-    if (!found && (e->state() & Node::NodeStateFocused)) {
-        String* value = e->value();
-        y = mostTop;
-        if (isLTR) {
-            x = paddingLeft() + borderLeft();
-            if (value->length()) {
-                x += mostRight;
-            }
-        } else {
-            x = paddingRight() + borderRight();
-            if (value->length()) {
-                x = mostLeft;
-            }
-        }
-    }
-
-    e->currentCaretLayoutLocation().setX(x);
-    e->currentCaretLayoutLocation().setY(y);
-
-    if (x + caretThickness > contentWidth()) {
-        node()->asElement()->ensureRareElementMembers()->m_scrollLeft =
-            x + caretThickness - contentWidth();
-    }
-}
-
-static void paintCaretForTextEditable(FrameInputBox* from, Canvas* canvas)
-{
-    STARFISH_ASSERT(from->node()->isHTMLTextEditable());
-    HTMLTextEditable* textEditable = from->node()->asHTMLTextEditable();
+    STARFISH_ASSERT(node()->isHTMLTextEditable());
+    HTMLTextEditable* textEditable = node()->asHTMLTextEditable();
     if (!textEditable->shouldDrawCaret()) {
         return;
     }
@@ -388,30 +254,6 @@ static void paintCaretForTextEditable(FrameInputBox* from, Canvas* canvas)
     x = textEditable->currentCaretLayoutLocation().x();
     y = textEditable->currentCaretLayoutLocation().y();
     canvas->save();
-    canvas->setColor(textEditable->style()->color());
-    canvas->drawRect(LayoutRect(x, y, caretThickness,
-                                from->style()->font()->metrics().m_fontHeight));
-    canvas->restore();
-}
-
-void FrameInputBox::paintCaret(Canvas* canvas)
-{
-    if (node()->isHTMLTextEditable()) {
-        paintCaretForTextEditable(this, canvas);
-        return;
-    }
-    HTMLInputElement* e = node()->asHTMLInputElement();
-    size_t cPos = e->m_currentCaretPosition;
-    if (!e->m_shouldDrawCaret) {
-        return;
-    }
-
-    LayoutUnit caretThickness = e->caretThickness();
-    LayoutUnit x, y;
-    x = e->currentCaretLayoutLocation().x();
-    y = e->currentCaretLayoutLocation().y();
-    canvas->save();
-    canvas->clip(makeRect(BoxValue::ContentBoxBoxValue));
     canvas->setColor(node()->style()->caretColor());
     canvas->drawRect(LayoutRect(x - scrollLeft(), y, caretThickness,
                                 style()->font()->metrics().m_fontHeight));

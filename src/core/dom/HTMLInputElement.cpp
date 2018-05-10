@@ -80,7 +80,7 @@ QualifiedName HTMLInputElement::name()
     return starFish()->staticStrings()->m_inputTagName;
 }
 
-bool HTMLInputElement::canHaveValue()
+bool HTMLInputElement::shouldCreateFrameText()
 {
     String* typeString = type();
     if (typeString->equals("")) {
@@ -598,7 +598,7 @@ bool HTMLInputElement::shouldUsePlaceholder()
 
 bool HTMLInputElement::handleDefaultEvent(Event* event)
 {
-    if (HTMLElement::handleDefaultEvent(event)) {
+    if (HTMLTextEditable::handleDefaultEvent(event)) {
         return true;
     }
 
@@ -617,97 +617,6 @@ bool HTMLInputElement::handleDefaultEvent(Event* event)
         } else if (event->type()->equals("mousedown") ||
                    event->type()->equals("touchstart")) {
             if (isEditableType()) {
-                return true;
-            }
-        }
-    } else {
-        if (document()->browsingContext()->focusedNode() == this &&
-            isEditableType()) {
-            String* value = this->value();
-
-            m_currentCaretPosition =
-                std::min(m_currentCaretPosition, value->length());
-
-            String* oldValue = value;
-            if (event->isKeyboardEvent() &&
-                event->type()->equalsIgnoreCase("keydown")) {
-                bool isUseful = false;
-                switch (event->asKeyboardEvent()->keyValue()) {
-                case KeyValue::BackspaceKey: {
-                    if (value->length()) {
-                        if (m_currentCaretPosition > 0 &&
-                            (int32_t)value->length() > minLength()) {
-                            StringBuilder sb;
-                            sb.appendSubString(value, 0,
-                                               m_currentCaretPosition - 1);
-                            sb.appendSubString(value, m_currentCaretPosition,
-                                               value->length());
-                            value = sb.finalize();
-                            m_currentCaretPosition--;
-                            m_shouldDrawCaret = true;
-                        }
-                        isUseful = true;
-                    }
-                } break;
-                case KeyValue::DeleteKey: {
-                    if (value->length()) {
-                        if (m_currentCaretPosition < value->length() &&
-                            (int32_t)value->length() > minLength()) {
-                            StringBuilder sb;
-                            sb.appendSubString(value, 0,
-                                               m_currentCaretPosition);
-                            sb.appendSubString(value,
-                                               m_currentCaretPosition + 1,
-                                               value->length());
-                            value = sb.finalize();
-                            m_shouldDrawCaret = true;
-                        }
-                        isUseful = true;
-                    }
-                } break;
-                default: {
-                    if (String::isASCIIPrintableKey(
-                            event->asKeyboardEvent()->keyValue()) &&
-                        m_currentCaretPosition < (size_t)maxLength()) {
-                        char key = (char)event->asKeyboardEvent()->keyValue();
-                        value = value->concat(key);
-                        m_currentCaretPosition++;
-                        m_shouldDrawCaret = true;
-                        isUseful = true;
-                    }
-                } break;
-                }
-
-                if (isUseful) {
-                    if (!value->equals(oldValue)) {
-                        setValue(value);
-                    }
-                    return true;
-                }
-            } else if (event->isCompositionEvent()) {
-                if (event->type()->equalsIgnoreCase("compositionstart")) {
-                } else if (event->type()->equalsIgnoreCase(
-                               "compositionupdate")) {
-                    value = value->remove(m_currentCaretPosition,
-                                          m_currentEditingText->length());
-                    m_currentEditingText = event->asCompositionEvent()->data();
-                    value = value->insert(m_currentEditingText,
-                                          m_currentCaretPosition);
-                    m_shouldDrawCaret = true;
-                } else if (event->type()->equalsIgnoreCase("compositionend") &&
-                           m_currentCaretPosition < (size_t)maxLength()) {
-                    value = value->remove(m_currentCaretPosition,
-                                          m_currentEditingText->length());
-                    value = value->insert(event->asCompositionEvent()->data(),
-                                          m_currentCaretPosition);
-                    m_currentEditingText = String::emptyString;
-                    m_currentCaretPosition +=
-                        event->asCompositionEvent()->data()->length();
-                    m_shouldDrawCaret = true;
-                }
-                if (!value->equals(oldValue)) {
-                    setAttribute(starFish()->staticStrings()->m_value, value);
-                }
                 return true;
             }
         }
@@ -741,6 +650,21 @@ bool HTMLInputElement::isEditableType()
     } else if (typeString->equals("tel")) {
         return true;
     } else if (typeString->equals("search")) {
+        return true;
+    }
+    return false;
+}
+
+bool HTMLInputElement::ignoreLineBreaks()
+{
+    String* typeString = type();
+    if (typeString->equals("text")) {
+        return true;
+    } else if (typeString->equals("search")) {
+        return true;
+    } else if (typeString->equals("tel")) {
+        return true;
+    } else if (typeString->equals("password")) {
         return true;
     }
     return false;

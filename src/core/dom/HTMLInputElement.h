@@ -62,7 +62,7 @@ public:
 
     // Other methods
     bool handleDefaultEvent(Event* event) override;
-    bool canHaveValue();
+    virtual bool shouldCreateFrameText() override;
     bool supportsFocus() override;
 
     virtual void styleForPresentationAttribute(
@@ -71,8 +71,9 @@ public:
     static String* obscurePhrase(String* phrase);
     static String* checkboxTickSymbol();
 
-    String* visibleValue();
+    virtual String* visibleValue() override;
     virtual bool isEditableType() override;
+    virtual bool ignoreLineBreaks() override;
 
     bool firstDefaultValue();
     void setFirstDefaultValue(bool firstDefaultValue);
@@ -103,12 +104,12 @@ public:
     {
         return true;
     }
+    virtual bool shouldUsePlaceholder() override;
 
 protected:
 private:
     void toggleChecked();
     bool isSizableType();
-    bool shouldUsePlaceholder();
     void sanitizeValue();
 
     GCVector<HTMLInputElement*>* radioButtonGroup();

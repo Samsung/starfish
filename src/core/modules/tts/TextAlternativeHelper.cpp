@@ -294,7 +294,7 @@ bool TextAlternativeHelper::appendFromEmbeddedControlIfNeeds(Node* node)
         }
     } else if (node->isHTMLTextEditable()) {
         // TODO input | textarea -> HTMLTextEditable
-        value = node->asHTMLTextEditable()->textValue();
+        value = node->asHTMLTextEditable()->visibleValue();
     } else if (node->isHTMLSelectElement()) {
         HTMLOptionElement* oe = node->asElement()
                                     ->asHTMLSelectElement()
