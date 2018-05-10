@@ -1,0 +1,11 @@
+// https://drafts.css-houdini.org/css-typed-om/#keywordvalue-objects
+[
+  Constructor(CSSOMString keyword),
+  ConstructorCallWith=Document,
+  RuntimeEnabled=CSSTypedOM,
+  Exposed=(Window, Worker, PaintWorklet, LayoutWorklet),
+  RaisesException=Constructor
+] interface CSSKeywordValue : CSSStyleValue {
+    [RaisesException=Setter] attribute CSSOMString value;
+};
+
