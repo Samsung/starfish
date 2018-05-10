@@ -42,6 +42,7 @@ public:
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+    static inline void fillGCDescriptor(GC_word* obj_bitmap);
 };
 }
 

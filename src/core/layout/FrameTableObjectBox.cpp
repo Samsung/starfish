@@ -22,6 +22,20 @@
 
 namespace StarFish {
 
+void* FrameTableObjectBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableObjectBox)] = { 0 };
+        FrameTableObjectBox::fillGCDescriptor(obj_bitmap);
+        descr =
+            GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableObjectBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 FrameTableObjectBox::FrameTableObjectBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {

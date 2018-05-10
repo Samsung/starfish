@@ -960,19 +960,7 @@ void* FrameBlockBox::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameBlockBox)] = { 0 };
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameBlockBox, m_node));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameBlockBox, m_layoutParent));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_parent));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_previous));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_next));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_firstChild));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameBlockBox, m_treeItemModel.m_lastChild));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameBlockBox, m_lineBoxes));
+        FrameBlockBox::fillGCDescriptor(obj_bitmap);
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameBlockBox));
         typeInited = true;
     }

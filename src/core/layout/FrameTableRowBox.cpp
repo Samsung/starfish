@@ -37,19 +37,7 @@ void* FrameTableRowBox::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTableRowBox)] = { 0 };
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableRowBox, m_node));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableRowBox, m_layoutParent));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableRowBox, m_treeItemModel.m_parent));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableRowBox,
-                                              m_treeItemModel.m_previous));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameTableRowBox, m_treeItemModel.m_next));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableRowBox,
-                                              m_treeItemModel.m_firstChild));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTableRowBox,
-                                              m_treeItemModel.m_lastChild));
+        FrameTableRowBox::fillGCDescriptor(obj_bitmap);
         descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTableRowBox));
         typeInited = true;
     }
@@ -98,7 +86,7 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
         for (; i < cell->absoluteColumnIndex(); i++) {
             STARFISH_ASSERT(i <
                             sectionBox()->tableBox()->columnWidths().size());
-            xSoFar += sectionBox()->tableBox()->columnWidths()[i].cellWidth;
+            xSoFar += sectionBox()->tableBox()->columnWidths()[i]->cellWidth;
 
             if (i < sectionBox()->tableBox()->columnWidths().size() - 1) {
                 xSoFar += borderSpacing;
@@ -118,7 +106,7 @@ void FrameTableRowBox::layoutWidth(LayoutContext& ctx)
                 STARFISH_ASSERT(
                     i < sectionBox()->tableBox()->columnWidths().size());
                 cellWidth =
-                    sectionBox()->tableBox()->columnWidths()[i].cellWidth;
+                    sectionBox()->tableBox()->columnWidths()[i]->cellWidth;
                 cell->setWidth(cellWidth);
             }
 
