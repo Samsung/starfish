@@ -1,0 +1,9 @@
+// Spec: https://drafts.css-houdini.org/css-typed-om/#stylevalue-objects
+[
+  ConstructorCallWith=Document,
+  Exposed=(Window, Worker, PaintWorklet, LayoutWorklet)
+] interface CSSStyleValue {
+  //stringifier;
+  [RaisesException, Exposed=Window] static CSSStyleValue parse(CSSOMString property, CSSOMString cssText);
+  [RaisesException, Exposed=Window] static sequence<CSSStyleValue> parseAll(CSSOMString property, CSSOMString cssText);
+};

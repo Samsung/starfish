@@ -1,0 +1,11 @@
+// https://drafts.css-houdini.org/css-typed-om/#cssunitvalue
+[
+ Constructor(double value, CSSOMString unit),
+ ConstructorCallWith=Document,
+ RaisesException=Constructor,
+ Exposed=(Window,LayoutWorklet,PaintWorklet)
+] interface CSSUnitValue : CSSNumericValue {
+  attribute double value;
+  readonly attribute CSSOMString unit;
+};
+

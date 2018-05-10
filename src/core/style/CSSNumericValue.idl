@@ -1,0 +1,43 @@
+// https://drafts.css-houdini.org/css-typed-om/#numeric-objects
+typedef (double or CSSNumericValue) CSSNumberish;
+
+enum CSSNumericBaseType {
+    "length",
+    "angle",
+    "time",
+    "frequency",
+    "resolution",
+    "flex",
+    "percent",
+};
+
+dictionary CSSNumericType {
+    long length;
+    long angle;
+    long time;
+    long frequency;
+    long resolution;
+    long flex;
+    long percent;
+    CSSNumericBaseType percentHint;
+};
+
+[
+  Exposed=(Window, Worker, PaintWorklet, LayoutWorklet)
+] interface CSSNumericValue : CSSStyleValue {
+//   [RaisesException, NewObject] CSSNumericValue add(CSSNumberish... values);
+//   [RaisesException, NewObject] CSSNumericValue sub(CSSNumberish... values);
+//   [RaisesException, NewObject] CSSNumericValue mul(CSSNumberish... values);
+//   [RaisesException, NewObject] CSSNumericValue div(CSSNumberish... values);
+//   [RaisesException, NewObject] CSSNumericValue min(CSSNumberish... values);
+//   [RaisesException, NewObject] CSSNumericValue max(CSSNumberish... values);
+//
+//   boolean equals(CSSNumberish... values);
+//
+//   [RaisesException, NewObject] CSSUnitValue to(CSSOMString unit);
+//   [RaisesException, NewObject] CSSMathSum toSum(CSSOMString... units);
+//   CSSNumericType type();
+//
+//   // Putting Exposed=Window in the next line makes |parse| not exposed to PaintWorklet.
+   [RaisesException, NewObject, Exposed=Window] static CSSNumericValue parse(CSSOMString cssText);
+};
