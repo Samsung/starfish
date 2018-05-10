@@ -3011,6 +3011,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundImage:
+            style->resetBackgroundImages();
             if ((cssValues[k].valueKind() ==
                  CSSStyleValuePair::ValueKind::Initial) ||
                 (cssValues[k].valueKind() ==
@@ -3052,6 +3053,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundPositionX:
+            style->resetBackgroundPositionXs();
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
@@ -3062,6 +3064,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundPositionY:
+            style->resetBackgroundPositionYs();
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
@@ -3072,6 +3075,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundSize:
+            style->resetBackgroundSizes();
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
@@ -3131,6 +3135,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundRepeatX:
+            style->resetBackgroundRepeatXs();
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
@@ -3166,6 +3171,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundRepeatY:
+            style->resetBackgroundRepeatYs();
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
@@ -3201,6 +3207,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundAttachment:
+            style->resetBackgroundAttachments();
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Initial:
             case CSSStyleValuePair::ValueKind::Unset:
@@ -3236,6 +3243,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundClip:
+            style->resetBackgroundClips();
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Initial:
             case CSSStyleValuePair::ValueKind::Unset:
@@ -3267,6 +3275,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundOrigin:
+            style->resetBackgroundOrigins();
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Initial:
             case CSSStyleValuePair::ValueKind::Unset:
@@ -6449,9 +6458,11 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         ComputedStyle* oldStyle = element->style();
         element->setStyle(style);
 
-        if (oldStyle && style->transition() &&
-            (damage != ComputedStyleDamage::ComputedStyleDamageNone)) {
-            if (needsToApplyTransition(style, damagedKeys)) {
+        if (style->display() == NoneDisplayValue) {
+            element->document()->animationExecutor()->cancelAnimation(element);
+        } else if (oldStyle && style->transition() &&
+                   (damage != ComputedStyleDamage::ComputedStyleDamageNone)) {
+            if (oldFrame && needsToApplyTransition(style, damagedKeys)) {
                 if (!element->webView()->inRendering()) {
                     element->document()
                         ->animationExecutor()

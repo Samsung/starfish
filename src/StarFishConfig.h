@@ -517,6 +517,16 @@ inline void hash_combine(std::size_t& seed, const T& v)
     seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
+template <typename T1, typename T2>
+inline T2 narrow_cast(T1 v)
+{
+    static_assert(std::numeric_limits<T2>::max() <
+                      std::numeric_limits<T1>::max(),
+                  "Wrong type cast");
+    return static_cast<T2>(
+        v % (static_cast<T1>(std::numeric_limits<T2>::max()) + 1));
+}
+
 #include "core/layout/LayoutUtil.h"
 #include "core/util/String.h"
 #include "core/util/AtomicString.h"

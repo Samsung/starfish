@@ -1328,75 +1328,145 @@ public:
 
     void setBackgroundColor(Unit::Color color)
     {
-        m_rareComputedStyleData.ensureBackground()->setBgColor(color);
+        m_rareComputedStyleData.ensureBackground()->setColor(color);
     }
 
     void setBackgroundColorToCurrentColor()
     {
-        m_rareComputedStyleData.ensureBackground()->setBgColorToCurrentColor();
+        m_rareComputedStyleData.ensureBackground()->setColorToCurrentColor();
     }
 
-    void setBackgroundImage(ImageValue* image, unsigned int layer = 0)
+    void setBackgroundImage(ImageValue* image, uint32_t layer = 0)
     {
-        m_rareComputedStyleData.ensureBackground()->setBgImage(image, layer);
+        m_rareComputedStyleData.ensureBackground()->setImage(image, layer);
     }
 
-    void setBackgroundImageResource(ImageResource* img, unsigned int layer = 0)
+    void setBackgroundImageResource(ImageResource* img, uint32_t layer = 0)
     {
-        m_rareComputedStyleData.ensureBackground()->setBgImageResource(img,
-                                                                       layer);
+        m_rareComputedStyleData.ensureBackground()->setImageResource(img,
+                                                                     layer);
     }
 
-    void setBackgroundRepeatX(BackgroundRepeatValue repeat,
-                              unsigned int layer = 0)
+    void setBackgroundRepeatX(BackgroundRepeatValue repeat, uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setRepeatX(repeat, layer);
     }
 
-    void setBackgroundRepeatY(BackgroundRepeatValue repeat,
-                              unsigned int layer = 0)
+    void setBackgroundRepeatY(BackgroundRepeatValue repeat, uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setRepeatY(repeat, layer);
     }
 
-    void setBackgroundPositionX(Length value, unsigned int layer = 0)
+    void setBackgroundPositionX(Length value, uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setPositionX(value, layer);
     }
 
-    void setBackgroundPositionY(Length value, unsigned int layer = 0)
+    void setBackgroundPositionY(Length value, uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setPositionY(value, layer);
     }
 
-    void setBackgroundSize(BackgroundSizeValue size, unsigned int layer = 0)
+    void setBackgroundSize(BackgroundSizeValue size, uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setSize(size, layer);
     }
 
-    void setBackgroundSize(LengthSize size, unsigned int layer = 0)
+    void setBackgroundSize(LengthSize size, uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setSize(size, layer);
     }
 
     void setBackgroundAttachment(BackgroundAttachmentValue attachment,
-                                 unsigned int layer = 0)
+                                 uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setAttachment(attachment,
                                                                   layer);
     }
 
-    void setBackgroundClip(BoxValue clip, unsigned int layer = 0)
+    void setBackgroundClip(BoxValue clip, uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setClip(clip, layer);
     }
 
-    void setBackgroundOrigin(BoxValue origin, unsigned int layer = 0)
+    void setBackgroundOrigin(BoxValue origin, uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setOrigin(origin, layer);
     }
 
-    unsigned int backgroundLayerSize()
+    void resetBackgroundImages()
+    {
+        StyleBackgroundData* data = background();
+        if (data) {
+            data->shrinkImages(0);
+        }
+    }
+
+    void resetBackgroundRepeatXs()
+    {
+        StyleBackgroundData* data = background();
+        if (data) {
+            data->shrinkRepeatXs(0);
+        }
+    }
+
+    void resetBackgroundRepeatYs()
+    {
+        StyleBackgroundData* data = background();
+        if (data) {
+            data->shrinkRepeatYs(0);
+        }
+    }
+
+    void resetBackgroundPositionXs()
+    {
+        StyleBackgroundData* data = background();
+        if (data) {
+            data->shrinkPositionXs(0);
+        }
+    }
+
+    void resetBackgroundPositionYs()
+    {
+        StyleBackgroundData* data = background();
+        if (data) {
+            data->shrinkPositionYs(0);
+        }
+    }
+
+    void resetBackgroundSizes()
+    {
+        StyleBackgroundData* data = background();
+        if (data) {
+            data->shrinkSizes(0);
+        }
+    }
+
+    void resetBackgroundAttachments()
+    {
+        StyleBackgroundData* data = background();
+        if (data) {
+            data->shrinkAttachments(0);
+        }
+    }
+
+    void resetBackgroundClips()
+    {
+        StyleBackgroundData* data = background();
+        if (data) {
+            data->shrinkClips(0);
+        }
+    }
+
+    void resetBackgroundOrigins()
+    {
+        StyleBackgroundData* data = background();
+        if (data) {
+            data->shrinkOrigins(0);
+        }
+    }
+
+    uint32_t backgroundLayerSize()
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1411,28 +1481,28 @@ public:
         if (background == nullptr) {
             return Unit::Color();
         }
-        return background->bgColor();
+        return background->color();
     }
 
-    ImageValue* backgroundImage(unsigned int layer = 0)
+    ImageValue* backgroundImage(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
             return nullptr;
         }
-        return background->bgImage(layer);
+        return background->image(layer);
     }
 
-    NativeImageData* backgroundImageData(unsigned int layer = 0)
+    NativeImageData* backgroundImageData(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
             return nullptr;
         }
-        return background->bgImageData(layer);
+        return background->imageData(layer);
     }
 
-    BackgroundRepeatValue backgroundRepeatX(unsigned int layer = 0)
+    BackgroundRepeatValue backgroundRepeatX(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1441,7 +1511,7 @@ public:
         return background->repeatX(layer);
     }
 
-    BackgroundRepeatValue backgroundRepeatY(unsigned int layer = 0)
+    BackgroundRepeatValue backgroundRepeatY(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1450,7 +1520,7 @@ public:
         return background->repeatY(layer);
     }
 
-    Length backgroundPositionX(unsigned int layer = 0)
+    Length backgroundPositionX(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1459,7 +1529,7 @@ public:
         return background->positionX(layer);
     }
 
-    Length backgroundPositionY(unsigned int layer = 0)
+    Length backgroundPositionY(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1468,7 +1538,7 @@ public:
         return background->positionY(layer);
     }
 
-    bool backgroundSizeIsLength(unsigned int layer = 0)
+    bool backgroundSizeIsLength(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1477,7 +1547,7 @@ public:
         return background->sizeIsLength(layer);
     }
 
-    BackgroundSizeValue backgroundSizeTypeValue(unsigned int layer = 0)
+    BackgroundSizeValue backgroundSizeTypeValue(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1487,7 +1557,7 @@ public:
         return background->sizeTypeValue(layer);
     }
 
-    LengthSize backgroundSizeLengthValue(unsigned int layer = 0)
+    LengthSize backgroundSizeLengthValue(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1496,7 +1566,7 @@ public:
         return background->sizeLengthValue(layer);
     }
 
-    BackgroundAttachmentValue backgroundAttachment(unsigned int layer = 0)
+    BackgroundAttachmentValue backgroundAttachment(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1505,7 +1575,7 @@ public:
         return background->attachment(layer);
     }
 
-    BoxValue backgroundClip(unsigned int layer = 0)
+    BoxValue backgroundClip(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1514,7 +1584,7 @@ public:
         return background->clip(layer);
     }
 
-    BoxValue backgroundOrigin(unsigned int layer = 0)
+    BoxValue backgroundOrigin(uint32_t layer = 0)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {

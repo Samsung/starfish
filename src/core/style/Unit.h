@@ -53,7 +53,7 @@ namespace Unit {
 
     class Size {
     public:
-        Size(float w, float h)
+        Size(float w = 0, float h = 0)
         {
             m_width = w;
             m_height = h;
