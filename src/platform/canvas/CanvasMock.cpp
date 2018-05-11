@@ -167,17 +167,13 @@ public:
     {
     }
 
-    virtual void drawLinearGradient(const Unit::Rect& dst, const float& sx,
-                                    const float& sy, const float& ex,
-                                    const float& ey,
-                                    GCVector<ColorStop*>& colorStops)
+    virtual void drawLinearGradient(const Unit::Rect& dst,
+                                    GradientDrawingInfo* info)
     {
     }
 
-    virtual void drawRadialGradient(const Unit::Rect& dst, float sx, float sy,
-                                    float sr, float ex, float ey, float er,
-                                    float firstRadius, float secondRadius,
-                                    GCVector<ColorStop*>& colorStops)
+    virtual void drawRadialGradient(const Unit::Rect& dst,
+                                    GradientDrawingInfo* info)
     {
     }
 

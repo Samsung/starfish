@@ -738,10 +738,8 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawLinearGradient(const Unit::Rect& dst, const float& sx,
-                                    const float& sy, const float& ex,
-                                    const float& ey,
-                                    GCVector<ColorStop*>& colorStops)
+    virtual void drawLinearGradient(const Unit::Rect& dst,
+                                    GradientDrawingInfo* info)
     {
         STARFISH_ASSERT(m_canvas);
         if (!lastState().m_visible) {
@@ -751,12 +749,13 @@ public:
         cairo_save(m_canvas);
 
         cairo_pattern_t* pt;
-        pt = cairo_pattern_create_linear(sx, sy, ex, ey);
+        pt =
+            cairo_pattern_create_linear(info->x1, info->y1, info->x2, info->y2);
 
-        size_t size = colorStops.size();
+        size_t size = info->colorStops.size();
         for (size_t i = 0; i < size; ++i) {
-            const auto& color = colorStops[i]->color();
-            const auto& offset = colorStops[i]->offset().percent();
+            const auto& color = info->colorStops[i]->color();
+            const auto& offset = info->colorStops[i]->offset().percent();
             cairo_pattern_add_color_stop_rgba(pt, offset, color.R(), color.G(),
                                               color.B(), color.A());
         }
@@ -768,10 +767,8 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawRadialGradient(const Unit::Rect& dst, float sx, float sy,
-                                    float sr, float ex, float ey, float er,
-                                    float firstRadius, float secondRadius,
-                                    GCVector<ColorStop*>& colorStops)
+    virtual void drawRadialGradient(const Unit::Rect& dst,
+                                    GradientDrawingInfo* info)
     {
         STARFISH_ASSERT(m_canvas);
         if (!lastState().m_visible) {
@@ -782,29 +779,33 @@ public:
         cairo_clip(m_canvas);
         cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
 
-        if (secondRadius && firstRadius > secondRadius) {
-            er = firstRadius;
-            sy = sy * (firstRadius / secondRadius);
-            ey = ey * (firstRadius / secondRadius);
-            cairo_scale(m_canvas, 1, 1 * (secondRadius / firstRadius));
-        } else if (secondRadius && firstRadius < secondRadius) {
-            er = secondRadius;
-            sx = sx * (secondRadius / firstRadius);
-            ex = ex * (secondRadius / firstRadius);
-            cairo_scale(m_canvas, 1 * (firstRadius / secondRadius), 1);
+        if (info->secondRadius && info->firstRadius > info->secondRadius) {
+            info->r2 = info->firstRadius;
+            info->y1 = info->y1 * (info->firstRadius / info->secondRadius);
+            info->y2 = info->y2 * (info->firstRadius / info->secondRadius);
+            cairo_scale(m_canvas, 1,
+                        1 * (info->secondRadius / info->firstRadius));
+        } else if (info->secondRadius &&
+                   info->firstRadius < info->secondRadius) {
+            info->r2 = info->secondRadius;
+            info->x1 = info->x1 * (info->secondRadius / info->firstRadius);
+            info->x2 = info->x2 * (info->secondRadius / info->firstRadius);
+            cairo_scale(m_canvas, 1 * (info->firstRadius / info->secondRadius),
+                        1);
         }
 
         cairo_pattern_t* pt;
-        pt = cairo_pattern_create_radial(sx, sy, sr, ex, ey, er);
+        pt = cairo_pattern_create_radial(info->x1, info->y1, info->r1, info->x2,
+                                         info->y2, info->r2);
 
-        size_t size = colorStops.size();
+        size_t size = info->colorStops.size();
         for (size_t i = 0; i < size; ++i) {
-            const auto& color = colorStops[i]->color();
-            const auto& offset = colorStops[i]->offset().percent();
+            const auto& color = info->colorStops[i]->color();
+            const auto& offset = info->colorStops[i]->offset().percent();
             cairo_pattern_add_color_stop_rgba(pt, offset, color.R(), color.G(),
                                               color.B(), color.A());
         }
-        cairo_arc(m_canvas, ex, ey, er, 0, 2 * M_PI);
+        cairo_arc(m_canvas, info->x2, info->y2, info->r2, 0, 2 * M_PI);
         cairo_set_source(m_canvas, pt);
         cairo_fill(m_canvas);
         cairo_pattern_destroy(pt);

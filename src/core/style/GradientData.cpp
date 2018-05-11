@@ -505,6 +505,18 @@ void GradientData::convertColorStopsToCSSColorStops(
     }
 }
 
+GradientDrawingInfo* LinearGradientData::makeGradientDrawingInfo(
+    const Unit::Rect& rect, FrameBox* box)
+{
+    STARFISH_ASSERT(box);
+
+    GradientDrawingInfo* ret = new GradientDrawingInfo();
+    computeEndPoints(rect, ret->x1, ret->y1, ret->x2, ret->y2);
+    makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
+                            ret->y2, ret->r2, box);
+    return ret;
+}
+
 CSSGradientValue* LinearGradientData::convertToCSSGradientValue()
 {
     CSSLinearGradientValue* gradient = new CSSLinearGradientValue();
@@ -547,6 +559,19 @@ RadialGradientData::RadialGradientData()
     , m_shape(RadialGradientShape::None)
     , m_gradientSizeKeyword(RadialGradientSizeKeyword::None)
 {
+}
+
+GradientDrawingInfo* RadialGradientData::makeGradientDrawingInfo(
+    const Unit::Rect& rect, FrameBox* box)
+{
+    STARFISH_ASSERT(box);
+
+    GradientDrawingInfo* ret = new GradientDrawingInfo();
+    computeEndPoints(rect, box, ret->x1, ret->y1, ret->r1, ret->x2, ret->y2,
+                     ret->r2, ret->firstRadius, ret->secondRadius);
+    makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
+                            ret->y2, ret->r2, box);
+    return ret;
 }
 
 CSSGradientValue* RadialGradientData::convertToCSSGradientValue()

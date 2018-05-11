@@ -1445,208 +1445,200 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             continue;
         }
         auto type = style->backgroundImage(idx)->type();
+
+        NativeImageData* id = nullptr;
+        float width = 0;
+        float height = 0;
         if (type.isURL()) {
-            NativeImageData* id = style->backgroundImageData(idx);
-
-            if (id && id->width() && id->height()) {
-                Unit::Rect paintingRect;
-                Unit::Rect positioningRect;
-                BackgroundAttachmentValue attachment =
-                    style->backgroundAttachment(idx);
-                if (rootOrBodyelement) {
-                    Window* window = rootOrBodyelement->window();
-                    FrameDocument* doc =
-                        window->document()->frame()->asFrameDocument();
-                    paintingRect =
-                        Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
-                                   window->innerWidth(), window->innerHeight());
-                }
-
-                if (attachment == FixedBackgroundAttachmentValue) {
-                    FrameDocument* doc =
-                        box->document()->frame()->asFrameDocument();
-                    LayoutLocation loc;
-                    if (!rootOrBodyelement) {
-                        loc = box->absolutePoint(doc);
-                    }
-                    positioningRect =
-                        doc->makeRect(style->backgroundOrigin(idx));
-                    positioningRect.setX(-loc.x().toFloat() +
-                                         doc->scrollLeft());
-                    positioningRect.setY(-loc.y().toFloat() + doc->scrollTop());
-                    if (!rootOrBodyelement) {
-                        paintingRect =
-                            box->makeRect(style->backgroundClip(idx));
-                    }
-                } else if (attachment == LocalBackgroundAttachmentValue &&
-                           box->isFrameBlockBox()) {
-                    FrameBox scrollBox(box->node(), style);
-                    scrollBox.copyFrom(box, FrameBox::BorderCopy |
-                                                FrameBox::PaddingCopy);
-                    scrollBox.setWidth(box->asFrameBlockBox()->scrollWidth());
-                    scrollBox.setHeight(box->asFrameBlockBox()->scrollHeight());
-                    positioningRect =
-                        scrollBox.makeRect(style->backgroundOrigin(idx));
-                    positioningRect.setX(positioningRect.x() -
-                                         box->asFrameBlockBox()->scrollLeft());
-                    positioningRect.setY(positioningRect.x() -
-                                         box->asFrameBlockBox()->scrollTop());
-                    if (rootOrBodyelement) {
-                        positioningRect.setX(positioningRect.x() + box->x());
-                        positioningRect.setY(positioningRect.y() + box->y());
-                    } else {
-                        paintingRect =
-                            scrollBox.makeRect(style->backgroundClip(idx));
-                    }
-                } else {
-                    positioningRect =
-                        box->makeRect(style->backgroundOrigin(idx));
-
-                    if (rootOrBodyelement) {
-                        positioningRect.setX(positioningRect.x() + box->x());
-                        positioningRect.setY(positioningRect.y() + box->y());
-                    } else {
-                        paintingRect =
-                            box->makeRect(style->backgroundClip(idx));
-                    }
-                }
-                canvas->save();
-                canvas->translate(paintingRect.x(), paintingRect.y());
-                canvas->clip(Unit::Rect(0, 0, paintingRect.width(),
-                                        paintingRect.height()));
-
-                float positionW = positioningRect.width();
-                float positionH = positioningRect.height();
-                float paintingW = paintingRect.width();
-                float paintingH = paintingRect.height();
-                float imgW = positionW;
-                float imgH = positionH;
-
-                float boxR = positionW / positionH;
-                float imgR = id->width() / (float)id->height();
-                if (style->backgroundSizeIsLength(idx)) {
-                    LengthSize bgSize = style->backgroundSizeLengthValue(idx);
-                    if (bgSize.width().isAuto() && bgSize.height().isAuto()) {
-                        imgW = id->width();
-                        imgH = id->height();
-                    } else if (bgSize.width().isAuto() &&
-                               !bgSize.height().isAuto()) {
-                        imgH = bgSize.height().specifiedValue(positionH, box);
-                        imgW = imgH * id->width() / id->height();
-                    } else if (!bgSize.width().isAuto() &&
-                               bgSize.height().isAuto()) {
-                        imgW = bgSize.width().specifiedValue(positionW, box);
-                        imgH = imgW * id->height() / id->width();
-                    } else {
-                        imgW = bgSize.width().specifiedValue(positionW, box);
-                        imgH = bgSize.height().specifiedValue(positionH, box);
-                    }
-                } else {
-                    BackgroundSizeValue bgSize =
-                        style->backgroundSizeTypeValue(idx);
-                    if (bgSize ==
-                        BackgroundSizeValue::CoverBackgroundSizeValue) {
-                        if (boxR < imgR) {
-                            imgW = positionH * imgR;
-                        } else {
-                            imgH = positionW / imgR;
-                        }
-                    } else {
-                        STARFISH_ASSERT(
-                            bgSize ==
-                            BackgroundSizeValue::ContainBackgroundSizeValue);
-                        if (boxR > imgR) {
-                            imgW = positionH * imgR;
-                        } else {
-                            imgH = positionW / imgR;
-                        }
-                    }
-                }
-
-                Length positionX = style->backgroundPositionX(idx);
-                Length positionY = style->backgroundPositionY(idx);
-                LayoutUnit x = positionX.specifiedValue(positionW - imgW, box) +
-                               positioningRect.x() - paintingRect.x();
-                LayoutUnit y = positionY.specifiedValue(positionH - imgH, box) +
-                               positioningRect.y() - paintingRect.y();
-
-                auto repeatX = style->backgroundRepeatX(idx);
-                auto repeatY = style->backgroundRepeatY(idx);
-                if (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
-                    repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
-                    canvas->drawRepeatImage(
-                        id, Unit::Rect(x, y, paintingW, paintingH), imgW, imgH,
-                        true, true, imageRenderingValue);
-                } else if (repeatX ==
-                               BackgroundRepeatValue::NoRepeatRepeatValue &&
-                           repeatY ==
-                               BackgroundRepeatValue::RepeatRepeatValue) {
-                    canvas->drawRepeatImage(
-                        id, Unit::Rect(x, y, imgW, paintingH), imgW, imgH,
-                        false, true, imageRenderingValue);
-                } else if (repeatX ==
-                               BackgroundRepeatValue::RepeatRepeatValue &&
-                           repeatY ==
-                               BackgroundRepeatValue::NoRepeatRepeatValue) {
-                    canvas->drawRepeatImage(
-                        id, Unit::Rect(x, y, paintingW, imgH), imgW, imgH, true,
-                        false, imageRenderingValue);
-                } else {
-                    canvas->drawImage(id, Unit::Rect(x, y, imgW, imgH),
-                                      imageRenderingValue);
-                }
-
-                canvas->restore();
+            id = style->backgroundImageData(idx);
+            if (!id || !id->width() || !id->height()) {
+                return;
             }
+            width = id->width();
+            height = id->height();
         } else if (type.isGradient()) {
-            canvas->save();
-            Unit::Rect paintingRect;
+            Unit::Rect rect;
             if (rootOrBodyelement) {
                 Window* window = rootOrBodyelement->window();
                 FrameDocument* doc =
                     window->document()->frame()->asFrameDocument();
-                paintingRect =
-                    Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
-                               window->innerWidth(), window->innerHeight());
+                rect = Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
+                                  window->innerWidth(), window->innerHeight());
             } else {
                 unsigned int idx = style->backgroundLayerSize() - 1;
-                paintingRect = box->makeRect(BoxValue::PaddingBoxBoxValue);
+                rect = box->makeRect(BoxValue::PaddingBoxBoxValue);
             }
-
-            ImageValue* imageValue = style->backgroundImage(idx);
-            float x1, y1, r1, x2, y2, r2, firstRadius, secondRadius;
-            if (imageValue->gradientValue()->type() ==
-                GradientType::LinearGradient) {
-                Unit::Rect rect = paintingRect.snapSizeToPixel();
-                auto gradient =
-                    imageValue->gradientValue()->asLinearGradientData();
-
-                gradient->computeEndPoints(rect, x1, y1, x2, y2);
-
-                GCVector<ColorStop*> colorStop;
-                gradient->makeSpecifiedColorStops(colorStop, x1, y1, r1, x2, y2,
-                                                  r2, box);
-
-                canvas->drawLinearGradient(rect, x1, y1, x2, y2, colorStop);
-
-            } else if (imageValue->gradientValue()->type() ==
-                       GradientType::RadialGradient) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                Unit::Rect rect = paintingRect.snapSizeToPixel();
-                auto gradient =
-                    imageValue->gradientValue()->asRadialGradientData();
-                gradient->computeEndPoints(rect, box, x1, y1, r1, x2, y2, r2,
-                                           firstRadius, secondRadius);
-
-                GCVector<ColorStop*> colorStop;
-                gradient->makeSpecifiedColorStops(colorStop, x1, y1, r1, x2, y2,
-                                                  r2, box);
-                canvas->drawRadialGradient(rect, x1, y1, r1, x2, y2, r2,
-                                           firstRadius, secondRadius,
-                                           colorStop);
-            }
-            canvas->restore();
+            width = rect.width();
+            height = rect.height();
         }
+
+        Unit::Rect paintingRect;
+        Unit::Rect positioningRect;
+        BackgroundAttachmentValue attachment = style->backgroundAttachment(idx);
+        if (rootOrBodyelement) {
+            Window* window = rootOrBodyelement->window();
+            FrameDocument* doc = window->document()->frame()->asFrameDocument();
+            paintingRect =
+                Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
+                           window->innerWidth(), window->innerHeight());
+        }
+
+        if (attachment == FixedBackgroundAttachmentValue) {
+            FrameDocument* doc = box->document()->frame()->asFrameDocument();
+            LayoutLocation loc;
+            if (!rootOrBodyelement) {
+                loc = box->absolutePoint(doc);
+            }
+            positioningRect = doc->makeRect(style->backgroundOrigin(idx));
+            positioningRect.setX(-loc.x().toFloat() + doc->scrollLeft());
+            positioningRect.setY(-loc.y().toFloat() + doc->scrollTop());
+            if (!rootOrBodyelement) {
+                paintingRect = box->makeRect(style->backgroundClip(idx));
+            }
+        } else if (attachment == LocalBackgroundAttachmentValue &&
+                   box->isFrameBlockBox()) {
+            FrameBox scrollBox(box->node(), style);
+            scrollBox.copyFrom(box,
+                               FrameBox::BorderCopy | FrameBox::PaddingCopy);
+            scrollBox.setWidth(box->asFrameBlockBox()->scrollWidth());
+            scrollBox.setHeight(box->asFrameBlockBox()->scrollHeight());
+            positioningRect = scrollBox.makeRect(style->backgroundOrigin(idx));
+            positioningRect.setX(positioningRect.x() -
+                                 box->asFrameBlockBox()->scrollLeft());
+            positioningRect.setY(positioningRect.x() -
+                                 box->asFrameBlockBox()->scrollTop());
+            if (rootOrBodyelement) {
+                positioningRect.setX(positioningRect.x() + box->x());
+                positioningRect.setY(positioningRect.y() + box->y());
+            } else {
+                paintingRect = scrollBox.makeRect(style->backgroundClip(idx));
+            }
+        } else {
+            positioningRect = box->makeRect(style->backgroundOrigin(idx));
+
+            if (rootOrBodyelement) {
+                positioningRect.setX(positioningRect.x() + box->x());
+                positioningRect.setY(positioningRect.y() + box->y());
+            } else {
+                paintingRect = box->makeRect(style->backgroundClip(idx));
+            }
+        }
+        canvas->save();
+        canvas->translate(paintingRect.x(), paintingRect.y());
+        canvas->clip(
+            Unit::Rect(0, 0, paintingRect.width(), paintingRect.height()));
+
+        float positionW = positioningRect.width();
+        float positionH = positioningRect.height();
+        float paintingW = paintingRect.width();
+        float paintingH = paintingRect.height();
+        float imgW = positionW;
+        float imgH = positionH;
+
+        float boxR = positionW / positionH;
+        float imgR = width / height;
+        float hasSpecifiedSize = false;
+        if (style->backgroundSizeIsLength(idx)) {
+            LengthSize bgSize = style->backgroundSizeLengthValue(idx);
+            if (bgSize.width().isAuto() && bgSize.height().isAuto()) {
+                imgW = width;
+                imgH = height;
+            } else if (bgSize.width().isAuto() && !bgSize.height().isAuto()) {
+                hasSpecifiedSize = true;
+                imgH = bgSize.height().specifiedValue(positionH, box);
+                imgW = imgH * width / height;
+            } else if (!bgSize.width().isAuto() && bgSize.height().isAuto()) {
+                hasSpecifiedSize = true;
+                imgW = bgSize.width().specifiedValue(positionW, box);
+                imgH = imgW * height / width;
+            } else {
+                hasSpecifiedSize = true;
+                imgW = bgSize.width().specifiedValue(positionW, box);
+                imgH = bgSize.height().specifiedValue(positionH, box);
+            }
+        } else {
+            BackgroundSizeValue bgSize = style->backgroundSizeTypeValue(idx);
+            if (bgSize == BackgroundSizeValue::CoverBackgroundSizeValue) {
+                if (boxR < imgR) {
+                    imgW = positionH * imgR;
+                } else {
+                    imgH = positionW / imgR;
+                }
+            } else {
+                STARFISH_ASSERT(
+                    bgSize == BackgroundSizeValue::ContainBackgroundSizeValue);
+                if (boxR > imgR) {
+                    imgW = positionH * imgR;
+                } else {
+                    imgH = positionW / imgR;
+                }
+            }
+        }
+
+        Length positionX = style->backgroundPositionX(idx);
+        Length positionY = style->backgroundPositionY(idx);
+        LayoutUnit x = positionX.specifiedValue(positionW - imgW, box) +
+                       positioningRect.x() - paintingRect.x();
+        LayoutUnit y = positionY.specifiedValue(positionH - imgH, box) +
+                       positioningRect.y() - paintingRect.y();
+
+        auto repeatX = style->backgroundRepeatX(idx);
+        auto repeatY = style->backgroundRepeatY(idx);
+
+        bool shouldApplyRepeat = type.isGradient() ? hasSpecifiedSize : true;
+
+        if (shouldApplyRepeat &&
+            (repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
+             repeatY == BackgroundRepeatValue::RepeatRepeatValue)) {
+            if (type.isURL()) {
+                canvas->drawRepeatImage(
+                    id, Unit::Rect(x, y, paintingW, paintingH), imgW, imgH,
+                    true, true, imageRenderingValue);
+            } else if (type.isGradient()) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+        } else if (shouldApplyRepeat &&
+                   repeatX == BackgroundRepeatValue::NoRepeatRepeatValue &&
+                   repeatY == BackgroundRepeatValue::RepeatRepeatValue) {
+            if (type.isURL()) {
+                canvas->drawRepeatImage(id, Unit::Rect(x, y, imgW, paintingH),
+                                        imgW, imgH, false, true,
+                                        imageRenderingValue);
+            } else if (type.isGradient()) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+
+        } else if (shouldApplyRepeat &&
+                   repeatX == BackgroundRepeatValue::RepeatRepeatValue &&
+                   repeatY == BackgroundRepeatValue::NoRepeatRepeatValue) {
+            if (type.isURL()) {
+                canvas->drawRepeatImage(id, Unit::Rect(x, y, paintingW, imgH),
+                                        imgW, imgH, true, false,
+                                        imageRenderingValue);
+            } else if (type.isGradient()) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+        } else {
+            if (type.isURL()) {
+                canvas->drawImage(id, Unit::Rect(x, y, imgW, imgH),
+                                  imageRenderingValue);
+            } else if (type.isGradient()) {
+                ImageValue* imageValue = style->backgroundImage(idx);
+                Unit::Rect rect =
+                    Unit::Rect(x, y, imgW, imgH).snapSizeToPixel();
+                auto info =
+                    imageValue->gradientValue()->makeGradientDrawingInfo(rect,
+                                                                         box);
+                if (imageValue->gradientValue()->type() ==
+                    GradientType::LinearGradient) {
+                    canvas->drawLinearGradient(rect, info);
+                } else if (imageValue->gradientValue()->type() ==
+                           GradientType::RadialGradient) {
+                    canvas->drawRadialGradient(rect, info);
+                }
+            }
+        }
+        canvas->restore();
     }
 }
 

@@ -103,6 +103,51 @@ private:
     bool m_specified;
 };
 
+struct GradientDrawingInfo : public gc {
+    float x1;
+    float y1;
+    float x2;
+    float y2;
+    float r1;
+    float r2;
+    float firstRadius;
+    float secondRadius;
+    GCVector<ColorStop*> colorStops;
+
+    GradientDrawingInfo()
+        : x1(0.0f)
+        , y1(0.0f)
+        , x2(0.0f)
+        , y2(0.0f)
+        , r1(0.0f)
+        , r2(0.0f)
+        , firstRadius(0.0f)
+        , secondRadius(0.0f)
+        , colorStops()
+    {
+    }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(GradientDrawingInfo)] = { 0 };
+            GC_set_bit(desc, GC_WORD_OFFSET(GradientDrawingInfo, colorStops));
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(GradientDrawingInfo));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new(size_t size, GradientDrawingInfo* gradientDrawingInfo)
+    {
+        return gradientDrawingInfo;
+    }
+
+    void* operator new[](size_t size) = delete;
+};
+
 class GradientData : public gc {
 public:
     GradientData(GradientType gradientType)
@@ -143,6 +188,9 @@ public:
     {
         return m_colorStopList;
     }
+
+    virtual GradientDrawingInfo* makeGradientDrawingInfo(const Unit::Rect& rect,
+                                                         FrameBox* box) = 0;
 
     virtual CSSGradientValue* convertToCSSGradientValue() = 0;
 
@@ -189,6 +237,8 @@ public:
     bool computeEndPoints(const Unit::Rect& rect, float& x1, float& y1,
                           float& x2, float& y2);
 
+    virtual GradientDrawingInfo* makeGradientDrawingInfo(
+        const Unit::Rect& rect, FrameBox* box) override;
     virtual CSSGradientValue* convertToCSSGradientValue() override;
     virtual void checkComputed(Length curFontSize, Length rootFontSize,
                                Font* font, LayoutSize windowSize,
@@ -286,6 +336,8 @@ public:
                           float& y1, float& r1, float& x2, float& y2, float& r2,
                           float& firstRadius, float& secondRadius);
 
+    virtual GradientDrawingInfo* makeGradientDrawingInfo(
+        const Unit::Rect& rect, FrameBox* box) override;
     virtual CSSGradientValue* convertToCSSGradientValue() override;
     virtual void checkComputed(Length curFontSize, Length rootFontSize,
                                Font* font, LayoutSize windowSize,
