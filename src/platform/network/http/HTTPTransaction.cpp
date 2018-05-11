@@ -83,6 +83,7 @@ void HTTPTransaction::start()
     struct curl_slist* list = m_httpRequest->headers().generateCurlList();
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
     curl_easy_setopt(m_curl, CURLOPT_SHARE, curlsh);
+    curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
 
     if (NetworkSharedResourceManager::getInstance()
             ->cookieStoreFilePath()
