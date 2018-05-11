@@ -51,6 +51,7 @@
 #include "core/storage/StorageNamespace.h"
 #include "core/style/CSSParser.h"
 #include "core/style/MediaQueryList.h"
+#include "core/style/MediaQueryListMatcher.h"
 #include "platform/window/PlatformWindow.h"
 
 #ifdef STARFISH_ENABLE_TEST
@@ -82,7 +83,6 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     , m_height(initialHeight)
     , m_cssTarget(nullptr)
     , m_frames(nullptr)
-
 {
     /*
         GC_REGISTER_FINALIZER_NO_ORDER(
@@ -366,6 +366,10 @@ void Window::resize(uint32_t w, uint32_t h)
         }
         browsingContext()->setNeedsLayout();
     }
+
+    // Change event will be fired at the MediaQueryList when the matches state
+    // changes.
+    document()->evalMediaQueryLists();
 }
 
 void Window::focus()
@@ -659,13 +663,7 @@ MediaQueryList* Window::matchMedia(String* query)
         return nullptr;
     }
 
-    CSSParser parser(document());
-    RefPtr<CSSToken> token = parser.makeToken(query);
-    MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
-    MediaQueryEvaluator* mediaQueryEvaluator = const_cast<MediaQueryEvaluator*>(
-        &document()->styleResolver().mediaQueryEvaluator());
-    return new MediaQueryList(scriptBindingInstance(), mediaQuerySet,
-                              mediaQueryEvaluator);
+    return document()->mediaQueryListMatcher()->matchMedia(query);
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#named-access-on-the-window-object

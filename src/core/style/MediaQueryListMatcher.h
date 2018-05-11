@@ -17,45 +17,32 @@
  *  USA
  */
 
-#ifndef __StarFishMediaQueryList__
-#define __StarFishMediaQueryList__
+#ifndef __StarFishMediaQueryListMatcher__
+#define __StarFishMediaQueryListMarcher__
 
-#include "core/dom/EventTarget.h"
+#include "binding/DocumentHoldable.h"
 
 namespace StarFish {
 
 class Document;
 class MediaQueryEvaluator;
-class MediaQueryListMatcher;
-class MediaQuerySet;
 
-class MediaQueryList : public EventTarget {
+class MediaQueryListMatcher : public DocumentHoldable, public gc {
 public:
-    MediaQueryList(Document* document, MediaQueryListMatcher* matcher,
-                   MediaQuerySet* media);
+    MediaQueryListMatcher(Document* document, MediaQueryEvaluator* evaluator)
+        : DocumentHoldable(document)
+    {
+    }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isMediaQueryList() const override;
+    MediaQueryList* matchMedia(String* query);
+    void mediaFeaturesChanged();
 
-    /* DOM APIs */
-    String* media() const;
-    bool matches();
-    void addListener(EventListener* listener);
-    void removeListener(EventListener* listener);
-
-#define VIRTUAL
-#define OVERRIDE
-    DECLARE_EVENT_LISTENER(change);
-#undef VIRTUAL
-#undef OVERRIDE
+    void addMediaQueryList(MediaQueryList* list);
 
 private:
-    MediaQueryListMatcher* m_matcher;
-    MediaQuerySet* m_media;
-    bool m_matches;
+    GCVector<std::pair<MediaQueryList*, bool>> m_mediaQueryLists;
 };
 
 } /* namespace StarFish */
 
-#endif /* __StarFishMediaQueryList__ */
+#endif /* __StarFishMediaQueryListMatcher__ */

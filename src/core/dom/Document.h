@@ -40,6 +40,7 @@ class Element;
 class HTMLBodyElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
+class MediaQueryListMatcher;
 class NativeImageData;
 class Location;
 class ResourceRequest;
@@ -480,6 +481,9 @@ public:
 
     void notifyQuoteOutdated();
 
+    MediaQueryListMatcher* mediaQueryListMatcher();
+    void evalMediaQueryLists();
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -586,6 +590,9 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_currentScripts));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_focusRingCache));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_ranges));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentLanguage));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
     }
 
     // only used in html document builder
@@ -645,6 +652,7 @@ protected:
     // each element has strong reference by DOM tree already
     size_t m_pendingDocumentParsingIdlerHandle;
     String* m_contentLanguage;
+    MediaQueryListMatcher* m_mediaQueryListMatcher;
     GCVector<std::pair<HTMLScriptElement*, DeferredScriptDownloadClient*>>
         m_deferredScriptElements;
     BloomFilter<12> m_nameIdFilter;
