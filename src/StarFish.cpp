@@ -546,7 +546,7 @@ void StarFish::removeActiveThread(Thread* thread)
 {
     STARFISH_ASSERT(isMainThread());
     auto it =
-        std::find(m_activeThreadList.end(), m_activeThreadList.end(), thread);
+        std::find(m_activeThreadList.begin(), m_activeThreadList.end(), thread);
     if (it != m_activeThreadList.end()) {
         m_activeThreadList.erase(it);
     }
