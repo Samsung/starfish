@@ -18,17 +18,24 @@
  */
 
 #include "StarFishConfig.h"
-#include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/MediaQueryList.h"
+#include "core/style/MediaQueryListMatcher.h"
 #include "core/style/MediaQuerySet.h"
+#include "core/page/Window.h"
 
 namespace StarFish {
 
-ScriptBindingInstance* MediaQueryList::scriptBindingInstance()
+MediaQueryList::MediaQueryList(Document* document,
+                               MediaQueryListMatcher* matcher,
+                               MediaQuerySet* media)
+    : EventTarget(document)
+    , m_matcher(matcher)
+    , m_media(media)
+    , m_matches(false)
 {
-    return m_scriptBindingInstance;
+    m_matcher->addMediaQueryList(this);
 }
 
 String* MediaQueryList::media() const
@@ -38,19 +45,36 @@ String* MediaQueryList::media() const
 
 bool MediaQueryList::matches()
 {
-    return m_evaluator->eval(m_media);
+    if (m_matches !=
+        document()->styleResolver().mediaQueryEvaluator().eval(m_media)) {
+        m_matches = !m_matches;
+    }
+
+    return m_matches;
 }
 
 void MediaQueryList::addListener(EventListener* listener)
 {
     // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-addlistener
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (!listener) {
+        return;
+    }
+
+    String* changeEvent = starFish()->staticStrings()->m_change.localName();
+    addEventListener(changeEvent, listener, false);
 }
 
 void MediaQueryList::removeListener(EventListener* listener)
 {
     // https://drafts.csswg.org/cssom-view/#dom-mediaquerylist-removelistener
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (!listener) {
+        return;
+    }
+
+    String* changeEvent = starFish()->staticStrings()->m_change.localName();
+    removeEventListener(changeEvent, listener, false);
 }
+
+DEFINE_EVENT_LISTENER(MediaQueryList, change);
 
 } /* namespace StarFish */

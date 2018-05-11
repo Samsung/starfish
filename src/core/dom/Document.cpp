@@ -65,6 +65,7 @@
 #include "core/page/WebView.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/MediaQueryListMatcher.h"
 #include "core/style/StyleSheetList.h"
 #include "core/style/StyleRule.h"
 #include "platform/file/File.h"
@@ -119,6 +120,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_implementation(nullptr)
     , m_pendingDocumentParsingIdlerHandle(SIZE_MAX)
     , m_contentLanguage(String::emptyString)
+    , m_mediaQueryListMatcher(nullptr)
 #ifdef STARFISH_TIZEN
     , m_tizenWidgetTransparentBackground(0)
 #endif
@@ -1756,6 +1758,23 @@ void Document::notifyQuoteOutdated()
     browsingContext()->setNeedsFrameTreeBuild();
     STARFISH_ASSERT(frame());
     frame()->asFrameDocument()->setQuoteOutdatedFlag();
+}
+
+MediaQueryListMatcher* Document::mediaQueryListMatcher()
+{
+    if (!m_mediaQueryListMatcher) {
+        MediaQueryEvaluator* evaluator = const_cast<MediaQueryEvaluator*>(
+            &styleResolver().mediaQueryEvaluator());
+        m_mediaQueryListMatcher = new MediaQueryListMatcher(this, evaluator);
+    }
+    return m_mediaQueryListMatcher;
+}
+
+void Document::evalMediaQueryLists()
+{
+    if (m_mediaQueryListMatcher) {
+        m_mediaQueryListMatcher->mediaFeaturesChanged();
+    }
 }
 
 DEFINE_EVENT_LISTENER(Document, abort);

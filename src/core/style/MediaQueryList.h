@@ -20,31 +20,23 @@
 #ifndef __StarFishMediaQueryList__
 #define __StarFishMediaQueryList__
 
-#include "binding/ScriptWrappable.h"
 #include "core/dom/EventTarget.h"
 
 namespace StarFish {
 
 class Document;
 class MediaQueryEvaluator;
+class MediaQueryListMatcher;
 class MediaQuerySet;
 
-class MediaQueryList : public ScriptWrappable {
+class MediaQueryList : public EventTarget {
 public:
-    MediaQueryList(ScriptBindingInstance* instance, MediaQuerySet* media,
-                   MediaQueryEvaluator* evaluator)
-        : ScriptWrappable(this)
-        , m_scriptBindingInstance(instance)
-        , m_media(media)
-        , m_evaluator(evaluator)
-        , m_matches(false)
-    {
-    }
+    MediaQueryList(Document* document, MediaQueryListMatcher* matcher,
+                   MediaQuerySet* media);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isMediaQueryList() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     /* DOM APIs */
     String* media() const;
@@ -52,10 +44,15 @@ public:
     void addListener(EventListener* listener);
     void removeListener(EventListener* listener);
 
+#define VIRTUAL
+#define OVERRIDE
+    DECLARE_EVENT_LISTENER(change);
+#undef VIRTUAL
+#undef OVERRIDE
+
 private:
-    ScriptBindingInstance* m_scriptBindingInstance;
+    MediaQueryListMatcher* m_matcher;
     MediaQuerySet* m_media;
-    MediaQueryEvaluator* m_evaluator;
     bool m_matches;
 };
 

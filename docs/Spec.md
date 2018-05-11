@@ -735,8 +735,11 @@ section are supported.
 |  | method | void appendMedium(CSSOMString medium) | Adds a media type to the mediaList collection. |
 |  | method | void deleteMedium(CSSOMString medium) | Removes a media type from the mediaList collection. |
 | [MediaQueryList](https://drafts.csswg.org/cssom-view/#mediaquerylist) | interface | MediaQueryList | A MediaQueryList object stores information on a media query applied to a document, and handles sending notifications to listeners when the media query state change (i.e. when the media query test starts or stops evaluating to true). |
-|  | attribute | media | Return the associated media. |
-|  | attribute | matches | Return the associated matches state. |
+|  | attribute | media | Returns the associated media. |
+|  | attribute | matches | Returns the associated matches state. |
+|  | methods | addListener | Adds a listener to associated list of event listeners that will run a custom callback function in response to the media query status changing. |
+|  | methods | removeListener | Removes a listener from the associated list of event listeners. |
+|  | attribute | onchange | An event handler property representing a function that is invoked when the change event fires. |
 | [MessageChannel](https://www.w3.org/TR/webmessaging/#messagechannel) | interface | MessageChannel | To enable independent pieces of code (e.g. running in different browsing contexts) to communicate directly, authors can use channel messaging. |
 |  | attribute | port1 | Returns the first MessagePort object. |
 |  | attribute | port2 | Returns the second MessagePort object. |
