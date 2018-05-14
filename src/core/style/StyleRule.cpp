@@ -347,4 +347,11 @@ StyleRuleSupports::StyleRuleSupports(String* conditionText, bool isSupported,
     , m_isSupported(isSupported)
 {
 }
+
+bool StyleRuleSupports::eval(Document* doc, String* conditionText)
+{
+    CSSParser parser(doc);
+    parser.makeToken(conditionText);
+    return parser.parseSupportsCondition();
+}
 }

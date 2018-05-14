@@ -184,6 +184,8 @@ public:
 
     CSSSupportsRule(StyleRuleSupports*, CSSStyleSheet*);
     String* cssText() override;
+    String* conditionText() const override;
+    void setConditionText(String* conditionText) override;
 
 private:
     CSSRule::Type type() const override

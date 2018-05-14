@@ -1674,12 +1674,13 @@ public:
     void consumeComponentValue(RefPtr<CSSToken>& token);
     void parseSelector(GCVector<CSSSelectorList*>& list, bool& validSelector);
 
+    bool parseSupportsCondition(); // for supports rule
+
 protected:
     RefPtr<CSSToken> getToken(bool aSkipWS, bool aSkipComment,
                               bool isURL = false);
     RefPtr<CSSToken> currentToken();
     void ungetToken();
-    bool consumeToken(String* token);
     void preserveState();
     void restoreState();
     void forgetState();
@@ -1783,15 +1784,14 @@ protected:
 
 private:
     // for supports rule
-    bool parseSupportsCondition();
     bool parseSupportsNegation();
     bool parseSupportsConnectives(String* conjoiner);
-    bool parseGroupRuleBody();
+    bool parseGroupRuleBody(GCVector<StyleRuleBase*>& rules);
     bool parseSupportsConditionInParen();
     bool parseSupportsConditionInParenSub();
     bool parseSupportsDeclarationCondition();
     bool parseGeneralEnclosed();
-    void doLogicOperation();
+    bool doLogicOperation();
     GCVector<TruthOp> m_supportOperandStack;
     GCVector<LogicOp> m_supportOperatorStack;
 };

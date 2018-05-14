@@ -172,6 +172,8 @@ section are supported.
 |  | attribute | conditionText | Experimental. Partial support (only getter works). Returns the result of serializing the associated condition. |
 | [CSSMediaRule](https://drafts.csswg.org/css-conditional-3/#cssmediarule) | interface | CSSMediaRule | Represents a @media at-rule. |
 |  | attribute | media | Returns a MediaList object for the list of media queries specified with the @media at-rule.|
+| [CSSSupportsRule](https://drafts.csswg.org/css-conditional-3/#csssupportsrule) | interface | CSSSupportsRule | Represents a @supports at-rule. |
+|  | attribute | conditionText | Returns the value of conditionText on the rule. (CSSSupportsRule-specific definition for attribute on CSSConditionRule) On setting, if the given conditionText evaluates to true, the original conditionText is replaced by the given conditionText. |
 | [CSSStyleSheet](https://drafts.csswg.org/cssom/#the-cssstylesheet-interface) | interface | CSSStyleSheet | Represents a CSS style sheet. |
 | | attribute | ownerRule | If this style sheet is imported into the document using an @import rule, the ownerRule property will return that CSSImportRule, otherwise it returns null. |
 | | attribute | cssRules | Returns a live CSSRuleList, listing the CSSRule objects in the style sheet. |
