@@ -31,7 +31,7 @@
 
 #include <cairo.h>
 #include <png.h>
-#include <turbojpeg.h>
+#include <jpeglib.h>
 #include <gif_lib.h>
 
 namespace StarFish {
@@ -371,48 +371,119 @@ private:
         free(rowPointers);
     }
 
-    void decodeJPG(tjhandle dHandle, unsigned char* buf, const int size)
+    void decodeJPG(jpeg_decompress_struct* dHandle, unsigned char* buf,
+                   const int size)
     {
-        int hdrw = 0;
-        int hdrh = 0;
-        int hdrsubsamp = -1;
-        int scaledWidth = 0;
-        int scaledHeight = 0;
         unsigned long dstSize = 0;
-        int n = 0;
+        jpeg_mem_src(dHandle, buf, size);
 
-        tjscalingfactor sf1 = { 1, 1 };
-        tjscalingfactor* sf = tjGetScalingFactors(&n);
-
-        tjDecompressHeader2(dHandle, buf, size, &hdrw, &hdrh, &hdrsubsamp);
-
-        if (!sf || !n) {
-            STARFISH_LOG_ERROR("%s %d\n : scaledfactor is NULL", __FUNCTION__,
-                               __LINE__);
+        if (jpeg_read_header(dHandle, TRUE) != 1) {
             return;
         }
 
-        scaledWidth = TJSCALED(hdrw, sf1);
-        scaledHeight = TJSCALED(hdrh, sf1);
-        dstSize = scaledWidth * scaledHeight * tjPixelSize[TJPF_BGRA];
-
-        m_image = (unsigned char*)malloc(dstSize);
-
-#ifdef STARFISH_ANDROID
-        tjDecompress2(dHandle, buf, size, (unsigned char*)m_image, scaledWidth,
-                      0, scaledHeight, TJPF_RGBA, 0);
-#else
-        tjDecompress2(dHandle, buf, size, (unsigned char*)m_image, scaledWidth,
-                      0, scaledHeight, TJPF_BGRA, 0);
-#endif
-        m_width = scaledWidth;
-        m_height = scaledHeight;
+        if (jpeg_start_decompress(dHandle) != 1) {
+            return;
+        }
+        m_width = dHandle->output_width;
+        m_height = dHandle->output_height;
         m_stride = m_width * 4;
+        dstSize = m_stride * m_height;
+        m_image = malloc(dstSize);
+
+        unsigned char* buffer_array[1];
+        if (dHandle->out_color_space == JCS_GRAYSCALE) {
+            while (dHandle->output_scanline < dHandle->output_height) {
+                buffer_array[0] = (unsigned char*)m_image +
+                                  (dHandle->output_scanline) * m_stride;
+                jpeg_read_scanlines(dHandle, buffer_array, 1);
+                {
+                    uint8_t* buf_raw = static_cast<uint8_t*>(buffer_array[0]);
+                    uint8_t* iter = buf_raw;
+                    iter += m_width;
+                    int g;
+                    for (int i = m_stride - 1; i >= 0; i -= 4) {
+                        g = *--iter;
+                        buf_raw[i] = 255;
+                        buf_raw[i - 1] = g;
+                        buf_raw[i - 2] = g;
+                        buf_raw[i - 3] = g;
+                    }
+                }
+            }
+        } else {
+            while (dHandle->output_scanline < dHandle->output_height) {
+                buffer_array[0] = (unsigned char*)m_image +
+                                  (dHandle->output_scanline) * m_stride;
+                jpeg_read_scanlines(dHandle, buffer_array, 1);
+                {
+                    uint8_t* buf_raw = static_cast<uint8_t*>(buffer_array[0]);
+                    uint8_t* iter = buf_raw;
+                    iter += (m_stride * 3 / 4);
+                    int r, g, b;
+                    for (int i = m_stride - 1; i >= 0; i -= 4) {
+                        b = *--iter;
+                        g = *--iter;
+                        r = *--iter;
+#ifdef STARFISH_ANDROID
+                        buf_raw[i] = 255;
+                        buf_raw[i - 1] = b;
+                        buf_raw[i - 2] = g;
+                        buf_raw[i - 3] = r;
+#else
+                        buf_raw[i] = 255;
+                        buf_raw[i - 1] = r;
+                        buf_raw[i - 2] = g;
+                        buf_raw[i - 3] = b;
+#endif
+                    }
+                }
+            }
+        }
+
+        jpeg_finish_decompress(dHandle);
+    }
+
+    struct custom_error_mgr {
+        jpeg_error_mgr pub;
+        jmp_buf setjmp_buffer;
+    };
+
+    typedef struct custom_error_mgr* custom_error_ptr;
+
+    static void jpeg_error_handle(j_common_ptr cinfo)
+    {
+        custom_error_ptr c_err = (custom_error_ptr)cinfo->err;
+        longjmp(c_err->setjmp_buffer, 1);
+    }
+
+    static void jpeg_message_handle(j_common_ptr cinfo, int msg_level)
+    {
+        custom_error_ptr c_err = (custom_error_ptr)cinfo->err;
+        if (msg_level < 0) {
+            longjmp(c_err->setjmp_buffer, 1);
+        }
     }
 
     void readJPGFile(FILE* fp)
     {
-        tjhandle dHandle = nullptr;
+        jpeg_decompress_struct dHandle;
+        custom_error_mgr jerr;
+
+        dHandle.err = jpeg_std_error(&jerr.pub);
+        jerr.pub.error_exit = jpeg_error_handle;
+        jerr.pub.emit_message = jpeg_message_handle;
+        if (setjmp(jerr.setjmp_buffer)) {
+            m_width = 0;
+            m_height = 0;
+            m_stride = 0;
+            if (m_image) {
+                free(m_image);
+                m_image = NULL;
+            }
+            jpeg_destroy_decompress(&dHandle);
+            return;
+        }
+
         unsigned char* srcBuf = nullptr;
         int jpegSize = 0;
         size_t readSize = 0;
@@ -420,16 +491,11 @@ private:
         fseek(fp, 0, SEEK_END);
         jpegSize = ftell(fp);
         rewind(fp);
-
-        if ((dHandle = tjInitDecompress()) == nullptr) {
-            STARFISH_LOG_ERROR("%s %d\n : dHandle is NULL", __FUNCTION__,
-                               __LINE__);
-            return;
-        }
+        jpeg_create_decompress(&dHandle);
 
         srcBuf = (unsigned char*)malloc(sizeof(unsigned char) * jpegSize);
         if (srcBuf == nullptr) {
-            tjDestroy(dHandle);
+            jpeg_destroy_decompress(&dHandle);
             STARFISH_LOG_ERROR("%s %d\n : srcBuf is NULL", __FUNCTION__,
                                __LINE__);
             return;
@@ -437,30 +503,43 @@ private:
 
         readSize = fread(srcBuf, 1, jpegSize, fp);
         if (readSize <= 0) {
-            tjDestroy(dHandle);
-            tjFree(srcBuf);
+            jpeg_destroy_decompress(&dHandle);
+            free(srcBuf);
             STARFISH_LOG_ERROR("%s %d\n : readSize fail", __FUNCTION__,
                                __LINE__);
             return;
         }
-
-        decodeJPG(dHandle, srcBuf, jpegSize);
-        tjDestroy(dHandle);
-        tjFree(srcBuf);
+        decodeJPG(&dHandle, srcBuf, jpegSize);
+        jpeg_destroy_decompress(&dHandle);
+        free(srcBuf);
     }
 
     void readJPGBufferedInput(const char* buf, size_t len)
     {
-        tjhandle dHandle = nullptr;
+        jpeg_decompress_struct dHandle;
+        custom_error_mgr jerr;
 
-        if ((dHandle = tjInitDecompress()) == nullptr) {
-            STARFISH_LOG_ERROR("%s %d\n : dHandle is NULL", __FUNCTION__,
-                               __LINE__);
+        dHandle.err = jpeg_std_error(&jerr.pub);
+        jerr.pub.error_exit = jpeg_error_handle;
+        jerr.pub.emit_message = jpeg_message_handle;
+
+        if (setjmp(jerr.setjmp_buffer)) {
+            m_width = 0;
+            m_height = 0;
+            m_stride = 0;
+            if (m_image) {
+                free(m_image);
+                m_image = NULL;
+            }
+
+            jpeg_destroy_decompress(&dHandle);
             return;
         }
 
-        decodeJPG(dHandle, (unsigned char*)buf, len);
-        tjDestroy(dHandle);
+        jpeg_create_decompress(&dHandle);
+
+        decodeJPG(&dHandle, (unsigned char*)buf, len);
+        jpeg_destroy_decompress(&dHandle);
     }
 
     typedef struct {

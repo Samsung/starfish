@@ -207,7 +207,7 @@
                     'sources_extra': [
                     ],
                     'libraries_extra': [
-                        '-lturbojpeg',
+                        '-ljpeg',
                         '-lgif',
                     ],
                 }],
@@ -219,7 +219,7 @@
                     'sources_extra': [
                     ],
                     'libraries_extra': [
-                        '-lturbojpeg',
+                        '-ljpeg',
                         '-lgif',
                     ],
                 }],
