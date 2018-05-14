@@ -246,9 +246,14 @@ public:
     StyleRuleCondition(CSSRule::Type, GCVector<StyleRuleBase*>& rules);
     StyleRuleCondition(StyleRuleCondition&);
 
-    String* conditionText() const
+    virtual String* conditionText() const
     {
         return m_conditionText;
+    }
+
+    virtual void setConditionText(String* conditionText)
+    {
+        m_conditionText = conditionText;
     }
 
 protected:
@@ -349,10 +354,18 @@ public:
     StyleRuleSupports(String* conditionText, bool isSupported,
                       GCVector<StyleRuleBase*>& rules);
     StyleRuleSupports(StyleRuleSupports& o);
+
     bool isSupported()
     {
         return m_isSupported;
     }
+
+    void setSupported(bool isSupported)
+    {
+        m_isSupported = isSupported;
+    }
+
+    bool eval(Document* doc, String* conditionText);
 
 private:
     bool m_isSupported;

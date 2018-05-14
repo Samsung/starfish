@@ -1646,9 +1646,11 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                 ungetToken();
                             }
                         } else {
+                            forgetState();
                             return ParseResult::Consumed;
                         }
                     } else {
+                        forgetState();
                         return ParseResult::Consumed;
                     }
                 }
@@ -1736,6 +1738,7 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                         },
                         &sender);
                 }
+                forgetState();
                 return ParseResult::Consumed;
             }
         }
@@ -1749,6 +1752,7 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
         }
         return aToken.value;
         */
+        forgetState();
         return ParseResult::Consumed;
     }
 
@@ -2192,19 +2196,24 @@ StyleRuleSupports* CSSParser::parseSupportsRule()
 
     m_supportOperandStack.clear();
     m_supportOperatorStack.clear();
+
+    if (currentToken()->isAtRule("@supports")) {
+        getToken(true, true);
+    }
+
     if (!parseSupportsCondition()) {
         restoreState();
         return nullptr;
     }
 
-    if (!parseGroupRuleBody()) {
+    GCVector<StyleRuleBase*> rules;
+    if (!parseGroupRuleBody(rules)) {
         restoreState();
         return nullptr;
     }
 
     doLogicOperation();
     bool isSupported = m_supportOperandStack.back();
-    GCVector<StyleRuleBase*> rules;
     StyleRuleSupports* supportsRule =
         new StyleRuleSupports(conditionText, isSupported, rules);
 
@@ -2226,31 +2235,52 @@ bool CSSParser::parseSupportsCondition()
         return false;
     }
 
-    // optional
-    String* conjoiner = lookAhead(true, true)->value()->toString()->toLower();
-    bool ok = true;
+    // Looking for optional ( and | or )
+    String* conjoiner = currentToken()->value()->toString()->toLower();
     if (conjoiner->equals("and") || conjoiner->equals("or")) {
+        bool ok = false;
         preserveState();
 
-        while (lookAhead(true, true)
-                   ->value()
-                   ->toString()
-                   ->equalsIgnoreCase(conjoiner)) {
-            RefPtr<CSSToken> token = getToken(true, true);
-
+        while (
+            currentToken()->value()->toString()->equalsIgnoreCase(conjoiner)) {
+            getToken(true, true);
             if (!parseSupportsConditionInParen()) {
-                restoreState();
                 ok = false;
                 break;
+            } else {
+                ok = true;
+                if (conjoiner->equals("and")) {
+                    m_supportOperatorStack.push_back(And);
+                } else {
+                    m_supportOperatorStack.push_back(Or);
+                }
             }
         }
 
         if (ok) {
-            forgetState();
+            forgetState(); // matching preserveState() for this optional
+                           // ( and | or )
+            forgetState(); // matching preserveState() in this function
+            return true;
+        } else {
+            restoreState(); // matching preserveState() for this optional
+                            // ( and | or )
+            restoreState(); // matching preserveState() in this function
+            return false;
         }
     }
 
-    if (ok) {
+    forgetState();
+    return true;
+}
+
+bool CSSParser::parseGroupRuleBody(GCVector<StyleRuleBase*>& rules)
+{
+    preserveState();
+
+    RefPtr<CSSToken> token = currentToken();
+    if (token->isSymbol('{')) {
+        parseRules(token, rules, RuleListType::RegularRuleList);
         forgetState();
         return true;
     }
@@ -2259,23 +2289,18 @@ bool CSSParser::parseSupportsCondition()
     return false;
 }
 
-bool CSSParser::parseGroupRuleBody()
-{
-    // TODO: parse group rules
-    return true;
-}
-
 bool CSSParser::parseSupportsNegation()
 {
     preserveState();
 
-    RefPtr<CSSToken> token = getToken(true, true);
+    RefPtr<CSSToken> token = currentToken();
     if (!token->value()->toString()->equalsIgnoreCase("not")) {
         restoreState();
         return false;
     }
 
     m_supportOperandStack.push_back(Paren);
+    getToken(true, true);
     if (!parseSupportsConditionInParen()) {
         restoreState();
         return false;
@@ -2293,14 +2318,17 @@ bool CSSParser::parseSupportsNegation()
     return true;
 }
 
-void CSSParser::doLogicOperation()
+bool CSSParser::doLogicOperation()
 {
     TruthOp result = False;
     while (m_supportOperatorStack.size() > 0) {
         LogicOp op = m_supportOperatorStack.back();
         m_supportOperatorStack.pop_back();
 
-        STARFISH_ASSERT(m_supportOperandStack.size() >= 2);
+        if (m_supportOperandStack.size() < 2) {
+            return false;
+        }
+
         TruthOp rightOperand = m_supportOperandStack.back();
         m_supportOperandStack.pop_back();
         TruthOp leftOperand = m_supportOperandStack.back();
@@ -2312,7 +2340,8 @@ void CSSParser::doLogicOperation()
             result = (TruthOp)(leftOperand || rightOperand);
         }
 
-        if (m_supportOperandStack.back() == Paren) {
+        if (!m_supportOperandStack.empty() &&
+            m_supportOperandStack.back() == Paren) {
             m_supportOperandStack.pop_back();
             m_supportOperandStack.push_back(result);
             break;
@@ -2320,48 +2349,8 @@ void CSSParser::doLogicOperation()
             m_supportOperandStack.push_back(result);
         }
     }
-}
 
-bool CSSParser::parseSupportsConnectives(String* conjoiner)
-{
-    preserveState();
-
-    if (!parseSupportsConditionInParen()) {
-        restoreState();
-        return false;
-    }
-
-    int count = 0;
-    while (lookAhead(true, true)
-               ->value()
-               ->toString()
-               ->equalsIgnoreCase(conjoiner)) {
-        RefPtr<CSSToken> token = getToken(true, true);
-        if (!token->value()->toString()->equalsIgnoreCase(conjoiner)) {
-            restoreState();
-            return false;
-        }
-
-        if (!parseSupportsConditionInParen()) {
-            restoreState();
-            return false;
-        }
-        count++;
-    };
-
-    if (count >= 1) {
-        if (conjoiner->equals("and")) {
-            m_supportOperatorStack.push_back(And);
-        } else {
-            m_supportOperatorStack.push_back(Or);
-        }
-
-        forgetState();
-        return true;
-    }
-
-    restoreState();
-    return false;
+    return true;
 }
 
 bool CSSParser::parseSupportsConditionInParen()
@@ -2391,7 +2380,9 @@ bool CSSParser::parseSupportsConditionInParenSub()
 {
     preserveState();
 
-    if (!consumeToken(String::createASCIIString("("))) {
+    if (currentToken()->isSymbol('(')) {
+        getToken(true, true);
+    } else {
         restoreState();
         return false;
     }
@@ -2401,7 +2392,9 @@ bool CSSParser::parseSupportsConditionInParenSub()
         return false;
     }
 
-    if (!consumeToken(String::createASCIIString(")"))) {
+    if (currentToken()->isSymbol(')')) {
+        getToken(true, true);
+    } else {
         restoreState();
         return false;
     }
@@ -2414,17 +2407,21 @@ bool CSSParser::parseSupportsDeclarationCondition()
 {
     preserveState();
 
-    if (!consumeToken(String::createASCIIString("("))) {
+    if (currentToken()->isSymbol('(')) {
+        getToken(true, true);
+    } else {
         restoreState();
         return false;
     }
 
-    // NOTE: parseDeclaration() requires to read its key before calling the
-    // function
+    if (!currentToken()->isIdent()) {
+        restoreState();
+        return false;
+    }
 
     // Terms (that are part of the support grammar) cannot be CSS keys
-    RefPtr<CSSToken> key = getToken(true, true);
-    if (key->value()->toString()->equals("(") ||
+    RefPtr<CSSToken> key = currentToken();
+    if (key->isSymbol('(') ||
         key->value()->toString()->equalsIgnoreCase("not")) {
         restoreState();
         return false;
@@ -2432,7 +2429,8 @@ bool CSSParser::parseSupportsDeclarationCondition()
 
     {
         preserveState();
-        if (!consumeToken(String::createASCIIString(":"))) {
+        RefPtr<CSSToken> sep = getToken(true, true);
+        if (!sep->isSymbol(':')) {
             restoreState(); // for looking at ':' token
             restoreState(); // for terminating this function
             return false;
@@ -2441,7 +2439,7 @@ bool CSSParser::parseSupportsDeclarationCondition()
     }
 
     CSSStyleDeclaration* decl = new CSSStyleDeclaration(document());
-    ParseResult r = parseDeclaration(key, decl);
+    parseDeclaration(key, decl);
 
     if (decl->cssText()->equals(String::emptyString)) {
         m_supportOperandStack.push_back(False);
@@ -2449,9 +2447,9 @@ bool CSSParser::parseSupportsDeclarationCondition()
         m_supportOperandStack.push_back(True);
     }
 
-    // NOTE: parseDeclaration() reads the next token.
-    ungetToken();
-    if (!consumeToken(String::createASCIIString(")"))) {
+    if (currentToken()->isSymbol(')')) {
+        getToken(true, true);
+    } else {
         restoreState();
         return false;
     }
@@ -2464,17 +2462,6 @@ bool CSSParser::parseGeneralEnclosed()
 {
     preserveState();
     restoreState();
-    return false;
-}
-
-bool CSSParser::consumeToken(String* token)
-{
-    RefPtr<CSSToken> next = lookAhead(true, true);
-    if (next->value()->toString()->equals(token)) {
-        getToken(true, true);
-        return true;
-    }
-
     return false;
 }
 

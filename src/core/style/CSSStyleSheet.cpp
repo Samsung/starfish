@@ -268,6 +268,13 @@ void CSSStyleSheet::collectStyleRules(
             }
         } else if (rule->isFontFaceRule()) {
             webFonts.push_back(rule->asStyleRuleFontFace()->styleDeclaration());
+        } else if (rule->isSupportsRule()) {
+            StyleRuleSupports* supports = rule->asStyleRuleSupports();
+            if (supports->isSupported()) {
+                collectStyleRules(supports->childRules(), webFonts, url,
+                                  viewportDependentResult,
+                                  deviceDependentResult);
+            }
         }
         iter++;
     }

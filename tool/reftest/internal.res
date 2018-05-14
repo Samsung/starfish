@@ -228,3 +228,6 @@ test/internal-test/css/text/word-concatenating.html
 test/internal-test/css/border/starting_unprocessed_mbp_with_pre.html
 test/internal-test/cookie/cookie-internal-test-1.html
 test/internal-test/cookie/cookie-internal-test-2.html
+test/internal-test/selector/support_rule_01.html
+test/internal-test/selector/support_rule_02.html
+test/internal-test/selector/support_rule_03.html

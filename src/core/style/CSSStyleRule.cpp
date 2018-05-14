@@ -404,6 +404,32 @@ String* CSSSupportsRule::cssText()
     return result.finalize();
 }
 
+String* CSSSupportsRule::conditionText() const
+{
+    if (!m_groupRule) {
+        return String::emptyString;
+    }
+
+    STARFISH_ASSERT(m_groupRule->isSupportsRule());
+    StyleRuleSupports* supports = static_cast<StyleRuleSupports*>(m_groupRule);
+    return supports->conditionText();
+}
+
+void CSSSupportsRule::setConditionText(String* conditionText)
+{
+    if (!m_groupRule) {
+        return;
+    }
+
+    STARFISH_ASSERT(m_groupRule->isSupportsRule());
+    StyleRuleSupports* supports = static_cast<StyleRuleSupports*>(m_groupRule);
+    if (supports->eval(scriptBindingInstance()->ownerDocument(),
+                       conditionText)) {
+        supports->setConditionText(conditionText);
+        supports->setSupported(true);
+    }
+}
+
 CSSCounterStyleRule::CSSCounterStyleRule(
     StyleRuleCounterStyle* counterStyleRule, CSSStyleSheet* parent)
     : CSSRule(parent)
