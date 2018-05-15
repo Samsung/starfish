@@ -1432,6 +1432,38 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
     paintBackgroundLayers(canvas, box, rootOrBodyelement, style);
 }
 
+static inline void paintRepeatGradient(
+    Canvas* canvas, FrameBox* box, ComputedStyle* style,
+    const unsigned int& idx, Unit::Rect dst, const float& width,
+    const float& height, bool repeatX, bool repeatY,
+    const ImageRenderingValue& imageRenderingValue)
+{
+    canvas->save();
+
+    NativeImageData* nativeImage =
+        NativeImageData::create(ceil(width), ceil(height));
+    Canvas* cv =
+        Canvas::createGenericCanvas(box->node()->starFish(), nativeImage);
+    cv->clearColor(Unit::Color(0, 0, 0, 0));
+
+    ImageValue* imageValue = style->backgroundImage(idx);
+    Unit::Rect rect = Unit::Rect(0, 0, width, height).snapSizeToPixel();
+    auto info = imageValue->gradientValue()->makeGradientDrawingInfo(rect, box);
+
+    if (imageValue->gradientValue()->type() == GradientType::LinearGradient) {
+        cv->drawLinearGradient(rect, info);
+    } else if (imageValue->gradientValue()->type() ==
+               GradientType::RadialGradient) {
+        cv->drawRadialGradient(rect, info);
+    }
+    cv->fill();
+    delete cv;
+    canvas->drawRepeatImage(nativeImage, dst, width, height, repeatX, repeatY,
+                            imageRenderingValue);
+    delete nativeImage;
+    canvas->restore();
+}
+
 void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                      HTMLElement* rootOrBodyelement,
                                      ComputedStyle* style)
@@ -1595,7 +1627,10 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                     id, Unit::Rect(x, y, paintingW, paintingH), imgW, imgH,
                     true, true, imageRenderingValue);
             } else if (type.isGradient()) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                paintRepeatGradient(canvas, box, style, idx,
+                                    Unit::Rect(x, y, paintingW, paintingH),
+                                    imgW, imgH, true, true,
+                                    imageRenderingValue);
             }
         } else if (shouldApplyRepeat &&
                    repeatX == BackgroundRepeatValue::NoRepeatRepeatValue &&
@@ -1605,7 +1640,9 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                         imgW, imgH, false, true,
                                         imageRenderingValue);
             } else if (type.isGradient()) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                paintRepeatGradient(canvas, box, style, idx,
+                                    Unit::Rect(x, y, imgW, paintingH), imgW,
+                                    imgH, false, true, imageRenderingValue);
             }
 
         } else if (shouldApplyRepeat &&
@@ -1616,7 +1653,9 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                                         imgW, imgH, true, false,
                                         imageRenderingValue);
             } else if (type.isGradient()) {
-                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                paintRepeatGradient(canvas, box, style, idx,
+                                    Unit::Rect(x, y, paintingW, imgH), imgW,
+                                    imgH, true, false, imageRenderingValue);
             }
         } else {
             if (type.isURL()) {
