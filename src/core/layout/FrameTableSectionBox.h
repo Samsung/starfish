@@ -101,7 +101,7 @@ private:
     GCVector<CellStruct*> m_cells;
 };
 
-class FrameTableSectionBox : public FrameTableObjectBox {
+class FrameTableSectionBox final : public FrameTableObjectBox {
 public:
     FrameTableSectionBox(Node* node, ComputedStyle* style);
 

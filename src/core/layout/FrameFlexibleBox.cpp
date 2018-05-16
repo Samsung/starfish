@@ -22,6 +22,19 @@
 
 namespace StarFish {
 
+void* FrameFlexibleBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(FrameFlexibleBox)] = { 0 };
+        FrameFlexibleBox::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameFlexibleBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 FlexFormattingContext::FlexFormattingContext(LayoutContext& ctx,
                                              FrameFlexibleBox* container,
                                              LayoutUnit availableWidth)

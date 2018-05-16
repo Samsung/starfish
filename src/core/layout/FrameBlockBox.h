@@ -70,7 +70,7 @@ protected:
     }
 };
 
-class InlineTextBox : public FrameBox {
+class InlineTextBox final : public FrameBox {
 public:
     InlineTextBox(InlineTextBox* box)
         : FrameBox(box->node(), box->style())
@@ -432,7 +432,7 @@ public:
     int m_status;
 };
 
-class InlineNonReplacedBox : public InlineBoxLayoutParentBox {
+class InlineNonReplacedBox final : public InlineBoxLayoutParentBox {
     friend class FrameBlockBox;
     friend class LineFormattingContext;
 
@@ -549,6 +549,12 @@ public:
     }
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        InlineBoxLayoutParentBox::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(InlineNonReplacedBox, m_origin));
+    }
+
     union {
         FrameInline* m_origin;
         InlineNonReplacedBoxRareData* m_rareData;
@@ -600,7 +606,7 @@ protected:
     }
 };
 
-class LineBox : public InlineBoxLayoutParentBox {
+class LineBox final : public InlineBoxLayoutParentBox {
     friend class LineFormattingContext;
     friend class FrameBlockBox;
     friend class InlineNonReplacedBox;
@@ -624,6 +630,12 @@ public:
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        InlineBoxLayoutParentBox::fillGCDescriptor(desc);
+    }
 };
 
 struct FrameBlockBoxRareData : public FrameBoxRareData {

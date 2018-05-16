@@ -27,7 +27,7 @@ namespace StarFish {
 class FrameTableCellBox;
 class ColSizeStruct;
 
-class FrameTableRowBox : public FrameTableObjectBox {
+class FrameTableRowBox final : public FrameTableObjectBox {
 public:
     FrameTableRowBox(Node* node, ComputedStyle* style);
 

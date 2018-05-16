@@ -106,7 +106,7 @@ private:
     std::unordered_map<FrameBox*, LayoutUnit> m_firstLineBoxYPositions;
 };
 
-class FrameFlexibleBox : public FrameBlockBox {
+class FrameFlexibleBox final : public FrameBlockBox {
 public:
     FrameFlexibleBox(Node* node, ComputedStyle* style);
 
@@ -134,6 +134,15 @@ public:
 
     virtual void computePreferredWidth(PreferredWidthContext& ctx) override;
     void layoutFlex(LayoutContext& ctx);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBlockBox::fillGCDescriptor(desc);
+    }
 };
 }
 #endif

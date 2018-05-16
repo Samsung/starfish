@@ -27,7 +27,7 @@ namespace StarFish {
 class FrameTreeBuilderContext;
 class ComputedStyle;
 
-class FrameSelectBox : public FrameBlockBox {
+class FrameSelectBox final : public FrameBlockBox {
 public:
     FrameSelectBox(Node* node, ComputedStyle* style);
 
@@ -44,7 +44,14 @@ public:
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
 
-private:
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBlockBox::fillGCDescriptor(desc);
+    }
 };
 }
 

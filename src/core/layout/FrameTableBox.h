@@ -247,7 +247,7 @@ protected:
     }
 };
 
-class FrameTableBox : public FrameTableObjectBox {
+class FrameTableBox final : public FrameTableObjectBox {
 public:
     FrameTableBox(Node* node, ComputedStyle* style);
 

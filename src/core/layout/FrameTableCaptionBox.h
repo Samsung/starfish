@@ -24,7 +24,7 @@
 
 namespace StarFish {
 
-class FrameTableCaptionBox : public FrameTableObjectBox {
+class FrameTableCaptionBox final : public FrameTableObjectBox {
 public:
     FrameTableCaptionBox(Node* node, ComputedStyle* style);
 
@@ -42,6 +42,8 @@ public:
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap);
 };
 }

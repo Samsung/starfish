@@ -27,7 +27,7 @@ namespace StarFish {
 class FrameTreeBuilderContext;
 class ComputedStyle;
 
-class FrameButtonBox : public FrameBlockBox {
+class FrameButtonBox final : public FrameBlockBox {
 public:
     FrameButtonBox(Node* node, ComputedStyle* style);
 
@@ -37,6 +37,15 @@ public:
     }
 
     virtual void inlineLayoutAdditionalPath(LayoutContext& ctx) override;
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBlockBox::fillGCDescriptor(desc);
+    }
 };
 }
 

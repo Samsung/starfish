@@ -28,7 +28,7 @@ namespace StarFish {
 // In the specification, <col> and <colgroup> are very similar
 // The only difference is that <col> should not have children
 // So we will use A appropriately for <col> and <colgroup>
-class FrameTableColBox : public FrameTableCellBox {
+class FrameTableColBox final : public FrameTableCellBox {
 public:
     FrameTableColBox(Node* node, ComputedStyle* style);
 

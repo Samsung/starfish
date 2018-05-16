@@ -27,20 +27,9 @@ void* FrameSVGRectBox::operator new(size_t size)
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
-        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameSVGRectBox)] = { 0 };
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGRectBox, m_node));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGRectBox, m_layoutParent));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameSVGRectBox, m_treeItemModel.m_parent));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameSVGRectBox, m_treeItemModel.m_previous));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(FrameSVGRectBox, m_treeItemModel.m_next));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGRectBox,
-                                              m_treeItemModel.m_firstChild));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameSVGRectBox,
-                                              m_treeItemModel.m_lastChild));
-        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameSVGRectBox));
+        GC_word desc[GC_BITMAP_SIZE(FrameSVGRectBox)] = { 0 };
+        FrameSVGRectBox::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameSVGRectBox));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
