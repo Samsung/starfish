@@ -66,15 +66,21 @@ public:
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(Cell)] = { 0 };
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Cell, m_cellBox));
-            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(Cell));
+            GC_word desc[GC_BITMAP_SIZE(Cell)] = { 0 };
+            Cell::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(Cell));
             typeInited = true;
         }
         return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
     }
 
     void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(Cell, m_cellBox));
+    }
 
 private:
     FrameTableCellBox* m_cellBox;
@@ -92,15 +98,21 @@ class Row : public gc {
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(Row)] = { 0 };
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Row, m_cells));
-            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(Row));
+            GC_word desc[GC_BITMAP_SIZE(Row)] = { 0 };
+            Row::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(Row));
             typeInited = true;
         }
         return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
     }
 
     void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(Row, m_cells));
+    }
 
 private:
     // represents a row of cells
@@ -122,15 +134,21 @@ public:
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(ColGroup)] = { 0 };
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(ColGroup, m_column));
-            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(ColGroup));
+            GC_word desc[GC_BITMAP_SIZE(ColGroup)] = { 0 };
+            ColGroup::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(ColGroup));
             typeInited = true;
         }
         return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
     }
 
     void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(ColGroup, m_column));
+    }
 
 private:
     size_t m_slotX; // slotY = 0 by definition
@@ -153,10 +171,9 @@ public:
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(Table)] = { 0 };
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Table, m_rows));
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(Table, m_colGroups));
-            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(Table));
+            GC_word desc[GC_BITMAP_SIZE(Table)] = { 0 };
+            Table::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(Table));
             typeInited = true;
         }
         return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -169,6 +186,13 @@ public:
         m_height = 0;
         m_rows.clear();
         m_colGroups.clear();
+    }
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(Table, m_rows));
+        GC_set_bit(desc, GC_WORD_OFFSET(Table, m_colGroups));
     }
 
 private:

@@ -154,7 +154,24 @@ public:
         paintReplaced(canvas);
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBox::fillGCDescriptor(desc);
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameReplaced, m_treeItemModel.m_parent));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameReplaced, m_treeItemModel.m_previous));
+        GC_set_bit(desc, GC_WORD_OFFSET(FrameReplaced, m_treeItemModel.m_next));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameReplaced, m_treeItemModel.m_firstChild));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameReplaced, m_treeItemModel.m_lastChild));
+    }
+
     virtual bool hasFrameTreeItemModel() override
     {
         return true;

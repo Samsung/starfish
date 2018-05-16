@@ -56,20 +56,9 @@ public:
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(FrameLineBreak)] = { 0 };
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameLineBreak, m_node));
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameLineBreak,
-                                                  m_treeItemModel.m_parent));
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameLineBreak,
-                                                  m_treeItemModel.m_previous));
-            GC_set_bit(obj_bitmap,
-                       GC_WORD_OFFSET(FrameLineBreak, m_treeItemModel.m_next));
-            GC_set_bit(
-                obj_bitmap,
-                GC_WORD_OFFSET(FrameLineBreak, m_treeItemModel.m_firstChild));
-            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameLineBreak,
-                                                  m_treeItemModel.m_lastChild));
-            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameLineBreak));
+            GC_word desc[GC_BITMAP_SIZE(FrameLineBreak)] = { 0 };
+            FrameLineBreak::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameLineBreak));
             typeInited = true;
         }
         return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -77,6 +66,21 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        Frame::fillGCDescriptor(desc);
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameLineBreak, m_treeItemModel.m_parent));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameLineBreak, m_treeItemModel.m_previous));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameLineBreak, m_treeItemModel.m_next));
+        GC_set_bit(
+            desc, GC_WORD_OFFSET(FrameLineBreak, m_treeItemModel.m_firstChild));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameLineBreak, m_treeItemModel.m_lastChild));
+    }
+
     virtual bool hasFrameTreeItemModel() override
     {
         return true;
