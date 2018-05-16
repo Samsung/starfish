@@ -62,5 +62,8 @@ interface HTMLInputElement : HTMLElement {
     [Unimplemented] void setRangeText(DOMString replacement, unsigned long start, unsigned long end, optional SelectionMode selectionMode = "preserve");
     [Unimplemented] void setSelectionRange(unsigned long start, unsigned long end, optional DOMString direction);
 
+    // https://html.spec.whatwg.org/#HTMLInputElement-partial
+    [CEReactions, Reflect] attribute DOMString align;
+    [CEReactions, Reflect=usemap] attribute DOMString useMap;
     // also has obsolete members
 };

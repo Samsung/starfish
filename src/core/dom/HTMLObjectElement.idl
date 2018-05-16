@@ -21,4 +21,17 @@ interface HTMLObjectElement : HTMLElement {
   [Unimplemented] boolean checkValidity();
   [Unimplemented] boolean reportValidity();
   [Unimplemented] void setCustomValidity(DOMString error);
+
+  // https://html.spec.whatwg.org/#HTMLObjectElement-partial
+  [CEReactions, Reflect] attribute DOMString align;
+  [CEReactions, Reflect] attribute DOMString archive;
+  [CEReactions, Reflect] attribute DOMString code;
+  [CEReactions, Reflect] attribute boolean declare;
+  // [CEReactions, Reflect] attribute unsigned long hspace;
+  [CEReactions, Reflect] attribute DOMString standby;
+  // [CEReactions, Reflect] attribute unsigned long vspace;
+  [CEReactions, Reflect=codebase] attribute DOMString codeBase;
+  [CEReactions, Reflect=codetype] attribute DOMString codeType;
+
+  [CEReactions, Reflect, TreatNullAs=EmptyString] attribute DOMString border;
 };

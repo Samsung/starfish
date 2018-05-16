@@ -1,3 +1,6 @@
 // https://html.spec.whatwg.org/multipage/semantics.html#the-pre-element
 [HTMLConstructor]
-interface HTMLPreElement : HTMLElement {};
+interface HTMLPreElement : HTMLElement {
+    // https://html.spec.whatwg.org/#HTMLPreElement-partial
+    // [CEReactions, Reflect] attribute long width;
+};

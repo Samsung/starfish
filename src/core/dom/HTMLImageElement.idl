@@ -21,12 +21,13 @@ interface HTMLImageElement : HTMLElement {
   [Unimplemented] readonly attribute DOMString currentSrc;
   [CEReactions] attribute DOMString referrerPolicy;
 
-  // https://www.w3.org/TR/REC-DOM-Level-1/level-one-html.html#ID-17701901
-  // Initial definition
-  [Unimplemented] attribute DOMString lowSrc;
-  [Rename=nameAttr] attribute DOMString name;
-  [Unimplemented] attribute DOMString align;
-  [Unimplemented] attribute DOMString hspace;
-  [Unimplemented] attribute DOMString longDesc;
-  [Unimplemented] attribute DOMString vspace;
+  // https://html.spec.whatwg.org/#HTMLImageElement-partial
+  [CEReactions, Rename=nameAttr] attribute DOMString name;
+  [Unimplemented, CEReactions] attribute USVString lowsrc;
+  [CEReactions, Reflect] attribute DOMString align;
+  // [CEReactions, Reflect] attribute unsigned long hspace;
+  // [CEReactions, Reflect] attribute unsigned long vspace;
+  [CEReactions, Reflect=longdesc] attribute USVString longDesc;
+
+  [CEReactions, Reflect, TreatNullAs=EmptyString] attribute DOMString border;
 };
