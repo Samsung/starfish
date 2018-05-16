@@ -27,7 +27,7 @@ namespace StarFish {
 class FrameTreeBuilderContext;
 class ComputedStyle;
 
-class FrameInputBox : public FrameBlockBox {
+class FrameInputBox final : public FrameBlockBox {
 public:
     FrameInputBox(Node* node, ComputedStyle* style);
     static FrameInputBox* buildFrameTree(Node* current,
@@ -51,7 +51,15 @@ public:
     void layoutForTextEditable(LayoutContext& ctx,
                                Frame::LayoutWantToResolve resolveWhat);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBlockBox::fillGCDescriptor(desc);
+    }
+
     void paintCaret(Canvas* canvas);
     virtual void paintInlineContentBlock(Canvas* canvas) override;
     static ComputedStyle* createInputElementStyleFrom(Node* parent);

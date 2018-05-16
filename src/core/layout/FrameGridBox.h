@@ -252,7 +252,7 @@ private:
     bool m_areaChecker[GRID_MAX_TRACK][GRID_MAX_TRACK];
 };
 
-class FrameGridBox : public FrameBlockBox {
+class FrameGridBox final : public FrameBlockBox {
 public:
     FrameGridBox(Node* node, ComputedStyle* style);
 
@@ -273,6 +273,28 @@ public:
 
     void layoutGrid(LayoutContext& ctx);
     void computePreferredWidth(PreferredWidthContext& ctx) override;
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(FrameGridBox)] = { 0 };
+            FrameGridBox::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameGridBox));
+            typeInited = true;
+        }
+
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBlockBox::fillGCDescriptor(desc);
+    }
 };
 
 template <typename dataType>

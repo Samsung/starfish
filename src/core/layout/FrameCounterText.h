@@ -27,7 +27,7 @@ namespace StarFish {
 class CounterContentData;
 class CounterStyle;
 
-class FrameCounterText : public FrameText {
+class FrameCounterText final : public FrameText {
 public:
     enum CounterType {
         CounterTypeListOutside,
@@ -52,10 +52,9 @@ public:
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(FrameCounterText)] = { 0 };
-            FrameText::fillGCDescriptor(obj_bitmap);
-            descr =
-                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameCounterText));
+            GC_word desc[GC_BITMAP_SIZE(FrameCounterText)] = { 0 };
+            FrameCounterText::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameCounterText));
             typeInited = true;
         }
         return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -90,6 +89,11 @@ public:
     void updateCounterText(std::vector<int32_t>& indice);
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameText::fillGCDescriptor(desc);
+    }
+
     const CounterStyle* counterStyle() const;
 
 protected:

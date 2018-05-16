@@ -24,7 +24,7 @@
 
 namespace StarFish {
 
-class FrameSVGCircleBox : public FrameSVGBox {
+class FrameSVGCircleBox final : public FrameSVGBox {
 public:
     FrameSVGCircleBox(Node* node)
         : FrameSVGBox(node)
@@ -38,7 +38,14 @@ public:
 
     virtual void paintSVG(PaintingContext& ctx) override;
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameSVGBox::fillGCDescriptor(desc);
+    }
 };
 }
 

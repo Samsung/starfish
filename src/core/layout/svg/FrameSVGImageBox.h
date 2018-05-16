@@ -25,7 +25,7 @@
 
 namespace StarFish {
 
-class FrameSVGImageBox : public FrameSVGBox {
+class FrameSVGImageBox final : public FrameSVGBox {
 public:
     FrameSVGImageBox(Node* node)
         : FrameSVGBox(node)
@@ -103,7 +103,26 @@ public:
         }
     }
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(FrameSVGImageBox)] = { 0 };
+            FrameSVGImageBox::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameSVGImageBox));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new[](size_t size) = delete;
+
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameSVGBox::fillGCDescriptor(desc);
+    }
 };
 }
 

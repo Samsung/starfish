@@ -24,7 +24,7 @@
 
 namespace StarFish {
 
-class FrameDocument : public FrameBlockBox {
+class FrameDocument final : public FrameBlockBox {
     friend class FrameBlockBox;
 
 public:
@@ -91,6 +91,11 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBlockBox::fillGCDescriptor(desc);
+    }
+
     LayoutUnit m_scrollLeft;
     LayoutUnit m_scrollTop;
     bool m_countingOutdatedFlag;

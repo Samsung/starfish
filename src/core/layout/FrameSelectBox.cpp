@@ -28,6 +28,19 @@
 
 namespace StarFish {
 
+void* FrameSelectBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(FrameSelectBox)] = { 0 };
+        FrameSelectBox::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameSelectBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 FrameSelectBox::FrameSelectBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {

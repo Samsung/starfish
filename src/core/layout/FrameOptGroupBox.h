@@ -27,7 +27,7 @@ namespace StarFish {
 class FrameTreeBuilderContext;
 class ComputedStyle;
 
-class FrameOptGroupBox : public FrameBlockBox {
+class FrameOptGroupBox final : public FrameBlockBox {
 public:
     FrameOptGroupBox(Node* node, ComputedStyle* style);
 
@@ -41,7 +41,14 @@ public:
         return true;
     }
 
-private:
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBlockBox::fillGCDescriptor(desc);
+    }
 };
 }
 

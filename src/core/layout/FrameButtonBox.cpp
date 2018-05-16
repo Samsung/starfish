@@ -27,6 +27,19 @@
 
 namespace StarFish {
 
+void* FrameButtonBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(FrameButtonBox)] = { 0 };
+        FrameButtonBox::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameButtonBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 FrameButtonBox::FrameButtonBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
 {

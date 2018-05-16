@@ -39,9 +39,9 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    static inline void fillGCDescriptor(GC_word* obj_bitmap)
+    static inline void fillGCDescriptor(GC_word* desc)
     {
-        FrameBlockBox::fillGCDescriptor(obj_bitmap);
+        FrameBlockBox::fillGCDescriptor(desc);
     }
 };
 }

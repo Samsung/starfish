@@ -28,7 +28,7 @@ void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
                          double ry, double xAxisRotation, bool isLargeArc,
                          bool isPositiveSweep, double x2, double y2);
 
-class FrameSVGRectBox : public FrameSVGBox {
+class FrameSVGRectBox final : public FrameSVGBox {
 public:
     FrameSVGRectBox(Node* node)
         : FrameSVGBox(node)
@@ -121,6 +121,11 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameSVGBox::fillGCDescriptor(desc);
+    }
+
     float m_rx, m_ry;
 };
 }

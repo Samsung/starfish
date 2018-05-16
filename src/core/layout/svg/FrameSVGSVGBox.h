@@ -25,7 +25,7 @@
 
 namespace StarFish {
 
-class FrameSVGSVGBox : public FrameReplaced {
+class FrameSVGSVGBox final : public FrameReplaced {
 public:
     FrameSVGSVGBox(Node* node)
         : FrameReplaced(node, nullptr)
@@ -62,6 +62,12 @@ public:
     }
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameReplaced::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(FrameSVGSVGBox, m_surface));
+    }
+
     Nullable<Unit::Rect> m_viewBox;
     float m_svgScale;
     NativeImageData* m_surface;

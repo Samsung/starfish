@@ -24,7 +24,7 @@
 
 namespace StarFish {
 
-class FrameQuoteText : public FrameText {
+class FrameQuoteText final : public FrameText {
 public:
     FrameQuoteText(Node* node, QuoteValue val);
 
@@ -48,9 +48,9 @@ public:
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
-            GC_word obj_bitmap[GC_BITMAP_SIZE(FrameQuoteText)] = { 0 };
-            FrameText::fillGCDescriptor(obj_bitmap);
-            descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameQuoteText));
+            GC_word desc[GC_BITMAP_SIZE(FrameQuoteText)] = { 0 };
+            FrameQuoteText::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameQuoteText));
             typeInited = true;
         }
         return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -59,6 +59,11 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameText::fillGCDescriptor(desc);
+    }
+
     QuoteValue m_quote;
 };
 }

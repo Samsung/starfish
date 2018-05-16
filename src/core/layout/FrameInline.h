@@ -24,7 +24,7 @@
 
 namespace StarFish {
 
-class FrameInline : public Frame {
+class FrameInline final : public Frame {
 public:
     FrameInline(Node* node)
         : Frame(node, nullptr)

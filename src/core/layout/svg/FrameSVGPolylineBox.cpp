@@ -28,6 +28,19 @@
 
 namespace StarFish {
 
+void* FrameSVGPolylineBox::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(FrameSVGPolylineBox)] = { 0 };
+        FrameSVGPolylineBox::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameSVGPolylineBox));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 void FrameSVGPolylineBox::paintSVG(PaintingContext& ctx)
 {
     auto points =
