@@ -1195,15 +1195,9 @@ void* InlineBoxLayoutParentBox::operator new(size_t size)
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
-        GC_word obj_bitmap[GC_BITMAP_SIZE(InlineBoxLayoutParentBox)] = { 0 };
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(InlineBoxLayoutParentBox, m_node));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(InlineBoxLayoutParentBox, m_layoutParent));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(InlineBoxLayoutParentBox, m_boxes));
-        descr = GC_make_descriptor(obj_bitmap,
-                                   GC_WORD_LEN(InlineBoxLayoutParentBox));
+        GC_word desc[GC_BITMAP_SIZE(InlineBoxLayoutParentBox)] = { 0 };
+        InlineBoxLayoutParentBox::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(InlineBoxLayoutParentBox));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -3079,10 +3073,9 @@ void* FrameTextRareData::operator new(size_t size)
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
-        GC_word obj_bitmap[GC_BITMAP_SIZE(FrameTextRareData)] = { 0 };
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTextRareData, m_node));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(FrameTextRareData, m_text));
-        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(FrameTextRareData));
+        GC_word desc[GC_BITMAP_SIZE(FrameTextRareData)] = { 0 };
+        FrameTextRareData::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameTextRareData));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -4827,11 +4820,9 @@ void* InlineTextBox::operator new(size_t size)
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
-        GC_word obj_bitmap[GC_BITMAP_SIZE(InlineTextBox)] = { 0 };
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_node));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_layoutParent));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(InlineTextBox, m_text));
-        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(InlineTextBox));
+        GC_word desc[GC_BITMAP_SIZE(InlineTextBox)] = { 0 };
+        InlineTextBox::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(InlineTextBox));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);

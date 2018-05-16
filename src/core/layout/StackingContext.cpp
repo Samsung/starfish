@@ -241,11 +241,9 @@ void* StackingContextRareData::operator new(size_t size)
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
-        GC_word obj_bitmap[GC_BITMAP_SIZE(StackingContextRareData)] = { 0 };
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(StackingContextRareData, m_buffer));
-        descr = GC_make_descriptor(obj_bitmap,
-                                   GC_WORD_LEN(StackingContextRareData));
+        GC_word desc[GC_BITMAP_SIZE(StackingContextRareData)] = { 0 };
+        StackingContextRareData::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(StackingContextRareData));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
@@ -291,13 +289,9 @@ void* StackingContext::operator new(size_t size)
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
-        GC_word obj_bitmap[GC_BITMAP_SIZE(StackingContext)] = { 0 };
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StackingContext, m_rareData));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StackingContext, m_owner));
-        GC_set_bit(obj_bitmap, GC_WORD_OFFSET(StackingContext, m_parent));
-        GC_set_bit(obj_bitmap,
-                   GC_WORD_OFFSET(StackingContext, m_childContexts));
-        descr = GC_make_descriptor(obj_bitmap, GC_WORD_LEN(StackingContext));
+        GC_word desc[GC_BITMAP_SIZE(StackingContext)] = { 0 };
+        StackingContext::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(StackingContext));
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);

@@ -46,6 +46,12 @@ struct StackingContextRareData : public gc {
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(StackingContextRareData, m_buffer));
+    }
 };
 
 class StackingContext : public gc {
@@ -121,6 +127,14 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(StackingContext, m_rareData));
+        GC_set_bit(desc, GC_WORD_OFFSET(StackingContext, m_owner));
+        GC_set_bit(desc, GC_WORD_OFFSET(StackingContext, m_parent));
+        GC_set_bit(desc, GC_WORD_OFFSET(StackingContext, m_childContexts));
+    }
+
     StackingContextRareData* ensureRareData();
 
     struct ComputeStackingContextContext;

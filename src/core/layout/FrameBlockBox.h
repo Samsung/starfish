@@ -47,6 +47,27 @@ struct InlineTextBoxRareData : public gc {
         m_isTextOverflowDirectionIsLTR = true;
         m_overflowText = String::emptyString;
     }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(InlineTextBoxRareData)] = { 0 };
+            InlineTextBoxRareData::fillGCDescriptor(desc);
+            descr =
+                GC_make_descriptor(desc, GC_WORD_LEN(InlineTextBoxRareData));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(InlineTextBoxRareData, m_overflowText));
+    }
 };
 
 class InlineTextBox : public FrameBox {
@@ -181,6 +202,12 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBox::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(InlineTextBox, m_text));
+    }
+
     void setText(String* str, size_t start, size_t end)
     {
         STARFISH_ASSERT(str);
@@ -354,6 +381,12 @@ public:
     void mergeInlineTextBoxes(LineFormattingContext* ctx);
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBox::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(InlineBoxLayoutParentBox, m_boxes));
+    }
+
     GCVector<FrameBox*> m_boxes;
 
     InlineBoxLayoutParentBox(Node* node, ComputedStyle* style)
@@ -604,6 +637,12 @@ struct FrameBlockBoxRareData : public FrameBoxRareData {
 
     LayoutUnit m_scrollWidth;
     LayoutUnit m_scrollHeight;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameBoxRareData::fillGCDescriptor(desc);
+    }
 };
 
 class FrameBlockBox : public FrameBox {

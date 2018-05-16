@@ -30,6 +30,19 @@
 
 namespace StarFish {
 
+void* FrameReplaced::operator new(size_t size)
+{
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(FrameReplaced)] = { 0 };
+        FrameReplaced::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameReplaced));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
 {
     IntrinsicSize siz = intrinsicSize();

@@ -84,6 +84,17 @@ struct FrameBoxRareData : public gc {
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(FrameBoxRareData, m_layoutParent));
+        GC_set_bit(desc, GC_WORD_OFFSET(FrameBoxRareData, m_stackingContext));
+#if defined(PORT_GRAPHIC_BACKEND_EFL)
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(FrameBoxRareData, m_bufferForBorderRadius));
+#endif
+    }
 };
 
 enum PaintingInlineStage {
