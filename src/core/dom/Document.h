@@ -167,6 +167,50 @@ public:
     HTMLCollection* links();
     HTMLCollection* forms();
     HTMLCollection* scripts();
+    HTMLCollection* anchors();
+
+// TODO : Return empty string on getting and do nothing on setting when body is
+// HTMLFrameSetElement
+#define REFLECT_ATTR_GETTER_FROM_BODY(NAME, ATTR)                       \
+    String* NAME()                                                      \
+    {                                                                   \
+        auto b = body();                                                \
+        if (b != nullptr) {                                             \
+            auto nullable =                                             \
+                b->getAttribute(starFish()->staticStrings()->m_##ATTR); \
+            if (nullable.hasValue()) {                                  \
+                return nullable.getValue();                             \
+            }                                                           \
+        }                                                               \
+        return String::emptyString;                                     \
+    }
+
+#define REFLECT_ATTR_SETTER_TO_BODY(NAME, ATTR)                            \
+    void set##NAME(String* value)                                          \
+    {                                                                      \
+        auto b = body();                                                   \
+        if (b != nullptr) {                                                \
+            b->setAttribute(starFish()->staticStrings()->m_##ATTR, value); \
+        }                                                                  \
+    }
+
+    REFLECT_ATTR_GETTER_FROM_BODY(fgColor, text)
+    REFLECT_ATTR_SETTER_TO_BODY(FgColor, text)
+
+    REFLECT_ATTR_GETTER_FROM_BODY(linkColor, link)
+    REFLECT_ATTR_SETTER_TO_BODY(LinkColor, link)
+
+    REFLECT_ATTR_GETTER_FROM_BODY(vlinkColor, vlink)
+    REFLECT_ATTR_SETTER_TO_BODY(VlinkColor, vlink)
+
+    REFLECT_ATTR_GETTER_FROM_BODY(alinkColor, alink)
+    REFLECT_ATTR_SETTER_TO_BODY(AlinkColor, alink)
+
+    REFLECT_ATTR_GETTER_FROM_BODY(bgColor, bgcolor)
+    REFLECT_ATTR_SETTER_TO_BODY(BgColor, bgcolor)
+
+#undef REFLECT_ATTR_GETTER_FROM_BODY
+#undef REFLECT_ATTR_SETTER_TO_BODY
 
     Attr* createAttribute(QualifiedName localName);
     Attr* createAttribute(String* name);
@@ -559,6 +603,17 @@ public:
 #endif
 #undef VIRTUAL
 #undef OVERRIDE
+
+    // Must do nothing.
+    void clear()
+    {
+    }
+    void captureEvents()
+    {
+    }
+    void releaseEvents()
+    {
+    }
 
 protected:
     Element* nextBaseElement(Node* node, Node* root);

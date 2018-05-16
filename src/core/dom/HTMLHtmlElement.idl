@@ -1,3 +1,6 @@
 // https://html.spec.whatwg.org/multipage/semantics.html#the-html-element
 [HTMLConstructor]
-interface HTMLHtmlElement : HTMLElement {};
+interface HTMLHtmlElement : HTMLElement {
+  // https://html.spec.whatwg.org/#HTMLHtmlElement-partial
+  [CEReactions, Reflect] attribute DOMString version;
+};

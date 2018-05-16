@@ -384,6 +384,19 @@ public:
     QualifiedName m_referrerpolicy;
     QualifiedName m_event;
     QualifiedName m_nomodule;
+    QualifiedName m_noshade;
+    QualifiedName m_longdesc;
+    QualifiedName m_hspace;
+    QualifiedName m_vspace;
+    QualifiedName m_version;
+    QualifiedName m_clear;
+    QualifiedName m_archive;
+    QualifiedName m_code;
+    QualifiedName m_codebase;
+    QualifiedName m_codetype;
+    QualifiedName m_standby;
+    QualifiedName m_declare;
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;
     QualifiedName m_loop;

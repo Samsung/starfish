@@ -308,6 +308,44 @@ StaticStrings::StaticStrings(StarFish* sf)
     m_nomodule =
         QualifiedName(AtomicString::emptyAtomicString(),
                       AtomicString::createAtomicString(sf, "nomodule"));
+    m_noshade = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "noshade"));
+
+    m_longdesc =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "longdesc"));
+
+    m_hspace = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "hspace"));
+
+    m_vspace = QualifiedName(AtomicString::emptyAtomicString(),
+                             AtomicString::createAtomicString(sf, "vspace"));
+
+    m_version = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "version"));
+
+    m_clear = QualifiedName(AtomicString::emptyAtomicString(),
+                            AtomicString::createAtomicString(sf, "clear"));
+
+    m_archive = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "archive"));
+
+    m_code = QualifiedName(AtomicString::emptyAtomicString(),
+                           AtomicString::createAtomicString(sf, "code"));
+
+    m_codebase =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "codebase"));
+
+    m_codetype =
+        QualifiedName(AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(sf, "codetype"));
+
+    m_standby = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "standby"));
+
+    m_declare = QualifiedName(AtomicString::emptyAtomicString(),
+                              AtomicString::createAtomicString(sf, "declare"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default = QualifiedName(AtomicString::emptyAtomicString(),
                               AtomicString::createAtomicString(sf, "default"));

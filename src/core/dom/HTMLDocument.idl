@@ -7,10 +7,10 @@ interface HTMLDocument : Document {
   // readonly attribute DOMString URL;
   // attribute HTMLElement body;
   // readonly attribute HTMLCollection images;
-  [Unimplemented] readonly attribute HTMLCollection applets;
+  // readonly attribute HTMLCollection applets;
   // readonly attribute HTMLCollection links;
   // readonly attribute HTMLCollection forms;
-  [Unimplemented] readonly attribute HTMLCollection anchors;
+  // readonly attribute HTMLCollection anchors;
   // attribute DOMString cookie;
                                         // raises(DOMException) on setting
   // void open();

@@ -837,16 +837,16 @@ bool WebView::rendering(bool force)
 #endif
             cairo_surface_destroy(png_buffer);
 
-            if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
-                strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
-                exit(0);
-            }
-
             if (g_surfaceForScreehShot) {
                 g_surfaceForScreehShot->detachNativeBuffer();
                 starFish()->removePointerFromRootSet(g_surfaceForScreehShot);
             }
             g_surfaceForScreehShot = nullptr;
+
+            if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
+                strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
+                exit(0);
+            }
         }
 
 #ifdef STARFISH_ENABLE_PROFILE_LOADING

@@ -2,4 +2,11 @@
 
 [Exposed=Window,
  HTMLConstructor]
-interface HTMLHRElement : HTMLElement {};
+interface HTMLHRElement : HTMLElement {
+  // https://html.spec.whatwg.org/#HTMLHRElement-partial
+  [CEReactions, Reflect] attribute DOMString align;
+  [CEReactions, Reflect] attribute DOMString color;
+  [CEReactions, Reflect=noshade] attribute boolean noShade;
+  [CEReactions, Reflect] attribute DOMString size;
+  [CEReactions, Reflect] attribute DOMString width;
+};

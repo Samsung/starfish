@@ -3,4 +3,7 @@
 [HTMLConstructor]
 interface HTMLLegendElement : HTMLElement {
   readonly attribute HTMLFormElement? form;
+
+  // https://html.spec.whatwg.org/#HTMLLegendElement-partial
+  [CEReactions, Reflect] attribute DOMString align;
 };

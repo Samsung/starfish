@@ -682,6 +682,11 @@ HTMLCollection* Document::scripts()
     return getElementsByTagName(starFish()->staticStrings()->m_scriptTagName);
 }
 
+HTMLCollection* Document::anchors()
+{
+    return getElementsByTagName(starFish()->staticStrings()->m_aTagName);
+}
+
 DocumentFragment* Document::createDocumentFragment()
 {
     return new DocumentFragment(this);
