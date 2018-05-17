@@ -879,6 +879,11 @@ dom_conformance_test_blink:
 	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/blink_dom_conformance_test.res common -p$(TEST_NPROCS)
 dom_conformance_test_gecko:
 	./tool/drivers/run_test.py dom_conformance tool/reftest/efl/gecko_dom_conformance_test.res common -p$(TEST_NPROCS)
+dom_conformance_all:
+	make dom_conformance_test
+	make dom_conformance_test_webkit
+	make dom_conformance_test_blink
+	make dom_conformance_test_gecko
 
 web_platform_test_dom:
 	./tool/drivers/run_test.py multi_basic tool/reftest/efl/wpt_dom.res common -p$(TEST_NPROCS)
@@ -892,6 +897,13 @@ web_platform_test_progress_events:
 	./tool/drivers/run_test.py multi_basic tool/reftest/efl/wpt_progress_events.res common -p$(TEST_NPROCS)
 web_platform_test_xhr:
 	./tool/drivers/run_test.py multi_basic tool/reftest/efl/wpt_xhr.res common -p$(TEST_NPROCS)
+web_platform_test_all:
+	make web_platform_test_dom
+	make web_platform_test_dom_events
+	make web_platform_test_html
+	make web_platform_test_page_visibility
+	make web_platform_test_progress_events
+	make web_platform_test_xhr
 
 vendor_test_blink_fast_dom:
 	./tool/drivers/run_test.py vendor_basic tool/reftest/efl/blink_fast_dom.res common -p$(TEST_NPROCS)
@@ -916,6 +928,22 @@ vendor_test_webkit_fast_css:
 vendor_test_webkit_fast_etc:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_etc.res efl -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/efl/webkit_fast_etc_manual.res efl --font-dep -p$(TEST_NPROCS)
+vendor_test_all:
+	make vendor_test_blink_fast_dom
+	make vendor_test_blink_fast_html
+	make vendor_test_blink_fast_css
+	make vendor_test_blink_fast_etc
+	make vendor_test_gecko_layout
+	make vendor_test_webkit_fast_dom
+	make vendor_test_webkit_fast_html
+	make vendor_test_webkit_fast_css
+	make vendor_test_webkit_fast_etc
+
+reftest_all:
+	make dom_conformance_all
+	make web_platform_test_all
+	make vendor_test_all
+	make csswg_test_all
 
 bidi_test:
 	./tool/drivers/run_test.py bidi tool/reftest/efl/bidi.res efl --font-dep -p$(TEST_NPROCS)
@@ -989,6 +1017,11 @@ dom_conformance_test_blink_cairo:
 	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/blink_dom_conformance_test.res common -p$(TEST_NPROCS)
 dom_conformance_test_gecko_cairo:
 	./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/gecko_dom_conformance_test.res common -p$(TEST_NPROCS)
+dom_conformance_all_cairo:
+	make dom_conformance_test_cairo
+	make dom_conformance_test_webkit_cairo
+	make dom_conformance_test_blink_cairo
+	make dom_conformance_test_gecko_cairo
 
 web_platform_test_dom_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_dom.res common -p$(TEST_NPROCS)
@@ -1002,6 +1035,13 @@ web_platform_test_progress_events_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_progress_events.res common -p$(TEST_NPROCS)
 web_platform_test_xhr_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_xhr.res common -p$(TEST_NPROCS)
+web_platform_test_all_cairo:
+	make web_platform_test_dom_cairo
+	make web_platform_test_dom_events_cairo
+	make web_platform_test_html_cairo
+	make web_platform_test_page_visibility_cairo
+	make web_platform_test_progress_events_cairo
+	make web_platform_test_xhr_cairo
 
 vendor_test_blink_fast_dom_cairo:
 	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/blink_fast_dom.res common -p$(TEST_NPROCS)
@@ -1029,6 +1069,23 @@ vendor_test_webkit_fast_css_cairo:
 vendor_test_webkit_fast_etc_cairo:
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_etc.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_etc_manual.res cairo --font-dep -p$(TEST_NPROCS)
+vendor_test_all_cairo:
+	make vendor_test_blink_fast_dom_cairo
+	make vendor_test_blink_fast_html_cairo
+	make vendor_test_blink_fast_css_cairo
+	make vendor_test_blink_fast_etc_cairo
+	make vendor_test_blink_css3_cairo
+	make vendor_test_gecko_layout_cairo
+	make vendor_test_webkit_fast_dom_cairo
+	make vendor_test_webkit_fast_html_cairo
+	make vendor_test_webkit_fast_css_cairo
+	make vendor_test_webkit_fast_etc_cairo
+
+reftest_all_cairo:
+	make dom_conformance_all_cairo
+	make web_platform_test_all_cairo
+	make vendor_test_all_cairo
+	make csswg_test_all_cairo
 
 bidi_test_cairo:
 	./tool/drivers/run_test.py bidi tool/reftest/cairo/bidi.res cairo --font-dep -p$(TEST_NPROCS)
@@ -1040,51 +1097,13 @@ react_test:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/react.res common -p$(TEST_NPROCS)
 
 test_all:
-	make dom_conformance_test
-	make dom_conformance_test_webkit
-	make dom_conformance_test_blink
-	make dom_conformance_test_gecko
-	make web_platform_test_dom
-	make web_platform_test_dom_events
-	make web_platform_test_html
-	make web_platform_test_page_visibility
-	make web_platform_test_progress_events
-	make web_platform_test_xhr
-	make vendor_test_blink_fast_dom
-	make vendor_test_blink_fast_html
-	make vendor_test_blink_fast_css
-	make vendor_test_blink_fast_etc
-	make vendor_test_gecko_layout
-	make vendor_test_webkit_fast_dom
-	make vendor_test_webkit_fast_html
-	make vendor_test_webkit_fast_css
-	make vendor_test_webkit_fast_etc
+	make reftest_all
 	make bidi_test
-	make csswg_test_all
 	make internal_test
 
 test_all_cairo:
-	make dom_conformance_test_cairo
-	make dom_conformance_test_webkit_cairo
-	make dom_conformance_test_blink_cairo
-	make dom_conformance_test_gecko_cairo
-	make web_platform_test_dom_cairo
-	make web_platform_test_dom_events_cairo
-	make web_platform_test_html_cairo
-	make web_platform_test_page_visibility_cairo
-	make web_platform_test_progress_events_cairo
-	make web_platform_test_xhr_cairo
-	make vendor_test_blink_fast_dom_cairo
-	make vendor_test_blink_fast_html_cairo
-	make vendor_test_blink_fast_css_cairo
-	make vendor_test_blink_fast_etc_cairo
-	make vendor_test_gecko_layout_cairo
-	make vendor_test_webkit_fast_dom_cairo
-	make vendor_test_webkit_fast_html_cairo
-	make vendor_test_webkit_fast_css_cairo
-	make vendor_test_webkit_fast_etc_cairo
+	make reftest_all_cairo
 	make bidi_test_cairo
-	make csswg_test_all_cairo
 	make internal_test_cairo
 
 reftest_emulator_2.3:
