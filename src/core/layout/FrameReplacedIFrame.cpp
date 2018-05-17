@@ -28,6 +28,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/layout/StackingContext.h"
 
 namespace StarFish {
 
@@ -111,5 +112,39 @@ void FrameReplacedIFrame::establishesStackingContextIfNeeds()
                 ->setLayoutParent(this);
         }
     }
+}
+
+Frame* FrameReplacedIFrame::hitTest(LayoutUnit x, LayoutUnit y,
+                                    HitTestStage stage)
+{
+    Frame* result = nullptr;
+    HTMLIFrameElement* v = node()->asHTMLIFrameElement();
+    if (!(x >= 0 && x < m_frameRect.width() && y >= 0 &&
+          y < m_frameRect.height())) {
+        return result;
+    }
+
+    if (v->browsingContext()) {
+        if (v->browsingContext()->window()) {
+            auto documentFrame =
+                v->browsingContext()->window()->document()->frame();
+            if (documentFrame->asFrameBox()) {
+                if (!documentFrame->firstChild() ||
+                    !documentFrame->firstChild()
+                         ->asFrameBox()
+                         ->stackingContext()) {
+                    return nullptr;
+                }
+                result =
+                    documentFrame->firstChild()
+                        ->asFrameBox()
+                        ->stackingContext()
+                        ->hitTestStackingContext(x, y, documentFrame->node()
+                                                           ->asDocument()
+                                                           ->browsingContext());
+            }
+        }
+    }
+    return result;
 }
 }

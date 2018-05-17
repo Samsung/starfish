@@ -56,15 +56,7 @@ public:
                         Frame::LayoutWantToResolve resolveWhat) override;
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y,
-                           HitTestStage stage) override
-    {
-        if (x >= 0 && x < m_frameRect.width() && y >= 0 &&
-            y < m_frameRect.height()) {
-            return this;
-        }
-        return nullptr;
-    }
-
+                           HitTestStage stage) override;
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
                                        HitTestStage stage) override
     {
