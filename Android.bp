@@ -51,18 +51,6 @@ cc_prebuilt_library_static {
 }
 
 cc_prebuilt_library_static {
-    name: "liblwe_prebuilt_static_tj",
-    compile_multilib: "32",
-    multilib: {
-        lib32: {
-            srcs: [
-                "third_party/prebuilt_armv-7a_8.1.0/lib/libjpeg-turbo.a",
-            ],
-        },
-    },
-}
-
-cc_prebuilt_library_static {
     name: "liblwe_prebuilt_static_pixman",
     compile_multilib: "32",
     multilib: {
@@ -177,7 +165,6 @@ cc_library_shared {
         "liblwe_prebuilt_static_ft2",
         "liblwe_prebuilt_static_harfbuzz",
         "liblwe_prebuilt_staticharfbuzz_icu",
-        "liblwe_prebuilt_static_tj",
         "liblwe_prebuilt_static_pixman",
     ],
 
