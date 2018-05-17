@@ -338,8 +338,7 @@ void CSSVariableSyntaxTreeBuilder::dump()
                 } else if (block->isRawValue()) {
                 } else if (block->isVariableBlock()) {
                     VariableBlock* variableBlock = (VariableBlock*)block;
-                    printf("[%p][VariableBlock] Child :%zu\n", variableBlock,
-                           variableBlock->variables.size());
+                    printf("[%p][VariableBlock]\n", variableBlock);
                     contexts.push_back(Context(variableBlock, 0));
                     depth++;
                 }
