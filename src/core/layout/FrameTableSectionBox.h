@@ -143,7 +143,7 @@ public:
         return m_grid;
     }
 
-    GCAtomicVector<ColSizeStruct*>& columnWidths()
+    GCVector<ColSizeStruct*>& columnWidths()
     {
         return m_columnWidths;
     }
@@ -173,7 +173,7 @@ private:
                                         size_t colId);
 
     GCVector<RowStruct*> m_grid; // cells in a 2D table for easier traversal
-    GCAtomicVector<ColSizeStruct*> m_columnWidths;
+    GCVector<ColSizeStruct*> m_columnWidths;
 };
 }
 

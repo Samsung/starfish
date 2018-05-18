@@ -1355,8 +1355,8 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
 }
 
 void FrameTableBox::collectColumnWidths(
-    GCAtomicVector<ColSizeStruct*>& columnWidthsSoFar,
-    GCAtomicVector<ColSizeStruct*>& columnWidths)
+    GCVector<ColSizeStruct*>& columnWidthsSoFar,
+    GCVector<ColSizeStruct*>& columnWidths)
 {
     if (columnWidthsSoFar.empty()) {
         for (auto& col : columnWidths) {
