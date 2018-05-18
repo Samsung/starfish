@@ -221,7 +221,7 @@ struct PreferredWidthKey {
     {
     }
 };
-};
+}; // namespace StarFish
 
 namespace std {
 template <>
@@ -244,7 +244,7 @@ struct equal_to<StarFish::PreferredWidthKey> {
                a.m_frame == b.m_frame;
     }
 };
-}
+} // namespace std
 
 namespace StarFish {
 
@@ -2048,13 +2048,15 @@ protected:
         bool m_paddingHeightDamaged : 1;
     } m_flags;
 
+#if !COMPILER(MSVC)
     STARFISH_COMPILE_ASSERT(sizeof(FrameFlags) <= sizeof(uint32_t),
                             "keep FrameFlags small");
+#endif
     union {
         Node* m_node;
         ComputedStyle* m_styleWhenNodeIsAnonymous;
     };
 };
-}
+} // namespace StarFish
 
 #endif

@@ -1716,21 +1716,26 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                         CSSStyleValuePair::KeyKind kind =
                                             ((Sender*)data)->kind;
 
-                                        if (kind == CSSStyleValuePair::KeyKind::
-                                                        CustomProperty) {
+                                        switch (kind) {
+                                        case CSSStyleValuePair::KeyKind::
+                                            CustomProperty: {
                                             // https://www.w3.org/TR/css-variables-1/
                                             String* key = ((Sender*)data)->key;
                                             declaration->setCustomProperty(
                                                 key, String::createASCIIString(
                                                          value),
                                                 len);
+                                        } break;
+#define SET_ATTR(name, nameLower, nameCSSCase)        \
+    case CSSStyleValuePair::KeyKind::name: {          \
+        declaration->set##name(value, len, priority); \
+    } break;
+                                            FOR_EACH_STYLE_ATTRIBUTE_TOTAL(
+                                                SET_ATTR)
+                                        default:
+                                            break;
                                         }
-#define SET_ATTR(name, nameLower, nameCSSCase)         \
-    else if (kind == CSSStyleValuePair::KeyKind::name) \
-    {                                                  \
-        declaration->set##name(value, len, priority);  \
-    }
-                                        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+
                                         return 0;
                                     },
                                     data);
@@ -3290,4 +3295,4 @@ String* MediaQueryExpValue::cssText() const
 
     return output.finalize();
 }
-}
+} // namespace StarFish

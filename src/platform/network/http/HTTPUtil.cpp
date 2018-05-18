@@ -32,7 +32,7 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
     std::string ret = header;
     std::string lower;
     lower.resize(header.length());
-    std::transform(header.begin(), header.end(), lower.begin(), ::tolower);
+    std::transform(header.begin(), header.end(), lower.begin(), tolower);
 
     switch (len) {
     case 2:

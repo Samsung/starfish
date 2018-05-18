@@ -96,7 +96,7 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
         auto s = res->m_url->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO("failed to open %s\n", s.data());
         res->m_status = 0;
-        res->handleError(ResourceRequest::ERROR);
+        res->handleError(ResourceRequest::IN_ERROR);
     }
     delete fio;
 }
@@ -275,12 +275,12 @@ void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* res,
 
     BlobURLStore store;
     if (!WebView::stringToBlobURLString(url, store)) {
-        res->handleError(ResourceRequest::ERROR);
+        res->handleError(ResourceRequest::IN_ERROR);
         return;
     }
 
     if (!res->document()->webView()->isValidBlobURL(store)) {
-        res->handleError(ResourceRequest::ERROR);
+        res->handleError(ResourceRequest::IN_ERROR);
         return;
     }
 

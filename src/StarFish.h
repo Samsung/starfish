@@ -351,7 +351,7 @@ protected:
 
     size_t posPrefix(std::string str, std::string prefix)
     {
-        std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+        std::transform(str.begin(), str.end(), str.begin(), tolower);
         return str.find(prefix);
     }
     StaticStrings* m_staticStrings;

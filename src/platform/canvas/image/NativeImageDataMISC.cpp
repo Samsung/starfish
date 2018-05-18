@@ -31,7 +31,13 @@
 
 #include <cairo.h>
 #include <png.h>
+#if OS(WINDOWS)
+#include <Wincodec.h>
+#pragma comment(lib, "Ole32.lib")
+#pragma comment(lib, "Windowscodecs.lib")
+#else
 #include <jpeglib.h>
+#endif
 #include <gif_lib.h>
 
 namespace StarFish {
@@ -147,7 +153,7 @@ public:
     }
 
 private:
-    enum ImageFormat { PNG, JPG, GIF, ERROR };
+    enum ImageFormat { PNG, JPG, GIF, FORMAT_ERROR };
 
     static bool isPNGFormat(const unsigned char* data)
     {
@@ -181,7 +187,7 @@ private:
 
     static ImageFormat parseImageFormatFromBuffer(const char* buf)
     {
-        ImageFormat imageFormat = ImageFormat::ERROR;
+        ImageFormat imageFormat = ImageFormat::FORMAT_ERROR;
 
         if (isPNGFormat((unsigned char*)buf)) {
             imageFormat = ImageFormat::PNG;
@@ -198,7 +204,7 @@ private:
 
     static ImageFormat parseImageFormatFromFile(FILE* fp)
     {
-        ImageFormat imageFormat = ImageFormat::ERROR;
+        ImageFormat imageFormat = ImageFormat::FORMAT_ERROR;
 
         if (!fp) {
             return imageFormat;
@@ -371,6 +377,7 @@ private:
         free(rowPointers);
     }
 
+#if !OS(WINDOWS)
     void decodeJPG(jpeg_decompress_struct* dHandle, unsigned char* buf,
                    const int size)
     {
@@ -541,7 +548,131 @@ private:
         decodeJPG(&dHandle, (unsigned char*)buf, len);
         jpeg_destroy_decompress(&dHandle);
     }
+#else
+    // https://stackoverflow.com/questions/45809347/how-to-decode-jpeg-using-win32
+    bool Win32DecodeJpeg(void* ImageData, unsigned int ImageDataSize)
+    {
+        // IWICImagingFactory is a structure containing the function pointers of
+        // the WIC API
+        static IWICImagingFactory* IWICFactory;
+        if (IWICFactory == NULL) {
+            if (CoInitializeEx(NULL, COINIT_MULTITHREADED) != S_OK) {
+                return false;
+            }
 
+            if (CoCreateInstance(CLSID_WICImagingFactory, nullptr,
+                                 CLSCTX_INPROC_SERVER,
+                                 IID_PPV_ARGS(&IWICFactory)) != S_OK) {
+                return false;
+            }
+        }
+
+        IWICStream* Stream;
+        if (IWICFactory->CreateStream(&Stream) != S_OK) {
+            return false;
+        }
+
+        if (Stream->InitializeFromMemory((unsigned char*)ImageData,
+                                         ImageDataSize) != S_OK) {
+            return false;
+        }
+
+        IWICBitmapDecoder* BitmapDecoder;
+        if (IWICFactory->CreateDecoderFromStream(Stream, NULL,
+                                                 WICDecodeMetadataCacheOnDemand,
+                                                 &BitmapDecoder) != S_OK) {
+            return false;
+        }
+
+        IWICBitmapFrameDecode* FrameDecode;
+        // frames apply mostly to GIFs and other animated media. JPEGs just have
+        // a single frame.
+        if (BitmapDecoder->GetFrame(0, &FrameDecode) != S_OK) {
+            return false;
+        }
+
+        IWICFormatConverter* FormatConverter;
+        if (IWICFactory->CreateFormatConverter(&FormatConverter) != S_OK) {
+            return false;
+        }
+
+        // this function does not do any actual decoding
+        if (FormatConverter->Initialize(FrameDecode,
+                                        GUID_WICPixelFormat32bppBGRA,
+                                        WICBitmapDitherTypeNone, nullptr, 0.0f,
+                                        WICBitmapPaletteTypeCustom) != S_OK) {
+            return false;
+        }
+
+        IWICBitmap* Bitmap;
+        if (IWICFactory->CreateBitmapFromSource(
+                FormatConverter, WICBitmapCacheOnDemand, &Bitmap) != S_OK) {
+            return false;
+        }
+
+        unsigned int Width, Height;
+        if (Bitmap->GetSize(&Width, &Height) != S_OK) {
+            return false;
+        }
+        WICRect Rect = { 0, 0, (int)Width, (int)Height };
+
+        IWICBitmapLock* Lock;
+        // this is the function that does the actual decoding. seems like they
+        // defer the decoding until it's actually needed
+        if (Bitmap->Lock(&Rect, WICBitmapLockRead, &Lock) != S_OK) {
+            return false;
+        }
+
+        unsigned int PixelDataSize = 0;
+        unsigned char* PixelData;
+        if (Lock->GetDataPointer(&PixelDataSize, &PixelData) != S_OK) {
+            return false;
+        }
+
+        m_image = (unsigned char*)malloc(Width * Height * 4);
+        m_width = Width;
+        m_height = Height;
+        m_stride = Width * 4;
+        m_hasTransparentPixel = true;
+
+        memcpy(m_image, PixelData, PixelDataSize);
+
+        Stream->Release();
+        BitmapDecoder->Release();
+        FrameDecode->Release();
+        FormatConverter->Release();
+        Bitmap->Release();
+        Lock->Release();
+
+        return true;
+    }
+    void decodeJPG(unsigned char* buf, const int size)
+    {
+        Win32DecodeJpeg(buf, size);
+    }
+    void readJPGFile(FILE* fp)
+    {
+        fseek(fp, 0, SEEK_END);
+        auto jpegSize = ftell(fp);
+        rewind(fp);
+
+        unsigned char* srcBuf =
+            (unsigned char*)malloc(sizeof(unsigned char) * jpegSize);
+        auto readSize = fread(srcBuf, 1, jpegSize, fp);
+        if (readSize <= 0) {
+            STARFISH_LOG_ERROR("%s %d\n : readSize fail", __FUNCTION__,
+                               __LINE__);
+            return;
+        }
+
+        decodeJPG(srcBuf, jpegSize);
+    }
+
+    void readJPGBufferedInput(const char* buf, size_t len)
+    {
+        decodeJPG((unsigned char*)buf, len);
+    }
+#endif
     typedef struct {
         unsigned long long size;
         void* mem;
@@ -571,9 +702,11 @@ private:
         }
 #ifdef GIF_LIB_VERSION
         DGifCloseFile(gifFile);
-#else
+#elif GIFLIB_MAJOR >= 5 && GIFLIB_MINOR >= 1
         int errorCode = 0;
         DGifCloseFile(gifFile, &errorCode);
+#else
+        DGifCloseFile(gifFile);
 #endif
     }
 
@@ -818,6 +951,6 @@ NativeImageData* NativeImageData::create(size_t width, size_t height)
 {
     return new NativeImageDataMISC(width, height);
 }
-}
+} // namespace StarFish
 
 #endif

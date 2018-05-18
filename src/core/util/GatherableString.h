@@ -226,11 +226,10 @@ bool GatherableString<InlineStorageSize>::equalsIgnoreCase(
 
     for (size_t i = 0; i < len; i++) {
         if (i < InlineStorageSize) {
-            if (::tolower(m_builtInBuffer[i]) != src[i])
+            if (tolower(m_builtInBuffer[i]) != src[i])
                 return false;
         } else {
-            if (::tolower((*m_externalString)[i - InlineStorageSize]) !=
-                src[i]) {
+            if (tolower((*m_externalString)[i - InlineStorageSize]) != src[i]) {
                 return false;
             }
         }
@@ -244,10 +243,10 @@ void GatherableString<InlineStorageSize>::toLower()
     size_t len = length();
     for (size_t i = 0; i < len; i++) {
         if (i < InlineStorageSize) {
-            m_builtInBuffer[i] = ::tolower(m_builtInBuffer[i]);
+            m_builtInBuffer[i] = tolower(m_builtInBuffer[i]);
         } else {
             (*m_externalString)[i - InlineStorageSize] =
-                ::tolower((*m_externalString)[i - InlineStorageSize]);
+                tolower((*m_externalString)[i - InlineStorageSize]);
         }
     }
 }

@@ -26,14 +26,16 @@
 #include "core/modules/threading/Mutex.h"
 
 #include <curl/curl.h>
+#if !OS(WINDOWS)
 #include <openssl/crypto.h>
+#endif
 
 #define CURLHANDLE_CACHE_PRUNE_MINIMUM_SIZE 12
 #define CURLHANDLE_CACHE_PRUNE_MINIMUM_INTERVAL_S 0.5
 #define CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S 0.25
 
 namespace StarFish {
-
+#if !OS(WINDOWS)
 static pthread_mutex_t* sslLockarray;
 
 static void sslLockCallback(int mode, int type, const char* file, int line)
@@ -73,7 +75,7 @@ static void removeSSLLocks(void)
 
     OPENSSL_free(sslLockarray);
 }
-
+#endif
 static NetworkSharedResourceManager* g_networkSharedResourceMangerInstance =
     nullptr;
 
@@ -263,7 +265,9 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
     , m_cookieStoreFilePath("")
 {
     initMutexes();
+#if !OS(WINDOWS)
     initSSLLocks();
+#endif
 
     curl_global_init(CURL_GLOBAL_ALL);
     m_curlShareHandle = curl_share_init();
@@ -284,7 +288,9 @@ NetworkSharedResourceManager::~NetworkSharedResourceManager()
     curl_share_cleanup(m_curlShareHandle);
     curl_global_cleanup();
 
+#if !OS(WINDOWS)
     removeSSLLocks();
+#endif
     removeMutexes();
 }
 
@@ -474,4 +480,4 @@ void NetworkSharedResourceManager::setCookies(Document* document,
                      cookie->bufferAccessData().asciiData());
     curl_easy_cleanup(curl);
 }
-}
+} // namespace StarFish

@@ -23,11 +23,16 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "Mutex.h"
 #include "Locker.h"
+#if !OS(WINDOWS)
 #include <unistd.h>
 #include <sys/syscall.h>
+#else
+#include <Windows.h>
+#endif
 
 namespace StarFish {
 
+#if !OS(WINDOWS)
 pid_t main_tid;
 void registerMainThread()
 {
@@ -47,6 +52,18 @@ bool isMainThread()
 #endif
     return true;
 }
+#else
+DWORD main_tid;
+void registerMainThread()
+{
+    main_tid = GetCurrentThreadId();
+}
+
+bool isMainThread()
+{
+    return GetCurrentThreadId() == main_tid;
+}
+#endif
 
 Thread::Thread(StarFish* starFish)
     : StarFishHoldable(starFish)
@@ -126,6 +143,9 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
                                    // error with `pthread_exit(((void*)0));`
             pthread_exit(((void*)0));
 #else
+            return nullptr;
+#endif
+#if COMPILER(MSVC)
             return nullptr;
 #endif
         },

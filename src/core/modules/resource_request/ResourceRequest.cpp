@@ -181,7 +181,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         it = m_responseHeaderMap.find(HTTPHeaderMap::kContentTransferEncoding);
         if (it != m_responseHeaderMap.end()) {
             std::string part = it->second;
-            std::transform(part.begin(), part.end(), part.begin(), ::tolower);
+            std::transform(part.begin(), part.end(), part.begin(), tolower);
             if (part.compare("base64") == 0) {
                 m_containsBase64Content = true;
             }
@@ -545,7 +545,7 @@ static const std::string base64CharsDebug =
 
 static inline bool isBase64(unsigned char c)
 {
-    return (isalnum(c) || (c == '+') || (c == '/'));
+    return (isalpha(c) || isdigit(c) || (c == '+') || (c == '/'));
 }
 
 template <typename StrType>

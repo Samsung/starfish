@@ -4122,7 +4122,7 @@ void StyleResolver::apply(Element* element,
                 for (unsigned c = 0; c < funcs->size(); c++) {
                     CSSTransformFunction f = (*funcs)[c];
                     int valueSize = f.values()->size();
-                    float dValues[valueSize];
+                    float* dValues = (float*)alloca(valueSize * sizeof(float));
                     for (int i = 0; i < valueSize; i++) {
                         const CSSStyleValuePair& item = (*f.values())[i];
                         if (item.valueKind() ==
@@ -11391,7 +11391,7 @@ bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)
                 return false;
             }
             CSSTokenValue s = token;
-            std::transform(s.begin(), s.end(), s.begin(), ::tolower);
+            std::transform(s.begin(), s.end(), s.begin(), tolower);
 
             if (s.find("truetype") != std::string::npos) {
                 format = FontFaceSrcData::Format::TrueType;

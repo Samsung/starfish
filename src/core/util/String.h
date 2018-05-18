@@ -73,7 +73,21 @@ typedef std::basic_string<char16_t, std::char_traits<char16_t>>
     UTF16StringDataNonGCStd;
 typedef std::basic_string<char32_t, std::char_traits<char32_t>>
     UTF32StringDataNonGCStd;
+
+// these functions only care ascii range(0~127)
+bool islower(char32_t ch);
+bool isupper(char32_t ch);
+char16_t tolower(char32_t ch);
+char16_t toupper(char32_t ch);
+bool isspace(char32_t ch);
+inline bool isspace(char ch)
+{
+    return isspace((char32_t)ch);
 }
+bool isdigit(char32_t ch);
+bool isalpha(char32_t ch);
+
+} // namespace StarFish
 
 namespace std {
 template <>
@@ -129,7 +143,7 @@ struct equal_to<StarFish::UTF32String> {
         return a.compare(b) == 0;
     }
 };
-}
+} // namespace std
 
 namespace StarFish {
 
@@ -1706,7 +1720,7 @@ struct TextRun {
     }
 #endif
 };
-}
+} // namespace StarFish
 
 namespace std {
 template <>
@@ -1725,5 +1739,5 @@ struct equal_to<StarFish::String*> {
         return s1->equals(s2);
     }
 };
-}
+} // namespace std
 #endif

@@ -22,7 +22,11 @@
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/modules/location/Geolocation.h"
+#if OS(WINDOWS)
+#include <Windows.h>
+#else
 #include <sys/utsname.h>
+#endif
 
 namespace StarFish {
 
@@ -60,14 +64,27 @@ String* Navigator::userAgent()
 
 String* Navigator::platform()
 {
+    StringBuilder platformName;
+#if !OS(WINDOWS)
     // Unix-like systems
     struct utsname osname;
-    StringBuilder platformName;
     if (uname(&osname) == 0) {
         platformName.appendString(osname.sysname);
         platformName.appendString(String::spaceString);
         platformName.appendString(osname.machine);
     }
+#else
+    OSVERSIONINFO info;
+    ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
+    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    GetVersionEx(&info);
+
+    platformName.appendString("Windows ");
+    platformName.appendChar((char32_t)(info.dwMajorVersion + '0'));
+    platformName.appendChar(' ');
+    platformName.appendChar((char32_t)(info.dwMinorVersion + '0'));
+
+#endif
     return platformName.finalize();
 }
 
@@ -75,4 +92,4 @@ String* Navigator::language()
 {
     return String::fromUTF8(starFish()->locale().getName());
 }
-}
+} // namespace StarFish

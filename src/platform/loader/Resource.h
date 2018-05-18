@@ -247,7 +247,7 @@ public:
             m_resource->didDataReceived(request->response().data(),
                                         request->response().size());
             m_resource->didLoadFinished();
-        } else if (request->progressState() == ResourceRequest::ERROR) {
+        } else if (request->progressState() == ResourceRequest::IN_ERROR) {
             m_resource->didLoadFailed();
         } else if (request->progressState() == ResourceRequest::TIMEOUT) {
             m_resource->didLoadFailed();

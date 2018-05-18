@@ -25,9 +25,10 @@
 #include "core/modules/threading/Thread.h"
 
 template <GC_get_sub_pointer_proc proc, const int number_of_sub_pointer>
-static struct GC_ms_entry* markAndPushCustom(
-    GC_word* addr, struct GC_ms_entry* mark_stack_ptr,
-    struct GC_ms_entry* mark_stack_limit, GC_word env)
+GC_ms_entry* markAndPushCustom(GC_word* addr,
+                               struct GC_ms_entry* mark_stack_ptr,
+                               struct GC_ms_entry* mark_stack_limit,
+                               GC_word env)
 {
     GC_mark_custom_result subPtrs[number_of_sub_pointer];
     return GC_mark_and_push_custom(addr, mark_stack_ptr, mark_stack_limit, proc,
@@ -36,6 +37,8 @@ static struct GC_ms_entry* markAndPushCustom(
 
 int getValidValueNativeImageData(void* ptr, GC_mark_custom_result* arr)
 {
+    arr[0].from = (GC_word*)ptr;
+    arr[0].to = (GC_word*)ptr;
     return 0;
 }
 
@@ -50,7 +53,7 @@ int NativeImageData::nativeImageDataGCKind()
         gcKind = GC_new_kind_enumerable(
             GC_new_free_list(),
             GC_MAKE_PROC(
-                GC_new_proc(markAndPushCustom<getValidValueNativeImageData, 0>),
+                GC_new_proc(markAndPushCustom<getValidValueNativeImageData, 1>),
                 0),
             FALSE, TRUE);
     }
@@ -63,4 +66,4 @@ std::vector<NativeImageData*>& NativeImageData::everyNativeImageInstances()
     static std::vector<NativeImageData*> v;
     return v;
 }
-}
+} // namespace StarFish

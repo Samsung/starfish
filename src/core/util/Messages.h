@@ -64,7 +64,8 @@ size_t bufferSize(std::initializer_list<const char*> args);
 
 #define COMPOSE_MESSAGE(MSG, TEMPLATE_STR, ...)                  \
     size_t MSG##siz = bufferSize({ TEMPLATE_STR, __VA_ARGS__ }); \
-    char MSG[MSG##siz + 1];                                      \
+    std::unique_ptr<char[]> MSG##buf(new char[MSG##siz + 1]);    \
+    char* MSG = MSG##buf.get();                                  \
     snprintf(MSG, MSG##siz + 1, TEMPLATE_STR, __VA_ARGS__)
 }
 

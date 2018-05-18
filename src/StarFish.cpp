@@ -62,7 +62,7 @@ extern Evas* g_internalCanvas;
 
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
 #include <Ecore.h>
-#elif !defined(STARFISH_ANDROID)
+#elif !defined(STARFISH_ANDROID) && !defined(STARFISH_WINDOWS)
 #include <Ecore_X.h>
 #endif
 
@@ -279,7 +279,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
 
-#if !defined(STARFISH_ANDROID)
+#if !defined(STARFISH_ANDROID) && !defined(STARFISH_WINDOWS)
         mallopt(M_MMAP_THRESHOLD, 2048);
         mallopt(M_MMAP_MAX, 1024 * 1024);
 #endif

@@ -517,19 +517,20 @@ icu::BreakIterator* openLineBreakIterator(BreakIteratorInfo& info,
     UErrorCode openStatus = U_ZERO_ERROR;
     if (mode == LineBreakIteratorModeUAX14) {
         auto utf8Data = makeLocaleWithBreakKeyword(info)->toUTF8NonGCString();
-        brkIter = BreakIterator::createLineInstance(
-            Locale::createCanonical(utf8Data.data()), openStatus);
+        brkIter = icu::BreakIterator::createLineInstance(
+            icu::Locale::createCanonical(utf8Data.data()), openStatus);
     } else {
         UParseError parseError;
         auto rules = makeRule(mode, isCJK);
-        brkIter = new RuleBasedBreakIterator(rules->toUnicodeString(),
-                                             parseError, openStatus);
+        brkIter = new icu::RuleBasedBreakIterator(rules->toUnicodeString(),
+                                                  parseError, openStatus);
     }
     // locale comes from a web page and it can be invalid, leading ICU
     // to fail, in which case we fall back to the default locale.
     if (U_FAILURE(openStatus)) {
         openStatus = U_ZERO_ERROR;
-        brkIter = BreakIterator::createLineInstance(info.m_locale, openStatus);
+        brkIter =
+            icu::BreakIterator::createLineInstance(info.m_locale, openStatus);
     }
 
     if (U_FAILURE(openStatus)) {
