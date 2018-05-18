@@ -1119,7 +1119,7 @@ tidy:
 	./tool/check_tidy.py > error_report
 
 tidy-update:
-	./tool/check_tidy.py -up ./src/
+	./tool/check_tidy.py --update
 
 gen_webapi_doc:
 	./docs/generator/run.py src/
