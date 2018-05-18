@@ -268,7 +268,7 @@ public:
         return true;
     }
 
-    GCAtomicVector<ColSizeStruct*>& columnWidths()
+    GCVector<ColSizeStruct*>& columnWidths()
     {
         return m_columnWidths;
     }
@@ -394,8 +394,8 @@ private:
     FrameTableCellBox* cellFromFirstRowOrColGroup(bool tableLayoutFixed,
                                                   size_t i);
 
-    void collectColumnWidths(GCAtomicVector<ColSizeStruct*>& columnWidthsSoFar,
-                             GCAtomicVector<ColSizeStruct*>& columnWidths);
+    void collectColumnWidths(GCVector<ColSizeStruct*>& columnWidthsSoFar,
+                             GCVector<ColSizeStruct*>& columnWidths);
 
     bool resetColspanIfPossible();
 
@@ -413,7 +413,7 @@ private:
 
     GCVector<FrameTableCaptionBox*> m_captions;
     GCVector<FrameTableColBox*> m_colObjects;
-    GCAtomicVector<ColSizeStruct*> m_columnWidths;
+    GCVector<ColSizeStruct*> m_columnWidths;
 
     GCVector<FrameTableCellBox*> m_cellsInTheFirstRow;
     GCVector<FrameTableColBox*> m_colBoxes;
