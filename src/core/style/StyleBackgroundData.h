@@ -616,7 +616,7 @@ public:
     {
         STARFISH_ASSERT(m_layers.size() >= m_maxLayerRepeatX);
         uint16_t assuredSize = narrow_cast<uint32_t, uint16_t>(newsize);
-        for (uint32_t i = assuredSize; i < m_maxLayerRepeatX; i++) {
+        for (uint16_t i = assuredSize; i < m_maxLayerRepeatX; i++) {
             m_layers[i].resetRepeatX();
         }
         m_maxLayerRepeatX = assuredSize;
@@ -626,7 +626,7 @@ public:
     {
         STARFISH_ASSERT(m_layers.size() >= m_maxLayerRepeatY);
         uint16_t assuredSize = narrow_cast<uint32_t, uint16_t>(newsize);
-        for (uint32_t i = assuredSize; i < m_maxLayerRepeatY; i++) {
+        for (uint16_t i = assuredSize; i < m_maxLayerRepeatY; i++) {
             m_layers[i].resetRepeatY();
         }
         m_maxLayerRepeatY = assuredSize;
@@ -636,7 +636,7 @@ public:
     {
         STARFISH_ASSERT(m_layers.size() >= m_maxLayerSize);
         uint16_t assuredSize = narrow_cast<uint32_t, uint16_t>(newsize);
-        for (uint32_t i = assuredSize; i < m_maxLayerSize; i++) {
+        for (uint16_t i = assuredSize; i < m_maxLayerSize; i++) {
             m_layers[i].resetSize();
         }
         m_maxLayerSize = assuredSize;
@@ -646,7 +646,7 @@ public:
     {
         STARFISH_ASSERT(m_layers.size() >= m_maxLayerPositionX);
         uint16_t assuredSize = narrow_cast<uint32_t, uint16_t>(newsize);
-        for (uint32_t i = assuredSize; i < m_maxLayerPositionX; i++) {
+        for (uint16_t i = assuredSize; i < m_maxLayerPositionX; i++) {
             m_layers[i].resetPositionX();
         }
         m_maxLayerPositionX = assuredSize;
@@ -656,7 +656,7 @@ public:
     {
         STARFISH_ASSERT(m_layers.size() >= m_maxLayerPositionY);
         uint16_t assuredSize = narrow_cast<uint32_t, uint16_t>(newsize);
-        for (uint32_t i = assuredSize; i < m_maxLayerPositionY; i++) {
+        for (uint16_t i = assuredSize; i < m_maxLayerPositionY; i++) {
             m_layers[i].resetPositionY();
         }
         m_maxLayerPositionY = assuredSize;
@@ -666,7 +666,7 @@ public:
     {
         STARFISH_ASSERT(m_layers.size() >= m_maxLayerAttachment);
         uint16_t assuredSize = narrow_cast<uint32_t, uint16_t>(newsize);
-        for (uint32_t i = assuredSize; i < m_maxLayerAttachment; i++) {
+        for (uint16_t i = assuredSize; i < m_maxLayerAttachment; i++) {
             m_layers[i].resetAttachment();
         }
         m_maxLayerAttachment = assuredSize;
@@ -676,7 +676,7 @@ public:
     {
         STARFISH_ASSERT(m_layers.size() >= m_maxLayerClip);
         uint16_t assuredSize = narrow_cast<uint32_t, uint16_t>(newsize);
-        for (uint32_t i = assuredSize; i < m_maxLayerClip; i++) {
+        for (uint16_t i = assuredSize; i < m_maxLayerClip; i++) {
             m_layers[i].resetClip();
         }
         m_maxLayerClip = assuredSize;
@@ -686,7 +686,7 @@ public:
     {
         STARFISH_ASSERT(m_layers.size() >= m_maxLayerOrigin);
         uint16_t assuredSize = narrow_cast<uint32_t, uint16_t>(newsize);
-        for (uint32_t i = assuredSize; i < m_maxLayerOrigin; i++) {
+        for (uint16_t i = assuredSize; i < m_maxLayerOrigin; i++) {
             m_layers[i].resetOrigin();
         }
         m_maxLayerOrigin = assuredSize;
