@@ -2738,8 +2738,10 @@ protected:
     AtomicString m_selectorText;
 };
 
+#if !COMPILER(MSVC)
 static_assert(sizeof(CSSSelector) <= sizeof(size_t) * 2,
               "keep sizeof CSSSelector small");
+#endif
 
 class CSSAttributeSelector : public CSSSelector {
 public:
@@ -3067,6 +3069,6 @@ protected:
     RuleSet* m_ruleSet;
     GCAtomicVector<AtomicString> m_ruleSetAttrFilter;
 };
-}
+} // namespace StarFish
 
 #endif

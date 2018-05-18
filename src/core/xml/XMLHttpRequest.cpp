@@ -51,7 +51,7 @@ public:
         if (progState == ResourceRequest::PROGRESS) {
             eventName =
                 request->starFish()->staticStrings()->m_progress.localName();
-        } else if (progState == ResourceRequest::ERROR) {
+        } else if (progState == ResourceRequest::IN_ERROR) {
             eventName =
                 request->starFish()->staticStrings()->m_error.localName();
             if (!m_xhr->m_resourceRequest->url()->isFileURL() &&

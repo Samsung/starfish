@@ -88,53 +88,14 @@
 #define PORT_COMPOSITOR_BACKEND_CAIRO
 #define PORT_EVENTLOOP_BACKEND_ANDROID
 #define PORT_IMAGEDECODER_BACKEND_MISC
+#elif defined(STARFISH_WINDOWS)
+#define PORT_WINDOW_BACKEND_GB
+#define PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
+#define PORT_CANVAS_BACKEND_CAIRO
+#define PORT_COMPOSITOR_BACKEND_CAIRO
+#define PORT_EVENTLOOP_BACKEND_WINDOWS
+#define PORT_IMAGEDECODER_BACKEND_MISC
 #endif
-
-#include <cstdlib>
-#include <cstdio>
-#include <cstdint>
-#include <vector>
-#include <deque>
-#include <list>
-#include <set>
-#include <map>
-#include <unordered_map>
-#include <unordered_set>
-#include <memory>
-#include <string>
-#include <cstring>
-#include <sstream>
-#include <cassert>
-#include <functional>
-#include <algorithm>
-#include <cmath>
-#include <limits>
-#include <locale>
-#include <clocale>
-#include <cwchar>
-#include <numeric>
-
-#ifndef ESCARGOT
-#define ESCARGOT // for use additional functions in GCutil
-#endif
-#include <GCUtil.h>
-#undef ESCARGOT
-
-#include <SkMatrix.h>
-
-#include <unicode/locid.h>
-#include <unicode/brkiter.h>
-#include <unicode/ubidi.h>
-#include <unicode/uchar.h>
-#include <unicode/ucnv.h>
-#include <unicode/ucsdet.h>
-#include <unicode/uscript.h>
-#include <unicode/rbbi.h>
-
-#include <pthread.h>
-#include <semaphore.h>
-
-#include <curl/curl.h>
 
 /* COMPILER() - the compiler being used to build the project */
 #define COMPILER(FEATURE) (defined COMPILER_##FEATURE && COMPILER_##FEATURE)
@@ -208,6 +169,105 @@
 #endif
 #endif
 
+/* EXPORT */
+#ifndef EXPORT
+#if COMPILER(MSVC)
+#define EXPORT __declspec(dllexport)
+#else
+#define EXPORT __attribute__((visibility("default")))
+#endif
+#endif
+
+#if COMPILER(MSVC)
+#define strncasecmp _strnicmp
+#define strcasecmp _stricmp
+#ifndef NDEBUG
+#define _ITERATOR_DEBUG_LEVEL 0
+#define rand_r(x) rand()
+#endif
+#endif
+
+#define OS(NAME) (defined OS_##NAME && OS_##NAME)
+
+#ifdef _WIN32
+#define OS_WINDOWS 1
+#elif _WIN64
+#define OS_WINODWS 1
+#elif __APPLE__
+#include "TargetConditionals.h"
+#if TARGET_IPHONE_SIMULATOR
+#define OS_POSIX 1
+#elif TARGET_OS_IPHONE
+#define OS_POSIX 1
+#elif TARGET_OS_MAC
+#define OS_POSIX 1
+#else
+#error "Unknown Apple platform"
+#endif
+#elif __linux__
+#define OS_POSIX 1
+#elif __unix__ // all unices not caught above
+#define OS_POSIX 1
+#elif defined(_POSIX_VERSION)
+#define OS_POSIX 1
+#else
+#error "failed to detect target OS"
+#endif
+
+#if OS(WINDOWS)
+#define NOMINMAX
+#define setenv(a, b, c) _putenv_s(a, b)
+#include <BaseTsd.h>
+typedef SSIZE_T ssize_t;
+#define _INC_CTYPE // for preventing include windows version of ctype header
+#endif
+
+#include <cstdlib>
+#include <cstdio>
+#include <cstdint>
+#include <vector>
+#include <deque>
+#include <list>
+#include <set>
+#include <map>
+#include <unordered_map>
+#include <unordered_set>
+#include <memory>
+#include <string>
+#include <cstring>
+#include <sstream>
+#include <cassert>
+#include <functional>
+#include <algorithm>
+#include <cmath>
+#include <limits>
+#include <locale>
+#include <clocale>
+#include <cwchar>
+#include <numeric>
+
+#ifndef ESCARGOT
+#define ESCARGOT // for use additional functions in GCutil
+#endif
+#include <GCUtil.h>
+#undef ESCARGOT
+
+#include <SkMatrix.h>
+
+#include <unicode/locid.h>
+#include <unicode/brkiter.h>
+#include <unicode/ubidi.h>
+#include <unicode/uchar.h>
+#include <unicode/ucnv.h>
+#include <unicode/ucsdet.h>
+#include <unicode/uscript.h>
+#include <unicode/rbbi.h>
+
+#include <pthread.h>
+#include <semaphore.h>
+
+#include <curl/curl.h>
+
 #if COMPILER(GCC)
 template <const int siz>
 inline void __attribute__((optimize("O0"))) clearStack()
@@ -220,6 +280,14 @@ template <const int siz>
 {
     volatile char a[siz] = { 0 };
 }
+#elif COMPILER(MSVC)
+#pragma optimize("", off)
+template <const int siz>
+inline void clearStack()
+{
+    volatile char a[siz] = { 0 };
+}
+#pragma optimize("", on)
 #else
 #error
 #endif

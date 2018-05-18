@@ -30,7 +30,7 @@ class String;
 // https://www.w3.org/TR/CSS21/syndata.html#value-def-length
 class CSSLength {
 public:
-    enum Kind { PX, EM, EX, IN, CM, MM, PT, PC, VW, VH, VMIN, VMAX, REM, CH };
+    enum Kind { PX, EM, EX, INCH, CM, MM, PT, PC, VW, VH, VMIN, VMAX, REM, CH };
 
     CSSLength(float f)
     {

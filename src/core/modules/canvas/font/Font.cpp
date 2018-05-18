@@ -209,7 +209,7 @@ Font* FontSelector::loadFont(String* familyNameArray[],
 
     for (size_t i = 0; i < familyNameArraySize; i++) {
         auto fm = familyNameArray[i]->toUTF8NonGCString();
-        std::transform(fm.begin(), fm.end(), fm.begin(), ::tolower);
+        std::transform(fm.begin(), fm.end(), fm.begin(), tolower);
         UTF8StringDataNonGCStd cacheStr =
             mergeStyleWeightWithString(fm, style, weight);
 
@@ -283,7 +283,7 @@ Font* FontSelector::loadFont(String* familyNameArray[],
             } else {
                 // local font
                 auto fm = selectedWebFont->localFontName()->toUTF8NonGCString();
-                std::transform(fm.begin(), fm.end(), fm.begin(), ::tolower);
+                std::transform(fm.begin(), fm.end(), fm.begin(), tolower);
 
                 auto iter = m_webFontLocalSrcCache.find(cacheStr);
                 if (iter == m_webFontLocalSrcCache.end()) {
@@ -349,7 +349,7 @@ void cacheDeleter(T& cache, const UTF8StringDataNonGCStd& str)
 void FontSelector::clearCache(String* relatedFamilyName)
 {
     auto fm = relatedFamilyName->toUTF8NonGCString();
-    std::transform(fm.begin(), fm.end(), fm.begin(), ::tolower);
+    std::transform(fm.begin(), fm.end(), fm.begin(), tolower);
     cacheDeleter(m_fontFaceListCache, fm);
     cacheDeleter(m_fontCache, fm);
     cacheDeleter(m_webFontLocalSrcCache, fm);

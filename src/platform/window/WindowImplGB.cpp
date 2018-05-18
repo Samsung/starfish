@@ -52,6 +52,12 @@ struct IdlerData {
 
 class WindowImplGB : public PlatformWindow {
 public:
+    void releaseNativeResources()
+    {
+#if defined(STARFISH_TIZEN)
+        free(s->m_internalBuffer);
+#endif
+    }
     WindowImplGB(StarFish* sf, int32_t width, int32_t height)
         : PlatformWindow(sf)
         , m_width(width)
@@ -70,9 +76,7 @@ public:
                                            STARFISH_LOG_INFO(
                                                "WindowImplGB::~WindowImplGB\n");
                                            WindowImplGB* s = (WindowImplGB*)obj;
-#if !defined(STARFISH_TIZEN)
-                                           free(s->m_internalBuffer);
-#endif
+                                           s->releaseNativeResources();
                                        },
                                        NULL, NULL, NULL);
     }
@@ -319,7 +323,8 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
     return new CanvasSurfaceDALI(wnd, w, h);
 }
 
-// static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data* priv,
+// static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data*
+// priv,
 //                                   void* user_data)
 // {
 //     ecore_animator_add(

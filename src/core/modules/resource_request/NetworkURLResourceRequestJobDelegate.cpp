@@ -203,7 +203,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     } else {
         auto s = nwd->request->m_url->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO("failed to open %s\n", s.data());
-        nwd->request->handleError(ResourceRequest::ERROR);
+        nwd->request->handleError(ResourceRequest::IN_ERROR);
     }
 
     if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=

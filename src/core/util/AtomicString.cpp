@@ -107,7 +107,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
         char* buf = (char*)alloca(data.length + 1);
         buf[data.length] = 0;
         for (size_t i = 0; i < data.length; i++) {
-            buf[i] = ::tolower(data.asciiData()[i]);
+            buf[i] = tolower(data.asciiData()[i]);
         }
         StringDataOnStackASCII str(buf, data.length);
 
@@ -123,7 +123,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
         char16_t* buf = (char16_t*)alloca((data.length + 1) * sizeof(char16_t));
         buf[data.length] = 0;
         for (size_t i = 0; i < data.length; i++) {
-            buf[i] = ::tolower(data.utf16Data()[i]);
+            buf[i] = tolower(data.utf16Data()[i]);
         }
         StringDataOnStackBMP str(buf, data.length);
 
@@ -140,7 +140,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
         char32_t* buf = (char32_t*)alloca((data.length + 1) * sizeof(char32_t));
         buf[data.length] = 0;
         for (size_t i = 0; i < data.length; i++) {
-            buf[i] = ::tolower(data.utf32Data()[i]);
+            buf[i] = tolower(data.utf32Data()[i]);
         }
         StringDataOnStackUTF32 str(buf, data.length);
 
@@ -200,7 +200,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str,
     char* buf = (char*)alloca(length + 1);
     buf[length] = 0;
     for (size_t i = 0; i < length; i++) {
-        buf[i] = ::tolower(str[i]);
+        buf[i] = tolower(str[i]);
     }
     StringDataOnStackASCII newStr(buf, length);
 
@@ -221,7 +221,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf,
     char16_t* buf = (char16_t*)alloca((length + 1) * sizeof(char16_t));
     buf[length] = 0;
     for (size_t i = 0; i < length; i++) {
-        buf[i] = ::tolower(str[i]);
+        buf[i] = tolower(str[i]);
     }
     StringDataOnStackBMP newStr(buf, length);
 
@@ -242,7 +242,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf,
     char32_t* buf = (char32_t*)alloca((length + 1) * sizeof(char32_t));
     buf[length] = 0;
     for (size_t i = 0; i < length; i++) {
-        buf[i] = ::tolower(str[i]);
+        buf[i] = tolower(str[i]);
     }
     StringDataOnStackUTF32 newStr(buf, length);
 

@@ -55,7 +55,7 @@ static CSSLength::Kind computeLengthUnit(T str)
             break;
         case 'i':
             if (c1 == 'n') {
-                return CSSLength::IN;
+                return CSSLength::INCH;
             }
             break;
         case 'c':
@@ -138,7 +138,7 @@ Length CSSLength::toLength() const
         return Length(Length::Fixed, convertFromCmToPx(m_value));
     } else if (m_kind == MM) {
         return Length(Length::Fixed, convertFromMmToPx(m_value));
-    } else if (m_kind == IN) {
+    } else if (m_kind == INCH) {
         return Length(Length::Fixed, convertFromInToPx(m_value));
     } else if (m_kind == PC) {
         return Length(Length::Fixed, convertFromPcToPx(m_value));
@@ -175,7 +175,7 @@ String* CSSLength::toString() const
         return String::fromUTF8(stdStr.append("cm").c_str());
     } else if (m_kind == MM) {
         return String::fromUTF8(stdStr.append("mm").c_str());
-    } else if (m_kind == IN) {
+    } else if (m_kind == INCH) {
         return String::fromUTF8(stdStr.append("in").c_str());
     } else if (m_kind == PC) {
         return String::fromUTF8(stdStr.append("pc").c_str());

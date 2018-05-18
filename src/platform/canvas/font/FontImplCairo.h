@@ -22,7 +22,7 @@
 
 #include <cairo.h>
 
-#if defined(STARFISH_ANDROID)
+#if defined(STARFISH_ANDROID) || defined(STARFISH_WINDOWS)
 #include <cairo-ft.h>
 #else
 #include <cairo/cairo-ft.h>
@@ -374,7 +374,7 @@ public:
         FcChar8* fontNameAfterMatch;
         FcPatternGetString(resultPattern, FC_FAMILY, 0, &fontNameAfterMatch);
         UTF8StringDataNonGCStd after = (char*)fontNameAfterMatch;
-        std::transform(after.begin(), after.end(), after.begin(), ::tolower);
+        std::transform(after.begin(), after.end(), after.begin(), tolower);
 
         if (familyName !=
             m_starfish->initialFontFamilyDatas()[1]

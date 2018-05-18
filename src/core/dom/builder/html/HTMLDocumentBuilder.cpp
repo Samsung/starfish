@@ -157,14 +157,14 @@ public:
                     for (size_t j = i + 1; j < bufferLen; j++) {
                         if (!gotChar) {
                             if (!String::isSpaceOrNewline(m_buffer[j])) {
-                                if (!std::isalpha(m_buffer[j])) {
+                                if (!::StarFish::isalpha(m_buffer[j])) {
                                     break;
                                 }
                                 gotChar = true;
                                 tagName[tagNameLength++] = tolower(m_buffer[j]);
                             }
                         } else {
-                            if (!std::isalpha(m_buffer[j])) {
+                            if (!::StarFish::isalpha(m_buffer[j])) {
                                 tagName[tagNameLength] = 0;
                                 if (memcmp("meta", tagName, 4) == 0) {
                                     i = j;

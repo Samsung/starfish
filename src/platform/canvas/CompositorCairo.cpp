@@ -485,6 +485,6 @@ Compositor* Compositor::create(StarFish* starfish, CanvasSurface* surface)
 {
     return new CompositorImplCairo(starfish, surface);
 }
-}
+} // namespace StarFish
 
 #endif

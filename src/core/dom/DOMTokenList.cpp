@@ -364,7 +364,7 @@ void DOMTokenList::validateToken(String* token)
         throw new DOMException(m_element->document(),
                                DOMException::Code::SYNTAX_ERR);
     }
-    auto f = [](char c) { return std::isspace(static_cast<unsigned char>(c)); };
+    auto f = [](char c) { return ::StarFish::isspace(c); };
     if (std::find_if(stdToken.begin(), stdToken.end(), f) != stdToken.end()) {
         throw new DOMException(m_element->document(),
                                DOMException::Code::INVALID_CHARACTER_ERR);

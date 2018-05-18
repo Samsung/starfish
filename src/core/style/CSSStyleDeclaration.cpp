@@ -721,7 +721,7 @@ static bool parseBorderImageShorthand(const CSSTokenVector& tokens,
     size_t pos = 0;
     while (pos < len) {
         CSSTokenValue token = tokens[pos++];
-        std::transform(token.begin(), token.end(), token.begin(), ::tolower);
+        std::transform(token.begin(), token.end(), token.begin(), tolower);
         if (hasSlicePrev) {
             hasSlicePrev = false;
             if (token.equals("/")) {
@@ -960,7 +960,7 @@ static bool parseFontShorthand(const CSSTokenVector& tokens,
     while (pos < len) {
         const CSSTokenValue& orgToken = tokens[pos];
         CSSTokenValue token = tokens[pos++];
-        std::transform(token.begin(), token.end(), token.begin(), ::tolower);
+        std::transform(token.begin(), token.end(), token.begin(), tolower);
 
         if (hasSizePrev) {
             hasSizePrev = false;
@@ -1347,7 +1347,7 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
             bool onlyWhiteSpace = true;
             for (size_t i = 0; i < str.length(); i++) {
                 if (!isCaseSensitive)
-                    str[i] = ::tolower(str[i]);
+                    str[i] = tolower(str[i]);
                 if (!String::isASCIISpace(str[i])) {
                     onlyWhiteSpace = false;
                 }
@@ -1366,12 +1366,12 @@ void CSSStyleDeclaration::tokenizeCSSValue(CSSTokenVector& tokens,
                 (str[1] == 'r' || str[1] == 'R') &&
                 (str[2] == 'l' || str[2] == 'L')) {
                 std::transform(str.begin(), str.begin() + 3, str.begin(),
-                               ::tolower);
+                               tolower);
                 tokens.push_back(std::move(str));
             } else if (str.length() != 0) {
                 if (!isCaseSensitive && !inQuotes) {
                     std::transform(str.begin(), str.end(), str.begin(),
-                                   ::tolower);
+                                   tolower);
                 }
                 if (!numberOfnesting) {
                     tokens.push_back(std::move(str));
@@ -1614,15 +1614,18 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
             bool isImportant = ((Sender*)data)->isImportant;
             if (kind == CSSStyleValuePair::KeyKind::Unknown) {
             } else {
-                if (false) {
-                }
-#define SET_ATTR(name, nameLower, nameCSSCase)         \
-    else if (kind == CSSStyleValuePair::KeyKind::name) \
-    {                                                  \
-        self->set##name(buf, len, isImportant);        \
+                switch (kind) {
+
+#define SET_ATTR_SET_PROPERTY(name, nameLower, nameCSSCase) \
+    case CSSStyleValuePair::KeyKind::name: {                \
+        self->set##name(buf, len, isImportant);             \
+        break;                                              \
     }
-                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
-#undef SET_ATTR
+                    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR_SET_PROPERTY)
+#undef SET_ATTR_SET_PROPERTY
+                default:
+                    break;
+                }
             }
             return 0;
         },
@@ -1650,15 +1653,20 @@ Nullable<String*> CSSStyleDeclaration::defaultNamedGetter(String* name)
     if (kind == CSSStyleValuePair::KeyKind::Unknown) {
         return Nullable<String*>();
     }
+    switch (kind) {
+#define GET_ATTR(name, ...)                  \
+    case CSSStyleValuePair::KeyKind::name: { \
+        return Nullable<String*>(name());    \
+        break;                               \
+    }
+        FOR_EACH_STYLE_ATTRIBUTE_TOTAL(GET_ATTR)
+#undef GET_ATTR
+    default:
+        break;
+    }
     if (false) {
     }
-#define GET_ATTR(name, ...)                            \
-    else if (kind == CSSStyleValuePair::KeyKind::name) \
-    {                                                  \
-        return Nullable<String*>(name());              \
-    }
-    FOR_EACH_STYLE_ATTRIBUTE_TOTAL(GET_ATTR)
-#undef GET_ATTR
+
     return Nullable<String*>();
 }
 
@@ -1704,15 +1712,18 @@ bool CSSStyleDeclaration::defaultNamedSetter(String* name,
         [](const char* buf, size_t len, void* data) -> size_t {
             CSSStyleValuePair::KeyKind kind = ((Sender*)data)->kind;
             CSSStyleDeclaration* self = ((Sender*)data)->self;
-            if (false) {
-            }
-#define SET_ATTR(name, ...)                            \
-    else if (kind == CSSStyleValuePair::KeyKind::name) \
-    {                                                  \
-        self->set##name(buf, len, false);              \
+            switch (kind) {
+#define SET_ATTR(name, ...)                  \
+    case CSSStyleValuePair::KeyKind::name: { \
+        self->set##name(buf, len, false);    \
+        break;                               \
     }
-            FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
+                FOR_EACH_STYLE_ATTRIBUTE_TOTAL(SET_ATTR)
 #undef SET_ATTR
+            default:
+                break;
+            }
+
             return 0;
         },
         &sender);

@@ -873,9 +873,9 @@ String* String::toUpper()
     auto data = bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::islower(data.asciiData()[i])) {
+            if (::StarFish::islower(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
-                std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+                std::transform(str.begin(), str.end(), str.begin(), toupper);
                 return new StringDataASCII(std::move(str));
             }
         }
@@ -906,27 +906,27 @@ String* String::toASCIIUpper()
     auto data = bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::islower(data.asciiData()[i])) {
+            if (::StarFish::islower(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
-                std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+                std::transform(str.begin(), str.end(), str.begin(), toupper);
                 return new StringDataASCII(std::move(str));
             }
         }
         return this;
     } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::islower(data.utf16Data()[i])) {
+            if (::StarFish::islower(data.utf16Data()[i])) {
                 BMPString str(data.utf16Data(), data.length);
-                std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+                std::transform(str.begin(), str.end(), str.begin(), toupper);
                 return new StringDataBMP(std::move(str));
             }
         }
         return this;
     } else {
         for (size_t i = 0; i < data.length; i++) {
-            if (::islower(data.utf32Data()[i])) {
+            if (::StarFish::islower(data.utf32Data()[i])) {
                 UTF32String str(data.utf32Data(), data.length);
-                std::transform(str.begin(), str.end(), str.begin(), ::toupper);
+                std::transform(str.begin(), str.end(), str.begin(), toupper);
                 return new StringDataUTF32(std::move(str));
             }
         }
@@ -939,9 +939,9 @@ String* String::toLower()
     auto data = bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::isupper(data.asciiData()[i])) {
+            if (::StarFish::isupper(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
-                std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+                std::transform(str.begin(), str.end(), str.begin(), tolower);
                 return new StringDataASCII(std::move(str));
             }
         }
@@ -972,27 +972,27 @@ String* String::toASCIILower()
     auto data = bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::isupper(data.asciiData()[i])) {
+            if (::StarFish::isupper(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
-                std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+                std::transform(str.begin(), str.end(), str.begin(), tolower);
                 return new StringDataASCII(std::move(str));
             }
         }
         return this;
     } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::isupper(data.utf16Data()[i])) {
+            if (::StarFish::isupper(data.utf16Data()[i])) {
                 BMPString str(data.utf16Data(), data.length);
-                std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+                std::transform(str.begin(), str.end(), str.begin(), tolower);
                 return new StringDataBMP(std::move(str));
             }
         }
         return this;
     } else {
         for (size_t i = 0; i < data.length; i++) {
-            if (::isupper(data.utf32Data()[i])) {
+            if (::StarFish::isupper(data.utf32Data()[i])) {
                 UTF32String str(data.utf32Data(), data.length);
-                std::transform(str.begin(), str.end(), str.begin(), ::tolower);
+                std::transform(str.begin(), str.end(), str.begin(), tolower);
                 return new StringDataUTF32(std::move(str));
             }
         }
@@ -1205,16 +1205,17 @@ bool StringUtils::equalsIgnoreCase(const std::string& a, const std::string& b)
 // trim from start (in place)
 void StringUtils::ltrim(std::string& s)
 {
-    s.erase(s.begin(),
-            std::find_if(s.begin(), s.end(),
-                         std::not1(std::ptr_fun<int, int>(std::isspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
+                                    std::not1(std::ptr_fun<char32_t, bool>(
+                                        ::StarFish::isspace))));
 }
 
 // trim from end (in place)
 void StringUtils::rtrim(std::string& s)
 {
-    s.erase(std::find_if(s.rbegin(), s.rend(),
-                         std::not1(std::ptr_fun<int, int>(std::isspace)))
+    s.erase(std::find_if(
+                s.rbegin(), s.rend(),
+                std::not1(std::ptr_fun<char32_t, bool>(::StarFish::isspace)))
                 .base(),
             s.end());
 }
@@ -2574,5 +2575,43 @@ void SegmentedString::setCurrentPosition(OrdinalNumber line,
     m_numberOfCharactersConsumedPriorToCurrentLine =
         numberOfCharactersConsumed() + prologLength -
         columnAftreProlog.zeroBasedInt();
+}
+
+bool isupper(char32_t ch)
+{
+    return (ch >= 'A' && ch <= 'Z');
+}
+
+bool islower(char32_t ch)
+{
+    return (ch >= 'a' && ch <= 'z');
+}
+
+char16_t tolower(char32_t c)
+{
+    return isupper(c) ? (c) - 'A' + 'a' : c;
+}
+
+char16_t toupper(char32_t c)
+{
+    return islower(c) ? c - 'a' + 'A' : c;
+}
+
+bool isspace(char32_t c)
+{
+    return (c == ' ' || c == '\t' || c == '\n' || c == '\r' || c == '\f' ||
+                    c == '\v'
+                ? 1
+                : 0);
+}
+
+bool isdigit(char32_t ch)
+{
+    return (ch >= '0' && ch <= '9');
+}
+
+bool isalpha(char32_t ch)
+{
+    return isupper(ch) || islower(ch);
 }
 }

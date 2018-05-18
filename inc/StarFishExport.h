@@ -20,6 +20,13 @@
 #ifndef __StarFishExport__
 #define __StarFishExport__
 
+/* STARFISH_EXPORT */
+#ifndef STARFISH_EXPORT
+#ifdef _MSC_VER
+#define STARFISH_EXPORT __declspec(dllexport)
+#else
 #define STARFISH_EXPORT __attribute__((visibility("default")))
+#endif
+#endif
 
 #endif

@@ -105,7 +105,7 @@ public:
         LOADSTART,
         PROGRESS,
         LOAD,
-        ERROR,
+        IN_ERROR,
         ABORT,
         TIMEOUT,
         LOADEND,
