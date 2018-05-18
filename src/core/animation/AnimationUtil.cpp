@@ -263,7 +263,7 @@ bool AnimationUtil::backgroundPosYToAnimatedValue(
                                         posSize, imgSize);
             from = Length(Length::Fixed,
                           oldPosY.specifiedValue(
-                              posSize.width() - imgSize.width(), element));
+                              posSize.height() - imgSize.height(), element));
         }
         to = Length(Length::Fixed, newPosY.specifiedValue(0, element));
     } else if (newPosY.isPercent()) {
@@ -274,7 +274,7 @@ bool AnimationUtil::backgroundPosYToAnimatedValue(
             Unit::Size posSize, imgSize;
             calculateBackgroundBaseData(oldPaintingBox, oldStyle, layer,
                                         posSize, imgSize);
-            float constantA = posSize.width() - imgSize.width();
+            float constantA = posSize.height() - imgSize.height();
             float inFixed = oldPosY.specifiedValue(constantA, element);
             from = Length(Length::Percent, inFixed / constantA);
         }

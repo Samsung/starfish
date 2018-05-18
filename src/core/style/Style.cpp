@@ -3227,7 +3227,8 @@ void StyleResolver::apply(Element* element,
                         CSSStyleValuePair::ValueKind::Initial) {
                         style->setBackgroundAttachment(
                             BackgroundAttachmentValue::
-                                ScrollBackgroundAttachmentValue);
+                                ScrollBackgroundAttachmentValue,
+                            i);
                     } else {
                         STARFISH_ASSERT(item.valueKind() ==
                                         CSSStyleValuePair::ValueKind::
