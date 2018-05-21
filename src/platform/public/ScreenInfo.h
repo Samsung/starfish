@@ -96,7 +96,7 @@ struct ScreenInfo {
     ScreenInfo()
         : deviceScaleFactor(1)
         , depth(24)
-        , depthPerComponent(8)
+        , depthPerComponent(24)
         , isMonochrome(false)
         , rect(LayoutLocation(), LayoutSize())
         , availableRect(LayoutLocation(), LayoutSize())
