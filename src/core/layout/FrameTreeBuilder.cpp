@@ -58,6 +58,9 @@
 #include "core/layout/FrameReplacedVideo.h"
 #endif
 #include "core/layout/FrameReplacedIFrame.h"
+#ifdef STARFISH_ENABLE_CANVAS
+#include "core/layout/FrameReplacedCanvas.h"
+#endif
 #include "core/layout/FrameReplacedObject.h"
 #include "core/layout/FrameLineBreak.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
@@ -783,7 +786,13 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
 #endif
     else if (current->isHTMLIFrameElement()) {
         return new FrameReplacedIFrame(current);
-    } else if (current->isHTMLBRElement()) {
+    }
+#ifdef STARFISH_ENABLE_CANVAS
+    else if (current->isHTMLCanvasElement()) {
+        return new FrameReplacedCanvas(current);
+    }
+#endif
+    else if (current->isHTMLBRElement()) {
         return new FrameLineBreak(current);
     } else if (current->isHTMLObjectElement()) {
         return new FrameReplacedObject(current);

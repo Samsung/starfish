@@ -50,6 +50,9 @@ class FrameSVGBox;
 class FrameText;
 class FrameCounterText;
 class FrameQuoteText;
+#ifdef STARFISH_ENABLE_CANVAS
+class FrameReplacedCanvas;
+#endif
 class InlineTextBox;
 class InlineNonReplacedBox;
 class InlineBoxLayoutParentBox;
@@ -1143,6 +1146,13 @@ public:
         return false;
     }
 
+#ifdef STARFISH_ENABLE_CANVAS
+    virtual bool isFrameCanvas()
+    {
+        return false;
+    }
+#endif
+
     FrameText* asFrameText()
     {
         STARFISH_ASSERT(isFrameText());
@@ -1285,6 +1295,14 @@ public:
         STARFISH_ASSERT(isFrameSVGBox());
         return (FrameSVGBox*)this;
     }
+
+#ifdef STARFISH_ENABLE_CANVAS
+    FrameReplacedCanvas* asFrameReplacedCanvas()
+    {
+        STARFISH_ASSERT(isFrameCanvas());
+        return (FrameReplacedCanvas*)this;
+    }
+#endif
 
     bool isDirectDescendantOfTableCellBox()
     {
