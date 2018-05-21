@@ -143,7 +143,10 @@ float MediaValues::devicePixelRatio() const
 
 int32_t MediaValues::colorBitsPerComponent() const
 {
-    return m_frame->document()->window()->screen()->pixelDepth();
+    // The colorDepth and pixelDepth attributes should return the number of bits
+    // allocated to colors for a pixel in the output device, excluding the alpha
+    // channel.
+    return m_frame->document()->window()->screen()->pixelDepth() / 3;
 }
 
 bool MediaValues::isMonochrome() const

@@ -1035,6 +1035,8 @@ web_platform_test_progress_events_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_progress_events.res common -p$(TEST_NPROCS)
 web_platform_test_xhr_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_xhr.res common -p$(TEST_NPROCS)
+web_platform_test_css_cairo:
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_css.res common -p$(TEST_NPROCS)
 web_platform_test_all_cairo:
 	make web_platform_test_dom_cairo
 	make web_platform_test_dom_events_cairo
@@ -1042,6 +1044,7 @@ web_platform_test_all_cairo:
 	make web_platform_test_page_visibility_cairo
 	make web_platform_test_progress_events_cairo
 	make web_platform_test_xhr_cairo
+	make web_platform_test_css_cairo
 
 vendor_test_blink_fast_dom_cairo:
 	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/blink_fast_dom.res common -p$(TEST_NPROCS)
