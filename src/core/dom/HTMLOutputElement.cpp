@@ -25,6 +25,7 @@
 namespace StarFish {
 HTMLOutputElement::HTMLOutputElement(Document* document)
     : HTMLFormControl(document)
+    , m_htmlForList(nullptr)
     , m_valueModeFlag(ValueModeFlag::defaultMode)
     , m_defaultValue(String::emptyString)
 {
