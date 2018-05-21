@@ -47,7 +47,7 @@ interface CanvasRenderingContext2D {
   attribute DOMString filter; // (default "none")
 
   // CanvasRect
-  [Unimplemented] void clearRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
+  void clearRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
   void fillRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
   [Unimplemented] void strokeRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
 
@@ -93,7 +93,7 @@ interface CanvasRenderingContext2D {
 
 
   // CanvasPathDrawingStyles
-  [Unimplemented] attribute unrestricted double lineWidth; // (default 1)
+  attribute unrestricted double lineWidth; // (default 1)
   [Unimplemented] attribute CanvasLineCap lineCap; // (default "butt")
   [Unimplemented] attribute CanvasLineJoin lineJoin; // (default "miter")
   [Unimplemented] attribute unrestricted double miterLimit; // (default 10)
@@ -114,7 +114,7 @@ interface CanvasRenderingContext2D {
   void moveTo(unrestricted double x, unrestricted double y);
   void lineTo(unrestricted double x, unrestricted double y);
   [Unimplemented] void quadraticCurveTo(unrestricted double cpx, unrestricted double cpy, unrestricted double x, unrestricted double y);
-  [Unimplemented] void bezierCurveTo(unrestricted double cp1x, unrestricted double cp1y, unrestricted double cp2x, unrestricted double cp2y, unrestricted double x, unrestricted double y);
+  void bezierCurveTo(unrestricted double cp1x, unrestricted double cp1y, unrestricted double cp2x, unrestricted double cp2y, unrestricted double x, unrestricted double y);
   [Unimplemented] void arcTo(unrestricted double x1, unrestricted double y1, unrestricted double x2, unrestricted double y2, unrestricted double radius); 
   [Unimplemented] void arcTo(unrestricted double x1, unrestricted double y1, unrestricted double x2, unrestricted double y2, unrestricted double radiusX, unrestricted double radiusY, unrestricted double rotation); 
   void rect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);

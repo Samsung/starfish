@@ -45,6 +45,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isCanvasRenderingContext2D() const override;
 
+    void setDefaultCommands();
+
     // CanvasState
     void save();
     void restore();
@@ -115,6 +117,21 @@ public:
     void ellipse(double x, double y, double radiusX, double radiusY,
                  double rotation, double startAngle, double endAngle,
                  bool anticlockwise = false);
+
+    void bezierCurveTo(double x1, double y1, double x2, double y2, double x3,
+                       double y3);
+
+    void clearRect(double x, double y, double w, double h);
+
+    double lineWidth()
+    {
+        return m_lineWidth;
+    }
+
+    void setLineWidth(double width);
+
+private:
+    double m_lineWidth;
 };
 
 class CanvasGradient : public ScriptWrappable {

@@ -22,25 +22,72 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "binding/DOMStringOrCanvasGradientOrCanvasPatternUnion.h"
+#include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
+
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/paint/PaintCommandBuffer.h"
 #include "core/dom/Document.h"
+#include "core/layout/Frame.h"
+#include "core/layout/FrameBox.h"
+#include "core/layout/StackingContext.h"
 
 namespace StarFish {
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(
     HTMLCanvasElement* canvasElement)
     : RenderingContext(canvasElement)
+    , m_lineWidth(1)
 {
-    STARFISH_LOG_INFO("NOTE: Current CanvasRenderingContext2D is mock\n");
+    setDefaultCommands();
+}
+
+void CanvasRenderingContext2D::setDefaultCommands()
+{
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        // Set the defualt line width.
+        PaintCommand command1(PaintCommand::Command::SETLINEWIDTH_2D);
+        command1.insertArgumentNumber(m_lineWidth);
+        canvas->commandBuffer().insertCommand(command1);
+
+        PaintCommand command2(PaintCommand::Command::SETCOLOR_2D);
+        command2.insertArgumentNumber(0);
+        command2.insertArgumentNumber(0);
+        command2.insertArgumentNumber(0);
+        command2.insertArgumentNumber(255);
+        canvas->commandBuffer().insertCommand(command2);
+    }
+}
+
+void CanvasRenderingContext2D::setLineWidth(double width)
+{
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        PaintCommand command(PaintCommand::Command::SETLINEWIDTH_2D);
+        command.insertArgumentNumber(width);
+        canvas->commandBuffer().insertCommand(command);
+    }
+    m_lineWidth = width;
 }
 
 void CanvasRenderingContext2D::save()
 {
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        PaintCommand command(PaintCommand::Command::SAVE_2D);
+        canvas->commandBuffer().insertCommand(command);
+    }
 }
 
 void CanvasRenderingContext2D::restore()
 {
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        PaintCommand command(PaintCommand::Command::RESTORE_2D);
+        canvas->commandBuffer().insertCommand(command);
+    }
 }
 
 void CanvasRenderingContext2D::scale(double x, double y)
@@ -108,6 +155,16 @@ void CanvasRenderingContext2D::setFilter(String* value)
 
 void CanvasRenderingContext2D::fillRect(double x, double y, double w, double h)
 {
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        canvas->setNeedsPainting();
+        PaintCommand command(PaintCommand::Command::FILLRECT_2D);
+        command.insertArgumentNumber(x);
+        command.insertArgumentNumber(y);
+        command.insertArgumentNumber(w);
+        command.insertArgumentNumber(h);
+        canvas->commandBuffer().insertCommand(command);
+    }
 }
 
 void CanvasRenderingContext2D::beginPath()
@@ -124,6 +181,12 @@ void CanvasRenderingContext2D::fill(Path2D* path, String* fillRule)
 
 void CanvasRenderingContext2D::stroke()
 {
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        canvas->setNeedsPainting();
+        PaintCommand command(PaintCommand::Command::STROKE_2D);
+        canvas->commandBuffer().insertCommand(command);
+    }
 }
 
 void CanvasRenderingContext2D::drawImage(ScriptValue image, double dx,
@@ -155,10 +218,26 @@ void CanvasRenderingContext2D::closePath()
 
 void CanvasRenderingContext2D::moveTo(double x, double y)
 {
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        canvas->setNeedsPainting();
+        PaintCommand command(PaintCommand::Command::MOVETO_2D);
+        command.insertArgumentNumber(x);
+        command.insertArgumentNumber(y);
+        canvas->commandBuffer().insertCommand(command);
+    }
 }
 
 void CanvasRenderingContext2D::lineTo(double x, double y)
 {
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        canvas->setNeedsPainting();
+        PaintCommand command(PaintCommand::Command::LINETO_2D);
+        command.insertArgumentNumber(x);
+        command.insertArgumentNumber(y);
+        canvas->commandBuffer().insertCommand(command);
+    }
 }
 
 void CanvasRenderingContext2D::rect(double x, double y, double w, double h)
@@ -176,6 +255,37 @@ void CanvasRenderingContext2D::ellipse(double x, double y, double radiusX,
                                        double startAngle, double endAngle,
                                        bool anticlockwise)
 {
+}
+
+void CanvasRenderingContext2D::bezierCurveTo(double x1, double y1, double x2,
+                                             double y2, double x3, double y3)
+{
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        canvas->setNeedsPainting();
+        PaintCommand command(PaintCommand::BEZIERCURVETO_2D);
+        command.insertArgumentNumber(x1);
+        command.insertArgumentNumber(y1);
+        command.insertArgumentNumber(x2);
+        command.insertArgumentNumber(y2);
+        command.insertArgumentNumber(x3);
+        command.insertArgumentNumber(y3);
+        canvas->commandBuffer().insertCommand(command);
+    }
+}
+
+void CanvasRenderingContext2D::clearRect(double x, double y, double w, double h)
+{
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        canvas->setNeedsPainting();
+        PaintCommand command(PaintCommand::CLEARRECT_2D);
+        command.insertArgumentNumber(x);
+        command.insertArgumentNumber(y);
+        command.insertArgumentNumber(w);
+        command.insertArgumentNumber(h);
+        canvas->commandBuffer().insertCommand(command);
+    }
 }
 
 void CanvasGradient::addColorStop(double offset, String* color)

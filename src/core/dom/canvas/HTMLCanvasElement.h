@@ -23,6 +23,7 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "core/dom/HTMLElement.h"
+#include "core/paint/PaintCommandBuffer.h"
 
 namespace StarFish {
 
@@ -59,6 +60,10 @@ public:
 
     uint32_t width();
     void setWidth(uint32_t value);
+    PaintCommandBuffer& commandBuffer()
+    {
+        return m_buffer;
+    }
 
     uint32_t height();
     void setHeight(uint32_t value);
@@ -67,6 +72,7 @@ public:
 
 private:
     RenderingContext* m_renderingContext;
+    PaintCommandBuffer m_buffer;
     CanvasContextMode m_contextMode;
 };
 }
