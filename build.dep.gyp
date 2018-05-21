@@ -144,8 +144,8 @@
                 'third_party/webm',
             ],
             'sources': [
-                'third_party/webm/mkvparser.cpp',
-                'third_party/webm/webvttparser.cc',
+                'third_party/webm/mkvparser/mkvparser.cc',
+                'third_party/webm/webvtt/webvttparser.cc',
             ],
             'all_dependent_settings': {
                 'include_dirs': [

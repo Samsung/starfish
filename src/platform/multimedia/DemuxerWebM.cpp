@@ -185,7 +185,7 @@ public:
         m_isStreamFinded = true;
         m_headerSegment = pSegment.release();
 
-        if (source->onSeek(m_headerSegment->getPos(),
+        if (source->onSeek(pSegmentInfo->m_start + pSegmentInfo->m_size,
                            DemuxerSource::SeekWhence::SeekWhenceSet) != pos) {
             // return false;
         }
@@ -197,12 +197,14 @@ public:
     {
         STARFISH_ASSERT(m_isStreamFinded);
         MkvReaderAdapter src(source);
-        mkvparser::Segment* segment =
-            mkvparser::Segment::CreateInstance(&src, m_headerSegment);
+        mkvparser::Segment* segment = nullptr;
+        long long pos = source->onSeek(0, DemuxerSource::SeekWhenceCurrent);
+        long long ret = mkvparser::Segment::CreateInstance(&src, pos, segment);
+        if (ret) {
+            return false;
+        }
 
-        segment->setPos(source->onSeek(0, DemuxerSource::SeekWhenceCurrent));
-
-        int ret = segment->LoadCluster();
+        ret = segment->LoadCluster();
         if (ret < 0) {
             // STARFISH_LOG_INFO("\n Segment::LoadCluster() failed.");
             return false;
