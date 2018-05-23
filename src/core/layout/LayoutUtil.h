@@ -169,11 +169,13 @@ public:
 
     LayoutUnit(float value)
     {
+        STARFISH_ASSERT(!std::isinf(value));
         m_value = clampToInteger(value * kFixedPointDenominator);
     }
 
     LayoutUnit(double value)
     {
+        STARFISH_ASSERT(!std::isinf(value));
         m_value = clampToInteger(value * kFixedPointDenominator);
     }
 
@@ -672,6 +674,7 @@ inline double operator*(const double a, const LayoutUnit& b)
 
 inline LayoutUnit operator/(const LayoutUnit& a, const LayoutUnit& b)
 {
+    STARFISH_ASSERT(b.rawValue() != 0);
     LayoutUnit returnVal;
     long long rawVal = static_cast<long long>(kFixedPointDenominator) *
                        a.rawValue() / b.rawValue();
@@ -681,71 +684,85 @@ inline LayoutUnit operator/(const LayoutUnit& a, const LayoutUnit& b)
 
 inline float operator/(const LayoutUnit& a, float b)
 {
+    STARFISH_ASSERT(b != 0);
     return a.toFloat() / b;
 }
 
 inline double operator/(const LayoutUnit& a, double b)
 {
+    STARFISH_ASSERT(b != 0);
     return a.toDouble() / b;
 }
 
 inline LayoutUnit operator/(const LayoutUnit& a, int b)
 {
+    STARFISH_ASSERT(b != 0);
     return a / LayoutUnit(b);
 }
 
 inline LayoutUnit operator/(const LayoutUnit& a, unsigned short b)
 {
+    STARFISH_ASSERT(b != 0);
     return a / LayoutUnit(b);
 }
 
 inline LayoutUnit operator/(const LayoutUnit& a, unsigned b)
 {
+    STARFISH_ASSERT(b != 0);
     return a / LayoutUnit(b);
 }
 
 inline LayoutUnit operator/(const LayoutUnit& a, unsigned long b)
 {
+    STARFISH_ASSERT(b != 0);
     return a / LayoutUnit(b);
 }
 
 inline LayoutUnit operator/(const LayoutUnit& a, unsigned long long b)
 {
+    STARFISH_ASSERT(b != 0);
     return a / LayoutUnit(b);
 }
 
 inline float operator/(const float a, const LayoutUnit& b)
 {
+    STARFISH_ASSERT(b != 0);
     return a / b.toFloat();
 }
 
 inline double operator/(const double a, const LayoutUnit& b)
 {
+    STARFISH_ASSERT(b != 0);
     return a / b.toDouble();
 }
 
 inline LayoutUnit operator/(const int a, const LayoutUnit& b)
 {
+    STARFISH_ASSERT(b != 0);
     return LayoutUnit(a) / b;
 }
 
 inline LayoutUnit operator/(unsigned short a, const LayoutUnit& b)
 {
+    STARFISH_ASSERT(b != 0);
     return LayoutUnit(a) / b;
 }
 
 inline LayoutUnit operator/(unsigned a, const LayoutUnit& b)
 {
+    STARFISH_ASSERT(b != 0);
     return LayoutUnit(a) / b;
 }
 
 inline LayoutUnit operator/(unsigned long a, const LayoutUnit& b)
 {
+    STARFISH_ASSERT(b != 0);
     return LayoutUnit(a) / b;
 }
 
 inline LayoutUnit operator/(unsigned long long a, const LayoutUnit& b)
 {
+    STARFISH_ASSERT(b != 0);
     return LayoutUnit(a) / b;
 }
 
