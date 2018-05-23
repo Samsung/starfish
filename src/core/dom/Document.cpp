@@ -647,8 +647,8 @@ Element* Document::getElementById(String* id)
         return nullptr;
     }
     return (Element*)Traverse::findDescendant(this, [&](Node* child) {
-        if (child->isHTMLElement() && child->asHTMLElement()->hasId() &&
-            child->asHTMLElement()->id()->equals(id)) {
+        if (child->isElement() && child->asElement()->hasId() &&
+            child->asElement()->id()->equals(id)) {
             return true;
         } else {
             return false;

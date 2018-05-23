@@ -1824,8 +1824,6 @@ public:
         return m_flags.m_isGridItem;
     }
 
-    bool isDocumentElement() const;
-
     bool isAnonymous() const
     {
         return m_flags.m_isAnonymous;

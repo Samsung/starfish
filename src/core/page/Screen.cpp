@@ -51,7 +51,7 @@ uint32_t Screen::colorDepth() const
 
 uint32_t Screen::pixelDepth() const
 {
-    return starFish()->screenInfo().depthPerComponent;
+    return starFish()->screenInfo().depth;
 }
 
 float Screen::devicePixelRatio() const
