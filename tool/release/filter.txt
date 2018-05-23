@@ -28,3 +28,6 @@ P /.git
 - test
 - out
 - out_tizen
+
+- third_party/escargot/third_party/icu
+- third_party/prebuilt_armv-7a_8.1.0
