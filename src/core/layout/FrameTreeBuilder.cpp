@@ -363,8 +363,11 @@ void FrameTreeBuilder::insertTableObjectChild(
             blockContainer, lastAnonymousTableObjectParent, currentFrame,
             currentNode, ctx);
     }
-
-    parent->appendChild(currentFrame);
+    if (parent->isFrameTableCellBox()) {
+        insertChild(parent->asFrameBlockBox(), currentFrame, currentNode, ctx);
+    } else {
+        parent->appendChild(currentFrame);
+    }
 }
 
 static bool isIgnorableWhiteSpace(Frame* parent, Frame* child)
@@ -1019,7 +1022,13 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     FrameTableObjectBox* lastAnonymousTableObject = nullptr;
     if (parent->isFrameTableObjectBox() && parent->isAnonymous()) {
         lastAnonymousTableObject = parent->asFrameTableObjectBox();
+    } else if (!parent->isFrameTableObjectBox() && parent->isFrameBlockBox() &&
+               parent->isAnonymous() &&
+               parent->parent()->isFrameTableCellBox() &&
+               parent->parent()->isAnonymous()) {
+        lastAnonymousTableObject = parent->parent()->asFrameTableObjectBox();
     }
+
     ctx.setLastAnonymousTableObjectParent(nullptr);
 
     if (currentFrame->isFrameBlockBox()) {
