@@ -552,7 +552,7 @@ void starfishCreate_internal(uv_async_t* handle)
     StarFish::StarFish* starFish = new (NoGC) StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         app->m_width, app->m_height, app->m_windowX, app->m_windowY, 1,
-        StarFish::String::createASCIIString("sans-serif"), info, "",
+        StarFish::String::createASCIIString("samsungOne"), info, "",
         "/tmp/StarFish_Cookies.txt", cacheDir.data(),
         StarFish::String::emptyString, StarFish::String::emptyString);
 
@@ -601,7 +601,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     int windowX = 0;
     int windowY = 0;
 #else
-    const char* defaultFont = "sans-serif";
+    const char* defaultFont = "samsungOne";
 #endif
 #if defined(STARFISH_DALI)
     if (needToInitMainThread()) {

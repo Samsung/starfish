@@ -220,7 +220,7 @@ WebView* WebView::Create(void* win, int x, int y, int width, int height)
     cacheDir += "/Starfish-cache";
     StarFish::StarFish* starfish = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", win, width,
-        height, x, y, 1, StarFish::String::createASCIIString("sans-serif"),
+        height, x, y, 1, StarFish::String::createASCIIString("samsungOne"),
         info, "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
         cacheDir.data(),
         StarFish::String::fromUTF8(customUserAgentString.data()),

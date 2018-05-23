@@ -216,7 +216,7 @@ void* mainShellThread(void* data)
             app->m_sf = new StarFish::StarFish(
                 (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", app,
                 app->m_width, app->m_height, x, y, 1,
-                String::createASCIIString("sans-serif"), info, "",
+                String::createASCIIString("samsungOne"), info, "",
                 "/tmp/StarFish_Cookies.txt", cacheDir.data(),
                 String::emptyString, String::emptyString);
 
@@ -752,7 +752,7 @@ int main(int argc, char* argv[])
     StarFish::StarFish* sf = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         width, height, x, y, 1,
-        StarFish::String::createASCIIString("sans-serif"), info,
+        StarFish::String::createASCIIString("samsungOne"), info,
         "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
         cacheDir.data(),
         StarFish::String::fromUTF8(customUserAgentString.data()),
