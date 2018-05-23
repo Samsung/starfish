@@ -34,6 +34,8 @@ private:
         }
 
         NodePointer()
+            : m_node(nullptr)
+            , m_isPointerBeforeNode(false)
         {
         }
 
