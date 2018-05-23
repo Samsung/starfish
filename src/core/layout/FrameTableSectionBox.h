@@ -133,6 +133,11 @@ public:
         return true;
     }
 
+    virtual bool isInternalTableBox() override
+    {
+        return true;
+    }
+
     FrameTableBox* tableBox()
     {
         return parent()->asFrameTableBox();

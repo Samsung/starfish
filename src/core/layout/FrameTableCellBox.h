@@ -41,6 +41,11 @@ public:
         return "FrameTableCell";
     }
 
+    virtual bool isInternalTableBox() override
+    {
+        return true;
+    }
+
     FrameTableRowBox* rowBox()
     {
         return parent()->asFrameTableRowBox();
