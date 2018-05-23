@@ -1447,15 +1447,11 @@ void Frame::markGridItem()
     }
 }
 
-bool Frame::isDocumentElement() const
-{
-    return !isAnonymous() && node()->document() == node();
-}
-
 Element* Frame::offsetParent()
 {
-    if (isDocumentElement() ||
-        (!isAnonymous() && node()->isHTMLBodyElement())) {
+    // https://drafts.csswg.org/cssom-view/#dom-htmlelement-offsetparent
+    if (isAnonymous() || isRootElement() || node()->isHTMLBodyElement() ||
+        style()->position() == PositionValue::FixedPositionValue) {
         return nullptr;
     }
 

@@ -60,10 +60,6 @@ struct ScreenInfo {
     // The screen depth in bits per pixel
     int depth;
 
-    // The bits per colour component. This assumes that the colours are balanced
-    // equally.
-    int depthPerComponent;
-
     // This can be true for black and white printers
     bool isMonochrome;
 
@@ -96,7 +92,6 @@ struct ScreenInfo {
     ScreenInfo()
         : deviceScaleFactor(1)
         , depth(24)
-        , depthPerComponent(24)
         , isMonochrome(false)
         , rect(LayoutLocation(), LayoutSize())
         , availableRect(LayoutLocation(), LayoutSize())
@@ -109,7 +104,6 @@ struct ScreenInfo {
     {
         return this->deviceScaleFactor == other.deviceScaleFactor &&
                this->depth == other.depth &&
-               this->depthPerComponent == other.depthPerComponent &&
                this->isMonochrome == other.isMonochrome &&
                this->rect.location().x() == other.rect.location().x() &&
                this->rect.location().y() == other.rect.location().y() &&
