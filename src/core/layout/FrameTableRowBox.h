@@ -41,6 +41,11 @@ public:
         return true;
     }
 
+    virtual bool isInternalTableBox() override
+    {
+        return true;
+    }
+
     bool hasChildCells();
     void collectCellWidthInfo(LayoutContext& ctx);
     void layoutWidth(LayoutContext& ctx);

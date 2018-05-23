@@ -38,6 +38,11 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+    virtual bool isInternalTableBox()
+    {
+        return false;
+    }
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {

@@ -47,6 +47,11 @@ public:
         return true;
     }
 
+    virtual bool isInternalTableBox() override
+    {
+        return true;
+    }
+
     uint32_t span();
     bool hasChildColBox();
 

@@ -31,6 +31,7 @@
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameGridBox.h"
+#include "core/layout/FrameTableObjectBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
 #include "core/style/CalcData.h"
@@ -109,16 +110,19 @@ FloatingBoxInfo::FloatingBoxInfo(FrameBox* box, LayoutContext* ctx)
 {
     STARFISH_ASSERT(box->isFloating());
     m_isLeft = box->style()->floating() == LeftFloatValue;
-    Frame* parent = box->layoutParent();
-    while (parent) {
+    for (Frame* parent = box->layoutParent(); parent;
+         parent = parent->layoutParent()) {
         if (!parent->isAnonymous() && parent->isBlockLevel()) {
+            if (parent->isFrameTableObjectBox() &&
+                parent->asFrameTableObjectBox()->isInternalTableBox()) {
+                //  Internal table elements do not have margins.
+                continue;
+            }
             m_canLayoutParentCollapseWithMarginTop =
                 ctx->marginInfo(parent->asFrameBlockBox())
                     ->canCollapseWithMarginTop();
             break;
         }
-
-        parent = parent->layoutParent();
     }
     reCache(ctx);
 }
