@@ -1372,7 +1372,7 @@ public:
         m_rareComputedStyleData.ensureBackground()->setSize(size, layer);
     }
 
-    void setBackgroundSize(LengthSize size, uint32_t layer = 0)
+    void setBackgroundSize(const LengthSize& size, uint32_t layer = 0)
     {
         m_rareComputedStyleData.ensureBackground()->setSize(size, layer);
     }

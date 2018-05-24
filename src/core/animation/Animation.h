@@ -59,9 +59,9 @@ public:
         m_type = LENGTH;
     }
 
-    AnimatedValue(LengthSize size)
+    AnimatedValue(const LengthSize& size)
     {
-        m_data.m_lengthSize = size;
+        m_data.m_lengthSize = new LengthSize(size);
         m_type = LENGTH_SIZE;
     }
 
@@ -136,7 +136,7 @@ public:
         return m_data.m_length;
     }
 
-    LengthSize getLengthSize() const
+    LengthSize* getLengthSize() const
     {
         STARFISH_ASSERT(m_type == LENGTH_SIZE);
         return m_data.m_lengthSize;
@@ -184,7 +184,7 @@ protected:
     union ValueData {
         Unit::Color m_color;
         Length m_length;
-        LengthSize m_lengthSize;
+        LengthSize* m_lengthSize;
         LayoutUnit m_layoutUnit;
         float m_float;
         int m_int;
