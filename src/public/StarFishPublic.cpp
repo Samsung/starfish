@@ -43,6 +43,7 @@
 
 #include <dali-toolkit/dali-toolkit.h>
 #include "platform/window/PlatformWindow.h"
+#include "platform/event/PlatformKeyEventData.h"
 
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
@@ -50,6 +51,7 @@
 #include "core/page/WebView.h"
 
 #include <uv.h>
+#include <cairo.h>
 #if defined(STARFISH_TIZEN)
 #include <tbm_surface.h>
 #endif
@@ -58,8 +60,8 @@ uv_async_t g_launcher_handle;
 pthread_mutex_t* g_initMutex;
 bool g_MainLoopAlive = false;
 
-StarFish::KeyboardData DaliEventKeyToKeyboardData(const char* DALIKeyString,
-                                                  bool isShiftPressed)
+StarFish::PlatformKeyEventData DaliEventKeyToPlatformKeyEventData(
+    const char* DALIKeyString, bool isShiftPressed)
 {
     StarFish::KeyValue keyValue = StarFish::KeyValue::UnidentifiedKey;
     if (strcmp("Left", DALIKeyString) == 0) {
@@ -186,16 +188,16 @@ StarFish::KeyboardData DaliEventKeyToKeyboardData(const char* DALIKeyString,
         keyValue = StarFish::KeyValue::TabKey;
     }
 #endif
-    StarFish::KeyboardData kdata(keyValue);
+    StarFish::PlatformKeyEventData kdata(keyValue);
     if (strcmp("Shift_L", DALIKeyString) == 0 ||
         strcmp("Shift_R", DALIKeyString) == 0) {
-        kdata.setShiftKey();
+        kdata.setShiftKey(true);
     } else if (strcmp("Control_L", DALIKeyString) == 0 ||
                strcmp("Control_R", DALIKeyString) == 0) {
-        kdata.setCtrlKey();
+        kdata.setCtrlKey(true);
     } else if (strcmp("Alt_L", DALIKeyString) == 0 ||
                strcmp("Alt_R", DALIKeyString) == 0) {
-        kdata.setAltKey();
+        kdata.setAltKey(true);
     }
 
     return kdata;
@@ -212,13 +214,6 @@ bool needToInitMainThread()
 
 void* mainThread(void* data)
 {
-    volatile int stack = 0;
-
-    GC_stack_base sb;
-    sb.mem_base = (void*)&stack;
-    GC_allow_register_threads();
-    GC_register_my_thread(&sb);
-
     g_MainLoopAlive = true;
     pthread_mutex_unlock(g_initMutex);
     while (true) {
@@ -273,15 +268,15 @@ public:
         if (TO_STARFISH(m_instance) != nullptr && m_isInit) {
             if (((StarFish::StarFish*)m_instance->m_starfish)) {
                 int bufferIdx = ((StarFish::StarFish*)m_instance->m_starfish)
-                                    ->frameBufferUpdate();
+                                    ->updateFrameBuffer();
                 if (bufferIdx == 1) {
                     Dali::Any source(m_surface1);
                     m_daliImg_src->SetSource(source);
-                    Dali::Stage::GetCurrent().KeepRendering(0.0f);
+                    Dali::Stage::GetCurrent().KeepRendering(0.1f);
                 } else if (bufferIdx == 2) {
                     Dali::Any source(m_surface2);
                     m_daliImg_src->SetSource(source);
-                    Dali::Stage::GetCurrent().KeepRendering(0.0f);
+                    Dali::Stage::GetCurrent().KeepRendering(0.1f);
                 }
             }
         }
@@ -334,7 +329,7 @@ public:
                             StarFish::StarFish* m_sf = d->starfish;
                             StarFish::MouseData mouseData = d->data;
                             m_sf->platformWindow()->dispatchMouseEvent(
-                                StarFish::PlatformWindow::MouseEventDown,
+                                StarFish::MouseEventKind::MouseEventDown,
                                 mouseData);
                             delete d;
                         },
@@ -359,7 +354,7 @@ public:
                             StarFish::StarFish* m_sf = d->starfish;
                             StarFish::MouseData mouseData = d->data;
                             m_sf->platformWindow()->dispatchMouseEvent(
-                                StarFish::PlatformWindow::MouseEventUp,
+                                StarFish::MouseEventKind::MouseEventUp,
                                 mouseData);
                             delete d;
                         },
@@ -386,7 +381,7 @@ public:
                             StarFish::StarFish* m_sf = d->starfish;
                             StarFish::MouseData mouseData = d->data;
                             m_sf->platformWindow()->dispatchMouseEvent(
-                                StarFish::PlatformWindow::MouseEventMove,
+                                StarFish::MouseEventKind::MouseEventMove,
                                 mouseData);
                             delete d;
                         },
@@ -435,7 +430,7 @@ public:
                     StarFish::StarFish* m_sf = d->starfish;
                     StarFish::MouseData mouseData = d->data;
                     m_sf->platformWindow()->dispatchMouseEvent(
-                        StarFish::PlatformWindow::MouseEventMove, mouseData);
+                        StarFish::MouseEventKind::MouseEventMove, mouseData);
                     delete d;
                 },
                 d);
@@ -455,18 +450,19 @@ public:
             return;
         }
 
-        StarFish::KeyboardData kdata(StarFish::KeyValue::UnidentifiedKey);
+        StarFish::PlatformKeyEventData kdata(
+            StarFish::KeyValue::UnidentifiedKey);
         if (32 < event.keyPressed.c_str()[0] &&
             127 > event.keyPressed.c_str()[0]) {
-            kdata = StarFish::KeyboardData(
+            kdata = StarFish::PlatformKeyEventData(
                 (StarFish::KeyValue)event.keyPressed.c_str()[0]);
         } else {
-            kdata = DaliEventKeyToKeyboardData(event.keyPressedName.c_str(),
-                                               event.keyModifier & 1);
+            kdata = DaliEventKeyToPlatformKeyEventData(
+                event.keyPressedName.c_str(), event.keyModifier & 1);
         }
         struct dummy {
             StarFish::StarFish* starfish;
-            StarFish::KeyboardData data;
+            StarFish::PlatformKeyEventData data;
         };
         dummy* d = new dummy;
         d->starfish = TO_STARFISH(m_instance);
@@ -482,12 +478,12 @@ public:
                     [](size_t, void* data) {
                         dummy* d = (dummy*)data;
                         StarFish::StarFish* m_sf = d->starfish;
-                        StarFish::KeyboardData keyData = d->data;
+                        StarFish::PlatformKeyEventData keyData = d->data;
                         StarFish::StarFishEnterer enter(m_sf);
                         m_sf->platformWindow()->dispatchKeyEvent(
-                            StarFish::PlatformWindow::KeyEventDown, keyData);
+                            StarFish::KeyEventKind::KeyEventDown, keyData);
                         m_sf->platformWindow()->dispatchKeyEvent(
-                            StarFish::PlatformWindow::KeyEventPress, keyData);
+                            StarFish::KeyEventKind::KeyEventPress, keyData);
                         delete d;
                     },
                     d);
@@ -502,10 +498,10 @@ public:
                     [](size_t, void* data) {
                         dummy* d = (dummy*)data;
                         StarFish::StarFish* m_sf = d->starfish;
-                        StarFish::KeyboardData keyData = d->data;
+                        StarFish::PlatformKeyEventData keyData = d->data;
                         StarFish::StarFishEnterer enter(m_sf);
                         m_sf->platformWindow()->dispatchKeyEvent(
-                            StarFish::PlatformWindow::KeyEventUp, keyData);
+                            StarFish::KeyEventKind::KeyEventUp, keyData);
                         delete d;
                     },
                     d);
@@ -529,6 +525,8 @@ public:
 
     Dali::NativeImageSourcePtr m_daliImg_src;
     Dali::NativeImage m_daliImg;
+#else
+    Dali::BufferImage m_daliImg;
 #endif
 };
 #define TO_CONTROLLER(instance) ((StarFishController*)instance->m_data)
@@ -642,10 +640,12 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
 
     starFishControl->m_mainView =
         Dali::Toolkit::ImageView::New(starFishControl->m_daliImg);
+#else
+    starFishControl->m_daliImg =
+        Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
+    starFishControl->m_mainView =
+        Dali::Toolkit::ImageView::New(starFishControl->m_daliImg);
 #endif
-    starFishControl->m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
-    starFishControl->m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
-    starFishControl->m_mainView.SetPosition(0, 0);
     Dali::Stage::GetCurrent().Add(starFishControl->m_mainView);
 
     starFishControl->m_width = width;
@@ -716,6 +716,7 @@ extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(
     };
     dummy* d = new dummy;
     d->starfish = TO_STARFISH(instance);
+
     strcpy(d->data, path);
     TO_STARFISH(instance)
         ->messageLoop()
@@ -724,7 +725,7 @@ extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(
             [](size_t, void* data) {
                 dummy* d = (dummy*)data;
                 StarFish::StarFish* m_sf = d->starfish;
-                StarFishEnterer enter(m_sf);
+                StarFish::StarFishEnterer enter(m_sf);
                 m_sf->loadHTMLDocument(
                     StarFish::String::fromUTF8(&(d->data)[0]));
                 delete d;

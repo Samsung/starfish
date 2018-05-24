@@ -59,7 +59,8 @@ public:
     void releaseNativeResources()
     {
 #if defined(STARFISH_TIZEN)
-        free(s->m_internalBuffer);
+#else
+        free(m_internalBuffer);
 #endif
     }
     WindowImplGB(StarFish* sf, int32_t width, int32_t height)
@@ -68,12 +69,13 @@ public:
         , m_height(height)
         , m_internalBuffer(nullptr)
         , m_rendingLockMutex(new Mutex())
+        , m_didPaintingOrCompositing(true)
     {
         m_renderingAnimator = 0;
         m_renderingIdlerData = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
-        initBuffer();
+        prepareBuffer();
 
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
@@ -113,7 +115,7 @@ public:
         m_internalBuffer = nullptr;
         m_width = w;
         m_height = h;
-        initBuffer();
+        prepareBuffer();
 
         PlatformWindow::resizeTo(w, h);
     }
@@ -124,39 +126,46 @@ public:
         return nullptr;
     }
 
-    void initBuffer()
+    void prepareBuffer()
     {
+        if (m_didPaintingOrCompositing) {
 #if defined(STARFISH_TIZEN)
-        m_internalBuffer = m_starFish->frameBuffer();
+            m_internalBuffer = m_starFish->frameBuffer();
 #else
-        if (m_internalBuffer == nullptr)
-            m_internalBuffer = malloc(m_width * m_height * sizeof(uint32_t));
+            if (m_internalBuffer == nullptr)
+                m_internalBuffer =
+                    malloc(m_width * m_height * sizeof(uint32_t));
 #endif
-        m_stride = m_width * 4;
-        if (m_cairo) {
-            cairo_destroy(m_cairo);
+            m_stride = m_width * 4;
+            if (m_cairo) {
+                cairo_destroy(m_cairo);
+            }
+            if (m_surface) {
+                cairo_surface_destroy(m_surface);
+            }
+            m_surface = cairo_image_surface_create_for_data(
+                (unsigned char*)m_internalBuffer, CAIRO_FORMAT_ARGB32, m_width,
+                m_height, m_stride);
+            m_cairo = cairo_create(m_surface);
         }
-        if (m_surface) {
-            cairo_surface_destroy(m_surface);
-        }
-        m_surface = cairo_image_surface_create_for_data(
-            (unsigned char*)m_internalBuffer, CAIRO_FORMAT_ARGB32, m_width,
-            m_height, m_stride);
-        m_cairo = cairo_create(m_surface);
     }
 
     void flushBuffer()
     {
+        if (m_didPaintingOrCompositing) {
 #if defined(STARFISH_TIZEN)
-        m_starFish->setNeedsUpdate();
+            m_starFish->setNeedsUpdate();
+
 #elif defined(STARFISH_WINDOWS)
-        PostMessage(NULL, WM_USER, 0, 0);
+            PostMessage(NULL, WM_USER, 0, 0);
 #else
-        memcpy(m_starFish->frameBuffer(), m_internalBuffer,
-               m_width * m_height * sizeof(uint32_t));
-        m_starFish->setNeedsUpdate();
+            memcpy(m_starFish->frameBuffer(), m_internalBuffer,
+                   m_width * m_height * sizeof(uint32_t));
+            m_starFish->setNeedsUpdate();
 #endif
+        }
     }
+
     virtual void* drawingBufferAddress()
     {
         return m_internalBuffer;
@@ -185,6 +194,7 @@ public:
     void* m_internalBuffer;
     size_t m_stride;
     Mutex* m_rendingLockMutex;
+    bool m_didPaintingOrCompositing;
 
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
@@ -411,12 +421,12 @@ void WebView::setNeedsRendering()
             WindowImplGB* wnd = (WindowImplGB*)data;
             StarFishEnterer enter(wnd->starFish());
             {
-                Locker<Mutex> l(*((WindowImplGB*)wnd)->m_rendingLockMutex);
-                ((WindowImplGB*)wnd)->initBuffer();
-                wnd->rendering();
-                ((WindowImplGB*)wnd)->m_renderingAnimator = 0;
-                ((WindowImplGB*)wnd)->m_renderingIdlerData = nullptr;
-                ((WindowImplGB*)wnd)->flushBuffer();
+                Locker<Mutex> l(*(wnd)->m_rendingLockMutex);
+                wnd->prepareBuffer();
+                wnd->m_didPaintingOrCompositing = wnd->rendering();
+                wnd->m_renderingAnimator = 0;
+                wnd->m_renderingIdlerData = nullptr;
+                wnd->flushBuffer();
             }
         },
         starFish()->platformWindow());

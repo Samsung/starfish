@@ -184,7 +184,6 @@
                         '-lrt',
                         '-ldl',
                         '-lcapi-location-manager',
-                        '-Wl,-soname,liblightweight-web-engine.so',
                     ],
                 }],
                 ['touchUi=="1"', {
@@ -305,6 +304,7 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
+                    '-Wl,-soname,liblightweight-web-engine.so',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl.tizen',
@@ -336,6 +336,7 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
+                    '-Wl,-soname,liblightweight-web-engine.so',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.tizen',
@@ -343,7 +344,7 @@
             }],
             ['platform=="linux" and backend=="dali"', {
                 'defines_extra': [
-                    'STARFISH_DALI','GC_THREADS'
+                    'STARFISH_DALI'
                 ],
                 'deps_extra': [
                     './build.dep.gyp:dali.x64',
@@ -360,10 +361,9 @@
             }],
             ['platform=="tizen" and backend=="dali"', {
                 'defines_extra': [
-                    'STARFISH_DALI','GC_THREADS'
+                    'STARFISH_DALI'
                 ],
                 'cflags_extra': [
-                    '-fno-rtti',
                     '-Wno-format-nonliteral',
                 ],
                 'deps_extra': [
@@ -377,7 +377,8 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
-                    '-pthread',
+                    '-lpthread',
+                    '-Wl,-soname,liblightweight-web-engine-dali-plugin.so',
                 ],
             }],
             # Specific device apis are included by each department-specific gyp

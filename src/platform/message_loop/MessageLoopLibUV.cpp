@@ -72,13 +72,14 @@ MessageLoop::MessageLoop(StarFish* sf)
             {
                 MessageLoop* ml = (MessageLoop*)handle->data;
                 // TODO: need to lock following whole section
-                while (!ml->m_idlersFromOtherThread.empty()) {
+                while (!ml->m_idlersFromOtherThreadForUV.empty()) {
                     IdlerData* id = nullptr;
                     {
                         Locker<Mutex> l(*ml->m_idlersFromOtherThreadMutex);
-                        id = (IdlerData*)*ml->m_idlersFromOtherThread.begin();
-                        ml->m_idlersFromOtherThread.erase(
-                            ml->m_idlersFromOtherThread.begin());
+                        id = (IdlerData*)*ml->m_idlersFromOtherThreadForUV
+                                 .begin();
+                        ml->m_idlersFromOtherThreadForUV.erase(
+                            ml->m_idlersFromOtherThreadForUV.begin());
                     }
 
                     if (id) {
@@ -97,13 +98,14 @@ MessageLoop::MessageLoop(StarFish* sf)
         [](uv_async_t* handle) {
             {
                 MessageLoop* ml = (MessageLoop*)handle->data;
-                while (!ml->m_idlersFromOtherThread.empty()) {
+                while (!ml->m_idlersFromOtherThreadForUV.empty()) {
                     IdlerData* id = nullptr;
                     {
                         Locker<Mutex> l(*ml->m_idlersFromOtherThreadMutex);
-                        id = (IdlerData*)*ml->m_idlersFromOtherThread.begin();
-                        ml->m_idlersFromOtherThread.erase(
-                            ml->m_idlersFromOtherThread.begin());
+                        id = (IdlerData*)*ml->m_idlersFromOtherThreadForUV
+                                 .begin();
+                        ml->m_idlersFromOtherThreadForUV.erase(
+                            ml->m_idlersFromOtherThreadForUV.begin());
                     }
 
                     if (id) {
@@ -228,7 +230,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
-        m_idlersFromOtherThread.insert((size_t)id);
+        m_idlersFromOtherThreadForUV.push_back((size_t)id);
     }
 
     m_idler_thread_async_handle1.data = this;
@@ -251,7 +253,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
-        m_idlersFromOtherThread.insert((size_t)id);
+        m_idlersFromOtherThreadForUV.push_back((size_t)id);
     }
 
     m_idler_thread_async_handle2.data = this;
@@ -291,8 +293,8 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     }
 
     Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
-    auto iter2 = m_idlersFromOtherThread.begin();
-    while (iter2 != m_idlersFromOtherThread.end()) {
+    auto iter2 = m_idlersFromOtherThreadForUV.begin();
+    while (iter2 != m_idlersFromOtherThreadForUV.end()) {
         IdlerData* id = (IdlerData*)*iter2;
         if (id->m_ctx == ctx || ctx == nullptr) {
             id->m_shouldExecute = false;

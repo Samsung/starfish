@@ -66,6 +66,7 @@ protected:
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
     std::unordered_set<size_t> m_idlersFromOtherThread;
+    std::list<size_t> m_idlersFromOtherThreadForUV;
     void* m_navigateInvokeIdler;
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 public:
