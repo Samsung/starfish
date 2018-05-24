@@ -20,19 +20,19 @@ if [ "$arch" == "x64" ]; then
     ./build/build_zeromq.sh
 
     cd $STARFISH_ROOT
-    ./build/build_gc.sh
+    ./build/build_escargot.sh
 
     cd $STARFISH_ROOT
-    ./build/build_escargot.sh
+    ./build/build_gc.sh
 elif [ "$arch" == "arm" ]; then
     #cd $STARFISH_ROOT
     #./build/build_zeromq.sh tizen_obs_arm
 
     cd $STARFISH_ROOT
-    ./build/build_gc.sh tizen_obs_arm
+    ./build/build_escargot.sh tizen_obs_arm
 
     cd $STARFISH_ROOT
-    ./build/build_escargot.sh tizen_obs_arm
+    ./build/build_gc.sh tizen_obs_arm
 else
     echo "Unknown option"
 fi

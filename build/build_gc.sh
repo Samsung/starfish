@@ -19,7 +19,7 @@ COMPILER_VERSION_MINOR=4.6.4
 ###########################################################
 
 ROOT=`pwd`
-cd third_party/GCutil/bdwgc/
+cd third_party/escargot/third_party/GCutil/bdwgc/
 BDWGC_ROOT=`pwd`
 
 if [[ $INCREMENTAL == false ]]; then

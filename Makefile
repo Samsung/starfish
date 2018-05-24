@@ -413,8 +413,8 @@ ifeq ($(TYPE), lib)
 endif
 
 # escargot
-CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/GCutil/bdwgc/include/
-CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/GCutil/
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/escargot/third_party/GCutil/bdwgc/include/
+CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/escargot/third_party/GCutil/
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/src
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/include
 CXXFLAGS += -I$(ESCARGOT_SRC_ROOT)/third_party/checked_arithmetic/
@@ -433,7 +433,7 @@ else ifneq (,$(findstring tizen,$(HOST)))
   GCLIBS = $(ESCARGOT_LIB_ROOT)/third_party/bdwgc/out/tizen_$(TIZEN_VERSION)_$(TIZEN_PROFILE)/$(TIZEN_ARCH)/$(MODE).shared/.libs/libgc.a
 else ifneq (,$(findstring android,$(HOST)))
   JSLIBS = $(ESCARGOT_LIB_ROOT)/out/android/arm/interpreter/$(MODE)/libescargot.a
-  GCLIBS = $(ESCARGOT_LIB_ROOT)/third_party/GCutil/bdwgc/out/android/arm/$(MODE).shared/.libs/libgc.a
+  GCLIBS = $(ESCARGOT_LIB_ROOT)/third_party/escargot/third_party/GCutil/bdwgc/out/android/arm/$(MODE).shared/.libs/libgc.a
 endif
 
 # deviceapi

@@ -101,8 +101,8 @@ cc_library_shared {
         },
     },
     local_include_dirs: [
-        "third_party/GCutil/bdwgc/include",
-        "third_party/GCutil",
+        "third_party/escargot/third_party/GCutil/bdwgc/include",
+        "third_party/escargot/third_party/GCutil",
         "third_party/escargot/src",
         "third_party/escargot/include",
         "third_party/escargot/third_party/checked_arithmetic",
@@ -126,8 +126,8 @@ cc_library_shared {
     ],
 
     srcs: [
-        "third_party/GCutil/bdwgc/*.c",
-        "third_party/GCutil/*.cpp",
+        "third_party/escargot/third_party/GCutil/bdwgc/*.c",
+        "third_party/escargot/third_party/GCutil/*.cpp",
         "third_party/escargot/third_party/double_conversion/*.cc",
         "third_party/escargot/third_party/yarr/*.cpp",
         "third_party/escargot/src/**/*.cpp",
