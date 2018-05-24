@@ -405,15 +405,15 @@ void LengthAnimationTask::execute(float progress)
 void LengthSizeAnimationTask::attachedToElement()
 {
     STARFISH_ASSERT(m_fromValue.isLengthSize() && m_toValue.isLengthSize());
-    STARFISH_ASSERT(m_fromValue.getLengthSize().width().type() ==
-                    m_toValue.getLengthSize().width().type());
-    STARFISH_ASSERT(m_fromValue.getLengthSize().height().type() ==
-                    m_toValue.getLengthSize().height().type());
+    STARFISH_ASSERT(m_fromValue.getLengthSize()->width().type() ==
+                    m_toValue.getLengthSize()->width().type());
+    STARFISH_ASSERT(m_fromValue.getLengthSize()->height().type() ==
+                    m_toValue.getLengthSize()->height().type());
 
     AnimationTask::attachedToElement();
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
-        targetElement()->style()->setBackgroundSize(m_fromValue.getLengthSize(),
-                                                    (size_t)m_extraData);
+        targetElement()->style()->setBackgroundSize(
+            *m_fromValue.getLengthSize(), (size_t)m_extraData);
         return;
     }
 }
@@ -421,20 +421,20 @@ void LengthSizeAnimationTask::attachedToElement()
 LengthSize LengthSizeAnimationTask::interpolateFixedOrPercent(
     float progress) const
 {
-#define INTERPOLATE_LENGTHSIZE(WH)                               \
-    Length(from.WH().type(), interpolate(from.WH().numberData(), \
-                                         to.WH().numberData(), progress))
+#define INTERPOLATE_LENGTHSIZE(WH)                                 \
+    Length(from->WH().type(), interpolate(from->WH().numberData(), \
+                                          to->WH().numberData(), progress))
 
-    const LengthSize& from = m_fromValue.getLengthSize();
-    const LengthSize& to = m_toValue.getLengthSize();
-    STARFISH_ASSERT(from.width().type() != Length::Auto ||
-                    from.height().type() != Length::Auto);
-    STARFISH_ASSERT(to.width().type() != Length::Auto ||
-                    to.height().type() != Length::Auto);
+    LengthSize* from = m_fromValue.getLengthSize();
+    LengthSize* to = m_toValue.getLengthSize();
+    STARFISH_ASSERT(from->width().type() != Length::Auto ||
+                    from->height().type() != Length::Auto);
+    STARFISH_ASSERT(to->width().type() != Length::Auto ||
+                    to->height().type() != Length::Auto);
 
-    if (from.width().type() == Length::Auto) {
+    if (from->width().type() == Length::Auto) {
         return LengthSize(Length(), INTERPOLATE_LENGTHSIZE(height));
-    } else if (from.height().type() == Length::Auto) {
+    } else if (from->height().type() == Length::Auto) {
         return LengthSize(INTERPOLATE_LENGTHSIZE(width), Length());
     }
     return LengthSize(INTERPOLATE_LENGTHSIZE(width),

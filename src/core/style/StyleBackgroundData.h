@@ -79,7 +79,7 @@ public:
     {
     }
 
-    void setSize(LengthSize size)
+    void setSize(const LengthSize& size)
     {
         if (!m_size.hasLengthValue()) {
             if (size == LengthSize()) {
@@ -417,7 +417,7 @@ public:
         m_layers[assured].setSize(size);
     }
 
-    void setSize(LengthSize size, uint32_t index)
+    void setSize(const LengthSize& size, uint32_t index)
     {
         uint16_t assured = assureLayerIndexAndSize(index, m_maxLayerSize);
         m_layers[assured].setSize(size);
