@@ -21,6 +21,7 @@
 #define __LWEWebView__
 
 #include "StarFishExport.h"
+#include <functional>
 #include <string>
 
 namespace LWE {
@@ -73,8 +74,10 @@ public:
 
 class STARFISH_EXPORT WebView {
 public:
-    static WebView* Create(void* win, int x, int y, int width, int height);
     static WebView* Create(void* starFish);
+    static WebView* Create(void* win, int x, int y, int width, int height);
+    static WebView* Create(void* win, int x, int y, int width, int height,
+                           void* actor);
 
     Settings GetSettings();
     void LoadURL(std::string url);

@@ -6,7 +6,6 @@ if [[ $1 == incremental ]]; then
     INCREMENTAL=true
 fi
 
-PORT=STARFISH_EFL
 #LTO=true
 LTO=false
 #COMPILER_VERSION_MAJOR=4.9
@@ -30,14 +29,11 @@ if [[ $INCREMENTAL == false ]]; then
 fi
 
 # Common flags --------------------------------------------
-GCCONFFLAGS_COMMON=" --enable-munmap --disable-parallel-mark --enable-large-config " # --enable-large-config --enable-cplusplus"
-if [[ $PORT == STARFISH_EFL ]]; then
-    GCCONFFLAGS_COMMON+=" --disable-pthread --disable-threads "
-fi
+GCCONFFLAGS_COMMON=" --enable-munmap --disable-parallel-mark --enable-large-config --disable-pthread --disable-threads " # --enable-large-config --enable-cplusplus"
 CFLAGS_COMMON=" -g3 "
 CFLAGS_COMMON+=" -DESCARGOT "
 CFLAGS_COMMON+=" -fdata-sections -ffunction-sections " # To exclude unused code from final binary
-CFLAGS_COMMON+=" -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA " # Everything in global data is false reference
+CFLAGS_COMMON+=" -DUSE_GET_STACKBASE_FOR_MAIN -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA " # Everything in global data is false reference
 LDFLAGS_COMMON=
 
 # HOST flags : linux / wearable / mobile / tv -------------

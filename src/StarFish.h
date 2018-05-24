@@ -229,12 +229,12 @@ public:
 #if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     void registerFrameBuffer(void* framBuffer1, void* framBuffer2)
     {
-        m_frameBufffer1 = framBuffer1;
-        m_frameBufffer2 = framBuffer2;
+        m_frameBuffer1 = framBuffer1;
+        m_frameBuffer2 = framBuffer2;
     }
     void* frameBuffer();
     void setNeedsUpdate();
-    int frameBufferUpdate();
+    int updateFrameBuffer();
 #endif
     void addActiveThread(Thread* thread);
     void removeActiveThread(Thread* thread);
@@ -392,11 +392,12 @@ protected:
     int m_width;
     int m_height;
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
-    int bufferIdx;
-    int m_completBufferIdx;
-    void* m_frameBufffer1;
-    void* m_frameBufffer2;
     bool m_needsUpdate;
+    bool m_didUpdatedFrameBuffer;
+    int m_bufferIdx;
+    int m_completBufferIdx;
+    void* m_frameBuffer1;
+    void* m_frameBuffer2;
     Mutex* m_frameBufferSwitchMutex;
 #endif
 

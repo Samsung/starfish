@@ -271,8 +271,11 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_height = h;
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
     m_needsUpdate = false;
+    m_didUpdatedFrameBuffer = false;
+    m_bufferIdx = 1;
     m_completBufferIdx = 0;
-    bufferIdx = 1;
+    m_frameBuffer1 = nullptr;
+    m_frameBuffer2 = nullptr;
     m_frameBufferSwitchMutex = new Mutex();
 #endif
     registerMainThread();
@@ -377,7 +380,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 
 #endif
 
-#if defined(STARFISH_TIZEN_TV)
+#if defined(STARFISH_TIZEN_TV) && !defined(STARFISH_DALI)
     Initialize_CursorMod();
     Ecore_Wl_Window* wl_window =
         elm_win_wl_window_get((Evas_Object*)m_nativeHandle);
@@ -461,6 +464,15 @@ StarFish::~StarFish()
     } else {
         g_singletonInstanceCnt--;
     }
+
+#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
+    if (m_frameBuffer1) {
+        free(m_frameBuffer1);
+    }
+    if (m_frameBuffer2) {
+        free(m_frameBuffer2);
+    }
+#endif
 }
 
 void StarFish::run()
@@ -596,39 +608,42 @@ void* StarFish::frameBuffer()
 {
     {
         Locker<Mutex> l(*m_frameBufferSwitchMutex);
-        if (m_completBufferIdx == 0) {
-            bufferIdx == 2 ? bufferIdx = 1 : bufferIdx = 2;
+        if (m_completBufferIdx == 0 || m_didUpdatedFrameBuffer) {
+            m_bufferIdx == 2 ? m_bufferIdx = 1 : m_bufferIdx = 2;
+            m_didUpdatedFrameBuffer = false;
         }
     }
-    if (bufferIdx == 2)
-        return m_frameBufffer2;
-    return m_frameBufffer1;
+    if (m_bufferIdx == 2) {
+        return m_frameBuffer2;
+    }
+    return m_frameBuffer1;
 }
 void StarFish::setNeedsUpdate()
 {
     Locker<Mutex> l(*m_frameBufferSwitchMutex);
-    m_completBufferIdx = bufferIdx;
+    m_completBufferIdx = m_bufferIdx;
 }
-int StarFish::frameBufferUpdate()
+int StarFish::updateFrameBuffer()
 {
     Locker<Mutex> l(*m_frameBufferSwitchMutex);
     int result = 0;
     if (m_completBufferIdx != 0) {
         result = m_completBufferIdx;
         m_completBufferIdx = 0;
+        m_didUpdatedFrameBuffer = true;
     }
     return result;
 }
 #else
 void* StarFish::frameBuffer()
 {
-    return m_frameBufffer1;
+    return m_frameBuffer1;
 }
 void StarFish::setNeedsUpdate()
 {
     m_needsUpdate = true;
 }
-int StarFish::frameBufferUpdate()
+int StarFish::updateFrameBuffer()
 {
     if (m_needsUpdate) {
         m_needsUpdate = false;

@@ -37,7 +37,7 @@
 
 #include <EscargotPublic.h>
 
-#ifdef PORT_WINDOW_BACKEND_ANDROID
+#if defined(PORT_WINDOW_BACKEND_ANDROID)
 #include <jni.h>
 #include <android/log.h>
 #include <android/bitmap.h>
@@ -82,6 +82,19 @@ extern unsigned char* g_androidBitmapAddress;
 extern size_t g_androidBitmapWidth;
 extern size_t g_androidBitmapHeight;
 extern size_t g_androidBitmapStride;
+
+#elif defined(STARFISH_DALI)
+#include <dali-toolkit/dali-toolkit.h>
+#include <dali-toolkit/devel-api/controls/web-view-lite/web-view-lite.h>
+#include <tbm_surface.h>
+#include <uv.h>
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/threading/Locker.h"
+#include "platform/event/PlatformKeyEventData.h"
+
+uv_async_t gLauncherHandle;
+pthread_mutex_t* gMutex;
+bool gIsAliveMainLoop = false;
 
 #endif
 
@@ -229,6 +242,570 @@ WebView* WebView::Create(void* win, int x, int y, int width, int height)
     return new WebView(starfish);
 }
 
+#if defined(STARFISH_DALI)
+StarFish::PlatformKeyEventData DaliEventKeyToKeyboardData(
+    const char* DALIKeyString, bool isShiftPressed)
+{
+    StarFish::KeyValue keyValue = StarFish::KeyValue::UnidentifiedKey;
+    if (strcmp("Left", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::ArrowLeftKey;
+    } else if (strcmp("Right", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::ArrowRightKey;
+    } else if (strcmp("Up", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::ArrowUpKey;
+    } else if (strcmp("Down", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::ArrowDownKey;
+    } else if (strcmp("space", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::SpaceKey;
+    } else if (strcmp("Return", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::EnterKey;
+    } else if (strcmp("BackSpace", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::BackspaceKey;
+    } else if (strcmp("Escape", DALIKeyString) == 0) {
+        keyValue = StarFish::KeyValue::EscapeKey;
+    } else if (strcmp("minus", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::MinusMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::UnderScoreMarkKey;
+        }
+    } else if (strcmp("equal", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::PlusMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::EqualitySignKey;
+        }
+    } else if (strcmp("bracketleft", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::LeftCurlyBracketMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::LeftSquareBracketKey;
+        }
+    } else if (strcmp("bracketright", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::RightCurlyBracketMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::RightSquareBracketKey;
+        }
+    } else if (strcmp("semicolon", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::ColonMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::SemiColonMarkKey;
+        }
+    } else if (strcmp("apostrophe", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::DoubleQuoteMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::SingleQuoteMarkKey;
+        }
+    } else if (strcmp("comma", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::LessThanMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::CommaMarkKey;
+        }
+    } else if (strcmp("period", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::GreaterThanSignKey;
+        } else {
+            keyValue = StarFish::KeyValue::PeriodKey;
+        }
+    } else if (strcmp("slash", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = StarFish::KeyValue::QuestionMarkKey;
+        } else {
+            keyValue = StarFish::KeyValue::SlashKey;
+        }
+    } else if (strlen(DALIKeyString) == 1) {
+        char ch = DALIKeyString[0];
+        if (ch >= '0' && ch <= '9') {
+            if (isShiftPressed) {
+                switch (ch) {
+                case '1':
+                    keyValue = StarFish::KeyValue::ExclamationMarkKey;
+                    break;
+                case '2':
+                    keyValue = StarFish::KeyValue::AtMarkKey;
+                    break;
+                case '3':
+                    keyValue = StarFish::KeyValue::SharpMarkKey;
+                    break;
+                case '4':
+                    keyValue = StarFish::KeyValue::DollarMarkKey;
+                    break;
+                case '5':
+                    keyValue = StarFish::KeyValue::PercentMarkKey;
+                    break;
+                case '6':
+                    keyValue = StarFish::KeyValue::CaretMarkKey;
+                    break;
+                case '7':
+                    keyValue = StarFish::KeyValue::AmpersandMarkKey;
+                    break;
+                case '8':
+                    keyValue = StarFish::KeyValue::AsteriskMarkKey;
+                    break;
+                case '9':
+                    keyValue = StarFish::KeyValue::LeftParenthesisMarkKey;
+                    break;
+                case '0':
+                    keyValue = StarFish::KeyValue::RightParenthesisMarkKey;
+                    break;
+                }
+            } else {
+                keyValue = (StarFish::KeyValue)(StarFish::KeyValue::Digit0Key +
+                                                ch - '0');
+            }
+        } else if (ch >= 'a' && ch <= 'z') {
+            int kv = StarFish::KeyValue::LowerAKey + ch - 'a';
+            if (isShiftPressed) {
+                kv -= ('z' - 'a');
+                kv -= 7;
+            }
+            keyValue = (StarFish::KeyValue)kv;
+        }
+    }
+#ifdef STARFISH_TIZEN_TV
+    if ((strcmp("XF86Red", DALIKeyString) == 0)) {
+        keyValue = StarFish::KeyValue::TabKey;
+    }
+#endif
+    StarFish::PlatformKeyEventData kdata(keyValue);
+    if (strcmp("Shift_L", DALIKeyString) == 0 ||
+        strcmp("Shift_R", DALIKeyString) == 0) {
+        kdata.setShiftKey(true);
+    } else if (strcmp("Control_L", DALIKeyString) == 0 ||
+               strcmp("Control_R", DALIKeyString) == 0) {
+        kdata.setCtrlKey(true);
+    } else if (strcmp("Alt_L", DALIKeyString) == 0 ||
+               strcmp("Alt_R", DALIKeyString) == 0) {
+        kdata.setAltKey(true);
+    }
+
+    return kdata;
+}
+
+class DaliPluginClient : public Dali::ConnectionTracker {
+public:
+    DaliPluginClient(int x, int y, int w, int h, void* actor)
+        : m_isInit(false)
+        , m_isMouseLbuttonDown(false)
+        , m_lastClickedTimestamp(0)
+        , m_clickedCount(0)
+        , m_x(x)
+        , m_y(y)
+        , m_w(w)
+        , m_h(h)
+        , m_starFish(nullptr)
+    {
+#if defined(STARFISH_TIZEN)
+        m_surface1 = tbm_surface_create(w, h, TBM_FORMAT_ARGB8888);
+        m_surface2 = tbm_surface_create(w, h, TBM_FORMAT_ARGB8888);
+        if (tbm_surface_map(m_surface1,
+                            TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
+                            &m_surface_info1) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Fail to map tbm_surface\n");
+            return;
+        }
+        if (tbm_surface_map(m_surface2,
+                            TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
+                            &m_surface_info2) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Fail to map tbm_surface\n");
+            return;
+        }
+
+        Dali::Any source(m_surface1);
+        mImgSrc = Dali::NativeImageSource::New(source);
+        mImg = Dali::NativeImage::New(*mImgSrc);
+#else
+        mImg = Dali::BufferImage::New(w, h, Dali::Pixel::BGRA8888);
+#endif
+        mMainImgView = (Dali::Toolkit::ImageView*)actor;
+        mMainImgView->SetImage(mImg);
+
+        mMainImgView->TouchSignal().Connect(
+            this, &DaliPluginClient::TouchEventHandler);
+        //        mMainImgView->HoveredSignal().Connect(this,
+        //        &DaliWebViewClient::HoverEventHandler);
+        Dali::Stage::GetCurrent().KeyEventSignal().Connect(
+            this, &DaliPluginClient::KeyEventHandler);
+    }
+    ~DaliPluginClient()
+    {
+#if defined(STARFISH_TIZEN)
+        if (tbm_surface_unmap(m_surface1) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Failed to unmap tbm_surface\n");
+        }
+        if (tbm_surface_unmap(m_surface2) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Failed to unmap tbm_surface\n");
+        }
+        if (tbm_surface_destroy(m_surface1) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Failed to destroy tbm_surface\n");
+        }
+        if (tbm_surface_destroy(m_surface2) != TBM_SURFACE_ERROR_NONE) {
+            STARFISH_LOG_INFO("Failed to destroy tbm_surface\n");
+        }
+#endif
+    }
+
+    bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data)
+    {
+        if (m_starFish == nullptr || !m_isInit) {
+            return true;
+        }
+        if (!(m_starFish->platformWindow() &&
+              m_starFish->platformWindow()->webView() &&
+              m_starFish->platformWindow()->webView()->mainBrowsingContext())) {
+            return true;
+        }
+
+        size_t pointCount = data.GetPointCount();
+        if (pointCount == 1) {
+            // Single touch event
+
+            struct dummy {
+                StarFish::StarFish* starfish;
+                StarFish::MouseData data;
+                StarFish::MouseEventKind kind;
+            };
+            dummy* d = new dummy;
+            d->starfish = m_starFish;
+
+            Dali::PointState::Type pointState = data.GetState(0);
+            const Dali::Vector2& screen = data.GetLocalPosition(0);
+
+            if (pointState == Dali::PointState::DOWN) {
+                StarFish::StarFishEnterer enter(m_starFish);
+                StarFish::MouseData data(
+                    StarFish::MouseData::MouseButtonValue::LeftButton,
+                    StarFish::MouseData::MouseButtonsValue::LeftButtonDown,
+                    screen.x * m_starFish->screenInfo().deviceScaleFactor,
+                    screen.y * m_starFish->screenInfo().deviceScaleFactor, 0);
+                d->data = data;
+                d->kind = StarFish::MouseEventKind::MouseEventDown;
+                m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                    m_starFish->platformWindow()
+                        ->webView()
+                        ->mainBrowsingContext(),
+                    [](size_t, void* data) {
+                        dummy* d = (dummy*)data;
+                        StarFish::StarFish* m_sf = d->starfish;
+                        StarFish::MouseData mouseData = d->data;
+                        m_sf->platformWindow()->dispatchMouseEvent(
+                            StarFish::MouseEventKind::MouseEventDown,
+                            mouseData);
+                        delete d;
+                    },
+                    d);
+                m_isMouseLbuttonDown = true;
+            } else if (pointState == Dali::PointState::UP) {
+                StarFish::StarFishEnterer enter(m_starFish);
+                StarFish::MouseData data(
+                    StarFish::MouseData::MouseButtonValue::NoButton,
+                    StarFish::MouseData::MouseButtonsValue::NoButtonDown,
+                    screen.x * m_starFish->screenInfo().deviceScaleFactor,
+                    screen.y * m_starFish->screenInfo().deviceScaleFactor, 0);
+                d->data = data;
+                d->kind = StarFish::MouseEventKind::MouseEventUp;
+                m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                    m_starFish->platformWindow()
+                        ->webView()
+                        ->mainBrowsingContext(),
+                    [](size_t, void* data) {
+                        dummy* d = (dummy*)data;
+                        StarFish::StarFish* m_sf = d->starfish;
+                        StarFish::MouseData mouseData = d->data;
+                        m_sf->platformWindow()->dispatchMouseEvent(
+                            StarFish::MouseEventKind::MouseEventUp, mouseData);
+                        delete d;
+                    },
+                    d);
+                m_isMouseLbuttonDown = false;
+            } else {
+                StarFish::StarFishEnterer enter(m_starFish);
+                unsigned char buttons =
+                    m_isMouseLbuttonDown
+                        ? StarFish::MouseData::MouseButtonsValue::LeftButtonDown
+                        : 0;
+                StarFish::MouseData data(
+                    0, buttons,
+                    screen.x * m_starFish->screenInfo().deviceScaleFactor,
+                    screen.y * m_starFish->screenInfo().deviceScaleFactor, 0);
+
+                d->data = data;
+                m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                    m_starFish->platformWindow()
+                        ->webView()
+                        ->mainBrowsingContext(),
+                    [](size_t, void* data) {
+                        dummy* d = (dummy*)data;
+                        StarFish::StarFish* m_sf = d->starfish;
+                        StarFish::MouseData mouseData = d->data;
+                        m_sf->platformWindow()->dispatchMouseEvent(
+                            StarFish::MouseEventKind::MouseEventMove,
+                            mouseData);
+                        delete d;
+                    },
+                    d);
+            }
+        }
+        return true;
+    }
+
+    bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event)
+    {
+        if (m_starFish == nullptr || !m_isInit)
+            return true;
+        if (!(m_starFish->platformWindow() &&
+              m_starFish->platformWindow()->webView() &&
+              m_starFish->platformWindow()->webView()->mainBrowsingContext())) {
+            return true;
+        }
+
+        const Dali::Vector2& point = event.GetPoint(0).local;
+        StarFish::StarFishEnterer enter(m_starFish);
+        unsigned char buttons =
+            m_isMouseLbuttonDown
+                ? StarFish::MouseData::MouseButtonsValue::LeftButtonDown
+                : 0;
+        StarFish::MouseData data(0, buttons, point.x, point.y, 0);
+
+        struct dummy {
+            StarFish::StarFish* starfish;
+            StarFish::MouseData data;
+        };
+        dummy* d = new dummy;
+        d->starfish = m_starFish;
+        d->data = data;
+        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            m_starFish->platformWindow()->webView()->mainBrowsingContext(),
+            [](size_t, void* data) {
+                dummy* d = (dummy*)data;
+                StarFish::StarFish* m_sf = d->starfish;
+                StarFish::MouseData mouseData = d->data;
+                m_sf->platformWindow()->dispatchMouseEvent(
+                    StarFish::MouseEventKind::MouseEventMove, mouseData);
+                delete d;
+            },
+            d);
+
+        return true;
+    }
+
+    void KeyEventHandler(const Dali::KeyEvent& event)
+    {
+        if (m_starFish == nullptr || !m_isInit)
+            return;
+        if (!(m_starFish->platformWindow() &&
+              m_starFish->platformWindow()->webView() &&
+              m_starFish->platformWindow()->webView()->mainBrowsingContext())) {
+            return;
+        }
+
+        StarFish::PlatformKeyEventData kdata(
+            StarFish::KeyValue::UnidentifiedKey);
+        if (32 < event.keyPressed.c_str()[0] &&
+            127 > event.keyPressed.c_str()[0]) {
+            kdata = StarFish::PlatformKeyEventData(
+                (StarFish::KeyValue)event.keyPressed.c_str()[0]);
+        } else {
+            kdata = DaliEventKeyToKeyboardData(event.keyPressedName.c_str(),
+                                               event.keyModifier & 1);
+        }
+        struct dummy {
+            StarFish::StarFish* starfish;
+            StarFish::PlatformKeyEventData data;
+        };
+        dummy* d = new dummy;
+        d->starfish = m_starFish;
+        d->data = kdata;
+        if (event.state == Dali::KeyEvent::Down) {
+            m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                m_starFish->platformWindow()->webView()->mainBrowsingContext(),
+                [](size_t, void* data) {
+                    dummy* d = (dummy*)data;
+                    StarFish::StarFish* m_sf = d->starfish;
+                    StarFish::PlatformKeyEventData keyData = d->data;
+                    StarFish::StarFishEnterer enter(m_sf);
+                    m_sf->platformWindow()->dispatchKeyEvent(
+                        StarFish::KeyEventKind::KeyEventDown, keyData);
+                    m_sf->platformWindow()->dispatchKeyEvent(
+                        StarFish::KeyEventKind::KeyEventPress, keyData);
+                    delete d;
+                },
+                d);
+        } else if (event.state == Dali::KeyEvent::Up) {
+            m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                m_starFish->platformWindow()->webView()->mainBrowsingContext(),
+                [](size_t, void* data) {
+                    dummy* d = (dummy*)data;
+                    StarFish::StarFish* m_sf = d->starfish;
+                    StarFish::PlatformKeyEventData keyData = d->data;
+                    StarFish::StarFishEnterer enter(m_sf);
+                    m_sf->platformWindow()->dispatchKeyEvent(
+                        StarFish::KeyEventKind::KeyEventUp, keyData);
+                    delete d;
+                },
+                d);
+        }
+    }
+
+    void SetStarFish(StarFish::StarFish* starFish)
+    {
+        m_starFish = starFish;
+    }
+
+#if defined(STARFISH_TIZEN)
+    bool UpdateBuffer()
+    {
+        if (m_isInit) {
+            if (m_starFish != nullptr) {
+                int bufferIdx = m_starFish->updateFrameBuffer();
+                if (bufferIdx == 1) {
+                    Dali::Any source(m_surface1);
+                    ((Dali::NativeImageSourcePtr)mImgSrc)->SetSource(source);
+                    Dali::Stage::GetCurrent().KeepRendering(0.01f);
+                } else if (bufferIdx == 2) {
+                    Dali::Any source(m_surface2);
+                    ((Dali::NativeImageSourcePtr)mImgSrc)->SetSource(source);
+                    Dali::Stage::GetCurrent().KeepRendering(0.01f);
+                }
+            }
+        }
+        return true;
+    }
+#else
+    bool UpdateBuffer()
+    {
+        if (m_isInit && m_starFish != nullptr &&
+            m_starFish->updateFrameBuffer()) {
+            mImg.Update();
+        }
+        return true;
+    }
+#endif
+    bool m_isInit;
+    bool m_isMouseLbuttonDown;
+    uint32_t m_lastClickedTimestamp;
+    uint32_t m_clickedCount;
+    int m_x, m_y, m_w, m_h;
+
+#if defined(STARFISH_TIZEN)
+    tbm_surface_h m_surface1;
+    tbm_surface_h m_surface2;
+    tbm_surface_info_s m_surface_info1;
+    tbm_surface_info_s m_surface_info2;
+
+    Dali::NativeImageSourcePtr mImgSrc;
+    Dali::NativeImage mImg;
+#else
+    Dali::BufferImage mImg;
+#endif
+    Dali::Toolkit::ImageView* mMainImgView;
+    Dali::Timer m_timer;
+
+    StarFish::StarFish* m_starFish;
+};
+
+static bool isAliveMainThread()
+{
+    return gIsAliveMainLoop;
+}
+
+struct mock {
+public:
+    void* webView;
+    void* client;
+};
+
+static void* startMainThread(void* data)
+{
+    uv_async_init(uv_default_loop(), &gLauncherHandle, [](uv_async_t* handle) {
+        mock* mk = (mock*)handle->data;
+        DaliPluginClient* client = (DaliPluginClient*)mk->client;
+
+        WebView* webView = WebView::Create(nullptr, client->m_x, client->m_y,
+                                           client->m_w, client->m_h);
+        StarFish::StarFish* starFish =
+            (StarFish::StarFish*)webView->getInternalPtr();
+
+        pthread_mutex_unlock(gMutex);
+
+        mk->webView = webView;
+        client->SetStarFish(starFish);
+
+#if defined(STARFISH_TIZEN)
+        starFish->registerFrameBuffer(client->m_surface_info1.planes[0].ptr,
+                                      client->m_surface_info2.planes[0].ptr);
+#else
+        starFish->registerFrameBuffer((void*)client->mImg.GetBuffer(), nullptr);
+#endif
+
+        starFish->run();
+
+        uv_close((uv_handle_t*)handle, nullptr);
+    });
+
+    gIsAliveMainLoop = true;
+    pthread_mutex_unlock(gMutex);
+    while (true) {
+        uv_run(uv_default_loop(), UV_RUN_ONCE);
+    }
+    return NULL;
+}
+
+static void initMainThread(void* (*f)(void*))
+{
+    gMutex = new pthread_mutex_t;
+    pthread_mutex_init(gMutex, NULL);
+
+    pthread_mutex_lock(gMutex);
+    pthread_t t;
+    pthread_attr_t attr;
+    pthread_attr_init(&attr);
+    pthread_create(&t, &attr, f, NULL);
+    pthread_mutex_lock(gMutex);
+    pthread_mutex_unlock(gMutex);
+}
+
+#endif
+
+WebView* WebView::Create(void* win, int x, int y, int w, int h, void* actor)
+{
+#if defined(STARFISH_DALI)
+
+    DaliPluginClient* client = new DaliPluginClient(x, y, w, h, actor);
+
+    if (!isAliveMainThread()) {
+        initMainThread(&startMainThread);
+    }
+
+    pthread_mutex_lock(gMutex);
+
+    mock* mk = new mock;
+    mk->client = client;
+    gLauncherHandle.data = mk;
+    uv_async_send(&gLauncherHandle);
+
+    pthread_mutex_lock(gMutex);
+    pthread_mutex_unlock(gMutex);
+
+    client->m_isInit = true;
+    client->m_timer = Dali::Timer::New(20);
+    client->m_timer.TickSignal().Connect(client,
+                                         &DaliPluginClient::UpdateBuffer);
+    client->m_timer.Start();
+
+    WebView* wv = (WebView*)mk->webView;
+    delete mk;
+
+    return wv;
+#else
+    return Create(win, x, y, w, h);
+#endif
+}
+
 WebView* WebView::Create(void* starFish)
 {
     return new WebView(starFish);
@@ -254,8 +831,32 @@ Settings WebView::GetSettings()
 void WebView::LoadURL(std::string url)
 {
     STARFISH_ASSERT(m_starfish);
+#if defined(STARFISH_DALI)
+    struct dummy {
+        StarFish::StarFish* starfish;
+        char data[128];
+    };
+    dummy* d = new dummy;
+    d->starfish = TO_STARFISH(m_starfish);
+
+    strcpy(d->data, url.c_str());
+    TO_STARFISH(m_starfish)
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(
+            nullptr,
+            [](size_t, void* data) {
+                dummy* d = (dummy*)data;
+                StarFish::StarFish* starFish = d->starfish;
+                StarFish::StarFishEnterer enter(starFish);
+                starFish->loadHTMLDocument(
+                    StarFish::String::fromUTF8(&(d->data)[0]));
+                delete d;
+            },
+            d);
+#else
     TO_STARFISH(m_starfish)
         ->loadHTMLDocument(StarFish::String::fromUTF8(url.data()));
+#endif
 }
 
 std::string WebView::GetURL()
@@ -394,8 +995,13 @@ void WebView::ClearHistory()
 
 void WebView::Destroy()
 {
+#if defined(STARFISH_DALI)
     STARFISH_ASSERT(m_starfish);
     delete TO_STARFISH(m_starfish);
+#else
+    STARFISH_ASSERT(m_starfish);
+    delete TO_STARFISH(m_starfish);
+#endif
 }
 
 void WebView::SetSettings(LWE::Settings setttings)
