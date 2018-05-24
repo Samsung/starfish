@@ -306,23 +306,23 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so',
-                        'third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1',
-                        'third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1.0.3',
+                        'third_party/escargot/third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so',
+                        'third_party/escargot/third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1',
+                        'third_party/escargot/third_party/GCutil/bdwgc/out/linux/x64/release.shared/.libs/libgc.so.1.0.3',
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
             ],
             'include_dirs': [
-                'third_party/GCutil/bdwgc/include/',
+                'third_party/escargot/third_party/GCutil/bdwgc/include/',
             ],
             'sources': [
-                '<!@(find third_party/GCutil -maxdepth 1 -name *.cpp)',
+                '<!@(find third_party/escargot/third_party/GCutil -maxdepth 1 -name *.cpp)',
             ],
             'all_dependent_settings': {
                 'include_dirs': [
-                    'third_party/GCutil/bdwgc/include',
-                    'third_party/GCutil',
+                    'third_party/escargot/third_party/GCutil/bdwgc/include',
+                    'third_party/escargot/third_party/GCutil',
                 ],
             },
             'direct_dependent_settings': {
@@ -337,23 +337,23 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so',
-                        'third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1',
-                        'third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1.0.3',
+                        'third_party/escargot/third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so',
+                        'third_party/escargot/third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1',
+                        'third_party/escargot/third_party/GCutil/bdwgc/out/linux/x64/debug.shared/.libs/libgc.so.1.0.3',
                     ],
                     'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
             ],
             'include_dirs': [
-                'third_party/GCutil/bdwgc/include/',
+                'third_party/escargot/third_party/GCutil/bdwgc/include/',
             ],
             'sources': [
-                '<!@(find third_party/GCutil -maxdepth 1 -name *.cpp)',
+                '<!@(find third_party/escargot/third_party/GCutil -maxdepth 1 -name *.cpp)',
             ],
             'all_dependent_settings': {
                 'include_dirs': [
-                    'third_party/GCutil/bdwgc/include',
-                    'third_party/GCutil',
+                    'third_party/escargot/third_party/GCutil/bdwgc/include',
+                    'third_party/escargot/third_party/GCutil',
                 ],
             },
             'direct_dependent_settings': {
@@ -368,16 +368,16 @@
             'copies': [
                 {
                     'files': [
-                        './third_party/GCutil/bdwgc/out/tizen_obs/arm/release.shared/.libs/libgc.a'
+                        './third_party/escargot/third_party/GCutil/bdwgc/out/tizen_obs/arm/release.shared/.libs/libgc.a'
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },
             ],
             'include_dirs': [
-                'third_party/GCutil/bdwgc/include/',
+                'third_party/escargot/third_party/GCutil/bdwgc/include/',
             ],
             'sources': [
-                '<!@(find third_party/GCutil -maxdepth 1 -name *.cpp)',
+                '<!@(find third_party/escargot/third_party/GCutil -maxdepth 1 -name *.cpp)',
             ],
             'direct_dependent_settings': {
                 'libraries': [
@@ -386,8 +386,8 @@
             },
             'all_dependent_settings': {
                 'include_dirs': [
-                    'third_party/GCutil/bdwgc/include',
-                    'third_party/GCutil',
+                    'third_party/escargot/third_party/GCutil/bdwgc/include',
+                    'third_party/escargot/third_party/GCutil',
                 ],
             },
         },
