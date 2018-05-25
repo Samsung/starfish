@@ -22,6 +22,7 @@
             'include_dirs': [
                 '<(starfish_root)/src',
                 '<(starfish_root)/inc',
+                '<(starfish_root)/third_party/escargot/third_party/rapidjson/include',
             ],
             'libraries': [
             ],
