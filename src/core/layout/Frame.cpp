@@ -32,6 +32,7 @@
 #include "core/layout/FrameFlexibleBox.h"
 #include "core/layout/FrameGridBox.h"
 #include "core/layout/FrameTableObjectBox.h"
+#include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
 #include "core/style/CalcData.h"
@@ -48,7 +49,8 @@ FrameBlockBox* blockContainer(Frame* currentFrame)
     }
 
     while (true) {
-        if (f->isFrameBlockBox() && !f->isAnonymous()) {
+        if ((f->isFrameBlockBox() && !f->isAnonymous()) ||
+            f->isFrameTableCellBox()) {
             return f->asFrameBlockBox();
         }
         f = f->layoutParent();

@@ -440,16 +440,24 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
     // * the width property (i.e., auto or specified) in the table.
     m_cellsInTheFirstRow.clear();
     FrameTableSectionBox* firstSection = firstSectionBoxInVisualOrder();
-    if (firstSection && firstSection->firstChild()) {
-        // We use nullptr to occupy spaces for non-existing cells because of
-        // previous colspans
-        FrameTableRowBox* row =
-            firstSection->firstChild()->asFrameTableRowBox();
-        for (Frame* c = row->firstChild(); c; c = c->next()) {
-            FrameTableCellBox* cell = c->asFrameTableCellBox();
-            m_cellsInTheFirstRow.push_back(cell);
-            for (unsigned i = 1; i < cell->updatedColspan(); i++) {
-                m_cellsInTheFirstRow.push_back(nullptr);
+    if (firstSection) {
+        FrameTableRowBox* nonEmptyFirstRow = nullptr;
+        for (Frame* r = firstSection->firstChild(); r; r = r->next()) {
+            if (r->firstChild()) {
+                nonEmptyFirstRow = r->asFrameTableRowBox();
+                break;
+            }
+        }
+
+        if (nonEmptyFirstRow) {
+            // We use nullptr to occupy spaces for non-existing cells because of
+            // previous colspans
+            for (Frame* c = nonEmptyFirstRow->firstChild(); c; c = c->next()) {
+                FrameTableCellBox* cell = c->asFrameTableCellBox();
+                m_cellsInTheFirstRow.push_back(cell);
+                for (unsigned i = 1; i < cell->updatedColspan(); i++) {
+                    m_cellsInTheFirstRow.push_back(nullptr);
+                }
             }
         }
     }
