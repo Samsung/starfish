@@ -70,6 +70,28 @@ public:
     Nullable<RenderingContextBindindingUnion> getContext(
         String* contextId, GCVector<ScriptValue> arguments);
 
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(HTMLCanvasElement));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(HTMLCanvasElement)] = { 0 };
+            HTMLCanvasElement::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLCanvasElement));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        HTMLElement::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(HTMLCanvasElement, m_renderingContext));
+    }
+
 private:
     RenderingContext* m_renderingContext;
     PaintCommandBuffer m_buffer;
