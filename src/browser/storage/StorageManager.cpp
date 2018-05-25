@@ -22,10 +22,10 @@
 #include "core/page/SecurityOriginData.h"
 #include "platform/file/File.h"
 
-#include "../third_party/escargot/third_party/rapidjson/include/rapidjson/document.h"
-#include "../third_party/escargot/third_party/rapidjson/include/rapidjson/stringbuffer.h"
-#include "../third_party/escargot/third_party/rapidjson/include/rapidjson/writer.h"
-#include "../third_party/escargot/third_party/rapidjson/include/rapidjson/encodings.h"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
+#include "rapidjson/encodings.h"
 
 #define PROTOCOL "protocol"
 #define HOST "host"

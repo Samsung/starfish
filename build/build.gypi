@@ -112,6 +112,7 @@
            '<(starfish_root)/inc',
            #'<(starfish_root)/third_party/rapidxml',
            '<!@(pkg-config --cflags-only-I <(third_party_libs) | sed s/-I//g)',
+           '<(escargot_root)/third_party/rapidjson/include',
         ],
         'main_file' : 'src/shell/shell.cpp',
         'test_runner_file' : 'src/shell/testRunner.cpp',

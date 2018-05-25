@@ -23,9 +23,9 @@
 #include "StarFish.h"
 #include "Inspector.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "../third_party/escargot/third_party/rapidjson/include/rapidjson/document.h"
-#include "../third_party/escargot/third_party/rapidjson/include/rapidjson/stringbuffer.h"
-#include "../third_party/escargot/third_party/rapidjson/include/rapidjson/writer.h"
+#include "rapidjson/document.h"
+#include "rapidjson/stringbuffer.h"
+#include "rapidjson/writer.h"
 
 namespace StarFish {
 struct Request {
