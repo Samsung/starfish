@@ -34,6 +34,7 @@ namespace StarFish {
 
 void* HTMLScriptElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLScriptElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

@@ -63,6 +63,7 @@ public:
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(TranslateTransform));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {

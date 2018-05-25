@@ -46,6 +46,7 @@ public:
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(TransformOriginData));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
@@ -162,6 +163,7 @@ public:
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(StyleTransformOrigin));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {

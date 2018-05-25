@@ -29,6 +29,7 @@ namespace StarFish {
 
 void* FrameButtonBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameButtonBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

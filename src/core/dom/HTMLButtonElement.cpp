@@ -36,6 +36,7 @@ HTMLButtonElement::HTMLButtonElement(Document* document)
 
 void* HTMLButtonElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLButtonElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

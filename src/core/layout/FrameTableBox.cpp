@@ -41,6 +41,7 @@ FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
 
 void* ColSizeStruct::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(ColSizeStruct));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -54,6 +55,7 @@ void* ColSizeStruct::operator new(size_t size)
 
 void* FrameTableBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameTableBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

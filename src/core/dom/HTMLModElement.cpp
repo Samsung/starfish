@@ -31,6 +31,7 @@ HTMLModElement::HTMLModElement(Document* document, AtomicString name)
 
 void* HTMLModElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLModElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

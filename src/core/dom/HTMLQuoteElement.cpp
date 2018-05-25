@@ -31,6 +31,7 @@ HTMLQuoteElement::HTMLQuoteElement(Document* document, AtomicString name)
 
 void* HTMLQuoteElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLQuoteElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

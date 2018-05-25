@@ -28,6 +28,7 @@ namespace StarFish {
 
 void* CharacterData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(CharacterData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

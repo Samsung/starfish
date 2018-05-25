@@ -25,6 +25,7 @@ namespace StarFish {
 
 void* HTMLLegendElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLLegendElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

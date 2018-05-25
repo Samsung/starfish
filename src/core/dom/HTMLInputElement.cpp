@@ -60,6 +60,7 @@ HTMLInputElement::HTMLInputElement(Document* document)
 
 void* HTMLInputElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLInputElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

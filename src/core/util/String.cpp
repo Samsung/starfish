@@ -1942,6 +1942,7 @@ bool String::validDouble(String* s)
 
 void* StringDataASCII::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(StringDataASCII));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -1955,6 +1956,7 @@ void* StringDataASCII::operator new(size_t size)
 
 void* StringDataUTF32::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(StringDataUTF32));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -1968,6 +1970,7 @@ void* StringDataUTF32::operator new(size_t size)
 
 void* StringDataBMP::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(StringDataBMP));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -1981,6 +1984,7 @@ void* StringDataBMP::operator new(size_t size)
 
 void* StringView::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(StringView));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

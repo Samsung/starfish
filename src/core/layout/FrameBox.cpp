@@ -41,6 +41,7 @@ namespace StarFish {
 
 void* FrameBoxRareData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameBoxRareData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -54,6 +55,7 @@ void* FrameBoxRareData::operator new(size_t size)
 
 void* FrameBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

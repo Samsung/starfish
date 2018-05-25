@@ -79,6 +79,7 @@ public:
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(ColorStop));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
@@ -129,6 +130,7 @@ struct GradientDrawingInfo : public gc {
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(GradientDrawingInfo));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
@@ -247,6 +249,7 @@ public:
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(LinearGradientData));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
@@ -346,6 +349,7 @@ public:
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(RadialGradientData));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {

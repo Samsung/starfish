@@ -24,6 +24,7 @@
 namespace StarFish {
 void* HTMLParamElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLParamElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

@@ -31,6 +31,7 @@ namespace StarFish {
 
 void* FrameDocument::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameDocument));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

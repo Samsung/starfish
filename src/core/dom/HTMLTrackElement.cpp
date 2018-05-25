@@ -126,6 +126,7 @@ HTMLTrackElement::HTMLTrackElement(Document* document)
 
 void* HTMLTrackElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLTrackElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

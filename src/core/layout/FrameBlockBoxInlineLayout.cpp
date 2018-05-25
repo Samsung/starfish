@@ -57,6 +57,7 @@ LayoutUnit Frame::lineHeight()
 
 void* LineBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(LineBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -1190,6 +1191,7 @@ void LineFormattingContext::registerInlineContent(FrameLineBreak* br)
 
 void* InlineBoxLayoutParentBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(InlineBoxLayoutParentBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -3068,6 +3070,7 @@ static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
 
 void* FrameTextRareData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameTextRareData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -3628,6 +3631,7 @@ void LineFormattingContext::computeDirection(Frame* parent,
 
 void* InlineNonReplacedBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(InlineNonReplacedBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -4810,6 +4814,7 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
 
 void* InlineTextBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(InlineTextBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

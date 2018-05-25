@@ -117,6 +117,7 @@ void StyleRule::initFlagsRelatedWithSelectorList()
 
 void* StyleRule::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(StyleRule));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

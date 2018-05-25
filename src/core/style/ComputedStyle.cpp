@@ -74,6 +74,7 @@ static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
 
 void* RareComputedStyleData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(RareComputedStyleData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -88,6 +89,7 @@ void* RareComputedStyleData::operator new(size_t size)
 
 void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(ComputedStyle::InheritedStylesRareData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -114,6 +116,7 @@ void* ComputedStyle::InheritedStylesRareData::operator new(size_t size)
 
 void* ComputedStyle::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(ComputedStyle));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

@@ -36,6 +36,7 @@ namespace StarFish {
 
 void* FrameBlockBoxRareData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameBlockBoxRareData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -948,6 +949,7 @@ Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 
 void* FrameBlockBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameBlockBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

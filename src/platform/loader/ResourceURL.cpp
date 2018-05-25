@@ -304,6 +304,7 @@ ResourceURL::ResourceURL(String* url, String* baseURL)
 
 void* ResourceURL::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(ResourceURL));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -1016,6 +1017,7 @@ DocumentURL::DocumentURL(ResourceURL* url, FormSubmitData* formSubmitData)
 
 void* DocumentURL::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(DocumentURL));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

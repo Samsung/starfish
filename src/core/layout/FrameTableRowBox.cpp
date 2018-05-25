@@ -33,6 +33,7 @@ FrameTableRowBox::FrameTableRowBox(Node* node, ComputedStyle* style)
 
 void* FrameTableRowBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameTableRowBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

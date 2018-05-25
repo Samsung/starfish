@@ -80,6 +80,7 @@ static bool isEditable(Node* node)
 
 void* HTMLElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -402,6 +403,7 @@ HTMLKnownElement::HTMLKnownElement(Document* document, AtomicString localName)
 
 void* HTMLKnownElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLKnownElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

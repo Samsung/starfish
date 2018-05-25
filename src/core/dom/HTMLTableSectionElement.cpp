@@ -35,6 +35,7 @@ HTMLTableSectionElement::HTMLTableSectionElement(Document* document)
 
 void* HTMLTableSectionElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLTableSectionElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

@@ -30,6 +30,7 @@ namespace StarFish {
 
 void* FrameSVGCircleBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameSVGCircleBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
