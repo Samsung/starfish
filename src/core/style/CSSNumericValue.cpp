@@ -130,6 +130,7 @@ void CSSNumericType::setPercentHint(String* percentHint)
 
 void* CSSNumericValue::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(CSSNumericValue));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

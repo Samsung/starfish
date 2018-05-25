@@ -26,6 +26,7 @@ namespace StarFish {
 
 void* PositionedMaskData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(PositionedMaskData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

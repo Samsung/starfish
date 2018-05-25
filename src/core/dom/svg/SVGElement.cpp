@@ -27,6 +27,7 @@ namespace StarFish {
 
 void* SVGElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(SVGElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -262,6 +263,7 @@ int SVGElement::tabIndex()
 
 void* SVGNamedElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(SVGNamedElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

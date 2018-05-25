@@ -29,6 +29,7 @@ namespace StarFish {
 
 void* HTMLImageElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLImageElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

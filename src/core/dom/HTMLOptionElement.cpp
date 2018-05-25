@@ -66,6 +66,7 @@ HTMLOptionElement::HTMLOptionElement(Document* document, String* text,
 
 void* HTMLOptionElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLOptionElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

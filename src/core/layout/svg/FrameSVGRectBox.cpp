@@ -24,6 +24,7 @@ namespace StarFish {
 
 void* FrameSVGRectBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameSVGRectBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

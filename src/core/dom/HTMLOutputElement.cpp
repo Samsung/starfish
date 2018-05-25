@@ -33,6 +33,7 @@ HTMLOutputElement::HTMLOutputElement(Document* document)
 
 void* HTMLOutputElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLOutputElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

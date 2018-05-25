@@ -30,6 +30,7 @@ HTMLHeadingElement::HTMLHeadingElement(Document* document, AtomicString name)
 
 void* HTMLHeadingElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLHeadingElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

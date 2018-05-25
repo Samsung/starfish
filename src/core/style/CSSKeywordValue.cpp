@@ -27,6 +27,7 @@ namespace StarFish {
 
 void* CSSKeywordValue::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(CSSKeywordValue));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

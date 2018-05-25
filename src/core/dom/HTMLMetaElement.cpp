@@ -34,6 +34,7 @@ extern bool g_enablePixelTest;
 
 void* HTMLMetaElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLMetaElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

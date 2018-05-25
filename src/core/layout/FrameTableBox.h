@@ -63,6 +63,7 @@ public:
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(Cell));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
@@ -95,6 +96,7 @@ class Row : public gc {
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(Row));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
@@ -131,6 +133,7 @@ public:
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(ColGroup));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {
@@ -168,6 +171,7 @@ public:
 
     void* operator new(size_t size)
     {
+        STARFISH_ASSERT(size == sizeof(Table));
         static bool typeInited = false;
         static GC_descr descr;
         if (!typeInited) {

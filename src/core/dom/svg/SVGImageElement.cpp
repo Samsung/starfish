@@ -28,6 +28,7 @@ namespace StarFish {
 
 void* SVGImageElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(SVGImageElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

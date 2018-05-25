@@ -238,6 +238,7 @@ StackingContextRareData::StackingContextRareData()
 
 void* StackingContextRareData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(StackingContextRareData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -286,6 +287,7 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
 
 void* StackingContext::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(StackingContext));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

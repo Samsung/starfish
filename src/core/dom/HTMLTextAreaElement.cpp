@@ -49,6 +49,7 @@ HTMLTextAreaElement::HTMLTextAreaElement(Document* document)
 
 void* HTMLTextAreaElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLTextAreaElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

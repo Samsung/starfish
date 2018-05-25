@@ -93,6 +93,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document)
 
 void* HTMLMediaElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLMediaElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

@@ -281,6 +281,7 @@ void FrameTableCellBox::resetColspanForLayout()
 
 void* FrameTableCellBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameTableCellBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

@@ -43,6 +43,7 @@ HTMLSelectElement::HTMLSelectElement(Document* document)
 
 void* HTMLSelectElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLSelectElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

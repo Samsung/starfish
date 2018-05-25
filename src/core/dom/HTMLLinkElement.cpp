@@ -38,6 +38,7 @@ bool isCSSType(const char* type);
 
 void* HTMLLinkElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLLinkElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

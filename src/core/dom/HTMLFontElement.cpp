@@ -25,6 +25,7 @@ namespace StarFish {
 
 void* HTMLFontElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLFontElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

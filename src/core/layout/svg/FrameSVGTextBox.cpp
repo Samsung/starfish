@@ -26,6 +26,7 @@ namespace StarFish {
 
 void* FrameSVGTextBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameSVGTextBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

@@ -33,6 +33,7 @@ HTMLUnknownElement::HTMLUnknownElement(Document* document,
 
 void* HTMLUnknownElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLUnknownElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

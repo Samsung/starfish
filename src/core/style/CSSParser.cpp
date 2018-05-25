@@ -218,6 +218,7 @@ class CSSParser;
 
 void* CSSToken::operator new(size_t size, CSSParser* parser)
 {
+    STARFISH_ASSERT(size == sizeof(CSSToken));
     if (!parser) {
         return GC_MALLOC(sizeof(CSSToken));
     }

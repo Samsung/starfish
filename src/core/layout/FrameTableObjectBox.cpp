@@ -24,6 +24,7 @@ namespace StarFish {
 
 void* FrameTableObjectBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameTableObjectBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

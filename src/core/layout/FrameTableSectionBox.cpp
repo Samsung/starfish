@@ -29,6 +29,7 @@ namespace StarFish {
 
 void* CellStruct::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(CellStruct));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -42,6 +43,7 @@ void* CellStruct::operator new(size_t size)
 
 void* RowStruct::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(RowStruct));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -102,6 +104,7 @@ FrameTableSectionBox::FrameTableSectionBox(Node* node, ComputedStyle* style)
 
 void* FrameTableSectionBox::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FrameTableSectionBox));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

@@ -28,6 +28,7 @@ namespace StarFish {
 
 void* SerializedStringData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(SerializedStringData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -42,6 +43,7 @@ void* SerializedStringData::operator new(size_t size)
 
 void* SerializedArrayData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(SerializedArrayData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -56,6 +58,7 @@ void* SerializedArrayData::operator new(size_t size)
 
 void* SerializedObjectData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(SerializedObjectData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -70,6 +73,7 @@ void* SerializedObjectData::operator new(size_t size)
 
 void* SerializedTypedData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(SerializedTypedData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {

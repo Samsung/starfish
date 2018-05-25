@@ -55,6 +55,7 @@ FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
 
 void* FormDataSetItem::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FormDataSetItem));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -88,6 +89,7 @@ FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
 
 void* FormSubmitData::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(FormSubmitData));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
@@ -526,6 +528,7 @@ NodeList* HTMLFormControl::labels()
 
 void* HTMLFormElement::operator new(size_t size)
 {
+    STARFISH_ASSERT(size == sizeof(HTMLFormElement));
     static bool typeInited = false;
     static GC_descr descr;
     if (!typeInited) {
