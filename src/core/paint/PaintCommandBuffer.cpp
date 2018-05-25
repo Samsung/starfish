@@ -115,7 +115,6 @@ void PaintCommandBuffer::paintCommands(Canvas* canvas)
     canvas->save();
     size_t numberOfSave = 0;
     // Set defulat value
-    canvas->setStrokeWidth(1);
     for (auto& command : m_commands) {
         switch (command.type()) {
         case PaintCommand::Command::MOVETO_2D:
