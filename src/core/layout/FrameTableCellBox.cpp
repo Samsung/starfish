@@ -83,6 +83,8 @@ void FrameTableCellBox::collectCellWidthInfo(
             m_maxCellWidth = mw;
         }
     }
+
+    setContentWidth(m_maxCellWidth - borderWidth() - paddingWidth());
 }
 
 void FrameTableCellBox::layoutWidth(LayoutContext& ctx)
