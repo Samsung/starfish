@@ -37,20 +37,39 @@ IntrinsicSize FrameReplacedCanvas::intrinsicSize()
 void FrameReplacedCanvas::paintContent(PaintingContext& ctx)
 {
     FrameReplaced::paintContent(ctx);
+
     Unit::Rect frameRect =
         Unit::Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
                    width() - borderWidth() - paddingWidth(),
                    height() - borderHeight() - paddingHeight());
+    if (!m_canvasImage) {
+        m_canvasImage =
+            NativeImageData::create(frameRect.width(), frameRect.height());
+    }
+
+    if (m_canvasImage->width() != frameRect.width() &&
+        m_canvasImage->height() != frameRect.height()) {
+        m_canvasImage =
+            NativeImageData::create(frameRect.width(), frameRect.height());
+    }
+
     Canvas* canvas = ctx.m_canvas;
     canvas->save();
-    canvas->clip(frameRect);
+
+    Canvas* imageCanvas =
+        Canvas::createGenericCanvas(node()->starFish(), m_canvasImage);
 
     // Run the command buffer.
     Node* n = this->node();
     if (n && n->isHTMLCanvasElement()) {
         HTMLCanvasElement* e = n->asHTMLCanvasElement();
-        e->commandBuffer().paintCommands(canvas);
+        e->commandBuffer().paintCommands(imageCanvas);
     }
+
+    canvas->drawImage(m_canvasImage, frameRect);
+
+    delete imageCanvas;
+
     canvas->restore();
 }
 }

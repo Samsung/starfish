@@ -23,6 +23,8 @@
 #define __StarFishFrameReplacedCanvas__
 
 #include "core/layout/FrameReplaced.h"
+#include "core/modules/canvas/Canvas.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
 
@@ -30,6 +32,7 @@ class FrameReplacedCanvas final : public FrameReplaced {
 public:
     FrameReplacedCanvas(Node* node)
         : FrameReplaced(node, nullptr)
+        , m_canvasImage(nullptr)
     {
     }
 
@@ -46,6 +49,30 @@ public:
     void paintContent(PaintingContext& ctx);
 
     virtual IntrinsicSize intrinsicSize() override;
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(FrameReplacedCanvas)] = { 0 };
+            FrameReplacedCanvas::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(FrameReplacedCanvas));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        FrameReplaced::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(FrameReplacedCanvas, m_canvasImage));
+    }
+
+private:
+    NativeImageData* m_canvasImage;
 };
 }
 #endif

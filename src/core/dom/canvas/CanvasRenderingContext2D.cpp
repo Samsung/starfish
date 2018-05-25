@@ -134,6 +134,9 @@ DOMStringOrCanvasGradientOrCanvasPattern CanvasRenderingContext2D::fillStyle()
 void CanvasRenderingContext2D::setFillStyle(
     DOMStringOrCanvasGradientOrCanvasPattern value)
 {
+    if (value.isDOMStringValue()) {
+        // Values : #000000, namedColor, rgb, rgba
+    }
 }
 
 CanvasGradient* CanvasRenderingContext2D::createLinearGradient(double x0,
