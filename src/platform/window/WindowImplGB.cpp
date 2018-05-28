@@ -36,6 +36,10 @@
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
+#if defined(OS_WINDOWS)
+#include <Windows.h>
+#endif
+
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
 unsigned char* g_imgBufferForScreehShot;
@@ -105,7 +109,13 @@ public:
 
     virtual void resizeTo(int w, int h)
     {
-        // TODO
+        free(m_internalBuffer);
+        m_internalBuffer = nullptr;
+        m_width = w;
+        m_height = h;
+        initBuffer();
+
+        PlatformWindow::resizeTo(w, h);
     }
 
     virtual void* unwrap()
@@ -120,20 +130,48 @@ public:
         m_internalBuffer = m_starFish->frameBuffer();
 #else
         if (m_internalBuffer == nullptr)
-            m_internalBuffer =
-                (void*)malloc(m_width * m_height * sizeof(uint32_t));
+            m_internalBuffer = malloc(m_width * m_height * sizeof(uint32_t));
 #endif
-        m_stride = cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, m_width);
+        m_stride = m_width * 4;
+        if (m_cairo) {
+            cairo_destroy(m_cairo);
+        }
+        if (m_surface) {
+            cairo_surface_destroy(m_surface);
+        }
+        m_surface = cairo_image_surface_create_for_data(
+            (unsigned char*)m_internalBuffer, CAIRO_FORMAT_ARGB32, m_width,
+            m_height, m_stride);
+        m_cairo = cairo_create(m_surface);
     }
 
     void flushBuffer()
     {
-#if !defined(STARFISH_TIZEN)
+#if defined(STARFISH_TIZEN)
+        m_starFish->setNeedsUpdate();
+#elif defined(STARFISH_WINDOWS)
+        PostMessage(NULL, WM_USER, 0, 0);
+#else
         memcpy(m_starFish->frameBuffer(), m_internalBuffer,
                m_width * m_height * sizeof(uint32_t));
-
-#endif
         m_starFish->setNeedsUpdate();
+#endif
+    }
+    virtual void* drawingBufferAddress()
+    {
+        return m_internalBuffer;
+    }
+    virtual uint32_t drawingBufferWidth()
+    {
+        return m_width;
+    }
+    virtual uint32_t drawingBufferHeight()
+    {
+        return m_height;
+    }
+    virtual uint32_t drawingBufferStride()
+    {
+        return m_stride;
     }
 
     virtual void clearResources();
@@ -161,9 +199,9 @@ public:
     cairo_t* m_cairo;
 };
 
-class CanvasSurfaceDALI : public CanvasSurface {
+class CanvasSurfaceGB : public CanvasSurface {
 public:
-    CanvasSurfaceDALI(PlatformWindow* wnd, size_t w, size_t h)
+    CanvasSurfaceGB(PlatformWindow* wnd, size_t w, size_t h)
     {
         m_width = w;
         m_height = h;
@@ -180,10 +218,10 @@ public:
         resize(w, h);
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
-                                           CanvasSurfaceDALI* s =
-                                               (CanvasSurfaceDALI*)obj;
+                                           CanvasSurfaceGB* s =
+                                               (CanvasSurfaceGB*)obj;
                                            // STARFISH_LOG_INFO("release
-                                           // CanvasSurfaceDALI %p\n", s);
+                                           // CanvasSurfaceGB %p\n", s);
                                            s->detachNativeBuffer();
                                        },
                                        NULL, NULL, NULL);
@@ -320,22 +358,8 @@ protected:
 
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
 {
-    return new CanvasSurfaceDALI(wnd, w, h);
+    return new CanvasSurfaceGB(wnd, w, h);
 }
-
-// static void mainRenderingFunction(Evas_Object* o, Evas_Object_Box_Data*
-// priv,
-//                                   void* user_data)
-// {
-//     ecore_animator_add(
-//         [](void* user_data) -> Eina_Bool {
-//             WindowImplGB* wnd = (WindowImplGB*)user_data;
-//             wnd->setNeedsLayout();
-//             wnd->webView()->mainBrowsingContext()->setNeedsLayout();
-//             return ECORE_CALLBACK_CANCEL;
-//         },
-//         user_data);
-// }
 
 PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                        int height)
@@ -366,12 +390,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         */
     }
 #endif
-
-    wnd->m_surface = cairo_image_surface_create_for_data(
-        (unsigned char*)wnd->m_internalBuffer, CAIRO_FORMAT_ARGB32, width,
-        height, cairo_format_stride_for_width(CAIRO_FORMAT_ARGB32, width));
-    wnd->m_cairo = cairo_create(wnd->m_surface);
-
     return wnd;
 }
 
@@ -387,32 +405,21 @@ void WebView::setNeedsRendering()
     // TODO: refresh rendering animator here.
 
     m_needsRendering = true;
-
-    IdlerData* id = new (NoGC) IdlerData;
-    id->m_fn = [](void* data) -> void {
-        PlatformWindow* wnd = (PlatformWindow*)data;
-        wnd->rendering();
-    };
-    id->m_data = starFish()->platformWindow();
-
-    wnd->m_renderingIdlerData = id;
     wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
         nullptr,
         [](size_t handle, void* data) {
-            IdlerData* id = (IdlerData*)data;
-            PlatformWindow* wnd = (PlatformWindow*)id->m_data;
+            WindowImplGB* wnd = (WindowImplGB*)data;
             StarFishEnterer enter(wnd->starFish());
             {
                 Locker<Mutex> l(*((WindowImplGB*)wnd)->m_rendingLockMutex);
                 ((WindowImplGB*)wnd)->initBuffer();
-                id->m_fn(id->m_data);
+                wnd->rendering();
                 ((WindowImplGB*)wnd)->m_renderingAnimator = 0;
                 ((WindowImplGB*)wnd)->m_renderingIdlerData = nullptr;
                 ((WindowImplGB*)wnd)->flushBuffer();
             }
-            GC_FREE(id);
         },
-        id);
+        starFish()->platformWindow());
 }
 
 Canvas* WindowImplGB::preparePainting()
@@ -476,5 +483,5 @@ void WindowImplGB::clearResources()
 
     webView()->clearStackingContext(false);
 }
-}
+} // namespace StarFish
 #endif

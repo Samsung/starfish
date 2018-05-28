@@ -37,7 +37,7 @@ GC_ms_entry* markAndPushCustom(GC_word* addr,
 
 int getValidValueNativeImageData(void* ptr, GC_mark_custom_result* arr)
 {
-    arr[0].from = (GC_word*)ptr;
+    arr[0].from = (GC_word*)&ptr;
     arr[0].to = (GC_word*)ptr;
     return 0;
 }

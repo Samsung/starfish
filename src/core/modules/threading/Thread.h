@@ -31,6 +31,7 @@ typedef void* (*ThreadWorker)(void*);
 
 void registerMainThread();
 bool isMainThread();
+size_t mainThreadID();
 
 struct ThreadData {
     ThreadData(Thread* t, MessageLoop* m, ThreadWorker w, void* d)

@@ -154,13 +154,6 @@ public:
     {
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
-#ifdef STARFISH_MEDIAPLAYER_DEBUG
-                                           STARFISH_LOG_INFO(
-                                               "DemuxerClientSourceBuffer::~"
-                                               "DemuxerClientSourceBuffer "
-                                               "(%p)\n",
-                                               obj);
-#endif
                                            DemuxerClientSourceBuffer* self =
                                                (DemuxerClientSourceBuffer*)obj;
                                            self->clearAll();

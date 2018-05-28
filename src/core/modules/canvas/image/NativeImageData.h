@@ -28,7 +28,7 @@ class NativeImageData : public gc {
     friend class ResourceLoader;
 
 public:
-    enum PreserveAspectRatioValue {
+    enum PreserveAspectRatioValue ENSURE_ENUM_UNSIGNED {
         None,
         xMinYMin,
         xMidYMin,
@@ -60,14 +60,13 @@ public:
     virtual bool hasTransparentPixel() = 0;
     virtual void disposeNativeImageData()
     {
+#if !OS(WINDOWS)
+        auto& r = everyNativeImageInstances();
+        r.erase(std::find(r.begin(), r.end(), this));
+#endif
     }
     virtual ~NativeImageData()
     {
-        disposeNativeImageData();
-
-        auto& r = everyNativeImageInstances();
-        r.erase(std::find(r.begin(), r.end(), this));
-
         GC_REGISTER_FINALIZER_NO_ORDER(this, NULL, NULL, NULL, NULL);
     }
 
@@ -95,21 +94,21 @@ protected:
     {
         m_isSeenByGC = false;
         m_preserveAspectRatioValue = None;
+#if !OS(WINDOWS)
         everyNativeImageInstances().push_back(this);
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this,
-            [](void* obj, void* cd) {
-                NativeImageData* self = (NativeImageData*)obj;
-                self->disposeNativeImageData();
-                auto& r = everyNativeImageInstances();
-                r.erase(std::find(r.begin(), r.end(), self));
-            },
-            NULL, NULL, NULL);
+#endif
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           NativeImageData* self =
+                                               (NativeImageData*)obj;
+                                           self->disposeNativeImageData();
+                                       },
+                                       NULL, NULL, NULL);
     }
 
     bool m_isSeenByGC : 1;
     PreserveAspectRatioValue m_preserveAspectRatioValue : 4;
 };
-}
+} // namespace StarFish
 
 #endif

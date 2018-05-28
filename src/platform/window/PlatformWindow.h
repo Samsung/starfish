@@ -64,7 +64,10 @@ public:
 
     virtual int32_t width() = 0;
     virtual int32_t height() = 0;
-    virtual void resizeTo(int w, int h) = 0;
+    virtual void resizeTo(int w, int h)
+    {
+        onResize();
+    }
     virtual void* unwrap() = 0;
     virtual void clearResources() = 0;
     virtual Canvas* preparePainting() = 0;
@@ -78,6 +81,22 @@ public:
     virtual bool isIMEEnabledNow()
     {
         return false;
+    }
+    virtual void* drawingBufferAddress()
+    {
+        return nullptr;
+    }
+    virtual uint32_t drawingBufferWidth()
+    {
+        return 0;
+    }
+    virtual uint32_t drawingBufferHeight()
+    {
+        return 0;
+    }
+    virtual uint32_t drawingBufferStride()
+    {
+        return 0;
     }
 
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,

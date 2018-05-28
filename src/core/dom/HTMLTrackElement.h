@@ -33,7 +33,7 @@ class HTMLTrackElement : public HTMLElement {
     friend class VttResourceReader;
 
 public:
-    enum ReadyState { NONE, LOADING, LOADED, ERROR };
+    enum ReadyState { NONE, LOADING, LOADED, IN_ERROR };
 
     HTMLTrackElement(Document* document);
 

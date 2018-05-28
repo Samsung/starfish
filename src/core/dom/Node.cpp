@@ -749,7 +749,6 @@ unsigned short Node::compareDocumentPosition(const Node* other)
     } else {
         root = ownerDocument();
         if (ownerDocument() != other->ownerDocument()) {
-            STARFISH_ASSERT_NOT_REACHED();
             return DOCUMENT_POSITION_DISCONNECTED +
                    DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC +
                    DOCUMENT_POSITION_PRECEDING;

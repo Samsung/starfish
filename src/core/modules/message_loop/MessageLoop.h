@@ -31,6 +31,7 @@ namespace StarFish {
 class BrowsingContext;
 
 class MessageLoop : public gc, public StarFishHoldable {
+    friend class MessageLoopImpl;
     friend class StarFish;
     friend class Window;
 

@@ -333,6 +333,7 @@ void ResourceLoader::cachePruning()
             }
         }
 
+#if !OS(WINDOWS)
         auto& globalImages = NativeImageData::everyNativeImageInstances();
         for (size_t i = 0; i < globalImages.size(); i++) {
             globalImages[i]->m_isSeenByGC = false;
@@ -344,16 +345,15 @@ void ResourceLoader::cachePruning()
                 size_t size;
                 int kind = GC_get_kind_and_size(obj, &size);
                 STARFISH_ASSERT(size == bytes);
+                void* ptr = GC_USR_PTR_FROM_BASE(obj);
 
                 int srcKind = (int)(size_t)cd;
                 if (kind == srcKind) {
-                    void* ptr = GC_USR_PTR_FROM_BASE(obj);
                     ((NativeImageData*)ptr)->m_isSeenByGC = true;
                 }
             },
             (void*)(size_t)NativeImageData::nativeImageDataGCKind());
         GC_enable();
-
         for (size_t i = 0; i < globalImages.size(); i++) {
             if (!globalImages[i]->m_isSeenByGC) {
                 if (*(int*)globalImages[i]) {
@@ -364,6 +364,7 @@ void ResourceLoader::cachePruning()
                 i--;
             }
         }
+#endif
         STARFISH_LOG_INFO(
             "ResourceLoader::cachePruning - prune %dKB current cache size is "
             "%dKB\n",
@@ -567,4 +568,4 @@ void ResourceLoader::cancelAllOfPendingRequests()
         v[0]->cancel();
     }
 }
-}
+} // namespace StarFish

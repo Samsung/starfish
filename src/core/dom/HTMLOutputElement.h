@@ -29,7 +29,7 @@ class DOMTokenList;
 
 class HTMLOutputElement : public HTMLFormControl {
 public:
-    enum ValueModeFlag { defaultMode, valueMode };
+    enum ValueModeFlag ENSURE_ENUM_UNSIGNED { defaultMode, valueMode };
 
     HTMLOutputElement(Document* document);
 

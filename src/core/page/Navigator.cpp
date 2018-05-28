@@ -75,15 +75,14 @@ String* Navigator::platform()
     }
 #else
     OSVERSIONINFO info;
-    ZeroMemory(&info, sizeof(OSVERSIONINFOEX));
-    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFOEX);
+    ZeroMemory(&info, sizeof(OSVERSIONINFO));
+    info.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
     GetVersionEx(&info);
 
     platformName.appendString("Windows ");
     platformName.appendChar((char32_t)(info.dwMajorVersion + '0'));
     platformName.appendChar(' ');
     platformName.appendChar((char32_t)(info.dwMinorVersion + '0'));
-
 #endif
     return platformName.finalize();
 }

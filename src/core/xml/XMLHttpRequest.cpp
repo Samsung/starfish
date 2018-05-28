@@ -442,7 +442,6 @@ String* XMLHttpRequest::getAllResponseHeaders()
             (key.compare(HTTPHeaderMap::kSetCookie2) == 0)) {
             continue;
         }
-
         sb.appendString(key.c_str());
         sb.appendChar(':');
         sb.appendChar(' ');

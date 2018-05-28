@@ -229,7 +229,7 @@ struct NullableUTF8String : public gc {
     size_t m_bufferSize;
 };
 
-enum CharDirection {
+enum CharDirection ENSURE_ENUM_UNSIGNED {
     Ltr,
     Rtl,
     Mixed,

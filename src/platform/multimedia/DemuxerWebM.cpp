@@ -110,7 +110,7 @@ public:
             return false;
         }
 
-        std::auto_ptr<mkvparser::Segment> pSegment(segment);
+        std::unique_ptr<mkvparser::Segment> pSegment(segment);
 
         ret = pSegment->ParseHeaders();
         if (ret < 0) {
