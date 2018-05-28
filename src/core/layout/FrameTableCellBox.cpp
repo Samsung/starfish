@@ -203,6 +203,11 @@ LayoutUnit FrameTableCellBox::calBaseline(LayoutContext& ctx)
 {
     // To reduce unneeded computation, baseline is only calculated when
     // this cell has "vertical-align: baseline" or equivalent
+
+    // The baseline of a cell is the baseline of the first in-flow line box
+    // in the cell, or the first in-flow table-row in the cell, whichever comes
+    // first. If there is no such line box or table-row, the baseline is the
+    // bottom of content edge of the cell box.
     switch (style()->verticalAlign()) {
     case VerticalAlignValue::BaselineVAlignValue:
     case VerticalAlignValue::SubVAlignValue:
@@ -220,7 +225,12 @@ LayoutUnit FrameTableCellBox::calBaseline(LayoutContext& ctx)
     default:
         break;
     }
-    return 0;
+
+    if (rowBox()) {
+        return rowBox()->baseline();
+    }
+
+    return contentHeight();
 }
 
 size_t FrameTableCellBox::colspan()
