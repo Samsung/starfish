@@ -47,16 +47,17 @@ static void lineToFor2D(Canvas* canvas,
     canvas->lineTo(arguments[0].value(), arguments[1].value());
 }
 
-static void fillRectFor2D(Canvas* canvas,
-                          std::vector<PaintCommandArgument>& arguments)
+void PaintCommandBuffer::fillRectFor2D(
+    Canvas* canvas, std::vector<PaintCommandArgument>& arguments)
 {
     if (arguments.size() != 4) {
         return;
     }
 
+    canvas->setColor(m_fillColor);
+
     canvas->drawRect(LayoutRect(arguments[0].value(), arguments[1].value(),
                                 arguments[2].value(), arguments[3].value()));
-    canvas->fill();
 }
 
 static void bezierCurveFor2D(Canvas* canvas,
@@ -106,6 +107,20 @@ static void setColorFor2D(Canvas* canvas,
     canvas->setColor(Unit::Color(r, g, b, a));
 }
 
+void PaintCommandBuffer::setFillColorFor2D(
+    Canvas* canvas, std::vector<PaintCommandArgument>& arguments)
+{
+    if (arguments.size() != 4) {
+        return;
+    }
+    double r = arguments[0].value();
+    double g = arguments[1].value();
+    double b = arguments[2].value();
+    double a = arguments[3].value();
+
+    m_fillColor = Unit::Color(r, g, b, a);
+}
+
 void PaintCommandBuffer::paintCommands(Canvas* canvas)
 {
     if (!m_commands.size()) {
@@ -114,7 +129,6 @@ void PaintCommandBuffer::paintCommands(Canvas* canvas)
 
     canvas->save();
     size_t numberOfSave = 0;
-    // Set defulat value
     for (auto& command : m_commands) {
         switch (command.type()) {
         case PaintCommand::Command::MOVETO_2D:
@@ -150,6 +164,9 @@ void PaintCommandBuffer::paintCommands(Canvas* canvas)
             break;
         case PaintCommand::Command::SETCOLOR_2D:
             setColorFor2D(canvas, command.arguments());
+            break;
+        case PaintCommand::Command::SETFILLCOLOR_2D:
+            setFillColorFor2D(canvas, command.arguments());
             break;
         default:
             break;

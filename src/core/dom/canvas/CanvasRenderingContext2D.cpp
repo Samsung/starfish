@@ -27,6 +27,7 @@
 
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/style/Style.h"
 #include "core/paint/PaintCommandBuffer.h"
 #include "core/dom/Document.h"
 #include "core/layout/Frame.h"
@@ -58,6 +59,13 @@ void CanvasRenderingContext2D::setDefaultCommands()
         command2.insertArgumentNumber(0);
         command2.insertArgumentNumber(255);
         canvas->commandBuffer().insertCommand(command2);
+
+        PaintCommand command3(PaintCommand::Command::SETFILLCOLOR_2D);
+        command3.insertArgumentNumber(0);
+        command3.insertArgumentNumber(0);
+        command3.insertArgumentNumber(0);
+        command3.insertArgumentNumber(255);
+        canvas->commandBuffer().insertCommand(command3);
     }
 }
 
@@ -134,8 +142,24 @@ DOMStringOrCanvasGradientOrCanvasPattern CanvasRenderingContext2D::fillStyle()
 void CanvasRenderingContext2D::setFillStyle(
     DOMStringOrCanvasGradientOrCanvasPattern value)
 {
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (!canvas) {
+        return;
+    }
+
     if (value.isDOMStringValue()) {
-        // Values : #000000, namedColor, rgb, rgba
+        String* v = value.getDOMStringValue();
+        auto s1 = v->toUTF8NonGCString();
+        NamedColor::NamedColorValue ret;
+        if (NamedColor::parseNamedColor(s1.data(), s1.length(), ret)) {
+            Unit::Color c = NamedColor::namedColorToColor(ret);
+            PaintCommand command(PaintCommand::Command::SETFILLCOLOR_2D);
+            command.insertArgumentNumber(c.r());
+            command.insertArgumentNumber(c.g());
+            command.insertArgumentNumber(c.b());
+            command.insertArgumentNumber(c.a());
+            canvas->commandBuffer().insertCommand(command);
+        }
     }
 }
 
