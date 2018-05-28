@@ -1,0 +1,9 @@
+// https://drafts.csswg.org/css-conditional-3/#the-css-interface
+// https://drafts.csswg.org/cssom/#the-css.escape()-method
+
+[Exposed=(Window,Worker)]
+interface CSS {
+    [CallWith=Document] static boolean supports(DOMString property, DOMString value);
+    [CallWith=Document] static boolean supports(DOMString conditionText);
+    [Unimplemented] static DOMString escape(DOMString ident);
+};
