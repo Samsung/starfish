@@ -34,8 +34,8 @@ test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-41.html
 test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-41a.html
 test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-42.html
 test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-42a.html
-#test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-43.html
-#test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-43b.html
+test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-43.html
+test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-43b.html
 test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-44.html
 test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-44b.html
 test/cairo/reftest/csswg-test/selectors3_original/html/css3-modsel-44c.html
