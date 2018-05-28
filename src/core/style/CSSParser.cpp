@@ -2585,6 +2585,47 @@ void CSSParser::parseStyleSheet(String* sourceString, CSSStyleSheet* target)
     }
 }
 
+bool CSSParser::parseSupportCondition(String* str)
+{
+    // https://drafts.csswg.org/css-conditional-3/#the-css-interface
+    RefPtr<CSSToken> token = makeToken(str);
+    preserveState();
+
+    if (!token->isNotNull()) {
+        return false;
+    }
+    ungetToken();
+
+    String* conditionText = String::emptyString;
+    {
+        preserveState();
+        StringBuilder b;
+        RefPtr<CSSToken> token;
+        while ((token = getToken(false, true))->isNotNull()) {
+            if (token->isSymbol('{') || token->isSymbol('}')) {
+                break;
+            }
+            b.appendString(token->value()->toString());
+        }
+        conditionText = b.finalize()->trim();
+        restoreState();
+    }
+
+    m_supportOperandStack.clear();
+    m_supportOperatorStack.clear();
+
+    if (!parseSupportsCondition()) {
+        restoreState();
+        return false;
+    }
+
+    doLogicOperation();
+    bool isSupported = m_supportOperandStack.back();
+
+    forgetState();
+    return isSupported;
+}
+
 void CSSParser::parseRules(RefPtr<CSSToken> token,
                            GCVector<StyleRuleBase*>& rootRule,
                            RuleListType ruleListType, bool isInsertedByUser)

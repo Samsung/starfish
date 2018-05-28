@@ -1653,6 +1653,7 @@ public:
     }
 
     void parseStyleSheet(String* sourceString, CSSStyleSheet* target);
+    bool parseSupportCondition(String* str);
     void parseRules(RefPtr<CSSToken> token, GCVector<StyleRuleBase*>& rootRule,
                     RuleListType ruleListType, bool isInsertedByUser = false);
     void parseStyleDeclaration(String* str, CSSStyleDeclaration* declaration);
