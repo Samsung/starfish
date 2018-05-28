@@ -183,8 +183,14 @@
 #define strcasecmp _stricmp
 #ifndef NDEBUG
 #define _ITERATOR_DEBUG_LEVEL 0
+#endif
 #define rand_r(x) rand()
 #endif
+
+#if COMPILER(MSVC)
+#define ENSURE_ENUM_UNSIGNED : unsigned int
+#else
+#define ENSURE_ENUM_UNSIGNED
 #endif
 
 #define OS(NAME) (defined OS_##NAME && OS_##NAME)

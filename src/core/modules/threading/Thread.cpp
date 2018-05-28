@@ -33,11 +33,11 @@
 namespace StarFish {
 
 #if !OS(WINDOWS)
-pid_t main_tid;
+pid_t mainTid;
 void registerMainThread()
 {
 #ifdef SYS_gettid
-    main_tid = syscall(SYS_gettid);
+    mainTid = syscall(SYS_gettid);
 #else
 #error "SYS_gettid unavailable on this system"
 #endif
@@ -46,22 +46,30 @@ void registerMainThread()
 bool isMainThread()
 {
 #ifdef SYS_gettid
-    return syscall(SYS_gettid) == main_tid;
+    return syscall(SYS_gettid) == mainTid;
 #else
-    return gettid() == main_tid;
+    return gettid() == mainTid;
 #endif
     return true;
 }
+size_t mainThreadID()
+{
+    return mainTid;
+}
 #else
-DWORD main_tid;
+DWORD mainTid;
 void registerMainThread()
 {
-    main_tid = GetCurrentThreadId();
+    mainTid = GetCurrentThreadId();
 }
 
 bool isMainThread()
 {
-    return GetCurrentThreadId() == main_tid;
+    return GetCurrentThreadId() == mainTid;
+}
+size_t mainThreadID()
+{
+    return mainTid;
 }
 #endif
 
@@ -88,10 +96,10 @@ void Thread::finishUnjoined()
     void* ret;
     pthread_join(m_currentUnjoined->m_tid, &ret);
     m_starFish->removeActiveThread(this);
+    GC_FREE(m_currentUnjoined);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     m_currentUnjoined->m_messageLoop->decreaseUnjoinedThreadCount();
 #endif
-    GC_FREE(m_currentUnjoined);
     m_currentUnjoined = nullptr;
 }
 
@@ -103,8 +111,8 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
     finishUnjoined();
     Locker<Mutex> l(*m_mutex);
     m_starFish->addActiveThread(this);
-    m_currentUnjoined = new (NoGC) ThreadData(this, msgLoop, fn, data);
-
+    m_currentUnjoined = new (GC_MALLOC_UNCOLLECTABLE(sizeof(ThreadData)))
+        ThreadData(this, msgLoop, fn, data);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     msgLoop->increaseRunningThreadCount();
     msgLoop->increaseUnjoinedThreadCount();
@@ -139,8 +147,10 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
                 } // else: joinIfNeeds() called while thread running
             }
             pthread_cleanup_pop(0);
-#if !defined(__SANITIZE_ADDRESS__) // GCC 4.8.5 & -fsanitize=address makes wrong
-                                   // error with `pthread_exit(((void*)0));`
+#if !OS(WINDOWS) && \
+    !defined(       \
+        __SANITIZE_ADDRESS__) // GCC 4.8.5 & -fsanitize=address makes wrong
+                              // error with `pthread_exit(((void*)0));`
             pthread_exit(((void*)0));
 #else
             return nullptr;

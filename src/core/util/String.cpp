@@ -1205,17 +1205,16 @@ bool StringUtils::equalsIgnoreCase(const std::string& a, const std::string& b)
 // trim from start (in place)
 void StringUtils::ltrim(std::string& s)
 {
-    s.erase(s.begin(), std::find_if(s.begin(), s.end(),
-                                    std::not1(std::ptr_fun<char32_t, bool>(
-                                        ::StarFish::isspace))));
+    s.erase(s.begin(), std::find_if(s.begin(), s.end(), [](char ch) -> bool {
+                return !isspace(ch);
+            }));
 }
 
 // trim from end (in place)
 void StringUtils::rtrim(std::string& s)
 {
-    s.erase(std::find_if(
-                s.rbegin(), s.rend(),
-                std::not1(std::ptr_fun<char32_t, bool>(::StarFish::isspace)))
+    s.erase(std::find_if(s.rbegin(), s.rend(),
+                         [](char ch) -> bool { return !isspace(ch); })
                 .base(),
             s.end());
 }

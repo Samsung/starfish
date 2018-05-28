@@ -28,7 +28,7 @@ namespace StarFish {
 
 class CalcValueType {
 public:
-    enum ValueType {
+    enum ValueType ENSURE_ENUM_UNSIGNED {
         None,
         Invalid, // Only for type checking
         Number,

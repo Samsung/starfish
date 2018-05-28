@@ -60,7 +60,7 @@ const char* unitTypeToString(UnitType type);
 
 class CSSPropertyParser {
 public:
-    enum ParserOption {
+    enum ParserOption ENSURE_ENUM_UNSIGNED {
         AllowNegative = 1 << 0,
         AllowPercent = 1 << 1,
         AllowAuto = 1 << 2,
@@ -1480,7 +1480,7 @@ public:
     static const char SGML_COMMENT_TYPE = 17;
 
 protected:
-    char m_type : 8;
+    unsigned char m_type : 8;
     UnitType m_unitType : 8;
     bool m_hasNumberValue : 1;
     bool m_hasCharValue : 1;

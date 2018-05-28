@@ -3933,7 +3933,11 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         if (needsTestingTextOverflow) {
             String* overflowString;
             if (textOverflowData.hasEllipsisValue()) {
+#if OS(WINDOWS)
+                overflowString = String::fromUTF8("...");
+#else
                 overflowString = String::fromUTF8("\u2026");
+#endif
             } else {
                 overflowString = textOverflowData.stringValue();
             }
@@ -5147,4 +5151,4 @@ void InlineNonReplacedBox::dump(int depth)
     }
 }
 #endif
-}
+} // namespace StarFish

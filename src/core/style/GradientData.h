@@ -27,7 +27,7 @@ class FrameBox;
 class CSSColorStop;
 
 enum class GradientType;
-enum class SideValue;
+enum class SideValue ENSURE_ENUM_UNSIGNED;
 enum class RadialGradientShape;
 enum class RadialGradientSizeKeyword;
 

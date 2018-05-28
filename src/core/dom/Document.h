@@ -56,14 +56,14 @@ class DOMImplementation;
 class DeferredScriptDownloadClient;
 
 /* VisibilityState */
-enum VisibilityState {
+enum VisibilityState ENSURE_ENUM_UNSIGNED {
     VisibilityStateHidden,
     VisibilityStateVisible,
     VisibilityStatePrerender,
     VisibilityStateUnloaded
 };
 
-enum DocumentReadyState {
+enum DocumentReadyState ENSURE_ENUM_UNSIGNED {
     DocumentReadyStateLoading,
     DocumentReadyStateInteractive,
     DocumentReadyStateComplete,
@@ -95,7 +95,11 @@ protected:
              bool doesParticipateInRendering);
 
 public:
-    enum CompatibilityMode { QuirksMode, LimitedQuirksMode, NoQuirksMode };
+    enum CompatibilityMode ENSURE_ENUM_UNSIGNED {
+        QuirksMode,
+        LimitedQuirksMode,
+        NoQuirksMode
+    };
     void setCompatibilityMode(CompatibilityMode m)
     {
         m_compatibilityMode = m;

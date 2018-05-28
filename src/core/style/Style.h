@@ -61,7 +61,7 @@ class CSSGradientValue;
 typedef VectorWithInlineStorage<4, CSSTokenValue, std::allocator<CSSTokenValue>>
     CSSTokenVector;
 
-enum UnitType {
+enum UnitType ENSURE_ENUM_UNSIGNED {
     UnknownType,
     Number,
     Percentage,
@@ -108,7 +108,7 @@ enum UnitType {
 // inline-table | table-row-group | table-header-group | table-footer-group |
 // table-row | table-column-group | table-column | table-cell | table-caption |
 // flex | inline-flex | none | inherit
-enum DisplayValue {
+enum DisplayValue ENSURE_ENUM_UNSIGNED {
     InlineDisplayValue, // initial value
     BlockDisplayValue,
     ListItemDisplayValue,
@@ -131,20 +131,20 @@ enum DisplayValue {
     NoneDisplayValue,
 };
 
-enum PositionValue {
+enum PositionValue ENSURE_ENUM_UNSIGNED {
     StaticPositionValue,
     RelativePositionValue,
     AbsolutePositionValue,
     FixedPositionValue,
 };
 
-enum FloatValue {
+enum FloatValue ENSURE_ENUM_UNSIGNED {
     NoneFloatValue,
     LeftFloatValue,
     RightFloatValue,
 };
 
-enum ClearValue {
+enum ClearValue ENSURE_ENUM_UNSIGNED {
     NoneClearValue = 0,
     LeftClearValue = 1,
     RightClearValue = 1 << 1,
@@ -152,20 +152,20 @@ enum ClearValue {
 };
 
 // flex
-enum FlexDirectionValue {
+enum FlexDirectionValue ENSURE_ENUM_UNSIGNED {
     RowFlexDirectionValue,
     RowReverseFlexDirectionValue,
     ColumnFlexDirectionValue,
     ColumnReverseFlexDirectionValue,
 };
 
-enum FlexWrapValue {
+enum FlexWrapValue ENSURE_ENUM_UNSIGNED {
     NoWrapFlexWrapValue,
     WrapFlexWrapValue,
     WrapReverseFlexWrapValue,
 };
 
-enum JustifyContentValue {
+enum JustifyContentValue ENSURE_ENUM_UNSIGNED {
     FlexStartJustifyContentValue,
     FlexEndJustifyContentValue,
     CenterJustifyContentValue,
@@ -173,7 +173,7 @@ enum JustifyContentValue {
     SpaceAroundJustifyContentValue,
 };
 
-enum AlignItemValue {
+enum AlignItemValue ENSURE_ENUM_UNSIGNED {
     FlexStartAlignItemValue,
     FlexEndAlignItemValue,
     CenterAlignItemValue,
@@ -181,7 +181,7 @@ enum AlignItemValue {
     StretchAlignItemValue,
 };
 
-enum AlignContentValue {
+enum AlignContentValue ENSURE_ENUM_UNSIGNED {
     FlexStartAlignContentValue,
     FlexEndAlignContentValue,
     CenterAlignContentValue,
@@ -190,9 +190,9 @@ enum AlignContentValue {
     StretchAlignContentValue,
 };
 
-enum FlexBasisValue { ContentFlexBasisValue };
+enum FlexBasisValue ENSURE_ENUM_UNSIGNED { ContentFlexBasisValue };
 
-enum VerticalAlignValue {
+enum VerticalAlignValue ENSURE_ENUM_UNSIGNED {
     BaselineVAlignValue,
     SubVAlignValue,
     SuperVAlignValue,
@@ -204,7 +204,7 @@ enum VerticalAlignValue {
     NumericVAlignValue,
 };
 
-enum TextAlignValue {
+enum TextAlignValue ENSURE_ENUM_UNSIGNED {
     StartTextAlignValue,
     EndTextAlignValue,
     LeftTextAlignValue,
@@ -214,7 +214,7 @@ enum TextAlignValue {
 };
 
 // transform-origin, background-position
-enum class SideValue {
+enum class SideValue ENSURE_ENUM_UNSIGNED {
     NoneSideValue,
     TopSideValue,
     RightSideValue,
@@ -224,42 +224,42 @@ enum class SideValue {
     ValueSideValue,
 };
 
-enum DirectionValue {
+enum DirectionValue ENSURE_ENUM_UNSIGNED {
     LtrDirectionValue,
     RtlDirectionValue,
 };
 
-enum BackgroundSizeValue {
+enum BackgroundSizeValue ENSURE_ENUM_UNSIGNED {
     CoverBackgroundSizeValue = 1,
     ContainBackgroundSizeValue,
     BackgroundSizeValueEnd = ContainBackgroundSizeValue,
 };
 
-enum BackgroundRepeatValue {
+enum BackgroundRepeatValue ENSURE_ENUM_UNSIGNED {
     RepeatRepeatValue,
     NoRepeatRepeatValue,
 };
 
-enum MaskSizeValue {
+enum MaskSizeValue ENSURE_ENUM_UNSIGNED {
     CoverMaskSizeValue,
     ContainMaskSizeValue,
 };
 
 // Because padding-box is not supported in box-sizing property, so we make
 // another enum.
-enum BoxValue {
+enum BoxValue ENSURE_ENUM_UNSIGNED {
     BorderBoxBoxValue,
     PaddingBoxBoxValue,
     ContentBoxBoxValue,
 };
 
-enum BackgroundAttachmentValue {
+enum BackgroundAttachmentValue ENSURE_ENUM_UNSIGNED {
     ScrollBackgroundAttachmentValue,
     FixedBackgroundAttachmentValue,
     LocalBackgroundAttachmentValue,
 };
 
-enum FontSizeValue {
+enum FontSizeValue ENSURE_ENUM_UNSIGNED {
     XXSmallFontSizeValue,
     XSmallFontSizeValue,
     SmallFontSizeValue,
@@ -272,7 +272,7 @@ enum FontSizeValue {
     SmallerFontSizeValue,
 };
 
-enum WhiteSpaceValue {
+enum WhiteSpaceValue ENSURE_ENUM_UNSIGNED {
     NoWrapWhiteSpaceValue = 1 << 0,  /* Ignore newline characters */
     PreWhiteSpaceValue = 1 << 1,     /* Preserve spaces */
     PreLineWhiteSpaceValue = 1 << 2, /* Wrap lines */
@@ -280,14 +280,14 @@ enum WhiteSpaceValue {
     PreWrapWhiteSpaceValue = PreLineWhiteSpaceValue | PreWhiteSpaceValue,
 };
 
-enum OverflowValue {
+enum OverflowValue ENSURE_ENUM_UNSIGNED {
     VisibleOverflow,
     HiddenOverflow,
     AutoOverflow,
     ScrollOverflow,
 };
 
-enum PointerEventsValue {
+enum PointerEventsValue ENSURE_ENUM_UNSIGNED {
     PointerEventsNoneValue,
     PointerEventsAutoValue,
     PointerEventsVisiblePaintedValue,
@@ -300,21 +300,21 @@ enum PointerEventsValue {
     PointerEventsAllValue,
 };
 
-enum BorderImageRepeatValue {
+enum BorderImageRepeatValue ENSURE_ENUM_UNSIGNED {
     StretchValue,
     RepeatValue,
     RoundValue,
     SpaceValue,
 };
 
-enum BorderShorthandValueType {
+enum BorderShorthandValueType ENSURE_ENUM_UNSIGNED {
     BWidth,
     BStyle,
     BColor,
     BInvalid,
 };
 
-enum BorderStyleValue {
+enum BorderStyleValue ENSURE_ENUM_UNSIGNED {
     NoneBorderStyleValue,
     HiddenBorderStyleValue,
     SolidBorderStyleValue,
@@ -327,33 +327,33 @@ enum BorderStyleValue {
     RidgeBorderStyleValue,
 };
 
-enum BorderWidthValue {
+enum BorderWidthValue ENSURE_ENUM_UNSIGNED {
     ThinBorderWidthValue,
     MediumBorderWidthValue,
     ThickBorderWidthValue,
 };
 
-enum BorderCollapseValue {
+enum BorderCollapseValue ENSURE_ENUM_UNSIGNED {
     SeparateBorderCollapseValue,
     CollapseBorderCollapseValue,
 };
 
-enum CaptionSideValue {
+enum CaptionSideValue ENSURE_ENUM_UNSIGNED {
     TopCaptionSideValue,
     BottomCaptionSideValue,
 };
 
-enum TableLayoutValue {
+enum TableLayoutValue ENSURE_ENUM_UNSIGNED {
     AutoTableLayoutValue,
     FixedTableLayoutValue,
 };
 
-enum EmptyCellsValue {
+enum EmptyCellsValue ENSURE_ENUM_UNSIGNED {
     ShowEmptyCellsValue,
     HideEmptyCellsValue,
 };
 
-enum TextDecorationLineValue {
+enum TextDecorationLineValue ENSURE_ENUM_UNSIGNED {
     NoneTextDecorationLineValue,
     UnderlineTextDecorationLineValue,
     OverlineTextDecorationLineValue,
@@ -361,7 +361,7 @@ enum TextDecorationLineValue {
     BlinkTextDecorationLineValue,
 };
 
-enum TextDecorationStyleValue {
+enum TextDecorationStyleValue ENSURE_ENUM_UNSIGNED {
     SolidTextDecorationStyleValue,
     DoubleTextDecorationStyleValue,
     DottedTextDecorationStyleValue,
@@ -369,20 +369,20 @@ enum TextDecorationStyleValue {
     WavyTextDecorationStyleValue,
 };
 
-enum TextUnderlinePositionValue {
+enum TextUnderlinePositionValue ENSURE_ENUM_UNSIGNED {
     AutoTextUnderlinePositionValue,
     UnderTextUnderlinePositionValue,
     LeftTextUnderlinePositionValue,
     RightTextUnderlinePositionValue,
 };
 
-enum FontStyleValue {
+enum FontStyleValue ENSURE_ENUM_UNSIGNED {
     NormalFontStyleValue,
     ItalicFontStyleValue,
     ObliqueFontStyleValue,
 };
 
-enum FontWeightValue {
+enum FontWeightValue ENSURE_ENUM_UNSIGNED {
     NormalFontWeightValue,
     BoldFontWeightValue,
     BolderFontWeightValue,
@@ -398,25 +398,25 @@ enum FontWeightValue {
     NineHundredsFontWeightValue,
 };
 
-enum WordWrapValue {
+enum WordWrapValue ENSURE_ENUM_UNSIGNED {
     NormalWordWrapValue,
     BreakWordWordWrapValue,
     //    BreakSpaceWordWrapValue,
 };
 
-enum VisibilityValue {
+enum VisibilityValue ENSURE_ENUM_UNSIGNED {
     VisibleVisibilityValue,
     CollapseVisibilityValue,
     HiddenVisibilityValue,
 };
 
-enum UnicodeBidiValue {
+enum UnicodeBidiValue ENSURE_ENUM_UNSIGNED {
     NormalUnicodeBidiValue,
     EmbedUnicodeBidiValue,
     IsolateUnicodeBidiValue,
 };
 
-enum ObjectFitValue {
+enum ObjectFitValue ENSURE_ENUM_UNSIGNED {
     FillObjectFitValue,
     ContainObjectFitValue,
     CoverObjectFitValue,
@@ -424,13 +424,13 @@ enum ObjectFitValue {
     ScaledownObjectFitValue,
 };
 
-enum ImageRenderingValue {
+enum ImageRenderingValue ENSURE_ENUM_UNSIGNED {
     ImageRenderingAutoValue,
     ImageRenderingCrispEdgesValue,
     ImageRenderingPixelatedValue,
 };
 
-enum TransitionTimingFunctionValue {
+enum TransitionTimingFunctionValue ENSURE_ENUM_UNSIGNED {
     TransitionTimingFunctionEaseValue,
     TransitionTimingFunctionLinearValue,
     TransitionTimingFunctionEaseInValue,
@@ -440,58 +440,61 @@ enum TransitionTimingFunctionValue {
     TransitionTimingFunctionStepEndValue,
 };
 
-enum BoxSizingValue { ContentBoxBoxSizingValue, BorderBoxBoxSizingValue };
+enum BoxSizingValue ENSURE_ENUM_UNSIGNED {
+    ContentBoxBoxSizingValue,
+    BorderBoxBoxSizingValue
+};
 
-enum QuoteValue {
+enum QuoteValue ENSURE_ENUM_UNSIGNED {
     OpenQuoteValue,
     CloseQuoteValue,
     NoOpenQuoteValue,
     NoCloseQuoteValue,
 };
 
-enum FillRuleValue {
+enum FillRuleValue ENSURE_ENUM_UNSIGNED {
     FillRuleNonZero,
     FillRuleEvenOdd,
 };
 
-enum TextTransformValue {
+enum TextTransformValue ENSURE_ENUM_UNSIGNED {
     NoneTextTransformValue,
     CapitalizeTextTransformValue,
     UppercaseTextTransformValue,
     LowercaseTextTransformValue,
 };
 
-enum ListStylePositionValue {
+enum ListStylePositionValue ENSURE_ENUM_UNSIGNED {
     ListStylePositionOutside, // Default
     ListStylePositionInside,
 };
 
-enum UserSelectValue {
+enum UserSelectValue ENSURE_ENUM_UNSIGNED {
     NoneUserSelectValue,
     TextUserSelectValue,
     ContainUserSelectValue,
     AllUserSelectValue,
 };
 
-enum HyphensValue {
+enum HyphensValue ENSURE_ENUM_UNSIGNED {
     NoneHyphensValue,
     ManualHyphensValue,
 };
 
-enum LineBreakValue {
+enum LineBreakValue ENSURE_ENUM_UNSIGNED {
     LooseLineBreakValue,
     NormalLineBreakValue,
     StrictLineBreakValue,
 };
 
-enum WordBreakValue {
+enum WordBreakValue ENSURE_ENUM_UNSIGNED {
     NormalWordBreakValue,
     BreakAllWordBreakValue,
     KeepAllWordBreakValue,
     BreakWordWordBreakValue,
 };
 
-enum ResizeValue {
+enum ResizeValue ENSURE_ENUM_UNSIGNED {
     NoneResizeValue,
     BothResizeValue,
     HorizontalResizeValue,
@@ -503,14 +506,14 @@ enum ResizeValue {
 // These values are introduced in CSS basic box model
 // (https://drafts.csswg.org/css-box-3/). But, it is undergoing changes and many
 // parts are not consistent with other modules of CSS.
-enum WidthHeightKeywordValue {
+enum WidthHeightKeywordValue ENSURE_ENUM_UNSIGNED {
     AvailableValue,
     MaxContentValue,
     MinContentValue,
     FitContentValue,
 };
 
-enum BoxDecorationBreakValue {
+enum BoxDecorationBreakValue ENSURE_ENUM_UNSIGNED {
     SliceBoxDecorationBreakValue,
     CloneBoxDecorationBreakValue,
 };
@@ -852,7 +855,7 @@ class CSSStyleValuePair : public gc {
     friend class ValuePair;
 
 public:
-    enum KeyKind {
+    enum KeyKind ENSURE_ENUM_UNSIGNED {
         Unknown,
 #define ADD_CSS_KEYKIND(Name, name, cssname) Name,
         FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
@@ -864,7 +867,7 @@ public:
     // font related properties must be followed end of this enum(KeyKind)
     // This order is used by CSSParser::parseFontFaceRule
 
-    enum ValueKind {
+    enum ValueKind ENSURE_ENUM_UNSIGNED {
         Initial,
         Inherit,
         Unset,
@@ -2601,7 +2604,7 @@ private:
 
 class CSSSelector : public gc {
 public:
-    enum Type {
+    enum Type ENSURE_ENUM_UNSIGNED {
         UnKnown,
         Universal,
         Tag,
@@ -2619,7 +2622,7 @@ public:
         FirstAttributeSelectorMatch = AttributeExact,
     };
 
-    enum RelationType {
+    enum RelationType ENSURE_ENUM_UNSIGNED {
         None,
         SubSelector,     // No combinator
         Descendant,      // "Space" combinator
@@ -2628,7 +2631,7 @@ public:
         GeneralSibling   // ~ combinator
     };
 
-    enum PseudoType {
+    enum PseudoType ENSURE_ENUM_UNSIGNED {
         PseudoNone,
 #define ADD_PSEUDO_TYPE(name, nameLower, selectorName) Pseudo##name,
         STARFISH_ENUM_PSEUDO_SELECTORS(ADD_PSEUDO_TYPE)
@@ -2636,7 +2639,7 @@ public:
             PseudoTotalCount,
     };
 
-    enum AttributeMatchType {
+    enum AttributeMatchType ENSURE_ENUM_UNSIGNED {
         CaseInsensitive,
         CaseSensitive,
     };
@@ -2894,7 +2897,7 @@ class StyleResolver : public DocumentHoldable, public gc {
         const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& end);
 
 public:
-    enum PseudoElementType {
+    enum PseudoElementType ENSURE_ENUM_UNSIGNED {
         PseudoElementNone,
         PseudoElementFirstLine,
         PseudoElementFirstLetter,
@@ -2905,7 +2908,7 @@ public:
         PseudoElementCounter,
     };
 
-    enum Match {
+    enum Match ENSURE_ENUM_UNSIGNED {
         SelectorMatches,          // The selector matches the element
         SelectorFailsLocally,     // The selector fails for the element.
         SelectorFailsAllSiblings, // The selector fails for the element and any
@@ -2915,7 +2918,7 @@ public:
     };
 
     // MUST uses same bit with Node::StyleChangeReason
-    enum StyleDamageSource {
+    enum StyleDamageSource ENSURE_ENUM_UNSIGNED {
         NoDamage = 0,
         StyleDamageFromID = 1,
         StyleDamageFromClass = 1 << 1,

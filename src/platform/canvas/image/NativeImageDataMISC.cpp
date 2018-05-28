@@ -116,6 +116,8 @@ public:
             cairo_surface_destroy(m_imageSurface);
         }
         free(m_image);
+
+        NativeImageData::disposeNativeImageData();
     }
 
     void initInternalSurface()

@@ -40,15 +40,6 @@ class NetworkSharedResourceManager {
 
 public:
     typedef std::multimap<std::string, CurlHandleData> CurlHandleDataMultiMap;
-    enum MutexKind {
-        CookieMutex = 0,
-        SSLMutex,
-        DNSMutex,
-        ShareMutex,
-        CurlCacheMutex,
-        MutexKindMax
-    };
-
     static NetworkSharedResourceManager* getInstance();
     static void close();
 
@@ -89,7 +80,7 @@ private:
     uint64_t m_lastCachePruneTime;
     size_t m_cacheClearTimerID;
     std::string m_cookieStoreFilePath;
-    Mutex* m_mutexes[MutexKindMax];
+    Mutex* m_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST + 1];
 };
 }
 

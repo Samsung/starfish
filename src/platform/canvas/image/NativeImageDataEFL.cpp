@@ -159,6 +159,7 @@ public:
             evas_object_hide(m_image);
             evas_object_del(m_image);
         }
+        NativeImageData::disposeNativeImageData();
     }
 
     virtual void* unwrap()

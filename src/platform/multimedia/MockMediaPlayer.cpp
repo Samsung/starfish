@@ -209,10 +209,11 @@ void MockMediaPlayer::fillBuffer(MockMediaStream* stream)
                    lastDTS, (int)submitCount, (int)submitBytes);
 }
 
+const uint64_t forwardDuration = 1000;
+const uint64_t timerInterval = 250;
+
 void MockMediaPlayer::play()
 {
-    const uint64_t forwardDuration = 1000;
-    const uint64_t timerInterval = 250;
     if (m_playbackState != PLAYBACK_STATE_PLAYING) {
         m_playbackState = PLAYBACK_STATE_PLAYING;
         m_container->document()->browsingContext()->addPointerInRootSet(this);
@@ -348,8 +349,6 @@ void MockMediaPlayer::seek(double time)
     setCurrentTimeInMS(timeInMS);
     STARFISH_ASSERT(m_seekingTimer == SIZE_MAX);
 
-    const uint64_t forwardDuration = 500;
-    const uint64_t timerInterval = 250;
     m_seekingTimer = window()->setInterval(
         [](Window* window, void* data) {
             MockMediaPlayer* self = (MockMediaPlayer*)data;
