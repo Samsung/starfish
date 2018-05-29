@@ -1617,7 +1617,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                     canvas->setVisible(true);
                 }
 
-                STARFISH_ASSERT(!isPositioned());
+                STARFISH_ASSERT(!childBox->isEstablishesStackingContext());
 
                 if (overflowApplied) {
                     canvas->save();
