@@ -1120,6 +1120,8 @@ public:
         return !m_word.isEmpty();
     }
 
+    bool breakableWord(FrameBox* box) const;
+
     void handleAbsoluteBox(FrameBox* box, bool canInsert, bool canRegister);
     void handleTextToken(TextToken& token);
     void handleSoftHyphenate(bool hyphenateOnLine);
