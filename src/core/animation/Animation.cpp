@@ -489,6 +489,10 @@ void OpacityAnimationTask::detachedFromElement()
     Element* current = targetElement();
     Frame* frame = current->frame();
 
+    if (!frame) {
+        return;
+    }
+
     bool before = frame->isEstablishesStackingContext();
     ComputedStyle* style = current->style();
     style->setOpacity(m_toValue.getFloat());

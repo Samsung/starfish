@@ -208,8 +208,8 @@ void Timer::removeGenericAnimator(size_t reqID)
 
     if (handlerData != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)handlerData->second;
-        ecore_animator_freeze((Ecore_Animator*)ad->m_timerID);
-        ecore_animator_del((Ecore_Animator*)ad->m_timerID);
+        ecore_animator_freeze(ad->m_timerID);
+        ecore_animator_del(ad->m_timerID);
         GC_FREE(ad);
         m_animationHandler.erase(handlerData);
     }

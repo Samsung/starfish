@@ -4562,7 +4562,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                                      std::floor(diff / f->style()->flexGrow()));
                     }
                 } else if (diff < 0) {
-                    if (f->style()->flexShrink() > 0) {
+                    if (f->style()->flexShrink() > 0 && basisSize > 0) {
                         maxContentFlexShrinkFraction = std::max(
                             maxContentFlexShrinkFraction,
                             std::floor(-diff /
