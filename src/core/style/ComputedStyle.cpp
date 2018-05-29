@@ -992,10 +992,10 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
 
     StyleTransitionData* data = newStyle->transition();
     for (size_t i = 0; i < data->size(); i++) {
-        if (!data->at(i).duration().toTimeValue()) {
+        if (!data->duration(i).toTimeValue()) {
             continue;
         }
-        CSSStyleValuePair::KeyKind property = data->at(i).property();
+        CSSStyleValuePair::KeyKind property = data->property(i);
         bool isPropertyAll = property == CSSStyleValuePair::All;
 
         // e.g. BackgroundColor = BackgroundColor | Background | All
@@ -1045,15 +1045,15 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
     AnimationExecutor* executor = element->document()->animationExecutor();
     StyleTransitionData* data = newStyle->transition();
     for (size_t i = 0; i < data->size(); i++) {
-        if (!data->at(i).duration().toTimeValue()) {
+        if (!data->duration(i).toTimeValue()) {
             continue;
         }
-        CSSStyleValuePair::KeyKind property = data->at(i).property();
+        CSSStyleValuePair::KeyKind property = data->property(i);
         bool isPropertyAll = property == CSSStyleValuePair::All;
 
-        auto duration = data->at(i).duration().toTimeValue();
-        auto delay = data->at(i).delay().toTimeValue();
-        auto timingFunction = data->at(i).timingFunction();
+        auto duration = data->duration(i).toTimeValue();
+        auto delay = data->delay(i).toTimeValue();
+        auto timingFunction = data->timingFunction(i);
 
         if (NEED_TRANSITION(CSSStyleValuePair::BackgroundColor,
                             CSSStyleValuePair::Background)) {
