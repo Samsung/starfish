@@ -2140,7 +2140,7 @@ void LineFormattingContext::insertPendingInlineBoxes()
                 handleAbsoluteBox(box, true, false);
             } else {
                 if (!dontBreakLine(box, box->outerWidth())) {
-                    if (!m_canConcatWord && isWord(box)) {
+                    if (breakableWord(box)) {
                         InlineTextBox* box2 =
                             splitInlineTextBox(box->asInlineTextBox());
                         insertInlineBox(box2);
@@ -2169,6 +2169,8 @@ void LineFormattingContext::updateCurrentLayoutParent(Frame* parent)
                                      ->origin()];
     }
 
+    // NOTE When word-wrap value is break-word, we do not concat word
+    // TODO Support word concat for break-word word-wrap value
     if (m_currentLayoutParent->isLineBox()) {
         m_canConcatWord =
             m_block->style()->wordWrap() != BreakWordWordWrapValue;
@@ -2417,6 +2419,12 @@ bool LineFormattingContext::hasFloatingBoxAlreadyInLineBox(Frame* f)
     }
 }
 
+bool LineFormattingContext::breakableWord(FrameBox* box) const
+{
+    return isWord(box) && !m_canConcatWord &&
+           (box->asInlineTextBox()->text().length() > 1);
+}
+
 // TODO: when concatenating word, we should check if word to concatenate
 // is shouldWrapLines.
 bool LineFormattingContext::dontBreakLine(FrameBox* box, LayoutUnit width)
@@ -2431,7 +2439,7 @@ bool LineFormattingContext::dontBreakLine(FrameBox* box, LayoutUnit width)
         wrapLine = true;
     }
     return (!hasFloatingBoxAlreadyInLineBox(box) && m_currentLineWidth == 0 &&
-            !(isWord(box) && !m_canConcatWord)) ||
+            !breakableWord(box)) ||
            !wrapLine || canInsertToLineBox(box, width);
 }
 
@@ -2608,6 +2616,7 @@ void LineFormattingContext::insertInlineBox(FrameBox* box)
 
 InlineTextBox* LineFormattingContext::splitInlineTextBox(InlineTextBox* textBox)
 {
+    STARFISH_ASSERT(textBox->text().length() > 1);
     TextRun run = textBox->textRun();
     size_t start = run.m_stringView.start();
     size_t end = run.m_stringView.end();
@@ -2616,18 +2625,10 @@ InlineTextBox* LineFormattingContext::splitInlineTextBox(InlineTextBox* textBox)
     ret->setLayoutParent(m_currentLayoutParent);
     ret->setHeight(ret->style()->font()->metrics().m_fontHeight);
     bool splitted = false;
-    size_t splittedIndex;
+    size_t splittedIndex = end;
     LayoutUnit remainingWidth =
         (m_lineBoxWidth - m_currentLineWidth - m_unprocessedStartingMBPWidth -
          m_textIndentWidth);
-    float ratio;
-    if (remainingWidth > 0) {
-        ratio = remainingWidth / textBox->width();
-    } else {
-        ratio = 0;
-    }
-    splittedIndex =
-        std::max((size_t)((end - start) * ratio) + start, start + 1);
     for (; splittedIndex > start; splittedIndex--) {
         sv->setEnd(splittedIndex);
         ret->setText(sv);
@@ -2652,6 +2653,8 @@ InlineTextBox* LineFormattingContext::splitInlineTextBox(InlineTextBox* textBox)
 
 void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
 {
+    // NOTE When word-wrap value is break-word, we do not concat word
+    // TODO Support word concat for break-word word-wrap value
     if (m_canConcatWord && isWord(box)) {
         m_word.concat(box);
         return;
@@ -2677,15 +2680,16 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
         if (!dontBreakLine(box, box->outerWidth())) {
             if (isCollapsibleWhiteSpace(box)) {
                 m_isPendingBreakLine = true;
-            } else {
-                if (!m_canConcatWord && isWord(box) &&
-                    box->asInlineTextBox()->text().length() > 1) {
+            } else if (breakableWord(box)) {
+                if (m_currentLineWidth == 0) {
                     InlineTextBox* box2 =
                         splitInlineTextBox(box->asInlineTextBox());
                     insertInlineBox(box2);
                 }
                 breakLine(nullptr);
-
+                tryInsertInlineBox(box);
+            } else {
+                breakLine(nullptr);
                 if (!canInsertToLineBox(box, box->outerWidth()) &&
                     m_lastLineHasFloatValue == HasFloat::HasNone) {
                     insertInlineBox(box);
