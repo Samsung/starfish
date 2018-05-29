@@ -3860,6 +3860,15 @@ void StyleResolver::apply(Element* element,
                    CSSStyleValuePair::ValueKind::Percentage) {            \
             style->set##POS(                                              \
                 Length(Length::Percent, cssValues[k].percentageValue())); \
+        } else if (cssValues[k].valueKind() ==                            \
+                   CSSStyleValuePair::ValueKind::CalcValueKind) {         \
+            Nullable<Length> length = convertValueToLength(               \
+                cssValues[k].valueKind(), cssValues[k].value());          \
+            if (length.hasValue()) {                                      \
+                style->set##POS(length.getValue());                       \
+            } else {                                                      \
+                style->set##POS(Length());                                \
+            }                                                             \
         } else {                                                          \
             STARFISH_RELEASE_ASSERT_NOT_REACHED();                        \
         }                                                                 \
