@@ -560,7 +560,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.so',
+                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
                     ],
                     'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
@@ -572,7 +572,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.so',
+                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
@@ -584,7 +584,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/armv7l-linux/debug/lib/libtuv.so',
+                        'third_party/libtuv/build/armv7l-linux/debug/lib/libtuv.a',
                     ],
                     'destination': '<(PRODUCT_DIR)/../debug/lib/tizen',
                 },
@@ -596,7 +596,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/armv7l-linux/debug/lib/libtuv.so',
+                        'third_party/libtuv/build/armv7l-linux/debug/lib/libtuv.a',
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },
