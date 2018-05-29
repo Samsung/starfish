@@ -193,6 +193,7 @@ public:
     virtual void setCssText(String* text);
 
     String* getPropertyValue(String* name);
+    String* getPropertyPriority(String* name);
     void setProperty(String* name, String* value, String* priority);
 
     // NOTE Based on IDL,

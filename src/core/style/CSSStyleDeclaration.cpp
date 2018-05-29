@@ -1562,7 +1562,7 @@ String* CSSStyleDeclaration::item(uint32_t index)
 
 String* CSSStyleDeclaration::getPropertyValue(String* name)
 {
-    auto str = name->toNullableUTF8String();
+    auto str = name->toASCIILower()->toNullableUTF8String();
     CSSStyleValuePair::KeyKind kind =
         lookupCSSStyle(str.m_buffer, str.m_bufferSize);
     String* val = String::emptyString;
@@ -1578,6 +1578,21 @@ String* CSSStyleDeclaration::getPropertyValue(String* name)
         break;
     }
     return val;
+}
+
+// https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-getpropertypriority
+String* CSSStyleDeclaration::getPropertyPriority(String* name)
+{
+    auto str = name->toASCIILower()->toNullableUTF8String();
+    CSSStyleValuePair::KeyKind kind =
+        lookupCSSStyle(str.m_buffer, str.m_bufferSize);
+    auto iter = std::find_if(
+        m_cssValues.begin(), m_cssValues.end(),
+        [kind](CSSStyleValuePair p) { return p.keyKind() == kind; });
+
+    return iter != m_cssValues.end() && iter->flagImportant()
+               ? String::fromUTF8("important")
+               : String::emptyString;
 }
 
 void CSSStyleDeclaration::setProperty(String* name, String* value,
