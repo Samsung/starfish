@@ -1886,6 +1886,7 @@ Canvas* WindowImplEFL::preparePainting()
         int w, h;
         evas_object_image_size_get(m_canvasAdpater, &w, &h);
         if (w != width() || h != height()) {
+            evas_object_resize(m_canvasAdpater, width(), height());
             evas_object_image_size_set(m_canvasAdpater, width(), height());
             evas_object_image_fill_set(m_canvasAdpater, 0, 0, width(),
                                        height());
