@@ -72,7 +72,9 @@ public:
         BEZIERCURVETO_2D,
         SETLINEWIDTH_2D,
         CLEARRECT_2D,
-        SETFILLCOLOR_2D
+        SETFILLCOLOR_2D,
+        SETSTROKECOLOR_2D,
+        RECT_2D,
         // 3D for 'opengl' or 'direct X'
     };
 
@@ -122,10 +124,20 @@ public:
                        std::vector<PaintCommandArgument>& arguments);
     void setFillColorFor2D(Canvas* canvas,
                            std::vector<PaintCommandArgument>& arguments);
+    void setStrokeColorFor2D(Canvas* canvas,
+                             std::vector<PaintCommandArgument>& arguments);
+
+    void drawRectFor2D(Canvas* canvas,
+                       std::vector<PaintCommandArgument>& arguments);
+
+    void setLineWidhtFor2D(Canvas* canvas,
+                           std::vector<PaintCommandArgument>& arguments);
 
 private:
     std::vector<PaintCommand> m_commands;
     Unit::Color m_fillColor;
+    Unit::Color m_strokeColor;
+    double m_lienWidth;
 };
 }
 

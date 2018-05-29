@@ -68,6 +68,9 @@ public:
     // CanvasFillStrokeStyles
     DOMStringOrCanvasGradientOrCanvasPattern fillStyle();
     void setFillStyle(DOMStringOrCanvasGradientOrCanvasPattern value);
+
+    DOMStringOrCanvasGradientOrCanvasPattern strokeStyle();
+    void setStrokeStyle(DOMStringOrCanvasGradientOrCanvasPattern value);
     CanvasGradient* createLinearGradient(double x0, double y0, double x1,
                                          double y1);
 
