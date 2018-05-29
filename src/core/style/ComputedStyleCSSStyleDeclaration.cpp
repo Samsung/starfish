@@ -952,7 +952,6 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::TransformFunctions);
-            FrameDocument* doc = frame->asFrameDocument();
             FrameBox* box = frame->findNearestAssociateBox();
             SkMatrix m = style->transformsToMatrix(
                 box->width(), box->height(), box, style->hasTransforms(frame));
