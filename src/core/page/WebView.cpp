@@ -591,22 +591,26 @@ void WebView::layoutIfNeeds()
                             printf(
                                 "StackingContext[%p, node %p %s id:%s "
                                 "className:%s"
-                                ", frame %p, buf? %d painting %d visibleRect "
+                                ", frame %p, buf? %d painting %d opacity %f "
+                                "visibleRect "
                                 "%d "
                                 "%d %d %d]\n",
                                 ctx, element, utf8DataLog1.data(),
                                 utf8DataLog2.data(), className.data(),
                                 ctx->owner(), (int)ctx->needsGraphicsBuffer(),
-                                (int)ctx->needsRepainting(), (int)fr.x(),
+                                (int)ctx->needsRepainting(),
+                                ctx->owner()->style()->opacity(), (int)fr.x(),
                                 (int)fr.y(), (int)fr.width(), (int)fr.height());
                         } else {
                             printf(
                                 "StackingContext[%p, anonymous node"
-                                ", frame %p, buf %d painting %d visibleRect %d "
+                                ", frame %p, buf %d painting %d opacity %f "
+                                "visibleRect %d "
                                 "%d %d %d]\n",
                                 ctx, ctx->owner(),
                                 (int)ctx->needsGraphicsBuffer(),
-                                (int)ctx->needsRepainting(), (int)fr.x(),
+                                (int)ctx->needsRepainting(),
+                                ctx->owner()->style()->opacity(), (int)fr.x(),
                                 (int)fr.y(), (int)fr.width(), (int)fr.height());
                         }
 
