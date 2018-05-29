@@ -1994,38 +1994,52 @@ public:
 
     StyleTransitionData* transition()
     {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return nullptr;
-        }
         return m_rareComputedStyleData.transition();
     }
 
     size_t transitionLayerSize()
     {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return 0;
+        StyleTransitionData* t = transition();
+        if (t) {
+            return t->size();
         }
-
-        StyleTransitionData* transition = m_rareComputedStyleData.transition();
-        if (transition) {
-            return transition->size();
-        }
-
         return 0;
     }
 
     CSSStyleValuePair::KeyKind transitionProperty(size_t layer = 0)
     {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return CSSStyleValuePair::KeyKind::All;
+        StyleTransitionData* t = transition();
+        if (t) {
+            return t->property(layer);
         }
-
-        StyleTransitionData* transition = m_rareComputedStyleData.transition();
-        if (transition) {
-            return transition->property(layer);
-        }
-
         return CSSStyleValuePair::KeyKind::All;
+    }
+
+    CSSTime transitionDuration(size_t layer = 0)
+    {
+        StyleTransitionData* t = transition();
+        if (t) {
+            return t->duration(layer);
+        }
+        return CSSTime(0);
+    }
+
+    CSSTime transitionDelay(size_t layer = 0)
+    {
+        StyleTransitionData* t = transition();
+        if (t) {
+            return t->delay(layer);
+        }
+        return CSSTime(0);
+    }
+
+    AnimationTimingFunction* transitionTimingFunction(size_t layer = 0)
+    {
+        StyleTransitionData* t = transition();
+        if (t) {
+            return t->timingFunction(layer);
+        }
+        return StyleTransitionData::defaultTimingFunction();
     }
 
     void setTransitionProperty(CSSStyleValuePair::KeyKind property,
@@ -2035,57 +2049,15 @@ public:
                                                                 layer);
     }
 
-    CSSTime transitionDuration(size_t layer = 0)
-    {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return CSSTime(0);
-        }
-
-        StyleTransitionData* transition = m_rareComputedStyleData.transition();
-        if (transition) {
-            return transition->duration(layer);
-        }
-
-        return CSSTime(0);
-    }
-
     void setTransitionDuration(CSSTime duration, size_t layer = 0)
     {
         m_rareComputedStyleData.ensureTransition()->setDuration(duration,
                                                                 layer);
     }
 
-    CSSTime transitionDelay(size_t layer = 0)
-    {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return CSSTime(0);
-        }
-
-        StyleTransitionData* transition = m_rareComputedStyleData.transition();
-        if (transition) {
-            return transition->delay(layer);
-        }
-
-        return CSSTime(0);
-    }
-
     void setTransitionDelay(CSSTime duration, size_t layer = 0)
     {
         m_rareComputedStyleData.ensureTransition()->setDelay(duration, layer);
-    }
-
-    AnimationTimingFunction* transitionTimingFunction(size_t layer = 0)
-    {
-        if (!m_rareComputedStyleData.m_styles.size()) {
-            return StyleTransitionData::defaultTimingFunction();
-        }
-
-        StyleTransitionData* transition = m_rareComputedStyleData.transition();
-        if (transition) {
-            return transition->timingFunction(layer);
-        }
-
-        return StyleTransitionData::defaultTimingFunction();
     }
 
     void setTransitionTimingFunction(AnimationTimingFunction* v,
@@ -2099,6 +2071,38 @@ public:
     {
         m_rareComputedStyleData.ensureTransition()->setTimingFunction(
             knownTransitionTimingFunction(v), layer);
+    }
+
+    void resetTransitionProperties()
+    {
+        StyleTransitionData* t = transition();
+        if (t) {
+            t->shrinkProperties(0);
+        }
+    }
+
+    void resetTransitionDurations()
+    {
+        StyleTransitionData* t = transition();
+        if (t) {
+            t->shrinkDurations(0);
+        }
+    }
+
+    void resetTransitionDelays()
+    {
+        StyleTransitionData* t = transition();
+        if (t) {
+            t->shrinkDelays(0);
+        }
+    }
+
+    void resetTransitionTimingFunctions()
+    {
+        StyleTransitionData* t = transition();
+        if (t) {
+            t->shrinkTimingFunctions(0);
+        }
     }
 
 #define SET_SIDE(UPOS, ...)                                      \

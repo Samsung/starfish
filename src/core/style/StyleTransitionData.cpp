@@ -26,7 +26,7 @@
 namespace StarFish {
 StyleTransitionLayer::StyleTransitionLayer()
     : m_property(CSSStyleValuePair::KeyKind::All)
-    , m_timingFunction(StyleTransitionData::defaultTimingFunction())
+    , m_timingFunction(nullptr)
     , m_duration(0)
     , m_delay(0)
 {
@@ -46,7 +46,9 @@ bool StyleTransitionLayer::operator==(const StyleTransitionLayer& b) const
         return false;
     }
 
-    if (*m_timingFunction != *b.m_timingFunction) {
+    if (m_timingFunction != b.m_timingFunction &&
+        (!m_timingFunction || !b.m_timingFunction ||
+         *m_timingFunction != *b.m_timingFunction)) {
         return false;
     }
 
@@ -63,11 +65,28 @@ AnimationTimingFunction* StyleTransitionData::defaultTimingFunction()
     return new CubicBezier(0.25, 0.1, 0.25, 1);
 }
 
-AnimationTimingFunction* StyleTransitionData::timingFunction(size_t layer) const
+bool StyleTransitionData::operator==(const StyleTransitionData& b) const
 {
-    if (size() <= layer) {
-        return defaultTimingFunction();
+    if (size() != b.size()) {
+        return false;
     }
-    return at(layer).timingFunction();
+    size_t len = size();
+    for (size_t i = 0; i < len; i++) {
+        if (property(i) != b.property(i)) {
+            return false;
+        }
+        if (duration(i) != b.duration(i)) {
+            return false;
+        }
+        AnimationTimingFunction* t1 = timingFunction(i);
+        AnimationTimingFunction* t2 = b.timingFunction(i);
+        if (t1 != t2 && (!t1 || !t2 || *t1 != *t2)) {
+            return false;
+        }
+        if (delay(i) != b.delay(i)) {
+            return false;
+        }
+    }
+    return true;
 }
 }

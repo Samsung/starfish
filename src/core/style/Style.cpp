@@ -3389,6 +3389,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionProperty:
+            style->resetTransitionProperties();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
                 applyTransitionProperty(style, parentStyle, cssValues[k], 0);
             } else {
@@ -3399,6 +3400,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionDuration:
+            style->resetTransitionDurations();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
                 applyTransitionDuration(style, parentStyle, cssValues[k], 0);
             } else {
@@ -3409,6 +3411,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
+            style->resetTransitionTimingFunctions();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
                 applyTransitionTimingFunction(style, parentStyle, cssValues[k],
                                               0);
@@ -3421,6 +3424,7 @@ void StyleResolver::apply(Element* element,
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionDelay:
+            style->resetTransitionDelays();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
                 applyTransitionDelay(style, parentStyle, cssValues[k], 0);
             } else {
