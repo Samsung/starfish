@@ -5634,6 +5634,17 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
 
         if (canUseAncestorSelectorFilter &&
             ctx.m_ancestorSelectorFilter->canIgnoreSelector(rule, element)) {
+            const CSSSelectorList& selectorList = rule->selectorList();
+
+            for (size_t i = 1; i < selectorList.size(); i++) {
+                if (selectorList[i]->type() == CSSSelector::Class) {
+                    ret->setStyleDamageSource(
+                        StyleResolver::StyleDamageSource::StyleDamageFromClass);
+                } else if (selectorList[i]->type() == CSSSelector::Id) {
+                    ret->setStyleDamageSource(
+                        StyleResolver::StyleDamageSource::StyleDamageFromID);
+                }
+            }
             continue;
         }
 

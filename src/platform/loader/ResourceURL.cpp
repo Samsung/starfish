@@ -1058,6 +1058,20 @@ ReferrerURL::ReferrerURL(ResourceURL* referrer, String* policy)
     }
 }
 
+void* ReferrerURL::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(ReferrerURL));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(ReferrerURL)] = { 0 };
+        ResourceURL::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(ReferrerURL));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
 String* ReferrerURL::referrerString(ResourceURL* url)
 {
     STARFISH_ASSERT(url->url());

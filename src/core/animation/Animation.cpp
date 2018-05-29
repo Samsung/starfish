@@ -828,6 +828,10 @@ void AnimationExecutor::cancelPreviousAnimationIfNeeded(AnimationTask* newTask)
         std::remove_if(m_animationList.begin(), m_animationList.end(),
                        [&newTask](AnimationTask* current) {
                            if (shouldCancelPrevious(current, newTask)) {
+                               if (newTask->propertyType() !=
+                                   CSSStyleValuePair::KeyKind::Transform) {
+                                   newTask->m_toValue = current->m_toValue;
+                               }
                                current->fireCancelEvent();
                                return true;
                            }

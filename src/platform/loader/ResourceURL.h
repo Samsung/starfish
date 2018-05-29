@@ -277,6 +277,9 @@ public:
     ReferrerURL(ResourceURL* url);
     ReferrerURL(ResourceURL* url, String* policy);
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
     virtual bool isReferrerURL() override
     {
         return true;

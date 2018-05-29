@@ -1125,7 +1125,7 @@ void StackingContext::paintStackingContext(
 
     if (hasGraphicsBuffer) {
         needsPainting = m_needsRepainting || parentGraphicsLayerNeedsPainting;
-        if (m_needsRepainting) {
+        if (m_needsRepainting || m_rareData->m_buffer == nullptr) {
             parentGraphicsLayerNeedsPainting = true;
             if (m_owner->hasOwnGraphicsBufferMethod()) {
                 m_owner->createGraphicsBuffer(&m_rareData->m_buffer,
