@@ -66,6 +66,13 @@ void CanvasRenderingContext2D::setDefaultCommands()
         command3.insertArgumentNumber(0);
         command3.insertArgumentNumber(255);
         canvas->commandBuffer().insertCommand(command3);
+
+        PaintCommand command4(PaintCommand::Command::SETSTROKECOLOR_2D);
+        command4.insertArgumentNumber(0);
+        command4.insertArgumentNumber(0);
+        command4.insertArgumentNumber(0);
+        command4.insertArgumentNumber(255);
+        canvas->commandBuffer().insertCommand(command4);
     }
 }
 
@@ -154,6 +161,36 @@ void CanvasRenderingContext2D::setFillStyle(
         if (NamedColor::parseNamedColor(s1.data(), s1.length(), ret)) {
             Unit::Color c = NamedColor::namedColorToColor(ret);
             PaintCommand command(PaintCommand::Command::SETFILLCOLOR_2D);
+            command.insertArgumentNumber(c.r());
+            command.insertArgumentNumber(c.g());
+            command.insertArgumentNumber(c.b());
+            command.insertArgumentNumber(c.a());
+            canvas->commandBuffer().insertCommand(command);
+        }
+    }
+}
+
+DOMStringOrCanvasGradientOrCanvasPattern CanvasRenderingContext2D::strokeStyle()
+{
+    return DOMStringOrCanvasGradientOrCanvasPattern::createDOMString(
+        String::fromUTF8("black"));
+}
+
+void CanvasRenderingContext2D::setStrokeStyle(
+    DOMStringOrCanvasGradientOrCanvasPattern value)
+{
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (!canvas) {
+        return;
+    }
+
+    if (value.isDOMStringValue()) {
+        String* v = value.getDOMStringValue();
+        auto s1 = v->toUTF8NonGCString();
+        NamedColor::NamedColorValue ret;
+        if (NamedColor::parseNamedColor(s1.data(), s1.length(), ret)) {
+            Unit::Color c = NamedColor::namedColorToColor(ret);
+            PaintCommand command(PaintCommand::Command::SETSTROKECOLOR_2D);
             command.insertArgumentNumber(c.r());
             command.insertArgumentNumber(c.g());
             command.insertArgumentNumber(c.b());
@@ -269,6 +306,16 @@ void CanvasRenderingContext2D::lineTo(double x, double y)
 
 void CanvasRenderingContext2D::rect(double x, double y, double w, double h)
 {
+    HTMLCanvasElement* canvas = m_canvasElement;
+    if (canvas) {
+        canvas->setNeedsPainting();
+        PaintCommand command(PaintCommand::Command::RECT_2D);
+        command.insertArgumentNumber(x);
+        command.insertArgumentNumber(y);
+        command.insertArgumentNumber(w);
+        command.insertArgumentNumber(h);
+        canvas->commandBuffer().insertCommand(command);
+    }
 }
 
 void CanvasRenderingContext2D::arc(double x, double y, double radius,

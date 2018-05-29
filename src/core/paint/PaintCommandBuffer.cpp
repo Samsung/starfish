@@ -25,6 +25,7 @@
 namespace StarFish {
 PaintCommandBuffer::PaintCommandBuffer()
 {
+    m_lienWidth = 1.0f;
 }
 
 static void moveToFor2D(Canvas* canvas,
@@ -72,12 +73,14 @@ static void bezierCurveFor2D(Canvas* canvas,
                     arguments[4].value(), arguments[5].value());
 }
 
-static void setLineWidhtFor2D(Canvas* canvas,
-                              std::vector<PaintCommandArgument>& arguments)
+void PaintCommandBuffer::setLineWidhtFor2D(
+    Canvas* canvas, std::vector<PaintCommandArgument>& arguments)
 {
     if (arguments.size() != 1) {
         return;
     }
+
+    m_lienWidth = arguments[0].value();
     canvas->setStrokeWidth(arguments[0].value());
 }
 
@@ -121,6 +124,39 @@ void PaintCommandBuffer::setFillColorFor2D(
     m_fillColor = Unit::Color(r, g, b, a);
 }
 
+void PaintCommandBuffer::drawRectFor2D(
+    Canvas* canvas, std::vector<PaintCommandArgument>& arguments)
+{
+    if (arguments.size() != 4) {
+        return;
+    }
+
+    double x = arguments[0].value();
+    double y = arguments[1].value();
+    double w = arguments[2].value();
+    double h = arguments[3].value();
+
+    canvas->moveTo(x - m_lienWidth / 2, y);
+    canvas->lineTo(x + w, y);
+    canvas->lineTo(x + w, y + h);
+    canvas->lineTo(x, y + h);
+    canvas->lineTo(x, y);
+}
+
+void PaintCommandBuffer::setStrokeColorFor2D(
+    Canvas* canvas, std::vector<PaintCommandArgument>& arguments)
+{
+    if (arguments.size() != 4) {
+        return;
+    }
+    double r = arguments[0].value();
+    double g = arguments[1].value();
+    double b = arguments[2].value();
+    double a = arguments[3].value();
+
+    m_strokeColor = Unit::Color(r, g, b, a);
+}
+
 void PaintCommandBuffer::paintCommands(Canvas* canvas)
 {
     if (!m_commands.size()) {
@@ -138,6 +174,7 @@ void PaintCommandBuffer::paintCommands(Canvas* canvas)
             lineToFor2D(canvas, command.arguments());
             break;
         case PaintCommand::Command::STROKE_2D:
+            canvas->setColor(m_strokeColor);
             canvas->stroke();
             break;
         case PaintCommand::Command::FILLRECT_2D:
@@ -167,6 +204,12 @@ void PaintCommandBuffer::paintCommands(Canvas* canvas)
             break;
         case PaintCommand::Command::SETFILLCOLOR_2D:
             setFillColorFor2D(canvas, command.arguments());
+            break;
+        case PaintCommand::Command::SETSTROKECOLOR_2D:
+            setStrokeColorFor2D(canvas, command.arguments());
+            break;
+        case PaintCommand::Command::RECT_2D:
+            drawRectFor2D(canvas, command.arguments());
             break;
         default:
             break;
