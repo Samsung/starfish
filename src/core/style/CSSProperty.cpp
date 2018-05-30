@@ -25,35 +25,39 @@ namespace StarFish {
 bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
 {
     switch (property) {
+    // Shorthand
     case CSSStyleValuePair::All:
     case CSSStyleValuePair::Background:
-    case CSSStyleValuePair::BackgroundColor:
     case CSSStyleValuePair::BackgroundPosition:
+    case CSSStyleValuePair::BorderBottom:
+    case CSSStyleValuePair::BorderColor:
+    case CSSStyleValuePair::BorderLeft:
+    case CSSStyleValuePair::BorderRight:
+    case CSSStyleValuePair::BorderTop:
+    case CSSStyleValuePair::Bottom:
+    case CSSStyleValuePair::Flex:
+    case CSSStyleValuePair::Font:
+    case CSSStyleValuePair::Margin:
+    case CSSStyleValuePair::Outline:
+    case CSSStyleValuePair::Padding:
+    case CSSStyleValuePair::TextDecoration:
+    // Normal
+    case CSSStyleValuePair::BackgroundColor:
     case CSSStyleValuePair::BackgroundPositionX:
     case CSSStyleValuePair::BackgroundPositionY:
     case CSSStyleValuePair::BackgroundSize:
-    case CSSStyleValuePair::BorderBottom:
     case CSSStyleValuePair::BorderBottomColor:
     case CSSStyleValuePair::BorderBottomLeftRadius:
     case CSSStyleValuePair::BorderBottomRightRadius:
     case CSSStyleValuePair::BorderBottomWidth:
-    case CSSStyleValuePair::BorderColor:
-    case CSSStyleValuePair::BorderImageOutset:
-    case CSSStyleValuePair::BorderImageSlice:
-    case CSSStyleValuePair::BorderImageSource:
-    case CSSStyleValuePair::BorderImageWidth:
-    case CSSStyleValuePair::BorderLeft:
     case CSSStyleValuePair::BorderLeftColor:
     case CSSStyleValuePair::BorderLeftWidth:
-    case CSSStyleValuePair::BorderRight:
     case CSSStyleValuePair::BorderRightColor:
     case CSSStyleValuePair::BorderRightWidth:
-    case CSSStyleValuePair::BorderTop:
     case CSSStyleValuePair::BorderTopColor:
     case CSSStyleValuePair::BorderTopLeftRadius:
     case CSSStyleValuePair::BorderTopRightRadius:
     case CSSStyleValuePair::BorderTopWidth:
-    case CSSStyleValuePair::Bottom:
     case CSSStyleValuePair::BoxShadow:
     case CSSStyleValuePair::CaretColor:
     case CSSStyleValuePair::Clip:
@@ -72,7 +76,6 @@ bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
     case CSSStyleValuePair::Left:
     case CSSStyleValuePair::LetterSpacing:
     case CSSStyleValuePair::LineHeight:
-    case CSSStyleValuePair::ListStyleImage:
     case CSSStyleValuePair::MarginBottom:
     case CSSStyleValuePair::MarginLeft:
     case CSSStyleValuePair::MarginRight:
@@ -97,7 +100,6 @@ bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
     case CSSStyleValuePair::RY:
     case CSSStyleValuePair::Stroke:
     case CSSStyleValuePair::StrokeWidth:
-    case CSSStyleValuePair::TextDecoration:
     case CSSStyleValuePair::TextDecorationColor:
     case CSSStyleValuePair::TextIndent:
     case CSSStyleValuePair::TextShadow:

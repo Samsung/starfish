@@ -844,14 +844,17 @@ void AnimationExecutor::cancelPreviousAnimationIfNeeded(AnimationTask* newTask)
 void AnimationExecutor::cancelAnimation(Element* target)
 {
     m_animationList.erase(
-        std::remove_if(m_animationList.begin(), m_animationList.end(),
-                       [&target](AnimationTask* current) {
-                           if (current->targetElement() == target) {
-                               current->fireCancelEvent();
-                               return true;
-                           }
-                           return false;
-                       }),
+        std::remove_if(
+            m_animationList.begin(), m_animationList.end(),
+            [&target](AnimationTask* current) {
+                if (current->targetElement() == target) {
+                    target->setNeedsStyleRecalc(
+                        Node::StyleChangeReason::JustNeedsRecalcSelf);
+                    current->fireCancelEvent();
+                    return true;
+                }
+                return false;
+            }),
         m_animationList.end());
 }
 
