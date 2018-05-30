@@ -31,6 +31,7 @@ public:
         : FrameReplaced(node, nullptr)
         , m_svgScale(1)
         , m_surface(nullptr)
+        , m_isInnerSVG(false)
     {
     }
 
@@ -61,6 +62,16 @@ public:
         return m_svgScale;
     }
 
+    bool isInnerSVG()
+    {
+        return m_isInnerSVG;
+    }
+
+    void setInnerSVG(bool v)
+    {
+        m_isInnerSVG = v;
+    }
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -71,6 +82,7 @@ protected:
     Nullable<Unit::Rect> m_viewBox;
     float m_svgScale;
     NativeImageData* m_surface;
+    bool m_isInnerSVG;
 };
 }
 

@@ -52,7 +52,7 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
 
     Frame* currentFrame = nullptr;
     if (svgElement->isSVGSVGElement()) {
-        shouldContinue = !parentFrame->isFrameSVGSVGBox();
+        shouldContinue = true;
         shouldVisitChild = true;
         currentFrame = new FrameSVGSVGBox(svgElement);
     } else if (svgElement->isSVGRectElement()) {
@@ -106,7 +106,10 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
     svgElement->clearNeedsFrameTreeBuild();
 
     if (shouldContinue) {
-        if (!svgElement->isSVGSVGElement()) {
+        if (!svgElement->isSVGSVGElement() || parentFrame->isFrameSVGSVGBox()) {
+            if (currentFrame->isFrameSVGSVGBox()) {
+                ((FrameSVGSVGBox*)currentFrame)->setInnerSVG(true);
+            }
             parentFrame->appendChild(currentFrame);
         }
         svgElement->setFrame(currentFrame);
