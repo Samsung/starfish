@@ -29,6 +29,7 @@
 #include "core/page/WebView.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "platform/window/PlatformWindow.h"
 
 #include <Ecore.h>
@@ -144,7 +145,6 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
             if (td->m_timer->m_requestAnimationFrameHandler.end() != a) {
                 td->m_timer->m_requestAnimationFrameHandler.erase(a);
             }
-            GC_FREE(td);
             return ECORE_CALLBACK_DONE;
         },
         td);
@@ -195,7 +195,13 @@ void Timer::removeWindowAnimator(size_t reqID)
         TimeoutData* td = (TimeoutData*)handlerData->second;
         ecore_animator_freeze((Ecore_Animator*)td->m_timerID);
         ecore_animator_del((Ecore_Animator*)td->m_timerID);
-        GC_FREE(td);
+        m_starFish->messageLoop()->addIdler(td->m_window->browsingContext(),
+                                            [](size_t, void* data) {
+                                                TimeoutData* td =
+                                                    (TimeoutData*)data;
+                                                GC_FREE(td);
+                                            },
+                                            td);
         m_requestAnimationFrameHandler.erase(handlerData);
     }
 }
