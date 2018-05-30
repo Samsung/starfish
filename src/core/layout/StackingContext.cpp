@@ -359,7 +359,9 @@ private:
                 return true;
             }
 
-            if (m_child->isAbsolutePositioned()) {
+            if (m_child->style() &&
+                m_child->style()->position() ==
+                    PositionValue::FixedPositionValue) {
                 return parent->canBeContainingBlockOfAbsolutePositionedBox(
                            m_child) &&
                        parent->shouldApplyOverflow();
@@ -438,6 +440,7 @@ public:
             OverflowStatus status(f);
             bool canScroll =
                 status.m_child->style()->position() != FixedPositionValue;
+
             while (f) {
                 frameList.push_back(f->asFrameBox());
                 f = f->layoutParent();
