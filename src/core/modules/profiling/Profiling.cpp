@@ -49,7 +49,7 @@
 #include <sys/timeb.h>
 #endif
 
-#if OS(WINDOWS)
+#if defined(OS_WINDOWS)
 // https : // gist.github.com/ugovaretto/5875385
 #include < time.h >
 #include < windows.h >

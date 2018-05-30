@@ -97,9 +97,6 @@
 #define PORT_IMAGEDECODER_BACKEND_MISC
 #endif
 
-/* COMPILER() - the compiler being used to build the project */
-#define COMPILER(FEATURE) (defined COMPILER_##FEATURE && COMPILER_##FEATURE)
-
 #if defined(__clang__)
 #define COMPILER_CLANG 1
 #elif defined(_MSC_VER)
@@ -110,7 +107,7 @@
 #error "Compiler dectection failed"
 #endif
 
-#if COMPILER(CLANG)
+#if defined(COMPILER_CLANG)
 /* Keep strong enums turned off when building with clang-cl: We cannot yet build
  * all of Blink without fallback to cl.exe, and strong enums are exposed at ABI
  * boundaries. */
@@ -122,9 +119,10 @@
 
 /* ALWAYS_INLINE */
 #ifndef ALWAYS_INLINE
-#if (COMPILER(GCC) || COMPILER(CLANG)) && defined(NDEBUG) && !COMPILER(MINGW)
+#if (defined(COMPILER_GCC) || defined(COMPILER_CLANG)) && defined(NDEBUG) && \
+    !defined(COMPILER_MINGW)
 #define ALWAYS_INLINE inline __attribute__((__always_inline__))
-#elif COMPILER(MSVC) && defined(NDEBUG)
+#elif defined(COMPILER_MSVC) && defined(NDEBUG)
 #define ALWAYS_INLINE __forceinline
 #else
 #define ALWAYS_INLINE inline
@@ -133,7 +131,7 @@
 
 /* NEVER_INLINE */
 #ifndef NEVER_INLINE
-#if COMPILER(GCC) || COMPILER(CLANG)
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
 #define NEVER_INLINE __attribute__((__noinline__))
 #else
 #define NEVER_INLINE
@@ -142,7 +140,7 @@
 
 /* UNLIKELY */
 #ifndef UNLIKELY
-#if COMPILER(GCC) || COMPILER(CLANG)
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
 #define UNLIKELY(x) __builtin_expect((x), 0)
 #else
 #define UNLIKELY(x) (x)
@@ -151,7 +149,7 @@
 
 /* LIKELY */
 #ifndef LIKELY
-#if COMPILER(GCC) || COMPILER(CLANG)
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
 #define LIKELY(x) __builtin_expect((x), 1)
 #else
 #define LIKELY(x) (x)
@@ -160,9 +158,9 @@
 
 /* NO_RETURN */
 #ifndef NO_RETURN
-#if COMPILER(GCC) || COMPILER(CLANG)
+#if defined(COMPILER_GCC) || defined(COMPILER_CLANG)
 #define NO_RETURN __attribute((__noreturn__))
-#elif COMPILER(MSVC)
+#elif defined(COMPILER_MSVC)
 #define NO_RETURN __declspec(noreturn)
 #else
 #define NO_RETURN
@@ -171,14 +169,14 @@
 
 /* EXPORT */
 #ifndef EXPORT
-#if COMPILER(MSVC)
+#if defined(COMPILER_MSVC)
 #define EXPORT __declspec(dllexport)
 #else
 #define EXPORT __attribute__((visibility("default")))
 #endif
 #endif
 
-#if COMPILER(MSVC)
+#if defined(COMPILER_MSVC)
 #define strncasecmp _strnicmp
 #define strcasecmp _stricmp
 #ifndef NDEBUG
@@ -187,13 +185,11 @@
 #define rand_r(x) rand()
 #endif
 
-#if COMPILER(MSVC)
+#if defined(COMPILER_MSVC)
 #define ENSURE_ENUM_UNSIGNED : unsigned int
 #else
 #define ENSURE_ENUM_UNSIGNED
 #endif
-
-#define OS(NAME) (defined OS_##NAME && OS_##NAME)
 
 #ifdef _WIN32
 #define OS_WINDOWS 1
@@ -220,7 +216,7 @@
 #error "failed to detect target OS"
 #endif
 
-#if OS(WINDOWS)
+#if defined(OS_WINDOWS)
 #define NOMINMAX
 #define setenv(a, b, c) _putenv_s(a, b)
 #include <BaseTsd.h>
@@ -274,19 +270,19 @@ typedef SSIZE_T ssize_t;
 
 #include <curl/curl.h>
 
-#if COMPILER(GCC)
+#if defined(COMPILER_GCC)
 template <const int siz>
 inline void __attribute__((optimize("O0"))) clearStack()
 {
     volatile char a[siz] = { 0 };
 }
-#elif COMPILER(CLANG)
+#elif defined(COMPILER_CLANG)
 template <const int siz>
 [[clang::optnone]] inline void clearStack()
 {
     volatile char a[siz] = { 0 };
 }
-#elif COMPILER(MSVC)
+#elif defined(COMPILER_MSVC)
 #pragma optimize("", off)
 template <const int siz>
 inline void clearStack()
@@ -410,7 +406,7 @@ inline void clearStack()
     inline void* operator new(size_t size) = delete; \
     inline void* operator new(size_t size, void* p) = delete;
 
-#if !defined(WARN_UNUSED_RETURN) && COMPILER(GCC)
+#if !defined(WARN_UNUSED_RETURN) && defined(COMPILER_GCC)
 #define WARN_UNUSED_RETURN __attribute__((__warn_unused_result__))
 #endif
 

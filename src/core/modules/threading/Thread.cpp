@@ -23,7 +23,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "Mutex.h"
 #include "Locker.h"
-#if !OS(WINDOWS)
+#if !defined(OS_WINDOWS)
 #include <unistd.h>
 #include <sys/syscall.h>
 #else
@@ -32,7 +32,7 @@
 
 namespace StarFish {
 
-#if !OS(WINDOWS)
+#if !defined(OS_WINDOWS)
 pid_t mainTid;
 void registerMainThread()
 {
@@ -147,15 +147,15 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
                 } // else: joinIfNeeds() called while thread running
             }
             pthread_cleanup_pop(0);
-#if !OS(WINDOWS) && \
-    !defined(       \
+#if !defined(OS_WINDOWS) && \
+    !defined(               \
         __SANITIZE_ADDRESS__) // GCC 4.8.5 & -fsanitize=address makes wrong
                               // error with `pthread_exit(((void*)0));`
             pthread_exit(((void*)0));
 #else
             return nullptr;
 #endif
-#if COMPILER(MSVC)
+#if defined(COMPILER_MSVC)
             return nullptr;
 #endif
         },

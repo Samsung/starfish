@@ -23,7 +23,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#if OS(WINDOWS)
+#if defined(OS_WINDOWS)
 size_t getline(char** lineptr, size_t* n, FILE* stream)
 {
     char* bufptr = NULL;
@@ -383,7 +383,7 @@ File* File::createInNonGCArea()
 
 Nullable<String*> File::absolutePath(String* localPath)
 {
-#if OS(WINDOWS)
+#if defined(OS_WINDOWS)
     return localPath;
 #else
     UTF8StringDataNonGCStd data = localPath->toUTF8NonGCString();

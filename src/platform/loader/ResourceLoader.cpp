@@ -333,7 +333,7 @@ void ResourceLoader::cachePruning()
             }
         }
 
-#if !OS(WINDOWS)
+#if !defined(OS_WINDOWS)
         auto& globalImages = NativeImageData::everyNativeImageInstances();
         for (size_t i = 0; i < globalImages.size(); i++) {
             globalImages[i]->m_isSeenByGC = false;

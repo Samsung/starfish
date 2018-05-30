@@ -31,7 +31,7 @@
 
 #include <cairo.h>
 #include <png.h>
-#if OS(WINDOWS)
+#if defined(OS_WINDOWS)
 #include <Wincodec.h>
 #pragma comment(lib, "Ole32.lib")
 #pragma comment(lib, "Windowscodecs.lib")
@@ -379,7 +379,7 @@ private:
         free(rowPointers);
     }
 
-#if !OS(WINDOWS)
+#if !defined(OS_WINDOWS)
     void decodeJPG(jpeg_decompress_struct* dHandle, unsigned char* buf,
                    const int size)
     {

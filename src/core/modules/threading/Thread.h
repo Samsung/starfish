@@ -39,7 +39,7 @@ struct ThreadData {
         , m_messageLoop(m)
         , m_fn(w)
         , m_data(d)
-#if !OS(WINDOWS)
+#if !defined(OS_WINDOWS)
         , m_tid(0)
 #endif
         , m_joinHandle(SIZE_MAX)

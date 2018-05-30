@@ -60,7 +60,7 @@ public:
     virtual bool hasTransparentPixel() = 0;
     virtual void disposeNativeImageData()
     {
-#if !OS(WINDOWS)
+#if !defined(OS_WINDOWS)
         auto& r = everyNativeImageInstances();
         r.erase(std::find(r.begin(), r.end(), this));
 #endif
@@ -94,7 +94,7 @@ protected:
     {
         m_isSeenByGC = false;
         m_preserveAspectRatioValue = None;
-#if !OS(WINDOWS)
+#if !defined(OS_WINDOWS)
         everyNativeImageInstances().push_back(this);
 #endif
         GC_REGISTER_FINALIZER_NO_ORDER(this,
