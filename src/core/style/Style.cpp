@@ -2079,7 +2079,6 @@ void StyleResolver::apply(Element* element,
             CSSStyleValuePair ret;
             switch (cssValues[k].temporaryKeyKind()) {
                 FOR_EACH_STYLE_ATTRIBUTE_BASIC(SET_CASES)
-                FOR_EACH_STYLE_ATTRIBUTE_STICKY(SET_CASES)
             case CSSStyleValuePair::KeyKind::Unknown:
                 break;
             default:
@@ -6484,10 +6483,12 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         element->setStyle(style);
 
         if (style->display() == NoneDisplayValue) {
+            // The element will disapear soon
             element->document()->animationExecutor()->cancelAnimation(element);
-        } else if (oldStyle && style->transition() &&
-                   (damage != ComputedStyleDamage::ComputedStyleDamageNone)) {
-            if (oldFrame && needsToApplyTransition(style, damagedKeys)) {
+        } else if (style->transitionLayerSize() > 0) {
+            if (oldStyle &&
+                damage != ComputedStyleDamage::ComputedStyleDamageNone &&
+                oldFrame && needsToApplyTransition(style, damagedKeys)) {
                 if (!element->webView()->inRendering()) {
                     element->document()
                         ->animationExecutor()
@@ -6499,6 +6500,8 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                 }
             }
         } else if (element->webView()->inRendering()) {
+            // Transition property has gone
+            STARFISH_ASSERT(style->transitionLayerSize() == 0);
             element->document()->animationExecutor()->cancelAnimation(element);
         }
 

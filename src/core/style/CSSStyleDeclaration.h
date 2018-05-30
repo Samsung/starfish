@@ -149,27 +149,19 @@ public:
     void setBorderColor(const char* value, size_t len, bool isImportant);
     void setBorderImage(const char* value, size_t len, bool isImportant);
     void setFont(const char* value, size_t len, bool isImportant);
-    void setFontFamily(const char* value, size_t len, bool isImportant);
-    void setSrc(const char* value, size_t len, bool isImportant);
     void setTextDecoration(const char* value, size_t len, bool isImportant);
     void setTransition(const char* value, size_t len, bool isImportant);
     void setOverflow(const char* value, size_t len, bool isImportant);
     void setFlexFlow(const char* value, size_t len, bool isImportant);
     void setFlex(const char* value, size_t len, bool isImportant);
     void setOutline(const char* value, size_t len, bool isImportant);
-    void setD(const char* value, size_t len, bool isImportant);
     void setListStyle(const char* value, size_t len, bool isImportant);
-    void setTransitionProperty(const char* value, size_t len, bool isImportant);
-    void setTransitionDuration(const char* value, size_t len, bool isImportant);
-    void setTransitionTimingFunction(const char* value, size_t len,
-                                     bool isImportant);
-    void setTransitionDelay(const char* value, size_t len, bool isImportant);
-
     void setCustomProperty(String* key, String* value, size_t len);
 
 #define DECLARE_ATTRIBUTE_SETTER(name, ...) \
     void set##name(const char* value, size_t len, bool isImportant);
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(DECLARE_ATTRIBUTE_SETTER)
+    FOR_EACH_STYLE_ATTRIBUTE_STICKY(DECLARE_ATTRIBUTE_SETTER)
 #undef DECLARE_ATTRIBUTE_SETTER
 
 #define DECLARE_ATTRIBUTE_GETTER_FOURSIDE(PRE, ...) \
