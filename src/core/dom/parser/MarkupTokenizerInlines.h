@@ -69,7 +69,7 @@ inline void advanceStringAndASSERT(SegmentedString& source,
         source.advanceAndASSERT(*expectedCharacters++);
 }
 
-#if COMPILER(MSVC)
+#if defined(COMPILER_MSVC)
 // We need to disable the "unreachable code" warning because we want to assert
 // that some code points aren't reached in the state machine.
 #pragma warning(disable : 4702)

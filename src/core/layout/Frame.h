@@ -2064,7 +2064,7 @@ protected:
         bool m_paddingHeightDamaged : 1;
     } m_flags;
 
-#if !COMPILER(MSVC)
+#if !defined(COMPILER_MSVC)
     STARFISH_COMPILE_ASSERT(sizeof(FrameFlags) <= sizeof(uint32_t),
                             "keep FrameFlags small");
 #endif

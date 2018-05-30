@@ -2742,7 +2742,7 @@ protected:
     AtomicString m_selectorText;
 };
 
-#if !COMPILER(MSVC)
+#if !defined(COMPILER_MSVC)
 static_assert(sizeof(CSSSelector) <= sizeof(size_t) * 2,
               "keep sizeof CSSSelector small");
 #endif

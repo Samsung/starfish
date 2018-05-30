@@ -3937,7 +3937,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         if (needsTestingTextOverflow) {
             String* overflowString;
             if (textOverflowData.hasEllipsisValue()) {
-#if OS(WINDOWS)
+#if defined(OS_WINDOWS)
                 overflowString = String::fromUTF8("...");
 #else
                 overflowString = String::fromUTF8("\u2026");

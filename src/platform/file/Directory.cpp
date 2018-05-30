@@ -19,7 +19,7 @@
 
 #include "StarFishConfig.h"
 #include "Directory.h"
-#if OS(WINDOWS)
+#if defined(OS_WINDOWS)
 #include <direct.h>
 #define mkdir(a, b) _mkdir(a)
 #define rmdir _rmdir

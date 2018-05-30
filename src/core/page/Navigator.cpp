@@ -22,7 +22,7 @@
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/modules/location/Geolocation.h"
-#if OS(WINDOWS)
+#if defined(OS_WINDOWS)
 #include <Windows.h>
 #else
 #include <sys/utsname.h>
@@ -65,7 +65,7 @@ String* Navigator::userAgent()
 String* Navigator::platform()
 {
     StringBuilder platformName;
-#if !OS(WINDOWS)
+#if !defined(OS_WINDOWS)
     // Unix-like systems
     struct utsname osname;
     if (uname(&osname) == 0) {
