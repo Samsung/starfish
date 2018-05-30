@@ -58,6 +58,11 @@ public:
         return true;
     }
 
+    virtual bool needsGeometryAttributes() override
+    {
+        return true;
+    }
+
     bool hasViewBox() const
     {
         return m_hasViewBox;

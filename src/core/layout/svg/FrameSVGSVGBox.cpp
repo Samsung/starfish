@@ -99,12 +99,34 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
             }
         }
 
+        if (isInnerSVG()) {
+            FrameBox* cb = layoutParent()->asFrameBox();
+            auto styleX = style()->x();
+            auto styleY = style()->y();
+            float x = 0, y = 0;
+            if (styleX.isSpecified() && styleY.isSpecified()) {
+                x = styleX.specifiedValue(cb->width(), this);
+                y = styleY.specifiedValue(cb->height(), this);
+            } else if (styleX.isSpecified() && !styleY.isSpecified()) {
+                x = styleX.specifiedValue(cb->width(), this);
+            } else if (!styleX.isSpecified() && styleY.isSpecified()) {
+                y = styleY.specifiedValue(cb->height(), this);
+            }
+            setX(x);
+            setY(y);
+        }
+
         Frame* f = firstChild();
         while (f) {
-            f->asFrameSVGBox()->resolvePosition(ctx);
-            f->asFrameSVGBox()->moveX(borderLeft() + paddingLeft());
-            f->asFrameSVGBox()->moveY(borderTop() + paddingTop());
-            f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+            if (f->isFrameSVGSVGBox()) {
+                FrameSVGSVGBox* svg = (FrameSVGSVGBox*)f;
+                f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+            } else {
+                f->asFrameSVGBox()->resolvePosition(ctx);
+                f->asFrameSVGBox()->moveX(borderLeft() + paddingLeft());
+                f->asFrameSVGBox()->moveY(borderTop() + paddingTop());
+                f->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+            }
 
             f = f->next();
         }
@@ -208,7 +230,12 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         ctx.m_canvas->translate(
             child->asFrameBox()->x() - borderLeft() - paddingLeft(),
             child->asFrameBox()->y() - borderTop() - paddingTop());
-        child->asFrameSVGBox()->paintContent(ctx);
+        if (child->isFrameSVGSVGBox()) {
+            FrameSVGSVGBox* svg = (FrameSVGSVGBox*)child;
+            svg->paintReplaced(canvas);
+        } else {
+            child->asFrameSVGBox()->paintContent(ctx);
+        }
         ctx.m_canvas->restore();
         child = child->next();
     }
