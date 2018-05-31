@@ -7,9 +7,6 @@
 [submodule "third_party/escargot"]
 	path = third_party/escargot
 	url = git@github.sec.samsung.net:RS7-webtf/escargot.git
-[submodule "third_party/libtuv"]
-	path = third_party/libtuv
-	url = https://github.com/Samsung/libtuv.git
 [submodule "test"]
 	path = test
 	url = git@github.sec.samsung.net:RS8-webtf-test/web_full_tc.git
@@ -37,3 +34,42 @@
 [submodule "tool/gyp"]
 	path = tool/gyp
 	url = git@github.sec.samsung.net:RS8-webtf-misc/gyp.git
+[submodule "third_party/libtuv"]
+	path = third_party/libtuv
+	url = https://github.com/Samsung/libtuv.git
+[submodule "third_party/cairo"]
+	path = third_party/cairo
+	url = git@github.sec.samsung.net:RS8-webtf-sub/cairo.git
+[submodule "third_party/curl"]
+	path = third_party/curl
+	url = git@github.sec.samsung.net:RS8-webtf-sub/curl.git
+[submodule "third_party/fontconfig"]
+	path = third_party/fontconfig
+	url = git@github.sec.samsung.net:RS8-webtf-sub/fontconfig.git
+[submodule "third_party/freetype2"]
+	path = third_party/freetype2
+	url = git@github.sec.samsung.net:RS8-webtf-sub/freetype2.git
+[submodule "third_party/giflib"]
+	path = third_party/giflib
+	url = git@github.sec.samsung.net:RS8-webtf-sub/giflib.git
+[submodule "third_party/harfbuzz"]
+	path = third_party/harfbuzz
+	url = git@github.sec.samsung.net:RS8-webtf-sub/harfbuzz.git
+[submodule "third_party/libpng"]
+	path = third_party/libpng
+	url = git@github.sec.samsung.net:RS8-webtf-sub/libpng.git
+[submodule "third_party/libxml2"]
+	path = third_party/libxml2
+	url = git@github.sec.samsung.net:RS8-webtf-sub/libxml2.git
+[submodule "third_party/libiconv"]
+	path = third_party/libiconv
+	url = git@github.sec.samsung.net:RS8-webtf-sub/libiconv.git
+[submodule "third_party/pixman"]
+	path = third_party/pixman
+	url = git@github.sec.samsung.net:RS8-webtf-sub/pixman.git
+[submodule "third_party/windows_pthread"]
+	path = third_party/windows_pthread
+	url = git@github.sec.samsung.net:RS8-webtf-sub/windows_pthread.git
+[submodule "third_party/zlib"]
+	path = third_party/zlib
+	url = git@github.sec.samsung.net:RS8-webtf-sub/zlib.git

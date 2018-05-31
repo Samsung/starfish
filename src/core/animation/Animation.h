@@ -30,7 +30,7 @@ class Node;
 class PlatformWindow;
 
 class AnimatedValue : public gc {
-    enum ValueType {
+    enum ValueType ENSURE_ENUM_UNSIGNED {
         UNDEFINED,
         COLOR,
         LAYOUT_UNIT,

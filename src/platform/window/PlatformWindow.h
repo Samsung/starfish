@@ -98,6 +98,14 @@ public:
     {
         return 0;
     }
+    virtual void updateDrawingBufferAddress(void* buf, uint32_t width,
+                                            uint32_t height, uint32_t stride)
+    {
+    }
+    virtual uint32_t drawingBufferFrameNumber()
+    {
+        return 0;
+    }
 
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);

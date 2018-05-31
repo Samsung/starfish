@@ -506,7 +506,11 @@ void StarFish::loadHTMLDocument(String* filePath)
     String* resolvedPath = filePath;
     if (!filePath->startsWith("http") && !filePath->startsWith("about") &&
         !filePath->startsWith("data:")) {
+#if defined(OS_WINDOWS)
+        String* prefix = String::fromUTF8("file:///");
+#else
         String* prefix = String::fromUTF8("file://");
+#endif
         Nullable<String*> result = File::absolutePath(filePath);
         if (result.hasValue()) {
             resolvedPath = prefix->concat(result.getValue());

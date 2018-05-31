@@ -22,6 +22,14 @@
   readonly attribute boolean onLine;
 };
 
+[
+  PartialInterface
+] interface NavigatorPlugins {
+  [SameObject, Unimplemented] readonly attribute PluginArray plugins;
+  [SameObject, Unimplemented] readonly attribute MimeTypeArray mimeTypes;
+  boolean javaEnabled();
+};
+
 interface Navigator {
   // Partial
   // https://dev.w3.org/geo/api/spec-source.html#navi-geo

@@ -29,6 +29,8 @@
 #include "core/page/WebView.h"
 #include <pthread.h>
 
+#if !defined(STARFISH_WINDOWS)
+
 #if defined(STARFISH_DALI)
 
 #if defined(STARFISH_TIZEN)
@@ -851,3 +853,5 @@ int main(int argc, char* argv[])
 
     return 0;
 }
+
+#endif

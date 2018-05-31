@@ -78,6 +78,8 @@ class MessageLoopImpl {
 public:
     static void processMessage(MessageLoop* self, const MSG& message)
     {
+        TranslateMessage(&message);
+        DispatchMessage(&message);
         switch (message.message) {
         case IDLE_MESSAGE: {
             STARFISH_ASSERT(message.message == IDLE_MESSAGE);
