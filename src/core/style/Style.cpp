@@ -2079,6 +2079,7 @@ void StyleResolver::apply(Element* element,
             CSSStyleValuePair ret;
             switch (cssValues[k].temporaryKeyKind()) {
                 FOR_EACH_STYLE_ATTRIBUTE_BASIC(SET_CASES)
+                FOR_EACH_STYLE_ATTRIBUTE_STICKY(SET_CASES)
             case CSSStyleValuePair::KeyKind::Unknown:
                 break;
             default:

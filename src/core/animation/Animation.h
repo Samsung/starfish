@@ -317,6 +317,7 @@ public:
                          AnimationTimingFunction* timingFunction,
                          void* data = nullptr);
     void execute(float progress) override;
+    void attachedToElement() override;
     void detachedFromElement() override;
 
 private:
