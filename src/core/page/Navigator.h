@@ -87,6 +87,11 @@ public:
         return true;
     }
 
+    bool javaEnabled()
+    {
+        return false;
+    }
+
 protected:
     Geolocation* m_geolocation;
 };

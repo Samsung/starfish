@@ -75,6 +75,8 @@ public:
         m_renderingIdlerData = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
+        m_hasSelfAllocatedBuffer = true;
+        m_renderingFrameNumber = 0;
         prepareBuffer();
 
         GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -111,13 +113,33 @@ public:
 
     virtual void resizeTo(int w, int h)
     {
-        free(m_internalBuffer);
-        m_internalBuffer = nullptr;
         m_width = w;
         m_height = h;
-        prepareBuffer();
+        if (m_hasSelfAllocatedBuffer) {
+            free(m_internalBuffer);
+            m_internalBuffer = nullptr;
+            prepareBuffer();
+        }
 
         PlatformWindow::resizeTo(w, h);
+    }
+
+    virtual void updateDrawingBufferAddress(void* buf, uint32_t width,
+                                            uint32_t height, uint32_t stride)
+    {
+        if (m_hasSelfAllocatedBuffer) {
+            free(m_internalBuffer);
+            m_internalBuffer = nullptr;
+        }
+        m_hasSelfAllocatedBuffer = false;
+        if (width != m_width || height != m_height) {
+            resizeTo(width, height);
+        }
+
+        m_stride = stride;
+        m_internalBuffer = buf;
+
+        updateCairoVariables();
     }
 
     virtual void* unwrap()
@@ -137,27 +159,31 @@ public:
                     malloc(m_width * m_height * sizeof(uint32_t));
 #endif
             m_stride = m_width * 4;
-            if (m_cairo) {
-                cairo_destroy(m_cairo);
-            }
-            if (m_surface) {
-                cairo_surface_destroy(m_surface);
-            }
-            m_surface = cairo_image_surface_create_for_data(
-                (unsigned char*)m_internalBuffer, CAIRO_FORMAT_ARGB32, m_width,
-                m_height, m_stride);
-            m_cairo = cairo_create(m_surface);
+            updateCairoVariables();
         }
+    }
+
+    void updateCairoVariables()
+    {
+        if (m_cairo) {
+            cairo_destroy(m_cairo);
+        }
+        if (m_surface) {
+            cairo_surface_destroy(m_surface);
+        }
+        m_surface = cairo_image_surface_create_for_data(
+            (unsigned char*)m_internalBuffer, CAIRO_FORMAT_ARGB32, m_width,
+            m_height, m_stride);
+        m_cairo = cairo_create(m_surface);
     }
 
     void flushBuffer()
     {
         if (m_didPaintingOrCompositing) {
+            m_renderingFrameNumber++;
 #if defined(STARFISH_TIZEN)
             m_starFish->setNeedsUpdate();
-
 #elif defined(STARFISH_WINDOWS)
-            PostMessage(NULL, WM_USER, 0, 0);
 #else
             memcpy(m_starFish->frameBuffer(), m_internalBuffer,
                    m_width * m_height * sizeof(uint32_t));
@@ -182,6 +208,10 @@ public:
     {
         return m_stride;
     }
+    virtual uint32_t drawingBufferFrameNumber()
+    {
+        return m_renderingFrameNumber;
+    }
 
     virtual void clearResources();
     virtual Canvas* preparePainting();
@@ -190,6 +220,7 @@ public:
     int32_t m_width;
     int32_t m_height;
     size_t m_renderingAnimator;
+    uint32_t m_renderingFrameNumber;
     IdlerData* m_renderingIdlerData;
     void* m_internalBuffer;
     size_t m_stride;
@@ -200,6 +231,7 @@ public:
     bool m_isMouseLbuttonDown;
     bool m_isKeyDown;
     bool m_canRendering;
+    bool m_hasSelfAllocatedBuffer;
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
@@ -421,12 +453,14 @@ void WebView::setNeedsRendering()
             WindowImplGB* wnd = (WindowImplGB*)data;
             StarFishEnterer enter(wnd->starFish());
             {
-                Locker<Mutex> l(*(wnd)->m_rendingLockMutex);
-                wnd->prepareBuffer();
-                wnd->m_didPaintingOrCompositing = wnd->rendering();
-                wnd->m_renderingAnimator = 0;
-                wnd->m_renderingIdlerData = nullptr;
-                wnd->flushBuffer();
+                Locker<Mutex> l(*((WindowImplGB*)wnd)->m_rendingLockMutex);
+                ((WindowImplGB*)wnd)->prepareBuffer();
+                bool drawingBufferUpdated = wnd->rendering();
+                ((WindowImplGB*)wnd)->m_renderingAnimator = 0;
+                ((WindowImplGB*)wnd)->m_renderingIdlerData = nullptr;
+                if (drawingBufferUpdated) {
+                    ((WindowImplGB*)wnd)->flushBuffer();
+                }
             }
         },
         starFish()->platformWindow());

@@ -1,0 +1,857 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\..\third_party\cairo\build\windows\cairo\cairo\cairo.vcxproj">
+      <Project>{df16c596-7aa6-47a1-90c8-25bff00b7ec9}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\curl\projects\Windows\VC15\lib\libcurl.vcxproj">
+      <Project>{da6f56b4-06a4-441d-ad70-ac5a7d51fadb}</Project>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\escargot\build\windows\escargot\escargot\escargot.vcxproj">
+      <Project>{fa76f553-5978-4e00-81b0-f35d58029cde}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\escargot\third_party\GCutil\windows\GCutil\GCutil.vcxproj">
+      <Project>{06a2482c-2546-4b7b-ae77-6daf4b6c3f72}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\escargot\third_party\icu\source\common\common.vcxproj">
+      <Project>{73c0a65b-d1f2-4de1-b3a6-15dad2c23f3d}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\escargot\third_party\icu\source\extra\uconv\uconv.vcxproj">
+      <Project>{dba4088d-f6f9-4f8f-8820-082a4765c16c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\escargot\third_party\icu\source\i18n\i18n.vcxproj">
+      <Project>{0178b127-6269-407d-b112-93877bb62776}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\escargot\third_party\icu\source\io\io.vcxproj">
+      <Project>{c2b04507-2521-4801-bf0d-5fd79d6d518c}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\escargot\third_party\icu\source\samples\cal\cal.vcxproj">
+      <Project>{f7659d77-09cf-4fe9-acee-927287aa9509}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\escargot\third_party\icu\source\samples\date\date.vcxproj">
+      <Project>{38b5751a-c6f9-4409-950c-f4f9da17275f}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\fontconfig\build\windows\libfontconfig\libfontconfig\libfontconfig.vcxproj">
+      <Project>{e40b738c-d8b5-4b79-b224-b381378d56a5}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\freetype2\builds\windows\vc2010\freetype.vcxproj">
+      <Project>{78b079bd-9fc7-4b9e-b4a6-96da0f00248b}</Project>
+      <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\giflib\build\windows\giflib\libgif\libgif.vcxproj">
+      <Project>{a9160eec-2f6c-4190-920d-a079cc4e4996}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\harfbuzz\build\windows\harfbuzz\harfbuzz\harfbuzz.vcxproj">
+      <Project>{920d7999-884a-47ed-b1b0-b2902d1d058a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\..\..\..\third_party\libpng\projects\visualc71\libpng.vcxproj">
+      <Project>{0008960e-e0dd-41a6-8265-00b31ddb4c21}</Project>
+    </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\..\src\binding\ArrayBufferViewOrArrayBufferBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\AttrBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\BlobBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\BlobCustomBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\BufferSourceOrBlobOrDOMStringBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CanvasGradientBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CanvasPatternBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CanvasRenderingContext2DBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CDATASectionBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CharacterDataBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CharacterDataCustomBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CommentBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CompositionEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CompositionEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CoordinatesBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSConditionRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSCounterStyleRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSFontFaceRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSGroupingRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSImportRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSKeyframesRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSKeywordValueBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSMediaRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSNamespaceRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSNumericTypeBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSNumericValueBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSRuleListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSStyleDeclarationBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSStyleRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSStyleSheetBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSStyleValueBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSSupportsRuleBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CSSUnitValueBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CustomEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\CustomEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DocumentBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DocumentCustomBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DocumentFragmentBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DocumentHoldable.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DocumentTypeBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMExceptionBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMImplementationBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMParserBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMPointBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMPointInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMPointReadOnlyBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMQuadBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMRectBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMRectListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMRectReadOnlyBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMSettableTokenListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMStringListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMStringMapBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMStringOrCanvasGradientOrCanvasPatternBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMStringOrFunctionBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\DOMTokenListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\doubleOrAutoKeywordBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\doubleOrCSSNumericValueBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ErrorEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ErrorEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\EventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\EventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\EventModifierInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\EventOrDOMStringBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\EventSourceBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\EventSourceInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\EventTargetBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\FocusEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\FocusEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\GeolocationBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\GeolocationCustomBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\GeopositionBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HistoryBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLAnchorElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLAreaElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLAudioElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLBaseElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLBodyElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLBRElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLButtonElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLCanvasElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLCollectionBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLDivElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLDListElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLDocumentBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLElementOrlongBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLFieldSetElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLFontElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLFormControlsCollectionBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLFormElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLHeadElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLHeadingElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLHRElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLHtmlElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLIFrameElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLImageElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLInputElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLInputElementCustomBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLLabelElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLLegendElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLLIElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLLinkElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLMapElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLMediaElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLMetaElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLModElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLObjectElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLOListElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLOptGroupElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLOptionElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLOptionElementOrHTMLOptGroupElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLOptionsCollectionBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLOutputElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLParagraphElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLParamElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLPreElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLQuoteElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLScriptElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLScriptElementOrSVGScriptElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLSelectElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLSourceElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLSpanElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLStyleElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTableCaptionElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTableCellElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTableColElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTableElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTableRowElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTableSectionElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTextAreaElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTFootElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTHeadElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTHElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTitleElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLTrackElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLUListElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLUnknownElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HTMLVideoElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ImageBitmapRenderingContextBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ImageDataBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\InputEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\InputEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\KeyboardEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\KeyboardEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\LocationBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MediaListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MediaQueryListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MediaQueryListEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MediaQueryListEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MediaSourceBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MessageChannelBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MessageEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MessageEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MessagePortBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MouseEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\MouseEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\NamedNodeMapBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\NavigatorBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\NodeBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\NodeFilterBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\NodeIteratorBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\NodeListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\NodeOrDOMStringBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\Path2DBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\PositionErrorBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ProcessingInstructionBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ProgressEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ProgressEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\RangeBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ScreenBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ScriptBindingInstance.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ScriptEngineInstance.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ScriptWrappable.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ScrollOptionsBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ScrollToOptionsBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SourceBufferBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SourceBufferListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\StorageBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\StyleSheetBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\StyleSheetListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGAnimatedLengthBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGCircleElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGDocumentBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGGElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGImageElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGLengthBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGPathElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGPolygonElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGPolylineElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGRectElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGScriptElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGStyleElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGSVGElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGTextElementBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\testRunnerBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TextBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TextTrackBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TextTrackCueBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TextTrackCueListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TextTrackListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TimeRangesBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TouchBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TouchEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TouchInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TouchListBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TransitionEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TransitionEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\TreeWalkerBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\UIEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\UIEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\URLBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\VTTCueBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\WebGLRenderingContextBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\WindowBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\WindowCustomBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\WindowHoldable.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\XMLDocumentBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\XMLHttpRequestBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\XMLHttpRequestEventTargetBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\browser\history\HistoryManager.cpp" />
+    <ClCompile Include="..\..\..\..\src\browser\storage\StorageImpl.cpp" />
+    <ClCompile Include="..\..\..\..\src\browser\storage\StorageManager.cpp" />
+    <ClCompile Include="..\..\..\..\src\browser\storage\StorageNamespaceImpl.cpp" />
+    <ClCompile Include="..\..\..\..\src\browser\storage\WebStorageNamespaceProvider.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\animation\Animation.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\animation\AnimationTimingFunction.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\animation\AnimationUtil.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\animation\CubicBezier.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Attr.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Attribute.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\builder\html\HTMLDocumentBuilder.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\canvas\CanvasRenderingContext2D.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\canvas\HTMLCanvasElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\canvas\RenderingContext.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\CDATASection.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\CharacterData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Comment.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\CSS.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Document.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DocumentFragment.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMException.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMImplementation.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMParser.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMPoint.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMPointReadOnly.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMQuad.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMRect.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMRectList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMRectReadOnly.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMStringList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMStringMap.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\DOMTokenList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Element.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Event.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\EventTarget.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLAnchorElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLAreaElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLAudioElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLBaseElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLBodyElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLBRElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLButtonElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLCollection.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLDivElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLDListElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLDocument.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLFieldSetElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLFontElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLFormControlsCollection.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLFormElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLHeadElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLHeadingElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLHRElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLHtmlElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLHyperlinkContainer.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLIFrameElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLImageElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLInputElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLLabelElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLLegendElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLLIElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLLinkElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLListContainer.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLMapElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLMediaElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLMetaElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLModElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLObjectElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLOListElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLOptGroupElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLOptionElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLOptionsCollection.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLOutputElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLParagraphElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLParamElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLPreElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLQuoteElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLScriptElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLSelectElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLSourceElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLSpanElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLStyleElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTableCaptionElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTableCellElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTableColElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTableColGroupElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTableElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTablePartElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTableRowElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTableSectionElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTBodyElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTDElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTextAreaElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTextEditable.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTFootElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTHeadElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTHElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTitleElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLTrackElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLUListElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLUnknownElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\HTMLVideoElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\KeyboardEvent.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\MessageChannel.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\MessagePort.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\NamedNodeMap.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Node.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\NodeIterator.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\NodeList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\NodeListImpl.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLConstructionSite.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLElementLookupTrie.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLElementStack.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLEntityParser.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLEntitySearch.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLEntityTable.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLFormattingElementList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLParser.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLParserIdioms.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLStackItem.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLTokenizer.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLTreeBuilder.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\ProcessingInstruction.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\PseudoElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Range.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Scrolling.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\SelectorQuery.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGAnimatedLength.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGCircleElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGDocument.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGGElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGImageElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGLength.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGPathElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGPolygonElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGPolylineElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGRectElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGScriptElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGStyleElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGSVGElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGTextElement.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Text.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\TextTrack.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\TextTrackCue.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\Touch.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\TouchEvent.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\TouchList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\TransitionEvent.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\TreeWalker.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\UIEvent.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\WebOrigin.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\xml\XMLSerializer.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\event\KeyBoardEventData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\extra\Avplay.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\extra\Console.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\extra\MimeType.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fileapi\Blob.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\inspector\Inspector.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\Frame.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameBlockBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameBlockBoxBlockLayout.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameBlockBoxInlineLayout.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameButtonBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameCounterText.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameDocument.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameFlexibleBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameGridBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameInline.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameInputBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameOptGroupBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameOptionBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameQuoteText.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameReplaced.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameReplacedCanvas.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameReplacedIFrame.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameReplacedImage.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameReplacedObject.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameReplacedVideo.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameSelectBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameTableBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameTableCaptionBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameTableCellBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameTableColBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameTableObjectBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameTableRowBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameTableSectionBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\FrameTreeBuilder.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\StackingContext.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGCircleBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGPathBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGPolygonBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGPolylineBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGRectBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGSVGBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGTextBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameTreeBuilderSVG.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\canvas\Compositor.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\canvas\font\Font.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\canvas\image\NativeImageData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\canvas\ShadowBlur.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\canvas\TextDecorationData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\location\Geolocation.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\location\GeolocationTizen.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\mediasource\MediaSource.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\mediasource\SourceBuffer.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\mediasource\SourceBufferList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\profiling\Profiling.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\resource_request\NetworkURLResourceRequestJobDelegate.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\resource_request\ResourceRequest.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\resource_request\ResourceRequestJob.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\threading\Mutex.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\threading\Semaphore.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\threading\Thread.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\threading\ThreadPool.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\tts\TextAlternativeHelper.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\BrowsingContext.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\EventSource.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\EventSourceParser.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\History.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\Location.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\Navigator.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\Screen.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\Serializer.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\WebView.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\page\Window.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\paint\PaintCommandBuffer.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\storage\Storage.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\AncestorSelectorFilter.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\BorderImage.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CalcData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\ComputedStyle.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\ComputedStyleCSSStyleDeclaration.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\ContentData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CounterStyle.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSAngle.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSGradientValue.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSKeywordValue.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSLength.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSNumericValue.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSParser.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSProperty.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSRuleList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSStyleDeclaration.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSStyleLookupTrie.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSStyleRule.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSStyleSheet.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSStyleValue.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSTime.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSUnitValue.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\CSSVariableSyntaxTreeBuilder.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\GradientData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\ImageValue.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\Length.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\ListStyleData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\MediaList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\MediaQuery.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\MediaQueryEvaluator.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\MediaQueryList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\MediaQueryListMatcher.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\MediaQuerySet.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\MediaValues.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\NamedColors.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\PositionedMaskData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\ShadowData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\Style.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\StyleBackgroundData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\StyleRule.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\StyleSheetList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\StyleTransitionData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\Unit.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\style\UnitHelper.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\util\AtomicString.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\util\AttributeName.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\util\LineBreakerIteratorPool.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\util\Message.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\util\QualifiedName.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\util\String.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\util\TextConverter.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\util\URL.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\xml\XMLHttpRequest.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\CanvasCairo.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\CanvasEFL.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\CanvasMock.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\CompositorCairo.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\CompositorEFL.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\CompositorMock.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\font\FontImplCairo.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\font\FontImplEFL.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\font\FontImplMock.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\image\NativeImageDataEFL.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\image\NativeImageDataMISC.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\image\NativeImageDataMock.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\file\Directory.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\file\File.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\loader\ElementResourceClient.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\loader\FontResource.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\loader\ImageResource.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\loader\Resource.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\loader\ResourceLoader.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\loader\ResourceURL.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\loader\TextResource.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\message_loop\MessageLoopAndroid.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\message_loop\MessageLoopEFL.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\message_loop\MessageLoopLibUV.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\message_loop\MessageLoopWindows.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\message_loop\TimerAndroid.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\message_loop\TimerEFL.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\message_loop\TimerLibUV.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\message_loop\TimerWindows.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\Demuxer.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\DemuxerMP4.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\DemuxerWebM.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\MediaPlayer.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\MediaPlayerTizen.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\MediaPlayerTizenBase.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\MockMediaPlayer.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\MP4PacketGenerator.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\StreamInfo.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\network\HTTPCache.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\network\HTTPCacheEntry.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\network\http\HTTPHeaderMap.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\network\http\HTTPRequest.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\network\http\HTTPResponse.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\network\http\HTTPTransaction.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\network\http\HTTPUtil.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\network\NetworkSharedResourceManager.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\tts\TTSBase.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\window\PlatformWindow.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\window\VirtualCursorData.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\window\WindowImplAndroid.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\window\WindowImplEFL.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\window\WindowImplEFLHeadLess.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\window\WindowImplGB.cpp" />
+    <ClCompile Include="..\..\..\..\src\public\JavaScriptNativeHandler.cpp" />
+    <ClCompile Include="..\..\..\..\src\public\LWEWebView.cpp" />
+    <ClCompile Include="..\..\..\..\src\public\StarFishPublic.cpp" />
+    <ClCompile Include="..\..\..\..\src\shell\shell.cpp" />
+    <ClCompile Include="..\..\..\..\src\shell\testRunner.cpp" />
+    <ClCompile Include="..\..\..\..\src\StarFish.cpp" />
+    <ClCompile Include="..\..\..\..\src\StaticStrings.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\clipper\cpp\clipper.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.Atom.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.AVCC.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.BinaryStream.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.BXML.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.CO64.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.ContainerAtom.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.CPRT.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.CTTS.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.DataAtom.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.DREF.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.ELST.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.ESDS.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.File.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.FREE.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.FRMA.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.FTYP.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.FullBox.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.HDLR.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.HMHD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.IINF.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.ILOC.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.IMIF.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.IPMC.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.MDAT.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.MDHD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.MEHD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.MFHD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.MFRO.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.MP4A.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.MVHD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.PADB.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.Parser.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.PDIN.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.PITM.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.SBGP.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.SCHI.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.SCHM.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.SDTP.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.SGPD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.SMHD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.STCO.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.STDP.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.STSC.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.STSD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.STSH.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.STSS.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.STSZ.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.STTS.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.STZ2.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.SUBS.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.TFDT.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.TFHD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.TFRA.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.TKHD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.TREF.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.TREX.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.TRUN.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.UDTA.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.UnknownAtom.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.VMHD.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.XML.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\mp4parse.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkDebug.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkFloatBits.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkMath.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkMatrix.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkPoint.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkRect.cpp" />
+    <ClCompile Include="..\..\..\..\third_party\webm\mkvparser\mkvparser.cc" />
+    <ClCompile Include="..\..\..\..\third_party\webm\mkvparser\mkvreader.cc" />
+    <ClCompile Include="..\..\..\..\third_party\webm\webvtt\vttreader.cc" />
+    <ClCompile Include="..\..\..\..\third_party\webm\webvtt\webvttparser.cc" />
+    <ClCompile Include="StarFishLoggingAndConsoleBridge.cpp" />
+    <ClCompile Include="StarFishWinformBridge.cpp" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{30238400-8542-41E4-9722-0F066B61EEE6}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>StarFish</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;STARFISH_WINDOWS;_ITERATOR_DEBUG_LEVEL=0;_TIMESPEC_DEFINED;_USE_MATH_DEFINES;GC_DEBUG;ESCARGOT_ENABLE_TYPEDARRAY;ESCARGOT_ENABLE_PROMISE;ESCARGOT_32;_DEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;STARFISH_ENABLE_MULTIMEDIA;STARFISH_ENABLE_DOMPARSER;STARFISH_IGNORE_CROSS_ORIGIN;STARFISH_IGNORE_SSL_VERIFYPEER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.\..\..\..\..\src;.\..\..\..\..\inc;.\..\..\..\..\third_party\escargot\third_party\GCutil;.\..\..\..\..\third_party\escargot\third_party\GCutil\bdwgc\include;.\..\..\..\..\third_party\escargot\src\api;.\..\..\..\..\third_party\clipper\cpp;.\..\..\..\..\third_party\skia_matrix;.\..\..\..\..\third_party\MP4Parse\source\include;.\..\..\..\..\third_party\escargot\third_party\icu\include;.\..\..\..\..\third_party\windows_pthread\include;.\..\..\..\..\third_party\curl\include;.\..\..\..\..\third_party\cairo\src;.\..\..\..\..\third_party\cairo\build\windows\cairo\cairo;.\..\..\..\..\third_party\fontconfig;.\..\..\..\..\third_party\freetype2\include;.\..\..\..\..\third_party\giflib\lib;.\..\..\..\..\third_party\libpng;.\..\..\..\..\third_party\escargot\third_party\rapidjson\include;.\..\..\..\..\third_party\rapidxml;.\..\..\..\..\third_party\harfbuzz\src;.\..\..\..\..\third_party\webm;.\..\..\..\..\third_party\MP4Parse\source</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Strict</FloatingPointModel>
+      <AdditionalOptions>/Oy-  /utf-8 %(AdditionalOptions)</AdditionalOptions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <StackReserveSize>4194304</StackReserveSize>
+      <AdditionalDependencies>.\..\..\..\..\third_party\windows_pthread\lib\x86\pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>_DEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level1</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;STARFISH_WINDOWS;_TIMESPEC_DEFINED;_USE_MATH_DEFINES;ESCARGOT_ENABLE_TYPEDARRAY;ESCARGOT_ENABLE_PROMISE;ESCARGOT_32;NDEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;STARFISH_ENABLE_MULTIMEDIA;STARFISH_ENABLE_DOMPARSER;STARFISH_IGNORE_CROSS_ORIGIN;STARFISH_IGNORE_SSL_VERIFYPEER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <AdditionalIncludeDirectories>.\..\..\..\..\src;.\..\..\..\..\inc;.\..\..\..\..\third_party\escargot\third_party\GCutil;.\..\..\..\..\third_party\escargot\third_party\GCutil\bdwgc\include;.\..\..\..\..\third_party\escargot\src\api;.\..\..\..\..\third_party\clipper\cpp;.\..\..\..\..\third_party\skia_matrix;.\..\..\..\..\third_party\MP4Parse\source\include;.\..\..\..\..\third_party\escargot\third_party\icu\include;.\..\..\..\..\third_party\windows_pthread\include;.\..\..\..\..\third_party\curl\include;.\..\..\..\..\third_party\cairo\src;.\..\..\..\..\third_party\cairo\build\windows\cairo\cairo;.\..\..\..\..\third_party\fontconfig;.\..\..\..\..\third_party\freetype2\include;.\..\..\..\..\third_party\giflib\lib;.\..\..\..\..\third_party\libpng;.\..\..\..\..\third_party\escargot\third_party\rapidjson\include;.\..\..\..\..\third_party\rapidxml;.\..\..\..\..\third_party\harfbuzz\src;.\..\..\..\..\third_party\webm;.\..\..\..\..\third_party\MP4Parse\source</AdditionalIncludeDirectories>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
+      <AdditionalOptions>/Oy-  /utf-8 %(AdditionalOptions)</AdditionalOptions>
+      <LanguageStandard>stdcpp17</LanguageStandard>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <WholeProgramOptimization>true</WholeProgramOptimization>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Strict</FloatingPointModel>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <AdditionalDependencies>.\..\..\..\..\third_party\windows_pthread\lib\x86\pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>NDEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

@@ -556,7 +556,11 @@ private:
         // the WIC API
         static IWICImagingFactory* IWICFactory;
         if (IWICFactory == NULL) {
-            if (CoInitializeEx(NULL, COINIT_MULTITHREADED) != S_OK) {
+            auto ret = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+            if (ret == S_OK ||
+                ret == S_FALSE) { // S_FALSE means COM already initialzed
+
+            } else {
                 return false;
             }
 

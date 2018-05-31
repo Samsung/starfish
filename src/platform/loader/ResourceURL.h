@@ -80,7 +80,7 @@ public:
     void* operator new[](size_t size) = delete;
     static void fillGCDescriptor(GC_word* desc);
 
-    static ResourceURL* AboutBlankURL()
+    static ResourceURL* aboutBlankURL()
     {
         return new ResourceURL("about:blank");
     }

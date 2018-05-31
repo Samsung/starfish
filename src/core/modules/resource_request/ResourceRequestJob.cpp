@@ -61,7 +61,11 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     // this area doesn't require lock.
     // reading file does not require thread
     String* path = m_orgProxy->m_url->getUrlPathString();
+#if defined(OS_WINDOWS)
+    String* filePath = path->substring(8, path->length() - 8);
+#else
     String* filePath = path->substring(7, path->length() - 7);
+#endif
 
     if (m_orgProxy->m_isSync) {
         worker(m_orgProxy, filePath);

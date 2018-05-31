@@ -1112,7 +1112,7 @@ void Document::updateBaseURL()
     }
 
     if (!m_baseURL->isValid()) {
-        m_baseURL = ResourceURL::AboutBlankURL();
+        m_baseURL = ResourceURL::aboutBlankURL();
     }
 }
 
@@ -1123,7 +1123,7 @@ ResourceURL* Document::baseURL() const
     if (m_baseURL) {
         return m_baseURL;
     }
-    return ResourceURL::AboutBlankURL();
+    return ResourceURL::aboutBlankURL();
 }
 
 void Document::setBaseURL(ResourceURL* newURL)

@@ -247,6 +247,7 @@ typedef SSIZE_T ssize_t;
 #include <clocale>
 #include <cwchar>
 #include <numeric>
+#include <stdarg.h>
 
 #ifndef ESCARGOT
 #define ESCARGOT // for use additional functions in GCutil
@@ -302,6 +303,14 @@ inline void clearStack()
 #error "Environment not 32 or 64-bit."
 #endif
 
+#if defined(OS_WINDOWS)
+namespace StarFish {
+void forwardPrintingLogInfo(const char* fmt, ...);
+void forwardPrintingLogError(const char* fmt, ...);
+void forwardPrintingLogWarn(const char* fmt, ...);
+}
+#endif
+
 #define STARFISH_LOG_INFO(...) fprintf(stdout, __VA_ARGS__);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_INFO
@@ -314,6 +323,10 @@ inline void clearStack()
 #undef STARFISH_LOG_INFO
 #define STARFISH_LOG_INFO(...) \
     __android_log_print(ANDROID_LOG_INFO, STARFISH_NAME, __VA_ARGS__);
+#endif
+#ifdef STARFISH_WINDOWS
+#undef STARFISH_LOG_INFO
+#define STARFISH_LOG_INFO(...) ::StarFish::forwardPrintingLogInfo(__VA_ARGS__);
 #endif
 
 #define STARFISH_LOG_ERROR(...) fprintf(stderr, __VA_ARGS__);
@@ -329,6 +342,11 @@ inline void clearStack()
 #define STARFISH_LOG_ERROR(...) \
     __android_log_print(ANDROID_LOG_ERROR, STARFISH_NAME, __VA_ARGS__);
 #endif
+#ifdef STARFISH_WINDOWS
+#undef STARFISH_LOG_ERROR
+#define STARFISH_LOG_ERROR(...) \
+    ::StarFish::forwardPrintingLogError(__VA_ARGS__);
+#endif
 
 #define STARFISH_LOG_WARN(...) fprintf(stderr, __VA_ARGS__);
 #ifdef STARFISH_TIZEN
@@ -342,6 +360,10 @@ inline void clearStack()
 #undef STARFISH_LOG_WARN
 #define STARFISH_LOG_WARN(...) \
     __android_log_print(ANDROID_LOG_WARN, STARFISH_NAME, __VA_ARGS__);
+#endif
+#ifdef STARFISH_WINDOWS
+#undef STARFISH_LOG_WARN
+#define STARFISH_LOG_WARN(...) ::StarFish::forwardPrintingLogWarn(__VA_ARGS__);
 #endif
 
 #define STARFISH_CRASH STARFISH_RELEASE_ASSERT_NOT_REACHED

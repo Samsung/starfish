@@ -384,7 +384,12 @@ File* File::createInNonGCArea()
 Nullable<String*> File::absolutePath(String* localPath)
 {
 #if defined(OS_WINDOWS)
-    return localPath;
+    if (localPath->startsWith("file://")) {
+        auto s = sizeof("file://");
+        return localPath->substring(s, localPath->length() - s);
+    } else {
+        return localPath;
+    }
 #else
     UTF8StringDataNonGCStd data = localPath->toUTF8NonGCString();
     char* resolved = realpath(data.c_str(), NULL);

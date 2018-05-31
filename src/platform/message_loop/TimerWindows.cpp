@@ -127,7 +127,7 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
     td->m_data = data;
     td->m_handler = handler;
     td->m_timerID =
-        SetTimer(NULL, (size_t)td, USER_TIMER_MINIMUM,
+        SetTimer(NULL, (size_t)td, USER_TIMER_MINIMUM + 1,
                  [](HWND, UINT, UINT_PTR timerId, DWORD) {
                      TimeoutData* td =
                          (TimeoutData*)g_windowsTimerData[timerId];
@@ -159,7 +159,7 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
     ad->m_window = window;
     ad->m_handler = handler;
     ad->m_timerID =
-        SetTimer(NULL, (size_t)ad, USER_TIMER_MINIMUM,
+        SetTimer(NULL, (size_t)ad, USER_TIMER_MINIMUM + 1,
                  [](HWND, UINT, UINT_PTR timerId, DWORD) {
                      AnimationTickData* ad =
                          (AnimationTickData*)g_windowsTimerData[timerId];
