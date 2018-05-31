@@ -119,6 +119,7 @@ protected:
         , m_didInlineStyleModifiedAfterAttributeSet(false)
         , m_tabIndexWasSetExplicitly(false)
         , m_hasDirAttribute(false)
+        , m_isRunningOpacityAnimation(false)
         , m_isRunningTransformAnimation(false)
         , m_canBeCountingRoot(false)
         , m_state(NodeStateNormal)
@@ -655,14 +656,29 @@ public:
         return (HTMLListContainer*)this;
     }
 
+    bool isRunningOpacityAnimation()
+    {
+        return m_isRunningOpacityAnimation;
+    }
+
     bool isRunningTransformAnimation()
     {
         return m_isRunningTransformAnimation;
     }
 
+    void markRunningOpacityAnimation()
+    {
+        m_isRunningOpacityAnimation = true;
+    }
+
     void markRunningTransformAnimation()
     {
         m_isRunningTransformAnimation = true;
+    }
+
+    void clearRunningOpacityAnimation()
+    {
+        m_isRunningOpacityAnimation = false;
     }
 
     void clearRunningTransformAnimation()
@@ -713,6 +729,7 @@ protected:
     // for HTMLElelement
     bool m_hasDirAttribute : 1;
     // for animation
+    bool m_isRunningOpacityAnimation : 1;
     bool m_isRunningTransformAnimation : 1;
     bool m_canBeCountingRoot : 1;
     bool m_canBeQuoteRoot : 1;

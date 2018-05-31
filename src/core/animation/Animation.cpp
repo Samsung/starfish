@@ -465,6 +465,12 @@ OpacityAnimationTask::OpacityAnimationTask(
 {
 }
 
+void OpacityAnimationTask::attachedToElement()
+{
+    AnimationTask::attachedToElement();
+    targetElement()->markRunningOpacityAnimation();
+}
+
 void OpacityAnimationTask::opacityUpdated(bool before, bool after)
 {
     Element* current = targetElement();
@@ -499,6 +505,8 @@ void OpacityAnimationTask::detachedFromElement()
     frame->computeStyleFlags();
     bool after = frame->isEstablishesStackingContext();
     opacityUpdated(before, after);
+
+    current->clearRunningOpacityAnimation();
 }
 
 void OpacityAnimationTask::execute(float progress)
@@ -916,7 +924,6 @@ void AnimationExecutor::step()
 
     for (size_t i = 0; i < m_animationList.size(); i++) {
         AnimationTask* task = m_animationList[i];
-
         if (task->m_startTimeMs == 0) {
             task->m_startTimeMs = currentTickCount + task->m_delayMs;
         }
@@ -925,7 +932,6 @@ void AnimationExecutor::step()
             if (!task->m_isStartEventFired) {
                 task->fireStartEvent();
             }
-
             float progress = task->computeProgress(currentTickCount);
             if (progress >= 1 || task->targetElement()->frame() == nullptr ||
                 !task->targetElement()

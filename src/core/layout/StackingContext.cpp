@@ -775,6 +775,7 @@ void StackingContext::computeStackingContextProperties()
 bool StackingContext::canComposite(ComputeStackingContextContext& ctx)
 {
     if (m_owner->needsGraphicsBuffer() ||
+        m_owner->isRunningOpacityAnimation() ||
         m_owner->isRunningTransformAnimation()) {
         return true;
     }
@@ -802,6 +803,7 @@ void StackingContext::computeStackingContextProperties(
     // respectTransforms);
 
     bool willBeComposited = m_owner->needsGraphicsBuffer() ||
+                            m_owner->isRunningOpacityAnimation() ||
                             m_owner->isRunningTransformAnimation();
     IndirectCompositingReason compositingReason =
         compositingState.subLayerHasGraphicsBuffer

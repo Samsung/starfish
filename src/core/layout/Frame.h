@@ -1847,8 +1847,11 @@ public:
         return m_flags.m_isAnonymous;
     }
 
+    bool isRunningOpacityAnimation();
     bool isRunningTransformAnimation();
+    void markRunningOpacityAnimation();
     void markRunningTransformAnimation();
+    void clearRunningOpacityAnimation();
     void clearRunningTransformAnimation();
 
     bool isBlockLevel(bool originally = false)

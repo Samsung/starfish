@@ -1771,6 +1771,14 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
     return false;
 }
 
+bool Frame::isRunningOpacityAnimation()
+{
+    if (isAnonymous()) {
+        return false;
+    }
+    return node()->isRunningOpacityAnimation();
+}
+
 bool Frame::isRunningTransformAnimation()
 {
     if (isAnonymous()) {
@@ -1779,10 +1787,22 @@ bool Frame::isRunningTransformAnimation()
     return node()->isRunningTransformAnimation();
 }
 
+void Frame::markRunningOpacityAnimation()
+{
+    STARFISH_ASSERT(node());
+    node()->markRunningOpacityAnimation();
+}
+
 void Frame::markRunningTransformAnimation()
 {
     STARFISH_ASSERT(node());
     node()->markRunningTransformAnimation();
+}
+
+void Frame::clearRunningOpacityAnimation()
+{
+    STARFISH_ASSERT(node());
+    node()->isRunningOpacityAnimation();
 }
 
 void Frame::clearRunningTransformAnimation()
