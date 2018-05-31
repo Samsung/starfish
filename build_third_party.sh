@@ -24,6 +24,9 @@ if [ "$arch" == "x64" ]; then
 
     cd $STARFISH_ROOT
     ./build/build_gc.sh
+
+#TODO libtuv for x64 
+
 elif [ "$arch" == "arm" ]; then
     #cd $STARFISH_ROOT
     #./build/build_zeromq.sh tizen_obs_arm
@@ -33,15 +36,16 @@ elif [ "$arch" == "arm" ]; then
 
     cd $STARFISH_ROOT
     ./build/build_gc.sh tizen_obs_arm
+
+    cd $STARFISH_ROOT
+    cd third_party/libtuv
+    make clean
+    TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
+    cd -
 else
     echo "Unknown option"
 fi
 
-cd $STARFISH_ROOT
-cd third_party/libtuv
-make clean
-make -j$NUMPROC
-cd -
 
 cd $STARFISH_ROOT
 #python ./binding_generator/scripts/starfish_code_generator.py src/ src/binding/
