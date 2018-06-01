@@ -478,6 +478,8 @@ void OpacityAnimationTask::opacityUpdated(bool before, bool after)
 
     if (before != after) {
         targetElement()->webView()->clearStackingContext(true);
+    } else if (before == after) {
+        targetElement()->webView()->setNeedsComputeStackingContextProperties();
     }
 
     if (frame->isFrameBox() && frame->asFrameBox()->stackingContext() &&

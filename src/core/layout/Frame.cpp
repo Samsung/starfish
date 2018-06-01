@@ -1802,13 +1802,13 @@ void Frame::markRunningTransformAnimation()
 void Frame::clearRunningOpacityAnimation()
 {
     STARFISH_ASSERT(node());
-    node()->isRunningOpacityAnimation();
+    node()->clearRunningOpacityAnimation();
 }
 
 void Frame::clearRunningTransformAnimation()
 {
     STARFISH_ASSERT(node());
-    node()->isRunningTransformAnimation();
+    node()->clearRunningTransformAnimation();
 }
 
 bool Frame::hasFrameBorderRadius()

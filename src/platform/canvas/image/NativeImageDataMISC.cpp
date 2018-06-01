@@ -354,22 +354,20 @@ private:
                ((unsigned)(unsigned char)(sa) << 24))
 
         uint8_t* data = (uint8_t*)m_image;
-        for (png_uint_32 y = 0; y < m_height; y++) {
+        for (png_uint_32 y = 0; y < m_height; ++y) {
             for (png_uint_32 x = 0; x < rowbytes; x += 4) {
-                uint32_t* tmp = (uint32_t*)(&(data[y * rowbytes + x]));
-
-                if (data[y * rowbytes + x + 3] != 255) {
+                png_uint_32 idx = y * rowbytes + x;
+                uint32_t* tmp = (uint32_t*)(&(data[idx]));
+                if (data[idx + 3] != 255) {
                     m_hasTransparentPixel = true;
                 }
 
 #ifdef STARFISH_ANDROID
-                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
-                    data[y * rowbytes + x + 2], data[y * rowbytes + x + 1],
-                    data[y * rowbytes + x], data[y * rowbytes + x + 3]);
+                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(data[idx + 2], data[idx + 1],
+                                                 data[idx], data[idx + 3]);
 #else
-                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
-                    data[y * rowbytes + x], data[y * rowbytes + x + 1],
-                    data[y * rowbytes + x + 2], data[y * rowbytes + x + 3]);
+                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(data[idx], data[idx + 1],
+                                                 data[idx + 2], data[idx + 3]);
 #endif
             }
         }
