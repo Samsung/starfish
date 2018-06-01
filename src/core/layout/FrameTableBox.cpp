@@ -677,6 +677,37 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                         }
                     }
                 }
+
+                // The sum of col widths is smaller than the table width
+                // increase the cell widths if all cells' widths are specified
+                // in percentage
+                if (sumOfSpecifiedCellWidths < availableWidth) {
+                    double sumOfPercentageWidths = 0;
+                    bool allCellsHavePercentageWidths = true;
+                    for (auto& col : m_columnWidths) {
+                        FrameTableCellBox* cellBox = cellFromFirstRowOrColGroup(
+                            tableLayoutFixed, col->id);
+                        Length width = cellBox->style()->width();
+                        if (width.isPercent()) {
+                            sumOfPercentageWidths += width.percent();
+                        } else {
+                            allCellsHavePercentageWidths = false;
+                            break;
+                        }
+                    }
+
+                    if (allCellsHavePercentageWidths) {
+                        for (auto& col : m_columnWidths) {
+                            FrameTableCellBox* cellBox =
+                                cellFromFirstRowOrColGroup(tableLayoutFixed,
+                                                           col->id);
+                            col->cellWidth =
+                                LayoutUnit(cellBox->style()->width().percent() /
+                                           sumOfPercentageWidths *
+                                           tableContentWidth.toDouble());
+                        }
+                    }
+                }
             } else {
                 LayoutUnit remainingWidth = availableWidth;
                 remainingWidth -= sumOfSpecifiedCellWidths;
