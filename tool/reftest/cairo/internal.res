@@ -217,6 +217,7 @@ test/cairo/internal-test/css/position2/left-margin-fixed-right-margin-auto-width
 test/cairo/internal-test/css/position2/replaced-left-margin-fixed-right-margin-auto-width-fixed.html
 test/cairo/internal-test/css/table/table_auto_07.html
 test/cairo/internal-test/css/table/table_auto_05.html
+test/cairo/internal-test/css/table/table_viv_01.html
 test/cairo/internal-test/css/position2/replaced-left-margin-fixed-right-margin-auto-width-auto.html
 test/cairo/internal-test/css/position2/replaced-left-margin-auto-right-margin-auto-width-auto.html
 test/cairo/internal-test/css/position2/replaced-left-margin-auto-right-margin-fixed-width-auto.html

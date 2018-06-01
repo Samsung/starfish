@@ -535,7 +535,14 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
         }
     }
 
-    LayoutUnit tableContentWidth = tableWidth - borderWidth() - paddingWidth();
+    bool borderCollapseSeparate =
+        style()->borderCollapse() ==
+        BorderCollapseValue::SeparateBorderCollapseValue;
+
+    LayoutUnit tableContentWidth = tableWidth - borderWidth();
+    if (borderCollapseSeparate) {
+        tableContentWidth -= paddingWidth();
+    }
 
     // The values from <col> have higher priority
     for (auto& col : m_columnWidths) {
@@ -1258,6 +1265,9 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     //    If there are multiple captions, place them in document order
 
     LayoutUnit ySoFar = 0;
+    bool borderCollapseSeparate =
+        style()->borderCollapse() ==
+        BorderCollapseValue::SeparateBorderCollapseValue;
 
     // 1. place captions with caption-side: top
     Frame* child = firstChild();
@@ -1288,8 +1298,13 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     m_tableRect.setX(0);
     m_tableRect.setY(ySoFar);
     ySoFar += borderTop();
-    ySoFar += paddingTop();
-    LayoutUnit xPosOfSection = borderLeft() + paddingLeft();
+    if (borderCollapseSeparate) {
+        ySoFar += paddingTop();
+    }
+    LayoutUnit xPosOfSection = borderLeft();
+    if (borderCollapseSeparate) {
+        xPosOfSection += paddingLeft();
+    }
     FrameTableSectionBox* thead = this->thead();
     FrameTableSectionBox* tfoot = this->tfoot();
 
@@ -1321,7 +1336,9 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
         ySoFar += tfoot->asFrameBox()->height();
     }
 
-    ySoFar += paddingBottom();
+    if (borderCollapseSeparate) {
+        ySoFar += paddingBottom();
+    }
     ySoFar += borderBottom();
     m_tableRect.setWidth(width());
 
