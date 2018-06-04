@@ -478,7 +478,7 @@ void OpacityAnimationTask::opacityUpdated(bool before, bool after)
 
     if (before != after) {
         targetElement()->webView()->clearStackingContext(true);
-    } else if (before == after) {
+    } else {
         targetElement()->webView()->setNeedsComputeStackingContextProperties();
     }
 
@@ -502,12 +502,15 @@ void OpacityAnimationTask::detachedFromElement()
     }
 
     bool before = frame->isEstablishesStackingContext();
+    bool canOwnBefore =
+        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
     ComputedStyle* style = current->style();
     style->setOpacity(m_toValue.getFloat());
     frame->computeStyleFlags();
     bool after = frame->isEstablishesStackingContext();
-    opacityUpdated(before, after);
-
+    bool canOwnAfter =
+        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
+    opacityUpdated(before && canOwnBefore, after && canOwnAfter);
     current->clearRunningOpacityAnimation();
 }
 
@@ -519,12 +522,16 @@ void OpacityAnimationTask::execute(float progress)
     Element* current = targetElement();
     Frame* frame = current->frame();
     bool before = frame->isEstablishesStackingContext();
+    bool canOwnBefore =
+        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
     ComputedStyle* style = current->style();
     float newOpacity = from * (1 - progress) + to * progress;
     style->setOpacity(newOpacity);
     frame->computeStyleFlags();
     bool after = frame->isEstablishesStackingContext();
-    opacityUpdated(before, after);
+    bool canOwnAfter =
+        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
+    opacityUpdated(before && canOwnBefore, after && canOwnAfter);
 }
 
 inline double rad2deg(double rad)
