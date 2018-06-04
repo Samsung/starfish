@@ -1067,6 +1067,19 @@ void Document::setReadyState(DocumentReadyState newState)
     }
 }
 
+Element* Document::scrollingElement()
+{
+    // https://drafts.csswg.org/cssom-view/#dom-document-scrollingelement
+    if (inQuirksMode()) {
+        if (body() && body()->frame() &&
+            body()->asHTMLBodyElement()->isPotentiallyScrollable()) {
+            return body();
+        }
+        return nullptr;
+    }
+    return documentElement();
+}
+
 String* Document::urlString()
 {
     return m_documentURI->urlString();

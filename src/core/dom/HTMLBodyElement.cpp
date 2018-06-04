@@ -152,4 +152,16 @@ void HTMLBodyElement::styleForPresentationAttribute(
         }
     }
 }
+
+bool HTMLBodyElement::isPotentiallyScrollable()
+{
+    // https://drafts.csswg.org/cssom-view/#potentially-scrollable
+    if (parentElement()->appliedOverflowX() > OverflowValue::VisibleOverflow &&
+        parentElement()->appliedOverflowY() > OverflowValue::VisibleOverflow &&
+        appliedOverflowX() > OverflowValue::VisibleOverflow &&
+        appliedOverflowY() > OverflowValue::VisibleOverflow) {
+        return true;
+    }
+    return false;
+}
 }
