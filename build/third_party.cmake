@@ -5,18 +5,237 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 #######################################################
 
 # JS BINDING
-EXECUTE_PROCESS (
-    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${OUTPUT_DIRECTORY}/tmp
+SET (STARFISH_BINDING_OUTPUT_LIST
+    ${STARFISH_ROOT}/src/binding/ArrayBufferViewOrArrayBufferBinding.cpp
+    ${STARFISH_ROOT}/src/binding/AttrBinding.cpp
+    ${STARFISH_ROOT}/src/binding/BlobBinding.cpp
+    ${STARFISH_ROOT}/src/binding/BlobCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/BufferSourceOrBlobOrDOMStringBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CanvasGradientBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CanvasPatternBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CanvasRenderingContext2DBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CDATASectionBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CharacterDataBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CharacterDataCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CommentBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CompositionEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CompositionEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CoordinatesBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSConditionRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSCounterStyleRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSFontFaceRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSGroupingRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSImportRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSKeyframesRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSKeywordValueBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSMediaRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSNamespaceRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSNumericTypeBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSNumericValueBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSRuleListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSStyleDeclarationBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSStyleRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSStyleSheetBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSStyleValueBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSSupportsRuleBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CSSUnitValueBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CustomEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/CustomEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DocumentBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DocumentCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DocumentFragmentBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DocumentHoldable.cpp
+    ${STARFISH_ROOT}/src/binding/DocumentTypeBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMExceptionBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMImplementationBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMParserBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMPointBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMPointInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMPointReadOnlyBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMQuadBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMRectBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMRectListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMRectReadOnlyBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMSettableTokenListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMStringListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMStringMapBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMStringOrCanvasGradientOrCanvasPatternBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMStringOrFunctionBinding.cpp
+    ${STARFISH_ROOT}/src/binding/DOMTokenListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/doubleOrAutoKeywordBinding.cpp
+    ${STARFISH_ROOT}/src/binding/doubleOrCSSNumericValueBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ErrorEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ErrorEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/EventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/EventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/EventModifierInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/EventOrDOMStringBinding.cpp
+    ${STARFISH_ROOT}/src/binding/EventSourceBinding.cpp
+    ${STARFISH_ROOT}/src/binding/EventSourceInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/EventTargetBinding.cpp
+    ${STARFISH_ROOT}/src/binding/FocusEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/FocusEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/GeolocationBinding.cpp
+    ${STARFISH_ROOT}/src/binding/GeolocationCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/GeopositionBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HistoryBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLAnchorElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLAreaElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLAudioElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLBaseElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLBodyElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLBRElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLButtonElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLCanvasElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLCollectionBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLDivElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLDListElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLDocumentBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLElementOrlongBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLFieldSetElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLFontElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLFormControlsCollectionBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLFormElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLHeadElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLHeadingElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLHRElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLHtmlElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLIFrameElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLImageElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLInputElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLInputElementCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLLabelElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLLegendElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLLIElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLLinkElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLMapElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLMediaElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLMetaElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLModElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLObjectElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLOListElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLOptGroupElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLOptionElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLOptionElementOrHTMLOptGroupElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLOptionsCollectionBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLOutputElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLParagraphElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLParamElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLPreElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLQuoteElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLScriptElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLScriptElementOrSVGScriptElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLSelectElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLSourceElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLSpanElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLStyleElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTableCaptionElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTableCellElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTableColElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTableElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTableRowElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTableSectionElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTextAreaElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTFootElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTHeadElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTHElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTitleElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLTrackElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLUListElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLUnknownElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/HTMLVideoElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ImageBitmapRenderingContextBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ImageDataBinding.cpp
+    ${STARFISH_ROOT}/src/binding/InputEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/InputEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/KeyboardEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/KeyboardEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/LocationBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MediaListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MediaQueryListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MediaQueryListEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MediaQueryListEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MediaSourceBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MessageChannelBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MessageEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MessageEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MessagePortBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MouseEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/MouseEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/NamedNodeMapBinding.cpp
+    ${STARFISH_ROOT}/src/binding/NavigatorBinding.cpp
+    ${STARFISH_ROOT}/src/binding/NodeBinding.cpp
+    ${STARFISH_ROOT}/src/binding/NodeFilterBinding.cpp
+    ${STARFISH_ROOT}/src/binding/NodeIteratorBinding.cpp
+    ${STARFISH_ROOT}/src/binding/NodeListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/NodeOrDOMStringBinding.cpp
+    ${STARFISH_ROOT}/src/binding/Path2DBinding.cpp
+    ${STARFISH_ROOT}/src/binding/PositionErrorBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ProcessingInstructionBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ProgressEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ProgressEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/RangeBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ScreenBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ScriptBindingInstance.cpp
+    ${STARFISH_ROOT}/src/binding/ScriptEngineInstance.cpp
+    ${STARFISH_ROOT}/src/binding/ScriptWrappable.cpp
+    ${STARFISH_ROOT}/src/binding/ScrollOptionsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/ScrollToOptionsBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SourceBufferBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SourceBufferListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/StorageBinding.cpp
+    ${STARFISH_ROOT}/src/binding/StyleSheetBinding.cpp
+    ${STARFISH_ROOT}/src/binding/StyleSheetListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGAnimatedLengthBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGCircleElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGDocumentBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGGElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGImageElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGLengthBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGPathElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGPolygonElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGPolylineElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGRectElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGScriptElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGStyleElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGSVGElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/SVGTextElementBinding.cpp
+    ${STARFISH_ROOT}/src/binding/testRunnerBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TextBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TextTrackBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TextTrackCueBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TextTrackCueListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TextTrackListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TimeRangesBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TouchBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TouchEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TouchInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TouchListBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TransitionEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TransitionEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/TreeWalkerBinding.cpp
+    ${STARFISH_ROOT}/src/binding/UIEventBinding.cpp
+    ${STARFISH_ROOT}/src/binding/UIEventInitBinding.cpp
+    ${STARFISH_ROOT}/src/binding/URLBinding.cpp
+    ${STARFISH_ROOT}/src/binding/VTTCueBinding.cpp
+    ${STARFISH_ROOT}/src/binding/WebGLRenderingContextBinding.cpp
+    ${STARFISH_ROOT}/src/binding/WindowBinding.cpp
+    ${STARFISH_ROOT}/src/binding/WindowCustomBinding.cpp
+    ${STARFISH_ROOT}/src/binding/WindowHoldable.cpp
+    ${STARFISH_ROOT}/src/binding/XMLDocumentBinding.cpp
+    ${STARFISH_ROOT}/src/binding/XMLHttpRequestBinding.cpp
+    ${STARFISH_ROOT}/src/binding/XMLHttpRequestEventTargetBinding.cpp
 )
 
-FILE (GLOB STARFISH_BINDING_TMP_LIST ${OUTPUT_DIRECTORY}/tmp/*)
-
-FOREACH ( F ${STARFISH_BINDING_TMP_LIST})
-    GET_FILENAME_COMPONENT ("${F}" FN NAME)
-    CONFIGURE_FILE ("${F}" "${STARFISH_ROOT}/src/binding/${FN}" COPYONLY)
-ENDFOREACH()
-
-FILE (GLOB STARFISH_BINDING_OUTPUT_LIST ${STARFISH_ROOT}/src/binding/*.cpp)
+ADD_CUSTOM_TARGET (generate_binding
+    COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding
+)
 
 # SKIA
 FILE (GLOB SKIA_LIST ${THIRD_PARTY_ROOT}/skia_matrix/*.cpp)
@@ -28,32 +247,6 @@ TARGET_COMPILE_OPTIONS (skia PUBLIC ${LWE_CXXFLAGS})
 ADD_LIBRARY (clipper STATIC ${THIRD_PARTY_ROOT}/clipper/cpp/clipper.cpp)
 TARGET_COMPILE_DEFINITIONS (clipper PUBLIC ${LWE_DEFINITIONS})
 TARGET_COMPILE_OPTIONS (clipper PUBLIC ${LWE_CXXFLAGS})
-
-# ZEROMQ, ESCARGOT, GC and LIBTUV
-ADD_LIBRARY (escargot STATIC IMPORTED)
-ADD_LIBRARY (gc SHARED IMPORTED)
-IF (${ARCH} STREQUAL "tizen")
-    SET (ESCARGOT_OUTPUT ${ESCARGOT_ROOT}/libescargot.a)
-    SET (GC_OUTPUT ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.so)
-    SET (LIBTUV_OUTPUT ${THIRD_PARTY_ROOT}/libtuv/build/armv7l-linux/debug/lib/libtuv.so)
-    ADD_LIBRARY (libtuv STATIC IMPORTED)
-    SET_PROPERTY (TARGET libtuv PROPERTY IMPORTED_LOCATION ${LIBTUV_OUTPUT})
-    SET (THIRD_PARTY_ARCH "arm")
-ELSE()
-    SET (ESCARGOT_OUTPUT ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a)
-    SET (GC_OUTPUT ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so)
-    SET (ZMQ_OUTPUT ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so)
-    ADD_LIBRARY (zmq STATIC IMPORTED)
-    SET_PROPERTY (TARGET zmq PROPERTY IMPORTED_LOCATION ${ZMQ_OUTPUT})
-    SET (THIRD_PARTY_ARCH "x64")
-ENDIF()
-
-SET_PROPERTY (TARGET escargot PROPERTY IMPORTED_LOCATION ${ESCARGOT_OUTPUT})
-SET_PROPERTY (TARGET gc PROPERTY IMPORTED_LOCATION ${GC_OUTPUT})
-MESSAGE (STATUS "HELL: ${ESCARGOT_OUTPUT}")
-
-#ADD_CUSTOM_COMMAND (OUTPUT ${ESCARGOT_OUTPUT} ${GC_OUTPUT} ${ZMQ_OUTPUT} ${LIBTUV_OUTPUT}
-#                    COMMAND @./build_third_party.sh ${THIRD_PARTY_ARCH})
 
 # MP4PARSE
 FILE (GLOB MP4PARSE_LIST ${THIRD_PARTY_ROOT}/MP4Parse/source/MP4*.cpp)
@@ -72,33 +265,47 @@ TARGET_COMPILE_OPTIONS (webm PUBLIC ${LWE_CXXFLAGS})
 TARGET_INCLUDE_DIRECTORIES (webm PUBLIC ${THIRD_PARTY_ROOT}/webm/)
 
 #######################################################
-# COPY THIRD PARTY LIBRARY FILES
+# PREPARE THIRD PARTY LIBRARY FILES
 #######################################################
 
 IF (${ARCH} STREQUAL "tizen")
-    ADD_CUSTOM_TARGET (library_build
-        DEPENDS gc escargot libtuv
+    ADD_CUSTOM_TARGET (build_third_party
         COMMAND ./build_third_party.sh arm
     )
     ADD_CUSTOM_TARGET (library_copy
-        DEPENDS library_build
-        COMMAND ${CMAKE_COMMAND} -E make_directory ${OUTPUT_DIRECTORY}/lib/tizen/
+        DEPENDS ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.so  ${ESCARGOT_ROOT}/libescargot.a ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.a
         #COMMAND ${CMAKE_COMMAND} -E copy ${STARFISH_ROOT}/tizen_dep/arm/libzmq.a ${OUTPUT_DIRECTORY}/lib/tizen
-        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.so.1.0.3  ${OUTPUT_DIRECTORY}/lib/tizen/
-        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/libescargot.a ${OUTPUT_DIRECTORY}/lib/tizen/
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib/tizen
+        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.so ${OUTPUT_DIRECTORY}/lib
+        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/libescargot.a ${OUTPUT_DIRECTORY}/lib
+        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.a ${OUTPUT_DIRECTORY}/lib
     )
+    ADD_LIBRARY (tuv STATIC STATIC IMPORTED)
+    ADD_DEPENDENCIES (tuv library_copy)
+    SET_PROPERTY (TARGET tuv PROPERTY IMPORTED_LOCATION ${OUTPUT_DIRECTORY}/lib/libtuv.a)
 ELSE()
-    ADD_CUSTOM_TARGET (library_build
-        DEPENDS gc escargot zmq
+    ADD_CUSTOM_TARGET (build_third_party
         COMMAND ./build_third_party.sh x86
     )
     ADD_CUSTOM_TARGET (library_copy
-        DEPENDS library_build
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5.0.1 ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.a ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so.1.0.3  ${OUTPUT_DIRECTORY}/lib/
+        DEPENDS ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a
+        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${OUTPUT_DIRECTORY}/lib/
+        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so ${OUTPUT_DIRECTORY}/lib/
         COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a ${OUTPUT_DIRECTORY}/lib/
         # COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/x86_64-linux/debug/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib/
     )
+    ADD_LIBRARY (zmq SHARED IMPORTED)
+    ADD_DEPENDENCIES (zmq library_copy)
+    SET_PROPERTY (TARGET zmq PROPERTY IMPORTED_LOCATION ${OUTPUT_DIRECTORY}/lib/libzmq.so)
 ENDIF()
+
+ADD_LIBRARY (escargot STATIC IMPORTED)
+SET_PROPERTY (TARGET escargot PROPERTY IMPORTED_LOCATION ${OUTPUT_DIRECTORY}/lib/libescargot.a)
+ADD_DEPENDENCIES (escargot library_copy)
+
+ADD_LIBRARY (gc SHARED IMPORTED)
+SET_PROPERTY (TARGET gc PROPERTY IMPORTED_LOCATION ${OUTPUT_DIRECTORY}/lib/libgc.so)
+ADD_DEPENDENCIES (gc library_copy)
+
+ADD_CUSTOM_TARGET (prepare_build
+    DEPENDS build_third_party generate_binding
+)

@@ -40,7 +40,7 @@ elif [ "$arch" == "arm" ]; then
     cd $STARFISH_ROOT
     cd third_party/libtuv
     make clean
-    TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
+    TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
     cd -
 else
     echo "Unknown option"
