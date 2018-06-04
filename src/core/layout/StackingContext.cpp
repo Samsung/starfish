@@ -1425,6 +1425,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         compositor->translate(-to.x(), -to.y());
     }
 
+    if (ownerStyle->opacity() != 1) {
+        compositor->beginOpacityLayer(ownerStyle->opacity());
+    }
+
     if (needsGraphicsBuffer()) {
         LayoutUnit minX = visibleRect.x();
         LayoutUnit maxX = visibleRect.maxX();
@@ -1438,10 +1442,6 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
         size_t bufferWidth = (int)(maxX - minX);
         size_t bufferHeight = (int)(maxY - minY);
-
-        if (ownerStyle->opacity() != 1) {
-            compositor->beginOpacityLayer(ownerStyle->opacity());
-        }
 
         if (owner()->shouldApplyOverflow()) {
             compositor->clip(
@@ -1527,10 +1527,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         }
     }
 
-    if (needsGraphicsBuffer()) {
-        if (ownerStyle->opacity() != 1) {
-            compositor->endOpacityLayer();
-        }
+    if (ownerStyle->opacity() != 1) {
+        compositor->endOpacityLayer();
     }
 
     compositor->restore();
