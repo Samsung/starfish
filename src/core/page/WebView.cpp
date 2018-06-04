@@ -975,8 +975,8 @@ void WebView::assignGraphicsBuffer(CanvasSurface** surfaceHolder,
                                    size_t visibleWidth, size_t visibleHeight)
 {
     STARFISH_ASSERT(m_inRendering);
-    if (!*surfaceHolder || (((*surfaceHolder)->width() != visibleWidth) &&
-                            ((*surfaceHolder)->height() != visibleHeight))) {
+    if (!*surfaceHolder || ((*surfaceHolder)->width() != visibleWidth) ||
+        ((*surfaceHolder)->height() != visibleHeight)) {
         if (*surfaceHolder) {
             m_backStackingContextBufferUpWhileReCompsite.push_back(
                 *surfaceHolder);

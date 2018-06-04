@@ -3203,23 +3203,7 @@ void FrameBox::establishesStackingContextIfNeeds()
             }
             while (true) {
                 if (p->isEstablishesStackingContext()) {
-                    if (p->isRootElement()) {
-                        break;
-                    } else if (p->needsGraphicsBuffer()) {
-                        break;
-                    } else if (p->style()->hasTransforms(p)) {
-                        break;
-                    } else if (p->style()->position() == FixedPositionValue) {
-                        break;
-                    } else if ((p->isPositioned() || p->isFlexItem()) &&
-                               p->style()->isSpecifiedZIndex()) {
-                        break;
-                    } else if (p->style()->opacity() != 1) {
-                        break;
-                    } else if (p->style()->overflowX() !=
-                                   OverflowValue::VisibleOverflow ||
-                               p->style()->overflowY() !=
-                                   OverflowValue::VisibleOverflow) {
+                    if (p->canOwnsStackingContext()) {
                         break;
                     }
                 }
