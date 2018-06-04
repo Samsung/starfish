@@ -9067,7 +9067,7 @@ static bool parseGridTemplateColumnsAndRows(const CSSTokenVector& tokens,
         if (str == "fr") {
             GridLength g(number);
             v->push_back(g);
-        } else {
+        } else if (CSSPropertyParser::isLengthUnit(str)) {
             GridLength g(CSSLength(str, number).toLength());
             v->push_back(g);
         }
