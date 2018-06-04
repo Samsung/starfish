@@ -140,9 +140,10 @@ public:
         , m_isMouseLbuttonDown(false)
         , m_width(width)
         , m_height(height)
-        , m_starFish(nullptr)
+        , m_webView(nullptr)
         , mApplication(application)
     {
+        m_currentBuffer = malloc(m_width * m_height * sizeof(uint32_t));
         mApplication.InitSignal().Connect(this, &DaliShellController::Create);
     }
     ~DaliShellController()
@@ -168,12 +169,18 @@ public:
     bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data);
     bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event);
     void KeyEventHandler(const Dali::KeyEvent& event);
-
+    void renderingFinishedCB(LWE::WebContainer* webview, void* buffer)
+    {
+        memcpy(m_daliImg.GetBuffer(), buffer,
+               m_width * m_height * sizeof(uint32_t));
+        m_needsUpdate = true;
+    }
+    bool m_needsUpdate;
     bool m_isInit;
     bool m_isMouseLbuttonDown;
     int m_width;
     int m_height;
-    StarFish::StarFish* m_starFish;
+    LWE::WebContainer* m_webView;
     Application& mApplication;
 #if defined(STARFISH_TIZEN)
     tbm_surface_h m_surface1;
@@ -186,6 +193,7 @@ public:
 #else
     Dali::BufferImage m_daliImg;
 #endif
+    void* m_currentBuffer;
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
 };
@@ -194,36 +202,18 @@ void* mainShellThread(void* data)
 {
     uv_async_init(
         uv_default_loop(), &g_launcher_handle, [](uv_async_t* handle) {
-
-            int flag = 0;
-            int x = 0;
-            int y = 0;
             DaliShellController* app = (DaliShellController*)handle->data;
-
-            StarFish::ScreenInfo info;
-            info.rect.setWidth(app->m_width);
-            info.rect.setHeight(app->m_height);
-            info.availableRect.setWidth(app->m_width);
-            info.availableRect.setHeight(app->m_height);
-
-            std::string cacheDir(getenv("HOME"));
-            cacheDir += "/Starfish-cache";
-
-            app->m_starFish = new StarFish::StarFish(
-                (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", app,
-                app->m_width, app->m_height, x, y, 1,
-                StarFish::String::createASCIIString("samsungOne"), info, "",
-                "/tmp/StarFish_Cookies.txt", cacheDir.data(),
-                StarFish::String::emptyString, StarFish::String::emptyString);
-
 #if defined(STARFISH_TIZEN)
-            app->m_starFish->registerFrameBuffer(
-                app->m_surface_info1.planes[0].ptr,
-                app->m_surface_info2.planes[0].ptr);
+            app->m_webView = LWE::WebContainer::Create(
+                app->m_surface_info1.planes[0].ptr, app->m_width, app->m_height,
+                app->m_width * 4);
 #else
-        app->m_starFish->registerFrameBuffer(
-            (void*)app->m_daliImg.GetBuffer(),nullptr);
+            app->m_webView = LWE::WebContainer::Create((void*)app->m_currentBuffer,app->m_width,app->m_height,app->m_width*4);
 #endif
+            app->m_webView->RegisterOnRenderedHandler(
+                [app](LWE::WebContainer* webview, void* buffer) -> void {
+                    app->renderingFinishedCB(webview, buffer);
+                });
             app->m_isInit = true;
             pthread_mutex_unlock(g_initMutex);
         });
@@ -238,7 +228,7 @@ void* mainShellThread(void* data)
 #if defined(STARFISH_TIZEN)
 bool DaliShellController::updateTick()
 {
-    if (m_starFish) {
+    if (m_webView) {
         int bufferIdx = m_starFish->updateFrameBuffer();
         if (bufferIdx == 1) {
             Any source(m_surface1);
@@ -256,8 +246,9 @@ bool DaliShellController::updateTick()
 #else
 bool DaliShellController::updateTick()
 {
-    if (m_starFish && m_starFish->updateFrameBuffer()) {
+    if (m_needsUpdate) {
         m_daliImg.Update();
+        m_needsUpdate = false;
     }
     return true;
 }
@@ -318,200 +309,22 @@ void DaliShellController::Create(Application& application)
     pthread_mutex_lock(g_initMutex);
     pthread_mutex_unlock(g_initMutex);
 
-    struct dummy {
-        StarFish::StarFish* starfish;
-        char data[128];
-    };
-    dummy* d = new dummy;
-    d->starfish = m_starFish;
-    strcpy(d->data, url);
-    m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-        nullptr,
-        [](size_t, void* data) {
-            dummy* d = (dummy*)data;
-            StarFish::StarFish* m_sf = d->starfish;
-            StarFish::StarFishEnterer enter(m_sf);
-            m_sf->loadHTMLDocument(StarFish::String::fromUTF8(&(d->data)[0]));
-            delete d;
-        },
-        d);
+    m_webView->LoadURL(std::string(url));
 }
 
 bool DaliShellController::TouchEventHandler(Dali::Actor actor,
                                             const Dali::TouchData& data)
 {
-    if (m_starFish == nullptr || !m_isInit) {
-        return true;
-    }
-    if (!(m_starFish->platformWindow() &&
-          m_starFish->platformWindow()->webView() &&
-          m_starFish->platformWindow()->webView()->mainBrowsingContext())) {
-        return true;
-    }
-    size_t pointCount = data.GetPointCount();
-    if (pointCount == 1) {
-        // Single touch event
-
-        struct dummy {
-            StarFish::StarFish* starfish;
-            StarFish::MouseData data;
-        };
-        dummy* d = new dummy;
-        d->starfish = m_starFish;
-
-        Dali::PointState::Type pointState = data.GetState(0);
-        const Dali::Vector2& screen = data.GetLocalPosition(0);
-        if (pointState == Dali::PointState::DOWN) {
-            StarFish::StarFishEnterer enter(m_starFish);
-            StarFish::MouseData data(
-                StarFish::MouseData::MouseButtonValue::LeftButton,
-                StarFish::MouseData::MouseButtonsValue::LeftButtonDown,
-                screen.x * m_starFish->screenInfo().deviceScaleFactor,
-                screen.y * m_starFish->screenInfo().deviceScaleFactor, 0);
-            d->data = data;
-            m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                m_starFish->platformWindow()->webView()->mainBrowsingContext(),
-                [](size_t, void* data) {
-                    dummy* d = (dummy*)data;
-                    StarFish::StarFish* m_sf = d->starfish;
-                    StarFish::MouseData mouseData = d->data;
-                    m_sf->platformWindow()->dispatchMouseEvent(
-                        StarFish::MouseEventKind::MouseEventDown, mouseData);
-                    delete d;
-                },
-                d);
-            m_isMouseLbuttonDown = true;
-        } else if (pointState == Dali::PointState::UP) {
-            StarFish::StarFishEnterer enter(m_starFish);
-            StarFish::MouseData data(
-                StarFish::MouseData::MouseButtonValue::NoButton,
-                StarFish::MouseData::MouseButtonsValue::NoButtonDown,
-                screen.x * m_starFish->screenInfo().deviceScaleFactor,
-                screen.y * m_starFish->screenInfo().deviceScaleFactor, 0);
-            d->data = data;
-            m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                m_starFish->platformWindow()->webView()->mainBrowsingContext(),
-                [](size_t, void* data) {
-                    dummy* d = (dummy*)data;
-                    StarFish::StarFish* m_sf = d->starfish;
-                    StarFish::MouseData mouseData = d->data;
-                    m_sf->platformWindow()->dispatchMouseEvent(
-                        StarFish::MouseEventKind::MouseEventUp, mouseData);
-                    delete d;
-                },
-                d);
-            m_isMouseLbuttonDown = false;
-        } else {
-            StarFish::StarFishEnterer enter(m_starFish);
-            unsigned char buttons =
-                m_isMouseLbuttonDown
-                    ? StarFish::MouseData::MouseButtonsValue::LeftButtonDown
-                    : 0;
-            StarFish::MouseData data(
-                0, buttons,
-                screen.x * m_starFish->screenInfo().deviceScaleFactor,
-                screen.y * m_starFish->screenInfo().deviceScaleFactor, 0);
-
-            d->data = data;
-            m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                m_starFish->platformWindow()->webView()->mainBrowsingContext(),
-                [](size_t, void* data) {
-                    dummy* d = (dummy*)data;
-                    StarFish::StarFish* m_sf = d->starfish;
-                    StarFish::MouseData mouseData = d->data;
-                    m_sf->platformWindow()->dispatchMouseEvent(
-                        StarFish::MouseEventKind::MouseEventMove, mouseData);
-                    delete d;
-                },
-                d);
-        }
-    }
     return true;
 }
 
 bool DaliShellController::HoverEventHandler(Dali::Actor actor,
                                             const Dali::HoverEvent& event)
 {
-    if (!m_isInit)
-        return true;
-
-    const Dali::Vector2& point = event.GetPoint(0).screen;
-    StarFish::StarFishEnterer enter(m_starFish);
-    unsigned char buttons =
-        m_isMouseLbuttonDown
-            ? StarFish::MouseData::MouseButtonsValue::LeftButtonDown
-            : 0;
-    StarFish::MouseData data(
-        0, buttons, point.x * m_starFish->screenInfo().deviceScaleFactor,
-        point.y * m_starFish->screenInfo().deviceScaleFactor, 0);
-
-    struct dummy {
-        StarFish::StarFish* starfish;
-        StarFish::MouseData data;
-    };
-    dummy* d = new dummy;
-    d->starfish = m_starFish;
-    d->data = data;
-    m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-        m_starFish->platformWindow()->webView()->mainBrowsingContext(),
-        [](size_t, void* data) {
-            dummy* d = (dummy*)data;
-            StarFish::StarFish* m_sf = d->starfish;
-            StarFish::MouseData mouseData = d->data;
-            m_sf->platformWindow()->dispatchMouseEvent(
-                StarFish::MouseEventKind::MouseEventMove, mouseData);
-            delete d;
-        },
-        d);
-
     return true;
 }
 void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
 {
-    StarFish::PlatformKeyEventData kdata(StarFish::KeyValue::UnidentifiedKey);
-    if (32 < event.keyPressed.c_str()[0] && 127 > event.keyPressed.c_str()[0]) {
-        kdata = StarFish::PlatformKeyEventData(
-            (StarFish::KeyValue)event.keyPressed.c_str()[0]);
-    } else {
-        kdata = DaliEventKeyToPlatformKeyEventData(event.keyPressedName.c_str(),
-                                                   event.keyModifier & 1);
-    }
-    struct dummy {
-        StarFish::StarFish* starfish;
-        StarFish::PlatformKeyEventData data;
-    };
-    dummy* d = new dummy;
-    d->starfish = m_starFish;
-    d->data = kdata;
-    if (event.state == Dali::KeyEvent::Down) {
-        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            m_starFish->platformWindow()->webView()->mainBrowsingContext(),
-            [](size_t, void* data) {
-                dummy* d = (dummy*)data;
-                StarFish::StarFish* m_sf = d->starfish;
-                StarFish::PlatformKeyEventData keyData = d->data;
-                StarFish::StarFishEnterer enter(m_sf);
-                m_sf->platformWindow()->dispatchKeyEvent(
-                    StarFish::KeyEventKind::KeyEventDown, keyData);
-                m_sf->platformWindow()->dispatchKeyEvent(
-                    StarFish::KeyEventKind::KeyEventPress, keyData);
-                delete d;
-            },
-            d);
-    } else if (event.state == Dali::KeyEvent::Up) {
-        m_starFish->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            m_starFish->platformWindow()->webView()->mainBrowsingContext(),
-            [](size_t, void* data) {
-                dummy* d = (dummy*)data;
-                StarFish::StarFish* m_sf = d->starfish;
-                StarFish::PlatformKeyEventData keyData = d->data;
-                StarFish::StarFishEnterer enter(m_sf);
-                m_sf->platformWindow()->dispatchKeyEvent(
-                    StarFish::KeyEventKind::KeyEventUp, keyData);
-                delete d;
-            },
-            d);
-    }
 }
 
 #endif

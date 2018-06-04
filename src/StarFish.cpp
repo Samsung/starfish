@@ -270,13 +270,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_width = w;
     m_height = h;
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
-    m_needsUpdate = false;
-    m_didUpdatedFrameBuffer = false;
-    m_bufferIdx = 1;
-    m_completBufferIdx = 0;
-    m_frameBuffer1 = nullptr;
-    m_frameBuffer2 = nullptr;
-    m_frameBufferSwitchMutex = new Mutex();
+    m_frameBuffer = nullptr;
 #endif
     registerMainThread();
     if (!g_starFishGlobalInit) {
@@ -464,15 +458,6 @@ StarFish::~StarFish()
     } else {
         g_singletonInstanceCnt--;
     }
-
-#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
-    if (m_frameBuffer1) {
-        free(m_frameBuffer1);
-    }
-    if (m_frameBuffer2) {
-        free(m_frameBuffer2);
-    }
-#endif
 }
 
 void StarFish::run()
@@ -604,59 +589,6 @@ void StarFish::initNetworkSharedResourceManager(const char* cookieStoreFilePath)
     }
     NetworkSharedResourceManager::getInstance()->initCookieSession();
 }
-
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-
-#if defined(STARFISH_TIZEN)
-void* StarFish::frameBuffer()
-{
-    {
-        Locker<Mutex> l(*m_frameBufferSwitchMutex);
-        if (m_completBufferIdx == 0 || m_didUpdatedFrameBuffer) {
-            m_bufferIdx == 2 ? m_bufferIdx = 1 : m_bufferIdx = 2;
-            m_didUpdatedFrameBuffer = false;
-        }
-    }
-    if (m_bufferIdx == 2) {
-        return m_frameBuffer2;
-    }
-    return m_frameBuffer1;
-}
-void StarFish::setNeedsUpdate()
-{
-    Locker<Mutex> l(*m_frameBufferSwitchMutex);
-    m_completBufferIdx = m_bufferIdx;
-}
-int StarFish::updateFrameBuffer()
-{
-    Locker<Mutex> l(*m_frameBufferSwitchMutex);
-    int result = 0;
-    if (m_completBufferIdx != 0) {
-        result = m_completBufferIdx;
-        m_completBufferIdx = 0;
-        m_didUpdatedFrameBuffer = true;
-    }
-    return result;
-}
-#else
-void* StarFish::frameBuffer()
-{
-    return m_frameBuffer1;
-}
-void StarFish::setNeedsUpdate()
-{
-    m_needsUpdate = true;
-}
-int StarFish::updateFrameBuffer()
-{
-    if (m_needsUpdate) {
-        m_needsUpdate = false;
-        return 1;
-    }
-    return 0;
-}
-#endif
-#endif
 
 void StarFish::addPointerInRootSet(void* ptr)
 {
