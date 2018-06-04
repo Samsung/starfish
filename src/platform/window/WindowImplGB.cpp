@@ -151,14 +151,13 @@ public:
     void prepareBuffer()
     {
         if (m_didPaintingOrCompositing) {
-#if defined(STARFISH_TIZEN)
+            uint width = m_starFish->width();
+            uint height = m_starFish->height();
+            m_stride = m_starFish->stride();
+            if (width != m_width || height != m_height) {
+                resizeTo(width, height);
+            }
             m_internalBuffer = m_starFish->frameBuffer();
-#else
-            if (m_internalBuffer == nullptr)
-                m_internalBuffer =
-                    malloc(m_width * m_height * sizeof(uint32_t));
-#endif
-            m_stride = m_width * 4;
             updateCairoVariables();
         }
     }
@@ -181,14 +180,7 @@ public:
     {
         if (m_didPaintingOrCompositing) {
             m_renderingFrameNumber++;
-#if defined(STARFISH_TIZEN)
-            m_starFish->setNeedsUpdate();
-#elif defined(STARFISH_WINDOWS)
-#else
-            memcpy(m_starFish->frameBuffer(), m_internalBuffer,
-                   m_width * m_height * sizeof(uint32_t));
-            m_starFish->setNeedsUpdate();
-#endif
+            m_starFish->callRenderingFinishedHandler(m_internalBuffer);
         }
     }
 
@@ -217,8 +209,8 @@ public:
     virtual Canvas* preparePainting();
     virtual Compositor* prepareCompositor();
 
-    int32_t m_width;
-    int32_t m_height;
+    uint32_t m_width;
+    uint32_t m_height;
     size_t m_renderingAnimator;
     uint32_t m_renderingFrameNumber;
     IdlerData* m_renderingIdlerData;

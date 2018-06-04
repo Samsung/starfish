@@ -227,14 +227,43 @@ public:
 #endif
 
 #if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    void registerFrameBuffer(void* framBuffer1, void* framBuffer2)
+    void updateFrameBuffer(void* framBuffer, uint width, uint height,
+                           uint stride)
     {
-        m_frameBuffer1 = framBuffer1;
-        m_frameBuffer2 = framBuffer2;
+        m_frameBuffer = framBuffer;
+        m_width = width;
+        m_height = height;
+        m_stride = stride;
     }
-    void* frameBuffer();
-    void setNeedsUpdate();
-    int updateFrameBuffer();
+    void* frameBuffer()
+    {
+        return m_frameBuffer;
+    }
+
+    uint stride()
+    {
+        return m_stride;
+    }
+
+    uint width()
+    {
+        return m_width;
+    }
+
+    uint height()
+    {
+        return m_height;
+    }
+    void registerFinishedHandler(std::function<void(void*)> cb)
+    {
+        m_finishedCB = cb;
+    }
+    void callRenderingFinishedHandler(void* buffer)
+    {
+        if (m_finishedCB != nullptr) {
+            m_finishedCB(buffer);
+        }
+    }
 #endif
     void addActiveThread(Thread* thread);
     void removeActiveThread(Thread* thread);
@@ -389,16 +418,12 @@ protected:
     String* m_customUserAgentString;
     String* m_builtinPolyfillPathString;
 
-    int m_width;
-    int m_height;
+    uint m_width;
+    uint m_height;
 #ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
-    bool m_needsUpdate;
-    bool m_didUpdatedFrameBuffer;
-    int m_bufferIdx;
-    int m_completBufferIdx;
-    void* m_frameBuffer1;
-    void* m_frameBuffer2;
-    Mutex* m_frameBufferSwitchMutex;
+    uint m_stride;
+    void* m_frameBuffer;
+    std::function<void(void*)> m_finishedCB;
 #endif
 
     GCUnorderedMap<void*, size_t> m_rootMap;

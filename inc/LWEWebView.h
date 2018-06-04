@@ -25,26 +25,24 @@
 #include <string>
 
 namespace LWE {
-
-class WebView;
 class STARFISH_EXPORT Settings {
 public:
-    Settings(std::string default_ua, std::string ua);
+    Settings(const std::string& defaultUA, const std::string& ua);
     std::string GetDefaultUserAgent();
     std::string GetUserAgentString();
     int GetCacheMode();
-    void SetUserAgentString(std::string ua);
+    void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
 
 private:
     std::string m_defaultUserAgent;
-    std::string m_UserAgent;
+    std::string m_userAgent;
     int m_cacheMode;
 };
 
 class STARFISH_EXPORT ResourceError {
 public:
-    ResourceError(int code, std::string description);
+    ResourceError(int code, const std::string& description);
     int GetErrorCode();
     std::string GetDescription();
 
@@ -53,56 +51,40 @@ private:
     std::string m_description;
 };
 
-class STARFISH_EXPORT WebViewClient {
-public:
-    virtual ~WebViewClient()
-    {
-    }
-    virtual void OnReceivedError(WebView* view, ResourceError error)
-    {
-    }
-    virtual void OnPageFinished(WebView* view, std::string url)
-    {
-    }
-    virtual void OnPageStarted(WebView* view, std::string url)
-    {
-    }
-    virtual void OnLoadResource(WebView* view, std::string url)
-    {
-    }
-};
-
 class STARFISH_EXPORT WebView {
 public:
     static WebView* Create(void* starFish);
     static WebView* Create(void* win, int x, int y, int width, int height);
-    static WebView* Create(void* win, int x, int y, int width, int height,
-                           void* actor);
 
     Settings GetSettings();
-    void LoadURL(std::string url);
+    void LoadURL(const std::string& url);
     std::string GetURL();
-    void LoadData(std::string data);
+    void LoadData(const std::string& data);
     void Reload();
     void StopLoading();
     void GoBack();
     void GoForward();
     bool CanGoBack();
     bool CanGoForward();
-    void AddJavaScriptInterface(std::string exposedObjectName,
-                                std::string jsFunctionName,
-                                std::function<std::string(std::string)> cb);
-    std::string EvaluateJavaScript(std::string script);
+    void AddJavaScriptInterface(
+        const std::string& exposedObjectName, const std::string& jsFunctionName,
+        std::function<std::string(const std::string&)> cb);
+    std::string EvaluateJavaScript(const std::string& script);
     void ClearHistory();
     void Destroy();
-    void SetSettings(Settings setttings);
-    void RemoveJavascriptInterface(std::string exposedObjectName,
-                                   std::string jsFunctionName);
-    void SetWebViewClient(WebViewClient* client);
+    void SetSettings(const Settings& setttings);
+    void RemoveJavascriptInterface(const std::string& exposedObjectName,
+                                   const std::string& jsFunctionName);
     void ClearCache();
+    void RegisterOnReceivedErrorHandler(
+        std::function<void(LWE::WebView*, LWE::ResourceError)> cb);
+    void RegisterOnPageFinishedHandler(
+        std::function<void(LWE::WebView*, const std::string&)> cb);
+    void RegisterOnPageStartedHandler(
+        std::function<void(LWE::WebView*, const std::string&)> cb);
+    void RegisterOnLoadResourceHandler(
+        std::function<void(LWE::WebView*, const std::string&)> cb);
 
-    // Internal API
-    void* getInternalPtr();
     void* unwrap();
 
 protected:
@@ -110,7 +92,61 @@ protected:
 
 private:
     void* m_starfish;
-    WebViewClient* m_webViewClient;
+};
+
+// NEW API for porting
+class STARFISH_EXPORT WebContainer {
+public:
+    static WebContainer* Create(void* buffer, uint width, uint height,
+                                uint stride);
+
+    Settings GetSettings();
+    void LoadURL(const std::string& url);
+    std::string GetURL();
+    void LoadData(const std::string& data);
+    void Reload();
+    void StopLoading();
+    void GoBack();
+    void GoForward();
+    bool CanGoBack();
+    bool CanGoForward();
+    void AddJavaScriptInterface(
+        const std::string& exposedObjectName, const std::string& jsFunctionName,
+        std::function<std::string(const std::string&)> cb);
+    std::string EvaluateJavaScript(const std::string& script);
+    void ClearHistory();
+    void Destroy();
+    void SetSettings(const Settings& setttings);
+    void RemoveJavascriptInterface(const std::string& exposedObjectName,
+                                   const std::string& jsFunctionName);
+    void ClearCache();
+
+    void RegisterOnReceivedErrorHandler(
+        std::function<void(LWE::WebContainer*, LWE::ResourceError)> cb);
+    void RegisterOnPageFinishedHandler(
+        std::function<void(LWE::WebContainer*, const std::string&)> cb);
+    void RegisterOnPageStartedHandler(
+        std::function<void(LWE::WebContainer*, const std::string&)> cb);
+    void RegisterOnLoadResourceHandler(
+        std::function<void(LWE::WebContainer*, const std::string&)> cb);
+
+    void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
+    void RegisterOnRenderedHandler(
+        std::function<void(LWE::WebContainer*, void*)> cb);
+
+    void SetUserAgentString(const std::string& userAgent);
+    void SetCacheMode(int mode);
+    void DispatchMouseMoveEvent(char ButtonStatus, double x, double y);
+    void DispatchMouseDownEvent(char ButtonStatus, double x, double y);
+    void DispatchMouseUpEvent(char ButtonStatus, double x, double y);
+    void DispatchKeyDownEvent(int modifier, int keycode);
+    void DispatchKeyUpEvent(int modifier, int keycode);
+
+protected:
+    WebContainer(void* starFish);
+
+private:
+    void* m_starfish;
 };
 }
 
