@@ -248,6 +248,14 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
     }
 
     Length height = style()->height();
+
+    // This code ignores the percent for the grid itme.
+    // Because the grid item don't need parent's height
+    // to compute the height of the grid item.
+    if (this->isGridItem() && height.isPercent()) {
+        parentHeight = contentHeight;
+    }
+
     if (height.isDefinite(parentHasFixedHeight)) {
         contentHeight = height.specifiedValue(parentHeight, this);
         contentHeight = contentHeightApplyingBoxSizing(contentHeight);
