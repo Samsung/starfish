@@ -131,7 +131,7 @@ interface Document : Node {
   Element? elementFromPoint(double x, double y);
   [Unimplemented] sequence<Element> elementsFromPoint(double x, double y);
   [Unimplemented] CaretPosition? caretPositionFromPoint(double x, double y);
-  [Unimplemented] readonly attribute Element? scrollingElement;
+  readonly attribute Element? scrollingElement;
 
 
 

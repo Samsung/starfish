@@ -324,6 +324,8 @@ public:
 
     void setReadyState(DocumentReadyState state);
 
+    Element* scrollingElement();
+
     void updateDOMVersion();
     size_t domVersion()
     {

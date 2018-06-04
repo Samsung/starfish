@@ -728,15 +728,30 @@ double Element::scrollLeft(bool layoutIfNeeds)
 
 void Element::setScrollLeft(double s, bool layoutIfNeeds)
 {
+    // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
     if (layoutIfNeeds) {
         window()->browsingContext()->webView()->layoutIfNeeds();
     }
 
-    if (!frame() || !frame()->isFrameBlockBox()) {
+    if (!window()) {
         return;
     }
 
-    if (appliedOverflowX() < OverflowValue::HiddenOverflow) {
+    if (document()->rootElement() == this) {
+        if (!document()->inQuirksMode()) {
+            window()->scrollTo(s, window()->scrollY());
+        }
+        return;
+    }
+
+    if (isHTMLBodyElement() && document()->inQuirksMode() &&
+        !asHTMLBodyElement()->isPotentiallyScrollable()) {
+        window()->scrollTo(s, window()->scrollY());
+        return;
+    }
+
+    if (!frame() || !frame()->isFrameBlockBox() ||
+        appliedOverflowX() < OverflowValue::HiddenOverflow) {
         return;
     }
 
@@ -794,15 +809,30 @@ bool Element::canScrollVerticaly(bool layoutIfNeeds)
 
 void Element::setScrollTop(double s, bool layoutIfNeeds)
 {
+    // https://drafts.csswg.org/cssom-view/#dom-element-scrolltop
     if (layoutIfNeeds) {
         window()->browsingContext()->webView()->layoutIfNeeds();
     }
 
-    if (!frame() || !frame()->isFrameBlockBox()) {
+    if (!window()) {
         return;
     }
 
-    if (appliedOverflowY() < OverflowValue::HiddenOverflow) {
+    if (document()->rootElement() == this) {
+        if (!document()->inQuirksMode()) {
+            window()->scrollTo(window()->scrollX(), s);
+        }
+        return;
+    }
+
+    if (isHTMLBodyElement() && document()->inQuirksMode() &&
+        !asHTMLBodyElement()->isPotentiallyScrollable()) {
+        window()->scrollTo(window()->scrollX(), s);
+        return;
+    }
+
+    if (!frame() || !frame()->isFrameBlockBox() ||
+        appliedOverflowY() < OverflowValue::HiddenOverflow) {
         return;
     }
 

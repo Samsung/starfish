@@ -226,6 +226,7 @@ section are supported.
 |  | attribute | designMode | Returns "on" if the document is editable, and "off" if it isn't. Can be set, to change the document's current state. This focuses the document and resets the selection in that document. |
 |  | attribute | cookie | Represents the cookies of the resource identified by the document's URL. |
 | [Document](https://drafts.csswg.org/cssom-view/#extensions-to-the-document-interface) | method | Element? elementFromPoint(double x, double y); | If there is a layout box in the viewport that would be a target for hit testing at coordinates x,y, return the associated element. If the document has a root element, returns the root element. Otherwise returns null |
+| | attribute | scrollingElement | Returns a reference to the Element that scrolls the document. |
 | [Document](https://drafts.csswg.org/cssom/#extensions-to-the-document-interface) | attribute | styleSheets | Returns a StyleSheetList collection representing the document CSS style sheets. |
 | [Document](https://www.w3.org/TR/page-visibility/#sec-document-interface) | attribute | hidden | Returns true if the Document contained by the top level browsing context (root window in the browser's viewport) is not visible at all. |
 | | attribute | visibilityState | Returns one of the following strings: "hidden", or "visible" |

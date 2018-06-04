@@ -82,6 +82,8 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
+
+    bool isPotentiallyScrollable();
 };
 }
 
