@@ -1752,7 +1752,7 @@ void WebView::setNeedsRendering()
 #else
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
-        if (currentActiveAnimatorCount()) {
+        if (hasActiveAnimationExecutor()) {
             return;
         }
         ecore_animator_freeze(wnd->m_renderingAnimator);

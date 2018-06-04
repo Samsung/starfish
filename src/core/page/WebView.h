@@ -69,11 +69,13 @@ class Blob;
 class MediaSource;
 class StackingContext;
 class CanvasSurface;
+class AnimationExecutor;
 
 class WebView : public StarFishHoldable, public gc {
     friend class BrowsingContext;
     friend class StackingContext;
     friend class PlatformWindow;
+    friend class AnimationExecutor;
 
 public:
     static WebView* create(StarFish* starFish);
@@ -180,19 +182,9 @@ public:
     void assignGraphicsBuffer(CanvasSurface** surfaceHolder,
                               size_t visibleWidth, size_t visibleHeight);
 
-    uint32_t currentActiveAnimatorCount()
+    bool hasActiveAnimationExecutor()
     {
-        return m_currentActiveAnimatorCount;
-    }
-
-    void increaseActiveAnimatorCount()
-    {
-        m_currentActiveAnimatorCount++;
-    }
-
-    void decreaseActiveAnimatorCount()
-    {
-        m_currentActiveAnimatorCount--;
+        return m_activeAnimationExecutor.size();
     }
 
 private:
@@ -250,6 +242,8 @@ private:
     GCVector<CanvasSurface*> m_backStackingContextBufferUpWhileReCompsite;
     GCVector<std::pair<DidLayoutCallback, void*>> m_didLayoutCallbacks;
     GCVector<BrowsingContext*> m_browsingContextsHasPendingAnimation;
+    GCVector<AnimationExecutor*> m_activeAnimationExecutor;
+    size_t m_activeAnimatorForAnimationExecutor;
 };
 }
 

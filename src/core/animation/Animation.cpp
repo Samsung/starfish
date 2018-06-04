@@ -880,22 +880,37 @@ void AnimationExecutor::cancelAnimation(Element* target)
 // * We do not have a sophisticated solution that surpasses this
 void AnimationExecutor::startIfNeeds()
 {
-    if (m_isAlive && m_platformAnimator != SIZE_MAX) {
+    if (m_isAlive) {
         return;
     }
     m_isAlive = true;
-    m_platformAnimator = window()->starFish()->timer()->addAnimator(
-        window(),
-        [](void* data) -> bool {
-            AnimationExecutor* executor = (AnimationExecutor*)data;
-            if (executor->isAlive()) {
-                executor->step();
-                return true;
-            }
-            return false;
-        },
-        this);
-    window()->webView()->increaseActiveAnimatorCount();
+
+    auto& v = window()->webView()->m_activeAnimationExecutor;
+    v.push_back(this);
+    if (v.size() == 1) {
+        STARFISH_ASSERT(
+            window()->webView()->m_activeAnimatorForAnimationExecutor ==
+            SIZE_MAX);
+        window()->webView()->m_activeAnimatorForAnimationExecutor =
+            window()->starFish()->timer()->addAnimator(
+                window(),
+                [](void* data) -> bool {
+                    WebView* wv = (WebView*)data;
+                    auto& v = wv->m_activeAnimationExecutor;
+                    bool didWork = false;
+                    for (size_t i = 0; i < v.size(); i++) {
+                        if (v[i]->isAlive()) {
+                            v[i]->step();
+                            didWork = true;
+                        }
+                    }
+                    if (didWork) {
+                        wv->rendering(false);
+                    }
+                    return didWork;
+                },
+                window()->webView());
+    }
 }
 
 void AnimationExecutor::stop()
@@ -904,11 +919,16 @@ void AnimationExecutor::stop()
         return;
     }
     m_isAlive = false;
-    if (m_platformAnimator != SIZE_MAX) {
+    auto& v = window()->webView()->m_activeAnimationExecutor;
+    auto iter = std::find(v.begin(), v.end(), this);
+    window()->webView()->m_activeAnimationExecutor.erase(iter);
+    if (window()->webView()->m_activeAnimationExecutor.size() == 0) {
+        STARFISH_ASSERT(
+            window()->webView()->m_activeAnimatorForAnimationExecutor !=
+            SIZE_MAX);
         window()->starFish()->timer()->removeGenericAnimator(
-            m_platformAnimator);
-        m_platformAnimator = SIZE_MAX;
-        window()->webView()->decreaseActiveAnimatorCount();
+            window()->webView()->m_activeAnimatorForAnimationExecutor);
+        window()->webView()->m_activeAnimatorForAnimationExecutor = SIZE_MAX;
     }
 }
 
