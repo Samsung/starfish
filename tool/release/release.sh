@@ -33,7 +33,7 @@ git submodule update binding_generator third_party/deviceapi third_party/escargo
 
 cd third_party/escargot
 git submodule init
-git submodule update third_party/GCutil
+git submodule update
 mkdir -p include
 make install_header_to_include
 cd $ROOT
