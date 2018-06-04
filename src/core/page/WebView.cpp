@@ -96,6 +96,7 @@ WebView::WebView(StarFish* starFish)
     , m_needsComposite(false)
     , m_didCompositeBefore(false)
     , m_rootStackingContext(nullptr)
+    , m_activeAnimatorForAnimationExecutor(SIZE_MAX)
 {
     m_scriptEngineInstance = new ScriptEngineInstance(starFish);
     m_historyManager = HistoryManager::create(this);

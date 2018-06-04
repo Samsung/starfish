@@ -376,7 +376,6 @@ class AnimationExecutor : public gc {
 public:
     AnimationExecutor(Window* window)
         : m_isAlive(false)
-        , m_platformAnimator(0)
     {
         m_window = window;
     }
@@ -406,7 +405,6 @@ public:
 private:
     bool m_isAlive;
     Window* m_window;
-    size_t m_platformAnimator;
     GCVector<AnimationTask*> m_animationList;
     GCVector<PendingAnimiationInfo*> m_pendingAnimationInfoList;
 };
