@@ -51,6 +51,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameDocument.h"
 #include "core/layout/FrameReplaced.h"
 #include "core/page/BrowsingContext.h"
 #include "core/modules/canvas/Canvas.h"
@@ -1419,9 +1420,16 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     ComputedStyle* ownerStyle = m_owner->style();
     compositor->save();
 
-    if (m_owner->isFrameReplaced() &&
-        m_owner->asFrameReplaced()->isFrameReplacedIFrame()) {
-        compositor->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
+    if (m_owner->layoutParent() && m_owner->layoutParent()->isFrameDocument()) {
+        if (!m_owner->node()
+                 ->document()
+                 ->browsingContext()
+                 ->isTopLevelBrowsingContext()) {
+            compositor->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
+            compositor->translate(
+                -m_owner->layoutParent()->asFrameDocument()->scrollLeft(),
+                -m_owner->layoutParent()->asFrameDocument()->scrollTop());
+        }
     }
 
     SkMatrix m = transformMatrix();
@@ -1461,9 +1469,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         if (owner()->shouldApplyOverflow()) {
             compositor->clip(
                 Unit::Rect(0, 0, owner()->width(), owner()->height()));
-            if (m_owner->isFrameBlockBox())
+            if (m_owner->isFrameBlockBox()) {
                 compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                                       -m_owner->asFrameBlockBox()->scrollTop());
+            }
         }
 
         if (bufferWidth && bufferHeight) {
@@ -1479,9 +1488,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     } else {
         if (owner()->shouldApplyOverflow()) {
             compositor->clip(owner()->makeRect(BoxValue::BorderBoxBoxValue));
-            if (m_owner->isFrameBlockBox())
+            if (m_owner->isFrameBlockBox()) {
                 compositor->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
                                       -m_owner->asFrameBlockBox()->scrollTop());
+            }
         }
         owner()->compsitingStackingContext(compositor);
     }

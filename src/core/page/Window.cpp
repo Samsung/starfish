@@ -394,7 +394,7 @@ double Window::scrollX(bool canLeadLayoutThrashing)
         browsingContext()->webView()->layoutIfNeeds();
     }
     if (document()->frame()) {
-        return document()->frame()->asFrameBlockBox()->scrollLeft();
+        return document()->frame()->asFrameDocument()->scrollLeft();
     }
     return 0;
 }
@@ -406,7 +406,7 @@ double Window::scrollY(bool canLeadLayoutThrashing)
         browsingContext()->webView()->layoutIfNeeds();
     }
     if (document()->frame()) {
-        return document()->frame()->asFrameBlockBox()->scrollTop();
+        return document()->frame()->asFrameDocument()->scrollTop();
     }
     return 0;
 }
