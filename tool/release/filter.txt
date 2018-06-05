@@ -32,4 +32,4 @@ P /.git
 - out
 - out_tizen
 
-- third_party/escargot/third_party/icu
+- third_party/escargot/third_party/windows
