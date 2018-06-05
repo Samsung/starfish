@@ -584,7 +584,8 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/armv7l-linux/debug/lib/libtuv.a',
+                        'third_party/libtuv/build/noarch-tizen/debug/lib/libtuv.so',
+
                     ],
                     'destination': '<(PRODUCT_DIR)/../debug/lib/tizen',
                 },
@@ -596,7 +597,8 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/armv7l-linux/debug/lib/libtuv.a',
+                        'third_party/libtuv/build/noarch-tizen/debug/lib/libtuv.so',
+
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },
