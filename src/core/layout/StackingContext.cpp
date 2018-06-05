@@ -337,7 +337,7 @@ private:
         m_canApplyOverflowOrScrolls;
     struct OverflowStatus {
         Frame* m_child;
-
+        bool m_seenContainingBlockForAbsBlock;
         OverflowStatus(Frame* child)
         {
             reset(child);
@@ -359,12 +359,15 @@ private:
                 return true;
             }
 
-            if (m_child->style() &&
-                m_child->style()->position() ==
-                    PositionValue::FixedPositionValue) {
-                return parent->canBeContainingBlockOfAbsolutePositionedBox(
-                           m_child) &&
-                       parent->shouldApplyOverflow();
+            if (m_child->isAbsolutePositioned()) {
+                if (m_seenContainingBlockForAbsBlock) {
+                    return parent->shouldApplyOverflow();
+                }
+                bool b = parent->canBeContainingBlockOfAbsolutePositionedBox(
+                    m_child);
+                m_seenContainingBlockForAbsBlock =
+                    m_seenContainingBlockForAbsBlock || b;
+                return b && parent->shouldApplyOverflow();
             }
 
             return parent->shouldApplyOverflow();
@@ -373,6 +376,7 @@ private:
         void reset(Frame* f)
         {
             m_child = f;
+            m_seenContainingBlockForAbsBlock = false;
         }
     };
 

@@ -1035,7 +1035,6 @@ static DocumentFragment* fragmentParsingAlgorithm(Document* document,
 
 void Element::setInnerHTML(String* html)
 {
-    setNeedsFrameTreeBuild();
     while (firstChild()) {
         removeChild(firstChild());
     }

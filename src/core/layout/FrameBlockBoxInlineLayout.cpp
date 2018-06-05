@@ -4600,7 +4600,25 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                 w += mbpWidth;
                 f = f->next();
             }
-            ctx.updatePreferredWidth(w);
+
+            if (w > ctx.remainingWidth()) {
+                f = firstChild();
+                LayoutUnit minWidth;
+                while (f) {
+                    if (!f->isFlexItem()) {
+                        f = f->next();
+                        continue;
+                    }
+                    auto widths =
+                        ctx.preferredWidthsWithNewContext(f->asFrameBox());
+                    minWidth += widths.second;
+                    f = f->next();
+                }
+                ctx.updatePreferredMinWidth(minWidth);
+                ctx.updatePreferredWidth(ctx.remainingWidth());
+            } else {
+                ctx.updatePreferredWidth(w);
+            }
         } else {
             Frame* f = firstChild();
             LayoutUnit w;

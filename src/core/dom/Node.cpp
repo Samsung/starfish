@@ -1344,42 +1344,6 @@ static void removeOneChild(FrameBlockBox* parent, Frame* child)
             FrameTreeBuilder::clearTree(child->node());
             return;
         }
-    } else if (child->isBlockLevel() &&
-               child->node()->parentNode()->frame()->isFrameInline()) {
-        Frame* prevNearstABB = child->previous();
-        Frame* nextNearstABB = child->next();
-        STARFISH_ASSERT(prevNearstABB->isAnonymous() &&
-                        nextNearstABB->isAnonymous());
-
-        parent->removeChild(child);
-        FrameInline* prev =
-            prevNearstABB->firstFrameInline(child->node()->parentNode());
-        FrameInline* next =
-            nextNearstABB->firstFrameInline(child->node()->parentNode());
-        Frame* prevParent = prev->parent();
-        Frame* nextParent = next->parent();
-
-        while (nextParent != parent) {
-            Frame* f = nextParent->firstChild();
-            if (!nextParent->isLeftMBPCleared()) {
-                prevParent->setLeftMBPCleared(false);
-            }
-
-            if (!nextParent->isRightMBPCleared()) {
-                prevParent->setRightMBPCleared(false);
-            }
-
-            while (f) {
-                nextParent->removeChild(f);
-                prevParent->appendChild(f);
-                f = nextParent->firstChild();
-            }
-            prevParent = prevParent->parent();
-            nextParent = nextParent->parent();
-        }
-        parent->removeChild(nextNearstABB);
-        FrameTreeBuilder::clearTree(child->node());
-        return;
     }
 
     if (child->parent()) {
