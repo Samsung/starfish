@@ -704,6 +704,41 @@ void Element::scrollIntoView(bool alignToTop)
     }
 }
 
+double Element::scrollLeftProperty(bool layoutIfNeeds)
+{
+    // NOTE DOM interface only
+    if (layoutIfNeeds) {
+        window()->browsingContext()->webView()->layoutIfNeeds();
+    }
+
+    if (document()->rootElement() == this) {
+        if (!document()->inQuirksMode()) {
+            return document()->frame()->asFrameDocument()->scrollLeft();
+        }
+        return 0;
+    }
+
+    if (isHTMLBodyElement() && document()->inQuirksMode() &&
+        !asHTMLBodyElement()->isPotentiallyScrollable()) {
+        return document()->frame()->asFrameDocument()->scrollLeft();
+    }
+
+    if (!frame() || !frame()->isFrameBlockBox()) {
+        return 0;
+    }
+
+    if (!isHTMLInputElement()) {
+        if (appliedOverflowX() < OverflowValue::HiddenOverflow) {
+            return 0;
+        }
+    }
+
+    if (hasRareMembers()) {
+        return rareMembers()->m_scrollLeft;
+    }
+    return 0;
+}
+
 double Element::scrollLeft(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
@@ -724,6 +759,12 @@ double Element::scrollLeft(bool layoutIfNeeds)
         return rareMembers()->m_scrollLeft;
     }
     return 0;
+}
+
+void Element::setScrollLeftProperty(double s, bool layoutIfNeeds)
+{
+    // NOTE DOM interface only
+    setScrollLeft(s, layoutIfNeeds);
 }
 
 void Element::setScrollLeft(double s, bool layoutIfNeeds)
@@ -774,6 +815,18 @@ double Element::scrollTop(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
         window()->browsingContext()->webView()->layoutIfNeeds();
+    }
+
+    if (document()->rootElement() == this) {
+        if (!document()->inQuirksMode()) {
+            return document()->frame()->asFrameDocument()->scrollTop();
+        }
+        return 0;
+    }
+
+    if (isHTMLBodyElement() && document()->inQuirksMode() &&
+        !asHTMLBodyElement()->isPotentiallyScrollable()) {
+        return document()->frame()->asFrameDocument()->scrollTop();
     }
 
     if (!frame() || !frame()->isFrameBlockBox()) {

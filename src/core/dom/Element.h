@@ -229,7 +229,9 @@ public:
     }
     void scrollIntoView(bool alignToTop);
     void scrollIntoViewIfNeeded();
+    double scrollLeftProperty(bool layoutIfNeeds = true);
     double scrollLeft(bool layoutIfNeeds = true);
+    void setScrollLeftProperty(double s, bool layoutIfNeeds = true);
     void setScrollLeft(double s, bool layoutIfNeeds = true);
     double scrollTop(bool layoutIfNeeds = true);
     void setScrollTop(double s, bool layoutIfNeeds = true);

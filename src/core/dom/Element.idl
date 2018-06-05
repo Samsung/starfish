@@ -74,7 +74,7 @@ interface Element : Node {
   [Unimplemented] void scrollBy(optional ScrollToOptions options);
   [Unimplemented] void scrollBy(unrestricted double x, unrestricted double y);
   attribute unrestricted double scrollTop;
-  attribute unrestricted double scrollLeft;
+  [Rename=scrollLeftProperty] attribute unrestricted double scrollLeft;
   readonly attribute long scrollWidth;
   readonly attribute long scrollHeight;
   readonly attribute long clientTop;
