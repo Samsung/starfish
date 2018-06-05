@@ -106,6 +106,10 @@ public:
     {
         return 0;
     }
+    virtual bool canRendering()
+    {
+        return false;
+    }
 
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);

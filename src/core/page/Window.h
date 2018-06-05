@@ -265,8 +265,8 @@ public:
 
     float devicePixelRatio();
 
-    double scrollX();
-    double scrollY();
+    double scrollX(bool canLeadLayoutThrashing = true);
+    double scrollY(bool canLeadLayoutThrashing = true);
     double pageXOffset();
     double pageYOffset();
 
@@ -276,6 +276,7 @@ public:
         return scrollTo(options);
     }
 
+    bool scrollToWithoutLayout(double x, double y);
     bool scrollTo(ScrollToOptions options);
     bool scrollTo(double x, double y)
     {

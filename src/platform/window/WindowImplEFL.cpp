@@ -177,6 +177,11 @@ public:
         return (void*)m_window;
     }
 
+    virtual bool canRendering()
+    {
+        return m_canRendering;
+    }
+
     virtual void clearResources() override;
     virtual Canvas* preparePainting() override;
     virtual Compositor* prepareCompositor() override;
@@ -279,6 +284,9 @@ public:
         m_inRendering = true;
         // ProfilerTimer renderingTimer("WindowImplEFL::rendering");
         bool ret = PlatformWindow::rendering();
+        if (ret) {
+            m_canRendering = false;
+        }
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
         if (ret && m_canvasAdpaterCairo) {
             int w, h;
@@ -1752,9 +1760,6 @@ void WebView::setNeedsRendering()
 #else
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
-        if (hasActiveAnimationExecutor()) {
-            return;
-        }
         ecore_animator_freeze(wnd->m_renderingAnimator);
         ecore_animator_del(wnd->m_renderingAnimator);
         wnd->m_renderingAnimator = nullptr;
@@ -1773,11 +1778,7 @@ void WebView::setNeedsRendering()
             }
 
             StarFishEnterer enter(wnd->starFish());
-            if (wnd->rendering()) {
-                wnd->m_canRendering = false;
-            } else {
-                wnd->m_canRendering = true;
-            }
+            wnd->rendering();
             wnd->m_renderingAnimator = nullptr;
             return ECORE_CALLBACK_CANCEL;
         },

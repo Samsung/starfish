@@ -1015,9 +1015,60 @@ void StackingContext::computeStackingContextProperties(
 void StackingContext::applyStackingContextProperties(
     ComputeStackingContextContext& ctx)
 {
-    bool compositedBefore = needsGraphicsBuffer();
+    auto iter = m_childContexts.begin();
+    while (iter != m_childContexts.end()) {
+        StackingContextChild* child = *iter;
+        auto iter2 = child->rbegin();
+        while (iter2 != child->rend()) {
+            (*iter2)->applyStackingContextProperties(ctx);
+            iter2++;
+        }
+        iter++;
+    }
 
+    bool inAnimation =
+        m_owner->node()->window()->webView()->hasActiveAnimationExecutor();
+    bool compositedBefore = needsGraphicsBuffer();
     bool willBeComposited = (*ctx.compositeFlagInfo)[this];
+
+    if (inAnimation && compositedBefore && !willBeComposited) {
+        willBeComposited = true;
+    }
+
+    if (m_rareData) {
+        m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
+    }
+
+    if (willBeComposited) {
+        ensureRareData();
+
+        SkMatrix l = SkMatrix::I();
+        Frame::ComputeVisibleRectContext ctx(
+            Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
+            m_rareData->m_visibleRect);
+
+        m_owner->computeVisibleRect(ctx);
+
+        if (m_rareData->m_visibleRect.width() &&
+            m_rareData->m_visibleRect.height()) {
+            // TODO implement sub-visible rect painting & compositing
+            LayoutRect visibleRect = m_owner->frameVisibleRect();
+            if (m_rareData->m_visibleRect.width() < visibleRect.width() ||
+                m_rareData->m_visibleRect.height() < visibleRect.height()) {
+                m_rareData->m_visibleRect.setWidth(std::max(
+                    visibleRect.width(), m_rareData->m_visibleRect.width()));
+                m_rareData->m_visibleRect.setHeight(std::max(
+                    visibleRect.height(), m_rareData->m_visibleRect.height()));
+            }
+        } else if (!isRootContext() && !inAnimation) {
+            willBeComposited = false;
+        }
+    } else {
+        if (m_rareData) {
+            m_rareData->m_isVisibleRectComputedForNonGraphicsLayer = false;
+        }
+    }
+
     if (compositedBefore != willBeComposited) {
         if (compositedBefore) {
             StackingContext* p = m_parent;
@@ -1043,46 +1094,6 @@ void StackingContext::applyStackingContextProperties(
     } else {
         if (m_rareData) {
             m_rareData->m_needsGraphicsBuffer = false;
-        }
-    }
-
-    auto iter = m_childContexts.begin();
-    while (iter != m_childContexts.end()) {
-        StackingContextChild* child = *iter;
-        auto iter2 = child->rbegin();
-        while (iter2 != child->rend()) {
-            (*iter2)->applyStackingContextProperties(ctx);
-            iter2++;
-        }
-        iter++;
-    }
-
-    if (m_rareData) {
-        m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
-    }
-    if (needsGraphicsBuffer()) {
-        SkMatrix l = SkMatrix::I();
-        Frame::ComputeVisibleRectContext ctx(
-            Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
-            m_rareData->m_visibleRect);
-
-        m_owner->computeVisibleRect(ctx);
-
-        if (m_rareData->m_visibleRect.width() &&
-            m_rareData->m_visibleRect.height()) {
-            // TODO implement sub-visible rect painting & compositing
-            LayoutRect visibleRect = m_owner->frameVisibleRect();
-            if (m_rareData->m_visibleRect.width() < visibleRect.width() ||
-                m_rareData->m_visibleRect.height() < visibleRect.height()) {
-                m_rareData->m_visibleRect.setWidth(std::max(
-                    visibleRect.width(), m_rareData->m_visibleRect.width()));
-                m_rareData->m_visibleRect.setHeight(std::max(
-                    visibleRect.height(), m_rareData->m_visibleRect.height()));
-            }
-        }
-    } else {
-        if (m_rareData) {
-            m_rareData->m_isVisibleRectComputedForNonGraphicsLayer = false;
         }
     }
 }
