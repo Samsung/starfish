@@ -1,4 +1,6 @@
 P /.git
+- /Makefile
+- /inspector
 - .git
 - .gitignore
 - .gitmodules
@@ -24,10 +26,10 @@ P /.git
 + tool/gyp
 - tool/*
 
+- third_party/android
 + third_party/libtuv/test
 - test
 - out
 - out_tizen
 
 - third_party/escargot/third_party/icu
-- third_party/prebuilt_armv-7a_8.1.0
