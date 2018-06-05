@@ -181,6 +181,10 @@ public:
     }
     void* operator new[](size_t size) = delete;
 
+#ifndef NDEBUG
+    String* toString() const;
+#endif
+
 protected:
     union ValueData {
         Unit::Color m_color;
@@ -209,7 +213,7 @@ public:
     virtual ~AnimationTask()
     {
     }
-    float computeProgress(uint64_t tickCount);
+    float computeProgress(float fraction);
     bool canExecute();
     void fireStartEvent();
     void fireEndEvent();
@@ -234,6 +238,17 @@ public:
     void* extraData() const
     {
         return m_extraData;
+    }
+
+#ifndef NDEBUG
+    String* dumpString() const;
+#endif
+
+    float fraction(uint64_t tickCount) const
+    {
+        uint64_t timeDiff = tickCount - m_startTimeMs;
+        float result = timeDiff / ((float)m_durationMs);
+        return std::min(result, 1.0f);
     }
 
 protected:
@@ -281,11 +296,12 @@ public:
     }
     void execute(float progress) override;
     void attachedToElement() override;
+    void detachedFromElement() override;
     void computeToValue();
 
 protected:
-    Length interpolateFixed(float progress) const;
-    Length interpolateFixedOrPercent(float progress) const;
+    Length interpolateLayoutUnit(float progress) const;
+    Length interpolateLength(float progress) const;
 
 protected:
     LayoutUnit m_toFixedValue;
@@ -305,9 +321,10 @@ public:
     }
     void execute(float progress) override;
     void attachedToElement() override;
+    void detachedFromElement() override;
 
 protected:
-    LengthSize interpolateFixedOrPercent(float progress) const;
+    LengthSize interpolateLength(float progress) const;
 };
 
 class OpacityAnimationTask : public AnimationTask {

@@ -2106,7 +2106,7 @@ public:
     }
 
 #define SET_SIDE(UPOS, ...)                                      \
-    void set##UPOS(Length unit)                                  \
+    void set##UPOS(const Length& unit)                           \
     {                                                            \
         m_rareComputedStyleData.ensureOffset()->set##UPOS(unit); \
     }
@@ -2114,7 +2114,7 @@ public:
 #undef SET_SIDE
 
 #define SET_MARGIN(UPOS, ...)                                    \
-    void setMargin##UPOS(Length unit)                            \
+    void setMargin##UPOS(const Length& unit)                     \
     {                                                            \
         m_rareComputedStyleData.ensureMargin()->set##UPOS(unit); \
     }
@@ -2122,7 +2122,7 @@ public:
 #undef SET_MARGIN
 
 #define SET_PADDING(UPOS, ...)                                    \
-    void setPadding##UPOS(Length unit)                            \
+    void setPadding##UPOS(const Length& unit)                     \
     {                                                             \
         m_rareComputedStyleData.ensurePadding()->set##UPOS(unit); \
     }

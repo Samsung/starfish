@@ -1021,6 +1021,16 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
         RETURN_NEED_TRANSITION(CSSStyleValuePair::Color);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::CaretColor);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::Height);
+#ifndef NDEBUG
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::MarginBottom,
+                               CSSStyleValuePair::Margin);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::MarginLeft,
+                               CSSStyleValuePair::Margin);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::MarginRight,
+                               CSSStyleValuePair::Margin);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::MarginTop,
+                               CSSStyleValuePair::Margin);
+#endif
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MaxHeight);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MaxWidth);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MinHeight);
@@ -1223,6 +1233,48 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                                             duration, delay, timingFunction));
             }
         }
+#ifndef NDEBUG
+        if (NEED_TRANSITION(CSSStyleValuePair::MarginBottom,
+                            CSSStyleValuePair::Margin)) {
+            AnimatedValue v1, v2;
+            if (AnimationUtil::marginBottomToAnimatedValue(oldStyle, newStyle,
+                                                           element, v1, v2)) {
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::MarginBottom, v1, v2, duration,
+                    delay, timingFunction));
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::MarginLeft,
+                            CSSStyleValuePair::Margin)) {
+            AnimatedValue v1, v2;
+            if (AnimationUtil::marginLeftToAnimatedValue(oldStyle, newStyle,
+                                                         element, v1, v2)) {
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::MarginLeft, v1, v2, duration,
+                    delay, timingFunction));
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::MarginRight,
+                            CSSStyleValuePair::Margin)) {
+            AnimatedValue v1, v2;
+            if (AnimationUtil::marginRightToAnimatedValue(oldStyle, newStyle,
+                                                          element, v1, v2)) {
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::MarginRight, v1, v2, duration,
+                    delay, timingFunction));
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::MarginTop,
+                            CSSStyleValuePair::Margin)) {
+            AnimatedValue v1, v2;
+            if (AnimationUtil::marginTopToAnimatedValue(oldStyle, newStyle,
+                                                        element, v1, v2)) {
+                executor->registerAnimation(new LengthAnimationTask(
+                    element, CSSStyleValuePair::MarginTop, v1, v2, duration,
+                    delay, timingFunction));
+            }
+        }
+#endif
         if (NEED_TRANSITION(CSSStyleValuePair::MaxHeight)) {
             if (oldStyle->maxHeight().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&
@@ -1634,32 +1686,31 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->margin() != oldStyle->margin()) {
-        // TODO seprate this
-        damagedKeys[CSSStyleValuePair::KeyKind::MarginTop] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::MarginRight] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::MarginBottom] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::MarginLeft] = true;
+    if (LengthData::damaged(
+            oldStyle->margin(), newStyle->margin(),
+            damagedKeys[CSSStyleValuePair::KeyKind::MarginTop],
+            damagedKeys[CSSStyleValuePair::KeyKind::MarginRight],
+            damagedKeys[CSSStyleValuePair::KeyKind::MarginBottom],
+            damagedKeys[CSSStyleValuePair::KeyKind::MarginLeft])) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->padding() != oldStyle->padding()) {
-        // TODO seprate this
-        damagedKeys[CSSStyleValuePair::KeyKind::PaddingTop] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::PaddingRight] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::PaddingBottom] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::PaddingLeft] = true;
+    if (LengthData::damaged(
+            oldStyle->padding(), newStyle->padding(),
+            damagedKeys[CSSStyleValuePair::KeyKind::PaddingTop],
+            damagedKeys[CSSStyleValuePair::KeyKind::PaddingRight],
+            damagedKeys[CSSStyleValuePair::KeyKind::PaddingBottom],
+            damagedKeys[CSSStyleValuePair::KeyKind::PaddingLeft])) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
 
-    if (newStyle->offset() != oldStyle->offset()) {
-        // TODO seprate this
-        damagedKeys[CSSStyleValuePair::KeyKind::Left] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::Top] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::Right] = true;
-        damagedKeys[CSSStyleValuePair::KeyKind::Bottom] = true;
+    if (LengthData::damaged(oldStyle->offset(), newStyle->offset(),
+                            damagedKeys[CSSStyleValuePair::KeyKind::Top],
+                            damagedKeys[CSSStyleValuePair::KeyKind::Right],
+                            damagedKeys[CSSStyleValuePair::KeyKind::Bottom],
+                            damagedKeys[CSSStyleValuePair::KeyKind::Left])) {
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageLayout | damage);
     }
