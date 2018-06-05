@@ -285,4 +285,70 @@ bool AnimationUtil::backgroundPosYToAnimatedValue(
     }
     return true;
 }
+
+static bool marginToAnimationValue(const Length& oldMargin,
+                                   const Length& newMargin, Element* element,
+                                   AnimatedValue& from, AnimatedValue& to)
+{
+    if (!oldMargin.isDefinite(false) || !newMargin.isDefinite(false)) {
+        return false;
+    }
+    from = Length(Length::Fixed, oldMargin.specifiedValue(0, element));
+    to = Length(Length::Fixed, newMargin.specifiedValue(0, element));
+    return true;
+}
+
+bool AnimationUtil::marginTopToAnimatedValue(ComputedStyle* oldStyle,
+                                             ComputedStyle* newStyle,
+                                             Element* element,
+                                             AnimatedValue& from,
+                                             AnimatedValue& to)
+{
+    // Vertical margins will not have any effect on non-replaced inline
+    // elements.
+    if (oldStyle->display() == DisplayValue::InlineDisplayValue ||
+        newStyle->display() == DisplayValue::InlineDisplayValue) {
+        return false;
+    }
+    return marginToAnimationValue(oldStyle->margin().top(),
+                                  newStyle->margin().top(), element, from, to);
+}
+
+bool AnimationUtil::marginRightToAnimatedValue(ComputedStyle* oldStyle,
+                                               ComputedStyle* newStyle,
+                                               Element* element,
+                                               AnimatedValue& from,
+                                               AnimatedValue& to)
+{
+    return marginToAnimationValue(oldStyle->margin().right(),
+                                  newStyle->margin().right(), element, from,
+                                  to);
+}
+
+bool AnimationUtil::marginBottomToAnimatedValue(ComputedStyle* oldStyle,
+                                                ComputedStyle* newStyle,
+                                                Element* element,
+                                                AnimatedValue& from,
+                                                AnimatedValue& to)
+{
+    // Vertical margins will not have any effect on non-replaced inline
+    // elements.
+    if (oldStyle->display() == DisplayValue::InlineDisplayValue ||
+        newStyle->display() == DisplayValue::InlineDisplayValue) {
+        return false;
+    }
+    return marginToAnimationValue(oldStyle->margin().bottom(),
+                                  newStyle->margin().bottom(), element, from,
+                                  to);
+}
+
+bool AnimationUtil::marginLeftToAnimatedValue(ComputedStyle* oldStyle,
+                                              ComputedStyle* newStyle,
+                                              Element* element,
+                                              AnimatedValue& from,
+                                              AnimatedValue& to)
+{
+    return marginToAnimationValue(oldStyle->margin().left(),
+                                  newStyle->margin().left(), element, from, to);
+}
 }

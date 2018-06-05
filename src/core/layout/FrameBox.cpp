@@ -3190,17 +3190,7 @@ void FrameBox::establishesStackingContextIfNeeds()
             }
         } else {
             FrameBox* p;
-            if (!isRootElement()) {
-                p = layoutParent()->asFrameBox();
-            } else {
-                p = node()
-                        ->document()
-                        ->browsingContext()
-                        ->sourceElement()
-                        ->frame()
-                        ->layoutParent()
-                        ->asFrameBox();
-            }
+            p = layoutParent()->asFrameBox();
             while (true) {
                 if (p->isEstablishesStackingContext()) {
                     if (p->canOwnsStackingContext()) {

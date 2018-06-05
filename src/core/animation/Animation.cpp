@@ -36,6 +36,11 @@
 
 namespace StarFish {
 
+#define STARFISH_ASSERT_INPUT_LENGTH_FIXED()                         \
+    STARFISH_ASSERT(m_fromValue.isLength() && m_toValue.isLength()); \
+    STARFISH_ASSERT(m_fromValue.getLength().isFixed() &&             \
+                    m_toValue.getLength().isFixed());
+
 #define STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT()              \
     STARFISH_ASSERT(m_fromValue.isLength() && m_toValue.isLength()); \
     STARFISH_ASSERT((m_fromValue.getLength().isFixed() &&            \
@@ -65,6 +70,39 @@ static bool shouldCancelPrevious(const AnimationTask* oldTask,
     }
     return matchBasic;
 }
+
+#ifndef NDEBUG
+String* AnimatedValue::toString() const
+{
+    if (isColor()) {
+        return getColor().toString();
+    }
+    if (isLayoutUnit()) {
+        return String::fromInt(getLayoutUnit().toInt());
+    }
+    if (isLength()) {
+        return getLength().dumpString();
+    }
+    if (isLengthSize()) {
+        LengthSize* size = getLengthSize();
+        return String::fromUTF8("(")
+            ->concat(size->width().dumpString())
+            ->concat(", ")
+            ->concat(size->height().dumpString())
+            ->concat(")");
+    }
+    if (isFloat()) {
+        return String::fromFloat(getFloat());
+    }
+    if (isInt()) {
+        return String::fromInt(getInt());
+    }
+    if (isMatrix()) {
+        return String::fromUTF8("matrix");
+    }
+    return String::emptyString;
+}
+#endif
 
 AnimationTask::AnimationTask(Element* target,
                              CSSStyleValuePair::KeyKind targetProperty,
@@ -142,17 +180,34 @@ void AnimationTask::fireCancelEvent()
 }
 
 // This function calculte progress value to get intermediate value of animation.
-// * returnVal range : 0-1
-float AnimationTask::computeProgress(uint64_t tickCount)
+float AnimationTask::computeProgress(float fraction)
 {
-    uint64_t timeDiff = tickCount - m_startTimeMs;
-    float result = timeDiff / ((float)m_durationMs);
-    if (result >= 1) {
-        result = 1;
-    }
-    result = m_timingFunction->getValue(result);
-    return result;
+    STARFISH_ASSERT(fraction >= 0.0f);
+    STARFISH_ASSERT(fraction <= 1.0f);
+    return m_timingFunction->getValue(fraction);
 }
+
+bool AnimationTask::canExecute()
+{
+    return targetElement()->frame() != nullptr &&
+           targetElement()
+               ->isInDocumentScopeAndDocumentParticipateInRendering();
+}
+
+#ifndef NDEBUG
+String* AnimationTask::dumpString() const
+{
+    char temp[100];
+    snprintf(temp, sizeof(temp),
+             "Transition %s on %s (%s -> %s, %dms, delay:%dms)",
+             CSSPropertyHelper::toString(propertyType()),
+             targetElement()->name().localName()->toUTF8NonGCString().data(),
+             m_fromValue.toString()->toUTF8NonGCString().data(),
+             m_toValue.toString()->toUTF8NonGCString().data(),
+             (int)m_durationMs, (int)m_delayMs);
+    return String::fromUTF8(temp);
+}
+#endif
 
 static void checkNeedsUpdateInheritStyleValues(
     CSSStyleValuePair::KeyKind keyKind, Element* parentElement,
@@ -316,6 +371,22 @@ void LengthAnimationTask::attachedToElement()
         targetElement()->style()->setBackgroundPositionY(
             m_fromValue.getLength(), (size_t)m_extraData);
         return;
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
+        targetElement()->style()->setMarginBottom(m_fromValue.getLength());
+        return;
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
+        targetElement()->style()->setMarginLeft(m_fromValue.getLength());
+        return;
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
+        targetElement()->style()->setMarginRight(m_fromValue.getLength());
+        return;
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
+        targetElement()->style()->setMarginTop(m_fromValue.getLength());
+        return;
     }
 
     if (m_toValue.getLength().isDefinite(false)) {
@@ -358,17 +429,18 @@ void LengthAnimationTask::attachedToElement()
     }
 }
 
-Length LengthAnimationTask::interpolateFixed(float progress) const
+Length LengthAnimationTask::interpolateLayoutUnit(float progress) const
 {
     return Length(Length::Fixed, interpolate(m_fromValue.getLayoutUnit(),
                                              m_toFixedValue, progress));
 }
 
-Length LengthAnimationTask::interpolateFixedOrPercent(float progress) const
+Length LengthAnimationTask::interpolateLength(float progress) const
 {
-    STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
     const Length& from = m_fromValue.getLength();
     const Length& to = m_toValue.getLength();
+    STARFISH_ASSERT(from.type() == to.type());
+    STARFISH_ASSERT(from.type() != Length::Auto);
     return Length(from.type(),
                   interpolate(from.numberData(), to.numberData(), progress));
 }
@@ -378,28 +450,61 @@ void LengthAnimationTask::execute(float progress)
     Element* current = targetElement();
     ComputedStyle* style = current->style();
     if (m_property == CSSStyleValuePair::KeyKind::Width) {
-        style->setWidth(interpolateFixed(progress));
+        style->setWidth(interpolateLayoutUnit(progress));
+        current->setNeedsLayout();
     } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
-        style->setHeight(interpolateFixed(progress));
+        style->setHeight(interpolateLayoutUnit(progress));
+        current->setNeedsLayout();
     } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
-        style->setMinWidth(interpolateFixed(progress));
+        style->setMinWidth(interpolateLayoutUnit(progress));
+        current->setNeedsLayout();
     } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
-        style->setMinHeight(interpolateFixed(progress));
+        style->setMinHeight(interpolateLayoutUnit(progress));
+        current->setNeedsLayout();
     } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
-        style->setMaxWidth(interpolateFixed(progress));
+        style->setMaxWidth(interpolateLayoutUnit(progress));
+        current->setNeedsLayout();
     } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
-        style->setMaxHeight(interpolateFixed(progress));
+        style->setMaxHeight(interpolateLayoutUnit(progress));
+        current->setNeedsLayout();
     } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
-        style->setBackgroundPositionX(interpolateFixedOrPercent(progress),
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
+        style->setBackgroundPositionX(interpolateLength(progress),
                                       (size_t)m_extraData);
+        current->setNeedsPainting();
     } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
-        style->setBackgroundPositionY(interpolateFixedOrPercent(progress),
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
+        style->setBackgroundPositionY(interpolateLength(progress),
                                       (size_t)m_extraData);
+        current->setNeedsPainting();
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
+        style->setMarginBottom(interpolateLength(progress));
+        current->setNeedsLayout();
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
+        style->setMarginLeft(interpolateLength(progress));
+        current->setNeedsLayout();
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
+        style->setMarginRight(interpolateLength(progress));
+        current->setNeedsLayout();
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
+        style->setMarginTop(interpolateLength(progress));
+        current->setNeedsLayout();
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+}
 
-    current->setNeedsLayout();
+void LengthAnimationTask::detachedFromElement()
+{
+    AnimationTask::detachedFromElement();
+    if (canExecute()) {
+        execute(computeProgress(1.0));
+        return;
+    }
 }
 
 void LengthSizeAnimationTask::attachedToElement()
@@ -418,8 +523,7 @@ void LengthSizeAnimationTask::attachedToElement()
     }
 }
 
-LengthSize LengthSizeAnimationTask::interpolateFixedOrPercent(
-    float progress) const
+LengthSize LengthSizeAnimationTask::interpolateLength(float progress) const
 {
 #define INTERPOLATE_LENGTHSIZE(WH)                                 \
     Length(from->WH().type(), interpolate(from->WH().numberData(), \
@@ -427,11 +531,17 @@ LengthSize LengthSizeAnimationTask::interpolateFixedOrPercent(
 
     LengthSize* from = m_fromValue.getLengthSize();
     LengthSize* to = m_toValue.getLengthSize();
+    STARFISH_ASSERT(from->width().type() == to->width().type());
+    STARFISH_ASSERT(from->height().type() == to->height().type());
     STARFISH_ASSERT(from->width().type() != Length::Auto ||
                     from->height().type() != Length::Auto);
-    STARFISH_ASSERT(to->width().type() != Length::Auto ||
-                    to->height().type() != Length::Auto);
-
+    // NOTE
+    // (O) FROM(!auto, !auto) -> TO(!auto, !auto)
+    // (O) FROM(auto, !auto) -> TO(auto, !auto)
+    // (O) FROM(!auto, auto) -> TO(!auto, auto)
+    // (X) FROM(auto, auto) -> TO(auto, auto)
+    // (X) FROM(auto, !auto) -> TO(!auto, auto)
+    // (X) FROM(!auto, auto) -> TO(auto, !auto)
     if (from->width().type() == Length::Auto) {
         return LengthSize(Length(), INTERPOLATE_LENGTHSIZE(height));
     } else if (from->height().type() == Length::Auto) {
@@ -447,13 +557,22 @@ void LengthSizeAnimationTask::execute(float progress)
     Element* current = targetElement();
     ComputedStyle* style = current->style();
     if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
-        style->setBackgroundSize(interpolateFixedOrPercent(progress),
+        style->setBackgroundSize(interpolateLength(progress),
                                  (size_t)m_extraData);
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     current->setNeedsLayout();
+}
+
+void LengthSizeAnimationTask::detachedFromElement()
+{
+    AnimationTask::detachedFromElement();
+    if (canExecute()) {
+        execute(computeProgress(1.0));
+        return;
+    }
 }
 
 OpacityAnimationTask::OpacityAnimationTask(
@@ -495,8 +614,9 @@ void OpacityAnimationTask::detachedFromElement()
     AnimationTask::detachedFromElement();
 
     Element* current = targetElement();
-    Frame* frame = current->frame();
+    current->clearRunningOpacityAnimation();
 
+    Frame* frame = current->frame();
     if (!frame) {
         return;
     }
@@ -511,7 +631,6 @@ void OpacityAnimationTask::detachedFromElement()
     bool canOwnAfter =
         frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
     opacityUpdated(before && canOwnBefore, after && canOwnAfter);
-    current->clearRunningOpacityAnimation();
 }
 
 void OpacityAnimationTask::execute(float progress)
@@ -905,7 +1024,7 @@ void AnimationExecutor::startIfNeeds()
                         }
                     }
                     if (didWork) {
-                        wv->rendering(false);
+                        wv->starFish()->platformWindow()->rendering();
                     }
                     return didWork;
                 },
@@ -954,6 +1073,14 @@ void AnimationExecutor::step()
     for (size_t i = 0; i < m_animationList.size(); i++) {
         AnimationTask* task = m_animationList[i];
         if (task->m_startTimeMs == 0) {
+#ifndef NDEBUG
+            STARFISH_LOG_INFO(
+                "[START][%lums][%p] %s (id:%s, className:%s)\n",
+                currentTickCount, task,
+                task->dumpString()->toUTF8NonGCString().data(),
+                task->targetElement()->id()->toUTF8NonGCString().data(),
+                task->targetElement()->className()->toUTF8NonGCString().data());
+#endif
             task->m_startTimeMs = currentTickCount + task->m_delayMs;
         }
 
@@ -961,15 +1088,28 @@ void AnimationExecutor::step()
             if (!task->m_isStartEventFired) {
                 task->fireStartEvent();
             }
-            float progress = task->computeProgress(currentTickCount);
-            if (progress >= 1 || task->targetElement()->frame() == nullptr ||
-                !task->targetElement()
-                     ->isInDocumentScopeAndDocumentParticipateInRendering()) {
+            float f = task->fraction(currentTickCount);
+            STARFISH_ASSERT(f >= 0.0f);
+            STARFISH_ASSERT(f <= 1.0f);
+            if (f == 1.0f || !task->canExecute()) {
+// NOTE Does not execute for fraction 1.0
+//      Need to handle in detachedFromElement()
+#ifndef NDEBUG
+                STARFISH_LOG_INFO(
+                    "[ END ][%lums][%p] %s (id:%s, className:%s)\n",
+                    currentTickCount, task,
+                    task->dumpString()->toUTF8NonGCString().data(),
+                    task->targetElement()->id()->toUTF8NonGCString().data(),
+                    task->targetElement()
+                        ->className()
+                        ->toUTF8NonGCString()
+                        .data());
+#endif
                 task->fireEndEvent();
                 m_animationList.erase(i);
                 i--;
             } else {
-                task->execute(progress);
+                task->execute(task->computeProgress(f));
             }
         }
     }

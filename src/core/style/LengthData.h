@@ -62,22 +62,42 @@ public:
         return m_left;
     }
 
-    void setTop(Length top)
+    const Length& top() const
+    {
+        return m_top;
+    }
+
+    const Length& right() const
+    {
+        return m_right;
+    }
+
+    const Length& bottom() const
+    {
+        return m_bottom;
+    }
+
+    const Length& left() const
+    {
+        return m_left;
+    }
+
+    void setTop(const Length& top)
     {
         m_top = top;
     }
 
-    void setRight(Length right)
+    void setRight(const Length& right)
     {
         m_right = right;
     }
 
-    void setBottom(Length bottom)
+    void setBottom(const Length& bottom)
     {
         m_bottom = bottom;
     }
 
-    void setLeft(Length left)
+    void setLeft(const Length& left)
     {
         m_left = left;
     }
@@ -97,6 +117,16 @@ public:
         m_bottom.changeToFixedIfNeeded(curFontSize, rootFontSize, font,
                                        windowSize.width(), windowSize.height(),
                                        cs);
+    }
+
+    static bool damaged(const LengthData& a, const LengthData& b, bool& top,
+                        bool& right, bool& bottom, bool& left)
+    {
+        top = a.m_top != b.m_top;
+        right = a.m_right != b.m_right;
+        bottom = a.m_bottom != b.m_bottom;
+        left = a.m_left != b.m_left;
+        return top || right || bottom || left;
     }
 
     bool operator==(const LengthData& o)

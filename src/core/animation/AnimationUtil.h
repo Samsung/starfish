@@ -40,6 +40,24 @@ public:
         ComputedStyle* oldStyle, ComputedStyle* newStyle,
         FrameBox* oldPaintingBox, Element* element, AnimatedValue& from,
         AnimatedValue& to, uint32_t layer);
+    static bool marginTopToAnimatedValue(ComputedStyle* oldStyle,
+                                         ComputedStyle* newStyle,
+                                         Element* element, AnimatedValue& from,
+                                         AnimatedValue& to);
+    static bool marginRightToAnimatedValue(ComputedStyle* oldStyle,
+                                           ComputedStyle* newStyle,
+                                           Element* element,
+                                           AnimatedValue& from,
+                                           AnimatedValue& to);
+    static bool marginBottomToAnimatedValue(ComputedStyle* oldStyle,
+                                            ComputedStyle* newStyle,
+                                            Element* element,
+                                            AnimatedValue& from,
+                                            AnimatedValue& to);
+    static bool marginLeftToAnimatedValue(ComputedStyle* oldStyle,
+                                          ComputedStyle* newStyle,
+                                          Element* element, AnimatedValue& from,
+                                          AnimatedValue& to);
 };
 }
 
