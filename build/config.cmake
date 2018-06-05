@@ -99,10 +99,8 @@ IF (${MODE} STREQUAL "debug" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
         -DSTARFISH_ENABLE_TEST
         #-DSTARFISH_ENABLE_NETWORK_TEST
     )
-    SET (CMAKE_BUILD_TYPE "Debug")
 ELSEIF (${MODE} STREQUAL "release" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     SET (LWE_DEFINES_MODE -DNDEBUG)
-    SET (CMAKE_BUILD_TYPE "Release")
 ENDIF()
 
 IF (${BACKEND} STREQUAL "efl")
@@ -146,7 +144,8 @@ ELSEIF (${MODE} STREQUAL "release" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
 ENDIF()
 
 IF (${HOST} STREQUAL "linux")
-    SET (LWE_CXXFLAGS_HOST -fno-rtti -Wl,--gc-sections -L/usr/local/lib -Wl,-rpath=$$ORIGIN/lib -Wl,-rpath-link=lib -fvisibility=hidden -Wl,-rpath=${OUTPUT_DIRECTORY}/lib)
+    SET (LWE_CXXFLAGS_HOST -fno-rtti -fvisibility=hidden)
+    SET (LWE_LDFLAGS "-Wl,--gc-sections -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib")
 ELSEIF (${ARCH} STREQUAL "tizen")
     SET (LWE_CXXFLAGS_HOST -fno-rtti -Wno-format-nonliteral)
     IF (${CUSTOM} STREQUAL "speaker")
