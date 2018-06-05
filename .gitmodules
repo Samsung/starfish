@@ -73,3 +73,6 @@
 [submodule "third_party/zlib"]
 	path = third_party/zlib
 	url = git@github.sec.samsung.net:RS8-webtf-sub/zlib.git
+[submodule "third_party/android/prebuilt_armv-7a_8.1.0"]
+	path = third_party/android/prebuilt_armv-7a_8.1.0
+	url = git@github.sec.samsung.net:RS8-webtf-sub/prebuilt_armv-7a_8.1.0.git
