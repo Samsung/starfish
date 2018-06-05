@@ -24,7 +24,7 @@ function build_escargot_for_linux() {
     ROOT=`pwd`
     cd third_party/escargot/
     git submodule init
-    git submodule update third_party/GCutil third_party/checked_arithmetic third_party/double_conversion third_party/icu third_party/rapidjson third_party/yarr
+    git submodule update third_party/GCutil third_party/checked_arithmetic third_party/double_conversion third_party/rapidjson third_party/yarr
     make clean
     make x64.interpreter.release.static -j$NUMPROC
     make x64.interpreter.debug.static -j$NUMPROC

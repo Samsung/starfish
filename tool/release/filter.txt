@@ -27,6 +27,7 @@ P /.git
 - tool/*
 
 - third_party/android
+- third_party/windows
 + third_party/libtuv/test
 - test
 - out

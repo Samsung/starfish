@@ -37,42 +37,42 @@
 [submodule "third_party/libtuv"]
 	path = third_party/libtuv
 	url = https://github.com/Samsung/libtuv.git
-[submodule "third_party/cairo"]
-	path = third_party/cairo
-	url = git@github.sec.samsung.net:RS8-webtf-sub/cairo.git
-[submodule "third_party/curl"]
-	path = third_party/curl
-	url = git@github.sec.samsung.net:RS8-webtf-sub/curl.git
-[submodule "third_party/fontconfig"]
-	path = third_party/fontconfig
-	url = git@github.sec.samsung.net:RS8-webtf-sub/fontconfig.git
-[submodule "third_party/freetype2"]
-	path = third_party/freetype2
-	url = git@github.sec.samsung.net:RS8-webtf-sub/freetype2.git
-[submodule "third_party/giflib"]
-	path = third_party/giflib
-	url = git@github.sec.samsung.net:RS8-webtf-sub/giflib.git
-[submodule "third_party/harfbuzz"]
-	path = third_party/harfbuzz
-	url = git@github.sec.samsung.net:RS8-webtf-sub/harfbuzz.git
-[submodule "third_party/libpng"]
-	path = third_party/libpng
-	url = git@github.sec.samsung.net:RS8-webtf-sub/libpng.git
-[submodule "third_party/libxml2"]
-	path = third_party/libxml2
-	url = git@github.sec.samsung.net:RS8-webtf-sub/libxml2.git
-[submodule "third_party/libiconv"]
-	path = third_party/libiconv
-	url = git@github.sec.samsung.net:RS8-webtf-sub/libiconv.git
-[submodule "third_party/pixman"]
-	path = third_party/pixman
-	url = git@github.sec.samsung.net:RS8-webtf-sub/pixman.git
-[submodule "third_party/windows_pthread"]
-	path = third_party/windows_pthread
-	url = git@github.sec.samsung.net:RS8-webtf-sub/windows_pthread.git
-[submodule "third_party/zlib"]
-	path = third_party/zlib
-	url = git@github.sec.samsung.net:RS8-webtf-sub/zlib.git
 [submodule "third_party/android/prebuilt_armv-7a_8.1.0"]
 	path = third_party/android/prebuilt_armv-7a_8.1.0
 	url = git@github.sec.samsung.net:RS8-webtf-sub/prebuilt_armv-7a_8.1.0.git
+[submodule "third_party/windows/cairo"]
+	path = third_party/windows/cairo
+	url = git@github.sec.samsung.net:RS8-webtf-sub/cairo.git
+[submodule "third_party/windows/curl"]
+	path = third_party/windows/curl
+	url = git@github.sec.samsung.net:RS8-webtf-sub/curl.git
+[submodule "third_party/windows/fontconfig"]
+	path = third_party/windows/fontconfig
+	url = git@github.sec.samsung.net:RS8-webtf-sub/fontconfig.git
+[submodule "third_party/windows/freetype2"]
+	path = third_party/windows/freetype2
+	url = git@github.sec.samsung.net:RS8-webtf-sub/freetype2.git
+[submodule "third_party/windows/giflib"]
+	path = third_party/windows/giflib
+	url = git@github.sec.samsung.net:RS8-webtf-sub/giflib.git
+[submodule "third_party/windows/harfbuzz"]
+	path = third_party/windows/harfbuzz
+	url = git@github.sec.samsung.net:RS8-webtf-sub/harfbuzz.git
+[submodule "third_party/windows/libiconv"]
+	path = third_party/windows/libiconv
+	url = git@github.sec.samsung.net:RS8-webtf-sub/libiconv.git
+[submodule "third_party/windows/libpng"]
+	path = third_party/windows/libpng
+	url = git@github.sec.samsung.net:RS8-webtf-sub/libpng.git
+[submodule "third_party/windows/libxml2"]
+	path = third_party/windows/libxml2
+	url = git@github.sec.samsung.net:RS8-webtf-sub/libxml2.git
+[submodule "third_party/windows/pixman"]
+	path = third_party/windows/pixman
+	url = git@github.sec.samsung.net:RS8-webtf-sub/pixman.git
+[submodule "third_party/windows/windows_pthread"]
+	path = third_party/windows/windows_pthread
+	url = git@github.sec.samsung.net:RS8-webtf-sub/windows_pthread.git
+[submodule "third_party/windows/zlib"]
+	path = third_party/windows/zlib
+	url = git@github.sec.samsung.net:RS8-webtf-sub/zlib.git
