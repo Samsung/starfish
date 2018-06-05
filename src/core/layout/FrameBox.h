@@ -659,7 +659,7 @@ public:
         } else if ((isPositioned() || isFlexItem()) &&
                    style()->isSpecifiedZIndex()) {
             return true;
-        } else if (style()->opacity() != 1) {
+        } else if (style()->opacity() != 1 || isRunningOpacityAnimation()) {
             return true;
         } else if (style()->overflowX() != OverflowValue::VisibleOverflow ||
                    style()->overflowY() != OverflowValue::VisibleOverflow) {

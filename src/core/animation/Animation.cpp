@@ -602,7 +602,7 @@ void OpacityAnimationTask::opacityUpdated(bool before, bool after)
     }
 
     if (frame->isFrameBox() && frame->asFrameBox()->stackingContext() &&
-        frame->asFrameBox()->needsGraphicsBuffer()) {
+        frame->asFrameBox()->stackingContext()->needsGraphicsBuffer()) {
         targetElement()->setNeedsComposite();
     } else {
         targetElement()->setNeedsPainting();
@@ -1023,7 +1023,8 @@ void AnimationExecutor::startIfNeeds()
                             didWork = true;
                         }
                     }
-                    if (didWork) {
+                    if (didWork &&
+                        wv->starFish()->platformWindow()->canRendering()) {
                         wv->starFish()->platformWindow()->rendering();
                     }
                     return didWork;

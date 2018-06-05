@@ -387,9 +387,10 @@ float Window::devicePixelRatio()
     return screen()->devicePixelRatio();
 }
 
-double Window::scrollX()
+double Window::scrollX(bool canLeadLayoutThrashing)
 {
-    if (!browsingContext()->webView()->inRendering()) {
+    if (canLeadLayoutThrashing &&
+        !browsingContext()->webView()->inRendering()) {
         browsingContext()->webView()->layoutIfNeeds();
     }
     if (document()->frame()) {
@@ -398,9 +399,10 @@ double Window::scrollX()
     return 0;
 }
 
-double Window::scrollY()
+double Window::scrollY(bool canLeadLayoutThrashing)
 {
-    if (!browsingContext()->webView()->inRendering()) {
+    if (canLeadLayoutThrashing &&
+        !browsingContext()->webView()->inRendering()) {
         browsingContext()->webView()->layoutIfNeeds();
     }
     if (document()->frame()) {
@@ -417,6 +419,22 @@ double Window::pageXOffset()
 double Window::pageYOffset()
 {
     return scrollY();
+}
+
+bool Window::scrollToWithoutLayout(double x, double y)
+{
+    if (document()->frame()) {
+        if (document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(
+                x, y)) {
+            if (webView()->didCompositeBefore()) {
+                browsingContext()->setNeedsComposite();
+            } else {
+                browsingContext()->setNeedsPainting();
+            }
+            return true;
+        }
+    }
+    return false;
 }
 
 bool Window::scrollTo(ScrollToOptions options)
@@ -437,18 +455,7 @@ bool Window::scrollTo(ScrollToOptions options)
     }
 
     browsingContext()->webView()->layoutIfNeeds();
-    if (document()->frame()) {
-        if (document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(
-                x, y)) {
-            if (webView()->didCompositeBefore()) {
-                browsingContext()->setNeedsComposite();
-            } else {
-                browsingContext()->setNeedsPainting();
-            }
-            return true;
-        }
-    }
-    return false;
+    return scrollToWithoutLayout(x.toDouble(), y.toDouble());
 }
 
 bool Window::handleDefaultEvent(Event* event)

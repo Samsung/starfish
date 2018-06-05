@@ -1287,8 +1287,8 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     // STARFISH_LOG_INFO("BrowsingContext::dispatchMouseEvent %d %f %f %d\n",
     // (int)kind, data.clientX(), data.clientY(), (int)data.buttons());
 
-    data.setClientX(data.clientX() + window()->scrollX());
-    data.setClientY(data.clientY() + window()->scrollY());
+    data.setClientX(data.clientX() + window()->scrollX(false));
+    data.setClientY(data.clientY() + window()->scrollY(false));
 
     // Hit test to validate event position
     Node* targetNode = hitTest((float)data.clientX(), (float)data.clientY());
@@ -1370,8 +1370,8 @@ bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
         return false;
     }
 
-    double wx = window()->scrollX() + screenX;
-    double wy = window()->scrollY() + screenY;
+    double wx = window()->scrollX(false) + screenX;
+    double wy = window()->scrollY(false) + screenY;
     // Hit test to validate event position
     Node* targetNode = hitTest(wx, wy);
     if (!targetNode) {
@@ -1532,8 +1532,8 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
                 }
             } else if (e->keyValue() >= KeyValue::ArrowDownKey &&
                        e->keyValue() <= KeyValue::ArrowRightKey) {
-                double sx = window()->scrollX();
-                double sy = window()->scrollY();
+                double sx = window()->scrollX(false);
+                double sy = window()->scrollY(false);
                 OverflowValue ox = document()->appliedOverflowX();
                 OverflowValue oy = document()->appliedOverflowY();
 
@@ -1551,7 +1551,7 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
                     sx -= 15;
                 }
 
-                window()->scrollTo(sx, sy);
+                window()->scrollToWithoutLayout(sx, sy);
             }
         }
     }
