@@ -1994,20 +1994,22 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         oldStyle->hasRareComputeStyleData()
             ? oldStyle->rareComputedStyleData()->transforms()
             : nullptr;
-    if (oldTransforms && oldTransforms->size() == 0) {
-        oldTransforms = nullptr;
-    }
     StyleTransformDataGroup* newTransforms =
         newStyle->hasRareComputeStyleData()
             ? newStyle->rareComputedStyleData()->transforms()
             : nullptr;
+    bool oldComplex = oldTransforms ? (oldTransforms->hasComplexTransform() ||
+                                       oldTransforms->has3DTransform())
+                                    : false;
+    bool newComplex = newTransforms ? (newTransforms->hasComplexTransform() ||
+                                       newTransforms->has3DTransform())
+                                    : false;
+    if (oldTransforms && oldTransforms->size() == 0) {
+        oldTransforms = nullptr;
+    }
     if (newTransforms && newTransforms->size() == 0) {
         newTransforms = nullptr;
     }
-    bool oldComplex =
-        oldTransforms ? oldTransforms->hasComplexTransform() : false;
-    bool newComplex =
-        newTransforms ? newTransforms->hasComplexTransform() : false;
     if (oldComplex != newComplex) {
         damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
         damage = (ComputedStyleDamage)(

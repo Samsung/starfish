@@ -1028,16 +1028,19 @@ void WebView::assignGraphicsBuffer(CanvasSurface** surfaceHolder,
             (*surfaceHolder) =
                 m_backStackingContextBufferUpWhileReCompsite[bestFitIdx];
             m_backStackingContextBufferUpWhileReCompsite.erase(bestFitIdx);
-            // printf("WebView::assignGraphicsBuffer - reuse canvas surface %d
-            // %d -> %d %d\n", (int)visibleWidth, (int)visibleHeight,
-            // (int)(*surfaceHolder)->bufferWidth(),
-            // (int)(*surfaceHolder)->bufferHeight());
+            STARFISH_LOG_INFO(
+                "WebView::assignGraphicsBuffer - reuse canvas surface %d %d -> "
+                "%d %d\n",
+                (int)visibleWidth, (int)visibleHeight,
+                (int)(*surfaceHolder)->bufferWidth(),
+                (int)(*surfaceHolder)->bufferHeight());
             (*surfaceHolder)->resize(visibleWidth, visibleHeight);
         }
 
         if (*surfaceHolder == nullptr) {
-            // printf("WebView::assignGraphicsBuffer - create canvas surface %d
-            // %d\n", (int)visibleWidth, (int)visibleHeight);
+            STARFISH_LOG_INFO(
+                "WebView::assignGraphicsBuffer - create canvas surface %d %d\n",
+                (int)visibleWidth, (int)visibleHeight);
             INSTALL_PROFILE_TIMER(
                 starFish(),
                 "WebView::assignGraphicsBuffer - create canvas surface");
