@@ -154,6 +154,7 @@ public:
     void DispatchMouseWheelEvent(double x, double y, int delta);
     void DispatchKeyDownEvent(KeyValue keyCode,
                               int modifier = 0); // modifiers not defined yet.
+    void DispatchKeyPressEvent(KeyValue keyCode, int modifier = 0);
     void DispatchKeyUpEvent(KeyValue keyCode, int modifier = 0);
 
 protected:

@@ -33,7 +33,7 @@
 
 #if defined(STARFISH_DALI)
 
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
 #include <tbm_surface.h>
 #endif
 
@@ -148,7 +148,7 @@ public:
     }
     ~DaliShellController()
     {
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
         if (tbm_surface_unmap(m_surface1) != TBM_SURFACE_ERROR_NONE) {
             printf("Failed to unmap tbm_surface\n");
         }
@@ -182,7 +182,7 @@ public:
     int m_height;
     LWE::WebContainer* m_webView;
     Application& mApplication;
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
     tbm_surface_h m_surface1;
     tbm_surface_h m_surface2;
     tbm_surface_info_s m_surface_info1;
@@ -203,16 +203,20 @@ void* mainShellThread(void* data)
     uv_async_init(
         uv_default_loop(), &g_launcher_handle, [](uv_async_t* handle) {
             DaliShellController* app = (DaliShellController*)handle->data;
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
             app->m_webView = LWE::WebContainer::Create(
                 app->m_surface_info1.planes[0].ptr, app->m_width, app->m_height,
                 app->m_width * 4);
 #else
-            app->m_webView = LWE::WebContainer::Create((void*)app->m_currentBuffer,app->m_width,app->m_height,app->m_width*4);
+            app->m_webView = LWE::WebContainer::Create((void*)app->m_currentBuffer,app->m_width,app->m_height,app->m_width*4, 1.0);
 #endif
             app->m_webView->RegisterOnRenderedHandler(
-                [app](LWE::WebContainer* webview, void* buffer) -> void {
+                [app](LWE::WebContainer* webview, void* buffer) -> char* {
                     app->renderingFinishedCB(webview, buffer);
+
+                    return (char*)StarFish::String::fromUTF8("shell.cpp")
+                        ->toUTF8NonGCString()
+                        .data();
                 });
             app->m_isInit = true;
             pthread_mutex_unlock(g_initMutex);
@@ -225,7 +229,7 @@ void* mainShellThread(void* data)
     return NULL;
 }
 
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
 bool DaliShellController::updateTick()
 {
     if (m_webView) {
@@ -261,7 +265,7 @@ void DaliShellController::Create(Application& application)
 
     int width = m_width, height = m_height;
 
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
     m_surface1 = tbm_surface_create(m_width, m_height, TBM_FORMAT_ARGB8888);
     m_surface2 = tbm_surface_create(m_width, m_height, TBM_FORMAT_ARGB8888);
 

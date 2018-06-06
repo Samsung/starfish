@@ -93,7 +93,7 @@ public:
 
     virtual void resizeTo(int w, int h)
     {
-        if (w != m_width || h != m_height) {
+        if (w != (int)m_width || h != (int)m_height) {
             m_width = w;
             m_height = h;
             PlatformWindow::resizeTo(w, h);

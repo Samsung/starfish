@@ -52,7 +52,7 @@
 
 #include <uv.h>
 #include <cairo.h>
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
 #include <tbm_surface.h>
 #endif
 
@@ -63,76 +63,76 @@ bool g_MainLoopAlive = false;
 StarFish::PlatformKeyEventData DaliEventKeyToPlatformKeyEventData(
     const char* DALIKeyString, bool isShiftPressed)
 {
-    StarFish::KeyValue keyValue = StarFish::KeyValue::UnidentifiedKey;
+    LWE::KeyValue keyValue = LWE::KeyValue::UnidentifiedKey;
     if (strcmp("Left", DALIKeyString) == 0) {
-        keyValue = StarFish::KeyValue::ArrowLeftKey;
+        keyValue = LWE::KeyValue::ArrowLeftKey;
     } else if (strcmp("Right", DALIKeyString) == 0) {
-        keyValue = StarFish::KeyValue::ArrowRightKey;
+        keyValue = LWE::KeyValue::ArrowRightKey;
     } else if (strcmp("Up", DALIKeyString) == 0) {
-        keyValue = StarFish::KeyValue::ArrowUpKey;
+        keyValue = LWE::KeyValue::ArrowUpKey;
     } else if (strcmp("Down", DALIKeyString) == 0) {
-        keyValue = StarFish::KeyValue::ArrowDownKey;
+        keyValue = LWE::KeyValue::ArrowDownKey;
     } else if (strcmp("space", DALIKeyString) == 0) {
-        keyValue = StarFish::KeyValue::SpaceKey;
+        keyValue = LWE::KeyValue::SpaceKey;
     } else if (strcmp("Return", DALIKeyString) == 0) {
-        keyValue = StarFish::KeyValue::EnterKey;
+        keyValue = LWE::KeyValue::EnterKey;
     } else if (strcmp("BackSpace", DALIKeyString) == 0) {
-        keyValue = StarFish::KeyValue::BackspaceKey;
+        keyValue = LWE::KeyValue::BackspaceKey;
     } else if (strcmp("Escape", DALIKeyString) == 0) {
-        keyValue = StarFish::KeyValue::EscapeKey;
+        keyValue = LWE::KeyValue::EscapeKey;
     } else if (strcmp("minus", DALIKeyString) == 0) {
         if (isShiftPressed) {
-            keyValue = StarFish::KeyValue::MinusMarkKey;
+            keyValue = LWE::KeyValue::MinusMarkKey;
         } else {
-            keyValue = StarFish::KeyValue::UnderScoreMarkKey;
+            keyValue = LWE::KeyValue::UnderScoreMarkKey;
         }
     } else if (strcmp("equal", DALIKeyString) == 0) {
         if (isShiftPressed) {
-            keyValue = StarFish::KeyValue::PlusMarkKey;
+            keyValue = LWE::KeyValue::PlusMarkKey;
         } else {
-            keyValue = StarFish::KeyValue::EqualitySignKey;
+            keyValue = LWE::KeyValue::EqualitySignKey;
         }
     } else if (strcmp("bracketleft", DALIKeyString) == 0) {
         if (isShiftPressed) {
-            keyValue = StarFish::KeyValue::LeftCurlyBracketMarkKey;
+            keyValue = LWE::KeyValue::LeftCurlyBracketMarkKey;
         } else {
-            keyValue = StarFish::KeyValue::LeftSquareBracketKey;
+            keyValue = LWE::KeyValue::LeftSquareBracketKey;
         }
     } else if (strcmp("bracketright", DALIKeyString) == 0) {
         if (isShiftPressed) {
-            keyValue = StarFish::KeyValue::RightCurlyBracketMarkKey;
+            keyValue = LWE::KeyValue::RightCurlyBracketMarkKey;
         } else {
-            keyValue = StarFish::KeyValue::RightSquareBracketKey;
+            keyValue = LWE::KeyValue::RightSquareBracketKey;
         }
     } else if (strcmp("semicolon", DALIKeyString) == 0) {
         if (isShiftPressed) {
-            keyValue = StarFish::KeyValue::ColonMarkKey;
+            keyValue = LWE::KeyValue::ColonMarkKey;
         } else {
-            keyValue = StarFish::KeyValue::SemiColonMarkKey;
+            keyValue = LWE::KeyValue::SemiColonMarkKey;
         }
     } else if (strcmp("apostrophe", DALIKeyString) == 0) {
         if (isShiftPressed) {
-            keyValue = StarFish::KeyValue::DoubleQuoteMarkKey;
+            keyValue = LWE::KeyValue::DoubleQuoteMarkKey;
         } else {
-            keyValue = StarFish::KeyValue::SingleQuoteMarkKey;
+            keyValue = LWE::KeyValue::SingleQuoteMarkKey;
         }
     } else if (strcmp("comma", DALIKeyString) == 0) {
         if (isShiftPressed) {
-            keyValue = StarFish::KeyValue::LessThanMarkKey;
+            keyValue = LWE::KeyValue::LessThanMarkKey;
         } else {
-            keyValue = StarFish::KeyValue::CommaMarkKey;
+            keyValue = LWE::KeyValue::CommaMarkKey;
         }
     } else if (strcmp("period", DALIKeyString) == 0) {
         if (isShiftPressed) {
-            keyValue = StarFish::KeyValue::GreaterThanSignKey;
+            keyValue = LWE::KeyValue::GreaterThanSignKey;
         } else {
-            keyValue = StarFish::KeyValue::PeriodKey;
+            keyValue = LWE::KeyValue::PeriodKey;
         }
     } else if (strcmp("slash", DALIKeyString) == 0) {
         if (isShiftPressed) {
-            keyValue = StarFish::KeyValue::QuestionMarkKey;
+            keyValue = LWE::KeyValue::QuestionMarkKey;
         } else {
-            keyValue = StarFish::KeyValue::SlashKey;
+            keyValue = LWE::KeyValue::SlashKey;
         }
     } else if (strlen(DALIKeyString) == 1) {
         char ch = DALIKeyString[0];
@@ -140,52 +140,51 @@ StarFish::PlatformKeyEventData DaliEventKeyToPlatformKeyEventData(
             if (isShiftPressed) {
                 switch (ch) {
                 case '1':
-                    keyValue = StarFish::KeyValue::ExclamationMarkKey;
+                    keyValue = LWE::KeyValue::ExclamationMarkKey;
                     break;
                 case '2':
-                    keyValue = StarFish::KeyValue::AtMarkKey;
+                    keyValue = LWE::KeyValue::AtMarkKey;
                     break;
                 case '3':
-                    keyValue = StarFish::KeyValue::SharpMarkKey;
+                    keyValue = LWE::KeyValue::SharpMarkKey;
                     break;
                 case '4':
-                    keyValue = StarFish::KeyValue::DollarMarkKey;
+                    keyValue = LWE::KeyValue::DollarMarkKey;
                     break;
                 case '5':
-                    keyValue = StarFish::KeyValue::PercentMarkKey;
+                    keyValue = LWE::KeyValue::PercentMarkKey;
                     break;
                 case '6':
-                    keyValue = StarFish::KeyValue::CaretMarkKey;
+                    keyValue = LWE::KeyValue::CaretMarkKey;
                     break;
                 case '7':
-                    keyValue = StarFish::KeyValue::AmpersandMarkKey;
+                    keyValue = LWE::KeyValue::AmpersandMarkKey;
                     break;
                 case '8':
-                    keyValue = StarFish::KeyValue::AsteriskMarkKey;
+                    keyValue = LWE::KeyValue::AsteriskMarkKey;
                     break;
                 case '9':
-                    keyValue = StarFish::KeyValue::LeftParenthesisMarkKey;
+                    keyValue = LWE::KeyValue::LeftParenthesisMarkKey;
                     break;
                 case '0':
-                    keyValue = StarFish::KeyValue::RightParenthesisMarkKey;
+                    keyValue = LWE::KeyValue::RightParenthesisMarkKey;
                     break;
                 }
             } else {
-                keyValue = (StarFish::KeyValue)(StarFish::KeyValue::Digit0Key +
-                                                ch - '0');
+                keyValue = (LWE::KeyValue)(LWE::KeyValue::Digit0Key + ch - '0');
             }
         } else if (ch >= 'a' && ch <= 'z') {
-            int kv = StarFish::KeyValue::LowerAKey + ch - 'a';
+            int kv = LWE::KeyValue::LowerAKey + ch - 'a';
             if (isShiftPressed) {
                 kv -= ('z' - 'a');
                 kv -= 7;
             }
-            keyValue = (StarFish::KeyValue)kv;
+            keyValue = (LWE::KeyValue)kv;
         }
     }
 #ifdef STARFISH_TIZEN_TV
     if ((strcmp("XF86Red", DALIKeyString) == 0)) {
-        keyValue = StarFish::KeyValue::TabKey;
+        keyValue = LWE::KeyValue::TabKey;
     }
 #endif
     StarFish::PlatformKeyEventData kdata(keyValue);
@@ -246,7 +245,7 @@ public:
     }
     ~StarFishController()
     {
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
         if (tbm_surface_unmap(m_surface1) != TBM_SURFACE_ERROR_NONE) {
             STARFISH_LOG_INFO("Failed to unmap tbm_surface\n");
         }
@@ -264,7 +263,7 @@ public:
 
     bool updateBuffer()
     {
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
         if (TO_STARFISH(m_instance) != nullptr && m_isInit) {
             if (((StarFish::StarFish*)m_instance->m_starfish)) {
                 int bufferIdx = ((StarFish::StarFish*)m_instance->m_starfish)
@@ -312,10 +311,9 @@ public:
             const Dali::Vector2& screen = data.GetScreenPosition(0);
             if (pointState == Dali::PointState::DOWN) {
                 StarFish::StarFishEnterer enter(TO_STARFISH(m_instance));
-                StarFish::MouseData data(
-                    StarFish::MouseButtonValue::LeftButton,
-                    StarFish::MouseButtonsValue::LeftButtonDown, screen.x,
-                    screen.y, 0);
+                StarFish::MouseData data(MouseButtonValue::LeftButton,
+                                         MouseButtonsValue::LeftButtonDown,
+                                         screen.x, screen.y, 0);
                 d->data = data;
                 TO_STARFISH(m_instance)
                     ->messageLoop()
@@ -337,10 +335,9 @@ public:
                 m_isMouseLbuttonDown = true;
             } else if (pointState == Dali::PointState::UP) {
                 StarFish::StarFishEnterer enter(TO_STARFISH(m_instance));
-                StarFish::MouseData data(
-                    StarFish::MouseButtonValue::NoButton,
-                    StarFish::MouseButtonsValue::NoButtonDown, screen.x,
-                    screen.y, 0);
+                StarFish::MouseData data(MouseButtonValue::NoButton,
+                                         MouseButtonsValue::NoButtonDown,
+                                         screen.x, screen.y, 0);
                 d->data = data;
                 TO_STARFISH(m_instance)
                     ->messageLoop()
@@ -362,10 +359,9 @@ public:
                 m_isMouseLbuttonDown = false;
             } else {
                 StarFish::StarFishEnterer enter(TO_STARFISH(m_instance));
-                unsigned char buttons =
-                    m_isMouseLbuttonDown
-                        ? StarFish::MouseData::MouseButtonsValue::LeftButtonDown
-                        : 0;
+                unsigned char buttons = m_isMouseLbuttonDown
+                                            ? MouseButtonsValue::LeftButtonDown
+                                            : 0;
                 StarFish::MouseData data(0, buttons, screen.x, screen.y, 0);
 
                 d->data = data;
@@ -406,8 +402,7 @@ public:
         const Dali::Vector2& point = event.GetPoint(0).screen;
         StarFish::StarFishEnterer enter(TO_STARFISH(m_instance));
         unsigned char buttons =
-            m_isMouseLbuttonDown ? StarFish::MouseButtonsValue::LeftButtonDown
-                                 : 0;
+            m_isMouseLbuttonDown ? LWE::MouseButtonsValue::LeftButtonDown : 0;
         StarFish::MouseData data(0, buttons, point.x, point.y, 0);
 
         struct dummy {
@@ -449,12 +444,11 @@ public:
             return;
         }
 
-        StarFish::PlatformKeyEventData kdata(
-            StarFish::KeyValue::UnidentifiedKey);
+        StarFish::PlatformKeyEventData kdata(LWE::KeyValue::UnidentifiedKey);
         if (32 < event.keyPressed.c_str()[0] &&
             127 > event.keyPressed.c_str()[0]) {
             kdata = StarFish::PlatformKeyEventData(
-                (StarFish::KeyValue)event.keyPressed.c_str()[0]);
+                (LWE::KeyValue)event.keyPressed.c_str()[0]);
         } else {
             kdata = DaliEventKeyToPlatformKeyEventData(
                 event.keyPressedName.c_str(), event.keyModifier & 1);
@@ -516,7 +510,7 @@ public:
     StarFishInstance* m_instance;
     Dali::Toolkit::ImageView m_mainView;
     Dali::Timer m_timer;
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
     tbm_surface_h m_surface1;
     tbm_surface_h m_surface2;
     tbm_surface_info_s m_surface_info1;
@@ -553,7 +547,7 @@ void starfishCreate_internal(uv_async_t* handle)
         "/tmp/StarFish_Cookies.txt", cacheDir.data(),
         StarFish::String::emptyString, StarFish::String::emptyString);
 
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
     starFish->registerFrameBuffer(app->m_surface_info1.planes[0].ptr,
                                   app->m_surface_info2.planes[0].ptr);
 #endif
@@ -613,7 +607,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     StarFishController* starFishControl = new StarFishController(instance);
     instance->m_data = (void*)starFishControl;
 
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_DALI_TBMSURFACE)
     starFishControl->m_surface1 =
         tbm_surface_create(width, height, TBM_FORMAT_ARGB8888);
     starFishControl->m_surface2 =

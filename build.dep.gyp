@@ -597,7 +597,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/noarch-tizen/debug/lib/libtuv.so',
+                        'third_party/libtuv/build/noarch-tizen/release/lib/libtuv.so',
 
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
