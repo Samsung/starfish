@@ -127,8 +127,19 @@ void GridFormattingContext::layoutGridItems()
         offsetY =
             heightOfSum + m_container->borderTop() + m_container->paddingTop();
 
+        if (gridItem->marginTop()) {
+            offsetY += gridItem->marginTop();
+        }
+
         offsetX =
             widthOfSum + m_container->borderLeft() + m_container->paddingLeft();
+
+        if (gridItem->marginLeft()) {
+            if (gridItem->width() > gridItem->mbpWidth()) {
+                offsetX += gridItem->marginLeft();
+            }
+        }
+
         gridItem->setX(offsetX);
         gridItem->setY(offsetY);
     }
@@ -1706,7 +1717,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                 ((area.m_columnEnd - area.m_columnStart - 1) * m_columnGap);
         }
 
-        if (width >= gridItem->mbpWidth()) {
+        if (width > gridItem->mbpWidth()) {
             style->setWidth(
                 Length(Length::Fixed, width - gridItem->mbpWidth()));
         } else {
