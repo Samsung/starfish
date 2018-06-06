@@ -1706,7 +1706,12 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
                 ((area.m_columnEnd - area.m_columnStart - 1) * m_columnGap);
         }
 
-        style->setWidth(Length(Length::Fixed, width - gridItem->mbpWidth()));
+        if (width >= gridItem->mbpWidth()) {
+            style->setWidth(
+                Length(Length::Fixed, width - gridItem->mbpWidth()));
+        } else {
+            style->setWidth(Length(Length::Fixed, width));
+        }
 
         if (!layoutLines) {
             if (!style->height().isFixed()) {
