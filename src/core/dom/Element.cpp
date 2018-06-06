@@ -811,7 +811,7 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
     setNeedsPainting();
 }
 
-double Element::scrollTop(bool layoutIfNeeds)
+double Element::scrollTopProperty(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
         window()->browsingContext()->webView()->layoutIfNeeds();
@@ -843,6 +843,26 @@ double Element::scrollTop(bool layoutIfNeeds)
     return 0;
 }
 
+double Element::scrollTop(bool layoutIfNeeds)
+{
+    if (layoutIfNeeds) {
+        window()->browsingContext()->webView()->layoutIfNeeds();
+    }
+
+    if (!frame() || !frame()->isFrameBlockBox()) {
+        return 0;
+    }
+
+    if (appliedOverflowY() < OverflowValue::HiddenOverflow) {
+        return 0;
+    }
+
+    if (hasRareMembers()) {
+        return rareMembers()->m_scrollTop;
+    }
+    return 0;
+}
+
 bool Element::canScrollVerticaly(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
@@ -858,6 +878,12 @@ bool Element::canScrollVerticaly(bool layoutIfNeeds)
     }
 
     return frame()->asFrameBlockBox()->hasBiggerContentThanFrameHeight();
+}
+
+void Element::setScrollTopProperty(double s, bool layoutIfNeeds)
+{
+    // NOTE DOM interface only
+    setScrollTop(s, layoutIfNeeds);
 }
 
 void Element::setScrollTop(double s, bool layoutIfNeeds)

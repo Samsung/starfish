@@ -233,7 +233,9 @@ public:
     double scrollLeft(bool layoutIfNeeds = true);
     void setScrollLeftProperty(double s, bool layoutIfNeeds = true);
     void setScrollLeft(double s, bool layoutIfNeeds = true);
+    double scrollTopProperty(bool layoutIfNeeds = true);
     double scrollTop(bool layoutIfNeeds = true);
+    void setScrollTopProperty(double s, bool layoutIfNeeds = true);
     void setScrollTop(double s, bool layoutIfNeeds = true);
     bool canScrollVerticaly(bool layoutIfNeeds = true);
     uint32_t scrollWidth();
