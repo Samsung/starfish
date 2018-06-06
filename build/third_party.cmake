@@ -291,7 +291,7 @@ IF (${ARCH} STREQUAL "tizen")
 
     ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LIB} ${ESCARGOT_LIB} ${GC_LIB}
                         DEPENDS ${TUV_TARGET} ${ESCARGOT_TARGET} ${GC_TARGET}
-                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib
+                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/release/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib
                         COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/libescargot.a ${OUTPUT_DIRECTORY}/lib
                         COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib
     )
