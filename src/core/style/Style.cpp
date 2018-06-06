@@ -9041,8 +9041,47 @@ bool CSSStyleValuePair::updateValueClip(Document* document,
     return true;
 }
 
-static bool parseGridTemplateColumnsAndRows(const CSSTokenVector& tokens,
-                                            GCVector<GridLength>* v)
+static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
+                                     GCVector<GridLength>* v)
+{
+    for (size_t i = 0; i < tokens.size(); i++) {
+        auto ss = tokens[i].trim();
+        CSSPropertyParser parser((char*)ss.data(), ss.length());
+
+        bool hasPoint = false;
+        parser.consumeWhitespaces();
+        if (!parser.consumeNumber(&hasPoint)) {
+            return false;
+        }
+
+        float number = parser.parsedNumber();
+        parser.consumeString(CSSPropertyParser::AllowWithoutUnit |
+                             CSSPropertyParser::AllowPercent);
+        const auto& str = parser.parsedString();
+        if (str.length() != 0 && (!CSSPropertyParser::isLengthUnit(str) &&
+                                  !(str == "fr") && !(str == "%"))) {
+            return false;
+        }
+
+        // TODO : Add the GridLine, GridArea and Repeat
+        // Create GridLength and push back into vector.
+        if (str == "fr") {
+            GridLength g(number);
+            v->push_back(g);
+        } else if (CSSPropertyParser::isLengthUnit(str)) {
+            GridLength g(CSSLength(str, number).toLength());
+            v->push_back(g);
+        } else {
+            GridLength g(number / 100);
+            v->push_back(g);
+        }
+    }
+
+    return true;
+}
+
+static bool parseGridTemplateRows(const CSSTokenVector& tokens,
+                                  GCVector<GridLength>* v)
 {
     for (size_t i = 0; i < tokens.size(); i++) {
         auto ss = tokens[i].trim();
@@ -9090,7 +9129,7 @@ bool CSSStyleValuePair::updateValueGridTemplateColumns(
     GCVector<GridLength>* v = new GCVector<GridLength>();
     ValueList* v1 = new ValueList(ValueList::Separator::SpaceSeparator);
 
-    if (!parseGridTemplateColumnsAndRows(tokens, v)) {
+    if (!parseGridTemplateColumns(tokens, v)) {
         return false;
     }
 
@@ -9112,7 +9151,7 @@ bool CSSStyleValuePair::updateValueGridTemplateRows(
 
     GCVector<GridLength>* v = new GCVector<GridLength>();
 
-    if (!parseGridTemplateColumnsAndRows(tokens, v)) {
+    if (!parseGridTemplateRows(tokens, v)) {
         return false;
     }
 
