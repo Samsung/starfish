@@ -305,11 +305,12 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
                          parentContentWidth, parentHeightLength);
 
     LayoutUnit w, h;
-
+    bool isBrokenImageWithAuto = false;
     if (node()->isHTMLImageElement() &&
         (node()->asHTMLImageElement()->imageData() ==
          node()->document()->brokenImage())) {
         if (width.isAuto() || height.isAuto()) {
+            isBrokenImageWithAuto = true;
             width = Length(Length::Type::Fixed, intrinsicWidth);
             height = Length(Length::Type::Fixed, intrinsicHeight);
         }
@@ -320,7 +321,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         setContentWidth(0);
         setContentHeight(0);
         return;
-    } else if (width.isAuto() && height.isAuto()) {
+    } else if ((width.isAuto() && height.isAuto()) || isBrokenImageWithAuto) {
         w = intrinsicWidth;
         h = intrinsicHeight;
     } else if (height.isAuto()) {
