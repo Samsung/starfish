@@ -276,51 +276,32 @@ TARGET_COMPILE_OPTIONS (webm PUBLIC ${THIRD_PARTY_CXXFLAGS})
 #######################################################
 
 IF (${ARCH} STREQUAL "tizen")
-    ADD_CUSTOM_TARGET (build_third_party
-        COMMAND ./build_third_party.sh arm
-        #COMMAND ${CMAKE_COMMAND} -E copy ${STARFISH_ROOT}/tizen_dep/arm/libzmq.a ${OUTPUT_DIRECTORY}/lib/tizen
-        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/libescargot.a ${OUTPUT_DIRECTORY}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib
+    SET (TUV_LIB "${OUTPUT_DIRECTORY}/lib/libtuv.so")
+    SET (ESCARGOT_LIB "${OUTPUT_DIRECTORY}/lib/libescargot.a")
+    SET (GC_LIB "${OUTPUT_DIRECTORY}/lib/libgc.a")
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LIB} ${ESCARGOT_LIB} ${GC_LIB}
+                        COMMENT "Build Third_Party for arm"
+                        COMMAND ./build_third_party.sh arm
+                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib
+                        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/libescargot.a ${OUTPUT_DIRECTORY}/lib
+                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib
     )
-    ADD_CUSTOM_TARGET (library_copy
-        DEPENDS ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.a  ${ESCARGOT_ROOT}/libescargot.a ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.so
-        #COMMAND ${CMAKE_COMMAND} -E copy ${STARFISH_ROOT}/tizen_dep/arm/libzmq.a ${OUTPUT_DIRECTORY}/lib/tizen
-        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/libescargot.a ${OUTPUT_DIRECTORY}/lib
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib
-    )
-    ADD_LIBRARY (tuv SHARED IMPORTED)
-    ADD_DEPENDENCIES (tuv library_copy)
-    SET_PROPERTY (TARGET tuv PROPERTY IMPORTED_LOCATION ${OUTPUT_DIRECTORY}/lib/libtuv.so)
+
+
 ELSE()
-    ADD_CUSTOM_TARGET (build_third_party
-        COMMAND ./build_third_party.sh x86
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5 ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5.0.1 ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a ${OUTPUT_DIRECTORY}/lib/
-        # COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/x86_64-linux/debug/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib/
+    SET (ZMQ_LIB "${OUTPUT_DIRECTORY}/lib/libzmq.so")
+    SET (ESCARGOT_LIB "${OUTPUT_DIRECTORY}/lib/libescargot.a")
+    SET (GC_LIB "${OUTPUT_DIRECTORY}/lib/libgc.a")
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_LIB} ${ESCARGOT_LIB} ${GC_LIB}
+                        COMMENT "Build Third_Party for x64"
+                        COMMAND ./build_third_party.sh x64
+                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${OUTPUT_DIRECTORY}/lib/
+                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5 ${OUTPUT_DIRECTORY}/lib/
+                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5.0.1 ${OUTPUT_DIRECTORY}/lib/
+                        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a ${OUTPUT_DIRECTORY}/lib/
+                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib/
     )
-    ADD_CUSTOM_TARGET (library_copy
-        DEPENDS ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.a ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5 ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5.0.1 ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib/
-        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a ${OUTPUT_DIRECTORY}/lib/
-        # COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/x86_64-linux/debug/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib/
-    )
-    ADD_LIBRARY (zmq SHARED IMPORTED)
-    ADD_DEPENDENCIES (zmq library_copy)
-    SET_PROPERTY (TARGET zmq PROPERTY IMPORTED_LOCATION ${OUTPUT_DIRECTORY}/lib/libzmq.so)
 ENDIF()
 
-ADD_LIBRARY (escargot STATIC IMPORTED)
-SET_PROPERTY (TARGET escargot PROPERTY IMPORTED_LOCATION ${OUTPUT_DIRECTORY}/lib/libescargot.a)
-ADD_DEPENDENCIES (escargot library_copy)
-
-ADD_LIBRARY (gc STATIC IMPORTED)
-SET_PROPERTY (TARGET gc PROPERTY IMPORTED_LOCATION ${OUTPUT_DIRECTORY}/lib/libgc.a)
-ADD_DEPENDENCIES (gc library_copy)

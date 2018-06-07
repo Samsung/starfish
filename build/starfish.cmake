@@ -174,11 +174,11 @@ SET (STARFISH_LINK_LIBRARIES
     ${STARFISH_LIBRARIES_CUSTOM}
     ${STARFISH_LIBRARIES_TOUCH_UI}
     skia
-    "-lclipper"
+    clipper
     mp4parse
     webm
-    escargot
-    gc
+#    escargot
+#    gc
     ${STARFISH_TIZEN_CUSTOM_LIBRARIES}
     ${STARFISH_DALI_ADDTIONAL_LIBRARIES}
 )
@@ -186,6 +186,13 @@ SET (STARFISH_LINK_LIBRARIES
 #######################################################
 # BUILD TARGET
 #######################################################
+IF (${ARCH} STREQUAL "tizen")
+    SET (STARFISH_SRC_LIST ${STARFISH_SRC_LIST} ${TUV_LIB} ${ESCARGOT_LIB} ${GC_LIB})
+    SET (STARFISH_LINK_LIBRARIES ${STARFISH_LINK_LIBRARIES} ${TUV_LIB} ${ESCARGOT_LIB} ${GC_LIB})
+ELSE()
+    SET (STARFISH_SRC_LIST ${STARFISH_SRC_LIST} ${ZMQ_LIB} ${ESCARGOT_LIB} ${GC_LIB})
+    SET (STARFISH_LINK_LIBRARIES ${STARFISH_LINK_LIBRARIES} ${ZMQ_LIB} ${ESCARGOT_LIB} ${GC_LIB})
+ENDIF()
 
 IF (${COMPONENT} STREQUAL "executable")
     ADD_EXECUTABLE (${TARGETNAME} ${STARFISH_SRC_LIST})
@@ -203,20 +210,9 @@ ADD_DEPENDENCIES (${TARGETNAME}
     clipper
     mp4parse
     webm
-    escargot
-    gc
-    library_copy
+#    escargot
+#    gc
 )
-
-IF (${ARCH} STREQUAL "tizen")
-    ADD_DEPENDENCIES (${TARGETNAME}
-        tuv
-    )
-ELSE()
-    ADD_DEPENDENCIES (${TARGETNAME}
-        zmq
-    )
-ENDIF()
 
 #######################################################
 # STARFISH TARGET

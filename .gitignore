@@ -3,6 +3,11 @@ out
 StarFish
 *.pyc
 *.class
+cmake_install.cmake
+CMakeCache.txt
+CMakeFiles
+build.ninja
+rules.ninja
 
 # Binding Generator generated
 src/binding/*Binding.cpp
