@@ -426,10 +426,17 @@ bool Window::scrollToWithoutLayout(double x, double y)
     if (document()->frame()) {
         if (document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(
                 x, y)) {
-            if (webView()->didCompositeBefore()) {
-                browsingContext()->setNeedsComposite();
-            } else {
+            if (!browsingContext()->isTopLevelBrowsingContext()) {
+                // NOTE For Iframe, didCompositeBefore() does not gurantee
+                // this window has compositable root buffer, so repaint all
+                // TODO Optimize this path
                 browsingContext()->setNeedsPainting();
+            } else {
+                if (webView()->didCompositeBefore()) {
+                    browsingContext()->setNeedsComposite();
+                } else {
+                    browsingContext()->setNeedsPainting();
+                }
             }
             return true;
         }
