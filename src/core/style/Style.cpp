@@ -1807,6 +1807,13 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
         setCSSPropertyNameValue(kind);
         return true;
     }
+    if (kind != CSSStyleValuePair::Unknown ||
+        CSSPropertyParser::stringIsIdent(
+            String::fromUTF8(value.data(), value.length()))) {
+        // NOTE Accept non-property or non-animatable ident as `Unknown`
+        setCSSPropertyNameValue(CSSStyleValuePair::Unknown);
+        return true;
+    }
     return false;
 }
 
