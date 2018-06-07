@@ -1548,6 +1548,7 @@ public:
     };
     virtual void computePaintingFlags(LayoutContext& ctx,
                                       LayoutWantToResolve resolveWhat);
+    void updatePaintingFlags(FrameBox* childStackingContextOwner);
     void seenPaintingKind(PaintingKind kind);
     void markSeenNormalFlowInline()
     {

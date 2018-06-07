@@ -75,7 +75,8 @@ void TextAlternativeHelper::appendTextAlternativeIfNeeds(Node* node)
         return;
     }
 
-    if (!node->isElement()) {
+    if (!node->isElement() || node->isHTMLScriptElement() ||
+        node->isHTMLStyleElement()) {
         return;
     }
 

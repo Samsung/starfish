@@ -877,6 +877,10 @@ void WebView::clearStackingContext(bool backupBuffer)
         StackingContext* ctx = m_rootStackingContext;
         std::function<void(StackingContext*)> clearSC =
             [&](StackingContext* ctx) {
+                auto lp = ctx->owner()->layoutParent();
+                if (lp) {
+                    lp->updatePaintingFlags(ctx->owner());
+                }
                 ctx->owner()->clearStackingContextIfNeeds(!backupBuffer);
                 auto iter = ctx->childContexts().begin();
                 while (iter != ctx->childContexts().end()) {

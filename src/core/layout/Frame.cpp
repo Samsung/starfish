@@ -1042,6 +1042,26 @@ void Frame::computePaintingFlags(LayoutContext& ctx,
     }
 }
 
+void Frame::updatePaintingFlags(FrameBox* childStackingContextOwner)
+{
+    if (childStackingContextOwner->m_flags.m_seenNormalFlowInline) {
+        m_flags.m_seenNormalFlowInline = m_flags.m_seenNormalFlowInline;
+        seenPaintingKind(PaintingKind::NormalFlowInline);
+    }
+    if (childStackingContextOwner->m_flags.m_seenNonPositionedFloats) {
+        m_flags.m_seenNonPositionedFloats = m_flags.m_seenNonPositionedFloats;
+        seenPaintingKind(PaintingKind::NonPositionedFloats);
+    }
+    if (childStackingContextOwner->m_flags.m_seenReplacedBlock) {
+        m_flags.m_seenReplacedBlock = m_flags.m_seenReplacedBlock;
+        seenPaintingKind(PaintingKind::ReplacedBlock);
+    }
+    if (childStackingContextOwner->m_flags.m_seenNormalFlowBlockChild) {
+        m_flags.m_seenNormalFlowBlockChild = m_flags.m_seenNormalFlowBlockChild;
+        seenPaintingKind(PaintingKind::NormalFlowBlockChild);
+    }
+}
+
 void Frame::seenPaintingKind(PaintingKind kind)
 {
     Frame* f = this;
