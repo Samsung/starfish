@@ -1855,4 +1855,19 @@ BorderRadiusData Frame::frameBorderRadius()
     }
     return data;
 }
+
+void Frame::markNeedsLayout()
+{
+    m_flags.m_needsLayout = true;
+    if (isFlexItem()) {
+        Frame* p = layoutParent();
+        while (p) {
+            if (p->isFrameFlexibleBox()) {
+                p->markNeedsLayout();
+                break;
+            }
+            p = p->layoutParent();
+        }
+    }
+}
 }

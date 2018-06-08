@@ -950,6 +950,10 @@ struct MBPRestorer {
             m_box->frameBoxRareData()->m_margin = m_margin;
             m_box->frameBoxRareData()->m_border = m_border;
             m_box->frameBoxRareData()->m_padding = m_padding;
+        } else if (m_hasRareData && m_box->hasRareData()) {
+            m_box->frameBoxRareData()->m_margin = LayoutBoxSurroundData();
+            m_box->frameBoxRareData()->m_border = LayoutBoxSurroundData();
+            m_box->frameBoxRareData()->m_padding = LayoutBoxSurroundData();
         }
 
         m_box->m_flags.m_paddingWidthDamaged = m_paddingWidthDamaged;
