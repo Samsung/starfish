@@ -1714,13 +1714,6 @@ void BrowsingContext::setNeedsPainting()
                 ->stackingContext()
                 ->setNeedsRepainting();
         }
-        if (!isTopLevelBrowsingContext()) {
-            // NOTE Iframe case does not seem to be considered here...
-            //      Set repaint to the top level browsing context to make
-            //      sure iframe content to be painted!
-            // TODO Optimize this path
-            parentBrowsingContext()->setNeedsPainting();
-        }
     }
 }
 

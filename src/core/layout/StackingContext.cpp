@@ -332,6 +332,19 @@ void StackingContext::clearGraphicsBuffer(bool needsDetachNative)
     }
 }
 
+bool StackingContext::isIFrameStackingContext()
+{
+    if (m_owner->layoutParent() && m_owner->layoutParent()->isFrameDocument()) {
+        if (!m_owner->node()
+                 ->document()
+                 ->browsingContext()
+                 ->isTopLevelBrowsingContext()) {
+            return true;
+        }
+    }
+    return false;
+}
+
 class CanvasStateRestorer {
 private:
     std::vector<std::pair<Frame*, std::pair<bool, bool>>>
@@ -339,6 +352,7 @@ private:
     struct OverflowStatus {
         Frame* m_child;
         bool m_seenContainingBlockForAbsBlock;
+        bool m_seenAbsBlock;
         OverflowStatus(Frame* child)
         {
             reset(child);
@@ -369,6 +383,12 @@ private:
                 m_seenContainingBlockForAbsBlock =
                     m_seenContainingBlockForAbsBlock || b;
                 return b && parent->shouldApplyOverflow();
+            } else {
+                if (m_seenAbsBlock) {
+                    return false;
+                }
+                m_seenAbsBlock =
+                    m_seenAbsBlock || parent->isAbsolutePositioned();
             }
 
             return parent->shouldApplyOverflow();
@@ -378,6 +398,7 @@ private:
         {
             m_child = f;
             m_seenContainingBlockForAbsBlock = false;
+            m_seenAbsBlock = false;
         }
     };
 
@@ -779,7 +800,7 @@ void StackingContext::computeStackingContextProperties()
 
 bool StackingContext::canComposite(ComputeStackingContextContext& ctx)
 {
-    if (m_owner->needsGraphicsBuffer() ||
+    if (m_owner->needsGraphicsBuffer() || isIFrameStackingContext() ||
         m_owner->isRunningOpacityAnimation() ||
         m_owner->isRunningTransformAnimation()) {
         return true;
@@ -808,6 +829,7 @@ void StackingContext::computeStackingContextProperties(
     // respectTransforms);
 
     bool willBeComposited = m_owner->needsGraphicsBuffer() ||
+                            isIFrameStackingContext() ||
                             m_owner->isRunningOpacityAnimation() ||
                             m_owner->isRunningTransformAnimation();
     IndirectCompositingReason compositingReason =
@@ -1280,28 +1302,21 @@ void StackingContext::paintStackingContext(
     // Within each stacking context, the following layers are painted in
     // back-to-front order:
     // the background and borders of the element forming the stacking context.
-    if (m_owner->layoutParent()->isFrameDocument()) {
-        if (!m_owner->node()
-                 ->document()
-                 ->browsingContext()
-                 ->isTopLevelBrowsingContext()) {
-            FrameBlockBox* document =
-                m_owner->layoutParent()->asFrameBlockBox();
-            FrameBox* iframeBox = m_owner->node()
-                                      ->document()
-                                      ->browsingContext()
-                                      ->sourceElement()
-                                      ->frame()
-                                      ->asFrameBox();
-            canvas->translate(iframeBox->borderLeft() +
-                                  iframeBox->paddingLeft(),
-                              iframeBox->borderTop() + iframeBox->paddingTop());
-            if (needsPainting) {
-                m_owner->node()
-                    ->document()
-                    ->browsingContext()
-                    ->paintWindowBackground(canvas);
-            }
+    if (isIFrameStackingContext()) {
+        FrameBlockBox* document = m_owner->layoutParent()->asFrameBlockBox();
+        FrameBox* iframeBox = m_owner->node()
+                                  ->document()
+                                  ->browsingContext()
+                                  ->sourceElement()
+                                  ->frame()
+                                  ->asFrameBox();
+        canvas->translate(iframeBox->borderLeft() + iframeBox->paddingLeft(),
+                          iframeBox->borderTop() + iframeBox->paddingTop());
+        if (needsPainting) {
+            m_owner->node()
+                ->document()
+                ->browsingContext()
+                ->paintWindowBackground(canvas);
         }
     }
 
@@ -1367,39 +1382,34 @@ void StackingContext::paintStackingContext(
         canvas->endOpacityLayer();
     }
 
-    if (m_owner->layoutParent()->isFrameDocument()) {
-        if (!m_owner->node()
-                 ->document()
-                 ->browsingContext()
-                 ->isTopLevelBrowsingContext()) {
-            HTMLIFrameElement* iframe =
-                m_owner->node()->document()->browsingContext()->sourceElement();
-            if (!iframe->scrolling()->toASCIILower()->equals("no")) {
-                canvas->save();
-                canvas->translate(m_owner->node()
-                                      ->document()
-                                      ->browsingContext()
-                                      ->window()
-                                      ->scrollX(),
-                                  m_owner->node()
-                                      ->document()
-                                      ->browsingContext()
-                                      ->window()
-                                      ->scrollY());
-                FrameBlockBox* document =
-                    m_owner->layoutParent()->asFrameBlockBox();
-                if (needsPainting) {
-                    m_owner->node()
-                        ->document()
-                        ->browsingContext()
-                        ->window()
-                        ->scrolling()
-                        ->paintScrollbars(canvas, document,
-                                          document->appliedOverflowX(),
-                                          document->appliedOverflowY());
-                }
-                canvas->restore();
+    if (isIFrameStackingContext()) {
+        HTMLIFrameElement* iframe =
+            m_owner->node()->document()->browsingContext()->sourceElement();
+        if (!iframe->scrolling()->toASCIILower()->equals("no")) {
+            canvas->save();
+            canvas->translate(m_owner->node()
+                                  ->document()
+                                  ->browsingContext()
+                                  ->window()
+                                  ->scrollX(),
+                              m_owner->node()
+                                  ->document()
+                                  ->browsingContext()
+                                  ->window()
+                                  ->scrollY());
+            FrameBlockBox* document =
+                m_owner->layoutParent()->asFrameBlockBox();
+            if (needsPainting) {
+                m_owner->node()
+                    ->document()
+                    ->browsingContext()
+                    ->window()
+                    ->scrolling()
+                    ->paintScrollbars(canvas, document,
+                                      document->appliedOverflowX(),
+                                      document->appliedOverflowY());
             }
+            canvas->restore();
         }
     }
 
@@ -1420,16 +1430,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     ComputedStyle* ownerStyle = m_owner->style();
     compositor->save();
 
-    if (m_owner->layoutParent() && m_owner->layoutParent()->isFrameDocument()) {
-        if (!m_owner->node()
-                 ->document()
-                 ->browsingContext()
-                 ->isTopLevelBrowsingContext()) {
-            compositor->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
-            compositor->translate(
-                -m_owner->layoutParent()->asFrameDocument()->scrollLeft(),
-                -m_owner->layoutParent()->asFrameDocument()->scrollTop());
-        }
+    if (isIFrameStackingContext()) {
+        compositor->clip(owner()->makeRect(BoxValue::PaddingBoxBoxValue));
+        compositor->translate(
+            -m_owner->layoutParent()->asFrameDocument()->scrollLeft(),
+            -m_owner->layoutParent()->asFrameDocument()->scrollTop());
     }
 
     SkMatrix m = transformMatrix();

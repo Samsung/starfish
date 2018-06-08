@@ -114,7 +114,6 @@ void FlexFormattingContext::computeMainSize()
     while (child) {
         if (child->isFlexItem()) {
             orderedFlexItems.push_back(child->asFrameBox());
-            child->markNeedsLayoutOnlySelf();
         } else {
             // to register absolute positioned box
             child->layout(m_layoutContext,
@@ -1141,9 +1140,13 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
     FrameBox* containingBlockOfFlexItem = containingBlock(flexItem);
     LayoutUnit oldContainingBlockWidth =
         containingBlockOfFlexItem->contentWidth();
+    bool containingBlockOfFlexItemContentWidthDamaged =
+        containingBlockOfFlexItem->contentWidthDamaged();
 
     if (isMainAxisInInlineAxis) {
         containingBlockOfFlexItem->setContentWidth(availableMainSize);
+        containingBlockOfFlexItem->markContentWidthDamaged();
+
         Length oldWidth = flexItem->style()->width(), width;
         if (flexBasis.isWidth()) {
             if (flexBasis.width().isAuto()) {
@@ -1158,6 +1161,7 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
         basisSize = flexItem->contentWidth();
     } else {
         containingBlockOfFlexItem->setContentWidth(availableCrossSize);
+        containingBlockOfFlexItem->markContentWidthDamaged();
         flexItem->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
         Length oldHeight = flexItem->style()->height(), height;
         if (flexBasis.isWidth()) {
@@ -1174,7 +1178,11 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
     }
 
     containingBlockOfFlexItem->setContentWidth(oldContainingBlockWidth);
-
+    if (containingBlockOfFlexItemContentWidthDamaged) {
+        containingBlockOfFlexItem->markContentWidthDamaged();
+    } else {
+        containingBlockOfFlexItem->clearContentWidthDamaged();
+    }
     return basisSize;
 }
 

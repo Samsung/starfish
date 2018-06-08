@@ -123,6 +123,8 @@ public:
         m_needsRepainting = true;
     }
 
+    bool isIFrameStackingContext();
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
