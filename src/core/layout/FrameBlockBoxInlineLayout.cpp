@@ -4744,7 +4744,7 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
 {
     FrameBox* cb = containingBlock(this);
 
-    if (canSkipPaintingStage(ctx) && !cb->isGridItem()) {
+    if (canSkipPaintingStage(ctx)) {
         return;
     }
 
@@ -4764,8 +4764,7 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
         ctx.m_canvas->setVisible(true);
     }
 
-    // TODO: Use stacking context for frmaes into the grid item.
-    STARFISH_ASSERT(!isPositioned() || cb->isGridItem());
+    STARFISH_ASSERT(!isPositioned());
 
     if (isFlexItem()) {
         if (ctx.m_paintingStage == PaintingNormalFlowInline) {
