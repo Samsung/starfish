@@ -654,9 +654,10 @@ void Element::scrollIntoView(bool alignToTop)
     DOMRect* rect = getBoundingClientRect();
 
     LayoutUnit remainSpaceToScrollEnd;
+    LayoutUnit remainSpaceToScrollEndHorizontal;
     if (alignToTop) {
         remainSpaceToScrollEnd = rect->top();
-
+        remainSpaceToScrollEndHorizontal = rect->left();
         Element* e = this->parentElement();
         while (e && remainSpaceToScrollEnd) {
             if (e->canScrollVerticaly()) {
@@ -672,14 +673,31 @@ void Element::scrollIntoView(bool alignToTop)
             }
             e = e->parentElement();
         }
+        e = this->parentElement();
+        while (e && remainSpaceToScrollEnd) {
+            if (e->canScrollHorizontally()) {
+                LayoutUnit initialValue = e->scrollLeft(false);
+                LayoutUnit outer = e->frame()->asFrameBox()->paddingLeft() +
+                                   e->frame()->asFrameBox()->borderLeft();
+                DOMRect* eBounds = e->getBoundingClientRect();
+                outer += (LayoutUnit)eBounds->left();
+                e->setScrollLeft(initialValue +
+                                     remainSpaceToScrollEndHorizontal - outer,
+                                 false);
+                LayoutUnit now = e->scrollLeft(false);
+                remainSpaceToScrollEndHorizontal -= (now - initialValue);
+            }
+            e = e->parentElement();
+        }
 
         if (remainSpaceToScrollEnd) {
-            window()->scrollTo(window()->scrollX(),
+            window()->scrollTo(window()->scrollX() +
+                                   remainSpaceToScrollEndHorizontal,
                                window()->scrollY() + remainSpaceToScrollEnd);
         }
     } else {
         remainSpaceToScrollEnd = rect->bottom();
-
+        remainSpaceToScrollEndHorizontal = rect->left();
         Element* e = this->parentElement();
         while (e && remainSpaceToScrollEnd) {
             if (e->canScrollVerticaly()) {
@@ -695,10 +713,27 @@ void Element::scrollIntoView(bool alignToTop)
             }
             e = e->parentElement();
         }
+        e = this->parentElement();
+        while (e && remainSpaceToScrollEnd) {
+            if (e->canScrollHorizontally()) {
+                LayoutUnit initialValue = e->scrollLeft(false);
+                LayoutUnit outer = e->frame()->asFrameBox()->paddingLeft() +
+                                   e->frame()->asFrameBox()->borderLeft();
+                DOMRect* eBounds = e->getBoundingClientRect();
+                outer += (LayoutUnit)eBounds->left();
+                e->setScrollLeft(initialValue +
+                                     remainSpaceToScrollEndHorizontal - outer,
+                                 false);
+                LayoutUnit now = e->scrollLeft(false);
+                remainSpaceToScrollEndHorizontal -= (now - initialValue);
+            }
+            e = e->parentElement();
+        }
 
         if (remainSpaceToScrollEnd) {
             remainSpaceToScrollEnd -= window()->innerHeight();
-            window()->scrollTo(window()->scrollX(),
+            window()->scrollTo(window()->scrollX() +
+                                   remainSpaceToScrollEndHorizontal,
                                window()->scrollY() + remainSpaceToScrollEnd);
         }
     }
@@ -878,6 +913,23 @@ bool Element::canScrollVerticaly(bool layoutIfNeeds)
     }
 
     return frame()->asFrameBlockBox()->hasBiggerContentThanFrameHeight();
+}
+
+bool Element::canScrollHorizontally(bool layoutIfNeeds)
+{
+    if (layoutIfNeeds) {
+        window()->browsingContext()->webView()->layoutIfNeeds();
+    }
+
+    if (!frame() || !frame()->isFrameBlockBox()) {
+        return false;
+    }
+
+    if (appliedOverflowX() < OverflowValue::HiddenOverflow) {
+        return false;
+    }
+
+    return frame()->asFrameBlockBox()->hasBiggerContentThanFrameWidth();
 }
 
 void Element::setScrollTopProperty(double s, bool layoutIfNeeds)

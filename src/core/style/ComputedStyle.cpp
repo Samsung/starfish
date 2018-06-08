@@ -1021,7 +1021,6 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
         RETURN_NEED_TRANSITION(CSSStyleValuePair::Color);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::CaretColor);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::Height);
-#ifdef STARFISH_EXPERIMENTAL_TRANSITION
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MarginBottom,
                                CSSStyleValuePair::Margin);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MarginLeft,
@@ -1030,7 +1029,6 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
                                CSSStyleValuePair::Margin);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MarginTop,
                                CSSStyleValuePair::Margin);
-#endif
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MaxHeight);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MaxWidth);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::MinHeight);
@@ -1233,7 +1231,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                                             duration, delay, timingFunction));
             }
         }
-#ifdef STARFISH_EXPERIMENTAL_TRANSITION
         if (NEED_TRANSITION(CSSStyleValuePair::MarginBottom,
                             CSSStyleValuePair::Margin)) {
             AnimatedValue v1, v2;
@@ -1274,7 +1271,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                     delay, timingFunction));
             }
         }
-#endif
         if (NEED_TRANSITION(CSSStyleValuePair::MaxHeight)) {
             if (oldStyle->maxHeight().isDefinite(true) &&
                 oldStyle->hasBlockLikeDisplay() &&

@@ -1687,11 +1687,11 @@ public:
         }
     }
 
-    void markNeedsLayout()
+    void markNeedsLayout();
+    void markNeedsLayoutOnlySelf()
     {
         m_flags.m_needsLayout = true;
     }
-
     void clearNeedsLayout()
     {
         m_flags.m_needsLayout = false;

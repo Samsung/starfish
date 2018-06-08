@@ -114,6 +114,7 @@ void FlexFormattingContext::computeMainSize()
     while (child) {
         if (child->isFlexItem()) {
             orderedFlexItems.push_back(child->asFrameBox());
+            child->markNeedsLayoutOnlySelf();
         } else {
             // to register absolute positioned box
             child->layout(m_layoutContext,
@@ -414,6 +415,13 @@ void FlexFormattingContext::resolveMainMargin()
 
         for (size_t j = 0; j < flexItems.size(); j++) {
             FrameBox* flexItem = flexItems[j];
+            if (m_isMainAxisInInlineAxis) {
+                flexItem->computeBorderMarginPadding(m_layoutContext,
+                                                     m_availableMainSize);
+            } else {
+                flexItem->computeBorderMarginPadding(m_layoutContext,
+                                                     m_availableCrossSize);
+            }
             if (m_isMainAxisInInlineAxis) {
                 LengthData margin = flexItem->style()->margin();
                 if (sumOfMainSize <= m_availableMainSize &&
@@ -1119,7 +1127,6 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
                         availableCrossSize * (intrinsicHeight / intrinsicWidth);
                 }
             }
-
             return basisSize;
         }
     }

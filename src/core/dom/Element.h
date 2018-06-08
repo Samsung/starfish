@@ -238,6 +238,7 @@ public:
     void setScrollTopProperty(double s, bool layoutIfNeeds = true);
     void setScrollTop(double s, bool layoutIfNeeds = true);
     bool canScrollVerticaly(bool layoutIfNeeds = true);
+    bool canScrollHorizontally(bool layoutIfNeeds = true);
     uint32_t scrollWidth();
     uint32_t scrollHeight();
 
