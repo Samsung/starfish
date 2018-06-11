@@ -4742,8 +4742,6 @@ void FrameBlockBox::paintInlineContentBlock(Canvas* canvas)
 
 void FrameBlockBox::paintContent(PaintingContext& ctx)
 {
-    FrameBox* cb = containingBlock(this);
-
     if (canSkipPaintingStage(ctx)) {
         return;
     }
