@@ -313,9 +313,9 @@ public:
             if (pointState == Dali::PointState::DOWN) {
                 StarFish::StarFishEnterer enter(TO_STARFISH(m_instance));
                 StarFish::MouseData data(
-                    StarFish::MouseData::MouseButtonValue::LeftButton,
-                    StarFish::MouseData::MouseButtonsValue::LeftButtonDown,
-                    screen.x, screen.y, 0);
+                    StarFish::MouseButtonValue::LeftButton,
+                    StarFish::MouseButtonsValue::LeftButtonDown, screen.x,
+                    screen.y, 0);
                 d->data = data;
                 TO_STARFISH(m_instance)
                     ->messageLoop()
@@ -338,9 +338,9 @@ public:
             } else if (pointState == Dali::PointState::UP) {
                 StarFish::StarFishEnterer enter(TO_STARFISH(m_instance));
                 StarFish::MouseData data(
-                    StarFish::MouseData::MouseButtonValue::NoButton,
-                    StarFish::MouseData::MouseButtonsValue::NoButtonDown,
-                    screen.x, screen.y, 0);
+                    StarFish::MouseButtonValue::NoButton,
+                    StarFish::MouseButtonsValue::NoButtonDown, screen.x,
+                    screen.y, 0);
                 d->data = data;
                 TO_STARFISH(m_instance)
                     ->messageLoop()
@@ -406,9 +406,8 @@ public:
         const Dali::Vector2& point = event.GetPoint(0).screen;
         StarFish::StarFishEnterer enter(TO_STARFISH(m_instance));
         unsigned char buttons =
-            m_isMouseLbuttonDown
-                ? StarFish::MouseData::MouseButtonsValue::LeftButtonDown
-                : 0;
+            m_isMouseLbuttonDown ? StarFish::MouseButtonsValue::LeftButtonDown
+                                 : 0;
         StarFish::MouseData data(0, buttons, point.x, point.y, 0);
 
         struct dummy {

@@ -15,7 +15,7 @@ using System.Windows.Interop;
 
 namespace StarFishWindowsShell
 {
-    public partial class BrowserUIForm : Form
+    public partial class BrowserUIForm : Form, IMessageFilter
     {
         StarFish mStarFish;
         Console mConsole;
@@ -42,6 +42,30 @@ namespace StarFishWindowsShell
             mStarFish.OnLoadPageStart = new StarFish.LoadPageStart(onLoadPageStartDelegate);
             mStarFish.OnGotMessage = new StarFish.GotMessage(onGotMessage);
             mInitialTitle = this.Text;
+
+            Application.AddMessageFilter(this);
+        }
+
+        // P/Invoke declarations
+        [DllImport("user32.dll")]
+        private static extern IntPtr WindowFromPoint(Point pt);
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
+        public bool PreFilterMessage(ref Message m)
+        {
+            if (m.Msg == (int)0x20a)
+            {
+                // WM_MOUSEWHEEL, find the control at screen position m.LParam
+                var hWnd = WindowFromPoint(Cursor.Position);
+
+                if (hWnd != IntPtr.Zero && hWnd != m.HWnd && Control.FromHandle(hWnd) != null)
+                {
+                    SendMessage(hWnd, m.Msg, m.WParam, m.LParam);
+                    return true;
+                }
+            }
+
+            return false;
         }
 
         private void MConsole_FormClosing(object sender, FormClosingEventArgs e)
@@ -261,30 +285,16 @@ namespace StarFishWindowsShell
         [DllImport("StarFish.dll")]
         public static extern IntPtr createWebViewInstance(uint initialWidth,
                                              uint initialHeight, IntPtr initialBuffer, uint initialBufferStride);
-
         [DllImport("StarFish.dll")]
         public static extern void loadURL(IntPtr mWebViewInstance, IntPtr utf8URL, uint urlBufferLength);
-
-        [DllImport("StarFish.dll")]
-        public static extern void startMessageLoop(IntPtr mWebViewInstance);
-
         [DllImport("StarFish.dll")]
         public static extern void giveMessage(IntPtr mWebViewInstance, MSG msg);
-
-        [DllImport("StarFish.dll")]
-        public static extern IntPtr internalDrawingBufferAddress(IntPtr mWebViewInstance);
-        [DllImport("StarFish.dll")]
-        public static extern uint internalDrawingBufferWidth(IntPtr mWebViewInstance);
-        [DllImport("StarFish.dll")]
-        public static extern uint internalDrawingBufferHeight(IntPtr mWebViewInstance);
-        [DllImport("StarFish.dll")]
-        public static extern uint internalDrawingBufferStride(IntPtr mWebViewInstance);
         [DllImport("StarFish.dll")]
         public static extern uint updateDrawingBufferAddress(IntPtr mWebViewInstance, uint width, uint height, IntPtr buffer, uint stride);
         [DllImport("StarFish.dll")]
-        public static extern uint drawingBufferFrameNumber(IntPtr mWebViewInstance);
-        [DllImport("StarFish.dll")]
         public static extern void resizeWindow(IntPtr mWebViewInstance, uint width, uint height, IntPtr buffer, uint stride);
+        [DllImport("StarFish.dll")]
+        public static extern uint drawingBufferFrameNumber(IntPtr mWebViewInstance);
         [DllImport("StarFish.dll")]
         public static extern void dispatchMouseDownEvent(IntPtr mWebViewInstance, float x, float y);
         [DllImport("StarFish.dll")]

@@ -21,6 +21,8 @@
 #define __StarFishMouseEvent__
 
 #include "UIEvent.h"
+#include "PlatformIntegrationData.h"
+using namespace LWE;
 
 namespace StarFish {
 
@@ -29,23 +31,9 @@ class Window;
 // https://w3c.github.io/uievents/#idl-mouseevent
 // https://w3c.github.io/uievents/#idl-mouseeventinit
 class MouseData {
-    friend MouseEvent;
+    friend class MouseEvent;
     STARFISH_MAKE_STACK_ALLOCATED()
 public:
-    enum MouseButtonValue {
-        NoButton = 0,
-        LeftButton = 0,
-        MiddleButton = 1,
-        RightButton = 2
-    };
-
-    enum MouseButtonsValue {
-        NoButtonDown = 0,
-        LeftButtonDown = 1,
-        RightButtonDown = 1 << 1,
-        MiddleButtonDown = 1 << 2,
-    };
-
     MouseData()
         : MouseData(MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
                     0, 0, 0)

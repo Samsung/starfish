@@ -34,6 +34,9 @@
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "platform/network/HTTPCache.h"
+#include "core/dom/MouseEvent.h"
+#include "core/event/KeyBoardEventData.h"
+#include "platform/event/PlatformKeyEventData.h"
 
 #include <EscargotPublic.h>
 
@@ -696,11 +699,34 @@ static void initMainThread(void* (*f)(void*))
 WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
                                    uint stride)
 {
+#if !defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+    STARFISH_LOG_ERROR("Cannot use WebContainer this port!");
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return nullptr;
+#endif
     std::string screenShot;
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
     int flag = 0;
     float scaleFactor = 1;
+
+    const char* defaultFontName = "serif";
+
+#if defined(STARFISH_DALI)
+    defaultFontName = "samsungOne";
+#endif
+
+    std::string tempPath = "/tmp/";
+
+#if defined(OS_WINDOWS)
+    tempPath = ::StarFish::getWindowsTempDir();
+#endif
+
+    std::string localStoragePath = tempPath;
+    localStoragePath += "StarFish_localStorage.txt";
+
+    std::string cookiePath = tempPath;
+    localStoragePath += "StarFish_Cookies.txt";
 
     StarFish::ScreenInfo info;
     info.rect.setWidth(width);
@@ -709,19 +735,17 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     info.availableRect.setHeight(height);
     info.deviceScaleFactor = scaleFactor;
 
-    std::string cacheDir(getenv("HOME"));
-    cacheDir += "/Starfish-cache";
-    StarFish::StarFish* starfish = new StarFish::StarFish(
+    std::string cacheDir = tempPath;
+    cacheDir += "Starfish-cache";
+    StarFish::StarFish* starfish = new (NoGC) StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         width, height, 0, 0, 1,
-        StarFish::String::createASCIIString("samsungOne"), info,
-        "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
-        cacheDir.data(),
+        StarFish::String::createASCIIString(defaultFontName), info,
+        localStoragePath.data(), cookiePath.data(), cacheDir.data(),
         StarFish::String::fromUTF8(customUserAgentString.data()),
         StarFish::String::fromUTF8(builtinPolyfillPathString.data()));
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    starfish->updateFrameBuffer(buffer, width, height, stride);
-#endif
+    starfish->platformWindow()->updateDrawingBufferAddress(buffer, width,
+                                                           height, stride);
     return new WebContainer(starfish);
 
     // #if defined(STARFISH_DALI)
@@ -982,7 +1006,7 @@ void WebContainer::ClearCache()
 }
 
 void WebContainer::RegisterOnReceivedErrorHandler(
-    std::function<void(LWE::WebContainer*, LWE::ResourceError)> cb)
+    const std::function<void(LWE::WebContainer*, LWE::ResourceError)>& cb)
 {
     TO_STARFISH(m_starfish)
         ->registerWebViewHandler(
@@ -994,7 +1018,7 @@ void WebContainer::RegisterOnReceivedErrorHandler(
 }
 
 void WebContainer::RegisterOnPageFinishedHandler(
-    std::function<void(LWE::WebContainer*, const std::string&)> cb)
+    const std::function<void(LWE::WebContainer*, const std::string&)>& cb)
 {
     TO_STARFISH(m_starfish)
         ->registerWebViewHandler(
@@ -1005,7 +1029,7 @@ void WebContainer::RegisterOnPageFinishedHandler(
 }
 
 void WebContainer::RegisterOnPageStartedHandler(
-    std::function<void(LWE::WebContainer*, const std::string&)> cb)
+    const std::function<void(LWE::WebContainer*, const std::string&)>& cb)
 {
     TO_STARFISH(m_starfish)
         ->registerWebViewHandler(
@@ -1016,7 +1040,7 @@ void WebContainer::RegisterOnPageStartedHandler(
 }
 
 void WebContainer::RegisterOnLoadResourceHandler(
-    std::function<void(LWE::WebContainer*, const std::string&)> cb)
+    const std::function<void(LWE::WebContainer*, const std::string&)>& cb)
 {
     TO_STARFISH(m_starfish)
         ->registerWebViewHandler(
@@ -1029,47 +1053,84 @@ void WebContainer::RegisterOnLoadResourceHandler(
 void WebContainer::UpdateBuffer(void* buffer, uint width, uint height,
                                 uint stride)
 {
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    TO_STARFISH(m_starfish)->updateFrameBuffer(buffer, width, height, stride);
-#endif
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->updateDrawingBufferAddress(buffer, width, height, stride);
 }
 
 void WebContainer::RegisterOnRenderedHandler(
-    std::function<void(LWE::WebContainer*, void*)> cb)
+    const std::function<void(LWE::WebContainer*, void*)>& cb)
 {
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     TO_STARFISH(m_starfish)
-        ->registerFinishedHandler(
-            [this, cb](void* buffer) -> void { cb(this, buffer); });
-#endif
+        ->platformWindow()
+        ->registerRenderingFinishedCallback([this, cb]() {
+            cb(this, TO_STARFISH(m_starfish)
+                         ->platformWindow()
+                         ->drawingBufferAddress());
+        });
 }
 
 void WebContainer::SetUserAgentString(const std::string& userAgent)
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void WebContainer::SetCacheMode(int mode)
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
-void WebContainer::DispatchMouseMoveEvent(char ButtonStatus, double x, double y)
+void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
+                                          MouseButtonsValue buttons, double x,
+                                          double y)
 {
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->dispatchMouseEvent(::StarFish::MouseEventKind::MouseEventMove,
+                             ::StarFish::MouseData(button, buttons, x, y, 0));
 }
 
-void WebContainer::DispatchMouseDownEvent(char ButtonStatus, double x, double y)
+void WebContainer::DispatchMouseDownEvent(MouseButtonValue button,
+                                          MouseButtonsValue buttons, double x,
+                                          double y)
 {
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->dispatchMouseEvent(::StarFish::MouseEventKind::MouseEventDown,
+                             ::StarFish::MouseData(button, buttons, x, y, 0));
 }
 
-void WebContainer::DispatchMouseUpEvent(char ButtonStatus, double x, double y)
+void WebContainer::DispatchMouseUpEvent(MouseButtonValue button,
+                                        MouseButtonsValue buttons, double x,
+                                        double y)
 {
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->dispatchMouseEvent(::StarFish::MouseEventKind::MouseEventUp,
+                             ::StarFish::MouseData(button, buttons, x, y, 0));
 }
 
-void WebContainer::DispatchKeyDownEvent(int modifier, int keycode)
+void WebContainer::DispatchMouseWheelEvent(double x, double y, int delta)
 {
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->dispatchMouseWheelEvent(x, y, delta, true);
 }
 
-void WebContainer::DispatchKeyUpEvent(int modifier, int keycode)
+void WebContainer::DispatchKeyDownEvent(KeyValue keyCode, int modifier)
 {
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->dispatchKeyEvent(::StarFish::KeyEventKind::KeyEventDown,
+                           ::StarFish::PlatformKeyEventData(keyCode));
+}
+
+void WebContainer::DispatchKeyUpEvent(KeyValue keyCode, int modifier)
+{
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->dispatchKeyEvent(::StarFish::KeyEventKind::KeyEventUp,
+                           ::StarFish::PlatformKeyEventData(keyCode));
 }
 }
 

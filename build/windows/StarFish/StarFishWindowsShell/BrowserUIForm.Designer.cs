@@ -41,9 +41,9 @@
             // buttonNavigate
             // 
             this.buttonNavigate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonNavigate.Location = new System.Drawing.Point(764, 1);
+            this.buttonNavigate.Location = new System.Drawing.Point(865, 1);
             this.buttonNavigate.Name = "buttonNavigate";
-            this.buttonNavigate.Size = new System.Drawing.Size(92, 22);
+            this.buttonNavigate.Size = new System.Drawing.Size(66, 22);
             this.buttonNavigate.TabIndex = 0;
             this.buttonNavigate.Text = "Navigate";
             this.buttonNavigate.UseVisualStyleBackColor = true;
@@ -53,9 +53,9 @@
             // 
             this.textBoxAddress.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.textBoxAddress.Location = new System.Drawing.Point(1, 2);
+            this.textBoxAddress.Location = new System.Drawing.Point(1, 1);
             this.textBoxAddress.Name = "textBoxAddress";
-            this.textBoxAddress.Size = new System.Drawing.Size(757, 21);
+            this.textBoxAddress.Size = new System.Drawing.Size(864, 21);
             this.textBoxAddress.TabIndex = 1;
             this.textBoxAddress.Text = "about:blank";
             this.textBoxAddress.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxAddress_KeyDown);
@@ -67,9 +67,9 @@
             this.pictureBoxBrowserContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
             | System.Windows.Forms.AnchorStyles.Left) 
             | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBoxBrowserContent.Location = new System.Drawing.Point(1, 27);
+            this.pictureBoxBrowserContent.Location = new System.Drawing.Point(1, 23);
             this.pictureBoxBrowserContent.Name = "pictureBoxBrowserContent";
-            this.pictureBoxBrowserContent.Size = new System.Drawing.Size(1214, 818);
+            this.pictureBoxBrowserContent.Size = new System.Drawing.Size(1214, 821);
             this.pictureBoxBrowserContent.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pictureBoxBrowserContent.TabIndex = 2;
             this.pictureBoxBrowserContent.TabStop = false;
@@ -83,9 +83,9 @@
             // buttonConsole
             // 
             this.buttonConsole.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonConsole.Location = new System.Drawing.Point(862, 1);
+            this.buttonConsole.Location = new System.Drawing.Point(931, 1);
             this.buttonConsole.Name = "buttonConsole";
-            this.buttonConsole.Size = new System.Drawing.Size(87, 22);
+            this.buttonConsole.Size = new System.Drawing.Size(63, 22);
             this.buttonConsole.TabIndex = 3;
             this.buttonConsole.Text = "Console";
             this.buttonConsole.UseVisualStyleBackColor = true;
@@ -94,9 +94,9 @@
             // buttonResizeFHDHalf
             // 
             this.buttonResizeFHDHalf.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResizeFHDHalf.Location = new System.Drawing.Point(955, 1);
+            this.buttonResizeFHDHalf.Location = new System.Drawing.Point(994, 1);
             this.buttonResizeFHDHalf.Name = "buttonResizeFHDHalf";
-            this.buttonResizeFHDHalf.Size = new System.Drawing.Size(127, 22);
+            this.buttonResizeFHDHalf.Size = new System.Drawing.Size(120, 22);
             this.buttonResizeFHDHalf.TabIndex = 4;
             this.buttonResizeFHDHalf.Text = "Resize to FHD-.5x";
             this.buttonResizeFHDHalf.UseVisualStyleBackColor = true;
@@ -105,9 +105,9 @@
             // buttonResizeFHD
             // 
             this.buttonResizeFHD.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResizeFHD.Location = new System.Drawing.Point(1088, 1);
+            this.buttonResizeFHD.Location = new System.Drawing.Point(1113, 1);
             this.buttonResizeFHD.Name = "buttonResizeFHD";
-            this.buttonResizeFHD.Size = new System.Drawing.Size(127, 22);
+            this.buttonResizeFHD.Size = new System.Drawing.Size(102, 22);
             this.buttonResizeFHD.TabIndex = 5;
             this.buttonResizeFHD.Text = "Resize to FHD";
             this.buttonResizeFHD.UseVisualStyleBackColor = true;
@@ -127,6 +127,7 @@
             this.AllowDrop = true;
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            this.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.ClientSize = new System.Drawing.Size(1215, 845);
             this.Controls.Add(this.buttonResizeFHD);
             this.Controls.Add(this.buttonResizeFHDHalf);

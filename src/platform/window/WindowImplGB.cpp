@@ -56,13 +56,6 @@ struct IdlerData {
 
 class WindowImplGB : public PlatformWindow {
 public:
-    void releaseNativeResources()
-    {
-#if defined(STARFISH_TIZEN)
-#else
-        free(m_internalBuffer);
-#endif
-    }
     WindowImplGB(StarFish* sf, int32_t width, int32_t height)
         : PlatformWindow(sf)
         , m_width(width)
@@ -71,95 +64,50 @@ public:
         , m_rendingLockMutex(new Mutex())
         , m_didPaintingOrCompositing(true)
     {
-        m_renderingAnimator = 0;
+        m_renderingAnimator = SIZE_MAX;
         m_renderingIdlerData = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
-        m_hasSelfAllocatedBuffer = true;
-        m_renderingFrameNumber = 0;
-        prepareBuffer();
 
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            STARFISH_LOG_INFO(
                                                "WindowImplGB::~WindowImplGB\n");
-                                           WindowImplGB* s = (WindowImplGB*)obj;
-                                           s->releaseNativeResources();
                                        },
                                        NULL, NULL, NULL);
     }
 
     virtual int32_t width() override
     {
-#ifdef STARFISH_ENABLE_TEST
-        if (getenv("SCREEN_SHOT_WIDTH") &&
-            strlen(getenv("SCREEN_SHOT_WIDTH"))) {
-            return atoi(getenv("SCREEN_SHOT_WIDTH"));
-        }
-#endif
         return m_width;
     }
 
     virtual int32_t height() override
     {
-#ifdef STARFISH_ENABLE_TEST
-        if (getenv("SCREEN_SHOT_HEIGHT") &&
-            strlen(getenv("SCREEN_SHOT_HEIGHT"))) {
-            return atoi(getenv("SCREEN_SHOT_HEIGHT"));
-        }
-#endif
         return m_height;
     }
 
     virtual void resizeTo(int w, int h)
     {
-        m_width = w;
-        m_height = h;
-        if (m_hasSelfAllocatedBuffer) {
-            free(m_internalBuffer);
-            m_internalBuffer = nullptr;
-            prepareBuffer();
+        if (w != m_width || h != m_height) {
+            m_width = w;
+            m_height = h;
+            PlatformWindow::resizeTo(w, h);
         }
-
-        PlatformWindow::resizeTo(w, h);
     }
 
     virtual void updateDrawingBufferAddress(void* buf, uint32_t width,
                                             uint32_t height, uint32_t stride)
     {
-        if (m_hasSelfAllocatedBuffer) {
-            free(m_internalBuffer);
-            m_internalBuffer = nullptr;
-        }
-        m_hasSelfAllocatedBuffer = false;
-        if (width != m_width || height != m_height) {
-            resizeTo(width, height);
-        }
-
+        PlatformWindow::updateDrawingBufferAddress(buf, width, height, stride);
         m_stride = stride;
         m_internalBuffer = buf;
-
         updateCairoVariables();
     }
 
     virtual void* unwrap()
     {
-        // return getCompletedBuffer();
         return nullptr;
-    }
-
-    void prepareBuffer()
-    {
-        if (m_didPaintingOrCompositing) {
-            uint width = m_starFish->width();
-            uint height = m_starFish->height();
-            m_stride = m_starFish->stride();
-            if (width != m_width || height != m_height) {
-                resizeTo(width, height);
-            }
-            m_internalBuffer = m_starFish->frameBuffer();
-            updateCairoVariables();
-        }
     }
 
     void updateCairoVariables()
@@ -176,33 +124,9 @@ public:
         m_cairo = cairo_create(m_surface);
     }
 
-    void flushBuffer()
-    {
-        if (m_didPaintingOrCompositing) {
-            m_renderingFrameNumber++;
-            m_starFish->callRenderingFinishedHandler(m_internalBuffer);
-        }
-    }
-
     virtual void* drawingBufferAddress()
     {
         return m_internalBuffer;
-    }
-    virtual uint32_t drawingBufferWidth()
-    {
-        return m_width;
-    }
-    virtual uint32_t drawingBufferHeight()
-    {
-        return m_height;
-    }
-    virtual uint32_t drawingBufferStride()
-    {
-        return m_stride;
-    }
-    virtual uint32_t drawingBufferFrameNumber()
-    {
-        return m_renderingFrameNumber;
     }
 
     virtual void clearResources();
@@ -212,7 +136,6 @@ public:
     uint32_t m_width;
     uint32_t m_height;
     size_t m_renderingAnimator;
-    uint32_t m_renderingFrameNumber;
     IdlerData* m_renderingIdlerData;
     void* m_internalBuffer;
     size_t m_stride;
@@ -223,7 +146,6 @@ public:
     bool m_isMouseLbuttonDown;
     bool m_isKeyDown;
     bool m_canRendering;
-    bool m_hasSelfAllocatedBuffer;
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
@@ -437,7 +359,6 @@ void WebView::setNeedsRendering()
     WindowImplGB* wnd = (WindowImplGB*)starFish()->platformWindow();
 
     // TODO: refresh rendering animator here.
-
     m_needsRendering = true;
     wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
         nullptr,
@@ -446,13 +367,9 @@ void WebView::setNeedsRendering()
             StarFishEnterer enter(wnd->starFish());
             {
                 Locker<Mutex> l(*((WindowImplGB*)wnd)->m_rendingLockMutex);
-                ((WindowImplGB*)wnd)->prepareBuffer();
                 bool drawingBufferUpdated = wnd->rendering();
-                ((WindowImplGB*)wnd)->m_renderingAnimator = 0;
+                ((WindowImplGB*)wnd)->m_renderingAnimator = SIZE_MAX;
                 ((WindowImplGB*)wnd)->m_renderingIdlerData = nullptr;
-                if (drawingBufferUpdated) {
-                    ((WindowImplGB*)wnd)->flushBuffer();
-                }
             }
         },
         starFish()->platformWindow());
@@ -511,9 +428,9 @@ Compositor* WindowImplGB::prepareCompositor()
 
 void WindowImplGB::clearResources()
 {
-    if (m_renderingAnimator) {
+    if (m_renderingAnimator != SIZE_MAX) {
         starFish()->messageLoop()->removeIdler(m_renderingAnimator);
-        m_renderingAnimator = 0;
+        m_renderingAnimator = SIZE_MAX;
         GC_FREE(m_renderingIdlerData);
     }
 
