@@ -20,7 +20,29 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
+#define _WIN32_WINNT _WIN32_WINNT_WIN7
+#include <Windows.h>
+#include <ShellAPI.h>
+#include <KnownFolders.h>
+#include <ShlObj.h>
+#include <stdio.h>
+
 namespace StarFish {
+
+const char* getWindowsTempDir()
+{
+    CoInitialize(NULL);
+    static char pBuffer[MAX_PATH];
+    if (!pBuffer[0]) {
+        PWSTR path = 0;
+        SHGetKnownFolderPath(FOLDERID_LocalAppData, KF_FLAG_SIMPLE_IDLIST, NULL, &path);
+        wcstombs(pBuffer, path, wcslen(path));
+        CoTaskMemFree(path);
+        strcat(pBuffer, "\\");
+    }
+
+    return pBuffer;
+}
 
 __declspec(thread) bool g_postLogMessageToThreadMessageQueue = false;
 

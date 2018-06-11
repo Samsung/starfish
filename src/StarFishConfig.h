@@ -222,6 +222,8 @@
 #include <BaseTsd.h>
 typedef SSIZE_T ssize_t;
 #define _INC_CTYPE // for preventing include windows version of ctype header
+#include <inttypes.h>
+typedef unsigned int uint;
 #endif
 
 #include <cstdlib>
@@ -308,6 +310,7 @@ namespace StarFish {
 void forwardPrintingLogInfo(const char* fmt, ...);
 void forwardPrintingLogError(const char* fmt, ...);
 void forwardPrintingLogWarn(const char* fmt, ...);
+const char* getWindowsTempDir();
 }
 #endif
 

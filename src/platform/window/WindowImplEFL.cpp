@@ -1055,8 +1055,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 sf->m_clickedCount++;
             }
             MouseData mdata(
-                MouseData::MouseButtonValue::LeftButton,
-                MouseData::MouseButtonsValue::LeftButtonDown,
+                MouseButtonValue::LeftButton, MouseButtonsValue::LeftButtonDown,
                 currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
                 currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
                 sf->m_clickedCount);
@@ -1085,8 +1084,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                 sf->m_clickedCount++;
             }
             MouseData mdata(
-                MouseData::MouseButtonValue::NoButton,
-                MouseData::MouseButtonsValue::NoButtonDown,
+                MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
                 currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
                 currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
                 sf->m_clickedCount);
@@ -1126,10 +1124,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         int currentPosY = ev->cur.output.y - sf->starFish()->posY();
         if (currentPosX >= 0 && currentPosY >= 0) {
             StarFishEnterer enter(sf->m_starFish);
-            unsigned char buttons =
-                sf->m_isMouseLbuttonDown
-                    ? MouseData::MouseButtonsValue::LeftButtonDown
-                    : 0;
+            unsigned char buttons = sf->m_isMouseLbuttonDown
+                                        ? MouseButtonsValue::LeftButtonDown
+                                        : 0;
             MouseData mdata(
                 0, buttons,
                 currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
@@ -1244,8 +1241,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         sf->m_clickedCount = 1;
 
         MouseData mdata(
-            MouseData::MouseButtonValue::LeftButton,
-            MouseData::MouseButtonsValue::LeftButtonDown,
+            MouseButtonValue::LeftButton, MouseButtonsValue::LeftButtonDown,
             ev->canvas.x / sf->starFish()->screenInfo().deviceScaleFactor,
             ev->canvas.y / sf->starFish()->screenInfo().deviceScaleFactor,
             sf->m_clickedCount);
@@ -1265,9 +1261,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         StarFishEnterer enter(sf->m_starFish);
 
         unsigned char buttons =
-            sf->m_isMouseLbuttonDown
-                ? MouseData::MouseButtonsValue::LeftButtonDown
-                : 0;
+            sf->m_isMouseLbuttonDown ? MouseButtonsValue::LeftButtonDown : 0;
         MouseData mdata(0, buttons,
                         ((WindowImplEFL*)sf)->m_lastMouseX /
                             sf->starFish()->screenInfo().deviceScaleFactor,
@@ -1284,8 +1278,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         WindowImplEFL* sf = (WindowImplEFL*)data;
 
         StarFishEnterer enter(sf->starFish());
-        MouseData mdata(MouseData::MouseButtonValue::NoButton,
-                        MouseData::MouseButtonsValue::NoButtonDown,
+        MouseData mdata(MouseButtonValue::NoButton,
+                        MouseButtonsValue::NoButtonDown,
                         ((WindowImplEFL*)sf)->m_lastMouseX /
                             sf->starFish()->screenInfo().deviceScaleFactor,
                         ((WindowImplEFL*)sf)->m_lastMouseY /
@@ -1302,8 +1296,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         WindowImplEFL* sf = (WindowImplEFL*)data;
 
         StarFishEnterer enter(sf->m_starFish);
-        MouseData mdata(MouseData::MouseButtonValue::NoButton,
-                        MouseData::MouseButtonsValue::NoButtonDown,
+        MouseData mdata(MouseButtonValue::NoButton,
+                        MouseButtonsValue::NoButtonDown,
                         ((WindowImplEFL*)sf)->m_lastMouseX /
                             sf->starFish()->screenInfo().deviceScaleFactor,
                         ((WindowImplEFL*)sf)->m_lastMouseY /

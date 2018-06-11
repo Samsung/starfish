@@ -1953,5 +1953,8 @@
     <ClCompile Include="..\..\..\..\src\binding\CanvasPatternBinding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\public\LWEWebContainer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

@@ -226,45 +226,6 @@ public:
     void setupInspector(uint32_t portNumber = 23888);
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
-    void updateFrameBuffer(void* framBuffer, uint width, uint height,
-                           uint stride)
-    {
-        m_frameBuffer = framBuffer;
-        m_width = width;
-        m_height = height;
-        m_stride = stride;
-    }
-    void* frameBuffer()
-    {
-        return m_frameBuffer;
-    }
-
-    uint stride()
-    {
-        return m_stride;
-    }
-
-    uint width()
-    {
-        return m_width;
-    }
-
-    uint height()
-    {
-        return m_height;
-    }
-    void registerFinishedHandler(std::function<void(void*)> cb)
-    {
-        m_finishedCB = cb;
-    }
-    void callRenderingFinishedHandler(void* buffer)
-    {
-        if (m_finishedCB != nullptr) {
-            m_finishedCB(buffer);
-        }
-    }
-#endif
     void addActiveThread(Thread* thread);
     void removeActiveThread(Thread* thread);
     void joinAllActiveThread();
@@ -417,14 +378,6 @@ protected:
     String* m_localStorageFilePath;
     String* m_customUserAgentString;
     String* m_builtinPolyfillPathString;
-
-    uint m_width;
-    uint m_height;
-#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
-    uint m_stride;
-    void* m_frameBuffer;
-    std::function<void(void*)> m_finishedCB;
-#endif
 
     GCUnorderedMap<void*, size_t> m_rootMap;
     AtomicStringMap m_atomicStringMap;

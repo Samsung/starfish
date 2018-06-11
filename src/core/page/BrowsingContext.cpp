@@ -1205,9 +1205,9 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
             Node* t = targetNode->nearestParentElement();
             t = t ? t : document();
             name = starFish()->staticStrings()->m_click.localName();
-            MouseData clickData(MouseData::MouseButtonValue::LeftButton,
-                                MouseData::MouseButtonsValue::LeftButtonDown,
-                                targetX, targetY, 1);
+            MouseData clickData(MouseButtonValue::LeftButton,
+                                MouseButtonsValue::LeftButtonDown, targetX,
+                                targetY, 1);
             Event* click = createMouseEvent(document(), name, clickData);
             document()->window()->dispatchEventByUA(t, click);
         }
@@ -1763,8 +1763,8 @@ void BrowsingContext::addGlobalPointingEventInterceptListener(EventTarget* node)
 {
     size_t sizeBefore = m_globalPointingEventListener.size();
     if (sizeBefore == 0) {
-        MouseData mdata(MouseData::MouseButtonValue::NoButton,
-                        MouseData::MouseButtonsValue::NoButtonDown,
+        MouseData mdata(MouseButtonValue::NoButton,
+                        MouseButtonsValue::NoButtonDown,
                         m_lastMouseMovePoint.x(), m_lastMouseMovePoint.y(), 0);
         mdata.setDefaultPrevented();
         dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);

@@ -267,11 +267,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_lweWebViewControlDelegator(nullptr)
 {
     m_nativeHandle = platformHandle;
-    m_width = w;
-    m_height = h;
-#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
-    m_frameBuffer = nullptr;
-#endif
     registerMainThread();
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
@@ -419,8 +414,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_tts = new TTS(this);
 #endif
 
-    m_platformWindow =
-        PlatformWindow::create(this, nativeHandle(), m_width, m_height);
+    m_platformWindow = PlatformWindow::create(this, nativeHandle(), w, h);
 
     WebView* webView = WebView::create(this);
     m_platformWindow->setWebView(webView);

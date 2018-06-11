@@ -632,6 +632,7 @@
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplEFLHeadLess.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplGB.cpp" />
     <ClCompile Include="..\..\..\..\src\public\JavaScriptNativeHandler.cpp" />
+    <ClCompile Include="..\..\..\..\src\public\LWEWebContainer.cpp" />
     <ClCompile Include="..\..\..\..\src\public\LWEWebView.cpp" />
     <ClCompile Include="..\..\..\..\src\public\StarFishPublic.cpp" />
     <ClCompile Include="..\..\..\..\src\shell\shell.cpp" />

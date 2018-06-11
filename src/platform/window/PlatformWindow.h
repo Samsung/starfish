@@ -84,27 +84,25 @@ public:
     }
     virtual void* drawingBufferAddress()
     {
+#if !defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+#endif
         return nullptr;
-    }
-    virtual uint32_t drawingBufferWidth()
-    {
-        return 0;
-    }
-    virtual uint32_t drawingBufferHeight()
-    {
-        return 0;
-    }
-    virtual uint32_t drawingBufferStride()
-    {
-        return 0;
     }
     virtual void updateDrawingBufferAddress(void* buf, uint32_t width,
                                             uint32_t height, uint32_t stride)
     {
+#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+        resizeTo(width, height);
+#else
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+#endif
     }
-    virtual uint32_t drawingBufferFrameNumber()
+
+    virtual void registerRenderingFinishedCallback(
+        const std::function<void()>& cb)
     {
-        return 0;
+        m_renderingFinishedCallback = cb;
     }
     virtual bool canRendering()
     {
@@ -154,6 +152,8 @@ protected:
     StarFish* m_starFish;
     WebView* m_webView;
     size_t m_idleCleanerTimerID;
+
+    std::function<void()> m_renderingFinishedCallback;
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     bool m_isButtonOfVirtualCursorClicked;

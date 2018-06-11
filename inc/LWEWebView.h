@@ -20,12 +20,21 @@
 #ifndef __LWEWebView__
 #define __LWEWebView__
 
-#include "StarFishExport.h"
+#ifndef LWE_EXPORT
+#ifdef _MSC_VER
+#define LWE_EXPORT __declspec(dllexport)
+#else
+#define LWE_EXPORT __attribute__((visibility("default")))
+#endif
+#endif
+
+#include "PlatformIntegrationData.h"
+
 #include <functional>
 #include <string>
 
 namespace LWE {
-class STARFISH_EXPORT Settings {
+class LWE_EXPORT Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
     std::string GetDefaultUserAgent();
@@ -40,7 +49,7 @@ private:
     int m_cacheMode;
 };
 
-class STARFISH_EXPORT ResourceError {
+class LWE_EXPORT ResourceError {
 public:
     ResourceError(int code, const std::string& description);
     int GetErrorCode();
@@ -51,7 +60,7 @@ private:
     std::string m_description;
 };
 
-class STARFISH_EXPORT WebView {
+class LWE_EXPORT WebView {
 public:
     static WebView* Create(void* starFish);
     static WebView* Create(void* win, int x, int y, int width, int height);
@@ -94,8 +103,7 @@ private:
     void* m_starfish;
 };
 
-// NEW API for porting
-class STARFISH_EXPORT WebContainer {
+class LWE_EXPORT WebContainer {
 public:
     static WebContainer* Create(void* buffer, uint width, uint height,
                                 uint stride);
@@ -122,25 +130,30 @@ public:
     void ClearCache();
 
     void RegisterOnReceivedErrorHandler(
-        std::function<void(LWE::WebContainer*, LWE::ResourceError)> cb);
+        const std::function<void(LWE::WebContainer*, LWE::ResourceError)>& cb);
     void RegisterOnPageFinishedHandler(
-        std::function<void(LWE::WebContainer*, const std::string&)> cb);
+        const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
     void RegisterOnPageStartedHandler(
-        std::function<void(LWE::WebContainer*, const std::string&)> cb);
+        const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
     void RegisterOnLoadResourceHandler(
-        std::function<void(LWE::WebContainer*, const std::string&)> cb);
+        const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
 
     void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
     void RegisterOnRenderedHandler(
-        std::function<void(LWE::WebContainer*, void*)> cb);
+        const std::function<void(LWE::WebContainer*, void*)>& cb);
 
     void SetUserAgentString(const std::string& userAgent);
     void SetCacheMode(int mode);
-    void DispatchMouseMoveEvent(char ButtonStatus, double x, double y);
-    void DispatchMouseDownEvent(char ButtonStatus, double x, double y);
-    void DispatchMouseUpEvent(char ButtonStatus, double x, double y);
-    void DispatchKeyDownEvent(int modifier, int keycode);
-    void DispatchKeyUpEvent(int modifier, int keycode);
+    void DispatchMouseMoveEvent(MouseButtonValue button,
+                                MouseButtonsValue buttons, double x, double y);
+    void DispatchMouseDownEvent(MouseButtonValue button,
+                                MouseButtonsValue buttons, double x, double y);
+    void DispatchMouseUpEvent(MouseButtonValue button,
+                              MouseButtonsValue buttons, double x, double y);
+    void DispatchMouseWheelEvent(double x, double y, int delta);
+    void DispatchKeyDownEvent(KeyValue keyCode,
+                              int modifier = 0); // modifiers not defined yet.
+    void DispatchKeyUpEvent(KeyValue keyCode, int modifier = 0);
 
 protected:
     WebContainer(void* starFish);
