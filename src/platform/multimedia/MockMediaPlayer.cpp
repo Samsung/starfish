@@ -41,9 +41,11 @@
 #define STARFISH_FRAME_EVICTION_BACKWARD_DUR 500
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
-#define MOCKPLAYER_LOG(mk, ...)                \
-    STARFISH_LOG_INFO("[MockPlayer|%p] ", mk); \
-    STARFISH_LOG_INFO(__VA_ARGS__);
+#define MOCKPLAYER_LOG(mk, STR, ...) \
+    STARFISH_LOG_INFO(               \
+        "[MockPlayer|%p] "           \
+        "" STR,                      \
+        mk, ##__VA_ARGS__);
 #else
 #define MOCKPLAYER_LOG(mk, ...)
 #endif

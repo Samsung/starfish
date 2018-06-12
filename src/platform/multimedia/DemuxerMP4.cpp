@@ -31,9 +31,11 @@
 #include "MP4.Parser.h"
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
-#define DEMUXERMP4_LOG(...)             \
-    STARFISH_LOG_INFO("[DemuxerMP4] "); \
-    STARFISH_LOG_INFO(__VA_ARGS__);
+#define DEMUXERMP4_LOG(STR, ...) \
+    STARFISH_LOG_INFO(           \
+        "[DemuxerMP4] "          \
+        "" STR,                  \
+        ##__VA_ARGS__);
 #else
 #define DEMUXERMP4_LOG(...)
 #endif
