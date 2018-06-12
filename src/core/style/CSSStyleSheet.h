@@ -192,6 +192,7 @@ public:
     void setDisabled(bool disabled) override;
 
 protected:
+    void syncChildRuleWrappers();
     // m_stringString != String::emptyString means we need to parse style sheet
     // before access style rules.
     String* m_sourceString;

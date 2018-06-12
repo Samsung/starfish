@@ -373,9 +373,6 @@ bool CSSStyleSheet::wrapperInsertRule(StyleRuleBase* rule, unsigned index)
 
 unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
 {
-    STARFISH_ASSERT(m_childRuleWrappers.empty() ||
-                    m_childRuleWrappers.size() == length());
-
     if (index > length()) {
         StringBuilder msg;
         msg.appendString("The index provided (");
@@ -412,6 +409,7 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
                                "Failed to insert the rule.");
     }
 
+    syncChildRuleWrappers();
     m_childRuleWrappers.insert(m_childRuleWrappers.begin() + index, nullptr);
 
     scriptBindingInstance()
@@ -444,9 +442,6 @@ bool CSSStyleSheet::wrapperDeleteRule(unsigned index)
 
 void CSSStyleSheet::deleteRule(unsigned index)
 {
-    STARFISH_ASSERT(m_childRuleWrappers.empty() ||
-                    m_childRuleWrappers.size() == length());
-
     if (index >= length()) {
         StringBuilder msg;
         msg.appendString("The index provided (");
@@ -466,6 +461,7 @@ void CSSStyleSheet::deleteRule(unsigned index)
                                "Failed to delete rule");
     }
 
+    syncChildRuleWrappers();
     if (!m_childRuleWrappers.empty()) {
         if (m_childRuleWrappers[index]) {
             m_childRuleWrappers[index]->setParentStyleSheet(nullptr);
@@ -496,6 +492,18 @@ StyleRuleBase* CSSStyleSheet::ruleAt(unsigned index) const
     return m_childRules[index];
 }
 
+void CSSStyleSheet::syncChildRuleWrappers()
+{
+    size_t ruleCount = length();
+    if (m_childRuleWrappers.size() != ruleCount) {
+        m_childRuleWrappers.resize(ruleCount);
+        for (size_t i = 0; i < ruleCount; i++) {
+            m_childRuleWrappers[i] =
+                ruleAt(i)->createCSSOMWrapper(const_cast<CSSStyleSheet*>(this));
+        }
+    }
+}
+
 CSSRule* CSSStyleSheet::item(unsigned index)
 {
     unsigned ruleCount = length();
@@ -503,15 +511,7 @@ CSSRule* CSSStyleSheet::item(unsigned index)
         return nullptr;
     }
 
-    if (m_childRuleWrappers.size() == 0) {
-        m_childRuleWrappers.resize(ruleCount);
-    }
-
-    if (!m_childRuleWrappers[index]) {
-        m_childRuleWrappers[index] =
-            ruleAt(index)->createCSSOMWrapper(const_cast<CSSStyleSheet*>(this));
-    }
-
+    syncChildRuleWrappers();
     return m_childRuleWrappers[index];
 }
 
