@@ -725,6 +725,7 @@ void StackingContext::computeTransformMatrix()
 
 enum IndirectCompositingReason {
     None,
+    SubFrame,
     Stacking,
     Overlap,
     BackgroundLayer,
@@ -734,17 +735,23 @@ enum IndirectCompositingReason {
 };
 
 static bool requiresCompositingForIndirectReason(
-    FrameBox* owner, bool hasCompositedDescendants,
+    StackingContext* ctx, bool hasCompositedDescendants,
     bool has3DTransformedDescendants, IndirectCompositingReason& reason)
 {
     // When a layer has composited descendants, some effects, like 2d
     // transforms, filters, masks etc must be implemented
     // via compositing so that they also apply to those composited descendants.
-    if (hasCompositedDescendants && owner->style()->hasTransforms(owner)) {
+    if (hasCompositedDescendants &&
+        ctx->owner()->style()->hasTransforms(ctx->owner())) {
         // && (layer.isolatesCompositedBlending() || layer.transform() ||
         // renderer.createsGroup() || renderer.hasReflection() ||
         // renderer.isRenderNamedFlowFragmentContainer())) {
         reason = IndirectCompositingReason::GraphicalEffect;
+        return true;
+    }
+
+    if (hasCompositedDescendants && ctx->isIFrameStackingContext()) {
+        reason = IndirectCompositingReason::SubFrame;
         return true;
     }
 
@@ -965,7 +972,7 @@ void StackingContext::computeStackingContextProperties(
     IndirectCompositingReason indirectCompositingReason;
     if (!willBeComposited && canComposite(compositingState) &&
         requiresCompositingForIndirectReason(
-            m_owner, childState.subLayerHasGraphicsBuffer,
+            this, childState.subLayerHasGraphicsBuffer,
             anyDescendantHas3DTransform, indirectCompositingReason)) {
         // layer.setIndirectCompositingReason(indirectCompositingReason);
         childState.compositingAncestor = this;
