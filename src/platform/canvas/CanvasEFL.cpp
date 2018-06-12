@@ -230,8 +230,8 @@ public:
         evas_object_resize(eo, m_width, m_height);
         if (m_eventLayer) {
             elm_box_pack_end(m_eventLayer, eo);
-            evas_object_raise(eo);
         }
+        evas_object_raise(eo);
         applyClippers(eo);
         evas_object_show(eo);
         restore();
@@ -734,8 +734,8 @@ public:
         evas_object_resize(eo, ww, hh);
         if (m_eventLayer) {
             elm_box_pack_end(m_eventLayer, eo);
-            evas_object_raise(eo);
         }
+        evas_object_raise(eo);
         if (!isHole) {
             applyClippers(eo);
         }
@@ -1569,10 +1569,17 @@ public:
         }
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
+        bool isVideoSurface = evas_object_data_get(eo, "video");
         if (m_eventLayer) {
             elm_box_pack_end(m_eventLayer, eo);
-            evas_object_raise(eo);
         }
+        evas_object_raise(eo);
+        if (isVideoSurface) {
+            evas_object_show(eo);
+            restore();
+            return;
+        }
+
 #ifdef STARFISH_ENABLE_TEST
         if (evas_object_evas_get(eo) != m_canvas) {
             eo = evas_object_image_add(m_canvas);
@@ -1736,17 +1743,6 @@ public:
         }
 
         evas_object_anti_alias_set(eo, EINA_TRUE);
-
-        /*
-        evas_map_alpha_set(map, EINA_TRUE);
-        if (lastState().m_opacity != 1) {
-            int c = lastState().m_opacity * 255;
-            evas_map_point_color_set(map, 0, c, c, c, c);
-            evas_map_point_color_set(map, 1, c, c, c, c);
-            evas_map_point_color_set(map, 2, c, c, c, c);
-            evas_map_point_color_set(map, 3, c, c, c, c);
-        }
-        */
         evas_map_smooth_set(map, EINA_TRUE);
 
         evas_object_map_set(eo, map);
