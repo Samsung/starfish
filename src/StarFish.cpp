@@ -277,12 +277,14 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #endif
 
         GC_set_abort_func([](const char* msg) {
-            STARFISH_LOG_ERROR("Starfish: GC aborted\n");
+            STARFISH_LOG_ERROR("StarFish: GC aborted\n");
             STARFISH_LOG_ERROR("%s\n", msg);
         });
 
-        GC_set_warn_proc(
-            [](char* msg, GC_word arg) { STARFISH_LOG_ERROR(msg, arg); });
+        GC_set_warn_proc([](char* msg, GC_word arg) {
+            STARFISH_LOG_ERROR("StarFish: GC warning\n");
+            STARFISH_LOG_ERROR("%s\n", msg);
+        });
 
 #ifdef STARFISH_SHOW_MEMSTATE
         addGCCollectionListener([](GC_EventType evtType) {
