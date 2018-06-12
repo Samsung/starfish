@@ -61,7 +61,7 @@ STARFISH_EXPORT void registerFileCloseCB(int (*cb)(FILE* fp));
 STARFISH_EXPORT void registerFileMatchLocationCB(
     const char* (*cb)(const char* fileName));
 
-#if defined(STARFISH_TIZEN_WEARABLE) && defined(TIZEN_DEVICE_API)
+#if defined(STARFISH_TIZEN_WEARABLE_WIDGET) && defined(TIZEN_DEVICE_API)
 STARFISH_EXPORT void starfishSetWidgetContext(StarFishInstance* instance,
                                               const void* widgetContext);
 STARFISH_EXPORT void registerWebWidgetAPISetContentInfoOfContextCB(

@@ -812,7 +812,7 @@ extern "C" STARFISH_EXPORT void registerWebWidgetAPIGetContentInfoOfContextCB(
 extern "C" STARFISH_EXPORT void starfishWebWidgetAPINotifyReceiveContent(
     StarFishInstance* instance, const void* data)
 {
-    StarFishEnterer enter(TO_STARFISH(instance));
+    StarFish::StarFishEnterer enter(TO_STARFISH(instance));
     DeviceAPI::ExtensionManagerInstance* em = TO_STARFISH(instance)
                                                   ->platformWindow()
                                                   ->webView()

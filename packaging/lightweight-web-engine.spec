@@ -102,8 +102,11 @@ lightweight-web-engine development headers
 %setup -q
 
 %build
-
+%if "%{tizen_product}" == "gear"
+./build_third_party.sh arm gear
+%else
 ./build_third_party.sh arm
+%endif
 
 %if "%{tizen_product}" == "tv"
 %define target tv
@@ -117,9 +120,9 @@ ninja -C out_tizen/%{target}/release starfish.tizen.tv.release
 %define target gear
 CFLAGS+=' -Os '
 CXXFLAGS+=' -Os '
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dbackend=efl -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}
 ninja -C out_tizen/%{target}/release starfish.tizen.gear.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dbackend=efl -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}
 ninja -C out_tizen/%{target}/release starfish.tizen.gear.release
 %endif
 
