@@ -110,12 +110,12 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
 {
 }
 
-std::string Settings::GetDefaultUserAgent()
+std::string Settings::GetDefaultUserAgent() const
 {
     return m_defaultUserAgent;
 }
 
-std::string Settings::GetUserAgentString()
+std::string Settings::GetUserAgentString() const
 {
     return m_userAgent;
 }
@@ -125,7 +125,7 @@ void Settings::SetUserAgentString(const std::string& ua)
     m_userAgent = ua;
 }
 
-int Settings::GetCacheMode()
+int Settings::GetCacheMode() const
 {
     return m_cacheMode;
 }

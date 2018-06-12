@@ -40,7 +40,7 @@
 
 #include <EscargotPublic.h>
 
-#if defined(PORT_WINDOW_BACKEND_ANDROID)
+#if defined(STARFISH_ANDROID)
 #include <jni.h>
 #include <android/log.h>
 #include <android/bitmap.h>
@@ -67,7 +67,7 @@ struct WindowGlue {
 } g_WindowGlue;
 JavaVM* g_jvm;
 
-std::map<LWE::WebView*, std::pair<jobject, LWE::WebViewClient*>> g_webViews;
+std::map<LWE::WebContainer*, std::pair<jobject, void*>> g_webViews;
 
 typedef bool (*TimerCallback)(int uid, void* data);
 int startTimer(int ms, TimerCallback pointer, void* data);
@@ -80,11 +80,6 @@ void callOnPageFinished(LWE::WebView* view, const char* url, bool canGoBack,
                         bool canGoForward);
 void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
                        bool canGoForward);
-
-extern unsigned char* g_androidBitmapAddress;
-extern size_t g_androidBitmapWidth;
-extern size_t g_androidBitmapHeight;
-extern size_t g_androidBitmapStride;
 
 #elif defined(STARFISH_DALI)
 #include <dali-toolkit/dali-toolkit.h>
@@ -697,7 +692,7 @@ static void initMainThread(void* (*f)(void*))
 #endif
 
 WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
-                                   uint stride)
+                                   uint stride, float scaleFactor)
 {
 #if !defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     STARFISH_LOG_ERROR("Cannot use WebContainer this port!");
@@ -708,7 +703,6 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
     int flag = 0;
-    float scaleFactor = 1;
 
     const char* defaultFontName = "serif";
 
@@ -746,7 +740,13 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
         StarFish::String::fromUTF8(builtinPolyfillPathString.data()));
     starfish->platformWindow()->updateDrawingBufferAddress(buffer, width,
                                                            height, stride);
-    return new WebContainer(starfish);
+
+    WebContainer* newWebContainer = new WebContainer(starfish);
+
+#if defined(STARFISH_ANDROID)
+    starfish->setLWEWebView(newWebContainer);
+#endif
+    return newWebContainer;
 
     // #if defined(STARFISH_DALI)
 
@@ -837,56 +837,13 @@ std::string WebContainer::GetURL()
 void WebContainer::LoadData(const std::string& data)
 {
     STARFISH_ASSERT(m_starfish);
-    unsigned int dataLength = data.size();
-    // base64 encode
     if (data.size() > 0) {
-        const char* originData = data.c_str();
-        std::string dataURI = "data:text/html;charset=utf-8;base64,";
-        std::string base64Chars =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
-        int i = 0, j = 0;
-        unsigned char charArray3[3];
-        unsigned char charArray4[4];
-
-        while (dataLength--) {
-            charArray3[i++] = *(originData++);
-            if (i == 3) {
-                charArray4[0] = (charArray3[0] & 0xfc) >> 2;
-                charArray4[1] = ((charArray3[0] & 0x03) << 4) +
-                                ((charArray3[1] & 0xf0) >> 4);
-                charArray4[2] = ((charArray3[1] & 0x0f) << 2) +
-                                ((charArray3[2] & 0xc0) >> 6);
-                charArray4[3] = charArray3[2] & 0x3f;
-
-                for (i = 0; (i < 4); i++) {
-                    dataURI += base64Chars[charArray4[i]];
-                }
-                i = 0;
-            }
-        }
-
-        if (i) {
-            for (j = i; j < 3; j++) {
-                charArray3[j] = '\0';
-            }
-
-            charArray4[0] = (charArray3[0] & 0xfc) >> 2;
-            charArray4[1] =
-                ((charArray3[0] & 0x03) << 4) + ((charArray3[1] & 0xf0) >> 4);
-            charArray4[2] =
-                ((charArray3[1] & 0x0f) << 2) + ((charArray3[2] & 0xc0) >> 6);
-            charArray4[3] = charArray3[2] & 0x3f;
-
-            for (j = 0; (j < i + 1); j++) {
-                dataURI += base64Chars[charArray4[j]];
-            }
-
-            while ((i++ < 3)) {
-                dataURI += '=';
-            }
-        }
+        auto dataURI = StarFish::StringUtils::toBase64HTMLDataURI(data);
         TO_STARFISH(m_starfish)
             ->loadHTMLDocument(StarFish::String::fromUTF8(dataURI.data()));
+    } else {
+        TO_STARFISH(m_starfish)
+            ->loadHTMLDocument(StarFish::String::fromUTF8("about:blank"));
     }
 }
 
@@ -976,14 +933,14 @@ void WebContainer::Destroy()
 void WebContainer::SetSettings(const Settings& setttings)
 {
     STARFISH_ASSERT(m_starfish);
-    //     TO_STARFISH(m_starfish)
-    //         ->setCustomUserAgentString(
-    //             StarFish::String::fromUTF8(setttings.GetUserAgentString().c_str()));
-    // #ifdef STARFISH_ENABLE_HTTPCACHE
-    //     TO_STARFISH(m_starfish)
-    //         ->httpCache()
-    //         ->setCacheMode(setttings.GetCacheMode());
-    // #endif
+    TO_STARFISH(m_starfish)
+        ->setCustomUserAgentString(
+            StarFish::String::fromUTF8(setttings.GetUserAgentString().c_str()));
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    TO_STARFISH(m_starfish)
+        ->httpCache()
+        ->setCacheMode(setttings.GetCacheMode());
+#endif
 }
 void WebContainer::RemoveJavascriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName)
@@ -991,11 +948,15 @@ void WebContainer::RemoveJavascriptInterface(
     STARFISH_ASSERT(m_starfish);
     StarFish::String* objectName =
         StarFish::String::fromUTF8(exposedObjectName.c_str());
-    StarFish::String* functionName =
-        StarFish::String::fromUTF8(jsFunctionName.c_str());
-
-    StarFish::unregisterJavaScriptNativeInterface(
-        TO_SCRIPT_BINDING_INSTANCE(m_starfish), objectName, functionName);
+    if (jsFunctionName != nullptr) {
+        StarFish::String* functionName =
+            StarFish::String::fromUTF8(jsFunctionName.c_str());
+        StarFish::unregisterJavaScriptNativeInterface(
+            TO_SCRIPT_BINDING_INSTANCE(m_starfish), objectName, functionName);
+    } else {
+        StarFish::unregisterJavaScriptNativeInterface(
+            TO_SCRIPT_BINDING_INSTANCE(m_starfish), objectName);
+    }
 }
 void WebContainer::ClearCache()
 {
@@ -1056,6 +1017,10 @@ void WebContainer::UpdateBuffer(void* buffer, uint width, uint height,
     TO_STARFISH(m_starfish)
         ->platformWindow()
         ->updateDrawingBufferAddress(buffer, width, height, stride);
+}
+void WebContainer::RenderingDirectly()
+{
+    TO_STARFISH(m_starfish)->platformWindow()->rendering();
 }
 
 void WebContainer::RegisterOnRenderedHandler(
@@ -1134,7 +1099,7 @@ void WebContainer::DispatchKeyUpEvent(KeyValue keyCode, int modifier)
 }
 }
 
-#ifdef PORT_WINDOW_BACKEND_ANDROID
+#ifdef STARFISH_ANDROID
 
 static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
                             const char signature[])
@@ -1192,7 +1157,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_serviceQueueTimer(
     return ret;
 }
 
-void callOnLoadResourceHandler(LWE::WebView* view, const char* url)
+void callOnLoadResourceHandler(LWE::WebContainer* view, const char* url)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -1207,7 +1172,6 @@ void callOnLoadResourceHandler(LWE::WebView* view, const char* url)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    LOGE("OnLoadResource");
     if (!env || !g_WindowGlue.m_onLoadResource) {
         LOGE("OnLoadResource error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -1217,7 +1181,7 @@ void callOnLoadResourceHandler(LWE::WebView* view, const char* url)
                         jstr);
 }
 
-void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
+void callOnReceivedError(LWE::WebContainer* view, int errorCode, bool canGoBack,
                          bool canGoForward)
 {
     JNIEnv* env = g_WindowGlue.m_env;
@@ -1233,7 +1197,6 @@ void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    LOGE("OnReceivedError");
     if (!env || !g_WindowGlue.m_onReceivedError) {
         LOGE("OnPageStarted error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -1244,8 +1207,8 @@ void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onReceivedError,
                         jint1, jboolean1, jboolean2);
 }
-void callOnPageFinished(LWE::WebView* view, const char* url, bool canGoBack,
-                        bool canGoForward)
+void callOnPageFinished(LWE::WebContainer* view, const char* url,
+                        bool canGoBack, bool canGoForward)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -1260,7 +1223,6 @@ void callOnPageFinished(LWE::WebView* view, const char* url, bool canGoBack,
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    LOGE("OnPageFinished");
     if (!env || !g_WindowGlue.m_onPageFinished) {
         LOGE("OnPageFinished error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -1271,7 +1233,7 @@ void callOnPageFinished(LWE::WebView* view, const char* url, bool canGoBack,
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onPageFinished,
                         jstr, jboolean1, jboolean2);
 }
-void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
+void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
                        bool canGoForward)
 {
     JNIEnv* env = g_WindowGlue.m_env;
@@ -1287,7 +1249,6 @@ void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    LOGE("OnPageStarted");
     if (!env || !g_WindowGlue.m_onPageStarted) {
         LOGE("OnPageStarted error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -1382,12 +1343,11 @@ void requestRender(void* view)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    // LOGE("requestRender");
     if (!env || !g_WindowGlue.m_requestRender) {
         LOGE("reuqest render error");
         return;
     }
-    env->CallVoidMethod(g_webViews[(LWE::WebView*)view].first,
+    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
                         g_WindowGlue.m_requestRender);
 }
 
@@ -1396,64 +1356,37 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
     JNIEnv* env, jobject thiz, jint w, jint h, jfloat devicePixelRatio,
     jstring jua)
 {
-    StarFish::ScreenInfo info;
-    info.rect.setWidth(w);
-    info.rect.setHeight(h);
-    info.availableRect.setWidth(w);
-    info.availableRect.setHeight(h);
-    info.deviceScaleFactor = devicePixelRatio;
+    LWE::WebContainer* webContainer =
+        LWE::WebContainer::Create(nullptr, w, h, 0, devicePixelRatio);
 
-    const char* locale = "ko-KR";
-    const char* timezoneID = "Asia/Seoul";
-    const char* cacheDir = "/mnt/sdcard/TMP";
-    float defaultFontSizeMultiplier = 1;
+    webContainer->RegisterOnReceivedErrorHandler(
+        [](LWE::WebContainer* view, LWE::ResourceError error) -> void {
+            callOnReceivedError(view, error.GetErrorCode(), view->CanGoBack(),
+                                view->CanGoBack());
+        });
 
-    const char* cstr = env->GetStringUTFChars(jua, NULL);
-    StarFish::String* ua = StarFish::String::fromUTF8(cstr);
+    webContainer->RegisterOnPageFinishedHandler(
+        [](LWE::WebContainer* view, const std::string& url) -> void {
+            callOnPageFinished(view, url.c_str(), view->CanGoBack(),
+                               view->CanGoBack());
+        });
 
-    StarFish::StarFish* starfish = new (NoGC) StarFish::StarFish(
-        (StarFish::StarFishStartUpFlag)0, locale, timezoneID, nullptr, w, h, 0,
-        0, defaultFontSizeMultiplier, StarFish::String::fromUTF8("Roboto"),
-        info, "", "", cacheDir, ua);
-    env->ReleaseStringUTFChars(jua, cstr);
+    webContainer->RegisterOnPageStartedHandler(
+        [](LWE::WebContainer* view, const std::string& url) -> void {
+            callOnPageStarted(view, url.c_str(), view->CanGoBack(),
+                              view->CanGoBack());
+        });
 
-    LWE::WebContainer* webView = LWE::WebContainer::Create(starfish);
-    starfish->setLWEWebView((void*)webView);
-
-    // class AndroidWebViewClient : public LWE::WebViewClient {
-    //     virtual void OnReceivedError(LWE::WebView* view,
-    //                                  LWE::ResourceError error) override
-    //     {
-    //         callOnReceivedError(view, error.GetErrorCode(),
-    //         view->CanGoBack(),
-    //                             view->CanGoBack());
-    //     }
-    //     virtual void OnPageFinished(LWE::WebView* view,
-    //                                 std::string url) override
-    //     {
-    //         callOnPageFinished(view, url.c_str(), view->CanGoBack(),
-    //                            view->CanGoBack());
-    //     }
-    //     virtual void OnPageStarted(LWE::WebView* view, std::string url)
-    //     override
-    //     {
-    //         callOnPageStarted(view, url.c_str(), view->CanGoBack(),
-    //                           view->CanGoBack());
-    //     }
-    //     virtual void OnLoadResource(LWE::WebView* view,
-    //                                 std::string url) override
-    //     {
-    //         callOnLoadResourceHandler(view, url.c_str());
-    //     }
-    // };
-    // AndroidWebViewClient* client = new AndroidWebViewClient();
-    // webView->SetWebViewClient(client);
+    webContainer->RegisterOnLoadResourceHandler(
+        [](LWE::WebContainer* view, const std::string& url) -> void {
+            callOnLoadResourceHandler(view, url.c_str());
+        });
 
     jobject java_webview = env->NewGlobalRef(thiz);
     g_webViews.insert(
-        std::make_pair(webView, std::make_pair(java_webview, client)));
+        std::make_pair(webContainer, std::make_pair(java_webview, nullptr)));
 
-    return (jlong)webView;
+    return (jlong)webContainer;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1461,12 +1394,12 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Destroy(JNIEnv* env,
                                                            jobject thiz,
                                                            jlong wv)
 {
-    LWE::WebView* webView = (LWE::WebView*)wv;
-    webView->Destroy();
-    env->DeleteGlobalRef(g_webViews[webView].first);
-    delete (g_webViews[webView].second);
-    g_webViews.erase(webView);
-    delete webView;
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->Destroy();
+    env->DeleteGlobalRef(g_webViews[webContainer].first);
+    //    delete (g_webViews[webView].second);
+    g_webViews.erase(webContainer);
+    delete webContainer;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1475,10 +1408,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_resizeWebView(JNIEnv* env,
                                                                  jlong sf,
                                                                  jint w, jint h)
 {
-    // LWE::WebView* webView = (LWE::WebView*)sf;
-    // ((StarFish::StarFish*)webView->getInternalPtr())
-    //     ->platformWindow()
-    //     ->resizeTo(w, h);
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)sf;
+    webContainer->UpdateBuffer(nullptr, w, h, 0);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1491,8 +1422,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_loadUrl(JNIEnv* env,
     std::string urlString = std::string(nativeString);
     env->ReleaseStringUTFChars(url, nativeString);
 
-    LWE::WebView* webView = (LWE::WebView*)wv;
-    webView->LoadURL(urlString);
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->LoadURL(urlString);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1505,8 +1436,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_loadData(JNIEnv* env,
     std::string dataString = std::string(nativeString);
     env->ReleaseStringUTFChars(data, nativeString);
 
-    LWE::WebView* webView = (LWE::WebView*)wv;
-    webView->LoadData(dataString);
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->LoadData(dataString);
 }
 
 extern "C" JNIEXPORT jstring JNICALL
@@ -1517,8 +1448,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_EvaluateJavaScript(
     std::string dataString = std::string(nativeString);
     env->ReleaseStringUTFChars(data, nativeString);
 
-    LWE::WebView* webView = (LWE::WebView*)wv;
-    std::string result = webView->EvaluateJavaScript(dataString);
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    std::string result = webContainer->EvaluateJavaScript(dataString);
     jstring jstr = env->NewStringUTF(result.c_str());
     return jstr;
 }
@@ -1537,8 +1468,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_GoBack(JNIEnv* env,
                                                           jobject thiz,
                                                           jlong data)
 {
-    LWE::WebView* webView = (LWE::WebView*)data;
-    webView->GoBack();
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->GoBack();
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1546,8 +1477,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_GoForward(JNIEnv* env,
                                                              jobject thiz,
                                                              jlong data)
 {
-    LWE::WebView* webView = (LWE::WebView*)data;
-    webView->GoForward();
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->GoForward();
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1555,8 +1486,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Reload(JNIEnv* env,
                                                           jobject thiz,
                                                           jlong data)
 {
-    LWE::WebView* webView = (LWE::WebView*)data;
-    webView->Reload();
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->Reload();
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1564,8 +1495,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_StopLoading(JNIEnv* env,
                                                                jobject thiz,
                                                                jlong data)
 {
-    LWE::WebView* webView = (LWE::WebView*)data;
-    webView->StopLoading();
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->StopLoading();
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1573,8 +1504,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_ClearHistory(JNIEnv* env,
                                                                 jobject thiz,
                                                                 jlong data)
 {
-    LWE::WebView* webView = (LWE::WebView*)data;
-    webView->ClearHistory();
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->ClearHistory();
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1613,9 +1544,9 @@ Java_com_samsung_android_mobileservice_lwe_WebView_addJavascriptInterface(
         env->DeleteGlobalRef(ref);
     });
 
-    std::function<std::string(std::string)> NB =
+    std::function<std::string(const std::string&)> NB =
         [javaObjectRef, callback_obj, clz,
-         callback_methodID](std::string param) -> std::string {
+         callback_methodID](const std::string& param) -> std::string {
 
         JNIEnv* env = g_WindowGlue.m_env;
 
@@ -1641,8 +1572,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_addJavascriptInterface(
         return resultStr;
     };
 
-    LWE::WebView* webView = (LWE::WebView*)wv;
-    webView->AddJavaScriptInterface(objNameString, functionNameString, NB);
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->AddJavaScriptInterface(objNameString, functionNameString, NB);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1650,16 +1581,11 @@ Java_com_samsung_android_mobileservice_lwe_WebView_removeJavascriptInterface(
     JNIEnv* env, jobject thiz, jlong wv, jstring objName)
 {
     const char* nativeString = env->GetStringUTFChars(objName, 0);
-    StarFish::String* objectName = StarFish::String::fromUTF8(nativeString);
+    const std::string objectName(nativeString);
     env->ReleaseStringUTFChars(objName, nativeString);
 
-    LWE::WebView* webView = (LWE::WebView*)wv;
-    // StarFish::StarFish* starFish =
-    //     (StarFish::StarFish*)webView->getInternalPtr();
-
-    // STARFISH_ASSERT(starFish);
-    // StarFish::unregisterJavaScriptNativeInterface(
-    //     TO_SCRIPT_BINDING_INSTANCE(starFish), objectName);
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->RemoveJavascriptInterface(objectName, nullptr);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1668,7 +1594,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_rendering(JNIEnv* env,
                                                              jlong wv,
                                                              jobject bitmap)
 {
-    LWE::WebView* webView = (LWE::WebView*)wv;
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
 
     int ret;
     AndroidBitmapInfo info;
@@ -1687,14 +1613,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_rendering(JNIEnv* env,
         LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
     }
 
-    g_androidBitmapAddress = (unsigned char*)pixels;
-    g_androidBitmapWidth = info.width;
-    g_androidBitmapHeight = info.height;
-    g_androidBitmapStride = info.stride;
-
-    // ((StarFish::StarFish*)webView->getInternalPtr())
-    //     ->platformWindow()
-    //     ->rendering();
+    webContainer->UpdateBuffer(pixels, info.width, info.height, info.stride);
+    webContainer->RenderingDirectly();
 
     AndroidBitmap_unlockPixels(env, bitmap);
 }
@@ -1707,7 +1627,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_setUserAgentString(
     StarFish::String* uaString = StarFish::String::fromUTF8(nativeString);
     env->ReleaseStringUTFChars(userAgent, nativeString);
 
-    LWE::WebView* webView = (LWE::WebView*)wv;
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     // ((StarFish::StarFish*)webView->getInternalPtr())
     //     ->setCustomUserAgentString(uaString);
 }
@@ -1719,8 +1639,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_setCacheMode(JNIEnv* env,
                                                                 jint mode)
 {
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    LWE::WebView* webView = (LWE::WebView*)wv;
-// ((StarFish::StarFish*)webView->getInternalPtr())
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+// ((StarFish::StarFish*)webContainer->getInternalPtr())
 //     ->httpCache()
 //     ->setCacheMode(mode);
 #endif
@@ -1732,8 +1652,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_ClearCache(JNIEnv* env,
                                                               jlong wv)
 {
 #ifdef STARFISH_ENABLE_HTTPCACHE
-// LWE::WebView* webView = (LWE::WebView*)wv;
-// ((StarFish::StarFish*)webView->getInternalPtr())->httpCache()->clear();
+// LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+// ((StarFish::StarFish*)webContainer->getInternalPtr())->httpCache()->clear();
 #endif
 }
 
@@ -1741,68 +1661,32 @@ extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseDown(
     JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
 {
-    LWE::WebView* webView = (LWE::WebView*)data;
-    // StarFish::PlatformWindow* sf =
-    //     (StarFish::PlatformWindow*)((StarFish::StarFish*)
-    //                                     webView->getInternalPtr())
-    //         ->platformWindow();
-    // StarFish::StarFishEnterer enter(sf->starFish());
-    // StarFish::MouseData mdata(
-    //     StarFish::MouseData::MouseButtonValue::LeftButton,
-    //     StarFish::MouseData::MouseButtonsValue::LeftButtonDown,
-    //     x / sf->starFish()->screenInfo().deviceScaleFactor,
-    //     y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
-    // sf->dispatchMouseEvent(StarFish::MouseEventKind::MouseEventDown, mdata);
-    // sf->m_isMouseLbuttonDown = true;
-
-    LOGE("Mouse down=%f %f", x, y);
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->DispatchMouseDownEvent(
+        LeftButton, MouseButtonsValue::LeftButtonDown, x, y);
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseMove(
-    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
+    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y,
+    bool isLButtonPressed, bool isRButtonPressed)
 {
-    LWE::WebView* webView = (LWE::WebView*)data;
-    // StarFish::PlatformWindow* sf =
-    //     (StarFish::PlatformWindow*)((StarFish::StarFish*)
-    //                                     webView->getInternalPtr())
-    //         ->platformWindow();
-
-    // StarFish::StarFishEnterer enter(sf->starFish());
-    // // unsigned char buttons = sf->m_isMouseLbuttonDown
-    // //                       ?
-    // //                       MouseData::MouseButtonsValue::LeftButtonDown
-    // //                       : 0;
-    // unsigned char buttons =
-    //     StarFish::MouseData::MouseButtonsValue::LeftButtonDown;
-    // StarFish::MouseData mdata(
-    //     0, buttons, x / sf->starFish()->screenInfo().deviceScaleFactor,
-    //     y / sf->starFish()->screenInfo().deviceScaleFactor, 0);
-    // sf->dispatchMouseEvent(StarFish::MouseEventKind::MouseEventMove, mdata);
-
-    LOGE("Mouse move=%f %f", x, y);
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->DispatchMouseMoveEvent(
+        isLButtonPressed ? MouseButtonValue::LeftButton
+                         : MouseButtonValue::NoButton,
+        isLButtonPressed ? MouseButtonsValue::LeftButtonDown
+                         : MouseButtonsValue::NoButtonDown,
+        x, y);
 }
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseUp(
     JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
 {
-    LWE::WebView* webView = (LWE::WebView*)data;
-    // StarFish::PlatformWindow* sf =
-    //     (StarFish::PlatformWindow*)((StarFish::StarFish*)
-    //                                     webView->getInternalPtr())
-    //         ->platformWindow();
-
-    // StarFish::StarFishEnterer enter(sf->starFish());
-    // StarFish::MouseData mdata(
-    //     StarFish::MouseData::MouseButtonValue::NoButton,
-    //     StarFish::MouseData::MouseButtonsValue::NoButtonDown,
-    //     x / sf->starFish()->screenInfo().deviceScaleFactor,
-    //     y / sf->starFish()->screenInfo().deviceScaleFactor, 1);
-    // sf->dispatchMouseEvent(StarFish::MouseEventKind::MouseEventUp, mdata);
-    // sf->m_isMouseLbuttonDown = false;
-
-    LOGE("Mouse up=%f %f", x, y);
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->DispatchMouseUpEvent(MouseButtonValue::NoButton,
+                                       MouseButtonsValue::NoButtonDown, x, y);
 }
 
 #endif
