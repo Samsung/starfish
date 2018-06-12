@@ -34,6 +34,10 @@ CFLAGS_COMMON=" -g3 "
 CFLAGS_COMMON+=" -DESCARGOT "
 CFLAGS_COMMON+=" -fdata-sections -ffunction-sections " # To exclude unused code from final binary
 CFLAGS_COMMON+=" -DUSE_GET_STACKBASE_FOR_MAIN -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA " # Everything in global data is false reference
+if [[ "$2" == "gear" ]]; then
+    CFLAGS_COMMON+=" -DTIZEN "
+    echo Build for gear
+fi
 LDFLAGS_COMMON=
 
 # HOST flags : linux / wearable / mobile / tv -------------
