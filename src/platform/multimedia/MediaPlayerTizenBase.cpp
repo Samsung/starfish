@@ -70,22 +70,18 @@ int MediaPlayerTizen::playerSetPlayPosition(int& timeInMS)
                                     seekedCallback, this);
 }
 
+void MediaPlayerTizen::initCanvasSurface()
+{
+}
+
 void MediaPlayerTizen::disposePlayer()
 {
     dispose();
 }
 
-void MediaPlayerTizen::initCanvasSurface()
-{
-    m_canvasSurface =
-        CanvasSurface::create(m_container->starFish()->platformWindow(), 1, 1);
-    m_canvasSurface->clear();
-}
-
 void MediaPlayerTizen::setNativePlayerDisplayMode()
 {
-    player_set_display_mode(m_nativePlayer,
-                            PLAYER_DISPLAY_MODE_ORIGIN_OR_LETTER);
+    player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_CROPPED_FULL);
     player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_EVAS,
                        m_canvasSurface->unwrap());
 }
@@ -97,11 +93,6 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
                                  const LayoutRect& videoRect,
                                  const LayoutRect& absVideoRect)
 {
-    canvas->setColor(Unit::Color(0, 0, 0, 255));
-    canvas->drawRect(videoRect);
-    canvas->drawSurface(m_canvasSurface,
-                        Unit::Rect(videoRect.x(), videoRect.y(),
-                                   videoRect.width(), videoRect.height()));
 }
 
 void MediaPlayerTizen::updateAudioStreamInfo(MediaStream* audio,

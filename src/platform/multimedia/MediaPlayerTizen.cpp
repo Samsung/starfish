@@ -38,6 +38,8 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
+#include <Elementary.h>
+
 namespace StarFish {
 
 #define STARFISH_VIDEO_MAX_WIDTH 1920
@@ -364,6 +366,7 @@ void MediaStream::setLastBufferBytes(size_t value)
     m_lastBufferBytes = value;
 }
 
+// Fake Canvas surface for support display video with evas image object
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
@@ -388,6 +391,104 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
             player->close();
         },
         NULL, NULL, NULL);
+}
+
+class CanvasSurfaceVideo : public CanvasSurface {
+public:
+    CanvasSurfaceVideo(PlatformWindow* wnd)
+    {
+        m_buffer = (uint8_t*)malloc(4);
+        Evas_Object* wndObject = (Evas_Object*)wnd->unwrap();
+        m_imageObject =
+            evas_object_image_filled_add(evas_object_evas_get(wndObject));
+        evas_object_data_set(m_imageObject, "video", "1");
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           CanvasSurfaceVideo* s =
+                                               (CanvasSurfaceVideo*)obj;
+                                           evas_object_del(s->m_imageObject);
+                                           free(s->m_buffer);
+                                       },
+                                       NULL, NULL, NULL);
+    }
+
+    virtual void detachNativeBuffer()
+    {
+    }
+
+    void attachNativeBuffer(size_t w, size_t h)
+    {
+    }
+
+    virtual void resize(size_t w, size_t h)
+    {
+    }
+
+    virtual void* unwrap()
+    {
+        return m_imageObject;
+    }
+
+    virtual uint8_t* data()
+    {
+        return m_buffer;
+    }
+
+    virtual size_t width()
+    {
+        return 1;
+    }
+
+    virtual size_t height()
+    {
+        return 1;
+    }
+
+    virtual size_t bufferWidth()
+    {
+        return 1;
+    }
+
+    virtual size_t bufferHeight()
+    {
+        return 1;
+    }
+
+    virtual size_t imageWidth()
+    {
+        return 1;
+    }
+
+    virtual size_t imageHeight()
+    {
+        return 1;
+    }
+
+    virtual size_t pixelRatio()
+    {
+        return 1;
+    }
+
+    virtual size_t bufferStride()
+    {
+        return 4;
+    }
+
+    virtual void clear()
+    {
+        size_t end = sizeof(uint32_t);
+        memset(m_buffer, 0x00, end);
+    }
+
+protected:
+    uint8_t* m_buffer;
+    Evas_Object* m_imageObject;
+};
+
+CanvasSurface* MediaPlayerTizen::createGraphicsBuffer(size_t visibleWidth,
+                                                      size_t visibleHeight)
+{
+    return m_canvasSurface;
 }
 
 void MediaPlayerTizen::handlePlayerError()
@@ -740,7 +841,8 @@ void MediaPlayerTizen::pause()
 
 void MediaPlayerTizen::initDisplay()
 {
-    initCanvasSurface();
+    m_canvasSurface =
+        new CanvasSurfaceVideo(m_container->starFish()->platformWindow());
 }
 
 void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)
@@ -1021,6 +1123,11 @@ void MediaPlayerTizen::drawVideo(Compositor* canvas,
     if (isMSE() && playbackState() == MediaPlayer::PLAYBACK_STATE_END) {
         return;
     }
+    canvas->setColor(Unit::Color(0, 0, 0, 255));
+    canvas->drawRect(videoRect);
+    canvas->drawSurface(m_canvasSurface,
+                        Unit::Rect(videoRect.x(), videoRect.y(),
+                                   videoRect.width(), videoRect.height()));
     punchHole(canvas, videoRect, absVideoRect);
 #endif
 }
