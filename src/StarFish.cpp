@@ -647,7 +647,7 @@ void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
     if (it == m_lweWebViewHandlers.end()) {
         return;
     }
-    struct dummy {
+    struct dummy : public gc {
         std::string handlerName;
         StarFish* starFish;
         String* url;
@@ -661,12 +661,6 @@ void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
     messageLoop()->addIdler(
         nullptr,
         [](size_t, void* data) {
-            struct dummy {
-                std::string handlerName;
-                StarFish* starFish;
-                String* url;
-                int errorCode;
-            };
             dummy* d = (dummy*)data;
             auto it = d->starFish->m_lweWebViewHandlers.find(d->handlerName);
             if (it != d->starFish->m_lweWebViewHandlers.end()) {

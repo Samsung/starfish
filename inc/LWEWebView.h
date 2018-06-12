@@ -37,9 +37,9 @@ namespace LWE {
 class LWE_EXPORT Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
-    std::string GetDefaultUserAgent();
-    std::string GetUserAgentString();
-    int GetCacheMode();
+    std::string GetDefaultUserAgent() const;
+    std::string GetUserAgentString() const;
+    int GetCacheMode() const;
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
 
@@ -106,7 +106,7 @@ private:
 class LWE_EXPORT WebContainer {
 public:
     static WebContainer* Create(void* buffer, uint width, uint height,
-                                uint stride);
+                                uint stride, float scaleFactor);
 
     Settings GetSettings();
     void LoadURL(const std::string& url);
@@ -139,6 +139,7 @@ public:
         const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
 
     void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
+    void RenderingDirectly();
     void RegisterOnRenderedHandler(
         const std::function<void(LWE::WebContainer*, void*)>& cb);
 
