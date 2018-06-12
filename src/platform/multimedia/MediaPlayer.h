@@ -32,9 +32,11 @@
 #include <sys/syscall.h>
 #include <pthread.h>
 
-#define PLAYER_LOGI(...)                                         \
-    STARFISH_LOG_INFO("[PLAYER_LOG|%ld] ", syscall(SYS_gettid)); \
-    STARFISH_LOG_INFO(__VA_ARGS__);
+#define PLAYER_LOGI(STR, ...) \
+    STARFISH_LOG_INFO(        \
+        "[PLAYER_LOG|%ld] "   \
+        "" STR,               \
+        syscall(SYS_gettid), ##__VA_ARGS__);
 #define PLAYER_LOGE(...) PLAYER_LOGI(__VA_ARGS__)
 #else
 #define PLAYER_LOGI(...)
@@ -47,6 +49,7 @@ class Canvas;
 class CanvasSurface;
 class Compositor;
 class MediaSource;
+class Mutex;
 class URL;
 class Window;
 
@@ -92,10 +95,8 @@ public:
     virtual void setVolume(double volume) = 0;
     virtual void setMuted(bool muted) = 0;
 
-    PlaybackState playbackState()
-    {
-        return m_playbackState;
-    }
+    PlaybackState playbackState();
+    void setPlaybackState(PlaybackState state);
 
     virtual void drawVideo(Compositor* canvas, const LayoutRect& videoRect,
                            const LayoutRect& absVideoRect) = 0;
@@ -159,6 +160,7 @@ protected:
     MediaSource* m_activeMediaSource;
     volatile unsigned long m_videoWidth, m_videoHeight;
     size_t m_currentTimeUpdateTimer;
+    Mutex* m_playerStateMutex;
 };
 }
 #endif

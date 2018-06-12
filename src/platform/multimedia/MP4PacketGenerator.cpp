@@ -24,10 +24,11 @@
 #include "platform/multimedia/PacketGenerator.h"
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
-#define MP4PACKET_GENERATOR_LOG(pg, ...)                \
-    STARFISH_LOG_INFO("[PacketGenerator|%s] ",          \
-                      mediaCodecToString(pg->codec())); \
-    STARFISH_LOG_INFO(__VA_ARGS__);
+#define MP4PACKET_GENERATOR_LOG(pg, STR, ...) \
+    STARFISH_LOG_INFO(                        \
+        "[PacketGenerator|%s] "               \
+        "" STR,                               \
+        mediaCodecToString(pg->codec()), ##__VA_ARGS__);
 #else
 #define MP4PACKET_GENERATOR_LOG(pg, ...)
 #endif

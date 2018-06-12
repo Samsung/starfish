@@ -185,6 +185,8 @@ public:
         int s;
         int ret = player_get_play_position(m_nativePlayer, &s);
         if (ret) {
+            PLAYER_LOGI("player_get_play_position: failed\n");
+            printNativePlayerError(ret);
             return 0;
         }
         return s / 1000.0;
@@ -248,6 +250,7 @@ protected:
                                      StreamInfo* info);
     void setMediaFormatExtraForAudio(media_format_h& mediaFormat,
                                      StreamInfo* info);
+    void videoFramerateChanged(MediaStream* stream, int num, int den);
 };
 }
 

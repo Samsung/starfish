@@ -42,9 +42,11 @@
 #include "platform/multimedia/MediaPlayer.h"
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
-#define MEDIA_ELEMENT_LOG(element, ...)               \
-    STARFISH_LOG_INFO("[MediaElement|%p] ", element); \
-    STARFISH_LOG_INFO(__VA_ARGS__);
+#define MEDIA_ELEMENT_LOG(element, STR, ...) \
+    STARFISH_LOG_INFO(                       \
+        "[MediaElement|%p] "                 \
+        "" STR,                              \
+        element, ##__VA_ARGS__);
 #else
 #define MEDIA_ELEMENT_LOG(element, ...)
 #endif

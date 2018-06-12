@@ -104,21 +104,14 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
                                    videoRect.width(), videoRect.height()));
 }
 
-void MediaPlayerTizen::updateStreamInfo(MediaStream* stream,
-                                        size_t pastInitIndex,
-                                        size_t newInitIndex)
-{
-}
-
 void MediaPlayerTizen::updateAudioStreamInfo(MediaStream* audio,
                                              size_t pastInitIndex,
                                              size_t newInitIndex)
 {
 }
 
-void MediaPlayerTizen::updateVideoStreamInfo(MediaStream* video,
-                                             size_t pastInitIndex,
-                                             size_t newInitIndex)
+void MediaPlayerTizen::videoFramerateChanged(MediaStream* stream, int num,
+                                             int den)
 {
 }
 

@@ -43,6 +43,7 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     , m_videoWidth(STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS)
     , m_videoHeight(STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS)
     , m_currentTimeUpdateTimer(SIZE_MAX)
+    , m_playerStateMutex(new Mutex())
 {
 }
 
@@ -96,6 +97,18 @@ uint64_t MediaPlayer::activeStreamIndex(StreamType type)
 bool MediaPlayer::isMSE()
 {
     return m_activeMediaSource;
+}
+
+MediaPlayer::PlaybackState MediaPlayer::playbackState()
+{
+    Locker<Mutex> locker(*m_playerStateMutex);
+    return m_playbackState;
+}
+
+void MediaPlayer::setPlaybackState(MediaPlayer::PlaybackState state)
+{
+    Locker<Mutex> locker(*m_playerStateMutex);
+    m_playbackState = state;
 }
 }
 #endif /* STARFISH_ENABLE_MULTIMEDIA */
