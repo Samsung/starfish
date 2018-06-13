@@ -9058,6 +9058,12 @@ static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
 {
     for (size_t i = 0; i < tokens.size(); i++) {
         auto ss = tokens[i].trim();
+        if (ss == "auto") {
+            GridLength g;
+            v->push_back(g);
+            continue;
+        }
+
         CSSPropertyParser parser((char*)ss.data(), ss.length());
 
         bool hasPoint = false;

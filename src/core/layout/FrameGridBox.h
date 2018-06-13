@@ -92,6 +92,11 @@ public:
         m_containing = contain;
     }
 
+    void setAuto(bool isAuto)
+    {
+        m_isAuto = isAuto;
+    }
+
     bool isFixed()
     {
         return m_fixed;
@@ -112,6 +117,11 @@ public:
         return m_state == Fr;
     }
 
+    bool isAuto()
+    {
+        return m_isAuto;
+    }
+
     bool isContaining()
     {
         return m_containing;
@@ -122,6 +132,7 @@ public:
         : m_offset(0)
         , m_fr(fr)
         , m_computed(computed)
+        , m_isAuto(false)
         , m_fixed(true)
         , m_newLine(false)
         , m_state(Fr)
@@ -133,6 +144,7 @@ public:
         : m_offset(offset)
         , m_fr(0)
         , m_computed(true)
+        , m_isAuto(false)
         , m_fixed(true)
         , m_newLine(false)
         , m_state(Fixed)
@@ -144,6 +156,7 @@ private:
     LayoutUnit m_offset;
     LayoutUnit m_fr;
     bool m_computed;
+    bool m_isAuto;
     bool m_fixed;
     bool m_newLine;
     enum GridLineState {
