@@ -179,7 +179,8 @@ Document* DOMParser::parseFromString(String* str, String* type)
         }
     } else {
         COMPOSE_MESSAGE(reason, ARG_TYPE_MISMATCH_WITH_ENUM, "SupportedType");
-        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "parseFromString", "DOMParser");
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "parseFromString", "DOMParser",
+                        reason);
         throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR, msg);
     }
 }
