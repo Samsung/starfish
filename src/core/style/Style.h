@@ -2882,12 +2882,26 @@ public:
 
     void* allocateComputedStyle();
 
+    void markInDisplayNone()
+    {
+        m_inDisplayNone++;
+    }
+    void unmarkInDisplayNone()
+    {
+        m_inDisplayNone--;
+    }
+    size_t InDisplayNone()
+    {
+        return m_inDisplayNone;
+    }
+
     Document* m_document;
     std::unique_ptr<AncestorSelectorFilter> m_ancestorSelectorFilter;
     GCVector<ComputedStyle*> m_computedStylePool;
 #ifndef NDEBUG
     std::set<ComputedStyle*> m_dbg;
 #endif
+    size_t m_inDisplayNone;
 };
 
 class StyleResolver : public DocumentHoldable, public gc {
