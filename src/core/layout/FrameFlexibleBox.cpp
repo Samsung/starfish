@@ -114,12 +114,7 @@ void FlexFormattingContext::computeMainSize()
     while (child) {
         if (child->isFlexItem()) {
             orderedFlexItems.push_back(child->asFrameBox());
-        } else {
-            // to register absolute positioned box
-            child->layout(m_layoutContext,
-                          Frame::LayoutWantToResolve::ResolveAll);
         }
-
         child = child->next();
     }
 
@@ -1237,5 +1232,14 @@ void FrameFlexibleBox::layoutFlex(LayoutContext& ctx)
 
     flexFormattingContext.layoutMain();
     flexFormattingContext.layoutCross();
+
+    Frame* child = firstChild();
+    while (child) {
+        if (!child->isFlexItem()) {
+            // to register absolute positioned box
+            child->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+        }
+        child = child->next();
+    }
 }
 }

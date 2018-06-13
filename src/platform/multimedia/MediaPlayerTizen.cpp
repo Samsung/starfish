@@ -414,6 +414,7 @@ public:
 
     virtual void detachNativeBuffer()
     {
+        evas_object_hide(m_imageObject);
     }
 
     void attachNativeBuffer(size_t w, size_t h)

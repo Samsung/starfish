@@ -1940,7 +1940,9 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                 ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         } else {
             damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+                ComputedStyleDamage::
+                    ComputedStyleDamageEstablishesStackingContext |
+                damage);
         }
     }
 
@@ -2017,16 +2019,9 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     if (newTransforms == nullptr && oldTransforms == nullptr) {
     } else if (newTransforms == nullptr || oldTransforms == nullptr) {
         damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;
-        // FIXME if element has transform, we should re-layout for building
-        // stacking-context
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::
-                ComputedStyleDamageComputeStackingContextProperties |
+            ComputedStyleDamage::ComputedStyleDamageEstablishesStackingContext |
             damage);
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     } else {
         if (*newTransforms != *oldTransforms) {
             damagedKeys[CSSStyleValuePair::KeyKind::Transform] = true;

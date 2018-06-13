@@ -91,6 +91,7 @@ WebView::WebView(StarFish* starFish)
     , m_currentActiveAnimatorCount(0)
     , m_inRendering(false)
     , m_needsRendering(false)
+    , m_needsEstablishesStackingContext(false)
     , m_needsComputeStackingContextProperties(false)
     , m_needsPainting(false)
     , m_needsComposite(false)
@@ -494,10 +495,15 @@ void WebView::layoutIfNeeds()
 
         m_didLayoutCallbacks.clear();
 
+        if (didLayout) {
+            m_needsEstablishesStackingContext = true;
+        }
         break;
     }
 
-    if (didLayout || !m_rootStackingContext) {
+    if (didLayout || !m_rootStackingContext ||
+        m_needsEstablishesStackingContext) {
+        clearStackingContext(true);
 #ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableComputedStyleDump) {
@@ -524,6 +530,7 @@ void WebView::layoutIfNeeds()
         } else {
             m_rootStackingContext = nullptr;
         }
+        m_needsEstablishesStackingContext = false;
         setNeedsComputeStackingContextProperties();
     }
 
@@ -595,7 +602,7 @@ void WebView::layoutIfNeeds()
                                 ", frame %p, buf? %d painting %d opacity %f "
                                 "visibleRect "
                                 "%d "
-                                "%d %d %d]\n",
+                                "%d %d %d]",
                                 ctx, element, utf8DataLog1.data(),
                                 utf8DataLog2.data(), className.data(),
                                 ctx->owner(), (int)ctx->needsGraphicsBuffer(),
@@ -607,13 +614,20 @@ void WebView::layoutIfNeeds()
                                 "StackingContext[%p, anonymous node"
                                 ", frame %p, buf %d painting %d opacity %f "
                                 "visibleRect %d "
-                                "%d %d %d]\n",
+                                "%d %d %d]",
                                 ctx, ctx->owner(),
                                 (int)ctx->needsGraphicsBuffer(),
                                 (int)ctx->needsRepainting(),
                                 ctx->owner()->style()->opacity(), (int)fr.x(),
                                 (int)fr.y(), (int)fr.width(), (int)fr.height());
                         }
+
+                        SkMatrix m = ctx->transformMatrix();
+                        printf("matrix [%f %f %f][%f %f %f][%f %f %f]",
+                               m.getScaleX(), m.getSkewX(), m.getTranslateX(),
+                               m.getSkewY(), m.getScaleY(), m.getTranslateY(),
+                               m.getPerspX(), m.getPerspY(), m.get(8));
+                        printf("\n");
 
                         auto iter = ctx->childContexts().begin();
                         while (iter != ctx->childContexts().end()) {
