@@ -147,6 +147,7 @@ protected:
     bool canComposite(ComputeStackingContextContext& ctx);
 
     bool m_needsRepainting;
+    bool m_catchedMatrixChangedWhileComputeStackingContextProperties;
     FrameBox* m_owner;
     StackingContext* m_parent;
     GCVector<StackingContextChild*> m_childContexts;

@@ -6475,6 +6475,11 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         }
 
         if (damage & ComputedStyleDamage::
+                         ComputedStyleDamageEstablishesStackingContext) {
+            element->webView()->setNeedsEstablishesStackingContext();
+        }
+
+        if (damage & ComputedStyleDamage::
                          ComputedStyleDamageComputeStackingContextProperties) {
             element->webView()->setNeedsComputeStackingContextProperties();
         }

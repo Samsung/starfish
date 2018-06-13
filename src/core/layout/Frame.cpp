@@ -730,9 +730,6 @@ void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
         const auto& boxes = iter->second;
         for (size_t i = 0; i < boxes.size(); i++) {
             FrameBox* box = boxes[i];
-            if (isQuickLayout() && !box->needsLayout()) {
-                continue;
-            }
             box->layout(*this, Frame::LayoutWantToResolve::ResolveAll);
         }
         m_absolutePositionedBoxes.erase(iter);

@@ -94,7 +94,11 @@ class CanvasCairo : public Canvas {
 
     void init()
     {
+#ifdef STARFISH_ENABLE_TEST
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_FAST);
+#else
+        cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_GOOD);
+#endif
     }
 
 public:

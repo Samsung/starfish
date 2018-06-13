@@ -149,6 +149,14 @@ public:
         }
     }
 
+    void setNeedsEstablishesStackingContext()
+    {
+        if (!m_needsEstablishesStackingContext) {
+            m_needsEstablishesStackingContext = true;
+            setNeedsRendering();
+        }
+    }
+
     void markNeedsPaintingConsiderInRendering()
     {
         if (!m_needsPainting) {
@@ -232,6 +240,7 @@ private:
     uint32_t m_currentActiveAnimatorCount;
     bool m_inRendering;
     bool m_needsRendering;
+    bool m_needsEstablishesStackingContext;
     bool m_needsComputeStackingContextProperties;
     bool m_needsPainting;
     bool m_needsComposite;

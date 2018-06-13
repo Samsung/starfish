@@ -253,6 +253,7 @@ void* StackingContextRareData::operator new(size_t size)
 
 StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     : m_needsRepainting(true)
+    , m_catchedMatrixChangedWhileComputeStackingContextProperties(false)
     , m_owner(owner)
     , m_parent(parent)
     , m_rareData(nullptr)
@@ -689,7 +690,8 @@ void StackingContext::computeTransformMatrix()
 #endif
 
         if (!m_rareData->m_matrix.isIdentity()) {
-            /* STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
+            /*
+            STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
                                m_rareData->m_matrix.getScaleX(),
                                m_rareData->m_matrix.getSkewX(),
                                m_rareData->m_matrix.getTranslateX(),
@@ -820,7 +822,11 @@ void StackingContext::computeStackingContextProperties(
     ComputeStackingContextContext& compositingState,
     StackingContext* ancestorLayer, bool& descendantHas3DTransform)
 {
+    auto oldMatrix = transformMatrix();
     computeTransformMatrix();
+    if (oldMatrix != transformMatrix()) {
+        m_catchedMatrixChangedWhileComputeStackingContextProperties = true;
+    }
 
     // OverlapExtent layerExtent;
     // Use the fact that we're composited as a hint to check for an animating
@@ -1120,8 +1126,13 @@ void StackingContext::applyStackingContextProperties(
         }
     } else if (compositedBefore && compositedBefore == willBeComposited) {
         m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
+    } else if (!compositedBefore && !willBeComposited) {
+        if (m_catchedMatrixChangedWhileComputeStackingContextProperties) {
+            m_owner->node()->setNeedsPainting();
+        }
     }
 
+    m_catchedMatrixChangedWhileComputeStackingContextProperties = false;
     if (willBeComposited) {
         ensureRareData()->m_needsGraphicsBuffer = true;
     } else {
