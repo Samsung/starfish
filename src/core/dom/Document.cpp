@@ -596,9 +596,9 @@ void Document::notifyDomContentLoaded()
         STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
         if (m_compatibilityMode != NoQuirksMode) {
             std::string s;
-            if (m_documentURI->urlString()->length() > 32) {
+            if (m_documentURI->urlString()->length() > 128) {
                 s = m_documentURI->urlString()
-                        ->substring(0, 32)
+                        ->substring(0, 128)
                         ->toUTF8NonGCString();
                 s += "...";
             } else {

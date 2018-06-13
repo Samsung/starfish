@@ -600,21 +600,44 @@ void LayoutContext::registerLineBoxAscender(FrameBlockBox* blockBox,
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
     for (size_t i = 0; i < c.m_inlineBlockBoxStack->size(); i++) {
-        FrameBlockBox* blockBox = (*c.m_inlineBlockBoxStack)[i];
+        FrameBlockBox* blockBoxInStack = (*c.m_inlineBlockBoxStack)[i];
         auto& lineBoxAscenders = (*c.m_lineBoxAscenders);
-        if (blockBox->style()->verticalAlign() == BaselineVAlignValue ||
-            blockBox->style()->verticalAlign() == NumericVAlignValue) {
-            if (blockBox->isFrameFlexibleBox() || blockBox->isFrameGridBox() ||
-                blockBox->isFrameTableCellBox()) {
-                auto iter = lineBoxAscenders.find(blockBox);
+        if (blockBoxInStack->style()->verticalAlign() == BaselineVAlignValue ||
+            blockBoxInStack->style()->verticalAlign() == NumericVAlignValue) {
+            if (blockBoxInStack->isFrameFlexibleBox() ||
+                blockBoxInStack->isFrameGridBox() ||
+                blockBoxInStack->isFrameTableCellBox()) {
+                auto iter = lineBoxAscenders.find(blockBoxInStack);
                 if (iter == lineBoxAscenders.end()) {
-                    lineBoxAscenders[blockBox] =
-                        lb->absolutePoint(blockBox).y() + ascender;
+                    if (isQuickLayout()) {
+                        LayoutUnit l;
+                        Frame* p = lb;
+                        while (blockBoxInStack != p) {
+                            l += p->asFrameBox()->y();
+                            l += -p->asFrameBox()->marginTop();
+                            p = p->layoutParent();
+                        }
+                        lineBoxAscenders[blockBoxInStack] = l + ascender;
+                    } else {
+                        lineBoxAscenders[blockBoxInStack] =
+                            lb->absolutePoint(blockBoxInStack).y() + ascender;
+                    }
                 }
-            } else if (blockBox->style()->display() ==
+            } else if (blockBoxInStack->style()->display() ==
                        InlineBlockDisplayValue) {
-                lineBoxAscenders[blockBox] =
-                    lb->absolutePoint(blockBox).y() + ascender;
+                if (isQuickLayout()) {
+                    LayoutUnit l;
+                    Frame* p = lb;
+                    while (blockBoxInStack != p) {
+                        l += p->asFrameBox()->y();
+                        l += -p->asFrameBox()->marginTop();
+                        p = p->layoutParent();
+                    }
+                    lineBoxAscenders[blockBoxInStack] = l + ascender;
+                } else {
+                    lineBoxAscenders[blockBoxInStack] =
+                        lb->absolutePoint(blockBoxInStack).y() + ascender;
+                }
             }
         }
     }

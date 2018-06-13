@@ -375,6 +375,11 @@ private:
                 return true;
             }
 
+            if (m_seenAbsBlock) {
+                return false;
+            }
+            m_seenAbsBlock = m_seenAbsBlock || parent->isAbsolutePositioned();
+
             if (m_child->isAbsolutePositioned()) {
                 if (m_seenContainingBlockForAbsBlock) {
                     return parent->shouldApplyOverflow();
@@ -384,12 +389,6 @@ private:
                 m_seenContainingBlockForAbsBlock =
                     m_seenContainingBlockForAbsBlock || b;
                 return b && parent->shouldApplyOverflow();
-            } else {
-                if (m_seenAbsBlock) {
-                    return false;
-                }
-                m_seenAbsBlock =
-                    m_seenAbsBlock || parent->isAbsolutePositioned();
             }
 
             return parent->shouldApplyOverflow();
