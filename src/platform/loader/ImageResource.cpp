@@ -172,16 +172,32 @@ void ImageResource::didLoadFinished()
     }
 
     if (isSVG) {
-        // FIXME
-        // content of SVGDocument loaded twice from ImageResource &
-        // HTMLIFrameElement
-        m_mockFrameForSVGDocument =
-            new MockHTMLIFrameElement(loader()->document(), this);
-        m_mockFrameForSVGDocument->navigate(
-            url(), HistoryManager::Action::Add,
-            loader()->document()->documentURI());
-        m_imageData = nullptr;
-        return;
+        TextConverter* converter =
+            new TextConverter(m_resourceRequest->responseMimeType(),
+                              m_resourceRequest->document()->characterSet(),
+                              m_resourceRequest->response().data(),
+                              m_resourceRequest->response().size());
+        String* resposeText =
+            converter->convert(m_resourceRequest->response().data(),
+                               m_resourceRequest->response().size(), true);
+
+        // TODO enhance this heuristic algorithm
+        String* testText = resposeText->substring(
+            0, resposeText->length() > 128 ? 128 : resposeText->length());
+        if (testText->contains("<svg") || testText->startsWith("<?xml")) {
+            auto resposeTextUTF8 = resposeText->toUTF8NonGCString();
+            auto dataURI =
+                StringUtils::toBase64HTMLDataURI(resposeTextUTF8, "svg");
+            m_mockFrameForSVGDocument =
+                new MockHTMLIFrameElement(loader()->document(), this);
+            m_mockFrameForSVGDocument->navigate(
+                new ResourceURL(
+                    String::fromUTF8(dataURI.data(), dataURI.length())),
+                HistoryManager::Action::Add,
+                loader()->document()->documentURI());
+            m_imageData = nullptr;
+            return;
+        }
     }
 #if defined(PORT_CANVAS_BACKEND_EFL)
     if (!m_url->isFileURL()) {

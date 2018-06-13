@@ -1270,6 +1270,58 @@ std::vector<std::string> StringUtils::split(const std::string& s,
     return output;
 }
 
+std::string StringUtils::toBase64HTMLDataURI(const std::string& src,
+                                             const std::string& type)
+{
+    size_t dataLength = src.length();
+    const char* originData = src.c_str();
+    std::string dataURI = "data:text/" + type + ";charset=utf-8;base64,";
+    std::string base64Chars =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    int i = 0, j = 0;
+    unsigned char charArray3[3];
+    unsigned char charArray4[4];
+
+    while (dataLength--) {
+        charArray3[i++] = *(originData++);
+        if (i == 3) {
+            charArray4[0] = (charArray3[0] & 0xfc) >> 2;
+            charArray4[1] =
+                ((charArray3[0] & 0x03) << 4) + ((charArray3[1] & 0xf0) >> 4);
+            charArray4[2] =
+                ((charArray3[1] & 0x0f) << 2) + ((charArray3[2] & 0xc0) >> 6);
+            charArray4[3] = charArray3[2] & 0x3f;
+
+            for (i = 0; (i < 4); i++) {
+                dataURI += base64Chars[charArray4[i]];
+            }
+            i = 0;
+        }
+    }
+
+    if (i) {
+        for (j = i; j < 3; j++) {
+            charArray3[j] = '\0';
+        }
+
+        charArray4[0] = (charArray3[0] & 0xfc) >> 2;
+        charArray4[1] =
+            ((charArray3[0] & 0x03) << 4) + ((charArray3[1] & 0xf0) >> 4);
+        charArray4[2] =
+            ((charArray3[1] & 0x0f) << 2) + ((charArray3[2] & 0xc0) >> 6);
+        charArray4[3] = charArray3[2] & 0x3f;
+
+        for (j = 0; (j < i + 1); j++) {
+            dataURI += base64Chars[charArray4[j]];
+        }
+
+        while ((i++ < 3)) {
+            dataURI += '=';
+        }
+    }
+    return dataURI;
+}
+
 int utf32ToUtf16(char32_t i, char16_t* u)
 {
     if (i <= 0xffff) {
