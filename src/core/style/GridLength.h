@@ -26,6 +26,13 @@ namespace StarFish {
 
 class GridLength : public gc {
 public:
+    GridLength()
+        : m_length(Length())
+        , m_fr(0)
+        , m_type(LengthType)
+    {
+    }
+
     GridLength(const Length& length)
         : m_length(length)
         , m_fr(0)

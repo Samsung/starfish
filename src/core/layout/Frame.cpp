@@ -1690,6 +1690,10 @@ bool Frame::shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
                 markNeedsLayout();
                 return true;
             }
+
+            if (isFrameTableBox() && style->width().isPercent()) {
+                return true;
+            }
         }
 
         if (isLayoutDamaged(damager, style->minWidth()) ||

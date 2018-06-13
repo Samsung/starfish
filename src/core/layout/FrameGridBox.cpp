@@ -992,6 +992,10 @@ void GridFormattingContext::buildGridLineTemplate()
                 Length length = gridLength.length();
                 GridLine line = GridLine(length.numberData());
                 m_gridLineColumns.push_back(line);
+            } else if (gridLength.isAuto()) {
+                GridLine line = GridLine(0);
+                line.setAuto(true);
+                m_gridLineColumns.push_back(line);
             } else if (gridLength.isFr()) {
                 double value = gridLength.fr();
 
@@ -1033,6 +1037,32 @@ void GridFormattingContext::buildGridLineTemplate()
     applyFrUnitsWithColumns();
 
     arrangeGridLinesWithGridAreas(true);
+
+    // Distribute 'auto' size;
+    LayoutUnit sumOfColumn = 0;
+    size_t numberOfAuto = 0;
+    for (size_t i = 0; i < m_gridLineColumns.size(); i++) {
+        sumOfColumn += m_gridLineColumns[i].offset();
+        if (m_gridLineColumns[i].isAuto()) {
+            numberOfAuto++;
+        }
+    }
+
+    sumOfColumn += (m_gridLineColumns.size() - 2) * m_columnGap;
+
+    if (numberOfAuto) {
+        LayoutUnit remainingWidth =
+            (m_availableWidth - sumOfColumn) / numberOfAuto;
+        if (remainingWidth > 0) {
+            for (size_t i = 0; i < m_gridLineColumns.size(); i++) {
+                if (m_gridLineColumns[i].isAuto()) {
+                    LayoutUnit w =
+                        m_gridLineColumns[i].offset() + remainingWidth;
+                    m_gridLineColumns[i].setOffset(w, true);
+                }
+            }
+        }
+    }
 
     applyFrUnitsWithColumns();
 
