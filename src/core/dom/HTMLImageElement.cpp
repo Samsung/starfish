@@ -231,8 +231,14 @@ void HTMLImageElement::loadImage(String* src)
         new ElementResourceClient(this, m_imageResource));
     ResourceURL* rUrl =
         new ReferrerURL(document()->documentURI(), referrerPolicy());
-    m_imageResource->request(
-        Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded, rUrl, true);
+    if (rUrl->isFileURL()) {
+        m_imageResource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
+                                 rUrl, true);
+    } else {
+        m_imageResource->request(
+            Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded, rUrl,
+            true);
+    }
 }
 
 String* HTMLImageElement::referrerPolicy()
