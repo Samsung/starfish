@@ -1850,6 +1850,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 StyleResolveContext::StyleResolveContext(Document* document)
     : m_document(document)
     , m_ancestorSelectorFilter(new AncestorSelectorFilter())
+    , m_inDisplayNone(0)
 {
 }
 
@@ -6408,7 +6409,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                 ComputedStyleDamage::ComputedStyleDamageInherited |
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
         } else {
-            if (!element->frame()) {
+            if (!element->frame() && !ctx.InDisplayNone()) {
                 damage = (ComputedStyleDamage)(
                     ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
             }
@@ -6532,6 +6533,12 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 {
     ComputedStyle* childTextNodeStyle = nullptr;
     bool inheritedStyleChangedForTextNode = inheritedStyleChanged;
+    bool isParentDisplayNone = false;
+    if (parentElementStyle &&
+        parentElementStyle->display() == NoneDisplayValue) {
+        isParentDisplayNone = true;
+        ctx.markInDisplayNone();
+    }
 
     if (parentElement->isElement()) {
         ctx.m_ancestorSelectorFilter->pushElement(parentElement->asElement());
@@ -6618,6 +6625,10 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 
     if (parentElement->isElement()) {
         ctx.m_ancestorSelectorFilter->popElement();
+    }
+
+    if (isParentDisplayNone) {
+        ctx.unmarkInDisplayNone();
     }
 }
 
