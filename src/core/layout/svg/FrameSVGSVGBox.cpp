@@ -138,7 +138,6 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
 
 void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 {
-    canvas->setNeedsGoodQualityAntialias();
 #if defined(PORT_CANVAS_BACKEND_EFL)
     Canvas* outerCanvas = canvas;
     outerCanvas->save();
@@ -184,6 +183,7 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
                            Unit::Rect(0, 0, contentWidth(), contentHeight()));
     outerCanvas->restore();
 #else
+    canvas->setNeedsGoodQualityAntialias();
     canvas->save();
     canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
     canvas->clip(Unit::Rect(0, 0, contentWidth(), contentHeight()));
@@ -241,7 +241,7 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
     }
 
     canvas->restore();
-#endif
     canvas->setNeedsFastAntialias();
+#endif
 }
 }

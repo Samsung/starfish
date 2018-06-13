@@ -595,7 +595,15 @@ void Document::notifyDomContentLoaded()
 
         STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
         if (m_compatibilityMode != NoQuirksMode) {
-            auto s = m_documentURI->urlString()->toUTF8NonGCString();
+            std::string s;
+            if (m_documentURI->urlString()->length() > 32) {
+                s = m_documentURI->urlString()
+                        ->substring(0, 32)
+                        ->toUTF8NonGCString();
+                s += "...";
+            } else {
+                s = m_documentURI->urlString()->toUTF8NonGCString();
+            }
             STARFISH_LOG_ERROR(
                 "WARNING: No doctype is found or quirks mode is given in %s\n"
                 "WARNING: Please make sure the document starts with "

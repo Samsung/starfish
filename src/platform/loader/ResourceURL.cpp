@@ -329,7 +329,7 @@ bool ResourceURL::isValidURL(String* url)
     // For the time being, we check for valid characters only.
     if (!(url->startsWith("http://") || url->startsWith("https://") ||
           url->startsWith("file://") || url->startsWith("blob://") ||
-          url->startsWith("data://") || url->startsWith("about:"))) {
+          url->startsWith("data:") || url->startsWith("about:"))) {
         return false;
     }
 
