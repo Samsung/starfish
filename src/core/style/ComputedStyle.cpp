@@ -2034,6 +2034,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                 ComputedStyleDamage::
                     ComputedStyleDamageComputeStackingContextProperties |
                 damage);
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         }
     }
 
