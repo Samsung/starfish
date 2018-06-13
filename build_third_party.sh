@@ -25,7 +25,7 @@ if [ "$arch" == "x64" ]; then
     cd $STARFISH_ROOT
     ./build/build_gc.sh
 
-#TODO libtuv for x64 
+#TODO libtuv for x64
 
 elif [ "$arch" == "arm" ]; then
     #cd $STARFISH_ROOT
@@ -44,7 +44,7 @@ elif [ "$arch" == "arm" ]; then
     cd $STARFISH_ROOT
     cd third_party/libtuv
     make clean
-    TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
+    TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
     cd -
 else
     echo "Unknown option"
