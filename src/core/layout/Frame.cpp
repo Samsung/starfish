@@ -701,6 +701,13 @@ void LayoutContext::tempReigsterFirstLineAscender(
     FrameTableCellBox* cellBox, std::pair<LineBox*, LayoutUnit> ascenderInfo)
 {
     BlockFormattingContext& c = m_blockFormattingContextInfo.back();
+
+    auto iter = (*c.m_tempAscenders).find(cellBox);
+
+    if (iter != (*c.m_tempAscenders).end()) {
+        (*c.m_tempAscenders).erase(iter);
+    }
+
     (*c.m_tempAscenders).insert(std::make_pair(cellBox, ascenderInfo));
 }
 
