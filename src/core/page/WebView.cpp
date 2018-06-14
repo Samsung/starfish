@@ -131,6 +131,7 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->dispose();
     }
+    starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
     m_topLevelBrowsingContext = BrowsingContext::create(starFish(), this);
     m_topLevelBrowsingContext->open(url, type, referrerURL);
     starFish()->callWebViewHandler(std::string("OnPageStarted"),

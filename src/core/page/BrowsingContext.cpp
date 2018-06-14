@@ -673,7 +673,7 @@ void BrowsingContext::dispose()
 
     if (isTopLevelBrowsingContext()) {
         m_starFish->platformWindow()->clearResources();
-        m_starFish->messageLoop()->clearPendingIdlers(nullptr);
+        m_starFish->messageLoop()->clearPendingIdlers(this);
         webView()->clearStackingContext(false);
 
         m_webView->initRenderingFlags();
