@@ -76,3 +76,6 @@
 [submodule "third_party/windows/zlib"]
 	path = third_party/windows/zlib
 	url = git@github.sec.samsung.net:RS8-webtf-sub/zlib.git
+[submodule "test_new"]
+	path = test_new
+	url = git@github.sec.samsung.net:RS8-webtf-test/web_tc_new.git
