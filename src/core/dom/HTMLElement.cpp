@@ -103,6 +103,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_click, value, this);
     } else if (name == ss->m_onchange) {
         setAttributeEventListener(ss->m_change, value, this);
+    } else if (name == ss->m_onmouseout) {
+        setAttributeEventListener(ss->m_mouseout, value, this);
     } else if (name == ss->m_onmouseover) {
         setAttributeEventListener(ss->m_mouseover, value, this);
     } else if (name == ss->m_onmouseup) {
