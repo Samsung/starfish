@@ -33,8 +33,7 @@ void* CharacterData::operator new(size_t size)
     static GC_descr descr;
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(CharacterData)] = { 0 };
-        Node::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(CharacterData, m_data));
+        CharacterData::fillGCDescriptor(desc);
         descr = GC_make_descriptor(desc, GC_WORD_LEN(CharacterData));
         typeInited = true;
     }

@@ -54,7 +54,31 @@ public:
         return m_target;
     }
 
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(ProcessingInstruction));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(ProcessingInstruction)] = { 0 };
+            ProcessingInstruction::fillGCDescriptor(desc);
+            descr =
+                GC_make_descriptor(desc, GC_WORD_LEN(ProcessingInstruction));
+            typeInited = true;
+        }
+
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    void* operator new[](size_t size) = delete;
+
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        CharacterData::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(ProcessingInstruction, m_target));
+    }
+
     String* m_target;
 };
 }
