@@ -276,32 +276,50 @@ TARGET_COMPILE_OPTIONS (webm PUBLIC ${THIRD_PARTY_CXXFLAGS})
 #######################################################
 
 IF (${ARCH} STREQUAL "tizen")
+    SET (TUV_TARGET ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.so)
+    SET (ESCARGOT_TARGET ${ESCARGOT_ROOT}/libescargot.a)
+    SET (GC_TARGET ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.a)
+
     SET (TUV_LIB "${OUTPUT_DIRECTORY}/lib/libtuv.so")
     SET (ESCARGOT_LIB "${OUTPUT_DIRECTORY}/lib/libescargot.a")
     SET (GC_LIB "${OUTPUT_DIRECTORY}/lib/libgc.a")
 
-    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LIB} ${ESCARGOT_LIB} ${GC_LIB}
+    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_TARGET} ${ESCARGOT_TARGET} ${GC_TARGET}
                         COMMENT "Build Third_Party for arm"
                         COMMAND ./build_third_party.sh arm
+    )
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LIB} ${ESCARGOT_LIB} ${GC_LIB}
+                        DEPENDS ${TUV_TARGET} ${ESCARGOT_TARGET} ${GC_TARGET}
                         COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib
                         COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/libescargot.a ${OUTPUT_DIRECTORY}/lib
                         COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib
     )
 
-
 ELSE()
+    SET (ZMQ_TARGET ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5 ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5.0.1)
+    SET (ESCARGOT_TARGET ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a)
+    SET (GC_TARGET ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so.1 ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so.1.0.3)
+
     SET (ZMQ_LIB "${OUTPUT_DIRECTORY}/lib/libzmq.so")
     SET (ESCARGOT_LIB "${OUTPUT_DIRECTORY}/lib/libescargot.a")
-    SET (GC_LIB "${OUTPUT_DIRECTORY}/lib/libgc.a")
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_LIB} ${ESCARGOT_LIB} ${GC_LIB}
+    SET (GC_LIB "${OUTPUT_DIRECTORY}/lib/libgc.so")
+    
+    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_TARGET} ${ESCARGOT_TARGET} ${GC_TARGET}
                         COMMENT "Build Third_Party for x64"
                         COMMAND ./build_third_party.sh x64
+    )
+                        
+    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_LIB} ${ESCARGOT_LIB} ${GC_LIB}
+                        DEPENDS ${ZMQ_TARGET} ${ESCARGOT_TARGET} ${GC_TARGET}
                         COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${OUTPUT_DIRECTORY}/lib/
                         COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5 ${OUTPUT_DIRECTORY}/lib/
                         COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5.0.1 ${OUTPUT_DIRECTORY}/lib/
                         COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a ${OUTPUT_DIRECTORY}/lib/
-                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib/
+#                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib/
+                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so ${OUTPUT_DIRECTORY}/lib/
+                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so.1 ${OUTPUT_DIRECTORY}/lib/
+                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so.1.0.3 ${OUTPUT_DIRECTORY}/lib/
     )
 ENDIF()
 
