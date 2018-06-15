@@ -30,6 +30,24 @@
 
 namespace StarFish {
 
+static void baseSizeForBackground(FrameBox* box, ComputedStyle* style,
+                                  uint32_t layer, float& baseW, float& baseH)
+{
+    baseW = baseH = 0;
+    if (style->backgroundImage(layer)->type().isURL()) {
+        NativeImageData* id = style->backgroundImageData(layer);
+        if (id) {
+            baseW = id->width();
+            baseH = id->height();
+        }
+    } else if (style->backgroundImage(layer)->type().isGradient()) {
+        // TODO rootOrBodyelement
+        Unit::Rect rect = box->makeRect(BoxValue::PaddingBoxBoxValue);
+        baseW = rect.width();
+        baseH = rect.height();
+    }
+}
+
 static void calculateBackgroundBaseData(FrameBox* box, ComputedStyle* style,
                                         uint32_t layer,
                                         Unit::Size& positioningSize,
@@ -54,22 +72,24 @@ static void calculateBackgroundBaseData(FrameBox* box, ComputedStyle* style,
     float positionW = positioningRect.width();
     float positionH = positioningRect.height();
     float boxR = positionW / positionH;
-    float sizeW = 0;
-    float sizeH = 0;
-    NativeImageData* id = style->backgroundImageData(layer);
-    if (id && id->width() && id->height()) {
-        float imgR = id->width() / (float)id->height();
+    float baseW = 0, baseH = 0;
+    float sizeW = 0, sizeH = 0;
+
+    baseSizeForBackground(box, style, layer, baseW, baseH);
+
+    if (baseW && baseH) {
+        float imgR = baseW / baseH;
         if (style->backgroundSizeIsLength(layer)) {
             LengthSize bgSize = style->backgroundSizeLengthValue(layer);
             if (bgSize.width().isAuto() && bgSize.height().isAuto()) {
-                sizeW = id->width();
-                sizeH = id->height();
+                sizeW = baseW;
+                sizeH = baseH;
             } else if (bgSize.width().isAuto() && !bgSize.height().isAuto()) {
                 sizeH = bgSize.height().specifiedValue(positionH, box);
-                sizeW = sizeH * id->width() / id->height();
+                sizeW = sizeH * baseW / baseH;
             } else if (!bgSize.width().isAuto() && bgSize.height().isAuto()) {
                 sizeW = bgSize.width().specifiedValue(positionW, box);
-                sizeH = sizeW * id->height() / id->width();
+                sizeH = sizeW * baseH / baseW;
             } else {
                 sizeW = bgSize.width().specifiedValue(positionW, box);
                 sizeH = bgSize.height().specifiedValue(positionH, box);
@@ -195,8 +215,9 @@ bool AnimationUtil::backgroundPosXToAnimatedValue(
     Element* element, AnimatedValue& from, AnimatedValue& to, uint32_t layer)
 {
     STARFISH_ASSERT(newStyle->backgroundImage(layer));
-    if (!newStyle->backgroundImage(layer)->type().isURL()) {
-        // TODO support gradient
+    ImageValueType newType = newStyle->backgroundImage(layer)->type();
+    if (oldStyle->backgroundImage(layer)->type() != newType ||
+        !(newType.isURL() || newType.isGradient())) {
         return false;
     }
     const Length& oldPosX = oldStyle->backgroundPositionX(layer);
@@ -243,8 +264,9 @@ bool AnimationUtil::backgroundPosYToAnimatedValue(
     Element* element, AnimatedValue& from, AnimatedValue& to, uint32_t layer)
 {
     STARFISH_ASSERT(newStyle->backgroundImage(layer));
-    if (!newStyle->backgroundImage(layer)->type().isURL()) {
-        // TODO support gradient
+    ImageValueType newType = newStyle->backgroundImage(layer)->type();
+    if (oldStyle->backgroundImage(layer)->type() != newType ||
+        !(newType.isURL() || newType.isGradient())) {
         return false;
     }
     const Length& oldPosY = oldStyle->backgroundPositionY(layer);
