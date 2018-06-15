@@ -552,7 +552,7 @@ int main(int argc, char* argv[])
         NULL);
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+#if defined(STARFISH_DALI)
     url = argv[1];
     Application application = Application::New(&argc, &argv);
     DaliShellController shell(application, width, height);
