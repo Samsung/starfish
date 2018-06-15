@@ -443,7 +443,9 @@ public:
             autoFilterMode = anti >= CAIRO_ANTIALIAS_GOOD ? CAIRO_FILTER_GOOD
                                                           : CAIRO_FILTER_FAST;
         }
-
+#if defined(STARFISH_ANDROID)
+        autoFilterMode = CAIRO_FILTER_FAST;
+#endif
         if (imageRenderingMode == ImageRenderingAutoValue) {
             cairo_pattern_set_filter(resizePattern, autoFilterMode);
         } else if (imageRenderingMode == ImageRenderingPixelatedValue) {
