@@ -410,8 +410,6 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
     }
 
     syncChildRuleWrappers();
-    m_childRuleWrappers.insert(m_childRuleWrappers.begin() + index, nullptr);
-
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()

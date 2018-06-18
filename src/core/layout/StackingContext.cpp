@@ -1,28 +1,4 @@
 /*
- * Copyright (C) 2009, 2010 Apple Inc. All rights reserved.
- *
- * Redistribution and use in source and binary forms, with or without
- * modification, are permitted provided that the following conditions
- * are met:
- * 1. Redistributions of source code must retain the above copyright
- *    notice, this list of conditions and the following disclaimer.
- * 2. Redistributions in binary form must reproduce the above copyright
- *    notice, this list of conditions and the following disclaimer in the
- *    documentation and/or other materials provided with the distribution.
- *
- * THIS SOFTWARE IS PROVIDED BY APPLE INC. ``AS IS'' AND ANY
- * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
- * PURPOSE ARE DISCLAIMED.  IN NO EVENT SHALL APPLE INC. OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
- * EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
- * PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
- * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
- * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
- * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- */
-/*
  * Copyright (c) 2016-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
@@ -63,57 +39,16 @@
 namespace StarFish {
 
 struct StackingContext::ComputeStackingContextContext {
-    StackingContext* rootLayer;
-    StackingContext* compositingAncestor;
-    std::shared_ptr<std::unordered_map<StackingContext*, LayoutRect>>
-        extentPerLayer;
-    std::shared_ptr<std::vector<StackingContext*>> compositedLayers;
-    std::shared_ptr<bool> overlapMapFilled;
-    std::shared_ptr<std::set<StackingContext*>>
-        seenPossiblyNonCompositeLayers; // when found prev computing
-    std::shared_ptr<std::vector<StackingContext*>>
-        seenPossiblyNonCompositeLayersNow;
-    std::shared_ptr<std::unordered_map<StackingContext*, bool>>
-        compositeFlagInfo;
-    bool subLayerHasGraphicsBuffer;
-    bool testingOverlap;
+    std::unordered_map<StackingContext*, LayoutRect> extentPerLayer;
+    std::unordered_map<StackingContext*, bool> compositeFlagInfo;
+    std::vector<StackingContext*> compositedLayers;
 
-    ComputeStackingContextContext(StackingContext* rootLayer,
-                                  StackingContext* compositingAncestor,
-                                  std::shared_ptr<std::set<StackingContext*>>
-                                      seenPossiblyNonCompositeLayers,
-                                  bool testingOverlap = true)
-        : rootLayer(rootLayer)
-        , compositingAncestor(compositingAncestor)
-        , extentPerLayer(new std::unordered_map<StackingContext*, LayoutRect>())
-        , compositedLayers(new std::vector<StackingContext*>())
-        , overlapMapFilled(new bool(false))
-        , seenPossiblyNonCompositeLayers(seenPossiblyNonCompositeLayers)
-        , seenPossiblyNonCompositeLayersNow(new std::vector<StackingContext*>())
-        , compositeFlagInfo(new std::unordered_map<StackingContext*, bool>())
-        , subLayerHasGraphicsBuffer(false)
-        , testingOverlap(testingOverlap)
+    ComputeStackingContextContext()
     {
     }
 
-    ComputeStackingContextContext(const ComputeStackingContextContext& other)
-        : rootLayer(other.rootLayer)
-        , compositingAncestor(other.compositingAncestor)
-        , extentPerLayer(other.extentPerLayer)
-        , compositedLayers(other.compositedLayers)
-        , overlapMapFilled(other.overlapMapFilled)
-        , seenPossiblyNonCompositeLayers(other.seenPossiblyNonCompositeLayers)
-        , seenPossiblyNonCompositeLayersNow(
-              other.seenPossiblyNonCompositeLayersNow)
-        , compositeFlagInfo(other.compositeFlagInfo)
-        , subLayerHasGraphicsBuffer(other.subLayerHasGraphicsBuffer)
-        , testingOverlap(other.testingOverlap)
+    LayoutRect computeLayerExtent(LayoutRect rt, const SkMatrix& m)
     {
-    }
-
-    LayoutRect computeLayerExtent(StackingContext* c, SkMatrix m)
-    {
-        LayoutRect rt(LayoutLocation(), c->owner()->frameRect().size());
         if (m.rectStaysRect()) {
             SkRect skRect =
                 SkRect::MakeXYWH((float)rt.x(), (float)rt.y(),
@@ -160,65 +95,79 @@ struct StackingContext::ComputeStackingContextContext {
 
     LayoutRect screenExtentPerLayer(StackingContext* c)
     {
-        auto iter = extentPerLayer->find(c);
-        if (iter != extentPerLayer->end()) {
-            return iter->second;
+        {
+            auto iter = extentPerLayer.find(c);
+            if (iter != extentPerLayer.end()) {
+                return iter->second;
+            }
         }
 
-        StackingContext* cur = c;
-
-        std::vector<StackingContext*> path;
-        while (cur != rootLayer) {
-            path.push_back(cur);
-            cur = cur->parent();
+        std::vector<FrameBox*> frameList;
+        frameList.reserve(32);
+        Frame* f = c->owner();
+        while (f) {
+            frameList.push_back(f->asFrameBox());
+            f = f->layoutParent();
         }
+
+        auto vr = c->owner()->frameVisibleRect();
 
         SkMatrix m = SkMatrix::I();
-        FrameBox* before = rootLayer->owner();
-        FrameBox* after;
-        for (size_t i = 0; i < path.size(); i++) {
-            after = path[i]->owner();
-
-            SkMatrix m2 = after->stackingContext()->transformMatrix();
-            if (!m2.isIdentity()) {
-                LayoutLocation to = after->stackingContext()->transformOrigin();
-                m.postTranslate((float)to.x(), (float)to.y());
-                m.preConcat(m2);
-                m.postTranslate(-(float)to.x(), -(float)to.y());
+        auto iter = frameList.rbegin();
+        FrameBox* lastParentBox = nullptr;
+        while (iter != frameList.rend()) {
+            FrameBox* fBox = *iter;
+            if (fBox->stackingContext()) {
+                SkMatrix m2 = fBox->stackingContext()->transformMatrix();
+                if (!m2.isIdentity()) {
+                    LayoutLocation to =
+                        fBox->stackingContext()->transformOrigin();
+                    m.postTranslate((float)to.x(), (float)to.y());
+                    m.preConcat(m2);
+                    m.postTranslate(-(float)to.x(), -(float)to.y());
+                }
             }
 
-            auto pos = after->absolutePointIncludingScroll(before);
+            auto pos = fBox->absolutePointIncludingScroll(lastParentBox);
             m.postTranslate((float)pos.x(), (float)pos.y());
-
-            after = before;
+            lastParentBox = fBox;
+            iter++;
         }
 
-        LayoutRect rt = computeLayerExtent(c, m);
-
-        extentPerLayer->insert(std::make_pair(c, rt));
+        LayoutRect rt = computeLayerExtent(vr, m);
+        extentPerLayer.insert(std::make_pair(c, rt));
 
         return rt;
     }
 
-    bool isOverlap(StackingContext* a, StackingContext* b)
-    {
-        auto extentA = screenExtentPerLayer(a);
-        auto extentB = screenExtentPerLayer(b);
-        return extentA.intersects(extentB);
-    }
-
     void pushCompsitedLayer(StackingContext* c)
     {
-        if (!c->isRootContext()) {
-            compositedLayers->push_back(c);
+        compositedLayers.push_back(c);
+    }
+
+    bool isCompsitedLayer(StackingContext* c, size_t* idx = nullptr)
+    {
+        for (size_t i = 0; i < compositedLayers.size(); i++) {
+            if (compositedLayers.at(i) == c) {
+                if (idx) {
+                    *idx = i;
+                }
+                return true;
+            }
         }
+        return false;
+    }
+
+    bool seenCompsitedLayer()
+    {
+        return compositedLayers.size();
     }
 
     bool isOverlapWithAlreadyCompositedLayer(StackingContext* a)
     {
         auto extentA = screenExtentPerLayer(a);
-        for (size_t i = 0; i < compositedLayers->size(); i++) {
-            auto extentB = screenExtentPerLayer(compositedLayers->at(i));
+        for (size_t i = 0; i < compositedLayers.size(); i++) {
+            auto extentB = screenExtentPerLayer(compositedLayers.at(i));
             if (extentA.intersects(extentB)) {
                 return true;
             }
@@ -724,102 +673,17 @@ void StackingContext::computeTransformMatrix()
     }
 }
 
-enum IndirectCompositingReason {
-    None,
-    SubFrame,
-    Stacking,
-    Overlap,
-    BackgroundLayer,
-    GraphicalEffect, // opacity, mask, filter, transform etc.
-    Perspective,
-    Preserve3D
-};
-
-static bool requiresCompositingForIndirectReason(
-    StackingContext* ctx, bool hasCompositedDescendants,
-    bool has3DTransformedDescendants, IndirectCompositingReason& reason)
-{
-    // When a layer has composited descendants, some effects, like 2d
-    // transforms, filters, masks etc must be implemented
-    // via compositing so that they also apply to those composited descendants.
-    if (hasCompositedDescendants &&
-        ctx->owner()->style()->hasTransforms(ctx->owner())) {
-        // && (layer.isolatesCompositedBlending() || layer.transform() ||
-        // renderer.createsGroup() || renderer.hasReflection() ||
-        // renderer.isRenderNamedFlowFragmentContainer())) {
-        reason = IndirectCompositingReason::GraphicalEffect;
-        return true;
-    }
-
-    if (hasCompositedDescendants && ctx->isIFrameStackingContext()) {
-        reason = IndirectCompositingReason::SubFrame;
-        return true;
-    }
-
-    // A layer with preserve-3d or perspective only needs to be composited if
-    // there are descendant layers that
-    // will be affected by the preserve-3d or perspective.
-    if (has3DTransformedDescendants) {
-        // TODO enable this after implement transform3d
-        /*
-        if (renderer.style().transformStyle3D() == TransformStyle3DPreserve3D) {
-            reason = RenderLayer::IndirectCompositingReason::Preserve3D;
-            return true;
-        }
-
-        if (renderer.style().hasPerspective()) {
-            reason = RenderLayer::IndirectCompositingReason::Perspective;
-            return true;
-        }*/
-    }
-
-    reason = IndirectCompositingReason::None;
-    return false;
-}
-
 void StackingContext::computeStackingContextProperties()
 {
     STARFISH_ASSERT(parent() == nullptr);
 
-    std::shared_ptr<std::set<StackingContext*>> seenPossiblyNonCompositeLayers(
-        new std::set<StackingContext*>());
-    ComputeStackingContextContext ctx(this, nullptr,
-                                      seenPossiblyNonCompositeLayers);
-    bool descendantHas3DTransform = false;
-
-    size_t prevCnt = SIZE_MAX;
-    do {
-        prevCnt = seenPossiblyNonCompositeLayers->size();
-        ctx.compositeFlagInfo->clear();
-        computeStackingContextProperties(ctx, nullptr,
-                                         descendantHas3DTransform);
-        for (size_t i = 0; i < ctx.seenPossiblyNonCompositeLayersNow->size();
-             i++) {
-            seenPossiblyNonCompositeLayers->insert(
-                ctx.seenPossiblyNonCompositeLayersNow->at(i));
-        }
-        if (prevCnt == seenPossiblyNonCompositeLayers->size()) {
-            break;
-        }
-    } while (seenPossiblyNonCompositeLayers->size());
-
+    ComputeStackingContextContext ctx;
+    computeStackingContextProperties(ctx);
     applyStackingContextProperties(ctx);
 }
 
-bool StackingContext::canComposite(ComputeStackingContextContext& ctx)
-{
-    if (m_owner->needsGraphicsBuffer() ||
-        m_owner->isRunningOpacityAnimation() ||
-        m_owner->isRunningTransformAnimation()) {
-        return true;
-    }
-    auto iter = ctx.seenPossiblyNonCompositeLayers->find(this);
-    return ctx.seenPossiblyNonCompositeLayers->end() == iter;
-}
-
 void StackingContext::computeStackingContextProperties(
-    ComputeStackingContextContext& compositingState,
-    StackingContext* ancestorLayer, bool& descendantHas3DTransform)
+    ComputeStackingContextContext& compositingState)
 {
     auto oldMatrix = transformMatrix();
     computeTransformMatrix();
@@ -827,84 +691,69 @@ void StackingContext::computeStackingContextProperties(
         m_catchedMatrixChangedWhileComputeStackingContextProperties = true;
     }
 
-    // OverlapExtent layerExtent;
-    // Use the fact that we're composited as a hint to check for an animating
-    // transform.
-    // FIXME: Maybe needsToBeComposited() should return a bitmask of reasons, to
-    // avoid the need to recompute things.
-    // if (willBeComposited && !layer.isRootLayer())
-    //      layerExtent.hasTransformAnimation =
-    //      isRunningTransformAnimation(layer.renderer());
-
-    // bool respectTransforms = !layerExtent.hasTransformAnimation;
-    // overlapMap.geometryMap().pushMappingsToAncestor(&layer, ancestorLayer,
-    // respectTransforms);
-
-    bool willBeComposited = m_owner->needsGraphicsBuffer() ||
+    bool compositedBySelf = m_owner->needsGraphicsBuffer() ||
                             m_owner->isRunningOpacityAnimation() ||
                             m_owner->isRunningTransformAnimation();
-    IndirectCompositingReason compositingReason =
-        compositingState.subLayerHasGraphicsBuffer
-            ? IndirectCompositingReason::Stacking
-            : IndirectCompositingReason::None;
+    bool willBeComposited = compositedBySelf;
 
-#ifdef STARFISH_ENABLE_MULTIMEDIA
-    if (m_owner->isFrameReplaced() &&
-        m_owner->asFrameReplaced()->isFrameReplacedVideo()) {
-        compositingReason = IndirectCompositingReason::Overlap;
+    if (!willBeComposited && compositingState.seenCompsitedLayer()) {
+        // find most nearest Composited ancestor index
+        size_t ancestorIndex = 0;
+
+        StackingContext* p = parent();
+        StackingContext* compositedAncestor = nullptr;
+        while (p) {
+            if (compositingState.isCompsitedLayer(p, &ancestorIndex)) {
+                compositedAncestor = p;
+                break;
+            }
+            p = p->parent();
+        }
+        STARFISH_ASSERT(compositedAncestor);
+        bool canConveredByParentCompositedLayer = false;
+
+        auto parentExtent =
+            compositingState.screenExtentPerLayer(compositedAncestor);
+        auto selfExtent = compositingState.screenExtentPerLayer(this);
+
+        if (parentExtent.containsInVisual(selfExtent.x(), selfExtent.y()) &&
+            parentExtent.containsInVisual(selfExtent.maxX(), selfExtent.y()) &&
+            parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) &&
+            parentExtent.containsInVisual(selfExtent.maxX(),
+                                          selfExtent.maxY())) {
+            canConveredByParentCompositedLayer = true;
+        }
+
+        bool isCollapsedWithSilbingLayer = false;
+
+        auto& cv = compositingState.compositedLayers;
+
+        for (size_t i = ancestorIndex + 1; i < cv.size(); i++) {
+            auto extent = compositingState.screenExtentPerLayer(cv[i]);
+            if (extent.intersects(selfExtent)) {
+                isCollapsedWithSilbingLayer = true;
+            }
+        }
+
+        if (canConveredByParentCompositedLayer &&
+            !isCollapsedWithSilbingLayer) {
+        } else {
+            willBeComposited = true;
+        }
     }
-#endif
-
-    if (!willBeComposited &&
-        compositingReason == IndirectCompositingReason::Stacking &&
-        compositingState.testingOverlap) {
-        compositingReason =
-            compositingState.isOverlapWithAlreadyCompositedLayer(this)
-                ? IndirectCompositingReason::Overlap
-                : IndirectCompositingReason::None;
-    }
-
-    // layer.setIndirectCompositingReason(compositingReason);
-
-    // Check if the computed indirect reason will force the layer to become
-    // composited.
-    if (!willBeComposited && compositingReason &&
-        canComposite(compositingState)) {
-        willBeComposited = true;
-    }
-
-    // The children of this layer don't need to composite, unless there is
-    // a compositing layer among them, so start by inheriting the compositing
-    // ancestor with subtreeIsCompositing set to false.
-    ComputeStackingContextContext childState(compositingState);
-    childState.subLayerHasGraphicsBuffer = false;
 
     if (willBeComposited) {
-        // Tell the parent it has compositing descendants.
-        compositingState.subLayerHasGraphicsBuffer = true;
-        // This layer now acts as the ancestor for kids.
-        childState.compositingAncestor = this;
-
+        StackingContext* p = parent();
+        while (p) {
+            if (p->isRootContext() && !compositingState.isCompsitedLayer(p)) {
+                STARFISH_ASSERT(compositingState.compositedLayers.size() == 0);
+                compositingState.pushCompsitedLayer(p);
+                break;
+            }
+            p = p->parent();
+        }
         compositingState.pushCompsitedLayer(this);
-        // overlapMap.pushCompositingContainer();
-        // This layer is going to be composited, so children can safely ignore
-        // the fact that there's an
-        // animation running behind this layer, meaning they can rely on the
-        // overlap map testing again.
-        childState.testingOverlap = true;
-
-        // computeExtent(overlapMap, layer, layerExtent);
-
-        // childState.ancestorHasTransformAnimation |=
-        // layerExtent.hasTransformAnimation;
-        // Too hard to compute animated bounds if both us and some ancestor is
-        // animating transform.
-        // layerExtent.animationCausesExtentUncertainty |=
-        // layerExtent.hasTransformAnimation &&
-        // compositingState.ancestorHasTransformAnimation;
     }
-
-    bool anyDescendantHas3DTransform = false;
 
     auto iter = m_childContexts.begin();
     while (iter != m_childContexts.end()) {
@@ -915,28 +764,7 @@ void StackingContext::computeStackingContextProperties(
         }
         auto iter2 = child->begin();
         while (iter2 != child->end()) {
-            (*iter2)->computeStackingContextProperties(
-                childState, this, anyDescendantHas3DTransform);
-
-            // If we have to make a layer for this child, make one now so we can
-            // have a contents layer
-            // (since we need to ensure that the -ve z-order child renders
-            // underneath our contents).
-            if (!willBeComposited && childState.subLayerHasGraphicsBuffer &&
-                canComposite(compositingState)) {
-                // make layer compositing
-                // layer.setIndirectCompositingReason(RenderLayer::IndirectCompositingReason::BackgroundLayer);
-                compositingReason = BackgroundLayer;
-                childState.compositingAncestor = this;
-                // overlapMap.pushCompositingContainer();
-                compositingState.pushCompsitedLayer(this);
-                // This layer is going to be composited, so children can safely
-                // ignore the fact that there's an
-                // animation running behind this layer, meaning they can rely on
-                // the overlap map testing again
-                childState.testingOverlap = true;
-                willBeComposited = true;
-            }
+            (*iter2)->computeStackingContextProperties(compositingState);
             iter2++;
         }
         iter++;
@@ -949,92 +777,21 @@ void StackingContext::computeStackingContextProperties(
         if (num >= 0) {
             auto iter2 = child->begin();
             while (iter2 != child->end()) {
-                (*iter2)->computeStackingContextProperties(
-                    childState, this, anyDescendantHas3DTransform);
+                (*iter2)->computeStackingContextProperties(compositingState);
                 iter2++;
             }
         }
         iter++;
     }
 
-    // If we just entered compositing mode, the root will have become composited
-    // (as long as accelerated compositing is enabled).
     if (isRootContext()) {
-        // if (inCompositingMode() && m_hasAcceleratedCompositing)
-        if (compositingState.compositedLayers->size()) {
+        if (compositingState.compositedLayers.size()) {
             willBeComposited = true;
         }
     }
 
-    if (childState.compositingAncestor &&
-        !(childState.compositingAncestor->parent() == nullptr)) {
-        // addToOverlapMap(overlapMap, layer, layerExtent);
-        (*compositingState.overlapMapFilled.get()) = true;
-    }
-
-    // Now check for reasons to become composited that depend on the state of
-    // descendant layers.
-    IndirectCompositingReason indirectCompositingReason;
-    if (!willBeComposited && canComposite(compositingState) &&
-        requiresCompositingForIndirectReason(
-            this, childState.subLayerHasGraphicsBuffer,
-            anyDescendantHas3DTransform, indirectCompositingReason)) {
-        // layer.setIndirectCompositingReason(indirectCompositingReason);
-        childState.compositingAncestor = this;
-        // overlapMap.pushCompositingContainer();
-        compositingState.pushCompsitedLayer(this);
-        // addToOverlapMapRecursive(overlapMap, layer);
-        (*compositingState.overlapMapFilled.get()) = true;
-        willBeComposited = true;
-    }
-
-    // ASSERT(willBeComposited == needsToBeComposited(layer));
-    // if (layer.reflectionLayer()) {
-    // FIXME: Shouldn't we call computeCompositingRequirements to handle a
-    // reflection overlapping with another renderer?
-    // layer.reflectionLayer()->setIndirectCompositingReason(willBeComposited ?
-    // RenderLayer::IndirectCompositingReason::Stacking :
-    // RenderLayer::IndirectCompositingReason::None);
-    // }
-
-    // Subsequent layers in the parent stacking context also need to composite.
-    if (childState.subLayerHasGraphicsBuffer)
-        compositingState.subLayerHasGraphicsBuffer = true;
-
-    // Set the flag to say that this layer has compositing children.
-    // layer.setHasCompositingDescendant(childState.subtreeIsCompositing);
-    /*
-        // setHasCompositingDescendant() may have changed the answer to
-       needsToBeComposited() when clipping, so test that again.
-        bool isCompositedClippingLayer = canBeComposited(layer) &&
-       clipsCompositingDescendants(layer);
-
-        // Turn overlap testing off for later layers if it's already off, or if
-       we have an animating transform.
-        // Note that if the layer clips its descendants, there's no reason to
-       propagate the child animation to the parent layers. That's because
-        // we know for sure the animation is contained inside the clipping
-       rectangle, which is already added to the overlap map.
-        if ((!childState.testingOverlap && !isCompositedClippingLayer) ||
-       layerExtent.knownToBeHaveExtentUncertainty())
-            compositingState.testingOverlap = false;
-
-        if (isCompositedClippingLayer) {
-            if (!willBeComposited) {
-                childState.compositingAncestor = &layer;
-                overlapMap.pushCompositingContainer();
-                addToOverlapMapRecursive(overlapMap, layer);
-                willBeComposited = true;
-             }
-        }
-    */
-
-    compositingState.compositeFlagInfo->insert(
+    compositingState.compositeFlagInfo.insert(
         std::make_pair(this, willBeComposited));
-
-    descendantHas3DTransform |=
-        anyDescendantHas3DTransform ||
-        (m_rareData ? m_rareData->m_hasNon2DRectTransform : false);
 
     if (willBeComposited) {
         SkMatrix l = SkMatrix::I();
@@ -1043,10 +800,6 @@ void StackingContext::computeStackingContextProperties(
             Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
             visibleRect);
         m_owner->computeVisibleRect(ctx);
-
-        if (visibleRect.isEmpty()) {
-            compositingState.seenPossiblyNonCompositeLayersNow->push_back(this);
-        }
     }
 }
 
@@ -1067,7 +820,7 @@ void StackingContext::applyStackingContextProperties(
     bool inAnimation =
         m_owner->node()->window()->webView()->hasActiveAnimationExecutor();
     bool compositedBefore = needsGraphicsBuffer();
-    bool willBeComposited = (*ctx.compositeFlagInfo)[this];
+    bool willBeComposited = ctx.compositeFlagInfo[this];
 
     if (inAnimation && compositedBefore && !willBeComposited) {
         willBeComposited = true;
@@ -1498,9 +1251,28 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
         if (bufferWidth && bufferHeight) {
             owner()->willCompsiteStackingContext(compositor);
+#ifdef STARFISH_ENABLE_TEST
+            if (owner()->node()->starFish()->startUpFlag() &
+                StarFishStartUpFlag::enableDebugGraphicsLayer) {
+                // debug compositing method
+                compositor->setColor(Unit::Color(255, 0, 0, 64));
+                compositor->drawRect(
+                    Unit::Rect(minX, minY, bufferWidth, bufferHeight));
+                compositor->beginOpacityLayer(0.25);
+                compositor->drawSurface(
+                    m_rareData->m_buffer,
+                    Unit::Rect(minX, minY, bufferWidth, bufferHeight));
+                compositor->endOpacityLayer();
+            } else {
+                compositor->drawSurface(
+                    m_rareData->m_buffer,
+                    Unit::Rect(minX, minY, bufferWidth, bufferHeight));
+            }
+#else
             compositor->drawSurface(
                 m_rareData->m_buffer,
                 Unit::Rect(minX, minY, bufferWidth, bufferHeight));
+#endif
             owner()->didCompsiteStackingContext(compositor);
         }
         // draw debug rect

@@ -1753,6 +1753,7 @@ void Node::setNeedsFrameTreeBuild()
         Frame* blockParent = FrameTreeBuilder::findNearestBlock(old->parent());
         if (!blockParent) {
             blockParent = document()->frame();
+            STARFISH_ASSERT(frame()->isFrameDocument());
         }
 
         STARFISH_ASSERT(blockParent);

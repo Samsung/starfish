@@ -207,7 +207,9 @@ public:
             ->setWholeDocumentNeedsStyleRecalc();
         resource()->loader()->document()->fontSelector()->clearCache(
             m_familyName);
-        resource()->loader()->document()->setNeedsPainting();
+        resource()->loader()->document()->setNeedsLayout();
+        STARFISH_LOG_INFO("WebFont %s is failed to load..\n",
+                          m_familyName->toUTF8NonGCString().data());
     }
 
     virtual void didLoadFinished()
@@ -218,9 +220,11 @@ public:
             ->document()
             ->browsingContext()
             ->setWholeDocumentNeedsStyleRecalc();
-        resource()->loader()->document()->setNeedsLayout();
         resource()->loader()->document()->fontSelector()->clearCache(
             m_familyName);
+        resource()->loader()->document()->setNeedsLayout();
+        STARFISH_LOG_INFO("WebFont %s is downloaded\n",
+                          m_familyName->toUTF8NonGCString().data());
     }
 
     virtual void didLoadCanceled()

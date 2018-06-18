@@ -84,7 +84,7 @@ public:
     }
 
     InlineTextBox(FrameText* frame, const TextRun& run, bool isFirstLine)
-        : FrameBox(frame->node(), frame->style())
+        : FrameBox(frame->nodeSlowCase(), frame->style())
     {
         setText(run.m_stringView.string(), run.m_stringView.start(),
                 run.m_stringView.end());

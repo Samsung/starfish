@@ -4869,7 +4869,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
             return;
         }
 
-        ComputedStyle* s = style();
+        ComputedStyle* s = InlineTextBox::style();
         if (s->visibility() == VisibilityValue::HiddenVisibilityValue) {
             return;
         } else {
@@ -4901,6 +4901,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
         canvas->setFont(s->font());
         canvas->setColor(s->color());
+
 #ifndef PORT_CANVAS_BACKEND_EFL
         bool hasShadow = s->textShadow() ? true : false;
 
