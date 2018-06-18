@@ -37,14 +37,14 @@ struct WindowGlue {
     jclass m_clazz;
     jmethodID m_startTimer;
     jmethodID m_cancelTimer;
-    jmethodID m_requestRender;
+    jmethodID m_flushRendering;
     jmethodID m_onLoadResource;
     jmethodID m_onReceivedError;
     jmethodID m_onPageFinished;
     jmethodID m_onPageStarted;
     WindowGlue()
     {
-        m_startTimer = m_requestRender = 0;
+        m_startTimer = m_flushRendering = 0;
     }
 } g_WindowGlue;
 JavaVM* g_jvm;
@@ -54,6 +54,7 @@ std::map<LWE::WebContainer*, std::pair<jobject, void*>> g_webViews;
 typedef bool (*TimerCallback)(int uid, void* data);
 int startTimer(int ms, TimerCallback pointer, void* data);
 void cancelTimer(int uid);
+void flushRenderingCB(void* view);
 
 void callOnLoadResourceHandler(LWE::WebView* view, const char* url);
 void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
@@ -93,8 +94,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
     g_WindowGlue.m_startTimer = GetJMethod(env, clazz, "startTimer", "(III)I");
     g_WindowGlue.m_cancelTimer = GetJMethod(env, clazz, "cancelTimer", "(I)V");
 
-    g_WindowGlue.m_requestRender =
-        env->GetMethodID(clazz, "requestRender", "()V");
+    g_WindowGlue.m_flushRendering =
+        env->GetMethodID(clazz, "flushRendering", "()V");
     g_WindowGlue.m_onLoadResource =
         env->GetMethodID(clazz, "onLoadResource", "(Ljava/lang/String;)V");
     g_WindowGlue.m_onReceivedError =
@@ -285,7 +286,7 @@ void cancelTimer(int uid)
                               uid);
 }
 
-void requestRender(void* view)
+void flushRenderingCB(void* view)
 {
     JNIEnv* env = g_WindowGlue.m_env;
 
@@ -305,12 +306,12 @@ void requestRender(void* view)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    if (!env || !g_WindowGlue.m_requestRender) {
+    if (!env || !g_WindowGlue.m_flushRendering) {
         LOGE("reuqest render error");
         return;
     }
     env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
-                        g_WindowGlue.m_requestRender);
+                        g_WindowGlue.m_flushRendering);
 }
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -344,6 +345,11 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
             callOnLoadResourceHandler(view, url.c_str());
         });
 
+    webContainer->RegisterOnRenderedHandler(
+        [](LWE::WebContainer* wv, void* buffer) -> void {
+            flushRenderingCB(wv);
+        });
+
     jobject java_webview = env->NewGlobalRef(thiz);
     g_webViews.insert(
         std::make_pair(webContainer, std::make_pair(java_webview, nullptr)));
@@ -359,19 +365,35 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Destroy(JNIEnv* env,
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->Destroy();
     env->DeleteGlobalRef(g_webViews[webContainer].first);
-    //    delete (g_webViews[webView].second);
+    if (g_webViews[webContainer].second != nullptr) {
+        AndroidBitmap_unlockPixels(env,
+                                   (jobject)g_webViews[webContainer].second);
+        env->DeleteGlobalRef((jobject)g_webViews[webContainer].second);
+    }
     g_webViews.erase(webContainer);
     delete webContainer;
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_WebView_resizeWebView(JNIEnv* env,
-                                                                 jobject thiz,
-                                                                 jlong sf,
-                                                                 jint w, jint h)
+Java_com_samsung_android_mobileservice_lwe_WebView_updateBuffer(
+    JNIEnv* env, jobject thiz, jlong sf, jobject bitmap, jint w, jint h,
+    jint stride)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)sf;
-    webContainer->UpdateBuffer(nullptr, w, h, 0);
+    int ret;
+    void* pixels;
+
+    if (g_webViews[webContainer].second != nullptr) {
+        jobject bObject_old = (jobject)g_webViews[webContainer].second;
+        AndroidBitmap_unlockPixels(env, bObject_old);
+        env->DeleteGlobalRef(bObject_old);
+    }
+    jobject bObject_new = env->NewGlobalRef(bitmap);
+    if ((ret = AndroidBitmap_lockPixels(env, bObject_new, &pixels)) < 0) {
+        LOGE("[MONG]AndroidBitmap_lockPixels() failed ! error=%d", ret);
+    }
+    webContainer->UpdateBuffer(pixels, w, h, stride);
+    g_webViews[webContainer].second = bObject_new;
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -548,37 +570,6 @@ Java_com_samsung_android_mobileservice_lwe_WebView_removeJavascriptInterface(
 
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->RemoveJavascriptInterface(objectName, nullptr);
-}
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_WebView_rendering(JNIEnv* env,
-                                                             jobject thiz,
-                                                             jlong wv,
-                                                             jobject bitmap)
-{
-    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
-
-    int ret;
-    AndroidBitmapInfo info;
-    if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
-        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
-        return;
-    }
-
-    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        LOGE("Bitmap format is not RGBA_8888 !");
-        return;
-    }
-
-    void* pixels;
-    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
-        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
-    }
-
-    webContainer->UpdateBuffer(pixels, info.width, info.height, info.stride);
-    webContainer->RenderingDirectly();
-
-    AndroidBitmap_unlockPixels(env, bitmap);
 }
 
 extern "C" JNIEXPORT void JNICALL

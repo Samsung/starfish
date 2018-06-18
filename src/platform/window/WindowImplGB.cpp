@@ -46,10 +46,6 @@ unsigned char* g_imgBufferForScreehShot;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
-#if defined(STARFISH_ANDROID)
-void requestRender(void* view);
-#endif
-
 // #define STARFISH_ENABLE_TIMER
 namespace StarFish {
 
@@ -202,7 +198,6 @@ void WebView::setNeedsRendering()
 
     // TODO: refresh rendering animator here.
     m_needsRendering = true;
-#if !defined(STARFISH_ANDROID)
     wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
         nullptr,
         [](size_t handle, void* data) {
@@ -216,11 +211,6 @@ void WebView::setNeedsRendering()
             }
         },
         starFish()->platformWindow());
-#else
-    if (starFish()->LWEWebView() != nullptr) {
-        requestRender(starFish()->LWEWebView());
-    }
-#endif
 }
 
 Canvas* WindowImplGB::preparePainting()
