@@ -1468,7 +1468,7 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
     for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
         unsigned int idx = style->backgroundLayerSize() - i - 1;
 
-        if (style->backgroundImage(idx) == nullptr) {
+        if (!style->backgroundImage(idx)) {
             continue;
         }
         auto type = style->backgroundImage(idx)->type();
@@ -1497,6 +1497,8 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             }
             width = rect.width();
             height = rect.height();
+        } else {
+            continue;
         }
 
         Unit::Rect paintingRect;

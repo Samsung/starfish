@@ -524,15 +524,16 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         for (unsigned int i = 0; i < style->backgroundLayerSize(); i++) {
             CSSStyleValuePair item;
-            auto imageValue = style->backgroundImage();
-            const auto& type = imageValue->type();
-            if (type.isNone()) {
-                item.setStringValue(String::emptyString);
-            } else if (type.isURL()) {
+            auto imageValue = style->backgroundImage(i);
+            if (!imageValue) {
+                item.setValueKind(CSSStyleValuePair::None);
+            } else if (imageValue->type().isURL()) {
                 item.setUrlValue(imageValue->urlValue());
-            } else if (type.isGradient()) {
+            } else if (imageValue->type().isGradient()) {
                 item.setGradientValue(
                     imageValue->gradientValue()->convertToCSSGradientValue());
+            } else {
+                item.setValueKind(CSSStyleValuePair::None);
             }
             bgImageValues->push_back(item);
         }
@@ -665,7 +666,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         bgRepeatX.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatX);
         if (!style->backgroundLayerSize()) {
-            bgRepeatX.setBackgroundRepeatValue(style->backgroundRepeatX());
+            bgRepeatX.setBackgroundRepeatValue(style->backgroundRepeatX(0));
             addValuePair(bgRepeatX);
             return;
         }
@@ -691,7 +692,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
 
         bgRepeatY.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundRepeatY);
         if (!style->backgroundLayerSize()) {
-            bgRepeatY.setBackgroundRepeatValue(style->backgroundRepeatY());
+            bgRepeatY.setBackgroundRepeatValue(style->backgroundRepeatY(0));
             addValuePair(bgRepeatY);
             return;
         }

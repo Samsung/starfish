@@ -1289,7 +1289,7 @@ public:
 
     void setStringValue(String* value)
     {
-        STARFISH_ASSERT(m_valueKind == StringValueKind);
+        m_valueKind = StringValueKind;
         m_value.m_stringValue = value;
     }
 

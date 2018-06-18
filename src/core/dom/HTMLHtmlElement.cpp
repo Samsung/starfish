@@ -37,8 +37,7 @@ void HTMLHtmlElement::didComputedStyleChanged(ComputedStyle* oldStyle,
 {
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
     if (newStyle && (!newStyle->backgroundColor().isTransparent() ||
-                     (newStyle->backgroundImage() &&
-                      !newStyle->backgroundImage()->type().isNone()))) {
+                     newStyle->backgroundLayerSize())) {
         window()->browsingContext()->m_hasRootElementBackground = true;
     } else {
         window()->browsingContext()->m_hasRootElementBackground = false;

@@ -3020,42 +3020,35 @@ void StyleResolver::apply(Element* element,
             break;
         case CSSStyleValuePair::KeyKind::BackgroundImage:
             style->resetBackgroundImages();
-            if ((cssValues[k].valueKind() ==
-                 CSSStyleValuePair::ValueKind::Initial) ||
-                (cssValues[k].valueKind() ==
-                 CSSStyleValuePair::ValueKind::Unset)) {
+            // NOTE Do nothing for Initial, Unset, None
+            if (cssValues[k].valueKind() ==
+                CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                ImageValue* image = new ImageValue();
-                style->setBackgroundImage(image);
+                uint32_t size = parentStyle->backgroundLayerSize();
+                for (uint32_t i = 0; i < size; i++) {
+                    style->setBackgroundImage(parentStyle->backgroundImage(i),
+                                              i);
+                }
             } else if (cssValues[k].valueKind() ==
-                       CSSStyleValuePair::ValueKind::Inherit) {
-                style->setBackgroundImage(parentStyle->backgroundImage());
-            } else {
-                STARFISH_ASSERT(cssValues[k].valueKind() ==
-                                CSSStyleValuePair::ValueKind::ValueListKind);
+                       CSSStyleValuePair::ValueKind::ValueListKind) {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
                     const CSSStyleValuePair& item = (*list)[i];
                     auto vKind = item.valueKind();
-                    ImageValue* image;
-                    if (vKind == CSSStyleValuePair::ValueKind::None ||
-                        vKind == CSSStyleValuePair::ValueKind::Initial) {
-                        image = new ImageValue();
-                        style->setBackgroundImage(image, i);
-                    } else if (vKind ==
-                               CSSStyleValuePair::ValueKind::UrlValueKind) {
-                        image = new ImageValue(item.urlValue(origin));
-                        style->setBackgroundImage(image, i);
+                    if (vKind == CSSStyleValuePair::ValueKind::UrlValueKind) {
+                        style->setBackgroundImage(
+                            new ImageValue(item.urlValue(origin)), i);
                     } else if (vKind == CSSStyleValuePair::ValueKind::
                                             GradientValueKind) {
-                        image = new ImageValue(
-                            item.gradientValue()->convertToGradientData());
-                        style->setBackgroundImage(image, i);
-                    } else if (vKind == CSSStyleValuePair::ValueKind::Inherit) {
                         style->setBackgroundImage(
-                            parentStyle->backgroundImage(), i);
+                            new ImageValue(
+                                item.gradientValue()->convertToGradientData()),
+                            i);
                     } else {
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        // NOTE Do nothing for Initial, None
+                        STARFISH_RELEASE_ASSERT(
+                            vKind == CSSStyleValuePair::ValueKind::Initial ||
+                            vKind == CSSStyleValuePair::ValueKind::None);
                     }
                 }
             }
@@ -3065,8 +3058,11 @@ void StyleResolver::apply(Element* element,
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBackgroundPositionX(
-                    parentStyle->backgroundPositionX());
+                uint32_t size = parentStyle->backgroundLayerSize();
+                for (uint32_t i = 0; i < size; i++) {
+                    style->setBackgroundPositionX(
+                        parentStyle->backgroundPositionX(i), i);
+                }
             } else {
                 setComputedStyleBackgroundPositionX(style, cssValues[k]);
             }
@@ -3076,8 +3072,11 @@ void StyleResolver::apply(Element* element,
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBackgroundPositionY(
-                    parentStyle->backgroundPositionY());
+                uint32_t size = parentStyle->backgroundLayerSize();
+                for (uint32_t i = 0; i < size; i++) {
+                    style->setBackgroundPositionY(
+                        parentStyle->backgroundPositionY(i), i);
+                }
             } else {
                 setComputedStyleBackgroundPositionY(style, cssValues[k]);
             }
@@ -3087,18 +3086,23 @@ void StyleResolver::apply(Element* element,
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                if (style->backgroundSizeIsLength()) {
-                    style->setBackgroundSize(
-                        parentStyle->backgroundSizeLengthValue());
-                } else {
-                    style->setBackgroundSize(
-                        parentStyle->backgroundSizeTypeValue());
+                uint32_t size = parentStyle->backgroundLayerSize();
+                for (uint32_t i = 0; i < size; i++) {
+                    style->setBackgroundPositionY(
+                        parentStyle->backgroundPositionY(i), i);
+                    if (parentStyle->backgroundSizeIsLength(i)) {
+                        style->setBackgroundSize(
+                            parentStyle->backgroundSizeLengthValue(i), i);
+                    } else {
+                        style->setBackgroundSize(
+                            parentStyle->backgroundSizeTypeValue(i), i);
+                    }
                 }
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
-                style->setBackgroundSize(LengthSize());
+                style->setBackgroundSize(LengthSize(), 0);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ValueListKind) {
                 ValueList* layers = cssValues[k].multiValue();
@@ -3147,18 +3151,22 @@ void StyleResolver::apply(Element* element,
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBackgroundRepeatX(parentStyle->backgroundRepeatX());
+                uint32_t size = parentStyle->backgroundLayerSize();
+                for (uint32_t i = 0; i < size; i++) {
+                    style->setBackgroundRepeatX(
+                        parentStyle->backgroundRepeatX(i), i);
+                }
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
                 style->setBackgroundRepeatX(
-                    BackgroundRepeatValue::RepeatRepeatValue);
+                    BackgroundRepeatValue::RepeatRepeatValue, 0);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::
                            BackgroundRepeatValueKind) {
                 style->setBackgroundRepeatX(
-                    cssValues[k].backgroundRepeatValue());
+                    cssValues[k].backgroundRepeatValue(), 0);
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
@@ -3183,18 +3191,22 @@ void StyleResolver::apply(Element* element,
             if (cssValues[k].valueKind() ==
                 CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBackgroundRepeatY(parentStyle->backgroundRepeatY());
+                uint32_t size = parentStyle->backgroundLayerSize();
+                for (uint32_t i = 0; i < size; i++) {
+                    style->setBackgroundRepeatY(
+                        parentStyle->backgroundRepeatY(i), i);
+                }
             } else if ((cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Initial) ||
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
                 style->setBackgroundRepeatY(
-                    BackgroundRepeatValue::RepeatRepeatValue);
+                    BackgroundRepeatValue::RepeatRepeatValue, 0);
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::
                            BackgroundRepeatValueKind) {
                 style->setBackgroundRepeatY(
-                    cssValues[k].backgroundRepeatValue());
+                    cssValues[k].backgroundRepeatValue(), 0);
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
@@ -3220,13 +3232,17 @@ void StyleResolver::apply(Element* element,
             case CSSStyleValuePair::ValueKind::Initial:
             case CSSStyleValuePair::ValueKind::Unset:
                 style->setBackgroundAttachment(
-                    BackgroundAttachmentValue::ScrollBackgroundAttachmentValue);
+                    BackgroundAttachmentValue::ScrollBackgroundAttachmentValue,
+                    0);
                 break;
-            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Inherit: {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBackgroundAttachment(
-                    parentStyle->backgroundAttachment());
-                break;
+                uint32_t size = parentStyle->backgroundLayerSize();
+                for (uint32_t i = 0; i < size; i++) {
+                    style->setBackgroundAttachment(
+                        parentStyle->backgroundAttachment(i), i);
+                }
+            } break;
             case CSSStyleValuePair::ValueKind::ValueListKind: {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
@@ -3256,12 +3272,15 @@ void StyleResolver::apply(Element* element,
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Initial:
             case CSSStyleValuePair::ValueKind::Unset:
-                style->setBackgroundClip(BoxValue::BorderBoxBoxValue);
+                style->setBackgroundClip(BoxValue::BorderBoxBoxValue, 0);
                 break;
-            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Inherit: {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBackgroundClip(parentStyle->backgroundClip());
-                break;
+                uint32_t size = parentStyle->backgroundLayerSize();
+                for (uint32_t i = 0; i < size; i++) {
+                    style->setBackgroundClip(parentStyle->backgroundClip(i), i);
+                }
+            } break;
             case CSSStyleValuePair::ValueKind::ValueListKind: {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
@@ -3288,12 +3307,16 @@ void StyleResolver::apply(Element* element,
             switch (cssValues[k].valueKind()) {
             case CSSStyleValuePair::ValueKind::Initial:
             case CSSStyleValuePair::ValueKind::Unset:
-                style->setBackgroundOrigin(BoxValue::PaddingBoxBoxValue);
+                style->setBackgroundOrigin(BoxValue::PaddingBoxBoxValue, 0);
                 break;
-            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Inherit: {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                style->setBackgroundOrigin(parentStyle->backgroundOrigin());
-                break;
+                uint32_t size = parentStyle->backgroundLayerSize();
+                for (uint32_t i = 0; i < size; i++) {
+                    style->setBackgroundOrigin(parentStyle->backgroundOrigin(i),
+                                               i);
+                }
+            } break;
             case CSSStyleValuePair::ValueKind::ValueListKind: {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
@@ -3349,10 +3372,15 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Inherit) {
                 MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
-                if (style->backgroundSizeIsLength()) {
-                    style->setMaskSize(parentStyle->maskSizeLengthValue());
-                } else {
-                    style->setMaskSize(parentStyle->maskSizeTypeValue());
+                size_t size = parentStyle->maskSizeLayerLength();
+                for (size_t i = 0; i < size; i++) {
+                    if (style->maskSizeIsLength(i)) {
+                        style->setMaskSize(parentStyle->maskSizeLengthValue(i),
+                                           i);
+                    } else {
+                        style->setMaskSize(parentStyle->maskSizeTypeValue(i),
+                                           i);
+                    }
                 }
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::ValueListKind) {
