@@ -48,8 +48,7 @@ void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
 {
     HTMLElement::didComputedStyleChanged(oldStyle, newStyle);
     if (newStyle && (!newStyle->backgroundColor().isTransparent() ||
-                     (newStyle->backgroundImage() &&
-                      !newStyle->backgroundImage()->type().isNone()))) {
+                     newStyle->backgroundLayerSize())) {
         document()->browsingContext()->m_hasBodyElementBackground = true;
     } else {
         document()->browsingContext()->m_hasBodyElementBackground = false;

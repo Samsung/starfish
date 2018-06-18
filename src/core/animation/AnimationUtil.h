@@ -22,7 +22,6 @@
 
 namespace StarFish {
 
-class BackgroundLayer;
 class ComputedStyle;
 class FrameBox;
 

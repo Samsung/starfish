@@ -1337,60 +1337,60 @@ public:
         m_rareComputedStyleData.ensureBackground()->setColorToCurrentColor();
     }
 
-    void setBackgroundImage(ImageValue* image, uint32_t layer = 0)
+    void setBackgroundImage(ImageValue* image, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setImage(image, layer);
     }
 
-    void setBackgroundImageResource(ImageResource* img, uint32_t layer = 0)
+    void setBackgroundImageResource(ImageResource* img, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setImageResource(img,
                                                                      layer);
     }
 
-    void setBackgroundRepeatX(BackgroundRepeatValue repeat, uint32_t layer = 0)
+    void setBackgroundRepeatX(BackgroundRepeatValue repeat, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setRepeatX(repeat, layer);
     }
 
-    void setBackgroundRepeatY(BackgroundRepeatValue repeat, uint32_t layer = 0)
+    void setBackgroundRepeatY(BackgroundRepeatValue repeat, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setRepeatY(repeat, layer);
     }
 
-    void setBackgroundPositionX(Length value, uint32_t layer = 0)
+    void setBackgroundPositionX(Length value, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setPositionX(value, layer);
     }
 
-    void setBackgroundPositionY(Length value, uint32_t layer = 0)
+    void setBackgroundPositionY(Length value, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setPositionY(value, layer);
     }
 
-    void setBackgroundSize(BackgroundSizeValue size, uint32_t layer = 0)
+    void setBackgroundSize(BackgroundSizeValue size, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setSize(size, layer);
     }
 
-    void setBackgroundSize(const LengthSize& size, uint32_t layer = 0)
+    void setBackgroundSize(const LengthSize& size, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setSize(size, layer);
     }
 
     void setBackgroundAttachment(BackgroundAttachmentValue attachment,
-                                 uint32_t layer = 0)
+                                 uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setAttachment(attachment,
                                                                   layer);
     }
 
-    void setBackgroundClip(BoxValue clip, uint32_t layer = 0)
+    void setBackgroundClip(BoxValue clip, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setClip(clip, layer);
     }
 
-    void setBackgroundOrigin(BoxValue origin, uint32_t layer = 0)
+    void setBackgroundOrigin(BoxValue origin, uint32_t layer)
     {
         m_rareComputedStyleData.ensureBackground()->setOrigin(origin, layer);
     }
@@ -1485,7 +1485,7 @@ public:
         return background->color();
     }
 
-    ImageValue* backgroundImage(uint32_t layer = 0)
+    ImageValue* backgroundImage(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1494,7 +1494,7 @@ public:
         return background->image(layer);
     }
 
-    NativeImageData* backgroundImageData(uint32_t layer = 0)
+    NativeImageData* backgroundImageData(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1503,7 +1503,7 @@ public:
         return background->imageData(layer);
     }
 
-    BackgroundRepeatValue backgroundRepeatX(uint32_t layer = 0)
+    BackgroundRepeatValue backgroundRepeatX(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1512,7 +1512,7 @@ public:
         return background->repeatX(layer);
     }
 
-    BackgroundRepeatValue backgroundRepeatY(uint32_t layer = 0)
+    BackgroundRepeatValue backgroundRepeatY(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1521,7 +1521,7 @@ public:
         return background->repeatY(layer);
     }
 
-    Length backgroundPositionX(uint32_t layer = 0)
+    Length backgroundPositionX(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1530,7 +1530,7 @@ public:
         return background->positionX(layer);
     }
 
-    Length backgroundPositionY(uint32_t layer = 0)
+    Length backgroundPositionY(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1539,7 +1539,7 @@ public:
         return background->positionY(layer);
     }
 
-    bool backgroundSizeIsLength(uint32_t layer = 0)
+    bool backgroundSizeIsLength(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1548,7 +1548,7 @@ public:
         return background->sizeIsLength(layer);
     }
 
-    BackgroundSizeValue backgroundSizeTypeValue(uint32_t layer = 0)
+    BackgroundSizeValue backgroundSizeTypeValue(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1558,7 +1558,7 @@ public:
         return background->sizeTypeValue(layer);
     }
 
-    LengthSize backgroundSizeLengthValue(uint32_t layer = 0)
+    LengthSize backgroundSizeLengthValue(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1567,7 +1567,7 @@ public:
         return background->sizeLengthValue(layer);
     }
 
-    BackgroundAttachmentValue backgroundAttachment(uint32_t layer = 0)
+    BackgroundAttachmentValue backgroundAttachment(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1576,7 +1576,7 @@ public:
         return background->attachment(layer);
     }
 
-    BoxValue backgroundClip(uint32_t layer = 0)
+    BoxValue backgroundClip(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1585,7 +1585,7 @@ public:
         return background->clip(layer);
     }
 
-    BoxValue backgroundOrigin(uint32_t layer = 0)
+    BoxValue backgroundOrigin(uint32_t layer)
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
@@ -1836,13 +1836,7 @@ public:
         if (!m_rareComputedStyleData.m_styles.size()) {
             return nullptr;
         }
-
-        StyleBackgroundData* background = m_rareComputedStyleData.background();
-        if (background) {
-            return background;
-        }
-
-        return nullptr;
+        return m_rareComputedStyleData.background();
     }
 
     bool isFourSideBorderStyleValueSolid();
@@ -3194,6 +3188,16 @@ public:
     void setMaskSize(LengthSize size, unsigned int layer = 0)
     {
         rareComputedStyleData()->ensurePositionedMask()->setSize(size, layer);
+    }
+
+    bool maskSizeIsLength(unsigned int layer = 0)
+    {
+        PositionedMaskData* positionedMask =
+            m_rareComputedStyleData.positionedMask();
+        if (positionedMask) {
+            return positionedMask->maskSizeIsLength(layer);
+        }
+        return true;
     }
 
     LengthSize maskSizeLengthValue(unsigned int layer = 0)

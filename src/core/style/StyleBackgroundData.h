@@ -68,6 +68,7 @@ public:
         , m_repeatY(BackgroundRepeatValue::RepeatRepeatValue)
         , m_positionX(Length(Length::Percent, 0.0f))
         , m_positionY(Length(Length::Percent, 0.0f))
+        , m_size()
         , m_attachment(
               BackgroundAttachmentValue::ScrollBackgroundAttachmentValue)
         , m_clip(BoxValue::BorderBoxBoxValue)
@@ -105,6 +106,8 @@ public:
 
     void setImage(ImageValue* image)
     {
+        STARFISH_ASSERT(image);
+        STARFISH_ASSERT(!image->type().isNone());
         m_image = image;
     }
 
@@ -426,6 +429,8 @@ public:
 
     void setImage(ImageValue* image, uint32_t index)
     {
+        STARFISH_ASSERT(image);
+        STARFISH_ASSERT(!image->type().isNone());
         uint16_t assured = assureLayerIndexAndSize(index, m_maxLayerImage);
         m_layers[assured].setImage(image);
     }

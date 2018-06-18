@@ -26,6 +26,11 @@ namespace StarFish {
 
 class MaskLayer : public gc {
 public:
+    MaskLayer()
+        : m_sizeIsLength(true)
+    {
+    }
+
     union MaskSize {
         MaskSizeValue m_typeValue;
         LengthSize* m_lengthValue;
@@ -140,6 +145,14 @@ public:
             m_maxLayerSizes = layer + 1;
         }
         m_layers[layer].setSize(size);
+    }
+
+    bool maskSizeIsLength(unsigned int layer = 0) const
+    {
+        if (m_layers.size() <= layer) {
+            return true;
+        }
+        return m_layers[layer].m_sizeIsLength;
     }
 
     LengthSize maskSizeLengthValue(unsigned int layer = 0) const
