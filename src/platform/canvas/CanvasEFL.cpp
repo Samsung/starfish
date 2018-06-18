@@ -1574,8 +1574,8 @@ public:
             elm_box_pack_end(m_eventLayer, eo);
         }
         evas_object_raise(eo);
+        evas_object_show(eo);
         if (isVideoSurface) {
-            evas_object_show(eo);
             restore();
             return;
         }
@@ -1607,6 +1607,7 @@ public:
             }
 
             evas_object_image_data_set(eo, dst);
+            evas_object_show(eo);
         }
 #endif
 
@@ -1682,6 +1683,8 @@ public:
                 m_objList->push_back(clip);
             }
             evas_object_clip_set(eo, clip);
+        } else {
+            evas_object_clip_set(eo, nullptr);
         }
 
         Evas_Map* map = evas_map_new(4);
@@ -1749,7 +1752,6 @@ public:
         evas_object_map_enable_set(eo, EINA_TRUE);
         evas_map_free(map);
 
-        evas_object_show(eo);
         restore();
     }
 

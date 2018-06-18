@@ -50,7 +50,8 @@ enum StarFishStartUpFlag {
     enableFrameTreeDump = 1 << 2,
     enableStackingContextDump = 1 << 3,
     enableHitTestDump = 1 << 4,
-    enableRegressionTest = 1 << 5,
+    enableDebugGraphicsLayer = 1 << 5,
+    enableRegressionTest = 1 << 6,
 };
 
 enum StarFishDeviceKind {

@@ -1850,7 +1850,6 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 StyleResolveContext::StyleResolveContext(Document* document)
     : m_document(document)
     , m_ancestorSelectorFilter(new AncestorSelectorFilter())
-    , m_inDisplayNone(0)
 {
 }
 
@@ -5957,6 +5956,8 @@ StyleResolver::Match StyleResolver::matchForRelation(
         }
     }
     case CSSSelector::RelationType::AdjacentSibling: {
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
         Element* previousSibling = element->previousElementSibling();
         if (previousSibling) {
             AtomicString elementName =
@@ -5976,6 +5977,8 @@ StyleResolver::Match StyleResolver::matchForRelation(
         }
     }
     case CSSSelector::RelationType::GeneralSibling: {
+        result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
+                                                     StyleDamageFromDOMTree);
         Element* previousSibling = element->previousElementSibling();
         while (previousSibling) {
             AtomicString elementName =
@@ -6437,7 +6440,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                 ComputedStyleDamage::ComputedStyleDamageInherited |
                 ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
         } else {
-            if (!element->frame() && !ctx.InDisplayNone()) {
+            if (!element->frame()) {
                 damage = (ComputedStyleDamage)(
                     ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
             }
@@ -6560,14 +6563,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                                          bool inheritedStyleChanged)
 {
     ComputedStyle* childTextNodeStyle = nullptr;
-    bool inheritedStyleChangedForTextNode = inheritedStyleChanged;
-    bool isParentDisplayNone = false;
-    if (parentElementStyle &&
-        parentElementStyle->display() == NoneDisplayValue) {
-        isParentDisplayNone = true;
-        ctx.markInDisplayNone();
-    }
-
+    STARFISH_ASSERT(parentElementStyle->display() != NoneDisplayValue);
     if (parentElement->isElement()) {
         ctx.m_ancestorSelectorFilter->pushElement(parentElement->asElement());
     }
@@ -6576,24 +6572,32 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
     while (child) {
         if (child->isElement()) {
             ComputedStyle* oldStyle = child->style();
-            bool childIsHiddenBefore =
-                oldStyle ? oldStyle->display() == NoneDisplayValue : true;
             auto damage =
                 resolveElementStyle(ctx, resolver, child->asElement(),
                                     parentElementStyle, inheritedStyleChanged);
+
+            child->m_gotInheritedStyleDirty =
+                damage & ComputedStyleDamage::ComputedStyleDamageInherited;
+
             if (child->style()->display() == DisplayValue::NoneDisplayValue) {
-                child->asElement()->clearChildNeedsStyleRecalc();
-            } else if (damage & ComputedStyleDamageInherited) {
-                inheritedStyleChanged = true;
-            } else if (childIsHiddenBefore) {
-                inheritedStyleChanged = true;
+                child->m_gotInheritedStyleDirty = false;
+                child->clearNeedsStyleRecalc();
+            } else if (inheritedStyleChanged ||
+                       child->m_gotInheritedStyleDirty || !oldStyle ||
+                       oldStyle->display() == NoneDisplayValue) {
+                child->setChildNeedsStyleRecalc();
+                child->m_gotInheritedStyleDirty = true;
             }
+
+            if (child->style()->display() == NoneDisplayValue) {
+                child->clearChildNeedsStyleRecalc();
+            }
+
             if (oldStyle && oldStyle != child->style()) {
                 ctx.pushIntoComputedStylePool(oldStyle);
             }
-
         } else {
-            if (inheritedStyleChangedForTextNode || child->needsStyleRecalc()) {
+            if (inheritedStyleChanged || child->needsStyleRecalc()) {
                 if (childTextNodeStyle == nullptr) {
                     childTextNodeStyle = new (ctx.allocateComputedStyle())
                         ComputedStyle(parentElementStyle);
@@ -6632,31 +6636,17 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 
     child = parentElement->firstChild();
     while (child) {
-        if (child->isElement() &&
-            (child->childNeedsStyleRecalc() || inheritedStyleChanged)) {
-            resolveChildrenStyle(ctx, resolver, child->asElement(),
-                                 child->style(), inheritedStyleChanged);
+        if (child->isElement() && child->childNeedsStyleRecalc()) {
+            resolveChildrenStyle(
+                ctx, resolver, child->asElement(), child->style(),
+                inheritedStyleChanged || child->m_gotInheritedStyleDirty);
         }
         child = child->nextSibling();
     }
 
-#ifndef NDEBUG
-    child = parentElement->firstChild();
-    while (child) {
-        STARFISH_ASSERT(!child->needsStyleRecalc());
-        STARFISH_ASSERT(!child->childNeedsStyleRecalc());
-        child = child->nextSibling();
-    }
-#endif
-
     parentElement->clearChildNeedsStyleRecalc();
-
     if (parentElement->isElement()) {
         ctx.m_ancestorSelectorFilter->popElement();
-    }
-
-    if (isParentDisplayNone) {
-        ctx.unmarkInDisplayNone();
     }
 }
 

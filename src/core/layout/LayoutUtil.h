@@ -1232,6 +1232,12 @@ public:
                py < (y() + height());
     }
 
+    bool containsInVisual(LayoutUnit px, LayoutUnit py) const
+    {
+        return px >= x() && px <= (x() + width()) && py >= y() &&
+               py <= (y() + height());
+    }
+
     void unite(const LayoutRect& other)
     {
         if (other.isEmpty()) {

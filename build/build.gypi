@@ -17,6 +17,8 @@
             'STARFISH_ENABLE_TTS',
             'STARFISH_IGNORE_CROSS_ORIGIN',
             'STARFISH_ENABLE_HTTPCACHE',
+
+            # 'STARFISH_ENABLE_TEST',
             # 'STARFISH_ENABLE_PROFILING',
         ],
         # NOTE: common #defines for all Tizen platform

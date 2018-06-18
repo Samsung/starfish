@@ -140,11 +140,8 @@ protected:
     StackingContextRareData* ensureRareData();
 
     struct ComputeStackingContextContext;
-    void computeStackingContextProperties(ComputeStackingContextContext& ctx,
-                                          StackingContext* ancestorLayer,
-                                          bool& descendantHas3DTransform);
+    void computeStackingContextProperties(ComputeStackingContextContext& ctx);
     void applyStackingContextProperties(ComputeStackingContextContext& ctx);
-    bool canComposite(ComputeStackingContextContext& ctx);
 
     bool m_needsRepainting;
     bool m_catchedMatrixChangedWhileComputeStackingContextProperties;

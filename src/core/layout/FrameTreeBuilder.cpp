@@ -168,6 +168,7 @@ void FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f)
     Node* node = f->node()->firstChild();
     while (node) {
         node->markNeedsFrameTreeBuild();
+        clearTree(node);
         node = node->nextSibling();
     }
 

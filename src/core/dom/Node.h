@@ -118,10 +118,12 @@ protected:
         , m_childNeedsFrameTreeBuild(true)
         , m_didInlineStyleModifiedAfterAttributeSet(false)
         , m_tabIndexWasSetExplicitly(false)
+        , m_gotInheritedStyleDirty(false)
         , m_hasDirAttribute(false)
         , m_isRunningOpacityAnimation(false)
         , m_isRunningTransformAnimation(false)
         , m_canBeCountingRoot(false)
+        , m_canBeQuoteRoot(false)
         , m_state(NodeStateNormal)
         , m_rareNodeMembers(nullptr)
         , m_nextSibling(nullptr)
@@ -726,6 +728,8 @@ protected:
     // for Element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
     bool m_tabIndexWasSetExplicitly : 1;
+    friend class StyleResolver;
+    bool m_gotInheritedStyleDirty : 1; // this flag only used in style resolver
     // for HTMLElelement
     bool m_hasDirAttribute : 1;
     // for animation

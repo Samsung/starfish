@@ -2807,10 +2807,14 @@ void CSSStyleDeclaration::setFontFamily(const char* value, size_t len,
         removeCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily);
         return;
     }
-    CSSTokenVector tokens;
-    tokenizeCSSValue(tokens, value, len, ",", 1, true);
+
+    CSSTokenVector layers;
+    if (!CSSPropertyParser::parseLayers(value, len, layers)) {
+        return;
+    }
+
     CSSStyleValuePair ret;
-    if (ret.updateValueCommon(tokens) || ret.updateValueFontFamily(tokens)) {
+    if (ret.updateValueCommon(layers) || ret.updateValueFontFamily(layers)) {
         ret.setFlagImportant(isImportant);
         addCSSValuePair(CSSStyleValuePair::KeyKind::FontFamily, ret);
     }
