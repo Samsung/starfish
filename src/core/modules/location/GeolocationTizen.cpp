@@ -19,8 +19,8 @@
 
 #include "StarFishConfig.h"
 #include "core/modules/location/Geolocation.h"
-#if defined(STARFISH_TIZEN_MOBILE) || defined(STARFISH_TIZEN_WEARABLE) || \
-    defined(STARFISH_TIZEN_TV)
+#if defined(STARFISH_TIZEN_MOBILE) || \
+    defined(STARFISH_TIZEN_WEARABLE_WIDGET) || defined(STARFISH_TIZEN_TV)
 #include "core/modules/location/Geoposition.h"
 #include "core/modules/location/Coordinates.h"
 #include "core/modules/location/PositionError.h"

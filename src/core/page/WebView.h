@@ -75,6 +75,7 @@ class WebView : public StarFishHoldable, public gc {
     friend class BrowsingContext;
     friend class StackingContext;
     friend class PlatformWindow;
+    friend class WindowImplEFL;
     friend class AnimationExecutor;
 
 public:

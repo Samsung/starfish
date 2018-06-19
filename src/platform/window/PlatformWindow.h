@@ -120,8 +120,8 @@ public:
                                   Node* node = nullptr);
 
     virtual bool rendering();
-    void pause();
-    void resume();
+    virtual void pause();
+    virtual void resume();
     virtual void close();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
