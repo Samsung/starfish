@@ -74,6 +74,13 @@ def run_multi_results_basic_test(list, backend, font_dep):
     result = basictest.run_parallel(list, nproc, tc_handler=tc_handler, result_handler=result_handler)
     return result_summarizer(result)
 
+# WPT pixel test
+def run_wpt_pixel_test(list, backend, font_dep):
+    import basics.starfish_pixel_test as pixeltest
+    from tests.wpt_test import wpt_exp_png_namer
+    result = pixeltest.run_parallel(list, backend, nproc, ahem_font=(not font_dep), expected_namer=wpt_exp_png_namer)
+    return default_result_summarizer(result)
+
 tests = {}
 # Named tests
 tests["dom_conformance"] = run_dom_conformance_test
@@ -81,6 +88,7 @@ tests["vendor_basic"] = run_vendor_basic_test
 tests["vendor_pixel"] = run_vendor_pixel_test
 tests["csswg"] = run_csswg_test
 tests["bidi"] = run_bidi_test
+tests["wpt_pixel"] = run_wpt_pixel_test
 # General tests
 tests["basic"] = run_default_basic_test
 tests["pixel"] = run_default_pixel_test
