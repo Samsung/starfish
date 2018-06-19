@@ -54,7 +54,7 @@
             # 'STARFISH_TIZEN_WEARABLE',
             'STARFISH_TIZEN_WEARABLE_WIDGET',
             'STARFISH_TIZEN_TRANSPARENT_BACKGROUND',
-            'STARFISH_ENABLE_MULTIMEDIA',
+            #'STARFISH_ENABLE_MULTIMEDIA',
         ],
         'defines_custom_da': [
         ],

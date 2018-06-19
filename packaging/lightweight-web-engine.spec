@@ -103,6 +103,8 @@ lightweight-web-engine development headers
 
 %build
 %if "%{tizen_product}" == "gear"
+CFLAGS+=' -Os '
+CXXFLAGS+=' -Os '
 ./build_third_party.sh arm gear
 %else
 ./build_third_party.sh arm
@@ -118,8 +120,6 @@ ninja -C out_tizen/%{target}/release starfish.tizen.tv.release
 
 %if "%{tizen_product}" == "gear"
 %define target gear
-CFLAGS+=' -Os '
-CXXFLAGS+=' -Os '
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dbackend=efl -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}
 ninja -C out_tizen/%{target}/release starfish.tizen.gear.release
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dbackend=efl -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}

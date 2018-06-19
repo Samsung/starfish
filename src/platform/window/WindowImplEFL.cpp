@@ -32,7 +32,6 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
-#include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/profiling/Profiling.h"
@@ -251,11 +250,32 @@ public:
         return evas_object_focus_get(m_mainBox) == EINA_TRUE;
     }
 
+    virtual void pause() override
+    {
+        STARFISH_LOG_INFO("WindowImpleEFL::pause()\n");
+        PlatformWindow::pause();
+        if (g_currentWnd == this) {
+            g_currentWnd = nullptr;
+        }
+    }
+
+    virtual void resume() override
+    {
+        STARFISH_LOG_INFO("WindowImpleEFL::resume()\n");
+        if (g_currentWnd != this) {
+            g_currentWnd = this;
+        }
+        PlatformWindow::resume();
+        webView()->setNeedsRendering();
+    }
+
     virtual void close() override
     {
         STARFISH_LOG_INFO("WindowImplEFL::close()\n");
         PlatformWindow::close();
-        g_currentWnd = nullptr;
+        if (g_currentWnd == this) {
+            g_currentWnd = nullptr;
+        }
     }
 
     virtual void onIdle() override
@@ -1916,7 +1936,9 @@ Compositor* WindowImplEFL::prepareCompositor()
 
 void WindowImplEFL::clearResources()
 {
+    STARFISH_LOG_INFO("WindowImplEFL::clearResources()\n");
     if (m_renderingAnimator) {
+        STARFISH_LOG_INFO("Remove animator\n");
         ecore_animator_freeze(m_renderingAnimator);
         ecore_animator_del(m_renderingAnimator);
     }
