@@ -74,6 +74,13 @@ def run_multi_results_basic_test(list, backend, font_dep):
     result = basictest.run_parallel(list, nproc, tc_handler=tc_handler, result_handler=result_handler)
     return result_summarizer(result)
 
+# WPT basic test
+def run_wpt_basic_test(list, backend, font_dep):
+    import basics.starfish_basic_test as basictest
+    from tests.wpt_test import wpt_tc_handler
+    result = basictest.run_parallel(list, nproc, tc_handler=wpt_tc_handler)
+    return default_result_summarizer(result)
+
 # WPT pixel test
 def run_wpt_pixel_test(list, backend, font_dep):
     import basics.starfish_pixel_test as pixeltest
@@ -88,6 +95,7 @@ tests["vendor_basic"] = run_vendor_basic_test
 tests["vendor_pixel"] = run_vendor_pixel_test
 tests["csswg"] = run_csswg_test
 tests["bidi"] = run_bidi_test
+tests["wpt_basic"] = run_wpt_basic_test
 tests["wpt_pixel"] = run_wpt_pixel_test
 # General tests
 tests["basic"] = run_default_basic_test
