@@ -315,11 +315,9 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         GC_set_on_collection_event([](GC_EventType evtType) {
 
             if (GC_EVENT_RECLAIM_END == evtType) {
-#if defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
                 STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
                                   GC_get_memory_use() / 1024.f / 1024.f,
                                   GC_get_heap_size() / 1024.f / 1024.f);
-#endif
             }
 
             auto iter = g_gcCollectionEventListenterList.begin();

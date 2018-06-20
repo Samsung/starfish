@@ -25,6 +25,10 @@
 #include <dali-toolkit/dali-toolkit.h>
 #include <dali-toolkit/devel-api/controls/web-view-lite/web-view-lite.h>
 
+#if defined(STARFISH_TIZEN)
+#define STARFISH_DALI_TBMSURFACE
+#endif
+
 #if defined(STARFISH_DALI_TBMSURFACE)
 #include <tbm_surface.h>
 #endif
@@ -50,24 +54,26 @@ struct UVAsyncHandleData {
     std::function<void(void*)> cb;
     void* data;
 };
-std::vector<uv_async_t*> gAsyncHandlePool;
-uv_async_t* fetchAsyncHandle()
-{
-    pthread_mutex_lock(&gMutex);
-    uv_async_t* handle = gAsyncHandlePool.back();
-    gAsyncHandlePool.pop_back();
-    pthread_mutex_unlock(&gMutex);
-    return handle;
-}
 
 static void* startMainThread(void* data);
 struct DaliStarFishBinder {
     void* webContainerInstance;
+#if defined(STARFISH_DALI_TBMSURFACE)
+    Dali::NativeImageSourcePtr nativeImageSrc;
+    tbm_surface_h tbmSurface;
+    tbm_surface_info_s tbmSurfaceInfo;
+#else
     Dali::BufferImage bufferImage;
+#endif
     void* daliControlInstance;
+    std::list<size_t> asyncHandlePool;
     int w, h, s;
     DaliStarFishBinder()
         : webContainerInstance(nullptr)
+#if defined(STARFISH_DALI_TBMSURFACE)
+        , nativeImageSrc(nullptr)
+        , tbmSurface(nullptr)
+#endif
         , daliControlInstance(nullptr)
         , w(0)
         , h(0)
@@ -107,11 +113,9 @@ extern "C" __attribute__((visibility("default"))) void initMainThread(
 
 extern "C" __attribute__((visibility("default"))) void startMainThreadIfNeeds()
 {
-    // STARFISH_LOG_INFO("startMainThreadIfNeeds()\n");
+    // STARFISH_LOG_INFO("[StarFish] startMainThreadIfNeeds()\n");
     if (!isAliveMainThread()) {
         initMainThread(startMainThread);
-        uv_async_send(&gLauncherHandle);
-        pthread_mutex_lock(&gMutex);
     }
 }
 
@@ -120,17 +124,19 @@ extern "C" __attribute__((visibility("default"))) void dispatchMouseDownEvent(
 {
     STARFISH_ASSERT(binder);
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [x, y](void* data) {
-        // STARFISH_LOG_INFO("Callback in dispatchMouseDownEvent()\n");
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [x, y](void* data) {
+        // STARFISH_LOG_INFO("[StarFish] Callback in
+        // dispatchMouseDownEvent()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         ((WebContainer*)binder->webContainerInstance)
             ->DispatchMouseDownEvent(MouseButtonValue::LeftButton,
                                      MouseButtonsValue::LeftButtonDown, x, y);
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 extern "C" __attribute__((visibility("default"))) void dispatchMouseUpEvent(
@@ -138,17 +144,18 @@ extern "C" __attribute__((visibility("default"))) void dispatchMouseUpEvent(
 {
     STARFISH_ASSERT(binder);
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [x, y](void* data) {
-        // STARFISH_LOG_INFO("Callback in dispatchMouseUpEvent()\n");
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [x, y](void* data) {
+        // STARFISH_LOG_INFO("[StarFish] Callback in dispatchMouseUpEvent()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         ((WebContainer*)binder->webContainerInstance)
             ->DispatchMouseUpEvent(MouseButtonValue::NoButton,
                                    MouseButtonsValue::NoButtonDown, x, y);
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 extern "C" __attribute__((visibility("default"))) void dispatchMouseMoveEvent(
@@ -157,11 +164,11 @@ extern "C" __attribute__((visibility("default"))) void dispatchMouseMoveEvent(
 {
     STARFISH_ASSERT(binder);
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [x, y, isLButtonPressed](void* data) {
-        // STARFISH_LOG_INFO("Callback in dispatchMouseMoveEvent()\n");
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [x, y, isLButtonPressed](void* data) {
+        // STARFISH_LOG_INFO("[StarFish] Callback in
+        // dispatchMouseMoveEvent()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         ((WebContainer*)binder->webContainerInstance)
             ->DispatchMouseMoveEvent(
@@ -171,7 +178,9 @@ extern "C" __attribute__((visibility("default"))) void dispatchMouseMoveEvent(
                                  : MouseButtonsValue::NoButtonDown,
                 x, y);
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 extern "C" __attribute__((visibility("default"))) void dispatchKeyDownEvent(
@@ -179,16 +188,17 @@ extern "C" __attribute__((visibility("default"))) void dispatchKeyDownEvent(
 {
     STARFISH_ASSERT(binder);
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [keyCode](void* data) {
-        // STARFISH_LOG_INFO("Callback in dispatchKeyDownEvent()\n");
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [keyCode](void* data) {
+        STARFISH_LOG_INFO("[StarFish] Callback in dispatchKeyDownEvent()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         ((WebContainer*)binder->webContainerInstance)
             ->DispatchKeyDownEvent(keyCode);
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 extern "C" __attribute__((visibility("default"))) void dispatchKeyPressEvent(
@@ -196,16 +206,18 @@ extern "C" __attribute__((visibility("default"))) void dispatchKeyPressEvent(
 {
     STARFISH_ASSERT(binder);
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [keyCode](void* data) {
-        // STARFISH_LOG_INFO("Callback in dispatchKeyPressEvent()\n");
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [keyCode](void* data) {
+        // STARFISH_LOG_INFO("[StarFish] Callback in
+        // dispatchKeyPressEvent()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         ((WebContainer*)binder->webContainerInstance)
             ->DispatchKeyPressEvent(keyCode);
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 extern "C" __attribute__((visibility("default"))) void dispatchKeyUpEvent(
@@ -213,16 +225,17 @@ extern "C" __attribute__((visibility("default"))) void dispatchKeyUpEvent(
 {
     STARFISH_ASSERT(binder);
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [keyCode](void* data) {
-        // STARFISH_LOG_INFO("Callback in dispatchKeyUpEvent()\n");
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [keyCode](void* data) {
+        // STARFISH_LOG_INFO("[StarFish] Callback in dispatchKeyUpEvent()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         ((WebContainer*)binder->webContainerInstance)
             ->DispatchKeyUpEvent(keyCode);
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 LWE::KeyValue eventKeyToKeyboardData(const char* DALIKeyString,
@@ -414,7 +427,11 @@ public:
     {
         STARFISH_ASSERT(mBinder);
         if (isNeedsUpdate()) {
+#if defined(STARFISH_DALI_TBMSURFACE)
+            Dali::Stage::GetCurrent().KeepRendering(0.01f);
+#else
             mBinder->bufferImage.Update();
+#endif
             setNeedsUpdate(false);
         }
 
@@ -430,6 +447,7 @@ private:
 extern "C" __attribute__((visibility("default"))) void createInstance(
     DaliStarFishBinder* binder)
 {
+    STARFISH_ASSERT(binder);
     Dali::Toolkit::WebViewLite* view =
         (Dali::Toolkit::WebViewLite*)binder->daliControlInstance;
 
@@ -438,45 +456,71 @@ extern "C" __attribute__((visibility("default"))) void createInstance(
                                 &EventTracker::touchEventHandler);
     Dali::Stage::GetCurrent().KeyEventSignal().Connect(
         gEventInstance, &EventTracker::keyEventHandler);
-    view->SetImage(binder->bufferImage);
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [](void* data) {
-        // STARFISH_LOG_INFO("Callback in createInstance()\n");
+#if defined(STARFISH_DALI_TBMSURFACE)
+    STARFISH_ASSERT(binder->nativeImageSrc);
+    STARFISH_LOG_INFO(
+        "[StarFish] createInstance() [binder->nativeImageSrc : %p]\n",
+        binder->nativeImageSrc);
+    //    view->SetImage(binder->nativeImage);
+    binder->nativeImageSrc->SetSource(binder->tbmSurface);
+#else
+    STARFISH_ASSERT(binder->bufferImage);
+    STARFISH_LOG_INFO(
+        "[StarFish] createInstance() [binder->bufferImage : %p]\n",
+        binder->bufferImage);
+    view->SetImage(binder->bufferImage);
+#endif
+
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [](void* data) {
+        STARFISH_LOG_INFO("[StarFish] Callback in createInstance()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         binder->webContainerInstance = WebContainer::Create(
             malloc(binder->w * binder->h * sizeof(uint32_t)), binder->w,
             binder->h, binder->s, 1.0);
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 extern "C" __attribute__((visibility("default"))) void loadURL(
     DaliStarFishBinder* binder, const std::string& url)
 {
     STARFISH_ASSERT(binder);
+    STARFISH_LOG_INFO("[StarFish] loadURL()\n");
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [url](void* data) {
-        // STARFISH_LOG_INFO("Callback in  StarFish::loadURL()\n");
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [url](void* data) {
+        STARFISH_LOG_INFO("[StarFish] Callback in loadURL()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         ((WebContainer*)binder->webContainerInstance)->LoadURL(url);
         ((WebContainer*)binder->webContainerInstance)
             ->RegisterOnRenderedHandler(
                 [binder](LWE::WebContainer* c, void* buf) {
-                    // STARFISH_LOG_INFO("Callback of Callback in
+#if defined(STARFISH_DALI_TBMSURFACE)
+                    // STARFISH_LOG_INFO("[StarFish] Callback of Callback in
+                    // RegisterOnRenderedHandler()
+                    // [binder->tbmSurfaceInfo.planes[0].ptr:%p]\n",
+                    // binder->tbmSurfaceInfo.planes[0].ptr);
+                    memcpy(binder->tbmSurfaceInfo.planes[0].ptr, buf,
+                           binder->w * binder->h * sizeof(uint32_t));
+#else
+                    // STARFISH_LOG_INFO("[StarFish] Callback of Callback in
                     // RegisterOnRenderedHandler() [Dali BufImg:%p]\n",
                     // binder->bufferImage);
                     memcpy(binder->bufferImage.GetBuffer(), buf,
                            binder->w * binder->h * sizeof(uint32_t));
+#endif
                     gNeedsUpdate = true;
                 });
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 extern "C" __attribute__((visibility("default"))) void destory(
@@ -484,24 +528,24 @@ extern "C" __attribute__((visibility("default"))) void destory(
 {
     STARFISH_ASSERT(binder);
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [](void* data) {
-        // STARFISH_LOG_INFO("Callback in destory()\n");
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [](void* data) {
+        // STARFISH_LOG_INFO("[StarFish] Callback in destory()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         ((WebContainer*)binder->webContainerInstance)->Destroy();
 
-        auto iter = gAsyncHandlePool.begin();
-        for (; iter != gAsyncHandlePool.end();) {
-            free((*iter)->data);
-            iter = gAsyncHandlePool.erase(iter);
+        auto iter = binder->asyncHandlePool.begin();
+        for (; iter != binder->asyncHandlePool.end();) {
+            iter = binder->asyncHandlePool.erase(iter);
         }
-        gAsyncHandlePool.clear();
+        binder->asyncHandlePool.clear();
 
         free(gEventInstance);
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 extern "C" __attribute__((visibility("default"))) void
@@ -509,50 +553,54 @@ registerOnRenderedHandler(DaliStarFishBinder* binder)
 {
     STARFISH_ASSERT(binder);
 
-    uv_async_t* handle = fetchAsyncHandle();
-    TO_HANDLE_DATA(handle)->data = binder;
-    TO_HANDLE_DATA(handle)
-        ->cb = [&](void* data) {
-        // STARFISH_LOG_INFO("Callback in registerOnRenderedHandler()\n");
+    UVAsyncHandleData* handle = new UVAsyncHandleData();
+    handle->data = binder;
+    handle->cb = [&](void* data) {
+        // STARFISH_LOG_INFO("[StarFish] Callback in
+        // registerOnRenderedHandler()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         ((WebContainer*)binder->webContainerInstance)
             ->RegisterOnRenderedHandler(
                 [binder](LWE::WebContainer* c, void* buf) {
-                    // STARFISH_LOG_INFO("Callback in
-                    // RegisterOnRenderedHandler() [Dali BufImg:%p]\n",
-                    // binder->bufferImage);
+// STARFISH_LOG_INFO("[StarFish] Callback in
+// RegisterOnRenderedHandler() [Dali BufImg:%p]\n",
+// binder->bufferImage);
+#if defined(STARFISH_DALI_TBMSURFACE)
+                    memcpy(binder->tbmSurfaceInfo.planes[0].ptr, buf,
+                           binder->w * binder->h * sizeof(uint32_t));
+#else
                     memcpy(binder->bufferImage.GetBuffer(), buf,
                            binder->w * binder->h * sizeof(uint32_t));
+#endif
                     gNeedsUpdate = true;
                 });
     };
-    uv_async_send(handle);
+    binder->asyncHandlePool.push_back((size_t)handle);
+    gLauncherHandle.data = binder;
+    uv_async_send(&gLauncherHandle);
 }
 
 static void* startMainThread(void* data)
 {
-    // STARFISH_LOG_INFO("startMainThread(void* data)\n");
     uv_async_init(uv_default_loop(), &gLauncherHandle, [](uv_async_t* handle) {
-        // STARFISH_LOG_INFO("uv_async_init() in StarFish::startMainThread(void*
-        // data)\n");
-        for (size_t i = 0; i < 128; i++) {
-            uv_async_t* t = new uv_async_t;
-            t->data = new UVAsyncHandleData();
-            ((UVAsyncHandleData*)t->data)->cb = nullptr;
-            ((UVAsyncHandleData*)t->data)->data = nullptr;
-            uv_async_init(uv_default_loop(), t, [](uv_async_t* handle) {
-                // STARFISH_LOG_INFO("uv_async_init() of uv_async_init() in
-                // startMainThread(void* data)\n");
-                TO_HANDLE_DATA(handle)->cb(TO_HANDLE_DATA(handle)->data);
-
+        // STARFISH_LOG_INFO("[StarFish] uv_async_init() in
+        // startMainThread()\n");
+        DaliStarFishBinder* binder = (DaliStarFishBinder*)handle->data;
+        while (!binder->asyncHandlePool.empty()) {
+            UVAsyncHandleData* handleData = nullptr;
+            {
                 pthread_mutex_lock(&gMutex);
-                gAsyncHandlePool.push_back(handle);
+                handleData =
+                    (UVAsyncHandleData*)*binder->asyncHandlePool.begin();
+                binder->asyncHandlePool.erase(binder->asyncHandlePool.begin());
                 pthread_mutex_unlock(&gMutex);
-            });
-            gAsyncHandlePool.push_back(t);
+            }
+
+            if (handleData) {
+                handleData->cb(handleData->data);
+                delete handleData;
+            }
         }
-        pthread_mutex_unlock(&gMutex);
-        uv_close((uv_handle_t*)handle, nullptr);
     });
 
     gIsAliveMainLoop = true;
@@ -564,5 +612,4 @@ static void* startMainThread(void* data)
 }
 
 /////////////////////////////////////////////
-
 #endif
