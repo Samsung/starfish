@@ -817,7 +817,7 @@ bool WebView::rendering(bool force)
     m_needsRendering = false;
     m_inRendering = false;
 
-#if defined(STARFISH_ENABLE_TEST)
+#if defined(STARFISH_ENABLE_TEST) && !defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
     {
         if (g_fireOnloadEvent &&
             starFish()->TestCompatibleMode() ==

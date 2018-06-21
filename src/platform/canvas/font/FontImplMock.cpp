@@ -19,7 +19,8 @@
 
 #include "StarFishConfig.h"
 
-#if defined(PORT_CANVAS_BACKEND_MOCK)
+#if defined(PORT_CANVAS_BACKEND_MOCK) || \
+    defined(PORT_CANVAS_BACKEND_SKIA) // temp
 #include "StarFish.h"
 
 #include "core/style/UnitHelper.h"
@@ -42,6 +43,11 @@ public:
         return fm;
     }
 };
+
+FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
+{
+    return new FontFaceImplMock();
+}
 
 class FontImplMock : public Font {
 public:

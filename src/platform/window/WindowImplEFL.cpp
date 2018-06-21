@@ -53,7 +53,9 @@
 #include <tizen.h>
 #endif
 
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
 #include <cairo.h>
+#endif
 
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
 #include <Evas_GL.h>
@@ -1778,6 +1780,10 @@ Canvas* WindowImplEFL::preparePainting()
     d.h = height() + starFish()->posY();
     return Canvas::createDirect(starFish(), &d);
 #endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return Canvas::createDirect(starFish(), (void*)0);
+#endif
 }
 
 Compositor* WindowImplEFL::prepareCompositor()
@@ -1931,6 +1937,10 @@ Compositor* WindowImplEFL::prepareCompositor()
     }
 #endif
     return c;
+#endif
+#if defined(PORT_COMPOSITOR_BACKEND_MOCK)
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return Compositor::create(starFish(), (void*)0);
 #endif
 }
 
