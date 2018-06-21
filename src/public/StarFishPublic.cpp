@@ -31,6 +31,10 @@
 
 #include <cstdlib>
 
+#ifdef STARFISH_TIZEN
+#include <net_connection.h>
+#endif
+
 #define TO_STARFISH(instance) ((StarFish::StarFish*)instance->m_starfish)
 #if defined(STARFISH_DALI)
 #include "core/dom/Document.h"
@@ -683,6 +687,25 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
 #if defined(STARFISH_ENABLE_INSPECTOR)
     TO_STARFISH(instance)->setupInspector();
 #endif
+
+#ifdef STARFISH_TIZEN
+    connection_h connection;
+    int conn_err;
+    conn_err = connection_create(&connection);
+    char* proxyAddress = NULL;
+    if (conn_err == CONNECTION_ERROR_NONE) {
+        connection_get_proxy(connection, CONNECTION_ADDRESS_FAMILY_IPV4,
+                             &proxyAddress);
+        if (proxy_address) {
+            TO_STARFISH(instance)->setProxyURL(proxyAddress);
+            free(proxyAddress);
+        }
+        connection_destroy(connection);
+    } else {
+        STARFISH_LOG_INFO("got error while opening tizen network connection\n");
+    }
+#endif
+
     return instance;
 #endif
 }

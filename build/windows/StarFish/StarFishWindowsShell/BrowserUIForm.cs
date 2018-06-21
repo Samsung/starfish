@@ -7,11 +7,13 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using System.Windows.Forms;
 using System.Windows.Interop;
+using static StarFishWindowsShell.SettingsForm;
 
 namespace StarFishWindowsShell
 {
@@ -21,6 +23,7 @@ namespace StarFishWindowsShell
         Console mConsole;
         int mPixelRatio = 1;
         string mInitialTitle;
+        DemoForm mDemoForm;
         public BrowserUIForm()
         {
             InitializeComponent();
@@ -38,11 +41,18 @@ namespace StarFishWindowsShell
             textBoxAddress.Text = url;
             pictureBoxBrowserContent.MouseWheel += PictureBoxBrowserContent_MouseWheel;
             mStarFish = new StarFish(this, pictureBoxBrowserContent.Width, pictureBoxBrowserContent.Height, url);
+            // applySettings();
             mStarFish.OnScreenBufferUpdate = new StarFish.ScreenBufferUpdated(onUpdateScreenBitmapDelegate);
             mStarFish.OnLoadPageStart = new StarFish.LoadPageStart(onLoadPageStartDelegate);
             mStarFish.OnGotMessage = new StarFish.GotMessage(onGotMessage);
             mInitialTitle = this.Text;
 
+            string testURL = "http://www.w3.org/";
+            Uri p = WebProxy.GetDefaultProxy().GetProxy(new Uri(testURL));
+            if (p.ToString() != testURL)
+            {
+                mStarFish.SetProxyURL(p.ToString());
+            }
             Application.AddMessageFilter(this);
         }
 
@@ -94,6 +104,7 @@ namespace StarFishWindowsShell
 
         private void BrowserUIForm_FormClosed(object sender, FormClosedEventArgs e)
         {
+            // mDemoForm.Close();
             mStarFish.Close();
         }
 
@@ -206,6 +217,8 @@ namespace StarFishWindowsShell
 
         void resizeInto(int w, int h)
         {
+            WindowState = FormWindowState.Normal;
+
             if (pictureBoxBrowserContent.Width < w)
             {
                 this.Width = this.Width + (w - pictureBoxBrowserContent.Width);
@@ -229,7 +242,10 @@ namespace StarFishWindowsShell
 
         private void BrowserUIForm_Load(object sender, EventArgs e)
         {
-            buttonResizeFHDHalf.PerformClick();
+            // mDemoForm = new DemoForm(mStarFish);
+            // mDemoForm.Show();
+
+            buttonResizeFullScreen_Click(null, null);
         }
 
         private void BrowserUIForm_KeyDown(object sender, KeyEventArgs e)
@@ -277,6 +293,34 @@ namespace StarFishWindowsShell
         {
             e.Effect = DragDropEffects.Link;
         }
+
+        private void buttonResizeFullScreen_Click(object sender, EventArgs e)
+        {
+            mPixelRatio = 1;
+            resizeInto(1920, 1080);
+
+            WindowState = FormWindowState.Maximized;
+        }
+
+        private void buttonSettings_Click(object sender, EventArgs e)
+        {
+            SettingsForm form = new SettingsForm();
+            form.Owner = this;
+            form.ShowDialog();
+
+            applySettings();
+        }
+
+        void applySettings()
+        {
+            IniFile iniFile = new IniFile();
+            var url = iniFile.Read("proxy");
+            if (!url.StartsWith("http"))
+            {
+                url = "http://" + url;
+            }
+            mStarFish.SetProxyURL(url);
+        }
     }
 
 
@@ -285,6 +329,8 @@ namespace StarFishWindowsShell
         [DllImport("StarFish.dll")]
         public static extern IntPtr createWebViewInstance(uint initialWidth,
                                              uint initialHeight, IntPtr initialBuffer, uint initialBufferStride);
+        [DllImport("StarFish.dll")]
+        public static extern IntPtr setProxyURL(IntPtr mWebViewInstance, IntPtr utf8URL, uint urlBufferLength);
         [DllImport("StarFish.dll")]
         public static extern void loadURL(IntPtr mWebViewInstance, IntPtr utf8URL, uint urlBufferLength);
         [DllImport("StarFish.dll")]
@@ -383,9 +429,17 @@ namespace StarFishWindowsShell
             arg.initialURL = initialURL;
             mStarFishThread.Start(arg);
 
-            mWaitingForm = new StarFishFontInitWaitForm();
-            mWaitingForm.Owner = form;
-            mWaitingForm.ShowDialog();
+            try
+            {
+                mWaitingForm = new StarFishFontInitWaitForm();
+                mWaitingForm.Owner = form;
+                mWaitingForm.ShowDialog();
+            }
+            catch (Exception e)
+            {
+                System.Diagnostics.Debugger.Log(0, "", e.ToString());
+            }
+            
         }
 
         public void OnCloseWaitingForm(Form form)
@@ -456,6 +510,15 @@ namespace StarFishWindowsShell
         public void dispatchKeyUpEvent(Keys keyCode)
         {
             PostThreadMessage(mStarFishThreadID, 0x0413, new UIntPtr(1), new IntPtr((int)keyCode));
+        }
+
+        public void SetProxyURL(string url)
+        {
+            byte[] array = Encoding.UTF8.GetBytes(url);
+            IntPtr lpData = Marshal.AllocHGlobal(array.Length);
+            Marshal.Copy(array, 0, lpData, array.Length);
+            UIntPtr lpLength = new UIntPtr((uint)array.Length);
+            PostThreadMessage(mStarFishThreadID, 0x0510, lpLength, lpData);
         }
 
         public void evaluateJS(string js, GotJSResult cb)
@@ -632,6 +695,25 @@ namespace StarFishWindowsShell
                     else
                     {
                         dispatchKeyDownEvent(mWebViewInstance, (uint)keyCode);
+                    }
+                }
+                else if (msg.message == 0x0510)
+                {
+                    byte[] buf = new byte[(uint)msg.wParam.ToInt32()];
+                    Marshal.Copy(msg.lParam, buf, 0, buf.Length);
+                    string url = Encoding.UTF8.GetString(buf);
+                    LocalFree(msg.lParam);
+
+                    {
+                        byte[] bytes = Encoding.UTF8.GetBytes(url);
+                        unsafe
+                        {
+                            fixed (byte* burl = bytes)
+                            {
+                                setProxyURL(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
+                            }
+                        }
+
                     }
                 }
                 else

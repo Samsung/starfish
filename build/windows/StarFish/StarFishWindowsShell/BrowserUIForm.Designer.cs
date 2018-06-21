@@ -41,7 +41,7 @@
             // buttonNavigate
             // 
             this.buttonNavigate.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonNavigate.Location = new System.Drawing.Point(865, 1);
+            this.buttonNavigate.Location = new System.Drawing.Point(861, 0);
             this.buttonNavigate.Name = "buttonNavigate";
             this.buttonNavigate.Size = new System.Drawing.Size(66, 22);
             this.buttonNavigate.TabIndex = 0;
@@ -55,7 +55,7 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxAddress.Location = new System.Drawing.Point(1, 1);
             this.textBoxAddress.Name = "textBoxAddress";
-            this.textBoxAddress.Size = new System.Drawing.Size(864, 21);
+            this.textBoxAddress.Size = new System.Drawing.Size(854, 21);
             this.textBoxAddress.TabIndex = 1;
             this.textBoxAddress.Text = "about:blank";
             this.textBoxAddress.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxAddress_KeyDown);
@@ -83,7 +83,7 @@
             // buttonConsole
             // 
             this.buttonConsole.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonConsole.Location = new System.Drawing.Point(931, 1);
+            this.buttonConsole.Location = new System.Drawing.Point(927, 0);
             this.buttonConsole.Name = "buttonConsole";
             this.buttonConsole.Size = new System.Drawing.Size(63, 22);
             this.buttonConsole.TabIndex = 3;
@@ -94,7 +94,7 @@
             // buttonResizeFHDHalf
             // 
             this.buttonResizeFHDHalf.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResizeFHDHalf.Location = new System.Drawing.Point(994, 1);
+            this.buttonResizeFHDHalf.Location = new System.Drawing.Point(990, 0);
             this.buttonResizeFHDHalf.Name = "buttonResizeFHDHalf";
             this.buttonResizeFHDHalf.Size = new System.Drawing.Size(120, 22);
             this.buttonResizeFHDHalf.TabIndex = 4;
@@ -105,7 +105,7 @@
             // buttonResizeFHD
             // 
             this.buttonResizeFHD.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right)));
-            this.buttonResizeFHD.Location = new System.Drawing.Point(1113, 1);
+            this.buttonResizeFHD.Location = new System.Drawing.Point(1110, 0);
             this.buttonResizeFHD.Name = "buttonResizeFHD";
             this.buttonResizeFHD.Size = new System.Drawing.Size(102, 22);
             this.buttonResizeFHD.TabIndex = 5;
@@ -137,7 +137,6 @@
             this.Controls.Add(this.buttonNavigate);
             this.Controls.Add(this.textBoxFocusReceiver);
             this.DoubleBuffered = true;
-            this.MaximizeBox = false;
             this.Name = "BrowserUIForm";
             this.Text = "StarFish Windows Shell";
             this.FormClosed += new System.Windows.Forms.FormClosedEventHandler(this.BrowserUIForm_FormClosed);

@@ -627,7 +627,6 @@
     <ClCompile Include="..\..\..\..\src\platform\tts\TTSBase.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\PlatformWindow.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\VirtualCursorData.cpp" />
-    <ClCompile Include="..\..\..\..\src\platform\window\WindowImplAndroid.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplEFL.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplEFLHeadLess.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplGB.cpp" />

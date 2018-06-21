@@ -120,6 +120,11 @@ std::string Settings::GetUserAgentString() const
     return m_userAgent;
 }
 
+std::string Settings::GetProxyURL() const
+{
+    return m_proxyURL;
+}
+
 void Settings::SetUserAgentString(const std::string& ua)
 {
     m_userAgent = ua;
@@ -129,9 +134,15 @@ int Settings::GetCacheMode() const
 {
     return m_cacheMode;
 }
+
 void Settings::SetCacheMode(int mode)
 {
     m_cacheMode = mode;
+}
+
+void Settings::SetProxyURL(const std::string& s)
+{
+    m_proxyURL = s;
 }
 
 ResourceError::ResourceError(int code, const std::string& description)
@@ -199,6 +210,7 @@ Settings WebView::GetSettings()
 #ifdef STARFISH_ENABLE_HTTPCACHE
     result.SetCacheMode(TO_STARFISH(m_starfish)->httpCache()->cacheMode());
 #endif
+    result.SetProxyURL(TO_STARFISH(m_starfish)->proxyURL());
     return result;
 }
 
@@ -306,17 +318,16 @@ void WebView::Destroy()
     delete TO_STARFISH(m_starfish);
 }
 
-void WebView::SetSettings(const LWE::Settings& setttings)
+void WebView::SetSettings(const Settings& settings)
 {
     STARFISH_ASSERT(m_starfish);
-    //     TO_STARFISH(m_starfish)
-    //         ->setCustomUserAgentString(
-    //             StarFish::String::fromUTF8(setttings.GetUserAgentString().c_str()));
-    // #ifdef STARFISH_ENABLE_HTTPCACHE
-    //     TO_STARFISH(m_starfish)
-    //         ->httpCache()
-    //         ->setCacheMode(setttings.GetCacheMode());
-    // #endif
+    TO_STARFISH(m_starfish)
+        ->setCustomUserAgentString(
+            StarFish::String::fromUTF8(settings.GetUserAgentString().c_str()));
+    TO_STARFISH(m_starfish)->setProxyURL(settings.GetProxyURL());
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    TO_STARFISH(m_starfish)->httpCache()->setCacheMode(settings.GetCacheMode());
+#endif
 }
 
 void WebView::RemoveJavascriptInterface(const std::string& exposedObjectName,

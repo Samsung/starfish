@@ -336,6 +336,16 @@ public:
         return m_lweWebViewControlDelegator;
     }
 
+    void setProxyURL(const std::string& url)
+    {
+        m_proxyURL = url;
+    }
+
+    const std::string& proxyURL()
+    {
+        return m_proxyURL;
+    }
+
 protected:
     void enter();
     void exit();
@@ -347,6 +357,7 @@ protected:
     }
     StaticStrings* m_staticStrings;
     icu::Locale m_locale;
+    std::string m_proxyURL;
     LineBreakIteratorPool* m_lineBreakIteratorPool;
     String* m_timezoneID;
     unsigned int m_startUpFlag;

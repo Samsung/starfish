@@ -45,7 +45,7 @@ extern "C" size_t STARFISH_EXPORT __stdcall createWebViewInstance(
 {
     FcInitLoadConfig();
     g_postLogMessageToThreadMessageQueue = true;
-    LWE::WebContainer* wv = LWE::WebContainer::Create(initialBuffer, initialWidth, initialHeight, initialBufferStride);
+    LWE::WebContainer* wv = LWE::WebContainer::Create(initialBuffer, initialWidth, initialHeight, initialBufferStride, 1);
     wv->RegisterOnPageStartedHandler([](LWE::WebContainer* wv, const std::string& url) {
         void* buffer = LocalAlloc(LMEM_FIXED, url.size() + 1);
         memcpy(buffer, url.data(), url.size());
@@ -64,6 +64,17 @@ extern "C" void STARFISH_EXPORT __stdcall loadURL(size_t webViewInstance,
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
     std::string url((char*)utf8URL, urlLength);
     wv->LoadURL(url);
+}
+
+extern "C" void STARFISH_EXPORT __stdcall setProxyURL(size_t webViewInstance,
+    size_t utf8URL,
+    uint32_t urlLength)
+{
+    LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
+    auto s = wv->GetSettings();
+    std::string url((char*)utf8URL, urlLength);
+    s.SetProxyURL(url);
+    wv->SetSettings(s);
 }
 
 void processMessage(MessageLoop* self, const MSG& message);
