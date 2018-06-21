@@ -195,6 +195,23 @@ Frame* FrameTreeBuilder::findNearestBlock(Frame* f)
     }
 }
 
+Frame* FrameTreeBuilder::findNearestBlockStartPositionOfFrameTreeBuildCandidate(
+    Frame* f)
+{
+    if (!f) {
+        return nullptr;
+    } else {
+        while (f) {
+            if (!f->isAnonymous() && !f->didSpiltFrameInline() &&
+                (f->isBlockLevel(true) || f->isFrameTableCellBox())) {
+                break;
+            }
+            f = f->parent();
+        }
+        return f;
+    }
+}
+
 template <typename T>
 static T* createAnonymousBlockBox(FrameBlockBox* blockContainer, Node* node,
                                   DisplayValue display)
@@ -947,6 +964,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                 ctx.isInFrameInlineFlow()) {
                 // divide block. when comes Inline.. + Block(normal flow)
                 didSplitBlock = true;
+                currentFrame->markDidSpiltFrameInline();
 
                 STARFISH_ASSERT(current->parentNode());
                 Frame* parent = current->parentNode()->frame();

@@ -1439,17 +1439,26 @@ Node* Node::removeChild(Node* child)
 
     Frame* old = child->frame();
     if (old) {
-        Frame* target = old->parent();
-        target = FrameTreeBuilder::findNearestBlock(target);
+        Frame* target = FrameTreeBuilder::
+            findNearestBlockStartPositionOfFrameTreeBuildCandidate(
+                old->parent());
+        Frame* otherTarget = FrameTreeBuilder::findNearestBlock(old->parent());
         if (target == nullptr) {
             target = document()->frame();
         }
-        STARFISH_ASSERT(target);
-        FrameBlockBox* targetBlockBox = target->asFrameBlockBox();
-        removeOneChild(targetBlockBox, old);
-        removeAnonymousBlockBoxesIfNeeded(targetBlockBox);
-        target->propagateMarkNeedsLayout();
-        window()->browsingContext()->setNeedsLayout();
+        if (otherTarget == nullptr) {
+            otherTarget = document()->frame();
+        }
+        STARFISH_ASSERT(target && otherTarget);
+        if (otherTarget == target) {
+            FrameBlockBox* targetBlockBox = target->asFrameBlockBox();
+            removeOneChild(targetBlockBox, old);
+            removeAnonymousBlockBoxesIfNeeded(targetBlockBox);
+            target->propagateMarkNeedsLayout();
+            window()->browsingContext()->setNeedsLayout();
+        } else {
+            target->node()->setNeedsFrameTreeBuild();
+        }
     } else {
         child->setNeedsFrameTreeBuild();
     }
@@ -1750,20 +1759,22 @@ void Node::setNeedsFrameTreeBuild()
 
     Frame* old = frame();
     if (old) {
-        Frame* blockParent = FrameTreeBuilder::findNearestBlock(old->parent());
+        Frame* blockParent = FrameTreeBuilder::
+            findNearestBlockStartPositionOfFrameTreeBuildCandidate(
+                old->parent());
         if (!blockParent) {
             blockParent = document()->frame();
-            STARFISH_ASSERT(frame()->isFrameDocument());
         }
 
         STARFISH_ASSERT(blockParent);
         FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(
             blockParent);
     } else {
-        if (isElement()) {
+        if (isElement() && !needsFrameTreeBuild()) {
             if (parentElement() && parentElement()->frame()) {
-                Frame* blockParent = FrameTreeBuilder::findNearestBlock(
-                    parentElement()->frame());
+                Frame* blockParent = FrameTreeBuilder::
+                    findNearestBlockStartPositionOfFrameTreeBuildCandidate(
+                        parentElement()->frame());
                 if (blockParent) {
                     FrameTreeBuilder::
                         needsFrameTreeBuildFromChildrenOfThisFrame(blockParent);
@@ -1798,7 +1809,8 @@ void Node::setNeedsFrameTreeBuildWithoutSelf()
 
     Frame* old = frame();
     if (old) {
-        Frame* blockParent = FrameTreeBuilder::findNearestBlock(old);
+        Frame* blockParent = FrameTreeBuilder::
+            findNearestBlockStartPositionOfFrameTreeBuildCandidate(old);
         if (!blockParent) {
             blockParent = document()->frame();
         }
@@ -1809,8 +1821,9 @@ void Node::setNeedsFrameTreeBuildWithoutSelf()
     } else {
         if (isElement()) {
             if (parentElement() && parentElement()->frame()) {
-                Frame* blockParent = FrameTreeBuilder::findNearestBlock(
-                    parentElement()->frame());
+                Frame* blockParent = FrameTreeBuilder::
+                    findNearestBlockStartPositionOfFrameTreeBuildCandidate(
+                        parentElement()->frame());
                 if (blockParent) {
                     FrameTreeBuilder::
                         needsFrameTreeBuildFromChildrenOfThisFrame(blockParent);

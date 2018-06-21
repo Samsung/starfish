@@ -6506,6 +6506,8 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             element->setNeedsLayout();
         }
 
+        element->setNeedsLayout();
+
         if (damage & ComputedStyleDamage::
                          ComputedStyleDamageEstablishesStackingContext) {
             element->webView()->setNeedsEstablishesStackingContext();
