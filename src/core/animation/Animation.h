@@ -222,9 +222,7 @@ public:
     {
     }
     virtual void attachedToElement();
-    virtual void detachedFromElement()
-    {
-    }
+    virtual void detachedFromElement();
     CSSStyleValuePair::KeyKind propertyType() const
     {
         return m_property;
@@ -259,6 +257,7 @@ protected:
 
 private:
     bool m_isStartEventFired;
+    bool m_attached;
     size_t m_startTimeMs;
     size_t m_durationMs;
     size_t m_delayMs;
@@ -279,6 +278,7 @@ public:
                         delay, timingFunction, data)
     {
     }
+    void attachedToElement() override;
     void execute(float progress) override;
 };
 
@@ -418,6 +418,7 @@ public:
     void runPendingAnimation();
     void addPendingAnimation(Element* element, ComputedStyle* oldStyle,
                              ComputedStyle* newStyle, Frame* oldFrame);
+    void attachAll();
 
 private:
     bool m_isAlive;
