@@ -213,6 +213,18 @@
                         '-lgif',
                     ],
                 }],
+                ['backend=="efl_skia"', {
+                    'cflags_extra': [
+                    ],
+                    'include_dirs_extra': [
+                    ],
+                    'sources_extra': [
+                    ],
+                    'libraries_extra': [
+                        '-ljpeg',
+                        '-lgif',
+                    ],
+                }],
                 ['backend=="dali"', {
                     'cflags_extra': [
                     ],
@@ -325,6 +337,27 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.x64',
+                ],
+            }],
+            ['platform=="linux" and backend=="efl_skia"', {
+                'defines_extra': [
+                    'STARFISH_EFL_SKIA',
+                ],
+                'cflags_extra': [
+                    '<@(cflags_extra)',
+                    '-fno-rtti',
+                ],
+                'libraries_extra': [
+                    '<@(libraries_extra)',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:efl_skia.x64',
+                ],
+                'deps_debug_extra': [
+                    './build.dep.gyp:libskia.x64.debug',
+                ],
+                'deps_release_extra': [
+                    './build.dep.gyp:libskia.x64.release',
                 ],
             }],
             ['platform=="tizen" and backend=="efl_cairo"', {

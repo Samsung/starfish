@@ -98,7 +98,7 @@
             ],
         },
         {
-            'target_name': 'skia',
+            'target_name': 'skia_matrix',
             'type': '<(deplib)',
             'dependencies': [
             ],
@@ -492,6 +492,21 @@
             },
         },
         {
+            'target_name': 'efl_skia.x64',
+            'type': 'none',
+            'all_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
+                    'third_party/skia/include',
+                ],
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
+                    '-lturbojpeg -lgif',
+                    '-Llib -lskia',
+                ],
+            },
+        },
+        {
             'target_name': 'efl_cairo.tizen',
             'type': 'none',
             'all_dependent_settings': {
@@ -601,6 +616,33 @@
 
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
+                },
+            ],
+        },
+        {
+            'target_name': 'libskia.x64.release',
+            'type': 'none',
+            'copies': [
+                {
+                    'files': [
+                        # 'third_party/libskia/out/Release/Shared/libskia.so',
+                        # Below is a temporary
+                        'third_party/skia/out/Debug/Shared/libskia.so',
+                    ],
+                    'destination': '<(PRODUCT_DIR)/../release/lib',
+                },
+            ],
+        },
+        {
+            'target_name': 'libskia.x64.debug',
+            'type': 'none',
+            'copies': [
+                {
+                    'files': [
+                        'third_party/skia/out/Debug/Shared/libskia.so',
+                       
+                    ],
+                    'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
             ],
         },
