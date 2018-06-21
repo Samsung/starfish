@@ -513,12 +513,12 @@ public:
 
     bool isCollapsed() const
     {
-        return m_flags.m_isCollapsed;
+        return m_flags.m_isCollapsedOrDidSpiltFrameInline;
     }
 
     void markCollapsed()
     {
-        m_flags.m_isCollapsed = true;
+        m_flags.m_isCollapsedOrDidSpiltFrameInline = true;
     }
 
     void processStartingMBP(LineFormattingContext* lineFormattingContext);
@@ -573,7 +573,7 @@ protected:
         : InlineBoxLayoutParentBox(frame)
         , m_origin(origin)
     {
-        m_flags.m_isCollapsed = false;
+        m_flags.m_isCollapsedOrDidSpiltFrameInline = false;
         m_flags.m_isFirstLine = isFirstLine;
         if (origin->isLeftMBPCleared()) {
             setLeftMBPCleared(true);

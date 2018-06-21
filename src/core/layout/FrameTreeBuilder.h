@@ -156,6 +156,8 @@ public:
     static void clearTree(Node* current);
     static void needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f);
     static Frame* findNearestBlock(Frame* f);
+    static Frame* findNearestBlockStartPositionOfFrameTreeBuildCandidate(
+        Frame* f);
 
     static void createPseudoElement(Node* parent,
                                     StyleResolver::PseudoElementType pseudoId,

@@ -242,6 +242,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 goto reLayoutFrameBox;
             } else {
                 child->asFrameBox()->setY(normalFlowHeight + top + advanceY);
+                ctx.advanceLineBoxAscender(advanceY);
                 // if the y position of box has any changes, then the cached
                 // position of float boxes which it is going to be used next
                 // time

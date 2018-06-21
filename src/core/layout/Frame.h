@@ -387,6 +387,7 @@ public:
         m_blockFormattingContextInfo.back().m_inlineBlockBoxStack->pop_back();
     }
 
+    void advanceLineBoxAscender(LayoutUnit a);
     void registerLineBoxAscender(FrameBlockBox* blockBox, LineBox* lb,
                                  LayoutUnit ascender);
     Nullable<LayoutUnit> lineBoxAscender(FrameBlockBox* box);
@@ -1515,6 +1516,9 @@ public:
     virtual void dump(int depth)
     {
         printf("%s [%p]", name(), this);
+        if (!isAnonymous()) {
+            printf(" node [%p] ", node());
+        }
     }
 #endif
 
@@ -1983,6 +1987,16 @@ public:
     bool hasFrameBorderRadius();
     BorderRadiusData frameBorderRadius();
 
+    bool didSpiltFrameInline()
+    {
+        return m_flags.m_isCollapsedOrDidSpiltFrameInline;
+    }
+
+    void markDidSpiltFrameInline()
+    {
+        m_flags.m_isCollapsedOrDidSpiltFrameInline = true;
+    }
+
 protected:
     Frame(Node* node, ComputedStyle* s);
 
@@ -2052,8 +2066,12 @@ protected:
         bool m_isFirstLine : 1;
         // special flag for InlineTextBox
         CharDirection m_direction : 2;
-        // special flag for InlineNonReplacedBox
-        bool m_isCollapsed : 1;
+        // special flag for InlineNonReplacedBox & for others
+        // we can share two flags because
+        // 1. InlineNonReplacedBox never split FrameInline
+        // 2. isCollapsed is readed in only inline-layout
+        // 2. didSpiltFrameInline is readed in only FrameTreeBuilder
+        bool m_isCollapsedOrDidSpiltFrameInline : 1;
         bool m_seenNormalFlowInlineBox : 1;
         bool m_seenNormalFlowInlineBlockBox : 1;
         bool m_seenNormalFlowInlineReplaced : 1;
