@@ -1071,7 +1071,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 AnimatedValue(oldColor),
                 AnimatedValue(newStyle->backgroundColor()), duration, delay,
                 timingFunction));
-            newStyle->setBackgroundColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionX,
                             CSSStyleValuePair::BackgroundPosition,
@@ -1089,15 +1088,10 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 if (AnimationUtil::backgroundPosXToAnimatedValue(
                         oldStyle, newStyle, oldPaintingBox, element, pos1, pos2,
                         i)) {
-                    // NOTE Do not register animation directly here
-                    // Because registerAnimation can effect next layer style
-                    tasks.push_back(new LengthAnimationTask(
+                    executor->registerAnimation(new LengthAnimationTask(
                         element, CSSStyleValuePair::BackgroundPositionX, pos1,
                         pos2, duration, delay, timingFunction, (void*)i));
                 }
-            }
-            for (size_t i = 0; i < tasks.size(); i++) {
-                executor->registerAnimation(tasks[i]);
             }
         }
         if (NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionY,
@@ -1116,15 +1110,10 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 if (AnimationUtil::backgroundPosYToAnimatedValue(
                         oldStyle, newStyle, oldPaintingBox, element, pos1, pos2,
                         i)) {
-                    // NOTE Do not register animation directly here
-                    // Because registerAnimation can effect next layer style
-                    tasks.push_back(new LengthAnimationTask(
+                    executor->registerAnimation(new LengthAnimationTask(
                         element, CSSStyleValuePair::BackgroundPositionY, pos1,
                         pos2, duration, delay, timingFunction, (void*)i));
                 }
-            }
-            for (size_t i = 0; i < tasks.size(); i++) {
-                executor->registerAnimation(tasks[i]);
             }
         }
         // NOTE background-size should come after background-position
@@ -1143,15 +1132,10 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 if (AnimationUtil::backgroundSizeToAnimatedValue(
                         oldStyle, newStyle, oldPaintingBox, element, size1,
                         size2, i)) {
-                    // NOTE Do not register animation directly here
-                    // Because registerAnimation can effect next layer style
-                    tasks.push_back(new LengthSizeAnimationTask(
+                    executor->registerAnimation(new LengthSizeAnimationTask(
                         element, CSSStyleValuePair::BackgroundSize, size1,
                         size2, duration, delay, timingFunction, (void*)i));
                 }
-            }
-            for (size_t i = 0; i < tasks.size(); i++) {
-                executor->registerAnimation(tasks[i]);
             }
         }
         if (NEED_TRANSITION(CSSStyleValuePair::BorderBottomColor,
@@ -1163,7 +1147,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 AnimatedValue(oldColor),
                 AnimatedValue(newStyle->border().bottom().color()), duration,
                 delay, timingFunction));
-            newStyle->setBorderBottomColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::BorderLeftColor,
                             CSSStyleValuePair::BorderColor,
@@ -1174,7 +1157,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 AnimatedValue(oldColor),
                 AnimatedValue(newStyle->border().left().color()), duration,
                 delay, timingFunction));
-            newStyle->setBorderLeftColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::BorderRightColor,
                             CSSStyleValuePair::BorderColor,
@@ -1185,7 +1167,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 AnimatedValue(oldColor),
                 AnimatedValue(newStyle->border().right().color()), duration,
                 delay, timingFunction));
-            newStyle->setBorderRightColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::BorderTopColor,
                             CSSStyleValuePair::BorderColor,
@@ -1196,7 +1177,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 AnimatedValue(oldColor),
                 AnimatedValue(newStyle->border().top().color()), duration,
                 delay, timingFunction));
-            newStyle->setBorderTopColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::Color)) {
             Unit::Color oldColor = oldStyle->color();
@@ -1204,7 +1184,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 element, CSSStyleValuePair::Color, AnimatedValue(oldColor),
                 AnimatedValue(newStyle->color()), duration, delay,
                 timingFunction));
-            newStyle->setColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::CaretColor)) {
             Unit::Color oldColor = oldStyle->caretColor();
@@ -1212,7 +1191,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 element, CSSStyleValuePair::CaretColor, AnimatedValue(oldColor),
                 AnimatedValue(newStyle->caretColor()), duration, delay,
                 timingFunction));
-            newStyle->setColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::Height)) {
             if (oldStyle->height().isDefinite(true) &&
@@ -1340,7 +1318,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 element, AnimatedValue(oldStyle->opacity()),
                 AnimatedValue(newStyle->opacity()), duration, delay,
                 timingFunction));
-            newStyle->setOpacity(oldStyle->opacity());
         }
         if (NEED_TRANSITION(CSSStyleValuePair::OutlineColor)) {
             Unit::Color oldColor = oldStyle->outlineColor();
@@ -1349,7 +1326,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                                        AnimatedValue(oldColor),
                                        AnimatedValue(newStyle->outlineColor()),
                                        duration, delay, timingFunction));
-            newStyle->setOutlineColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::TextDecorationColor,
                             CSSStyleValuePair::TextDecoration)) {
@@ -1359,7 +1335,6 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                 AnimatedValue(oldColor),
                 AnimatedValue(newStyle->textDecorationColor()), duration, delay,
                 timingFunction));
-            newStyle->setTextDecorationColor(oldColor);
         }
         if (NEED_TRANSITION(CSSStyleValuePair::Transform)) {
             if (oldFrame->isTransformable()) {
@@ -1392,6 +1367,7 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
             }
         }
     }
+    executor->attachAll();
 }
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,

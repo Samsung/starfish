@@ -112,6 +112,7 @@ AnimationTask::AnimationTask(Element* target,
                              void* data)
 {
     m_isStartEventFired = false;
+    m_attached = false;
     m_targetElement = target;
     m_durationMs = durationInms;
     m_delayMs = delayInms;
@@ -127,6 +128,12 @@ AnimationTask::AnimationTask(Element* target,
 void AnimationTask::attachedToElement()
 {
     m_targetElement->style()->markUsedInAnimator();
+    m_attached = true;
+}
+
+void AnimationTask::detachedFromElement()
+{
+    STARFISH_ASSERT(m_attached);
 }
 
 void AnimationTask::fireStartEvent()
@@ -147,8 +154,6 @@ void AnimationTask::fireStartEvent()
 
 void AnimationTask::fireEndEvent()
 {
-    detachedFromElement();
-
     TransitionEventInit init;
     init.setPropertyName(m_targetPropertyString);
     init.setBubbles(true);
@@ -164,8 +169,6 @@ void AnimationTask::fireEndEvent()
 
 void AnimationTask::fireCancelEvent()
 {
-    detachedFromElement();
-
     TransitionEventInit init;
     init.setPropertyName(m_targetPropertyString);
     init.setBubbles(true);
@@ -250,6 +253,27 @@ static void checkNeedsUpdateInheritStyleValues(
 
         n = n->nextSibling();
     }
+}
+
+void ColorAnimationTask::attachedToElement()
+{
+    AnimationTask::attachedToElement();
+
+#define INIT_COLOR_PROPERTY_STYLE(NAME)                              \
+    if (m_property == CSSStyleValuePair::KeyKind::NAME) {            \
+        targetElement()->style()->set##NAME(m_fromValue.getColor()); \
+        return;                                                      \
+    }
+    INIT_COLOR_PROPERTY_STYLE(BackgroundColor)
+    INIT_COLOR_PROPERTY_STYLE(BorderBottomColor)
+    INIT_COLOR_PROPERTY_STYLE(BorderLeftColor)
+    INIT_COLOR_PROPERTY_STYLE(BorderRightColor)
+    INIT_COLOR_PROPERTY_STYLE(BorderTopColor)
+    INIT_COLOR_PROPERTY_STYLE(Color)
+    INIT_COLOR_PROPERTY_STYLE(CaretColor)
+    INIT_COLOR_PROPERTY_STYLE(OutlineColor)
+    INIT_COLOR_PROPERTY_STYLE(TextDecorationColor)
+#undef INIT_COLOR_PROPERTY_STYLE
 }
 
 // This function change computed style of target node.
@@ -588,6 +612,7 @@ void OpacityAnimationTask::attachedToElement()
 {
     AnimationTask::attachedToElement();
     targetElement()->markRunningOpacityAnimation();
+    targetElement()->style()->setOpacity(m_fromValue.getFloat());
 }
 
 void OpacityAnimationTask::opacityUpdated(bool before, bool after)
@@ -950,7 +975,6 @@ void AnimationExecutor::registerAnimation(AnimationTask* newTask)
 {
     startIfNeeds();
     cancelPreviousAnimationIfNeeded(newTask);
-    newTask->attachedToElement();
     m_animationList.push_back(newTask);
 }
 
@@ -964,11 +988,12 @@ void AnimationExecutor::cancelPreviousAnimationIfNeeded(AnimationTask* newTask)
         std::remove_if(m_animationList.begin(), m_animationList.end(),
                        [&newTask](AnimationTask* current) {
                            if (shouldCancelPrevious(current, newTask)) {
-                               if (newTask->propertyType() !=
-                                   CSSStyleValuePair::KeyKind::Transform) {
-                                   newTask->m_toValue = current->m_toValue;
+                               if (current->m_attached) {
+                                   current->detachedFromElement();
                                }
-                               current->fireCancelEvent();
+                               if (current->m_isStartEventFired) {
+                                   current->fireCancelEvent();
+                               }
                                return true;
                            }
                            return false;
@@ -986,7 +1011,12 @@ void AnimationExecutor::cancelAnimation(Element* target)
                 if (current->targetElement() == target) {
                     target->setNeedsStyleRecalc(
                         Node::StyleChangeReason::JustNeedsRecalcSelf);
-                    current->fireCancelEvent();
+                    if (current->m_attached) {
+                        current->detachedFromElement();
+                    }
+                    if (current->m_isStartEventFired) {
+                        current->fireCancelEvent();
+                    }
                     return true;
                 }
                 return false;
@@ -1106,6 +1136,7 @@ void AnimationExecutor::step()
                         ->toUTF8NonGCString()
                         .data());
 #endif
+                task->detachedFromElement();
                 task->fireEndEvent();
                 m_animationList.erase(i);
                 i--;
@@ -1185,6 +1216,17 @@ void AnimationExecutor::addPendingAnimation(Element* element,
     info->newStyle = newStyle;
     info->oldFrame = oldFrame;
     m_pendingAnimationInfoList.push_back(info);
+}
+
+void AnimationExecutor::attachAll()
+{
+    size_t size = m_animationList.size();
+    for (size_t i = 0; i < size; i++) {
+        AnimationTask* task = m_animationList[i];
+        if (!task->m_attached) {
+            task->attachedToElement();
+        }
+    }
 }
 }
 
