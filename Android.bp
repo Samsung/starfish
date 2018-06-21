@@ -1,13 +1,14 @@
-// Test Android.bp for LigthWeigth Web Engine
+// Android.bp for LigthWeigth Web Engine
 
-
+// Should be removed next release.
+// ******************************************************************************
 cc_prebuilt_library_static {
     name: "liblwe_prebuilt_static_cairo",
     compile_multilib: "32",
     multilib: {
         lib32: {
             srcs: [
-                "third_party/prebuilt_armv-7a_8.1.0/lib/libcairo.a",
+                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libcairo.a",
             ],
         },
     },
@@ -20,7 +21,7 @@ cc_prebuilt_library_static {
     multilib: {
         lib32: {
             srcs: [
-                "third_party/prebuilt_armv-7a_8.1.0/lib/libft2.a",
+                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libft2.a",
             ],
         },
     },
@@ -32,7 +33,7 @@ cc_prebuilt_library_static {
     multilib: {
         lib32: {
             srcs: [
-                "third_party/prebuilt_armv-7a_8.1.0/lib/libharfbuzz.a",
+                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libharfbuzz.a",
             ],
         },
     },
@@ -44,7 +45,7 @@ cc_prebuilt_library_static {
     multilib: {
         lib32: {
             srcs: [
-                "third_party/prebuilt_armv-7a_8.1.0/lib/libharfbuzz-icu.a",
+                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libharfbuzz-icu.a",
             ],
         },
     },
@@ -56,7 +57,7 @@ cc_prebuilt_library_static {
     multilib: {
         lib32: {
             srcs: [
-                "third_party/prebuilt_armv-7a_8.1.0/lib/libpixman.a",
+                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libpixman.a",
             ],
         },
     },
@@ -68,7 +69,7 @@ cc_prebuilt_library_shared {
     multilib: {
         lib32: {
             srcs: [
-                "third_party/prebuilt_armv-7a_8.1.0/lib/libfontconfig.so",
+                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libfontconfig.so",
             ],
         },
     },
@@ -80,11 +81,12 @@ cc_prebuilt_library_shared {
     multilib: {
         lib32: {
             srcs: [
-                "third_party/prebuilt_armv-7a_8.1.0/lib/libjnigraphics.so",
+                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libjnigraphics.so",
             ],
         },
     },
 }
+// ******************************************************************************
 
 cc_library_shared {
     compile_multilib : "32",
@@ -119,10 +121,10 @@ cc_library_shared {
         "inc",
         "src",
 // external header
-        "third_party/prebuilt_armv-7a_8.1.0/include",
-        "third_party/prebuilt_armv-7a_8.1.0/include/bdwgc",
-        "third_party/prebuilt_armv-7a_8.1.0/include/cairo",
-        "third_party/prebuilt_armv-7a_8.1.0/include/harfbuzz",
+        "third_party/android/prebuilt_armv-7a_8.1.0/include",
+        "third_party/android/prebuilt_armv-7a_8.1.0/include/bdwgc",
+        "third_party/android/prebuilt_armv-7a_8.1.0/include/cairo",
+        "third_party/android/prebuilt_armv-7a_8.1.0/include/harfbuzz",
     ],
 
     srcs: [
@@ -156,8 +158,11 @@ cc_library_shared {
         "libcrypto",
         "libssl",
         "liblwe_prebuilt_shared_fc",
+		"libandroidfw",
+// Should use next line over android 8.1         
+//		"libandroid_runtime",
+// Should be removed next release.
         "liblwe_prebuilt_shared_jnigraphics",
-//      "libjnigraphics",  //TODO
     ],
     static_libs:[
         "libgif",
@@ -168,7 +173,6 @@ cc_library_shared {
         "liblwe_prebuilt_static_pixman",
     ],
 
-//  export_include_dirs: ["src"],
     cflags: [
         "-Wno-format-nonliteral",
         "-Wno-invalid-offsetof",

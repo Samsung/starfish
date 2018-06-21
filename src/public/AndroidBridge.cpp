@@ -26,6 +26,7 @@
 #include <jni.h>
 #include <android/log.h>
 #include <android/bitmap.h>
+// #include <android/graphics/Bitmap.h>
 
 #define LOG_TAG "StarFish"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -368,6 +369,10 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Destroy(JNIEnv* env,
     if (g_webViews[webContainer].second != nullptr) {
         AndroidBitmap_unlockPixels(env,
                                    (jobject)g_webViews[webContainer].second);
+        /*
+        android::bitmap::unlockPixels(env,
+                                      (jobject)g_webViews[webContainer].second);
+        */
         env->DeleteGlobalRef((jobject)g_webViews[webContainer].second);
     }
     g_webViews.erase(webContainer);
@@ -386,12 +391,18 @@ Java_com_samsung_android_mobileservice_lwe_WebView_updateBuffer(
     if (g_webViews[webContainer].second != nullptr) {
         jobject bObject_old = (jobject)g_webViews[webContainer].second;
         AndroidBitmap_unlockPixels(env, bObject_old);
+        /*
+        android::bitmap::unlockPixels(env, bObject_old);
+        */
         env->DeleteGlobalRef(bObject_old);
     }
     jobject bObject_new = env->NewGlobalRef(bitmap);
     if ((ret = AndroidBitmap_lockPixels(env, bObject_new, &pixels)) < 0) {
         LOGE("[MONG]AndroidBitmap_lockPixels() failed ! error=%d", ret);
     }
+    /*
+    pixels = android::bitmap::lockPixels(env, bObject_new);
+    */
     webContainer->UpdateBuffer(pixels, w, h, stride);
     g_webViews[webContainer].second = bObject_new;
 }
