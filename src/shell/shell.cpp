@@ -46,6 +46,38 @@
 #include "platform/event/PlatformKeyEventData.h"
 #include <uv.h>
 extern bool g_MainLoopAlive;
+
+struct DaliStarFishBinder {
+    void* webContainerInstance;
+#if defined(STARFISH_DALI_TBMSURFACE)
+    Dali::NativeImageSourcePtr nativeImageSrc;
+    Dali::NativeImage nativeImage;
+    tbm_surface_h tbmSurface;
+    tbm_surface_info_s tbmSurfaceInfo;
+#else
+    Dali::BufferImage bufferImage;
+#endif
+    void* daliControlInstance;
+    std::list<size_t> asyncHandlePool;
+    int w, h, s;
+    DaliStarFishBinder()
+        : webContainerInstance(nullptr)
+#if defined(STARFISH_DALI_TBMSURFACE)
+        , nativeImageSrc(nullptr)
+        , tbmSurface(nullptr)
+#endif
+        , daliControlInstance(nullptr)
+        , w(0)
+        , h(0)
+        , s(0)
+    {
+    }
+};
+
+extern "C" void startMainThreadIfNeeds();
+extern "C" void createInstance(DaliStarFishBinder* binder);
+extern "C" void loadURL(DaliStarFishBinder* binder, const std::string& url);
+extern "C" void destory(DaliStarFishBinder* binder);
 #endif
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
@@ -136,199 +168,89 @@ StarFish::PlatformKeyEventData DaliEventKeyToPlatformKeyEventData(
 class DaliShellController : public ConnectionTracker {
 public:
     DaliShellController(Application& application, int width, int height)
-        : m_isInit(false)
-        , m_isMouseLbuttonDown(false)
-        , m_width(width)
+        : m_width(width)
         , m_height(height)
         , m_webView(nullptr)
         , mApplication(application)
+        , mWebEngineLiteInstance(nullptr)
     {
         m_currentBuffer = malloc(m_width * m_height * sizeof(uint32_t));
         mApplication.InitSignal().Connect(this, &DaliShellController::Create);
     }
     ~DaliShellController()
     {
-#if defined(STARFISH_DALI_TBMSURFACE)
-        if (tbm_surface_unmap(m_surface1) != TBM_SURFACE_ERROR_NONE) {
-            printf("Failed to unmap tbm_surface\n");
-        }
-        if (tbm_surface_unmap(m_surface2) != TBM_SURFACE_ERROR_NONE) {
-            printf("Failed to unmap tbm_surface\n");
-        }
-        if (tbm_surface_destroy(m_surface1) != TBM_SURFACE_ERROR_NONE) {
-            printf("Failed to destroy tbm_surface\n");
-        }
-        if (tbm_surface_destroy(m_surface2) != TBM_SURFACE_ERROR_NONE) {
-            printf("Failed to destroy tbm_surface\n");
-        }
-#endif
     }
 
     bool updateTick();
     void Create(Application& application);
-    bool TouchEventHandler(Dali::Actor actor, const Dali::TouchData& data);
-    bool HoverEventHandler(Dali::Actor actor, const Dali::HoverEvent& event);
-    void KeyEventHandler(const Dali::KeyEvent& event);
-    void renderingFinishedCB(LWE::WebContainer* webview, void* buffer)
-    {
-        memcpy(m_daliImg.GetBuffer(), buffer,
-               m_width * m_height * sizeof(uint32_t));
-        m_needsUpdate = true;
-    }
-    bool m_needsUpdate;
-    bool m_isInit;
-    bool m_isMouseLbuttonDown;
     int m_width;
     int m_height;
     LWE::WebContainer* m_webView;
     Application& mApplication;
-#if defined(STARFISH_DALI_TBMSURFACE)
-    tbm_surface_h m_surface1;
-    tbm_surface_h m_surface2;
-    tbm_surface_info_s m_surface_info1;
-    tbm_surface_info_s m_surface_info2;
-
-    Dali::NativeImageSourcePtr m_daliImg_src;
-    Dali::NativeImage m_daliImg;
-#else
-    Dali::BufferImage m_daliImg;
-#endif
     void* m_currentBuffer;
     Dali::Toolkit::ImageView m_mainView;
-    Dali::Timer m_timer;
+    void* mWebEngineLiteInstance;
+
+private:
+    void OnKeyEvent(const Dali::KeyEvent& event);
 };
 
-void* mainShellThread(void* data)
-{
-    uv_async_init(
-        uv_default_loop(), &g_launcher_handle, [](uv_async_t* handle) {
-            DaliShellController* app = (DaliShellController*)handle->data;
-#if defined(STARFISH_DALI_TBMSURFACE)
-            app->m_webView = LWE::WebContainer::Create(
-                app->m_surface_info1.planes[0].ptr, app->m_width, app->m_height,
-                app->m_width * 4);
-#else
-            app->m_webView = LWE::WebContainer::Create((void*)app->m_currentBuffer,app->m_width,app->m_height,app->m_width*4, 1.0);
-#endif
-            app->m_webView->RegisterOnRenderedHandler(
-                [app](LWE::WebContainer* webview, void* buffer) -> char* {
-                    app->renderingFinishedCB(webview, buffer);
-
-                    return (char*)StarFish::String::fromUTF8("shell.cpp")
-                        ->toUTF8NonGCString()
-                        .data();
-                });
-            app->m_isInit = true;
-            pthread_mutex_unlock(g_initMutex);
-        });
-    g_MainLoopAlive = true;
-    pthread_mutex_unlock(g_initMutex);
-    while (true) {
-        uv_run(uv_default_loop(), UV_RUN_ONCE);
-    }
-    return NULL;
-}
-
-#if defined(STARFISH_DALI_TBMSURFACE)
-bool DaliShellController::updateTick()
-{
-    if (m_webView) {
-        int bufferIdx = m_starFish->updateFrameBuffer();
-        if (bufferIdx == 1) {
-            Any source(m_surface1);
-            m_daliImg_src->SetSource(source);
-            Dali::Stage::GetCurrent().KeepRendering(0.0f);
-        } else if (bufferIdx == 2) {
-            Any source(m_surface2);
-            m_daliImg_src->SetSource(source);
-            Dali::Stage::GetCurrent().KeepRendering(0.0f);
-        }
-    }
-
-    return true;
-}
-#else
-bool DaliShellController::updateTick()
-{
-    if (m_needsUpdate) {
-        m_daliImg.Update();
-        m_needsUpdate = false;
-    }
-    return true;
-}
-#endif
 void DaliShellController::Create(Application& application)
 {
-    if (needToInitMainThread()) {
-        initMainThread(&mainShellThread);
-    }
+    STARFISH_ASSERT(mWebEngineLiteInstance == nullptr);
 
-    int width = m_width, height = m_height;
+    STARFISH_LOG_INFO("DaliShellController::Create() start\n");
+    startMainThreadIfNeeds();
 
+    DaliStarFishBinder* binder = new DaliStarFishBinder();
+    int width = m_width;
+    int height = m_height;
 #if defined(STARFISH_DALI_TBMSURFACE)
-    m_surface1 = tbm_surface_create(m_width, m_height, TBM_FORMAT_ARGB8888);
-    m_surface2 = tbm_surface_create(m_width, m_height, TBM_FORMAT_ARGB8888);
-
-    if (tbm_surface_map(m_surface1,
+    binder->tbmSurface = tbm_surface_create(width, height, TBM_FORMAT_ARGB8888);
+    if (tbm_surface_map(binder->tbmSurface,
                         TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
-                        &m_surface_info1) != TBM_SURFACE_ERROR_NONE) {
-        printf("Fail to map tbm_surface\n");
-    }
-    if (tbm_surface_map(m_surface2,
-                        TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
-                        &m_surface_info2) != TBM_SURFACE_ERROR_NONE) {
-        printf("Fail to map tbm_surface\n");
+                        &binder->tbmSurfaceInfo) != TBM_SURFACE_ERROR_NONE) {
+        DALI_LOG_RELEASE_INFO("Fail to map tbm_surface\n");
     }
 
-    Any source(m_surface1);
-    m_daliImg_src = Dali::NativeImageSource::New(source);
-    m_daliImg = Dali::NativeImage::New(*m_daliImg_src);
+    Dali::Any source(binder->tbmSurface);
+    binder->nativeImageSrc = Dali::NativeImageSource::New(source);
+    binder->nativeImage = Dali::NativeImage::New(*binder->nativeImageSrc);
 #else
-    m_daliImg = Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
+    binder->bufferImage =
+        Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
 #endif
-    m_mainView = Dali::Toolkit::ImageView::New(m_daliImg);
+    binder->w = width;
+    binder->h = height;
+    binder->s = width * 4;
+    m_mainView = Dali::Toolkit::ImageView::New();
     m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
     m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
-    m_mainView.SetPosition(0, 0);
+
+    binder->daliControlInstance = &m_mainView;
+
     Dali::Stage::GetCurrent().Add(m_mainView);
 
-    // TODO: Need to get screen info from X11.
-    // Temporally, rect's width and height are set to window size.
-    pthread_mutex_lock(g_initMutex);
+    mWebEngineLiteInstance = binder;
 
-    g_launcher_handle.data = this;
-    uv_async_send(&g_launcher_handle);
+    STARFISH_LOG_INFO("DaliBridge::createInstance()\n");
+    createInstance(binder);
 
-    Dali::Stage::GetCurrent().GetRootLayer().TouchSignal().Connect(
-        this, &DaliShellController::TouchEventHandler);
-    Dali::Stage::GetCurrent().GetRootLayer().HoveredSignal().Connect(
-        this, &DaliShellController::HoverEventHandler);
-    Dali::Stage::GetCurrent().KeyEventSignal().Connect(
-        this, &DaliShellController::KeyEventHandler);
+    STARFISH_LOG_INFO("DaliBridge::loadURL()\n");
+    loadURL((DaliStarFishBinder*)mWebEngineLiteInstance, url);
 
-    m_timer = Dali::Timer::New(20);
-    m_timer.TickSignal().Connect(this, &DaliShellController::updateTick);
-
-    m_timer.Start();
-    pthread_mutex_lock(g_initMutex);
-    pthread_mutex_unlock(g_initMutex);
-
-    m_webView->LoadURL(std::string(url));
+    Stage::GetCurrent().KeyEventSignal().Connect(
+        this, &DaliShellController::OnKeyEvent);
 }
 
-bool DaliShellController::TouchEventHandler(Dali::Actor actor,
-                                            const Dali::TouchData& data)
+void DaliShellController::OnKeyEvent(const Dali::KeyEvent& event)
 {
-    return true;
-}
-
-bool DaliShellController::HoverEventHandler(Dali::Actor actor,
-                                            const Dali::HoverEvent& event)
-{
-    return true;
-}
-void DaliShellController::KeyEventHandler(const Dali::KeyEvent& event)
-{
+    if (event.state == KeyEvent::Down) {
+        if (IsKey(event, DALI_KEY_ESCAPE) || IsKey(event, DALI_KEY_BACK)) {
+            destory((DaliStarFishBinder*)mWebEngineLiteInstance);
+            mApplication.Quit();
+        }
+    }
 }
 
 #endif
