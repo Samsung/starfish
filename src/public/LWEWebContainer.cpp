@@ -121,7 +121,11 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     defaultFontName = "samsungOne";
 #endif
 
+#if defined(STARFISH_ANDROID)
+    std::string tempPath = "/sdcard/tmp/";
+#else
     std::string tempPath = "/tmp/";
+#endif
 
 #if defined(OS_WINDOWS)
     tempPath = ::StarFish::getWindowsTempDir();
@@ -298,7 +302,7 @@ void WebContainer::RemoveJavascriptInterface(
     STARFISH_ASSERT(m_starfish);
     StarFish::String* objectName =
         StarFish::String::fromUTF8(exposedObjectName.c_str());
-    if (jsFunctionName != nullptr) {
+    if (!jsFunctionName.empty()) {
         StarFish::String* functionName =
             StarFish::String::fromUTF8(jsFunctionName.c_str());
         StarFish::unregisterJavaScriptNativeInterface(
@@ -312,7 +316,9 @@ void WebContainer::ClearCache()
 {
     STARFISH_ASSERT(m_starfish);
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    TO_STARFISH(m_starfish)->httpCache()->clear();
+    if (TO_STARFISH(m_starfish)->httpCache() != nullptr) {
+        TO_STARFISH(m_starfish)->httpCache()->clear();
+    }
 #endif
 }
 
@@ -387,12 +393,16 @@ void WebContainer::RegisterOnRenderedHandler(
 
 void WebContainer::SetUserAgentString(const std::string& userAgent)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    TO_STARFISH(m_starfish)
+        ->setCustomUserAgentString(
+            StarFish::String::fromUTF8(userAgent.c_str()));
 }
 
 void WebContainer::SetCacheMode(int mode)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (TO_STARFISH(m_starfish)->httpCache() != nullptr) {
+        TO_STARFISH(m_starfish)->httpCache()->setCacheMode(mode);
+    }
 }
 
 void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
