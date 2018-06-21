@@ -580,7 +580,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_removeJavascriptInterface(
     env->ReleaseStringUTFChars(objName, nativeString);
 
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
-    webContainer->RemoveJavascriptInterface(objectName, nullptr);
+    webContainer->RemoveJavascriptInterface(objectName, "");
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -588,12 +588,11 @@ Java_com_samsung_android_mobileservice_lwe_WebView_setUserAgentString(
     JNIEnv* env, jobject thiz, jlong wv, jstring userAgent)
 {
     const char* nativeString = env->GetStringUTFChars(userAgent, 0);
-    StarFish::String* uaString = StarFish::String::fromUTF8(nativeString);
+    const std::string uaString(nativeString);
     env->ReleaseStringUTFChars(userAgent, nativeString);
 
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
-    // ((StarFish::StarFish*)webView->getInternalPtr())
-    //     ->setCustomUserAgentString(uaString);
+    webContainer->SetUserAgentString(uaString);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -604,9 +603,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_setCacheMode(JNIEnv* env,
 {
 #ifdef STARFISH_ENABLE_HTTPCACHE
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
-// ((StarFish::StarFish*)webContainer->getInternalPtr())
-//     ->httpCache()
-//     ->setCacheMode(mode);
+    webContainer->SetCacheMode(mode);
 #endif
 }
 
@@ -616,8 +613,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_ClearCache(JNIEnv* env,
                                                               jlong wv)
 {
 #ifdef STARFISH_ENABLE_HTTPCACHE
-// LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
-// ((StarFish::StarFish*)webContainer->getInternalPtr())->httpCache()->clear();
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->ClearCache();
 #endif
 }
 
