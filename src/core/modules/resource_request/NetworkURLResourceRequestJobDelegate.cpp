@@ -324,6 +324,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         urlUTF8Data, hostUTF8Data, method, headers, bodyUTF8Data));
     nwd->httpTransaction->setTimeout(
         static_cast<unsigned long>(m_orgProxy->m_timeout));
+    nwd->httpTransaction->setProxyURL(m_orgProxy->starFish()->proxyURL());
 
     nwd->httpTransaction->setProgressCallbackAndData(curlProgressCallback, nwd);
     nwd->httpTransaction->setWriteHeaderCallbackAndData(curlWriteHeaderCallback,

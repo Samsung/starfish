@@ -177,6 +177,7 @@ Settings WebContainer::GetSettings()
 #ifdef STARFISH_ENABLE_HTTPCACHE
     result.SetCacheMode(TO_STARFISH(m_starfish)->httpCache()->cacheMode());
 #endif
+    result.SetProxyURL(TO_STARFISH(m_starfish)->proxyURL());
     return result;
 }
 
@@ -284,18 +285,18 @@ void WebContainer::Destroy()
     delete TO_STARFISH(m_starfish);
 }
 
-void WebContainer::SetSettings(const Settings& setttings)
+void WebContainer::SetSettings(const Settings& settings)
 {
     STARFISH_ASSERT(m_starfish);
     TO_STARFISH(m_starfish)
         ->setCustomUserAgentString(
-            StarFish::String::fromUTF8(setttings.GetUserAgentString().c_str()));
+            StarFish::String::fromUTF8(settings.GetUserAgentString().c_str()));
+    TO_STARFISH(m_starfish)->setProxyURL(settings.GetProxyURL());
 #ifdef STARFISH_ENABLE_HTTPCACHE
-    TO_STARFISH(m_starfish)
-        ->httpCache()
-        ->setCacheMode(setttings.GetCacheMode());
+    TO_STARFISH(m_starfish)->httpCache()->setCacheMode(settings.GetCacheMode());
 #endif
 }
+
 void WebContainer::RemoveJavascriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName)
 {
@@ -400,9 +401,11 @@ void WebContainer::SetUserAgentString(const std::string& userAgent)
 
 void WebContainer::SetCacheMode(int mode)
 {
+#ifdef STARFISH_ENABLE_HTTPCACHE
     if (TO_STARFISH(m_starfish)->httpCache() != nullptr) {
         TO_STARFISH(m_starfish)->httpCache()->setCacheMode(mode);
     }
+#endif
 }
 
 void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,

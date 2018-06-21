@@ -72,11 +72,6 @@ void* LineBox::operator new(size_t size)
 void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                                                       bool dueToBr)
 {
-    if (m_block->node() && m_block->node()->isElement() &&
-        m_block->node()->asElement()->id()->equals("box")) {
-        printf("%s\n", __PRETTY_FUNCTION__);
-    }
-
     LayoutUnit ascender;
     LayoutUnit descender;
     ComputedStyle* parentStyle;

@@ -39,13 +39,16 @@ public:
     Settings(const std::string& defaultUA, const std::string& ua);
     std::string GetDefaultUserAgent() const;
     std::string GetUserAgentString() const;
+    std::string GetProxyURL() const;
     int GetCacheMode() const;
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
+    void SetProxyURL(const std::string& ua);
 
 private:
     std::string m_defaultUserAgent;
     std::string m_userAgent;
+    std::string m_proxyURL;
     int m_cacheMode;
 };
 

@@ -1926,9 +1926,6 @@
     <ClCompile Include="..\..\..\..\src\binding\WindowHoldable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\platform\window\WindowImplAndroid.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplEFLHeadLess.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

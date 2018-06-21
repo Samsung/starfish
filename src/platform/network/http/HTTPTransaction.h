@@ -73,6 +73,11 @@ public:
         m_timeout = timeout;
     }
 
+    void setProxyURL(const std::string& url)
+    {
+        m_proxyURL = url;
+    }
+
     CURLcode res()
     {
         return m_res;
@@ -106,6 +111,9 @@ private:
     unsigned long m_timeout;
     CURL* m_curl;
     CURLcode m_res;
+
+    // proxy
+    std::string m_proxyURL;
 
     // progress
     ProgressCallBack m_procCB;

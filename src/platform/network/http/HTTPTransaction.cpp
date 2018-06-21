@@ -27,10 +27,6 @@
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/profiling/Profiling.h"
 
-#ifdef STARFISH_TIZEN_WEARABLE
-#include <net_connection.h>
-#endif
-
 namespace StarFish {
 
 HTTPTransaction::HTTPTransaction()
@@ -102,6 +98,10 @@ void HTTPTransaction::start()
 
     curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
 
+    if (m_proxyURL.size()) {
+        curl_easy_setopt(m_curl, CURLOPT_PROXY, m_proxyURL.data());
+    }
+
     // Enable all encoding (zlib, gzip)
     curl_easy_setopt(m_curl, CURLOPT_ACCEPT_ENCODING, "");
 
@@ -143,24 +143,6 @@ void HTTPTransaction::start()
     } else if (!(m_httpRequest->method().compare("GET") == 0)) {
         // Do not need to set bodyentity for get
     }
-
-#ifdef STARFISH_TIZEN_WEARABLE
-    connection_h connection;
-    int conn_err;
-    conn_err = connection_create(&connection);
-    char* proxy_address = NULL;
-    if (conn_err == CONNECTION_ERROR_NONE) {
-        connection_get_proxy(connection, CONNECTION_ADDRESS_FAMILY_IPV4,
-                             &proxy_address);
-        if (proxy_address) {
-            curl_easy_setopt(m_curl, CURLOPT_PROXY, proxy_address);
-            free(proxy_address);
-        }
-        connection_destroy(connection);
-    } else {
-        STARFISH_LOG_INFO("got error while opening tizen network connection\n");
-    }
-#endif
 
     m_httpRequest->setRequestTime(timestamp() / 1000);
     m_res = curl_easy_perform(m_curl);
