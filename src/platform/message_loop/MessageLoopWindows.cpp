@@ -96,7 +96,13 @@ public:
                         (size_t)id, id->m_data, id->m_data1, id->m_data2);
                 }
             }
-            id->m_ml->m_idlers.erase((size_t)id);
+            self->m_idlers.erase((size_t)id);
+
+            if (self->m_inClosingState && self->m_idlers.size() == 0 &&
+                self->m_idlersFromOtherThread.size() == 0) {
+                PostMessage(NULL, WM_QUIT, 0, 0);
+            }
+
             GC_FREE(id);
         } break;
         case IDLE_MESSAGE_FROM_OTHER_THREAD: {
@@ -116,6 +122,10 @@ public:
                 Locker<Mutex> l(*self->m_idlersFromOtherThreadMutex);
                 self->m_idlersFromOtherThread.erase((size_t)id);
             }
+            if (self->m_inClosingState && self->m_idlers.size() == 0 &&
+                self->m_idlersFromOtherThread.size() == 0) {
+                PostMessage(NULL, WM_QUIT, 0, 0);
+            }
             STARFISH_ASSERT(_CrtCheckMemory());
             delete id;
         } break;
@@ -128,6 +138,11 @@ public:
                 g_invokeNavigateData = nullptr;
             }
             GC_FREE((void*)message.wParam);
+
+            if (self->m_inClosingState && self->m_idlers.size() == 0 &&
+                self->m_idlersFromOtherThread.size() == 0) {
+                PostMessage(NULL, WM_QUIT, 0, 0);
+            }
         } break;
         default:
             break;
@@ -138,6 +153,16 @@ public:
 void processMessage(MessageLoop* self, const MSG& message)
 {
     MessageLoopImpl::processMessage(self, message);
+}
+
+void MessageLoop::close()
+{
+    m_inClosingState = true;
+    g_invokeNavigateData = nullptr;
+
+    if (m_idlers.size() != 0 || m_idlersFromOtherThread.size() != 0) {
+        run();
+    }
 }
 
 void MessageLoop::run()

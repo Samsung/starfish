@@ -41,6 +41,7 @@ namespace StarFish {
 
 MessageLoop::MessageLoop(StarFish* sf)
     : StarFishHoldable(sf)
+    , m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
     , m_navigateInvokeIdler(nullptr)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
@@ -54,13 +55,37 @@ MessageLoop::MessageLoop(StarFish* sf)
 
 void MessageLoop::run()
 {
-#if defined(PORT_WINDOW_BACKEND_EFL)
-    elm_run();
-#endif
-
-#if defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
+#if defined(PORT_WINDOW_BACKEND_EFL) || \
+    defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
     ecore_main_loop_begin();
 #endif
+}
+
+struct InvokeNavigateData : public gc {
+    WebView* wv;
+    ResourceURL* url;
+    ResourceURL* referrerURL;
+    Ecore_Idler* idler;
+    void** extra;
+
+    static void* operator new(size_t s)
+    {
+        return GC_MALLOC_UNCOLLECTABLE(s);
+    }
+};
+
+void MessageLoop::close()
+{
+    m_inClosingState = true;
+    if (m_navigateInvokeIdler) {
+        ecore_idler_del(((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
+        delete ((InvokeNavigateData*)m_navigateInvokeIdler);
+        m_navigateInvokeIdler = nullptr;
+    }
+
+    if (m_idlers.size() != 0 || m_idlersFromOtherThread.size() != 0) {
+        ecore_main_loop_begin();
+    }
 }
 
 struct IdlerData {
@@ -107,6 +132,11 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
                 StarFishEnterer enter(id->m_ml->m_starFish);
                 id->m_fn((size_t)id, id->m_data);
             }
+            if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
+                id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                ecore_main_loop_quit();
+            }
+
             GC_FREE(id);
             return ECORE_CALLBACK_CANCEL;
         },
@@ -137,6 +167,11 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
                 StarFishEnterer enter(id->m_ml->m_starFish);
                 ((void (*)(size_t, void*, void*))id->m_fn)(
                     (size_t)id, id->m_data, id->m_data1);
+            }
+
+            if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
+                id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                ecore_main_loop_quit();
             }
             GC_FREE(id);
             return ECORE_CALLBACK_CANCEL;
@@ -169,6 +204,11 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
                 StarFishEnterer enter(id->m_ml->m_starFish);
                 ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                     (size_t)id, id->m_data, id->m_data1, id->m_data2);
+            }
+
+            if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
+                id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                ecore_main_loop_quit();
             }
             GC_FREE(id);
             return ECORE_CALLBACK_CANCEL;
@@ -209,6 +249,13 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                         StarFishEnterer enter(id->m_ml->m_starFish);
                         id->m_fn((size_t)id, id->m_data);
                     }
+
+                    if (id->m_ml->m_inClosingState &&
+                        id->m_ml->m_idlers.size() == 0 &&
+                        id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                        ecore_main_loop_quit();
+                    }
+
                     delete id;
                     return ECORE_CALLBACK_CANCEL;
                 },
@@ -251,6 +298,12 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                         StarFishEnterer enter(id->m_ml->m_starFish);
                         ((void (*)(size_t, void*, void*))id->m_fn)(
                             (size_t)id, id->m_data, id->m_data1);
+                    }
+
+                    if (id->m_ml->m_inClosingState &&
+                        id->m_ml->m_idlers.size() == 0 &&
+                        id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                        ecore_main_loop_quit();
                     }
                     delete id;
                     return ECORE_CALLBACK_CANCEL;
@@ -311,19 +364,6 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     }
     m_idlersFromOtherThreadMutex->unlock();
 }
-
-struct InvokeNavigateData : public gc {
-    WebView* wv;
-    ResourceURL* url;
-    ResourceURL* referrerURL;
-    Ecore_Idler* idler;
-    void** extra;
-
-    static void* operator new(size_t s)
-    {
-        return GC_MALLOC_UNCOLLECTABLE(s);
-    }
-};
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
                                  ResourceURL* referrerURL)

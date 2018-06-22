@@ -59,10 +59,12 @@ public:
         BrowsingContext* ctx); // give nullptr to clear every idlers
 
     void run();
+    void close();
     void invokeNavigate(WebView* wv, ResourceURL* url,
                         ResourceURL* referrerURL);
 
 protected:
+    bool m_inClosingState;
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
     std::unordered_set<size_t> m_idlersFromOtherThread;

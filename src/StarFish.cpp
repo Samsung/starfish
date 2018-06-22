@@ -442,8 +442,6 @@ StarFish::~StarFish()
     delete m_platformFontCache;
     delete m_platformFontSelector;
 
-    joinAllActiveThread();
-
     if (g_singletonInstanceCnt <= 1) {
         NetworkSharedResourceManager::close();
 #ifdef STARFISH_ENABLE_HTTPCACHE
@@ -525,18 +523,6 @@ void StarFish::addActiveThread(Thread* thread)
     m_activeThreadList.push_back(thread);
 }
 
-void StarFish::joinAllActiveThread()
-{
-    STARFISH_ASSERT(isMainThread());
-    STARFISH_LOG_INFO("StarFish::joinAllActiveThread()\n");
-    // NOTE: Iterate copied list.
-    //       joinIfNeeds() may modify m_activeThreadList.
-    GCVector<Thread*> copies = m_activeThreadList;
-    for (auto th : copies) {
-        th->joinIfNeeds();
-    }
-}
-
 void StarFish::removeActiveThread(Thread* thread)
 {
     STARFISH_ASSERT(isMainThread());
@@ -549,6 +535,16 @@ void StarFish::removeActiveThread(Thread* thread)
 
 void StarFish::close()
 {
+    m_threadPool->close();
+    m_messageLoop->close();
+    STARFISH_ASSERT(isMainThread());
+    // NOTE: Iterate copied list.
+    //       joinIfNeeds() may modify m_activeThreadList.
+    GCVector<Thread*> copies = m_activeThreadList;
+    for (auto th : copies) {
+        th->joinIfNeeds();
+    }
+    m_timer->close();
     m_platformWindow->close();
 }
 

@@ -265,5 +265,39 @@ void Timer::clear(BrowsingContext* ctx)
         }
     }
 }
+
+void Timer::close()
+{
+    STARFISH_LOG_INFO("TimerEFL::close\n");
+    auto timerIter = m_timeoutHandler.begin();
+    while (timerIter != m_timeoutHandler.end()) {
+        TimeoutData* td = (TimeoutData*)timerIter->second;
+        ecore_timer_freeze(td->m_timerID);
+        ecore_timer_del(td->m_timerID);
+        GC_FREE(td);
+        timerIter++;
+    }
+    m_timeoutHandler.clear();
+
+    auto aniIter = m_requestAnimationFrameHandler.begin();
+    while (aniIter != m_requestAnimationFrameHandler.end()) {
+        TimeoutData* td = (TimeoutData*)aniIter->second;
+        ecore_animator_freeze((Ecore_Animator*)td->m_timerID);
+        ecore_animator_del((Ecore_Animator*)td->m_timerID);
+        GC_FREE(td);
+        aniIter++;
+    }
+    m_requestAnimationFrameHandler.clear();
+
+    auto aniIter2 = m_animationHandler.begin();
+    while (aniIter2 != m_animationHandler.end()) {
+        AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
+        ecore_animator_freeze((Ecore_Animator*)ad->m_timerID);
+        ecore_animator_del((Ecore_Animator*)ad->m_timerID);
+        GC_FREE(ad);
+        aniIter2++;
+    }
+    m_animationHandler.clear();
+}
 }
 #endif

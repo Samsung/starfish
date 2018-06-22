@@ -696,7 +696,7 @@ extern "C" STARFISH_EXPORT StarFishInstance* starfishCreate(
     if (conn_err == CONNECTION_ERROR_NONE) {
         connection_get_proxy(connection, CONNECTION_ADDRESS_FAMILY_IPV4,
                              &proxyAddress);
-        if (proxy_address) {
+        if (proxyAddress) {
             TO_STARFISH(instance)->setProxyURL(proxyAddress);
             free(proxyAddress);
         }

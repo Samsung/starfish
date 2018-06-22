@@ -24,12 +24,18 @@
 namespace StarFish {
 
 ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
-    : m_messageLoop(ml)
+    : m_isClosed(false)
+    , m_messageLoop(ml)
 {
     m_workerQueueMutex = new Mutex();
     for (size_t i = 0; i < maxThreadCount; i++) {
         m_threads.push_back(new Thread(m_messageLoop->starFish()));
     }
+}
+
+void ThreadPool::close()
+{
+    m_isClosed = true;
 }
 
 struct DataRooter {
@@ -39,6 +45,9 @@ struct DataRooter {
 
 void ThreadPool::addWork(BrowsingContext* ctx, ThreadWorker fn, void* data)
 {
+    if (m_isClosed) {
+        return;
+    }
     STARFISH_ASSERT(isMainThread());
     m_workerQueueMutex->lock();
     DataRooter* r = new (NoGC) DataRooter;
