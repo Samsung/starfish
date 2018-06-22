@@ -79,6 +79,6 @@
 [submodule "test_new"]
 	path = test_new
 	url = git@github.sec.samsung.net:RS8-webtf-test/web_tc_new.git
-[submodule "third_party/skia"]
-	path = third_party/skia
+[submodule "third_party/android/skia"]
+	path = third_party/android/skia
 	url = https://skia.googlesource.com/skia.git

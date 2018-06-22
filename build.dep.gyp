@@ -497,7 +497,7 @@
             'all_dependent_settings': {
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
-                    'third_party/skia/include',
+                    'third_party/android/skia/include',
                 ],
                 'libraries': [
                     '<!@((pkg-config --silence-errors --libs-only-l libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
@@ -627,7 +627,7 @@
                     'files': [
                         # 'third_party/libskia/out/Release/Shared/libskia.so',
                         # Below is a temporary
-                        'third_party/skia/out/Debug/Shared/libskia.so',
+                        'third_party/android/skia/out/Debug/Shared/libskia.so',
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib',
                 },
@@ -639,7 +639,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/skia/out/Debug/Shared/libskia.so',
+                        'third_party/android/skia/out/Debug/Shared/libskia.so',
                        
                     ],
                     'destination': '<(PRODUCT_DIR)/../debug/lib',
