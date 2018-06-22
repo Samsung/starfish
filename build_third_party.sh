@@ -28,7 +28,7 @@ if [ "$arch" == "x64" ]; then
     if [ "$2" == "skia" ]; then
         echo "build skia"
         cd $STARFISH_ROOT
-        cd ./third_party/skia/
+        cd ./third_party/android/skia/
         rm -rf out/
         python tools/git-sync-deps
         echo "here"
