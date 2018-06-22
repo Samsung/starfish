@@ -140,9 +140,10 @@ public:
         const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
     void RegisterOnLoadResourceHandler(
         const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
+    void RegisterOnProgressChangedHandler(
+        const std::function<void(LWE::WebContainer*, int progress)>& cb);
 
     void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
-    void RenderingDirectly();
     void RegisterOnRenderedHandler(
         const std::function<void(LWE::WebContainer*, void*)>& cb);
 

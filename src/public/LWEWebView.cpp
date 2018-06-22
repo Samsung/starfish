@@ -243,7 +243,7 @@ void WebView::LoadData(const std::string& data)
 void WebView::Reload()
 {
     STARFISH_ASSERT(m_starfish);
-    TO_LOCATION(m_starfish)->reload();
+    TO_LOCATION(m_starfish)->reload(true);
 }
 
 void WebView::StopLoading()

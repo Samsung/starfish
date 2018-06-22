@@ -305,7 +305,7 @@ public:
     void registerWebViewHandler(const std::string& handlerName,
                                 std::function<void(String*, int)> handler);
     void callWebViewHandler(const std::string& handlerName, String* url,
-                            int error_code = 0);
+                            int param = 0);
     void setLWEWebView(void* webView)
     {
         m_lweWebView = webView;

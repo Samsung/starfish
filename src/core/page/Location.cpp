@@ -208,9 +208,9 @@ void Location::replace(String* url)
     }
 }
 
-void Location::reload()
+void Location::reload(bool force)
 {
     ResourceURL* newUrl = new ResourceURL(*url());
-    assign(newUrl);
+    assign(newUrl, force);
 }
 }
