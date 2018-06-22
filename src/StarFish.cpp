@@ -635,7 +635,7 @@ void StarFish::registerWebViewHandler(const std::string& handlerName,
 }
 
 void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
-                                  int error_code)
+                                  int param)
 {
     auto it = m_lweWebViewHandlers.find(handlerName);
     if (it == m_lweWebViewHandlers.end()) {
@@ -645,20 +645,20 @@ void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
         std::string handlerName;
         StarFish* starFish;
         String* url;
-        int errorCode;
+        int int_param;
     };
     dummy* d = new dummy;
     d->handlerName = handlerName;
     d->starFish = this;
     d->url = url;
-    d->errorCode = error_code;
+    d->int_param = param;
     messageLoop()->addIdler(
         nullptr,
         [](size_t, void* data) {
             dummy* d = (dummy*)data;
             auto it = d->starFish->m_lweWebViewHandlers.find(d->handlerName);
             if (it != d->starFish->m_lweWebViewHandlers.end()) {
-                (it->second)(d->url, d->errorCode);
+                (it->second)(d->url, d->int_param);
             }
             delete d;
         },

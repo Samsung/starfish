@@ -30,8 +30,9 @@
 #include "core/page/WebView.h"
 
 typedef bool (*TimerCallback)(int uid, void* data);
-int startTimer(int ms, TimerCallback pointer, void* data);
-void cancelTimer(int uid);
+int startIdler(int ms, TimerCallback pointer, void* data);
+void cancelIdler(int uid);
+void runAllRemainingIdler();
 
 namespace StarFish {
 
@@ -89,9 +90,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     id->m_ml = this;
     id->m_ctx = ctx;
     id->m_idler =
-        startTimer(10,
+        startIdler(10,
                    [](int, void* data) -> bool {
-
                        IdlerData* id = (IdlerData*)data;
                        removeIderFromList(id->m_ml->m_idlers, id);
                        if (validateContext(id->m_ctx)) {
@@ -120,9 +120,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_ml = this;
     id->m_ctx = ctx;
     id->m_idler =
-        startTimer(10,
+        startIdler(10,
                    [](int, void* data) -> bool {
-
                        IdlerData* id = (IdlerData*)data;
                        removeIderFromList(id->m_ml->m_idlers, id);
                        if (validateContext(id->m_ctx)) {
@@ -153,10 +152,9 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data2 = data2;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler = startTimer(
+    id->m_idler = startIdler(
         10,
         [](int, void* data) -> bool {
-
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
             if (validateContext(id->m_ctx)) {
@@ -188,7 +186,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThread.insert((size_t)id);
     }
 
-    id->m_idler = startTimer(
+    id->m_idler = startIdler(
         10,
         [](int, void* data) -> bool {
 
@@ -226,7 +224,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThread.insert((size_t)id);
     }
 
-    id->m_idler = startTimer(
+    id->m_idler = startIdler(
         10,
         [](int, void* data) -> bool {
 
@@ -256,7 +254,7 @@ void MessageLoop::removeIdler(size_t handle)
     }
     IdlerData* id = (IdlerData*)handle;
     removeIderFromList(m_idlers, id);
-    cancelTimer(id->m_idler);
+    cancelIdler(id->m_idler);
     GC_FREE(id);
 }
 
@@ -277,7 +275,7 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_ctx == ctx || ctx == nullptr) {
-            cancelTimer(id->m_idler);
+            cancelIdler(id->m_idler);
             iter = m_idlers.erase(iter);
             GC_FREE(id);
         } else {
@@ -315,7 +313,7 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
 {
     if (m_navigateInvokeIdler != nullptr) {
         auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
-        cancelTimer(data->idler);
+        cancelIdler(data->idler);
         delete data;
     }
 
@@ -325,7 +323,7 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
     data->wv = wv;
     data->url = url;
     data->referrerURL = referrerURL;
-    data->idler = startTimer(
+    data->idler = startIdler(
         10,
         [](int, void* d) -> bool {
 
@@ -337,6 +335,32 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
             return false;
         },
         data);
+}
+
+void MessageLoop::close()
+{
+    m_inClosingState = true;
+    if (m_navigateInvokeIdler) {
+        cancelIdler(((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
+        delete ((InvokeNavigateData*)m_navigateInvokeIdler);
+        m_navigateInvokeIdler = nullptr;
+    }
+
+    if (m_idlers.size() != 0 || m_idlersFromOtherThread.size() != 0) {
+        STARFISH_ASSERT(isMainThread());
+        // Wait here until Idler.
+        runAllRemainingIdler();
+
+        // Remove idlers from other thread
+        m_idlersFromOtherThreadMutex->lock();
+        auto iterOther = m_idlersFromOtherThread.begin();
+        while (iterOther != m_idlersFromOtherThread.end()) {
+            IdlerData* id = (IdlerData*)*iterOther;
+            id->m_valid = false;
+            iterOther++;
+        }
+        m_idlersFromOtherThreadMutex->unlock();
+    }
 }
 }
 #endif

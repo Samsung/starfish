@@ -37,15 +37,20 @@ struct WindowGlue {
     JNIEnv* m_env;
     jclass m_clazz;
     jmethodID m_startTimer;
+    jmethodID m_startIdler;
     jmethodID m_cancelTimer;
+    jmethodID m_cancelIdler;
+    jmethodID m_runAllRemainingIdler;
     jmethodID m_flushRendering;
     jmethodID m_onLoadResource;
     jmethodID m_onReceivedError;
     jmethodID m_onPageFinished;
     jmethodID m_onPageStarted;
+    jmethodID m_onProgressed;
+
     WindowGlue()
     {
-        m_startTimer = m_flushRendering = 0;
+        m_startTimer = m_startIdler = m_flushRendering = 0;
     }
 } g_WindowGlue;
 JavaVM* g_jvm;
@@ -55,6 +60,7 @@ std::map<LWE::WebContainer*, std::pair<jobject, void*>> g_webViews;
 typedef bool (*TimerCallback)(int uid, void* data);
 int startTimer(int ms, TimerCallback pointer, void* data);
 void cancelTimer(int uid);
+void runAllRemainingIdler();
 void flushRenderingCB(void* view);
 
 void callOnLoadResourceHandler(LWE::WebView* view, const char* url);
@@ -64,6 +70,7 @@ void callOnPageFinished(LWE::WebView* view, const char* url, bool canGoBack,
                         bool canGoForward);
 void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
                        bool canGoForward);
+void callOnProgressChanged(LWE::WebContainer* view, int newProgress);
 
 static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
                             const char signature[])
@@ -93,8 +100,11 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
     g_WindowGlue.m_clazz = (jclass)env->NewGlobalRef(clazz);
     g_WindowGlue.m_env = env;
     g_WindowGlue.m_startTimer = GetJMethod(env, clazz, "startTimer", "(III)I");
+    g_WindowGlue.m_startIdler = GetJMethod(env, clazz, "startIdler", "(III)I");
     g_WindowGlue.m_cancelTimer = GetJMethod(env, clazz, "cancelTimer", "(I)V");
-
+    g_WindowGlue.m_cancelIdler = GetJMethod(env, clazz, "cancelIdler", "(I)V");
+    g_WindowGlue.m_runAllRemainingIdler =
+        GetJMethod(env, clazz, "runAllRemainingIdler", "()V");
     g_WindowGlue.m_flushRendering =
         env->GetMethodID(clazz, "flushRendering", "()V");
     g_WindowGlue.m_onLoadResource =
@@ -105,7 +115,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
         env->GetMethodID(clazz, "onPageFinished", "(Ljava/lang/String;ZZ)V");
     g_WindowGlue.m_onPageStarted =
         env->GetMethodID(clazz, "onPageStarted", "(Ljava/lang/String;ZZ)V");
-
+    g_WindowGlue.m_onProgressed =
+        env->GetMethodID(clazz, "onProgressChanged", "(I)V");
     env->DeleteLocalRef(clazz);
 
     LOGI("Java_com_samsung_android_mobileservice_lwe_WebView_init call end");
@@ -225,6 +236,31 @@ void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
                         jstr, jboolean1, jboolean2);
 }
 
+void callOnProgressChanged(LWE::WebContainer* view, int progress)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_onProgressed) {
+        LOGE("OnPageStarted error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    jint newProgress = progress;
+    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onProgressed,
+                        newProgress);
+}
+
 int startTimer(int ms, TimerCallback pointer, void* data)
 {
     JNIEnv* env = g_WindowGlue.m_env;
@@ -252,6 +288,38 @@ int startTimer(int ms, TimerCallback pointer, void* data)
 
     int ret = env->CallStaticIntMethod(g_WindowGlue.m_clazz,
                                        g_WindowGlue.m_startTimer, ms,
+                                       (long)pointer, (long)data);
+
+    return ret;
+}
+
+int startIdler(int ms, TimerCallback pointer, void* data)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+
+    // double check it's all ok
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        // std::cout << "GetEnv: not attached" << std::endl;
+        // LOGE("GetEnv: not attached");
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            // std::cout << "Failed to attach" << std::endl;
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_startIdler) {
+        LOGE("signalQueueTimer error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    int ret = env->CallStaticIntMethod(g_WindowGlue.m_clazz,
+                                       g_WindowGlue.m_startIdler, ms,
                                        (long)pointer, (long)data);
 
     return ret;
@@ -285,6 +353,61 @@ void cancelTimer(int uid)
 
     env->CallStaticVoidMethod(g_WindowGlue.m_clazz, g_WindowGlue.m_cancelTimer,
                               uid);
+}
+
+void cancelIdler(int uid)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+
+    // double check it's all ok
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        // std::cout << "GetEnv: not attached" << std::endl;
+        // LOGE("GetEnv: not attached");
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            // std::cout << "Failed to attach" << std::endl;
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    // LOGE("cancelTimer");
+    if (!env || !g_WindowGlue.m_cancelIdler) {
+        LOGE("cancel error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz, g_WindowGlue.m_cancelIdler,
+                              uid);
+}
+
+void runAllRemainingIdler()
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    // LOGE("runAllRemainingIdler");
+    if (!env || !g_WindowGlue.m_runAllRemainingIdler) {
+        LOGE("runAllRemainingTimer error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
+                              g_WindowGlue.m_runAllRemainingIdler);
 }
 
 void flushRenderingCB(void* view)
@@ -326,19 +449,19 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
     webContainer->RegisterOnReceivedErrorHandler(
         [](LWE::WebContainer* view, LWE::ResourceError error) -> void {
             callOnReceivedError(view, error.GetErrorCode(), view->CanGoBack(),
-                                view->CanGoBack());
+                                view->CanGoForward());
         });
 
     webContainer->RegisterOnPageFinishedHandler(
         [](LWE::WebContainer* view, const std::string& url) -> void {
             callOnPageFinished(view, url.c_str(), view->CanGoBack(),
-                               view->CanGoBack());
+                               view->CanGoForward());
         });
 
     webContainer->RegisterOnPageStartedHandler(
         [](LWE::WebContainer* view, const std::string& url) -> void {
             callOnPageStarted(view, url.c_str(), view->CanGoBack(),
-                              view->CanGoBack());
+                              view->CanGoForward());
         });
 
     webContainer->RegisterOnLoadResourceHandler(

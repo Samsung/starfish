@@ -210,7 +210,7 @@ void WebContainer::LoadData(const std::string& data)
 void WebContainer::Reload()
 {
     STARFISH_ASSERT(m_starfish);
-    TO_LOCATION(m_starfish)->reload();
+    TO_LOCATION(m_starfish)->reload(true);
 }
 
 void WebContainer::StopLoading()
@@ -375,10 +375,6 @@ void WebContainer::UpdateBuffer(void* buffer, uint width, uint height,
         ->platformWindow()
         ->updateDrawingBufferAddress(buffer, width, height, stride);
 }
-void WebContainer::RenderingDirectly()
-{
-    TO_STARFISH(m_starfish)->platformWindow()->rendering();
-}
 
 void WebContainer::RegisterOnRenderedHandler(
     const std::function<void(LWE::WebContainer*, void*)>& cb)
@@ -390,6 +386,17 @@ void WebContainer::RegisterOnRenderedHandler(
                          ->platformWindow()
                          ->drawingBufferAddress());
         });
+}
+
+void WebContainer::RegisterOnProgressChangedHandler(
+    const std::function<void(LWE::WebContainer*, int)>& cb)
+{
+    TO_STARFISH(m_starfish)
+        ->registerWebViewHandler(
+            std::string("OnProgressChanged"),
+            [this, cb](StarFish::String* url, int newProgress) -> void {
+                cb(this, newProgress);
+            });
 }
 
 void WebContainer::SetUserAgentString(const std::string& userAgent)
