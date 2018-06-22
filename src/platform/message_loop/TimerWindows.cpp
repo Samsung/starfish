@@ -250,5 +250,36 @@ void Timer::clear(BrowsingContext* ctx)
         }
     }
 }
+
+void Timer::close()
+{
+    auto timerIter = m_timeoutHandler.begin();
+    while (timerIter != m_timeoutHandler.end()) {
+        TimeoutData* td = (TimeoutData*)timerIter->second;
+        KillTimer(NULL, (size_t)td->m_timerID);
+        GC_FREE(td);
+        timerIter++;
+    }
+    m_timeoutHandler.clear();
+
+    auto aniIter = m_requestAnimationFrameHandler.begin();
+    while (aniIter != m_requestAnimationFrameHandler.end()) {
+        TimeoutData* td = (TimeoutData*)aniIter->second;
+        KillTimer(NULL, (size_t)td->m_timerID);
+        GC_FREE(td);
+        aniIter++;
+    }
+    m_requestAnimationFrameHandler.clear();
+
+    auto aniIter2 = m_animationHandler.begin();
+    while (aniIter2 != m_animationHandler.end()) {
+        AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
+        KillTimer(NULL, (size_t)ad->m_timerID);
+        GC_FREE(ad);
+        aniIter2++;
+    }
+    m_animationHandler.clear();
+}
+
 } // namespace StarFish
 #endif

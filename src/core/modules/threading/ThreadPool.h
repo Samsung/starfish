@@ -36,7 +36,10 @@ public:
     }
     void addWork(BrowsingContext* ctx, ThreadWorker fn, void* data);
     void clearWork(BrowsingContext* ctx); // give nullptr to clear every idlers
+    void close();
+
 protected:
+    bool m_isClosed;
     MessageLoop* m_messageLoop;
     GCVector<Thread*> m_threads;
     std::list<std::pair<ThreadWorker, void*>> m_workerQueue;

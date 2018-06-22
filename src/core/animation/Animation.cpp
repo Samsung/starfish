@@ -612,7 +612,23 @@ void OpacityAnimationTask::attachedToElement()
 {
     AnimationTask::attachedToElement();
     targetElement()->markRunningOpacityAnimation();
-    targetElement()->style()->setOpacity(m_fromValue.getFloat());
+
+    Element* current = targetElement();
+    ComputedStyle* style = current->style();
+    Frame* frame = current->frame();
+    if (!frame) {
+        return;
+    }
+
+    bool before = frame->isEstablishesStackingContext();
+    bool canOwnBefore =
+        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
+    style->setOpacity(m_fromValue.getFloat());
+    frame->computeStyleFlags();
+    bool after = frame->isEstablishesStackingContext();
+    bool canOwnAfter =
+        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
+    opacityUpdated(before && canOwnBefore, after && canOwnAfter);
 }
 
 void OpacityAnimationTask::opacityUpdated(bool before, bool after)

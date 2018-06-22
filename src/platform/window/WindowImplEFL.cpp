@@ -1630,6 +1630,12 @@ void WebView::setNeedsRendering()
                 return ECORE_CALLBACK_CANCEL;
             }
 
+#ifndef STARFISH_ENABLE_TEST
+            if (evas_object_visible_get(wnd->m_window) != EINA_TRUE) {
+                return ECORE_CALLBACK_RENEW;
+            }
+#endif
+
             if (!wnd->m_canRendering) {
                 return ECORE_CALLBACK_RENEW;
             }

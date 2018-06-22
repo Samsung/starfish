@@ -47,6 +47,8 @@ public:
 
     void clear(BrowsingContext* ctx); // give nullptr to clear every tiemr
 
+    void close();
+
     StarFish* m_starFish;
 
     int32_t m_timeoutCounter;
