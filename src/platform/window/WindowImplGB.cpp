@@ -197,6 +197,9 @@ void WindowImplGB::setNeedsRendering()
         nullptr,
         [](size_t handle, void* data) {
             WindowImplGB* wnd = (WindowImplGB*)data;
+            if (!wnd->starFish()) {
+                return;
+            }
             StarFishEnterer enter(wnd->starFish());
             {
                 Locker<Mutex> l(*((WindowImplGB*)wnd)->m_rendingLockMutex);

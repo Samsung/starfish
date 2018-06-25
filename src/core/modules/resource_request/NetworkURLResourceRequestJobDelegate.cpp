@@ -208,23 +208,28 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 
     if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
         SIZE_MAX) {
-        nwd->request->starFish()->timer()->removeTimer(
-            NetworkSharedResourceManager::getInstance()->cacheClearTimerID());
+        if (nwd->request->starFish()->timer()) {
+            nwd->request->starFish()->timer()->removeTimer(
+                NetworkSharedResourceManager::getInstance()
+                    ->cacheClearTimerID());
+        }
     }
 
-    size_t timerID = nwd->request->starFish()->timer()->addTimer(
-        STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS,
-        nwd->request->document()->window(),
-        [](Window* wnd, void* data) {
-            NetworkSharedResourceManager::getInstance()
-                ->clearAllCurlHandleDataCache();
-            NetworkSharedResourceManager::getInstance()->setCacheClearTimerID(
-                SIZE_MAX);
-        },
-        nullptr, false);
+    if (nwd->request->starFish()->timer()) {
+        size_t timerID = nwd->request->starFish()->timer()->addTimer(
+            STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS,
+            nwd->request->document()->window(),
+            [](Window* wnd, void* data) {
+                NetworkSharedResourceManager::getInstance()
+                    ->clearAllCurlHandleDataCache();
+                NetworkSharedResourceManager::getInstance()
+                    ->setCacheClearTimerID(SIZE_MAX);
+            },
+            nullptr, false);
 
-    NetworkSharedResourceManager::getInstance()->setCacheClearTimerID(timerID);
-
+        NetworkSharedResourceManager::getInstance()->setCacheClearTimerID(
+            timerID);
+    }
     nwd->request->m_activeNetworkURLWorkerData = nullptr;
     nwd->~NetworkURLWorkerData();
     GC_FREE(nwd);
