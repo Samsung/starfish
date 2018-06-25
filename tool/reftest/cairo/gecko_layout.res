@@ -54,7 +54,6 @@ test/cairo/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1m
 test/cairo/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1a.html
 test/cairo/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1l.html
 #test/cairo/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1e.html
-test/cairo/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1l.html
 test/cairo/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1h.html
 test/cairo/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1j.html
 #test/cairo/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1f.html

@@ -60,6 +60,9 @@
 #include "binding/ScriptEngineInstance.h"
 
 #ifdef STARFISH_ENABLE_TEST
+#include "core/extra/Console.h"
+#include "core/dom/HTMLLinkElement.h"
+
 extern bool g_fireOnloadEvent;
 extern bool g_forceRendering;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
@@ -839,6 +842,21 @@ bool WebView::rendering(bool force)
                 fprintf(stderr, "#EOF\n");
                 g_enableDumpAsText = false;
                 exit(0);
+            }
+        }
+
+        if (g_fireOnloadEvent && g_enableRefTest) {
+            HTMLCollection* result =
+                m_topLevelBrowsingContext->document()->getElementsByTagName(
+                    starFish()->staticStrings()->m_link);
+            for (size_t i = 0; i < result->length(); i++) {
+                HTMLLinkElement* current = result->item(i)->asHTMLLinkElement();
+                if (current->rel()->equals(String::fromUTF8("match"))) {
+                    starFish()->console()->log(
+                        String::fromUTF8("STARFISH_REFTEST_REF:")
+                            ->concat(current->href()));
+                    break;
+                }
             }
         }
 

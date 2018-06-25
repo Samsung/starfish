@@ -54,7 +54,6 @@ test/efl/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1m.h
 test/efl/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1a.html
 test/efl/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1l.html
 #test/efl/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1e.html
-test/efl/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1l.html
 test/efl/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1h.html
 test/efl/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1j.html
 #test/efl/reftest/vendor/gecko_original/layout/reftests/box-sizing/intrinsic-1f.html
