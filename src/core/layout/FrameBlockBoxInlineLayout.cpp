@@ -768,21 +768,12 @@ void InlineBoxLayoutParentBox::setRightMBPs(LineFormattingContext* ctx)
     }
 }
 
-void InlineBoxLayoutParentBox::saveChildrenVerticalPositions(
-    std::vector<LayoutUnit>& vPositions)
-{
-    vPositions.reserve(m_boxes.size());
-    for (size_t i = 0; i < m_boxes.size(); i++) {
-        vPositions.push_back(m_boxes[i]->y());
-        m_boxes[i]->setY(0);
-    }
-}
-
-void InlineBoxLayoutParentBox::restoreChildrenVerticalPositions(
-    std::vector<LayoutUnit>& vPositions)
+void InlineBoxLayoutParentBox::resetChildrenVerticalPositions()
 {
     for (size_t i = 0; i < m_boxes.size(); i++) {
-        m_boxes[i]->setY(vPositions[i]);
+        if (m_boxes[i]->isNormalFlow() || m_boxes[i]->isAbsolutePositioned()) {
+            m_boxes[i]->setY(0);
+        }
     }
 }
 
@@ -794,16 +785,9 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
             continue;
         } else if (box->isInlineNonReplacedBox()) {
             InlineNonReplacedBox* inrb = box->asInlineNonReplacedBox();
+            inrb->resetChildrenVerticalPositions();
             inrb->quickInlineLayout(ctx);
-            if (ctx->isLastLineBox()) {
-                std::vector<LayoutUnit> vPositions;
-                inrb->saveChildrenVerticalPositions(vPositions);
-                ctx->computeVerticalProperties(inrb, false);
-                inrb->setContentHeight(
-                    inrb->style()->font()->metrics().m_ascender -
-                    inrb->style()->font()->metrics().m_descender);
-                inrb->restoreChildrenVerticalPositions(vPositions);
-            }
+            ctx->computeVerticalProperties(inrb, false);
         } else {
             if (box->isAbsolutePositioned()) {
                 ctx->m_layoutContext.registerAbsolutePositionedBox(box);

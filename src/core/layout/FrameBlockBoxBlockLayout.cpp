@@ -195,7 +195,8 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             }
         }
 
-        child->asFrameBox()->setY(normalFlowHeight + top + advanceY);
+        LayoutUnit childYFirstCandidate = normalFlowHeight + top + advanceY;
+        child->asFrameBox()->setY(childYFirstCandidate);
 
         size_t floatSize = ctx.floatingBoxesSize();
         clearedDistanceToFloatBottom = ctx.clearedDistanceToFloatBottom(
@@ -241,8 +242,11 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
                 child->markNeedsLayout();
                 goto reLayoutFrameBox;
             } else {
-                child->asFrameBox()->setY(normalFlowHeight + top + advanceY);
-                ctx.advanceLineBoxAscender(advanceY);
+                LayoutUnit childY = normalFlowHeight + top + advanceY;
+                child->asFrameBox()->setY(childY);
+                if (childYFirstCandidate != childY) {
+                    ctx.advanceLineBoxAscender(childY - childYFirstCandidate);
+                }
                 // if the y position of box has any changes, then the cached
                 // position of float boxes which it is going to be used next
                 // time
