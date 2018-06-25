@@ -36,6 +36,7 @@
 #include "core/dom/WebOrigin.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
+#include "core/layout/StackingContext.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/page/BrowsingContext.h"
@@ -427,7 +428,17 @@ bool Window::scrollToWithoutLayout(double x, double y)
         if (document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(
                 x, y)) {
             if (webView()->didCompositeBefore()) {
-                browsingContext()->setNeedsComposite();
+                if (!browsingContext()->isTopLevelBrowsingContext()) {
+                    StackingContext* ctx =
+                        document()->frame()->asFrameBox()->stackingContext();
+                    if (ctx && ctx->needsGraphicsBuffer()) {
+                        browsingContext()->setNeedsComposite();
+                    } else {
+                        document()->setNeedsPainting();
+                    }
+                } else {
+                    browsingContext()->setNeedsComposite();
+                }
             } else {
                 browsingContext()->setNeedsPainting();
             }

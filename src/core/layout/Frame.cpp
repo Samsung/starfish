@@ -760,10 +760,6 @@ void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
 
 void LayoutContext::registerRelativePositionedBox(FrameBox* box, bool dueToSelf)
 {
-    if (m_isQuickLayout) {
-        return;
-    }
-
     FrameBlockBox* cb = containingFrameBlockBox(box);
     m_relativePositionedBoxes.emplace(
         cb, std::vector<std::pair<FrameBox*, bool>>());

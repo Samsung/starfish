@@ -413,19 +413,17 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                 lCtx.markIsLastLineBox();
             }
             m_lineBoxes[i]->quickInlineLayout(&lCtx);
-            if (i == m_lineBoxes.size() - 1) {
-                std::vector<LayoutUnit> vPositions;
-                m_lineBoxes[i]->saveChildrenVerticalPositions(vPositions);
-                lCtx.computeVerticalProperties(m_lineBoxes[i], false);
-                m_lineBoxes[i]->restoreChildrenVerticalPositions(vPositions);
-                lCtx.registerInlineContent(nullptr);
-            }
+            m_lineBoxes[i]->resetChildrenVerticalPositions();
+            lCtx.computeVerticalProperties(m_lineBoxes[i], false);
+            lCtx.registerInlineContent(nullptr);
+            m_lineBoxes[i]->coordinateVerticalProperties(&lCtx, 0);
         }
         registerRelativePositionedBoxesAndMarkPaintFlag(ctx);
     }
 
     if (!isEstablishesBlockFormattingContext()) {
         ctx.layoutRegisteredAbsolutePositionedBoxes(this);
+        ctx.layoutRegisteredRelativePositionedBoxes(this);
     }
 }
 

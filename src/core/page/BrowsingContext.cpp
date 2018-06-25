@@ -208,6 +208,7 @@ public:
         resource()->loader()->document()->fontSelector()->clearCache(
             m_familyName);
         resource()->loader()->document()->setNeedsLayout();
+        resource()->loader()->document()->setNeedsPainting();
         STARFISH_LOG_INFO("WebFont %s is failed to load..\n",
                           m_familyName->toUTF8NonGCString().data());
     }
@@ -223,6 +224,7 @@ public:
         resource()->loader()->document()->fontSelector()->clearCache(
             m_familyName);
         resource()->loader()->document()->setNeedsLayout();
+        resource()->loader()->document()->setNeedsPainting();
         STARFISH_LOG_INFO("WebFont %s is downloaded\n",
                           m_familyName->toUTF8NonGCString().data());
     }
