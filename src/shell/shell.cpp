@@ -408,6 +408,10 @@ int main(int argc, char* argv[])
             StarFish::g_enablePixelTest = true;
             setenv("PIXEL_TEST", "1", 1);
 #endif
+        } else if (strcmp(argv[i], "--ref-test") == 0) {
+#ifdef STARFISH_ENABLE_TEST
+            StarFish::g_enableRefTest = true;
+#endif
         } else if (strstr(argv[i], "--width=") == argv[i]) {
             width = std::atoi(argv[i] + strlen("--width="));
         } else if (strstr(argv[i], "--height=") == argv[i]) {

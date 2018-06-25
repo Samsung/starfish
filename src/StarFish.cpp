@@ -105,6 +105,7 @@ namespace StarFish {
 
 #ifdef STARFISH_ENABLE_TEST
 bool g_enablePixelTest = false;
+bool g_enableRefTest = false;
 bool g_memLogDump = false;
 bool g_enableDumpAsText = false;
 bool g_DumpAsText_Async = false;

@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 import os
+import sys
 import subprocess
 import utils
 from urlparse import urlparse
@@ -31,7 +32,6 @@ class __PixelTestOpts():
         self.width = DEFAULT_WIDTH_OPT
         self.height = DEFAULT_HEIGHT_OPT
         self.font_opt = DEFAULT_FONT_OPT
-        self.show_progress = True
         self.expected_namer = default_expected_namer
         self.tc_handler = default_tc_handler
         self.backend = DEFAULT_BACKEND
@@ -48,10 +48,6 @@ class __PixelTestOpts():
         if utils.is_bool(v):
             self.font_opt = AHEM_OPT if v else NON_AHEM_OPT
 
-    def set_show_progress(self, v):
-        if utils.is_bool(v):
-            self.show_progress = v
-
     def set_expected_namer(self, v):
         if utils.is_function(v):
             self.expected_namer = v
@@ -64,6 +60,31 @@ class __PixelTestOpts():
         if utils.is_string(v):
             self.backend = v
 
+def pixel_diff(tc_file, tc_result_png, tc_expected_png, handler):
+    diff_command = ["tool/imgdiff/imgdiff", tc_result_png, tc_expected_png]
+    diff_result = subprocess.check_output(diff_command).decode("UTF-8").strip()
+    success = handler(tc_file, diff_result)
+    if not success:
+        # When tc failed, give 3 images to user
+        # _1 Screen-shot from Starfish
+        # _2 Expected image
+        # _3 Diff image
+        base_path = os.path.join(OUT_DIR, tc_file)
+        image_1 = base_path + ".png"
+        image_2 = base_path + "_expected.png"
+        image_3 = base_path + "_diff.png"
+        dir_name = os.path.dirname(image_1)
+        if not os.path.exists(dir_name):
+            os.makedirs(dir_name)
+        copyfile(tc_result_png, image_1)
+        copyfile(tc_expected_png, image_2)
+        gen_cmd = ["test/tool/image_diff", "--diff",
+                            image_1, image_2, image_3]
+        subprocess.call(gen_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+        print utils.PColors.red("Check images: " + base_path + "*.png")
+    os.remove(tc_result_png)
+    return success
+
 def case_runner(tc):
     tc_idx, tc_file = tc
     tc_expected_png = __opts.expected_namer(tc_file, __opts.backend)
@@ -72,12 +93,12 @@ def case_runner(tc):
     # Assure TC exist
     if not (tc_file.startswith("http") or os.path.isfile(tc_file)):
         print "ERROR : TC file does not exist - " + tc_file
-        return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
+        return __opts.tc_handler(tc_file, ERRSTR)
 
     # Assure expected image
     if not os.path.isfile(tc_expected_png):
         print "ERROR : Expected file does not exist - " + tc_expected_png
-        return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
+        return __opts.tc_handler(tc_file, ERRSTR)
 
     # Create screen-shot image using Starfish
     starfish_command = ["./StarFish", tc_file, HIDE_WINDOW_OPT,
@@ -88,43 +109,20 @@ def case_runner(tc):
     try:
         p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         starfish_output, starfish_err = p.communicate("")
-        #subprocess.call(starfish_command, stdout=FNULL, stderr=subprocess.STDOUT)
+        # subprocess.call(starfish_command, stdout=FNULL, stderr=subprocess.STDOUT)
         if not os.path.isfile(tc_result_png):
             print "ERROR : Starfish error - " + tc_file
             print "Starfish output=>"
             print starfish_output
             print "Starfish stderr=>"
             print starfish_err
-            return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
+            return __opts.tc_handler(tc_file, ERRSTR)
 
         # Diff
-        diff_command = ["tool/imgdiff/imgdiff", tc_result_png, tc_expected_png]
-        diff_result = subprocess.check_output(diff_command).decode("UTF-8").strip()
-        success = __opts.tc_handler(tc_file, diff_result, __opts.show_progress)
-        if not success:
-            # When tc failed, give 3 images to user
-            # _1 Screen-shot from Starfish
-            # _2 Expected image
-            # _3 Diff image
-            base_path = os.path.join(OUT_DIR, tc_file)
-            image_1 = base_path + ".png"
-            image_2 = base_path + "_expected.png"
-            image_3 = base_path + "_diff.png"
-            dir_name = os.path.dirname(image_1)
-            if not os.path.exists(dir_name):
-                os.makedirs(dir_name)
-            copyfile(tc_result_png, image_1)
-            copyfile(tc_expected_png, image_2)
-            gen_cmd = ["test/tool/image_diff", "--diff",
-                                image_1, image_2, image_3]
-            subprocess.call(gen_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
-            print utils.PColors.red("Check images: " + base_path + "*.png")
-
-        os.remove(tc_result_png)
-        return success
+        return pixel_diff(tc_file, tc_result_png, tc_expected_png, __opts.tc_handler)
 
     except subprocess.CalledProcessError:
-        return __opts.tc_handler(tc_file, ERRSTR, __opts.show_progress)
+        return __opts.tc_handler(tc_file, ERRSTR)
     except OSError, e:
         if e.errno != 17:
             raise
@@ -132,8 +130,7 @@ def case_runner(tc):
 
 
 def run_parallel(list_file, backend, nproc=None, width=None, height=None,
-                 ahem_font=None, show_progress=None,
-                 expected_namer=None, tc_handler=None, result_handler=None):
+                 ahem_font=None, expected_namer=None, tc_handler=None, result_handler=None):
     import parallel
     global __opts
     if __opts is None:
@@ -142,7 +139,6 @@ def run_parallel(list_file, backend, nproc=None, width=None, height=None,
     __opts.set_width(width)
     __opts.set_height(height)
     __opts.set_ahem_font(ahem_font)
-    __opts.set_show_progress(show_progress)
     __opts.set_expected_namer(expected_namer)
     __opts.set_tc_handler(tc_handler)
 
@@ -150,7 +146,7 @@ def run_parallel(list_file, backend, nproc=None, width=None, height=None,
                                   result_handler=result_handler)
 
 
-def default_tc_handler(tc_file, diff_result, show_progress=True):
+def default_tc_handler(tc_file, diff_result):
     is_passed = False
     result = ""
     if "passed" in diff_result:
@@ -159,8 +155,7 @@ def default_tc_handler(tc_file, diff_result, show_progress=True):
     else:
         result = utils.Strings.FAIL_SIGN
     result += tc_file + " " + diff_result
-    if show_progress:
-        print result
+    print result
     return is_passed
 
 def default_http_expected_namer(tc_file, backend):

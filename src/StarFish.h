@@ -437,6 +437,7 @@ protected:
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_enablePixelTest;
+extern bool g_enableRefTest;
 extern bool g_memLogDump;
 extern bool g_enableDumpAsText;
 extern bool g_DumpAsText_Async;
