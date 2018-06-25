@@ -45,10 +45,9 @@
 #include "core/dom/KeyboardEvent.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include <uv.h>
-extern bool g_MainLoopAlive;
 
 struct DaliStarFishBinder {
-    void* webContainerInstance;
+    void* lweInstance;
 #if defined(STARFISH_DALI_TBMSURFACE)
     Dali::NativeImageSourcePtr nativeImageSrc;
     Dali::NativeImage nativeImage;
@@ -57,27 +56,61 @@ struct DaliStarFishBinder {
 #else
     Dali::BufferImage bufferImage;
 #endif
-    void* daliControlInstance;
+    void* daliInstance;
+    void* buffer;
     std::list<size_t> asyncHandlePool;
     int w, h, s;
+    bool canGoBack, canGoForward;
+    bool isRunning;
+    bool isFirstTime;
+    std::function<void(LWE::WebContainer*, LWE::ResourceError)> onReceivedError;
+    std::function<void(LWE::WebContainer*, const std::string&)>
+        onPageFinishedHandler;
+    std::function<void(LWE::WebContainer*, const std::string&)>
+        onPageStartedHandler;
+    std::function<void(LWE::WebContainer*, const std::string&)>
+        onLoadResourceHandler;
     DaliStarFishBinder()
-        : webContainerInstance(nullptr)
+        : lweInstance(nullptr)
 #if defined(STARFISH_DALI_TBMSURFACE)
         , nativeImageSrc(nullptr)
         , tbmSurface(nullptr)
 #endif
-        , daliControlInstance(nullptr)
+        , daliInstance(nullptr)
+        , buffer(nullptr)
         , w(0)
         , h(0)
         , s(0)
+        , canGoBack(false)
+        , canGoForward(false)
+        , isRunning(false)
+        , isFirstTime(true)
     {
     }
 };
 
-extern "C" void startMainThreadIfNeeds();
+extern "C" void startMainThreadIfNeeds(pthread_t& t);
 extern "C" void createInstance(DaliStarFishBinder* binder);
 extern "C" void loadURL(DaliStarFishBinder* binder, const std::string& url);
-extern "C" void destory(DaliStarFishBinder* binder);
+extern "C" void setSize(DaliStarFishBinder* binder);
+extern "C" void loadData(DaliStarFishBinder* binder, const std::string& d);
+extern "C" void reload(DaliStarFishBinder* binder);
+extern "C" void stopLoading(DaliStarFishBinder* binder);
+extern "C" void goBack(DaliStarFishBinder* binder);
+extern "C" void goForward(DaliStarFishBinder* binder);
+extern "C" void addJavaScriptInterface(
+    DaliStarFishBinder* binder, const std::string& exposedObjectName,
+    const std::string& jsFunctionName,
+    std::function<std::string(const std::string&)> cb);
+extern "C" void evaluateJavaScript(DaliStarFishBinder* binder,
+                                   const std::string& script);
+extern "C" void clearHistory(DaliStarFishBinder* binder);
+extern "C" void destroy(DaliStarFishBinder* binder);
+extern "C" void removeJavascriptInterface(DaliStarFishBinder* binder,
+                                          const std::string& exposedObjectName,
+                                          const std::string& jsFunctionName);
+extern "C" void clearCache(DaliStarFishBinder* binder);
+extern "C" void stopLoop(DaliStarFishBinder* binder);
 #endif
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
@@ -155,10 +188,6 @@ static void printMemps(
 #ifdef STARFISH_DALI
 using namespace Dali;
 
-char* url = nullptr;
-extern uv_async_t g_launcher_handle;
-extern pthread_mutex_t* g_initMutex;
-
 void uv_term_cb(uv_signal_t* handle, int signum);
 bool needToInitMainThread();
 void initMainThread(void* (*f)(void*));
@@ -167,42 +196,97 @@ StarFish::PlatformKeyEventData DaliEventKeyToPlatformKeyEventData(
 
 class DaliShellController : public ConnectionTracker {
 public:
-    DaliShellController(Application& application, int width, int height)
+    DaliShellController(Application& application, int width, int height,
+                        char* url)
         : m_width(width)
         , m_height(height)
-        , m_webView(nullptr)
         , mApplication(application)
-        , mWebEngineLiteInstance(nullptr)
+        , mLWEBinder(nullptr)
+        , mUrl(url)
     {
-        m_currentBuffer = malloc(m_width * m_height * sizeof(uint32_t));
         mApplication.InitSignal().Connect(this, &DaliShellController::Create);
     }
     ~DaliShellController()
     {
     }
+    void InnerCreate(Application& application);
 
     bool updateTick();
     void Create(Application& application);
     int m_width;
     int m_height;
-    LWE::WebContainer* m_webView;
     Application& mApplication;
-    void* m_currentBuffer;
     Dali::Toolkit::ImageView m_mainView;
-    void* mWebEngineLiteInstance;
+    DaliStarFishBinder* mLWEBinder;
+    Dali::Toolkit::PushButton mCreateButton;
+    Dali::Toolkit::PushButton mRemoveButton;
+    pthread_t t;
+    std::string mUrl;
 
 private:
     void OnKeyEvent(const Dali::KeyEvent& event);
+    bool OnCreateButton(Toolkit::Button button)
+    {
+        if (mLWEBinder == nullptr || mLWEBinder->isRunning == false) {
+            STARFISH_ASSERT(mApplication);
+            InnerCreate(mApplication);
+        }
+        return true;
+    }
+
+    bool OnRemoveButton(Toolkit::Button button)
+    {
+        if (mLWEBinder && mLWEBinder->isRunning == true) {
+            mLWEBinder->isRunning = false;
+            Dali::Stage::GetCurrent().Remove(m_mainView);
+
+            destroy(mLWEBinder);
+        }
+        return true;
+    }
 };
 
 void DaliShellController::Create(Application& application)
 {
-    STARFISH_ASSERT(mWebEngineLiteInstance == nullptr);
+    InnerCreate(application);
+    mCreateButton = Dali::Toolkit::PushButton::New();
+    mCreateButton.SetBackgroundColor(Vector4(1.0f, 0.0f, 0.0f, 0.7f));
+    mCreateButton.SetProperty(Toolkit::Button::Property::TOGGLABLE, true);
+    mCreateButton.SetProperty(Toolkit::Button::Property::LABEL,
+                              "Create Web-View");
+    mCreateButton.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
+    mCreateButton.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
+    mCreateButton.SetSize(300, 50);
+    mCreateButton.SetPosition(0, 600);
+    mCreateButton.StateChangedSignal().Connect(
+        this, &DaliShellController::OnCreateButton);
+    Dali::Stage::GetCurrent().Add(mCreateButton);
 
-    STARFISH_LOG_INFO("DaliShellController::Create() start\n");
-    startMainThreadIfNeeds();
+    mRemoveButton = Dali::Toolkit::PushButton::New();
+    mRemoveButton.SetBackgroundColor(Vector4(0.0f, 1.0f, 0.0f, 0.7f));
+    mRemoveButton.SetProperty(Toolkit::Button::Property::TOGGLABLE, true);
+    mRemoveButton.SetProperty(Toolkit::Button::Property::LABEL,
+                              "Remove Web-View");
+    mRemoveButton.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
+    mRemoveButton.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
+    mRemoveButton.SetSize(300, 50);
+    mRemoveButton.SetPosition(0, 650);
+    mRemoveButton.StateChangedSignal().Connect(
+        this, &DaliShellController::OnRemoveButton);
+    Dali::Stage::GetCurrent().Add(mRemoveButton);
+}
 
-    DaliStarFishBinder* binder = new DaliStarFishBinder();
+void DaliShellController::InnerCreate(Application& application)
+{
+    STARFISH_LOG_INFO("[Dali Shell] Create() start\n");
+
+    startMainThreadIfNeeds(t);
+
+    if (!mLWEBinder) {
+        mLWEBinder = new DaliStarFishBinder();
+    }
+    mLWEBinder->isRunning = true;
+
     int width = m_width;
     int height = m_height;
 #if defined(STARFISH_DALI_TBMSURFACE)
@@ -217,38 +301,175 @@ void DaliShellController::Create(Application& application)
     binder->nativeImageSrc = Dali::NativeImageSource::New(source);
     binder->nativeImage = Dali::NativeImage::New(*binder->nativeImageSrc);
 #else
-    binder->bufferImage =
+    mLWEBinder->bufferImage =
         Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
+    STARFISH_LOG_INFO("[Dali Shell] [Dali BufImg:%p]\n",
+                      mLWEBinder->bufferImage);
 #endif
-    binder->w = width;
-    binder->h = height;
-    binder->s = width * 4;
-    m_mainView = Dali::Toolkit::ImageView::New();
-    m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
-    m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
+    mLWEBinder->w = width;
+    mLWEBinder->h = height;
+    mLWEBinder->s = width * 4;
 
-    binder->daliControlInstance = &m_mainView;
+    if (mLWEBinder->isFirstTime == true) {
+        mLWEBinder->isFirstTime = false;
+        m_mainView = Dali::Toolkit::ImageView::New();
+        m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
+        m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
+
+        Stage::GetCurrent().KeyEventSignal().Connect(
+            this, &DaliShellController::OnKeyEvent);
+
+        mLWEBinder->daliInstance = &m_mainView;
+        mLWEBinder->onReceivedError = [](LWE::WebContainer* container,
+                                         LWE::ResourceError error) {
+            STARFISH_LOG_INFO("[Dali Shell] onReceivedError()\n");
+        };
+        mLWEBinder->onPageStartedHandler = [](LWE::WebContainer* container,
+                                              const std::string& url) {
+            STARFISH_LOG_INFO("[Dali Shell] onPageStartedHandler()\n");
+        };
+        mLWEBinder->onPageFinishedHandler = [](LWE::WebContainer* container,
+                                               const std::string& url) {
+            STARFISH_LOG_INFO("[Dali Shell] onPageFinishedHandler()\n");
+        };
+        mLWEBinder->onLoadResourceHandler = [](LWE::WebContainer* container,
+                                               const std::string& url) {
+            STARFISH_LOG_INFO("[Dali Shell] onLoadResourceHandler()\n");
+        };
+    }
 
     Dali::Stage::GetCurrent().Add(m_mainView);
 
-    mWebEngineLiteInstance = binder;
+    STARFISH_LOG_INFO("[Dali Shell] createInstance()\n");
+    createInstance(mLWEBinder);
 
-    STARFISH_LOG_INFO("DaliBridge::createInstance()\n");
-    createInstance(binder);
-
-    STARFISH_LOG_INFO("DaliBridge::loadURL()\n");
-    loadURL((DaliStarFishBinder*)mWebEngineLiteInstance, url);
-
-    Stage::GetCurrent().KeyEventSignal().Connect(
-        this, &DaliShellController::OnKeyEvent);
+    STARFISH_LOG_INFO("[Dali Shell] loadURL() : %s\n", mUrl.c_str());
+    loadURL(mLWEBinder, mUrl);
 }
 
 void DaliShellController::OnKeyEvent(const Dali::KeyEvent& event)
 {
-    if (event.state == KeyEvent::Down) {
+    STARFISH_ASSERT(mLWEBinder);
+    DaliStarFishBinder* binder = (DaliStarFishBinder*)mLWEBinder;
+
+    STARFISH_LOG_INFO("[Dali Shell] key pressed [%d]\n", event.keyCode);
+
+    if (event.state == KeyEvent::Up) {
         if (IsKey(event, DALI_KEY_ESCAPE) || IsKey(event, DALI_KEY_BACK)) {
-            destory((DaliStarFishBinder*)mWebEngineLiteInstance);
+            if (mLWEBinder->isRunning == true) {
+                mLWEBinder->isRunning = false;
+                Dali::Stage::GetCurrent().Remove(m_mainView);
+
+                destroy(mLWEBinder);
+            }
+            stopLoop((DaliStarFishBinder*)mLWEBinder);
+            int status;
+            pthread_join(t, (void**)&status);
+
+            free(mLWEBinder);
+            mLWEBinder = nullptr;
             mApplication.Quit();
+        } else {
+            // F1
+            if (event.keyCode == 67) {
+                if (binder->w != 800) {
+                    STARFISH_LOG_INFO("[Dali Shell] setSize(800 * 600)\n");
+                    binder->w = 800;
+                    binder->h = 600;
+                    binder->s = 800 * 4;
+#if defined(STARFISH_DALI_TBMSURFACE)
+                    if (binder->tbmSurface) {
+                        if (tbm_surface_unmap(binder->tbmSurface) !=
+                            TBM_SURFACE_ERROR_NONE) {
+                            STARFISH_LOG_INFO(
+                                "[Dali Shell] Failed to unmap tbm_surface\n");
+                        }
+                    }
+
+                    binder->tbmSurface = tbm_surface_create(
+                        binder->w, binder->h, TBM_FORMAT_ARGB8888);
+                    if (tbm_surface_map(binder->tbmSurface,
+                                        TBM_SURF_OPTION_READ |
+                                            TBM_SURF_OPTION_WRITE,
+                                        &binder->tbmSurfaceInfo) !=
+                        TBM_SURFACE_ERROR_NONE) {
+                        DALI_LOG_RELEASE_INFO(
+                            "[Dali Shell] Fail to map tbm_surface\n");
+                    }
+
+                    Dali::Any source(binder->tbmSurface);
+                    binder->nativeImageSrc =
+                        Dali::NativeImageSource::New(source);
+                    binder->nativeImage =
+                        Dali::NativeImage::New(*binder->nativeImageSrc);
+#else
+                    binder->bufferImage = Dali::BufferImage::New(
+                        binder->w, binder->h, Dali::Pixel::BGRA8888);
+                    STARFISH_LOG_INFO("[Dali Shell] [Dali BufImg:%p]\n",
+                                      binder->bufferImage);
+#endif
+                    m_mainView.SetSize(binder->w, binder->h);
+                    setSize(binder);
+                }
+                // F2
+            } else if (event.keyCode == 68) {
+                if (binder->w != 1280) {
+                    STARFISH_LOG_INFO("[Dali Shell] setSize(1280 * 720)\n");
+                    binder->w = 1280;
+                    binder->h = 720;
+                    binder->s = 1280 * 4;
+#if defined(STARFISH_DALI_TBMSURFACE)
+#else
+                    binder->bufferImage = Dali::BufferImage::New(
+                        binder->w, binder->h, Dali::Pixel::BGRA8888);
+                    STARFISH_LOG_INFO("[Dali Shell] [Dali BufImg:%p]\n",
+                                      binder->bufferImage);
+#endif
+                    m_mainView.SetSize(binder->w, binder->h);
+                    setSize(binder);
+                }
+                // F3
+            } else if (event.keyCode == 69) {
+                std::string str =
+                    "<!DOCTYPE html><html><body><div "
+                    "style=\"width:200px;height:200px;background-color:green;"
+                    "\"></div></body></html>";
+                loadData(binder, str);
+                // F4
+            } else if (event.keyCode == 70) {
+                stopLoading(binder);
+                // F5
+            } else if (event.keyCode == 71) {
+                reload(binder);
+                // F6
+            } else if (event.keyCode == 72) {
+                goBack(binder);
+                // F7
+            } else if (event.keyCode == 73) {
+                goForward(binder);
+                // F8
+            } else if (event.keyCode == 74) {
+                bool ret = binder->canGoBack;
+                STARFISH_LOG_INFO("[Dali Shell] canGoBack() returns [%s]\n",
+                                  ret ? "true" : "false");
+                // F9
+            } else if (event.keyCode == 75) {
+                addJavaScriptInterface(
+                    binder, "testObj", "testFunc",
+                    [](const std::string& str) -> std::string {
+                        return str + " world!!";
+                    });
+                evaluateJavaScript(binder, "testObj.testFunc('hello')");
+                // F10
+            } else if (event.keyCode == 76) {
+                clearHistory(binder);
+                // F11
+            } else if (event.keyCode == 77) {
+                removeJavascriptInterface(binder, "testObj", "testFunc");
+                // F12
+            } else if (event.keyCode == 78) {
+                clearCache(binder);
+            }
         }
     }
 }
@@ -384,7 +605,7 @@ int main(int argc, char* argv[])
     std::string screenShot;
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
-    int width = 1280, height = 720;
+    int width = 1280, height = 600;
 #ifdef STARFISH_TIZEN_TV
     width = 1920;
     height = 1080;
@@ -481,9 +702,8 @@ int main(int argc, char* argv[])
 #endif
 
 #if defined(STARFISH_DALI)
-    url = argv[1];
     Application application = Application::New(&argc, &argv);
-    DaliShellController shell(application, width, height);
+    DaliShellController shell(application, width, height, argv[1]);
     application.MainLoop();
 #else
 
@@ -591,6 +811,10 @@ int main(int argc, char* argv[])
 
 #ifndef NDEBUG
     clearStack<102400>();
+#endif
+
+#if !defined(STARFISH_DALI)
+    GC_gcollect_and_unmap();
 #endif
 
     return 0;

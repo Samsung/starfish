@@ -286,5 +286,36 @@ void Timer::clear(BrowsingContext* ctx)
         }
     }
 }
+
+void Timer::close()
+{
+    auto timerIter = m_timeoutHandler.begin();
+    while (timerIter != m_timeoutHandler.end()) {
+        TimeoutData* td = (TimeoutData*)timerIter->second;
+        timerIter = m_timeoutHandler.erase(timerIter);
+        uv_timer_stop(td->m_timerID);
+        uv_close((uv_handle_t*)td->m_timerID, on_close_handle);
+        GC_FREE(td);
+    }
+
+    auto aniIter = m_requestAnimationFrameHandler.begin();
+    while (aniIter != m_requestAnimationFrameHandler.end()) {
+        TimeoutData* td = (TimeoutData*)aniIter->second;
+        aniIter = m_requestAnimationFrameHandler.erase(aniIter);
+        uv_timer_stop(td->m_timerID);
+        uv_close((uv_handle_t*)td->m_timerID, on_close_handle);
+        GC_FREE(td);
+    }
+
+    auto aniIter2 = m_animationHandler.begin();
+    while (aniIter2 != m_animationHandler.end()) {
+        AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
+        aniIter2 = m_animationHandler.erase(aniIter2);
+        uv_handle_t* handle = (uv_handle_t*)ad->m_timerID;
+        uv_timer_stop(ad->m_timerID);
+        uv_close((uv_handle_t*)ad->m_timerID, on_close_handle);
+        GC_FREE(ad);
+    }
+}
 }
 #endif

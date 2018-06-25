@@ -169,6 +169,9 @@ public:
     void DispatchKeyPressEvent(KeyValue keyCode, int modifier = 0);
     void DispatchKeyUpEvent(KeyValue keyCode, int modifier = 0);
 
+    size_t width();
+    size_t height();
+
 protected:
     WebContainer(void* starFish);
 

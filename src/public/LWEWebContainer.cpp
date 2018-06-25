@@ -384,6 +384,16 @@ void WebContainer::UpdateBuffer(void* buffer, uint width, uint height,
         ->updateDrawingBufferAddress(buffer, width, height, stride);
 }
 
+size_t WebContainer::width()
+{
+    return TO_STARFISH(m_starfish)->platformWindow()->width();
+}
+
+size_t WebContainer::height()
+{
+    return TO_STARFISH(m_starfish)->platformWindow()->height();
+}
+
 void WebContainer::RegisterOnRenderedHandler(
     const std::function<void(LWE::WebContainer*, void*)>& cb)
 {

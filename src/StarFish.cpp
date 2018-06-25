@@ -517,7 +517,6 @@ void StarFish::close()
 #endif
     platformWindow()->webView()->close();
     m_threadPool->close();
-    m_messageLoop->close();
     STARFISH_ASSERT(isMainThread());
     // NOTE: Iterate copied list.
     //       joinIfNeeds() may modify m_activeThreadList.
@@ -525,6 +524,7 @@ void StarFish::close()
     for (auto th : copies) {
         th->joinIfNeeds();
     }
+    m_messageLoop->close();
     m_timer->close();
     m_platformWindow->close();
 
