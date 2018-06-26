@@ -305,6 +305,7 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl.x64',
+                    './build.dep.gyp:skia_matrix',
                 ],
             }],
             ['platform=="tizen" and backend=="efl"', {
@@ -322,6 +323,7 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl.tizen',
+                    './build.dep.gyp:skia_matrix',
                 ],
             }],
             ['platform=="linux" and backend=="efl_cairo"', {
@@ -337,6 +339,7 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.x64',
+                    './build.dep.gyp:skia_matrix',
                 ],
             }],
             ['platform=="linux" and backend=="efl_skia"', {
@@ -375,6 +378,7 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.tizen',
+                    './build.dep.gyp:skia_matrix',
                 ],
             }],
             ['platform=="linux" and backend=="dali"', {
@@ -383,6 +387,7 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:dali.x64',
+                    './build.dep.gyp:skia_matrix',
                 ],
                 'deps_debug_extra': [
                     './build.dep.gyp:libtuv.x64.debug',
@@ -403,6 +408,7 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:dali.tizen',
+                    './build.dep.gyp:skia_matrix',
                 ],
                 'deps_debug_extra': [
                     './build.dep.gyp:libtuv.tizen.debug',
@@ -437,6 +443,7 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_headless_cairo.tizen',
+                    './build.dep.gyp:skia_matrix',
                 ],
             }],
         ],

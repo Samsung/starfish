@@ -15,7 +15,6 @@
             #'./build.dep.gyp:js_binding',
             './build.dep.gyp:clipper',
             './build.dep.gyp:cppzmq',
-            './build.dep.gyp:skia_matrix',
             '<@(deps_extra)',
         ],
         'direct_dependent_settings': {
