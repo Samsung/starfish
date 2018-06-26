@@ -48,9 +48,11 @@ def run_test_pool(case_runner, in_path, nproc,
         sys.exit(1)
 
     if out_path is not None:
-        with open(out_path, 'a') as fp:
+        i = 0
+        with open(out_path, "w+") as fp:
             for line in itr:
-                fp.write(line + "\n")
+                fp.write(str(line) + " " + tcs[i][1] + "\n")
+                i += 1
 
     return result_handler(tcs, itr)
 
