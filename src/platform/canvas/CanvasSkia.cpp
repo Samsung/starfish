@@ -45,6 +45,23 @@ public:
 
 class CanvasSkia : public Canvas {
 public:
+    CanvasSkia(StarFish* starfish, void* buffer, int width, int height,
+               int stride)
+    {
+        m_shouldDestroySkia = true;
+        m_shouldDestroySurface = true;
+        m_starfish = starfish;
+        m_canvas = nullptr;
+        m_surface = nullptr;
+        m_width = width;
+        m_height = height;
+
+        SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
+        m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
+        m_canvas = m_surface->getCanvas();
+        save();
+    }
+
     CanvasSkia(StarFish* starfish, void* data)
     {
         struct dummy {
@@ -147,7 +164,7 @@ public:
 
     virtual void postMatrix(const SkMatrix& matrix)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        m_canvas->concat(matrix);
     }
 
     virtual void clip(const Unit::Rect& rt)
@@ -297,6 +314,14 @@ public:
 
     virtual void applyMatrixTo(LayoutLocation& lp)
     {
+        double x = lp.x();
+        double y = lp.y();
+
+        SkMatrix m = m_canvas->getTotalMatrix();
+        SkPoint point;
+        m.mapXY(x, y, &point);
+        lp.setX(point.x());
+        lp.setY(point.y());
     }
 
     virtual void applyMatrixTo(LayoutRect& lp)
