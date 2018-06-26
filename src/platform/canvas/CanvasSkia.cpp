@@ -26,9 +26,11 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/style/UnitHelper.h"
 
+#include "SkBitmap.h"
 #include "SkCanvas.h"
 #include "SkDashPathEffect.h"
 #include "SkPath.h"
+#include "SkPixmap.h"
 #include "SkSurface.h"
 
 namespace StarFish {
@@ -120,7 +122,7 @@ public:
 
     virtual void scale(double x, double y, double ox, double oy)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void rotate(double angle)
@@ -130,7 +132,7 @@ public:
 
     virtual void rotate(double angle, double ox, double oy)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void translate(double x, double y)
@@ -145,7 +147,7 @@ public:
 
     virtual void postMatrix(const SkMatrix& matrix)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void clip(const Unit::Rect& rt)
@@ -163,12 +165,12 @@ public:
 
     virtual void beginOpacityLayer(float c)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void endOpacityLayer()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void setFont(Font* font)
@@ -243,6 +245,18 @@ public:
         if (!lastState().m_visible) {
             return;
         }
+        auto pixels = data->data();
+        auto w = data->width();
+        auto h = data->height();
+
+        SkBitmap bitmap;
+        bitmap.installPixels(SkImageInfo::MakeN32Premul(w, h), (void*)pixels,
+                             data->stride());
+
+        m_canvas->drawBitmapRect(
+            bitmap, SkIRect::MakeWH(w, h),
+            SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
+            &m_paint);
     }
 
     virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst,
@@ -382,7 +396,7 @@ public:
 
     virtual void* unwrap()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return NULL;
     }
 
@@ -394,13 +408,13 @@ public:
     // reset transform matrix & clip
     virtual void resetMatrixAndClip()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     // reset transform clip
     virtual void resetClip()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
 protected:
@@ -425,17 +439,21 @@ Canvas* Canvas::createDirect(StarFish* starfish, void* data)
 
 Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
 {
-    return new CanvasSkia(starfish, data);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
 }
 
 Canvas* Canvas::createGenericCanvas(StarFish* starfish, void* data, size_t w,
                                     size_t h)
 {
-    return new CanvasSkia(starfish, data);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
 }
+
 Canvas* Canvas::createGenericCanvas(StarFish* starfish, NativeImageData* data)
 {
-    return new CanvasSkia(starfish, data);
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return nullptr;
 }
 }
 #endif
