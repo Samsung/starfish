@@ -138,8 +138,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                 LengthData margin = style()->margin();
                 if (isFlexItem() &&
                     (margin.left().isAuto() || margin.right().isAuto())) {
-                    PreferredWidthMainContext mainContext;
-                    PreferredWidthContext p(ctx, mainContext, this, this,
+                    PreferredWidthContext p(ctx, nullptr, this, this,
                                             containgBlockContentWidth -
                                                 mbpWidth());
 
@@ -150,8 +149,7 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                         containgBlockContentWidth - mbpWidth(), LayoutUnit(0));
                 }
             } else {
-                PreferredWidthMainContext mainContext;
-                PreferredWidthContext p(ctx, mainContext, this, this,
+                PreferredWidthContext p(ctx, nullptr, this, this,
                                         containgBlockContentWidth - mbpWidth());
 
                 p.computePreferredWidth();

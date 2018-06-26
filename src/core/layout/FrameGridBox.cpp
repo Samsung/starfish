@@ -1722,8 +1722,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
             contentWidth = width;
             isFixed = true;
         } else {
-            PreferredWidthMainContext mainContext;
-            PreferredWidthContext p(m_layoutContext, mainContext, gridItem,
+            PreferredWidthContext p(m_layoutContext, nullptr, gridItem,
                                     gridItem, 0);
             p.computePreferredWidth();
             contentWidth = p.preferredWidth();

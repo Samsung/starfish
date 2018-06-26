@@ -1171,6 +1171,22 @@ void StackingContext::paintStackingContext(
                                   ->sourceElement()
                                   ->frame()
                                   ->asFrameBox();
+        auto clipRect = iframeBox->makeRect(BoxValue::PaddingBoxBoxValue);
+        HTMLIFrameElement* iframe =
+            m_owner->node()->document()->browsingContext()->sourceElement();
+        clipRect.setX(clipRect.x() +
+                      m_owner->node()
+                          ->document()
+                          ->browsingContext()
+                          ->window()
+                          ->scrollX());
+        clipRect.setY(clipRect.y() +
+                      m_owner->node()
+                          ->document()
+                          ->browsingContext()
+                          ->window()
+                          ->scrollY());
+        canvas->clip(clipRect);
         canvas->translate(iframeBox->borderLeft() + iframeBox->paddingLeft(),
                           iframeBox->borderTop() + iframeBox->paddingTop());
         if (needsPainting) {
