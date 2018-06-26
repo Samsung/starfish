@@ -57,6 +57,11 @@
 #include <cairo.h>
 #endif
 
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#include "SkCanvas.h"
+#include "SkSurface.h"
+#endif
+
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
 #include <Evas_GL.h>
 #include <cairo-evas-gl.h>
@@ -333,6 +338,11 @@ public:
     Evas_Object* m_canvasAdpater;
     cairo_surface_t* m_canvasAdpaterSurface;
     cairo_t* m_canvasAdpaterCairo;
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+    Evas_Object* m_canvasAdpater;
+    sk_sp<SkSurface> m_canvasAdpaterSurface;
+    SkCanvas* m_canvasAdpaterSkia;
 #endif
     std::vector<Evas_Object*> m_objectList;
     Evas_Object* m_mainBox;
@@ -837,7 +847,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     elm_box_layout_set(wnd->m_mainBox, elm_box_layout_cb, NULL, NULL);
     evas_object_show(wnd->m_mainBox);
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
     wnd->m_canvasAdpater =
         evas_object_image_add(evas_object_evas_get(wnd->m_mainBox));
     elm_box_pack_end(wnd->m_mainBox, wnd->m_canvasAdpater);
@@ -1219,7 +1230,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         wnd->m_mainBox, EVAS_CALLBACK_RESIZE,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
             ProfilerTimer t(wnd->starFish(), "WindowImplEFL resize");
             int w, h;
             evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
@@ -1238,7 +1250,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_object_event_callback_add(
         wnd->m_mainBox, EVAS_CALLBACK_MOVE,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
             WindowImplEFL* wnd = (WindowImplEFL*)data;
             StarFishEnterer enter(wnd->starFish());
             int x, y;
@@ -1530,11 +1543,14 @@ PlatformWindow::~PlatformWindow()
 
     WindowImplEFL* eflWindow = (WindowImplEFL*)this;
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
     if (eflWindow->m_canvasAdpater) {
         evas_object_del(eflWindow->m_canvasAdpater);
         eflWindow->m_canvasAdpater = nullptr;
     }
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     if (eflWindow->m_canvasAdpaterSurface) {
         cairo_surface_destroy(eflWindow->m_canvasAdpaterSurface);
         cairo_destroy(eflWindow->m_canvasAdpaterCairo);
@@ -1542,6 +1558,13 @@ PlatformWindow::~PlatformWindow()
         eflWindow->m_canvasAdpaterCairo = nullptr;
     }
 #endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+    if (eflWindow->m_canvasAdpaterSurface) {
+        eflWindow->m_canvasAdpaterSurface = nullptr;
+        eflWindow->m_canvasAdpaterSkia = nullptr;
+    }
+#endif
+
     if (eflWindow->m_dummyBoxClipper) {
         evas_object_del(eflWindow->m_dummyBoxClipper);
         eflWindow->m_dummyBoxClipper = nullptr;
@@ -1787,8 +1810,78 @@ Canvas* WindowImplEFL::preparePainting()
     return Canvas::createDirect(starFish(), &d);
 #endif
 #if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return Canvas::createDirect(starFish(), (void*)0);
+#ifdef STARFISH_ENABLE_TEST
+    {
+        const char* path = getenv("SCREEN_SHOT");
+        if (path && strlen(path) && g_fireOnloadEvent) {
+            g_surfaceForScreehShot =
+                CanvasSurface::create(this, width(), height());
+            starFish()->addPointerInRootSet(g_surfaceForScreehShot);
+            STARFISH_LOG_INFO(
+                "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "
+                "%p\n",
+                g_surfaceForScreehShot->data(),
+                g_surfaceForScreehShot->data() +
+                    (g_surfaceForScreehShot->bufferStride() *
+                     g_surfaceForScreehShot->bufferHeight()));
+            Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
+            return c;
+        }
+    }
+#endif
+
+    auto iter = m_objectList.begin();
+    while (iter != m_objectList.end()) {
+        evas_object_del(*iter);
+        iter++;
+    }
+    m_objectList.clear();
+    m_objectList.shrink_to_fit();
+
+    if (m_canvasAdpaterSkia) {
+        m_canvasAdpaterSkia = nullptr;
+        m_canvasAdpaterSurface = nullptr;
+    }
+
+    {
+        int w, h;
+        evas_object_image_size_get(m_canvasAdpater, &w, &h);
+        if (w != width() || h != height()) {
+            evas_object_resize(m_canvasAdpater, width(), height());
+            evas_object_image_size_set(m_canvasAdpater, width(), height());
+            evas_object_image_fill_set(m_canvasAdpater, 0, 0, width(),
+                                       height());
+        }
+    }
+
+    int w, h;
+    evas_object_image_size_get(m_canvasAdpater, &w, &h);
+    evas_object_show(m_canvasAdpater);
+    void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
+    evas_object_image_data_set(m_canvasAdpater, addr);
+
+    SkImageInfo info = SkImageInfo::MakeN32Premul(w, h);
+    size_t rowBytes = evas_object_image_stride_get(m_canvasAdpater);
+    m_canvasAdpaterSurface = SkSurface::MakeRasterDirect(info, addr, rowBytes);
+
+    STARFISH_LOG_INFO("WindowImplEFL::preparePainting buffer info %p -> %p\n",
+                      addr,
+                      ((unsigned char*)addr) +
+                          (evas_object_image_stride_get(m_canvasAdpater) * h));
+
+    m_canvasAdpaterSkia = m_canvasAdpaterSurface->getCanvas();
+    struct dummy {
+        SkCanvas* canvas;
+        sk_sp<SkSurface> surface;
+        int w;
+        int h;
+    } d;
+    d.canvas = m_canvasAdpaterSkia;
+    d.surface = m_canvasAdpaterSurface;
+    d.w = width() + starFish()->posX();
+    d.h = height() + starFish()->posY();
+    return Canvas::createDirect(starFish(), &d);
+
 #endif
 }
 

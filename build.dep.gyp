@@ -498,6 +498,11 @@
                 'include_dirs': [
                     '<!@((pkg-config --silence-errors --cflags-only-I libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
                     'third_party/android/skia/include',
+                    'third_party/android/skia/include/effects',
+                    'third_party/android/skia/include/config',
+                    'third_party/android/skia/include/core',
+                    'third_party/android/skia/include/image',
+                    'third_party/android/skia/include/gpu',
                 ],
                 'libraries': [
                     '<!@((pkg-config --silence-errors --libs-only-l libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
