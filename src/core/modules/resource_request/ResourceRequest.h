@@ -62,6 +62,7 @@ class ResourceRequest : public gc,
     friend class DataURLResourceRequestJobDelegate;
     friend class BlobURLResourceRequestJobDelegate;
     friend class AboutURLResourceRequestJobDelegate;
+    friend class JavaScriptURLResourceRequestJobDelegate;
     friend class NetworkURLResourceRequestJobDelegate;
     friend class UnknownURLResourceRequestJobDelegate;
     friend class EventSource;

@@ -24,7 +24,7 @@ namespace StarFish {
 
 class ResourceRequest;
 
-static String* decodeURL(String* src, size_t idx);
+String* decodeURL(String* src, size_t idx);
 
 class ResourceRequestJobInterface {
 public:
@@ -87,6 +87,19 @@ class AboutURLResourceRequestJobDelegate : public gc,
 public:
     static void worker(ResourceRequest* res, String* filePath);
     AboutURLResourceRequestJobDelegate(ResourceRequest* proxy);
+    virtual void send(String* body = String::emptyString,
+                      bool allowCache = false);
+
+private:
+    ResourceRequest* m_orgProxy;
+};
+
+class JavaScriptURLResourceRequestJobDelegate
+    : public gc,
+      public ResourceRequestJobInterface {
+public:
+    static void worker(ResourceRequest* res, String* filePath);
+    JavaScriptURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);
 
