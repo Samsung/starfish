@@ -1457,7 +1457,7 @@ Node* Node::removeChild(Node* child)
             target->propagateMarkNeedsLayout();
             window()->browsingContext()->setNeedsLayout();
         } else {
-            target->node()->setNeedsFrameTreeBuild();
+            child->setNeedsFrameTreeBuild();
         }
     } else {
         child->setNeedsFrameTreeBuild();

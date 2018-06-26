@@ -4234,21 +4234,22 @@ std::pair<LayoutUnit, LayoutUnit>
 PreferredWidthContext::preferredWidthsWithNewContext(Frame* f)
 {
     LayoutUnit mbpWidth = this->mbpWidth(f);
-    PreferredWidthContext newCtx(m_layoutContext, mainContext(), f, m_owner,
+    PreferredWidthContext newCtx(m_layoutContext, this, f, m_owner,
                                  m_remainingWidth - mbpWidth);
     newCtx.computePreferredWidth();
 
     if (f->style()->clear() & ClearValue::LeftClearValue) {
-        mainContext().m_floatLeftWidth = 0;
+        upperContext().m_floatLeftWidth = 0;
     }
     if (f->style()->clear() & ClearValue::RightClearValue) {
-        mainContext().m_floatRightWidth = 0;
+        upperContext().m_floatRightWidth = 0;
     }
 
     if (f->style()->floating() & FloatValue::LeftFloatValue) {
-        mainContext().m_floatLeftWidth += (newCtx.preferredWidth() + mbpWidth);
+        upperContext().m_floatLeftWidth += (newCtx.preferredWidth() + mbpWidth);
     } else if (f->style()->floating() & FloatValue::RightFloatValue) {
-        mainContext().m_floatRightWidth += (newCtx.preferredWidth() + mbpWidth);
+        upperContext().m_floatRightWidth +=
+            (newCtx.preferredWidth() + mbpWidth);
     }
 
     return std::make_pair(newCtx.preferredWidth() + mbpWidth,
@@ -4435,22 +4436,20 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 if (f->isEstablishesBlockFormattingContext()) {
                     if (f->isNormalFlow()) {
                         if (f->style()->clear() & ClearValue::LeftClearValue) {
-                            ctx.mainContext().m_floatLeftWidth = 0;
+                            ctx.floatLeftWidth() = 0;
                         }
                         if (f->style()->clear() & ClearValue::RightClearValue) {
-                            ctx.mainContext().m_floatRightWidth = 0;
+                            ctx.floatRightWidth() = 0;
                         }
-                        w = std::max(w,
-                                     widths.first +
-                                         ctx.mainContext().m_floatLeftWidth +
-                                         ctx.mainContext().m_floatRightWidth);
+                        w = std::max(w, widths.first + ctx.floatLeftWidth() +
+                                            ctx.floatRightWidth());
                     } else {
                         w = std::max(w, widths.first);
                     }
                 } else {
                     if (!f->isAnonymous() && f->isNormalFlow()) {
-                        ctx.mainContext().m_floatLeftWidth = 0;
-                        ctx.mainContext().m_floatRightWidth = 0;
+                        ctx.floatLeftWidth() = 0;
+                        ctx.floatRightWidth() = 0;
                     }
                     w = std::max(w, widths.first);
                 }

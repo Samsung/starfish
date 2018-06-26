@@ -718,18 +718,13 @@ enum WordType {
     General,
 };
 
-struct PreferredWidthMainContext {
-    LayoutUnit m_floatLeftWidth;
-    LayoutUnit m_floatRightWidth;
-};
-
 class PreferredWidthContext {
 public:
     PreferredWidthContext(LayoutContext& lc,
-                          PreferredWidthMainContext& mainContext, Frame* frame,
+                          PreferredWidthContext* upperContext, Frame* frame,
                           Frame* owner, LayoutUnit lastKnownWidth)
         : m_layoutContext(lc)
-        , m_mainContext(mainContext)
+        , m_upperContext(upperContext)
         , m_frame(frame)
         , m_owner(owner)
         , m_preferredWidthSoFar(0)
@@ -745,6 +740,9 @@ public:
         , m_isPendingWrapLine(false)
         , m_hasAppliedTextIndent(false)
     {
+        if (m_upperContext == nullptr) {
+            m_upperContext = this;
+        }
     }
 
     Frame* owner() const
@@ -759,9 +757,19 @@ public:
         return m_layoutContext;
     }
 
-    PreferredWidthMainContext& mainContext()
+    PreferredWidthContext& upperContext()
     {
-        return m_mainContext;
+        return *m_upperContext;
+    }
+
+    LayoutUnit& floatLeftWidth()
+    {
+        return m_floatLeftWidth;
+    }
+
+    LayoutUnit& floatRightWidth()
+    {
+        return m_floatRightWidth;
     }
 
     void updatePreferredWidth(LayoutUnit r)
@@ -927,7 +935,9 @@ public:
 
 private:
     LayoutContext& m_layoutContext;
-    PreferredWidthMainContext& m_mainContext;
+    PreferredWidthContext* m_upperContext;
+    LayoutUnit m_floatLeftWidth;
+    LayoutUnit m_floatRightWidth;
     Frame* m_frame;
     Frame* m_owner;
     LayoutUnit m_preferredWidthSoFar;
