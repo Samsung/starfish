@@ -21,7 +21,7 @@
 
 #if defined(PORT_IMAGEDECODER_BACKEND_MISC)
 
-#if defined(PORT_CANVAS_BACKEND_CAIRO)
+#if defined(PORT_CANVAS_BACKEND_CAIRO) || defined(PORT_CANVAS_BACKEND_SKIA)
 #define NEEDS_PREMULTIPLIED_ALPHA
 #endif
 
@@ -29,7 +29,10 @@
 
 #include "core/modules/canvas/image/NativeImageData.h"
 
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
+#endif
+
 #include <png.h>
 #if defined(OS_WINDOWS)
 #include <Wincodec.h>
@@ -62,7 +65,9 @@ public:
     NativeImageDataMISC(const char* buf, size_t len)
     {
         m_image = nullptr;
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
         m_imageSurface = nullptr;
+#endif
         m_width = 0;
         m_height = 0;
         m_stride = 0;
@@ -112,9 +117,11 @@ public:
 
     virtual void disposeNativeImageData()
     {
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
         if (m_imageSurface) {
             cairo_surface_destroy(m_imageSurface);
         }
+#endif
         free(m_image);
 
         NativeImageData::disposeNativeImageData();
@@ -122,16 +129,23 @@ public:
 
     void initInternalSurface()
     {
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
         if (m_width && m_height) {
             m_imageSurface = cairo_image_surface_create_for_data(
                 (unsigned char*)m_image, CAIRO_FORMAT_ARGB32, m_width, m_height,
                 m_stride);
         }
+#endif
     }
 
     virtual void* internalSurface()
     {
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
         return m_imageSurface;
+#endif
+#if defined(PORT_CANVAS_BACKEND_SKIA)
+        return nullptr;
+#endif
     }
 
     virtual void* unwrap()
@@ -918,9 +932,11 @@ private:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dumpImage(const char* path)
     {
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
         if (m_imageSurface) {
             cairo_surface_write_to_png(m_imageSurface, path);
         }
+#endif
     }
 #endif
 
@@ -930,7 +946,9 @@ protected:
     size_t m_width;
     size_t m_stride;
     size_t m_height;
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_imageSurface;
+#endif
 };
 
 NativeImageData* NativeImageData::create(String* localImageSrc)

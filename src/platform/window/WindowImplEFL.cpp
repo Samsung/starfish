@@ -110,6 +110,11 @@ public:
         m_canvasAdpaterSurface = nullptr;
         m_canvasAdpaterCairo = nullptr;
 #endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+        m_canvasAdpater = nullptr;
+        m_canvasAdpaterSurface = nullptr;
+        m_canvasAdpaterSkia = nullptr;
+#endif
         m_renderingAnimator = nullptr;
         m_isMouseLbuttonDown = false;
         m_isKeyDown = false;
@@ -316,6 +321,13 @@ public:
         }
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
         if (ret && m_canvasAdpaterCairo) {
+            int w, h;
+            evas_object_image_size_get(m_canvasAdpater, &w, &h);
+            evas_object_image_data_update_add(m_canvasAdpater, 0, 0, w, h);
+        }
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+        if (ret && m_canvasAdpaterSkia) {
             int w, h;
             evas_object_image_size_get(m_canvasAdpater, &w, &h);
             evas_object_image_data_update_add(m_canvasAdpater, 0, 0, w, h);
