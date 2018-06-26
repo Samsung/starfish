@@ -44,6 +44,29 @@ public:
 };
 
 class CanvasSkia : public Canvas {
+    void initFromBuffer(void* buffer, int width, int height, int stride)
+    {
+        // FIXME : Apply device scale factor
+        m_width = width;
+        m_height = height;
+
+        SkImageInfo info = SkImageInfo::MakeN32Premul(m_width, m_height);
+        m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
+        m_canvas = m_surface->getCanvas();
+    }
+
+    void initFromNativeImageData(NativeImageData* data)
+    {
+        // FIXME : Apply device scale factor
+        m_width = data->width();
+        m_height = data->height();
+
+        SkImageInfo info = SkImageInfo::MakeN32Premul(m_width, m_height);
+        m_surface =
+            SkSurface::MakeRasterDirect(info, data->data(), data->stride());
+        m_canvas = m_surface->getCanvas();
+    }
+
 public:
     CanvasSkia(StarFish* starfish, void* buffer, int width, int height,
                int stride)
@@ -83,6 +106,27 @@ public:
 
     CanvasSkia(StarFish* starfish, CanvasSurface* data)
     {
+        m_starfish = starfish;
+        m_canvas = nullptr;
+        m_surface = nullptr;
+        m_shouldDestroySkia = true;
+        m_shouldDestroySurface = true;
+
+        initFromBuffer(data->data(), data->bufferWidth(), data->bufferHeight(),
+                       data->bufferStride());
+
+        save();
+    }
+
+    CanvasSkia(StarFish* starfish, NativeImageData* data)
+    {
+        m_shouldDestroySkia = true;
+        m_shouldDestroySurface = false;
+        m_starfish = starfish;
+        m_canvas = nullptr;
+        m_surface = nullptr;
+        initFromNativeImageData(data);
+        save();
     }
 
     virtual ~CanvasSkia()
@@ -279,6 +323,21 @@ public:
     virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst,
                            ImageRenderingValue imageRenderingMode)
     {
+        if (!lastState().m_visible) {
+            return;
+        }
+
+        auto pixels = data->data();
+        auto w = data->imageWidth();
+        auto h = data->imageHeight();
+
+        SkBitmap bitmap;
+        bitmap.installPixels(SkImageInfo::MakeN32Premul(w, h), (void*)pixels,
+                             data->bufferStride());
+        m_canvas->drawBitmapRect(
+            bitmap, SkIRect::MakeWH(w, h),
+            SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
+            &m_paint);
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
@@ -442,6 +501,12 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
+    virtual bool canRejectPainting(const LayoutRect& rect)
+    {
+        return m_canvas->quickReject(
+            SkRect::MakeXYWH(rect.x(), rect.y(), rect.width(), rect.height()));
+    }
+
 protected:
     StarFish* m_starfish;
     std::vector<CanvasStateSkia> m_state;
@@ -464,21 +529,18 @@ Canvas* Canvas::createDirect(StarFish* starfish, void* data)
 
 Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    return new CanvasSkia(starfish, data);
 }
 
 Canvas* Canvas::createGenericCanvas(StarFish* starfish, void* data, size_t w,
                                     size_t h)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    return new CanvasSkia(starfish, data, w, h, w * 4);
 }
 
 Canvas* Canvas::createGenericCanvas(StarFish* starfish, NativeImageData* data)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    return new CanvasSkia(starfish, data);
 }
 }
 #endif
