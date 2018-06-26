@@ -661,9 +661,6 @@ public:
             return true;
         } else if (style()->opacity() != 1 || isRunningOpacityAnimation()) {
             return true;
-        } else if (style()->overflowX() != OverflowValue::VisibleOverflow ||
-                   style()->overflowY() != OverflowValue::VisibleOverflow) {
-            return true;
         }
         return false;
     }

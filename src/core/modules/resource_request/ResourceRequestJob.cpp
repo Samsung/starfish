@@ -44,6 +44,8 @@ ResourceRequestJobInterface* ResourceRequestJobDelegateFactory::createJob(
         return new AboutURLResourceRequestJobDelegate(proxy);
     } else if (proxy->url()->isNetworkURL()) {
         return new NetworkURLResourceRequestJobDelegate(proxy);
+    } else if (proxy->url()->isJavascriptURL()) {
+        return new JavaScriptURLResourceRequestJobDelegate(proxy);
     } else {
         return new UnknownURLResourceRequestJobDelegate(proxy);
     }
@@ -211,6 +213,42 @@ void AboutURLResourceRequestJobDelegate::worker(ResourceRequest* res,
     res->handleResponseEOF();
 }
 
+JavaScriptURLResourceRequestJobDelegate::
+    JavaScriptURLResourceRequestJobDelegate(ResourceRequest* proxy)
+    : m_orgProxy(proxy)
+{
+}
+
+void JavaScriptURLResourceRequestJobDelegate::send(String* body,
+                                                   bool allowCache)
+{
+    STARFISH_ASSERT(m_orgProxy->m_url->isJavascriptURL());
+    // this area doesn't require lock.
+    if (m_orgProxy->m_isSync) {
+        worker(m_orgProxy, m_orgProxy->m_url->urlString());
+    } else {
+        size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
+            m_orgProxy->document()->browsingContext(),
+            [](size_t handle, void* data, void* data1) {
+                ResourceRequest* request = (ResourceRequest*)data;
+                request->removeIdlerHandle(handle);
+                AboutURLResourceRequestJobDelegate::worker(
+                    (ResourceRequest*)data, (String*)data1);
+            },
+            m_orgProxy, m_orgProxy->m_url->urlString());
+        m_orgProxy->pushIdlerHandle(handle);
+    }
+}
+
+void JavaScriptURLResourceRequestJobDelegate::worker(ResourceRequest* res,
+                                                     String* url)
+{
+    res->m_status = 200;
+    res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
+    res->changeReadyState(ResourceRequest::LOADING, true);
+    res->handleResponseEOF();
+}
+
 UnknownURLResourceRequestJobDelegate::UnknownURLResourceRequestJobDelegate(
     ResourceRequest* proxy)
     : m_orgProxy(proxy)
@@ -298,7 +336,7 @@ void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* res,
     res->handleResponseEOF();
 }
 
-static String* decodeURL(String* src, size_t idx)
+String* decodeURL(String* src, size_t idx)
 {
     bool gotUTF32Char = false;
     UTF32String ret;

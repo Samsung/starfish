@@ -388,7 +388,9 @@ public:
             Frame* s = self->layoutParent();
             while (s) {
                 if ((s->shouldApplyOverflow() &&
-                     !s->isEstablishesStackingContext()) ||
+                     (!s->isEstablishesStackingContext() ||
+                      (s->isFrameBox() &&
+                       !s->asFrameBox()->canOwnsStackingContext()))) ||
                     (s->style() &&
                      s->style()->position() == FixedPositionValue)) {
                     needsRestore = true;
