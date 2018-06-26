@@ -2011,7 +2011,8 @@ Compositor* WindowImplEFL::prepareCompositor()
         bool f;
     };
     elm_box_unpack_all(m_mainBox);
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
     elm_box_pack_end(m_mainBox, m_canvasAdpater);
 #endif
     dummy* d = new dummy;
@@ -2032,7 +2033,8 @@ Compositor* WindowImplEFL::prepareCompositor()
     Compositor* c = Compositor::create(starFish(), d);
     delete d;
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
     {
         int w, h;
         evas_object_image_size_get(m_canvasAdpater, &w, &h);
@@ -2048,10 +2050,6 @@ Compositor* WindowImplEFL::prepareCompositor()
     }
 #endif
     return c;
-#endif
-#if defined(PORT_COMPOSITOR_BACKEND_MOCK)
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return Compositor::create(starFish(), (void*)0);
 #endif
 }
 

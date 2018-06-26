@@ -39,7 +39,15 @@
 #include <SkMatrix.h>
 #include <clipper.hpp>
 
+#ifdef PORT_CANVAS_BACKEND_CAIRO
 #include <cairo.h>
+#endif
+
+#ifdef PORT_CANVAS_BACKEND_SKIA
+#include "SkSurface.h"
+#include "SkCanvas.h"
+#include "SkPath.h"
+#endif
 
 namespace StarFish {
 
@@ -563,6 +571,7 @@ public:
             evas_object_move(cl, clipRt.x(), clipRt.y());
             evas_object_resize(cl, clipRt.width(), clipRt.height());
 
+#ifdef PORT_CANVAS_BACKEND_CAIRO
             cairo_surface_t* surface;
             cairo_t* cr;
 
@@ -594,8 +603,37 @@ public:
             cairo_destroy(cr);
             cairo_surface_flush(surface);
             cairo_surface_destroy(surface);
-
             evas_object_image_data_set(cl, data);
+#endif
+#ifdef PORT_CANVAS_BACKEND_SKIA
+            void* data = evas_object_image_data_get(cl, EINA_TRUE);
+            SkImageInfo info = SkImageInfo::MakeN32Premul(w, h);
+            auto surface = SkSurface::MakeRasterDirect(
+                info, data, evas_object_image_stride_get(cl));
+            auto canvas = surface->getCanvas();
+            SkPath skpath;
+            for (size_t i = 0; i < clipPaths.size(); i++) {
+                Unit::Rect rt = boundingRect(clipPaths[i]);
+                if (rt.width() && rt.height()) {
+                    canvas->save();
+                    canvas->translate(-rt.x(), -rt.y());
+                    SkPaint paint;
+                    paint.setColor(SkColorSetARGB(o, o, o, o));
+
+                    const ClipperLib::Path& path = clipPaths[i];
+                    skpath.moveTo(path[0].X, path[0].Y);
+                    for (size_t j = 1; j < path.size(); j++) {
+                        skpath.lineTo(path[j].X, path[j].Y);
+                    }
+
+                    paint.setStyle(SkPaint::kFill_Style);
+                    canvas->drawPath(skpath, paint);
+                    skpath.reset();
+                    canvas->save();
+                }
+            }
+            evas_object_image_data_set(cl, data);
+#endif
             evas_object_show(cl);
             return cl;
         }
