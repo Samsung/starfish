@@ -620,6 +620,11 @@ void Document::notifyDomContentLoaded()
                 fragment->substring(1, fragment->length() - 1));
         }
     }
+
+    if (browsingContext()->isTopLevelBrowsingContext()) {
+        starFish()->callWebViewHandler(std::string("OnPageFinished"),
+                                       this->urlString());
+    }
 }
 
 void Document::dispose()

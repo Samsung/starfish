@@ -201,7 +201,8 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
 #endif
 
 PlatformWindow::PlatformWindow(StarFish* starFish)
-    : m_starFish(starFish)
+    : m_isClosed(false)
+    , m_starFish(starFish)
     , m_webView(nullptr)
     , m_idleCleanerTimerID(SIZE_MAX)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
@@ -237,11 +238,11 @@ void PlatformWindow::resume()
 void PlatformWindow::close()
 {
     STARFISH_LOG_INFO("PlatformWindow::close()\n");
+    m_isClosed = true;
     clearResources();
     if (m_idleCleanerTimerID != SIZE_MAX) {
         starFish()->timer()->removeTimer(m_idleCleanerTimerID);
     }
-    webView()->close();
 }
 
 void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,

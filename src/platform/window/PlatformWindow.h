@@ -57,11 +57,6 @@ enum class CompositionEventKind {
 
 class PlatformWindow : public gc {
 public:
-    virtual ~PlatformWindow()
-    {
-        STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
-    }
-
     static PlatformWindow* create(StarFish* starFish, void* win, int width,
                                   int height);
 
@@ -73,6 +68,7 @@ public:
     }
     virtual void* unwrap() = 0;
     virtual void clearResources() = 0;
+    virtual void setNeedsRendering() = 0;
     virtual Canvas* preparePainting() = 0;
     virtual Compositor* prepareCompositor() = 0;
     virtual void showSoftwareKeyboardIfPossible()
@@ -127,6 +123,11 @@ public:
     virtual void resume();
     virtual void close();
 
+    bool isClosed()
+    {
+        return m_isClosed;
+    }
+
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     void paintVirtualCursor(Canvas* canvas);
 #endif
@@ -152,6 +153,7 @@ public:
 protected:
     PlatformWindow(StarFish* starFish);
 
+    bool m_isClosed;
     StarFish* m_starFish;
     WebView* m_webView;
     size_t m_idleCleanerTimerID;

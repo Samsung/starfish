@@ -116,6 +116,8 @@ public:
         return ret;
     }
 
+    virtual void setNeedsRendering() override;
+
     uintptr_t m_handle;
 
     float m_lastMouseX, m_lastMouseY;
@@ -143,11 +145,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     return wnd;
 }
 
-void WebView::setNeedsRendering()
+void WindowImplEFLHeadLess::setNeedsRendering()
 {
-    m_needsRendering = true;
-    WindowImplEFLHeadLess* wnd =
-        (WindowImplEFLHeadLess*)starFish()->platformWindow();
+    WindowImplEFLHeadLess* wnd = this;
 
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {

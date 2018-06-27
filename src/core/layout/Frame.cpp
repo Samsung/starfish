@@ -774,17 +774,20 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
     if (iter == m_relativePositionedBoxes.end()) {
         return;
     } else {
-        const auto& boxes = iter->second;
-        for (size_t i = 0; i < boxes.size(); i++) {
-            FrameBox* box = boxes[i].first;
-            if (boxes[i].second) {
-                applyRelativePosition(box);
-            } else {
-                Element* elm = box->node()->parentElement();
-                while (elm && elm->frame()->isFrameInline() &&
-                       elm->style()->position() == RelativePositionValue) {
-                    applyRelativePositionInlineCase(elm->frame(), box);
-                    elm = elm->parentElement();
+        if (containingBlock->hasBlockFlow() && m_isQuickLayout) {
+        } else {
+            const auto& boxes = iter->second;
+            for (size_t i = 0; i < boxes.size(); i++) {
+                FrameBox* box = boxes[i].first;
+                if (boxes[i].second) {
+                    applyRelativePosition(box);
+                } else {
+                    Element* elm = box->node()->parentElement();
+                    while (elm && elm->frame()->isFrameInline() &&
+                           elm->style()->position() == RelativePositionValue) {
+                        applyRelativePositionInlineCase(elm->frame(), box);
+                        elm = elm->parentElement();
+                    }
                 }
             }
         }

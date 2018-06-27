@@ -31,13 +31,17 @@ class Node;
 class StackingContext;
 class BrowsingContext;
 
+enum NeedsGraphicsLayerReason ENSURE_ENUM_UNSIGNED {
+    NeedsGraphicsLayerReasonNone,
+    NeedsGraphicsLayerReasonBySelf,
+    NeedsGraphicsLayerReasonNotCoveredByParent,
+    NeedsGraphicsLayerReasonCollapsedWithSiblingLayer,
+};
+
 class StackingContextChild : public GCVector<StackingContext*> {
 };
 
 struct StackingContextRareData : public gc {
-    bool m_needsGraphicsBuffer;
-    bool m_hasNon2DRectTransform;
-    bool m_isVisibleRectComputedForNonGraphicsLayer;
     LayoutRect m_visibleRect;
     CanvasSurface* m_buffer;
     SkMatrix m_matrix;
@@ -80,7 +84,7 @@ public:
 
     bool needsGraphicsBuffer()
     {
-        return m_rareData ? m_rareData->m_needsGraphicsBuffer : false;
+        return m_needsGraphicsBuffer;
     }
 
     void clearGraphicsBuffer(bool needsDetachNative = true);
@@ -143,8 +147,12 @@ protected:
     void computeStackingContextProperties(ComputeStackingContextContext& ctx);
     void applyStackingContextProperties(ComputeStackingContextContext& ctx);
 
-    bool m_needsRepainting;
-    bool m_catchedMatrixChangedWhileComputeStackingContextProperties;
+    bool m_needsRepainting : 1;
+    bool m_catchedMatrixChangedWhileComputeStackingContextProperties : 1;
+    bool m_needsGraphicsBuffer : 1;
+    bool m_hasNon2DRectTransform : 1;
+    bool m_isVisibleRectComputedForNonGraphicsLayer : 1;
+    NeedsGraphicsLayerReason m_needsGraphicsBufferReason : 2;
     FrameBox* m_owner;
     StackingContext* m_parent;
     GCVector<StackingContextChild*> m_childContexts;

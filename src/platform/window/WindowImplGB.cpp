@@ -129,6 +129,8 @@ public:
         return m_internalBuffer;
     }
 
+    virtual void setNeedsRendering() override;
+
     virtual void clearResources();
     virtual Canvas* preparePainting();
     virtual Compositor* prepareCompositor();
@@ -187,12 +189,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     return wnd;
 }
 
-void WebView::setNeedsRendering()
+void WindowImplGB::setNeedsRendering()
 {
-    WindowImplGB* wnd = (WindowImplGB*)starFish()->platformWindow();
-
     // TODO: refresh rendering animator here.
-    m_needsRendering = true;
     wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
         nullptr,
         [](size_t handle, void* data) {

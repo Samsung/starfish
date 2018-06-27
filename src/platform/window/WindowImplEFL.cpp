@@ -122,7 +122,6 @@ public:
         m_clickedCount = 0;
         m_canRendering = true;
         m_inRendering = false;
-        m_isEvasFlushed = false;
         m_imfContext = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
@@ -138,108 +137,6 @@ public:
         m_evasGLConfig = nullptr;
         m_evasGLSurface = nullptr;
         m_evasGLContext = nullptr;
-#endif
-
-        GC_REGISTER_FINALIZER_NO_ORDER(
-            this,
-            [](void* obj, void* cd) {
-                STARFISH_LOG_INFO("GC Finalizer for WindowImplEFL\n");
-            },
-            NULL, NULL, NULL);
-    }
-
-    ~WindowImplEFL()
-    {
-        STARFISH_LOG_INFO("WindowImplEFL::~WindowImplEFL\n");
-        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-        if (eflWindow->m_canvasAdpater) {
-            evas_object_del(eflWindow->m_canvasAdpater);
-            eflWindow->m_canvasAdpater = nullptr;
-        }
-#endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-        if (eflWindow->m_canvasAdpaterSurface) {
-            cairo_surface_destroy(eflWindow->m_canvasAdpaterSurface);
-            cairo_destroy(eflWindow->m_canvasAdpaterCairo);
-            eflWindow->m_canvasAdpaterSurface = nullptr;
-            eflWindow->m_canvasAdpaterCairo = nullptr;
-        }
-#endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-        if (eflWindow->m_canvasAdpaterSurface) {
-            eflWindow->m_canvasAdpaterSurface = nullptr;
-            eflWindow->m_canvasAdpaterSkia = nullptr;
-        }
-#endif
-
-        if (eflWindow->m_dummyBoxClipper) {
-            evas_object_del(eflWindow->m_dummyBoxClipper);
-            eflWindow->m_dummyBoxClipper = nullptr;
-        }
-
-        if (eflWindow->m_dummyBox) {
-            evas_object_del(eflWindow->m_dummyBox);
-            eflWindow->m_dummyBox = nullptr;
-        }
-
-        if (eflWindow->m_mainBox) {
-            // elm_win_resize_object_del(eflWindow->m_window,
-            // eflWindow->m_mainBox);
-            evas_object_del(eflWindow->m_mainBox);
-            eflWindow->m_mainBox = nullptr;
-        }
-
-        if (eflWindow->m_nonIMEKeyEventBox) {
-            evas_object_del(eflWindow->m_nonIMEKeyEventBox);
-            eflWindow->m_nonIMEKeyEventBox = nullptr;
-        }
-
-        if (eflWindow->m_imfContext) {
-            ecore_imf_context_del(eflWindow->m_imfContext);
-        }
-
-#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
-        evas_object_event_callback_del(eflWindow->m_mainBox,
-                                       EVAS_CALLBACK_MOUSE_DOWN,
-                                       eflWindow->m_mouseDownEventHandler);
-        evas_object_event_callback_del(eflWindow->m_mainBox,
-                                       EVAS_CALLBACK_MOUSE_UP,
-                                       eflWindow->m_mouseUpEventHandler);
-        evas_object_event_callback_del(eflWindow->m_mainBox,
-                                       EVAS_CALLBACK_MOUSE_WHEEL,
-                                       eflWindow->m_mouseWheelEventHandler);
-        evas_object_event_callback_del(eflWindow->m_mainBox,
-                                       EVAS_CALLBACK_MOUSE_MOVE,
-                                       eflWindow->m_mouseMoveEventHandler);
-        evas_object_event_callback_del(eflWindow->m_mainBox,
-                                       EVAS_CALLBACK_KEY_DOWN,
-                                       eflWindow->m_keyDownEventHandler);
-        evas_object_event_callback_del(eflWindow->m_mainBox,
-                                       EVAS_CALLBACK_KEY_UP,
-                                       eflWindow->m_keyUpEventHandler);
-#endif
-
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-        evas_object_event_callback_del(eflWindow->m_dummyBox,
-                                       EVAS_CALLBACK_MOUSE_DOWN,
-                                       eflWindow->m_mouseDownEventHandler);
-        evas_object_event_callback_del(eflWindow->m_dummyBox,
-                                       EVAS_CALLBACK_MOUSE_MOVE,
-                                       eflWindow->m_mouseMoveEventHandler);
-        evas_object_event_callback_del(eflWindow->m_dummyBox,
-                                       EVAS_CALLBACK_MOUSE_UP,
-                                       eflWindow->m_mouseUpEventHandler);
-        evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked",
-                                       eflWindow->m_clickEventHandler);
-
-#endif
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-        if (!starFish()->updateFlag()) {
-            evas_object_del((Evas_Object*)eflWindow->m_window);
-        }
 #endif
     }
 
@@ -379,6 +276,99 @@ public:
     virtual void close() override
     {
         STARFISH_LOG_INFO("WindowImplEFL::close()\n");
+
+        if (m_renderingAnimator) {
+            ecore_animator_freeze(m_renderingAnimator);
+            ecore_animator_del(m_renderingAnimator);
+            m_renderingAnimator = nullptr;
+        }
+
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+        if (m_canvasAdpater) {
+            evas_object_del(m_canvasAdpater);
+            m_canvasAdpater = nullptr;
+        }
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+        if (m_canvasAdpaterSurface) {
+            cairo_surface_destroy(m_canvasAdpaterSurface);
+            cairo_destroy(m_canvasAdpaterCairo);
+            m_canvasAdpaterSurface = nullptr;
+            m_canvasAdpaterCairo = nullptr;
+        }
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+        if (m_canvasAdpaterSurface) {
+            m_canvasAdpaterSurface = nullptr;
+            m_canvasAdpaterSkia = nullptr;
+        }
+#endif
+
+        if (m_dummyBoxClipper) {
+            evas_object_del(m_dummyBoxClipper);
+            m_dummyBoxClipper = nullptr;
+        }
+
+        if (m_dummyBox) {
+            evas_object_del(m_dummyBox);
+            m_dummyBox = nullptr;
+        }
+
+        if (m_mainBox) {
+            // elm_win_resize_object_del(m_window, m_mainBox);
+            evas_object_del(m_mainBox);
+            m_mainBox = nullptr;
+        }
+
+        if (m_nonIMEKeyEventBox) {
+            evas_object_del(m_nonIMEKeyEventBox);
+            m_nonIMEKeyEventBox = nullptr;
+        }
+
+        if (m_imfContext) {
+            ecore_imf_context_del(m_imfContext);
+        }
+
+        evas_event_callback_del(evas_object_evas_get(m_mainBox),
+                                EVAS_CALLBACK_RENDER_POST, m_renderingHandler);
+
+        if (m_resizeHandler) {
+            evas_object_event_callback_del(m_window, EVAS_CALLBACK_RESIZE,
+                                           m_resizeHandler);
+        }
+
+#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
+        evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_MOUSE_DOWN,
+                                       m_mouseDownEventHandler);
+        evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_MOUSE_UP,
+                                       m_mouseUpEventHandler);
+        evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_MOUSE_WHEEL,
+                                       m_mouseWheelEventHandler);
+        evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_MOUSE_MOVE,
+                                       m_mouseMoveEventHandler);
+        evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_KEY_DOWN,
+                                       m_keyDownEventHandler);
+        evas_object_event_callback_del(m_mainBox, EVAS_CALLBACK_KEY_UP,
+                                       m_keyUpEventHandler);
+#endif
+
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
+        evas_object_event_callback_del(m_dummyBox, EVAS_CALLBACK_MOUSE_DOWN,
+                                       m_mouseDownEventHandler);
+        evas_object_event_callback_del(m_dummyBox, EVAS_CALLBACK_MOUSE_MOVE,
+                                       m_mouseMoveEventHandler);
+        evas_object_event_callback_del(m_dummyBox, EVAS_CALLBACK_MOUSE_UP,
+                                       m_mouseUpEventHandler);
+        evas_object_smart_callback_del(m_dummyBox, "clicked",
+                                       m_clickEventHandler);
+
+#endif
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
+        if (!starFish()->updateFlag()) {
+            evas_object_del((Evas_Object*)m_window);
+        }
+#endif
         PlatformWindow::close();
         if (g_currentWnd == this) {
             g_currentWnd = nullptr;
@@ -388,26 +378,10 @@ public:
     virtual void onIdle() override
     {
         PlatformWindow::onIdle();
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-// leave code block for future
-// drop screen buffer for cairo when we can use efl software backend
-/*
- auto tick = tickCount();
- if (!m_inRendering && m_canvasAdpaterSurface && m_isEvasFlushed && (tick -
- m_lastRenderingTime > 1000)) {
- STARFISH_LOG_INFO("drop screen buffer for cairo");
- cairo_destroy(m_canvasAdpaterCairo);
- cairo_surface_destroy(m_canvasAdpaterSurface);
- m_canvasAdpaterCairo = nullptr;
- m_canvasAdpaterSurface = nullptr;
- }
- */
-#endif
     }
 
     virtual bool rendering() override
     {
-        m_isEvasFlushed = false;
         m_inRendering = true;
         // ProfilerTimer renderingTimer("WindowImplEFL::rendering");
         bool ret = PlatformWindow::rendering();
@@ -439,6 +413,8 @@ public:
         return ret;
     }
 
+    virtual void setNeedsRendering() override;
+
     uintptr_t m_handle;
     Evas_Object* m_window;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
@@ -468,6 +444,9 @@ public:
     Evas_GL_Context* m_evasGLContext;
 #endif
 
+    void (*m_resizeHandler)(void* data, Evas* evas, Evas_Object* obj,
+                            void* event_info);
+    void (*m_renderingHandler)(void* data, Evas* evas, void* event_info);
     void (*m_mouseDownEventHandler)(void* data, Evas* evas, Evas_Object* obj,
                                     void* event_info);
     void (*m_mouseMoveEventHandler)(void* data, Evas* evas, Evas_Object* obj,
@@ -492,7 +471,6 @@ public:
     bool m_isKeyDown;
     bool m_canRendering;
     bool m_inRendering;
-    bool m_isEvasFlushed;
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
@@ -1291,46 +1269,30 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
 #endif
 
-    // Rendering control callback
-    evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
-                            EVAS_CALLBACK_RENDER_POST,
-                            [](void* data, Evas* e, void* event_info) {
-                                STARFISH_ASSERT(isMainThread());
-                                WindowImplEFL* wnd = (WindowImplEFL*)data;
-                                wnd->m_canRendering = true;
-                                wnd->m_isEvasFlushed = true;
-                                wnd->m_lastRenderingTime = tickCount();
-                            },
-                            wnd);
+    wnd->m_renderingHandler = [](void* data, Evas* evas,
+                                 void* event_info) -> void {
+        STARFISH_ASSERT(isMainThread());
+        WindowImplEFL* wnd = (WindowImplEFL*)data;
+        wnd->m_canRendering = true;
+        wnd->m_lastRenderingTime = tickCount();
+    };
 
     evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
-                            EVAS_CALLBACK_RENDER_PRE,
-                            [](void* data, Evas* e, void* event_info) {
-                                STARFISH_ASSERT(isMainThread());
-                                WindowImplEFL* wnd = (WindowImplEFL*)data;
-                                wnd->m_isEvasFlushed = false;
-                            },
+                            EVAS_CALLBACK_RENDER_POST, wnd->m_renderingHandler,
                             wnd);
-    evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
-                            EVAS_CALLBACK_RENDER_POST,
-                            [](void* data, Evas* e, void* event_info) {}, wnd);
-    evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
-                            EVAS_CALLBACK_RENDER_FLUSH_PRE,
-                            [](void* data, Evas* e, void* event_info) {}, wnd);
-    evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
-                            EVAS_CALLBACK_RENDER_FLUSH_POST,
-                            [](void* data, Evas* e, void* event_info) {}, wnd);
 
     if (sf->shouldFitWindow()) {
-        evas_object_event_callback_add(
-            wnd->m_window, EVAS_CALLBACK_RESIZE,
-            [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
-                WindowImplEFL* wnd = (WindowImplEFL*)data;
-                int w, h;
-                evas_object_geometry_get(wnd->m_window, NULL, NULL, &w, &h);
-                evas_object_resize(wnd->m_mainBox, w, h);
-            },
-            wnd);
+        wnd->m_resizeHandler = [](void* data, Evas* e, Evas_Object* obj,
+                                  void* event_info) {
+            WindowImplEFL* wnd = (WindowImplEFL*)data;
+            int w, h;
+            evas_object_geometry_get(wnd->m_window, NULL, NULL, &w, &h);
+            evas_object_resize(wnd->m_mainBox, w, h);
+        };
+        evas_object_event_callback_add(wnd->m_window, EVAS_CALLBACK_RESIZE,
+                                       wnd->m_resizeHandler, wnd);
+    } else {
+        wnd->m_resizeHandler = nullptr;
     }
 
     evas_object_event_callback_add(
@@ -1644,10 +1606,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     return wnd;
 }
 
-void WebView::setNeedsRendering()
+void WindowImplEFL::setNeedsRendering()
 {
-    m_needsRendering = true;
-    WindowImplEFL* wnd = (WindowImplEFL*)starFish()->platformWindow();
+    WindowImplEFL* wnd = this;
 
 #if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
     defined(STARFISH_TIZEN_EVASGL_CAIRO)
@@ -1689,7 +1650,6 @@ void WebView::setNeedsRendering()
 
 Canvas* WindowImplEFL::preparePainting()
 {
-    m_isEvasFlushed = false;
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
 #ifdef STARFISH_ENABLE_TEST
     {
@@ -1903,7 +1863,6 @@ Canvas* WindowImplEFL::preparePainting()
 Compositor* WindowImplEFL::prepareCompositor()
 {
 #if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
-    m_isEvasFlushed = false;
 #if defined(STARFISH_TIZEN) && defined(STARFISH_TIZEN_EVASGL_CAIRO)
     struct dummy {
         cairo_t* cairo;
@@ -2063,6 +2022,7 @@ void WindowImplEFL::clearResources()
         STARFISH_LOG_INFO("Remove animator\n");
         ecore_animator_freeze(m_renderingAnimator);
         ecore_animator_del(m_renderingAnimator);
+        m_renderingAnimator = nullptr;
     }
 
     auto iter = m_objectList.begin();

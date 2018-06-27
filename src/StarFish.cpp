@@ -421,38 +421,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_platformWindow->setWebView(webView);
 }
 
-StarFish::~StarFish()
-{
-    STARFISH_LOG_INFO("StarFish::~StarFish\n");
-#ifdef STARFISH_ENABLE_TEST
-    if (fp_mem) {
-        fclose(fp_mem);
-    }
-#endif
-#if defined(STARFISH_ENABLE_INSPECTOR)
-    delete m_inspector;
-#endif
-#if defined(PORT_CANVAS_BACKEND_EFL) || defined(PORT_IMAGEDECODER_BACKEND_EFL)
-    g_internalCanvas = nullptr;
-#endif
-    if (m_platformWindow) {
-        close();
-        delete m_platformWindow;
-    }
-
-    delete m_platformFontCache;
-    delete m_platformFontSelector;
-
-    if (g_singletonInstanceCnt <= 1) {
-        NetworkSharedResourceManager::close();
-#ifdef STARFISH_ENABLE_HTTPCACHE
-        HTTPCache::destory();
-#endif
-    } else {
-        g_singletonInstanceCnt--;
-    }
-}
-
 void StarFish::run()
 {
     m_messageLoop->run();
@@ -536,6 +504,18 @@ void StarFish::removeActiveThread(Thread* thread)
 
 void StarFish::close()
 {
+#ifdef STARFISH_ENABLE_TEST
+    if (fp_mem) {
+        fclose(fp_mem);
+    }
+#endif
+#if defined(STARFISH_ENABLE_INSPECTOR)
+    delete m_inspector;
+#endif
+#if defined(PORT_CANVAS_BACKEND_EFL) || defined(PORT_IMAGEDECODER_BACKEND_EFL)
+    g_internalCanvas = nullptr;
+#endif
+    platformWindow()->webView()->close();
     m_threadPool->close();
     m_messageLoop->close();
     STARFISH_ASSERT(isMainThread());
@@ -547,6 +527,19 @@ void StarFish::close()
     }
     m_timer->close();
     m_platformWindow->close();
+
+    delete m_platformFontCache;
+    delete m_platformFontSelector;
+
+    if (g_singletonInstanceCnt <= 1) {
+        NetworkSharedResourceManager::close();
+#ifdef STARFISH_ENABLE_HTTPCACHE
+        HTTPCache::destory();
+#endif
+        g_singletonInstanceCnt = 0;
+    } else {
+        g_singletonInstanceCnt--;
+    }
 }
 
 String* StarFish::evaluate(String* s)

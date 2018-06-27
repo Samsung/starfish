@@ -843,6 +843,7 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
     }
 
     ensureRareElementMembers()->m_scrollLeft = s;
+    webView()->setNeedsComputeStackingContextProperties();
     setNeedsPainting();
 }
 
@@ -979,6 +980,7 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
     }
 
     ensureRareElementMembers()->m_scrollTop = s;
+    webView()->setNeedsComputeStackingContextProperties();
     setNeedsPainting();
 }
 
