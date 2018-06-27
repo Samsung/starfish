@@ -143,9 +143,104 @@ public:
         GC_REGISTER_FINALIZER_NO_ORDER(
             this,
             [](void* obj, void* cd) {
-                STARFISH_LOG_INFO("WindowImplEFL::~WindowImplEFL\n");
+                STARFISH_LOG_INFO("GC Finalizer for WindowImplEFL\n");
             },
             NULL, NULL, NULL);
+    }
+
+    ~WindowImplEFL()
+    {
+        STARFISH_LOG_INFO("WindowImplEFL::~WindowImplEFL\n");
+        WindowImplEFL* eflWindow = (WindowImplEFL*)this;
+
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+        if (eflWindow->m_canvasAdpater) {
+            evas_object_del(eflWindow->m_canvasAdpater);
+            eflWindow->m_canvasAdpater = nullptr;
+        }
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+        if (eflWindow->m_canvasAdpaterSurface) {
+            cairo_surface_destroy(eflWindow->m_canvasAdpaterSurface);
+            cairo_destroy(eflWindow->m_canvasAdpaterCairo);
+            eflWindow->m_canvasAdpaterSurface = nullptr;
+            eflWindow->m_canvasAdpaterCairo = nullptr;
+        }
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+        if (eflWindow->m_canvasAdpaterSurface) {
+            eflWindow->m_canvasAdpaterSurface = nullptr;
+            eflWindow->m_canvasAdpaterSkia = nullptr;
+        }
+#endif
+
+        if (eflWindow->m_dummyBoxClipper) {
+            evas_object_del(eflWindow->m_dummyBoxClipper);
+            eflWindow->m_dummyBoxClipper = nullptr;
+        }
+
+        if (eflWindow->m_dummyBox) {
+            evas_object_del(eflWindow->m_dummyBox);
+            eflWindow->m_dummyBox = nullptr;
+        }
+
+        if (eflWindow->m_mainBox) {
+            // elm_win_resize_object_del(eflWindow->m_window,
+            // eflWindow->m_mainBox);
+            evas_object_del(eflWindow->m_mainBox);
+            eflWindow->m_mainBox = nullptr;
+        }
+
+        if (eflWindow->m_nonIMEKeyEventBox) {
+            evas_object_del(eflWindow->m_nonIMEKeyEventBox);
+            eflWindow->m_nonIMEKeyEventBox = nullptr;
+        }
+
+        if (eflWindow->m_imfContext) {
+            ecore_imf_context_del(eflWindow->m_imfContext);
+        }
+
+#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
+        evas_object_event_callback_del(eflWindow->m_mainBox,
+                                       EVAS_CALLBACK_MOUSE_DOWN,
+                                       eflWindow->m_mouseDownEventHandler);
+        evas_object_event_callback_del(eflWindow->m_mainBox,
+                                       EVAS_CALLBACK_MOUSE_UP,
+                                       eflWindow->m_mouseUpEventHandler);
+        evas_object_event_callback_del(eflWindow->m_mainBox,
+                                       EVAS_CALLBACK_MOUSE_WHEEL,
+                                       eflWindow->m_mouseWheelEventHandler);
+        evas_object_event_callback_del(eflWindow->m_mainBox,
+                                       EVAS_CALLBACK_MOUSE_MOVE,
+                                       eflWindow->m_mouseMoveEventHandler);
+        evas_object_event_callback_del(eflWindow->m_mainBox,
+                                       EVAS_CALLBACK_KEY_DOWN,
+                                       eflWindow->m_keyDownEventHandler);
+        evas_object_event_callback_del(eflWindow->m_mainBox,
+                                       EVAS_CALLBACK_KEY_UP,
+                                       eflWindow->m_keyUpEventHandler);
+#endif
+
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
+        evas_object_event_callback_del(eflWindow->m_dummyBox,
+                                       EVAS_CALLBACK_MOUSE_DOWN,
+                                       eflWindow->m_mouseDownEventHandler);
+        evas_object_event_callback_del(eflWindow->m_dummyBox,
+                                       EVAS_CALLBACK_MOUSE_MOVE,
+                                       eflWindow->m_mouseMoveEventHandler);
+        evas_object_event_callback_del(eflWindow->m_dummyBox,
+                                       EVAS_CALLBACK_MOUSE_UP,
+                                       eflWindow->m_mouseUpEventHandler);
+        evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked",
+                                       eflWindow->m_clickEventHandler);
+
+#endif
+#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
+        if (!starFish()->updateFlag()) {
+            evas_object_del((Evas_Object*)eflWindow->m_window);
+        }
+#endif
     }
 
     virtual int32_t width() override
@@ -1549,98 +1644,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     return wnd;
 }
 
-PlatformWindow::~PlatformWindow()
-{
-    STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
-
-    WindowImplEFL* eflWindow = (WindowImplEFL*)this;
-
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-    if (eflWindow->m_canvasAdpater) {
-        evas_object_del(eflWindow->m_canvasAdpater);
-        eflWindow->m_canvasAdpater = nullptr;
-    }
-#endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-    if (eflWindow->m_canvasAdpaterSurface) {
-        cairo_surface_destroy(eflWindow->m_canvasAdpaterSurface);
-        cairo_destroy(eflWindow->m_canvasAdpaterCairo);
-        eflWindow->m_canvasAdpaterSurface = nullptr;
-        eflWindow->m_canvasAdpaterCairo = nullptr;
-    }
-#endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-    if (eflWindow->m_canvasAdpaterSurface) {
-        eflWindow->m_canvasAdpaterSurface = nullptr;
-        eflWindow->m_canvasAdpaterSkia = nullptr;
-    }
-#endif
-
-    if (eflWindow->m_dummyBoxClipper) {
-        evas_object_del(eflWindow->m_dummyBoxClipper);
-        eflWindow->m_dummyBoxClipper = nullptr;
-    }
-
-    if (eflWindow->m_dummyBox) {
-        evas_object_del(eflWindow->m_dummyBox);
-        eflWindow->m_dummyBox = nullptr;
-    }
-
-    if (eflWindow->m_mainBox) {
-        // elm_win_resize_object_del(eflWindow->m_window, eflWindow->m_mainBox);
-        evas_object_del(eflWindow->m_mainBox);
-        eflWindow->m_mainBox = nullptr;
-    }
-
-    if (eflWindow->m_nonIMEKeyEventBox) {
-        evas_object_del(eflWindow->m_nonIMEKeyEventBox);
-        eflWindow->m_nonIMEKeyEventBox = nullptr;
-    }
-
-    if (eflWindow->m_imfContext) {
-        ecore_imf_context_del(eflWindow->m_imfContext);
-    }
-
-#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
-    evas_object_event_callback_del(eflWindow->m_mainBox,
-                                   EVAS_CALLBACK_MOUSE_DOWN,
-                                   eflWindow->m_mouseDownEventHandler);
-    evas_object_event_callback_del(eflWindow->m_mainBox, EVAS_CALLBACK_MOUSE_UP,
-                                   eflWindow->m_mouseUpEventHandler);
-    evas_object_event_callback_del(eflWindow->m_mainBox,
-                                   EVAS_CALLBACK_MOUSE_WHEEL,
-                                   eflWindow->m_mouseWheelEventHandler);
-    evas_object_event_callback_del(eflWindow->m_mainBox,
-                                   EVAS_CALLBACK_MOUSE_MOVE,
-                                   eflWindow->m_mouseMoveEventHandler);
-    evas_object_event_callback_del(eflWindow->m_mainBox, EVAS_CALLBACK_KEY_DOWN,
-                                   eflWindow->m_keyDownEventHandler);
-    evas_object_event_callback_del(eflWindow->m_mainBox, EVAS_CALLBACK_KEY_UP,
-                                   eflWindow->m_keyUpEventHandler);
-#endif
-
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-    evas_object_event_callback_del(eflWindow->m_dummyBox,
-                                   EVAS_CALLBACK_MOUSE_DOWN,
-                                   eflWindow->m_mouseDownEventHandler);
-    evas_object_event_callback_del(eflWindow->m_dummyBox,
-                                   EVAS_CALLBACK_MOUSE_MOVE,
-                                   eflWindow->m_mouseMoveEventHandler);
-    evas_object_event_callback_del(eflWindow->m_dummyBox,
-                                   EVAS_CALLBACK_MOUSE_UP,
-                                   eflWindow->m_mouseUpEventHandler);
-    evas_object_smart_callback_del(eflWindow->m_dummyBox, "clicked",
-                                   eflWindow->m_clickEventHandler);
-
-#endif
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-    if (!starFish()->updateFlag()) {
-        evas_object_del((Evas_Object*)eflWindow->m_window);
-    }
-#endif
-}
-
 void WebView::setNeedsRendering()
 {
     m_needsRendering = true;
@@ -1875,7 +1878,7 @@ Canvas* WindowImplEFL::preparePainting()
     SkImageInfo info = SkImageInfo::MakeN32Premul(w, h);
     size_t rowBytes = evas_object_image_stride_get(m_canvasAdpater);
     m_canvasAdpaterSurface = SkSurface::MakeRasterDirect(info, addr, rowBytes);
-
+    // FIXME : Apply device scale factor
     STARFISH_LOG_INFO("WindowImplEFL::preparePainting buffer info %p -> %p\n",
                       addr,
                       ((unsigned char*)addr) +

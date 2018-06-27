@@ -57,7 +57,10 @@ enum class CompositionEventKind {
 
 class PlatformWindow : public gc {
 public:
-    virtual ~PlatformWindow();
+    virtual ~PlatformWindow()
+    {
+        STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
+    }
 
     static PlatformWindow* create(StarFish* starFish, void* win, int width,
                                   int height);
