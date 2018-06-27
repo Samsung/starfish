@@ -187,11 +187,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     return wnd;
 }
 
-PlatformWindow::~PlatformWindow()
-{
-    STARFISH_LOG_INFO("PlatformWindow::~PlatformWindow\n");
-}
-
 void WebView::setNeedsRendering()
 {
     WindowImplGB* wnd = (WindowImplGB*)starFish()->platformWindow();

@@ -31,6 +31,7 @@
 #include "SkDashPathEffect.h"
 #include "SkPath.h"
 #include "SkPixmap.h"
+#include "SkShader.h"
 #include "SkSurface.h"
 
 namespace StarFish {
@@ -144,7 +145,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::clear");
+        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::clear");
         m_canvas->save();
         if (clr.a() == 0) {
             m_canvas->clear(SK_ColorTRANSPARENT);
@@ -359,6 +360,40 @@ public:
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue)
     {
+        if (!lastState().m_visible) {
+            return;
+        }
+        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::drawRepeatImage");
+        auto pixels = data->data();
+        auto dataW = data->width();
+        auto dataH = data->height();
+        auto x = dst.x();
+        auto y = dst.y();
+
+        if (xRepeat) {
+            x = 0;
+        }
+        if (yRepeat) {
+            y = 0;
+        }
+
+        SkBitmap bitmap;
+        bitmap.installPixels(SkImageInfo::MakeN32Premul(dataW, dataH),
+                             (void*)pixels, data->stride());
+        SkMatrix matrix;
+        matrix.setScaleTranslate(imageWidth / dataW, imageHeight / dataH,
+                                 dst.x(), dst.y());
+
+        auto shader =
+            SkShader::MakeBitmapShader(bitmap, SkShader::kRepeat_TileMode,
+                                       SkShader::kRepeat_TileMode, &matrix);
+
+        SkPaint paint;
+        paint.setShader(shader);
+        auto rect = SkRect::MakeXYWH(x, y, dst.width(), dst.height());
+        m_canvas->save();
+        m_canvas->drawRect(rect, paint);
+        m_canvas->restore();
     }
 
     virtual void drawLinearGradient(const Unit::Rect& dst,
