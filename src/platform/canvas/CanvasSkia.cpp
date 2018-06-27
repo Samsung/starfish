@@ -33,6 +33,8 @@
 #include "SkPixmap.h"
 #include "SkShader.h"
 #include "SkSurface.h"
+#define CLAMP(value, min, max) \
+    (((value) > (max)) ? (max) : (((value) < (min)) ? (min) : (value)))
 
 namespace StarFish {
 
@@ -227,12 +229,18 @@ public:
 
     virtual void beginOpacityLayer(float c)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::beginOpacityLayer");
+        save();
+        lastState().m_opacity = c;
+        m_canvas->saveLayerAlpha(nullptr,
+                                 ((uint8_t)(255.0f * CLAMP(c, 0.0, 1.0))));
     }
 
     virtual void endOpacityLayer()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::endOpacityLayer");
+        m_canvas->saveLayerAlpha(nullptr, 255);
+        restore();
     }
 
     virtual void setFont(Font* font)
@@ -290,10 +298,24 @@ public:
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3, LayoutLocation p4)
     {
-    } // left, top, right, bottom
+        if (!lastState().m_visible) {
+            return;
+        }
+        m_canvas->save();
+        beginPath();
+        moveTo(p1.x(), p1.y());
+        lineTo(p2.x(), p2.y());
+        lineTo(p3.x(), p3.y());
+        lineTo(p4.x(), p4.y());
+        lineTo(p1.x(), p1.y());
+        closePath();
+        fill();
+        m_canvas->restore();
+    }
 
     virtual void punchHole(const Unit::Rect& rt)
     {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
@@ -346,12 +368,14 @@ public:
                            const DrawImageInfo& borderinfo,
                            ImageRenderingValue imageRenderingMode)
     {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
                                  size_t l, size_t t, size_t r, size_t b,
                                  double scale, bool fill)
     {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void drawRepeatImage(
@@ -424,6 +448,7 @@ public:
 
     virtual void setVisible(bool visible)
     {
+        lastState().m_visible = visible;
     }
 
     virtual void beginPath()
@@ -527,13 +552,18 @@ public:
     // reset transform matrix & clip
     virtual void resetMatrixAndClip()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        m_canvas->resetMatrix();
+        m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
     }
 
     // reset transform clip
     virtual void resetClip()
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        // FIXME : skia doesn't have a way to reset clips only
+        SkMatrix m = m_canvas->getTotalMatrix();
+        m_canvas->resetMatrix();
+        m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
+        m_canvas->concat(m);
     }
 
     virtual bool canRejectPainting(const LayoutRect& rect)
