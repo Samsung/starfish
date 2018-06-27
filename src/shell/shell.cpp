@@ -579,7 +579,6 @@ int main(int argc, char* argv[])
 
     sf->run();
     webView->Destroy();
-    delete webView;
     webView = nullptr;
     sf = nullptr;
 #endif

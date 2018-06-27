@@ -715,7 +715,7 @@ extern "C" STARFISH_EXPORT void starfishRemove(StarFishInstance* instance)
 #if defined(STARFISH_DALI)
     delete (StarFishController*)instance->m_data;
 #endif
-    delete TO_STARFISH(instance);
+    TO_STARFISH(instance)->close();
     GC_FREE(instance);
 
     GC_gcollect_and_unmap();

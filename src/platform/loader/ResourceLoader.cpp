@@ -544,9 +544,6 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                     doc->browsingContext()
                         ->sourceElement()
                         ->childBrowsingContextLoaded();
-                } else {
-                    doc->starFish()->callWebViewHandler(
-                        std::string("OnPageFinished"), doc->urlString());
                 }
 #ifdef STARFISH_ENABLE_TEST
                 g_fireOnloadEvent = true;

@@ -785,8 +785,8 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
             continue;
         } else if (box->isInlineNonReplacedBox()) {
             InlineNonReplacedBox* inrb = box->asInlineNonReplacedBox();
-            inrb->resetChildrenVerticalPositions();
             inrb->quickInlineLayout(ctx);
+            inrb->resetChildrenVerticalPositions();
             ctx->computeVerticalProperties(inrb, false);
         } else {
             if (box->isAbsolutePositioned()) {

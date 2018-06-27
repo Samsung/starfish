@@ -109,6 +109,7 @@ WebView::WebView(StarFish* starFish)
 
 void WebView::close()
 {
+    STARFISH_LOG_INFO("WebView::close()\n");
     mainBrowsingContext()->dispose();
     m_scriptEngineInstance->dispose();
 }
@@ -668,6 +669,16 @@ void WebView::layoutIfNeeds()
 void WebView::addDidLayoutCallback(DidLayoutCallback cb, void* data)
 {
     m_didLayoutCallbacks.push_back(std::make_pair(cb, data));
+}
+
+void WebView::setNeedsRendering()
+{
+    auto wnd = starFish()->platformWindow();
+    if (UNLIKELY(wnd->isClosed())) {
+        return;
+    }
+    m_needsRendering = true;
+    wnd->setNeedsRendering();
 }
 
 bool WebView::rendering(bool force)

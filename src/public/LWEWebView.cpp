@@ -163,9 +163,6 @@ std::string ResourceError::GetDescription()
 
 WebView* WebView::Create(void* win, int x, int y, int width, int height)
 {
-    // elm_init(0, 0);
-    // elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
-
     std::string screenShot;
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
@@ -189,12 +186,12 @@ WebView* WebView::Create(void* win, int x, int y, int width, int height)
         StarFish::String::fromUTF8(customUserAgentString.data()),
         StarFish::String::fromUTF8(builtinPolyfillPathString.data()));
 
-    return new WebView(starfish);
+    return new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebView(starfish);
 }
 
 WebView* WebView::Create(void* starFish)
 {
-    return new WebView(starFish);
+    return new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebView(starFish);
 }
 
 WebView::WebView(void* starFish)
@@ -315,7 +312,14 @@ void WebView::ClearHistory()
 void WebView::Destroy()
 {
     STARFISH_ASSERT(m_starfish);
-    delete TO_STARFISH(m_starfish);
+    TO_STARFISH(m_starfish)->close();
+    m_starfish = nullptr;
+
+    GC_FREE(this);
+
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
 }
 
 void WebView::SetSettings(const Settings& settings)

@@ -146,7 +146,7 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
 
     std::string cacheDir = tempPath;
     cacheDir += "Starfish-cache";
-    StarFish::StarFish* starfish = new (NoGC) StarFish::StarFish(
+    StarFish::StarFish* starfish = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
         width, height, 0, 0, 1,
         StarFish::String::createASCIIString(defaultFontName), info,
@@ -156,7 +156,8 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     starfish->platformWindow()->updateDrawingBufferAddress(buffer, width,
                                                            height, stride);
 
-    WebContainer* newWebContainer = new WebContainer(starfish);
+    WebContainer* newWebContainer =
+        new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(starfish);
 
 #if defined(STARFISH_ANDROID)
     starfish->setLWEWebView(newWebContainer);
@@ -282,7 +283,14 @@ void WebContainer::ClearHistory()
 void WebContainer::Destroy()
 {
     STARFISH_ASSERT(m_starfish);
-    delete TO_STARFISH(m_starfish);
+    TO_STARFISH(m_starfish)->close();
+    m_starfish = nullptr;
+
+    GC_FREE(this);
+
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
 }
 
 void WebContainer::SetSettings(const Settings& settings)

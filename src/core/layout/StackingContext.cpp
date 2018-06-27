@@ -42,8 +42,10 @@ struct StackingContext::ComputeStackingContextContext {
     std::unordered_map<StackingContext*, LayoutRect> extentPerLayer;
     std::unordered_map<StackingContext*, bool> compositeFlagInfo;
     std::vector<StackingContext*> compositedLayers;
+    StackingContext* rootLayer;
 
-    ComputeStackingContextContext()
+    ComputeStackingContextContext(StackingContext* rootLayer)
+        : rootLayer(rootLayer)
     {
     }
 
@@ -177,10 +179,7 @@ struct StackingContext::ComputeStackingContextContext {
 };
 
 StackingContextRareData::StackingContextRareData()
-    : m_needsGraphicsBuffer(false)
-    , m_hasNon2DRectTransform(false)
-    , m_isVisibleRectComputedForNonGraphicsLayer(false)
-    , m_visibleRect(0, 0, 0, 0)
+    : m_visibleRect(0, 0, 0, 0)
     , m_buffer(nullptr)
     , m_matrix()
 {
@@ -203,6 +202,11 @@ void* StackingContextRareData::operator new(size_t size)
 StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     : m_needsRepainting(true)
     , m_catchedMatrixChangedWhileComputeStackingContextProperties(false)
+    , m_needsGraphicsBuffer(false)
+    , m_hasNon2DRectTransform(false)
+    , m_isVisibleRectComputedForNonGraphicsLayer(false)
+    , m_needsGraphicsBufferReason(
+          NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNone)
     , m_owner(owner)
     , m_parent(parent)
     , m_rareData(nullptr)
@@ -720,14 +724,13 @@ void StackingContext::computeTransformMatrix()
         m_rareData->m_matrix = cs->transformsToMatrix(
             m_owner->width(), m_owner->height(), m_owner, true);
 
-        m_rareData->m_hasNon2DRectTransform =
-            m_owner->style()->has3DTransforms(m_owner) ||
-            !m_rareData->m_matrix.rectStaysRect();
+        m_hasNon2DRectTransform = m_owner->style()->has3DTransforms(m_owner) ||
+                                  !m_rareData->m_matrix.rectStaysRect();
 
 #ifdef PORT_CANVAS_BACKEND_EFL
         // force use graphics buffer with complex-transform
         // because efl canvas can't deal well with complex-transform
-        m_rareData->m_hasNon2DRectTransform =
+        m_hasNon2DRectTransform =
             m_owner->style()->hasComplexTransforms(m_owner);
 #endif
 
@@ -769,9 +772,9 @@ void StackingContext::computeTransformMatrix()
 
 void StackingContext::computeStackingContextProperties()
 {
-    STARFISH_ASSERT(parent() == nullptr);
+    STARFISH_ASSERT(isRootContext());
 
-    ComputeStackingContextContext ctx;
+    ComputeStackingContextContext ctx(this);
     computeStackingContextProperties(ctx);
     applyStackingContextProperties(ctx);
 }
@@ -785,9 +788,14 @@ void StackingContext::computeStackingContextProperties(
         m_catchedMatrixChangedWhileComputeStackingContextProperties = true;
     }
 
+    NeedsGraphicsLayerReason reason =
+        NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNone;
     bool compositedBySelf = m_owner->needsGraphicsBuffer() ||
                             m_owner->isRunningOpacityAnimation() ||
                             m_owner->isRunningTransformAnimation();
+    if (compositedBySelf) {
+        reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
+    }
     bool willBeComposited = compositedBySelf;
 
     if (!willBeComposited && compositingState.seenCompsitedLayer()) {
@@ -816,6 +824,9 @@ void StackingContext::computeStackingContextProperties(
             parentExtent.containsInVisual(selfExtent.maxX(),
                                           selfExtent.maxY())) {
             canConveredByParentCompositedLayer = true;
+        } else {
+            reason = NeedsGraphicsLayerReason::
+                NeedsGraphicsLayerReasonNotCoveredByParent;
         }
 
         bool isCollapsedWithSilbingLayer = false;
@@ -826,6 +837,9 @@ void StackingContext::computeStackingContextProperties(
             auto extent = compositingState.screenExtentPerLayer(cv[i]);
             if (extent.intersects(selfExtent)) {
                 isCollapsedWithSilbingLayer = true;
+                reason = NeedsGraphicsLayerReason::
+                    NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
+                break;
             }
         }
 
@@ -848,6 +862,8 @@ void StackingContext::computeStackingContextProperties(
         }
         compositingState.pushCompsitedLayer(this);
     }
+
+    m_needsGraphicsBufferReason = reason;
 
     auto iter = m_childContexts.begin();
     while (iter != m_childContexts.end()) {
@@ -881,6 +897,8 @@ void StackingContext::computeStackingContextProperties(
     if (isRootContext()) {
         if (compositingState.compositedLayers.size()) {
             willBeComposited = true;
+            m_needsGraphicsBufferReason =
+                NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
         }
     }
 
@@ -949,9 +967,7 @@ void StackingContext::applyStackingContextProperties(
             willBeComposited = false;
         }
     } else {
-        if (m_rareData) {
-            m_rareData->m_isVisibleRectComputedForNonGraphicsLayer = false;
-        }
+        m_isVisibleRectComputedForNonGraphicsLayer = false;
     }
 
     if (compositedBefore != willBeComposited) {
@@ -980,11 +996,9 @@ void StackingContext::applyStackingContextProperties(
 
     m_catchedMatrixChangedWhileComputeStackingContextProperties = false;
     if (willBeComposited) {
-        ensureRareData()->m_needsGraphicsBuffer = true;
+        m_needsGraphicsBuffer = true;
     } else {
-        if (m_rareData) {
-            m_rareData->m_needsGraphicsBuffer = false;
-        }
+        m_needsGraphicsBuffer = false;
     }
 }
 
@@ -1142,7 +1156,7 @@ void StackingContext::paintStackingContext(
         canRejectPainting =
             canvas->canRejectPainting(m_owner->frameVisibleRect());
     } else {
-        if (!ensureRareData()->m_isVisibleRectComputedForNonGraphicsLayer) {
+        if (!m_isVisibleRectComputedForNonGraphicsLayer) {
             ensureRareData()->m_visibleRect = m_owner->frameVisibleRect();
             SkMatrix l = SkMatrix::I();
             Frame::ComputeVisibleRectContext ctx(
@@ -1151,7 +1165,7 @@ void StackingContext::paintStackingContext(
 
             m_owner->computeVisibleRect(ctx);
 
-            ensureRareData()->m_isVisibleRectComputedForNonGraphicsLayer = true;
+            m_isVisibleRectComputedForNonGraphicsLayer = true;
         }
 
         canRejectPainting =
@@ -1344,7 +1358,19 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             if (owner()->node()->starFish()->startUpFlag() &
                 StarFishStartUpFlag::enableDebugGraphicsLayer) {
                 // debug compositing method
-                compositor->setColor(Unit::Color(255, 0, 0, 64));
+                switch (m_needsGraphicsBufferReason) {
+                case NeedsGraphicsLayerReasonBySelf:
+                    compositor->setColor(Unit::Color(255, 0, 0, 64));
+                    break;
+                case NeedsGraphicsLayerReasonNotCoveredByParent:
+                    compositor->setColor(Unit::Color(0, 255, 0, 64));
+                    break;
+                case NeedsGraphicsLayerReasonCollapsedWithSiblingLayer:
+                    compositor->setColor(Unit::Color(0, 0, 255, 64));
+                    break;
+                default:
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
                 compositor->drawRect(
                     Unit::Rect(minX, minY, bufferWidth, bufferHeight));
                 compositor->beginOpacityLayer(0.15);

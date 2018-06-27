@@ -68,7 +68,7 @@ enum StarFishTestCompatibleMode {
 
 void addGCCollectionListener(void (*fn)(GC_EventType));
 
-// you must call delete
+// you must call close function
 // StarFish::StarFish function is NOT THREAD-SAFE
 class StarFish : public gc {
     friend class AtomicString;
@@ -86,7 +86,6 @@ public:
              String* customUserAgentString = String::emptyString,
              String* builtinPolyfillPathString = String::emptyString);
 
-    ~StarFish();
     void run();
 
     PlatformWindow* platformWindow()
