@@ -593,8 +593,6 @@ int main(int argc, char* argv[])
     clearStack<102400>();
 #endif
 
-    GC_gcollect_and_unmap();
-
     return 0;
 }
 

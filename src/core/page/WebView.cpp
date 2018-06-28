@@ -601,13 +601,13 @@ void WebView::layoutIfNeeds()
                             auto utf8DataLog2 =
                                 element->id()->toUTF8NonGCString();
                             printf(
-                                "StackingContext[%p, node %p %s id:%s "
+                                "StackingContext[%d][%p, node %p %s id:%s "
                                 "className:%s"
                                 ", frame %p, buf? %d painting %d opacity %f "
                                 "visibleRect "
                                 "%d "
                                 "%d %d %d]",
-                                ctx, element, utf8DataLog1.data(),
+                                depth / 2, ctx, element, utf8DataLog1.data(),
                                 utf8DataLog2.data(), className.data(),
                                 ctx->owner(), (int)ctx->needsGraphicsBuffer(),
                                 (int)ctx->needsRepainting(),
@@ -615,22 +615,30 @@ void WebView::layoutIfNeeds()
                                 (int)fr.y(), (int)fr.width(), (int)fr.height());
                         } else {
                             printf(
-                                "StackingContext[%p, anonymous node"
+                                "StackingContext[%d][%p, anonymous node"
                                 ", frame %p, buf %d painting %d opacity %f "
                                 "visibleRect %d "
                                 "%d %d %d]",
-                                ctx, ctx->owner(),
+                                depth / 2, ctx, ctx->owner(),
                                 (int)ctx->needsGraphicsBuffer(),
                                 (int)ctx->needsRepainting(),
                                 ctx->owner()->style()->opacity(), (int)fr.x(),
                                 (int)fr.y(), (int)fr.width(), (int)fr.height());
                         }
 
+                        auto reason = ctx->needsGraphicsBufferReason();
+                        if (reason) {
+                            printf(" buf reason? %d", (int)reason);
+                        }
+
                         SkMatrix m = ctx->transformMatrix();
-                        printf("matrix [%f %f %f][%f %f %f][%f %f %f]",
-                               m.getScaleX(), m.getSkewX(), m.getTranslateX(),
-                               m.getSkewY(), m.getScaleY(), m.getTranslateY(),
-                               m.getPerspX(), m.getPerspY(), m.get(8));
+                        if (!m.isIdentity()) {
+                            printf(" matrix [%f %f %f][%f %f %f][%f %f %f]",
+                                   m.getScaleX(), m.getSkewX(),
+                                   m.getTranslateX(), m.getSkewY(),
+                                   m.getScaleY(), m.getTranslateY(),
+                                   m.getPerspX(), m.getPerspY(), m.get(8));
+                        }
                         printf("\n");
 
                         auto iter = ctx->childContexts().begin();

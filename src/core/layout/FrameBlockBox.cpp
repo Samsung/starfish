@@ -411,7 +411,7 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                 lCtx.markIsLastLineBox();
             }
             m_lineBoxes[i]->quickInlineLayout(&lCtx);
-            m_lineBoxes[i]->resetChildrenVerticalPositions();
+            m_lineBoxes[i]->resetChildrenVerticalPositions(ctx);
             lCtx.computeVerticalProperties(m_lineBoxes[i], false);
             lCtx.registerInlineContent(nullptr);
             m_lineBoxes[i]->coordinateVerticalProperties(&lCtx, 0);

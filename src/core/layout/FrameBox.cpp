@@ -3337,6 +3337,15 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         return true;
     }
 
+    if (isAbsolutePositioned()) {
+        auto clip = style()->clip();
+        if (clip && clip->left().numberData() == 0 &&
+            clip->top().numberData() == 0 && clip->right().numberData() == 0 &&
+            clip->bottom().numberData() == 0) {
+            return false;
+        }
+    }
+
     bool ret = !shouldApplyOverflow();
     LayoutRect outline = frameVisibleOutlineRect();
 

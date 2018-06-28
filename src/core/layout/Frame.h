@@ -428,6 +428,7 @@ public:
 
     void layoutRegisteredRelativePositionedBoxes(
         FrameBlockBox* containingBlock);
+    void layoutRelativePositionedBox(FrameBox* box, bool dueToSelf);
 
     void setMarginCollapseResult(FrameBox* f, const MarginCollapseResult& r)
     {
