@@ -22,6 +22,8 @@
 
 namespace StarFish {
 
+class FrameBox;
+
 class BorderRadiusData : public gc {
 public:
     Length m_topLeftHorizontal;
@@ -92,6 +94,54 @@ public:
     bool operator!=(const BorderRadiusData& o)
     {
         return !operator==(o);
+    }
+};
+
+class BorderRadiusFixedData {
+public:
+    STARFISH_MAKE_STACK_ALLOCATED();
+    float m_topLeftHorizontal;
+    float m_topLeftVertical;
+    float m_topRightHorizontal;
+    float m_topRightVertical;
+    float m_bottomRightHorizontal;
+    float m_bottomRightVertical;
+    float m_bottomLeftHorizontal;
+    float m_bottomLeftVertical;
+
+    BorderRadiusFixedData(float topLeftHorizontal, float topLeftVertical,
+                          float topRightHorizontal, float topRightVertical,
+                          float bottomRightHorizontal,
+                          float bottomRightVertical, float bottomLeftHorizontal,
+                          float bottomLeftVertical)
+        : m_topLeftHorizontal(topLeftHorizontal)
+        , m_topLeftVertical(topLeftVertical)
+        , m_topRightHorizontal(topRightHorizontal)
+        , m_topRightVertical(topRightVertical)
+        , m_bottomRightHorizontal(bottomRightHorizontal)
+        , m_bottomRightVertical(bottomRightVertical)
+        , m_bottomLeftHorizontal(bottomLeftHorizontal)
+        , m_bottomLeftVertical(bottomLeftVertical)
+    {
+    }
+
+    BorderRadiusFixedData(const BorderRadiusData& from, const LayoutUnit& w,
+                          const LayoutUnit& h, Frame* box)
+        : BorderRadiusFixedData(
+              from.m_topLeftHorizontal.specifiedValue(w, box),
+              from.m_topLeftVertical.specifiedValue(h, box),
+              from.m_topRightHorizontal.specifiedValue(w, box),
+              from.m_topRightVertical.specifiedValue(h, box),
+              from.m_bottomRightHorizontal.specifiedValue(w, box),
+              from.m_bottomRightVertical.specifiedValue(h, box),
+              from.m_bottomLeftHorizontal.specifiedValue(w, box),
+              from.m_bottomLeftVertical.specifiedValue(h, box))
+    {
+    }
+
+    BorderRadiusFixedData()
+        : BorderRadiusFixedData(0, 0, 0, 0, 0, 0, 0, 0)
+    {
     }
 };
 

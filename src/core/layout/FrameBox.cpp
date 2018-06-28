@@ -39,6 +39,42 @@
 
 namespace StarFish {
 
+static void updateBorderRadiusByFactor(BorderRadiusFixedData& v, float factor)
+{
+    v.m_topLeftVertical *= factor;
+    v.m_topLeftHorizontal *= factor;
+    v.m_topRightHorizontal *= factor;
+    v.m_topRightVertical *= factor;
+    v.m_bottomLeftVertical *= factor;
+    v.m_bottomLeftHorizontal *= factor;
+    v.m_bottomRightHorizontal *= factor;
+    v.m_bottomRightVertical *= factor;
+}
+
+static void reduceBorderRadiusToFit(const LayoutRect& rect,
+                                    BorderRadiusFixedData& v)
+{
+    const float width = rect.width();
+    const float height = rect.height();
+
+    const float top = v.m_topLeftHorizontal + v.m_topRightHorizontal;
+    if (top > width) {
+        updateBorderRadiusByFactor(v, width / top);
+    }
+    const float right = v.m_topRightVertical + v.m_bottomRightVertical;
+    if (right > height) {
+        updateBorderRadiusByFactor(v, height / right);
+    }
+    const float bottom = v.m_bottomRightHorizontal + v.m_bottomLeftHorizontal;
+    if (bottom > width) {
+        updateBorderRadiusByFactor(v, width / bottom);
+    }
+    const float left = v.m_bottomLeftVertical + v.m_topLeftVertical;
+    if (left > height) {
+        updateBorderRadiusByFactor(v, height / left);
+    }
+}
+
 void* FrameBoxRareData::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(FrameBoxRareData));
@@ -505,51 +541,22 @@ void FrameBox::applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
 {
     // apply clip if border-radius exists
     if (hasFrameBorderRadius()) {
-        // const LayoutRect rect(0, 0, width(), height());
-        auto br = frameBorderRadius();
-
-        float maxWidthValue = rect.width();
-        float maxHeightValue = rect.height();
-
-        if (!br.m_topLeftVertical.isPercent() ||
-            !br.m_bottomLeftVertical.isPercent() ||
-            !br.m_bottomLeftVertical.isPercent() ||
-            !br.m_bottomRightVertical.isPercent() ||
-            !br.m_bottomLeftHorizontal.isPercent() ||
-            !br.m_bottomRightHorizontal.isPercent() ||
-            !br.m_topLeftHorizontal.isPercent() ||
-            !br.m_topRightHorizontal.isPercent()) {
-            maxHeightValue = maxWidthValue =
-                std::min(maxHeightValue, maxWidthValue);
-        }
-
-        float topLeftHorizontal;
-        float topRightHorizontal;
-        float topLeftVertical;
-        float bottomLeftVertical;
-        float topRightVertical;
-        float bottomRightVertical;
-        float bottomLeftHorizontal;
-        float bottomRightHorizontal;
-
-        computeBorderRadiusProperties(
-            br, rect, topLeftHorizontal, topRightHorizontal, topLeftVertical,
-            bottomLeftVertical, topRightVertical, bottomRightVertical,
-            bottomLeftHorizontal, bottomRightHorizontal);
+        BorderRadiusData br = frameBorderRadius();
+        BorderRadiusFixedData fixed(br, rect.width(), rect.height(), this);
 
         if (inset) {
 #define APPLY_BORDER_WIDTH(POS, BORDER_SIDE) \
     if (POS) {                               \
         POS -= BORDER_SIDE();                \
     }
-            APPLY_BORDER_WIDTH(topLeftHorizontal, borderLeft);
-            APPLY_BORDER_WIDTH(topRightHorizontal, borderRight);
-            APPLY_BORDER_WIDTH(topLeftVertical, borderTop);
-            APPLY_BORDER_WIDTH(bottomLeftVertical, borderBottom);
-            APPLY_BORDER_WIDTH(topRightVertical, borderTop);
-            APPLY_BORDER_WIDTH(bottomRightVertical, borderBottom);
-            APPLY_BORDER_WIDTH(bottomLeftHorizontal, borderLeft);
-            APPLY_BORDER_WIDTH(bottomRightHorizontal, borderRight);
+            APPLY_BORDER_WIDTH(fixed.m_topLeftHorizontal, borderLeft);
+            APPLY_BORDER_WIDTH(fixed.m_topRightHorizontal, borderRight);
+            APPLY_BORDER_WIDTH(fixed.m_topLeftVertical, borderTop);
+            APPLY_BORDER_WIDTH(fixed.m_bottomLeftVertical, borderBottom);
+            APPLY_BORDER_WIDTH(fixed.m_topRightVertical, borderTop);
+            APPLY_BORDER_WIDTH(fixed.m_bottomRightVertical, borderBottom);
+            APPLY_BORDER_WIDTH(fixed.m_bottomLeftHorizontal, borderLeft);
+            APPLY_BORDER_WIDTH(fixed.m_bottomRightHorizontal, borderRight);
 
 #undef APPLY_BORDER_WIDTH
         }
@@ -570,44 +577,26 @@ void FrameBox::applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
             POS += m;                                    \
         }                                                \
     }
-            APPLY_SPREAD_DISTANCE(topLeftHorizontal);
-            APPLY_SPREAD_DISTANCE(topRightHorizontal);
-            APPLY_SPREAD_DISTANCE(topLeftVertical);
-            APPLY_SPREAD_DISTANCE(bottomLeftVertical);
-            APPLY_SPREAD_DISTANCE(topRightVertical);
-            APPLY_SPREAD_DISTANCE(bottomRightVertical);
-            APPLY_SPREAD_DISTANCE(bottomLeftHorizontal);
-            APPLY_SPREAD_DISTANCE(bottomRightHorizontal);
+            APPLY_SPREAD_DISTANCE(fixed.m_topLeftHorizontal);
+            APPLY_SPREAD_DISTANCE(fixed.m_topRightHorizontal);
+            APPLY_SPREAD_DISTANCE(fixed.m_topLeftVertical);
+            APPLY_SPREAD_DISTANCE(fixed.m_bottomLeftVertical);
+            APPLY_SPREAD_DISTANCE(fixed.m_topRightVertical);
+            APPLY_SPREAD_DISTANCE(fixed.m_bottomRightVertical);
+            APPLY_SPREAD_DISTANCE(fixed.m_bottomLeftHorizontal);
+            APPLY_SPREAD_DISTANCE(fixed.m_bottomRightHorizontal);
 #undef APPLY_SPREAD_DISTANCE
         }
 
-        if (topLeftHorizontal + topRightHorizontal > maxWidthValue) {
-            float a = topLeftHorizontal;
-            float b = topRightHorizontal;
-            topLeftHorizontal = a / (a + b) * maxWidthValue;
-            topRightHorizontal = b / (a + b) * maxWidthValue;
-        }
-
-        if (topLeftVertical + bottomLeftVertical > maxHeightValue) {
-            float a = topLeftVertical;
-            float b = bottomLeftVertical;
-            topLeftVertical = a / (a + b) * maxHeightValue;
-            bottomLeftVertical = b / (a + b) * maxHeightValue;
-        }
-
-        if (topRightVertical + bottomRightVertical > maxHeightValue) {
-            float a = topRightVertical;
-            float b = bottomRightVertical;
-            topRightVertical = a / (a + b) * maxHeightValue;
-            bottomRightVertical = b / (a + b) * maxHeightValue;
-        }
-
-        if (bottomLeftHorizontal + bottomRightHorizontal > maxWidthValue) {
-            float a = bottomLeftHorizontal;
-            float b = bottomRightHorizontal;
-            bottomLeftHorizontal = a / (a + b) * maxWidthValue;
-            bottomRightHorizontal = b / (a + b) * maxWidthValue;
-        }
+        reduceBorderRadiusToFit(rect, fixed);
+        const float topLeftVertical = fixed.m_topLeftVertical;
+        const float topLeftHorizontal = fixed.m_topLeftHorizontal;
+        const float topRightHorizontal = fixed.m_topRightHorizontal;
+        const float topRightVertical = fixed.m_topRightVertical;
+        const float bottomLeftVertical = fixed.m_bottomLeftVertical;
+        const float bottomLeftHorizontal = fixed.m_bottomLeftHorizontal;
+        const float bottomRightHorizontal = fixed.m_bottomRightHorizontal;
+        const float bottomRightVertical = fixed.m_bottomRightVertical;
 
         float arcR;
         // border-left
@@ -2091,73 +2080,20 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 #endif
     } else if (border.hasBorderStyle()) {
         if (hasFrameBorderRadius()) {
-            float x, y;
-            auto br = frameBorderRadius();
+            BorderRadiusData br = frameBorderRadius();
+            BorderRadiusFixedData fixed(br, width(), height(), this);
+            reduceBorderRadiusToFit(rect, fixed);
 
-            float maxWidthValue = rect.width();
-            float maxHeightValue = rect.height();
+            const float topLeftVertical = fixed.m_topLeftVertical;
+            const float topLeftHorizontal = fixed.m_topLeftHorizontal;
+            const float topRightHorizontal = fixed.m_topRightHorizontal;
+            const float topRightVertical = fixed.m_topRightVertical;
+            const float bottomLeftVertical = fixed.m_bottomLeftVertical;
+            const float bottomLeftHorizontal = fixed.m_bottomLeftHorizontal;
+            const float bottomRightHorizontal = fixed.m_bottomRightHorizontal;
+            const float bottomRightVertical = fixed.m_bottomRightVertical;
 
-            if (!br.m_topLeftVertical.isPercent() ||
-                !br.m_bottomLeftVertical.isPercent() ||
-                !br.m_bottomLeftVertical.isPercent() ||
-                !br.m_bottomRightVertical.isPercent() ||
-                !br.m_bottomLeftHorizontal.isPercent() ||
-                !br.m_bottomRightHorizontal.isPercent() ||
-                !br.m_topLeftHorizontal.isPercent() ||
-                !br.m_topRightHorizontal.isPercent()) {
-                maxHeightValue = maxWidthValue =
-                    std::min(maxHeightValue, maxWidthValue);
-            }
-
-            float topLeftHorizontal =
-                br.m_topLeftHorizontal.specifiedValue(width(), this);
-            float topRightHorizontal =
-                br.m_topRightHorizontal.specifiedValue(width(), this);
-
-            if (topLeftHorizontal + topRightHorizontal > maxWidthValue) {
-                float a = topLeftHorizontal;
-                float b = topRightHorizontal;
-                topLeftHorizontal = a / (a + b) * maxWidthValue;
-                topRightHorizontal = b / (a + b) * maxWidthValue;
-            }
-
-            float topLeftVertical =
-                br.m_topLeftVertical.specifiedValue(height(), this);
-            float bottomLeftVertical =
-                br.m_bottomLeftVertical.specifiedValue(height(), this);
-
-            if (topLeftVertical + bottomLeftVertical > maxHeightValue) {
-                float a = topLeftVertical;
-                float b = bottomLeftVertical;
-                topLeftVertical = a / (a + b) * maxHeightValue;
-                bottomLeftVertical = b / (a + b) * maxHeightValue;
-            }
-
-            float topRightVertical =
-                br.m_topRightVertical.specifiedValue(height(), this);
-            float bottomRightVertical =
-                br.m_bottomRightVertical.specifiedValue(height(), this);
-
-            if (topRightVertical + bottomRightVertical > maxHeightValue) {
-                float a = topRightVertical;
-                float b = bottomRightVertical;
-                topRightVertical = a / (a + b) * maxHeightValue;
-                bottomRightVertical = b / (a + b) * maxHeightValue;
-            }
-
-            float bottomLeftHorizontal =
-                br.m_bottomLeftHorizontal.specifiedValue(width(), this);
-            float bottomRightHorizontal =
-                br.m_bottomRightHorizontal.specifiedValue(width(), this);
-
-            if (bottomLeftHorizontal + bottomRightHorizontal > maxWidthValue) {
-                float a = bottomLeftHorizontal;
-                float b = bottomRightHorizontal;
-                bottomLeftHorizontal = a / (a + b) * maxWidthValue;
-                bottomRightHorizontal = b / (a + b) * maxWidthValue;
-            }
-
-            float arcR;
+            float x, y, arcR;
 
             {
                 canvas->setColor(border.left().color());
