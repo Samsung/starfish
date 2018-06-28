@@ -499,7 +499,6 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Destroy(JNIEnv* env,
         env->DeleteGlobalRef((jobject)g_webViews[webContainer].second);
     }
     g_webViews.erase(webContainer);
-    delete webContainer;
 }
 
 extern "C" JNIEXPORT void JNICALL
