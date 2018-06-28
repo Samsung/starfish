@@ -146,12 +146,12 @@ bool Length::hasViewportPercent() const
     return false;
 }
 
-float Length::specifiedValue(LayoutUnit parentLength, Frame* f) const
+float Length::specifiedValue(const LayoutUnit& parentLength, Frame* f) const
 {
     return specifiedValue(parentLength, f->nearstNotAnonymousNode());
 }
 
-float Length::specifiedValue(LayoutUnit parentLength, Node* n) const
+float Length::specifiedValue(const LayoutUnit& parentLength, Node* n) const
 {
     STARFISH_ASSERT(n);
     STARFISH_ASSERT(isSpecified());

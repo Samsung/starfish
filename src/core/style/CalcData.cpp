@@ -22,7 +22,7 @@
 #include "core/style/CalcData.h"
 
 namespace StarFish {
-LayoutUnit CalcValue::specifiedValue(LayoutUnit parentContentLength,
+LayoutUnit CalcValue::specifiedValue(const LayoutUnit& parentContentLength,
                                      Node* n) const
 {
     if (m_type.isLength()) {
@@ -125,7 +125,7 @@ float CalcTerm::numberValue() const
     return n;
 }
 
-LayoutUnit CalcTerm::specifiedValue(LayoutUnit parentContentLength,
+LayoutUnit CalcTerm::specifiedValue(const LayoutUnit& parentContentLength,
                                     Node* n) const
 {
     STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());

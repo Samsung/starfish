@@ -1371,9 +1371,9 @@ public:
 
     Node* nodeSlowCase() const;
 
-    Node* nearstNotAnonymousNode()
+    Node* nearstNotAnonymousNode() const
     {
-        Frame* cur = this;
+        const Frame* cur = this;
         while (cur && !cur->node()) {
             cur = cur->parent();
         }

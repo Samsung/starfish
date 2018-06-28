@@ -205,7 +205,8 @@ public:
         return m_data.m_lengthData;
     }
 
-    LayoutUnit specifiedValue(LayoutUnit parentContentLength, Node* n) const;
+    LayoutUnit specifiedValue(const LayoutUnit& parentContentLength,
+                              Node* n) const;
     LayoutUnit specifiedFontValue(Node* n) const;
 
     CSSAngle angleValue() const
@@ -259,7 +260,8 @@ public:
 
     float numberValue() const;
 
-    LayoutUnit specifiedValue(LayoutUnit parentContentLength, Node* n) const;
+    LayoutUnit specifiedValue(const LayoutUnit& parentContentLength,
+                              Node* n) const;
 
     LayoutUnit specifiedFontValue(Node* n) const;
 
@@ -327,7 +329,8 @@ public:
         return n;
     }
 
-    LayoutUnit specifiedValue(LayoutUnit parentContentLength, Node* n) const
+    LayoutUnit specifiedValue(const LayoutUnit& parentContentLength,
+                              Node* n) const
     {
         auto it = m_terms.begin();
         LayoutUnit l = (*it)->specifiedValue(parentContentLength, n);

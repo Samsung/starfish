@@ -230,12 +230,12 @@ public:
         return m_data.m_calcData;
     }
 
-    float specifiedValue(LayoutUnit parentLength, Frame* f) const;
-    float specifiedValue(LayoutUnit parentLength, Node* n) const;
+    float specifiedValue(const LayoutUnit& parentLength, Frame* f) const;
+    float specifiedValue(const LayoutUnit& parentLength, Node* n) const;
     float specifiedFontValue(Node* n);
     float specifiedFontValue(Element* e);
 
-    float percentValue(LayoutUnit parentLength) const
+    float percentValue(const LayoutUnit& parentLength) const
     {
         STARFISH_ASSERT(isPercent());
         return parentLength * percent();
