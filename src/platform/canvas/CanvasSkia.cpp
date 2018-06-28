@@ -239,7 +239,7 @@ public:
     virtual void endOpacityLayer()
     {
         INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::endOpacityLayer");
-        m_canvas->saveLayerAlpha(nullptr, 255);
+        m_canvas->restore();
         restore();
     }
 
@@ -444,6 +444,14 @@ public:
 
     virtual void applyMatrixTo(LayoutRect& lp)
     {
+        double x = lp.x();
+        double y = lp.y();
+
+        SkMatrix m = m_canvas->getTotalMatrix();
+        SkPoint point;
+        m.mapXY(x, y, &point);
+        lp.setX(point.x());
+        lp.setY(point.y());
     }
 
     virtual void setVisible(bool visible)
@@ -527,6 +535,11 @@ public:
 
     virtual void setFillRule(bool shouldUseNonZeroFillRule)
     {
+        if (shouldUseNonZeroFillRule) {
+            m_path.setFillType(SkPath::kWinding_FillType);
+        } else {
+            m_path.setFillType(SkPath::kEvenOdd_FillType);
+        }
     }
 
     virtual void setStrokeWidth(float width)
