@@ -191,6 +191,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
 void WindowImplGB::setNeedsRendering()
 {
+    WindowImplGB* wnd = this;
     // TODO: refresh rendering animator here.
     wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
         nullptr,
