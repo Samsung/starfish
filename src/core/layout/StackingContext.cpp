@@ -112,7 +112,13 @@ struct StackingContext::ComputeStackingContextContext {
             f = f->layoutParent();
         }
 
-        auto vr = c->owner()->frameVisibleRect();
+        LayoutRect vr;
+        if (c->isRootContext()) {
+            vr = LayoutRect(0, 0, c->owner()->asFrameBlockBox()->scrollWidth(),
+                            c->owner()->asFrameBlockBox()->scrollHeight());
+        } else {
+            vr = c->owner()->frameVisibleRect();
+        }
 
         SkMatrix m = SkMatrix::I();
         auto iter = frameList.rbegin();
@@ -130,7 +136,12 @@ struct StackingContext::ComputeStackingContextContext {
                 }
             }
 
-            auto pos = fBox->absolutePointIncludingScroll(lastParentBox);
+            LayoutLocation pos;
+            if (fBox == c->owner() || fBox->isFrameDocument()) {
+                pos = fBox->absolutePoint(lastParentBox);
+            } else {
+                pos = fBox->absolutePointIncludingScroll(lastParentBox);
+            }
             m.postTranslate((float)pos.x(), (float)pos.y());
             lastParentBox = fBox;
             iter++;
@@ -471,8 +482,14 @@ public:
                     canvas->scale(1.0 / sc->buffer()->pixelRatio(),
                                   1.0 / sc->buffer()->pixelRatio());
                 }
-                canvas->translate(-sc->visibleRect().x(),
-                                  -sc->visibleRect().y());
+                LayoutRect visibleRect = sc->visibleRect();
+                LayoutUnit minX = visibleRect.x();
+                LayoutUnit minY = visibleRect.y();
+
+                minX = minX.floor();
+                minY = minY.floor();
+
+                canvas->translate(-minX, -minY);
                 break;
             }
             sc = sc->parent();
@@ -813,6 +830,7 @@ void StackingContext::computeStackingContextProperties(
         }
         STARFISH_ASSERT(compositedAncestor);
         bool canConveredByParentCompositedLayer = false;
+        bool isCollapsedWithSilbingLayer = false;
 
         auto parentExtent =
             compositingState.screenExtentPerLayer(compositedAncestor);
@@ -829,17 +847,16 @@ void StackingContext::computeStackingContextProperties(
                 NeedsGraphicsLayerReasonNotCoveredByParent;
         }
 
-        bool isCollapsedWithSilbingLayer = false;
-
-        auto& cv = compositingState.compositedLayers;
-
-        for (size_t i = ancestorIndex + 1; i < cv.size(); i++) {
-            auto extent = compositingState.screenExtentPerLayer(cv[i]);
-            if (extent.intersects(selfExtent)) {
-                isCollapsedWithSilbingLayer = true;
-                reason = NeedsGraphicsLayerReason::
-                    NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
-                break;
+        if (canConveredByParentCompositedLayer) {
+            auto& cv = compositingState.compositedLayers;
+            for (size_t i = ancestorIndex + 1; i < cv.size(); i++) {
+                auto extent = compositingState.screenExtentPerLayer(cv[i]);
+                if (extent.intersects(selfExtent)) {
+                    isCollapsedWithSilbingLayer = true;
+                    reason = NeedsGraphicsLayerReason::
+                        NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
+                    break;
+                }
             }
         }
 
@@ -904,15 +921,6 @@ void StackingContext::computeStackingContextProperties(
 
     compositingState.compositeFlagInfo.insert(
         std::make_pair(this, willBeComposited));
-
-    if (willBeComposited) {
-        SkMatrix l = SkMatrix::I();
-        LayoutRect visibleRect(0, 0, 0, 0);
-        Frame::ComputeVisibleRectContext ctx(
-            Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
-            visibleRect);
-        m_owner->computeVisibleRect(ctx);
-    }
 }
 
 void StackingContext::applyStackingContextProperties(
@@ -1091,12 +1099,6 @@ void StackingContext::paintStackingContext(
     }
 
     canvas->save();
-
-    std::unique_ptr<CanvasStateRestorer> canvasStateRestorerForFixedLayer;
-    if (m_owner->style()->position() == PositionValue::FixedPositionValue) {
-        canvasStateRestorerForFixedLayer.reset(
-            new CanvasStateRestorer(canvas, this, parent()->owner()));
-    }
 
     if (!hasGraphicsBuffer && owner()->style()->opacity() != 1) {
         canvas->beginOpacityLayer(owner()->style()->opacity());
@@ -1306,8 +1308,6 @@ void StackingContext::paintStackingContext(
         }
     }
 
-    canvasStateRestorerForFixedLayer.reset(nullptr);
-
     canvas->restore();
     if (hasGraphicsBuffer) {
         delete canvas;
@@ -1359,6 +1359,9 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 StarFishStartUpFlag::enableDebugGraphicsLayer) {
                 // debug compositing method
                 switch (m_needsGraphicsBufferReason) {
+                case NeedsGraphicsLayerReasonNone:
+                    compositor->setColor(Unit::Color(255, 64, 0, 64));
+                    break;
                 case NeedsGraphicsLayerReasonBySelf:
                     compositor->setColor(Unit::Color(255, 0, 0, 64));
                     break;

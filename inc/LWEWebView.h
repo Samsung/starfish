@@ -64,6 +64,10 @@ private:
 };
 
 class LWE_EXPORT WebView {
+private:
+    ~WebView()
+    {
+    } // use Destroy function instead of delete operator
 public:
     static WebView* Create(void* starFish);
     static WebView* Create(void* win, int x, int y, int width, int height);
@@ -107,6 +111,10 @@ private:
 };
 
 class LWE_EXPORT WebContainer {
+private:
+    ~WebContainer()
+    {
+    } // use Destroy function instead of delete operator
 public:
     static WebContainer* Create(void* buffer, uint width, uint height,
                                 uint stride, float scaleFactor);
@@ -168,9 +176,5 @@ private:
     void* m_starfish;
 };
 }
-
-#ifdef PORT_WINDOW_BACKEND_ANDROID
-void requestRender(void* view);
-#endif
 
 #endif

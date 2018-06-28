@@ -768,10 +768,31 @@ void InlineBoxLayoutParentBox::setRightMBPs(LineFormattingContext* ctx)
     }
 }
 
-void InlineBoxLayoutParentBox::resetChildrenVerticalPositions()
+void InlineBoxLayoutParentBox::resetChildrenVerticalPositions(
+    LayoutContext& ctx)
 {
     for (size_t i = 0; i < m_boxes.size(); i++) {
-        if (m_boxes[i]->isNormalFlow() || m_boxes[i]->isAbsolutePositioned()) {
+        if (m_boxes[i]->isFloating()) {
+            if (m_boxes[i]->style()->position() == RelativePositionValue) {
+                auto box = m_boxes[i];
+                LayoutUnit orgX = box->x();
+                LayoutUnit orgY = box->y();
+
+                bool dueToSelf = true;
+                if (box->node() && box->node()->parentElement()) {
+                    Node* nd = box->node()->parentElement();
+                    if (nd->frame()->isFrameInline() &&
+                        nd->style()->position() == RelativePositionValue) {
+                        dueToSelf = false;
+                    }
+                }
+
+                ctx.layoutRelativePositionedBox(box, dueToSelf);
+
+                box->setX(orgX - (box->x() - orgX));
+                box->setY(orgY - (box->y() - orgY));
+            }
+        } else {
             m_boxes[i]->setY(0);
         }
     }
@@ -786,7 +807,7 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
         } else if (box->isInlineNonReplacedBox()) {
             InlineNonReplacedBox* inrb = box->asInlineNonReplacedBox();
             inrb->quickInlineLayout(ctx);
-            inrb->resetChildrenVerticalPositions();
+            inrb->resetChildrenVerticalPositions(ctx->m_layoutContext);
             ctx->computeVerticalProperties(inrb, false);
         } else {
             if (box->isAbsolutePositioned()) {

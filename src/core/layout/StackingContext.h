@@ -127,6 +127,11 @@ public:
         m_needsRepainting = true;
     }
 
+    NeedsGraphicsLayerReason needsGraphicsBufferReason()
+    {
+        return m_needsGraphicsBufferReason;
+    }
+
     bool isIFrameStackingContext();
 
     void* operator new(size_t size);

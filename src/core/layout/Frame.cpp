@@ -767,6 +767,20 @@ void LayoutContext::registerRelativePositionedBox(FrameBox* box, bool dueToSelf)
     vec.emplace_back(box, dueToSelf);
 }
 
+void LayoutContext::layoutRelativePositionedBox(FrameBox* box, bool dueToSelf)
+{
+    if (dueToSelf) {
+        applyRelativePosition(box);
+    } else {
+        Element* elm = box->node()->parentElement();
+        while (elm && elm->frame()->isFrameInline() &&
+               elm->style()->position() == RelativePositionValue) {
+            applyRelativePositionInlineCase(elm->frame(), box);
+            elm = elm->parentElement();
+        }
+    }
+}
+
 void LayoutContext::layoutRegisteredRelativePositionedBoxes(
     FrameBlockBox* containingBlock)
 {
@@ -779,16 +793,7 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
             const auto& boxes = iter->second;
             for (size_t i = 0; i < boxes.size(); i++) {
                 FrameBox* box = boxes[i].first;
-                if (boxes[i].second) {
-                    applyRelativePosition(box);
-                } else {
-                    Element* elm = box->node()->parentElement();
-                    while (elm && elm->frame()->isFrameInline() &&
-                           elm->style()->position() == RelativePositionValue) {
-                        applyRelativePositionInlineCase(elm->frame(), box);
-                        elm = elm->parentElement();
-                    }
-                }
+                layoutRelativePositionedBox(box, boxes[i].second);
             }
         }
         m_relativePositionedBoxes.erase(iter);

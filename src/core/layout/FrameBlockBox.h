@@ -325,7 +325,7 @@ public:
     void setLeftMBPs(LineFormattingContext* ctx);
     void setRightMBPs(LineFormattingContext* ctx);
 
-    void resetChildrenVerticalPositions();
+    void resetChildrenVerticalPositions(LayoutContext& ctx);
     void quickInlineLayout(LineFormattingContext* ctx);
 
     virtual void iterateChildFrameBox(
