@@ -441,10 +441,25 @@ void flushRenderingCB(void* view)
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_samsung_android_mobileservice_lwe_WebView_Create(
     JNIEnv* env, jobject thiz, jint w, jint h, jfloat devicePixelRatio,
-    jstring jua)
+    jstring jua, jstring locale, jstring timezoneID, jstring localstoragePath,
+    jstring cookiePath, jstring cachePath)
 {
-    LWE::WebContainer* webContainer =
-        LWE::WebContainer::Create(nullptr, w, h, 0, devicePixelRatio);
+    const char* localeString = env->GetStringUTFChars(locale, 0);
+    const char* timezoneIDString = env->GetStringUTFChars(timezoneID, 0);
+    const char* localstoragePathString =
+        env->GetStringUTFChars(localstoragePath, 0);
+    const char* cookiePathString = env->GetStringUTFChars(cookiePath, 0);
+    const char* cachePathString = env->GetStringUTFChars(cachePath, 0);
+
+    LWE::WebContainer* webContainer = LWE::WebContainer::Create(
+        nullptr, w, h, 0, devicePixelRatio, localeString, timezoneIDString,
+        localstoragePathString, cookiePathString, cachePathString);
+
+    env->ReleaseStringUTFChars(locale, localeString);
+    env->ReleaseStringUTFChars(timezoneID, timezoneIDString);
+    env->ReleaseStringUTFChars(localstoragePath, localstoragePathString);
+    env->ReleaseStringUTFChars(cookiePath, cookiePathString);
+    env->ReleaseStringUTFChars(cachePath, cachePathString);
 
     webContainer->RegisterOnReceivedErrorHandler(
         [](LWE::WebContainer* view, LWE::ResourceError error) -> void {

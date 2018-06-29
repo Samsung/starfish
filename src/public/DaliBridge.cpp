@@ -522,8 +522,10 @@ extern "C" __attribute__((visibility("default"))) void createInstance(
             binder->buffer = nullptr;
         }
         binder->buffer = malloc(binder->w * binder->h * sizeof(uint32_t));
-        binder->lweInstance = WebContainer::Create(binder->buffer, binder->w,
-                                                   binder->h, binder->s, 1.0);
+        binder->lweInstance = WebContainer::Create(
+            binder->buffer, binder->w, binder->h, binder->s, 1.0, "ko-KR",
+            "Asia/Seoul", "/tmp/StarFish_localStorage.txt",
+            "/tmp/StarFish_Cookies.txt", "/tmp/StarFish-cache");
         TO_WEBCONTAINER(binder)
             ->RegisterOnRenderedHandler(
                 [binder](LWE::WebContainer* c, void* buf) {
