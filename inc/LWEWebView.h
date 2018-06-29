@@ -117,7 +117,11 @@ private:
     } // use Destroy function instead of delete operator
 public:
     static WebContainer* Create(void* buffer, uint width, uint height,
-                                uint stride, float scaleFactor);
+                                uint stride, float scaleFactor,
+                                const char* locale, const char* timezoneID,
+                                const char* localStorageFilePath,
+                                const char* cookieStoreFilePath,
+                                const char* httpCacheDirectorypath);
 
     Settings GetSettings();
     void LoadURL(const std::string& url);

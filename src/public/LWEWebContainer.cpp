@@ -103,7 +103,11 @@ static StarFish::ScriptValue nativeCallbackFunction(
 }
 
 WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
-                                   uint stride, float scaleFactor)
+                                   uint stride, float scaleFactor,
+                                   const char* locale, const char* timezoneID,
+                                   const char* localStorageFilePath,
+                                   const char* cookieStoreFilePath,
+                                   const char* httpCacheDirectorypath)
 {
 #if !defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
     STARFISH_LOG_ERROR("Cannot use WebContainer this port!");
@@ -121,22 +125,6 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     defaultFontName = "samsungOne";
 #endif
 
-#if defined(STARFISH_ANDROID)
-    std::string tempPath = "/sdcard/tmp/";
-#else
-    std::string tempPath = "/tmp/";
-#endif
-
-#if defined(OS_WINDOWS)
-    tempPath = ::StarFish::getWindowsTempDir();
-#endif
-
-    std::string localStoragePath = tempPath;
-    localStoragePath += "StarFish_localStorage.txt";
-
-    std::string cookiePath = tempPath;
-    localStoragePath += "StarFish_Cookies.txt";
-
     StarFish::ScreenInfo info;
     info.rect.setWidth(width);
     info.rect.setHeight(height);
@@ -144,13 +132,10 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     info.availableRect.setHeight(height);
     info.deviceScaleFactor = scaleFactor;
 
-    std::string cacheDir = tempPath;
-    cacheDir += "Starfish-cache";
     StarFish::StarFish* starfish = new StarFish::StarFish(
-        (StarFish::StarFishStartUpFlag)flag, "ko-KR", "Asia/Seoul", nullptr,
-        width, height, 0, 0, 1,
-        StarFish::String::createASCIIString(defaultFontName), info,
-        localStoragePath.data(), cookiePath.data(), cacheDir.data(),
+        (StarFish::StarFishStartUpFlag)flag, locale, timezoneID, nullptr, width,
+        height, 0, 0, 1, StarFish::String::createASCIIString(defaultFontName),
+        info, localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath,
         StarFish::String::fromUTF8(customUserAgentString.data()),
         StarFish::String::fromUTF8(builtinPolyfillPathString.data()));
     starfish->platformWindow()->updateDrawingBufferAddress(buffer, width,
