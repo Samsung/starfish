@@ -302,12 +302,23 @@ public:
             return;
         }
         m_canvas->save();
+        SkMatrix m = m_canvas->getTotalMatrix();
         beginPath();
-        moveTo(p1.x(), p1.y());
-        lineTo(p2.x(), p2.y());
-        lineTo(p3.x(), p3.y());
-        lineTo(p4.x(), p4.y());
-        lineTo(p1.x(), p1.y());
+        SkPoint src = SkPoint::Make(p1.x(), p1.y());
+        m.mapPoints(&src, 1);
+        moveTo(src.x(), src.y());
+        src = SkPoint::Make(p2.x(), p2.y());
+        m.mapPoints(&src, 1);
+        lineTo(src.x(), src.y());
+        src = SkPoint::Make(p3.x(), p3.y());
+        m.mapPoints(&src, 1);
+        lineTo(src.x(), src.y());
+        src = SkPoint::Make(p4.x(), p4.y());
+        m.mapPoints(&src, 1);
+        lineTo(src.x(), src.y());
+        src = SkPoint::Make(p1.x(), p1.y());
+        m.mapPoints(&src, 1);
+        lineTo(src.x(), src.y());
         closePath();
         fill();
         m_canvas->restore();
@@ -471,12 +482,18 @@ public:
 
     virtual void moveTo(float x, float y)
     {
-        m_path.moveTo(x, y);
+        SkMatrix m = m_canvas->getTotalMatrix();
+        SkPoint src = SkPoint::Make(x, y);
+        m.mapPoints(&src, 1);
+        m_path.moveTo(src.x(), src.y());
     }
 
     virtual void lineTo(float x, float y)
     {
-        m_path.lineTo(x, y);
+        SkMatrix m = m_canvas->getTotalMatrix();
+        SkPoint src = SkPoint::Make(x, y);
+        m.mapPoints(&src, 1);
+        m_path.lineTo(src.x(), src.y());
     }
 
     virtual void curveTo(float x1, float y1, float x2, float y2, float x3,
@@ -491,11 +508,27 @@ public:
     virtual void arc(double xc, double yc, double radius, double angle1,
                      double angle2)
     {
+        SkPath path;
+        double a1 = angle1 * 180 / M_PI;
+        double a2 = angle2 * 180 / M_PI;
+        SkRect rect =
+            SkRect::MakeXYWH(xc - radius, yc - radius, radius * 2, radius * 2);
+        path.arcTo(rect, a1, a2 - a1, true);
+        m_path.addPath(path, m_canvas->getTotalMatrix(),
+                       SkPath::kExtend_AddPathMode);
     }
 
     virtual void arcNegative(double xc, double yc, double radius, double angle1,
                              double angle2)
     {
+        SkPath path;
+        double a1 = angle1 * 180 / M_PI;
+        double a2 = angle2 * 180 / M_PI;
+        SkRect rect =
+            SkRect::MakeXYWH(xc - radius, yc - radius, radius * 2, radius * 2);
+        path.arcTo(rect, a1, a2 - a1, true);
+        m_path.addPath(path, m_canvas->getTotalMatrix(),
+                       SkPath::kExtend_AddPathMode);
     }
 
     virtual void stroke()
@@ -507,7 +540,10 @@ public:
     virtual void strokePreserve()
     {
         m_paint.setStyle(SkPaint::kStroke_Style);
+        SkMatrix m = m_canvas->getTotalMatrix();
+        m_canvas->resetMatrix();
         m_canvas->drawPath(m_path, m_paint);
+        m_canvas->setMatrix(m);
     }
 
     virtual void fill()
@@ -519,7 +555,10 @@ public:
     virtual void fillPreserve()
     {
         m_paint.setStyle(SkPaint::kFill_Style);
+        SkMatrix m = m_canvas->getTotalMatrix();
+        m_canvas->resetMatrix();
         m_canvas->drawPath(m_path, m_paint);
+        m_canvas->setMatrix(m);
     }
 
     virtual void clipPath()
@@ -530,7 +569,10 @@ public:
 
     virtual void clipPathPreserve()
     {
+        SkMatrix m = m_canvas->getTotalMatrix();
+        m_canvas->resetMatrix();
         m_canvas->clipPath(m_path);
+        m_canvas->setMatrix(m);
     }
 
     virtual void setFillRule(bool shouldUseNonZeroFillRule)
