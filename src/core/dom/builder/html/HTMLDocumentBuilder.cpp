@@ -131,6 +131,12 @@ public:
         m_htmlSource = m_htmlSource->concat(m_resource->url()->urlString());
         m_htmlSource =
             m_htmlSource->concat(String::createASCIIString("</div>"));
+#ifdef STARFISH_ENABLE_TEST
+        if (g_referenceTestState > 0) {
+            m_htmlSource = m_htmlSource->concat(String::createASCIIString(
+                "<sfrtfailed>Reference test load fail</sfrtfailed>"));
+        }
+#endif
         load();
     }
 

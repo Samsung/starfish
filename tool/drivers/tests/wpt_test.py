@@ -10,22 +10,27 @@ from urlparse import urlparse
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "../"))
 from basics.utils import Strings, PColors
-from basics.starfish_pixel_test import pixel_diff, default_tc_handler
-
-RE_KEYWORDS = re.compile("STARFISH_REFTEST_REF.*[htm|html|svg|xht]$")
 
 try:
   FNULL
 except NameError:
   FNULL = open(os.devnull, "w")
 
+RE_KEYWORDS = re.compile(r"PASS|FAIL")
+RE_RTERROR = re.compile("STARFISH_RTERROR.*")
+RE_RTPASS = re.compile("STARFISH_RTPASS$")
+RE_RTCAPTURED = re.compile("STARFISH_RTCAPTURED.*")
 TIMEOUT_SEC = 5
 
-def _extractRefPath(outs):
-    list = RE_KEYWORDS.findall(outs)
-    if len(list) > 0:
-        return list[0][21:]
-    return ""
+def _detectError(outs):
+    list = RE_RTERROR.findall(outs)
+    if len(list):
+        return list[0][17:]
+    return None
+
+def _isPass(outs):
+    list = RE_RTPASS.findall(outs)
+    return len(list) > 0
 
 def _validateFile(file):
     return file.startswith("http") or os.path.isfile(file)
@@ -34,10 +39,9 @@ def _timeout(proc, tc_file):
     proc.kill()
     print("Timeout(" + str(TIMEOUT_SEC) + "s): " + tc_file)
 
-def _capture_starfish(tc_file, png_name, extra_options=[]):
-    starfish_command = ["./StarFish", tc_file, "--hide-window",
-                        "--regression-test", "--width=800", "--height=600",
-                        "--screen-shot=" + png_name] + extra_options
+def _run_starfish_reftest(tc_file):
+    starfish_command = ["./StarFish", tc_file,
+                        "--ref-test", "--width=800", "--height=600"]
     outs = ""
     errs = ""
     try:
@@ -49,9 +53,16 @@ def _capture_starfish(tc_file, png_name, extra_options=[]):
         return (False, "CalledProcessError")
     finally:
         timer.cancel()
-        if not os.path.isfile(png_name):
-            return (False, outs + errs)
-        return (True, outs)
+    return (True, outs)
+
+def _gen_diff(outs):
+    list = RE_RTCAPTURED.findall(outs)
+    if len(list) != 2:
+        return
+    diff_cmd = ["test/tool/image_diff", "--diff",
+                list[0][20:], list[1][20:], "diff.png"]
+    subprocess.call(diff_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
+    print "Check 'diff.png'"
 
 def wpt_tc_handler(tc_file, output, show_progress=True):
     is_pass = False
@@ -91,10 +102,8 @@ def wpt_exp_namer(tc_file):
 def wpt_exp_png_namer(tc_file, backend):
     return wpt_exp_namer(tc_file) + "." + backend + ".png"
 
-def wpt_reftest_case_runner(tc):
+def wpt_reftest_case_runner(tc, gen_diff=False):
     tc_idx, tc_file = tc
-    tc_result_png = str(tc_idx) + "__starfish_result.png"
-    tc_ref_png = str(tc_idx) + "__starfish_result.ref.png"
 
     # Assure TC exist
     if not _validateFile(tc_file):
@@ -102,34 +111,27 @@ def wpt_reftest_case_runner(tc):
         print("ERROR : TC file does not exist - " + tc_file)
         return False
 
-    # Capture TC in StarFish
-    result, outs = _capture_starfish(tc_file, tc_result_png, extra_options=["--ref-test"])
+    # Run StarFish
+    result, outs = _run_starfish_reftest(tc_file)
     if not result:
-        print(Strings.FAIL_SIGN + tc_file + " tc_crash")
+        print(Strings.FAIL_SIGN + tc_file + " TC_CRASH")
         print("ERROR : Starfish error while running " + tc_file)
         print(outs)
         return False
 
-    # Assure TC reference
-    ref_file = _extractRefPath(outs)
-    if not len(ref_file) or not _validateFile(ref_file):
-        print(Strings.FAIL_SIGN + tc_file + " invalid ref")
-        print("Invalid reference file")
-        print(": Document does not have reference informations or a reference file does not exist")
+    err = _detectError(outs)
+    if err is not None:
+        print(Strings.FAIL_SIGN + tc_file + " " + err)
         return False
 
-    # Capture TC reference in StarFish
-    result, outs = _capture_starfish(ref_file, tc_ref_png)
-    if not result:
-        print(Strings.FAIL_SIGN + tc_file + " ref_crash")
-        print("ERROR : Starfish error while running " + ref_file)
-        print(outs)
+    if not _isPass(outs):
+        print(Strings.FAIL_SIGN + tc_file)
+        if gen_diff:
+            _gen_diff(outs)
         return False
 
-    # Image diff
-    final_result = pixel_diff(tc_file, tc_result_png, tc_ref_png, default_tc_handler)
-    os.remove(tc_ref_png)
-    return final_result
+    print(Strings.PASS_SIGN + tc_file)
+    return True
 
 # standalone version
 if __name__ == "__main__":
@@ -138,4 +140,5 @@ if __name__ == "__main__":
     parser.add_argument("tc_file")
     args = parser.parse_args()
 
-    wpt_reftest_case_runner((0, args.tc_file))
+    wpt_reftest_case_runner((0, args.tc_file), gen_diff=True)
+

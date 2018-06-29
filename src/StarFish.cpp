@@ -105,10 +105,10 @@ namespace StarFish {
 
 #ifdef STARFISH_ENABLE_TEST
 bool g_enablePixelTest = false;
-bool g_enableRefTest = false;
 bool g_memLogDump = false;
 bool g_enableDumpAsText = false;
 bool g_DumpAsText_Async = false;
+int g_referenceTestState = 0;
 
 FILE* fp_mem = NULL;
 static double process_mem_usage()

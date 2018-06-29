@@ -6,6 +6,8 @@ cd ./test_new/tc_list
 cd ../..
 
 mkdir -p out/wpt_result
+rm out/*reftest*.png
+
 for i in `seq 1 $DIV_NUM`
 do
     # echo [$SECONDS"s"] WPT reference test \("$i"/"$DIV_NUM"\)
