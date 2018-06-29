@@ -250,7 +250,17 @@ Nullable<String*> Node::textContent() const
                 str = str->concat(child->textContent().getValue());
             }
         }
-        return str;
+
+        StringBuilder sb;
+        if (!nextSibling() && str->length()) {
+            size_t last = str->length() - 1;
+            if (str->charAt(last) == '\n') {
+                str = str->substring(0, last);
+            }
+        }
+        sb.appendString(str);
+
+        return sb.finalize();
     }
     case ATTRIBUTE_NODE:
         return asAttr()->value();
