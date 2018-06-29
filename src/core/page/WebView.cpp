@@ -76,6 +76,127 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 
 namespace StarFish {
 
+#if defined(STARFISH_ENABLE_TEST) && !defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+static void screenShotInRendering(StarFish* starfish, const char* path)
+{
+    STARFISH_ASSERT(g_surfaceForScreehShot);
+    cairo_surface_t* png_buffer;
+    png_buffer = cairo_image_surface_create_for_data(
+        (unsigned char*)g_surfaceForScreehShot->data(), CAIRO_FORMAT_ARGB32,
+        starfish->platformWindow()->width(),
+        starfish->platformWindow()->height(),
+        g_surfaceForScreehShot->bufferStride());
+
+#if !defined(STARFISH_ANDROID)
+    cairo_surface_write_to_png(png_buffer, path);
+#endif
+    cairo_surface_destroy(png_buffer);
+
+    if (g_surfaceForScreehShot) {
+        g_surfaceForScreehShot->detachNativeBuffer();
+        starfish->removePointerFromRootSet(g_surfaceForScreehShot);
+    }
+    g_surfaceForScreehShot = nullptr;
+}
+// WPT Reference Test
+static Nullable<String*> rtExtractReference(Document* document)
+{
+    HTMLCollection* result = document->getElementsByTagName(
+        document->starFish()->staticStrings()->m_link);
+    for (size_t i = 0; i < result->length(); i++) {
+        HTMLLinkElement* current = result->item(i)->asHTMLLinkElement();
+        if (current->rel()->equals(String::fromUTF8("match"))) {
+            return current->href();
+        }
+    }
+    return Nullable<String*>();
+}
+// WPT Reference Test
+static void rtShouldTrue(bool condition, StarFish* starfish, const char* msg)
+{
+    if (!condition) {
+        STARFISH_LOG_INFO("STARFISH_RTERROR %s\n", msg);
+        exit(0);
+    }
+}
+// WPT Reference Test
+static void rtShouldLoaded(Document* document, const char* msg)
+{
+    HTMLCollection* error =
+        document->getElementsByTagName(String::createASCIIString("sfrtfailed"));
+    rtShouldTrue((!error->length()), document->starFish(), msg);
+}
+// WPT Reference Test
+static std::string rtCreatePngName(int id)
+{
+    char buf[32];
+    snprintf(buf, sizeof(buf), "out/%d_reftest%d.png", (int)getpid(), id);
+    return buf;
+}
+// WPT Reference Test
+static void rtScreenShot(StarFish* starfish)
+{
+    std::string capturePng = rtCreatePngName(g_referenceTestState);
+    screenShotInRendering(starfish, capturePng.c_str());
+    STARFISH_LOG_INFO("STARFISH_RTCAPTURED %s\n", capturePng.c_str());
+}
+// WPT Reference Test
+static bool rtPixelDiff(StarFish* starfish)
+{
+    std::string cmd = "./tool/imgdiff/imgdiff ";
+    cmd += rtCreatePngName(1);
+    cmd += " ";
+    cmd += rtCreatePngName(2);
+    FILE* fp = popen(cmd.c_str(), "r");
+    rtShouldTrue(fp, starfish, "INVALID_IMGDIFF");
+
+    int ch;
+    std::string output;
+    while ((ch = fgetc(fp)) != EOF) {
+        output += ch;
+    }
+    pclose(fp);
+    return output.find("[imgdiff-fail]") == std::string::npos;
+}
+// WPT Reference Test
+static void rtDoTest(Document* document)
+{
+    StarFish* starfish = document->starFish();
+    if (g_referenceTestState == 1) {
+        // Case1: Running TC
+        rtShouldLoaded(document, "TC_LOAD_FAIL");
+
+        Nullable<String*> url = rtExtractReference(document);
+        rtShouldTrue(url.hasValue(), starfish, "WRONG_REF_URL");
+
+        rtScreenShot(starfish);
+        g_referenceTestState = 2;
+
+        starfish->messageLoop()->addIdler(
+            nullptr,
+            [](size_t, void* data0, void* data1) {
+                Document* document = (Document*)data0;
+                g_fireOnloadEvent = false;
+                ResourceURL* url = new ResourceURL(
+                    (String*)data1, document->baseURL()->baseURI());
+                document->starFish()->platformWindow()->webView()->navigate(
+                    url, HistoryManager::Action::Add, nullptr);
+            },
+            document, url.getValue());
+    } else if (g_referenceTestState == 2) {
+        // Case2: Running Reference
+        rtShouldLoaded(document, "REF_LOAD_FAIL");
+        rtScreenShot(starfish);
+        if (rtPixelDiff(starfish)) {
+            STARFISH_LOG_INFO("STARFISH_RTPASS\n");
+        } else {
+            STARFISH_LOG_INFO("STARFISH_RTFAIL\n");
+        }
+        exit(0);
+    }
+}
+#endif
+
 WebView* WebView::create(StarFish* starFish)
 {
     return new WebView(starFish);
@@ -864,41 +985,14 @@ bool WebView::rendering(bool force)
             }
         }
 
-        if (g_fireOnloadEvent && g_enableRefTest) {
-            HTMLCollection* result =
-                m_topLevelBrowsingContext->document()->getElementsByTagName(
-                    starFish()->staticStrings()->m_link);
-            for (size_t i = 0; i < result->length(); i++) {
-                HTMLLinkElement* current = result->item(i)->asHTMLLinkElement();
-                if (current->rel()->equals(String::fromUTF8("match"))) {
-                    starFish()->console()->log(
-                        String::fromUTF8("STARFISH_REFTEST_REF:")
-                            ->concat(current->href()));
-                    break;
-                }
-            }
+        if (g_fireOnloadEvent && g_referenceTestState > 0) {
+            rtDoTest(m_topLevelBrowsingContext->document());
+            return didPaintingOrCompositing;
         }
 
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
-            cairo_surface_t* png_buffer;
-            png_buffer = cairo_image_surface_create_for_data(
-                (unsigned char*)g_surfaceForScreehShot->data(),
-                CAIRO_FORMAT_ARGB32, starFish()->platformWindow()->width(),
-                starFish()->platformWindow()->height(),
-                g_surfaceForScreehShot->bufferStride());
-
-#if !defined(STARFISH_ANDROID)
-            cairo_surface_write_to_png(png_buffer, path);
-#endif
-            cairo_surface_destroy(png_buffer);
-
-            if (g_surfaceForScreehShot) {
-                g_surfaceForScreehShot->detachNativeBuffer();
-                starFish()->removePointerFromRootSet(g_surfaceForScreehShot);
-            }
-            g_surfaceForScreehShot = nullptr;
-
+            screenShotInRendering(starFish(), path);
             if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
                 strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
                 exit(0);

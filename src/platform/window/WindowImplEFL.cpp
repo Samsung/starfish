@@ -1654,7 +1654,8 @@ Canvas* WindowImplEFL::preparePainting()
 #ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path) && g_fireOnloadEvent) {
+        if (((path && strlen(path)) || g_referenceTestState > 0) &&
+            g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
@@ -1712,7 +1713,8 @@ Canvas* WindowImplEFL::preparePainting()
 #ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path) && g_fireOnloadEvent) {
+        if (((path && strlen(path)) || g_referenceTestState > 0) &&
+            g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
@@ -1788,7 +1790,8 @@ Canvas* WindowImplEFL::preparePainting()
 #ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path) && g_fireOnloadEvent) {
+        if (((path && strlen(path)) || g_referenceTestState > 0) &&
+            g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
@@ -1879,7 +1882,8 @@ Compositor* WindowImplEFL::prepareCompositor()
 #ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path) && g_fireOnloadEvent) {
+        if (((path && strlen(path)) || g_referenceTestState > 0) &&
+            g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
@@ -1942,7 +1946,8 @@ Compositor* WindowImplEFL::prepareCompositor()
 #ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");
-        if (path && strlen(path) && g_fireOnloadEvent) {
+        if (((path && strlen(path)) || g_referenceTestState > 0) &&
+            g_fireOnloadEvent) {
             g_surfaceForScreehShot =
                 CanvasSurface::create(this, width(), height());
 

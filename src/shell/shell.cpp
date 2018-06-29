@@ -631,7 +631,8 @@ int main(int argc, char* argv[])
 #endif
         } else if (strcmp(argv[i], "--ref-test") == 0) {
 #ifdef STARFISH_ENABLE_TEST
-            StarFish::g_enableRefTest = true;
+            StarFish::g_referenceTestState = 1;
+            setenv("HIDE_WINDOW", "1", 1);
 #endif
         } else if (strstr(argv[i], "--width=") == argv[i]) {
             width = std::atoi(argv[i] + strlen("--width="));

@@ -436,10 +436,10 @@ protected:
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_enablePixelTest;
-extern bool g_enableRefTest;
 extern bool g_memLogDump;
 extern bool g_enableDumpAsText;
 extern bool g_DumpAsText_Async;
+extern int g_referenceTestState; // 0:None, 1:RunningTC, 2:RunningReference
 #endif
 }
 
