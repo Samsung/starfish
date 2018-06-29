@@ -33,6 +33,7 @@ namespace StarFish {
 void Resource::request(ResourceRequestSyncLevel syncLevel,
                        ResourceURL* referrerURL, bool allowCache)
 {
+    STARFISH_ASSERT(m_state == BeforeSend);
     m_isRequested = true;
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
@@ -101,6 +102,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
 
         m_resourceRequest->send(entityBody, allowCache);
     }
+    m_state = Receiving;
 }
 
 void Resource::cancel()
@@ -128,7 +130,6 @@ void Resource::didHeaderReceived(
 
 void Resource::didDataReceived(const char* buf, size_t length)
 {
-    m_state = Receiving;
     auto iter = m_resourceClients.begin();
     while (iter != m_resourceClients.end()) {
         (*iter)->didDataReceived(buf, length);
@@ -139,6 +140,9 @@ void Resource::didDataReceived(const char* buf, size_t length)
 void Resource::didLoadFinished()
 {
     m_state = Finished;
+    if (m_resourceRequest) {
+        m_responseMimeType = m_resourceRequest->responseMimeType();
+    }
     auto iter = m_resourceClients.begin();
     while (iter != m_resourceClients.end()) {
         (*iter)->didLoadFinished();

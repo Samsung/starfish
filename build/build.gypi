@@ -20,6 +20,8 @@
 
             # 'STARFISH_ENABLE_TEST',
             # 'STARFISH_ENABLE_PROFILING',
+            # 'STARFISH_ENABLE_NETWORK_PROFILING',
+            # 'STARFISH_ENABLE_SCRIPT_PROFILING',
         ],
         # NOTE: common #defines for all Tizen platform
         'defines_tizen': [

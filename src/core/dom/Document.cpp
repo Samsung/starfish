@@ -75,7 +75,9 @@
 #include "platform/network/NetworkSharedResourceManager.h"
 
 namespace StarFish {
-
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
+extern uint64_t g_profilingBaseTime;
+#endif
 Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
                    ResourceURL* uri, String* charSet,
                    bool doesParticipateInRendering)
@@ -111,6 +113,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
           this, window->starFish()->platformFontSelector(),
           window->starFish()->platformFontCache()))
 #endif
+    , m_preloadScanner(nullptr)
     , m_styleResolver(new StyleResolver(this))
     , m_documentBuilder(nullptr)
     , m_styleSheetList(nullptr)
@@ -570,6 +573,7 @@ void Document::notifyDomContentLoaded()
     }
 
     if (!m_domContentLoadedFired) {
+        m_preloadScanner = nullptr;
         m_resourceLoader->notifyEndParseDocument();
         m_domContentLoadedFired = true;
         String* eventType = window()
@@ -594,6 +598,15 @@ void Document::notifyDomContentLoaded()
 #endif
 
         STARFISH_LOG_INFO("Document::notifyDomContentLoaded\n");
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
+        if (browsingContext()->isTopLevelBrowsingContext()) {
+            STARFISH_LOG_INFO(
+                "[NETWORK_PROFILING] Document::notifyDomContentLoaded at "
+                "%dms\n",
+                (int)(timestamp() - g_profilingBaseTime));
+        }
+#endif
+
         if (m_compatibilityMode != NoQuirksMode) {
             std::string s;
             if (m_documentURI->urlString()->length() > 128) {

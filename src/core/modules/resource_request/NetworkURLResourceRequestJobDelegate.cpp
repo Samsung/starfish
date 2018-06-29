@@ -43,9 +43,10 @@
 #endif
 
 namespace StarFish {
-#ifdef STARFISH_ENABLE_PROFILING
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
 int64_t NetworkURLWorkerData::reqCnt = 0;
 int64_t NetworkURLWorkerData::hitCnt = 0;
+extern uint64_t g_profilingBaseTime;
 #endif
 
 NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
@@ -59,12 +60,12 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     , cachedEntry(nullptr)
 #endif
     , lastLocation("")
-#ifdef STARFISH_ENABLE_PROFILING
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
     , workingTime(0)
     , cachehit(false)
 #endif
 {
-#ifdef STARFISH_ENABLE_PROFILING
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
     NetworkURLWorkerData::reqCnt++;
 #endif
 }
@@ -81,14 +82,7 @@ NetworkURLWorkerData::~NetworkURLWorkerData()
 void* NetworkURLWorkerHelper::networkWorker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
-#ifdef STARFISH_ENABLE_PROFILING
-    uint64_t start = longTickCount();
-#endif
     nwd->httpTransaction->start();
-#ifdef STARFISH_ENABLE_PROFILING
-    uint64_t end = longTickCount();
-    nwd->workingTime += end - start;
-#endif
 
     // TODO : Do not use libur libcurl error codes
     if (nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK) {
@@ -117,7 +111,7 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
 #ifdef STARFISH_ENABLE_HTTPCACHE
 void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
 {
-#ifdef STARFISH_ENABLE_PROFILING
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
     uint64_t start = longTickCount();
 #endif
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
@@ -131,10 +125,14 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
         ret = nwd->cachedEntry->readRawDataFromEntryFile(
             nwd->request->response());
         nwd->cachedEntry->readEntryHeaders(nwd->request->m_responseHeaderMap);
-#ifdef STARFISH_ENABLE_PROFILING
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
         nwd->cachehit = true;
         uint64_t end = longTickCount();
         nwd->workingTime += end - start;
+        STARFISH_LOG_INFO(
+            "[NETWORK_PROFILING] Http disk cache hit! %s at %dms\n",
+            nwd->httpTransaction->httpRequest().url().data(),
+            (int)(timestamp() - g_profilingBaseTime));
 #endif
     }
     if (ret) {
@@ -245,12 +243,13 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(int res,
                                                     NetworkURLWorkerData* nwd)
 {
     Locker<Mutex> locker(*nwd->request->m_mutex);
-#ifdef STARFISH_ENABLE_PROFILING
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
     if (nwd->cachehit) {
         NetworkURLWorkerData::hitCnt++;
     }
     STARFISH_LOG_INFO(
-        "[Profiling] Resource Raw data(%zu byte) Load in %f ms, diskcache: "
+        "[NETWORK_PROFILING] Resource Raw data(%zu byte) Load in %f ms, "
+        "diskcache: "
         "%s, HitRate: %lf\n",
         nwd->request->response().size(), (float)((nwd->workingTime) / 1000.f),
         (nwd->cachehit) ? "hit" : "miss",
@@ -285,7 +284,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     switch (m_orgProxy->m_method) {
     case ResourceRequest::GET_METHOD: {
         method = "GET";
-#ifdef STARFISH_ENABLE_PROFILING
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
         uint64_t start = longTickCount();
 #endif
 #ifdef STARFISH_ENABLE_HTTPCACHE
@@ -300,7 +299,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
             }
         }
 #endif
-#ifdef STARFISH_ENABLE_PROFILING
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
         uint64_t end = longTickCount();
         nwd->workingTime += end - start;
 #endif
@@ -472,9 +471,43 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithCachedEntry(
     }
 }
 #endif
+
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
+class NetworkProifileRAIILogger {
+public:
+    NetworkProifileRAIILogger(NetworkURLWorkerData* nwd)
+        : nwd(nwd)
+    {
+        if (nwd->httpTransaction) {
+            STARFISH_LOG_INFO(
+                "[NETWORK_PROFILING] Start network request %s at %dms\n",
+                nwd->httpTransaction->httpRequest().url().data(),
+                (int)(timestamp() - g_profilingBaseTime));
+        }
+    }
+
+    ~NetworkProifileRAIILogger()
+    {
+        if (nwd->httpTransaction) {
+            STARFISH_LOG_INFO(
+                "[NETWORK_PROFILING] End network request %s at %dms\n",
+                nwd->httpTransaction->httpRequest().url().data(),
+                (int)(timestamp() - g_profilingBaseTime));
+        }
+    }
+
+    NetworkURLWorkerData* nwd;
+};
+
+#endif
+
 void* NetworkURLResourceRequestJobDelegate::worker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+#ifdef STARFISH_ENABLE_NETWORK_PROFILING
+    NetworkProifileRAIILogger logger(nwd);
+#endif
+
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (!nwd->cachedEntry || (nwd->cachedEntry->shouldReValidate())) {
         return nwd->helper->networkWorker(data);

@@ -353,11 +353,16 @@ public:
     static String* createASCIIString(const char* src);
     static String* createASCIIStringWithNoGC(const char* src);
     static String* createUTF32String(const UTF32String& src);
+    static String* createUTF32String(const UTF32StringDataNonGCStd& src);
     static String* createUTF32String(char32_t c);
-    static String* createASCIIStringFromUTF32Source(const UTF32String& src);
-    static String* createBMPStringFromUTF32Source(const UTF32String& src);
+    static String* createASCIIStringFromUTF32Source(
+        const UTF32StringDataNonGCStd& src);
+    static String* createBMPStringFromUTF32Source(
+        const UTF32StringDataNonGCStd& src);
     static String* createASCIIStringFromUTF32SourceIfPossible(
         const UTF32String& src);
+    static String* createASCIIStringFromUTF32SourceIfPossible(
+        const UTF32StringDataNonGCStd& src);
 
     static int parseInt(String* s);
     static int64_t parseInt64(String* s);

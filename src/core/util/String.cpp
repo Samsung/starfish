@@ -748,6 +748,11 @@ String* String::createASCIIStringWithNoGC(const char* str)
     return new StringDataNonGCASCII(str);
 }
 
+String* String::createUTF32String(const UTF32StringDataNonGCStd& src)
+{
+    return new StringDataUTF32(src.data(), src.length());
+}
+
 String* String::createUTF32String(const UTF32String& src)
 {
     return new StringDataUTF32(src);
@@ -766,7 +771,8 @@ String* String::createUTF32String(char32_t c)
     return new StringDataUTF32(s);
 }
 
-String* String::createASCIIStringFromUTF32Source(const UTF32String& src)
+String* String::createASCIIStringFromUTF32Source(
+    const UTF32StringDataNonGCStd& src)
 {
 #ifndef NDEBUG
     for (size_t i = 0; i < src.length(); i++) {
@@ -781,7 +787,8 @@ String* String::createASCIIStringFromUTF32Source(const UTF32String& src)
     return new StringDataASCII(std::move(ascii));
 }
 
-String* String::createBMPStringFromUTF32Source(const UTF32String& src)
+String* String::createBMPStringFromUTF32Source(
+    const UTF32StringDataNonGCStd& src)
 {
 #ifndef NDEBUG
     for (size_t i = 0; i < src.length(); i++) {
@@ -817,6 +824,37 @@ String* String::createASCIIStringFromUTF32SourceIfPossible(
                 return new StringDataBMP(std::move(utf32));
             } else {
                 return new StringDataUTF32(src);
+            }
+        }
+    }
+    ASCIIString ascii;
+    for (size_t i = 0; i < src.length(); i++) {
+        ascii.push_back(src[i]);
+    }
+    return new StringDataASCII(std::move(ascii));
+}
+
+String* String::createASCIIStringFromUTF32SourceIfPossible(
+    const UTF32StringDataNonGCStd& src)
+{
+    for (size_t i = 0; i < src.length(); i++) {
+        const char32_t c = src[i];
+        if (c > 127) {
+            bool isAllBMP = true;
+            for (; i < src.length(); i++) {
+                if (!isBMP(src[i])) {
+                    isAllBMP = false;
+                    break;
+                }
+            }
+            if (isAllBMP) {
+                BMPString utf32;
+                for (size_t i = 0; i < src.length(); i++) {
+                    utf32 += src[i];
+                }
+                return new StringDataBMP(std::move(utf32));
+            } else {
+                return new StringDataUTF32(src.data(), src.length());
             }
         }
     }

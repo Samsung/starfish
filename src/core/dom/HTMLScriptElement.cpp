@@ -32,6 +32,10 @@
 
 namespace StarFish {
 
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+extern uint64_t g_profilingBaseTime;
+#endif
+
 void* HTMLScriptElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLScriptElement));
@@ -67,6 +71,25 @@ static bool isJavaScriptType(const char* type, size_t len)
     ALLOW_TYPE("text/html")
     return false;
 }
+
+class JSProifileRAIILogger {
+public:
+    JSProifileRAIILogger()
+    {
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+        STARFISH_LOG_INFO("[SCRIPT_PROFILING] Start JS Execution at %dms\n",
+                          (int)(timestamp() - g_profilingBaseTime));
+#endif
+    }
+
+    ~JSProifileRAIILogger()
+    {
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+        STARFISH_LOG_INFO("[SCRIPT_PROFILING] End JS Execution at %dms\n",
+                          (int)(timestamp() - g_profilingBaseTime));
+#endif
+    }
+};
 
 class DeferredScriptDownloadClient : public ResourceClient {
 public:
@@ -106,9 +129,12 @@ public:
                 String* text = client->m_resource->asTextResource()->text();
                 client->m_element->document()->appendCurrentScript(
                     client->m_element);
-                evaluateString(
-                    client->m_element->window()->scriptBindingInstance(), text,
-                    ResourceClient::resource()->url()->urlString());
+                {
+                    JSProifileRAIILogger logger();
+                    evaluateString(
+                        client->m_element->window()->scriptBindingInstance(),
+                        text, ResourceClient::resource()->url()->urlString());
+                }
                 client->m_element->document()->popCurrentScript();
             }
             deferredScriptElements.erase(deferredScriptElements.begin());
@@ -171,8 +197,12 @@ public:
         if (isJavaScriptType(s.data(), s.length())) {
             String* text = m_resource->asTextResource()->text();
             m_element->document()->appendCurrentScript(m_element);
-            evaluateString(m_element->window()->scriptBindingInstance(), text,
-                           ResourceClient::resource()->url()->urlString());
+            {
+                JSProifileRAIILogger logger();
+                evaluateString(m_element->window()->scriptBindingInstance(),
+                               text,
+                               ResourceClient::resource()->url()->urlString());
+            }
             m_element->document()->popCurrentScript();
         }
         didScriptLoaded();
@@ -225,10 +255,13 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             String* script = text();
             m_isAlreadyStarted = true;
             document()->appendCurrentScript(this);
-            evaluateString(
-                window()->scriptBindingInstance(), script,
-                String::createASCIIString("HTMLScriptElement innerText"));
-            document()->popCurrentScript();
+            {
+                JSProifileRAIILogger logger();
+                evaluateString(
+                    window()->scriptBindingInstance(), script,
+                    String::createASCIIString("HTMLScriptElement innerText"));
+                document()->popCurrentScript();
+            }
             m_didScriptExecuted = true;
             return false;
         } else {
@@ -239,12 +272,51 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 return false;
             }
 
+            ResourceURL* rurl =
+                new ResourceURL(url, document()->baseURL()->baseURI());
+
+            if (document()->preloadScanner()) {
+                auto ps = document()->preloadScanner();
+                for (size_t i = 0; i < ps->preloadedJS().size(); i++) {
+                    Resource* res = ps->preloadedJS()[i];
+                    if (*res->url() == *rurl && !async() && !defer()) {
+                        if (res->isReceiving()) {
+                            bool shouldResumeParsing =
+                                inParser && !forceSync && !async();
+                            res->addResourceClient(new ScriptDownloadClient(
+                                this, res, shouldResumeParsing));
+                            res->addResourceClient(
+                                new ElementResourceClient(this, res, true));
+                            return true;
+                        } else if (res->isFinished()) {
+                            auto s = res->responseMimeType()
+                                         ->toASCIILower()
+                                         ->toUTF8NonGCString();
+                            if (isJavaScriptType(s.data(), s.length())) {
+                                String* text = res->asTextResource()->text();
+                                document()->appendCurrentScript(this);
+                                {
+                                    JSProifileRAIILogger logger();
+                                    evaluateString(
+                                        window()->scriptBindingInstance(), text,
+                                        res->url()->urlString());
+                                }
+                                document()->popCurrentScript();
+                            }
+                            ElementResourceClient onload(this, res, true);
+                            onload.didLoadFinished();
+                            return false;
+                        }
+                        break;
+                    }
+                }
+            }
+
             String* charset =
                 getAttributeOrEmpty(starFish()->staticStrings()->m_charset)
                     ->trim();
-            TextResource* res = document()->resourceLoader().fetchText(
-                new ResourceURL(url, document()->baseURL()->baseURI()),
-                charset);
+            TextResource* res =
+                document()->resourceLoader().fetchText(rurl, charset);
             if (!async() && defer()) {
                 res->addResourceClient(
                     new DeferredScriptDownloadClient(this, res));
