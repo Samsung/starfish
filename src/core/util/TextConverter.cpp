@@ -168,7 +168,7 @@ String* TextConverter::convert(const char* bytes, size_t len,
         }
         STARFISH_ASSERT(!U_FAILURE(err));
         m_bufferToConvert.assign(&bytes[0], &bytes[len]);
-        UTF32String str;
+        UTF32StringDataNonGCStd str;
         bool hasUTFChar = false;
         bool hasNonBMPChar = false;
         while (true) {

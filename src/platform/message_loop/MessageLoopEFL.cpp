@@ -51,6 +51,7 @@ MessageLoop::MessageLoop(StarFish* sf)
     , m_runningPoolWorkerCount(0)
 #endif
 {
+    ecore_animator_frametime_set(0.001);
 }
 
 void MessageLoop::run()
@@ -65,7 +66,7 @@ struct InvokeNavigateData : public gc {
     WebView* wv;
     ResourceURL* url;
     ResourceURL* referrerURL;
-    Ecore_Idler* idler;
+    Ecore_Animator* idler;
     void** extra;
 
     static void* operator new(size_t s)
@@ -78,7 +79,9 @@ void MessageLoop::close()
 {
     m_inClosingState = true;
     if (m_navigateInvokeIdler) {
-        ecore_idler_del(((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
+        ecore_animator_freeze(
+            ((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
+        ecore_animator_del(((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
         delete ((InvokeNavigateData*)m_navigateInvokeIdler);
         m_navigateInvokeIdler = nullptr;
     }
@@ -236,7 +239,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
     ecore_main_loop_thread_safe_call_async(
         [](void* data) -> void {
-            ecore_idler_add(
+            ecore_animator_add(
                 [](void* data) -> Eina_Bool {
                     IdlerData* id = (IdlerData*)data;
                     {
@@ -285,7 +288,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
     ecore_main_loop_thread_safe_call_async(
         [](void* data) -> void {
-            ecore_idler_add(
+            ecore_animator_add(
                 [](void* data) -> Eina_Bool {
                     IdlerData* id = (IdlerData*)data;
                     {
@@ -370,7 +373,8 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
 {
     if (m_navigateInvokeIdler != nullptr) {
         auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
-        ecore_idler_del(data->idler);
+        ecore_animator_freeze(data->idler);
+        ecore_animator_del(data->idler);
         delete data;
     }
 
@@ -380,7 +384,7 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
     data->wv = wv;
     data->url = url;
     data->referrerURL = referrerURL;
-    data->idler = ecore_idler_add(
+    data->idler = ecore_animator_add(
         [](void* d) -> Eina_Bool {
             InvokeNavigateData* data = (InvokeNavigateData*)d;
             data->wv->navigate(data->url, HistoryManager::Action::Add,

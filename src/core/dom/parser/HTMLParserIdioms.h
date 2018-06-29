@@ -259,7 +259,7 @@ String* stripLeadingAndTrailingHTMLSpaces(String*);
 inline String* stripLeadingAndTrailingHTMLSpaces(const UTF32String& vector)
 {
     return stripLeadingAndTrailingHTMLSpaces(
-        String::createASCIIStringFromUTF32SourceIfPossible(vector.data()));
+        String::createASCIIStringFromUTF32SourceIfPossible(vector));
 }
 
 // An implementation of the HTML specification's algorithm to convert a number
@@ -353,8 +353,7 @@ inline String* attemptStaticStringCreation(const UTF32String& vector,
     }*/
     String* string;
     if (width == Likely8Bit) {
-        string =
-            String::createASCIIStringFromUTF32SourceIfPossible(vector.data());
+        string = String::createASCIIStringFromUTF32SourceIfPossible(vector);
     } else if (width == Force8Bit) {
         string = String::createASCIIStringFromUTF32Source(vector.data());
     } else {

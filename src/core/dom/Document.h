@@ -25,6 +25,7 @@
 #include "core/util/BloomFilter.h"
 #include "core/style/Style.h"
 #include "core/style/WebFont.h"
+#include "core/dom/parser/PreloadScanner.h"
 #include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
 
 namespace StarFish {
@@ -54,6 +55,7 @@ class BrowsingContext;
 class AnimationExecutor;
 class DOMImplementation;
 class DeferredScriptDownloadClient;
+class PreloadScanner;
 
 /* VisibilityState */
 enum VisibilityState ENSURE_ENUM_UNSIGNED {
@@ -88,6 +90,7 @@ class Document : public Node {
     friend class BrowsingContext;
     friend class FontSelector;
     friend class DeferredScriptDownloadClient;
+    friend class HTMLResourceClient;
 
 protected:
     Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
@@ -262,6 +265,11 @@ public:
     StyleResolver& styleResolver()
     {
         return *m_styleResolver;
+    }
+
+    PreloadScanner* preloadScanner()
+    {
+        return m_preloadScanner;
     }
 
     ScriptBindingInstance* scriptBindingInstance() override;
@@ -638,6 +646,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentType));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resourceLoader));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fontSelector));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_preloadScanner));
 #if defined(PORT_CANVAS_BACKEND_EFL)
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fontSelectorGeneric));
 #endif
@@ -663,7 +672,6 @@ protected:
     }
 
     // only used in html document builder
-    friend class HTMLResourceClient;
     void setCharacterSet(String* s)
     {
         m_characterSet = s;
@@ -702,6 +710,7 @@ protected:
 #endif
     GCVector<WebFont> m_webFontList;
     GCVector<FontResource*> m_loadedWebFontList;
+    PreloadScanner* m_preloadScanner;
     StyleResolver* m_styleResolver;
     DocumentBuilder* m_documentBuilder;
     StyleSheetList* m_styleSheetList;

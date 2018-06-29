@@ -63,6 +63,7 @@ public:
         , m_url(url)
         , m_loader(loader)
         , m_resourceRequest(nullptr)
+        , m_responseMimeType(String::emptyString)
     {
     }
 
@@ -138,6 +139,11 @@ public:
         return m_url;
     }
 
+    String* responseMimeType()
+    {
+        return m_responseMimeType;
+    }
+
     enum ResourceRequestSyncLevel {
         NeverSync,
         SyncIfAlreadyLoaded,
@@ -207,12 +213,22 @@ public:
         return m_isRequested;
     }
 
-protected:
+    bool isFinished()
+    {
+        return m_state == State::Finished;
+    }
+
+    bool isReceiving()
+    {
+        return m_state == State::Receiving;
+    }
+
     State state()
     {
         return m_state;
     }
 
+protected:
     bool m_isIncludedInComputingWindowOnLoadEvent : 1;
     bool m_isReferencedByAnoterResource : 1;
     bool m_isCanceledButContinueLoadingDueToCache : 1;
@@ -221,6 +237,7 @@ protected:
     ResourceURL* m_url;
     ResourceLoader* m_loader;
     ResourceRequest* m_resourceRequest;
+    String* m_responseMimeType;
     GCVector<ResourceClient*> m_resourceClients;
     GCVector<size_t> m_requstedIdlers;
 };

@@ -237,7 +237,30 @@ void HTMLLinkElement::loadStyleSheet()
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();
     }
-    m_styleSheetTextResource = document()->resourceLoader().fetchText(url);
+
+    m_styleSheetTextResource = nullptr;
+
+    if (document()->preloadScanner()) {
+        auto ps = document()->preloadScanner();
+        for (size_t i = 0; i < ps->preloadedCSS().size(); i++) {
+            TextResource* res = ps->preloadedJS()[i];
+            if (*res->url() == *url) {
+                if (res->isReceiving()) {
+                    m_styleSheetTextResource = res;
+                } else if (res->isFinished()) {
+                    StyleSheetDownloadClient client(this, res);
+                    willStyleSheetLoad();
+                    client.didLoadFinished();
+                    return;
+                }
+                break;
+            }
+        }
+    }
+
+    if (!m_styleSheetTextResource) {
+        m_styleSheetTextResource = document()->resourceLoader().fetchText(url);
+    }
     m_styleSheetTextResource->addResourceClient(
         new StyleSheetDownloadClient(this, m_styleSheetTextResource));
     m_styleSheetTextResource->addResourceClient(

@@ -21,16 +21,23 @@
 #include "StarFish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/History.h"
+#include "core/page/Window.h"
 #include "browser/history/HistoryManager.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
+#include "core/dom/parser/PreloadScanner.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/loader/ResourceURL.h"
-#include "core/page/Window.h"
 
 namespace StarFish {
+
+#if defined(STARFISH_ENABLE_NETWORK_PROFILING) || \
+    defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+uint64_t g_profilingBaseTime;
+#endif
 
 static int strcicmp(char const* a, size_t len1, char const* b, size_t len2)
 {
@@ -148,7 +155,6 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-
         String* m = m_resource->resourceRequest()->responseMimeType();
         EncodingResult er = detectAndRemoveBOM(m_buffer);
 
@@ -277,6 +283,8 @@ public:
             m_htmlSource = createBlankHTMLSource();
         }
 
+        document->m_preloadScanner = new PreloadScanner(document, m_htmlSource);
+
         m_builder.m_parser = m_parser =
             new HTMLParser(document->starFish(), document, m_htmlSource);
         m_parser->startParse();
@@ -299,6 +307,13 @@ private:
 
 void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
 {
+#if defined(STARFISH_ENABLE_NETWORK_PROFILING) || \
+    defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    if (m_document->browsingContext()->isTopLevelBrowsingContext()) {
+        g_profilingBaseTime = timestamp();
+    }
+#endif
+
     m_resource = m_document->resourceLoader().fetch(url);
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));
 #ifndef STARFISH_TIZEN_WEARABLE_WIDGET

@@ -339,7 +339,7 @@ void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* res,
 String* decodeURL(String* src, size_t idx)
 {
     bool gotUTF32Char = false;
-    UTF32String ret;
+    UTF32StringDataNonGCStd ret;
 
     while (idx < src->length()) {
         char32_t c = src->charAt(idx);
@@ -382,7 +382,7 @@ String* decodeURL(String* src, size_t idx)
         idx++;
     }
     if (gotUTF32Char) {
-        return new StringDataUTF32(std::move(ret));
+        return new StringDataUTF32(ret.data(), ret.size());
     } else {
         return String::createASCIIStringFromUTF32Source(ret);
     }
