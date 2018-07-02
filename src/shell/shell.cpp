@@ -38,6 +38,7 @@
 #endif
 
 #include <dali-toolkit/dali-toolkit.h>
+//#include <dali-toolkit/devel-api/controls/web-view-lite/web-view-lite.h>
 #include "platform/window/PlatformWindow.h"
 
 #include "core/dom/MouseEvent.h"
@@ -46,23 +47,17 @@
 #include "platform/event/PlatformKeyEventData.h"
 #include <uv.h>
 
+bool isNeedsUpdate = false;
+bool isFirstTime = true;
+
 struct DaliStarFishBinder {
     void* lweInstance;
-#if defined(STARFISH_DALI_TBMSURFACE)
-    Dali::NativeImageSourcePtr nativeImageSrc;
-    Dali::NativeImage nativeImage;
-    tbm_surface_h tbmSurface;
-    tbm_surface_info_s tbmSurfaceInfo;
-#else
-    Dali::BufferImage bufferImage;
-#endif
-    void* daliInstance;
     void* buffer;
     std::list<size_t> asyncHandlePool;
     int w, h, s;
     bool canGoBack, canGoForward;
     bool isRunning;
-    bool isFirstTime;
+    std::function<void(LWE::WebContainer*, void*)> onRenderedHandler;
     std::function<void(LWE::WebContainer*, LWE::ResourceError)> onReceivedError;
     std::function<void(LWE::WebContainer*, const std::string&)>
         onPageFinishedHandler;
@@ -72,11 +67,6 @@ struct DaliStarFishBinder {
         onLoadResourceHandler;
     DaliStarFishBinder()
         : lweInstance(nullptr)
-#if defined(STARFISH_DALI_TBMSURFACE)
-        , nativeImageSrc(nullptr)
-        , tbmSurface(nullptr)
-#endif
-        , daliInstance(nullptr)
         , buffer(nullptr)
         , w(0)
         , h(0)
@@ -84,7 +74,6 @@ struct DaliStarFishBinder {
         , canGoBack(false)
         , canGoForward(false)
         , isRunning(false)
-        , isFirstTime(true)
     {
     }
 };
@@ -111,6 +100,37 @@ extern "C" void removeJavascriptInterface(DaliStarFishBinder* binder,
                                           const std::string& jsFunctionName);
 extern "C" void clearCache(DaliStarFishBinder* binder);
 extern "C" void stopLoop(DaliStarFishBinder* binder);
+
+extern "C" void registerOnRenderedHandler(
+    DaliStarFishBinder* binder,
+    const std::function<void(LWE::WebContainer* c, void* buf)>& callback);
+extern "C" void registerOnPageStartedHandler(
+    DaliStarFishBinder* binder,
+    const std::function<void(LWE::WebContainer*, const std::string&)>&
+        callback);
+extern "C" void registerOnReceivedErrorHandler(
+    DaliStarFishBinder* binder,
+    const std::function<void(LWE::WebContainer*, LWE::ResourceError)>&
+        callback);
+extern "C" void registerOnPageFinishedHandler(
+    DaliStarFishBinder* binder,
+    const std::function<void(LWE::WebContainer*, const std::string&)>&
+        callback);
+
+extern "C" void dispatchMouseDownEvent(DaliStarFishBinder* binder, float x,
+                                       float y);
+extern "C" void dispatchMouseUpEvent(DaliStarFishBinder* binder, float x,
+                                     float y);
+extern "C" void dispatchMouseMoveEvent(DaliStarFishBinder* binder, float x,
+                                       float y, bool isLButtonPressed,
+                                       bool isRButtonPressed);
+extern "C" void dispatchKeyDownEvent(DaliStarFishBinder* binder,
+                                     KeyValue keyCode);
+extern "C" void dispatchKeyPressEvent(DaliStarFishBinder* binder,
+                                      KeyValue keyCode);
+extern "C" void dispatchKeyUpEvent(DaliStarFishBinder* binder,
+                                   KeyValue keyCode);
+
 #endif
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
@@ -188,40 +208,184 @@ static void printMemps(
 #ifdef STARFISH_DALI
 using namespace Dali;
 
-void uv_term_cb(uv_signal_t* handle, int signum);
-bool needToInitMainThread();
-void initMainThread(void* (*f)(void*));
-StarFish::PlatformKeyEventData DaliEventKeyToPlatformKeyEventData(
-    const char* DALIKeyString, bool isShiftPressed);
+LWE::KeyValue eventKeyToKeyboardData(const char* DALIKeyString,
+                                     bool isShiftPressed)
+{
+    LWE::KeyValue keyValue = LWE::KeyValue::UnidentifiedKey;
+    if (strcmp("Left", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::ArrowLeftKey;
+    } else if (strcmp("Right", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::ArrowRightKey;
+    } else if (strcmp("Up", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::ArrowUpKey;
+    } else if (strcmp("Down", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::ArrowDownKey;
+    } else if (strcmp("space", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::SpaceKey;
+    } else if (strcmp("Return", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::EnterKey;
+    } else if (strcmp("BackSpace", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::BackspaceKey;
+    } else if (strcmp("Escape", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::EscapeKey;
+    } else if (strcmp("minus", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::MinusMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::UnderScoreMarkKey;
+        }
+    } else if (strcmp("equal", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::PlusMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::EqualitySignKey;
+        }
+    } else if (strcmp("bracketleft", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::LeftCurlyBracketMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::LeftSquareBracketKey;
+        }
+    } else if (strcmp("bracketright", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::RightCurlyBracketMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::RightSquareBracketKey;
+        }
+    } else if (strcmp("semicolon", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::ColonMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::SemiColonMarkKey;
+        }
+    } else if (strcmp("apostrophe", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::DoubleQuoteMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::SingleQuoteMarkKey;
+        }
+    } else if (strcmp("comma", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::LessThanMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::CommaMarkKey;
+        }
+    } else if (strcmp("period", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::GreaterThanSignKey;
+        } else {
+            keyValue = LWE::KeyValue::PeriodKey;
+        }
+    } else if (strcmp("slash", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::QuestionMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::SlashKey;
+        }
+    } else if (strlen(DALIKeyString) == 1) {
+        char ch = DALIKeyString[0];
+        if (ch >= '0' && ch <= '9') {
+            if (isShiftPressed) {
+                switch (ch) {
+                case '1':
+                    keyValue = LWE::KeyValue::ExclamationMarkKey;
+                    break;
+                case '2':
+                    keyValue = LWE::KeyValue::AtMarkKey;
+                    break;
+                case '3':
+                    keyValue = LWE::KeyValue::SharpMarkKey;
+                    break;
+                case '4':
+                    keyValue = LWE::KeyValue::DollarMarkKey;
+                    break;
+                case '5':
+                    keyValue = LWE::KeyValue::PercentMarkKey;
+                    break;
+                case '6':
+                    keyValue = LWE::KeyValue::CaretMarkKey;
+                    break;
+                case '7':
+                    keyValue = LWE::KeyValue::AmpersandMarkKey;
+                    break;
+                case '8':
+                    keyValue = LWE::KeyValue::AsteriskMarkKey;
+                    break;
+                case '9':
+                    keyValue = LWE::KeyValue::LeftParenthesisMarkKey;
+                    break;
+                case '0':
+                    keyValue = LWE::KeyValue::RightParenthesisMarkKey;
+                    break;
+                }
+            } else {
+                keyValue = (LWE::KeyValue)(LWE::KeyValue::Digit0Key + ch - '0');
+            }
+        } else if (ch >= 'a' && ch <= 'z') {
+            int kv = LWE::KeyValue::LowerAKey + ch - 'a';
+            if (isShiftPressed) {
+                kv -= ('z' - 'a');
+                kv -= 7;
+            }
+            keyValue = (LWE::KeyValue)kv;
+        }
+    }
+#ifdef STARFISH_TIZEN_TV
+    if ((strcmp("XF86Red", DALIKeyString) == 0)) {
+        keyValue = LWE::KeyValue::TabKey;
+    }
+#endif
+    return keyValue;
+}
 
 class DaliShellController : public ConnectionTracker {
 public:
     DaliShellController(Application& application, int width, int height,
                         char* url)
-        : m_width(width)
-        , m_height(height)
+        : mWidth(width)
+        , mHeight(height)
         , mApplication(application)
         , mLWEBinder(nullptr)
         , mUrl(url)
+        , mIsMouseLbuttonDown(false)
+#if defined(STARFISH_DALI_TBMSURFACE)
+        , tbmSurface(NULL)
+#endif
     {
         mApplication.InitSignal().Connect(this, &DaliShellController::Create);
     }
     ~DaliShellController()
     {
+        STARFISH_LOG_INFO("[Dali Shell] ~DaliShellController()\n");
+        mTimer.TickSignal().Disconnect(this,
+                                       &DaliShellController::updateBuffer);
+        mTimer.Stop();
     }
     void InnerCreate(Application& application);
 
     bool updateTick();
     void Create(Application& application);
-    int m_width;
-    int m_height;
+    int mWidth;
+    int mHeight;
     Application& mApplication;
-    Dali::Toolkit::ImageView m_mainView;
+    Dali::Toolkit::ImageView mImageView;
     DaliStarFishBinder* mLWEBinder;
     Dali::Toolkit::PushButton mCreateButton;
     Dali::Toolkit::PushButton mRemoveButton;
-    pthread_t t;
+    pthread_t mThreadHandle;
     std::string mUrl;
+
+    bool mIsMouseLbuttonDown;
+    Dali::Timer mTimer;
+
+#if defined(STARFISH_DALI_TBMSURFACE)
+    Dali::NativeImageSourcePtr nativeImageSrc;
+    Dali::NativeImage nativeImage;
+    tbm_surface_h tbmSurface;
+    tbm_surface_info_s tbmSurfaceInfo;
+#else
+    Dali::BufferImage bufferImage;
+#endif
 
 private:
     void OnKeyEvent(const Dali::KeyEvent& event);
@@ -238,9 +402,73 @@ private:
     {
         if (mLWEBinder && mLWEBinder->isRunning == true) {
             mLWEBinder->isRunning = false;
-            Dali::Stage::GetCurrent().Remove(m_mainView);
+            Dali::Stage::GetCurrent().Remove(mImageView);
 
             destroy(mLWEBinder);
+        }
+        return true;
+    }
+
+    bool touchEventHandler(Dali::Actor actor, const Dali::TouchData& data)
+    {
+        STARFISH_LOG_INFO("[StarFish] touchEventHandler()\n");
+        size_t pointCount = data.GetPointCount();
+        if (pointCount == 1) {
+            // Single touch event
+            Dali::PointState::Type pointState = data.GetState(0);
+            const Dali::Vector2& screen = data.GetLocalPosition(0);
+
+            if (pointState == Dali::PointState::DOWN) {
+                dispatchMouseDownEvent(mLWEBinder, screen.x, screen.y);
+                mIsMouseLbuttonDown = true;
+            } else if (pointState == Dali::PointState::UP) {
+                dispatchMouseUpEvent(mLWEBinder, screen.x, screen.y);
+                mIsMouseLbuttonDown = false;
+            } else {
+                dispatchMouseMoveEvent(mLWEBinder, screen.x, screen.y,
+                                       mIsMouseLbuttonDown, false);
+            }
+        }
+        return true;
+    }
+
+    bool keyEventHandler(Dali::Toolkit::Control control,
+                         const Dali::KeyEvent& event)
+    {
+        STARFISH_LOG_INFO("[StarFish] keyEventHandler()\n");
+        LWE::KeyValue keyValue = LWE::KeyValue::UnidentifiedKey;
+        if (32 < event.keyPressed.c_str()[0] &&
+            127 > event.keyPressed.c_str()[0]) {
+            keyValue = (LWE::KeyValue)event.keyPressed.c_str()[0];
+        } else {
+            keyValue = eventKeyToKeyboardData(event.keyPressedName.c_str(),
+                                              event.keyModifier & 1);
+        }
+        if (event.state == Dali::KeyEvent::Down) {
+            dispatchKeyDownEvent(mLWEBinder, keyValue);
+            dispatchKeyPressEvent(mLWEBinder, keyValue);
+        } else if (event.state == Dali::KeyEvent::Up) {
+            dispatchKeyUpEvent(mLWEBinder, keyValue);
+        }
+
+        return true;
+    }
+
+    bool updateBuffer()
+    {
+        if (!mLWEBinder || mLWEBinder->isRunning == false) {
+            return true;
+        }
+        if (isNeedsUpdate) {
+#if defined(STARFISH_DALI_TBMSURFACE)
+            Dali::Stage::GetCurrent().KeepRendering(0.01f);
+#else
+            if (!bufferImage) {
+                return false;
+            }
+            bufferImage.Update();
+#endif
+            isNeedsUpdate = false;
         }
         return true;
     }
@@ -274,52 +502,64 @@ void DaliShellController::Create(Application& application)
     mRemoveButton.StateChangedSignal().Connect(
         this, &DaliShellController::OnRemoveButton);
     Dali::Stage::GetCurrent().Add(mRemoveButton);
+
+    mTimer = Dali::Timer::New(20);
+    mTimer.TickSignal().Connect(this, &DaliShellController::updateBuffer);
+    mTimer.Start();
 }
 
 void DaliShellController::InnerCreate(Application& application)
 {
     STARFISH_LOG_INFO("[Dali Shell] Create() start\n");
 
-    startMainThreadIfNeeds(t);
+    startMainThreadIfNeeds(mThreadHandle);
 
     if (!mLWEBinder) {
         mLWEBinder = new DaliStarFishBinder();
     }
     mLWEBinder->isRunning = true;
 
-    int width = m_width;
-    int height = m_height;
-#if defined(STARFISH_DALI_TBMSURFACE)
-    binder->tbmSurface = tbm_surface_create(width, height, TBM_FORMAT_ARGB8888);
-    if (tbm_surface_map(binder->tbmSurface,
-                        TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
-                        &binder->tbmSurfaceInfo) != TBM_SURFACE_ERROR_NONE) {
-        DALI_LOG_RELEASE_INFO("Fail to map tbm_surface\n");
-    }
+    int width = mWidth;
+    int height = mHeight;
 
-    Dali::Any source(binder->tbmSurface);
-    binder->nativeImageSrc = Dali::NativeImageSource::New(source);
-    binder->nativeImage = Dali::NativeImage::New(*binder->nativeImageSrc);
-#else
-    mLWEBinder->bufferImage =
-        Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
-    STARFISH_LOG_INFO("[Dali Shell] [Dali BufImg:%p]\n",
-                      mLWEBinder->bufferImage);
-#endif
     mLWEBinder->w = width;
     mLWEBinder->h = height;
     mLWEBinder->s = width * 4;
 
-    if (mLWEBinder->isFirstTime == true) {
-        mLWEBinder->isFirstTime = false;
-        m_mainView = Dali::Toolkit::ImageView::New();
-        m_mainView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
-        m_mainView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
+    if (isFirstTime == true) {
+        isFirstTime = false;
+        mImageView = Dali::Toolkit::ImageView::New();
+        mImageView.SetParentOrigin(Dali::ParentOrigin::TOP_LEFT);
+        mImageView.SetAnchorPoint(Dali::AnchorPoint::TOP_LEFT);
 
         Stage::GetCurrent().KeyEventSignal().Connect(
             this, &DaliShellController::OnKeyEvent);
 
-        mLWEBinder->daliInstance = &m_mainView;
+        ((Dali::Toolkit::ImageView)mImageView)
+            .TouchSignal()
+            .Connect(this, &DaliShellController::touchEventHandler);
+        ((Dali::Toolkit::ImageView)mImageView)
+            .KeyEventSignal()
+            .Connect(this, &DaliShellController::keyEventHandler);
+
+        mLWEBinder->onRenderedHandler = [this](LWE::WebContainer* c,
+                                               void* buf) {
+            STARFISH_LOG_INFO("[Dali Shell] onRenderedHandler()\n");
+            int w = c->width();
+            int h = c->height();
+            if (mLWEBinder->w != w || mLWEBinder->h != h) {
+                return;
+            }
+#if defined(STARFISH_DALI_TBMSURFACE)
+            memcpy(tbmSurfaceInfo.planes[0].ptr, buf,
+                   mLWEBinder->w * mLWEBinder->h * sizeof(uint32_t));
+#else
+            memcpy(bufferImage.GetBuffer(), buf,
+                   mLWEBinder->w * mLWEBinder->h * sizeof(uint32_t));
+#endif
+            isNeedsUpdate = true;
+        };
+
         mLWEBinder->onReceivedError = [](LWE::WebContainer* container,
                                          LWE::ResourceError error) {
             STARFISH_LOG_INFO("[Dali Shell] onReceivedError()\n");
@@ -338,7 +578,26 @@ void DaliShellController::InnerCreate(Application& application)
         };
     }
 
-    Dali::Stage::GetCurrent().Add(m_mainView);
+#if defined(STARFISH_DALI_TBMSURFACE)
+    tbmSurface = tbm_surface_create(width, height, TBM_FORMAT_ARGB8888);
+    if (tbm_surface_map(tbmSurface,
+                        TBM_SURF_OPTION_READ | TBM_SURF_OPTION_WRITE,
+                        &tbmSurfaceInfo) != TBM_SURFACE_ERROR_NONE) {
+        STARFISH_LOG_INFO("Fail to map tbm_surface\n");
+    }
+
+    Dali::Any source(tbmSurface);
+    nativeImageSrc = Dali::NativeImageSource::New(source);
+    nativeImage = Dali::NativeImage::New(*nativeImageSrc);
+    nativeImageSrc->SetSource(source);
+    ((Dali::Toolkit::ImageView)mImageView).SetImage(nativeImage);
+#else
+    bufferImage = Dali::BufferImage::New(width, height, Dali::Pixel::BGRA8888);
+    STARFISH_LOG_INFO("[Dali Shell] [Dali BufImg:%p]\n", bufferImage);
+    ((Dali::Toolkit::ImageView)mImageView).SetImage(bufferImage);
+#endif
+
+    Dali::Stage::GetCurrent().Add(mImageView);
 
     STARFISH_LOG_INFO("[Dali Shell] createInstance()\n");
     createInstance(mLWEBinder);
@@ -358,13 +617,13 @@ void DaliShellController::OnKeyEvent(const Dali::KeyEvent& event)
         if (IsKey(event, DALI_KEY_ESCAPE) || IsKey(event, DALI_KEY_BACK)) {
             if (mLWEBinder->isRunning == true) {
                 mLWEBinder->isRunning = false;
-                Dali::Stage::GetCurrent().Remove(m_mainView);
+                Dali::Stage::GetCurrent().Remove(mImageView);
 
                 destroy(mLWEBinder);
             }
             stopLoop((DaliStarFishBinder*)mLWEBinder);
             int status;
-            pthread_join(t, (void**)&status);
+            pthread_join(mThreadHandle, (void**)&status);
 
             free(mLWEBinder);
             mLWEBinder = nullptr;
@@ -378,37 +637,36 @@ void DaliShellController::OnKeyEvent(const Dali::KeyEvent& event)
                     binder->h = 600;
                     binder->s = 800 * 4;
 #if defined(STARFISH_DALI_TBMSURFACE)
-                    if (binder->tbmSurface) {
-                        if (tbm_surface_unmap(binder->tbmSurface) !=
+                    if (tbmSurface != NULL) {
+                        if (tbm_surface_unmap(tbmSurface) !=
                             TBM_SURFACE_ERROR_NONE) {
                             STARFISH_LOG_INFO(
                                 "[Dali Shell] Failed to unmap tbm_surface\n");
                         }
                     }
 
-                    binder->tbmSurface = tbm_surface_create(
-                        binder->w, binder->h, TBM_FORMAT_ARGB8888);
-                    if (tbm_surface_map(binder->tbmSurface,
-                                        TBM_SURF_OPTION_READ |
-                                            TBM_SURF_OPTION_WRITE,
-                                        &binder->tbmSurfaceInfo) !=
+                    tbmSurface = tbm_surface_create(binder->w, binder->h,
+                                                    TBM_FORMAT_ARGB8888);
+                    if (tbm_surface_map(tbmSurface, TBM_SURF_OPTION_READ |
+                                                        TBM_SURF_OPTION_WRITE,
+                                        &tbmSurfaceInfo) !=
                         TBM_SURFACE_ERROR_NONE) {
-                        DALI_LOG_RELEASE_INFO(
+                        STARFISH_LOG_INFO(
                             "[Dali Shell] Fail to map tbm_surface\n");
                     }
 
-                    Dali::Any source(binder->tbmSurface);
-                    binder->nativeImageSrc =
-                        Dali::NativeImageSource::New(source);
-                    binder->nativeImage =
-                        Dali::NativeImage::New(*binder->nativeImageSrc);
+                    Dali::Any source(tbmSurface);
+                    nativeImageSrc->SetSource(source);
+// ??? ((Dali::Toolkit::ImageView)mImageView).SetImage(nativeImage);
 #else
-                    binder->bufferImage = Dali::BufferImage::New(
-                        binder->w, binder->h, Dali::Pixel::BGRA8888);
+                    bufferImage = Dali::BufferImage::New(binder->w, binder->h,
+                                                         Dali::Pixel::BGRA8888);
+                    ((Dali::Toolkit::ImageView)mImageView)
+                        .SetImage(bufferImage);
                     STARFISH_LOG_INFO("[Dali Shell] [Dali BufImg:%p]\n",
-                                      binder->bufferImage);
+                                      bufferImage);
 #endif
-                    m_mainView.SetSize(binder->w, binder->h);
+                    mImageView.SetSize(binder->w, binder->h);
                     setSize(binder);
                 }
                 // F2
@@ -419,13 +677,36 @@ void DaliShellController::OnKeyEvent(const Dali::KeyEvent& event)
                     binder->h = 720;
                     binder->s = 1280 * 4;
 #if defined(STARFISH_DALI_TBMSURFACE)
+                    if (tbmSurface) {
+                        if (tbm_surface_unmap(tbmSurface) !=
+                            TBM_SURFACE_ERROR_NONE) {
+                            STARFISH_LOG_INFO(
+                                "[Dali Shell] Failed to unmap tbm_surface\n");
+                        }
+                    }
+
+                    tbmSurface = tbm_surface_create(binder->w, binder->h,
+                                                    TBM_FORMAT_ARGB8888);
+                    if (tbm_surface_map(tbmSurface, TBM_SURF_OPTION_READ |
+                                                        TBM_SURF_OPTION_WRITE,
+                                        &tbmSurfaceInfo) !=
+                        TBM_SURFACE_ERROR_NONE) {
+                        STARFISH_LOG_INFO(
+                            "[Dali Shell] Fail to map tbm_surface\n");
+                    }
+
+                    Dali::Any source(tbmSurface);
+                    nativeImageSrc->SetSource(source);
+// ??? ((Dali::Toolkit::ImageView)mImageView).SetImage(nativeImage);
 #else
-                    binder->bufferImage = Dali::BufferImage::New(
-                        binder->w, binder->h, Dali::Pixel::BGRA8888);
+                    bufferImage = Dali::BufferImage::New(binder->w, binder->h,
+                                                         Dali::Pixel::BGRA8888);
+                    ((Dali::Toolkit::ImageView)mImageView)
+                        .SetImage(bufferImage);
                     STARFISH_LOG_INFO("[Dali Shell] [Dali BufImg:%p]\n",
-                                      binder->bufferImage);
+                                      bufferImage);
 #endif
-                    m_mainView.SetSize(binder->w, binder->h);
+                    mImageView.SetSize(binder->w, binder->h);
                     setSize(binder);
                 }
                 // F3
