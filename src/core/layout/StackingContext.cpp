@@ -1044,10 +1044,8 @@ void StackingContext::paintStackingContext(
     minY = minY.floor();
     maxY = maxY.ceil();
 
-    size_t bufferWidth =
-        (int)(maxX - minX) * m_owner->node()->window()->devicePixelRatio();
-    size_t bufferHeight =
-        (int)(maxY - minY) * m_owner->node()->window()->devicePixelRatio();
+    size_t bufferWidth = (int)(maxX - minX);
+    size_t bufferHeight = (int)(maxY - minY);
 
     bool hasGraphicsBuffer = needsGraphicsBuffer();
 

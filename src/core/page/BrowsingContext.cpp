@@ -134,9 +134,12 @@ void BrowsingContext::open(ResourceURL* url, HistoryManager::Action type,
     StarFishEnterer enter(m_starFish);
 
     if (isTopLevelBrowsingContext()) {
-        m_window = Window::create(m_starFish, this, url,
-                                  starFish()->platformWindow()->width(),
-                                  starFish()->platformWindow()->height());
+        m_window =
+            Window::create(m_starFish, this, url,
+                           starFish()->platformWindow()->width() /
+                               starFish()->screenInfo().devicePixelRatio,
+                           starFish()->platformWindow()->height() /
+                               starFish()->screenInfo().devicePixelRatio);
     } else {
         if (m_sourceElement->frame()) {
             m_window = Window::create(m_starFish, this, url,

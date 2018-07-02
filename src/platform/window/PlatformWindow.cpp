@@ -31,6 +31,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "core/dom/MouseEvent.h"
+#include "core/dom/TouchEvent.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/profiling/Profiling.h"
 
@@ -43,6 +44,7 @@ bool g_forceRendering = false;
 namespace StarFish {
 
 #if !defined(PORT_COMPOSITOR_BACKEND_EFL)
+static size_t g_totalCanvasSurfaceSimpleSize;
 class CanvasSurfaceSimple : public CanvasSurface {
 public:
     CanvasSurfaceSimple(PlatformWindow* wnd, size_t w, size_t h)
@@ -53,6 +55,7 @@ public:
         m_imageWidth = m_bufferWidth = m_width = -1;
         m_imageHeight = m_bufferHeight = m_height = -1;
         m_pixelRatio = 1;
+        m_buffer = nullptr;
 
         attachNativeBuffer(w, h);
         GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -66,15 +69,25 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        free(m_buffer);
-        m_buffer = nullptr;
+        if (m_buffer) {
+            g_totalCanvasSurfaceSimpleSize -=
+                m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+            free(m_buffer);
+            m_buffer = nullptr;
+            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
+                              g_totalCanvasSurfaceSimpleSize / 1024.f / 1024.f);
+        }
     }
 
     void attachNativeBuffer(size_t w, size_t h)
     {
         if (m_width != w || m_height != h) {
+            detachNativeBuffer();
             m_width = w;
             m_height = h;
+
+            float windowDevicePixelRatio =
+                m_window->starFish()->screenInfo().devicePixelRatio;
 
             if ((int)w < m_window->starFish()->screenInfo().rect.width()) {
                 w += STARFISH_CANVAS_SURFACE_MARGIN;
@@ -85,21 +98,31 @@ public:
 
             m_pixelRatio = 1;
 
-            while ((m_width / m_pixelRatio > 20000) ||
-                   (m_height / m_pixelRatio > 20000)) {
+            while ((m_width / m_pixelRatio * windowDevicePixelRatio > 20000) ||
+                   (m_height / m_pixelRatio * windowDevicePixelRatio > 20000)) {
                 m_pixelRatio++;
             }
 
-            m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
-            m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+            m_imageWidth =
+                std::max((size_t)1, (size_t)(m_width / m_pixelRatio *
+                                             windowDevicePixelRatio));
+            m_imageHeight =
+                std::max((size_t)1, (size_t)(m_height / m_pixelRatio *
+                                             windowDevicePixelRatio));
 
-            m_bufferWidth = std::max((size_t)1, w / m_pixelRatio);
-            m_bufferHeight = std::max((size_t)1, h / m_pixelRatio);
+            m_bufferWidth = std::max(
+                (size_t)1, (size_t)(w / m_pixelRatio * windowDevicePixelRatio));
+            m_bufferHeight = std::max(
+                (size_t)1, (size_t)(h / m_pixelRatio * windowDevicePixelRatio));
+
             m_bufferStride = m_bufferWidth * 4;
 
-            detachNativeBuffer();
             m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
                                               sizeof(uint32_t));
+            g_totalCanvasSurfaceSimpleSize +=
+                m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
+                              g_totalCanvasSurfaceSimpleSize / 1024.f / 1024.f);
         }
     }
 
@@ -110,13 +133,6 @@ public:
 
         m_width = w;
         m_height = h;
-
-        m_pixelRatio = 1;
-
-        while ((m_width / m_pixelRatio > 20000) ||
-               (m_height / m_pixelRatio > 20000)) {
-            m_pixelRatio++;
-        }
 
         m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
         m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
@@ -248,6 +264,16 @@ void PlatformWindow::close()
 void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                                         size_t touchCount)
 {
+    for (size_t i = 0; i < touchCount; i++) {
+        touches[i].setScreenX(touches[i].screenX() /
+                              starFish()->screenInfo().devicePixelRatio);
+        touches[i].setScreenY(touches[i].screenY() /
+                              starFish()->screenInfo().devicePixelRatio);
+        touches[i].setClientX(touches[i].clientX() /
+                              starFish()->screenInfo().devicePixelRatio);
+        touches[i].setClientY(touches[i].clientY() /
+                              starFish()->screenInfo().devicePixelRatio);
+    }
     registerOrUpdateIdleTimeCleaner();
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->dispatchTouchEvent(kind, touches,
@@ -257,6 +283,10 @@ void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
 
 void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
+    data.setScreenX(data.screenX() / starFish()->screenInfo().devicePixelRatio);
+    data.setScreenY(data.screenY() / starFish()->screenInfo().devicePixelRatio);
+    data.setClientX(data.clientX() / starFish()->screenInfo().devicePixelRatio);
+    data.setClientY(data.clientY() / starFish()->screenInfo().devicePixelRatio);
     registerOrUpdateIdleTimeCleaner();
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->dispatchMouseEvent(kind, data);
@@ -266,6 +296,8 @@ void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
                                              int z, bool isVerticalWheelEvent)
 {
+    screenX /= starFish()->screenInfo().devicePixelRatio;
+    screenY /= starFish()->screenInfo().devicePixelRatio;
     registerOrUpdateIdleTimeCleaner();
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->dispatchMouseWheelEvent(
@@ -451,7 +483,9 @@ void PlatformWindow::onResize()
     }
 #endif
     if (webView()->mainBrowsingContext()) {
-        webView()->mainBrowsingContext()->window()->resize(width(), height());
+        webView()->mainBrowsingContext()->window()->resize(
+            width() / starFish()->screenInfo().devicePixelRatio,
+            height() / starFish()->screenInfo().devicePixelRatio);
         webView()->setNeedsPainting();
     }
 }

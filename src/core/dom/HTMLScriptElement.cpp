@@ -190,10 +190,8 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        auto s = m_resource->resourceRequest()
-                     ->responseMimeType()
-                     ->toASCIILower()
-                     ->toUTF8NonGCString();
+        auto s =
+            m_resource->responseMimeType()->toASCIILower()->toUTF8NonGCString();
         if (isJavaScriptType(s.data(), s.length())) {
             String* text = m_resource->asTextResource()->text();
             m_element->document()->appendCurrentScript(m_element);
@@ -260,8 +258,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 evaluateString(
                     window()->scriptBindingInstance(), script,
                     String::createASCIIString("HTMLScriptElement innerText"));
-                document()->popCurrentScript();
             }
+            document()->popCurrentScript();
             m_didScriptExecuted = true;
             return false;
         } else {
@@ -275,11 +273,11 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             ResourceURL* rurl =
                 new ResourceURL(url, document()->baseURL()->baseURI());
 
-            if (document()->preloadScanner()) {
+            if (document()->preloadScanner() && !async() && !defer()) {
                 auto ps = document()->preloadScanner();
                 for (size_t i = 0; i < ps->preloadedJS().size(); i++) {
                     Resource* res = ps->preloadedJS()[i];
-                    if (*res->url() == *rurl && !async() && !defer()) {
+                    if (*res->url() == *rurl) {
                         if (res->isReceiving()) {
                             bool shouldResumeParsing =
                                 inParser && !forceSync && !async();
@@ -289,20 +287,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                                 new ElementResourceClient(this, res, true));
                             return true;
                         } else if (res->isFinished()) {
-                            auto s = res->responseMimeType()
-                                         ->toASCIILower()
-                                         ->toUTF8NonGCString();
-                            if (isJavaScriptType(s.data(), s.length())) {
-                                String* text = res->asTextResource()->text();
-                                document()->appendCurrentScript(this);
-                                {
-                                    JSProifileRAIILogger logger();
-                                    evaluateString(
-                                        window()->scriptBindingInstance(), text,
-                                        res->url()->urlString());
-                                }
-                                document()->popCurrentScript();
-                            }
+                            ScriptDownloadClient download(this, res, false);
+                            download.didLoadFinished();
                             ElementResourceClient onload(this, res, true);
                             onload.didLoadFinished();
                             return false;

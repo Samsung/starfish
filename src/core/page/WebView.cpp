@@ -928,7 +928,7 @@ bool WebView::rendering(bool force)
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
 
-            float devicePixelRatio = starFish()->screenInfo().deviceScaleFactor;
+            float devicePixelRatio = starFish()->screenInfo().devicePixelRatio;
             compositor->translate(starFish()->posX() / devicePixelRatio,
                                   starFish()->posY() / devicePixelRatio);
             compositor->clip(Unit::Rect(

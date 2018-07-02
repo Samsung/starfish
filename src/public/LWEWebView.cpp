@@ -174,7 +174,7 @@ WebView* WebView::Create(void* win, int x, int y, int width, int height)
     info.rect.setHeight(height);
     info.availableRect.setWidth(width);
     info.availableRect.setHeight(height);
-    info.deviceScaleFactor = scaleFactor;
+    info.devicePixelRatio = scaleFactor;
 
     std::string cacheDir(getenv("HOME"));
     cacheDir += "/Starfish-cache";

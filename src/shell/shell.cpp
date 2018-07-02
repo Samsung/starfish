@@ -886,7 +886,7 @@ int main(int argc, char* argv[])
     std::string screenShot;
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
-    int width = 1280, height = 600;
+    int width = 1280, height = 720;
 #ifdef STARFISH_TIZEN_TV
     width = 1920;
     height = 1080;
@@ -997,7 +997,7 @@ int main(int argc, char* argv[])
     info.availableRect.setWidth(width);
     info.availableRect.setHeight(height);
 #if defined(STARFISH_EFL_CAIRO)
-    info.deviceScaleFactor = scaleFactor;
+    info.devicePixelRatio = scaleFactor;
 #endif
 
     std::string cacheDir(getenv("HOME"));

@@ -73,8 +73,8 @@ class CanvasCairo : public Canvas {
         m_surface = cairo_image_surface_create_for_data(
             (unsigned char*)buffer, CAIRO_FORMAT, m_width, m_height, stride);
         cairo_surface_set_device_scale(
-            m_surface, m_starfish->screenInfo().deviceScaleFactor,
-            m_starfish->screenInfo().deviceScaleFactor);
+            m_surface, m_starfish->screenInfo().devicePixelRatio,
+            m_starfish->screenInfo().devicePixelRatio);
         m_canvas = cairo_create(m_surface);
     }
 
@@ -87,8 +87,8 @@ class CanvasCairo : public Canvas {
             (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
             data->height(), data->stride());
         cairo_surface_set_device_scale(
-            m_surface, m_starfish->screenInfo().deviceScaleFactor,
-            m_starfish->screenInfo().deviceScaleFactor);
+            m_surface, m_starfish->screenInfo().devicePixelRatio,
+            m_starfish->screenInfo().devicePixelRatio);
         m_canvas = cairo_create(m_surface);
     }
 

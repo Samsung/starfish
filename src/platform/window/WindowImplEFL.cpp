@@ -92,7 +92,7 @@ Evas* internalCanvas()
     STARFISH_RELEASE_ASSERT(g_internalCanvas);
     return g_internalCanvas;
 }
-static int g_totalCanvasSurfaceEFLSize;
+static size_t g_totalCanvasSurfaceEFLSize;
 static PlatformWindow* g_currentWnd = nullptr;
 static void* g_focusedWin = nullptr;
 
@@ -528,7 +528,10 @@ public:
         //                   image);
         int w, h;
         evas_object_image_size_get(image, &w, &h);
-        g_totalCanvasSurfaceEFLSize -= (w * h * 4);
+        g_totalCanvasSurfaceEFLSize -=
+            (h * evas_object_image_stride_get(image));
+        STARFISH_LOG_INFO("total CanvasSurfaceEFL size %fMB\n",
+                          g_totalCanvasSurfaceEFLSize / 1024.f / 1024.f);
         evas_object_image_size_set(image, 0, 0);
         evas_object_hide(image);
         STARFISH_RELEASE_ASSERT(evas_object_ref_get(image) == 0);
@@ -557,9 +560,15 @@ public:
     void attachNativeBuffer(size_t w, size_t h)
     {
         if (m_width != w || m_height != h) {
-            int ww, hh;
-            evas_object_image_size_get(m_image, &ww, &hh);
-            g_totalCanvasSurfaceEFLSize -= (ww * hh * 4);
+            {
+                int ww, hh;
+                evas_object_image_size_get(m_image, &ww, &hh);
+                g_totalCanvasSurfaceEFLSize -=
+                    (hh * evas_object_image_stride_get(m_image));
+            }
+
+            float windowDevicePixelRatio =
+                m_window->starFish()->screenInfo().devicePixelRatio;
 
             m_width = w;
             m_height = h;
@@ -576,16 +585,24 @@ public:
             do {
                 m_pixelRatio = 1;
 
-                while ((m_width / m_pixelRatio > v) ||
-                       (m_height / m_pixelRatio > v)) {
+                while ((m_width / m_pixelRatio * windowDevicePixelRatio > v) ||
+                       (m_height / m_pixelRatio * windowDevicePixelRatio > v)) {
                     m_pixelRatio++;
                 }
 
-                m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
-                m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+                m_imageWidth =
+                    std::max((size_t)1, (size_t)(m_width / m_pixelRatio *
+                                                 windowDevicePixelRatio));
+                m_imageHeight =
+                    std::max((size_t)1, (size_t)(m_height / m_pixelRatio *
+                                                 windowDevicePixelRatio));
 
-                m_bufferWidth = std::max((size_t)1, w / m_pixelRatio);
-                m_bufferHeight = std::max((size_t)1, h / m_pixelRatio);
+                m_bufferWidth =
+                    std::max((size_t)1, (size_t)(w / m_pixelRatio *
+                                                 windowDevicePixelRatio));
+                m_bufferHeight =
+                    std::max((size_t)1, (size_t)(h / m_pixelRatio *
+                                                 windowDevicePixelRatio));
 
                 evas_object_image_size_set(m_image, m_bufferWidth,
                                            m_bufferHeight);
@@ -602,7 +619,14 @@ public:
                 stride = m_bufferWidth * 4;
             }
             m_bufferStride = (size_t)stride;
-            g_totalCanvasSurfaceEFLSize += (m_bufferWidth * m_bufferHeight * 4);
+            {
+                int ww, hh;
+                evas_object_image_size_get(m_image, &ww, &hh);
+                g_totalCanvasSurfaceEFLSize += (hh * m_bufferStride);
+                STARFISH_LOG_INFO("total CanvasSurfaceEFL size %fMB\n",
+                                  g_totalCanvasSurfaceEFLSize / 1024.f /
+                                      1024.f);
+            }
         }
     }
 
@@ -1013,11 +1037,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             } else {
                 sf->m_clickedCount++;
             }
-            MouseData mdata(
-                MouseButtonValue::LeftButton, MouseButtonsValue::LeftButtonDown,
-                currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
-                currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
-                sf->m_clickedCount);
+            MouseData mdata(MouseButtonValue::LeftButton,
+                            MouseButtonsValue::LeftButtonDown, currentPosX,
+                            currentPosY, sf->m_clickedCount);
             sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
             sf->m_isMouseLbuttonDown = true;
         }
@@ -1042,11 +1064,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             } else {
                 sf->m_clickedCount++;
             }
-            MouseData mdata(
-                MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
-                currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
-                currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
-                sf->m_clickedCount);
+            MouseData mdata(MouseButtonValue::NoButton,
+                            MouseButtonsValue::NoButtonDown, currentPosX,
+                            currentPosY, sf->m_clickedCount);
             sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
             sf->m_isMouseLbuttonDown = false;
         }
@@ -1064,10 +1084,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         int currentPosX = ev->output.x - sf->starFish()->posX();
         int currentPosY = ev->output.y - sf->starFish()->posY();
         if (currentPosX >= 0 && currentPosY >= 0) {
-            sf->dispatchMouseWheelEvent(
-                currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
-                currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
-                ev->z, true);
+            sf->dispatchMouseWheelEvent(currentPosX, currentPosY, ev->z, true);
         }
         return;
     };
@@ -1086,11 +1103,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             unsigned char buttons = sf->m_isMouseLbuttonDown
                                         ? MouseButtonsValue::LeftButtonDown
                                         : 0;
-            MouseData mdata(
-                0, buttons,
-                currentPosX / sf->starFish()->screenInfo().deviceScaleFactor,
-                currentPosY / sf->starFish()->screenInfo().deviceScaleFactor,
-                0);
+            MouseData mdata(0, buttons, currentPosX, currentPosY, 0);
             sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
         }
         return;
@@ -1201,8 +1214,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 
         MouseData mdata(
             MouseButtonValue::LeftButton, MouseButtonsValue::LeftButtonDown,
-            ev->canvas.x / sf->starFish()->screenInfo().deviceScaleFactor,
-            ev->canvas.y / sf->starFish()->screenInfo().deviceScaleFactor,
+            ev->canvas.x / sf->starFish()->screenInfo().devicePixelRatio,
+            ev->canvas.y / sf->starFish()->screenInfo().devicePixelRatio,
             sf->m_clickedCount);
         sf->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
         sf->m_isMouseLbuttonDown = true;
@@ -1223,9 +1236,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             sf->m_isMouseLbuttonDown ? MouseButtonsValue::LeftButtonDown : 0;
         MouseData mdata(0, buttons,
                         ((WindowImplEFL*)sf)->m_lastMouseX /
-                            sf->starFish()->screenInfo().deviceScaleFactor,
+                            sf->starFish()->screenInfo().devicePixelRatio,
                         ((WindowImplEFL*)sf)->m_lastMouseY /
-                            sf->starFish()->screenInfo().deviceScaleFactor,
+                            sf->starFish()->screenInfo().devicePixelRatio,
                         0);
         sf->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
     };
@@ -1240,9 +1253,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         MouseData mdata(MouseButtonValue::NoButton,
                         MouseButtonsValue::NoButtonDown,
                         ((WindowImplEFL*)sf)->m_lastMouseX /
-                            sf->starFish()->screenInfo().deviceScaleFactor,
+                            sf->starFish()->screenInfo().devicePixelRatio,
                         ((WindowImplEFL*)sf)->m_lastMouseY /
-                            sf->starFish()->screenInfo().deviceScaleFactor,
+                            sf->starFish()->screenInfo().devicePixelRatio,
                         sf->m_clickedCount);
         sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
         sf->m_isMouseLbuttonDown = false;
@@ -1258,9 +1271,9 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         MouseData mdata(MouseButtonValue::NoButton,
                         MouseButtonsValue::NoButtonDown,
                         ((WindowImplEFL*)sf)->m_lastMouseX /
-                            sf->starFish()->screenInfo().deviceScaleFactor,
+                            sf->starFish()->screenInfo().devicePixelRatio,
                         ((WindowImplEFL*)sf)->m_lastMouseY /
-                            sf->starFish()->screenInfo().deviceScaleFactor,
+                            sf->starFish()->screenInfo().devicePixelRatio,
                         sf->m_clickedCount);
         sf->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
     };
@@ -1656,8 +1669,9 @@ Canvas* WindowImplEFL::preparePainting()
         const char* path = getenv("SCREEN_SHOT");
         if (((path && strlen(path)) || g_referenceTestState > 0) &&
             g_fireOnloadEvent) {
-            g_surfaceForScreehShot =
-                CanvasSurface::create(this, width(), height());
+            g_surfaceForScreehShot = CanvasSurface::create(
+                this, width() / starFish()->screenInfo().devicePixelRatio,
+                height() / starFish()->screenInfo().devicePixelRatio);
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
             Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
             return c;
@@ -1715,8 +1729,9 @@ Canvas* WindowImplEFL::preparePainting()
         const char* path = getenv("SCREEN_SHOT");
         if (((path && strlen(path)) || g_referenceTestState > 0) &&
             g_fireOnloadEvent) {
-            g_surfaceForScreehShot =
-                CanvasSurface::create(this, width(), height());
+            g_surfaceForScreehShot = CanvasSurface::create(
+                this, width() / starFish()->screenInfo().devicePixelRatio,
+                height() / starFish()->screenInfo().devicePixelRatio);
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
             STARFISH_LOG_INFO(
                 "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "
@@ -1770,8 +1785,8 @@ Canvas* WindowImplEFL::preparePainting()
                       ((unsigned char*)addr) +
                           (evas_object_image_stride_get(m_canvasAdpater) * h));
     cairo_surface_set_device_scale(m_canvasAdpaterSurface,
-                                   m_starFish->screenInfo().deviceScaleFactor,
-                                   m_starFish->screenInfo().deviceScaleFactor);
+                                   m_starFish->screenInfo().devicePixelRatio,
+                                   m_starFish->screenInfo().devicePixelRatio);
     m_canvasAdpaterCairo = cairo_create(m_canvasAdpaterSurface);
 
     struct dummy {
@@ -1792,8 +1807,9 @@ Canvas* WindowImplEFL::preparePainting()
         const char* path = getenv("SCREEN_SHOT");
         if (((path && strlen(path)) || g_referenceTestState > 0) &&
             g_fireOnloadEvent) {
-            g_surfaceForScreehShot =
-                CanvasSurface::create(this, width(), height());
+            g_surfaceForScreehShot = CanvasSurface::create(
+                this, width() / starFish()->screenInfo().devicePixelRatio,
+                height() / starFish()->screenInfo().devicePixelRatio);
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
             STARFISH_LOG_INFO(
                 "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "
@@ -1884,8 +1900,9 @@ Compositor* WindowImplEFL::prepareCompositor()
         const char* path = getenv("SCREEN_SHOT");
         if (((path && strlen(path)) || g_referenceTestState > 0) &&
             g_fireOnloadEvent) {
-            g_surfaceForScreehShot =
-                CanvasSurface::create(this, width(), height());
+            g_surfaceForScreehShot = CanvasSurface::create(
+                this, width() / starFish()->screenInfo().devicePixelRatio,
+                height() / starFish()->screenInfo().devicePixelRatio);
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
             Compositor* c =
                 Compositor::create(starFish(), g_surfaceForScreehShot);
@@ -1926,8 +1943,8 @@ Compositor* WindowImplEFL::prepareCompositor()
         (unsigned char*)addr, CAIRO_FORMAT_ARGB32, width(), height(),
         evas_object_image_stride_get(m_canvasAdpater));
     cairo_surface_set_device_scale(m_canvasAdpaterSurface,
-                                   m_starFish->screenInfo().deviceScaleFactor,
-                                   m_starFish->screenInfo().deviceScaleFactor);
+                                   m_starFish->screenInfo().devicePixelRatio,
+                                   m_starFish->screenInfo().devicePixelRatio);
     m_canvasAdpaterCairo = cairo_create(m_canvasAdpaterSurface);
 
     struct dummy {
@@ -1948,8 +1965,9 @@ Compositor* WindowImplEFL::prepareCompositor()
         const char* path = getenv("SCREEN_SHOT");
         if (((path && strlen(path)) || g_referenceTestState > 0) &&
             g_fireOnloadEvent) {
-            g_surfaceForScreehShot =
-                CanvasSurface::create(this, width(), height());
+            g_surfaceForScreehShot = CanvasSurface::create(
+                this, width() / starFish()->screenInfo().devicePixelRatio,
+                height() / starFish()->screenInfo().devicePixelRatio);
 
             STARFISH_LOG_INFO(
                 "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "

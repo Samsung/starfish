@@ -87,7 +87,6 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
             } else if (m_isScrollTarget) {
 #define STARFISH_SCROLL_THRESHOLD 10
                 unsigned t = STARFISH_SCROLL_THRESHOLD;
-                t /= window->devicePixelRatio();
 
                 if (std::abs(m_pointingEventY - y) > t &&
                     verticalScrollEnabled) {
@@ -174,8 +173,8 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
         LayoutUnit scrollBarHeight =
             scrollMovableArea *
             ((frame->height() - frame->borderHeight()) / frame->scrollHeight());
-        LayoutUnit scrollBarWidth = STARFISH_SCROLLBAR_THICKNESS /
-                                    frame->node()->window()->devicePixelRatio();
+        LayoutUnit scrollBarWidth = STARFISH_SCROLLBAR_THICKNESS;
+        ;
         if (hasHorizontalScroll) {
             scrollMovableArea -= scrollBarWidth;
         }
@@ -201,9 +200,7 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
             ((float)frame->scrollLeft() /
              (frame->scrollWidth() - (frame->width() - frame->borderWidth())));
         LayoutUnit scrollMovableArea = frame->width() - frame->borderWidth();
-        LayoutUnit scrollBarHeight =
-            STARFISH_SCROLLBAR_THICKNESS /
-            frame->node()->window()->devicePixelRatio();
+        LayoutUnit scrollBarHeight = STARFISH_SCROLLBAR_THICKNESS;
         LayoutUnit scrollBarWidth =
             scrollMovableArea *
             ((frame->width() - frame->borderWidth()) / frame->scrollWidth());

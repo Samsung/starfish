@@ -44,8 +44,8 @@ class CompositorImplCairo : public Compositor {
         m_surface = cairo_image_surface_create_for_data(
             (unsigned char*)buffer, CAIRO_FORMAT, width, height, stride);
         cairo_surface_set_device_scale(
-            m_surface, m_starfish->screenInfo().deviceScaleFactor,
-            m_starfish->screenInfo().deviceScaleFactor);
+            m_surface, m_starfish->screenInfo().devicePixelRatio,
+            m_starfish->screenInfo().devicePixelRatio);
         m_canvas = cairo_create(m_surface);
         m_width = width;
         m_height = height;

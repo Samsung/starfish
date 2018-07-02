@@ -76,6 +76,7 @@ protected:
             SVGSVGElement* svg = r->asSVGSVGElement();
             if (!svg->frame()) {
                 m_resource->didLoadFailed();
+                return;
             }
             FrameSVGSVGBox* svgBox = (FrameSVGSVGBox*)svg->frame();
 
@@ -94,6 +95,8 @@ protected:
             m_resource->m_imageData->setPreserveAspectRatioValue(
                 svg->preserveAspectRatioValue());
             m_resource->Resource::didLoadFinished();
+        } else {
+            m_resource->didLoadFailed();
         }
     }
 
@@ -199,6 +202,7 @@ void ImageResource::didLoadFinished()
             return;
         }
     }
+
 #if defined(PORT_CANVAS_BACKEND_EFL)
     if (!m_url->isFileURL()) {
         m_imageData =
