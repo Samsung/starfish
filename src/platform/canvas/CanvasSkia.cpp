@@ -379,7 +379,65 @@ public:
                            const DrawImageInfo& borderinfo,
                            ImageRenderingValue imageRenderingMode)
     {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        if (!lastState().m_visible) {
+            return;
+        }
+
+        auto pixels = data->data();
+        auto w = data->width();
+        auto h = data->height();
+
+        SkBitmap bitmap;
+        bitmap.installPixels(SkImageInfo::MakeN32Premul(w, h), (void*)pixels,
+                             data->stride());
+        SkBitmap subset;
+        bitmap.extractSubset(
+            &subset,
+            SkIRect::MakeXYWH(src.x(), src.y(), src.width(), src.height()));
+
+        if (borderinfo.hRepeat == BorderImageRepeatValue::StretchValue &&
+            borderinfo.vRepeat == BorderImageRepeatValue::StretchValue) {
+            m_canvas->drawBitmapRect(
+                subset, SkIRect::MakeWH(src.width(), src.height()),
+                SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
+                &m_paint);
+
+        } else {
+            double xx = dst.x(), yy = dst.y(), ww = dst.width(),
+                   hh = dst.height();
+            double x = 0.0, y = 0.0, hScale = borderinfo.hScale,
+                   vScale = borderinfo.vScale;
+            double scaledWidth = src.width() / borderinfo.hScale;
+            double scaledHeight = src.height() / borderinfo.vScale;
+
+            if (borderinfo.hRepeat == BorderImageRepeatValue::RepeatValue) {
+                x = (ww - scaledWidth) / 2;
+            } else if (borderinfo.hRepeat ==
+                       BorderImageRepeatValue::RoundValue) {
+                hScale = std::max(1.0, round(ww / scaledWidth));
+                hScale = (scaledWidth * hScale) / ww * borderinfo.hScale;
+            }
+            if (borderinfo.vRepeat == BorderImageRepeatValue::RepeatValue) {
+                y = (hh - scaledHeight) / 2;
+            } else if (borderinfo.vRepeat ==
+                       BorderImageRepeatValue::RoundValue) {
+                vScale = std::max(1.0, round(hh / scaledHeight));
+                vScale = (scaledHeight * vScale) / hh * borderinfo.vScale;
+            }
+            SkMatrix matrix;
+            matrix.setScaleTranslate(hScale, vScale, x, y);
+            auto shader =
+                SkShader::MakeBitmapShader(subset, SkShader::kRepeat_TileMode,
+                                           SkShader::kRepeat_TileMode, &matrix);
+
+            SkPaint paint;
+            paint.setShader(shader);
+            m_canvas->save();
+            m_canvas->translate(xx, yy);
+            auto rect = SkRect::MakeXYWH(0, 0, ww, hh);
+            m_canvas->drawRect(rect, paint);
+            m_canvas->restore();
+        }
     }
 
     virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,

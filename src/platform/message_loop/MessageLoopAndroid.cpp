@@ -90,7 +90,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     id->m_ml = this;
     id->m_ctx = ctx;
     id->m_idler =
-        startIdler(10,
+        startIdler(0,
                    [](int, void* data) -> bool {
                        IdlerData* id = (IdlerData*)data;
                        removeIderFromList(id->m_ml->m_idlers, id);
@@ -120,7 +120,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_ml = this;
     id->m_ctx = ctx;
     id->m_idler =
-        startIdler(10,
+        startIdler(0,
                    [](int, void* data) -> bool {
                        IdlerData* id = (IdlerData*)data;
                        removeIderFromList(id->m_ml->m_idlers, id);
@@ -153,7 +153,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_ml = this;
     id->m_ctx = ctx;
     id->m_idler = startIdler(
-        10,
+        0,
         [](int, void* data) -> bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
@@ -187,7 +187,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     }
 
     id->m_idler = startIdler(
-        10,
+        0,
         [](int, void* data) -> bool {
 
             IdlerData* id = (IdlerData*)data;
@@ -225,7 +225,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     }
 
     id->m_idler = startIdler(
-        10,
+        0,
         [](int, void* data) -> bool {
 
             IdlerData* id = (IdlerData*)data;
@@ -324,7 +324,7 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
     data->url = url;
     data->referrerURL = referrerURL;
     data->idler = startIdler(
-        10,
+        0,
         [](int, void* d) -> bool {
 
             InvokeNavigateData* data = (InvokeNavigateData*)d;
