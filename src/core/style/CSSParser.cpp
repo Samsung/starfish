@@ -2247,8 +2247,13 @@ bool CSSParser::parseSupportsCondition()
         bool ok = false;
         preserveState();
 
-        while (
-            currentToken()->value()->toString()->equalsIgnoreCase(conjoiner)) {
+        while (!currentToken()->isNull() && currentToken()->hasStringValue()) {
+            if (!currentToken()->value()->toString()->equalsIgnoreCase(
+                    conjoiner)) {
+                ok = false;
+                break;
+            }
+
             getToken(true, true);
             if (!parseSupportsConditionInParen()) {
                 ok = false;
