@@ -104,8 +104,8 @@ public:
     {
         m_canvas->resetMatrixAndClip();
 
-        m_canvas->scale(m_starfish->screenInfo().deviceScaleFactor,
-                        m_starfish->screenInfo().deviceScaleFactor);
+        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                        m_starfish->screenInfo().devicePixelRatio);
     }
 
     // reset transform clip

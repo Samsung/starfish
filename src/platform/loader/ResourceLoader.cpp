@@ -546,12 +546,25 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                         ->childBrowsingContextLoaded();
                 }
 #ifdef STARFISH_ENABLE_TEST
-                g_fireOnloadEvent = true;
-                if (doc->webView()->rootStackingContext()) {
-                    doc->webView()->rootStackingContext()->setNeedsRepainting();
+                if (doc->browsingContext()->isTopLevelBrowsingContext()) {
+                    // We need to wait few milliseconds
+                    // because some tests has setTimeout(0,...) in onload
+                    // handler
+                    doc->window()->setTimeout(
+                        [](Window* window, void* data) {
+                            g_fireOnloadEvent = true;
+                            if (window->webView()->rootStackingContext()) {
+                                window->webView()
+                                    ->rootStackingContext()
+                                    ->setNeedsRepainting();
+                            }
+                            window->window()
+                                ->browsingContext()
+                                ->setNeedsPainting();
+                            window->window()->testStart();
+                        },
+                        10, nullptr);
                 }
-                doc->window()->browsingContext()->setNeedsPainting();
-                doc->window()->testStart();
 #endif
             },
             document());

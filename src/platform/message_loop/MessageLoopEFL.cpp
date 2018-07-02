@@ -51,7 +51,7 @@ MessageLoop::MessageLoop(StarFish* sf)
     , m_runningPoolWorkerCount(0)
 #endif
 {
-    ecore_animator_frametime_set(0.001);
+    ecore_animator_frametime_set(1 / 60.0);
 }
 
 void MessageLoop::run()
@@ -96,7 +96,7 @@ struct IdlerData {
     void* m_data;
     void* m_data1;
     void* m_data2;
-    Ecore_Animator* m_idler;
+    Ecore_Timer* m_idler;
     MessageLoop* m_ml;
     BrowsingContext* m_ctx;
     volatile bool m_valid;
@@ -127,7 +127,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     id->m_data = data;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler = ecore_animator_add(
+    id->m_idler = ecore_timer_add(
+        0.0,
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
@@ -162,7 +163,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data1 = data1;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler = ecore_animator_add(
+    id->m_idler = ecore_timer_add(
+        0.0,
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
@@ -199,7 +201,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data2 = data2;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler = ecore_animator_add(
+    id->m_idler = ecore_timer_add(
+        0.0,
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
@@ -239,7 +242,8 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
     ecore_main_loop_thread_safe_call_async(
         [](void* data) -> void {
-            ecore_animator_add(
+            ecore_timer_add(
+                0.0,
                 [](void* data) -> Eina_Bool {
                     IdlerData* id = (IdlerData*)data;
                     {
@@ -288,7 +292,8 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
     ecore_main_loop_thread_safe_call_async(
         [](void* data) -> void {
-            ecore_animator_add(
+            ecore_timer_add(
+                0.0,
                 [](void* data) -> Eina_Bool {
                     IdlerData* id = (IdlerData*)data;
                     {
@@ -325,8 +330,8 @@ void MessageLoop::removeIdler(size_t handle)
     }
     IdlerData* id = (IdlerData*)handle;
     removeIderFromList(m_idlers, id);
-    ecore_animator_freeze(id->m_idler);
-    ecore_animator_del(id->m_idler);
+    ecore_timer_freeze(id->m_idler);
+    ecore_timer_del(id->m_idler);
     GC_FREE(id);
 }
 
@@ -347,8 +352,8 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_ctx == ctx || ctx == nullptr) {
-            ecore_animator_freeze(id->m_idler);
-            ecore_animator_del(id->m_idler);
+            ecore_timer_freeze(id->m_idler);
+            ecore_timer_del(id->m_idler);
             iter = m_idlers.erase(iter);
             GC_FREE(id);
         } else {

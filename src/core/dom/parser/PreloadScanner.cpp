@@ -127,26 +127,32 @@ PreloadScanner::PreloadScanner(Document* document, String* source)
                 }
             }
 
-            if (isScript) {
-                auto url = new ResourceURL(
-                    String::createASCIIStringFromUTF32SourceIfPossible(src),
-                    m_document->baseURL()->baseURI());
-                m_preloadedJS.push_back(m_document->resourceLoader().fetchText(
-                    url, String::createASCIIStringFromUTF32SourceIfPossible(
-                             encoding)));
-                m_preloadedJS.back()->request(
-                    Resource::ResourceRequestSyncLevel::NeverSync,
-                    m_document->documentURI(), true);
-            } else if (isCSS) {
-                auto url = new ResourceURL(
-                    String::createASCIIStringFromUTF32SourceIfPossible(src),
-                    m_document->baseURL()->baseURI());
-                m_preloadedCSS.push_back(m_document->resourceLoader().fetchText(
-                    url, String::createASCIIStringFromUTF32SourceIfPossible(
-                             encoding)));
-                m_preloadedCSS.back()->request(
-                    Resource::ResourceRequestSyncLevel::NeverSync,
-                    m_document->documentURI(), true);
+            if (src.length()) {
+                if (isScript) {
+                    auto url = new ResourceURL(
+                        String::createASCIIStringFromUTF32SourceIfPossible(src),
+                        m_document->baseURL()->baseURI());
+                    m_preloadedJS.push_back(
+                        m_document->resourceLoader().fetchText(
+                            url,
+                            String::createASCIIStringFromUTF32SourceIfPossible(
+                                encoding)));
+                    m_preloadedJS.back()->request(
+                        Resource::ResourceRequestSyncLevel::NeverSync,
+                        m_document->documentURI(), true);
+                } else if (isCSS) {
+                    auto url = new ResourceURL(
+                        String::createASCIIStringFromUTF32SourceIfPossible(src),
+                        m_document->baseURL()->baseURI());
+                    m_preloadedCSS.push_back(
+                        m_document->resourceLoader().fetchText(
+                            url,
+                            String::createASCIIStringFromUTF32SourceIfPossible(
+                                encoding)));
+                    m_preloadedCSS.back()->request(
+                        Resource::ResourceRequestSyncLevel::NeverSync,
+                        m_document->documentURI(), true);
+                }
             }
         }
     }

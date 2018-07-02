@@ -61,20 +61,11 @@ public:
         , m_width(width)
         , m_height(height)
         , m_internalBuffer(nullptr)
-        , m_rendingLockMutex(new Mutex())
         , m_didPaintingOrCompositing(true)
     {
         m_renderingAnimator = SIZE_MAX;
-        m_renderingIdlerData = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
-
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           STARFISH_LOG_INFO(
-                                               "WindowImplGB::~WindowImplGB\n");
-                                       },
-                                       NULL, NULL, NULL);
     }
 
     virtual int32_t width() override
@@ -121,6 +112,9 @@ public:
         m_surface = cairo_image_surface_create_for_data(
             (unsigned char*)m_internalBuffer, CAIRO_FORMAT_ARGB32, m_width,
             m_height, m_stride);
+        cairo_surface_set_device_scale(
+            m_surface, m_starFish->screenInfo().devicePixelRatio,
+            m_starFish->screenInfo().devicePixelRatio);
         m_cairo = cairo_create(m_surface);
     }
 
@@ -138,10 +132,8 @@ public:
     uint32_t m_width;
     uint32_t m_height;
     size_t m_renderingAnimator;
-    IdlerData* m_renderingIdlerData;
     void* m_internalBuffer;
     size_t m_stride;
-    Mutex* m_rendingLockMutex;
     bool m_didPaintingOrCompositing;
 
     float m_lastMouseX, m_lastMouseY;
@@ -162,37 +154,19 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 {
     auto wnd = new WindowImplGB(sf, width, height);
     wnd->m_starFish = sf;
-
-#ifdef STARFISH_ENABLE_TEST
-    {
-        const char* path = getenv("SCREEN_SHOT");
-        const char* hide = getenv("HIDE_WINDOW");
-
-        // AFAIK ,There is no way to hide the window in DALi@linux.(mh.byun)
-        /*
-        {
-            Dali::Application* app = (Dali::Application*)sf->nativeHandle();
-            if(app){
-                Dali::Window dali_win  = app->GetWindow();
-                if ((path && strlen(path)) || (hide && strlen(hide))) {
-                    Dali::DevelWindow::Hide(dali_win);
-                    // wnd->m_mainView.SetVisible(false);
-                } else {
-                    Dali::DevelWindow::Show(dali_win);
-                    // wnd->m_mainView.SetVisible(true);
-                }
-            }
-        }
-        */
-    }
-#endif
     return wnd;
 }
 
 void WindowImplGB::setNeedsRendering()
 {
     WindowImplGB* wnd = this;
-    // TODO: refresh rendering animator here.
+
+    // refresh rendering animator
+    if (wnd->m_renderingAnimator != SIZE_MAX) {
+        starFish()->messageLoop()->removeIdler(m_renderingAnimator);
+        wnd->m_renderingAnimator = SIZE_MAX;
+    }
+
     wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
         nullptr,
         [](size_t handle, void* data) {
@@ -201,12 +175,8 @@ void WindowImplGB::setNeedsRendering()
                 return;
             }
             StarFishEnterer enter(wnd->starFish());
-            {
-                Locker<Mutex> l(*((WindowImplGB*)wnd)->m_rendingLockMutex);
-                bool drawingBufferUpdated = wnd->rendering();
-                ((WindowImplGB*)wnd)->m_renderingAnimator = SIZE_MAX;
-                ((WindowImplGB*)wnd)->m_renderingIdlerData = nullptr;
-            }
+            wnd->rendering();
+            ((WindowImplGB*)wnd)->m_renderingAnimator = SIZE_MAX;
         },
         starFish()->platformWindow());
 }
@@ -217,8 +187,9 @@ Canvas* WindowImplGB::preparePainting()
     {
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
-            g_surfaceForScreehShot =
-                CanvasSurface::create(this, width(), height());
+            g_surfaceForScreehShot = CanvasSurface::create(
+                this, width() / starFish()->screenInfo().devicePixelRatio,
+                height() / starFish()->screenInfo().devicePixelRatio);
             g_imgBufferForScreehShot =
                 (unsigned char*)g_surfaceForScreehShot->unwrap();
             Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
@@ -267,9 +238,7 @@ void WindowImplGB::clearResources()
     if (m_renderingAnimator != SIZE_MAX) {
         starFish()->messageLoop()->removeIdler(m_renderingAnimator);
         m_renderingAnimator = SIZE_MAX;
-        GC_FREE(m_renderingIdlerData);
     }
-
     webView()->clearStackingContext(false);
 }
 } // namespace StarFish

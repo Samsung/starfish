@@ -325,17 +325,11 @@ Screen* Window::screen()
 
 int32_t Window::innerWidth()
 {
-    if (browsingContext()->isTopLevelBrowsingContext()) {
-        return m_width / screen()->devicePixelRatio();
-    }
     return m_width;
 }
 
 int32_t Window::innerHeight()
 {
-    if (browsingContext()->isTopLevelBrowsingContext()) {
-        return m_height / screen()->devicePixelRatio();
-    }
     return m_height;
 }
 
@@ -522,7 +516,8 @@ void Window::forceDisableOnloadCapture()
 
 void Window::simulateClick(float x, float y)
 {
-    TouchData data(x, y);
+    TouchData data(x * starFish()->screenInfo().devicePixelRatio,
+                   y * starFish()->screenInfo().devicePixelRatio);
     m_starFish->platformWindow()->dispatchTouchEvent(
         TouchEventKind::TouchEventStart, &data, 1);
     m_starFish->platformWindow()->dispatchTouchEvent(

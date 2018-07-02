@@ -90,7 +90,7 @@ void HTMLTextEditable::didStateChanged(int oldState, int newState)
 
 LayoutUnit HTMLTextEditable::caretThickness() const
 {
-    return LayoutUnit(CARET_THICKNESS / window()->devicePixelRatio());
+    return LayoutUnit(CARET_THICKNESS);
 }
 
 String* HTMLTextEditable::placeholder()

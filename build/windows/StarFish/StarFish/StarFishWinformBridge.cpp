@@ -45,7 +45,14 @@ extern "C" size_t STARFISH_EXPORT __stdcall createWebViewInstance(
 {
     FcInitLoadConfig();
     g_postLogMessageToThreadMessageQueue = true;
-    LWE::WebContainer* wv = LWE::WebContainer::Create(initialBuffer, initialWidth, initialHeight, initialBufferStride, 1);
+
+    std::string localStorage = getWindowsTempDir();
+    localStorage += "\\StarFishLocalStorage.txt";
+
+    std::string cookieStorage = getWindowsTempDir();
+    cookieStorage += "\\StarFishLocalCookie.txt";
+
+    LWE::WebContainer* wv = LWE::WebContainer::Create(initialBuffer, initialWidth, initialHeight, initialBufferStride, 1, "ko-KR", "Asia/Seoul", localStorage.data(), cookieStorage.data(), "");
     wv->RegisterOnPageStartedHandler([](LWE::WebContainer* wv, const std::string& url) {
         void* buffer = LocalAlloc(LMEM_FIXED, url.size() + 1);
         memcpy(buffer, url.data(), url.size());

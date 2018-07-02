@@ -55,7 +55,7 @@ namespace StarFish {
 struct ScreenInfo {
     // Device scale factor. Specifies the ratio between physical and logical
     // pixels.
-    float deviceScaleFactor;
+    float devicePixelRatio;
 
     // The screen depth in bits per pixel
     int depth;
@@ -90,7 +90,7 @@ struct ScreenInfo {
     int32_t orientationAngle;
 
     ScreenInfo()
-        : deviceScaleFactor(1)
+        : devicePixelRatio(1)
         , depth(24)
         , isMonochrome(false)
         , rect(LayoutLocation(), LayoutSize())
@@ -102,7 +102,7 @@ struct ScreenInfo {
 
     bool operator==(const ScreenInfo& other) const
     {
-        return this->deviceScaleFactor == other.deviceScaleFactor &&
+        return this->devicePixelRatio == other.devicePixelRatio &&
                this->depth == other.depth &&
                this->isMonochrome == other.isMonochrome &&
                this->rect.location().x() == other.rect.location().x() &&

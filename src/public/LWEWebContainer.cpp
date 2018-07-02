@@ -130,7 +130,7 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     info.rect.setHeight(height);
     info.availableRect.setWidth(width);
     info.availableRect.setHeight(height);
-    info.deviceScaleFactor = scaleFactor;
+    info.devicePixelRatio = scaleFactor;
 
     StarFish::StarFish* starfish = new StarFish::StarFish(
         (StarFish::StarFishStartUpFlag)flag, locale, timezoneID, nullptr, width,

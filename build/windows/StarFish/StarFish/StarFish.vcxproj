@@ -417,6 +417,7 @@
     <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLStackItem.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLTokenizer.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\parser\HTMLTreeBuilder.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\PreloadScanner.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\ProcessingInstruction.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\PseudoElement.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\Range.cpp" />

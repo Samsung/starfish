@@ -1953,5 +1953,8 @@
     <ClCompile Include="..\..\..\..\src\public\LWEWebContainer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\core\dom\parser\PreloadScanner.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>
