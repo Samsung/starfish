@@ -302,23 +302,12 @@ public:
             return;
         }
         m_canvas->save();
-        SkMatrix m = m_canvas->getTotalMatrix();
         beginPath();
-        SkPoint src = SkPoint::Make(p1.x(), p1.y());
-        m.mapPoints(&src, 1);
-        moveTo(src.x(), src.y());
-        src = SkPoint::Make(p2.x(), p2.y());
-        m.mapPoints(&src, 1);
-        lineTo(src.x(), src.y());
-        src = SkPoint::Make(p3.x(), p3.y());
-        m.mapPoints(&src, 1);
-        lineTo(src.x(), src.y());
-        src = SkPoint::Make(p4.x(), p4.y());
-        m.mapPoints(&src, 1);
-        lineTo(src.x(), src.y());
-        src = SkPoint::Make(p1.x(), p1.y());
-        m.mapPoints(&src, 1);
-        lineTo(src.x(), src.y());
+        moveTo(p1.x(), p1.y());
+        lineTo(p2.x(), p2.y());
+        lineTo(p3.x(), p3.y());
+        lineTo(p4.x(), p4.y());
+        lineTo(p1.x(), p1.y());
         closePath();
         fill();
         m_canvas->restore();
