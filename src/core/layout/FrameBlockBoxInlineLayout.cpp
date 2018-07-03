@@ -47,11 +47,12 @@ LayoutUnit Frame::lineHeight()
         if (lineHeight.isSpecified()) {
             return lineHeight.specifiedValue(fontSize, this);
         } else if (lineHeight.isInheritableNumber()) {
-            return fontSize * lineHeight.inheritableNumber();
+            return style()->font()->size() * lineHeight.inheritableNumber();
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
     }
+
     return fontSize;
 }
 

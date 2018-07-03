@@ -268,9 +268,19 @@ void FrameTreeBuilder::insertGridItemChild(FrameBlockBox* blockContainer,
     // FIXME
     bool isGridItem =
         currentFrame->isBlockLevel() && !currentFrame->isFrameLineBreak();
+
     if (isGridItem) {
         blockContainer->appendChild(currentFrame);
         currentFrame->markGridItem();
+    } else {
+        Frame* last = blockContainer->lastChild();
+        if (last && last->isAnonymous()) {
+        } else {
+            Frame* f = wrapWithAnonymousBlockBox<FrameBlockBox>(
+                blockContainer, currentNode, DisplayValue::BlockDisplayValue,
+                currentFrame);
+            f->markGridItem();
+        }
     }
 }
 
