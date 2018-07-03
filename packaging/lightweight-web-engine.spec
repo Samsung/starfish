@@ -112,6 +112,12 @@ CXXFLAGS+=' -Os '
 
 %if "%{tizen_product}" == "tv"
 %define target tv
+# For Dali
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dcustom=vd %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.tv.release
+mv out_tizen/%{target}/release/lib/liblightweight-web-engine.%{target}.so out_tizen/%{target}/release/lib/liblightweight-web-engine-dali-plugin.so
+
+# For Cairo
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dcustom=vd %{?gyp_addition_command}
 ninja -C out_tizen/%{target}/release starfish.tizen.tv.release
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dcustom=vd %{?gyp_addition_command}
@@ -120,6 +126,12 @@ ninja -C out_tizen/%{target}/release starfish.tizen.tv.release
 
 %if "%{tizen_product}" == "gear"
 %define target gear
+# For Dali
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dcustom=im %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.gear.release
+mv out_tizen/%{target}/release/lib/liblightweight-web-engine.%{target}.so out_tizen/%{target}/release/lib/liblightweight-web-engine-dali-plugin.so
+
+# For Cairo
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dbackend=efl -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}
 ninja -C out_tizen/%{target}/release starfish.tizen.gear.release
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dbackend=efl -Dplatform=tizen -Dcustom=im %{?gyp_addition_command}
@@ -134,6 +146,12 @@ ninja -C out_tizen/%{target}/release starfish.tizen.gear.release
 # With '-marm', compiler emits some warnings.
 CFLAGS+=' -marm '
 CXXFLAGS+=' -marm '
+# For Dali
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dcustom=im %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.speaker.release
+mv out_tizen/%{target}/release/lib/liblightweight-web-engine.%{target}.so out_tizen/%{target}/release/lib/liblightweight-web-engine-dali-plugin.so
+
+# For Cairo
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dcustom=im -DtouchUi=0 %{?gyp_addition_command}
 ninja -C out_tizen/%{target}/release starfish.tizen.speaker.release
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dcustom=im -DtouchUi=0 %{?gyp_addition_command}
@@ -142,6 +160,12 @@ ninja -C out_tizen/%{target}/release starfish.tizen.speaker.release
 
 %if "%{tizen_product}" == "unified"
 %define target unified
+# For Dali
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.unified.release
+mv out_tizen/%{target}/release/lib/liblightweight-web-engine.%{target}.so out_tizen/%{target}/release/lib/liblightweight-web-engine-dali-plugin.so
+
+# For Cairo
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen %{?gyp_addition_command}
 ninja -C out_tizen/%{target}/release starfish.tizen.unified.release
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen %{?gyp_addition_command}
@@ -167,7 +191,7 @@ cp inc/LWEWebView.h %{buildroot}%{_includedir}/%{name}/
 cp inc/PlatformIntegrationData.h %{buildroot}%{_includedir}/%{name}/
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
-cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
+cp *.pc %{buildroot}%{_libdir}/pkgconfig/
 
 %files
 %manifest %{name}.manifest
@@ -179,5 +203,5 @@ cp lightweight-web-engine.pc %{buildroot}%{_libdir}/pkgconfig/
 %{_includedir}
 %{_bindir}/%{bin}
 %{_libdir}/*.so
-%{_libdir}/pkgconfig/lightweight-web-engine.pc
+%{_libdir}/pkgconfig/*.pc
 
