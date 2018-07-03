@@ -19,8 +19,7 @@
 
 #include "StarFishConfig.h"
 
-#if defined(PORT_CANVAS_BACKEND_MOCK) || \
-    defined(PORT_CANVAS_BACKEND_SKIA) // temp
+#if defined(PORT_CANVAS_BACKEND_MOCK)
 #include "StarFish.h"
 
 #include "core/style/UnitHelper.h"
