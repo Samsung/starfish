@@ -174,9 +174,9 @@ void WindowImplGB::setNeedsRendering()
             if (!wnd->starFish()) {
                 return;
             }
+            ((WindowImplGB*)wnd)->m_renderingAnimator = SIZE_MAX;
             StarFishEnterer enter(wnd->starFish());
             wnd->rendering();
-            ((WindowImplGB*)wnd)->m_renderingAnimator = SIZE_MAX;
         },
         starFish()->platformWindow());
 }

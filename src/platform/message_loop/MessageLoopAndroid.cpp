@@ -67,7 +67,10 @@ struct IdlerData {
 
 static void removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
 {
-    list.erase(list.find((size_t)id));
+    auto iter = list.find((size_t)id);
+    if (iter != list.end()) {
+        list.erase(iter);
+    }
 }
 
 static bool validateContext(BrowsingContext* context)
