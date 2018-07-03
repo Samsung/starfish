@@ -54,6 +54,7 @@ struct DaliStarFishBinder {
     void* lweInstance;
     void* buffer;
     std::list<size_t> asyncHandlePool;
+    std::string url;
     int w, h, s;
     bool canGoBack, canGoForward;
     bool isRunning;
@@ -261,6 +262,7 @@ extern "C" __attribute__((visibility("default"))) void createInstance(
             ->RegisterOnPageStartedHandler(
                 [binder](LWE::WebContainer* container,
                          const std::string& url) -> void {
+                    binder->url = url;
                     binder->canGoBack = container->CanGoBack();
                     binder->canGoForward = container->CanGoForward();
                     binder->onPageStartedHandler(container, url);
@@ -269,6 +271,7 @@ extern "C" __attribute__((visibility("default"))) void createInstance(
             ->RegisterOnPageFinishedHandler(
                 [binder](LWE::WebContainer* container,
                          const std::string& url) -> void {
+                    binder->url = url;
                     binder->canGoBack = container->CanGoBack();
                     binder->canGoForward = container->CanGoForward();
                     binder->onPageFinishedHandler(container, url);
@@ -277,6 +280,7 @@ extern "C" __attribute__((visibility("default"))) void createInstance(
             ->RegisterOnLoadResourceHandler(
                 [binder](LWE::WebContainer* container,
                          const std::string& url) -> void {
+                    binder->url = url;
                     binder->canGoBack = container->CanGoBack();
                     binder->canGoForward = container->CanGoForward();
                     binder->onLoadResourceHandler(container, url);
