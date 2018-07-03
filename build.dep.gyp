@@ -503,6 +503,7 @@
                     'third_party/android/skia/include/core',
                     'third_party/android/skia/include/image',
                     'third_party/android/skia/include/gpu',
+                    'third_party/android/skia/include/ports',
                 ],
                 'libraries': [
                     '<!@((pkg-config --silence-errors --libs-only-l libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas) || true)',
@@ -630,9 +631,7 @@
             'copies': [
                 {
                     'files': [
-                        # 'third_party/libskia/out/Release/Shared/libskia.so',
-                        # Below is a temporary
-                        'third_party/android/skia/out/Debug/Shared/libskia.so',
+                        'third_party/android/skia/out/Release/Shared/libskia.so',
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib',
                 },

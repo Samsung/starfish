@@ -23,16 +23,21 @@
 #include "StarFish.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
+#include "platform/canvas/font/FontImplSkia.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/style/UnitHelper.h"
 
 #include "SkBitmap.h"
 #include "SkCanvas.h"
 #include "SkDashPathEffect.h"
+#include "SkFontMgr.h"
 #include "SkPath.h"
+#include "SkPoint.h"
 #include "SkPixmap.h"
 #include "SkShader.h"
 #include "SkSurface.h"
+#include "SkTypeface.h"
+
 #define CLAMP(value, min, max) \
     (((value) > (max)) ? (max) : (((value) < (min)) ? (min) : (value)))
 
@@ -316,11 +321,207 @@ public:
     virtual void punchHole(const Unit::Rect& rt)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        if (!lastState().m_visible) {
+            return;
+        }
+    }
+
+    void drawGlyphsCairo(SkCanvas* canvas, LayoutRect rect,
+                         const StringView& sv, LayoutUnit dx, LayoutUnit dy)
+    {
+        LayoutUnit xBias = 0;
+        FT_UInt glyph_index = 0;
+        sk_sp<SkTypeface> lastFontFace = nullptr;
+        sk_sp<SkTypeface> fontFace = nullptr;
+
+        FontImplSkia* f = (FontImplSkia*)lastState().m_font;
+        int size = f->size();
+
+        FontMetrics fontMetrics = f->metrics();
+
+        canvas->save();
+        canvas->translate(dx, fontMetrics.m_ascender + dy);
+
+        size_t glyphCount = 0;
+
+        LayoutUnit letterSpacing = f->letterSpacing();
+        SkPaint glyphsPaint;
+        glyphsPaint.setColor(
+            SkColorSetARGB(lastState().m_color.a(), lastState().m_color.r(),
+                           lastState().m_color.g(), lastState().m_color.b()));
+        glyphsPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+
+        SkAutoTMalloc<SkGlyphID> glyphs(sv.bufferAccessData().length);
+        SkAutoTMalloc<SkPoint> positions(sv.bufferAccessData().length);
+
+        if (skiaBackendCanUseSimpleFontPath(f, sv)) {
+            LayoutUnit letterSpacingValueSoFar;
+            auto stringAccessData = sv.bufferAccessData();
+
+            for (size_t i = 0; i < stringAccessData.length; i++) {
+                std::pair<std::pair<FontFaceImplSkia*, size_t>,
+                          std::pair<unsigned, LayoutUnit>>
+                    g = skiaBackendInternalLoadGlyph(
+                        f, stringAccessData.charAt(i));
+                if (g.second.first) {
+                    if (true) { // skip webfont enabled
+                        if (f->seenUnresolvedWebFontIndex() != SIZE_MAX &&
+                            f->seenUnresolvedWebFontIndex() <= g.first.second) {
+                            xBias += g.second.second;
+                            continue;
+                        }
+                    }
+                    if (lastFontFace != g.first.first->skTypeFace()) {
+                        if (fontFace) {
+                            canvas->drawPosText((glyphs).get(),
+                                                glyphCount * sizeof(SkGlyphID),
+                                                (positions).get(), glyphsPaint);
+                            glyphCount = 0;
+                            fontFace = nullptr;
+                        }
+                        lastFontFace = g.first.first->skTypeFace();
+
+                        fontFace = lastFontFace;
+                        SkString str;
+                        fontFace->getFamilyName(&str);
+                        glyphsPaint.setTypeface(fontFace);
+                        glyphsPaint.setTextSize(size);
+                    }
+
+                    (glyphs)[glyphCount] = SkToU16(g.second.first);
+                    (positions)[glyphCount] = SkPoint{
+                        xBias.toFloat() + letterSpacingValueSoFar.toFloat(), 0.0
+                    };
+                    glyphCount++;
+                    STARFISH_ASSERT(glyphCount <= sv.length());
+                    letterSpacingValueSoFar += letterSpacingValueSoFar;
+                    xBias += g.second.second + letterSpacing;
+                } else {
+                    if (true) { // skip webfont enabled
+                        if (f->seenUnresolvedWebFontIndex() != SIZE_MAX) {
+                            xBias += f->spaceWidth();
+                            continue;
+                        }
+                    }
+                    SkPath path;
+                    SkPaint tempPaint;
+                    tempPaint.setStrokeWidth(1);
+                    tempPaint.setStyle(SkPaint::kStroke_Style);
+                    tempPaint.setColor(SkColorSetARGB(
+                        lastState().m_color.a(), lastState().m_color.r(),
+                        lastState().m_color.g(), lastState().m_color.b()));
+                    path.addRect(SkRect::MakeXYWH(
+                        xBias, -fontMetrics.m_ascender, f->spaceWidth(),
+                        fontMetrics.m_fontHeight));
+
+                    canvas->drawPath(path, tempPaint);
+                    xBias += f->spaceWidth() + letterSpacing;
+                }
+            }
+        } else {
+            auto runs = generateFontSkiaTextRuns(&sv, f);
+            size_t glyphAllocCount = 0;
+            for (size_t i = 0; i < runs.size(); i++) {
+                FontSkiaTextRun& run = runs[i];
+                glyphAllocCount += run.m_glyphs.size();
+            }
+
+            float xBias = 0;
+            for (size_t i = 0; i < runs.size(); i++) {
+                FontSkiaTextRun& run = runs[i];
+
+                LayoutUnit letterSpacingValueSoFar;
+                if (run.m_skTypeFace == nullptr) {
+                    if (/* skip webfont enabled*/ f
+                            ->seenUnresolvedWebFontIndex() != SIZE_MAX) {
+                    } else {
+                        SkPath path;
+                        SkPaint tempPaint;
+                        tempPaint.setStrokeWidth(1);
+                        tempPaint.setStyle(SkPaint::kStroke_Style);
+                        tempPaint.setColor(SkColorSetARGB(
+                            lastState().m_color.a(), lastState().m_color.r(),
+                            lastState().m_color.g(), lastState().m_color.b()));
+
+                        for (size_t j = 0; j < run.m_text.length(); j++) {
+                            path.reset();
+                            path.addRect(SkRect::MakeXYWH(
+                                xBias + j * f->spaceWidth(),
+                                -fontMetrics.m_ascender, f->spaceWidth(),
+                                fontMetrics.m_fontHeight));
+                            canvas->drawPath(path, tempPaint);
+                        }
+                    }
+                } else {
+                    if (/* skip webfont enabled*/ f
+                                ->seenUnresolvedWebFontIndex() != SIZE_MAX &&
+                        f->seenUnresolvedWebFontIndex() <= run.m_faceIndex) {
+                    } else {
+                        if (run.m_skTypeFace != lastFontFace) {
+                            if (lastFontFace) {
+                                canvas->drawPosText(
+                                    (glyphs).get(),
+                                    glyphCount * sizeof(SkGlyphID),
+                                    (positions).get(), glyphsPaint);
+                                glyphCount = 0;
+                                fontFace = nullptr;
+                            }
+                            lastFontFace = run.m_skTypeFace;
+                            fontFace = lastFontFace;
+                            SkString str;
+                            fontFace->getFamilyName(&str);
+                            glyphsPaint.setTypeface(fontFace);
+                            glyphsPaint.setTextSize(size);
+                        }
+
+                        for (size_t j = 0; j < run.m_glyphs.size(); j++) {
+                            (glyphs)[glyphCount] = SkToU16(run.m_glyphs[j]);
+                            (positions)[glyphCount] = SkPoint{
+                                run.m_glyphPositions[j].x().toFloat() + xBias +
+                                    letterSpacingValueSoFar.toFloat(),
+                                run.m_glyphPositions[j].y().toFloat()
+                            };
+
+                            letterSpacingValueSoFar += letterSpacing;
+                            STARFISH_ASSERT(glyphCount < glyphAllocCount);
+                            glyphCount++;
+                        }
+                    }
+                }
+
+                xBias += (run.m_runWidth + letterSpacingValueSoFar);
+            }
+        }
+        if (glyphCount) {
+            canvas->drawPosText((glyphs).get(), glyphCount * sizeof(SkGlyphID),
+                                (positions).get(), glyphsPaint);
+        }
+        canvas->restore();
     }
 
     virtual void drawText(LayoutUnit x, LayoutUnit y, LayoutUnit stringWidth,
-                          const StringView& text)
+                          const StringView& sv)
     {
+        int size = lastState().m_font->size();
+        if (!lastState().m_visible || size == 0 || sv.length() == 0) {
+            return;
+        }
+        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::drawText");
+
+        LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
+        LayoutRect rt(x, y, sz.width(), sz.height());
+
+#ifdef STARFISH_ENABLE_TEST
+        if (g_enablePixelTest) {
+            // drawAhemBoxCairo(m_canvas, rt, sv, rt.x(), rt.y());
+        } else {
+            drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y());
+            // drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
+        }
+#else
+        drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y());
+//        drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
+#endif
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
@@ -580,12 +781,19 @@ public:
 
     virtual void stroke()
     {
+        if (!lastState().m_visible) {
+            closePath();
+            return;
+        }
         strokePreserve();
         m_path.reset();
     }
 
     virtual void strokePreserve()
     {
+        if (!lastState().m_visible) {
+            return;
+        }
         m_paint.setStyle(SkPaint::kStroke_Style);
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
@@ -595,12 +803,19 @@ public:
 
     virtual void fill()
     {
+        if (!lastState().m_visible) {
+            closePath();
+            return;
+        }
         fillPreserve();
         m_path.reset();
     }
 
     virtual void fillPreserve()
     {
+        if (!lastState().m_visible) {
+            return;
+        }
         m_paint.setStyle(SkPaint::kFill_Style);
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
