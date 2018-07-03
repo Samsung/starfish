@@ -54,6 +54,7 @@ struct DaliStarFishBinder {
     void* lweInstance;
     void* buffer;
     std::list<size_t> asyncHandlePool;
+    std::string url;
     int w, h, s;
     bool canGoBack, canGoForward;
     bool isRunning;
@@ -361,10 +362,10 @@ public:
                                        &DaliShellController::updateBuffer);
         mTimer.Stop();
     }
-    void InnerCreate(Application& application);
 
-    bool updateTick();
+    void InnerCreate(Application& application);
     void Create(Application& application);
+
     int mWidth;
     int mHeight;
     Application& mApplication;
