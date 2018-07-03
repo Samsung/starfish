@@ -1342,27 +1342,33 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
     ySoFar += borderBottom();
     m_tableRect.setWidth(width());
 
+    LayoutUnit sectionHeight = ySoFar - m_tableRect.y();
     LayoutUnit specifiedHeight = 0;
-    bool hasTableHeight = false;
-    Length height = style()->height();
-    if (!height.isAuto()) {
-        hasTableHeight = true;
-
-        if (height.isDefinite(false)) {
-            LayoutUnit unused;
-            specifiedHeight = height.specifiedValue(unused, this);
-            specifiedHeight += borderHeight() + paddingHeight();
-        } else if (height.isPercent()) {
-            if (ctx.parentHasFixedHeight(this)) {
-                specifiedHeight =
-                    height.percentValue(ctx.parentFixedHeight(this));
-            }
-        } else if (height.isCalc()) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    {
+        bool hasTableHeight = false;
+        Length height = style()->height();
+        if (!height.isAuto()) {
+            hasTableHeight = true;
         }
+        bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
+        LayoutUnit parentHeight;
+        if (parentHasFixedHeight) {
+            parentHeight = ctx.parentFixedHeight(this);
+        } else {
+            parentHeight = sectionHeight;
+        }
+
+        if (height.isDefinite(parentHasFixedHeight)) {
+            specifiedHeight = height.specifiedValue(parentHeight, this);
+            if (!height.isPercent()) {
+                specifiedHeight += borderHeight() + paddingHeight();
+            }
+        }
+
+        specifiedHeight = minMaxHeightAppliedIfNeeds(
+            ctx, specifiedHeight, parentHeight, parentHasFixedHeight);
     }
 
-    LayoutUnit sectionHeight = ySoFar - m_tableRect.y();
     if (sectionHeight < specifiedHeight) {
         // table height is specified, and it is greater than the sum of
         // all row heights. In this case, distribute remaining spaces equally

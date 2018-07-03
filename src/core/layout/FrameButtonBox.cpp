@@ -48,13 +48,24 @@ FrameButtonBox::FrameButtonBox(Node* node, ComputedStyle* style)
 
 void FrameButtonBox::inlineLayoutAdditionalPath(LayoutContext& ctx)
 {
+    bool shouldContinueOperation = true;
     LayoutUnit lineBoxesHeight;
     for (size_t i = 0; i < lineBoxes().size(); i++) {
-        lineBoxesHeight += lineBoxes()[i]->height();
+        auto lineBox = lineBoxes()[i];
+        lineBoxesHeight += lineBox->height();
+        for (size_t j = 0; j < lineBox->boxes().size(); j++) {
+            if (lineBox->boxes()[j]->isFloating()) {
+                shouldContinueOperation = false;
+                break;
+            }
+        }
+        if (!shouldContinueOperation) {
+            break;
+        }
     }
 
     LayoutUnit availableHeight = contentHeight() - lineBoxesHeight;
-    if (availableHeight > 0) {
+    if (availableHeight > 0 && shouldContinueOperation) {
         LayoutUnit d;
         for (size_t i = 0; i < lineBoxes().size(); i++) {
             lineBoxes()[i]->setY(availableHeight / 2 + paddingTop() +

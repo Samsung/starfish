@@ -788,13 +788,10 @@ void LayoutContext::layoutRegisteredRelativePositionedBoxes(
     if (iter == m_relativePositionedBoxes.end()) {
         return;
     } else {
-        if (containingBlock->hasBlockFlow() && m_isQuickLayout) {
-        } else {
-            const auto& boxes = iter->second;
-            for (size_t i = 0; i < boxes.size(); i++) {
-                FrameBox* box = boxes[i].first;
-                layoutRelativePositionedBox(box, boxes[i].second);
-            }
+        const auto& boxes = iter->second;
+        for (size_t i = 0; i < boxes.size(); i++) {
+            FrameBox* box = boxes[i].first;
+            layoutRelativePositionedBox(box, boxes[i].second);
         }
         m_relativePositionedBoxes.erase(iter);
     }

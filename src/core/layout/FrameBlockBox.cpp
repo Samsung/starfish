@@ -402,6 +402,28 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                 child->computePaintingFlags(ctx, ResolveAll);
                 child->quickLayout(ctx);
             }
+
+            if (child->isFrameBox() &&
+                child->style()->position() == RelativePositionValue) {
+                auto box = child->asFrameBox();
+                LayoutUnit orgX = box->x();
+                LayoutUnit orgY = box->y();
+
+                bool dueToSelf = true;
+                if (box->node() && box->node()->parentElement()) {
+                    Node* nd = box->node()->parentElement();
+                    if (nd->frame()->isFrameInline() &&
+                        nd->style()->position() == RelativePositionValue) {
+                        dueToSelf = false;
+                    }
+                }
+
+                ctx.layoutRelativePositionedBox(box, dueToSelf);
+
+                box->setX(orgX - (box->x() - orgX));
+                box->setY(orgY - (box->y() - orgY));
+            }
+
             child = child->next();
         }
     } else {
