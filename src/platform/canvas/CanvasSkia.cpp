@@ -333,7 +333,7 @@ public:
         FT_UInt glyph_index = 0;
         sk_sp<SkTypeface> lastFontFace = nullptr;
         sk_sp<SkTypeface> fontFace = nullptr;
-
+        SkPaint* paint = nullptr;
         FontImplSkia* f = (FontImplSkia*)lastState().m_font;
         int size = f->size();
 
@@ -345,12 +345,6 @@ public:
         size_t glyphCount = 0;
 
         LayoutUnit letterSpacing = f->letterSpacing();
-        SkPaint glyphsPaint;
-        glyphsPaint.setColor(
-            SkColorSetARGB(lastState().m_color.a(), lastState().m_color.r(),
-                           lastState().m_color.g(), lastState().m_color.b()));
-        glyphsPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
-
         SkAutoTMalloc<SkGlyphID> glyphs(sv.bufferAccessData().length);
         SkAutoTMalloc<SkPoint> positions(sv.bufferAccessData().length);
 
@@ -375,17 +369,18 @@ public:
                         if (fontFace) {
                             canvas->drawPosText((glyphs).get(),
                                                 glyphCount * sizeof(SkGlyphID),
-                                                (positions).get(), glyphsPaint);
+                                                (positions).get(), *paint);
                             glyphCount = 0;
                             fontFace = nullptr;
                         }
                         lastFontFace = g.first.first->skTypeFace();
 
                         fontFace = lastFontFace;
-                        SkString str;
-                        fontFace->getFamilyName(&str);
-                        glyphsPaint.setTypeface(fontFace);
-                        glyphsPaint.setTextSize(size);
+                        paint = g.first.first->skPaint();
+                        paint->setTextSize(size);
+                        paint->setColor(SkColorSetARGB(
+                            lastState().m_color.a(), lastState().m_color.r(),
+                            lastState().m_color.g(), lastState().m_color.b()));
                     }
 
                     (glyphs)[glyphCount] = SkToU16(g.second.first);
@@ -459,19 +454,22 @@ public:
                     } else {
                         if (run.m_skTypeFace != lastFontFace) {
                             if (lastFontFace) {
-                                canvas->drawPosText(
-                                    (glyphs).get(),
-                                    glyphCount * sizeof(SkGlyphID),
-                                    (positions).get(), glyphsPaint);
+                                canvas->drawPosText((glyphs).get(),
+                                                    glyphCount *
+                                                        sizeof(SkGlyphID),
+                                                    (positions).get(), *paint);
                                 glyphCount = 0;
                                 fontFace = nullptr;
                             }
                             lastFontFace = run.m_skTypeFace;
                             fontFace = lastFontFace;
-                            SkString str;
-                            fontFace->getFamilyName(&str);
-                            glyphsPaint.setTypeface(fontFace);
-                            glyphsPaint.setTextSize(size);
+                            paint = run.m_skPaint;
+                            paint->setTextSize(size);
+                            paint->setColor(
+                                SkColorSetARGB(lastState().m_color.a(),
+                                               lastState().m_color.r(),
+                                               lastState().m_color.g(),
+                                               lastState().m_color.b()));
                         }
 
                         for (size_t j = 0; j < run.m_glyphs.size(); j++) {
@@ -494,7 +492,7 @@ public:
         }
         if (glyphCount) {
             canvas->drawPosText((glyphs).get(), glyphCount * sizeof(SkGlyphID),
-                                (positions).get(), glyphsPaint);
+                                (positions).get(), *paint);
         }
         canvas->restore();
     }
