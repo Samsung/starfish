@@ -43,8 +43,16 @@ class CompositorImplSkia : public Compositor {
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
         m_canvas = m_surface->getCanvas();
+        applyDevicePixelRatio(m_canvas);
+
         m_width = width;
         m_height = height;
+    }
+
+    void applyDevicePixelRatio(SkCanvas* canvas)
+    {
+        canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                      m_starfish->screenInfo().devicePixelRatio);
     }
 
 public:
@@ -356,18 +364,16 @@ public:
     virtual void resetMatrixAndClip()
     {
         m_canvas->resetMatrix();
+        applyDevicePixelRatio(m_canvas);
         m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
-        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
-                        m_starfish->screenInfo().devicePixelRatio);
     }
 
     virtual void resetClip()
     {
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
+        applyDevicePixelRatio(m_canvas);
         m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
-        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
-                        m_starfish->screenInfo().devicePixelRatio);
         m_canvas->concat(m);
     }
 

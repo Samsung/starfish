@@ -54,20 +54,17 @@ public:
 class CanvasSkia : public Canvas {
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
-        // FIXME : Apply device scale factor
         m_width = width;
         m_height = height;
 
         SkImageInfo info = SkImageInfo::MakeN32Premul(m_width, m_height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
         m_canvas = m_surface->getCanvas();
-        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
-                        m_starfish->screenInfo().devicePixelRatio);
+        applyDevicePixelRatio(m_canvas);
     }
 
     void initFromNativeImageData(NativeImageData* data)
     {
-        // FIXME : Apply device scale factor
         m_width = data->width();
         m_height = data->height();
 
@@ -75,8 +72,13 @@ class CanvasSkia : public Canvas {
         m_surface =
             SkSurface::MakeRasterDirect(info, data->data(), data->stride());
         m_canvas = m_surface->getCanvas();
-        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
-                        m_starfish->screenInfo().devicePixelRatio);
+        applyDevicePixelRatio(m_canvas);
+    }
+
+    void applyDevicePixelRatio(SkCanvas* canvas)
+    {
+        canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                      m_starfish->screenInfo().devicePixelRatio);
     }
 
 public:
@@ -94,8 +96,7 @@ public:
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
         m_canvas = m_surface->getCanvas();
-        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
-                        m_starfish->screenInfo().devicePixelRatio);
+        applyDevicePixelRatio(m_canvas);
         save();
     }
 
@@ -874,9 +875,8 @@ public:
     virtual void resetMatrixAndClip()
     {
         m_canvas->resetMatrix();
+        applyDevicePixelRatio(m_canvas);
         m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
-        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
-                        m_starfish->screenInfo().devicePixelRatio);
     }
 
     // reset transform clip
@@ -885,10 +885,8 @@ public:
         // FIXME : skia doesn't have a way to reset clips only
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
+        applyDevicePixelRatio(m_canvas);
         m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
-        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
-                        m_starfish->screenInfo().devicePixelRatio);
-
         m_canvas->concat(m);
     }
 
