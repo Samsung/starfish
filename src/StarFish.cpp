@@ -74,6 +74,8 @@ extern Evas* g_internalCanvas;
 #endif
 #if defined(STARFISH_TIZEN_TV)
 #include <cursor_module.h> //Include this header to enable and disable cursor
+
+#if !defined(STARFISH_TIZEN_5_0)
 #include <Ecore_Wayland.h>
 int vd_util_cursormod;
 void Initialize_CursorMod() // Initialize cursor module
@@ -98,6 +100,7 @@ void Initialize_CursorMod() // Initialize cursor module
         }
     }
 }
+#endif
 
 #endif
 
@@ -370,6 +373,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 
 #endif
 
+#if !defined(STARFISH_TIZEN_5_0)
 #if defined(STARFISH_TIZEN_TV) && !defined(STARFISH_DALI)
     Initialize_CursorMod();
     Ecore_Wl_Window* wl_window =
@@ -379,6 +383,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
                       NULL); // Enable cursor in application
     CursorModule_Finalize(); // Finalize cursor module
     vd_util_cursormod = 0;
+#endif
 #endif
 
     m_deviceKind = deviceKindUseTouchScreen;
