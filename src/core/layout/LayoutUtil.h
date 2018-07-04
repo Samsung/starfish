@@ -1273,6 +1273,18 @@ public:
                other.x() < maxX() && y() < other.maxY() && other.y() < maxY();
     }
 
+    LayoutRect snapSizeToPixel() const
+    {
+        LayoutRect ret;
+        LayoutUnit rx = m_location.x();
+        LayoutUnit ry = m_location.y();
+        ret.m_location.setX(rx.floor());
+        ret.m_location.setY(ry.floor());
+        ret.setWidth(::StarFish::snapSizeToPixel(m_size.width(), rx));
+        ret.setHeight(::StarFish::snapSizeToPixel(m_size.height(), ry));
+        return ret;
+    }
+
 private:
     LayoutLocation m_location;
     LayoutSize m_size;

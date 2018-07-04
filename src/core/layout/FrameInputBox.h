@@ -48,9 +48,6 @@ public:
                         Frame::LayoutWantToResolve resolveWhat) override;
     virtual void paintContent(PaintingContext& ctx) override;
 
-    void layoutForTextEditable(LayoutContext& ctx,
-                               Frame::LayoutWantToResolve resolveWhat);
-
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 

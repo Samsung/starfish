@@ -153,6 +153,17 @@ public:
     virtual void setTextDecorationData(TextDecorationData d) = 0;
     virtual void drawRect(const Unit::Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
+    virtual void drawPixelSnappedRect(const LayoutRect& rt)
+    {
+        LayoutUnit rx = rt.x();
+        LayoutUnit ry = rt.y();
+
+        int xx = rx.floor();
+        int yy = ry.floor();
+        int ww = snapSizeToPixel(rt.width(), rx);
+        int hh = snapSizeToPixel(rt.height(), ry);
+        drawRect(LayoutRect(xx, yy, ww, hh));
+    }
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
                           LayoutLocation p3,
                           LayoutLocation p4) = 0; // left, top, right, bottom

@@ -366,14 +366,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        int xx = 0, yy = 0, ww = 0, hh = 0;
-        LayoutUnit rx = rt.x();
-        LayoutUnit ry = rt.y();
-
-        xx = rx.floor();
-        yy = ry.floor();
-        ww = snapSizeToPixel(rt.width(), rx);
-        hh = snapSizeToPixel(rt.height(), ry);
+        int xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
         drawCairoRect(xx, yy, ww, hh);
     }
 

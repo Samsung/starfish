@@ -807,7 +807,34 @@ void StackingContext::computeStackingContextProperties(
 
     NeedsGraphicsLayerReason reason =
         NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNone;
-    bool compositedBySelf = m_owner->needsGraphicsBuffer() ||
+
+    bool selfNeedsGraphicsBuffer = m_owner->needsGraphicsBuffer();
+
+    // check self visibility
+    if (selfNeedsGraphicsBuffer && m_owner->isAbsolutePositioned()) {
+        auto clip = m_owner->style()->clip();
+        if (clip && clip->left().numberData() == 0 &&
+            clip->top().numberData() == 0 && clip->right().numberData() == 0 &&
+            clip->bottom().numberData() == 0) {
+            selfNeedsGraphicsBuffer = false;
+        }
+    }
+    if (selfNeedsGraphicsBuffer &&
+        m_owner->style()->visibility() == HiddenVisibilityValue) {
+        bool everyDesendentBoxIsHidden = true;
+        m_owner->iterateChildFrameBox(
+            [&everyDesendentBoxIsHidden](FrameBox* fb) {
+                if (!fb->isAnonymous() &&
+                    fb->style()->visibility() != HiddenVisibilityValue) {
+                    everyDesendentBoxIsHidden = false;
+                }
+            });
+        if (everyDesendentBoxIsHidden) {
+            selfNeedsGraphicsBuffer = false;
+        }
+    }
+
+    bool compositedBySelf = selfNeedsGraphicsBuffer ||
                             m_owner->isRunningOpacityAnimation() ||
                             m_owner->isRunningTransformAnimation();
     if (compositedBySelf) {

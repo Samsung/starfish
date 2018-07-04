@@ -667,6 +667,10 @@ bool HTMLInputElement::ignoreLineBreaks()
         return true;
     } else if (typeString->equals("password")) {
         return true;
+    } else if (typeString->equals("submit")) {
+        return true;
+    } else if (typeString->equals("button")) {
+        return true;
     }
     return false;
 }
