@@ -1881,6 +1881,61 @@ Canvas* WindowImplEFL::preparePainting()
 
 Compositor* WindowImplEFL::prepareCompositor()
 {
+#if defined(PORT_COMPOSITOR_BACKEND_SKIA)
+    auto iter = m_objectList.begin();
+    while (iter != m_objectList.end()) {
+        evas_object_del(*iter);
+        iter++;
+    }
+    m_objectList.clear();
+    m_objectList.shrink_to_fit();
+
+    if (m_canvasAdpaterSkia) {
+        m_canvasAdpaterSkia = nullptr;
+        m_canvasAdpaterSurface = nullptr;
+    }
+
+    {
+        int w, h;
+        evas_object_image_size_get(m_canvasAdpater, &w, &h);
+        if (w != width() || h != height()) {
+            evas_object_resize(m_canvasAdpater, width(), height());
+            evas_object_image_size_set(m_canvasAdpater, width(), height());
+            evas_object_image_fill_set(m_canvasAdpater, 0, 0, width(),
+                                       height());
+        }
+    }
+
+    int w, h;
+    evas_object_image_size_get(m_canvasAdpater, &w, &h);
+    evas_object_show(m_canvasAdpater);
+    void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
+    evas_object_image_data_set(m_canvasAdpater, addr);
+
+    SkImageInfo info = SkImageInfo::MakeN32Premul(w, h);
+    size_t rowBytes = evas_object_image_stride_get(m_canvasAdpater);
+    m_canvasAdpaterSurface = SkSurface::MakeRasterDirect(info, addr, rowBytes);
+    // FIXME : Apply device scale factor
+    STARFISH_LOG_INFO("WindowImplEFL::preparePainting buffer info %p -> %p\n",
+                      addr,
+                      ((unsigned char*)addr) +
+                          (evas_object_image_stride_get(m_canvasAdpater) * h));
+
+    m_canvasAdpaterSkia = m_canvasAdpaterSurface->getCanvas();
+    struct dummy {
+        SkCanvas* canvas;
+        sk_sp<SkSurface> surface;
+        int w;
+        int h;
+    } d;
+    d.canvas = m_canvasAdpaterSkia;
+    d.surface = m_canvasAdpaterSurface;
+    d.w = width() + starFish()->posX();
+    d.h = height() + starFish()->posY();
+
+    return Compositor::create(starFish(), &d);
+#endif
+
 #if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
 #if defined(STARFISH_TIZEN) && defined(STARFISH_TIZEN_EVASGL_CAIRO)
     struct dummy {
