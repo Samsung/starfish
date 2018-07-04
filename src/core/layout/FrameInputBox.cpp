@@ -177,11 +177,7 @@ void FrameInputBox::layout(LayoutContext& ctx,
     // Align text to center vertically if necessary
     if (textEditable->shouldCreateFrameText() &&
         textEditable->ignoreLineBreaks()) {
-        if (lineBoxes().size() > 0) {
-            LineBox* lb = *lineBoxes().begin();
-            LayoutUnit availableHeight = contentHeight() - lb->height();
-            lb->setY(availableHeight / 2 + paddingTop() + borderTop());
-        }
+        layoutLineBoxesVerticallyCenter();
     }
 
     // Update caret location
@@ -190,9 +186,10 @@ void FrameInputBox::layout(LayoutContext& ctx,
         textEditable->style()->font()->metrics().m_fontHeight;
     bool isLTR = style()->direction() == DirectionValue::LtrDirectionValue;
     size_t cPos = textEditable->currentCaretPosition();
+    LayoutUnit defaultVerticalVias = (contentHeight() - fontHeight) / 2;
 
     if (!cPos) {
-        y = paddingTop() + borderTop();
+        y = paddingTop() + borderTop() + defaultVerticalVias;
         if (isLTR) {
             x = paddingLeft() + borderLeft();
         } else {

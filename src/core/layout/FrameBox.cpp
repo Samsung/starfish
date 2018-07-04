@@ -492,18 +492,20 @@ void FrameBox::paintOutline(Canvas* canvas)
         canvas->setColor(style()->outlineColor());
 
         // top
-        canvas->drawRect(LayoutRect(rt.x(), rt.y(), rt.width() - outlineWidth,
-                                    outlineWidth));
+        canvas->drawPixelSnappedRect(LayoutRect(
+            rt.x(), rt.y(), rt.width() - outlineWidth, outlineWidth));
         // right
-        canvas->drawRect(LayoutRect(rt.x() + rt.width() - outlineWidth, rt.y(),
-                                    outlineWidth, rt.height() - outlineWidth));
+        canvas->drawPixelSnappedRect(
+            LayoutRect(rt.x() + rt.width() - outlineWidth, rt.y(), outlineWidth,
+                       rt.height() - outlineWidth));
         // bottom
-        canvas->drawRect(LayoutRect(rt.x() + outlineWidth,
-                                    rt.y() + rt.height() - outlineWidth,
-                                    rt.width() - outlineWidth, outlineWidth));
+        canvas->drawPixelSnappedRect(LayoutRect(
+            rt.x() + outlineWidth, rt.y() + rt.height() - outlineWidth,
+            rt.width() - outlineWidth, outlineWidth));
         // left
-        canvas->drawRect(LayoutRect(rt.x(), rt.y() + outlineWidth, outlineWidth,
-                                    rt.height() - outlineWidth));
+        canvas->drawPixelSnappedRect(LayoutRect(rt.x(), rt.y() + outlineWidth,
+                                                outlineWidth,
+                                                rt.height() - outlineWidth));
 
         canvas->restore();
     }
@@ -1280,7 +1282,7 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                                           interiorRect.width(),
                                           interiorRect.height());
                     cv->setFillRule(false);
-                    cv->drawRect(rect);
+                    cv->drawPixelSnappedRect(rect);
                 }
                 cv->fill();
 
@@ -1405,12 +1407,17 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
             paintingRect = box->makeRect(style->backgroundClip(idx));
         }
         canvas->setColor(style->backgroundColor());
-        // FIXME: the results of drawRect(LayoutRect) and drawRect(Unit::Rect)
-        // are different because inside function drawRect(LayoutRect), modifies
-        // its x, y, width and height somehow.
-        canvas->drawRect(LayoutRect(paintingRect.x(), paintingRect.y(),
-                                    paintingRect.width(),
-                                    paintingRect.height()));
+        if (box->hasFrameBorderRadius()) {
+            box->applyBorderRadius(canvas, LayoutRect(paintingRect.x(),
+                                                      paintingRect.y(),
+                                                      paintingRect.width(),
+                                                      paintingRect.height()));
+            canvas->fill();
+        } else {
+            canvas->drawPixelSnappedRect(
+                LayoutRect(paintingRect.x(), paintingRect.y(),
+                           paintingRect.width(), paintingRect.height()));
+        }
         canvas->restore();
     }
     paintBackgroundLayers(canvas, box, rootOrBodyelement, style);
@@ -2080,9 +2087,12 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 #endif
     } else if (border.hasBorderStyle()) {
         if (hasFrameBorderRadius()) {
+            LayoutRect borderRect = rect;
+            borderRect = rect.snapSizeToPixel();
+
             BorderRadiusData br = frameBorderRadius();
             BorderRadiusFixedData fixed(br, width(), height(), this);
-            reduceBorderRadiusToFit(rect, fixed);
+            reduceBorderRadiusToFit(borderRect, fixed);
 
             const float topLeftVertical = fixed.m_topLeftVertical;
             const float topLeftHorizontal = fixed.m_topLeftHorizontal;
@@ -2100,8 +2110,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
                 if (topLeftHorizontal && topLeftVertical) {
                     canvas->save();
-                    canvas->translate(topLeftHorizontal + rect.x().toFloat(),
-                                      topLeftVertical + rect.y().toFloat());
+                    canvas->translate(
+                        topLeftHorizontal + borderRect.x().toFloat(),
+                        topLeftVertical + borderRect.y().toFloat());
                     if (topLeftVertical > topLeftHorizontal) {
                         canvas->scale(1 * (topLeftHorizontal / topLeftVertical),
                                       1);
@@ -2117,9 +2128,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                     if (topLeftHorizontal > borderLeft() &&
                         topLeftVertical > borderTop()) {
                         canvas->save();
-                        canvas->translate(topLeftHorizontal +
-                                              rect.x().toFloat(),
-                                          topLeftVertical + rect.y().toFloat());
+                        canvas->translate(
+                            topLeftHorizontal + borderRect.x().toFloat(),
+                            topLeftVertical + borderRect.y().toFloat());
                         float newHorizontal = topLeftHorizontal - borderLeft();
                         float newVertical = topLeftVertical - borderTop();
                         if (newVertical > newHorizontal) {
@@ -2132,21 +2143,22 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                         canvas->arcNegative(0, 0, arcR, M_PI + M_PI / 4, M_PI);
                         canvas->restore();
                     } else {
-                        canvas->lineTo(rect.x() + borderLeft(),
-                                       rect.y() + borderTop());
+                        canvas->lineTo(borderRect.x() + borderLeft(),
+                                       borderRect.y() + borderTop());
                     }
                 } else {
-                    canvas->moveTo(rect.x(), rect.y());
-                    canvas->lineTo(rect.x() + borderLeft(),
-                                   rect.y() + borderTop());
+                    canvas->moveTo(borderRect.x(), borderRect.y());
+                    canvas->lineTo(borderRect.x() + borderLeft(),
+                                   borderRect.y() + borderTop());
                 }
 
                 if (bottomLeftHorizontal && bottomLeftVertical) {
                     if (bottomLeftHorizontal > borderLeft() &&
                         bottomLeftVertical > borderBottom()) {
                         canvas->save();
-                        canvas->translate(rect.x() + bottomLeftHorizontal,
-                                          rect.maxY() - bottomLeftVertical);
+                        canvas->translate(borderRect.x() + bottomLeftHorizontal,
+                                          borderRect.maxY() -
+                                              bottomLeftVertical);
 
                         float newHorizontal =
                             bottomLeftHorizontal - borderLeft();
@@ -2163,13 +2175,13 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                             M_PI - M_PI / 2 + M_PI / 4);
                         canvas->restore();
                     } else {
-                        canvas->lineTo(rect.x() + borderLeft(),
-                                       rect.maxY() - borderBottom());
+                        canvas->lineTo(borderRect.x() + borderLeft(),
+                                       borderRect.maxY() - borderBottom());
                     }
 
                     canvas->save();
-                    canvas->translate(rect.x() + bottomLeftHorizontal,
-                                      rect.maxY() - bottomLeftVertical);
+                    canvas->translate(borderRect.x() + bottomLeftHorizontal,
+                                      borderRect.maxY() - bottomLeftVertical);
 
                     if (bottomLeftVertical > bottomLeftHorizontal) {
                         canvas->scale(
@@ -2184,13 +2196,13 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                     canvas->arc(0, 0, arcR, M_PI - M_PI / 2 + M_PI / 4, M_PI);
                     canvas->restore();
 
-                    x = rect.x();
-                    y = rect.y() + bottomLeftVertical;
+                    x = borderRect.x();
+                    y = borderRect.y() + bottomLeftVertical;
                     canvas->lineTo(x, y);
                 } else {
-                    canvas->lineTo(rect.x() + borderLeft(),
-                                   rect.maxY() - borderTop());
-                    canvas->lineTo(rect.x(), rect.maxY());
+                    canvas->lineTo(borderRect.x() + borderLeft(),
+                                   borderRect.maxY() - borderTop());
+                    canvas->lineTo(borderRect.x(), borderRect.maxY());
                 }
 
                 canvas->fill();
@@ -2204,9 +2216,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                     if (topLeftHorizontal > borderLeft() &&
                         topLeftVertical > borderTop()) {
                         canvas->save();
-                        canvas->translate(topLeftHorizontal +
-                                              rect.x().toFloat(),
-                                          topLeftVertical + rect.y().toFloat());
+                        canvas->translate(
+                            topLeftHorizontal + borderRect.x().toFloat(),
+                            topLeftVertical + borderRect.y().toFloat());
 
                         float newHorizontal = topLeftHorizontal - borderLeft();
                         float newVertical = topLeftVertical - borderTop();
@@ -2222,14 +2234,15 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                             M_PI + M_PI / 4);
                         canvas->restore();
                     } else {
-                        x = rect.x() + borderLeft();
-                        y = rect.y() + borderTop();
+                        x = borderRect.x() + borderLeft();
+                        y = borderRect.y() + borderTop();
                         canvas->moveTo(x, y);
                     }
 
                     canvas->save();
-                    canvas->translate(topLeftHorizontal + rect.x().toFloat(),
-                                      topLeftVertical + rect.y().toFloat());
+                    canvas->translate(
+                        topLeftHorizontal + borderRect.x().toFloat(),
+                        topLeftVertical + borderRect.y().toFloat());
                     if (topLeftVertical > topLeftHorizontal) {
                         canvas->scale(1 * (topLeftHorizontal / topLeftVertical),
                                       1);
@@ -2242,16 +2255,16 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                     canvas->arc(0, 0, arcR, M_PI + M_PI / 4, M_PI + M_PI / 2);
                     canvas->restore();
                 } else {
-                    canvas->moveTo(rect.x() + borderLeft(),
-                                   rect.y() + borderTop());
-                    canvas->lineTo(rect.x(), rect.y());
+                    canvas->moveTo(borderRect.x() + borderLeft(),
+                                   borderRect.y() + borderTop());
+                    canvas->lineTo(borderRect.x(), borderRect.y());
                 }
 
                 if (topRightHorizontal && topRightVertical) {
                     canvas->save();
-                    canvas->translate(-topRightHorizontal +
-                                          rect.maxX().toFloat(),
-                                      topRightVertical + rect.y().toFloat());
+                    canvas->translate(
+                        -topRightHorizontal + borderRect.maxX().toFloat(),
+                        topRightVertical + borderRect.y().toFloat());
 
                     if (topRightVertical > topRightHorizontal) {
                         canvas->scale(
@@ -2270,8 +2283,8 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                         topRightVertical > borderTop()) {
                         canvas->save();
                         canvas->translate(
-                            -topRightHorizontal + rect.maxX().toFloat(),
-                            topRightVertical + rect.y().toFloat());
+                            -topRightHorizontal + borderRect.maxX().toFloat(),
+                            topRightVertical + borderRect.y().toFloat());
                         float newHorizontal =
                             topRightHorizontal - borderRight();
                         float newVertical = topRightVertical - borderTop();
@@ -2286,14 +2299,14 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                             -M_PI / 2);
                         canvas->restore();
                     } else {
-                        x = rect.maxX() - borderRight();
-                        y = rect.y() + borderTop();
+                        x = borderRect.maxX() - borderRight();
+                        y = borderRect.y() + borderTop();
                         canvas->lineTo(x, y);
                     }
                 } else {
-                    canvas->lineTo(rect.maxX(), rect.y());
-                    canvas->lineTo(rect.maxX() - borderRight(),
-                                   rect.y() + borderTop());
+                    canvas->lineTo(borderRect.maxX(), borderRect.y());
+                    canvas->lineTo(borderRect.maxX() - borderRight(),
+                                   borderRect.y() + borderTop());
                 }
                 canvas->fill();
             }
@@ -2307,8 +2320,8 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                         topRightVertical > borderTop()) {
                         canvas->save();
                         canvas->translate(
-                            rect.maxX().toFloat() - topRightHorizontal,
-                            rect.y().toFloat() + topRightVertical);
+                            borderRect.maxX().toFloat() - topRightHorizontal,
+                            borderRect.y().toFloat() + topRightVertical);
 
                         float newHorizontal =
                             topRightHorizontal - borderRight();
@@ -2325,16 +2338,16 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                             M_PI / 4 - M_PI / 2);
                         canvas->restore();
                     } else {
-                        x = rect.maxX() - borderRight();
-                        y = rect.y() + borderTop();
+                        x = borderRect.maxX() - borderRight();
+                        y = borderRect.y() + borderTop();
                         canvas->moveTo(x, y);
                     }
 
                     canvas->save();
 
-                    canvas->translate(rect.maxX().toFloat() -
-                                          topRightHorizontal,
-                                      rect.y().toFloat() + topRightVertical);
+                    canvas->translate(
+                        borderRect.maxX().toFloat() - topRightHorizontal,
+                        borderRect.y().toFloat() + topRightVertical);
                     if (topRightVertical > topRightHorizontal) {
                         canvas->scale(
                             1 * (topRightHorizontal / topRightVertical), 1);
@@ -2348,19 +2361,19 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                 M_PI / 2 - M_PI / 2);
                     canvas->restore();
                 } else {
-                    canvas->moveTo(rect.maxX() - borderRight(),
-                                   rect.y() + borderTop());
-                    canvas->lineTo(rect.maxX(), rect.y());
+                    canvas->moveTo(borderRect.maxX() - borderRight(),
+                                   borderRect.y() + borderTop());
+                    canvas->lineTo(borderRect.maxX(), borderRect.y());
                 }
 
                 if (bottomRightHorizontal && bottomRightVertical) {
-                    x = rect.maxX();
-                    y = rect.maxY() - bottomRightVertical;
+                    x = borderRect.maxX();
+                    y = borderRect.maxY() - bottomRightVertical;
                     canvas->lineTo(x, y);
 
                     canvas->save();
-                    canvas->translate(rect.maxX() - bottomRightHorizontal,
-                                      rect.maxY() - bottomRightVertical);
+                    canvas->translate(borderRect.maxX() - bottomRightHorizontal,
+                                      borderRect.maxY() - bottomRightVertical);
                     if (bottomRightVertical > bottomRightHorizontal) {
                         canvas->scale(
                             1 * (bottomRightHorizontal / bottomRightVertical),
@@ -2377,8 +2390,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                     if (bottomRightHorizontal > borderRight() &&
                         bottomRightVertical > borderBottom()) {
                         canvas->save();
-                        canvas->translate(rect.maxX() - bottomRightHorizontal,
-                                          rect.maxY() - bottomRightVertical);
+                        canvas->translate(
+                            borderRect.maxX() - bottomRightHorizontal,
+                            borderRect.maxY() - bottomRightVertical);
 
                         float newHorizontal =
                             bottomRightHorizontal - borderRight();
@@ -2395,14 +2409,14 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                         canvas->arcNegative(0, 0, arcR, M_PI / 4, 0);
                         canvas->restore();
                     } else {
-                        x = rect.maxX() - borderRight();
-                        y = rect.maxY() - borderBottom();
+                        x = borderRect.maxX() - borderRight();
+                        y = borderRect.maxY() - borderBottom();
                         canvas->lineTo(x, y);
                     }
                 } else {
-                    canvas->lineTo(rect.maxX(), rect.maxY());
-                    canvas->lineTo(rect.maxX() - borderRight(),
-                                   rect.maxY() - borderBottom());
+                    canvas->lineTo(borderRect.maxX(), borderRect.maxY());
+                    canvas->lineTo(borderRect.maxX() - borderRight(),
+                                   borderRect.maxY() - borderBottom());
                 }
 
                 canvas->fill();
@@ -2415,8 +2429,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                     if (bottomRightHorizontal > borderRight() &&
                         bottomRightVertical > borderBottom()) {
                         canvas->save();
-                        canvas->translate(rect.maxX() - bottomRightHorizontal,
-                                          rect.maxY() - bottomRightVertical);
+                        canvas->translate(
+                            borderRect.maxX() - bottomRightHorizontal,
+                            borderRect.maxY() - bottomRightVertical);
 
                         float newHorizontal =
                             bottomRightHorizontal - borderRight();
@@ -2433,14 +2448,14 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                         canvas->arcNegative(0, 0, arcR, M_PI / 2, M_PI / 4);
                         canvas->restore();
                     } else {
-                        x = rect.maxX() - borderRight();
-                        y = rect.maxY() - borderBottom();
+                        x = borderRect.maxX() - borderRight();
+                        y = borderRect.maxY() - borderBottom();
                         canvas->moveTo(x, y);
                     }
 
                     canvas->save();
-                    canvas->translate(rect.maxX() - bottomRightHorizontal,
-                                      rect.maxY() - bottomRightVertical);
+                    canvas->translate(borderRect.maxX() - bottomRightHorizontal,
+                                      borderRect.maxY() - bottomRightVertical);
                     if (bottomRightVertical > bottomRightHorizontal) {
                         canvas->scale(
                             1 * (bottomRightHorizontal / bottomRightVertical),
@@ -2454,15 +2469,15 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                     canvas->arc(0, 0, arcR, M_PI / 4, M_PI / 2);
                     canvas->restore();
                 } else {
-                    canvas->moveTo(rect.maxX() - borderRight(),
-                                   rect.maxY() - borderBottom());
-                    canvas->lineTo(rect.maxX(), rect.maxY());
+                    canvas->moveTo(borderRect.maxX() - borderRight(),
+                                   borderRect.maxY() - borderBottom());
+                    canvas->lineTo(borderRect.maxX(), borderRect.maxY());
                 }
 
                 if (bottomLeftHorizontal && bottomLeftVertical) {
                     canvas->save();
-                    canvas->translate(rect.x() + bottomLeftHorizontal,
-                                      rect.maxY() - bottomLeftVertical);
+                    canvas->translate(borderRect.x() + bottomLeftHorizontal,
+                                      borderRect.maxY() - bottomLeftVertical);
                     if (bottomLeftVertical > bottomLeftHorizontal) {
                         canvas->scale(
                             1 * (bottomLeftHorizontal / bottomLeftVertical), 1);
@@ -2479,8 +2494,9 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                     if (bottomLeftHorizontal > borderLeft() &&
                         bottomLeftVertical > borderBottom()) {
                         canvas->save();
-                        canvas->translate(rect.x() + bottomLeftHorizontal,
-                                          rect.maxY() - bottomLeftVertical);
+                        canvas->translate(borderRect.x() + bottomLeftHorizontal,
+                                          borderRect.maxY() -
+                                              bottomLeftVertical);
 
                         float newHorizontal =
                             bottomLeftHorizontal - borderLeft();
@@ -2498,14 +2514,14 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                             M_PI - M_PI / 2);
                         canvas->restore();
                     } else {
-                        x = rect.x() + borderLeft();
-                        y = rect.maxY() - borderBottom();
+                        x = borderRect.x() + borderLeft();
+                        y = borderRect.maxY() - borderBottom();
                         canvas->lineTo(x, y);
                     }
                 } else {
-                    canvas->lineTo(rect.x(), rect.maxY());
-                    canvas->lineTo(rect.x() + borderLeft(),
-                                   rect.maxY() - borderBottom());
+                    canvas->lineTo(borderRect.x(), borderRect.maxY());
+                    canvas->lineTo(borderRect.x() + borderLeft(),
+                                   borderRect.maxY() - borderBottom());
                 }
                 canvas->fill();
             }
@@ -2529,24 +2545,24 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 //
 
                 // top
-                canvas->drawRect(
+                canvas->drawPixelSnappedRect(
                     LayoutRect(rect.x(), rect.y(), rect.width(), borderTop()));
 
                 // right
-                canvas->drawRect(
+                canvas->drawPixelSnappedRect(
                     LayoutRect(rect.x() + rect.width() - borderRight(),
                                rect.y() + borderTop(), borderRight(),
                                rect.height() - borderHeight()));
 
                 // bottom
-                canvas->drawRect(LayoutRect(rect.x(), rect.y() + rect.height() -
-                                                          borderBottom(),
-                                            width(), borderBottom()));
+                canvas->drawPixelSnappedRect(LayoutRect(
+                    rect.x(), rect.y() + rect.height() - borderBottom(),
+                    width(), borderBottom()));
 
                 // left
-                canvas->drawRect(LayoutRect(rect.x(), rect.y() + borderTop(),
-                                            borderLeft(),
-                                            rect.height() - borderHeight()));
+                canvas->drawPixelSnappedRect(
+                    LayoutRect(rect.x(), rect.y() + borderTop(), borderLeft(),
+                               rect.height() - borderHeight()));
 #else
                 canvas->beginPath();
 
@@ -3268,8 +3284,15 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
 
     ComputedStyle* cs = style();
+    ComputedStyle* parentStyle = nullptr;
+    if (!cs) {
+        if (isLineBox()) {
+            parentStyle = layoutParent()->style();
+        }
+    }
 
-    if (cs && cs->visibility() == HiddenVisibilityValue) {
+    if ((cs && cs->visibility() == HiddenVisibilityValue) ||
+        (parentStyle && parentStyle->visibility() == HiddenVisibilityValue)) {
         return true;
     }
 

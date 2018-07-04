@@ -857,7 +857,7 @@ public:
         drawEvasRect(xx, yy, ww, hh, rt, true);
     }
 
-    virtual void drawRect(const LayoutRect& rt)
+    virtual void drawPixelSnappedRect(const LayoutRect& rt)
     {
         if (canSkipPainting(
                 Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()))) {
@@ -889,6 +889,42 @@ public:
             yy = ry.floor();
             ww = snapSizeToPixel(rt.width(), rx);
             hh = snapSizeToPixel(rt.height(), ry);
+        }
+        drawEvasRect(xx, yy, ww, hh, Unit::Rect(xx, yy, ww, hh));
+    }
+
+    virtual void drawRect(const LayoutRect& rt)
+    {
+        if (canSkipPainting(
+                Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()))) {
+            return;
+        }
+
+        int xx = 0, yy = 0, ww = 0, hh = 0;
+        if (lastState().m_mapMode) {
+            SkRect sss = SkRect::MakeXYWH(SkFloatToScalar((float)rt.x()),
+                                          SkFloatToScalar((float)rt.y()),
+                                          SkFloatToScalar((float)rt.width()),
+                                          SkFloatToScalar((float)rt.height()));
+            if (!shouldApplyEvasMap()) {
+                lastState().m_matrix.mapRect(&sss);
+                sss.sort();
+            }
+            xx = sss.x();
+            yy = sss.y();
+            ww = sss.width();
+            hh = sss.height();
+        } else {
+            LayoutUnit rx = rt.x();
+            LayoutUnit ry = rt.y();
+            if (!shouldApplyEvasMap()) {
+                rx += lastState().m_baseX;
+                ry += lastState().m_baseY;
+            }
+            xx = rx;
+            yy = ry;
+            ww = rt.width();
+            hh = rt.height();
         }
         drawEvasRect(xx, yy, ww, hh, Unit::Rect(xx, yy, ww, hh));
     }

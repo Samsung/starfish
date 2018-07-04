@@ -36,6 +36,11 @@ public:
         return "FrameButtonBox";
     }
 
+    virtual bool isFrameButtonBox()
+    {
+        return true;
+    }
+
     virtual void inlineLayoutAdditionalPath(LayoutContext& ctx) override;
 
     void* operator new(size_t size);

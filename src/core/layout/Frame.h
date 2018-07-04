@@ -1133,6 +1133,11 @@ public:
         return false;
     }
 
+    virtual bool isFrameButtonBox()
+    {
+        return false;
+    }
+
     virtual bool isFrameSVGSVGBox()
     {
         return false;

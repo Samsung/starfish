@@ -835,6 +835,39 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
+    // special method for FrameInputBox & FrameButton
+    LayoutUnit layoutLineBoxesVerticallyCenter()
+    {
+        STARFISH_ASSERT(isFrameInputBox() || isFrameButtonBox());
+        bool shouldContinueOperation = true;
+        LayoutUnit lineBoxesHeight;
+        for (size_t i = 0; i < lineBoxes().size(); i++) {
+            auto lineBox = lineBoxes()[i];
+            lineBoxesHeight += lineBox->height();
+            for (size_t j = 0; j < lineBox->boxes().size(); j++) {
+                if (lineBox->boxes()[j]->isFloating()) {
+                    shouldContinueOperation = false;
+                    break;
+                }
+            }
+            if (!shouldContinueOperation) {
+                break;
+            }
+        }
+
+        LayoutUnit availableHeight = contentHeight() - lineBoxesHeight;
+        if (availableHeight > 0 && shouldContinueOperation) {
+            LayoutUnit d;
+            for (size_t i = 0; i < lineBoxes().size(); i++) {
+                lineBoxes()[i]->setY(availableHeight / 2 + paddingTop() +
+                                     borderTop() + d);
+                d += lineBoxes()[i]->height();
+            }
+            return availableHeight / 2;
+        }
+        return 0;
+    }
+
 protected:
     static inline void fillGCDescriptor(GC_word* obj_bitmap)
     {
