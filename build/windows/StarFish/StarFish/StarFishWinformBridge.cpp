@@ -148,7 +148,7 @@ extern "C" void STARFISH_EXPORT __stdcall dispatchMouseWheelEvent(
     wv->DispatchMouseWheelEvent(x, y, delta);
 }
 
-KeyValue virtualKeyCodeToKeyValue(uint32_t vKeyCode)
+KeyValue virtualKeyCodeToKeyValue(uint32_t vKeyCode, uint32_t capsLockOrShiftPressed)
 {
     switch (vKeyCode) {
     case VK_LEFT:
@@ -164,22 +164,55 @@ KeyValue virtualKeyCodeToKeyValue(uint32_t vKeyCode)
     case VK_BACK:
         return KeyValue::BackspaceKey;
     default:
+        UINT ch = MapVirtualKey(vKeyCode, MAPVK_VK_TO_CHAR);
+        if (String::isASCIIPrintableKey(ch)) {
+            if (isalpha(ch)) {
+                if (!capsLockOrShiftPressed) {
+                    ch = tolower(ch);
+                }
+            }
+            return (KeyValue)ch;
+        }
         return KeyValue::UnidentifiedKey;
     }
 }
 
 extern "C" void STARFISH_EXPORT __stdcall dispatchKeyDownEvent(
-    size_t webViewInstance, uint32_t keyCode)
+    size_t webViewInstance, uint32_t keyCode, uint32_t capsLockOrShiftPressed)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
-    wv->DispatchKeyDownEvent(virtualKeyCodeToKeyValue(keyCode));
+    wv->DispatchKeyDownEvent(virtualKeyCodeToKeyValue(keyCode, capsLockOrShiftPressed));
 }
 
 extern "C" void STARFISH_EXPORT __stdcall dispatchKeyUpEvent(
-    size_t webViewInstance, uint32_t keyCode)
+    size_t webViewInstance, uint32_t keyCode, uint32_t capsLockOrShiftPressed)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
-    wv->DispatchKeyUpEvent(virtualKeyCodeToKeyValue(keyCode));
+    wv->DispatchKeyUpEvent(virtualKeyCodeToKeyValue(keyCode, capsLockOrShiftPressed));
+}
+
+extern "C" void STARFISH_EXPORT __stdcall dispatchCompositionStartEvent(size_t webViewInstance,
+    size_t utf8Str,
+    uint32_t strLength)
+{
+    LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
+    wv->DispatchCompositionStartEvent(std::string((char*)utf8Str, strLength));
+}
+
+extern "C" void STARFISH_EXPORT __stdcall dispatchCompositionUpdateEvent(size_t webViewInstance,
+    size_t utf8Str,
+    uint32_t strLength)
+{
+    LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
+    wv->DispatchCompositionUpdateEvent(std::string((char*)utf8Str, strLength));
+}
+
+extern "C" void STARFISH_EXPORT __stdcall dispatchCompositionEndEvent(size_t webViewInstance,
+    size_t utf8Str,
+    uint32_t strLength)
+{
+    LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
+    wv->DispatchCompositionEndEvent(std::string((char*)utf8Str, strLength));
 }
 
 struct EvaluateJSResult

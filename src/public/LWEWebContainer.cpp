@@ -478,4 +478,54 @@ void WebContainer::DispatchKeyUpEvent(KeyValue keyCode, int modifier)
         ->dispatchKeyEvent(::StarFish::KeyEventKind::KeyEventUp,
                            ::StarFish::PlatformKeyEventData(keyCode));
 }
+
+void WebContainer::DispatchCompositionStartEvent(
+    const std::string& soFarCompositiedString)
+{
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->dispatchCompositionEvent(
+            ::StarFish::CompositionEventKind::CompositionEventStart,
+            ::StarFish::String::fromUTF8(soFarCompositiedString.data(),
+                                         soFarCompositiedString.length()));
+}
+
+void WebContainer::DispatchCompositionUpdateEvent(
+    const std::string& soFarCompositiedString)
+{
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->dispatchCompositionEvent(
+            ::StarFish::CompositionEventKind::CompositionEventUpdate,
+            ::StarFish::String::fromUTF8(soFarCompositiedString.data(),
+                                         soFarCompositiedString.length()));
+}
+
+void WebContainer::DispatchCompositionEndEvent(
+    const std::string& soFarCompositiedString)
+{
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->dispatchCompositionEvent(
+            ::StarFish::CompositionEventKind::CompositionEventEnd,
+            ::StarFish::String::fromUTF8(soFarCompositiedString.data(),
+                                         soFarCompositiedString.length()));
+}
+void WebContainer::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
+    const std::function<void(LWE::WebContainer*)>& cb)
+{
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->registerShowSoftwareKeyboardIfPossibleCallback(
+            [this, cb]() { cb(this); });
+}
+
+void WebContainer::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
+    const std::function<void(LWE::WebContainer*)>& cb)
+{
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->registerHideSoftwareKeyboardIfPossibleCallback(
+            [this, cb]() { cb(this); });
+}
 }
