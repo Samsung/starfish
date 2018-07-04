@@ -25,6 +25,7 @@
 #include "SkTypeface.h"
 #include "SkStream.h"
 #include "SkFontMgr.h"
+#include "SkPaint.h"
 
 #include <fontconfig/fontconfig.h>
 #include <hb.h>
@@ -98,6 +99,10 @@ FontFaceImplSkia::FontFaceImplSkia(FT_Face face, sk_sp<SkTypeface> skTypeface,
     m_hbFace = hbFace;
 
     m_skTypeFace = skTypeface;
+    m_skPaint = new SkPaint();
+    m_skPaint->setTypeface(m_skTypeFace);
+    m_skPaint->setAntiAlias(true);
+    m_skPaint->setTextEncoding(SkPaint::kGlyphID_TextEncoding);
 
     FT_Error error;
     FT_UInt glyph_index = FT_Get_Char_Index(m_face, 'x');
@@ -133,6 +138,8 @@ FontFaceImplSkia::FontFaceImplSkia(FT_Face face, sk_sp<SkTypeface> skTypeface,
                 hb_font_destroy(m->m_hbFace);
                 FT_Done_Face(m->m_face);
                 m->m_skTypeFace = nullptr;
+                delete m->m_skPaint;
+                m->m_skPaint = nullptr;
             }
             GlyphIndexCache().swap(m->m_glyphIndexCache);
             free(m->m_dataBuffer);
@@ -172,6 +179,8 @@ void FontFaceImplSkia::clearCache()
         m_face = nullptr;
         m_hbFace = nullptr;
         m_skTypeFace = nullptr;
+        delete m_skPaint;
+        m_skPaint = nullptr;
         GlyphIndexCache().swap(m_glyphIndexCache);
     }
 }
@@ -238,6 +247,12 @@ void FontFaceImplSkia::ensureFonts()
 
         m_skTypeFace = skTypeface;
     }
+    if (m_skPaint == nullptr) {
+        m_skPaint = new SkPaint();
+        m_skPaint->setTypeface(m_skTypeFace);
+        m_skPaint->setAntiAlias(true);
+        m_skPaint->setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+    }
 }
 
 std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
@@ -252,6 +267,7 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
         size_t faceIndex = SIZE_MAX;
         FT_Face lastFace = nullptr;
         sk_sp<SkTypeface> lastSkFontFace = nullptr;
+        SkPaint* lastSkPaint = nullptr;
 
         hb_font_t* hbFace = nullptr;
         UScriptCode lastUnicodeScript = USCRIPT_COMMON;
@@ -280,11 +296,12 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
             if (pos == 0) {
                 lastFace = glyphData.first.first->freetypeFace();
                 lastSkFontFace = glyphData.first.first->skTypeFace();
+                lastSkPaint = glyphData.first.first->skPaint();
                 hbFace = glyphData.first.first->harfbuzzFace();
                 lastUnicodeScript = unicodeScript;
             } else {
                 if (glyphData.first.first ||
-                    lastFace != glyphData.first.first->freetypeFace() ||
+                    lastSkFontFace != glyphData.first.first->skTypeFace() ||
                     lastUnicodeScript != unicodeScript ||
                     ((unicodeScript != USCRIPT_INHERITED) &&
                      (!uscript_hasScript(ch, lastUnicodeScript)))) {
@@ -306,6 +323,7 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
         run.m_script = hb_icu_script_to_script(lastUnicodeScript);
         run.m_faceIndex = faceIndex;
         run.m_skTypeFace = lastSkFontFace;
+        run.m_skPaint = lastSkPaint;
         run.m_hbFont = hbFace;
         run.m_text = StringView((String*)text, startPos, endPos);
         result.push_back(run);

@@ -22,7 +22,6 @@
 #define __FontImplSkia__
 
 #include "SkTypeface.h"
-#include "SkStream.h"
 
 #include <fontconfig/fontconfig.h>
 #include <hb.h>
@@ -33,8 +32,9 @@
 #include "core/style/ComputedStyle.h"
 #include "core/modules/canvas/font/Font.h"
 
-namespace StarFish {
+class SkPaint;
 
+namespace StarFish {
 class FontSelectorImplSkia : public FontSelector {
 public:
     FontSelectorImplSkia(Document* document,
@@ -73,6 +73,11 @@ public:
         return m_skTypeFace;
     }
 
+    SkPaint* skPaint()
+    {
+        return m_skPaint;
+    }
+
     hb_font_t* harfbuzzFace()
     {
         ensureFonts();
@@ -96,6 +101,7 @@ private:
 
     FT_Face m_face;
     sk_sp<SkTypeface> m_skTypeFace;
+    SkPaint* m_skPaint;
     hb_font_t* m_hbFace;
 };
 
@@ -105,6 +111,7 @@ public:
     size_t m_faceIndex;
     FT_Face m_ftFace;
     sk_sp<SkTypeface> m_skTypeFace;
+    SkPaint* m_skPaint;
     hb_font_t* m_hbFont;
     hb_script_t m_script;
     std::vector<unsigned> m_glyphs;
