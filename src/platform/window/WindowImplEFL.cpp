@@ -1868,6 +1868,8 @@ Canvas* WindowImplEFL::preparePainting()
                           (evas_object_image_stride_get(m_canvasAdpater) * h));
 
     m_canvasAdpaterSkia = m_canvasAdpaterSurface->getCanvas();
+    m_canvasAdpaterSkia->scale(starFish()->screenInfo().devicePixelRatio,
+                               starFish()->screenInfo().devicePixelRatio);
     struct dummy {
         SkCanvas* canvas;
         sk_sp<SkSurface> surface;

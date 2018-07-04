@@ -997,7 +997,7 @@ int main(int argc, char* argv[])
     info.rect.setHeight(height);
     info.availableRect.setWidth(width);
     info.availableRect.setHeight(height);
-#if defined(STARFISH_EFL_CAIRO)
+#if defined(STARFISH_EFL_CAIRO) || defined(STARFISH_EFL_SKIA)
     info.devicePixelRatio = scaleFactor;
 #endif
 
