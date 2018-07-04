@@ -182,6 +182,7 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}
 mkdir -p %{buildroot}%{_bindir}
 cp -r out_tizen/%{target}/release/lib/*.so %{buildroot}%{_libdir}
+cp -r out_tizen/%{target}/release/lib/tizen/*.so %{buildroot}%{_libdir}
 cp -r out_tizen/%{target}/release/lightweight-web-engine %{buildroot}%{_bindir}/%{bin}
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
