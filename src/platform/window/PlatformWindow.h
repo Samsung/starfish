@@ -74,9 +74,15 @@ public:
     virtual Compositor* prepareCompositor() = 0;
     virtual void showSoftwareKeyboardIfPossible()
     {
+        if (m_showSoftwareKeyboardIfPossibleCallback) {
+            m_showSoftwareKeyboardIfPossibleCallback();
+        }
     }
     virtual void hideSoftwareKeyboardIfPossible()
     {
+        if (m_hideSoftwareKeyboardIfPossibleCallback) {
+            m_hideSoftwareKeyboardIfPossibleCallback();
+        }
     }
     virtual bool isIMEEnabledNow()
     {
@@ -99,10 +105,19 @@ public:
 #endif
     }
 
-    virtual void registerRenderingFinishedCallback(
-        const std::function<void()>& cb)
+    void registerRenderingFinishedCallback(const std::function<void()>& cb)
     {
         m_renderingFinishedCallback = cb;
+    }
+    void registerShowSoftwareKeyboardIfPossibleCallback(
+        const std::function<void()>& cb)
+    {
+        m_showSoftwareKeyboardIfPossibleCallback = cb;
+    }
+    void registerHideSoftwareKeyboardIfPossibleCallback(
+        const std::function<void()>& cb)
+    {
+        m_hideSoftwareKeyboardIfPossibleCallback = cb;
     }
     virtual bool canRendering()
     {
@@ -160,6 +175,8 @@ protected:
     size_t m_idleCleanerTimerID;
 
     std::function<void()> m_renderingFinishedCallback;
+    std::function<void()> m_showSoftwareKeyboardIfPossibleCallback;
+    std::function<void()> m_hideSoftwareKeyboardIfPossibleCallback;
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     bool m_isButtonOfVirtualCursorClicked;

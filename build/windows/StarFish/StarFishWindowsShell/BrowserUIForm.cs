@@ -51,7 +51,7 @@ namespace StarFishWindowsShell
             Uri p = WebProxy.GetDefaultProxy().GetProxy(new Uri(testURL));
             if (p.ToString() != testURL)
             {
-                mStarFish.SetProxyURL(p.ToString());
+                mStarFish.setProxyURL(p.ToString());
             }
             Application.AddMessageFilter(this);
         }
@@ -61,8 +61,48 @@ namespace StarFishWindowsShell
         private static extern IntPtr WindowFromPoint(Point pt);
         [DllImport("user32.dll")]
         private static extern IntPtr SendMessage(IntPtr hWnd, int msg, IntPtr wp, IntPtr lp);
+        [DllImport("imm32.dll")]
+        public static extern IntPtr ImmGetContext(IntPtr hWnd);
+        [DllImport("Imm32.dll")]
+        public static extern bool ImmReleaseContext(IntPtr hWnd, IntPtr hIMC);
+        [DllImport("Imm32.dll", CharSet = CharSet.Unicode)]
+        private static extern int ImmGetCompositionStringW(IntPtr hIMC, int dwIndex, byte[] lpBuf, int dwBufLen);
+
+        private const int GCS_COMPSTR = 8;
+        private const int GCS_RESULTSTR = 0x0800;
+        bool mIsIMEActive = false;
+        string getIMEText(IntPtr hIMC, int readType = GCS_COMPSTR)
+        {
+            int strLen = ImmGetCompositionStringW(hIMC, readType, null, 0);
+
+            if (strLen > 0)
+            {
+                byte[] buffer = new byte[strLen];
+
+                ImmGetCompositionStringW(hIMC, readType, buffer, strLen);
+
+                return Encoding.Unicode.GetString(buffer);
+            }
+            else
+            {
+                return string.Empty;
+            }
+            return string.Empty;
+        }
+
         public bool PreFilterMessage(ref Message m)
         {
+            const int WM_IME_SETCONTEXT = 0x0281;
+            const int WM_IME_NOTIFY = 0x0282;
+            const int WM_IME_CONTROL = 0x0283;
+            const int WM_IME_COMPOSITIONFULL = 0x0284;
+            const int WM_IME_SELECT = 0x0285;
+            const int WM_IME_CHAR = 0x0286;
+            const int WM_CHAR = 0x0102;
+            const int WM_IME_STARTCOMPOSITION = 0x010D;
+            const int WM_IME_ENDCOMPOSITION = 0x010E;
+            const int WM_IME_COMPOSITION = 0x010F;
+
             if (m.Msg == (int)0x20a)
             {
                 // WM_MOUSEWHEEL, find the control at screen position m.LParam
@@ -74,6 +114,58 @@ namespace StarFishWindowsShell
                     return true;
                 }
             }
+
+            TextBox tb = textBoxFocusReceiver;
+            if (tb == null || !tb.Focused)
+            {
+                return false;
+            }
+
+            IntPtr hIMC = ImmGetContext(tb.Handle);
+
+            switch (m.Msg)
+            {
+                case WM_IME_CHAR:
+                    // System.Diagnostics.Debugger.Log(0, "", "WM_IME_CHAR " + getIMEText(hIMC) + "\n");
+                    break;
+                case WM_IME_COMPOSITION:
+                    if ((m.LParam.ToInt32() & GCS_RESULTSTR) != 0)
+                    {
+                        System.Diagnostics.Debugger.Log(0, "", "WM_IME_COMPOSITION making char end" + getIMEText(hIMC, GCS_RESULTSTR) + "\n");
+                        mStarFish.dispatchCompositionEndEvent(getIMEText(hIMC, GCS_RESULTSTR));
+                    }
+                    else if ((m.LParam.ToInt32() & GCS_COMPSTR) != 0)
+                    {
+                        System.Diagnostics.Debugger.Log(0, "", "WM_IME_COMPOSITION making char " + getIMEText(hIMC, GCS_COMPSTR) + "\n");
+                        mStarFish.dispatchCompositionUpdateEvent(getIMEText(hIMC, GCS_COMPSTR));
+                    }
+                    break;
+                case WM_IME_ENDCOMPOSITION:
+                    mIsIMEActive = false;
+                    System.Diagnostics.Debugger.Log(0, "", "WM_IME_ENDCOMPOSITION " + getIMEText(hIMC) + "\n");
+                    mStarFish.dispatchCompositionEndEvent(getIMEText(hIMC));
+                    break;
+                case WM_IME_STARTCOMPOSITION:
+                    mIsIMEActive = true;
+                    System.Diagnostics.Debugger.Log(0, "", "WM_IME_STARTCOMPOSITION " + getIMEText(hIMC) + "\n");
+                    mStarFish.dispatchCompositionStartEvent(getIMEText(hIMC));
+                    break;
+                case WM_CHAR:
+                    string ch = ((char)m.WParam.ToInt32()).ToString();
+                    if (ch.Length != 0)
+                    {
+                        System.Diagnostics.Debugger.Log(0, "", "WM_CHAR " + ch + " \n");
+                    }
+                    break;
+                case WM_IME_NOTIFY:
+                    // System.Diagnostics.Debugger.Log(0, "", "WM_IME_NOTIFY " + getIMEText(hIMC) + "\n");
+                    break;
+                case WM_IME_COMPOSITIONFULL:
+                    // System.Diagnostics.Debugger.Log(0, "", "WM_IME_COMPOSITIONFULL " + getIMEText(hIMC) + "\n");
+                    break;
+            }
+
+            ImmReleaseContext(tb.Handle, hIMC);
 
             return false;
         }
@@ -258,12 +350,18 @@ namespace StarFishWindowsShell
 
         private void textBoxFocusReceiver_KeyDown(object sender, KeyEventArgs e)
         {
-            mStarFish.dispatchKeyDownEvent(e.KeyCode);
+            if (!mIsIMEActive)
+            {
+                mStarFish.dispatchKeyDownEvent(e.KeyCode, Control.IsKeyLocked(Keys.CapsLock) || (e.Modifiers & Keys.Shift) != 0);
+            }
         }
 
         private void textBoxFocusReceiver_KeyUp(object sender, KeyEventArgs e)
         {
-            mStarFish.dispatchKeyUpEvent(e.KeyCode);
+            if (!mIsIMEActive)
+            {
+                mStarFish.dispatchKeyUpEvent(e.KeyCode, Control.IsKeyLocked(Keys.CapsLock) || (e.Modifiers & Keys.Shift) != 0);
+            }
         }
 
         private void pictureBoxBrowserContent_Click(object sender, EventArgs e)
@@ -319,7 +417,7 @@ namespace StarFishWindowsShell
             {
                 url = "http://" + url;
             }
-            mStarFish.SetProxyURL(url);
+            mStarFish.setProxyURL(url);
         }
     }
 
@@ -350,10 +448,15 @@ namespace StarFishWindowsShell
         [DllImport("StarFish.dll")]
         public static extern void dispatchMouseWheelEvent(IntPtr mWebViewInstance, float x, float y, int delta);
         [DllImport("StarFish.dll")]
-        public static extern void dispatchKeyDownEvent(IntPtr mWebViewInstance, uint keyCode);
+        public static extern void dispatchKeyDownEvent(IntPtr mWebViewInstance, uint keyCode, uint capsLockOrShiftPressed);
         [DllImport("StarFish.dll")]
-        public static extern void dispatchKeyUpEvent(IntPtr mWebViewInstance, uint keyCode);
-
+        public static extern void dispatchKeyUpEvent(IntPtr mWebViewInstance, uint keyCode, uint capsLockOrShiftPressed);
+        [DllImport("StarFish.dll")]
+        public static extern void dispatchCompositionStartEvent(IntPtr mWebViewInstance, IntPtr utf8Str, uint strBufferLength);
+        [DllImport("StarFish.dll")]
+        public static extern void dispatchCompositionUpdateEvent(IntPtr mWebViewInstance, IntPtr utf8Str, uint strBufferLength);
+        [DllImport("StarFish.dll")]
+        public static extern void dispatchCompositionEndEvent(IntPtr mWebViewInstance, IntPtr utf8Str, uint strBufferLength);
         public struct EvaluateJSResult
         {
             public IntPtr buf;
@@ -502,23 +605,54 @@ namespace StarFishWindowsShell
             PostThreadMessage(mStarFishThreadID, 0x0407, new UIntPtr((uint)z), new IntPtr(lparam));
         }
 
-        public void dispatchKeyDownEvent(Keys keyCode)
+        public void dispatchKeyDownEvent(Keys keyCode, bool useCaptialAlphabet)
         {
-            PostThreadMessage(mStarFishThreadID, 0x0413, new UIntPtr(0), new IntPtr((int)keyCode));
+            int capslock = useCaptialAlphabet ? 0x1 << 3 : 0;
+            PostThreadMessage(mStarFishThreadID, 0x0413, new UIntPtr((uint)(0 | capslock)), new IntPtr((int)keyCode));
         }
 
-        public void dispatchKeyUpEvent(Keys keyCode)
+        public void dispatchKeyUpEvent(Keys keyCode, bool useCaptialAlphabet)
         {
-            PostThreadMessage(mStarFishThreadID, 0x0413, new UIntPtr(1), new IntPtr((int)keyCode));
+            int capslock = useCaptialAlphabet ? 0x1 << 3 : 0;
+            PostThreadMessage(mStarFishThreadID, 0x0413, new UIntPtr((uint)(1 | capslock)), new IntPtr((int)keyCode));
         }
 
-        public void SetProxyURL(string url)
+        public void setProxyURL(string url)
         {
             byte[] array = Encoding.UTF8.GetBytes(url);
             IntPtr lpData = Marshal.AllocHGlobal(array.Length);
             Marshal.Copy(array, 0, lpData, array.Length);
             UIntPtr lpLength = new UIntPtr((uint)array.Length);
             PostThreadMessage(mStarFishThreadID, 0x0510, lpLength, lpData);
+        }
+
+        public void dispatchCompositionStartEvent(string str)
+        {
+            byte[] array = Encoding.UTF8.GetBytes(str);
+            IntPtr lpData = Marshal.AllocHGlobal(array.Length);
+            Marshal.Copy(array, 0, lpData, array.Length);
+            UIntPtr lpLength = new UIntPtr((uint)array.Length);
+
+            PostThreadMessage(mStarFishThreadID, 0x0511, lpLength, lpData);
+        }
+        public void dispatchCompositionUpdateEvent(string str)
+        {
+            byte[] array = Encoding.UTF8.GetBytes(str);
+            IntPtr lpData = Marshal.AllocHGlobal(array.Length);
+            Marshal.Copy(array, 0, lpData, array.Length);
+            UIntPtr lpLength = new UIntPtr((uint)array.Length);
+
+            PostThreadMessage(mStarFishThreadID, 0x0512, lpLength, lpData);
+        }
+
+        public void dispatchCompositionEndEvent(string str)
+        {
+            byte[] array = Encoding.UTF8.GetBytes(str);
+            IntPtr lpData = Marshal.AllocHGlobal(array.Length);
+            Marshal.Copy(array, 0, lpData, array.Length);
+            UIntPtr lpLength = new UIntPtr((uint)array.Length);
+
+            PostThreadMessage(mStarFishThreadID, 0x0513, lpLength, lpData);
         }
 
         public void evaluateJS(string js, GotJSResult cb)
@@ -688,13 +822,13 @@ namespace StarFishWindowsShell
                 else if (msg.message == 0x0413)
                 {
                     int keyCode = msg.lParam.ToInt32();
-                    if (msg.wParam.ToInt32() == 1)
+                    if ((msg.wParam.ToInt32() & 1) != 0)
                     {
-                        dispatchKeyUpEvent(mWebViewInstance, (uint)keyCode);
+                        dispatchKeyUpEvent(mWebViewInstance, (uint)keyCode, (uint)(msg.wParam.ToInt32() & 1<<3));
                     }
                     else
                     {
-                        dispatchKeyDownEvent(mWebViewInstance, (uint)keyCode);
+                        dispatchKeyDownEvent(mWebViewInstance, (uint)keyCode, (uint)(msg.wParam.ToInt32() & 1 << 3));
                     }
                 }
                 else if (msg.message == 0x0510)
@@ -715,6 +849,38 @@ namespace StarFishWindowsShell
                         }
 
                     }
+                }
+                else if (msg.message == 0x0511 || msg.message == 0x0512 || msg.message == 0x0513)
+                {
+                    byte[] buf = new byte[(uint)msg.wParam.ToInt32()];
+                    Marshal.Copy(msg.lParam, buf, 0, buf.Length);
+                    string str = Encoding.UTF8.GetString(buf);
+                    LocalFree(msg.lParam);
+
+                    {
+                        byte[] bytes = Encoding.UTF8.GetBytes(str);
+                        unsafe
+                        {
+                            fixed (byte* burl = bytes)
+                            {
+                                if (msg.message == 0x0511)
+                                {
+                                    dispatchCompositionStartEvent(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
+                                }
+                                else if (msg.message == 0x0512)
+                                {
+                                    dispatchCompositionUpdateEvent(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
+                                }
+                                else if (msg.message == 0x0513)
+                                {
+                                    dispatchCompositionEndEvent(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
+                                }
+
+                            }
+                        }
+
+                    }
+
                 }
                 else
                 {

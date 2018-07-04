@@ -166,8 +166,7 @@ void HTMLInputElement::setValue(String* val)
 
     sanitizeValue();
 
-    if (!oldValue->equals(val) && m_currentCaretPosition > 0) {
-        m_currentCaretPosition = val->length();
+    if (!oldValue->equals(val)) {
         setNeedsFrameTreeBuildWithoutSelf();
     }
 }

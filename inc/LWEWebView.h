@@ -173,6 +173,16 @@ public:
     void DispatchKeyPressEvent(KeyValue keyCode, int modifier = 0);
     void DispatchKeyUpEvent(KeyValue keyCode, int modifier = 0);
 
+    void DispatchCompositionStartEvent(
+        const std::string& soFarCompositiedString);
+    void DispatchCompositionUpdateEvent(
+        const std::string& soFarCompositiedString);
+    void DispatchCompositionEndEvent(const std::string& soFarCompositiedString);
+    void RegisterOnShowSoftwareKeyboardIfPossibleHandler(
+        const std::function<void(LWE::WebContainer*)>& cb);
+    void RegisterOnHideSoftwareKeyboardIfPossibleHandler(
+        const std::function<void(LWE::WebContainer*)>& cb);
+
     size_t width();
     size_t height();
 

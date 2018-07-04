@@ -213,6 +213,8 @@ public:
                     },
                     100, this);
         }
+
+        PlatformWindow::showSoftwareKeyboardIfPossible();
     }
 
     virtual void hideSoftwareKeyboardIfPossible() override
@@ -225,6 +227,8 @@ public:
                 evas_object_focus_set(self->m_nonIMEKeyEventBox, EINA_TRUE);
             },
             this);
+
+        PlatformWindow::hideSoftwareKeyboardIfPossible();
     }
 
     void adjustOffsetYDueToFocusChanging()
