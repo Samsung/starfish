@@ -21,7 +21,14 @@
 #ifdef PORT_WINDOW_BACKEND_GB
 
 #include "StarFish.h"
+
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
 #include <cairo.h>
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#include "SkCanvas.h"
+#include "SkSurface.h"
+#endif
 
 #include "core/animation/Animation.h"
 #include "core/dom/MouseEvent.h"
@@ -90,10 +97,18 @@ public:
     virtual void updateDrawingBufferAddress(void* buf, uint32_t width,
                                             uint32_t height, uint32_t stride)
     {
-        PlatformWindow::updateDrawingBufferAddress(buf, width, height, stride);
-        m_stride = stride;
-        m_internalBuffer = buf;
-        updateCairoVariables();
+        if (buf != nullptr) {
+            PlatformWindow::updateDrawingBufferAddress(buf, width, height,
+                                                       stride);
+            m_stride = stride;
+            m_internalBuffer = buf;
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+            updateCairoVariables();
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+            updateSkiaVariables();
+#endif
+        }
     }
 
     virtual void* unwrap()
@@ -101,6 +116,7 @@ public:
         return nullptr;
     }
 
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     void updateCairoVariables()
     {
         if (m_cairo) {
@@ -117,7 +133,17 @@ public:
             m_starFish->screenInfo().devicePixelRatio);
         m_cairo = cairo_create(m_surface);
     }
+#endif
 
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+    void updateSkiaVariables()
+    {
+        SkImageInfo info = SkImageInfo::MakeN32Premul(m_width, m_height);
+        m_surface =
+            SkSurface::MakeRasterDirect(info, m_internalBuffer, m_stride);
+        m_skia = m_surface->getCanvas();
+    }
+#endif
     virtual void* drawingBufferAddress()
     {
         return m_internalBuffer;
@@ -144,9 +170,14 @@ public:
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
     int m_offsetYDueToSoftwareKeyboard;
-
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     cairo_surface_t* m_surface;
     cairo_t* m_cairo;
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+    sk_sp<SkSurface> m_surface;
+    SkCanvas* m_skia;
+#endif
 };
 
 PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
@@ -198,6 +229,7 @@ Canvas* WindowImplGB::preparePainting()
     }
 #endif
 
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     struct dummy {
         cairo_t* cairo;
         cairo_surface_t* surface;
@@ -211,7 +243,21 @@ Canvas* WindowImplGB::preparePainting()
     d->surface = m_surface;
     d->w = width();
     d->h = height();
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+    struct dummy {
+        SkCanvas* canvas;
+        sk_sp<SkSurface> surface;
+        int w;
+        int h;
+    };
+    dummy* d = new dummy;
 
+    d->canvas = m_skia;
+    d->surface = m_surface;
+    d->w = width() + starFish()->posX();
+    d->h = height() + starFish()->posY();
+#endif
     Canvas* canvas = Canvas::createDirect(starFish(), d);
     delete d;
 
@@ -220,6 +266,7 @@ Canvas* WindowImplGB::preparePainting()
 
 Compositor* WindowImplGB::prepareCompositor()
 {
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     struct dummy {
         cairo_t* cairo;
         cairo_surface_t* surface;
@@ -231,6 +278,22 @@ Compositor* WindowImplGB::prepareCompositor()
     d.w = width();
     d.h = height();
     return Compositor::create(starFish(), &d);
+
+#endif
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+    struct dummy {
+        SkCanvas* canvas;
+        sk_sp<SkSurface> surface;
+        int w;
+        int h;
+    } d;
+    d.canvas = m_skia;
+    d.surface = m_surface;
+    d.w = width();
+    d.h = height();
+    return Compositor::create(starFish(), &d);
+#endif
+    return nullptr;
 }
 
 void WindowImplGB::clearResources()
