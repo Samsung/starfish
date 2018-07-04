@@ -330,15 +330,18 @@ static void adaptStartAndEndValueForColumn(GridFormattingContext& ctx,
 
         size_t numberOfNeededlines = end - numberOfColumns;
         for (size_t i = 0; i < numberOfNeededlines; i++) {
-            GridLine line = GridLine(1, false);
+            GridLine line = GridLine(0);
 
             if (existFr) {
                 line = GridLine(0);
                 line.setComputed(false);
+                line.setFixed(false);
+            } else {
+                line.setAuto(true);
             }
 
             line.setNewLine(true);
-            line.setFixed(false);
+
             gridLineColumns.push_back(line);
         }
     }
@@ -1006,7 +1009,9 @@ void GridFormattingContext::buildGridLineTemplate()
     }
 
     if (!columns) {
-        m_gridLineColumns.push_back(GridLine(1, false));
+        GridLine line = GridLine(0);
+        line.setAuto(true);
+        m_gridLineColumns.push_back(line);
     }
 
     const GCVector<GridLength>* rows = m_container->style()->gridTemplateRows();
