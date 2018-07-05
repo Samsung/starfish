@@ -142,6 +142,8 @@ public:
         m_surface =
             SkSurface::MakeRasterDirect(info, m_internalBuffer, m_stride);
         m_skia = m_surface->getCanvas();
+        m_skia->scale(starFish()->screenInfo().devicePixelRatio,
+                      starFish()->screenInfo().devicePixelRatio);
     }
 #endif
     virtual void* drawingBufferAddress()

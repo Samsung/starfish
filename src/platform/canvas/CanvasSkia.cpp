@@ -61,6 +61,8 @@ class CanvasSkia : public Canvas {
         SkImageInfo info = SkImageInfo::MakeN32Premul(m_width, m_height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
         m_canvas = m_surface->getCanvas();
+        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                        m_starfish->screenInfo().devicePixelRatio);
     }
 
     void initFromNativeImageData(NativeImageData* data)
@@ -73,6 +75,8 @@ class CanvasSkia : public Canvas {
         m_surface =
             SkSurface::MakeRasterDirect(info, data->data(), data->stride());
         m_canvas = m_surface->getCanvas();
+        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                        m_starfish->screenInfo().devicePixelRatio);
     }
 
 public:
@@ -90,6 +94,8 @@ public:
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
         m_canvas = m_surface->getCanvas();
+        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                        m_starfish->screenInfo().devicePixelRatio);
         save();
     }
 
@@ -869,6 +875,8 @@ public:
     {
         m_canvas->resetMatrix();
         m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
+        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                        m_starfish->screenInfo().devicePixelRatio);
     }
 
     // reset transform clip
@@ -878,6 +886,9 @@ public:
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
         m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
+        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                        m_starfish->screenInfo().devicePixelRatio);
+
         m_canvas->concat(m);
     }
 
