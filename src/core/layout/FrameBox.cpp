@@ -789,10 +789,6 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
     }
 
     canvas->save();
-    bool overflowApplied = shouldApplyOverflow();
-    if (overflowApplied) {
-        canvas->clip(Unit::Rect(0, 0, width(), height()));
-    }
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
     Canvas* orgCanvas = canvas;
@@ -3308,7 +3304,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     bool ret = !shouldApplyOverflow();
     LayoutRect outline = frameVisibleOutlineRect();
 
-    if (ctx.purpose == Frame::ComputeVisibleRectContext::GraphicsBuffer &&
+    if (ctx.purpose >= Frame::ComputeVisibleRectContext::GraphicsBufferBySelf &&
         isFrameBlockBox()) {
         BorderData border = cs->border();
         if (isAnonymous() ||
@@ -3351,8 +3347,8 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             }
         }
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
-            if (ctx.purpose ==
-                    Frame::ComputeVisibleRectContext::GraphicsBuffer &&
+            if (ctx.purpose >=
+                    Frame::ComputeVisibleRectContext::GraphicsBufferBySelf &&
                 isFrameBlockBox()) {
                 if (shadow->hasColor() && !shadow->color().isTransparent()) {
                     LayoutRect rect = computeVisibleShadowRect(owner, *shadow);

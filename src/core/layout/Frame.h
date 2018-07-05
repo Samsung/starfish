@@ -1633,7 +1633,11 @@ public:
     }
 
     struct ComputeVisibleRectContext {
-        enum ComputePurpose { Scrolling, GraphicsBuffer };
+        enum ComputePurpose {
+            Scrolling,
+            GraphicsBufferBySelf,
+            GraphicsBufferByOtherLayer
+        };
         ComputePurpose purpose;
         bool ignoreTransformOnce;
         bool isForSpecialValueForTableCell;
@@ -1648,7 +1652,8 @@ public:
                                   StackingContext* sourceStackingContext,
                                   SkMatrix& tranformMatrix, LayoutRect& result)
             : purpose(purpose)
-            , ignoreTransformOnce(purpose == GraphicsBuffer ? true : false)
+            , ignoreTransformOnce(purpose >= GraphicsBufferBySelf ? true
+                                                                  : false)
             , isForSpecialValueForTableCell(false)
             , sourceStackingContext(sourceStackingContext)
             , sourceFrameBox(nullptr)
@@ -1661,7 +1666,8 @@ public:
                                   FrameBox* sourceFrameBox,
                                   SkMatrix& tranformMatrix, LayoutRect& result)
             : purpose(purpose)
-            , ignoreTransformOnce(purpose == GraphicsBuffer ? true : false)
+            , ignoreTransformOnce(purpose >= GraphicsBufferBySelf ? true
+                                                                  : false)
             , isForSpecialValueForTableCell(false)
             , sourceStackingContext(nullptr)
             , sourceFrameBox(sourceFrameBox)

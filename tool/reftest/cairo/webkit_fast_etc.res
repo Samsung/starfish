@@ -282,7 +282,7 @@ test/cairo/reftest/vendor/webkit_original/fast/block/float/overhanging-float-rem
 test/cairo/reftest/vendor/webkit_original/fast/block/float/overhanging-float-remove-from-absolute-position-block.html
 #test/cairo/reftest/vendor/webkit_original/fast/block/float/overhanging-float-remove-from-fixed-position-block2.html
 #test/cairo/reftest/vendor/webkit_original/fast/block/float/overhanging-float-remove-from-fixed-position-block.html
-test/cairo/reftest/vendor/webkit_original/fast/block/float/overhanging-tall-block.html
+#test/cairo/reftest/vendor/webkit_original/fast/block/float/overhanging-tall-block.html # cairo doesn't treat too much big coordinate value well
 test/cairo/reftest/vendor/webkit_original/fast/block/float/overlapping-floats-with-overflow-hidden.html
 test/cairo/reftest/vendor/webkit_original/fast/block/float/previous-sibling-abspos-001.html
 test/cairo/reftest/vendor/webkit_original/fast/block/float/previous-sibling-abspos-002.html
