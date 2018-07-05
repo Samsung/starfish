@@ -2,18 +2,6 @@
 
 // Should be removed next release.
 // ******************************************************************************
-cc_prebuilt_library_static {
-    name: "liblwe_prebuilt_static_cairo",
-    compile_multilib: "32",
-    multilib: {
-        lib32: {
-            srcs: [
-                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libcairo.a",
-            ],
-        },
-    },
-}
-
 
 cc_prebuilt_library_static {
     name: "liblwe_prebuilt_static_ft2",
@@ -46,18 +34,6 @@ cc_prebuilt_library_static {
         lib32: {
             srcs: [
                 "third_party/android/prebuilt_armv-7a_8.1.0/lib/libharfbuzz-icu.a",
-            ],
-        },
-    },
-}
-
-cc_prebuilt_library_static {
-    name: "liblwe_prebuilt_static_pixman",
-    compile_multilib: "32",
-    multilib: {
-        lib32: {
-            srcs: [
-                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libpixman.a",
             ],
         },
     },
@@ -111,7 +87,6 @@ cc_library_shared {
         "third_party/escargot/third_party/double_conversion",
         "third_party/escargot/third_party/rapidjson/include",
         "third_party/escargot/third_party/yarr",
-        "third_party/skia_matrix",
         "third_party/clipper/cpp",
         "third_party/rapidxml",
         "third_party/webm",
@@ -123,7 +98,6 @@ cc_library_shared {
 // external header
         "third_party/android/prebuilt_armv-7a_8.1.0/include",
         "third_party/android/prebuilt_armv-7a_8.1.0/include/bdwgc",
-        "third_party/android/prebuilt_armv-7a_8.1.0/include/cairo",
         "third_party/android/prebuilt_armv-7a_8.1.0/include/harfbuzz",
     ],
 
@@ -134,11 +108,6 @@ cc_library_shared {
         "third_party/escargot/third_party/yarr/*.cpp",
         "third_party/escargot/src/**/*.cpp",
         "src/**/*.cpp",
-        "third_party/skia_matrix/SkMath.cpp",
-        "third_party/skia_matrix/SkPoint.cpp",
-        "third_party/skia_matrix/SkRect.cpp",
-        "third_party/skia_matrix/SkMatrix.cpp",
-        "third_party/skia_matrix/SkDebug.cpp",
     ],
 
     exclude_srcs: [
@@ -163,14 +132,13 @@ cc_library_shared {
 //		"libandroid_runtime",
 // Should be removed next release.
         "liblwe_prebuilt_shared_jnigraphics",
+        "libskia",
     ],
     static_libs:[
         "libgif",
-        "liblwe_prebuilt_static_cairo",
         "liblwe_prebuilt_static_ft2",
         "liblwe_prebuilt_static_harfbuzz",
         "liblwe_prebuilt_staticharfbuzz_icu",
-        "liblwe_prebuilt_static_pixman",
     ],
 
     cflags: [
