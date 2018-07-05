@@ -41,6 +41,7 @@ namespace StarFish {
 struct StackingContext::ComputeStackingContextContext {
     std::unordered_map<StackingContext*, LayoutRect> extentPerLayer;
     std::unordered_map<StackingContext*, bool> compositeFlagInfo;
+    std::unordered_map<StackingContext*, bool> compositeFlagInfoBecauseSelf;
     std::vector<StackingContext*> compositedLayers;
     StackingContext* rootLayer;
 
@@ -312,6 +313,7 @@ bool StackingContext::isIFrameStackingContext()
 
 struct OverflowStatus {
     Frame* m_child;
+    FrameBox* m_absChild;
     bool m_seenContainingBlockForAbsBlock;
     bool m_seenAbsBlock;
     OverflowStatus(Frame* child)
@@ -335,19 +337,22 @@ struct OverflowStatus {
             return true;
         }
 
-        if (m_seenAbsBlock) {
-            return false;
+        if (!m_seenAbsBlock && parent->isAbsolutePositioned()) {
+            m_seenAbsBlock = true;
+            m_absChild = parent->asFrameBox();
         }
-        m_seenAbsBlock = m_seenAbsBlock || parent->isAbsolutePositioned();
 
-        if (m_child->isAbsolutePositioned()) {
-            if (m_seenContainingBlockForAbsBlock) {
-                return parent->shouldApplyOverflow();
-            }
+        if (m_seenAbsBlock) {
             bool b =
-                parent->canBeContainingBlockOfAbsolutePositionedBox(m_child);
+                parent->canBeContainingBlockOfAbsolutePositionedBox(m_absChild);
+            if (!m_seenContainingBlockForAbsBlock && b) {
+                if (parent->style()->position() == RelativePositionValue) {
+                    m_seenAbsBlock = false;
+                    return parent->shouldApplyOverflow();
+                }
+            }
             m_seenContainingBlockForAbsBlock =
-                m_seenContainingBlockForAbsBlock || b;
+                b || m_seenContainingBlockForAbsBlock;
             return b && parent->shouldApplyOverflow();
         }
 
@@ -357,8 +362,14 @@ struct OverflowStatus {
     void reset(Frame* f)
     {
         m_child = f;
+        if (m_child->isAbsolutePositioned()) {
+            m_absChild = f->asFrameBox();
+            m_seenAbsBlock = true;
+        } else {
+            m_absChild = nullptr;
+            m_seenAbsBlock = false;
+        }
         m_seenContainingBlockForAbsBlock = false;
-        m_seenAbsBlock = false;
     }
 };
 
@@ -839,6 +850,9 @@ void StackingContext::computeStackingContextProperties(
                             m_owner->isRunningTransformAnimation();
     if (compositedBySelf) {
         reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
+        compositingState.compositeFlagInfoBecauseSelf[this] = true;
+    } else {
+        compositingState.compositeFlagInfoBecauseSelf[this] = false;
     }
     bool willBeComposited = compositedBySelf;
 
@@ -968,6 +982,7 @@ void StackingContext::applyStackingContextProperties(
         m_owner->node()->window()->webView()->hasActiveAnimationExecutor();
     bool compositedBefore = needsGraphicsBuffer();
     bool willBeComposited = ctx.compositeFlagInfo[this];
+    bool willBeCompositedDueToSelf = ctx.compositeFlagInfoBecauseSelf[this];
 
     if (inAnimation && compositedBefore && !willBeComposited) {
         willBeComposited = true;
@@ -982,8 +997,10 @@ void StackingContext::applyStackingContextProperties(
 
         SkMatrix l = SkMatrix::I();
         Frame::ComputeVisibleRectContext ctx(
-            Frame::ComputeVisibleRectContext::GraphicsBuffer, this, l,
-            m_rareData->m_visibleRect);
+            willBeCompositedDueToSelf
+                ? Frame::ComputeVisibleRectContext::GraphicsBufferBySelf
+                : Frame::ComputeVisibleRectContext::GraphicsBufferByOtherLayer,
+            this, l, m_rareData->m_visibleRect);
 
         m_owner->computeVisibleRect(ctx);
 
