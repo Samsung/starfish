@@ -357,6 +357,8 @@ public:
     {
         m_canvas->resetMatrix();
         m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
+        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                        m_starfish->screenInfo().devicePixelRatio);
     }
 
     virtual void resetClip()
@@ -364,6 +366,8 @@ public:
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
         m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
+        m_canvas->scale(m_starfish->screenInfo().devicePixelRatio,
+                        m_starfish->screenInfo().devicePixelRatio);
         m_canvas->concat(m);
     }
 
