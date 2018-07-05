@@ -322,6 +322,7 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
         FontSkiaTextRun run;
         run.m_script = hb_icu_script_to_script(lastUnicodeScript);
         run.m_faceIndex = faceIndex;
+        run.m_ftFace = lastFace;
         run.m_skTypeFace = lastSkFontFace;
         run.m_skPaint = lastSkPaint;
         run.m_hbFont = hbFace;
