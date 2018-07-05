@@ -22,10 +22,10 @@
 
 #include "StarFish.h"
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
 #endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if defined(PORT_CANVAS_BACKEND_SKIA)
 #include "SkCanvas.h"
 #include "SkSurface.h"
 #endif
@@ -102,10 +102,10 @@ public:
                                                        stride);
             m_stride = stride;
             m_internalBuffer = buf;
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
             updateCairoVariables();
 #endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if defined(PORT_CANVAS_BACKEND_SKIA)
             updateSkiaVariables();
 #endif
         }
@@ -116,7 +116,7 @@ public:
         return nullptr;
     }
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
     void updateCairoVariables()
     {
         if (m_cairo) {
@@ -135,7 +135,7 @@ public:
     }
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if defined(PORT_CANVAS_BACKEND_SKIA)
     void updateSkiaVariables()
     {
         SkImageInfo info = SkImageInfo::MakeN32Premul(m_width, m_height);
@@ -170,11 +170,11 @@ public:
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
     int m_offsetYDueToSoftwareKeyboard;
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_surface;
     cairo_t* m_cairo;
 #endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if defined(PORT_CANVAS_BACKEND_SKIA)
     sk_sp<SkSurface> m_surface;
     SkCanvas* m_skia;
 #endif
@@ -206,8 +206,10 @@ void WindowImplGB::setNeedsRendering()
                 return;
             }
             ((WindowImplGB*)wnd)->m_renderingAnimator = SIZE_MAX;
-            StarFishEnterer enter(wnd->starFish());
-            wnd->rendering();
+            if (wnd->width() != 0 && wnd->height() != 0) {
+                StarFishEnterer enter(wnd->starFish());
+                wnd->rendering();
+            }
         },
         starFish()->platformWindow());
 }
@@ -229,7 +231,7 @@ Canvas* WindowImplGB::preparePainting()
     }
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
     struct dummy {
         cairo_t* cairo;
         cairo_surface_t* surface;
@@ -244,7 +246,7 @@ Canvas* WindowImplGB::preparePainting()
     d->w = width();
     d->h = height();
 #endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if defined(PORT_CANVAS_BACKEND_SKIA)
     struct dummy {
         SkCanvas* canvas;
         sk_sp<SkSurface> surface;
@@ -266,7 +268,7 @@ Canvas* WindowImplGB::preparePainting()
 
 Compositor* WindowImplGB::prepareCompositor()
 {
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
     struct dummy {
         cairo_t* cairo;
         cairo_surface_t* surface;
@@ -280,7 +282,7 @@ Compositor* WindowImplGB::prepareCompositor()
     return Compositor::create(starFish(), &d);
 
 #endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if defined(PORT_CANVAS_BACKEND_SKIA)
     struct dummy {
         SkCanvas* canvas;
         sk_sp<SkSurface> surface;
