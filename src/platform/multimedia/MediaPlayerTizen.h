@@ -25,6 +25,15 @@
 #include "platform/multimedia/MediaPlayer.h"
 
 #include <media/player.h>
+
+#if defined(STARFISH_TIZEN_5_0)
+#ifndef EFL_BETA_API_SUPPORT
+#define EFL_BETA_API_SUPPORT
+#endif
+#include <Ecore_Wl2.h>
+#endif
+
+#include <media/player_internal.h>
 #if defined(STARFISH_TIZEN_TV)
 #include <media/player_product.h>
 #endif
