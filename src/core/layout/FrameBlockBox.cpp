@@ -422,8 +422,11 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
 
                 box->setX(orgX - (box->x() - orgX));
                 box->setY(orgY - (box->y() - orgY));
-            }
 
+                if (!child->isEstablishesBlockFormattingContext()) {
+                    ctx.registerRelativePositionedBox(box, dueToSelf);
+                }
+            }
             child = child->next();
         }
     } else {
