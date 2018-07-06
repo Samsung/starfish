@@ -25,7 +25,6 @@
 #include "platform/multimedia/MediaPlayer.h"
 
 #include <media/player.h>
-#include <media/player_internal.h>
 #if defined(STARFISH_TIZEN_TV)
 #include <media/player_product.h>
 #endif
