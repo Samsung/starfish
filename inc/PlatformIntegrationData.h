@@ -204,6 +204,7 @@ enum KeyValue {
     TVTerrestrialAnalogKey,
     TVTerrestrialDigitalKey,
     TVTimerKey,
+    TVHomeKey,
     MediaAppsKey,
     MediaAudioTrackKey,
     MediaLastKey,
