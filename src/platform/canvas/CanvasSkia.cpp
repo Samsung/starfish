@@ -25,6 +25,7 @@
 #include "core/modules/canvas/font/Font.h"
 #include "platform/canvas/font/FontImplSkia.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/style/GradientData.h"
 #include "core/style/UnitHelper.h"
 
 #include "SkBitmap.h"
@@ -37,6 +38,7 @@
 #include "SkShader.h"
 #include "SkSurface.h"
 #include "SkTypeface.h"
+#include "SkGradientShader.h"
 
 #define CLAMP(value, min, max) \
     (((value) > (max)) ? (max) : (((value) < (min)) ? (min) : (value)))
@@ -687,6 +689,24 @@ public:
     virtual void drawLinearGradient(const Unit::Rect& dst,
                                     GradientDrawingInfo* info)
     {
+        SkPoint points[] = { { info->x1, info->y1 }, { info->x2, info->y2 } };
+        size_t colorCount = info->colorStops.size();
+        SkColor colors[colorCount];
+        SkScalar pos[colorCount];
+        for (size_t i = 0; i < colorCount; i++) {
+            Unit::Color clr = info->colorStops[i]->color();
+            colors[i] = SkColorSetARGB(clr.a(), clr.r(), clr.g(), clr.b());
+            pos[i] = info->colorStops[i]->offset().percent();
+        }
+
+        SkPaint p;
+        p.setAntiAlias(true);
+        p.setShader(SkGradientShader::MakeLinear(
+            points, colors, pos, colorCount, SkShader::kClamp_TileMode, 0,
+            nullptr));
+        SkRect rect =
+            SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height());
+        m_canvas->drawRect(rect, p);
     }
 
     virtual void drawRadialGradient(const Unit::Rect& dst,
