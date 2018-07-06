@@ -55,7 +55,13 @@ String* keyValueToKey(KeyValue v)
         return String::createASCIIString("-");
     } else if (v == DeleteKey) {
         return String::createASCIIString("Delete");
-    } else {
+    }
+#ifdef STARFISH_TIZEN_TV
+    else if (v == TVHomeKey) {
+        return String::createASCIIString("XF86Home");
+    }
+#endif
+    else {
         if (v == UnidentifiedKey) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
@@ -105,7 +111,13 @@ String* keyValueToCode(KeyValue v)
         return String::createASCIIString("Minus");
     } else if (v == DeleteKey) {
         return String::createASCIIString("Delete");
-    } else {
+    }
+#ifdef STARFISH_TIZEN_TV
+    else if (v == TVHomeKey) {
+        return String::createASCIIString("F5");
+    }
+#endif
+    else {
         if (v == UnidentifiedKey) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
@@ -193,6 +205,8 @@ uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode)
         return 406;
     } else if (v == TVMenuKey) {
         return 18;
+    } else if (v == TVHomeKey) {
+        return 10071;
     }
 #endif
     else {

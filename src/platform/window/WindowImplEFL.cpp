@@ -138,6 +138,9 @@ public:
         m_evasGLSurface = nullptr;
         m_evasGLContext = nullptr;
 #endif
+#ifdef STARFISH_TIZEN_TN
+        m_focusInHandler = nullptr;
+#endif
     }
 
     virtual int32_t width() override
@@ -373,6 +376,13 @@ public:
             evas_object_del((Evas_Object*)m_window);
         }
 #endif
+#ifdef STARFISH_TIZEN_TV
+        if (m_focusInHandler) {
+            evas_object_event_callback_del(m_window, EVAS_CALLBACK_FOCUS_IN,
+                                           m_focusInHandler);
+        }
+#endif
+
         PlatformWindow::close();
         if (g_currentWnd == this) {
             g_currentWnd = nullptr;
@@ -464,6 +474,10 @@ public:
     void (*m_keyUpEventHandler)(void* data, Evas* evas, Evas_Object* obj,
                                 void* event_info);
     void (*m_clickEventHandler)(void* data, Evas_Object* obj, void* event_info);
+#ifdef STARFISH_TIZEN_TV
+    void (*m_focusInHandler)(void* data, Evas* evas, Evas_Object* obj,
+                             void* event_info);
+#endif
 
     Ecore_Animator* m_renderingAnimator;
 
@@ -872,6 +886,8 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
         return KeyValue::TVBlueKey;
     } else if (strcmp("XF86SysMenu", ecoreKeyString) == 0) {
         return KeyValue::TVMenuKey;
+    } else if (strcmp("XF86Home", ecoreKeyString) == 0) {
+        return KeyValue::TVHomeKey;
     }
 #endif
     STARFISH_LOG_ERROR("WindowImplEFL - unimplemented key %s\n",
@@ -1614,6 +1630,16 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             }
         },
         wnd);
+
+#ifdef STARFISH_TIZEN_TV
+    wnd->m_focusInHandler = [](void* data, Evas* e, Evas_Object* obj,
+                               void* event_info) {
+        WindowImplEFL* wnd = (WindowImplEFL*)data;
+        evas_object_focus_set(wnd->m_nonIMEKeyEventBox, EINA_TRUE);
+    };
+    evas_object_event_callback_add(wnd->m_window, EVAS_CALLBACK_FOCUS_IN,
+                                   wnd->m_focusInHandler, wnd);
+#endif
 
     ecore_imf_context_autocapital_type_set(wnd->m_imfContext,
                                            ECORE_IMF_AUTOCAPITAL_TYPE_NONE);
