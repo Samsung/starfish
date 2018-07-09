@@ -41,6 +41,7 @@ class HTMLListContainer;
 class NodeList;
 class RareNodeMembers;
 class RareElementMembers;
+class NodeOrDOMString;
 
 typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
 typedef GCVector<std::pair<std::pair<String*, String*>, HTMLCollection*>>
@@ -354,6 +355,9 @@ public:
         if (m_parentNode)
             m_parentNode->removeChild(this);
     }
+
+    void after(const GCVector<NodeOrDOMString>& array);
+    void before(const GCVector<NodeOrDOMString>& array);
 
     template <typename T>
     Node* childMatchedBy(Node* parent, T fn)
