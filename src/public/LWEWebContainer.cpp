@@ -278,6 +278,18 @@ void WebContainer::Destroy()
     GC_gcollect_and_unmap();
 }
 
+void WebContainer::Resume()
+{
+    STARFISH_ASSERT(m_starfish);
+    TO_STARFISH(m_starfish)->resume();
+}
+
+void WebContainer::Pause()
+{
+    STARFISH_ASSERT(m_starfish);
+    TO_STARFISH(m_starfish)->pause();
+}
+
 void WebContainer::SetSettings(const Settings& settings)
 {
     STARFISH_ASSERT(m_starfish);
