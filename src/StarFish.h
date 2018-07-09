@@ -94,6 +94,7 @@ public:
     }
 
     void loadHTMLDocument(String* filePath);
+    void loadHTMLDocumentAsync(String* filePath);
 
     void resume();
     void pause();
@@ -303,8 +304,13 @@ public:
 #endif
     void registerWebViewHandler(const std::string& handlerName,
                                 std::function<void(String*, int)> handler);
+    void registerWebViewHandler(const std::string& handlerName,
+                                std::function<void(void*)> handler);
+    bool containsWebViewHandler(const std::string& handlerName);
     void callWebViewHandler(const std::string& handlerName, String* url,
                             int param = 0);
+    void callWebViewHandler(const std::string& handlerName, void* data);
+
     void setLWEWebView(void* webView)
     {
         m_lweWebView = webView;
@@ -408,6 +414,8 @@ protected:
 #endif
     std::unordered_map<std::string, std::function<void(String*, int)>>
         m_lweWebViewHandlers;
+    std::unordered_map<std::string, std::function<void(void*)>>
+        m_lweWebViewHandlersGeneral;
     void* m_lweWebView;
     int m_posX;
     int m_posY;
@@ -415,6 +423,7 @@ protected:
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);
+    String* resolvePath(String* filePath);
 };
 
 class StarFishEnterer {

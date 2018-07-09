@@ -155,6 +155,8 @@ public:
         const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
     void RegisterOnLoadResourceHandler(
         const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
+    void RegisterShouldOverrideUrlLoadingHandler(
+        const std::function<bool(LWE::WebContainer*, const std::string&)>& cb);
     void RegisterOnProgressChangedHandler(
         const std::function<void(LWE::WebContainer*, int progress)>& cb);
 
