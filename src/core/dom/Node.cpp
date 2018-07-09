@@ -25,6 +25,7 @@
 #include "core/dom/Attr.h"
 #include "core/dom/CharacterData.h"
 #include "core/dom/Document.h"
+#include "core/dom/DocumentFragment.h"
 #include "core/dom/DocumentType.h"
 #include "core/dom/ProcessingInstruction.h"
 #include "core/dom/DOMException.h"
@@ -47,6 +48,7 @@
 #include "core/page/WebView.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "binding/NodeOrDOMStringUnion.h"
 
 namespace StarFish {
 
@@ -199,6 +201,96 @@ NodeList* Node::childNodes()
     return rareData->m_childNodeList;
 }
 
+static bool isNodeInNodes(Node* node, const GCVector<NodeOrDOMString>& nodes)
+{
+    size_t size = nodes.size();
+    for (size_t i = 0; i < size; ++i) {
+        if (nodes[i].isNodeValue() &&
+            nodes[i].getNodeValue()->isEqualNode(node)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static Node* findViableNextSibling(Node* node,
+                                   const GCVector<NodeOrDOMString>& nodes)
+{
+    Node* sibling = node->nextSibling();
+    while (sibling) {
+        if (!isNodeInNodes(sibling, nodes)) {
+            return sibling;
+        }
+        sibling = sibling->nextSibling();
+    }
+    return nullptr;
+}
+
+static Node* findViablePreviousSibling(Node* node,
+                                       const GCVector<NodeOrDOMString>& nodes)
+{
+    Node* sibling = node->previousSibling();
+    while (sibling) {
+        if (!isNodeInNodes(sibling, nodes)) {
+            return sibling;
+        }
+        sibling = sibling->previousSibling();
+    }
+    return nullptr;
+}
+
+static Node* nodeOrStringToNode(const NodeOrDOMString& nodeOrString,
+                                Document* document)
+{
+    if (nodeOrString.isNodeValue()) {
+        return nodeOrString.getNodeValue();
+    }
+    return new Text(document, nodeOrString.getDOMStringValue());
+}
+
+static Node* convertNodesIntoNode(const GCVector<NodeOrDOMString>& nodes,
+                                  Document* document)
+{
+    size_t size = nodes.size();
+    if (size == 1) {
+        return nodeOrStringToNode(nodes[0], document);
+    }
+
+    Node* fragment = new DocumentFragment(document);
+    for (size_t i = 0; i < size; ++i) {
+        fragment->appendChild(nodeOrStringToNode(nodes[i], document));
+    }
+    return fragment;
+}
+
+void Node::after(const GCVector<NodeOrDOMString>& nodes)
+{
+    Node* parent = parentNode();
+    if (!parent) {
+        return;
+    }
+    Node* viableNextSibling = findViableNextSibling(this, nodes);
+    Node* node = convertNodesIntoNode(nodes, document());
+    if (node) {
+        parent->insertBefore(node, viableNextSibling);
+    }
+}
+void Node::before(const GCVector<NodeOrDOMString>& nodes)
+{
+    Node* parent = parentNode();
+    if (!parent) {
+        return;
+    }
+
+    Node* viablePreviousSibling = findViablePreviousSibling(this, nodes);
+    Node* node = convertNodesIntoNode(nodes, document());
+    if (node) {
+        parent->insertBefore(node, viablePreviousSibling
+                                       ? viablePreviousSibling->nextSibling()
+                                       : parent->firstChild());
+    }
+}
+
 String* Node::baseURI() const
 {
     return document()->baseURL()->urlString();
@@ -346,7 +438,17 @@ bool Node::isEqualNode(Node* other)
     case ELEMENT_NODE: {
         Element* thisNode = asElement();
         Element* otherNode = other->asElement();
-        if (!(thisNode->hasSameAttributes(otherNode))) {
+        if (!(thisNode->localName()->equals(otherNode->localName())) ||
+            !(thisNode->hasSameAttributes(otherNode))) {
+            return false;
+        }
+        break;
+    }
+    case ATTRIBUTE_NODE: {
+        Attr* thisAttr = asAttr();
+        Attr* otherAttr = other->asAttr();
+        if (!(thisAttr->localName()->equals(otherAttr->localName())) ||
+            !(thisAttr->value()->equals(otherAttr->value()))) {
             return false;
         }
         break;
