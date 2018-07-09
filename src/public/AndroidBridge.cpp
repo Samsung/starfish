@@ -535,7 +535,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_updateBuffer(
     }
     jobject bObject_new = env->NewGlobalRef(bitmap);
     if ((ret = AndroidBitmap_lockPixels(env, bObject_new, &pixels)) < 0) {
-        LOGE("[MONG]AndroidBitmap_lockPixels() failed ! error=%d", ret);
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
     }
     /*
     pixels = android::bitmap::lockPixels(env, bObject_new);
@@ -638,6 +638,24 @@ Java_com_samsung_android_mobileservice_lwe_WebView_ClearHistory(JNIEnv* env,
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->ClearHistory();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_Resume(JNIEnv* env,
+                                                          jobject thiz,
+                                                          jlong data)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->Resume();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_Pause(JNIEnv* env,
+                                                         jobject thiz,
+                                                         jlong data)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->Pause();
 }
 
 extern "C" JNIEXPORT void JNICALL

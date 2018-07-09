@@ -139,6 +139,9 @@ public:
     std::string EvaluateJavaScript(const std::string& script);
     void ClearHistory();
     void Destroy();
+    void Pause();
+    void Resume();
+
     void SetSettings(const Settings& setttings);
     void RemoveJavascriptInterface(const std::string& exposedObjectName,
                                    const std::string& jsFunctionName);

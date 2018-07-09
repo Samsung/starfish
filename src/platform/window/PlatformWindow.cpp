@@ -248,6 +248,7 @@ void PlatformWindow::resume()
 {
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->resume();
+        webView()->setNeedsPainting();
     }
 }
 
