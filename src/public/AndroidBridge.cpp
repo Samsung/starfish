@@ -46,6 +46,7 @@ struct WindowGlue {
     jmethodID m_onReceivedError;
     jmethodID m_onPageFinished;
     jmethodID m_onPageStarted;
+    jmethodID m_shouldOverrideUrlLoading;
     jmethodID m_onProgressed;
 
     WindowGlue()
@@ -70,6 +71,7 @@ void callOnPageFinished(LWE::WebView* view, const char* url, bool canGoBack,
                         bool canGoForward);
 void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
                        bool canGoForward);
+bool callShouldOverrideUrlLoading(LWE::WebContainer* view, const char* url);
 void callOnProgressChanged(LWE::WebContainer* view, int newProgress);
 
 static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
@@ -115,6 +117,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
         env->GetMethodID(clazz, "onPageFinished", "(Ljava/lang/String;ZZ)V");
     g_WindowGlue.m_onPageStarted =
         env->GetMethodID(clazz, "onPageStarted", "(Ljava/lang/String;ZZ)V");
+    g_WindowGlue.m_shouldOverrideUrlLoading = env->GetMethodID(
+        clazz, "shouldOverrideUrlLoading", "(Ljava/lang/String;)Z");
     g_WindowGlue.m_onProgressed =
         env->GetMethodID(clazz, "onProgressChanged", "(I)V");
     env->DeleteLocalRef(clazz);
@@ -234,6 +238,32 @@ void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
 
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onPageStarted,
                         jstr, jboolean1, jboolean2);
+}
+
+bool callShouldOverrideUrlLoading(LWE::WebContainer* view, const char* url)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_shouldOverrideUrlLoading) {
+        LOGE("ShouldOverrideUrlLoading error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    jstring jstr = env->NewStringUTF(url);
+    bool ret = env->CallBooleanMethod(
+        g_webViews[view].first, g_WindowGlue.m_shouldOverrideUrlLoading, jstr);
+    return ret;
 }
 
 void callOnProgressChanged(LWE::WebContainer* view, int progress)
@@ -487,6 +517,11 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
     webContainer->RegisterOnRenderedHandler(
         [](LWE::WebContainer* wv, void* buffer) -> void {
             flushRenderingCB(wv);
+        });
+
+    webContainer->RegisterShouldOverrideUrlLoadingHandler(
+        [](LWE::WebContainer* view, const std::string& url) -> bool {
+            return callShouldOverrideUrlLoading(view, url.c_str());
         });
 
     jobject java_webview = env->NewGlobalRef(thiz);

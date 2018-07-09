@@ -454,6 +454,14 @@ void StarFish::exit()
 
 void StarFish::loadHTMLDocument(String* filePath)
 {
+    String* resolvedPath = resolvePath(filePath);
+    ResourceURL* url = new ResourceURL(resolvedPath);
+    m_platformWindow->webView()->navigate(url, HistoryManager::Action::Add,
+                                          nullptr);
+}
+
+String* StarFish::resolvePath(String* filePath)
+{
     String* resolvedPath = filePath;
     if (!filePath->startsWith("http") && !filePath->startsWith("about") &&
         !filePath->startsWith("data:")) {
@@ -470,9 +478,16 @@ void StarFish::loadHTMLDocument(String* filePath)
             resolvedPath = prefix->concat(resolvedPath);
         }
     }
+
+    return resolvedPath;
+}
+
+void StarFish::loadHTMLDocumentAsync(String* filePath)
+{
+    String* resolvedPath = resolvePath(filePath);
     ResourceURL* url = new ResourceURL(resolvedPath);
-    m_platformWindow->webView()->navigate(url, HistoryManager::Action::Add,
-                                          nullptr);
+    m_platformWindow->webView()->starFish()->messageLoop()->invokeNavigate(
+        m_platformWindow->webView(), url, nullptr);
 }
 
 void StarFish::resume()
@@ -633,6 +648,28 @@ void StarFish::registerWebViewHandler(const std::string& handlerName,
     }
 }
 
+void StarFish::registerWebViewHandler(const std::string& handlerName,
+                                      std::function<void(void*)> handler)
+{
+    auto it = m_lweWebViewHandlersGeneral.find(handlerName);
+    if (it == m_lweWebViewHandlersGeneral.end()) {
+        m_lweWebViewHandlersGeneral.insert(
+            std::make_pair(handlerName, handler));
+    } else {
+        it->second = handler;
+    }
+}
+
+bool StarFish::containsWebViewHandler(const std::string& handlerName)
+{
+    auto it = m_lweWebViewHandlersGeneral.find(handlerName);
+    if (it != m_lweWebViewHandlersGeneral.end()) {
+        return true;
+    }
+
+    return false;
+}
+
 void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
                                   int param)
 {
@@ -662,5 +699,34 @@ void StarFish::callWebViewHandler(const std::string& handlerName, String* url,
             delete d;
         },
         d);
+}
+
+void StarFish::callWebViewHandler(const std::string& handlerName, void* param)
+{
+    auto it = m_lweWebViewHandlersGeneral.find(handlerName);
+    if (it == m_lweWebViewHandlersGeneral.end()) {
+        return;
+    }
+
+    struct Env {
+        std::string handlerName;
+        StarFish* starFish;
+    };
+    Env* env = new Env();
+    env->handlerName = handlerName;
+    env->starFish = this;
+
+    messageLoop()->addIdler(
+        nullptr,
+        [](size_t, void* env, void* param) {
+            Env* e = (Env*)env;
+            auto it =
+                e->starFish->m_lweWebViewHandlersGeneral.find(e->handlerName);
+            if (it != e->starFish->m_lweWebViewHandlersGeneral.end()) {
+                (it->second)(param);
+            }
+            delete e;
+        },
+        env, param);
 }
 }

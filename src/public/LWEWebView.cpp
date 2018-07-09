@@ -215,7 +215,7 @@ void WebView::LoadURL(const std::string& url)
 {
     STARFISH_ASSERT(m_starfish);
     TO_STARFISH(m_starfish)
-        ->loadHTMLDocument(StarFish::String::fromUTF8(url.data()));
+        ->loadHTMLDocumentAsync(StarFish::String::fromUTF8(url.data()));
 }
 
 std::string WebView::GetURL()

@@ -31,12 +31,14 @@
 #include "binding/ScriptWrappable.h"
 #include "JavaScriptNativeHandler.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "platform/network/HTTPCache.h"
 #include "core/dom/MouseEvent.h"
 #include "core/event/KeyBoardEventData.h"
 #include "platform/event/PlatformKeyEventData.h"
+#include "platform/loader/ResourceURL.h"
 
 #include <EscargotPublic.h>
 
@@ -370,6 +372,36 @@ void WebContainer::RegisterOnLoadResourceHandler(
             std::string("OnLoadResource"),
             [this, cb](StarFish::String* url, int errorCode) -> void {
                 cb(this, url->toUTF8NonGCString());
+            });
+}
+
+void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
+    const std::function<bool(LWE::WebContainer*, const std::string&)>& cb)
+{
+    TO_STARFISH(m_starfish)
+        ->registerWebViewHandler(
+            std::string("shouldOverrideUrlLoading"),
+            [this, cb](void* param) -> void {
+                struct Param {
+                    std::string url;
+                    std::string referrerUrl;
+                };
+
+                Param* p = (Param*)param;
+                bool ret = cb(this, p->url);
+
+                if (ret == false) {
+                    // continue loading
+                    TO_STARFISH(m_starfish)
+                        ->messageLoop()
+                        ->invokeNavigate(
+                            TO_STARFISH(m_starfish)
+                                ->platformWindow()
+                                ->webView(),
+                            new StarFish::ResourceURL(p->url.c_str()),
+                            new StarFish::ResourceURL(p->referrerUrl.c_str()));
+                }
+                delete p;
             });
 }
 
