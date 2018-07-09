@@ -726,6 +726,10 @@ public:
     virtual void drawLinearGradient(const Unit::Rect& dst,
                                     GradientDrawingInfo* info)
     {
+        if (!lastState().m_visible) {
+            return;
+        }
+
         SkPoint points[] = { { info->x1, info->y1 }, { info->x2, info->y2 } };
         size_t colorCount = info->colorStops.size();
         SkColor colors[colorCount];
@@ -737,7 +741,7 @@ public:
         }
 
         SkPaint p;
-        p.setAntiAlias(true);
+        // p.setAntiAlias(true); // Uncomment if performance is not an issue
         p.setShader(SkGradientShader::MakeLinear(
             points, colors, pos, colorCount, SkShader::kClamp_TileMode, 0,
             nullptr));
@@ -749,6 +753,43 @@ public:
     virtual void drawRadialGradient(const Unit::Rect& dst,
                                     GradientDrawingInfo* info)
     {
+        if (!lastState().m_visible) {
+            return;
+        }
+
+        m_canvas->save();
+
+        size_t colorCount = info->colorStops.size();
+        SkColor colors[colorCount];
+        SkScalar pos[colorCount];
+        for (size_t i = 0; i < colorCount; i++) {
+            Unit::Color clr = info->colorStops[i]->color();
+            colors[i] = SkColorSetARGB(clr.a(), clr.r(), clr.g(), clr.b());
+            pos[i] = info->colorStops[i]->offset().percent();
+        }
+
+        if (info->secondRadius && (info->firstRadius > info->secondRadius)) {
+            // width > height
+            info->r2 = info->firstRadius;
+            info->y1 = info->y1 * (info->firstRadius / info->secondRadius);
+            m_canvas->scale(1, (info->secondRadius / info->firstRadius));
+        } else if (info->secondRadius &&
+                   (info->firstRadius < info->secondRadius)) {
+            // width < height
+            info->r2 = info->secondRadius;
+            info->x1 = info->x1 * (info->secondRadius / info->firstRadius);
+            m_canvas->scale((info->firstRadius / info->secondRadius), 1);
+        }
+
+        sk_sp<SkShader> s = SkGradientShader::MakeRadial(
+            { info->x1, info->y1 }, info->r2, colors, pos, colorCount,
+            SkShader::kClamp_TileMode);
+
+        SkPaint p;
+        // p.setAntiAlias(true); // Uncomment if performance is not an issue
+        p.setShader(s);
+        m_canvas->drawPaint(p);
+        m_canvas->restore();
     }
 
     virtual void applyMatrixTo(LayoutLocation& lp)
