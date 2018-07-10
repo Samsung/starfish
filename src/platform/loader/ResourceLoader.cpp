@@ -54,6 +54,7 @@ ResourceLoader::ResourceLoader(Document* document)
     , m_pendingResourceCountWhileDocumentOpening(0)
     , m_resourceCacheSize(0)
     , m_downloadedResourceContentSize(0)
+    , m_loadProgress(0)
 {
 }
 
@@ -144,6 +145,7 @@ public:
     {
         ResourceClient::didLoadFinished();
         clearAlive();
+        resource()->loader()->updateLoadProgress();
         resource()->loader()->document()->starFish()->callWebViewHandler(
             std::string("OnLoadResource"), resource()->url()->urlString());
     }
@@ -579,4 +581,67 @@ void ResourceLoader::cancelAllOfPendingRequests()
         v[0]->cancel();
     }
 }
+
+void ResourceLoader::resetLoadProgress()
+{
+    m_loadProgress = 0;
+    m_loadProgressState = LoadProgressState::Normal;
+}
+
+void ResourceLoader::startLoadProgressTracking()
+{
+    resetLoadProgress();
+    m_loadProgress = 10;
+    starFish()->callWebViewHandler(std::string("OnProgressChanged"), nullptr,
+                                   m_loadProgress);
+}
+
+void ResourceLoader::setLoadProgressState(LoadProgressState state)
+{
+    if (m_loadProgress == 0) {
+        return;
+    }
+    m_loadProgressState = state;
+    if (m_loadProgressState == LoadProgressState::DomContentLoaded) {
+        updateLoadProgress();
+    }
+}
+
+void ResourceLoader::updateLoadProgress()
+{
+    if (m_loadProgress == 0) {
+        return;
+    }
+
+    int loadProgress = 0;
+
+    if (m_loadProgressState == LoadProgressState::DomContentLoaded) {
+        loadProgress = 100;
+        resetLoadProgress();
+    } else {
+        int remain = 100 - m_loadProgress;
+        int delta = remain / m_pendingResourceCountWhileDocumentOpening;
+        m_loadProgress += delta;
+        if (m_loadProgressState == LoadProgressState::ParsingEnd) {
+            m_loadProgress += delta;
+        }
+        if (m_loadProgress >= 100) {
+            m_loadProgress = 99;
+        }
+        loadProgress = m_loadProgress;
+    }
+    starFish()->callWebViewHandler(std::string("OnProgressChanged"), nullptr,
+                                   loadProgress);
+}
+
+void ResourceLoader::markDocumentOpenState()
+{
+    if (window()->browsingContext()->isTopLevelBrowsingContext()) {
+        startLoadProgressTracking();
+    }
+    m_isDocumentInOpenState = true;
+    m_documentOpenTime = timestamp();
+    increasePendingResourceCountWhileDocumentOpening();
+}
+
 } // namespace StarFish
