@@ -304,7 +304,8 @@ size_t GatherableString<InlineStorageSize>::peekBMPBuffer(
     void* data) const
 {
     STARFISH_ASSERT(hasBMPContent());
-    char16_t* newStringData = ALLOCA(length() + 1, char16_t);
+    char16_t* newStringData =
+        ALLOCA((length() + 1) * sizeof(char16_t), char16_t);
     for (size_t i = 0; i < length(); i++) {
         newStringData[i] = (char16_t)charAt(i);
     }

@@ -31,7 +31,8 @@
 namespace StarFish {
 
 void Resource::request(ResourceRequestSyncLevel syncLevel,
-                       ResourceURL* referrerURL, bool allowCache)
+                       ResourceURL* referrerURL, bool allowCache,
+                       ResourceRequest::MethodType method)
 {
     STARFISH_ASSERT(m_state == BeforeSend);
     m_isRequested = true;
@@ -39,7 +40,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
         // cache miss
         m_resourceRequest = new ResourceRequest(loader()->document());
 
-        ResourceRequest::MethodType method = ResourceRequest::GET_METHOD;
+        // ResourceRequest::MethodType method = ResourceRequest::GET_METHOD;
         String* entityBody = String::emptyString;
 
         prepare();
@@ -119,11 +120,11 @@ void Resource::cancel()
 }
 
 void Resource::didHeaderReceived(
-    const std::unordered_map<std::string, std::string>& headrs)
+    const std::unordered_map<std::string, std::string>& headers)
 {
     auto iter = m_resourceClients.begin();
     while (iter != m_resourceClients.end()) {
-        (*iter)->didHeaderReceived(headrs);
+        (*iter)->didHeaderReceived(headers);
         iter++;
     }
 }

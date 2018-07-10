@@ -83,6 +83,12 @@ FontResource* ResourceLoader::fetchFont(ResourceURL* url)
     return res;
 }
 
+HeaderResource* ResourceLoader::fetchHeader(ResourceURL* url)
+{
+    HeaderResource* res = new HeaderResource(url, this);
+    return res;
+}
+
 class DocumentOnLoadChecker : public ResourceClient {
 public:
     DocumentOnLoadChecker(Resource* res)

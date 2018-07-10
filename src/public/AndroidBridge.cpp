@@ -48,6 +48,7 @@ struct WindowGlue {
     jmethodID m_onPageStarted;
     jmethodID m_shouldOverrideUrlLoading;
     jmethodID m_onProgressed;
+    jmethodID m_onDownloadStart;
 
     WindowGlue()
     {
@@ -73,6 +74,9 @@ void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
                        bool canGoForward);
 bool callShouldOverrideUrlLoading(LWE::WebContainer* view, const char* url);
 void callOnProgressChanged(LWE::WebContainer* view, int newProgress);
+void callOnDownloadStart(LWE::WebContainer* view, const char* url,
+                         const char* userAgent, const char* contentDisposition,
+                         const char* mimetype, long contentLength);
 
 static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
                             const char signature[])
@@ -121,6 +125,10 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
         clazz, "shouldOverrideUrlLoading", "(Ljava/lang/String;)Z");
     g_WindowGlue.m_onProgressed =
         env->GetMethodID(clazz, "onProgressChanged", "(I)V");
+    g_WindowGlue.m_onDownloadStart =
+        env->GetMethodID(clazz, "onDownloadStart",
+                         "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/"
+                         "String;Ljava/lang/String;J)V");
     env->DeleteLocalRef(clazz);
 
     LOGI("Java_com_samsung_android_mobileservice_lwe_WebView_init call end");
@@ -282,13 +290,47 @@ void callOnProgressChanged(LWE::WebContainer* view, int progress)
     }
 
     if (!env || !g_WindowGlue.m_onProgressed) {
-        LOGE("OnPageStarted error");
+        LOGE("OnProgressChanged error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     jint newProgress = progress;
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onProgressed,
                         newProgress);
+}
+
+void callOnDownloadStart(LWE::WebContainer* view, const char* url,
+                         const char* userAgent, const char* contentDisposition,
+                         const char* mimetype, long contentLength)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_onDownloadStart) {
+        LOGE("OnDownloadStarted error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    LOGI("ryanc callOnDownloadStart");
+
+    jstring jurl = env->NewStringUTF(url);
+    jstring juserAgent = env->NewStringUTF(userAgent);
+    jstring jcontentDisposition = env->NewStringUTF(contentDisposition);
+    jstring jmimetype = env->NewStringUTF(mimetype);
+    jlong jcontentLength = contentLength;
+    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onDownloadStart,
+                        jurl, juserAgent, jcontentDisposition, jmimetype,
+                        jcontentLength);
 }
 
 int startTimer(int ms, TimerCallback pointer, void* data)
@@ -527,6 +569,15 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
     webContainer->RegisterOnProgressChangedHandler(
         [](LWE::WebContainer* view, int newProgress) -> void {
             callOnProgressChanged(view, newProgress);
+        });
+
+    webContainer->RegisterOnDownloadStartHandler(
+        [](LWE::WebContainer* view, const std::string& url,
+           const std::string& userAgent, const std::string& contentDisposition,
+           const std::string& mimetype, long contentLength) -> void {
+            callOnDownloadStart(view, url.c_str(), userAgent.c_str(),
+                                contentDisposition.c_str(), mimetype.c_str(),
+                                contentLength);
         });
 
     jobject java_webview = env->NewGlobalRef(thiz);
