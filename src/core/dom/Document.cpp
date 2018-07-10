@@ -558,6 +558,10 @@ void Document::resumeDocumentParsing()
 
 void Document::endDocumentParsing()
 {
+    if (browsingContext()->isTopLevelBrowsingContext()) {
+        m_resourceLoader->setLoadProgressState(
+            ResourceLoader::LoadProgressState::ParsingEnd);
+    }
     if (m_pendingDocumentParsingIdlerHandle != SIZE_MAX) {
         window()->starFish()->messageLoop()->removeIdler(
             m_pendingDocumentParsingIdlerHandle);
@@ -635,6 +639,8 @@ void Document::notifyDomContentLoaded()
     }
 
     if (browsingContext()->isTopLevelBrowsingContext()) {
+        m_resourceLoader->setLoadProgressState(
+            ResourceLoader::LoadProgressState::DomContentLoaded);
         starFish()->callWebViewHandler(std::string("OnPageFinished"),
                                        this->urlString());
     }

@@ -44,6 +44,7 @@ class ResourceLoader : public gc, public DocumentHoldable {
     friend class ResourceLoaderTracer;
 
 public:
+    enum LoadProgressState { Normal, ParsingEnd, DomContentLoaded };
     ResourceLoader(Document* doc);
 
     Resource* fetch(ResourceURL* url);
@@ -52,13 +53,7 @@ public:
     ImageResource* fetchImage(ResourceURL* url);
     FontResource* fetchFont(ResourceURL* url);
 
-    void markDocumentOpenState()
-    {
-        m_isDocumentInOpenState = true;
-        m_documentOpenTime = timestamp();
-        increasePendingResourceCountWhileDocumentOpening();
-    }
-
+    void markDocumentOpenState();
     void notifyEndParseDocument()
     {
         decreasePendingResourceCountWhileDocumentOpening();
@@ -93,6 +88,11 @@ public:
     void increasePendingResourceCountWhileDocumentOpening();
     void decreasePendingResourceCountWhileDocumentOpening();
 
+    void resetLoadProgress();
+    void startLoadProgressTracking();
+    void setLoadProgressState(LoadProgressState state);
+    void updateLoadProgress();
+
 private:
     void cancelAllOfPendingRequests();
     void cacheHit(Resource* org, Resource* now,
@@ -111,6 +111,8 @@ private:
     size_t m_resourceCacheSize;
     uint64_t m_downloadedResourceContentSize; // This variable actually contains
                                               // content size of Resource.
+    size_t m_loadProgress;
+    LoadProgressState m_loadProgressState;
 };
 }
 
