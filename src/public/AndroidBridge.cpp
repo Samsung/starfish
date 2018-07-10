@@ -524,6 +524,11 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
             return callShouldOverrideUrlLoading(view, url.c_str());
         });
 
+    webContainer->RegisterOnProgressChangedHandler(
+        [](LWE::WebContainer* view, int newProgress) -> void {
+            callOnProgressChanged(view, newProgress);
+        });
+
     jobject java_webview = env->NewGlobalRef(thiz);
     g_webViews.insert(
         std::make_pair(webContainer, std::make_pair(java_webview, nullptr)));
