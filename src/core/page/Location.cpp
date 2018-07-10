@@ -184,13 +184,110 @@ void Location::assign(ResourceURL* url, bool force)
     assign(url, document()->documentURI(), force);
 }
 
+class HeaderResourceClient : public ResourceClient {
+public:
+    HeaderResourceClient(
+        std::function<void(bool,
+                           const std::unordered_map<std::string, std::string>&)>
+            cb,
+        Resource* res)
+        : ResourceClient(res)
+        , m_cb(cb)
+    {
+    }
+
+    virtual void didLoadFailed() override
+    {
+        ResourceClient::didLoadFailed();
+    }
+
+    virtual void didHeaderReceived(
+        const std::unordered_map<std::string, std::string>& headers) override
+    {
+        auto itr = headers.find("Content-type");
+        if (itr != headers.end()) {
+            String* mimetype = String::createASCIIString(itr->second.c_str());
+            if (mimetype->contains("application", false)) {
+                m_cb(false, headers);
+                return;
+            }
+        }
+
+        m_cb(true, headers);
+    }
+
+    virtual void didLoadFinished() override
+    {
+        ResourceClient::didLoadFinished();
+    }
+
+private:
+    std::function<void(bool,
+                       const std::unordered_map<std::string, std::string>&)>
+        m_cb;
+};
+
 void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
 {
-    if (!url->isJavascriptURL()) {
-        if (force || !this->url()->urlString()->equals(url->urlString())) {
-            navigateImpl(document()->browsingContext(), url, referrerURL);
-        }
-    }
+    // check whether the resource can be displayed
+    std::function<void(bool,
+                       const std::unordered_map<std::string, std::string>&)>
+        cb = [this, url, referrerURL, force](
+            bool isBrowsableContent,
+            const std::unordered_map<std::string, std::string>& headers) {
+            if (isBrowsableContent) {
+                if (!url->isJavascriptURL()) {
+                    if (force ||
+                        !this->url()->urlString()->equals(url->urlString())) {
+                        navigateImpl(document()->browsingContext(), url,
+                                     referrerURL);
+                    }
+                }
+            } else {
+                struct Param {
+                    std::string url;
+                    std::string userAgent;
+                    std::string contentDisposition;
+                    std::string mimetype;
+                    long contentLength;
+                };
+
+                Param* p = new Param();
+                p->url = url->urlString()->toUTF8NonGCString();
+                p->userAgent =
+                    document()->starFish()->userAgent()->toUTF8NonGCString();
+
+                auto it = headers.find("Content-Disposition");
+                if (it != headers.end()) {
+                    p->contentDisposition = it->second;
+                } else {
+                    p->contentDisposition = "";
+                }
+
+                it = headers.find("Content-type");
+                if (it != headers.end()) {
+                    p->mimetype = it->second;
+                } else {
+                    p->mimetype = "";
+                }
+
+                it = headers.find("Content-Length");
+                if (it != headers.end()) {
+                    p->contentLength = atol(it->second.c_str());
+                } else {
+                    p->contentLength = -1;
+                }
+
+                document()->starFish()->callWebViewHandler(
+                    std::string("onDownloadStart"), (void*)p);
+            }
+        };
+
+    HeaderResource* resource = document()->resourceLoader().fetchHeader(url);
+    resource->addResourceClient(new HeaderResourceClient(cb, resource));
+    ResourceURL* rUrl = new ReferrerURL(document()->documentURI());
+    resource->request(Resource::ResourceRequestSyncLevel::NeverSync, rUrl, true,
+                      ResourceRequest::HEAD_METHOD);
 }
 
 void Location::replace(String* url)

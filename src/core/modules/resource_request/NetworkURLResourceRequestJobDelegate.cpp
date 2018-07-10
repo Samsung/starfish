@@ -309,6 +309,10 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         method = "POST";
         break;
     }
+    case ResourceRequest::HEAD_METHOD: {
+        method = "HEAD";
+        break;
+    }
     case ResourceRequest::UNKNOWN_METHOD: {
         STARFISH_ASSERT_NOT_REACHED();
         break;

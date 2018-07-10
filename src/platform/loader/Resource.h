@@ -149,8 +149,10 @@ public:
         SyncIfAlreadyLoaded,
         AlwaysSync
     };
-    virtual void request(ResourceRequestSyncLevel syncLevel,
-                         ResourceURL* referrerURL, bool allowCache = false);
+    virtual void request(
+        ResourceRequestSyncLevel syncLevel, ResourceURL* referrerURL,
+        bool allowCache = false,
+        ResourceRequest::MethodType method = ResourceRequest::GET_METHOD);
     virtual void cancel();
     virtual void didHeaderReceived(
         const std::unordered_map<std::string, std::string>& headrs);

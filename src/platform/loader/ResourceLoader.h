@@ -25,6 +25,7 @@
 #include "platform/loader/TextResource.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/loader/FontResource.h"
+#include "platform/loader/HeaderResource.h"
 #include "core/modules/profiling/Profiling.h"
 
 namespace StarFish {
@@ -52,6 +53,7 @@ public:
                             String* preferredEncoding = String::emptyString);
     ImageResource* fetchImage(ResourceURL* url);
     FontResource* fetchFont(ResourceURL* url);
+    HeaderResource* fetchHeader(ResourceURL* url);
 
     void markDocumentOpenState();
     void notifyEndParseDocument()

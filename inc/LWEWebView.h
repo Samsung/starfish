@@ -159,6 +159,10 @@ public:
         const std::function<bool(LWE::WebContainer*, const std::string&)>& cb);
     void RegisterOnProgressChangedHandler(
         const std::function<void(LWE::WebContainer*, int progress)>& cb);
+    void RegisterOnDownloadStartHandler(
+        const std::function<void(LWE::WebContainer*, const std::string&,
+                                 const std::string&, const std::string&,
+                                 const std::string&, long)>& cb);
 
     void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
     void RegisterOnRenderedHandler(

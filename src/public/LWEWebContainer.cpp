@@ -406,6 +406,29 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
             });
 }
 
+void WebContainer::RegisterOnDownloadStartHandler(
+    const std::function<void(LWE::WebContainer*, const std::string&,
+                             const std::string&, const std::string&,
+                             const std::string&, long)>& cb)
+{
+    TO_STARFISH(m_starfish)
+        ->registerWebViewHandler(
+            std::string("onDownloadStart"), [this, cb](void* param) -> void {
+                struct Param {
+                    std::string url;
+                    std::string userAgent;
+                    std::string contentDisposition;
+                    std::string mimetype;
+                    long contentLength;
+                };
+
+                Param* p = (Param*)param;
+                cb(this, p->url, p->userAgent, p->contentDisposition,
+                   p->mimetype, p->contentLength);
+                delete p;
+            });
+}
+
 void WebContainer::UpdateBuffer(void* buffer, uint width, uint height,
                                 uint stride)
 {
