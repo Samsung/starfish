@@ -250,7 +250,9 @@ protected:
 
 class PlatformFontCache : public gc {
     friend class FontSelector;
-
+#ifdef PORT_CANVAS_BACKEND_SKIA
+    friend class FontSelectorImplSkia;
+#endif
 public:
     static PlatformFontCache* create(StarFish* sf);
     virtual ~PlatformFontCache()
@@ -264,7 +266,7 @@ public:
 
 protected:
     std::unordered_set<UTF8StringDataNonGCStd> m_absencePlatformFontNames;
-    std::unordered_map<UTF8StringDataNonGCStd, FontFace*> m_loadedPlatformFonts;
+    GCUnorderedMap<UTF8StringDataNonGCStd, FontFace*> m_loadedPlatformFonts;
 };
 
 class FontSelector : public DocumentHoldable, public gc {
@@ -329,8 +331,9 @@ protected:
     {
     }
 
-    FontFace* loadFromPlatform(const UTF8StringDataNonGCStd& fm,
-                               bool isGenericName, char style, char weight);
+    virtual FontFace* loadFromPlatform(const UTF8StringDataNonGCStd& fm,
+                                       bool isGenericName, char style,
+                                       char weight);
 };
 };
 #endif

@@ -25,6 +25,10 @@
 #include "core/dom/Document.h"
 #include "platform/loader/ResourceLoader.h"
 
+#ifdef PORT_CANVAS_BACKEND_SKIA
+#include "platform/canvas/font/FontImplSkia.h"
+#endif
+
 namespace StarFish {
 
 static UTF8StringDataNonGCStd mergeStyleWeightWithString(
@@ -314,10 +318,19 @@ Font* FontSelector::loadFont(String* familyNameArray[],
 
     if (!existInPlatformLayerCache) {
         bool g = isGenericFontName(familyName);
+#ifndef PORT_CANVAS_BACKEND_SKIA
         auto fontPath =
             m_platformFontSelector->findFont(familyName, g, style, weight);
+
         STARFISH_RELEASE_ASSERT(fontPath.length());
         face = m_platformFontSelector->loadFontFace(fontPath);
+#else
+        PlatformFontSelectorImplSkia* impl =
+            (PlatformFontSelectorImplSkia*)m_platformFontSelector;
+        auto skTypeface =
+            impl->findAndLoadFontFace(familyName, g, style, weight);
+        face = impl->loadFontFace(skTypeface);
+#endif
         m_platformFontCache->insertFaceCache(cacheStr, face);
     }
 
