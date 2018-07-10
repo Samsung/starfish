@@ -3,54 +3,6 @@
 // Should be removed next release.
 // ******************************************************************************
 
-cc_prebuilt_library_static {
-    name: "liblwe_prebuilt_static_ft2",
-    compile_multilib: "32",
-    multilib: {
-        lib32: {
-            srcs: [
-                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libft2.a",
-            ],
-        },
-    },
-}
-
-cc_prebuilt_library_static {
-    name: "liblwe_prebuilt_static_harfbuzz",
-    compile_multilib: "32",
-    multilib: {
-        lib32: {
-            srcs: [
-                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libharfbuzz.a",
-            ],
-        },
-    },
-}
-
-cc_prebuilt_library_static {
-    name: "liblwe_prebuilt_staticharfbuzz_icu",
-    compile_multilib: "32",
-    multilib: {
-        lib32: {
-            srcs: [
-                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libharfbuzz-icu.a",
-            ],
-        },
-    },
-}
-
-cc_prebuilt_library_shared {
-    name: "liblwe_prebuilt_shared_fc",
-    compile_multilib: "32",
-    multilib: {
-        lib32: {
-            srcs: [
-                "third_party/android/prebuilt_armv-7a_8.1.0/lib/libfontconfig.so",
-            ],
-        },
-    },
-}
-
 cc_prebuilt_library_shared {
     name: "liblwe_prebuilt_shared_jnigraphics",
     compile_multilib: "32",
@@ -96,9 +48,7 @@ cc_library_shared {
         "inc",
         "src",
 // external header
-        "third_party/android/prebuilt_armv-7a_8.1.0/include",
         "third_party/android/prebuilt_armv-7a_8.1.0/include/bdwgc",
-        "third_party/android/prebuilt_armv-7a_8.1.0/include/harfbuzz",
     ],
 
     srcs: [
@@ -126,19 +76,17 @@ cc_library_shared {
         "libjpeg",
         "libcrypto",
         "libssl",
-        "liblwe_prebuilt_shared_fc",
 		"libandroidfw",
 // Should use next line over android 8.1         
 //		"libandroid_runtime",
 // Should be removed next release.
         "liblwe_prebuilt_shared_jnigraphics",
         "libskia",
+        "libft2",
+        "libharfbuzz_ng",
     ],
     static_libs:[
         "libgif",
-        "liblwe_prebuilt_static_ft2",
-        "liblwe_prebuilt_static_harfbuzz",
-        "liblwe_prebuilt_staticharfbuzz_icu",
     ],
 
     cflags: [
