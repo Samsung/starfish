@@ -374,7 +374,7 @@ public:
                             continue;
                         }
                     }
-                    if (lastFontFace != g.first.first->skTypeFace()) {
+                    if (lastFontFace != g.first.first->skTypeface()) {
                         if (fontFace) {
                             canvas->drawPosText((glyphs).get(),
                                                 glyphCount * sizeof(SkGlyphID),
@@ -382,7 +382,7 @@ public:
                             glyphCount = 0;
                             fontFace = nullptr;
                         }
-                        lastFontFace = g.first.first->skTypeFace();
+                        lastFontFace = g.first.first->skTypeface();
 
                         fontFace = lastFontFace;
                         paint = g.first.first->skPaint();
@@ -435,7 +435,7 @@ public:
                 FontSkiaTextRun& run = runs[i];
 
                 LayoutUnit letterSpacingValueSoFar;
-                if (run.m_skTypeFace == nullptr) {
+                if (run.m_skTypeface == nullptr) {
                     if (/* skip webfont enabled*/ f
                             ->seenUnresolvedWebFontIndex() != SIZE_MAX) {
                     } else {
@@ -461,7 +461,7 @@ public:
                                 ->seenUnresolvedWebFontIndex() != SIZE_MAX &&
                         f->seenUnresolvedWebFontIndex() <= run.m_faceIndex) {
                     } else {
-                        if (run.m_skTypeFace != lastFontFace) {
+                        if (run.m_skTypeface != lastFontFace) {
                             if (lastFontFace) {
                                 canvas->drawPosText((glyphs).get(),
                                                     glyphCount *
@@ -470,7 +470,7 @@ public:
                                 glyphCount = 0;
                                 fontFace = nullptr;
                             }
-                            lastFontFace = run.m_skTypeFace;
+                            lastFontFace = run.m_skTypeface;
                             fontFace = lastFontFace;
                             paint = run.m_skPaint;
                             paint->setTextSize(size);

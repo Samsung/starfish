@@ -22,8 +22,8 @@
 #define __FontImplSkia__
 
 #include "SkTypeface.h"
+#include "SkData.h"
 
-#include <fontconfig/fontconfig.h>
 #include <hb.h>
 #include <hb-ft.h>
 #include <hb-icu.h>
@@ -43,13 +43,16 @@ public:
         : FontSelector(document, platformFontData, platformFontCache)
     {
     }
+
+    virtual FontFace* loadFromPlatform(const UTF8StringDataNonGCStd& fm,
+                                       bool isGenericName, char style,
+                                       char weight) override;
 };
 
 class FontFaceImplSkia : public FontFace {
 public:
     FontFaceImplSkia(FT_Face face, sk_sp<SkTypeface> skTypeface,
-                     hb_font_t* hbFace, uint8_t* dataBuffer = nullptr,
-                     size_t dataBufferSize = 0);
+                     sk_sp<SkData> skDataToHoldFontData, hb_font_t* hbFace);
 
     virtual FontMetrics metrics(float size);
     virtual void clearCache() override;
@@ -59,22 +62,20 @@ public:
 
     virtual size_t dataSize()
     {
-        return m_dataBufferSize;
+        return (m_skDataToHoldFontData != nullptr)
+                   ? m_skDataToHoldFontData->size()
+                   : 0;
     }
 
-    FT_Face freetypeFace()
+    sk_sp<SkTypeface> skTypeface()
     {
         ensureFonts();
-        return m_face;
-    }
-
-    sk_sp<SkTypeface> skTypeFace()
-    {
-        return m_skTypeFace;
+        return m_skTypeface;
     }
 
     SkPaint* skPaint()
     {
+        ensureFonts();
         return m_skPaint;
     }
 
@@ -84,8 +85,6 @@ public:
         return m_hbFace;
     }
 
-    uint8_t* m_dataBuffer;
-    size_t m_dataBufferSize;
     int m_xHeight;
     int m_unitsPerEM;
     int m_ascender;
@@ -100,7 +99,8 @@ private:
     void ensureFonts();
 
     FT_Face m_face;
-    sk_sp<SkTypeface> m_skTypeFace;
+    sk_sp<SkTypeface> m_skTypeface;
+    sk_sp<SkData> m_skDataToHoldFontData;
     SkPaint* m_skPaint;
     hb_font_t* m_hbFace;
 };
@@ -110,7 +110,7 @@ public:
     StringView m_text;
     size_t m_faceIndex;
     FT_Face m_ftFace;
-    sk_sp<SkTypeface> m_skTypeFace;
+    sk_sp<SkTypeface> m_skTypeface;
     SkPaint* m_skPaint;
     hb_font_t* m_hbFont;
     hb_script_t m_script;
@@ -150,10 +150,26 @@ public:
 
     virtual UTF8StringDataNonGCStd findFont(
         const UTF8StringDataNonGCStd& familyName, bool isGenericName,
-        char style, char weight) override;
-    virtual FontFace* loadFontFace(const UTF8StringDataNonGCStd& path) override;
+        char style, char weight) override
+    {
+        RELEASE_ASSERT_NOT_REACHED();
+        return UTF8StringDataNonGCStd();
+    }
 
-    GCUnorderedMap<UTF8StringDataNonGCStd, FontFaceImplSkia*> m_fontPathToFace;
+    virtual FontFace* loadFontFace(const UTF8StringDataNonGCStd& path) override
+    {
+        RELEASE_ASSERT_NOT_REACHED();
+        return nullptr;
+    }
+
+    // skia only
+    sk_sp<SkTypeface> findAndLoadFontFace(
+        const UTF8StringDataNonGCStd& familyName, bool isGenericName,
+        char style, char weight);
+    FontFace* loadFontFace(sk_sp<SkTypeface> skTypeface);
+
+private:
+    GCUnorderedMap<UTF8StringDataNonGCStd, FontFaceImplSkia*> m_fontFaceCache;
 };
 
 class PlatformFontCacheImplSkia : public PlatformFontCache {
