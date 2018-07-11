@@ -94,7 +94,6 @@ public:
     }
 
     void loadHTMLDocument(String* filePath);
-    void loadHTMLDocumentAsync(String* filePath);
 
     void resume();
     void pause();

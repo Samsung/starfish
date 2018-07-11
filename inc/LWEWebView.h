@@ -94,7 +94,9 @@ public:
     void ClearCache();
     void RegisterOnReceivedErrorHandler(
         std::function<void(LWE::WebView*, LWE::ResourceError)> cb);
-    void RegisterOnPageFinishedHandler(
+    void RegisterOnPageParsedHandler(
+        std::function<void(LWE::WebView*, const std::string&)> cb);
+    void RegisterOnPageLoadedHandler(
         std::function<void(LWE::WebView*, const std::string&)> cb);
     void RegisterOnPageStartedHandler(
         std::function<void(LWE::WebView*, const std::string&)> cb);
@@ -149,8 +151,10 @@ public:
 
     void RegisterOnReceivedErrorHandler(
         const std::function<void(LWE::WebContainer*, LWE::ResourceError)>& cb);
-    void RegisterOnPageFinishedHandler(
-        const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
+    void RegisterOnPageParsedHandler(
+        std::function<void(LWE::WebContainer*, const std::string&)> cb);
+    void RegisterOnPageLoadedHandler(
+        std::function<void(LWE::WebContainer*, const std::string&)> cb);
     void RegisterOnPageStartedHandler(
         const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
     void RegisterOnLoadResourceHandler(

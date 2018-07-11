@@ -215,7 +215,7 @@ void WebView::LoadURL(const std::string& url)
 {
     STARFISH_ASSERT(m_starfish);
     TO_STARFISH(m_starfish)
-        ->loadHTMLDocumentAsync(StarFish::String::fromUTF8(url.data()));
+        ->loadHTMLDocument(StarFish::String::fromUTF8(url.data()));
 }
 
 std::string WebView::GetURL()
@@ -367,12 +367,23 @@ void WebView::RegisterOnReceivedErrorHandler(
             });
 }
 
-void WebView::RegisterOnPageFinishedHandler(
+void WebView::RegisterOnPageParsedHandler(
     std::function<void(LWE::WebView*, const std::string&)> cb)
 {
     TO_STARFISH(m_starfish)
         ->registerWebViewHandler(
-            std::string("OnPageFinished"),
+            std::string("OnPageParsed"),
+            [this, cb](StarFish::String* url, int errorCode) -> void {
+                cb(this, url->toUTF8NonGCString());
+            });
+}
+
+void WebView::RegisterOnPageLoadedHandler(
+    std::function<void(LWE::WebView*, const std::string&)> cb)
+{
+    TO_STARFISH(m_starfish)
+        ->registerWebViewHandler(
+            std::string("OnPageLoaded"),
             [this, cb](StarFish::String* url, int errorCode) -> void {
                 cb(this, url->toUTF8NonGCString());
             });
