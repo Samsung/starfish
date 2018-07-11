@@ -44,7 +44,7 @@ struct WindowGlue {
     jmethodID m_flushRendering;
     jmethodID m_onLoadResource;
     jmethodID m_onReceivedError;
-    jmethodID m_onPageFinished;
+    jmethodID m_onPageParsed;
     jmethodID m_onPageStarted;
     jmethodID m_shouldOverrideUrlLoading;
     jmethodID m_onProgressed;
@@ -68,8 +68,8 @@ void flushRenderingCB(void* view);
 void callOnLoadResourceHandler(LWE::WebView* view, const char* url);
 void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
                          bool canGoForward);
-void callOnPageFinished(LWE::WebView* view, const char* url, bool canGoBack,
-                        bool canGoForward);
+void callOnPageParsed(LWE::WebView* view, const char* url, bool canGoBack,
+                      bool canGoForward);
 void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
                        bool canGoForward);
 bool callShouldOverrideUrlLoading(LWE::WebContainer* view, const char* url);
@@ -117,7 +117,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
         env->GetMethodID(clazz, "onLoadResource", "(Ljava/lang/String;)V");
     g_WindowGlue.m_onReceivedError =
         env->GetMethodID(clazz, "onReceivedError", "(IZZ)V");
-    g_WindowGlue.m_onPageFinished =
+    g_WindowGlue.m_onPageParsed =
         env->GetMethodID(clazz, "onPageFinished", "(Ljava/lang/String;ZZ)V");
     g_WindowGlue.m_onPageStarted =
         env->GetMethodID(clazz, "onPageStarted", "(Ljava/lang/String;ZZ)V");
@@ -194,8 +194,8 @@ void callOnReceivedError(LWE::WebContainer* view, int errorCode, bool canGoBack,
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onReceivedError,
                         jint1, jboolean1, jboolean2);
 }
-void callOnPageFinished(LWE::WebContainer* view, const char* url,
-                        bool canGoBack, bool canGoForward)
+void callOnPageParsed(LWE::WebContainer* view, const char* url, bool canGoBack,
+                      bool canGoForward)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -210,14 +210,14 @@ void callOnPageFinished(LWE::WebContainer* view, const char* url,
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    if (!env || !g_WindowGlue.m_onPageFinished) {
-        LOGE("OnPageFinished error");
+    if (!env || !g_WindowGlue.m_onPageParsed) {
+        LOGE("OnPageParsed error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     jstring jstr = env->NewStringUTF(url);
     jboolean jboolean1 = canGoBack;
     jboolean jboolean2 = canGoForward;
-    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onPageFinished,
+    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onPageParsed,
                         jstr, jboolean1, jboolean2);
 }
 void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
@@ -539,10 +539,10 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
                                 view->CanGoForward());
         });
 
-    webContainer->RegisterOnPageFinishedHandler(
+    webContainer->RegisterOnPageParsedHandler(
         [](LWE::WebContainer* view, const std::string& url) -> void {
-            callOnPageFinished(view, url.c_str(), view->CanGoBack(),
-                               view->CanGoForward());
+            callOnPageParsed(view, url.c_str(), view->CanGoBack(),
+                             view->CanGoForward());
         });
 
     webContainer->RegisterOnPageStartedHandler(

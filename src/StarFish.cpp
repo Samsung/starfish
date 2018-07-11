@@ -482,14 +482,6 @@ String* StarFish::resolvePath(String* filePath)
     return resolvedPath;
 }
 
-void StarFish::loadHTMLDocumentAsync(String* filePath)
-{
-    String* resolvedPath = resolvePath(filePath);
-    ResourceURL* url = new ResourceURL(resolvedPath);
-    m_platformWindow->webView()->starFish()->messageLoop()->invokeNavigate(
-        m_platformWindow->webView(), url, nullptr);
-}
-
 void StarFish::resume()
 {
     StarFishEnterer enter(this);

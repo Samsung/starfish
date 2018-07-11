@@ -68,7 +68,8 @@ extern bool g_forceRendering;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || defined(PORT_GRAPHIC_BACKEND_EFL)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
 #endif
 

@@ -268,7 +268,7 @@ extern "C" __attribute__((visibility("default"))) void createInstance(
                     binder->onPageStartedHandler(container, url);
                 });
         TO_WEBCONTAINER(binder)
-            ->RegisterOnPageFinishedHandler(
+            ->RegisterOnPageLoadedHandler(
                 [binder](LWE::WebContainer* container,
                          const std::string& url) -> void {
                     binder->url = url;
@@ -539,7 +539,7 @@ registerOnPageFinishedHandler(
     auto cb = [callback](void* data) {
         // STARFISH_LOG_INFO("[StarFish] registerOnPageFinishedHandler()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
-        TO_WEBCONTAINER(binder)->RegisterOnPageFinishedHandler(callback);
+        TO_WEBCONTAINER(binder)->RegisterOnPageLoadedHandler(callback);
     };
     sendAsyncHandle(binder, cb);
 }

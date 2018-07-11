@@ -641,7 +641,7 @@ void Document::notifyDomContentLoaded()
     if (browsingContext()->isTopLevelBrowsingContext()) {
         m_resourceLoader->setLoadProgressState(
             ResourceLoader::LoadProgressState::DomContentLoaded);
-        starFish()->callWebViewHandler(std::string("OnPageFinished"),
+        starFish()->callWebViewHandler(std::string("OnPageParsed"),
                                        this->urlString());
     }
 }

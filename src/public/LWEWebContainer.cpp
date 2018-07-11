@@ -342,12 +342,23 @@ void WebContainer::RegisterOnReceivedErrorHandler(
             });
 }
 
-void WebContainer::RegisterOnPageFinishedHandler(
-    const std::function<void(LWE::WebContainer*, const std::string&)>& cb)
+void WebContainer::RegisterOnPageParsedHandler(
+    std::function<void(LWE::WebContainer*, const std::string&)> cb)
 {
     TO_STARFISH(m_starfish)
         ->registerWebViewHandler(
-            std::string("OnPageFinished"),
+            std::string("OnPageParsed"),
+            [this, cb](StarFish::String* url, int errorCode) -> void {
+                cb(this, url->toUTF8NonGCString());
+            });
+}
+
+void WebContainer::RegisterOnPageLoadedHandler(
+    std::function<void(LWE::WebContainer*, const std::string&)> cb)
+{
+    TO_STARFISH(m_starfish)
+        ->registerWebViewHandler(
+            std::string("OnPageLoaded"),
             [this, cb](StarFish::String* url, int errorCode) -> void {
                 cb(this, url->toUTF8NonGCString());
             });
