@@ -60,8 +60,8 @@ public:
 
     void run();
     void close();
-    void invokeNavigate(WebView* wv, ResourceURL* url,
-                        ResourceURL* referrerURL);
+    void invokeNavigate(WebView* wv, ResourceURL* url, ResourceURL* referrerURL,
+                        bool force = false);
 
 protected:
     bool m_inClosingState;
