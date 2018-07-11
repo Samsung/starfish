@@ -145,6 +145,7 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
             if (td->m_timer->m_requestAnimationFrameHandler.end() != a) {
                 td->m_timer->m_requestAnimationFrameHandler.erase(a);
             }
+            GC_FREE(td);
             return ECORE_CALLBACK_DONE;
         },
         td);
