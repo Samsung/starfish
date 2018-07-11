@@ -312,7 +312,7 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
 }
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ResourceURL* referrerURL)
+                                 ResourceURL* referrerURL, bool force)
 {
     InvokeNavigateData* data =
         new (GC_MALLOC_UNCOLLECTABLE(sizeof(InvokeNavigateData)))

@@ -399,7 +399,8 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
                                 ->platformWindow()
                                 ->webView(),
                             new StarFish::ResourceURL(p->url.c_str()),
-                            new StarFish::ResourceURL(p->referrerUrl.c_str()));
+                            new StarFish::ResourceURL(p->referrerUrl.c_str()),
+                            true);
                 }
                 delete p;
             });

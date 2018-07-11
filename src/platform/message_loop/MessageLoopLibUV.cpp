@@ -373,7 +373,7 @@ void MessageLoop::close()
 }
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ResourceURL* referrerURL)
+                                 ResourceURL* referrerURL, bool force)
 {
     if (m_navigateInvokeIdler != nullptr) {
         auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
