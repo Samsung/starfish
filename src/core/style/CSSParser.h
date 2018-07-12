@@ -463,7 +463,14 @@ public:
         }
         int len = 0;
         char* start = m_curPos;
-        while (*m_curPos != ')' && m_curPos < m_endPos) {
+        int childBlock = 0;
+        while ((*m_curPos != ')' || childBlock != 0) && m_curPos < m_endPos) {
+            if (*m_curPos == ')') {
+                STARFISH_ASSERT(childBlock > 0);
+                childBlock--;
+            } else if (*m_curPos == '(') {
+                childBlock++;
+            }
             m_curPos++;
             len++;
         }
@@ -771,6 +778,30 @@ public:
         }
         pair->setInt32Value(result);
         return true;
+    }
+
+    // <number-percentage>
+    static bool parseNumberOrPercentage(const char* token, uint32_t option,
+                                        CSSStyleValuePair* pair)
+    {
+        bool allowNegative = option & AllowNegative;
+        CSSPropertyParser parser((char*)token);
+        if (!parser.consumeNumber()) {
+            return false;
+        }
+        float num = parser.parsedNumber();
+        if (!allowNegative && num < 0) {
+            return false;
+        }
+        if (parser.isEnd()) {
+            pair->setNumberValue(num);
+            return true;
+        }
+        if (parser.consumeIfNext('%') && parser.isEnd()) {
+            pair->setPercentageValue(num / 100.f);
+            return true;
+        }
+        return false;
     }
 
     static bool parseLength(const char* token, uint32_t option,

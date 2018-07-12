@@ -34,6 +34,8 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/style/CSSProperty.h"
+#include "core/style/FilterFunctions.h"
+#include "core/style/WillChangeData.h"
 #include "core/style/ComputedStyle.h"
 #include "platform/window/PlatformWindow.h"
 
@@ -844,6 +846,12 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         LengthData* offset = m_rareComputedStyleData.offset();
         if (offset) {
             offset->checkComputed(curFontSize, rootFontSize, font, windowSize,
+                                  this);
+        }
+
+        FilterFunctions* filter = m_rareComputedStyleData.filter();
+        if (filter) {
+            filter->checkComputed(curFontSize, rootFontSize, font, windowSize,
                                   this);
         }
 
@@ -2287,6 +2295,16 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         damagedKeys[CSSStyleValuePair::KeyKind::BoxDecorationBreak] = true;
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+    }
+
+    FilterFunctions* newFilter = newStyle->filter();
+    FilterFunctions* oldFilter = oldStyle->filter();
+    if (newFilter != oldFilter) {
+        if ((!newFilter || !oldFilter) || !oldFilter->compare(newFilter)) {
+            damagedKeys[CSSStyleValuePair::KeyKind::Filter] = true;
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
     }
 
     return damage;

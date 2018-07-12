@@ -155,6 +155,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::Cursor;
             }
             break;
+        case 'f':
+            if (memcmp(data, "filter", 6) == 0) {
+                return CSSStyleValuePair::KeyKind::Filter;
+            }
+            break;
         case 'h':
             if (memcmp(data, "height", 6) == 0) {
                 return CSSStyleValuePair::KeyKind::Height;
@@ -1137,6 +1142,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                     return CSSStyleValuePair::KeyKind::Border;
                 }
                 break;
+            }
+            break;
+        case 'f':
+            if (memcmp(data, "filter", 6) == 0) {
+                return CSSStyleValuePair::KeyKind::Filter;
             }
             break;
         case 'h':

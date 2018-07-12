@@ -522,6 +522,7 @@ class ValueList;
 class ValuePair;
 class FontFaceSrcData;
 class CSSStyleDeclaration;
+class CSSFilterFunction;
 
 // https://www.w3.org/TR/CSS2/visufx.html
 // https://www.w3.org/TR/CSS2/text.html
@@ -636,6 +637,7 @@ class CSSStyleDeclaration;
     F(Fill, fill, "fill")                                                      \
     F(FillOpacity, fillOpacity, "fill-opacity")                                \
     F(FillRule, fillRule, "fill-rule")                                         \
+    F(Filter, filter, "filter")                                                \
     F(Stroke, stroke, "stroke")                                                \
     F(StrokeWidth, strokeWidth, "stroke-width")                                \
     F(X, x, "x")                                                               \
@@ -889,6 +891,7 @@ public:
         UrlValueKind,
         PathFunctionValueKind,
         CSSPropertyNameValueKind,
+        FilterFunctionValueKind,
 
         CalcValueKind,
 
@@ -1617,6 +1620,12 @@ public:
         return m_value.m_animationTimingFunction;
     }
 
+    CSSFilterFunction* filterFunctionValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == FilterFunctionValueKind);
+        return m_value.m_filterFunction;
+    }
+
     union ValueData {
         float m_floatValue;
         int32_t m_int32Value;
@@ -1693,6 +1702,7 @@ public:
         PointerEventsValue m_pointerEventsValue;
         BoxDecorationBreakValue m_boxDecorationBreakValue;
         AnimationTimingFunction* m_animationTimingFunction;
+        CSSFilterFunction* m_filterFunction;
 
         ValueData(int v)
             : m_int32Value(v)
@@ -2008,6 +2018,11 @@ public:
             : m_animationTimingFunction(v)
         {
         }
+
+        ValueData(CSSFilterFunction* v)
+            : m_filterFunction(v)
+        {
+        }
     };
 
     CSSStyleValuePair(ValueKind kind, ValueData value)
@@ -2051,6 +2066,8 @@ public:
             return m_value.m_gradientValue;
         case AnimationTimingFunctionValueKind:
             return m_value.m_animationTimingFunction;
+        case FilterFunctionValueKind:
+            return m_value.m_filterFunction;
         default:
             return nullptr;
         }
@@ -2255,6 +2272,12 @@ public:
         m_value.m_animationTimingFunction = v;
     }
 
+    void setFilterFunctionValue(CSSFilterFunction* v)
+    {
+        m_valueKind = FilterFunctionValueKind;
+        m_value.m_filterFunction = v;
+    }
+
 #define NEW_SET_VALUE_DECL(name, ...) \
     bool updateValue##name(Document* document, const CSSTokenVector& tokens);
     FOR_EACH_STYLE_ATTRIBUTE_BASIC(NEW_SET_VALUE_DECL)
@@ -2305,6 +2328,7 @@ public:
     bool updateValueUnitGradient(const CSSTokenValue& value);
     bool updateValueUnitMargin(const CSSTokenValue& token);
     bool updateValueUnitPadding(const CSSTokenValue& token);
+    bool updateValueUnitFilterFunction(const CSSTokenValue& token);
     bool updateValueUnitFontSize(const CSSTokenValue& token);
     bool updateValueUnitFontStyle(const CSSTokenValue& token);
     bool updateValueUnitFontWeight(const CSSTokenValue& token);

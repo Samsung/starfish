@@ -71,6 +71,8 @@ union FontFamilyData {
     }
 };
 
+class FilterFunctions;
+
 class RareComputedStyleData : public gc {
     enum KeyKind {
         Order,
@@ -90,6 +92,7 @@ class RareComputedStyleData : public gc {
         MaxWidth,
         MinHeight,
         MaxHeight,
+        Filter,
         FlexBasis,
         VerticalAlignLength,
         Transforms,
@@ -175,6 +178,7 @@ class RareComputedStyleData : public gc {
         CounterBaseList* m_counterBaseList;
         WillChangeData* m_willChange;
         ValueList* m_textDecorationLine;
+        FilterFunctions* m_filter;
 
         RareComputedStyleValue()
             : m_int32Value(0)
@@ -348,6 +352,11 @@ class RareComputedStyleData : public gc {
 
         RareComputedStyleValue(ValueList* v)
             : m_textDecorationLine(v)
+        {
+        }
+
+        RareComputedStyleValue(FilterFunctions* v)
+            : m_filter(v)
         {
         }
     };
@@ -584,6 +593,23 @@ public:
         }
     }
 
+    FilterFunctions* filter()
+    {
+        FIND_VALUE(Filter);
+        if (it == m_styles.end()) {
+            return nullptr;
+        }
+        return (*it).m_value.m_filter;
+    }
+
+    void setFilter(FilterFunctions* v)
+    {
+        clearFilter();
+        if (v) {
+            m_styles.emplace_back(KeyKind::Filter, v);
+        }
+    }
+
 #undef GETTER_PTR
 
     CLEARER(Transforms);
@@ -593,6 +619,7 @@ public:
     CLEARER(WillChange);
     CLEARER(TextDecorationLine);
     CLEARER(Clip);
+    CLEARER(Filter);
 
 #undef FIND_VALUE
 #undef CLEARER
@@ -3396,6 +3423,19 @@ public:
     void setWordBreak(WordBreakValue v)
     {
         ensureInheritedRareData()->m_wordBreak = v;
+    }
+
+    FilterFunctions* filter()
+    {
+        return m_rareComputedStyleData.filter();
+    }
+
+    void setFilter(FilterFunctions* v)
+    {
+        if (!v && !m_rareComputedStyleData.m_styles.size()) {
+            return;
+        }
+        m_rareComputedStyleData.setFilter(v);
     }
 
     static AnimationTimingFunction* knownTransitionTimingFunction(

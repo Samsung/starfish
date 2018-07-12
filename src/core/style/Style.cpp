@@ -59,6 +59,7 @@
 #include "core/style/CSSStyleLookupTrie.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/FontFaceSrcData.h"
+#include "core/style/FilterFunctions.h"
 #include "core/style/FlexBasisData.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/MediaQueryResult.h"
@@ -69,6 +70,7 @@
 #include "core/style/StyleRule.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/style/ShadowData.h"
+#include "core/style/WillChangeData.h"
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
 #include "core/style/CSSVariableSyntaxTreeBuilder.h"
 #endif
@@ -1657,6 +1659,9 @@ String* CSSStyleValuePair::toString() const
         builder.appendString("\")");
         return builder.finalize();
     }
+    case CSSStyleValuePair::ValueKind::FilterFunctionValueKind:
+        STARFISH_ASSERT(filterFunctionValue());
+        return filterFunctionValue()->toString();
     case CSSStyleValuePair::ValueKind::AnimationTimingFunctionValueKind:
         STARFISH_ASSERT(animationTimingFunctionValue());
         return animationTimingFunctionValue()->toString();
@@ -5624,6 +5629,24 @@ void StyleResolver::apply(Element* element,
             default:
                 style->setBoxDecorationBreak(
                     cssValues[k].boxDecorationBreakValue());
+                break;
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Filter:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+                style->setFilter(parentStyle->filter());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+            case CSSStyleValuePair::ValueKind::None:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setFilter(nullptr);
+                break;
+            case CSSStyleValuePair::ValueKind::ValueListKind:
+                style->setFilter(FilterFunctions::create(cssValues[k]));
+                break;
+            default:
                 break;
             }
             break;
@@ -12000,6 +12023,42 @@ bool CSSStyleValuePair::updateValueLayerTransitionDelay(
     const CSSTokenVector& tokens)
 {
     return updateValueTime(tokens, 0);
+}
+
+bool CSSStyleValuePair::updateValueUnitFilterFunction(
+    const CSSTokenValue& token)
+{
+    CSSFilterFunction* result = CSSFilterFunction::parse(token);
+    if (result) {
+        setFilterFunctionValue(result);
+        return true;
+    }
+    return false;
+}
+
+bool CSSStyleValuePair::updateValueFilter(Document* document,
+                                          const CSSTokenVector& tokens)
+{
+    if (!tokens.size()) {
+        return false;
+    }
+
+    if (tokens.size() == 1 && tokens[0].equals("none")) {
+        setValueKind(ValueKind::None);
+        return true;
+    }
+
+    ValueList* list = new ValueList(ValueList::SpaceSeparator);
+    for (size_t i = 0; i < tokens.size(); i++) {
+        CSSStyleValuePair item;
+        if (item.updateValueUnitFilterFunction(tokens[i])) {
+            list->push_back(item);
+        } else {
+            return false;
+        }
+    }
+    setValueList(list);
+    return true;
 }
 
 #ifdef STARFISH_ENABLE_TEST
