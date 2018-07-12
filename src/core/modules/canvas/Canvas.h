@@ -56,7 +56,7 @@ inline double deg2rad(float degree)
 }
 
 #ifndef STARFISH_CANVAS_SURFACE_MARGIN
-#define STARFISH_CANVAS_SURFACE_MARGIN 5
+#define STARFISH_CANVAS_SURFACE_MARGIN 0
 #endif
 
 class CanvasSurface : public gc {
@@ -106,6 +106,17 @@ struct DrawImageInfo {
     BorderImageRepeatValue vRepeat;
 };
 
+struct CanvasRenderTargetInfo {
+    size_t m_width;
+    size_t m_height;
+
+    CanvasRenderTargetInfo(size_t width = 0, size_t height = 0)
+        : m_width(width)
+        , m_height(height)
+    {
+    }
+};
+
 class Canvas : public gc {
 protected:
     Canvas()
@@ -137,6 +148,10 @@ public:
     virtual void postMatrix(const SkMatrix& matrix) = 0;
 
     virtual void clip(const Unit::Rect& rt) = 0;
+    virtual void pixelSnappedClip(const LayoutRect& rt)
+    {
+        clip(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
+    }
 
     // reset transform matrix & clip
     virtual void resetMatrixAndClip() = 0;
@@ -293,6 +308,14 @@ public:
     }
 
     virtual void* unwrap() = 0;
+
+    CanvasRenderTargetInfo& renderTargetInfo()
+    {
+        return m_renderTargetInfo;
+    }
+
+protected:
+    CanvasRenderTargetInfo m_renderTargetInfo;
 };
 }
 

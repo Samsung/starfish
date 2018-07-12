@@ -133,10 +133,6 @@ public:
     virtual void clearCache()
     {
         if (m_face && m_dataBuffer) {
-            hb_font_destroy(m_hbFace);
-            FT_Done_Face(m_face);
-            m_face = nullptr;
-            m_hbFace = nullptr;
             GlyphIndexCache().swap(m_glyphIndexCache);
         }
     }

@@ -200,6 +200,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         }
     }
 
+    setNeedsPainting(true);
     registerRelativePositionIfNeeds(ctx);
 
     if (isFrameTableBox()) {

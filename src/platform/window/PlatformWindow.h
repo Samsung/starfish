@@ -20,6 +20,8 @@
 #ifndef __StarFishPlatformWindow__
 #define __StarFishPlatformWindow__
 
+#include "core/page/RenderResult.h"
+
 namespace StarFish {
 
 class AnimationExecutor;
@@ -134,7 +136,7 @@ public:
     void dispatchCompositionEvent(CompositionEventKind kind, String* data,
                                   Node* node = nullptr);
 
-    virtual bool rendering();
+    virtual RenderResult rendering();
     virtual void pause();
     virtual void resume();
     virtual void close();

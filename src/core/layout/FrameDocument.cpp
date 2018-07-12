@@ -113,12 +113,6 @@ void FrameDocument::paintContent(PaintingContext& ctx)
     if (!firstChild()) {
         return;
     }
-    ctx.m_canvas->save();
-    ctx.m_canvas->translate(firstChild()->asFrameBox()->x(),
-                            firstChild()->asFrameBox()->y());
-    firstChild()->asFrameBox()->stackingContext()->paintStackingContext(
-        ctx.m_canvas, false);
-    ctx.m_canvas->restore();
 }
 
 Frame* FrameDocument::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)

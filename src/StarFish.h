@@ -51,7 +51,8 @@ enum StarFishStartUpFlag {
     enableStackingContextDump = 1 << 3,
     enableHitTestDump = 1 << 4,
     enableDebugGraphicsLayer = 1 << 5,
-    enableRegressionTest = 1 << 6,
+    enableDebugRepaintRegion = 1 << 6,
+    enableRegressionTest = 1 << 7,
 };
 
 enum StarFishDeviceKind {

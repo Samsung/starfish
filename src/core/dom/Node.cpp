@@ -1935,36 +1935,7 @@ void Node::setNeedsPainting()
 
     Frame* frame = this->frame();
     if (frame) {
-        bool careHasGraphicsBuffer = webView()->didCompositeBefore();
-        while (frame) {
-            if (frame->isFrameBox()) {
-                break;
-            }
-            frame = frame->parent();
-        }
-        if (frame) {
-            FrameBox* box = frame->asFrameBox();
-            while (box->layoutParent() != nullptr && !box->stackingContext()) {
-                box = box->layoutParent()->asFrameBox();
-            }
-            if (box) {
-                StackingContext* ctx = box->stackingContext();
-                if (ctx) {
-                    while (true) {
-                        if (ctx->isRootContext() ||
-                            (careHasGraphicsBuffer &&
-                             ctx->needsGraphicsBuffer())) {
-                            ctx->setNeedsRepainting();
-                            return;
-                        }
-                        ctx = ctx->parent();
-                    }
-                }
-            }
-        }
-        if (webView()->rootStackingContext()) {
-            webView()->rootStackingContext()->setNeedsRepainting();
-        }
+        frame->setNeedsPainting(true);
     }
 }
 

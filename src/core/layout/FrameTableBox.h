@@ -304,16 +304,6 @@ public:
     bool isCellWidthAuto(unsigned i);
 
     virtual void resetIfNeeds(LayoutContext& ctx);
-    virtual void iterateChildFrameBox(
-        const std::function<void(FrameBox*)>& fn) override
-    {
-        fn(this);
-        Frame* box = firstChild();
-        while (box) {
-            box->asFrameBox()->iterateChildFrameBox(fn);
-            box = box->next();
-        }
-    }
 
     FrameTableSectionBox* thead() const
     {

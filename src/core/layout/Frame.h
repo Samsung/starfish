@@ -1724,12 +1724,23 @@ public:
         return m_flags.m_needsLayout;
     }
 
+    bool needsPainting() const
+    {
+        return m_flags.m_needsPainting;
+    }
+
+    void setNeedsPainting(bool b)
+    {
+        m_flags.m_needsPainting = b;
+    }
+
     bool shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
                       FrameBox* containingBoxs);
 
     void markContentWidthDamaged()
     {
         m_flags.m_contentWidthDamaged = true;
+        setNeedsPainting(true);
     }
 
     void clearContentWidthDamaged()
@@ -1745,6 +1756,7 @@ public:
     void markPaddingWidthDamaged()
     {
         m_flags.m_paddingWidthDamaged = true;
+        setNeedsPainting(true);
     }
 
     void clearPaddingWidthDamaged()
@@ -1760,6 +1772,7 @@ public:
     void markContentHeightDamaged()
     {
         m_flags.m_contentHeightDamaged = true;
+        setNeedsPainting(true);
     }
 
     void clearContentHeightDamaged()
@@ -1775,6 +1788,7 @@ public:
     void markPaddingHeightDamaged()
     {
         m_flags.m_paddingHeightDamaged = true;
+        setNeedsPainting(true);
     }
 
     void clearPaddingHeightDamaged()
@@ -2044,6 +2058,7 @@ protected:
 
     struct FrameFlags {
         bool m_needsLayout : 1;
+        bool m_needsPainting : 1;
         bool m_isAnonymous : 1;
 
         // https://www.w3.org/TR/CSS21/visuren.html#block-formatting

@@ -1049,6 +1049,7 @@ Frame::Frame(Node* node, ComputedStyle* s)
     if (m_flags.m_isEstablishesBlockFormattingContext) {
         m_flags.m_needsLayout = true;
     }
+    m_flags.m_needsPainting = true;
 }
 
 void Frame::computePaintingFlags(LayoutContext& ctx,

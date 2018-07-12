@@ -32,6 +32,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/style/CSSGradientValue.h"
@@ -3112,6 +3113,16 @@ void FrameBox::paintStackingContextContent(Canvas* canvas)
 
 void FrameBox::establishesStackingContextIfNeeds()
 {
+    if (!isAnonymous()) {
+        Node* nd = node();
+        auto& info = nd->webView()->prevDrawnStackingContextInfo();
+        auto iter = info.find(nd);
+        if (iter != info.end() && !isEstablishesStackingContext()) {
+            // stacking context is disappear
+            nd->setNeedsPainting();
+        }
+    }
+
     if (isEstablishesStackingContext()) {
         STARFISH_ASSERT(isRootElement() || stackingContext() == nullptr);
         if (isRootElement()) {
@@ -3161,41 +3172,49 @@ LayoutRect FrameBox::frameVisibleRect()
     LayoutRect shadow = frameVisibleShadowsRect();
     out.unite(shadow);
 
-    BorderData border = style()->border();
-    const BorderImageData& bi = border.image();
-    if (!bi.isNull()) {
-        auto outsets = bi.outsets();
-        double bLWidth = border.left().width().specifiedValue(width(), this);
-        double bTWidth = border.top().width().specifiedValue(height(), this);
-        double bRWidth = border.right().width().specifiedValue(width(), this);
-        double bBWidth = border.bottom().width().specifiedValue(height(), this);
+    ComputedStyle* cs = style();
+    if (cs) {
+        BorderData border = cs->border();
+        const BorderImageData& bi = border.image();
+        if (!bi.isNull()) {
+            auto outsets = bi.outsets();
+            double bLWidth =
+                border.left().width().specifiedValue(width(), this);
+            double bTWidth =
+                border.top().width().specifiedValue(height(), this);
+            double bRWidth =
+                border.right().width().specifiedValue(width(), this);
+            double bBWidth =
+                border.bottom().width().specifiedValue(height(), this);
 
-        double bLOutset =
-            outsets.left().computedBorderImageOutset(bLWidth, this);
-        double bTOutset =
-            outsets.top().computedBorderImageOutset(bTWidth, this);
-        double bROutset =
-            outsets.right().computedBorderImageOutset(bRWidth, this);
-        double bBOutset =
-            outsets.bottom().computedBorderImageOutset(bBWidth, this);
-        LayoutRect r = frameRect();
-        if (bLOutset > 0) {
-            r.setX(r.x() - bLOutset);
-            r.setWidth(r.width() + bLOutset);
-        }
-        if (bTOutset > 0) {
-            r.setY(r.x() - bTOutset);
-            r.setHeight(r.height() + bTOutset);
-        }
-        if (bROutset > 0) {
-            r.setWidth(r.width() + bROutset);
-        }
-        if (bBOutset > 0) {
-            r.setHeight(r.height() + bBOutset);
-        }
+            double bLOutset =
+                outsets.left().computedBorderImageOutset(bLWidth, this);
+            double bTOutset =
+                outsets.top().computedBorderImageOutset(bTWidth, this);
+            double bROutset =
+                outsets.right().computedBorderImageOutset(bRWidth, this);
+            double bBOutset =
+                outsets.bottom().computedBorderImageOutset(bBWidth, this);
+            LayoutRect r = frameRect();
+            if (bLOutset > 0) {
+                r.setX(r.x() - bLOutset);
+                r.setWidth(r.width() + bLOutset);
+            }
+            if (bTOutset > 0) {
+                r.setY(r.x() - bTOutset);
+                r.setHeight(r.height() + bTOutset);
+            }
+            if (bROutset > 0) {
+                r.setWidth(r.width() + bROutset);
+            }
+            if (bBOutset > 0) {
+                r.setHeight(r.height() + bBOutset);
+            }
 
-        out.unite(r);
+            out.unite(r);
+        }
     }
+
     return out;
 }
 
@@ -3383,10 +3402,9 @@ void FrameBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     tryUniteVisibleRect(ctx);
 }
 
-void FrameBox::clearStackingContextIfNeeds(bool shouldDetachNativeBuffer)
+void FrameBox::clearStackingContextIfNeeds()
 {
     if (stackingContext()) {
-        stackingContext()->clearGraphicsBuffer(shouldDetachNativeBuffer);
         frameBoxRareData()->m_stackingContext = nullptr;
     }
 }
@@ -3517,5 +3535,158 @@ LayoutUnit FrameBox::outlineThickness()
     LayoutUnit outlineOffset =
         style()->outlineOffset().specifiedValue(cbContentWidth, this);
     return outlineWidth + outlineOffset;
+}
+
+static LayoutRect computeBoxExtent(LayoutRect rt, const SkMatrix& m)
+{
+    if (m.rectStaysRect()) {
+        SkRect skRect = SkRect::MakeXYWH((float)rt.x(), (float)rt.y(),
+                                         (float)rt.width(), (float)rt.height());
+        m.mapRect(&skRect);
+        skRect.sort();
+
+        return LayoutRect(skRect.x(), skRect.y(), skRect.width(),
+                          skRect.height());
+    } else {
+        SkPoint pt[4];
+
+        float hw = rt.width() / 2;
+        float hh = rt.height() / 2;
+
+        pt[0].fX = rt.x() - hw;
+        pt[0].fY = rt.y() - hh;
+
+        pt[1].fX = rt.maxX() - hw;
+        pt[1].fY = rt.y() - hh;
+
+        pt[2].fX = rt.x() - hw;
+        pt[2].fY = rt.maxY() - hh;
+
+        pt[3].fX = rt.maxX() - hw;
+        pt[3].fY = rt.maxY() - hh;
+        SkMatrix t = m;
+        t.mapPoints(pt, 4);
+
+        for (size_t i = 0; i < 4; i++) {
+            pt[i].set(pt[i].x() + hw, pt[i].y() + hh);
+        }
+
+        LayoutUnit minX = pt[0].x();
+        LayoutUnit minY = pt[0].y();
+        LayoutUnit maxX = pt[0].x();
+        LayoutUnit maxY = pt[0].y();
+        for (size_t i = 1; i < 4; i++) {
+            minX = std::min((float)pt[i].x(), (float)minX);
+            minY = std::min((float)pt[i].y(), (float)minY);
+
+            maxX = std::max((float)pt[i].x(), (float)maxX);
+            maxY = std::max((float)pt[i].y(), (float)maxY);
+        }
+
+        return LayoutRect(minX, minY, (maxX - minX).abs(), (maxY - minY).abs());
+    }
+}
+
+SkMatrix FrameBox::computeScreenMatrix()
+{
+    StackingContext* sc = stackingContext();
+    bool seenFixedPositionedLayer = false;
+    FrameBox* turnOffScrollUntilMeet = nullptr;
+
+    std::vector<FrameBox*> frameList;
+    frameList.reserve(32);
+    Frame* f = this;
+    while (f) {
+        if (f->style() && f->style()->position() == FixedPositionValue) {
+            if (!seenFixedPositionedLayer) {
+                seenFixedPositionedLayer = true;
+                turnOffScrollUntilMeet = f->asFrameBox();
+            }
+        }
+        frameList.push_back(f->asFrameBox());
+        f = f->layoutParent();
+    }
+
+    SkMatrix m = SkMatrix::I();
+    if (seenFixedPositionedLayer) {
+        FrameBox* top = *frameList.rbegin();
+        m.postTranslate(top->asFrameBlockBox()->scrollLeft(),
+                        top->asFrameBlockBox()->scrollTop());
+
+        auto iter = frameList.rbegin();
+        FrameBox* lastParentBox = nullptr;
+        bool canScroll = false;
+        while (iter != frameList.rend()) {
+            FrameBox* fBox = *iter;
+            StackingContext* sc = fBox->stackingContext();
+            if (sc) {
+                SkMatrix m2 = sc->transformMatrix();
+                if (!m2.isIdentity()) {
+                    LayoutLocation to =
+                        fBox->stackingContext()->transformOrigin();
+                    m.postTranslate((float)to.x(), (float)to.y());
+                    m.preConcat(m2);
+                    m.postTranslate(-(float)to.x(), -(float)to.y());
+                }
+            }
+
+            LayoutLocation pos;
+            if (canScroll) {
+                pos = fBox->absolutePointIncludingScroll(lastParentBox);
+            } else {
+                pos = fBox->absolutePoint(lastParentBox);
+                if (fBox == turnOffScrollUntilMeet) {
+                    canScroll = true;
+                }
+            }
+            m.postTranslate((float)pos.x(), (float)pos.y());
+            lastParentBox = fBox;
+            iter++;
+        }
+    } else {
+        auto iter = frameList.rbegin();
+        FrameBox* lastParentBox = nullptr;
+        while (iter != frameList.rend()) {
+            FrameBox* fBox = *iter;
+            StackingContext* sc = fBox->stackingContext();
+            if (sc) {
+                SkMatrix m2 = sc->transformMatrix();
+                if (!m2.isIdentity()) {
+                    LayoutLocation to =
+                        fBox->stackingContext()->transformOrigin();
+                    m.postTranslate((float)to.x(), (float)to.y());
+                    m.preConcat(m2);
+                    m.postTranslate(-(float)to.x(), -(float)to.y());
+                }
+            }
+
+            LayoutLocation pos;
+            if (fBox == this || fBox->isFrameDocument()) {
+                pos = fBox->absolutePoint(lastParentBox);
+            } else {
+                pos = fBox->absolutePointIncludingScroll(lastParentBox);
+            }
+            m.postTranslate((float)pos.x(), (float)pos.y());
+            lastParentBox = fBox;
+            iter++;
+        }
+    }
+    return m;
+}
+
+LayoutRect FrameBox::computeScreenExtent()
+{
+    SkMatrix screenMatrix = computeScreenMatrix();
+
+    StackingContext* sc = stackingContext();
+    LayoutRect vr;
+    if (sc && sc->isRootContext()) {
+        vr = LayoutRect(0, 0, asFrameBlockBox()->scrollWidth(),
+                        asFrameBlockBox()->scrollHeight());
+    } else {
+        vr = frameVisibleRect();
+    }
+
+    return computeBoxExtent(vr, screenMatrix);
 }
 }

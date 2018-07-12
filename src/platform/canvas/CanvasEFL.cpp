@@ -137,8 +137,8 @@ class CanvasEFL : public Canvas {
         einfo->info.func.free_update_region = NULL;
         evas_engine_info_set(canvas, (Evas_Engine_Info*)einfo);
 
-        m_width = width;
-        m_height = height;
+        m_renderTargetInfo.m_width = width;
+        m_renderTargetInfo.m_height = height;
         m_canvas = canvas;
         m_buffer = buffer;
 
@@ -151,8 +151,9 @@ class CanvasEFL : public Canvas {
         m_state.push_back(CanvasStateEFL());
 
         lastState().m_matrix.reset();
-        lastState().m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
-                                       SkFloatToScalar((float)m_height));
+        lastState().m_clipRect.setLTRB(
+            0, 0, SkFloatToScalar((float)m_renderTargetInfo.m_width),
+            SkFloatToScalar((float)m_renderTargetInfo.m_height));
         lastState().m_clipper = NULL;
 
         if (m_forceMapMode) {
@@ -181,8 +182,8 @@ public:
         dummy* d = (dummy*)data;
         m_canvas = (Evas*)d->a;
         m_eventLayer = (Evas_Object*)d->b;
-        m_width = d->w;
-        m_height = d->h;
+        m_renderTargetInfo.m_width = d->w;
+        m_renderTargetInfo.m_height = d->h;
         m_objList = d->objList;
         m_forceMapMode = d->f;
         m_prevDrawnImageMap = nullptr;
@@ -237,7 +238,8 @@ public:
         Unit::Color c = computedAlphaColor();
         evas_object_color_set(eo, c.r(), c.g(), c.b(), c.a());
         evas_object_move(eo, 0, 0);
-        evas_object_resize(eo, m_width, m_height);
+        evas_object_resize(eo, m_renderTargetInfo.m_width,
+                           m_renderTargetInfo.m_height);
         if (m_eventLayer) {
             elm_box_pack_end(m_eventLayer, eo);
         }
@@ -397,15 +399,21 @@ public:
         }
 
         // check canvas bound
-        SkRect screenRect = SkRect::MakeXYWH(
-            SkFloatToScalar(0), SkFloatToScalar(0), SkFloatToScalar(m_width),
-            SkFloatToScalar(m_height));
+        SkRect screenRect =
+            SkRect::MakeXYWH(SkFloatToScalar(0), SkFloatToScalar(0),
+                             SkFloatToScalar(m_renderTargetInfo.m_width),
+                             SkFloatToScalar(m_renderTargetInfo.m_height));
 
         if (SkRect::Intersects(absRect, screenRect)) {
             return false;
         }
 
         return true;
+    }
+
+    virtual void pixelSnappedClip(const LayoutRect& rt)
+    {
+        // this function is only used in partial clipping
     }
 
     virtual void clip(const Unit::Rect& rt)
@@ -701,7 +709,8 @@ public:
                 int c = 255 * lastState().m_opacity;
                 evas_object_color_set(ceo, c, c, c, c);
                 evas_object_move(ceo, 0, 0);
-                evas_object_resize(ceo, m_width, m_height);
+                evas_object_resize(ceo, m_renderTargetInfo.m_width,
+                                   m_renderTargetInfo.m_height);
                 evas_object_show(ceo);
                 if (m_objList) {
                     m_objList->push_back(ceo);
@@ -1098,7 +1107,8 @@ public:
 
                     Unit::Rect test((float)xx, (float)yy, (float)rt.width(),
                                     (float)rt.height());
-                    Unit::Rect canvasSize(0, 0, m_width, m_height);
+                    Unit::Rect canvasSize(0, 0, m_renderTargetInfo.m_width,
+                                          m_renderTargetInfo.m_height);
                     if (canvasSize.contains(test.x(), test.y()) ||
                         canvasSize.contains(test.maxX(), test.y()) ||
                         canvasSize.contains(test.x(), test.maxY()) ||
@@ -2001,8 +2011,10 @@ public:
         lastState().m_didClip = false;
         lastState().m_hasPathClip = false;
         lastState().m_matrix = SkMatrix::I();
-        lastState().m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
-                                       SkFloatToScalar((float)m_height));
+        lastState().m_clipRect.setLTRB(
+            0, 0, SkFloatToScalar((float)m_renderTargetInfo.m_width),
+            SkFloatToScalar((float)m_renderTargetInfo.m_height));
+        // Evas canvas cannot care with initial clip rect
     }
 
     virtual void resetClip()
@@ -2010,8 +2022,10 @@ public:
         lastState().m_clipper = NULL;
         lastState().m_didClip = false;
         lastState().m_hasPathClip = false;
-        lastState().m_clipRect.setLTRB(0, 0, SkFloatToScalar((float)m_width),
-                                       SkFloatToScalar((float)m_height));
+        lastState().m_clipRect.setLTRB(
+            0, 0, SkFloatToScalar((float)m_renderTargetInfo.m_width),
+            SkFloatToScalar((float)m_renderTargetInfo.m_height));
+        // Evas canvas cannot care with initial clip rect
     }
 
 protected:
@@ -2024,8 +2038,6 @@ protected:
     bool m_forceMapMode;
     Evas_Object* m_image;
     void* m_buffer;
-    unsigned m_width;
-    unsigned m_height;
     size_t m_imageCount;
     std::vector<Evas_Object*>* m_objList;
     GCUnorderedMap<NativeImageData*, std::vector<std::pair<Evas_Object*, bool>>,

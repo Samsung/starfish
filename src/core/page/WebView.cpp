@@ -39,6 +39,7 @@
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
+#include "core/layout/RepaintRegionTracker.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/Timer.h"
@@ -74,29 +75,12 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
 namespace StarFish {
+#if defined(STARFISH_ENABLE_TEST)
+// should be defined in each window port
+void screenShotInRendering(StarFish* starfish, const char* path);
+#endif
 
 #if defined(STARFISH_ENABLE_TEST) && !defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-static void screenShotInRendering(StarFish* starfish, const char* path)
-{
-    STARFISH_ASSERT(g_surfaceForScreehShot);
-    cairo_surface_t* png_buffer;
-    png_buffer = cairo_image_surface_create_for_data(
-        (unsigned char*)g_surfaceForScreehShot->data(), CAIRO_FORMAT_ARGB32,
-        starfish->platformWindow()->width(),
-        starfish->platformWindow()->height(),
-        g_surfaceForScreehShot->bufferStride());
-
-#if !defined(STARFISH_ANDROID)
-    cairo_surface_write_to_png(png_buffer, path);
-#endif
-    cairo_surface_destroy(png_buffer);
-
-    if (g_surfaceForScreehShot) {
-        g_surfaceForScreehShot->detachNativeBuffer();
-        starfish->removePointerFromRootSet(g_surfaceForScreehShot);
-    }
-    g_surfaceForScreehShot = nullptr;
-}
 // WPT Reference Test
 static Nullable<String*> rtExtractReference(Document* document)
 {
@@ -627,7 +611,8 @@ void WebView::layoutIfNeeds()
 
     if (didLayout || !m_rootStackingContext ||
         m_needsEstablishesStackingContext) {
-        clearStackingContext(true);
+        INSTALL_PROFILE_TIMER(starFish(), "establishesStackingContext");
+        clearStackingContext();
 #ifdef STARFISH_ENABLE_TEST
         if (m_starFish->startUpFlag() &
             StarFishStartUpFlag::enableComputedStyleDump) {
@@ -695,6 +680,7 @@ void WebView::layoutIfNeeds()
                         }
 
                         auto fr = ctx->visibleRect();
+                        auto se = ctx->screenExtent();
 
                         if (ctx->needsGraphicsBuffer()) {
                             totalSurfaceBufferSize +=
@@ -723,27 +709,29 @@ void WebView::layoutIfNeeds()
                             printf(
                                 "StackingContext[%d][%p, node %p %s id:%s "
                                 "className:%s"
-                                ", frame %p, buf? %d painting %d opacity %f "
-                                "visibleRect "
+                                ", frame %p, buf? %d opacity %f "
+                                "screenExtent %f %f %f %f visibleRect "
                                 "%d "
                                 "%d %d %d]",
                                 depth / 2, ctx, element, utf8DataLog1.data(),
                                 utf8DataLog2.data(), className.data(),
                                 ctx->owner(), (int)ctx->needsGraphicsBuffer(),
-                                (int)ctx->needsRepainting(),
-                                ctx->owner()->style()->opacity(), (int)fr.x(),
-                                (int)fr.y(), (int)fr.width(), (int)fr.height());
+                                ctx->owner()->style()->opacity(), (float)se.x(),
+                                (float)se.y(), (float)se.width(),
+                                (float)se.height(), (int)fr.x(), (int)fr.y(),
+                                (int)fr.width(), (int)fr.height());
                         } else {
                             printf(
                                 "StackingContext[%d][%p, anonymous node"
-                                ", frame %p, buf %d painting %d opacity %f "
-                                "visibleRect %d "
+                                ", frame %p, buf %d opacity %f "
+                                "screenExtent %f %f %f %f visibleRect %d "
                                 "%d %d %d]",
                                 depth / 2, ctx, ctx->owner(),
                                 (int)ctx->needsGraphicsBuffer(),
-                                (int)ctx->needsRepainting(),
-                                ctx->owner()->style()->opacity(), (int)fr.x(),
-                                (int)fr.y(), (int)fr.width(), (int)fr.height());
+                                ctx->owner()->style()->opacity(), (float)se.x(),
+                                (float)se.y(), (float)se.width(),
+                                (float)se.height(), (int)fr.x(), (int)fr.y(),
+                                (int)fr.width(), (int)fr.height());
                         }
 
                         auto reason = ctx->needsGraphicsBufferReason();
@@ -809,13 +797,14 @@ void WebView::setNeedsRendering()
     wnd->setNeedsRendering();
 }
 
-bool WebView::rendering(bool force)
+RenderResult WebView::rendering(bool force)
 {
-    if (!m_needsRendering) {
-        return false;
-    }
+    RenderResult renderResult;
+    renderResult.didPaintingOrCompositing = false;
 
-    bool didPaintingOrCompositing = false;
+    if (!m_needsRendering) {
+        return renderResult;
+    }
 
     if (!force && mainBrowsingContext()->hasPendingStyleSheet() &&
         mainBrowsingContext()->document() &&
@@ -832,8 +821,14 @@ bool WebView::rendering(bool force)
         m_needsRendering = false;
         Canvas* canvas = starFish()->platformWindow()->preparePainting();
         mainBrowsingContext()->clearingBeforePaint(canvas);
+        renderResult.didPaintingOrCompositing = true;
+        renderResult.updateRect =
+            LayoutRect(0, 0, canvas->renderTargetInfo().m_width,
+                       canvas->renderTargetInfo().m_height);
         delete canvas;
-        return false;
+
+        renderResult.didPaintingOrCompositing = false;
+        return renderResult;
     }
 
     uint64_t currentTick = tickCount();
@@ -843,10 +838,15 @@ bool WebView::rendering(bool force)
 
     layoutIfNeeds();
 
+    PrevDrawnStackingContextInfoMap refHolder;
     if (m_needsPainting) {
         INSTALL_PROFILE_TIMER(starFish(), "painting");
 
-        didPaintingOrCompositing = true;
+        renderResult.didPaintingOrCompositing = true;
+        renderResult.updateRect =
+            LayoutRect(0, 0, starFish()->platformWindow()->width(),
+                       starFish()->platformWindow()->height());
+
         // painting
         Canvas* canvas = nullptr;
 
@@ -857,32 +857,103 @@ bool WebView::rendering(bool force)
             m_needsComposite = false;
         }
 
+        bool needsFullPainting = m_didCompositeBefore && !m_needsComposite;
+
+#if defined(STARFISH_EFL)
+        needsFullPainting = true;
+#endif
+
+        if (mainBrowsingContext()->document()->frame()->firstChild() &&
+            mainBrowsingContext()
+                ->document()
+                ->frame()
+                ->firstChild()
+                ->isAbsolutePositioned()) {
+            needsFullPainting = true;
+        }
+
+        if (needsFullPainting) {
+            m_paintingDirtyRect =
+                LayoutRect(0, 0, mainBrowsingContext()->window()->innerWidth(),
+                           mainBrowsingContext()->window()->innerHeight());
+        }
+
         {
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
+
+            LayoutUnit scrollX = mainFrame->scrollLeft();
+            LayoutUnit scrollY = mainFrame->scrollTop();
+            LayoutUnit additionalX, additionalY;
+            if (mainFrame->firstChild() && m_rootStackingContext) {
+                additionalX = mainFrame->firstChild()->asFrameBox()->x();
+                additionalY = mainFrame->firstChild()->asFrameBox()->y();
+                scrollX -= mainFrame->firstChild()->asFrameBox()->x();
+                scrollY -= mainFrame->firstChild()->asFrameBox()->y();
+            }
+
+            if (!m_rootStackingContext) {
+                m_paintingDirtyRect = LayoutRect(
+                    0, 0, mainBrowsingContext()->window()->innerWidth(),
+                    mainBrowsingContext()->window()->innerHeight());
+            }
+
+            auto prevDrawnStackingContextInfo =
+                std::move(m_prevDrawnStackingContextInfo);
+            RepaintRegionTracker tracker(
+                mainBrowsingContext()->document()->frame()->asFrameBlockBox(),
+                m_paintingDirtyRect, prevDrawnStackingContextInfo, scrollX,
+                scrollY);
+            m_paintingDirtyRect = LayoutRect(0, 0, 0, 0);
+            LayoutRect repaintRect = tracker.repaintRegion();
+
+            repaintRect.setX(repaintRect.x() - 1);
+            repaintRect.setY(repaintRect.y() - 1);
+            repaintRect.setWidth(repaintRect.width() + 2);
+            repaintRect.setHeight(repaintRect.height() + 2);
+
+#ifdef STARFISH_ENABLE_TEST
+            if ((starFish()->startUpFlag() &
+                 StarFishStartUpFlag::enableDebugRepaintRegion)) {
+                STARFISH_LOG_INFO(
+                    "repaint region %f %f %f %f\n", (float)repaintRect.x(),
+                    (float)repaintRect.y(), (float)repaintRect.width(),
+                    (float)repaintRect.height());
+            }
+#endif
+            StackingContext::PaintingStackingContextContext ctx(
+                m_needsComposite, prevDrawnStackingContextInfo, repaintRect,
+                scrollX, scrollY);
+
             if (!m_needsComposite) {
                 canvas = starFish()->platformWindow()->preparePainting();
                 canvas->save();
-                canvas->translate(-mainFrame->scrollLeft(),
-                                  -mainFrame->scrollTop());
+                canvas->pixelSnappedClip(repaintRect);
+                canvas->translate(-scrollX, -scrollY);
+                canvas->translate(-additionalX, -additionalY);
                 mainBrowsingContext()->paintWindowBackground(canvas);
+                canvas->translate(additionalX, additionalY);
 
                 if (mainFrame->firstChild() && m_rootStackingContext) {
-                    canvas->save();
-                    canvas->translate(
-                        mainFrame->firstChild()->asFrameBox()->x(),
-                        mainFrame->firstChild()->asFrameBox()->y());
-                    m_rootStackingContext->paintStackingContext(canvas, true);
-                    canvas->restore();
+                    m_rootStackingContext->paintStackingContext(canvas, ctx);
                 }
                 canvas->restore();
                 m_didCompositeBefore = false;
+                repaintRect.setX(repaintRect.x() - scrollX);
+                repaintRect.setY(repaintRect.y() - scrollY);
+
+                float d = starFish()->screenInfo().devicePixelRatio;
+                renderResult.updateRect = LayoutRect(
+                    repaintRect.x() * d, repaintRect.y() * d,
+                    repaintRect.width() * d, repaintRect.height() * d);
             } else {
                 STARFISH_ASSERT(
                     m_rootStackingContext ==
                     mainFrame->firstChild()->asFrameBox()->stackingContext());
-                m_rootStackingContext->paintStackingContext(nullptr, false);
+                m_rootStackingContext->paintStackingContext(nullptr, ctx);
             }
+
+            refHolder = std::move(prevDrawnStackingContextInfo);
         }
 
         if (!m_needsComposite) {
@@ -904,21 +975,12 @@ bool WebView::rendering(bool force)
         clearStack<102400>();
     }
 
-    {
-        size_t bufSiz = m_backStackingContextBufferUpWhileReCompsite.size();
-        for (size_t i = 0; i < bufSiz; i++) {
-            // printf("drop canvas surface %d %d\n",
-            // (int)m_backStackingContextBufferUpWhileReCompsite[i]->bufferWidth(),
-            //         (int)m_backStackingContextBufferUpWhileReCompsite[i]->bufferHeight());
-            m_backStackingContextBufferUpWhileReCompsite[i]
-                ->detachNativeBuffer();
-        }
-        m_backStackingContextBufferUpWhileReCompsite.clear();
-    }
-
     if (m_needsComposite) {
         INSTALL_PROFILE_TIMER(starFish(), "composite");
-        didPaintingOrCompositing = true;
+        renderResult.didPaintingOrCompositing = true;
+        renderResult.updateRect =
+            LayoutRect(0, 0, starFish()->platformWindow()->width(),
+                       starFish()->platformWindow()->height());
 
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
             m_rootStackingContext->needsGraphicsBuffer()) {
@@ -956,6 +1018,14 @@ bool WebView::rendering(bool force)
         m_needsComposite = false;
     }
 
+    auto iter = refHolder.begin();
+    while (iter != refHolder.end()) {
+        if (iter->second.graphicsBuffer) {
+            iter->second.graphicsBuffer->detachNativeBuffer();
+        }
+        iter++;
+    }
+
     m_needsRendering = false;
     m_inRendering = false;
 
@@ -986,7 +1056,7 @@ bool WebView::rendering(bool force)
 
         if (g_fireOnloadEvent && g_referenceTestState > 0) {
             rtDoTest(m_topLevelBrowsingContext->document());
-            return didPaintingOrCompositing;
+            return renderResult;
         }
 
         const char* path = getenv("SCREEN_SHOT");
@@ -1012,20 +1082,16 @@ bool WebView::rendering(bool force)
     }
 #endif
 
-    return didPaintingOrCompositing;
+    return renderResult;
 }
 
-void WebView::clearStackingContext(bool backupBuffer)
+void WebView::clearStackingContext()
 {
     if (m_rootStackingContext) {
         StackingContext* ctx = m_rootStackingContext;
         std::function<void(StackingContext*)> clearSC =
             [&](StackingContext* ctx) {
-                auto lp = ctx->owner()->layoutParent();
-                if (lp) {
-                    lp->updatePaintingFlags(ctx->owner());
-                }
-                ctx->owner()->clearStackingContextIfNeeds(!backupBuffer);
+                ctx->owner()->clearStackingContextIfNeeds();
                 auto iter = ctx->childContexts().begin();
                 while (iter != ctx->childContexts().end()) {
                     StackingContextChild* child = *iter;
@@ -1117,84 +1183,6 @@ void WebView::onIdle()
 {
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->onIdle();
-    }
-}
-
-void WebView::assignGraphicsBuffer(CanvasSurface** surfaceHolder,
-                                   size_t visibleWidth, size_t visibleHeight)
-{
-    STARFISH_ASSERT(m_inRendering);
-    if (!*surfaceHolder || ((*surfaceHolder)->width() != visibleWidth) ||
-        ((*surfaceHolder)->height() != visibleHeight)) {
-        if (*surfaceHolder) {
-            m_backStackingContextBufferUpWhileReCompsite.push_back(
-                *surfaceHolder);
-        }
-
-        *surfaceHolder = nullptr;
-
-        for (size_t i = 0;
-             i < m_backStackingContextBufferUpWhileReCompsite.size(); i++) {
-            size_t savedW =
-                m_backStackingContextBufferUpWhileReCompsite[i]->width();
-            size_t savedH =
-                m_backStackingContextBufferUpWhileReCompsite[i]->height();
-            if (savedW == visibleWidth && savedH == visibleHeight) {
-                (*surfaceHolder) =
-                    m_backStackingContextBufferUpWhileReCompsite[i];
-                m_backStackingContextBufferUpWhileReCompsite.erase(i);
-                return;
-            }
-        }
-
-        // find best nearset buffer
-        size_t bestFitScore = SIZE_MAX;
-        size_t bestFitIdx = SIZE_MAX;
-
-        for (size_t i = 0;
-             i < m_backStackingContextBufferUpWhileReCompsite.size(); i++) {
-            size_t savedW =
-                m_backStackingContextBufferUpWhileReCompsite[i]->bufferWidth();
-            size_t savedH =
-                m_backStackingContextBufferUpWhileReCompsite[i]->bufferHeight();
-
-            if (savedW >= visibleWidth && savedH >= visibleHeight) {
-                size_t areaA = savedW * savedH;
-                size_t areaB = visibleWidth * visibleHeight;
-                size_t score = areaA - areaB;
-
-                if (score < (areaA * 0.1)) {
-                    if (score < bestFitScore) {
-                        bestFitScore = score;
-                        bestFitIdx = i;
-                    }
-                }
-            }
-        }
-
-        if (bestFitIdx != SIZE_MAX) {
-            (*surfaceHolder) =
-                m_backStackingContextBufferUpWhileReCompsite[bestFitIdx];
-            m_backStackingContextBufferUpWhileReCompsite.erase(bestFitIdx);
-            STARFISH_LOG_INFO(
-                "WebView::assignGraphicsBuffer - reuse canvas surface %d %d -> "
-                "%d %d\n",
-                (int)visibleWidth, (int)visibleHeight,
-                (int)(*surfaceHolder)->bufferWidth(),
-                (int)(*surfaceHolder)->bufferHeight());
-            (*surfaceHolder)->resize(visibleWidth, visibleHeight);
-        }
-
-        if (*surfaceHolder == nullptr) {
-            STARFISH_LOG_INFO(
-                "WebView::assignGraphicsBuffer - create canvas surface %d %d\n",
-                (int)visibleWidth, (int)visibleHeight);
-            INSTALL_PROFILE_TIMER(
-                starFish(),
-                "WebView::assignGraphicsBuffer - create canvas surface");
-            (*surfaceHolder) = CanvasSurface::create(
-                starFish()->platformWindow(), visibleWidth, visibleHeight);
-        }
     }
 }
 }
