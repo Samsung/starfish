@@ -686,7 +686,10 @@ public:
     {
         CSSPropertyParser parser((char*)token);
         parser.consumeWhitespaces();
-        if (parser.consumeString(AllowNegative || AllowUnderline)) {
+        uint32_t options = 0;
+        options |= AllowNegative;
+        options |= AllowUnderline;
+        if (parser.consumeString(options)) {
             const CSSTokenValue& name = parser.parsedString();
             parser.consumeWhitespaces();
             if (name == functionName && parser.consumeParenthesisBlock()) {

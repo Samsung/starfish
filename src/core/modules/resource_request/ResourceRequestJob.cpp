@@ -362,7 +362,7 @@ String* decodeURL(String* src, size_t idx)
                     current = (c - 'a') + 10;
                 }
 
-                if ((16 * (1 - i))) {
+                if ((16 * (1 - i)) > 0) {
                     current = (current * 16);
                 }
                 ch += current;
