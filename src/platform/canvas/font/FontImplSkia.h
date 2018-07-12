@@ -23,9 +23,9 @@
 
 #include "SkTypeface.h"
 #include "SkData.h"
+#include "SkPaint.h"
 
 #include <hb.h>
-#include <hb-ft.h>
 #include <hb-icu.h>
 
 #include "core/style/Style.h"
@@ -51,8 +51,7 @@ public:
 
 class FontFaceImplSkia : public FontFace {
 public:
-    FontFaceImplSkia(FT_Face face, sk_sp<SkTypeface> skTypeface,
-                     sk_sp<SkData> skDataToHoldFontData, hb_font_t* hbFace);
+    FontFaceImplSkia(sk_sp<SkTypeface> skTypeface);
 
     virtual FontMetrics metrics(float size);
     virtual void clearCache() override;
@@ -62,27 +61,31 @@ public:
 
     virtual size_t dataSize()
     {
-        return (m_skDataToHoldFontData != nullptr)
-                   ? m_skDataToHoldFontData->size()
-                   : 0;
+        return m_downLoadFontDataSize;
+    }
+
+    void setDownLoadFontDataSize(size_t size)
+    {
+        m_downLoadFontDataSize = size;
     }
 
     sk_sp<SkTypeface> skTypeface()
     {
-        ensureFonts();
         return m_skTypeface;
     }
 
-    SkPaint* skPaint()
+    SkPaint skPaint()
     {
-        ensureFonts();
-        return m_skPaint;
+        return skPaint(m_skTypeface);
     }
 
-    hb_font_t* harfbuzzFace()
+    static inline SkPaint skPaint(sk_sp<SkTypeface> skTypeface)
     {
-        ensureFonts();
-        return m_hbFace;
+        SkPaint ret;
+        ret.setTypeface(skTypeface);
+        ret.setAntiAlias(true);
+        ret.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+        return ret;
     }
 
     int m_xHeight;
@@ -96,23 +99,15 @@ public:
     GlyphIndexCache m_glyphIndexCache;
 
 private:
-    void ensureFonts();
-
-    FT_Face m_face;
+    size_t m_downLoadFontDataSize;
     sk_sp<SkTypeface> m_skTypeface;
-    sk_sp<SkData> m_skDataToHoldFontData;
-    SkPaint* m_skPaint;
-    hb_font_t* m_hbFace;
 };
 
 class FontSkiaTextRun {
 public:
     StringView m_text;
     size_t m_faceIndex;
-    FT_Face m_ftFace;
     sk_sp<SkTypeface> m_skTypeface;
-    SkPaint* m_skPaint;
-    hb_font_t* m_hbFont;
     hb_script_t m_script;
     std::vector<unsigned> m_glyphs;
     std::vector<LayoutLocation> m_glyphPositions;
