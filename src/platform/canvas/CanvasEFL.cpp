@@ -67,7 +67,9 @@ public:
     CanvasStateEFL()
         : CanvasState()
     {
+        m_matrix = SkMatrix();
         m_clipper = NULL;
+        m_clipRect = SkRect();
         m_mapMode = false;
         m_didClip = false;
         m_hasPathClip = false;

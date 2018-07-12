@@ -4265,14 +4265,12 @@ void StyleResolver::apply(Element* element,
                             ->m_hasComplexTransform = true;
                         break;
                     case CSSTransformFunction::Kind::Skew:
+                    case CSSTransformFunction::Kind::SkewX:
                         if (valueSize == 2) {
                             style->setTransformSkew(dValues[0], dValues[1]);
-                            style->m_rareComputedStyleData.ensureTransforms()
-                                ->m_hasComplexTransform = true;
-                            break;
+                        } else {
+                            style->setTransformSkew(dValues[0], 0);
                         }
-                    case CSSTransformFunction::Kind::SkewX:
-                        style->setTransformSkew(dValues[0], 0);
                         style->m_rareComputedStyleData.ensureTransforms()
                             ->m_hasComplexTransform = true;
                         break;
