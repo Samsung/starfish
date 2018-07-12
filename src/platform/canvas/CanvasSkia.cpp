@@ -335,14 +335,13 @@ public:
         }
     }
 
-    void drawGlyphsCairo(SkCanvas* canvas, LayoutRect rect,
-                         const StringView& sv, LayoutUnit dx, LayoutUnit dy)
+    void drawGlyphsSkia(SkCanvas* canvas, LayoutRect rect, const StringView& sv,
+                        LayoutUnit dx, LayoutUnit dy)
     {
         LayoutUnit xBias = 0;
-        FT_UInt glyph_index = 0;
         sk_sp<SkTypeface> lastFontFace = nullptr;
         sk_sp<SkTypeface> fontFace = nullptr;
-        SkPaint* paint = nullptr;
+        SkPaint paint;
         FontImplSkia* f = (FontImplSkia*)lastState().m_font;
         int size = f->size();
 
@@ -378,7 +377,7 @@ public:
                         if (fontFace) {
                             canvas->drawPosText((glyphs).get(),
                                                 glyphCount * sizeof(SkGlyphID),
-                                                (positions).get(), *paint);
+                                                (positions).get(), paint);
                             glyphCount = 0;
                             fontFace = nullptr;
                         }
@@ -386,8 +385,8 @@ public:
 
                         fontFace = lastFontFace;
                         paint = g.first.first->skPaint();
-                        paint->setTextSize(size);
-                        paint->setColor(SkColorSetARGB(
+                        paint.setTextSize(size);
+                        paint.setColor(SkColorSetARGB(
                             lastState().m_color.a(), lastState().m_color.r(),
                             lastState().m_color.g(), lastState().m_color.b()));
                     }
@@ -466,15 +465,15 @@ public:
                                 canvas->drawPosText((glyphs).get(),
                                                     glyphCount *
                                                         sizeof(SkGlyphID),
-                                                    (positions).get(), *paint);
+                                                    (positions).get(), paint);
                                 glyphCount = 0;
                                 fontFace = nullptr;
                             }
                             lastFontFace = run.m_skTypeface;
                             fontFace = lastFontFace;
-                            paint = run.m_skPaint;
-                            paint->setTextSize(size);
-                            paint->setColor(
+                            paint = FontFaceImplSkia::skPaint(fontFace);
+                            paint.setTextSize(size);
+                            paint.setColor(
                                 SkColorSetARGB(lastState().m_color.a(),
                                                lastState().m_color.r(),
                                                lastState().m_color.g(),
@@ -501,7 +500,7 @@ public:
         }
         if (glyphCount) {
             canvas->drawPosText((glyphs).get(), glyphCount * sizeof(SkGlyphID),
-                                (positions).get(), *paint);
+                                (positions).get(), paint);
         }
         canvas->restore();
     }
@@ -522,11 +521,11 @@ public:
         if (g_enablePixelTest) {
             // drawAhemBoxCairo(m_canvas, rt, sv, rt.x(), rt.y());
         } else {
-            drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y());
+            drawGlyphsSkia(m_canvas, rt, sv, rt.x(), rt.y());
             // drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
         }
 #else
-        drawGlyphsCairo(m_canvas, rt, sv, rt.x(), rt.y());
+        drawGlyphsSkia(m_canvas, rt, sv, rt.x(), rt.y());
 //        drawTextDecorationCairo(m_canvas, rt, sv, rt.x(), rt.y());
 #endif
     }

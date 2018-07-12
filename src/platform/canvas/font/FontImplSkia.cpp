@@ -28,23 +28,15 @@
 #include "SkPaint.h"
 
 #include <hb.h>
-#include <hb-ft.h>
 #include <hb-ot.h>
 #include <hb-icu.h>
 #include "core/modules/canvas/font/Font.h"
 #include "FontImplSkia.h"
 #include "core/style/UnitHelper.h"
 
-#define CHECK_ERROR                            \
-    if (error) {                               \
-        STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
-    }
-
 static const int FONT_SIZE_SCALE = 64;
 
 namespace StarFish {
-
-FT_Library g_freeTypeInstance;
 
 static inline hb_font_t* createHarfbuzzFont(sk_sp<SkData> skData,
                                             sk_sp<SkTypeface> skTypeface)
@@ -59,11 +51,11 @@ static inline hb_font_t* createHarfbuzzFont(sk_sp<SkData> skData,
     hb_face_set_index(hf, index);
     hb_face_set_upem(hf, skTypeface->getUnitsPerEm());
 
-    auto hbFace = hb_font_create(hf);
+    auto hbFont = hb_font_create(hf);
     hb_face_destroy(hf);
-    hb_font_set_scale(hbFace, FONT_SIZE_SCALE, FONT_SIZE_SCALE);
-    hb_ot_font_set_funcs(hbFace);
-    return hbFace;
+    hb_font_set_scale(hbFont, FONT_SIZE_SCALE, FONT_SIZE_SCALE);
+    hb_ot_font_set_funcs(hbFont);
+    return hbFont;
 }
 
 static inline SkFontStyle::Slant styleToSkFontStyleSlant(char style)
@@ -73,6 +65,16 @@ static inline SkFontStyle::Slant styleToSkFontStyleSlant(char style)
         ret = SkFontStyle::Slant::kItalic_Slant;
     } else if (style == FontStyleOblique) {
         ret = SkFontStyle::Slant::kOblique_Slant;
+    }
+    return ret;
+}
+static inline char skFontStyleSlantToChar(SkFontStyle::Slant s)
+{
+    char ret = 'U';
+    if (s == SkFontStyle::Slant::kItalic_Slant) {
+        ret = 'I';
+    } else if (s == SkFontStyle::Slant::kOblique_Slant) {
+        ret = 'O';
     }
     return ret;
 }
@@ -119,6 +121,48 @@ static inline SkFontStyle::Weight fontWeightToSkFontStyleWeight(char weight)
     return ret;
 }
 
+static inline char skFontStyleWeightToChar(int w)
+{
+    char ret = 'M';
+    switch (w) {
+    case SkFontStyle::Weight::kInvisible_Weight:
+        ret = 'I';
+        break;
+    case SkFontStyle::Weight::kThin_Weight:
+        ret = 'T';
+        break;
+    case SkFontStyle::Weight::kExtraLight_Weight:
+        ret = 'l';
+        break;
+    case SkFontStyle::Weight::kLight_Weight:
+        ret = 'L';
+        break;
+    case SkFontStyle::Weight::kNormal_Weight:
+        ret = 'N';
+        break;
+    case SkFontStyle::Weight::kMedium_Weight:
+        ret = 'M';
+        break;
+    case SkFontStyle::Weight::kSemiBold_Weight:
+        ret = 'S';
+        break;
+    case SkFontStyle::Weight::kBold_Weight:
+        ret = 'b';
+        break;
+    case SkFontStyle::Weight::kExtraBold_Weight:
+        ret = 'B';
+        break;
+    case SkFontStyle::Weight::kBlack_Weight:
+        ret = 'k';
+        break;
+    case SkFontStyle::Weight::kExtraBlack_Weight:
+        ret = 'K';
+    default:
+        STARFISH_ASSERT_NOT_REACHED();
+    }
+    return ret;
+}
+
 PlatformFontSelector* PlatformFontSelector::create(StarFish* sf)
 {
     return new PlatformFontSelectorImplSkia(sf);
@@ -135,18 +179,10 @@ FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
     sk_sp<SkData> skData = SkData::MakeWithCopy(data, dataLen);
     sk_sp<SkTypeface> skTypeface(fm->createFromData(skData.get()));
 
-    FT_Face face;
-    FT_Error error = FT_New_Memory_Face(g_freeTypeInstance, skData->bytes(),
-                                        skData->size(), 0, &face);
-    if (error) {
-        return nullptr;
-    }
+    auto impl = new (PointerFreeGC) FontFaceImplSkia(skTypeface);
+    impl->setDownLoadFontDataSize(dataLen);
 
-    FT_Set_Pixel_Sizes(face, 0, 16);
-
-    auto hbFace = createHarfbuzzFont(skData, skTypeface);
-    return new (PointerFreeGC)
-        FontFaceImplSkia(face, skTypeface, skData, hbFace);
+    return impl;
 }
 
 FontSelector* FontSelector::create(Document* document,
@@ -162,65 +198,38 @@ Font* Font::createEmptyFont(FontSelector* s)
     return new FontImplSkia((FontSelectorImplSkia*)s);
 }
 
-FontFaceImplSkia::FontFaceImplSkia(FT_Face face, sk_sp<SkTypeface> skTypeface,
-                                   sk_sp<SkData> skDataToHoldFontData,
-                                   hb_font_t* hbFace)
+FontFaceImplSkia::FontFaceImplSkia(sk_sp<SkTypeface> skTypeface)
 {
-    m_face = face;
-    m_hbFace = hbFace;
-
     m_skTypeface = skTypeface;
-    m_skDataToHoldFontData = skDataToHoldFontData;
-    m_skPaint = new SkPaint();
-    m_skPaint->setTypeface(m_skTypeface);
-    m_skPaint->setAntiAlias(true);
-    m_skPaint->setTextEncoding(SkPaint::kGlyphID_TextEncoding);
+    m_downLoadFontDataSize = 0;
 
-    FT_Error error;
-    FT_UInt glyph_index = FT_Get_Char_Index(m_face, 'x');
-    if (glyph_index) {
-        error = FT_Load_Glyph(m_face, glyph_index, FT_LOAD_NO_SCALE);
-        m_xHeight = (int)m_face->glyph->metrics.height;
+    auto paint = skPaint();
+    paint.setTextSize(1);
+
+    m_unitsPerEM = skTypeface->getUnitsPerEm();
+
+    SkPaint::FontMetrics fontMetrics;
+    paint.getFontMetrics(&fontMetrics);
+
+    m_ascender = -fontMetrics.fAscent * m_unitsPerEM;
+    m_descender = -fontMetrics.fDescent * m_unitsPerEM;
+
+    if (-fontMetrics.fAscent < fontMetrics.fXHeight ||
+        fontMetrics.fXHeight == 0) {
+        // fallback
+        m_xHeight = -fontMetrics.fAscent * 0.56 * m_unitsPerEM;
     } else {
-        m_xHeight = 0;
+        m_xHeight = fontMetrics.fXHeight * m_unitsPerEM;
     }
-
-    m_unitsPerEM = m_face->units_per_EM;
-    if (m_unitsPerEM == 0) {
-        m_unitsPerEM = 2048; // fallback
-    }
-    m_ascender = m_face->ascender;
-    m_descender = m_face->descender;
-    if (m_ascender == 0 || m_descender == 0) {
-        m_ascender = m_unitsPerEM; // fallback
-        m_descender = 0;
-    }
-
-    m_supportsKerning = m_face->face_flags & FT_FACE_FLAG_KERNING;
-    m_xHeight += m_descender;
-    if (m_xHeight < 0) {
-        m_xHeight = 0;
-    }
+    m_supportsKerning =
+        m_skTypeface->getKerningPairAdjustments(nullptr, 0, nullptr);
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
         [](void* obj, void* cd) {
             FontFaceImplSkia* m = (FontFaceImplSkia*)obj;
-            if (m->m_hbFace) {
-                hb_font_destroy(m->m_hbFace);
-                FT_Done_Face(m->m_face);
-
-                if (m->m_skPaint != nullptr) {
-                    delete m->m_skPaint;
-                    m->m_skPaint = nullptr;
-                }
-
-                m->m_hbFace = nullptr;
-                m->m_face = nullptr;
-                m->m_skTypeface = nullptr;
-            }
+            m->m_skTypeface = nullptr;
             GlyphIndexCache().swap(m->m_glyphIndexCache);
-            m->m_skDataToHoldFontData = nullptr;
         },
         NULL, NULL, NULL);
 
@@ -251,28 +260,13 @@ FontMetrics FontFaceImplSkia::metrics(float size)
 
 void FontFaceImplSkia::clearCache()
 {
-    if (m_skTypeface != nullptr && m_skDataToHoldFontData != nullptr) {
-        hb_font_destroy(m_hbFace);
-        FT_Done_Face(m_face);
-        m_face = nullptr;
-        m_hbFace = nullptr;
-        m_skTypeface = nullptr;
-        if (m_skPaint) {
-            delete m_skPaint;
-            m_skPaint = nullptr;
-        }
-        GlyphIndexCache().swap(m_glyphIndexCache);
-    }
+    GlyphIndexCache().swap(m_glyphIndexCache);
 }
 
 bool FontFaceImplSkia::loadGlyph(
     int intSize, char32_t ch,
     std::pair<FontFaceImplSkia*, std::pair<unsigned, LayoutUnit>>& result)
 {
-    ensureFonts();
-    FT_Face face = m_face;
-    hb_font_t* hbFace = m_hbFace;
-
     auto iter = m_glyphIndexCache.find(ch);
     if (iter != m_glyphIndexCache.end()) {
         if (iter->second.first) {
@@ -284,57 +278,22 @@ bool FontFaceImplSkia::loadGlyph(
             return true;
         }
     } else {
-        FT_UInt glyphIndex = FT_Get_Char_Index(face, ch);
-        FT_Load_Glyph(face, glyphIndex, FT_LOAD_NO_SCALE);
+        SkGlyphID id;
+        m_skTypeface->charsToGlyphs(&ch, SkTypeface::kUTF32_Encoding, &id, 1);
 
-        m_glyphIndexCache.insert(std::make_pair(
-            ch, std::make_pair(glyphIndex, face->glyph->metrics.horiAdvance)));
+        auto paint = skPaint();
+        paint.setTextSize(intSize);
 
-        if (glyphIndex) {
-            LayoutUnit width =
-                LayoutUnit((int)(face->glyph->metrics.horiAdvance * intSize)) /
-                LayoutUnit((int)(m_unitsPerEM));
-            result = std::make_pair(this, std::make_pair(glyphIndex, width));
+        SkScalar w;
+        paint.getTextWidths(&id, sizeof(id), &w, nullptr);
+
+        if (id) {
+            LayoutUnit width(w);
+            result = std::make_pair(this, std::make_pair(id, width));
             return true;
         }
     }
     return false;
-}
-
-void FontFaceImplSkia::ensureFonts()
-{
-    STARFISH_ASSERT((m_skDataToHoldFontData && m_skTypeface == nullptr) ||
-                    (m_skDataToHoldFontData == nullptr && m_skTypeface));
-
-    if (m_face == nullptr) {
-        FT_Error error = FT_New_Memory_Face(
-            g_freeTypeInstance, m_skDataToHoldFontData->bytes(),
-            m_skDataToHoldFontData->size(), 0, &m_face);
-        if (error) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-        FT_Set_Pixel_Sizes(m_face, 0, 16);
-
-        FT_UInt glyph_index = FT_Get_Char_Index(m_face, ' ');
-        if (glyph_index) {
-            FT_Load_Glyph(m_face, glyph_index, FT_LOAD_RENDER);
-        }
-    }
-
-    if (m_skTypeface == nullptr) {
-        sk_sp<SkFontMgr> fm(SkFontMgr::RefDefault());
-        sk_sp<SkTypeface> skTypeface(
-            fm->createFromData(m_skDataToHoldFontData.get()));
-        m_skTypeface = skTypeface;
-        m_hbFace = createHarfbuzzFont(m_skDataToHoldFontData, skTypeface);
-    }
-
-    if (m_skPaint == nullptr) {
-        m_skPaint = new SkPaint();
-        m_skPaint->setTypeface(m_skTypeface);
-        m_skPaint->setAntiAlias(true);
-        m_skPaint->setTextEncoding(SkPaint::kGlyphID_TextEncoding);
-    }
 }
 
 std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
@@ -348,9 +307,8 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
         size_t pos = 0;
         size_t faceIndex = SIZE_MAX;
         sk_sp<SkTypeface> lastSkTypeface = nullptr;
-        SkPaint* lastSkPaint = nullptr;
 
-        hb_font_t* hbFace = nullptr;
+        hb_font_t* hbFont = nullptr;
         UScriptCode lastUnicodeScript = USCRIPT_COMMON;
         bool failedToFindFont = false;
         while (i + pos < length) {
@@ -376,8 +334,6 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
 
             if (pos == 0) {
                 lastSkTypeface = glyphData.first.first->skTypeface();
-                lastSkPaint = glyphData.first.first->skPaint();
-                hbFace = glyphData.first.first->harfbuzzFace();
                 lastUnicodeScript = unicodeScript;
             } else {
                 if (glyphData.first.first ||
@@ -403,8 +359,6 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
         run.m_script = hb_icu_script_to_script(lastUnicodeScript);
         run.m_faceIndex = faceIndex;
         run.m_skTypeface = lastSkTypeface;
-        run.m_skPaint = lastSkPaint;
-        run.m_hbFont = hbFace;
         run.m_text = StringView((String*)text, startPos, endPos);
         result.push_back(run);
     }
@@ -437,7 +391,15 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
         }
 
         if (run.m_skTypeface) {
-            hb_font_t* hbfont = run.m_hbFont;
+            int ttcIndex = 0;
+            std::unique_ptr<SkStreamAsset> skStream(
+                run.m_skTypeface->openStream(&ttcIndex));
+            size_t len = skStream->getLength();
+            sk_sp<SkData> skData =
+                SkData::MakeFromStream(skStream.release(), len);
+
+            hb_font_t* hbfont = createHarfbuzzFont(skData, run.m_skTypeface);
+
             hb_shape(hbfont, hbBuffer, &hbFeature, 1);
 
             hb_buffer_content_type_t t = hb_buffer_get_content_type(hbBuffer);
@@ -465,6 +427,9 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
 
                 totalAdvance += advance;
             }
+
+            hb_font_destroy(hbfont);
+            skData = nullptr;
         } else {
             totalAdvance += font->spaceWidth() * run.m_text.length();
         }
@@ -641,11 +606,6 @@ bool skiaBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
 PlatformFontSelectorImplSkia::PlatformFontSelectorImplSkia(StarFish* sf)
     : PlatformFontSelector(sf)
 {
-    if (!g_freeTypeInstance) {
-        FT_Error error;
-        error = FT_Init_FreeType(&g_freeTypeInstance);
-        CHECK_ERROR;
-    }
 }
 
 sk_sp<SkTypeface> PlatformFontSelectorImplSkia::findAndLoadFontFace(
@@ -676,15 +636,26 @@ sk_sp<SkTypeface> PlatformFontSelectorImplSkia::findAndLoadFontFace(
     return result;
 }
 
+static inline void makeSkTypefaceKey(sk_sp<SkTypeface> skTypeface,
+                                     SkString& key)
+{
+    skTypeface->getFamilyName(&key);
+    key.append("_");
+    auto fs = skTypeface->fontStyle();
+    auto c = skFontStyleWeightToChar(fs.weight());
+    key.append(&c, 1);
+    c = skFontStyleSlantToChar(fs.slant());
+    key.append(&c, 1);
+}
+
 FontFace* PlatformFontSelectorImplSkia::loadFontFace(
     sk_sp<SkTypeface> skTypeface)
 {
     STARFISH_ASSERT(skTypeface != nullptr);
-    SkString name;
-    skTypeface->getFamilyName(&name);
-    UTF8StringDataNonGCStd key = name.c_str();
+    SkString key;
+    makeSkTypefaceKey(skTypeface, key);
 
-    auto iter = m_fontFaceCache.find(key);
+    auto iter = m_fontFaceCache.find(key.c_str());
     if (iter != m_fontFaceCache.end()) {
         return iter->second;
     }
@@ -694,18 +665,8 @@ FontFace* PlatformFontSelectorImplSkia::loadFontFace(
     size_t len = skStream->getLength();
     sk_sp<SkData> skData = SkData::MakeFromStream(skStream.get(), len);
 
-    FT_Face face;
-    FT_Error error = FT_New_Memory_Face(g_freeTypeInstance, skData->bytes(),
-                                        skData->size(), 0, &face);
-
-    if (error) {
-        return nullptr;
-    }
-
-    auto hbFont = createHarfbuzzFont(skData, skTypeface);
-    auto impl =
-        new (PointerFreeGC) FontFaceImplSkia(face, skTypeface, skData, hbFont);
-    m_fontFaceCache.insert(std::make_pair(key, impl));
+    auto impl = new (PointerFreeGC) FontFaceImplSkia(skTypeface);
+    m_fontFaceCache.insert(std::make_pair(key.c_str(), impl));
     return impl;
 }
 
