@@ -358,6 +358,7 @@ public:
 
     void after(const GCVector<NodeOrDOMString>& array);
     void before(const GCVector<NodeOrDOMString>& array);
+    void replaceWith(const GCVector<NodeOrDOMString>& array);
 
     template <typename T>
     Node* childMatchedBy(Node* parent, T fn)

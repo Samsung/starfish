@@ -213,19 +213,6 @@ static bool isNodeInNodes(Node* node, const GCVector<NodeOrDOMString>& nodes)
     return false;
 }
 
-static Node* findViableNextSibling(Node* node,
-                                   const GCVector<NodeOrDOMString>& nodes)
-{
-    Node* sibling = node->nextSibling();
-    while (sibling) {
-        if (!isNodeInNodes(sibling, nodes)) {
-            return sibling;
-        }
-        sibling = sibling->nextSibling();
-    }
-    return nullptr;
-}
-
 static Node* findViablePreviousSibling(Node* node,
                                        const GCVector<NodeOrDOMString>& nodes)
 {
@@ -235,6 +222,19 @@ static Node* findViablePreviousSibling(Node* node,
             return sibling;
         }
         sibling = sibling->previousSibling();
+    }
+    return nullptr;
+}
+
+static Node* findViableNextSibling(Node* node,
+                                   const GCVector<NodeOrDOMString>& nodes)
+{
+    Node* sibling = node->nextSibling();
+    while (sibling) {
+        if (!isNodeInNodes(sibling, nodes)) {
+            return sibling;
+        }
+        sibling = sibling->nextSibling();
     }
     return nullptr;
 }
@@ -263,18 +263,6 @@ static Node* convertNodesIntoNode(const GCVector<NodeOrDOMString>& nodes,
     return fragment;
 }
 
-void Node::after(const GCVector<NodeOrDOMString>& nodes)
-{
-    Node* parent = parentNode();
-    if (!parent) {
-        return;
-    }
-    Node* viableNextSibling = findViableNextSibling(this, nodes);
-    Node* node = convertNodesIntoNode(nodes, document());
-    if (node) {
-        parent->insertBefore(node, viableNextSibling);
-    }
-}
 void Node::before(const GCVector<NodeOrDOMString>& nodes)
 {
     Node* parent = parentNode();
@@ -288,6 +276,35 @@ void Node::before(const GCVector<NodeOrDOMString>& nodes)
         parent->insertBefore(node, viablePreviousSibling
                                        ? viablePreviousSibling->nextSibling()
                                        : parent->firstChild());
+    }
+}
+
+void Node::after(const GCVector<NodeOrDOMString>& nodes)
+{
+    Node* parent = parentNode();
+    if (!parent) {
+        return;
+    }
+    Node* viableNextSibling = findViableNextSibling(this, nodes);
+    Node* node = convertNodesIntoNode(nodes, document());
+    if (node) {
+        parent->insertBefore(node, viableNextSibling);
+    }
+}
+
+void Node::replaceWith(const GCVector<NodeOrDOMString>& nodes)
+{
+    Node* parent = parentNode();
+    if (!parent) {
+        return;
+    }
+    Node* viableNextSibling = findViableNextSibling(this, nodes);
+    Node* node = convertNodesIntoNode(nodes, document());
+
+    if (parent == parentNode()) {
+        parent->replaceChild(node, this);
+    } else {
+        parent->insertBefore(node, viableNextSibling);
     }
 }
 
