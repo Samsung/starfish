@@ -30,7 +30,9 @@
 #include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSCounterFunction.h"
+#include "core/style/FilterFunctions.h"
 #include "core/style/GradientData.h"
+#include "core/style/WillChangeData.h"
 
 #include "core/style/CSSStyleDeclaration.h"
 
@@ -1716,6 +1718,17 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
             p.setPathFunctionValue(dvalue);
         } else {
             p.setValueKind(CSSStyleValuePair::None);
+        }
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::Filter: {
+        CSSStyleValuePair p;
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Filter);
+        FilterFunctions* filter = style->filter();
+        if (!filter) {
+            p.setValueKind(CSSStyleValuePair::ValueKind::None);
+        } else {
+            filter->toCSSStyleValue(p);
         }
         addValuePair(p);
     } break;
