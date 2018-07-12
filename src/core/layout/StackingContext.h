@@ -20,6 +20,8 @@
 #ifndef __StarFishStackingContext__
 #define __StarFishStackingContext__
 
+#include "core/page/RenderResult.h"
+
 namespace StarFish {
 
 class Canvas;
@@ -45,6 +47,7 @@ struct StackingContextRareData : public gc {
     LayoutRect m_visibleRect;
     CanvasSurface* m_buffer;
     SkMatrix m_matrix;
+    SkMatrix m_screenMatrix;
 
     StackingContextRareData();
 
@@ -87,7 +90,7 @@ public:
         return m_needsGraphicsBuffer;
     }
 
-    void clearGraphicsBuffer(bool needsDetachNative = true);
+    void clearGraphicsBuffer();
 
     CanvasSurface* buffer()
     {
@@ -108,8 +111,27 @@ public:
 
     void computeStackingContextProperties();
 
-    void paintStackingContext(Canvas* canvas, bool needsPainting,
-                              bool parentGraphicsLayerNeedsPainting = false);
+    struct PaintingStackingContextContext {
+        bool willCompositing;
+        PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap;
+        LayoutRect screenClipRect;
+        LayoutRect layerClipRect;
+        LayoutUnit scrollX, scrollY;
+        PaintingStackingContextContext(
+            bool willCompositing,
+            PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap,
+            const LayoutRect& screenClipRect, LayoutUnit scrollX,
+            LayoutUnit scrollY)
+            : willCompositing(willCompositing)
+            , prevDrawnStackingContextInfoMap(prevDrawnStackingContextInfoMap)
+            , screenClipRect(screenClipRect)
+            , scrollX(scrollX)
+            , scrollY(scrollY)
+        {
+        }
+    };
+    void paintStackingContext(Canvas* canvas,
+                              PaintingStackingContextContext& ctx);
     void compositeStackingContext(Compositor* compositor);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);
@@ -117,19 +139,14 @@ public:
 
     int32_t zIndex();
 
-    bool needsRepainting()
-    {
-        return m_needsRepainting;
-    }
-
-    void setNeedsRepainting()
-    {
-        m_needsRepainting = true;
-    }
-
     NeedsGraphicsLayerReason needsGraphicsBufferReason()
     {
         return m_needsGraphicsBufferReason;
+    }
+
+    const LayoutRect& screenExtent()
+    {
+        return m_screenExtent;
     }
 
     bool isIFrameStackingContext();
@@ -152,7 +169,6 @@ protected:
     void computeStackingContextProperties(ComputeStackingContextContext& ctx);
     void applyStackingContextProperties(ComputeStackingContextContext& ctx);
 
-    bool m_needsRepainting : 1;
     bool m_catchedMatrixChangedWhileComputeStackingContextProperties : 1;
     bool m_needsGraphicsBuffer : 1;
     bool m_hasNon2DRectTransform : 1;
@@ -162,6 +178,7 @@ protected:
     StackingContext* m_parent;
     GCVector<StackingContextChild*> m_childContexts;
     StackingContextRareData* m_rareData;
+    LayoutRect m_screenExtent;
 };
 }
 

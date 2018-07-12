@@ -906,6 +906,8 @@ int main(int argc, char* argv[])
             flag |= StarFish::enableHitTestDump;
         } else if (strcmp(argv[i], "--debug-graphics-layer") == 0) {
             flag |= StarFish::enableDebugGraphicsLayer;
+        } else if (strcmp(argv[i], "--debug-repaint-region") == 0) {
+            flag |= StarFish::enableDebugRepaintRegion;
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
 #ifdef STARFISH_ENABLE_TEST
             StarFish::g_enablePixelTest = true;

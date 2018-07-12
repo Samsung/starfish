@@ -637,7 +637,7 @@ void OpacityAnimationTask::opacityUpdated(bool before, bool after)
     Frame* frame = current->frame();
 
     if (before != after) {
-        targetElement()->webView()->clearStackingContext(true);
+        targetElement()->webView()->setNeedsEstablishesStackingContext();
     } else {
         targetElement()->webView()->setNeedsComputeStackingContextProperties();
     }
@@ -883,7 +883,7 @@ void TransformAnimationTask::computeToValue()
 
     if (needsToRecomputeStackingContext) {
         box->computeStyleFlags();
-        current->webView()->clearStackingContext(true);
+        current->webView()->setNeedsEstablishesStackingContext();
     }
 
     execute(0);
@@ -921,7 +921,7 @@ void TransformAnimationTask::detachedFromElement()
             // cleanup
             transforms->removeAt(transforms->size() - 1);
             if (transforms->size() == 0) {
-                current->webView()->clearStackingContext(true);
+                current->webView()->setNeedsEstablishesStackingContext();
                 style->clearTransform();
                 box->computeStyleFlags();
                 current->setNeedsPainting();

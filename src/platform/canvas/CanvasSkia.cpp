@@ -56,10 +56,11 @@ public:
 class CanvasSkia : public Canvas {
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
-        m_width = width;
-        m_height = height;
+        m_renderTargetInfo.m_width = width;
+        m_renderTargetInfo.m_height = height;
 
-        SkImageInfo info = SkImageInfo::MakeN32Premul(m_width, m_height);
+        SkImageInfo info = SkImageInfo::MakeN32Premul(
+            m_renderTargetInfo.m_width, m_renderTargetInfo.m_height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
         m_canvas = m_surface->getCanvas();
         applyDevicePixelRatio(m_canvas);
@@ -67,10 +68,11 @@ class CanvasSkia : public Canvas {
 
     void initFromNativeImageData(NativeImageData* data)
     {
-        m_width = data->width();
-        m_height = data->height();
+        m_renderTargetInfo.m_width = data->width();
+        m_renderTargetInfo.m_height = data->height();
 
-        SkImageInfo info = SkImageInfo::MakeN32Premul(m_width, m_height);
+        SkImageInfo info = SkImageInfo::MakeN32Premul(
+            m_renderTargetInfo.m_width, m_renderTargetInfo.m_height);
         m_surface =
             SkSurface::MakeRasterDirect(info, data->data(), data->stride());
         m_canvas = m_surface->getCanvas();
@@ -92,8 +94,8 @@ public:
         m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
-        m_width = width;
-        m_height = height;
+        m_renderTargetInfo.m_width = width;
+        m_renderTargetInfo.m_height = height;
 
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
@@ -114,8 +116,8 @@ public:
         m_starfish = starfish;
         m_canvas = d->canvas;
         m_surface = d->surface;
-        m_width = d->w;
-        m_height = d->h;
+        m_renderTargetInfo.m_width = d->w;
+        m_renderTargetInfo.m_height = d->h;
         m_shouldDestroySkia = false;
         m_shouldDestroySurface = false;
         save();
@@ -232,6 +234,42 @@ public:
     {
         m_canvas->clipRect(
             SkRect::MakeXYWH(rt.x(), rt.y(), rt.width(), rt.height()));
+    }
+
+    virtual void pixelSnappedClip(const LayoutRect& rt)
+    {
+        double x = rt.x();
+        double y = rt.y();
+        double maxX = rt.maxX();
+        double maxY = rt.maxY();
+
+        SkMatrix m = m_canvas->getTotalMatrix();
+        SkPoint point;
+        m.mapXY(x, y, &point);
+        x = point.x();
+        y = point.y();
+
+        x = floor(x);
+        y = floor(y);
+
+        m.mapXY(maxX, maxY, &point);
+        maxX = point.x();
+        maxY = point.y();
+
+        maxX = ceil(maxX) + 1;
+        maxY = ceil(maxY) + 1;
+
+        SkPath path;
+        path.reset();
+        path.moveTo(x, y);
+        path.lineTo(maxX, y);
+        path.lineTo(maxX, maxY);
+        path.lineTo(x, maxY);
+        path.lineTo(x, y);
+        path.close();
+        m_canvas->resetMatrix();
+        m_canvas->clipPath(path);
+        m_canvas->setMatrix(m);
     }
 
     virtual void setColor(const Unit::Color& clr)
@@ -895,7 +933,6 @@ public:
     {
         m_canvas->resetMatrix();
         applyDevicePixelRatio(m_canvas);
-        m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
     }
 
     // reset transform clip
@@ -905,7 +942,6 @@ public:
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
         applyDevicePixelRatio(m_canvas);
-        m_canvas->clipRect(SkRect::MakeXYWH(0, 0, m_width, m_height));
         m_canvas->concat(m);
     }
 
@@ -922,9 +958,6 @@ protected:
     sk_sp<SkSurface> m_surface;
     SkPaint m_paint;
     SkPath m_path;
-
-    unsigned m_width;
-    unsigned m_height;
 
     bool m_shouldDestroySkia;
     bool m_shouldDestroySurface;

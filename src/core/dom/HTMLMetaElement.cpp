@@ -103,13 +103,13 @@ void HTMLMetaElement::checkPlatformFlags()
             m_content->equalsIgnoreCase("yes")) {
             if (!m_tizenWidgetTransparentBackground) {
                 document()->m_tizenWidgetTransparentBackground++;
-                setNeedsPainting();
+                document()->setNeedsPainting();
             }
             m_tizenWidgetTransparentBackground = true;
         } else {
             if (m_tizenWidgetTransparentBackground) {
                 document()->m_tizenWidgetTransparentBackground--;
-                setNeedsPainting();
+                document()->setNeedsPainting();
             }
             m_tizenWidgetTransparentBackground = false;
         }

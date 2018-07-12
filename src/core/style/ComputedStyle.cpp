@@ -204,21 +204,19 @@ AnimationTimingFunction* ComputedStyle::knownTransitionTimingFunction(
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-class StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion
-    : public ResourceClient {
+class BackgroundImageResourceClient : public ResourceClient {
 public:
-    StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(
-        Resource* res, Document* document)
+    BackgroundImageResourceClient(Resource* res, Node* node)
         : ResourceClient(res)
-        , m_document(document)
+        , m_node(node)
     {
     }
     virtual void didLoadFinished()
     {
-        m_document->setNeedsPainting();
+        m_node->setNeedsPainting();
     }
 
-    Document* m_document;
+    Node* m_node;
 };
 
 void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
@@ -370,8 +368,7 @@ void ComputedStyle::loadBackgroundImage(
                 setBackgroundImageResource(res, bgIndex);
                 res->markThisResourceIsDoesNotAffectWindowOnLoad();
                 res->addResourceClient(
-                    new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(
-                        res, consumer->document()));
+                    new BackgroundImageResourceClient(res, consumer));
 #ifdef STARFISH_ENABLE_TEST
                 bool enableRegressionTest =
                     sf->startUpFlag() &
@@ -427,8 +424,7 @@ void ComputedStyle::loadBorderImage(
                 consumer->document()->resourceLoader().fetchImage(u);
             res->markThisResourceIsDoesNotAffectWindowOnLoad();
             res->addResourceClient(
-                new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(
-                    res, consumer->document()));
+                new BackgroundImageResourceClient(res, consumer));
 #ifdef STARFISH_ENABLE_TEST
             bool enableRegressionTest =
                 sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
@@ -475,8 +471,7 @@ void ComputedStyle::loadListStyleImage(
                 consumer->document()->resourceLoader().fetchImage(u);
             res->markThisResourceIsDoesNotAffectWindowOnLoad();
             res->addResourceClient(
-                new StupidImageResourceClientBecauseItIsNotConsiderRePaintRegion(
-                    res, consumer->document()));
+                new BackgroundImageResourceClient(res, consumer));
 #ifdef STARFISH_ENABLE_TEST
             bool enableRegressionTest =
                 sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
@@ -2005,8 +2000,6 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                 ComputedStyleDamage::
                     ComputedStyleDamageComputeStackingContextProperties |
                 damage);
-            damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         }
     }
 

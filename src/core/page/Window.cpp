@@ -421,6 +421,7 @@ bool Window::scrollToWithoutLayout(double x, double y)
     if (document()->frame()) {
         if (document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(
                 x, y)) {
+            webView()->setNeedsComputeStackingContextProperties();
             if (webView()->didCompositeBefore()) {
                 if (!browsingContext()->isTopLevelBrowsingContext()) {
                     StackingContext* ctx =
@@ -434,7 +435,7 @@ bool Window::scrollToWithoutLayout(double x, double y)
                     browsingContext()->setNeedsComposite();
                 }
             } else {
-                browsingContext()->setNeedsPainting();
+                document()->setNeedsPainting();
             }
             return true;
         }

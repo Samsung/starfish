@@ -67,11 +67,11 @@ public:
 class CanvasCairo : public Canvas {
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
-        m_width = width;
-        m_height = height;
+        m_renderTargetInfo.m_width = width;
+        m_renderTargetInfo.m_height = height;
 
         m_surface = cairo_image_surface_create_for_data(
-            (unsigned char*)buffer, CAIRO_FORMAT, m_width, m_height, stride);
+            (unsigned char*)buffer, CAIRO_FORMAT, width, height, stride);
         cairo_surface_set_device_scale(
             m_surface, m_starfish->screenInfo().devicePixelRatio,
             m_starfish->screenInfo().devicePixelRatio);
@@ -80,8 +80,8 @@ class CanvasCairo : public Canvas {
 
     void initFromNativeImageData(NativeImageData* data)
     {
-        m_width = data->width();
-        m_height = data->height();
+        m_renderTargetInfo.m_width = data->width();
+        m_renderTargetInfo.m_height = data->height();
 
         m_surface = cairo_image_surface_create_for_data(
             (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
@@ -110,10 +110,8 @@ public:
         m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
-        m_width = width;
-        m_height = height;
         {
-            initFromBuffer(buffer, m_width, m_height, stride);
+            initFromBuffer(buffer, width, height, stride);
         }
         init();
         save();
@@ -131,8 +129,9 @@ public:
         m_starfish = starfish;
         m_canvas = (cairo_t*)d->cairo;
         m_surface = (cairo_surface_t*)d->surface;
-        m_width = d->w;
-        m_height = d->h;
+        m_renderTargetInfo.m_width = d->w;
+        m_renderTargetInfo.m_height = d->h;
+
         m_shouldDestroyCairo = false;
         m_shouldDestroySurface = false;
         init();
@@ -282,6 +281,41 @@ public:
     {
         cairo_rectangle(m_canvas, rt.x(), rt.y(), rt.width(), rt.height());
         cairo_clip(m_canvas);
+    }
+
+    virtual void pixelSnappedClip(const LayoutRect& rt)
+    {
+        cairo_matrix_t m;
+        cairo_get_matrix(m_canvas, &m);
+        double x = rt.x();
+        double y = rt.y();
+
+        double maxX = rt.maxX();
+        double maxY = rt.maxY();
+
+        cairo_matrix_transform_point(&m, &x, &y);
+        cairo_matrix_transform_point(&m, &maxX, &maxY);
+
+        cairo_user_to_device(m_canvas, &x, &y);
+        x = floor(x) - 1;
+        y = floor(y) - 1;
+        cairo_device_to_user(m_canvas, &x, &y);
+
+        cairo_user_to_device(m_canvas, &maxX, &maxY);
+        x = ceil(x) + 1;
+        y = ceil(y) + 1;
+        cairo_device_to_user(m_canvas, &maxX, &maxY);
+
+        cairo_matrix_t m2;
+        cairo_matrix_init_identity(&m2);
+        cairo_set_matrix(m_canvas, &m2);
+        cairo_move_to(m_canvas, x, y);
+        cairo_line_to(m_canvas, maxX, y);
+        cairo_line_to(m_canvas, maxX, maxY);
+        cairo_line_to(m_canvas, x, maxY);
+        cairo_line_to(m_canvas, x, y);
+        cairo_clip(m_canvas);
+        cairo_set_matrix(m_canvas, &m);
     }
 
     virtual void setColor(const Unit::Color& clr_)
@@ -1282,8 +1316,6 @@ protected:
     std::vector<CanvasStateCairo> m_state;
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
-    unsigned m_width;
-    unsigned m_height;
 
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;

@@ -235,9 +235,9 @@ public:
     size_t countPointersInRootSet(void* ptr);
 #endif
     void resolveStyleIfNeeds();
-    void buildFrameTreeIfNeeds(bool fromWebView = true);
+    void buildFrameTreeIfNeeds();
     // return did layout
-    bool layoutIfNeeds(bool fromWebView = true);
+    bool layoutIfNeeds();
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     void registerMediaElement(HTMLMediaElement* element);
 #endif

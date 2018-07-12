@@ -24,6 +24,7 @@
 #include "core/dom/Text.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/extra/MimeType.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -287,11 +288,20 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                                 new ElementResourceClient(this, res, true));
                             return true;
                         } else if (res->isFinished()) {
-                            ScriptDownloadClient download(this, res, false);
-                            download.didLoadFinished();
-                            ElementResourceClient onload(this, res, true);
-                            onload.didLoadFinished();
-                            return false;
+                            webView()->starFish()->messageLoop()->addIdler(
+                                document()->browsingContext(),
+                                [](size_t id, void* res, void* self) {
+                                    ScriptDownloadClient download(
+                                        (HTMLScriptElement*)self,
+                                        (Resource*)res, true);
+                                    download.didLoadFinished();
+                                    ElementResourceClient onload(
+                                        (HTMLScriptElement*)self,
+                                        (Resource*)res, true);
+                                    onload.didLoadFinished();
+                                },
+                                res, this);
+                            return true;
                         }
                         break;
                     }

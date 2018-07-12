@@ -445,13 +445,13 @@ void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
     }
 }
 
-bool PlatformWindow::rendering()
+RenderResult PlatformWindow::rendering()
 {
-    bool ret = webView()->rendering();
-    if (ret && m_renderingFinishedCallback) {
+    auto renderResult = webView()->rendering();
+    if (renderResult.didPaintingOrCompositing && m_renderingFinishedCallback) {
         m_renderingFinishedCallback();
     }
-    return ret;
+    return renderResult;
 }
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR

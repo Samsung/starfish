@@ -22,6 +22,7 @@
 
 #include "binding/StarFishHoldable.h"
 #include "browser/history/HistoryManager.h"
+#include "core/page/RenderResult.h"
 
 namespace StarFish {
 struct BlobURLStore {
@@ -126,7 +127,7 @@ public:
     void clearBlobURLStore();
 
     void layoutIfNeeds();
-    void clearStackingContext(bool backupBuffer);
+    void clearStackingContext();
     StackingContext* rootStackingContext()
     {
         return m_rootStackingContext;
@@ -188,19 +189,27 @@ public:
     typedef bool (*DidLayoutCallback)(void*); // return true cause relayout
     void addDidLayoutCallback(DidLayoutCallback cb, void* data);
 
-    void assignGraphicsBuffer(CanvasSurface** surfaceHolder,
-                              size_t visibleWidth, size_t visibleHeight);
-
     bool hasActiveAnimationExecutor()
     {
         return m_activeAnimationExecutor.size();
+    }
+
+    void addPaintingDirtyArea(const LayoutRect& rt)
+    {
+        m_paintingDirtyRect.unite(rt);
+    }
+
+    PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfo()
+    {
+        return m_prevDrawnStackingContextInfo;
     }
 
 private:
     WebView(StarFish* starFish);
 
     void initRenderingFlags();
-    bool rendering(
+
+    RenderResult rendering(
         bool force = false); // returns did painting | did compositing
     void setNeedsRendering();
     void setNeedsPainting()
@@ -236,6 +245,8 @@ private:
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
 
+    PrevDrawnStackingContextInfoMap m_prevDrawnStackingContextInfo;
+
     uint64_t m_lastRenderingTime;
     uint64_t m_navigateStartingTime;
     uint32_t m_currentActiveAnimatorCount;
@@ -246,10 +257,10 @@ private:
     bool m_needsPainting;
     bool m_needsComposite;
     bool m_didCompositeBefore; // last state of enabling composite
+    LayoutRect m_paintingDirtyRect;
 
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;
-    GCVector<CanvasSurface*> m_backStackingContextBufferUpWhileReCompsite;
     GCVector<std::pair<DidLayoutCallback, void*>> m_didLayoutCallbacks;
     GCVector<BrowsingContext*> m_browsingContextsHasPendingAnimation;
     GCVector<AnimationExecutor*> m_activeAnimationExecutor;

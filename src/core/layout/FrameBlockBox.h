@@ -189,18 +189,19 @@ public:
         return Frame::style(parent, parent->style(), m_flags.m_isFirstLine);
     }
 
-    virtual void iterateChildFrameBox(
-        const std::function<void(FrameBox*)>& fn) override
-    {
-        fn(this);
-    }
-
     void* operator new(size_t size);
     void* operator new(size_t /* size */, void* p)
     {
         return p;
     }
     void* operator new[](size_t size) = delete;
+
+    virtual std::unique_ptr<ChildFrameBoxIterator> childFrameBoxiterator()
+        override
+    {
+        return std::unique_ptr<ChildFrameBoxIterator>(
+            new ChildFrameBoxIteratorNull());
+    }
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
@@ -328,13 +329,36 @@ public:
     void resetChildrenVerticalPositions(LayoutContext& ctx);
     void quickInlineLayout(LineFormattingContext* ctx);
 
-    virtual void iterateChildFrameBox(
-        const std::function<void(FrameBox*)>& fn) override
-    {
-        fn(this);
-        for (size_t i = 0; i < m_boxes.size(); i++) {
-            m_boxes[i]->iterateChildFrameBox(fn);
+    class ChildFrameBoxIteratorInlineBoxLayoutParentBox
+        : public ChildFrameBoxIterator {
+    public:
+        ChildFrameBoxIteratorInlineBoxLayoutParentBox(
+            InlineBoxLayoutParentBox* parent)
+            : parent(parent)
+            , pos(0)
+        {
         }
+
+        virtual FrameBox* next() override
+        {
+            pos++;
+            return parent->boxes()[pos - 1];
+        }
+
+        virtual bool hasNext() override
+        {
+            return pos < parent->boxes().size();
+        }
+
+        InlineBoxLayoutParentBox* parent;
+        size_t pos;
+    };
+
+    virtual std::unique_ptr<ChildFrameBoxIterator> childFrameBoxiterator()
+        override
+    {
+        return std::unique_ptr<ChildFrameBoxIterator>(
+            new ChildFrameBoxIteratorInlineBoxLayoutParentBox(this));
     }
 
     virtual Frame* hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
@@ -787,20 +811,38 @@ public:
         return m_lineBoxes;
     }
 
-    virtual void iterateChildFrameBox(
-        const std::function<void(FrameBox*)>& fn) override
+    class ChildFrameBoxIteratorFrameBoxInlineFlow
+        : public ChildFrameBoxIterator {
+    public:
+        ChildFrameBoxIteratorFrameBoxInlineFlow(FrameBlockBox* parent)
+            : parent(parent)
+            , pos(0)
+        {
+        }
+
+        virtual FrameBox* next() override
+        {
+            pos++;
+            return parent->lineBoxes()[pos - 1];
+        }
+
+        virtual bool hasNext() override
+        {
+            return pos < parent->lineBoxes().size();
+        }
+
+        FrameBlockBox* parent;
+        size_t pos;
+    };
+
+    virtual std::unique_ptr<ChildFrameBoxIterator> childFrameBoxiterator()
+        override
     {
-        fn(this);
         if (hasBlockFlow()) {
-            Frame* box = firstChild();
-            while (box) {
-                box->asFrameBox()->iterateChildFrameBox(fn);
-                box = box->next();
-            }
+            return FrameBox::childFrameBoxiterator();
         } else {
-            for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-                m_lineBoxes[i]->iterateChildFrameBox(fn);
-            }
+            return std::unique_ptr<ChildFrameBoxIterator>(
+                new ChildFrameBoxIteratorFrameBoxInlineFlow(this));
         }
     }
 

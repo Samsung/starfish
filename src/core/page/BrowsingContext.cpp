@@ -462,15 +462,11 @@ void BrowsingContext::resolveStyleIfNeeds()
     }
 }
 
-void BrowsingContext::buildFrameTreeIfNeeds(bool fromWebView)
+void BrowsingContext::buildFrameTreeIfNeeds()
 {
     resolveStyleIfNeeds();
     if (m_needsFrameTreeBuild) {
         if (document()->frame()) {
-            if (fromWebView) {
-                webView()->clearStackingContext(true);
-            }
-
             // create frame tree
             INSTALL_PROFILE_TIMER(starFish(), "create frame tree");
 
@@ -481,17 +477,13 @@ void BrowsingContext::buildFrameTreeIfNeeds(bool fromWebView)
     }
 }
 
-bool BrowsingContext::layoutIfNeeds(bool fromWebView)
+bool BrowsingContext::layoutIfNeeds()
 {
     resolveStyleIfNeeds();
     buildFrameTreeIfNeeds();
 
     bool ret = false;
     if (m_needsLayout) {
-        if (fromWebView) {
-            webView()->clearStackingContext(true);
-        }
-
         // lay out frame tree
         INSTALL_PROFILE_TIMER(starFish(), "lay out frame tree");
 
@@ -683,7 +675,16 @@ void BrowsingContext::dispose()
     if (isTopLevelBrowsingContext()) {
         m_starFish->platformWindow()->clearResources();
         m_starFish->messageLoop()->clearPendingIdlers(this);
-        webView()->clearStackingContext(false);
+
+        auto& prevDrawnInfo = webView()->prevDrawnStackingContextInfo();
+        auto iter = prevDrawnInfo.begin();
+        while (iter != prevDrawnInfo.end()) {
+            if (iter->second.graphicsBuffer) {
+                iter->second.graphicsBuffer->detachNativeBuffer();
+            }
+            iter++;
+        }
+        prevDrawnInfo.clear();
 
         m_webView->initRenderingFlags();
     } else {
@@ -1708,22 +1709,6 @@ void BrowsingContext::resume()
 void BrowsingContext::setNeedsPainting()
 {
     m_webView->setNeedsPainting();
-
-    if (m_webView->didCompositeBefore() && document() && document()->frame() &&
-        document()->frame()->firstChild()) {
-        if (document()
-                ->frame()
-                ->firstChild()
-                ->asFrameBox()
-                ->stackingContext()) {
-            document()
-                ->frame()
-                ->firstChild()
-                ->asFrameBox()
-                ->stackingContext()
-                ->setNeedsRepainting();
-        }
-    }
 }
 
 void BrowsingContext::setNeedsComposite()

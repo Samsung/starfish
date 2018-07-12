@@ -53,7 +53,7 @@
 #include <tizen.h>
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || defined(PORT_GRAPHIC_BACKEND_EFL)
 #include <cairo.h>
 #endif
 
@@ -394,26 +394,65 @@ public:
         PlatformWindow::onIdle();
     }
 
-    virtual bool rendering() override
+    virtual RenderResult rendering() override
     {
         m_inRendering = true;
-        // ProfilerTimer renderingTimer("WindowImplEFL::rendering");
-        bool ret = PlatformWindow::rendering();
-        if (ret) {
-            m_canRendering = false;
-        }
+        // ProfilerTimer renderingTimer(starFish(), "WindowImplEFL::rendering");
+        RenderResult ret = PlatformWindow::rendering();
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-        if (ret && m_canvasAdpaterCairo) {
-            int w, h;
-            evas_object_image_size_get(m_canvasAdpater, &w, &h);
-            evas_object_image_data_update_add(m_canvasAdpater, 0, 0, w, h);
+        if (ret.didPaintingOrCompositing && m_canvasAdpaterCairo) {
+            if (webView()->didCompositeBefore()) {
+                m_canRendering = false;
+            } else {
+                LayoutRect screen(0, 0, width(), height());
+                if (ret.updateRect.intersects(screen) ||
+                    screen.containsInVisual(ret.updateRect.x(),
+                                            ret.updateRect.y()) ||
+                    screen.containsInVisual(ret.updateRect.maxX(),
+                                            ret.updateRect.y()) ||
+                    screen.containsInVisual(ret.updateRect.x(),
+                                            ret.updateRect.maxY()) ||
+                    screen.containsInVisual(ret.updateRect.maxX(),
+                                            ret.updateRect.maxY())) {
+                    LayoutRect rt = ret.updateRect;
+                    if (rt.x() < 0) {
+                        rt.setWidth(rt.width() + rt.x());
+                        rt.setX(0);
+                    }
+                    if (rt.y() < 0) {
+                        rt.setHeight(rt.height() + rt.y());
+                        rt.setY(0);
+                    }
+                    if (rt.maxX() > screen.maxX()) {
+                        rt.setWidth(rt.width() - (rt.maxX() - screen.maxX()));
+                    }
+                    if (rt.maxY() > screen.maxY()) {
+                        rt.setHeight(rt.height() - (rt.maxY() - screen.maxY()));
+                    }
+                    evas_object_image_data_update_add(m_canvasAdpater, rt.x(),
+                                                      rt.y(), rt.width(),
+                                                      rt.height());
+                    /*
+                    STARFISH_LOG_INFO(
+                        "update efl window partial region %f %f %f %f\n",
+                        (float)rt.x(), (float)rt.y(), (float)rt.width(),
+                        (float)rt.height());
+                        */
+                    m_canRendering = false;
+                }
+                /*
+                int w, h;
+                evas_object_image_size_get(m_canvasAdpater, &w, &h);
+                evas_object_image_data_update_add(m_canvasAdpater, 0, 0, w, h);
+                */
+            }
         }
 #endif
 #if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-        if (ret && m_canvasAdpaterSkia) {
-            int w, h;
-            evas_object_image_size_get(m_canvasAdpater, &w, &h);
-            evas_object_image_data_update_add(m_canvasAdpater, 0, 0, w, h);
+        if (ret.didPaintingOrCompositing && m_canvasAdpaterSkia) {
+            evas_object_image_data_update_add(
+                m_canvasAdpater, ret.updateRect.x(), ret.updateRect.y(),
+                ret.updateRect.width(), ret.updateRect.height());
         }
 #endif
 #if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
@@ -1754,28 +1793,6 @@ Canvas* WindowImplEFL::preparePainting()
     d.h = height();
     return Canvas::createDirect(starFish(), &d);
 #endif
-#ifdef STARFISH_ENABLE_TEST
-    {
-        const char* path = getenv("SCREEN_SHOT");
-        if (((path && strlen(path)) || g_referenceTestState > 0) &&
-            g_fireOnloadEvent) {
-            g_surfaceForScreehShot = CanvasSurface::create(
-                this, width() / starFish()->screenInfo().devicePixelRatio,
-                height() / starFish()->screenInfo().devicePixelRatio);
-            starFish()->addPointerInRootSet(g_surfaceForScreehShot);
-            STARFISH_LOG_INFO(
-                "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "
-                "%p\n",
-                g_surfaceForScreehShot->data(),
-                g_surfaceForScreehShot->data() +
-                    (g_surfaceForScreehShot->bufferStride() *
-                     g_surfaceForScreehShot->bufferHeight()));
-            Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
-            return c;
-        }
-    }
-#endif
-
     auto iter = m_objectList.begin();
     while (iter != m_objectList.end()) {
         evas_object_del(*iter);
@@ -2147,5 +2164,35 @@ void WindowImplEFL::clearResources()
     m_objectList.shrink_to_fit();
 }
 
+#if defined(STARFISH_ENABLE_TEST) && !defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+void screenShotInRendering(StarFish* starfish, const char* path)
+{
+#if !defined(PORT_GRAPHIC_BACKEND_EFL)
+    WindowImplEFL* wnd = (WindowImplEFL*)starfish->platformWindow();
+    if (!starfish->platformWindow()->webView()->didCompositeBefore()) {
+        evas_object_image_save(wnd->m_canvasAdpater, path, nullptr, nullptr);
+        return;
+    }
+#endif
+    STARFISH_ASSERT(g_surfaceForScreehShot);
+    cairo_surface_t* png_buffer;
+    png_buffer = cairo_image_surface_create_for_data(
+        (unsigned char*)g_surfaceForScreehShot->data(), CAIRO_FORMAT_ARGB32,
+        starfish->platformWindow()->width(),
+        starfish->platformWindow()->height(),
+        g_surfaceForScreehShot->bufferStride());
+
+#if !defined(STARFISH_ANDROID)
+    cairo_surface_write_to_png(png_buffer, path);
+#endif
+    cairo_surface_destroy(png_buffer);
+
+    if (g_surfaceForScreehShot) {
+        g_surfaceForScreehShot->detachNativeBuffer();
+        starfish->removePointerFromRootSet(g_surfaceForScreehShot);
+    }
+    g_surfaceForScreehShot = nullptr;
+}
+#endif
 } // namespace StarFish
 #endif

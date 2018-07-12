@@ -72,7 +72,7 @@ protected:
                 return false;
             });
         if (r) {
-            m_browsingContext->layoutIfNeeds(false);
+            m_browsingContext->layoutIfNeeds();
             SVGSVGElement* svg = r->asSVGSVGElement();
             if (!svg->frame()) {
                 m_resource->didLoadFailed();

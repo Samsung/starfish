@@ -564,14 +564,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                     doc->window()->setTimeout(
                         [](Window* window, void* data) {
                             g_fireOnloadEvent = true;
-                            if (window->webView()->rootStackingContext()) {
-                                window->webView()
-                                    ->rootStackingContext()
-                                    ->setNeedsRepainting();
-                            }
-                            window->window()
-                                ->browsingContext()
-                                ->setNeedsPainting();
+                            window->document()->setNeedsPainting();
                             window->window()->testStart();
                         },
                         10, nullptr);

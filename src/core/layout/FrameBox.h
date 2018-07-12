@@ -795,7 +795,7 @@ public:
 
     bool tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx);
 
-    void clearStackingContextIfNeeds(bool shouldDetachNativeBuffer = true);
+    void clearStackingContextIfNeeds();
 
     virtual void paintStackingContextContent(Canvas* canvas);
     virtual void willCompsiteStackingContext(Compositor* c)
@@ -812,13 +812,83 @@ public:
     {
     }
 
-    virtual void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
+    SkMatrix computeScreenMatrix();
+    LayoutRect computeScreenExtent();
+
+    class ChildFrameBoxIterator {
+    public:
+        virtual ~ChildFrameBoxIterator()
+        {
+        }
+
+        virtual FrameBox* next() = 0;
+        virtual bool hasNext() = 0;
+    };
+
+    class ChildFrameBoxIteratorBase : public ChildFrameBoxIterator {
+    public:
+        ChildFrameBoxIteratorBase(FrameBox* pos)
+            : pos(pos)
+        {
+        }
+
+        virtual FrameBox* next() override
+        {
+            auto ret = pos;
+            auto next = pos->next();
+            if (next) {
+                pos = next->asFrameBox();
+            } else {
+                pos = nullptr;
+            }
+            return ret;
+        }
+
+        virtual bool hasNext() override
+        {
+            return pos != nullptr;
+        }
+
+        FrameBox* pos;
+    };
+
+    class ChildFrameBoxIteratorNull : public ChildFrameBoxIterator {
+    public:
+        ChildFrameBoxIteratorNull()
+        {
+        }
+
+        virtual FrameBox* next() override
+        {
+            return nullptr;
+        }
+
+        virtual bool hasNext() override
+        {
+            return false;
+        }
+    };
+
+    // This iterator not using GC alloctor
+    // use return value only temporary
+    virtual std::unique_ptr<ChildFrameBoxIterator> childFrameBoxiterator()
+    {
+        auto fs = firstChild();
+        if (fs) {
+            return std::unique_ptr<ChildFrameBoxIterator>(
+                new ChildFrameBoxIteratorBase(fs->asFrameBox()));
+        }
+        return std::unique_ptr<ChildFrameBoxIterator>(
+            new ChildFrameBoxIteratorNull());
+    }
+
+    void iterateChildFrameBox(const std::function<void(FrameBox*)>& fn)
     {
         fn(this);
-        Frame* box = firstChild();
-        while (box) {
-            box->asFrameBox()->iterateChildFrameBox(fn);
-            box = box->next();
+        auto iter = childFrameBoxiterator();
+        while (iter->hasNext()) {
+            auto box = iter->next();
+            box->iterateChildFrameBox(fn);
         }
     }
 
