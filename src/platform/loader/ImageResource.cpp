@@ -215,7 +215,8 @@ void ImageResource::didLoadFinished()
     }
 #else
     m_imageData = NativeImageData::create(m_resourceRequest->response().data(),
-                                          m_resourceRequest->response().size());
+                                          m_resourceRequest->response().size(),
+                                          m_shouldDecodingInstantly);
     if (!m_imageData) {
         Resource::didLoadFailed();
         return;

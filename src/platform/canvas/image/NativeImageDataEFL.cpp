@@ -208,7 +208,8 @@ NativeImageData* NativeImageData::create(String* localImageSrc)
     return imageData;
 }
 
-NativeImageData* NativeImageData::create(const char* buf, size_t len)
+NativeImageData* NativeImageData::create(const char* buf, size_t len,
+                                         bool unused)
 {
     NativeImageData* imageData = new NativeImageDataEFL(buf, len);
     if (imageData->unwrap() == NULL) {
