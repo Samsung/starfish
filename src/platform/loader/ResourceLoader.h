@@ -51,7 +51,8 @@ public:
     Resource* fetch(ResourceURL* url);
     TextResource* fetchText(ResourceURL* url,
                             String* preferredEncoding = String::emptyString);
-    ImageResource* fetchImage(ResourceURL* url);
+    ImageResource* fetchImage(ResourceURL* url,
+                              bool shouldDecodingInstantly = true);
     FontResource* fetchFont(ResourceURL* url);
     HeaderResource* fetchHeader(ResourceURL* url);
 

@@ -46,7 +46,8 @@ public:
 
     static NativeImageData* create(
         String* localImageSrc); // this is only for EFL backend
-    static NativeImageData* create(const char* buf, size_t len);
+    static NativeImageData* create(const char* buf, size_t len,
+                                   bool shouldDecodingInstantly = true);
     static NativeImageData* create(size_t width, size_t height);
 
     virtual size_t bufferSize() = 0;

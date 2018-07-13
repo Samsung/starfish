@@ -1048,6 +1048,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         }
 
         float dpr = m_owner->node()->starFish()->screenInfo().devicePixelRatio;
+        bool needsInitialClip = false;
         ctx.layerClipRect =
             LayoutRect(0, 0, m_rareData->m_buffer->imageWidth() / dpr,
                        m_rareData->m_buffer->imageHeight() / dpr);
@@ -1074,10 +1075,12 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                                            1);
                 ctx.layerClipRect.setHeight(ctx.layerClipRect.height().ceil() +
                                             1);
+                needsInitialClip = true;
             }
         } else if (isOverlappedWithScreenClipRect || gotNewBuffer) {
         } else {
             ctx.layerClipRect = LayoutRect(0, 0, 0, 0);
+            needsInitialClip = true;
         }
 
         if (m_rareData->m_buffer->pixelRatio() != 1) {
@@ -1086,7 +1089,9 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         }
 
         canvas->translate(-minX, -minY);
-        canvas->pixelSnappedClip(ctx.layerClipRect);
+        if (needsInitialClip) {
+            canvas->pixelSnappedClip(ctx.layerClipRect);
+        }
 
         canvas->clearColor(Unit::Color(0, 0, 0, 0));
     } else {

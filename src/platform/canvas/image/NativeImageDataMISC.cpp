@@ -62,7 +62,8 @@ public:
         initInternalSurface();
     }
 
-    NativeImageDataMISC(const char* buf, size_t len)
+    NativeImageDataMISC(const char* buf, size_t len,
+                        bool shouldDecodingInstantly)
     {
         m_image = nullptr;
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
@@ -74,8 +75,10 @@ public:
         m_hasTransparentPixel = false;
 
         if (buf && len != 0) {
-            decodeImage(nullptr, nullptr, buf, len);
-            initInternalSurface();
+            decodeImage(nullptr, nullptr, buf, len, shouldDecodingInstantly);
+            if (!shouldDecodingInstantly && m_width && m_height) {
+                m_inputBuffer.insert(m_inputBuffer.end(), buf, &buf[len]);
+            }
         }
     }
 
@@ -96,23 +99,31 @@ public:
 
     virtual uint8_t* data()
     {
+        if (m_inputBuffer.size()) {
+            decodeImage(nullptr, nullptr, (const char*)m_inputBuffer.data(),
+                        m_inputBuffer.size(), true);
+            std::vector<unsigned char>().swap(m_inputBuffer);
+            if (!m_image) {
+                // fallback
+                m_image = malloc(m_stride * m_height);
+            }
+            initInternalSurface();
+        }
         return (uint8_t*)m_image;
     }
 
     virtual void clear()
     {
         void* address = m_image;
-        size_t end = bufferSize();
-        memset(address, 0x00, end);
+        if (address) {
+            size_t end = bufferSize();
+            memset(address, 0x00, end);
+        }
     }
 
     virtual size_t bufferSize()
     {
-        if (m_image) {
-            return m_stride * m_height;
-        } else {
-            return 0;
-        }
+        return m_stride * m_height;
     }
 
     virtual void disposeNativeImageData()
@@ -123,7 +134,7 @@ public:
         }
 #endif
         free(m_image);
-
+        std::vector<unsigned char>().swap(m_inputBuffer);
         NativeImageData::disposeNativeImageData();
     }
 
@@ -261,7 +272,7 @@ private:
     }
 
     void readPNGFileOrBufferedInput(FILE* fp, const char* bufferedInput,
-                                    size_t len)
+                                    size_t len, bool needsDecoding)
     {
         READ_DATA readData;
         png_byte colorType;
@@ -336,25 +347,17 @@ private:
         png_set_bgr(png);
         png_read_update_info(png, info);
 
-        rowPointers = (png_bytep*)malloc(sizeof(png_bytep) * m_height);
-
         png_uint_32 rowbytes = png_get_rowbytes(png, info);
-
         m_stride = rowbytes;
-        if ((m_image = (unsigned char*)malloc(rowbytes * m_height)) ==
-            nullptr) {
-            png_destroy_read_struct(&png, &info, nullptr);
-            free(rowPointers);
-            return;
-        }
+        if (needsDecoding) {
+            rowPointers = (png_bytep*)malloc(sizeof(png_bytep) * m_height);
+            m_image = (unsigned char*)malloc(rowbytes * m_height);
+            for (png_uint_32 i = 0; i < (unsigned int)m_height; ++i) {
+                rowPointers[i] = (png_bytep)m_image + i * rowbytes;
+            }
 
-        for (png_uint_32 i = 0; i < (unsigned int)m_height; ++i) {
-            rowPointers[i] = (png_bytep)m_image + i * rowbytes;
-        }
-
-        png_read_image(png, rowPointers);
-        png_read_end(png, nullptr);
-        png_destroy_read_struct(&png, &info, nullptr);
+            png_read_image(png, rowPointers);
+            png_read_end(png, nullptr);
 #ifdef NEEDS_PREMULTIPLIED_ALPHA
 #define ARGB_TO_PREMULTIPLY_ALPHA(sr, sg, sb, sa)                              \
     (unsigned)(((unsigned)((unsigned char)(sr) * ((unsigned char)(sa) + 1)) >> \
@@ -367,33 +370,36 @@ private:
                 << 16) |                                                       \
                ((unsigned)(unsigned char)(sa) << 24))
 
-        uint8_t* data = (uint8_t*)m_image;
-        for (png_uint_32 y = 0; y < m_height; ++y) {
-            for (png_uint_32 x = 0; x < rowbytes; x += 4) {
-                png_uint_32 idx = y * rowbytes + x;
-                uint32_t* tmp = (uint32_t*)(&(data[idx]));
-                if (data[idx + 3] != 255) {
-                    m_hasTransparentPixel = true;
-                }
+            uint8_t* data = (uint8_t*)m_image;
+            for (png_uint_32 y = 0; y < m_height; ++y) {
+                for (png_uint_32 x = 0; x < rowbytes; x += 4) {
+                    png_uint_32 idx = y * rowbytes + x;
+                    uint32_t* tmp = (uint32_t*)(&(data[idx]));
+                    if (data[idx + 3] != 255) {
+                        m_hasTransparentPixel = true;
+                    }
 
 #ifdef STARFISH_ANDROID
-                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(data[idx + 2], data[idx + 1],
-                                                 data[idx], data[idx + 3]);
+                    *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
+                        data[idx + 2], data[idx + 1], data[idx], data[idx + 3]);
 #else
-                *tmp = ARGB_TO_PREMULTIPLY_ALPHA(data[idx], data[idx + 1],
-                                                 data[idx + 2], data[idx + 3]);
+                    *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
+                        data[idx], data[idx + 1], data[idx + 2], data[idx + 3]);
 #endif
+                }
             }
-        }
 
 #undef ARGB_TO_PREMULTIPLY_ALPHA
 #endif
-        free(rowPointers);
+            free(rowPointers);
+        }
+
+        png_destroy_read_struct(&png, &info, nullptr);
     }
 
 #if !defined(OS_WINDOWS)
     void decodeJPG(jpeg_decompress_struct* dHandle, unsigned char* buf,
-                   const int size)
+                   const int size, bool needsDecoding)
     {
         unsigned long dstSize = 0;
         jpeg_mem_src(dHandle, buf, size);
@@ -405,9 +411,36 @@ private:
         if (jpeg_start_decompress(dHandle) != 1) {
             return;
         }
+
         m_width = dHandle->output_width;
         m_height = dHandle->output_height;
         m_stride = m_width * 4;
+
+        if (!needsDecoding) {
+            // decode first line for testing
+            m_image = malloc(m_stride);
+
+            unsigned char* buffer_array[1];
+            if (dHandle->out_color_space == JCS_GRAYSCALE) {
+                while (dHandle->output_scanline < dHandle->output_height) {
+                    buffer_array[0] = (unsigned char*)m_image +
+                                      (dHandle->output_scanline) * m_stride;
+                    jpeg_read_scanlines(dHandle, buffer_array, 1);
+                    break;
+                }
+            } else {
+                while (dHandle->output_scanline < dHandle->output_height) {
+                    buffer_array[0] = (unsigned char*)m_image +
+                                      (dHandle->output_scanline) * m_stride;
+                    jpeg_read_scanlines(dHandle, buffer_array, 1);
+                    break;
+                }
+            }
+            free(m_image);
+            m_image = nullptr;
+            return;
+        }
+
         dstSize = m_stride * m_height;
         m_image = malloc(dstSize);
 
@@ -530,12 +563,12 @@ private:
                                __LINE__);
             return;
         }
-        decodeJPG(&dHandle, srcBuf, jpegSize);
+        decodeJPG(&dHandle, srcBuf, jpegSize, true);
         jpeg_destroy_decompress(&dHandle);
         free(srcBuf);
     }
 
-    void readJPGBufferedInput(const char* buf, size_t len)
+    void readJPGBufferedInput(const char* buf, size_t len, bool needsDecoding)
     {
         jpeg_decompress_struct dHandle;
         custom_error_mgr jerr;
@@ -559,12 +592,13 @@ private:
 
         jpeg_create_decompress(&dHandle);
 
-        decodeJPG(&dHandle, (unsigned char*)buf, len);
+        decodeJPG(&dHandle, (unsigned char*)buf, len, needsDecoding);
         jpeg_destroy_decompress(&dHandle);
     }
 #else
     // https://stackoverflow.com/questions/45809347/how-to-decode-jpeg-using-win32
-    bool Win32DecodeJpeg(void* ImageData, unsigned int ImageDataSize)
+    bool Win32DecodeJpeg(void* ImageData, unsigned int ImageDataSize,
+                         bool needsDecoding)
     {
         // IWICImagingFactory is a structure containing the function pointers of
         // the WIC API
@@ -632,41 +666,43 @@ private:
         if (Bitmap->GetSize(&Width, &Height) != S_OK) {
             return false;
         }
-        WICRect Rect = { 0, 0, (int)Width, (int)Height };
-
-        IWICBitmapLock* Lock;
-        // this is the function that does the actual decoding. seems like they
-        // defer the decoding until it's actually needed
-        if (Bitmap->Lock(&Rect, WICBitmapLockRead, &Lock) != S_OK) {
-            return false;
-        }
-
-        unsigned int PixelDataSize = 0;
-        unsigned char* PixelData;
-        if (Lock->GetDataPointer(&PixelDataSize, &PixelData) != S_OK) {
-            return false;
-        }
-
         m_image = (unsigned char*)malloc(Width * Height * 4);
         m_width = Width;
         m_height = Height;
         m_stride = Width * 4;
         m_hasTransparentPixel = true;
 
-        memcpy(m_image, PixelData, PixelDataSize);
+        if (needsDecoding) {
+            WICRect Rect = { 0, 0, (int)Width, (int)Height };
+            IWICBitmapLock* Lock;
+            // this is the function that does the actual decoding. seems like
+            // they
+            // defer the decoding until it's actually needed
+            if (Bitmap->Lock(&Rect, WICBitmapLockRead, &Lock) != S_OK) {
+                return false;
+            }
+
+            unsigned int PixelDataSize = 0;
+            unsigned char* PixelData;
+            if (Lock->GetDataPointer(&PixelDataSize, &PixelData) != S_OK) {
+                return false;
+            }
+
+            memcpy(m_image, PixelData, PixelDataSize);
+            Lock->Release();
+        }
 
         Stream->Release();
         BitmapDecoder->Release();
         FrameDecode->Release();
         FormatConverter->Release();
         Bitmap->Release();
-        Lock->Release();
 
         return true;
     }
-    void decodeJPG(unsigned char* buf, const int size)
+    void decodeJPG(unsigned char* buf, const int size, bool needsDecoding)
     {
-        Win32DecodeJpeg(buf, size);
+        Win32DecodeJpeg(buf, size, needsDecoding);
     }
     void readJPGFile(FILE* fp)
     {
@@ -686,9 +722,9 @@ private:
         decodeJPG(srcBuf, jpegSize);
     }
 
-    void readJPGBufferedInput(const char* buf, size_t len)
+    void readJPGBufferedInput(const char* buf, size_t len, bool needsDecoding)
     {
-        decodeJPG((unsigned char*)buf, len);
+        decodeJPG((unsigned char*)buf, len, needsDecoding);
     }
 #endif
     typedef struct {
@@ -729,7 +765,8 @@ private:
     }
 
     void readGIFFileOrBufferedInput(String* localImageSrc,
-                                    const char* bufferedInput)
+                                    const char* bufferedInput,
+                                    bool needsDecoding)
     {
         int row = 0, col = 0;
         int width = 0, height = 0;
@@ -773,116 +810,120 @@ private:
 
         m_width = gifFile->SWidth;
         m_height = gifFile->SHeight;
-
-        screenBuffer = (GifRowType*)malloc(m_height * sizeof(GifRowType));
-        if (screenBuffer == NULL) {
-            STARFISH_LOG_ERROR("Gif Open Error: malloc failed\n");
-            return;
-        }
-
-        size = m_width * sizeof(GifPixelType);
         m_stride = m_width * 4;
-        screenBuffer[0] = (GifRowType)calloc(1, size);
 
-        for (i = 0; i < (int)(m_width); i++) {
-            screenBuffer[0][i] = gifFile->SBackGroundColor;
-        }
-
-        for (i = 1; i < (int)(m_height); i++) {
-            screenBuffer[i] = (GifRowType)calloc(1, size);
-            memcpy(screenBuffer[i], screenBuffer[0], size);
-        }
-
-        int transparentIndex = -1;
-        do {
-            DGifGetRecordType(gifFile, &recordType);
-            switch (recordType) {
-            case IMAGE_DESC_RECORD_TYPE:
-                DGifGetImageDesc(gifFile);
-
-                row = gifFile->Image.Top;
-                col = gifFile->Image.Left;
-                width = gifFile->Image.Width;
-                height = gifFile->Image.Height;
-
-                imageNum++;
-
-                if (gifFile->Image.Interlace) {
-                    int interlacedOffset[] = { 0, 4, 2, 1 };
-                    int interlacedJumps[] = { 8, 8, 4, 2 };
-                    for (i = 0; i < 4; i++)
-                        for (j = row + interlacedOffset[i]; j < row + height;
-                             j += interlacedJumps[i]) {
-                            DGifGetLine(gifFile, &screenBuffer[j][col], width);
-                        }
-                } else {
-                    for (i = 0; i < height; i++) {
-                        DGifGetLine(gifFile, &screenBuffer[row++][col], width);
-                    }
-                }
-                break;
-            case EXTENSION_RECORD_TYPE: {
-                GifByteType* extension = nullptr;
-                DGifGetExtension(gifFile, &extCode, &extension);
-                while (extension != nullptr) {
-                    if (extension[0] == 4) {
-                        const int flags = extension[1];
-                        if ((flags & 0x01)) {
-                            transparentIndex = extension[4];
-                        }
-                    }
-                    DGifGetExtensionNext(gifFile, &extension);
-                }
-            } break;
-            case TERMINATE_RECORD_TYPE:
-                break;
-            default:
-                break;
+        if (needsDecoding) {
+            screenBuffer = (GifRowType*)malloc(m_height * sizeof(GifRowType));
+            if (screenBuffer == NULL) {
+                STARFISH_LOG_ERROR("Gif Open Error: malloc failed\n");
+                return;
             }
-            if (imageNum > 0) {
-                break;
+
+            size = m_width * sizeof(GifPixelType);
+            screenBuffer[0] = (GifRowType)calloc(1, size);
+
+            for (i = 0; i < (int)(m_width); i++) {
+                screenBuffer[0][i] = gifFile->SBackGroundColor;
             }
-        } while (recordType != TERMINATE_RECORD_TYPE);
 
-        colorMap = (gifFile->Image.ColorMap ? gifFile->Image.ColorMap
-                                            : gifFile->SColorMap);
+            for (i = 1; i < (int)(m_height); i++) {
+                screenBuffer[i] = (GifRowType)calloc(1, size);
+                memcpy(screenBuffer[i], screenBuffer[0], size);
+            }
 
-        if (colorMap == nullptr) {
-            STARFISH_LOG_ERROR("Gif Image does not have a colormap\n");
-            releaseGIFResource(gifFile, screenBuffer, m_height);
-            return;
-        }
+            int transparentIndex = -1;
+            do {
+                DGifGetRecordType(gifFile, &recordType);
+                switch (recordType) {
+                case IMAGE_DESC_RECORD_TYPE:
+                    DGifGetImageDesc(gifFile);
 
-        // Convert GIF to RGBA
-        GifRowType gifRow;
-        GifColorType* colorMapEntry = nullptr;
-        GifByteType* buffer = nullptr;
+                    row = gifFile->Image.Top;
+                    col = gifFile->Image.Left;
+                    width = gifFile->Image.Width;
+                    height = gifFile->Image.Height;
 
-        m_image = (void*)malloc(m_width * m_height * 4);
-        buffer = (GifByteType*)m_image;
-        for (unsigned long h = 0; h < m_height; h++) {
-            gifRow = screenBuffer[h];
-            for (unsigned long w = 0; w < m_width; w++) {
-                colorMapEntry = &colorMap->Colors[gifRow[w]];
+                    imageNum++;
 
-                if (gifRow[w] == transparentIndex) {
-                    *buffer++ = 0;
-                    *buffer++ = 0;
-                    *buffer++ = 0;
-                    *buffer++ = 0;
-                    m_hasTransparentPixel = true;
-                } else {
+                    if (gifFile->Image.Interlace) {
+                        int interlacedOffset[] = { 0, 4, 2, 1 };
+                        int interlacedJumps[] = { 8, 8, 4, 2 };
+                        for (i = 0; i < 4; i++)
+                            for (j = row + interlacedOffset[i];
+                                 j < row + height; j += interlacedJumps[i]) {
+                                DGifGetLine(gifFile, &screenBuffer[j][col],
+                                            width);
+                            }
+                    } else {
+                        for (i = 0; i < height; i++) {
+                            DGifGetLine(gifFile, &screenBuffer[row++][col],
+                                        width);
+                        }
+                    }
+                    break;
+                case EXTENSION_RECORD_TYPE: {
+                    GifByteType* extension = nullptr;
+                    DGifGetExtension(gifFile, &extCode, &extension);
+                    while (extension != nullptr) {
+                        if (extension[0] == 4) {
+                            const int flags = extension[1];
+                            if ((flags & 0x01)) {
+                                transparentIndex = extension[4];
+                            }
+                        }
+                        DGifGetExtensionNext(gifFile, &extension);
+                    }
+                } break;
+                case TERMINATE_RECORD_TYPE:
+                    break;
+                default:
+                    break;
+                }
+                if (imageNum > 0) {
+                    break;
+                }
+            } while (recordType != TERMINATE_RECORD_TYPE);
+
+            colorMap = (gifFile->Image.ColorMap ? gifFile->Image.ColorMap
+                                                : gifFile->SColorMap);
+
+            if (colorMap == nullptr) {
+                STARFISH_LOG_ERROR("Gif Image does not have a colormap\n");
+                releaseGIFResource(gifFile, screenBuffer, m_height);
+                return;
+            }
+
+            // Convert GIF to RGBA
+            GifRowType gifRow;
+            GifColorType* colorMapEntry = nullptr;
+            GifByteType* buffer = nullptr;
+
+            m_image = (void*)malloc(m_width * m_height * 4);
+            buffer = (GifByteType*)m_image;
+            for (unsigned long h = 0; h < m_height; h++) {
+                gifRow = screenBuffer[h];
+                for (unsigned long w = 0; w < m_width; w++) {
+                    colorMapEntry = &colorMap->Colors[gifRow[w]];
+
+                    if (gifRow[w] == transparentIndex) {
+                        *buffer++ = 0;
+                        *buffer++ = 0;
+                        *buffer++ = 0;
+                        *buffer++ = 0;
+                        m_hasTransparentPixel = true;
+                    } else {
 #ifdef STARFISH_ANDROID
-                    *buffer++ = colorMapEntry->Red;
-                    *buffer++ = colorMapEntry->Green;
-                    *buffer++ = colorMapEntry->Blue;
-                    *buffer++ = 255;
+                        *buffer++ = colorMapEntry->Red;
+                        *buffer++ = colorMapEntry->Green;
+                        *buffer++ = colorMapEntry->Blue;
+                        *buffer++ = 255;
 #else
-                    *buffer++ = colorMapEntry->Blue;
-                    *buffer++ = colorMapEntry->Green;
-                    *buffer++ = colorMapEntry->Red;
-                    *buffer++ = 255;
+                        *buffer++ = colorMapEntry->Blue;
+                        *buffer++ = colorMapEntry->Green;
+                        *buffer++ = colorMapEntry->Red;
+                        *buffer++ = 255;
 #endif
+                    }
                 }
             }
         }
@@ -891,7 +932,7 @@ private:
     }
 
     void decodeImage(FILE* fp, String* localImageSrc, const char* buf,
-                     size_t len)
+                     size_t len, bool needsDecoding = true)
     {
         m_hasTransparentPixel = false;
         ImageFormat imageFormat;
@@ -902,20 +943,21 @@ private:
         }
         switch (imageFormat) {
         case ImageFormat::PNG:
-            readPNGFileOrBufferedInput(fp, buf, len);
+            readPNGFileOrBufferedInput(fp, buf, len, needsDecoding);
             break;
         case ImageFormat::JPG:
             if (fp) {
                 readJPGFile(fp);
             } else {
-                readJPGBufferedInput(buf, len);
+                readJPGBufferedInput(buf, len, needsDecoding);
             }
             break;
         case ImageFormat::GIF:
             if (localImageSrc) {
-                readGIFFileOrBufferedInput(localImageSrc, nullptr);
+                readGIFFileOrBufferedInput(localImageSrc, nullptr,
+                                           needsDecoding);
             } else {
-                readGIFFileOrBufferedInput(nullptr, buf);
+                readGIFFileOrBufferedInput(nullptr, buf, needsDecoding);
             }
             break;
         default:
@@ -946,6 +988,7 @@ protected:
     size_t m_width;
     size_t m_stride;
     size_t m_height;
+    std::vector<unsigned char> m_inputBuffer;
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
     cairo_surface_t* m_imageSurface;
 #endif
@@ -960,10 +1003,12 @@ NativeImageData* NativeImageData::create(String* localImageSrc)
     return imageData;
 }
 
-NativeImageData* NativeImageData::create(const char* buf, size_t len)
+NativeImageData* NativeImageData::create(const char* buf, size_t len,
+                                         bool shouldDecodingInstantly)
 {
-    NativeImageData* imageData = new NativeImageDataMISC(buf, len);
-    if (imageData->data() == NULL) {
+    NativeImageData* imageData =
+        new NativeImageDataMISC(buf, len, shouldDecodingInstantly);
+    if (imageData->width() == 0 || imageData->height() == 0) {
         return NULL;
     }
     return imageData;
