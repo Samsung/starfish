@@ -285,9 +285,8 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
 
     HeaderResource* resource = document()->resourceLoader().fetchHeader(url);
     resource->addResourceClient(new HeaderResourceClient(cb, resource));
-    ResourceURL* rUrl = new ReferrerURL(document()->documentURI());
-    resource->request(Resource::ResourceRequestSyncLevel::NeverSync, rUrl, true,
-                      ResourceRequest::HEAD_METHOD);
+    resource->request(Resource::ResourceRequestSyncLevel::NeverSync,
+                      referrerURL, true, ResourceRequest::HEAD_METHOD);
 }
 
 void Location::replace(String* url)
