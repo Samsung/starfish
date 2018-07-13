@@ -306,7 +306,7 @@ void WindowImplGB::clearResources()
         starFish()->messageLoop()->removeIdler(m_renderingAnimator);
         m_renderingAnimator = SIZE_MAX;
     }
-    webView()->clearStackingContext(false);
+    webView()->clearStackingContext();
 }
 } // namespace StarFish
 #endif
