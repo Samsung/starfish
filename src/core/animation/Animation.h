@@ -412,7 +412,7 @@ public:
     void cancelAnimation(Element* target);
     void startIfNeeds();
     void stop();
-    void stopIfNeeds();
+    void stopIfNeeds(bool force = false);
     void step();
 
     void runPendingAnimation();

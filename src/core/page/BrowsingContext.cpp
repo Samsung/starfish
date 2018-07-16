@@ -126,7 +126,6 @@ void BrowsingContext::initFlags()
 void BrowsingContext::open(ResourceURL* url, HistoryManager::Action type,
                            ResourceURL* referrerURL)
 {
-    dispose();
     initFlags();
 
     m_isActive = true;
@@ -666,7 +665,7 @@ void BrowsingContext::dispose()
         }
 
         if (document()->animationExecutor()->isAlive()) {
-            document()->animationExecutor()->stopIfNeeds();
+            document()->animationExecutor()->stopIfNeeds(true);
         }
     }
 

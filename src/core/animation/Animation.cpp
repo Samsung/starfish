@@ -1085,6 +1085,8 @@ void AnimationExecutor::stop()
         return;
     }
     m_isAlive = false;
+    m_animationList.clear();
+    m_pendingAnimationInfoList.clear();
     auto& v = window()->webView()->m_activeAnimationExecutor;
     auto iter = std::find(v.begin(), v.end(), this);
     window()->webView()->m_activeAnimationExecutor.erase(iter);
@@ -1098,9 +1100,9 @@ void AnimationExecutor::stop()
     }
 }
 
-void AnimationExecutor::stopIfNeeds()
+void AnimationExecutor::stopIfNeeds(bool force)
 {
-    if (m_animationList.size() == 0) {
+    if (m_animationList.size() == 0 || force) {
         stop();
     }
 }

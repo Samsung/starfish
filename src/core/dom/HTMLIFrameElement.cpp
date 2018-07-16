@@ -223,6 +223,9 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
         if (!rUrl->isReferrerURL()) {
             rUrl = new ReferrerURL(rUrl, referrerPolicy());
         }
+        if (m_browsingContext) {
+            m_browsingContext->dispose();
+        }
         m_browsingContext = BrowsingContext::create(this);
         m_browsingContext->setName(nameAttr());
         m_browsingContext->open(url, type, rUrl);
