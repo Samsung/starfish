@@ -112,21 +112,21 @@ static bool parseArguments(FilterFunctionType type, const CSSTokenValue& from,
                            CSSStyleValuePair& result)
 {
     switch (type) {
-    case BlurFilterFunctionType:
+    case FilterFunctionType::BlurFilterFunctionType:
         return parseLengthFilter(from.trim(), result);
-    case DropShadowFilterFunctionType:
+    case FilterFunctionType::DropShadowFilterFunctionType:
         return parseDropShadowFilter(from, result);
-    case HueRotateFilterFunctionType:
+    case FilterFunctionType::HueRotateFilterFunctionType:
         return parseAngleFilter(from.trim(), result);
-    case BrightnessFilterFunctionType:
-    case ContrastFilterFunctionType:
-    case GrayScaleFilterFunctionType:
-    case InvertFilterFunctionType:
-    case OpacityFilterFunctionType:
-    case SaturateFilterFunctionType:
-    case SepiaFilterFunctionType:
+    case FilterFunctionType::BrightnessFilterFunctionType:
+    case FilterFunctionType::ContrastFilterFunctionType:
+    case FilterFunctionType::GrayScaleFilterFunctionType:
+    case FilterFunctionType::InvertFilterFunctionType:
+    case FilterFunctionType::OpacityFilterFunctionType:
+    case FilterFunctionType::SaturateFilterFunctionType:
+    case FilterFunctionType::SepiaFilterFunctionType:
         return parseNumberOrPercentageFilter(from.trim(), result);
-    case SVGUrlFilterFunctionType:
+    case FilterFunctionType::SVGUrlFilterFunctionType:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
         break;
     }
@@ -144,7 +144,7 @@ const char* CSSFilterFunction::typeToString(FilterFunctionType type)
 
 String* CSSFilterFunction::toString() const
 {
-    if (m_type == SVGUrlFilterFunctionType) {
+    if (m_type == FilterFunctionType::SVGUrlFilterFunctionType) {
         return m_data.toString();
     }
     StringBuilder result;
@@ -159,7 +159,8 @@ CSSFilterFunction* CSSFilterFunction::parse(const CSSTokenValue& from)
 {
     CSSStyleValuePair item;
     if (CSSPropertyParser::parseUrl(from.data(), &item)) {
-        return new CSSFilterFunction(SVGUrlFilterFunctionType, item);
+        return new CSSFilterFunction(
+            FilterFunctionType::SVGUrlFilterFunctionType, item);
     }
 
     CSSTokenValue token = from;

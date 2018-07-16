@@ -140,6 +140,48 @@ void* ComputedStyle::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+bool ComputedStyle::hasFilter()
+{
+    if (!m_rareComputedStyleData.m_styles.size()) {
+        return false;
+    }
+
+    return m_rareComputedStyleData.filter() != nullptr &&
+           m_rareComputedStyleData.filter()->size();
+}
+
+bool ComputedStyle::hasAvailableFilter()
+{
+    if (!hasFilter()) {
+        return false;
+    }
+
+    for (auto filer : *(m_rareComputedStyleData.filter())) {
+        switch (filer->type()) {
+        case FilterFunctionType::BlurFilterFunctionType:
+            if (!(static_cast<BlurFilterFunction*>(filer)
+                      ->standardDeviation()
+                      .isZero())) {
+                return true;
+            }
+            break;
+        case FilterFunctionType::DropShadowFilterFunctionType:
+        case FilterFunctionType::HueRotateFilterFunctionType:
+        case FilterFunctionType::BrightnessFilterFunctionType:
+        case FilterFunctionType::ContrastFilterFunctionType:
+        case FilterFunctionType::GrayScaleFilterFunctionType:
+        case FilterFunctionType::InvertFilterFunctionType:
+        case FilterFunctionType::OpacityFilterFunctionType:
+        case FilterFunctionType::SaturateFilterFunctionType:
+        case FilterFunctionType::SVGUrlFilterFunctionType:
+        default:
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            break;
+        }
+    }
+    return false;
+}
+
 bool ComputedStyle::hasTransforms(Frame* frame)
 {
     return transforms(frame) != nullptr;
@@ -2303,7 +2345,17 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         if ((!newFilter || !oldFilter) || !oldFilter->compare(newFilter)) {
             damagedKeys[CSSStyleValuePair::KeyKind::Filter] = true;
             damage = (ComputedStyleDamage)(
-                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+                ComputedStyleDamage::ComputedStyleDamagePainting |
+                ComputedStyleDamage::
+                    ComputedStyleDamageComputeStackingContextProperties |
+                damage);
+            if (newStyle->hasAvailableFilter() !=
+                oldStyle->hasAvailableFilter()) {
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamage::
+                        ComputedStyleDamageEstablishesStackingContext |
+                    damage);
+            }
         }
     }
 

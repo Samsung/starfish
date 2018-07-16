@@ -661,6 +661,8 @@ public:
             return true;
         } else if (style()->opacity() != 1 || isRunningOpacityAnimation()) {
             return true;
+        } else if (style()->hasAvailableFilter()) {
+            return true;
         }
         return false;
     }

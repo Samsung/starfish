@@ -30,18 +30,18 @@ FilterFunction* FilterFunction::create(const CSSFilterFunction& from)
 {
     FilterFunctionType type = from.type();
     switch (type) {
-    case BlurFilterFunctionType:
+    case FilterFunctionType::BlurFilterFunctionType:
         return new BlurFilterFunction(from);
-    case DropShadowFilterFunctionType:
-    case HueRotateFilterFunctionType:
-    case BrightnessFilterFunctionType:
-    case ContrastFilterFunctionType:
-    case GrayScaleFilterFunctionType:
-    case InvertFilterFunctionType:
-    case OpacityFilterFunctionType:
-    case SaturateFilterFunctionType:
-    case SepiaFilterFunctionType:
-    case SVGUrlFilterFunctionType:
+    case FilterFunctionType::DropShadowFilterFunctionType:
+    case FilterFunctionType::HueRotateFilterFunctionType:
+    case FilterFunctionType::BrightnessFilterFunctionType:
+    case FilterFunctionType::ContrastFilterFunctionType:
+    case FilterFunctionType::GrayScaleFilterFunctionType:
+    case FilterFunctionType::InvertFilterFunctionType:
+    case FilterFunctionType::OpacityFilterFunctionType:
+    case FilterFunctionType::SaturateFilterFunctionType:
+    case FilterFunctionType::SepiaFilterFunctionType:
+    case FilterFunctionType::SVGUrlFilterFunctionType:
         return new UnsupportedFilterFunction(type);
     }
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -57,7 +57,7 @@ String* UnsupportedFilterFunction::toString() const
 
 CSSFilterFunction* UnsupportedFilterFunction::toCSSFilterFunction() const
 {
-    if (m_type == SVGUrlFilterFunctionType) {
+    if (m_type == FilterFunctionType::SVGUrlFilterFunctionType) {
         return new CSSFilterFunction(
             m_type,
             CSSStyleValuePair(CSSStyleValuePair::ValueKind::UrlValueKind,
@@ -85,7 +85,7 @@ String* BlurFilterFunction::toString() const
 CSSFilterFunction* BlurFilterFunction::toCSSFilterFunction() const
 {
     return new CSSFilterFunction(
-        BlurFilterFunctionType,
+        FilterFunctionType::BlurFilterFunctionType,
         CSSStyleValuePair(CSSStyleValuePair::ValueKind::Length,
                           CSSLength(m_stdDeviation.fixed())));
 }

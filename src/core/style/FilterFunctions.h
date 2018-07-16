@@ -75,7 +75,7 @@ public:
 class BlurFilterFunction : public FilterFunction {
 public:
     BlurFilterFunction(const Length& value)
-        : FilterFunction(BlurFilterFunctionType)
+        : FilterFunction(FilterFunctionType::BlurFilterFunctionType)
         , m_stdDeviation(value)
     {
     }
@@ -115,7 +115,7 @@ public:
 
     bool compare(const FilterFunction* b) const override
     {
-        if (!b || b->type() != BlurFilterFunctionType) {
+        if (!b || b->type() != FilterFunctionType::BlurFilterFunctionType) {
             return false;
         }
         return m_stdDeviation == ((BlurFilterFunction*)b)->standardDeviation();
@@ -125,7 +125,7 @@ private:
     Length m_stdDeviation;
 };
 
-class FilterFunctions : GCVector<FilterFunction*> {
+class FilterFunctions : public GCVector<FilterFunction*> {
 public:
     void checkComputed(Length currentFS, Length rootFS, Font* font,
                        LayoutSize windowSize, ComputedStyle* cs)

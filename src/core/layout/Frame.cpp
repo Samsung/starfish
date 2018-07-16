@@ -1085,6 +1085,24 @@ void Frame::computePaintingFlags(LayoutContext& ctx,
 
 void Frame::updatePaintingFlags(FrameBox* childStackingContextOwner)
 {
+    if (isInlineBoxLayoutParentBox()) {
+        auto inlineParent = asInlineBoxLayoutParentBox();
+        if (childStackingContextOwner->isInlineNonReplacedBox()) {
+            inlineParent->seenInlineBox(PaintingInlineStage::PaintingInlineBox);
+        } else if (childStackingContextOwner->isInlineTextBox()) {
+            inlineParent->seenInlineBox(PaintingInlineStage::PaintingInlineBox);
+        } else if (childStackingContextOwner->isAtomicInlineLevel() ||
+                   childStackingContextOwner->isFloating()) {
+            inlineParent->seenInlineBox(
+                PaintingInlineStage::PaintingAtomicInlineBoxButInlineReplaced);
+        } else if (childStackingContextOwner->isFrameReplaced()) {
+            inlineParent->seenInlineBox(
+                PaintingInlineStage::PaintingInlineReplaced);
+        } else {
+            inlineParent->seenInlineBox(PaintingInlineStage::PaintingInlineBox);
+        }
+    }
+
     if (childStackingContextOwner->m_flags.m_seenNormalFlowInline) {
         m_flags.m_seenNormalFlowInline = m_flags.m_seenNormalFlowInline;
         seenPaintingKind(PaintingKind::NormalFlowInline);
@@ -1249,6 +1267,7 @@ void Frame::computeStyleFlags()
         (position != PositionValue::StaticPositionValue);
     m_flags.m_isEstablishesStackingContext |= (style->opacity() != 1);
     m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
+    m_flags.m_isEstablishesStackingContext |= (style->hasAvailableFilter());
 
     // TODO add condition
     m_flags.m_needsGraphicsBuffer = (style->has3DTransforms(this));

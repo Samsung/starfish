@@ -106,6 +106,7 @@ public:
             if (!m_image) {
                 // fallback
                 m_image = malloc(m_stride * m_height);
+                memset(m_image, 0x00, m_stride * m_height);
             }
             initInternalSurface();
         }
