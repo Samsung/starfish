@@ -1282,6 +1282,9 @@ public:
                m_rareComputedStyleData.transforms()->size();
     }
 
+    bool hasFilter();
+    bool hasAvailableFilter();
+
     bool hasTransforms(Frame* frame);
     bool hasComplexTransforms(Frame* frame);
     bool has3DTransforms(Frame* frame);

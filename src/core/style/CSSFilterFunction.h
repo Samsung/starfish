@@ -21,7 +21,7 @@
 #define __StarFishCSSFilterFunction__
 
 namespace StarFish {
-enum FilterFunctionType ENSURE_ENUM_UNSIGNED {
+enum class FilterFunctionType : unsigned int {
     // NOTE Sequence is matter in CSSFilterFunction.cpp and FilterFunctions.cpp
     BlurFilterFunctionType = 0,
     DropShadowFilterFunctionType,
@@ -61,23 +61,23 @@ public:
 
     static bool isLengthType(FilterFunctionType type)
     {
-        return type == BlurFilterFunctionType;
+        return type == FilterFunctionType::BlurFilterFunctionType;
     }
 
     static bool isPercentType(FilterFunctionType type)
     {
-        return type >= BrightnessFilterFunctionType &&
-               type <= SepiaFilterFunctionType;
+        return type >= FilterFunctionType::BrightnessFilterFunctionType &&
+               type <= FilterFunctionType::SepiaFilterFunctionType;
     }
 
     static bool isDegreeType(FilterFunctionType type)
     {
-        return type == HueRotateFilterFunctionType;
+        return type == FilterFunctionType::HueRotateFilterFunctionType;
     }
 
     static bool isDropShadowDataType(FilterFunctionType type)
     {
-        return type >= DropShadowFilterFunctionType;
+        return type >= FilterFunctionType::DropShadowFilterFunctionType;
     }
 
 private:
