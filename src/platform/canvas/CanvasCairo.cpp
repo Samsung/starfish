@@ -283,8 +283,13 @@ public:
         cairo_clip(m_canvas);
     }
 
-    virtual void pixelSnappedClip(const LayoutRect& rt)
+    virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)
     {
+        if (rt.width() == 0 || rt.height() == 0) {
+            clip(Unit::Rect(0, 0, 0, 0));
+            return LayoutRect(0, 0, 0, 0);
+        }
+        LayoutRect deviceRect;
         cairo_matrix_t m;
         cairo_get_matrix(m_canvas, &m);
         double x = rt.x();
@@ -293,18 +298,24 @@ public:
         double maxX = rt.maxX();
         double maxY = rt.maxY();
 
-        cairo_matrix_transform_point(&m, &x, &y);
-        cairo_matrix_transform_point(&m, &maxX, &maxY);
+        int ix, iy, iMaxX, iMaxY;
 
+        cairo_matrix_transform_point(&m, &x, &y);
         cairo_user_to_device(m_canvas, &x, &y);
-        x = floor(x) - 1;
-        y = floor(y) - 1;
+        ix = x = floor(x) - 1;
+        iy = y = floor(y) - 1;
         cairo_device_to_user(m_canvas, &x, &y);
 
+        cairo_matrix_transform_point(&m, &maxX, &maxY);
         cairo_user_to_device(m_canvas, &maxX, &maxY);
-        x = ceil(x) + 1;
-        y = ceil(y) + 1;
+        iMaxX = maxX = ceil(maxX) + 1;
+        iMaxY = maxY = ceil(maxY) + 1;
         cairo_device_to_user(m_canvas, &maxX, &maxY);
+
+        deviceRect.setX(std::min(ix, iMaxX));
+        deviceRect.setY(std::min(iy, iMaxY));
+        deviceRect.setWidth(std::abs(iMaxX - ix));
+        deviceRect.setHeight(std::abs(iMaxY - iy));
 
         cairo_matrix_t m2;
         cairo_matrix_init_identity(&m2);
@@ -316,6 +327,8 @@ public:
         cairo_line_to(m_canvas, x, y);
         cairo_clip(m_canvas);
         cairo_set_matrix(m_canvas, &m);
+
+        return deviceRect;
     }
 
     virtual void setColor(const Unit::Color& clr_)

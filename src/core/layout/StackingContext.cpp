@@ -992,6 +992,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 
     bool hasGraphicsBuffer = needsGraphicsBuffer();
     LayoutRect oldLayerClipRect = ctx.layerClipRect;
+    LayoutRect deviceLayerClipRect;
     if (hasGraphicsBuffer) {
         bool gotNewBuffer = false;
         if (m_rareData->m_buffer == nullptr ||
@@ -1050,8 +1051,8 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         float dpr = m_owner->node()->starFish()->screenInfo().devicePixelRatio;
         bool needsInitialClip = false;
         ctx.layerClipRect =
-            LayoutRect(0, 0, m_rareData->m_buffer->imageWidth() / dpr,
-                       m_rareData->m_buffer->imageHeight() / dpr);
+            LayoutRect(0, 0, m_rareData->m_buffer->bufferWidth(),
+                       m_rareData->m_buffer->bufferHeight());
 
         bool isOverlappedWithScreenClipRect =
             ctx.screenClipRect.intersects(m_screenExtent);
@@ -1090,7 +1091,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 
         canvas->translate(-minX, -minY);
         if (needsInitialClip) {
-            canvas->pixelSnappedClip(ctx.layerClipRect);
+            deviceLayerClipRect = canvas->pixelSnappedClip(ctx.layerClipRect);
         }
 
         canvas->clearColor(Unit::Color(0, 0, 0, 0));
@@ -1309,6 +1310,27 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 
     canvas->restore();
     if (hasGraphicsBuffer) {
+        if (deviceLayerClipRect.x() < 0) {
+            deviceLayerClipRect.setX(0);
+        }
+        if (deviceLayerClipRect.y() < 0) {
+            deviceLayerClipRect.setY(0);
+        }
+        if ((int)deviceLayerClipRect.width() >
+            (int)m_rareData->m_buffer->bufferWidth()) {
+            deviceLayerClipRect.setWidth(m_rareData->m_buffer->bufferWidth());
+        }
+        if ((int)deviceLayerClipRect.height() >
+            (int)m_rareData->m_buffer->bufferHeight()) {
+            deviceLayerClipRect.setHeight(m_rareData->m_buffer->bufferHeight());
+        }
+        if ((bool)deviceLayerClipRect.width() ||
+            (bool)deviceLayerClipRect.height()) {
+            m_rareData->m_buffer->notifyUpdateRegion(
+                (int)deviceLayerClipRect.x(), (int)deviceLayerClipRect.y(),
+                (int)deviceLayerClipRect.width(),
+                (int)deviceLayerClipRect.height());
+        }
         delete canvas;
     }
 

@@ -169,8 +169,20 @@ public:
                                  const std::string&, long)>& cb);
 
     void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
+
+    struct RenderResult {
+        size_t updatedX;
+        size_t updatedY;
+        size_t updatedWidth;
+        size_t updatedHeight;
+
+        void* updatedBufferAddress;
+        size_t bufferImageWidth;
+        size_t bufferImageHeight;
+    };
     void RegisterOnRenderedHandler(
-        const std::function<void(LWE::WebContainer*, void*)>& cb);
+        const std::function<void(LWE::WebContainer*,
+                                 const RenderResult& renderResult)>& cb);
 
     void SetUserAgentString(const std::string& userAgent);
     void SetCacheMode(int mode);

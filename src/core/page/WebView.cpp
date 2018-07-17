@@ -953,6 +953,33 @@ RenderResult WebView::rendering(bool force)
                 m_rootStackingContext->paintStackingContext(nullptr, ctx);
             }
 
+            LayoutRect screen(0, 0, starFish()->platformWindow()->width(),
+                              starFish()->platformWindow()->height());
+            LayoutRect rt = renderResult.updateRect;
+            if (rt.x() < 0) {
+                if (rt.width() + rt.x() > 0) {
+                    rt.setWidth(rt.width() + rt.x());
+                } else {
+                    rt.setWidth(0);
+                }
+                rt.setX(0);
+            }
+            if (rt.y() < 0) {
+                if (rt.height() + rt.y() > 0) {
+                    rt.setHeight(rt.height() + rt.y());
+                } else {
+                    rt.setHeight(0);
+                }
+                rt.setY(0);
+            }
+            if (rt.maxX() > screen.maxX()) {
+                rt.setWidth((rt.width() - (rt.maxX() - screen.maxX())).abs());
+            }
+            if (rt.maxY() > screen.maxY()) {
+                rt.setHeight((rt.height() - (rt.maxY() - screen.maxY())).abs());
+            }
+            renderResult.updateRect = rt;
+
             refHolder = std::move(prevDrawnStackingContextInfo);
         }
 
@@ -1115,6 +1142,10 @@ void WebView::initRenderingFlags()
     m_needsRendering = false;
     m_needsPainting = false;
     m_needsComposite = false;
+
+    m_paintingDirtyRect =
+        LayoutRect(0, 0, starFish()->platformWindow()->width(),
+                   starFish()->platformWindow()->height());
 }
 
 Node* WebView::focusedNode()

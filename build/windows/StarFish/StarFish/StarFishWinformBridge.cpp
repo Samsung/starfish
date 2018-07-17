@@ -32,12 +32,21 @@
 namespace StarFish {
 
 __declspec(thread) extern bool g_postLogMessageToThreadMessageQueue;
-__declspec(thread) size_t g_frameNumber;
 
-extern "C" uint32_t STARFISH_EXPORT __stdcall drawingBufferFrameNumber(
-    size_t webViewInstance)
+struct WinfomRenderResult {
+    uint32_t x;
+    uint32_t y;
+    uint32_t width;
+    uint32_t height;
+};
+__declspec(thread) WinfomRenderResult* g_renderResult;
+
+extern "C" size_t STARFISH_EXPORT __stdcall getRenderResult(size_t webViewInstance)
 {
-    return g_frameNumber;
+    LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
+    auto ret = g_renderResult;
+    g_renderResult = nullptr;
+    return (size_t)ret;
 }
 
 extern "C" size_t STARFISH_EXPORT __stdcall createWebViewInstance(
@@ -58,8 +67,13 @@ extern "C" size_t STARFISH_EXPORT __stdcall createWebViewInstance(
         memcpy(buffer, url.data(), url.size());
         PostMessage(NULL, 0x0408, (WPARAM)buffer, url.size());
     });
-    wv->RegisterOnRenderedHandler([](LWE::WebContainer* wv, void*) {
-        g_frameNumber++;
+    wv->RegisterOnRenderedHandler([](LWE::WebContainer* wv, const LWE::WebContainer::RenderResult& result) {
+        WinfomRenderResult* r = new (LocalAlloc(LMEM_FIXED, sizeof (WinfomRenderResult))) WinfomRenderResult();
+        r->x = result.updatedX;
+        r->y = result.updatedY;
+        r->width = result.updatedWidth;
+        r->height = result.updatedHeight;
+        g_renderResult = r;
     });
     return (size_t)wv;
 }
