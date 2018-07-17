@@ -400,7 +400,6 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
             if (child->isEstablishesBlockFormattingContext()) {
                 child->layout(ctx, ResolveAll);
             } else {
-                child->computePaintingFlags(ctx, ResolveAll);
                 child->quickLayout(ctx);
             }
 
@@ -442,7 +441,7 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
             lCtx.registerInlineContent(nullptr);
             m_lineBoxes[i]->coordinateVerticalProperties(&lCtx, 0);
         }
-        registerRelativePositionedBoxesAndMarkPaintFlag(ctx);
+        registerRelativePositionedBoxes(ctx);
     }
 
     if (!isEstablishesBlockFormattingContext()) {
@@ -454,8 +453,6 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
 void FrameBlockBox::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
-    computePaintingFlags(ctx, resolveWhat);
-
     BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
     FrameBox* cb = containingBlock(this);
     LayoutUnit parentContentWidth = cb->contentWidth();
@@ -780,19 +777,21 @@ InlineNonReplacedBox* FrameBlockBox::firstInlineNonReplacedBox(FrameInline* f)
     return ret;
 }
 
-void FrameBlockBox::establishesStackingContextIfNeeds()
+void FrameBlockBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
 {
-    FrameBox::establishesStackingContextIfNeeds();
+    FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags();
 
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
-            child->establishesStackingContextIfNeeds();
+            child->establishesStackingContextIfNeedsAndComputingPaintingFlags();
             child = child->next();
         }
     } else {
+        markSeenNormalFlowInline();
         for (size_t i = 0; i < m_lineBoxes.size(); i++) {
-            m_lineBoxes[i]->establishesStackingContextIfNeeds();
+            m_lineBoxes[i]
+                ->establishesStackingContextIfNeedsAndComputingPaintingFlags();
         }
     }
 }

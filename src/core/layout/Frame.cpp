@@ -1052,72 +1052,24 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_needsPainting = true;
 }
 
-void Frame::computePaintingFlags(LayoutContext& ctx,
-                                 LayoutWantToResolve resolveWhat)
+void Frame::computePaintingFlags()
 {
-    if (resolveWhat & LayoutWantToResolve::ResolveWidth) {
-        m_flags.m_seenNormalFlowBlockChild = false;
-        m_flags.m_seenNonPositionedFloats = false;
-        m_flags.m_seenReplacedBlock = false;
-        m_flags.m_seenNormalFlowInline = false;
+    PaintingKind kind;
+
+    if (isInlineLevel() || isFlexItem()) {
+        kind = NormalFlowInline;
+    } else if (isFloating()) {
+        kind = NonPositionedFloats;
+    } else if (isBlockLevel() && isFrameReplaced()) {
+        kind = ReplacedBlock;
+    } else {
+        kind = NormalFlowBlockChild;
     }
 
-    if (resolveWhat & LayoutWantToResolve::ResolveHeight) {
-        PaintingKind kind;
-
-        if (isInlineLevel() || isFlexItem()) {
-            kind = NormalFlowInline;
-        } else if (isFloating()) {
-            kind = NonPositionedFloats;
-        } else if (isBlockLevel() && isFrameReplaced()) {
-            kind = ReplacedBlock;
-        } else {
-            kind = NormalFlowBlockChild;
-        }
-
-        seenPaintingKind(kind);
-        if (kind != NormalFlowInline && isFrameBlockBox() &&
-            !asFrameBlockBox()->hasBlockFlow()) {
-            seenPaintingKind(NormalFlowInline);
-        }
-    }
-}
-
-void Frame::updatePaintingFlags(FrameBox* childStackingContextOwner)
-{
-    if (isInlineBoxLayoutParentBox()) {
-        auto inlineParent = asInlineBoxLayoutParentBox();
-        if (childStackingContextOwner->isInlineNonReplacedBox()) {
-            inlineParent->seenInlineBox(PaintingInlineStage::PaintingInlineBox);
-        } else if (childStackingContextOwner->isInlineTextBox()) {
-            inlineParent->seenInlineBox(PaintingInlineStage::PaintingInlineBox);
-        } else if (childStackingContextOwner->isAtomicInlineLevel() ||
-                   childStackingContextOwner->isFloating()) {
-            inlineParent->seenInlineBox(
-                PaintingInlineStage::PaintingAtomicInlineBoxButInlineReplaced);
-        } else if (childStackingContextOwner->isFrameReplaced()) {
-            inlineParent->seenInlineBox(
-                PaintingInlineStage::PaintingInlineReplaced);
-        } else {
-            inlineParent->seenInlineBox(PaintingInlineStage::PaintingInlineBox);
-        }
-    }
-
-    if (childStackingContextOwner->m_flags.m_seenNormalFlowInline) {
-        m_flags.m_seenNormalFlowInline = m_flags.m_seenNormalFlowInline;
-        seenPaintingKind(PaintingKind::NormalFlowInline);
-    }
-    if (childStackingContextOwner->m_flags.m_seenNonPositionedFloats) {
-        m_flags.m_seenNonPositionedFloats = m_flags.m_seenNonPositionedFloats;
-        seenPaintingKind(PaintingKind::NonPositionedFloats);
-    }
-    if (childStackingContextOwner->m_flags.m_seenReplacedBlock) {
-        m_flags.m_seenReplacedBlock = m_flags.m_seenReplacedBlock;
-        seenPaintingKind(PaintingKind::ReplacedBlock);
-    }
-    if (childStackingContextOwner->m_flags.m_seenNormalFlowBlockChild) {
-        m_flags.m_seenNormalFlowBlockChild = m_flags.m_seenNormalFlowBlockChild;
-        seenPaintingKind(PaintingKind::NormalFlowBlockChild);
+    seenPaintingKind(kind);
+    if (kind != NormalFlowInline && isFrameBlockBox() &&
+        !asFrameBlockBox()->hasBlockFlow()) {
+        seenPaintingKind(NormalFlowInline);
     }
 }
 

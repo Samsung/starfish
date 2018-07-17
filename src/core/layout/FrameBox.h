@@ -792,7 +792,7 @@ public:
         return nullptr;
     }
 
-    virtual void establishesStackingContextIfNeeds();
+    virtual void establishesStackingContextIfNeedsAndComputingPaintingFlags();
     virtual void computeVisibleRect(Frame::ComputeVisibleRectContext& ctx);
 
     bool tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx);

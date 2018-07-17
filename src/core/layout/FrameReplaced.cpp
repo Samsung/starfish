@@ -373,8 +373,6 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
 void FrameReplaced::layout(LayoutContext& ctx,
                            Frame::LayoutWantToResolve resolveWhat)
 {
-    Frame::computePaintingFlags(ctx, resolveWhat);
-
     FrameBox* cb = containingBlock(this);
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         clearContentWidthDamaged();
