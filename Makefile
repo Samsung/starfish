@@ -1089,15 +1089,26 @@ reftest_all_cairo:
 	make web_platform_test_all_cairo
 	make vendor_test_all_cairo
 	make csswg_test_all_cairo
+	make web_platform_test_new_all_cairo
 
 bidi_test_cairo:
 	./tool/drivers/run_test.py bidi tool/reftest/cairo/bidi.res cairo --font-dep -p$(TEST_NPROCS)
 
-################################################################################
-
 react_test:
 	cd ./test/cairo/reftest/vendor/react/ && ./generator.py
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/react.res common -p$(TEST_NPROCS)
+
+################################################################################
+# Test-new Cairo backend
+################################################################################
+
+web_platform_test_new_css_cairo:
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_mediaqueries-3_dev.res cairo -p$(TEST_NPROCS)
+
+web_platform_test_new_all_cairo:
+	make web_platform_test_new_css_cairo
+
+################################################################################
 
 test_all:
 	make reftest_all
