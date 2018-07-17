@@ -1566,9 +1566,7 @@ public:
         NormalFlowInline,
         ReplacedBlock,
     };
-    virtual void computePaintingFlags(LayoutContext& ctx,
-                                      LayoutWantToResolve resolveWhat);
-    void updatePaintingFlags(FrameBox* childStackingContextOwner);
+    void computePaintingFlags();
     void seenPaintingKind(PaintingKind kind);
     void markSeenNormalFlowInline()
     {
@@ -1627,7 +1625,7 @@ public:
         return ret;
     }
 
-    virtual void establishesStackingContextIfNeeds()
+    virtual void establishesStackingContextIfNeedsAndComputingPaintingFlags()
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

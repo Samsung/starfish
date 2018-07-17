@@ -846,8 +846,6 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
                     box->layout(ctx->m_layoutContext,
                                 LayoutWantToResolve::ResolveAll);
                 } else {
-                    box->computePaintingFlags(ctx->m_layoutContext,
-                                              LayoutWantToResolve::ResolveAll);
                     box->quickLayout(ctx->m_layoutContext);
                 }
             }
@@ -1393,30 +1391,12 @@ void InlineBoxLayoutParentBox::coordinateVerticalProperties(
     }
 }
 
-void InlineBoxLayoutParentBox::registerRelativePositionedBoxesAndMarkPaintFlag(
+void InlineBoxLayoutParentBox::registerRelativePositionedBoxes(
     LayoutContext& ctx)
 {
     for (size_t k = 0; k < m_boxes.size(); k++) {
         FrameBox* childBox = m_boxes[k];
         STARFISH_ASSERT(childBox != nullptr);
-        childBox->markSeenNormalFlowInline();
-
-        if (!childBox->isEstablishesStackingContext()) {
-            if (childBox->isInlineNonReplacedBox()) {
-                seenInlineBox(PaintingInlineStage::PaintingInlineBox);
-            } else if (childBox->isInlineTextBox()) {
-                seenInlineBox(PaintingInlineStage::PaintingInlineBox);
-            } else if (childBox->isAtomicInlineLevel() ||
-                       childBox->isFloating()) {
-                seenInlineBox(PaintingInlineStage::
-                                  PaintingAtomicInlineBoxButInlineReplaced);
-            } else if (childBox->isFrameReplaced()) {
-                seenInlineBox(PaintingInlineStage::PaintingInlineReplaced);
-            } else {
-                seenInlineBox(PaintingInlineStage::PaintingInlineBox);
-            }
-        }
-
         if (!childBox->isFrameBlockBox()) {
             if (childBox->style()->position() ==
                 PositionValue::RelativePositionValue) {
@@ -1425,7 +1405,7 @@ void InlineBoxLayoutParentBox::registerRelativePositionedBoxesAndMarkPaintFlag(
 
             if (childBox->isInlineNonReplacedBox()) {
                 childBox->asInlineNonReplacedBox()
-                    ->registerRelativePositionedBoxesAndMarkPaintFlag(ctx);
+                    ->registerRelativePositionedBoxes(ctx);
             }
         }
     }
@@ -4025,13 +4005,12 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
         }
     }
 
-    registerRelativePositionedBoxesAndMarkPaintFlag(ctx);
+    registerRelativePositionedBoxes(ctx);
 
     return lineFormattingContext.contentHeightForBlock();
 }
 
-void FrameBlockBox::registerRelativePositionedBoxesAndMarkPaintFlag(
-    LayoutContext& ctx)
+void FrameBlockBox::registerRelativePositionedBoxes(LayoutContext& ctx)
 {
     auto iter = m_lineBoxes.begin();
 
@@ -4046,8 +4025,7 @@ void FrameBlockBox::registerRelativePositionedBoxesAndMarkPaintFlag(
             }
         }
 
-        lineBox->markSeenNormalFlowInline();
-        lineBox->registerRelativePositionedBoxesAndMarkPaintFlag(ctx);
+        lineBox->registerRelativePositionedBoxes(ctx);
         iter++;
     }
 }

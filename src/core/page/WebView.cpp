@@ -629,7 +629,7 @@ void WebView::layoutIfNeeds()
 
         m_topLevelBrowsingContext->document()
             ->frame()
-            ->establishesStackingContextIfNeeds();
+            ->establishesStackingContextIfNeedsAndComputingPaintingFlags();
         if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
             m_rootStackingContext = m_topLevelBrowsingContext->document()
                                         ->frame()

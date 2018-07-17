@@ -281,10 +281,32 @@ public:
         return m_boxes;
     }
 
-    virtual void establishesStackingContextIfNeeds() override
+    virtual void establishesStackingContextIfNeedsAndComputingPaintingFlags()
+        override
     {
         for (size_t i = 0; i < m_boxes.size(); i++) {
-            m_boxes[i]->establishesStackingContextIfNeeds();
+            auto childBox = m_boxes[i];
+
+            childBox->markSeenNormalFlowInline();
+
+            if (!childBox->isEstablishesStackingContext()) {
+                if (childBox->isInlineNonReplacedBox()) {
+                    seenInlineBox(PaintingInlineStage::PaintingInlineBox);
+                } else if (childBox->isInlineTextBox()) {
+                    seenInlineBox(PaintingInlineStage::PaintingInlineBox);
+                } else if (childBox->isAtomicInlineLevel() ||
+                           childBox->isFloating()) {
+                    seenInlineBox(PaintingInlineStage::
+                                      PaintingAtomicInlineBoxButInlineReplaced);
+                } else if (childBox->isFrameReplaced()) {
+                    seenInlineBox(PaintingInlineStage::PaintingInlineReplaced);
+                } else {
+                    seenInlineBox(PaintingInlineStage::PaintingInlineBox);
+                }
+            }
+
+            childBox
+                ->establishesStackingContextIfNeedsAndComputingPaintingFlags();
         }
     }
 
@@ -318,7 +340,7 @@ public:
     void layoutInlineBoxes(LineFormattingContext* ctx, LayoutUnit start);
     void coordinateVerticalProperties(LineFormattingContext* ctx,
                                       LayoutUnit yOffset);
-    void registerRelativePositionedBoxesAndMarkPaintFlag(LayoutContext& ctx);
+    void registerRelativePositionedBoxes(LayoutContext& ctx);
 
     void moveToNewLineBox(LineFormattingContext* ctx, FrameBox* box,
                           LineBox* lineBox);
@@ -497,11 +519,13 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth) override;
 #endif
-    virtual void establishesStackingContextIfNeeds() override
+    virtual void establishesStackingContextIfNeedsAndComputingPaintingFlags()
+        override
     {
-        FrameBox::establishesStackingContextIfNeeds();
+        FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags();
 
-        InlineBoxLayoutParentBox::establishesStackingContextIfNeeds();
+        InlineBoxLayoutParentBox::
+            establishesStackingContextIfNeedsAndComputingPaintingFlags();
     }
 
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(
@@ -792,7 +816,8 @@ public:
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(
         FrameInline* f) override;
 
-    virtual void establishesStackingContextIfNeeds() override;
+    virtual void establishesStackingContextIfNeedsAndComputingPaintingFlags()
+        override;
     virtual void computeVisibleRect(
         FrameBox::ComputeVisibleRectContext& ctx) override;
 
@@ -933,7 +958,7 @@ protected:
     void updateScrollWidthAndHeightIfNeeds();
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
-    void registerRelativePositionedBoxesAndMarkPaintFlag(LayoutContext& ctx);
+    void registerRelativePositionedBoxes(LayoutContext& ctx);
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
     void registerRelativePositionIfNeeds(LayoutContext& ctx);
 

@@ -3111,8 +3111,10 @@ void FrameBox::paintStackingContextContent(Canvas* canvas)
     paintChildrenWith(ctx);
 }
 
-void FrameBox::establishesStackingContextIfNeeds()
+void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
 {
+    computePaintingFlags();
+
     if (!isAnonymous()) {
         Node* nd = node();
         auto& info = nd->webView()->prevDrawnStackingContextInfo();

@@ -68,7 +68,8 @@ public:
     virtual void computeVisibleRect(
         FrameBox::ComputeVisibleRectContext& ctx) override;
 
-    virtual void establishesStackingContextIfNeeds() override;
+    virtual void establishesStackingContextIfNeedsAndComputingPaintingFlags()
+        override;
 
     void* operator new(size_t size)
     {

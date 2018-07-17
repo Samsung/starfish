@@ -93,9 +93,10 @@ void FrameReplacedIFrame::computeVisibleRect(
     }
 }
 
-void FrameReplacedIFrame::establishesStackingContextIfNeeds()
+void FrameReplacedIFrame::
+    establishesStackingContextIfNeedsAndComputingPaintingFlags()
 {
-    FrameReplaced::establishesStackingContextIfNeeds();
+    FrameReplaced::establishesStackingContextIfNeedsAndComputingPaintingFlags();
     HTMLIFrameElement* v = node()->asHTMLIFrameElement();
     if (v->browsingContext()) {
         if (v->browsingContext()->window()) {
@@ -103,7 +104,7 @@ void FrameReplacedIFrame::establishesStackingContextIfNeeds()
                 ->window()
                 ->document()
                 ->frame()
-                ->establishesStackingContextIfNeeds();
+                ->establishesStackingContextIfNeedsAndComputingPaintingFlags();
             v->browsingContext()
                 ->window()
                 ->document()
