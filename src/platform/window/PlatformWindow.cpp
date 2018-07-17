@@ -449,7 +449,7 @@ RenderResult PlatformWindow::rendering()
 {
     auto renderResult = webView()->rendering();
     if (renderResult.didPaintingOrCompositing && m_renderingFinishedCallback) {
-        m_renderingFinishedCallback();
+        m_renderingFinishedCallback(renderResult);
     }
     return renderResult;
 }

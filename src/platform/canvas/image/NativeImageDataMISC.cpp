@@ -720,7 +720,7 @@ private:
             return;
         }
 
-        decodeJPG(srcBuf, jpegSize);
+        decodeJPG(srcBuf, jpegSize, true);
     }
 
     void readJPGBufferedInput(const char* buf, size_t len, bool needsDecoding)

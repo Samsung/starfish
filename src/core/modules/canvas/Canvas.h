@@ -73,7 +73,9 @@ public:
     virtual void resize(size_t w, size_t h) = 0;
     virtual void clear() = 0;
     virtual void detachNativeBuffer() = 0;
-
+    virtual void notifyUpdateRegion(size_t x, size_t y, size_t w, size_t h)
+    {
+    }
     virtual ~CanvasSurface()
     {
     }
@@ -148,9 +150,10 @@ public:
     virtual void postMatrix(const SkMatrix& matrix) = 0;
 
     virtual void clip(const Unit::Rect& rt) = 0;
-    virtual void pixelSnappedClip(const LayoutRect& rt)
+    virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)
     {
         clip(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
+        return rt;
     }
 
     // reset transform matrix & clip

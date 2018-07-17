@@ -107,7 +107,8 @@ public:
 #endif
     }
 
-    void registerRenderingFinishedCallback(const std::function<void()>& cb)
+    void registerRenderingFinishedCallback(
+        const std::function<void(const RenderResult& renderResult)>& cb)
     {
         m_renderingFinishedCallback = cb;
     }
@@ -176,7 +177,8 @@ protected:
     WebView* m_webView;
     size_t m_idleCleanerTimerID;
 
-    std::function<void()> m_renderingFinishedCallback;
+    std::function<void(const RenderResult& renderResult)>
+        m_renderingFinishedCallback;
     std::function<void()> m_showSoftwareKeyboardIfPossibleCallback;
     std::function<void()> m_hideSoftwareKeyboardIfPossibleCallback;
 

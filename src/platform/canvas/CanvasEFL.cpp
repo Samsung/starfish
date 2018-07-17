@@ -411,9 +411,10 @@ public:
         return true;
     }
 
-    virtual void pixelSnappedClip(const LayoutRect& rt)
+    virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)
     {
         // this function is only used in partial clipping
+        return rt;
     }
 
     virtual void clip(const Unit::Rect& rt)
@@ -1655,6 +1656,7 @@ public:
         }
         evas_object_move(eo, xx, yy);
         evas_object_resize(eo, ww, hh);
+
         bool isVideoSurface = evas_object_data_get(eo, "video");
         if (m_eventLayer) {
             elm_box_pack_end(m_eventLayer, eo);

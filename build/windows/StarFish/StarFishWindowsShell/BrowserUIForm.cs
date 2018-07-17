@@ -175,15 +175,25 @@ namespace StarFishWindowsShell
             mConsole = null;
         }
 
-        public void onUpdateScreenBitmapDelegate(Bitmap bitmap)
+        public void onUpdateScreenBitmapDelegate(Bitmap bitmap, uint x, uint y, uint width, uint height)
         {
-            if (pictureBoxBrowserContent.Image != bitmap)
+            if (pictureBoxBrowserContent.Image == null || pictureBoxBrowserContent.Image.Width != bitmap.Width || pictureBoxBrowserContent.Image.Height != bitmap.Height)
             {
-                using (Image old = pictureBoxBrowserContent.Image)
+                Image old = pictureBoxBrowserContent.Image;
+                pictureBoxBrowserContent.Image = new Bitmap(bitmap.Width, bitmap.Height);
+                if (old != null)
                 {
-                    pictureBoxBrowserContent.Image = bitmap;
+                    old.Dispose();
                 }
             }
+
+            using (Graphics g = Graphics.FromImage(pictureBoxBrowserContent.Image))
+            {
+                var r = new Rectangle((int)x, (int)y, (int)width, (int)height);
+                g.DrawImage(bitmap, r, r, GraphicsUnit.Pixel);
+                pictureBoxBrowserContent.Refresh();
+            }
+            bitmap.Dispose();
         }
 
         public void onGotMessage(string msg, StarFish.MessageKind kind)
@@ -438,7 +448,7 @@ namespace StarFishWindowsShell
         [DllImport("StarFish.dll")]
         public static extern void resizeWindow(IntPtr mWebViewInstance, uint width, uint height, IntPtr buffer, uint stride);
         [DllImport("StarFish.dll")]
-        public static extern uint drawingBufferFrameNumber(IntPtr mWebViewInstance);
+        public static extern IntPtr getRenderResult(IntPtr mWebViewInstance);
         [DllImport("StarFish.dll")]
         public static extern void dispatchMouseDownEvent(IntPtr mWebViewInstance, float x, float y);
         [DllImport("StarFish.dll")]
@@ -489,7 +499,7 @@ namespace StarFishWindowsShell
 
         [DllImport("kernel32.dll")]
         static extern uint GetCurrentThreadId();
-        public delegate void ScreenBufferUpdated(Bitmap bitmap);
+        public delegate void ScreenBufferUpdated(Bitmap bitmap, uint x, uint y, uint width, uint height);
         public delegate void LoadPageStart(string url);
 
         public enum MessageKind
@@ -506,7 +516,6 @@ namespace StarFishWindowsShell
         uint mStarFishThreadID;
         Bitmap mScreenBitmap;
         BitmapData mScreenBitmapData;
-        uint mLastFrameNumber = uint.MaxValue;
         ArrayList mJSResultCallbackList;
         StarFishFontInitWaitForm mWaitingForm;
 
@@ -671,6 +680,15 @@ namespace StarFishWindowsShell
         void lockScreenBitmap()
         {
             mScreenBitmapData = mScreenBitmap.LockBits(new Rectangle(0, 0, mScreenBitmap.Width, mScreenBitmap.Height), ImageLockMode.WriteOnly, mScreenBitmap.PixelFormat);
+        }
+
+        [StructLayout(LayoutKind.Sequential)]
+        public struct WinfomRenderResult
+        {
+            public uint x;
+            public uint y;
+            public uint width;
+            public uint height;
         }
 
         private void WorkThread(Object o)
@@ -885,25 +903,30 @@ namespace StarFishWindowsShell
                 else
                 {
                     giveMessage(mWebViewInstance, msg);
-                    if (mLastFrameNumber != drawingBufferFrameNumber(mWebViewInstance))
+
+                    IntPtr renderResult = getRenderResult(mWebViewInstance);
+                    if (renderResult.ToInt32() != 0)
                     {
+                        WinfomRenderResult result = (WinfomRenderResult)Marshal.PtrToStructure(renderResult, typeof(WinfomRenderResult));
+                        LocalFree(renderResult);
+
                         try
                         {
                             mForm.Invoke(new CloseWaitingForm(OnCloseWaitingForm), new object[] { mWaitingForm });
-                        } catch(Exception e)
+                        }
+                        catch (Exception e)
                         {
 
                         }
-                        
-                        mLastFrameNumber = drawingBufferFrameNumber(mWebViewInstance);
+
                         mScreenBitmap.UnlockBits(mScreenBitmapData);
                         mScreenBitmapData = null;
-                        Bitmap newBitmap = new Bitmap(mScreenBitmap.Width, mScreenBitmap.Height, mScreenBitmap.PixelFormat);
+                        Bitmap newBitmap = new Bitmap(mScreenBitmap.Width, mScreenBitmap.Height, PixelFormat.Format32bppArgb);
                         try
                         {
                             lock (OnScreenBufferUpdate)
                             {
-                                mForm.Invoke(OnScreenBufferUpdate, new object[] { mScreenBitmap });
+                                mForm.Invoke(OnScreenBufferUpdate, new object[] { mScreenBitmap, result.x, result.y, result.width, result.height });
                             }
                         }
                         catch (Exception e)
@@ -915,7 +938,6 @@ namespace StarFishWindowsShell
                         lockScreenBitmap();
                         updateDrawingBufferAddress(mWebViewInstance, (uint)mScreenBitmap.Width, (uint)mScreenBitmap.Height, mScreenBitmapData.Scan0, (uint)mScreenBitmapData.Stride);
                     }
-
                 }
             }
             

@@ -459,15 +459,27 @@ size_t WebContainer::height()
 }
 
 void WebContainer::RegisterOnRenderedHandler(
-    const std::function<void(LWE::WebContainer*, void*)>& cb)
+    const std::function<void(LWE::WebContainer*,
+                             const LWE::WebContainer::RenderResult&)>& cb)
 {
     TO_STARFISH(m_starfish)
         ->platformWindow()
-        ->registerRenderingFinishedCallback([this, cb]() {
-            cb(this, TO_STARFISH(m_starfish)
-                         ->platformWindow()
-                         ->drawingBufferAddress());
-        });
+        ->registerRenderingFinishedCallback(
+            [this, cb](const StarFish::RenderResult& renderResult) {
+                LWE::WebContainer::RenderResult result;
+                result.updatedX = (int)renderResult.updateRect.x();
+                result.updatedY = (int)renderResult.updateRect.y();
+                result.updatedWidth = (int)renderResult.updateRect.width();
+                result.updatedHeight = (int)renderResult.updateRect.height();
+                result.updatedBufferAddress = TO_STARFISH(m_starfish)
+                                                  ->platformWindow()
+                                                  ->drawingBufferAddress();
+                result.bufferImageWidth =
+                    TO_STARFISH(m_starfish)->platformWindow()->width();
+                result.bufferImageHeight =
+                    TO_STARFISH(m_starfish)->platformWindow()->height();
+                cb(this, result);
+            });
 }
 
 void WebContainer::RegisterOnProgressChangedHandler(

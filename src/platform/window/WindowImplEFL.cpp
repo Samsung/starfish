@@ -399,11 +399,20 @@ public:
         m_inRendering = true;
         // ProfilerTimer renderingTimer(starFish(), "WindowImplEFL::rendering");
         RenderResult ret = PlatformWindow::rendering();
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+        if (ret.didPaintingOrCompositing &&
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-        if (ret.didPaintingOrCompositing && m_canvasAdpaterCairo) {
+            m_canvasAdpaterCairo)
+#elif defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+            canvasAdpaterSkia)
+#endif
+        {
+#if defined(PORT_COMPOSITOR_BACKEND_EFL)
             if (webView()->didCompositeBefore()) {
                 m_canRendering = false;
             } else {
+#endif
                 LayoutRect screen(0, 0, width(), height());
                 if (ret.updateRect.intersects(screen) ||
                     screen.containsInVisual(ret.updateRect.x(),
@@ -415,44 +424,21 @@ public:
                     screen.containsInVisual(ret.updateRect.maxX(),
                                             ret.updateRect.maxY())) {
                     LayoutRect rt = ret.updateRect;
-                    if (rt.x() < 0) {
-                        rt.setWidth(rt.width() + rt.x());
-                        rt.setX(0);
+                    if (rt.width() && rt.height()) {
+                        evas_object_image_data_update_add(
+                            m_canvasAdpater, rt.x(), rt.y(), rt.width(),
+                            rt.height());
+                        m_canRendering = false;
                     }
-                    if (rt.y() < 0) {
-                        rt.setHeight(rt.height() + rt.y());
-                        rt.setY(0);
-                    }
-                    if (rt.maxX() > screen.maxX()) {
-                        rt.setWidth(rt.width() - (rt.maxX() - screen.maxX()));
-                    }
-                    if (rt.maxY() > screen.maxY()) {
-                        rt.setHeight(rt.height() - (rt.maxY() - screen.maxY()));
-                    }
-                    evas_object_image_data_update_add(m_canvasAdpater, rt.x(),
-                                                      rt.y(), rt.width(),
-                                                      rt.height());
-                    /*
                     STARFISH_LOG_INFO(
                         "update efl window partial region %f %f %f %f\n",
                         (float)rt.x(), (float)rt.y(), (float)rt.width(),
                         (float)rt.height());
-                        */
-                    m_canRendering = false;
                 }
-                /*
-                int w, h;
-                evas_object_image_size_get(m_canvasAdpater, &w, &h);
-                evas_object_image_data_update_add(m_canvasAdpater, 0, 0, w, h);
-                */
+
+#if defined(PORT_COMPOSITOR_BACKEND_EFL)
             }
-        }
 #endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-        if (ret.didPaintingOrCompositing && m_canvasAdpaterSkia) {
-            evas_object_image_data_update_add(
-                m_canvasAdpater, ret.updateRect.x(), ret.updateRect.y(),
-                ret.updateRect.width(), ret.updateRect.height());
         }
 #endif
 #if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
@@ -561,9 +547,10 @@ public:
         m_pixelRatio = 1;
 
         attachNativeBuffer(w, h);
-        // STARFISH_LOG_INFO("create CanvasSurfaceEFL %p %p\n", this, m_image);
+        // STARFISH_LOG_INFO("create CanvasSurfaceEFL %p %p\n", this,
+        // m_image);
 
-        STARFISH_ASSERT(evas_object_visible_get(m_image) == EINA_FALSE);
+        evas_object_show(m_image);
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            CanvasSurfaceEFL* s =
@@ -573,6 +560,11 @@ public:
                                            s->detachNativeBuffer();
                                        },
                                        NULL, NULL, NULL);
+    }
+
+    virtual void notifyUpdateRegion(size_t x, size_t y, size_t w, size_t h)
+    {
+        evas_object_image_data_update_add(m_image, x, y, w, h);
     }
 
     void detachNative(Evas_Object* image)
@@ -1426,7 +1418,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         wnd->m_imfContext,
         [](void* data, Ecore_IMF_Context* ctx, char** text,
            int* cursor_pos) -> Eina_Bool {
-            // This callback will be called when the Input Method Context module
+            // This callback will be called when the Input Method Context
+            // module
             // requests the surrounding context.
             if (text)
                 *text = strdup("");
@@ -1859,7 +1852,8 @@ Canvas* WindowImplEFL::preparePainting()
                 height() / starFish()->screenInfo().devicePixelRatio);
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
             STARFISH_LOG_INFO(
-                "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "
+                "WindowImplEFL::preparePainting buffer info(screen shot) "
+                "%p -> "
                 "%p\n",
                 g_surfaceForScreehShot->data(),
                 g_surfaceForScreehShot->data() +
@@ -2074,7 +2068,8 @@ Compositor* WindowImplEFL::prepareCompositor()
                 height() / starFish()->screenInfo().devicePixelRatio);
 
             STARFISH_LOG_INFO(
-                "WindowImplEFL::preparePainting buffer info(screen shot) %p -> "
+                "WindowImplEFL::preparePainting buffer info(screen shot) "
+                "%p -> "
                 "%p\n",
                 g_surfaceForScreehShot->data(),
                 g_surfaceForScreehShot->data() +

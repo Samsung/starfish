@@ -236,8 +236,13 @@ public:
             SkRect::MakeXYWH(rt.x(), rt.y(), rt.width(), rt.height()));
     }
 
-    virtual void pixelSnappedClip(const LayoutRect& rt)
+    virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)
     {
+        if (rt.width() == 0 || rt.height() == 0) {
+            clip(Unit::Rect(0, 0, 0, 0));
+            return LayoutRect(0, 0, 0, 0);
+        }
+        LayoutRect deviceRect;
         double x = rt.x();
         double y = rt.y();
         double maxX = rt.maxX();
@@ -270,6 +275,12 @@ public:
         m_canvas->resetMatrix();
         m_canvas->clipPath(path);
         m_canvas->setMatrix(m);
+
+        deviceRect.setX(std::min(x, maxX));
+        deviceRect.setY(std::min(y, maxY));
+        deviceRect.setWidth(std::abs(maxX - x));
+        deviceRect.setHeight(std::abs(maxY - y));
+        return deviceRect;
     }
 
     virtual void setColor(const Unit::Color& clr)
