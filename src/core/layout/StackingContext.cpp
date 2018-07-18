@@ -25,6 +25,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "core/style/FilterFunctions.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
@@ -35,6 +36,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
+#include "core/modules/canvas/ShadowBlur.h"
 
 namespace StarFish {
 
@@ -968,6 +970,107 @@ void StackingContext::applyStackingContextProperties(
         m_needsGraphicsBuffer = false;
     }
 }
+class FilterContext : public gc {
+public:
+    FilterContext(Canvas** origin, StackingContext* owner)
+        : m_origin(origin)
+        , m_originCanvas(*origin)
+        , m_ownerStackingContext(owner)
+        , m_radius(0.0f)
+        , m_radiusOffset(0.0f)
+        , m_nativeImageToApplyFilter(nullptr)
+        , m_canvasToApplyFilter(nullptr)
+    {
+        auto style = m_ownerStackingContext->owner()->style();
+        for (auto filter : *(style->filter())) {
+            auto type = filter->type();
+            if (type == FilterFunctionType::BlurFilterFunctionType) {
+                m_radius = (static_cast<BlurFilterFunction*>(filter)
+                                ->standardDeviation()
+                                .numberData()) *
+                           2;
+                m_radiusOffset = m_radius * 1.5;
+            } else if (type ==
+                       FilterFunctionType::DropShadowFilterFunctionType) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+        }
+
+        if (!m_ownerStackingContext->needsGraphicsBuffer()) {
+            LayoutRect rect = m_ownerStackingContext->screenExtent();
+            LayoutUnit minX = rect.x();
+            LayoutUnit maxX = rect.maxX();
+            LayoutUnit minY = rect.y();
+            LayoutUnit maxY = rect.maxY();
+
+            minX = minX.floor();
+            maxX = maxX.ceil();
+            minY = minY.floor();
+            maxY = maxY.ceil();
+            size_t bufferWidth = (int)(maxX - minX);
+            size_t bufferHeight = (int)(maxY - minY);
+
+            m_nativeImageToApplyFilter =
+                NativeImageData::create(bufferWidth + ceil(m_radiusOffset),
+                                        bufferHeight + ceil(m_radiusOffset));
+
+            m_canvasToApplyFilter = Canvas::createGenericCanvas(
+                m_ownerStackingContext->owner()->node()->starFish(),
+                m_nativeImageToApplyFilter);
+
+            m_canvasToApplyFilter->clearColor(Unit::Color(0, 0, 0, 0));
+
+            m_canvasToApplyFilter->setFont(style->font());
+            m_canvasToApplyFilter->setColor(style->color());
+            m_canvasToApplyFilter->setTextDecorationData(
+                m_originCanvas->textDecorationData());
+
+            m_canvasToApplyFilter->translate(ceil(m_radiusOffset / 2),
+                                             ceil(m_radiusOffset / 2));
+
+            (*m_origin) = m_canvasToApplyFilter;
+        }
+    }
+
+    ~FilterContext()
+    {
+        if (m_ownerStackingContext->needsGraphicsBuffer()) {
+            const auto& info = m_originCanvas->renderTargetInfo();
+            ShadowBlur sb(info.m_buffer, info.m_width, info.m_height,
+                          info.m_stride);
+            sb.process(m_radius);
+
+        } else {
+            ShadowBlur sb(m_nativeImageToApplyFilter->data(),
+                          m_nativeImageToApplyFilter->width(),
+                          m_nativeImageToApplyFilter->height(),
+                          m_nativeImageToApplyFilter->stride());
+            sb.process(m_radius);
+
+            Unit::Rect rect(0, 0, m_nativeImageToApplyFilter->width(),
+                            m_nativeImageToApplyFilter->height());
+            float offset = ceil(m_radiusOffset / 2);
+
+            m_originCanvas->translate(-offset, -offset);
+            m_originCanvas->drawImage(m_nativeImageToApplyFilter, rect);
+            m_originCanvas->translate(offset, offset);
+
+            delete m_nativeImageToApplyFilter;
+            delete m_canvasToApplyFilter;
+            (*m_origin) = m_originCanvas;
+        }
+    }
+
+private:
+    Canvas** m_origin;
+    Canvas* m_originCanvas;
+    StackingContext* m_ownerStackingContext;
+    float m_radius;
+    float m_radiusOffset;
+
+    NativeImageData* m_nativeImageToApplyFilter;
+    Canvas* m_canvasToApplyFilter;
+};
 
 void StackingContext::paintStackingContext(Canvas* canvas,
                                            PaintingStackingContextContext& ctx)
@@ -975,6 +1078,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     PrevDrawnStackingContextInfo info;
     info.screenExtent = m_screenExtent;
 
+    FilterContext* filterContext = nullptr;
     Canvas* oldCanvas = nullptr;
     LayoutRect visibleRect = StackingContext::visibleRect();
     LayoutUnit minX = visibleRect.x();
@@ -1096,6 +1200,12 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         canvas->clearColor(Unit::Color(0, 0, 0, 0));
     } else {
         clearGraphicsBuffer();
+    }
+
+    if (owner()->style()->hasAvailableFilter()) {
+#ifdef STARFISH_ENABLE_CSS_FILTER
+        filterContext = new FilterContext(&canvas, this);
+#endif
     }
 
     {
@@ -1330,7 +1440,16 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                 (int)deviceLayerClipRect.width(),
                 (int)deviceLayerClipRect.height());
         }
+        if (filterContext) {
+            filterContext->~FilterContext();
+            filterContext = nullptr;
+        }
         delete canvas;
+    }
+
+    if (filterContext) {
+        filterContext->~FilterContext();
+        filterContext = nullptr;
     }
 
     m_owner->node()->webView()->prevDrawnStackingContextInfo().insert(

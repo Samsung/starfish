@@ -109,12 +109,17 @@ struct DrawImageInfo {
 };
 
 struct CanvasRenderTargetInfo {
+    uint8_t* m_buffer;
     size_t m_width;
     size_t m_height;
+    size_t m_stride;
 
-    CanvasRenderTargetInfo(size_t width = 0, size_t height = 0)
-        : m_width(width)
+    CanvasRenderTargetInfo(uint8_t* buffer = nullptr, size_t width = 0,
+                           size_t height = 0, size_t stride = 0)
+        : m_buffer(buffer)
+        , m_width(width)
         , m_height(height)
+        , m_stride(stride)
     {
     }
 };

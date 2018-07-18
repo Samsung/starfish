@@ -405,7 +405,7 @@ public:
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
             m_canvasAdpaterCairo)
 #elif defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-            canvasAdpaterSkia)
+            m_canvasAdpaterSkia)
 #endif
         {
 #if defined(PORT_COMPOSITOR_BACKEND_EFL)
@@ -1910,13 +1910,18 @@ Canvas* WindowImplEFL::preparePainting()
     struct dummy {
         SkCanvas* canvas;
         sk_sp<SkSurface> surface;
+        void* buffer;
         int w;
         int h;
+        size_t stride;
     } d;
+
     d.canvas = m_canvasAdpaterSkia;
     d.surface = m_canvasAdpaterSurface;
+    d.buffer = addr;
     d.w = width() + starFish()->posX();
     d.h = height() + starFish()->posY();
+    d.stride = rowBytes;
     return Canvas::createDirect(starFish(), &d);
 
 #endif
