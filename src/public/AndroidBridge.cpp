@@ -63,7 +63,8 @@ typedef bool (*TimerCallback)(int uid, void* data);
 int startTimer(int ms, TimerCallback pointer, void* data);
 void cancelTimer(int uid);
 void runAllRemainingIdler();
-void flushRenderingCB(void* view);
+void flushRenderingCB(void* view,
+                      const LWE::WebContainer::RenderResult& result);
 
 void callOnLoadResourceHandler(LWE::WebView* view, const char* url);
 void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
@@ -112,7 +113,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
     g_WindowGlue.m_runAllRemainingIdler =
         GetJMethod(env, clazz, "runAllRemainingIdler", "()V");
     g_WindowGlue.m_flushRendering =
-        env->GetMethodID(clazz, "flushRendering", "()V");
+        env->GetMethodID(clazz, "flushRendering", "(IIII)V");
     g_WindowGlue.m_onLoadResource =
         env->GetMethodID(clazz, "onLoadResource", "(Ljava/lang/String;)V");
     g_WindowGlue.m_onReceivedError =
@@ -482,7 +483,7 @@ void runAllRemainingIdler()
                               g_WindowGlue.m_runAllRemainingIdler);
 }
 
-void flushRenderingCB(void* view)
+void flushRenderingCB(void* view, const LWE::WebContainer::RenderResult& result)
 {
     JNIEnv* env = g_WindowGlue.m_env;
 
@@ -506,8 +507,14 @@ void flushRenderingCB(void* view)
         LOGE("reuqest render error");
         return;
     }
+    jint updatedX = result.updatedX;
+    jint updatedY = result.updatedY;
+    jint updatedWidth = result.updatedWidth;
+    jint updatedHeight = result.updatedHeight;
+
     env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
-                        g_WindowGlue.m_flushRendering);
+                        g_WindowGlue.m_flushRendering, updatedX, updatedY,
+                        updatedWidth, updatedHeight);
 }
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -557,8 +564,9 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
         });
 
     webContainer->RegisterOnRenderedHandler(
-        [](LWE::WebContainer* wv, void* buffer) -> void {
-            flushRenderingCB(wv);
+        [](LWE::WebContainer* wv,
+           const LWE::WebContainer::RenderResult& result) -> void {
+            flushRenderingCB(wv, result);
         });
 
     webContainer->RegisterShouldOverrideUrlLoadingHandler(
