@@ -30,6 +30,9 @@ public:
         : m_type(type)
     {
     }
+    virtual ~FilterFunction()
+    {
+    }
 
     FilterFunctionType type() const
     {
