@@ -2339,6 +2339,12 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
     }
 
+    if (newStyle->appearance() != oldStyle->appearance()) {
+        damagedKeys[CSSStyleValuePair::KeyKind::Appearance] = true;
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+    }
+
     FilterFunctions* newFilter = newStyle->filter();
     FilterFunctions* oldFilter = oldStyle->filter();
     if (newFilter != oldFilter) {

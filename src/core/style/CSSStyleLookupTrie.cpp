@@ -337,7 +337,16 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         // Align-Self
         // Line-Break
         // Word-Break
+        // Appearance
         switch (data[0]) {
+        case 'a':
+            if (memcmp(data, "align-self", 10) == 0) {
+                return CSSStyleValuePair::KeyKind::AlignSelf;
+            }
+            if (memcmp(data, "appearance", 10) == 0) {
+                return CSSStyleValuePair::KeyKind::Appearance;
+            }
+            break;
         case 'b':
             if (memcmp(data, "background", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::Background;
@@ -404,11 +413,6 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
         case 'v':
             if (memcmp(data, "visibility", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::Visibility;
-            }
-            break;
-        case 'a':
-            if (memcmp(data, "align-self", 10) == 0) {
-                return CSSStyleValuePair::KeyKind::AlignSelf;
             }
             break;
         case 'w':
@@ -1357,6 +1361,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
         case 'a':
             if (memcmp(data, "alignItems", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::AlignItems;
+            }
+            if (memcmp(data, "appearance", 10) == 0) {
+                return CSSStyleValuePair::KeyKind::Appearance;
             }
             break;
         case 'b':

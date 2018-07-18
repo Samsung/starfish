@@ -494,6 +494,11 @@ enum WordBreakValue ENSURE_ENUM_UNSIGNED {
     BreakWordWordBreakValue,
 };
 
+enum AppearanceValue ENSURE_ENUM_UNSIGNED {
+    AutoAppearanceValue,
+    NoneAppearanceValue,
+};
+
 enum ResizeValue ENSURE_ENUM_UNSIGNED {
     NoneResizeValue,
     BothResizeValue,
@@ -700,6 +705,7 @@ class CSSFilterFunction;
     F(Hyphens, hyphens, "hyphens")                                             \
     F(LineBreak, lineBreak, "line-break")                                      \
     F(WordBreak, wordBreak, "word-break")                                      \
+    F(Appearance, appearance, "appearance")                                    \
     F(PointerEvents, pointerEvents, "pointer-events")                          \
     F(Resize, resize, "resize")                                                \
     F(WillChange, willChange, "will-change")
@@ -993,6 +999,7 @@ public:
         HyphensValueKind,
         LineBreakValueKind,
         WordBreakValueKind,
+        AppearanceValueKind,
         VarFunctionValueKind,
 
         // gradient
@@ -1554,6 +1561,12 @@ public:
         return m_value.m_wordBreak;
     }
 
+    AppearanceValue appearanceValue() const
+    {
+        STARFISH_ASSERT(m_valueKind == AppearanceValueKind);
+        return m_value.m_appearance;
+    }
+
     ResizeValue resizeValue() const
     {
         STARFISH_ASSERT(m_valueKind == ResizeValueKind);
@@ -1693,6 +1706,7 @@ public:
         HyphensValue m_hyphens;
         LineBreakValue m_lineBreak;
         WordBreakValue m_wordBreak;
+        AppearanceValue m_appearance;
         RectData* m_rect;
         GCVector<GridLength>* m_gridTemplateUnits;
         CSSCounterFunction* m_counterFunctionValue;
@@ -1971,6 +1985,11 @@ public:
 
         ValueData(WordBreakValue v)
             : m_wordBreak(v)
+        {
+        }
+
+        ValueData(AppearanceValue v)
+            : m_appearance(v)
         {
         }
 

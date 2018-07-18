@@ -128,6 +128,7 @@ class RareComputedStyleData : public gc {
         TextOverflow,
         CounterReset,
         CounterIncrement,
+        Appearance,
 
         // Grid
         GridTemplateColumns,
@@ -179,6 +180,7 @@ class RareComputedStyleData : public gc {
         WillChangeData* m_willChange;
         ValueList* m_textDecorationLine;
         FilterFunctions* m_filter;
+        AppearanceValue m_appearance;
 
         RareComputedStyleValue()
             : m_int32Value(0)
@@ -335,6 +337,11 @@ class RareComputedStyleData : public gc {
         {
         }
 
+        RareComputedStyleValue(AppearanceValue v)
+            : m_appearance(v)
+        {
+        }
+
         RareComputedStyleValue(TextOverflowData* v)
             : m_textOverflow(v)
         {
@@ -484,6 +491,8 @@ public:
                  NoneUserSelectValue);
     GETTER_VALUE(LineBreakValue, lineBreak, lineBreak, LineBreak,
                  NormalLineBreakValue);
+    GETTER_VALUE(AppearanceValue, appearance, appearance, Appearance,
+                 AutoAppearanceValue);
     GETTER_VALUE(Unit::Color, color, textDecorationColor, TextDecorationColor,
                  Unit::Color());
     GETTER_VALUE(TextDecorationStyleValue, textDecorationStyle,
@@ -3426,6 +3435,25 @@ public:
     void setWordBreak(WordBreakValue v)
     {
         ensureInheritedRareData()->m_wordBreak = v;
+    }
+
+    AppearanceValue appearance()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return AppearanceValue::AutoAppearanceValue;
+        }
+
+        Nullable<AppearanceValue> v = rareComputedStyleData()->appearance();
+        if (v.hasValue()) {
+            return v.getValue();
+        }
+
+        return AppearanceValue::AutoAppearanceValue;
+    }
+
+    void setAppearance(AppearanceValue v)
+    {
+        *m_rareComputedStyleData.ensureAppearance() = v;
     }
 
     FilterFunctions* filter()
