@@ -237,8 +237,10 @@ Canvas* WindowImplGB::preparePainting()
     struct dummy {
         cairo_t* cairo;
         cairo_surface_t* surface;
+        void* buffer;
         int w;
         int h;
+        size_t stride;
     };
 
     dummy* d = new dummy;
@@ -252,8 +254,10 @@ Canvas* WindowImplGB::preparePainting()
     struct dummy {
         SkCanvas* canvas;
         sk_sp<SkSurface> surface;
+        void* buffer;
         int w;
         int h;
+        size_t stride;
     };
     dummy* d = new dummy;
 
@@ -262,6 +266,8 @@ Canvas* WindowImplGB::preparePainting()
     d->w = width() + starFish()->posX();
     d->h = height() + starFish()->posY();
 #endif
+    d->buffer = m_internalBuffer;
+    d->stride = m_stride;
     Canvas* canvas = Canvas::createDirect(starFish(), d);
     delete d;
 

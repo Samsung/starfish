@@ -331,6 +331,7 @@
             ['platform=="linux" and backend=="efl_cairo"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO',
+                    'STARFISH_ENABLE_CSS_FILTER'
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
@@ -347,6 +348,7 @@
             ['platform=="linux" and backend=="efl_skia"', {
                 'defines_extra': [
                     'STARFISH_EFL_SKIA',
+                    'STARFISH_ENABLE_CSS_FILTER'
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',

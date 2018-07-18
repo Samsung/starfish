@@ -56,8 +56,10 @@ public:
 class CanvasSkia : public Canvas {
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
+        m_renderTargetInfo.m_buffer = (uint8_t*)buffer;
         m_renderTargetInfo.m_width = width;
         m_renderTargetInfo.m_height = height;
+        m_renderTargetInfo.m_stride = stride;
 
         SkImageInfo info = SkImageInfo::MakeN32Premul(
             m_renderTargetInfo.m_width, m_renderTargetInfo.m_height);
@@ -68,8 +70,10 @@ class CanvasSkia : public Canvas {
 
     void initFromNativeImageData(NativeImageData* data)
     {
+        m_renderTargetInfo.m_buffer = (uint8_t*)data->data();
         m_renderTargetInfo.m_width = data->width();
         m_renderTargetInfo.m_height = data->height();
+        m_renderTargetInfo.m_stride = data->stride();
 
         SkImageInfo info = SkImageInfo::MakeN32Premul(
             m_renderTargetInfo.m_width, m_renderTargetInfo.m_height);
@@ -109,15 +113,20 @@ public:
         struct dummy {
             SkCanvas* canvas;
             sk_sp<SkSurface> surface;
+            void* buffer;
             int w;
             int h;
+            size_t stride;
         };
         dummy* d = (dummy*)data;
         m_starfish = starfish;
         m_canvas = d->canvas;
         m_surface = d->surface;
+
+        m_renderTargetInfo.m_buffer = (uint8_t*)d->buffer;
         m_renderTargetInfo.m_width = d->w;
         m_renderTargetInfo.m_height = d->h;
+        m_renderTargetInfo.m_stride = d->stride;
         m_shouldDestroySkia = false;
         m_shouldDestroySurface = false;
         save();
