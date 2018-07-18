@@ -539,38 +539,54 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
         starFish()->platformWindow()->registerOrUpdateIdleTimeCleaner();
         starFish()->messageLoop()->addIdler(
             document()->browsingContext(),
-            [](size_t handle, void* data) {
+            [](size_t, void* data) {
                 Document* doc = (Document*)data;
-                doc->setReadyState(DocumentReadyStateComplete);
-                if (!doc->doesParticipateInRendering()) {
-                    return;
-                }
-                String* eventType =
-                    doc->starFish()->staticStrings()->m_load.localName();
-                Event* e = new Event(doc, eventType, EventInit(false, false));
-                doc->window()->dispatchEventByUA(e);
-                if (!doc->browsingContext()->isTopLevelBrowsingContext()) {
-                    doc->browsingContext()
-                        ->sourceElement()
-                        ->childBrowsingContextLoaded();
-                } else {
-                    doc->starFish()->callWebViewHandler(
-                        std::string("OnPageLoaded"), doc->urlString());
-                }
+                doc->webView()->setNeedsRendering();
+                doc->starFish()
+                    ->platformWindow()
+                    ->webView()
+                    ->addDidRenderingCallback(
+                        doc->browsingContext(),
+                        [](void* data) {
+                            Document* doc = (Document*)data;
+                            doc->setReadyState(DocumentReadyStateComplete);
+                            if (!doc->doesParticipateInRendering()) {
+                                return;
+                            }
+                            String* eventType = doc->starFish()
+                                                    ->staticStrings()
+                                                    ->m_load.localName();
+                            Event* e = new Event(doc, eventType,
+                                                 EventInit(false, false));
+                            doc->window()->dispatchEventByUA(e);
+                            if (!doc->browsingContext()
+                                     ->isTopLevelBrowsingContext()) {
+                                doc->browsingContext()
+                                    ->sourceElement()
+                                    ->childBrowsingContextLoaded();
+                            } else {
+                                doc->starFish()->callWebViewHandler(
+                                    std::string("OnPageLoaded"),
+                                    doc->urlString());
+                            }
 #ifdef STARFISH_ENABLE_TEST
-                if (doc->browsingContext()->isTopLevelBrowsingContext()) {
-                    // We need to wait few milliseconds
-                    // because some tests has setTimeout(0,...) in onload
-                    // handler
-                    doc->window()->setTimeout(
-                        [](Window* window, void* data) {
-                            g_fireOnloadEvent = true;
-                            window->document()->setNeedsPainting();
-                            window->window()->testStart();
-                        },
-                        10, nullptr);
-                }
+                            if (doc->browsingContext()
+                                    ->isTopLevelBrowsingContext()) {
+                                // We need to wait few milliseconds
+                                // because some tests has setTimeout(0,...) in
+                                // onload
+                                // handler
+                                doc->window()->setTimeout(
+                                    [](Window* window, void* data) {
+                                        g_fireOnloadEvent = true;
+                                        window->document()->setNeedsPainting();
+                                        window->window()->testStart();
+                                    },
+                                    10, nullptr);
+                            }
 #endif
+                        },
+                        doc);
             },
             document());
     }
