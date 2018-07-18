@@ -246,7 +246,7 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                 hbFace = glyphData.first.first->harfbuzzFace();
                 lastUnicodeScript = unicodeScript;
             } else {
-                if (glyphData.first.first ||
+                if (failedToFindFont ||
                     lastFace != glyphData.first.first->freetypeFace() ||
                     lastUnicodeScript != unicodeScript ||
                     ((unicodeScript != USCRIPT_INHERITED) &&
