@@ -24,6 +24,7 @@
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "core/style/FilterFunctions.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameFlexibleBox.h"
@@ -3173,6 +3174,8 @@ LayoutRect FrameBox::frameVisibleRect()
     LayoutRect out = frameVisibleOutlineRect();
     LayoutRect shadow = frameVisibleShadowsRect();
     out.unite(shadow);
+    LayoutRect filter = frameVisibleFilterRect();
+    out.unite(filter);
 
     ComputedStyle* cs = style();
     if (cs) {
@@ -3287,6 +3290,35 @@ LayoutRect FrameBox::frameVisibleShadowsRect()
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
             LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
             ret.unite(rect);
+        }
+    }
+    return ret;
+}
+
+LayoutRect FrameBox::frameVisibleFilterRect()
+{
+    LayoutRect owner = frameRect();
+    owner.setX(0);
+    owner.setY(0);
+
+    LayoutRect ret = owner;
+
+    ComputedStyle* cs = style();
+    if (!cs || !cs->hasAvailableFilter()) {
+        return ret;
+    }
+
+    for (auto filter : *(cs->filter())) {
+        auto t = filter->type();
+        if (t == FilterFunctionType::BlurFilterFunctionType) {
+            auto bf = static_cast<BlurFilterFunction*>(filter);
+            CanvasShadowData data(0, 0,
+                                  bf->standardDeviation().numberData() * 2, 0,
+                                  Unit::Color(), false, false);
+            LayoutRect rect = computeVisibleShadowRect(owner, data);
+            ret.unite(rect);
+        } else if (t == FilterFunctionType::DropShadowFilterFunctionType) {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
     }
     return ret;

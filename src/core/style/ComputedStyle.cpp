@@ -156,10 +156,10 @@ bool ComputedStyle::hasAvailableFilter()
         return false;
     }
 
-    for (auto filer : *(m_rareComputedStyleData.filter())) {
-        switch (filer->type()) {
+    for (auto filter : *(m_rareComputedStyleData.filter())) {
+        switch (filter->type()) {
         case FilterFunctionType::BlurFilterFunctionType:
-            if (!(static_cast<BlurFilterFunction*>(filer)
+            if (!(static_cast<BlurFilterFunction*>(filter)
                       ->standardDeviation()
                       .isZero())) {
                 return true;

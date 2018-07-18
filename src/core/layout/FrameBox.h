@@ -155,6 +155,7 @@ public:
     LayoutRect frameVisibleRect();
     LayoutRect frameVisibleOutlineRect();
     LayoutRect frameVisibleShadowsRect();
+    LayoutRect frameVisibleFilterRect();
 
     LayoutUnit x() const
     {
