@@ -336,7 +336,7 @@ std::vector<FontSkiaTextRun> generateFontSkiaTextRuns(const String* text,
                 lastSkTypeface = glyphData.first.first->skTypeface();
                 lastUnicodeScript = unicodeScript;
             } else {
-                if (glyphData.first.first ||
+                if (failedToFindFont ||
                     lastSkTypeface != glyphData.first.first->skTypeface() ||
                     lastUnicodeScript != unicodeScript ||
                     ((unicodeScript != USCRIPT_INHERITED) &&
