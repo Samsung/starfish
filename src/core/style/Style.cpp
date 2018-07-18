@@ -1597,6 +1597,14 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("break-word");
         }
         break;
+    case CSSStyleValuePair::ValueKind::AppearanceValueKind:
+        switch (appearanceValue()) {
+        case AutoAppearanceValue:
+            return String::fromUTF8("auto");
+        case NoneAppearanceValue:
+            return String::fromUTF8("none");
+        }
+        break;
     case CSSStyleValuePair::ValueKind::GridTemplateUnits:
         return GridLength::toStringWithGridLengths(gridTemplateUnits());
     case CSSStyleValuePair::ValueKind::CounterFunctionValueKind:
@@ -5392,6 +5400,22 @@ void StyleResolver::apply(Element* element,
                     CSSStyleValuePair::ValueKind::WordBreakValueKind ==
                     cssValues[k].valueKind());
                 style->setWordBreak(cssValues[k].wordBreakValue());
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Appearance:
+            switch (cssValues[k].valueKind()) {
+            case CSSStyleValuePair::ValueKind::Inherit:
+            case CSSStyleValuePair::ValueKind::Unset:
+                style->setAppearance(parentStyle->appearance());
+                break;
+            case CSSStyleValuePair::ValueKind::Initial:
+                style->setAppearance(AppearanceValue::AutoAppearanceValue);
+                break;
+            default:
+                STARFISH_ASSERT(
+                    CSSStyleValuePair::ValueKind::AppearanceValueKind ==
+                    cssValues[k].valueKind());
+                style->setAppearance(cssValues[k].appearanceValue());
             }
             break;
         case CSSStyleValuePair::KeyKind::GridTemplateColumns:
@@ -11836,6 +11860,25 @@ bool CSSStyleValuePair::updateValueWordBreak(Document* document,
     } else if (STRING_VALUE_IS_STRING("break-word")) {
         m_value.m_wordBreak = WordBreakValue::BreakWordWordBreakValue;
         return false; // unsupported yet
+    } else {
+        return false;
+    }
+    return true;
+}
+
+bool CSSStyleValuePair::updateValueAppearance(Document* document,
+                                              const CSSTokenVector& tokens)
+{
+    if (tokens.size() != 1) {
+        return false;
+    }
+
+    const CSSTokenValue& value = tokens[0];
+    m_valueKind = CSSStyleValuePair::ValueKind::AppearanceValueKind;
+    if (STRING_VALUE_IS_STRING("auto")) {
+        m_value.m_appearance = AppearanceValue::AutoAppearanceValue;
+    } else if (STRING_VALUE_IS_STRING("none")) {
+        m_value.m_appearance = AppearanceValue::NoneAppearanceValue;
     } else {
         return false;
     }
