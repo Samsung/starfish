@@ -149,6 +149,16 @@ void FrameInputBox::layout(LayoutContext& ctx,
     HTMLTextEditable* textEditable = node()->asHTMLTextEditable();
     if (textEditable->isHTMLInputElement() &&
         (textEditable->asHTMLInputElement()->type()->equals("checkbox"))) {
+        if (style()->appearance() == NoneAppearanceValue) {
+            // https://www.w3.org/TR/css-ui-4/#appearance-switching
+            // appearance is a vendor- and implementation-specific property
+            // that only Webkit based browsers support.
+            // Chrome does not draw a checkbox when appearance: none
+            // (Chrome draws a checkbox when appearance: checkbox, where the
+            // value checkbox is webkit-specific, and not in W3C spec)
+            return;
+        }
+
         Length fontSize;
         bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
         if (style()->width().isAuto() || style()->height().isAuto() ||
