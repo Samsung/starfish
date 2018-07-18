@@ -1050,9 +1050,8 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 
         float dpr = m_owner->node()->starFish()->screenInfo().devicePixelRatio;
         bool needsInitialClip = false;
-        ctx.layerClipRect =
-            LayoutRect(0, 0, m_rareData->m_buffer->bufferWidth(),
-                       m_rareData->m_buffer->bufferHeight());
+        ctx.layerClipRect = LayoutRect(0, 0, m_rareData->m_buffer->width(),
+                                       m_rareData->m_buffer->height());
 
         bool isOverlappedWithScreenClipRect =
             ctx.screenClipRect.intersects(m_screenExtent);

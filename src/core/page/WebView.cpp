@@ -787,6 +787,12 @@ void WebView::addDidLayoutCallback(DidLayoutCallback cb, void* data)
     m_didLayoutCallbacks.push_back(std::make_pair(cb, data));
 }
 
+void WebView::addDidRenderingCallback(BrowsingContext* ctx,
+                                      DidRenderingCallback cb, void* data)
+{
+    m_didRenderingCallbacks.push_back(std::make_tuple(ctx, cb, data));
+}
+
 void WebView::setNeedsRendering()
 {
     auto wnd = starFish()->platformWindow();
@@ -1055,6 +1061,18 @@ RenderResult WebView::rendering(bool force)
 
     m_needsRendering = false;
     m_inRendering = false;
+
+    {
+        auto& v = m_didRenderingCallbacks;
+        auto iter = v.begin();
+        while (iter != v.end()) {
+            if (std::get<1>(*iter)) {
+                std::get<1> (*iter)(std::get<2>(*iter));
+            }
+            iter++;
+        }
+        v.clear();
+    }
 
 #if defined(STARFISH_ENABLE_TEST) && !defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
     {

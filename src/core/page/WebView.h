@@ -78,6 +78,7 @@ class WebView : public StarFishHoldable, public gc {
     friend class PlatformWindow;
     friend class WindowImplEFL;
     friend class AnimationExecutor;
+    friend class ResourceLoader;
 
 public:
     static WebView* create(StarFish* starFish);
@@ -189,6 +190,10 @@ public:
     typedef bool (*DidLayoutCallback)(void*); // return true cause relayout
     void addDidLayoutCallback(DidLayoutCallback cb, void* data);
 
+    typedef void (*DidRenderingCallback)(void*);
+    void addDidRenderingCallback(BrowsingContext* ctx, DidRenderingCallback cb,
+                                 void* data);
+
     bool hasActiveAnimationExecutor()
     {
         return m_activeAnimationExecutor.size();
@@ -265,6 +270,8 @@ private:
     GCVector<BrowsingContext*> m_browsingContextsHasPendingAnimation;
     GCVector<AnimationExecutor*> m_activeAnimationExecutor;
     size_t m_activeAnimatorForAnimationExecutor;
+    GCVector<std::tuple<BrowsingContext*, DidRenderingCallback, void*>>
+        m_didRenderingCallbacks;
 };
 }
 

@@ -697,6 +697,13 @@ void BrowsingContext::dispose()
     if (iter != v.end()) {
         v.erase(iter);
     }
+
+    auto& v2 = m_webView->m_didRenderingCallbacks;
+    for (size_t i = 0; i < v2.size(); i++) {
+        if (std::get<0>(v2[i]) == this) {
+            v2[i] = std::make_tuple(nullptr, nullptr, nullptr);
+        }
+    }
 }
 
 void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
