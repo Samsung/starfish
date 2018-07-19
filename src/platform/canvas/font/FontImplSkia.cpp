@@ -179,6 +179,10 @@ FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
     sk_sp<SkData> skData = SkData::MakeWithCopy(data, dataLen);
     sk_sp<SkTypeface> skTypeface(fm->createFromData(skData.get()));
 
+    if (skTypeface == nullptr) {
+        return nullptr;
+    }
+
     auto impl = new (PointerFreeGC) FontFaceImplSkia(skTypeface);
     impl->setDownLoadFontDataSize(dataLen);
 
