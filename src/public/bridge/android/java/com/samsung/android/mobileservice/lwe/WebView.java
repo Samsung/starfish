@@ -43,8 +43,13 @@ import android.webkit.DownloadListener;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 import android.webkit.WebResourceRequest;
-
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+import android.widget.SpinnerAdapter;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -657,4 +662,9 @@ public class WebView extends SurfaceView {
     static native public void dispatchMouseDown(long starFish, float x, float y);
     static native public void dispatchMouseMove(long starFish, float x, float y,boolean isLButtonPressed, boolean isRButtonPressed);
     static native public void dispatchMouseUp(long starFish, float x, float y);
+
+    private void showDropdownMenu(String[] list) {
+        // ArrayList<String> itemList = new ArrayList(Arrays.asList(list));
+        // TODO: display a dropdownmenu from this thread
+    }
 }

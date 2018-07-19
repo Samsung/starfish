@@ -33,6 +33,7 @@
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
 
 #ifdef STARFISH_ENABLE_TEST
@@ -452,6 +453,52 @@ RenderResult PlatformWindow::rendering()
         m_renderingFinishedCallback(renderResult);
     }
     return renderResult;
+}
+
+void PlatformWindow::registerPlatformCallbackHandler(
+    const std::string& handlerName, const std::function<void(void*)>& handler)
+{
+    auto it = m_platformHandlersToCallbacks.find(handlerName);
+    if (it == m_platformHandlersToCallbacks.end()) {
+        m_platformHandlersToCallbacks.insert(
+            std::make_pair(handlerName, handler));
+
+    } else {
+        it->second = handler;
+    }
+}
+
+void PlatformWindow::callPlatformHandler(const std::string& handlerName,
+                                         void* param)
+{
+    auto it = m_platformHandlersToCallbacks.find(handlerName);
+    if (it == m_platformHandlersToCallbacks.end()) {
+        return;
+    }
+
+    struct Env {
+        PlatformWindow* window;
+        std::string handlerName;
+        void* param;
+    };
+
+    Env* env = new Env();
+    env->window = this;
+    env->handlerName = handlerName;
+    env->param = param;
+
+    starFish()->messageLoop()->addIdler(
+        nullptr,
+        [](size_t, void* env) {
+            Env* e = (Env*)env;
+            auto it =
+                e->window->m_platformHandlersToCallbacks.find(e->handlerName);
+            if (it != e->window->m_platformHandlersToCallbacks.end()) {
+                (it->second)(e->param);
+            }
+            delete e;
+        },
+        env);
 }
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR

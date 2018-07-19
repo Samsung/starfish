@@ -102,6 +102,8 @@ private:
     void resetFromOption(GCVector<HTMLOptionElement*>& list,
                          HTMLOptionElement* resetFrom);
 
+    void showDropdownMenu();
+
     HTMLCollection* m_selectedOptions;
     HTMLOptionsCollection* m_options;
 };

@@ -168,6 +168,10 @@ public:
                                  const std::string&, const std::string&,
                                  const std::string&, long)>& cb);
 
+    void RegisterShowDropdownMenuHandler(
+        const std::function<void(LWE::WebContainer*,
+                                 const std::vector<std::string>*)>& cb);
+
     void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
 
     struct RenderResult {

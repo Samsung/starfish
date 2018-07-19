@@ -701,24 +701,26 @@ void StarFish::callWebViewHandler(const std::string& handlerName, void* param)
     }
 
     struct Env {
-        std::string handlerName;
         StarFish* starFish;
+        std::string handlerName;
+        void* param;
     };
     Env* env = new Env();
-    env->handlerName = handlerName;
     env->starFish = this;
+    env->handlerName = handlerName;
+    env->param = param;
 
     messageLoop()->addIdler(
         nullptr,
-        [](size_t, void* env, void* param) {
+        [](size_t, void* env) {
             Env* e = (Env*)env;
             auto it =
                 e->starFish->m_lweWebViewHandlersGeneral.find(e->handlerName);
             if (it != e->starFish->m_lweWebViewHandlersGeneral.end()) {
-                (it->second)(param);
+                (it->second)(e->param);
             }
             delete e;
         },
-        env, param);
+        env);
 }
 }
