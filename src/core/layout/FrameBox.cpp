@@ -3308,19 +3308,14 @@ LayoutRect FrameBox::frameVisibleFilterRect()
         return ret;
     }
 
-    for (auto filter : *(cs->filter())) {
-        auto t = filter->type();
-        if (t == FilterFunctionType::BlurFilterFunctionType) {
-            auto bf = static_cast<BlurFilterFunction*>(filter);
-            CanvasShadowData data(0, 0,
-                                  bf->standardDeviation().numberData() * 2, 0,
-                                  Unit::Color(), false, false);
-            LayoutRect rect = computeVisibleShadowRect(owner, data);
-            ret.unite(rect);
-        } else if (t == FilterFunctionType::DropShadowFilterFunctionType) {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        }
+    Length standardDeviation;
+    if (cs->filter()->getStandardDeviationOfBlurFilter(standardDeviation)) {
+        CanvasShadowData data(0, 0, standardDeviation.numberData() * 2, 0,
+                              Unit::Color(), false, false);
+        LayoutRect rect = computeVisibleShadowRect(owner, data);
+        ret.unite(rect);
     }
+
     return ret;
 }
 
