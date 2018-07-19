@@ -50,6 +50,8 @@ struct WindowGlue {
     jmethodID m_onProgressed;
     jmethodID m_onDownloadStart;
 
+    jmethodID m_showDropdownMenu;
+
     WindowGlue()
     {
         m_startTimer = m_startIdler = m_flushRendering = 0;
@@ -78,6 +80,9 @@ void callOnProgressChanged(LWE::WebContainer* view, int newProgress);
 void callOnDownloadStart(LWE::WebContainer* view, const char* url,
                          const char* userAgent, const char* contentDisposition,
                          const char* mimetype, long contentLength);
+
+void callShowDropdownMenu(LWE::WebContainer* view,
+                          const std::vector<std::string>* list);
 
 static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
                             const char signature[])
@@ -130,6 +135,10 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
         env->GetMethodID(clazz, "onDownloadStart",
                          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/"
                          "String;Ljava/lang/String;J)V");
+
+    g_WindowGlue.m_showDropdownMenu =
+        env->GetMethodID(clazz, "showDropdownMenu", "([Ljava/lang/String;)V");
+
     env->DeleteLocalRef(clazz);
 
     LOGI("Java_com_samsung_android_mobileservice_lwe_WebView_init call end");
@@ -186,7 +195,7 @@ void callOnReceivedError(LWE::WebContainer* view, int errorCode, bool canGoBack,
     }
 
     if (!env || !g_WindowGlue.m_onReceivedError) {
-        LOGE("OnPageStarted error");
+        LOGE("OnReceived: error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     jint jint1 = errorCode;
@@ -195,6 +204,7 @@ void callOnReceivedError(LWE::WebContainer* view, int errorCode, bool canGoBack,
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onReceivedError,
                         jint1, jboolean1, jboolean2);
 }
+
 void callOnPageParsed(LWE::WebContainer* view, const char* url, bool canGoBack,
                       bool canGoForward)
 {
@@ -221,6 +231,7 @@ void callOnPageParsed(LWE::WebContainer* view, const char* url, bool canGoBack,
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onPageParsed,
                         jstr, jboolean1, jboolean2);
 }
+
 void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
                        bool canGoForward)
 {
@@ -304,6 +315,7 @@ void callOnDownloadStart(LWE::WebContainer* view, const char* url,
                          const char* userAgent, const char* contentDisposition,
                          const char* mimetype, long contentLength)
 {
+    LOGI("OnDownloadStarted: started");
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
     if (getEnvStat == JNI_EDETACHED) {
@@ -318,11 +330,9 @@ void callOnDownloadStart(LWE::WebContainer* view, const char* url,
     }
 
     if (!env || !g_WindowGlue.m_onDownloadStart) {
-        LOGE("OnDownloadStarted error");
+        LOGE("OnDownloadStarted: error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-
-    LOGI("ryanc callOnDownloadStart");
 
     jstring jurl = env->NewStringUTF(url);
     jstring juserAgent = env->NewStringUTF(userAgent);
@@ -332,6 +342,40 @@ void callOnDownloadStart(LWE::WebContainer* view, const char* url,
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onDownloadStart,
                         jurl, juserAgent, jcontentDisposition, jmimetype,
                         jcontentLength);
+}
+
+void callShowDropdownMenu(LWE::WebContainer* view,
+                          const std::vector<std::string>* list)
+{
+    LOGI("ShowDropdownMenu: started");
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_showDropdownMenu) {
+        LOGE("ShowDropdownMenu: error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    jsize len = list->size();
+    jobjectArray jlist = env->NewObjectArray(
+        len, env->FindClass("java/lang/String"), env->NewStringUTF(""));
+    for (size_t i = 0; i < len; i++) {
+        jstring str = env->NewStringUTF((*list)[i].c_str());
+        env->SetObjectArrayElement(jlist, i, str);
+    }
+
+    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_showDropdownMenu,
+                        jlist);
 }
 
 int startTimer(int ms, TimerCallback pointer, void* data)
@@ -588,6 +632,12 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
                                 contentLength);
         });
 
+    webContainer->RegisterShowDropdownMenuHandler(
+        [](LWE::WebContainer* view,
+           const std::vector<std::string>* list) -> void {
+            callShowDropdownMenu(view, list);
+        });
+
     jobject java_webview = env->NewGlobalRef(thiz);
     g_webViews.insert(
         std::make_pair(webContainer, std::make_pair(java_webview, nullptr)));
@@ -796,7 +846,6 @@ Java_com_samsung_android_mobileservice_lwe_WebView_addJavascriptInterface(
     std::function<std::string(const std::string&)> NB =
         [javaObjectRef, callback_obj, clz,
          callback_methodID](const std::string& param) -> std::string {
-
         JNIEnv* env = g_WindowGlue.m_env;
 
         int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);

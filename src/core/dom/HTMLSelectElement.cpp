@@ -29,8 +29,8 @@
 #include "core/dom/HTMLOptionsCollection.h"
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
-#include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
+#include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
 
@@ -458,6 +458,7 @@ bool HTMLSelectElement::handleDefaultEvent(Event* event)
                 HTMLOptionElement* option =
                     event->target()->asHTMLOptionElement();
                 if (option->selectElement() == this) {
+                    showDropdownMenu();
                     fireSelectUpdateNotification();
                 }
             }
@@ -465,5 +466,33 @@ bool HTMLSelectElement::handleDefaultEvent(Event* event)
     }
 
     return false;
+}
+
+void HTMLSelectElement::showDropdownMenu()
+{
+    struct Param {
+        std::vector<std::string>* list;
+    };
+
+    Param* p = new Param();
+    p->list = new std::vector<std::string>();
+
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
+    for (auto item : list) {
+        if (item->isHTMLOptionElement()) {
+            auto o = item->asHTMLOptionElement();
+            Nullable<String*> text = o->textContent();
+            if (text.hasValue()) {
+                p->list->push_back(
+                    std::string(text.getValue()->toUTF8NonGCString().data()));
+            } else {
+                p->list->push_back(std::string(""));
+            }
+        }
+    }
+
+    document()->starFish()->platformWindow()->callPlatformHandler(
+        std::string("showDropdownMenu"), (void*)p);
 }
 }

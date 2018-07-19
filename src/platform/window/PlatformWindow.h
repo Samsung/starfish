@@ -122,6 +122,12 @@ public:
     {
         m_hideSoftwareKeyboardIfPossibleCallback = cb;
     }
+
+    void registerPlatformCallbackHandler(
+        const std::string& handlerName,
+        const std::function<void(void*)>& handler);
+    void callPlatformHandler(const std::string& handlerName, void* param);
+
     virtual bool canRendering()
     {
         return false;
@@ -181,6 +187,9 @@ protected:
         m_renderingFinishedCallback;
     std::function<void()> m_showSoftwareKeyboardIfPossibleCallback;
     std::function<void()> m_hideSoftwareKeyboardIfPossibleCallback;
+
+    std::unordered_map<std::string, std::function<void(void*)>>
+        m_platformHandlersToCallbacks;
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     bool m_isButtonOfVirtualCursorClicked;

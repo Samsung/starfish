@@ -440,6 +440,25 @@ void WebContainer::RegisterOnDownloadStartHandler(
             });
 }
 
+void WebContainer::RegisterShowDropdownMenuHandler(
+    const std::function<void(LWE::WebContainer*,
+                             const std::vector<std::string>*)>& cb)
+{
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->registerPlatformCallbackHandler(
+            std::string("showDropdownMenu"), [this, cb](void* param) -> void {
+                struct Param {
+                    std::vector<std::string>* list;
+                };
+
+                Param* p = (Param*)param;
+                cb(this, p->list);
+                delete p->list;
+                delete p;
+            });
+}
+
 void WebContainer::UpdateBuffer(void* buffer, uint width, uint height,
                                 uint stride)
 {
