@@ -111,6 +111,23 @@ public:
         return m_scriptEngineInstance;
     }
 
+    void createScriptEngineInstance()
+    {
+        if (!m_scriptEngineInstance) {
+            m_scriptEngineInstance = new ScriptEngineInstance(m_starFish);
+        }
+    }
+
+    void removeScriptEngineInstance()
+    {
+        if (m_scriptEngineInstance) {
+            m_scriptEngineInstance->dispose();
+
+            delete m_scriptEngineInstance;
+            m_scriptEngineInstance = nullptr;
+        }
+    }
+
     static bool stringToBlobURLString(String* url, BlobURLStore& result);
     static String* blobURLStoreToString(BlobURLStore store, String* origin);
 
