@@ -138,4 +138,16 @@ String* FilterFunctions::toString() const
     }
     return builder.finalize();
 }
+
+bool FilterFunctions::getStandardDeviationOfBlurFilter(Length& out)
+{
+    for (auto filter : *this) {
+        if (filter->type() == FilterFunctionType::BlurFilterFunctionType) {
+            out = static_cast<BlurFilterFunction*>(filter)->standardDeviation();
+            return true;
+        }
+    }
+    return false;
+}
+
 } // namespace StarFish

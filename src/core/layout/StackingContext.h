@@ -70,6 +70,11 @@ public:
         return m_childContexts;
     }
 
+    GCVector<StackingContext*>& ancestorsThatHasFilters()
+    {
+        return m_ancestorsThatHasFilters;
+    }
+
     FrameBox* owner()
     {
         return m_owner;
@@ -161,6 +166,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(StackingContext, m_owner));
         GC_set_bit(desc, GC_WORD_OFFSET(StackingContext, m_parent));
         GC_set_bit(desc, GC_WORD_OFFSET(StackingContext, m_childContexts));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(StackingContext, m_ancestorsThatHasFilters));
     }
 
     StackingContextRareData* ensureRareData();
@@ -177,6 +184,7 @@ protected:
     FrameBox* m_owner;
     StackingContext* m_parent;
     GCVector<StackingContextChild*> m_childContexts;
+    GCVector<StackingContext*> m_ancestorsThatHasFilters;
     StackingContextRareData* m_rareData;
     LayoutRect m_screenExtent;
 };

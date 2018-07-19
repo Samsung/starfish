@@ -157,6 +157,8 @@ public:
         }
         return true;
     }
+
+    bool getStandardDeviationOfBlurFilter(Length& out);
 };
 }
 
