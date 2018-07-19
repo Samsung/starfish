@@ -672,6 +672,10 @@ void BrowsingContext::dispose()
     m_isActive = false;
 
     if (isTopLevelBrowsingContext()) {
+        if (webView()->scriptEngineInstance()) {
+            webView()->removeScriptEngineInstance();
+        }
+
         m_starFish->platformWindow()->clearResources();
         m_starFish->messageLoop()->clearPendingIdlers(this);
 

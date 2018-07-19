@@ -205,7 +205,6 @@ WebView::WebView(StarFish* starFish)
     , m_rootStackingContext(nullptr)
     , m_activeAnimatorForAnimationExecutor(SIZE_MAX)
 {
-    m_scriptEngineInstance = new ScriptEngineInstance(starFish);
     m_historyManager = HistoryManager::create(this);
     initRenderingFlags();
     initStorage();
@@ -215,7 +214,6 @@ void WebView::close()
 {
     STARFISH_LOG_INFO("WebView::close()\n");
     mainBrowsingContext()->dispose();
-    m_scriptEngineInstance->dispose();
 }
 
 void WebView::initStorage()
@@ -241,6 +239,7 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
     }
     starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
     m_topLevelBrowsingContext = BrowsingContext::create(starFish(), this);
+    m_topLevelBrowsingContext->webView()->createScriptEngineInstance();
     m_topLevelBrowsingContext->open(url, type, referrerURL);
     starFish()->callWebViewHandler(std::string("OnPageStarted"),
                                    url->urlString());
