@@ -44,7 +44,8 @@ bool g_forceRendering = false;
 
 namespace StarFish {
 
-#if !defined(PORT_COMPOSITOR_BACKEND_EFL)
+#if !defined(PORT_COMPOSITOR_BACKEND_EFL) && \
+    !defined(PORT_COMPOSITOR_BACKEND_GL)
 static size_t g_totalCanvasSurfaceSimpleSize;
 class CanvasSurfaceSimple : public CanvasSurface {
 public:

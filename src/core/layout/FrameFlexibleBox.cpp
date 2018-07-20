@@ -1137,6 +1137,7 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
         containingBlockOfFlexItem->contentWidth();
     bool containingBlockOfFlexItemContentWidthDamaged =
         containingBlockOfFlexItem->contentWidthDamaged();
+    bool oldNeedsPainting = containingBlockOfFlexItem->needsPainting();
 
     if (isMainAxisInInlineAxis) {
         containingBlockOfFlexItem->setContentWidth(availableMainSize);
@@ -1178,6 +1179,9 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
     } else {
         containingBlockOfFlexItem->clearContentWidthDamaged();
     }
+
+    containingBlockOfFlexItem->setNeedsPainting(oldNeedsPainting);
+
     return basisSize;
 }
 

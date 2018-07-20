@@ -1493,6 +1493,10 @@ void dump(Frame* frm, unsigned depth)
         frm->node()->dump();
     }
 
+    if (frm->needsPainting()) {
+        printf("needsPainting ");
+    }
+
     frm->dump(depth);
 
     printf("\n");
