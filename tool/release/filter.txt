@@ -16,6 +16,7 @@ P /.git
 - *.a
 - *.so
 - Android*
+- android*
 - Dali*
 
 - build_init.sh
