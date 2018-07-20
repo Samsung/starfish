@@ -1185,6 +1185,7 @@ void Frame::computeStyleFlags()
 
     // TODO add condition
     m_flags.m_isEstablishesBlockFormattingContext |= (shouldApplyOverflow());
+    m_flags.m_isEstablishesBlockFormattingContext |= isFlexItem();
     m_flags.m_isEstablishesBlockFormattingContext |= isAbsolutePositioned;
     m_flags.m_isEstablishesBlockFormattingContext |= isFloating;
     m_flags.m_isEstablishesBlockFormattingContext |=

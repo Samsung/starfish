@@ -864,6 +864,9 @@ int main(int argc, char* argv[])
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && defined(STARFISH_TIZEN)
     elm_config_accel_preference_set(config);
 #endif
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    elm_config_accel_preference_set("opengl");
+#endif
 #elif defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
     ecore_init();
     ecore_app_args_set(argc, (const char**)argv);

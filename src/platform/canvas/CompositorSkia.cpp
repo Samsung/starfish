@@ -397,7 +397,7 @@ Compositor* Compositor::create(StarFish* starfish, void* data)
 
 Compositor* Compositor::create(StarFish* starfish, CanvasSurface* surface)
 {
-    return new CompositorImplSkia(starfish, surface);
+    return new CompositorSkia(starfish, surface);
 }
 } // namespace StarFish
 

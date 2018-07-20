@@ -22,21 +22,6 @@
 #if defined(PORT_WINDOW_BACKEND_EFL)
 #include "StarFish.h"
 
-#include "core/dom/Element.h"
-#include "core/dom/MouseEvent.h"
-#include "core/dom/TouchEvent.h"
-#include "platform/event/PlatformKeyEventData.h"
-#include "core/modules/canvas/Canvas.h"
-#include "core/modules/canvas/Compositor.h"
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/WebView.h"
-#include "core/page/Window.h"
-#include "platform/window/PlatformWindow.h"
-#include "core/modules/threading/Thread.h"
-#include "core/modules/profiling/Profiling.h"
-#include "core/dom/CompositionEvent.h"
-
 #include <Elementary.h>
 #include <Evas_Engine_Buffer.h>
 #if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
@@ -48,6 +33,7 @@
 #include <Ecore_Input_Evas.h>
 #include <Ecore_IMF.h>
 #include <Ecore_IMF_Evas.h>
+#include <Evas_GL.h>
 
 #ifdef STARFISH_TIZEN_WEARABLE_WIDGET
 #include <tizen.h>
@@ -66,6 +52,21 @@
 #include <Evas_GL.h>
 #include <cairo-evas-gl.h>
 #endif
+
+#include "core/dom/Element.h"
+#include "core/dom/MouseEvent.h"
+#include "core/dom/TouchEvent.h"
+#include "platform/event/PlatformKeyEventData.h"
+#include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
+#include "core/page/Window.h"
+#include "platform/window/PlatformWindow.h"
+#include "core/modules/threading/Thread.h"
+#include "core/modules/profiling/Profiling.h"
+#include "core/dom/CompositionEvent.h"
 
 #ifndef STARFISH_TIZEN_WEARABLE_WIDGET
 extern "C" Ecore_Evas* ecore_evas_ecore_evas_get(const Evas* e);
@@ -456,6 +457,15 @@ public:
 
     uintptr_t m_handle;
     Evas_Object* m_window;
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    Evas_Object* m_glAdpater;
+    Evas_GL_Context* m_glCtx;
+    Evas_GL_Surface* m_glSfc;
+    Evas_GL_Config* m_glCfg;
+    Evas_GL* m_glEvasgl;
+    Evas_GL_API* m_glGlapi;
+#endif
+
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     Evas_Object* m_canvasAdpater;
     cairo_surface_t* m_canvasAdpaterSurface;
@@ -521,6 +531,246 @@ public:
     int m_offsetYDueToSoftwareKeyboard;
     size_t m_keyboardTimeoutId;
 };
+
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+static size_t g_totalCanvasSurfaceGLSize;
+class CanvasSurfaceGL : public CanvasSurface {
+public:
+    CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h)
+    {
+        m_window = (WindowImplEFL*)wnd;
+        m_width = w;
+        m_height = h;
+        m_imageWidth = m_bufferWidth = m_width = -1;
+        m_imageHeight = m_bufferHeight = m_height = -1;
+        m_pixelRatio = 1;
+        m_textureID = 0;
+        m_buffer = nullptr;
+
+        attachNativeBuffer(w, h);
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           CanvasSurfaceGL* s =
+                                               (CanvasSurfaceGL*)obj;
+                                           s->detachNativeBuffer();
+                                       },
+                                       NULL, NULL, NULL);
+    }
+
+    virtual void detachNativeBuffer()
+    {
+        if (m_buffer) {
+            evas_gl_make_current(m_window->m_glEvasgl, m_window->m_glSfc,
+                                 m_window->m_glCtx);
+            m_window->m_glGlapi->glDeleteTextures(1, &m_textureID);
+            g_totalCanvasSurfaceGLSize -=
+                m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+            free(m_buffer);
+            m_buffer = nullptr;
+            m_textureID = 0;
+            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
+                              g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
+        }
+    }
+
+    void attachNativeBuffer(size_t w, size_t h)
+    {
+        if (m_width != w || m_height != h) {
+            detachNativeBuffer();
+            m_width = w;
+            m_height = h;
+
+            float windowDevicePixelRatio =
+                m_window->starFish()->screenInfo().devicePixelRatio;
+
+            if ((int)w < m_window->starFish()->screenInfo().rect.width()) {
+                w += STARFISH_CANVAS_SURFACE_MARGIN;
+            }
+            if ((int)h < m_window->starFish()->screenInfo().rect.height()) {
+                h += STARFISH_CANVAS_SURFACE_MARGIN;
+            }
+
+            m_pixelRatio = 1;
+
+            while ((m_width / m_pixelRatio * windowDevicePixelRatio > 20000) ||
+                   (m_height / m_pixelRatio * windowDevicePixelRatio > 20000)) {
+                m_pixelRatio++;
+            }
+
+            m_imageWidth =
+                std::max((size_t)1, (size_t)(m_width / m_pixelRatio *
+                                             windowDevicePixelRatio));
+            m_imageHeight =
+                std::max((size_t)1, (size_t)(m_height / m_pixelRatio *
+                                             windowDevicePixelRatio));
+
+            m_bufferWidth = std::max(
+                (size_t)1, (size_t)(w / m_pixelRatio * windowDevicePixelRatio));
+            m_bufferHeight = std::max(
+                (size_t)1, (size_t)(h / m_pixelRatio * windowDevicePixelRatio));
+            m_bufferStride = m_bufferWidth * 4;
+            m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
+                                              sizeof(uint32_t));
+        }
+    }
+
+    virtual void resize(size_t w, size_t h)
+    {
+        STARFISH_RELEASE_ASSERT(w <= m_bufferWidth * m_pixelRatio);
+        STARFISH_RELEASE_ASSERT(h <= m_bufferHeight * m_pixelRatio);
+
+        m_width = w;
+        m_height = h;
+
+        m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
+        m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
+
+        STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
+        STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
+    }
+
+    void ensureGenerateTexture()
+    {
+        if (m_textureID) {
+            return;
+        }
+        evas_gl_make_current(m_window->m_glEvasgl, m_window->m_glSfc,
+                             m_window->m_glCtx);
+
+        m_window->m_glGlapi->glGenTextures(1, &m_textureID);
+        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+
+        // Bind the named texture to a texturing target
+        m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, m_textureID);
+        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+
+        m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        // Specifies the 2D texture image
+        m_window->m_glGlapi->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
+                                          m_bufferWidth, m_bufferHeight, 0,
+                                          GL_RGBA, GL_UNSIGNED_BYTE, m_buffer);
+        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+
+        // Set the filtering mode
+        m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D,
+                                             GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D,
+                                             GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+        m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, 0);
+        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+
+        g_totalCanvasSurfaceGLSize +=
+            m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+        STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
+                          g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
+    }
+
+    virtual void* unwrap()
+    {
+        ensureGenerateTexture();
+        return (void*)((size_t)m_textureID);
+    }
+
+    virtual uint8_t* data()
+    {
+        return m_buffer;
+    }
+
+    virtual size_t width()
+    {
+        return m_width;
+    }
+
+    virtual size_t height()
+    {
+        return m_height;
+    }
+
+    virtual size_t bufferWidth()
+    {
+        return m_bufferWidth;
+    }
+
+    virtual size_t bufferHeight()
+    {
+        return m_bufferHeight;
+    }
+
+    virtual size_t imageWidth()
+    {
+        return m_imageWidth;
+    }
+
+    virtual size_t imageHeight()
+    {
+        return m_imageHeight;
+    }
+
+    virtual size_t pixelRatio()
+    {
+        return m_pixelRatio;
+    }
+
+    virtual size_t bufferStride()
+    {
+        return m_bufferStride;
+    }
+
+    virtual void clear()
+    {
+        size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+        memset(m_buffer, 0x00, end);
+    }
+
+    virtual void notifyUpdateRegion(size_t x, size_t y, size_t w, size_t h)
+    {
+        evas_gl_make_current(m_window->m_glEvasgl, m_window->m_glSfc,
+                             m_window->m_glCtx);
+
+        m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, m_textureID);
+        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+
+        m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+        auto data = m_buffer;
+        // No support for all of skip, need to update a whole row at a time.
+        data += y * m_bufferWidth * 4;
+        x = 0;
+        w = m_bufferWidth;
+
+        // Specifies the 2D texture image
+        m_window->m_glGlapi->glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h,
+                                             GL_RGBA, GL_UNSIGNED_BYTE, data);
+        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+
+        m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+
+        m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, 0);
+        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+    }
+
+protected:
+    WindowImplEFL* m_window;
+    unsigned char* m_buffer;
+    GLuint m_textureID;
+    size_t m_width;
+    size_t m_height;
+    size_t m_imageWidth;
+    size_t m_imageHeight;
+    size_t m_bufferWidth;
+    size_t m_bufferHeight;
+    size_t m_bufferStride;
+    size_t m_pixelRatio;
+};
+
+CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
+{
+    return new CanvasSurfaceGL(wnd, w, h);
+}
+#endif
 
 #if defined(PORT_COMPOSITOR_BACKEND_EFL)
 class CanvasSurfaceEFL : public CanvasSurface {
@@ -1006,6 +1256,36 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_object_show(wnd->m_nonIMEKeyEventBox);
     elm_box_layout_set(wnd->m_mainBox, elm_box_layout_cb, NULL, NULL);
     evas_object_show(wnd->m_mainBox);
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    wnd->m_glAdpater =
+        evas_object_image_filled_add(evas_object_evas_get(wnd->m_mainBox));
+    elm_box_pack_end(wnd->m_mainBox, wnd->m_glAdpater);
+    evas_object_resize(wnd->m_glAdpater, width, height);
+    evas_object_image_size_set(wnd->m_glAdpater, width, height);
+    evas_object_move(wnd->m_glAdpater, wnd->starFish()->posX(),
+                     wnd->starFish()->posY());
+
+    wnd->m_glEvasgl = evas_gl_new(evas_object_evas_get(wnd->m_mainBox));
+    wnd->m_glGlapi = evas_gl_api_get(wnd->m_glEvasgl);
+
+    // Set a surface config
+    wnd->m_glCfg = evas_gl_config_new();
+    wnd->m_glCfg->color_format = EVAS_GL_RGBA_8888;
+    wnd->m_glCfg->depth_bits = EVAS_GL_DEPTH_NONE; // Othe config options
+    wnd->m_glCfg->stencil_bits = EVAS_GL_STENCIL_BIT_1;
+    wnd->m_glCfg->options_bits = EVAS_GL_OPTIONS_NONE;
+
+    // Create a surface and context
+    wnd->m_glSfc =
+        evas_gl_surface_create(wnd->m_glEvasgl, wnd->m_glCfg, width, height);
+    wnd->m_glCtx = evas_gl_context_version_create(
+        wnd->m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
+    //-//
+
+    Evas_Native_Surface ns;
+    evas_gl_native_surface_get(wnd->m_glEvasgl, wnd->m_glSfc, &ns);
+    evas_object_image_native_surface_set(wnd->m_glAdpater, &ns);
+#endif
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
     defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
@@ -1725,6 +2005,10 @@ void WindowImplEFL::setNeedsRendering()
 
 Canvas* WindowImplEFL::preparePainting()
 {
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    evas_object_hide(m_glAdpater);
+
+#endif
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
 #ifdef STARFISH_ENABLE_TEST
     {
@@ -1929,6 +2213,64 @@ Canvas* WindowImplEFL::preparePainting()
 
 Compositor* WindowImplEFL::prepareCompositor()
 {
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    WindowImplEFL* wnd = (WindowImplEFL*)this;
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+    {
+        int w, h;
+        evas_object_image_size_get(m_canvasAdpater, &w, &h);
+        if (w != 1 || h != 1) {
+            evas_object_image_size_set(m_canvasAdpater, 1, 1);
+            evas_object_image_fill_set(m_canvasAdpater, 0, 0, 1, 1);
+            void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
+            memset(addr, 0, 4);
+            evas_object_image_data_set(m_canvasAdpater, addr);
+            evas_object_image_data_update_add(m_canvasAdpater, 0, 0, 1, 1);
+            evas_object_hide(m_canvasAdpater);
+        }
+    }
+#endif
+    evas_object_show(m_glAdpater);
+
+    evas_object_image_pixels_dirty_set(m_glAdpater, EINA_TRUE);
+    /*
+    evas_object_image_pixels_get_callback_set(
+            m_glAdpater,
+            [](void* data, Evas_Object* o) {
+                WindowImplEFL* wnd = (WindowImplEFL*)data;
+                evas_gl_make_current(wnd->m_glEvasgl, wnd->m_glSfc,
+    wnd->m_glCtx);
+
+                static int s = 0;
+                s++;
+                wnd->m_glGlapi->glViewport(0, 0, wnd->width(), wnd->height());
+                switch (s % 3) {
+                case 0:
+                    wnd->m_glGlapi->glClearColor(0, 1, 1, 1);
+                    break;
+                case 1:
+                    wnd->m_glGlapi->glClearColor(1, 0, 1, 1);
+                    break;
+                case 2:
+                    wnd->m_glGlapi->glClearColor(1, 1, 0, 1);
+                    break;
+                }
+                wnd->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT |
+    GL_DEPTH_BUFFER_BIT);
+                wnd->m_glGlapi->glFlush();
+            },
+            this);
+*/
+    evas_gl_make_current(wnd->m_glEvasgl, wnd->m_glSfc, wnd->m_glCtx);
+    struct dummy {
+        Evas_GL_API* evasGLAPI;
+    } d;
+    d.evasGLAPI = m_glGlapi;
+
+    return Compositor::create(starFish(), &d);
+#endif
+
 #if defined(PORT_COMPOSITOR_BACKEND_SKIA)
     auto iter = m_objectList.begin();
     while (iter != m_objectList.end()) {
