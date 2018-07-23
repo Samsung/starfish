@@ -146,7 +146,7 @@ public:
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
                            ImageRenderingValue imageRenderingMode)
     {
-        m_compositor->drawImage(data, dst);
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
@@ -174,8 +174,7 @@ public:
                                  bool xRepeat, bool yRepeat,
                                  ImageRenderingValue imageRenderingMode)
     {
-        m_compositor->drawRepeatImage(data, dst, imageWidth, imageHeight,
-                                      xRepeat, yRepeat);
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     virtual void drawLinearGradient(const Unit::Rect& dst,

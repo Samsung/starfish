@@ -1485,6 +1485,12 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                     window->document()->frame()->asFrameDocument();
                 rect = Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
                                   window->innerWidth(), window->innerHeight());
+                if (rootOrBodyelement->webView()
+                        ->rootStackingContext()
+                        ->needsGraphicsBuffer()) {
+                    rect = Unit::Rect(0, 0, doc->scrollWidth(),
+                                      doc->scrollHeight());
+                }
             } else {
                 unsigned int idx = style->backgroundLayerSize() - 1;
                 rect = box->makeRect(BoxValue::PaddingBoxBoxValue);
@@ -1504,6 +1510,12 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
             paintingRect =
                 Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
                            window->innerWidth(), window->innerHeight());
+            if (rootOrBodyelement->webView()
+                    ->rootStackingContext()
+                    ->needsGraphicsBuffer()) {
+                paintingRect =
+                    Unit::Rect(0, 0, doc->scrollWidth(), doc->scrollHeight());
+            }
         }
 
         if (attachment == FixedBackgroundAttachmentValue) {
@@ -3352,8 +3364,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     bool ret = !shouldApplyOverflow();
     LayoutRect outline = frameVisibleOutlineRect();
 
-    if (ctx.purpose >= Frame::ComputeVisibleRectContext::GraphicsBufferBySelf &&
-        isFrameBlockBox()) {
+    if (ctx.isVisibleRectCollapsible && isFrameBlockBox()) {
         BorderData border = cs->border();
         if (isAnonymous() ||
             (cs->backgroundColor().isTransparent() &&
@@ -3395,9 +3406,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             }
         }
         for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
-            if (ctx.purpose >=
-                    Frame::ComputeVisibleRectContext::GraphicsBufferBySelf &&
-                isFrameBlockBox()) {
+            if (ctx.isVisibleRectCollapsible && isFrameBlockBox()) {
                 if (shadow->hasColor() && !shadow->color().isTransparent()) {
                     LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
                     shadowsRect.unite(rect);

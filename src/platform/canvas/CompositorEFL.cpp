@@ -149,24 +149,6 @@ public:
         m_canvas->drawImage(data, dst);
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
-    {
-        m_canvas->drawImage(data, dst);
-    }
-
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
-
-    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
-                                 float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat)
-    {
-        m_canvas->drawImage(data, dst);
-    }
-
     virtual void applyMatrixTo(LayoutLocation& lp)
     {
         m_canvas->applyMatrixTo(lp);

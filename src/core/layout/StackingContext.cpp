@@ -24,7 +24,9 @@
 #include "StarFish.h"
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
+#include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLIFrameElement.h"
+#include "core/dom/HTMLHtmlElement.h"
 #include "core/style/FilterFunctions.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
@@ -919,12 +921,36 @@ void StackingContext::applyStackingContextProperties(
     if (willBeComposited) {
         ensureRareData();
 
+        bool shouldPaintWindowBackgroundImage = false;
+        if (isRootContext()) {
+            BrowsingContext* bc =
+                m_owner->node()->document()->browsingContext();
+            HTMLElement* e = nullptr;
+            if (bc->hasRootElementBackground()) {
+                HTMLHtmlElement* root = bc->document()->rootElement();
+                e = root;
+            } else if (bc->hasBodyElementBackground()) {
+                HTMLBodyElement* body = bc->document()->rootElement()->body();
+                e = body;
+            }
+
+            if (e) {
+                if (e->style()->backgroundLayerSize()) {
+                    shouldPaintWindowBackgroundImage = true;
+                }
+            }
+        }
+
         SkMatrix l = SkMatrix::I();
         Frame::ComputeVisibleRectContext ctx(
             willBeCompositedDueToSelf
                 ? Frame::ComputeVisibleRectContext::GraphicsBufferBySelf
                 : Frame::ComputeVisibleRectContext::GraphicsBufferByOtherLayer,
             this, l, m_rareData->m_visibleRect);
+
+        if (shouldPaintWindowBackgroundImage) {
+            ctx.isVisibleRectCollapsible = false;
+        }
 
         m_owner->computeVisibleRect(ctx);
 
@@ -1247,6 +1273,12 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         }
 
         canvas->clearColor(Unit::Color(0, 0, 0, 0));
+        if (isRootContext()) {
+            m_owner->node()
+                ->document()
+                ->browsingContext()
+                ->paintWindowBackground(canvas);
+        }
     } else {
         clearGraphicsBuffer();
     }

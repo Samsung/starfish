@@ -1032,7 +1032,34 @@ RenderResult WebView::rendering(bool force)
             compositor->translate(-mainFrame->scrollLeft(),
                                   -mainFrame->scrollTop());
             Canvas* canvas = Compositor::createCanvasAdaptor(compositor);
-            mainBrowsingContext()->paintWindowBackground(canvas);
+
+            bool colorFill = false;
+            if (mainBrowsingContext()->hasRootElementBackground() ||
+                mainBrowsingContext()->hasBodyElementBackground()) {
+                Unit::Color clr;
+                if (mainBrowsingContext()->hasRootElementBackground()) {
+                    HTMLHtmlElement* root =
+                        mainBrowsingContext()->document()->rootElement();
+                    colorFill = true;
+                    clr = root->style()->color();
+                } else {
+                    HTMLBodyElement* body = mainBrowsingContext()
+                                                ->document()
+                                                ->rootElement()
+                                                ->body();
+                    if (!body) {
+                        colorFill = true;
+                        clr = body->style()->color();
+                    }
+                }
+                if (colorFill) {
+                    compositor->clearColor(clr);
+                }
+            }
+
+            if (!colorFill) {
+                mainBrowsingContext()->clearingBeforePaint(canvas);
+            }
 
             m_rootStackingContext->compositeStackingContext(compositor);
 
