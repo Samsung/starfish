@@ -24,6 +24,7 @@
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLSelectElement.h"
 #include "core/layout/FrameBlockBox.h"
+#include "core/layout/FrameSelectBox.h"
 
 namespace StarFish {
 
@@ -46,14 +47,53 @@ FrameOptionBox::FrameOptionBox(Node* node, ComputedStyle* style)
 {
 }
 
+FrameSelectBox* FrameOptionBox::selectBox()
+{
+    for (Frame* p = parent(); p; p = p->parent()) {
+        if (p->node() && (p->node()->isHTMLIFrameElement() ||
+                          p->node()->isHTMLFormElement())) {
+            return nullptr;
+        }
+
+        if (p->isFrameSelectBox()) {
+            return p->asFrameSelectBox();
+        }
+    }
+
+    return nullptr;
+}
+
 void FrameOptionBox::layout(LayoutContext& ctx,
                             Frame::LayoutWantToResolve resolveWhat)
 {
+    if (node() && node()->isHTMLOptionElement() &&
+        node()->asHTMLOptionElement()->isDisabled()) {
+        return;
+    }
+
     STARFISH_ASSERT(node()->isHTMLOptionElement());
     HTMLOptionElement* optionNode = node()->asHTMLOptionElement();
+    HTMLSelectElement* selectNode = optionNode->selectElement();
 
-    if (optionNode->m_drawOptionBox) {
+    if (!selectNode) {
         FrameBlockBox::layout(ctx, resolveWhat);
+    } else {
+        if (selectNode->displaySize() == 1) {
+            if (optionNode->selectedness() &&
+                selectBox()->m_drawOptionsCount == 0) {
+                if (resolveWhat & ResolveHeight) {
+                    selectBox()->m_drawOptionsCount++;
+                }
+                FrameBlockBox::layout(ctx, resolveWhat);
+            }
+        } else if (selectNode->displaySize() > 1 &&
+                   selectBox()->m_drawOptionsCount <
+                       selectNode->displaySize()) {
+            if (resolveWhat & ResolveHeight) {
+                selectBox()->m_drawOptionsCount++;
+            }
+            FrameBlockBox::layout(ctx, resolveWhat);
+        }
     }
 }
 }

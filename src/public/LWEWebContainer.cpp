@@ -446,17 +446,22 @@ void WebContainer::RegisterShowDropdownMenuHandler(
 {
     TO_STARFISH(m_starfish)
         ->platformWindow()
-        ->registerPlatformCallbackHandler(
-            std::string("showDropdownMenu"), [this, cb](void* param) -> void {
-                struct Param {
-                    std::vector<std::string>* list;
-                };
+        ->registerCallbackHandler(std::string("showDropdownMenu"),
+                                  [this, cb](void* param) -> void {
+                                      struct Param {
+                                          std::vector<std::string>* list;
+                                      };
 
-                Param* p = (Param*)param;
-                cb(this, p->list);
-                delete p->list;
-                delete p;
-            });
+                                      Param* p = (Param*)param;
+                                      cb(this, p->list);
+                                      delete p->list;
+                                      delete p;
+                                  });
+}
+
+void WebContainer::callHandler(const std::string& handler, void* param)
+{
+    TO_STARFISH(m_starfish)->platformWindow()->callHandler(handler, param);
 }
 
 void WebContainer::UpdateBuffer(void* buffer, uint width, uint height,

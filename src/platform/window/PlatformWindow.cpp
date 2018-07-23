@@ -456,24 +456,21 @@ RenderResult PlatformWindow::rendering()
     return renderResult;
 }
 
-void PlatformWindow::registerPlatformCallbackHandler(
+void PlatformWindow::registerCallbackHandler(
     const std::string& handlerName, const std::function<void(void*)>& handler)
 {
-    auto it = m_platformHandlersToCallbacks.find(handlerName);
-    if (it == m_platformHandlersToCallbacks.end()) {
-        m_platformHandlersToCallbacks.insert(
-            std::make_pair(handlerName, handler));
-
+    auto it = m_handlersToCallbacks.find(handlerName);
+    if (it == m_handlersToCallbacks.end()) {
+        m_handlersToCallbacks.insert(std::make_pair(handlerName, handler));
     } else {
         it->second = handler;
     }
 }
 
-void PlatformWindow::callPlatformHandler(const std::string& handlerName,
-                                         void* param)
+void PlatformWindow::callHandler(const std::string& handlerName, void* param)
 {
-    auto it = m_platformHandlersToCallbacks.find(handlerName);
-    if (it == m_platformHandlersToCallbacks.end()) {
+    auto it = m_handlersToCallbacks.find(handlerName);
+    if (it == m_handlersToCallbacks.end()) {
         return;
     }
 
@@ -492,9 +489,8 @@ void PlatformWindow::callPlatformHandler(const std::string& handlerName,
         nullptr,
         [](size_t, void* env) {
             Env* e = (Env*)env;
-            auto it =
-                e->window->m_platformHandlersToCallbacks.find(e->handlerName);
-            if (it != e->window->m_platformHandlersToCallbacks.end()) {
+            auto it = e->window->m_handlersToCallbacks.find(e->handlerName);
+            if (it != e->window->m_handlersToCallbacks.end()) {
                 (it->second)(e->param);
             }
             delete e;

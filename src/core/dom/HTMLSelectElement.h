@@ -71,13 +71,12 @@ public:
     virtual QualifiedName name() override;
 
     HTMLCollection* selectedOptions();
-    HTMLCollection* ensureSelectedOptions();
 
     // Other methods
-    HTMLOptionElement* firstOptionElement();
     HTMLOptionElement* firstSelectedOptionElement();
     void computeListOfOptionElements(Node* c,
                                      GCVector<HTMLOptionElement*>& list);
+    void computeSelectedOptions(GCVector<HTMLOptionElement*>& list);
 
     void fireSelectUpdateNotification();
     bool handleDefaultEvent(Event* event) override;
@@ -103,6 +102,7 @@ private:
                          HTMLOptionElement* resetFrom);
 
     void showDropdownMenu();
+    void onDropdownMenuItemSelected(int position);
 
     HTMLCollection* m_selectedOptions;
     HTMLOptionsCollection* m_options;

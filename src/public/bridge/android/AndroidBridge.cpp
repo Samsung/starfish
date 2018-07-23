@@ -378,6 +378,23 @@ void callShowDropdownMenu(LWE::WebContainer* view,
                         jlist);
 }
 
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_onDropdownMenuItemSelected(
+    JNIEnv* env, jobject thiz, jlong data, jint position)
+{
+    LOGI("onDropdownmenuselected: started");
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+
+    struct Param {
+        int position;
+    };
+    Param* p = new Param();
+    p->position = position;
+
+    webContainer->callHandler(std::string("onDropdownMenuItemSelected"),
+                              (void*)p);
+}
+
 int startTimer(int ms, TimerCallback pointer, void* data)
 {
     JNIEnv* env = g_WindowGlue.m_env;

@@ -24,6 +24,7 @@
 
 namespace StarFish {
 
+class FrameSelectBox;
 class FrameTreeBuilderContext;
 class ComputedStyle;
 
@@ -40,6 +41,8 @@ public:
     {
         return true;
     }
+
+    FrameSelectBox* selectBox();
 
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;

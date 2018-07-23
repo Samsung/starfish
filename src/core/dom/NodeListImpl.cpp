@@ -300,7 +300,7 @@ bool isFormElements(Node* node, void* data, GCVector<Node*>* collection)
 bool isSelectedOption(Node* node, void* data, GCVector<Node*>* collection)
 {
     if (node->isHTMLOptionElement()) {
-        if (node->asHTMLOptionElement()->selected()) {
+        if (node->asHTMLOptionElement()->selectedness()) {
             return true;
         }
     }

@@ -22,6 +22,7 @@
 #include "FrameSelectBox.h"
 
 #include "core/dom/HTMLCollection.h"
+#include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLSelectElement.h"
 #include "core/dom/HTMLOptionElement.h"
 #include "core/layout/FrameBlockBox.h"
@@ -44,20 +45,14 @@ void* FrameSelectBox::operator new(size_t size)
 
 FrameSelectBox::FrameSelectBox(Node* node, ComputedStyle* style)
     : FrameBlockBox(node, style)
+    , m_drawOptionsCount(0)
 {
 }
 
 void FrameSelectBox::layout(LayoutContext& ctx,
                             Frame::LayoutWantToResolve resolveWhat)
 {
-    STARFISH_ASSERT(node()->isHTMLSelectElement());
-    HTMLSelectElement* selectNode = node()->asHTMLSelectElement();
-    HTMLOptionElement* selected = selectNode->firstSelectedOptionElement();
-
-    if (selected) {
-        selected->m_drawOptionBox = true;
-    }
-
+    m_drawOptionsCount = 0;
     FrameBlockBox::layout(ctx, resolveWhat);
 }
 }

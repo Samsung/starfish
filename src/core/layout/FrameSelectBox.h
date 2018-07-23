@@ -28,6 +28,8 @@ class FrameTreeBuilderContext;
 class ComputedStyle;
 
 class FrameSelectBox final : public FrameBlockBox {
+    friend class FrameOptionBox;
+
 public:
     FrameSelectBox(Node* node, ComputedStyle* style);
 
@@ -52,6 +54,9 @@ protected:
     {
         FrameBlockBox::fillGCDescriptor(desc);
     }
+
+private:
+    int m_drawOptionsCount;
 };
 }
 

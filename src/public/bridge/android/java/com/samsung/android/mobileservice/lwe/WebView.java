@@ -667,4 +667,19 @@ public class WebView extends SurfaceView {
         // ArrayList<String> itemList = new ArrayList(Arrays.asList(list));
         // TODO: display a dropdownmenu from this thread
     }
+
+    public void onDropdownMenuItemSelected(int position) {
+        if (mWebViewHandler != null) {
+            mWebViewHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    if (mWebViewInternalHandle != 0) {
+                        onDropdownMenuItemSelected(mWebViewInternalHandle, position);
+                    }
+                }
+            });
+        }
+    }
+
+    native private void onDropdownMenuItemSelected(long starFish, int position);
 }

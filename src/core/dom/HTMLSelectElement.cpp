@@ -105,18 +105,7 @@ void HTMLSelectElement::setValue(String* value)
     setNeedsFrameTreeBuild();
 }
 
-HTMLOptionElement* HTMLSelectElement::firstOptionElement()
-{
-    GCVector<HTMLOptionElement*> list;
-    computeListOfOptionElements(this, list);
-
-    if (list.empty()) {
-        return nullptr;
-    }
-
-    return list[0];
-}
-
+// use this function internally to retrive a list of option elements efficiently
 void HTMLSelectElement::computeListOfOptionElements(
     Node* parent, GCVector<HTMLOptionElement*>& list)
 {
@@ -129,26 +118,28 @@ void HTMLSelectElement::computeListOfOptionElements(
     }
 }
 
-HTMLCollection* HTMLSelectElement::ensureSelectedOptions()
+// IDL method
+HTMLCollection* HTMLSelectElement::selectedOptions()
 {
     if (!m_selectedOptions) {
         m_selectedOptions = new HTMLCollection(
-            this, NodeListImpl::SelectedOptionsFilter, nullptr, true);
+            this, NodeListImpl::SelectedOptionsFilter, nullptr, false);
     }
     return m_selectedOptions;
 }
 
-HTMLCollection* HTMLSelectElement::selectedOptions()
+// internal use for faster computation
+void HTMLSelectElement::computeSelectedOptions(
+    GCVector<HTMLOptionElement*>& list)
 {
-    HTMLCollection* selectedOptions = ensureSelectedOptions();
-    if (selectedOptions->length() < 1) {
-        HTMLOptionElement* option = firstOptionElement();
-        if (option != nullptr && option->selected() != true) {
-            option->setSelectedness(true);
-            selectedOptions->getNodeListImpl().invalidateCache();
+    GCVector<HTMLOptionElement*> listAll;
+    computeListOfOptionElements(this, listAll);
+
+    for (auto item : listAll) {
+        if (item->selectedness()) {
+            list.push_back(item);
         }
     }
-    return selectedOptions;
 }
 
 String* HTMLSelectElement::type()
@@ -209,6 +200,7 @@ void HTMLSelectElement::reset()
     }
 }
 
+// IDL method
 HTMLOptionsCollection* HTMLSelectElement::options()
 {
     if (!m_options) {
@@ -394,30 +386,30 @@ void HTMLSelectElement::resetFromOption(HTMLOptionElement* resetFrom)
 
 void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
 {
-    if (newChild->isHTMLOptionElement() && !multiple()) {
-        HTMLOptionElement* newElement = newChild->asHTMLOptionElement();
-        HTMLCollection* selectedOptions = ensureSelectedOptions();
+    if (!newChild->isHTMLOptionElement()) {
+        return;
+    }
 
-        if (!newElement->selected()) {
-            if (selectedOptions->length() < 1) {
-                HTMLOptionElement* option = firstOptionElement();
-                if (option != nullptr && option->selected() != true) {
-                    selectedOptions->getNodeListImpl().invalidateCache();
+    HTMLOptionElement* newElement = newChild->asHTMLOptionElement();
+    GCVector<HTMLOptionElement*> selectedOptions;
+    computeSelectedOptions(selectedOptions);
+
+    if (!multiple()) {
+        if (displaySize() == 1 && selectedOptions.size() == 0) {
+            GCVector<HTMLOptionElement*> list;
+            computeListOfOptionElements(this, list);
+            for (auto option : list) {
+                if (!option->isDisabled()) {
                     option->setSelectedness(true);
+                    break;
                 }
             }
-        } else {
-            Element* element = this->firstElementChild();
-            while (element) {
-                if (element->isHTMLOptionElement() &&
-                    element->asHTMLOptionElement() != newElement) {
-                    HTMLOptionElement* option = element->asHTMLOptionElement();
-                    if (option->selected()) {
-                        selectedOptions->getNodeListImpl().invalidateCache();
-                        option->setSelectedness(false);
-                    }
-                }
-                element = element->nextElementSibling();
+        } else if (selectedOptions.size() >= 2) {
+            GCVector<HTMLOptionElement*> list;
+            computeListOfOptionElements(this, list);
+
+            for (size_t i = 0; i < list.size() - 1; i++) {
+                list[i]->setSelectedness(false);
             }
         }
     }
@@ -425,9 +417,10 @@ void HTMLSelectElement::didNodeInserted(Node* parent, Node* newChild)
 
 HTMLOptionElement* HTMLSelectElement::firstSelectedOptionElement()
 {
-    HTMLCollection* selectedOptions = HTMLSelectElement::selectedOptions();
-    if (selectedOptions->length() > 0) {
-        return selectedOptions->item(0)->asHTMLOptionElement();
+    GCVector<HTMLOptionElement*> selectedOptions;
+    computeSelectedOptions(selectedOptions);
+    if (selectedOptions.size() > 0) {
+        return selectedOptions[0];
     }
 
     return nullptr;
@@ -459,7 +452,6 @@ bool HTMLSelectElement::handleDefaultEvent(Event* event)
                     event->target()->asHTMLOptionElement();
                 if (option->selectElement() == this) {
                     showDropdownMenu();
-                    fireSelectUpdateNotification();
                 }
             }
         }
@@ -470,6 +462,18 @@ bool HTMLSelectElement::handleDefaultEvent(Event* event)
 
 void HTMLSelectElement::showDropdownMenu()
 {
+    // register the callback to be called when an item is selected
+    document()->starFish()->platformWindow()->registerCallbackHandler(
+        std::string("onDropdownMenuItemSelected"), [this](void* param) -> void {
+            struct Param {
+                int position;
+            };
+            Param* p = (Param*)param;
+            onDropdownMenuItemSelected(p->position);
+            delete p;
+        });
+
+    // calls the platform's dropdownmenu UI
     struct Param {
         std::vector<std::string>* list;
     };
@@ -482,17 +486,29 @@ void HTMLSelectElement::showDropdownMenu()
     for (auto item : list) {
         if (item->isHTMLOptionElement()) {
             auto o = item->asHTMLOptionElement();
-            Nullable<String*> text = o->textContent();
-            if (text.hasValue()) {
-                p->list->push_back(
-                    std::string(text.getValue()->toUTF8NonGCString().data()));
-            } else {
-                p->list->push_back(std::string(""));
-            }
+            p->list->push_back(o->text()->toUTF8NonGCString().data());
         }
     }
 
-    document()->starFish()->platformWindow()->callPlatformHandler(
+    document()->starFish()->platformWindow()->callHandler(
         std::string("showDropdownMenu"), (void*)p);
+}
+
+void HTMLSelectElement::onDropdownMenuItemSelected(int position)
+{
+    GCVector<HTMLOptionElement*> list;
+    computeListOfOptionElements(this, list);
+
+    if (0 < position && (size_t)position < list.size()) {
+        if (!multiple()) {
+            if (!list[position]->selectedness()) {
+                setSelectedIndex(position);
+                setNeedsFrameTreeBuild();
+                fireSelectUpdateNotification();
+            }
+        } else {
+            // TODO: multiple selection
+        }
+    }
 }
 }
