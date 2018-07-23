@@ -48,11 +48,6 @@
 #include "SkSurface.h"
 #endif
 
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-#include <Evas_GL.h>
-#include <cairo-evas-gl.h>
-#endif
-
 #include "core/dom/Element.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
@@ -106,15 +101,26 @@ public:
         m_nonIMEKeyEventBox = nullptr;
         m_dummyBox = nullptr;
         m_dummyBoxClipper = nullptr;
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
+    !defined(PORT_COMPOSITOR_BACKEND_GL)
         m_canvasAdpater = nullptr;
         m_canvasAdpaterSurface = nullptr;
         m_canvasAdpaterCairo = nullptr;
 #endif
-#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if defined(PORT_GRAPHIC_BACKEND_EFL_SKIA) && \
+    !defined(PORT_COMPOSITOR_BACKEND_GL)
         m_canvasAdpater = nullptr;
         m_canvasAdpaterSurface = nullptr;
         m_canvasAdpaterSkia = nullptr;
+#endif
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+        m_glPaintingSurface = nullptr;
+        m_glAdpater = nullptr;
+        m_glCtx = nullptr;
+        m_glSfc = nullptr;
+        m_glCfg = nullptr;
+        m_glEvasgl = nullptr;
+        m_glGlapi = nullptr;
 #endif
         m_renderingAnimator = nullptr;
         m_isMouseLbuttonDown = false;
@@ -129,16 +135,6 @@ public:
         m_softKeyboardOrigin = nullptr;
         m_lastRenderingTime = tickCount();
 
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
-    defined(STARFISH_TIZEN_EVASGL_CAIRO)
-        m_surface = nullptr;
-        m_cairo = nullptr;
-        m_cairoDevice = nullptr;
-        m_evasGL = nullptr;
-        m_evasGLConfig = nullptr;
-        m_evasGLSurface = nullptr;
-        m_evasGLContext = nullptr;
-#endif
 #ifdef STARFISH_TIZEN_TN
         m_focusInHandler = nullptr;
 #endif
@@ -291,6 +287,19 @@ public:
             m_renderingAnimator = nullptr;
         }
 
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+        evas_object_hide(m_glAdpater);
+        evas_object_image_native_surface_set(m_glAdpater, NULL);
+        evas_gl_context_destroy(m_glEvasgl, m_glCtx);
+        evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
+        evas_gl_config_free(m_glCfg);
+        evas_gl_free(m_glEvasgl);
+
+        if (m_glAdpater) {
+            evas_object_del(m_glAdpater);
+            m_glAdpater = nullptr;
+        }
+#endif
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
     defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
         if (m_canvasAdpater) {
@@ -400,6 +409,28 @@ public:
         m_inRendering = true;
         // ProfilerTimer renderingTimer(starFish(), "WindowImplEFL::rendering");
         RenderResult ret = PlatformWindow::rendering();
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+        if (ret.didPaintingOrCompositing) {
+            evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
+            if (webView()->didCompositeBefore()) {
+            } else {
+                m_glPaintingSurface->notifyUpdateRegion(
+                    (int)ret.updateRect.x(), (int)ret.updateRect.y(),
+                    (int)ret.updateRect.width(), (int)ret.updateRect.height());
+                // m_glPaintingSurface->notifyUpdateRegion(0, 0, width(),
+                // height());
+                struct dummy {
+                    Evas_GL_API* evasGLAPI;
+                } d;
+                d.evasGLAPI = m_glGlapi;
+                Compositor* c = Compositor::create(starFish(), &d);
+                c->clearColor(Unit::Color(0, 0, 0, 0));
+                c->drawSurface(m_glPaintingSurface,
+                               Unit::Rect(0, 0, width(), height()));
+                delete c;
+            }
+        }
+#else
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
     defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
         if (ret.didPaintingOrCompositing &&
@@ -442,6 +473,7 @@ public:
 #endif
         }
 #endif
+#endif
 #if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         evas_object_raise(m_dummyBox);
 #else
@@ -458,6 +490,7 @@ public:
     uintptr_t m_handle;
     Evas_Object* m_window;
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
+    CanvasSurface* m_glPaintingSurface;
     Evas_Object* m_glAdpater;
     Evas_GL_Context* m_glCtx;
     Evas_GL_Surface* m_glSfc;
@@ -481,17 +514,6 @@ public:
     Evas_Object* m_nonIMEKeyEventBox;
     Evas_Object* m_dummyBox;
     Evas_Object* m_dummyBoxClipper;
-
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
-    defined(STARFISH_TIZEN_EVASGL_CAIRO)
-    cairo_surface_t* m_surface;
-    cairo_t* m_cairo;
-    cairo_device_t* m_cairoDevice;
-    Evas_GL* m_evasGL;
-    Evas_GL_Config* m_evasGLConfig;
-    Evas_GL_Surface* m_evasGLSurface;
-    Evas_GL_Context* m_evasGLContext;
-#endif
 
     void (*m_resizeHandler)(void* data, Evas* evas, Evas_Object* obj,
                             void* event_info);
@@ -640,19 +662,16 @@ public:
         m_window->m_glGlapi->glGenTextures(1, &m_textureID);
         STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
 
-        // Bind the named texture to a texturing target
         m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, m_textureID);
         STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
 
         m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
-        // Specifies the 2D texture image
         m_window->m_glGlapi->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                           m_bufferWidth, m_bufferHeight, 0,
                                           GL_RGBA, GL_UNSIGNED_BYTE, m_buffer);
         STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
 
-        // Set the filtering mode
         m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D,
                                              GL_TEXTURE_MIN_FILTER, GL_NEAREST);
         m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D,
@@ -727,6 +746,10 @@ public:
 
     virtual void notifyUpdateRegion(size_t x, size_t y, size_t w, size_t h)
     {
+        if (m_textureID == 0) {
+            ensureGenerateTexture();
+            return;
+        }
         evas_gl_make_current(m_window->m_glEvasgl, m_window->m_glSfc,
                              m_window->m_glCtx);
 
@@ -736,15 +759,21 @@ public:
         m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
         auto data = m_buffer;
-        // No support for all of skip, need to update a whole row at a time.
         data += y * m_bufferWidth * 4;
         x = 0;
         w = m_bufferWidth;
 
-        // Specifies the 2D texture image
-        m_window->m_glGlapi->glTexSubImage2D(GL_TEXTURE_2D, 0, x, y, w, h,
-                                             GL_RGBA, GL_UNSIGNED_BYTE, data);
-        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+        if (data == m_buffer && x == 0 && y == 0 && w == m_bufferWidth &&
+            h == m_bufferHeight) {
+            m_window->m_glGlapi->glTexImage2D(
+                GL_TEXTURE_2D, 0, GL_RGBA, m_bufferWidth, m_bufferHeight, 0,
+                GL_RGBA, GL_UNSIGNED_BYTE, m_buffer);
+        } else {
+            m_window->m_glGlapi->glTexSubImage2D(
+                GL_TEXTURE_2D, 0, x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data);
+        }
+        GLuint error;
+        STARFISH_ASSERT((error = m_window->m_glGlapi->glGetError()) == 0);
 
         m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
@@ -1285,10 +1314,12 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     Evas_Native_Surface ns;
     evas_gl_native_surface_get(wnd->m_glEvasgl, wnd->m_glSfc, &ns);
     evas_object_image_native_surface_set(wnd->m_glAdpater, &ns);
+    evas_object_show(wnd->m_glAdpater);
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if (defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+     defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)) && \
+    !defined(PORT_COMPOSITOR_BACKEND_GL)
     wnd->m_canvasAdpater =
         evas_object_image_add(evas_object_evas_get(wnd->m_mainBox));
     elm_box_pack_end(wnd->m_mainBox, wnd->m_canvasAdpater);
@@ -1298,38 +1329,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_object_image_content_hint_set(wnd->m_canvasAdpater,
                                        EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
     evas_object_image_alpha_set(wnd->m_canvasAdpater, EINA_TRUE);
-#endif
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
-    defined(STARFISH_TIZEN_EVASGL_CAIRO)
-    Evas_Native_Surface ns;
-    wnd->m_evasGL = evas_gl_new(evas_object_evas_get(wnd->m_canvasAdpater));
-    wnd->m_evasGLConfig = evas_gl_config_new();
-    wnd->m_evasGLConfig->color_format = EVAS_GL_RGBA_8888;
-    wnd->m_evasGLConfig->stencil_bits = EVAS_GL_STENCIL_BIT_8;
-    wnd->m_evasGLConfig->multisample_bits = EVAS_GL_MULTISAMPLE_MED;
-    wnd->m_evasGLSurface = evas_gl_surface_create(
-        wnd->m_evasGL, wnd->m_evasGLConfig, wnd->width(), wnd->height());
-    wnd->m_evasGLContext = evas_gl_context_create(wnd->m_evasGL, NULL);
-    evas_gl_native_surface_get(wnd->m_evasGL, wnd->m_evasGLSurface, &ns);
-    evas_object_image_native_surface_set(wnd->m_canvasAdpater, &ns);
-    evas_object_image_pixels_get_callback_set(
-        wnd->m_canvasAdpater,
-        [](void* data, Evas_Object* o) {
-            STARFISH_RELEASE_ASSERT(isMainThread());
-            WindowImplEFL* wnd = (WindowImplEFL*)data;
-            StarFishEnterer enter(wnd->starFish());
-            wnd->rendering();
-        },
-        wnd);
-
-    setenv("CAIRO_GL_COMPOSITOR", "msaa", 1);
-    wnd->m_cairoDevice = (cairo_device_t*)cairo_evas_gl_device_create(
-        wnd->m_evasGL, wnd->m_evasGLContext);
-    cairo_gl_device_set_thread_aware(wnd->m_cairoDevice, 0);
-    wnd->m_surface = (cairo_surface_t*)cairo_gl_surface_create_for_evas_gl(
-        wnd->m_cairoDevice, wnd->m_evasGLSurface, wnd->m_evasGLConfig,
-        wnd->width(), wnd->height());
-    wnd->m_cairo = cairo_create(wnd->m_surface);
 #endif
 #ifndef STARFISH_TIZEN_WEARABLE_WIDGET
     Evas* e = evas_object_evas_get(wnd->m_mainBox);
@@ -1643,14 +1642,34 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         wnd->m_mainBox, EVAS_CALLBACK_RESIZE,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if (defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+     defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)) && \
+    !defined(PORT_COMPOSITOR_BACKEND_GL)
             ProfilerTimer t(wnd->starFish(), "WindowImplEFL resize");
             int w, h;
             evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
             if (w != wnd->width() || h != wnd->height()) {
                 evas_object_image_size_set(wnd->m_canvasAdpater, 1, 1);
                 evas_object_image_fill_set(wnd->m_canvasAdpater, 0, 0, 1, 1);
+                StarFishEnterer enter(wnd->starFish());
+                wnd->onResize();
+            }
+#elif defined(PORT_COMPOSITOR_BACKEND_GL)
+            ProfilerTimer t(wnd->starFish(), "WindowImplEFL resize");
+            int w, h;
+            evas_object_image_size_get(wnd->m_glAdpater, &w, &h);
+            if (w != wnd->width() || h != wnd->height()) {
+                evas_object_image_native_surface_set(wnd->m_glAdpater, NULL);
+                evas_gl_surface_destroy(wnd->m_glEvasgl, wnd->m_glSfc);
+                evas_object_resize(wnd->m_glAdpater, wnd->width(),
+                                   wnd->height());
+                evas_object_image_size_set(wnd->m_glAdpater, wnd->width(),
+                                           wnd->height());
+                Evas_Native_Surface ns;
+                wnd->m_glSfc = evas_gl_surface_create(
+                    wnd->m_glEvasgl, wnd->m_glCfg, wnd->width(), wnd->height());
+                evas_gl_native_surface_get(wnd->m_glEvasgl, wnd->m_glSfc, &ns);
+                evas_object_image_native_surface_set(wnd->m_glAdpater, &ns);
                 StarFishEnterer enter(wnd->starFish());
                 wnd->onResize();
             }
@@ -1663,14 +1682,22 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_object_event_callback_add(
         wnd->m_mainBox, EVAS_CALLBACK_MOVE,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if (defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+     defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)) && \
+    !defined(PORT_COMPOSITOR_BACKEND_GL)
             WindowImplEFL* wnd = (WindowImplEFL*)data;
             StarFishEnterer enter(wnd->starFish());
             int x, y;
             evas_object_geometry_get(wnd->m_mainBox, &x, &y, NULL, NULL);
             wnd->starFish()->setPos(x, y);
             evas_object_move(wnd->m_canvasAdpater, x, y);
+#elif defined(PORT_COMPOSITOR_BACKEND_GL)
+            WindowImplEFL* wnd = (WindowImplEFL*)data;
+            StarFishEnterer enter(wnd->starFish());
+            int x, y;
+            evas_object_geometry_get(wnd->m_mainBox, &x, &y, NULL, NULL);
+            wnd->starFish()->setPos(x, y);
+            evas_object_move(wnd->m_glAdpater, x, y);
 #endif
         },
         wnd);
@@ -1964,10 +1991,16 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 void WindowImplEFL::setNeedsRendering()
 {
     WindowImplEFL* wnd = this;
-
-#if defined(STARFISH_TIZEN) && defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) && \
-    defined(STARFISH_TIZEN_EVASGL_CAIRO)
-    evas_object_image_pixels_dirty_set(wnd->m_canvasAdpater, EINA_TRUE);
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    evas_object_image_pixels_dirty_set(wnd->m_glAdpater, EINA_TRUE);
+    evas_object_image_pixels_get_callback_set(
+        m_glAdpater,
+        [](void* data, Evas_Object* o) {
+            WindowImplEFL* wnd = (WindowImplEFL*)data;
+            evas_gl_make_current(wnd->m_glEvasgl, wnd->m_glSfc, wnd->m_glCtx);
+            wnd->rendering();
+        },
+        this);
 #else
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
@@ -2006,8 +2039,11 @@ void WindowImplEFL::setNeedsRendering()
 Canvas* WindowImplEFL::preparePainting()
 {
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
-    evas_object_hide(m_glAdpater);
-
+    if (!m_glPaintingSurface) {
+        m_glPaintingSurface = CanvasSurface::create(this, width(), height());
+    }
+    m_glPaintingSurface->attachNativeBuffer(width(), height());
+    return Canvas::create(starFish(), m_glPaintingSurface);
 #endif
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
 #ifdef STARFISH_ENABLE_TEST
@@ -2057,19 +2093,6 @@ Canvas* WindowImplEFL::preparePainting()
 #endif
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-#if defined(STARFISH_TIZEN) && defined(STARFISH_TIZEN_EVASGL_CAIRO)
-    struct dummy {
-        cairo_t* cairo;
-        cairo_surface_t* surface;
-        int w;
-        int h;
-    } d;
-    d.cairo = m_cairo;
-    d.surface = m_surface;
-    d.w = width();
-    d.h = height();
-    return Canvas::createDirect(starFish(), &d);
-#endif
     auto iter = m_objectList.begin();
     while (iter != m_objectList.end()) {
         evas_object_del(*iter);
@@ -2215,54 +2238,11 @@ Compositor* WindowImplEFL::prepareCompositor()
 {
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
     WindowImplEFL* wnd = (WindowImplEFL*)this;
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-    {
-        int w, h;
-        evas_object_image_size_get(m_canvasAdpater, &w, &h);
-        if (w != 1 || h != 1) {
-            evas_object_image_size_set(m_canvasAdpater, 1, 1);
-            evas_object_image_fill_set(m_canvasAdpater, 0, 0, 1, 1);
-            void* addr = evas_object_image_data_get(m_canvasAdpater, EINA_TRUE);
-            memset(addr, 0, 4);
-            evas_object_image_data_set(m_canvasAdpater, addr);
-            evas_object_image_data_update_add(m_canvasAdpater, 0, 0, 1, 1);
-            evas_object_hide(m_canvasAdpater);
-        }
-    }
-#endif
-    evas_object_show(m_glAdpater);
-
-    evas_object_image_pixels_dirty_set(m_glAdpater, EINA_TRUE);
-    /*
-    evas_object_image_pixels_get_callback_set(
-            m_glAdpater,
-            [](void* data, Evas_Object* o) {
-                WindowImplEFL* wnd = (WindowImplEFL*)data;
-                evas_gl_make_current(wnd->m_glEvasgl, wnd->m_glSfc,
-    wnd->m_glCtx);
-
-                static int s = 0;
-                s++;
-                wnd->m_glGlapi->glViewport(0, 0, wnd->width(), wnd->height());
-                switch (s % 3) {
-                case 0:
-                    wnd->m_glGlapi->glClearColor(0, 1, 1, 1);
-                    break;
-                case 1:
-                    wnd->m_glGlapi->glClearColor(1, 0, 1, 1);
-                    break;
-                case 2:
-                    wnd->m_glGlapi->glClearColor(1, 1, 0, 1);
-                    break;
-                }
-                wnd->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT |
-    GL_DEPTH_BUFFER_BIT);
-                wnd->m_glGlapi->glFlush();
-            },
-            this);
-*/
     evas_gl_make_current(wnd->m_glEvasgl, wnd->m_glSfc, wnd->m_glCtx);
+    if (m_glPaintingSurface) {
+        m_glPaintingSurface->detachNativeBuffer();
+        m_glPaintingSurface = nullptr;
+    }
     struct dummy {
         Evas_GL_API* evasGLAPI;
     } d;
@@ -2327,19 +2307,6 @@ Compositor* WindowImplEFL::prepareCompositor()
 #endif
 
 #if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
-#if defined(STARFISH_TIZEN) && defined(STARFISH_TIZEN_EVASGL_CAIRO)
-    struct dummy {
-        cairo_t* cairo;
-        cairo_surface_t* surface;
-        int w;
-        int h;
-    } d;
-    d.cairo = m_cairo;
-    d.surface = m_surface;
-    d.w = width();
-    d.h = height();
-    return Compositor::create(starFish(), &d);
-#endif
 #ifdef STARFISH_ENABLE_TEST
     {
         const char* path = getenv("SCREEN_SHOT");

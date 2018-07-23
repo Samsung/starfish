@@ -380,7 +380,7 @@ private:
                         m_hasTransparentPixel = true;
                     }
 
-#ifdef STARFISH_ANDROID
+#ifdef PORT_PIXEL_ORDER_RGBA
                     *tmp = ARGB_TO_PREMULTIPLY_ALPHA(
                         data[idx + 2], data[idx + 1], data[idx], data[idx + 3]);
 #else
@@ -479,7 +479,7 @@ private:
                         b = *--iter;
                         g = *--iter;
                         r = *--iter;
-#ifdef STARFISH_ANDROID
+#ifdef PORT_PIXEL_ORDER_RGBA
                         buf_raw[i] = 255;
                         buf_raw[i - 1] = b;
                         buf_raw[i - 2] = g;
@@ -913,7 +913,7 @@ private:
                         *buffer++ = 0;
                         m_hasTransparentPixel = true;
                     } else {
-#ifdef STARFISH_ANDROID
+#ifdef PORT_PIXEL_ORDER_RGBA
                         *buffer++ = colorMapEntry->Red;
                         *buffer++ = colorMapEntry->Green;
                         *buffer++ = colorMapEntry->Blue;
