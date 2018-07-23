@@ -195,10 +195,13 @@ class CompositorImplGL : public Compositor {
     Evas_GL_API* g_evasGLAPI;
 #endif
 public:
-    // Texture shader
     GLuint texShaderProgram;
-    GLuint vertexShader;
-    GLuint fragmentShader;
+    GLuint texVertexShader;
+    GLuint texFragmentShader;
+
+    GLuint rectShaderProgram;
+    GLuint rectVertexShader;
+    GLuint rectFragmentShader;
 
     GLuint loadShader(GLenum type, const GLchar* shaderSrc)
     {
@@ -240,7 +243,7 @@ public:
 
         glEnable(GL_BLEND);
         glEnable(GL_TEXTURE_2D);
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glViewport(0, 0, starfish->platformWindow()->width(),
                    starfish->platformWindow()->height());
 
@@ -250,36 +253,44 @@ public:
 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        GLchar vertexSource[] =
+        GLchar texVertexSource[] =
             "uniform mat4 uScreen;\n"
             "attribute vec2 aPosition;\n"
             "attribute vec2 aTexPos;\n"
             "varying vec2 vTexPos;\n"
+            "uniform float uAlpha;\n"
+            "varying float vAlpha;\n"
             "void main() {\n"
             "  vTexPos = aTexPos;\n"
+            "  vAlpha = uAlpha;\n"
             "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
             "}";
 
-        GLchar fragmentSource[] =
+        GLchar texFragmentSource[] =
             "precision mediump float;\n"
             "uniform sampler2D uTexture;\n"
             "varying vec2 vTexPos;\n"
+            "varying float vAlpha;\n"
             "void main(void)\n"
             "{\n"
             "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
+            "  gl_FragColor.a *= vAlpha;\n"
+            "  gl_FragColor.r *= vAlpha;\n"
+            "  gl_FragColor.g *= vAlpha;\n"
+            "  gl_FragColor.b *= vAlpha;\n"
             "}";
 
-        vertexShader = loadShader(GL_VERTEX_SHADER, vertexSource);
+        texVertexShader = loadShader(GL_VERTEX_SHADER, texVertexSource);
         checkError();
-        fragmentShader = loadShader(GL_FRAGMENT_SHADER, fragmentSource);
+        texFragmentShader = loadShader(GL_FRAGMENT_SHADER, texFragmentSource);
         checkError();
 
         texShaderProgram = glCreateProgram();
         checkError();
 
-        glAttachShader(texShaderProgram, vertexShader);
+        glAttachShader(texShaderProgram, texVertexShader);
         checkError();
-        glAttachShader(texShaderProgram, fragmentShader);
+        glAttachShader(texShaderProgram, texFragmentShader);
         checkError();
 
         glLinkProgram(texShaderProgram);
@@ -310,14 +321,77 @@ public:
 
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
+
+        GLchar rectVertexSource[] =
+            "uniform mat4 uScreen;\n"
+            "attribute vec2 aTexPos;\n"
+            "attribute vec2 aPosition;\n"
+            "uniform float uR;\n"
+            "varying float vR;\n"
+            "uniform float uG;\n"
+            "varying float vG;\n"
+            "uniform float uB;\n"
+            "varying float vB;\n"
+            "uniform float uA;\n"
+            "varying float vA;\n"
+            "void main() {\n"
+            "  vR = uR;\n"
+            "  vG = uG;\n"
+            "  vB = uB;\n"
+            "  vA = uA;\n"
+            "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
+            "}";
+
+        GLchar rectFragmentSource[] =
+            "precision mediump float;\n"
+            "varying float vR;\n"
+            "varying float vG;\n"
+            "varying float vB;\n"
+            "varying float vA;\n"
+            "void main(void)\n"
+            "{\n"
+            "  gl_FragColor.a = vA;\n"
+            "  gl_FragColor.r = vR;\n"
+            "  gl_FragColor.g = vG;\n"
+            "  gl_FragColor.b = vB;\n"
+            "}";
+
+        rectVertexShader = loadShader(GL_VERTEX_SHADER, rectVertexSource);
+        checkError();
+        rectFragmentShader = loadShader(GL_FRAGMENT_SHADER, rectFragmentSource);
+        checkError();
+
+        rectShaderProgram = glCreateProgram();
+        checkError();
+
+        glAttachShader(rectShaderProgram, rectVertexShader);
+        checkError();
+        glAttachShader(rectShaderProgram, rectFragmentShader);
+        checkError();
+
+        glLinkProgram(rectShaderProgram);
+        checkError();
+
+        glUseProgram(rectShaderProgram);
+        checkError();
+
+        uScreenPos = glGetUniformLocation(rectShaderProgram, "uScreen");
+        glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
+        checkError();
     }
 
     ~CompositorImplGL()
     {
         glDeleteProgram(texShaderProgram);
-        glDeleteShader(vertexShader);
+        glDeleteShader(texVertexShader);
         checkError();
-        glDeleteShader(fragmentShader);
+        glDeleteShader(texFragmentShader);
+        checkError();
+
+        glDeleteProgram(rectShaderProgram);
+        glDeleteShader(rectVertexShader);
+        checkError();
+        glDeleteShader(rectFragmentShader);
         checkError();
 
         restore();
@@ -387,14 +461,71 @@ public:
 
     virtual void punchHole(const Unit::Rect& rt)
     {
+        save();
+        setColor(Unit::Color(0, 0, 0, 0));
+        glBlendFunc(GL_ONE, GL_ZERO);
+        drawRect(rt);
+        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+        restore();
     }
 
     virtual void drawRect(const Unit::Rect& rt)
     {
+        glUseProgram(rectShaderProgram);
+
+        float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
+
+        SkPoint pt;
+        pt = SkPoint::Make(rt.x(), rt.y());
+
+        m_state.back().matrix.mapPoints(&pt, 1);
+        dest[0][0] = pt.x();
+        dest[0][1] = pt.y();
+
+        pt = SkPoint::Make(rt.x(), rt.maxY());
+        m_state.back().matrix.mapPoints(&pt, 1);
+        dest[1][0] = pt.x();
+        dest[1][1] = pt.y();
+
+        pt = SkPoint::Make(rt.maxX(), rt.y());
+        m_state.back().matrix.mapPoints(&pt, 1);
+        dest[2][0] = pt.x();
+        dest[2][1] = pt.y();
+
+        pt = SkPoint::Make(rt.maxX(), rt.maxY());
+        m_state.back().matrix.mapPoints(&pt, 1);
+        dest[3][0] = pt.x();
+        dest[3][1] = pt.y();
+
+        auto aPosition = glGetAttribLocation(rectShaderProgram, "aPosition");
+
+        float data[] = {
+            dest[0][0], dest[0][1], // V1
+            dest[1][0], dest[1][1], // V2
+            dest[2][0], dest[2][1], // V3
+            dest[3][0], dest[3][1]  // V4
+        };
+
+        glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0, &data[0]);
+        glEnableVertexAttribArray(aPosition);
+
+        auto uA = glGetUniformLocation(rectShaderProgram, "uA");
+        auto uR = glGetUniformLocation(rectShaderProgram, "uR");
+        auto uG = glGetUniformLocation(rectShaderProgram, "uG");
+        auto uB = glGetUniformLocation(rectShaderProgram, "uB");
+        float a = m_state.back().opacity;
+
+        glUniform1f(uA, a * m_state.back().color.A());
+        glUniform1f(uR, a * m_state.back().color.R());
+        glUniform1f(uG, a * m_state.back().color.G());
+        glUniform1f(uB, a * m_state.back().color.B());
+        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+        checkError();
     }
 
     virtual void drawRect(const LayoutRect& rt)
     {
+        drawRect(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
@@ -403,14 +534,18 @@ public:
 
     void checkError()
     {
+#ifndef NDEBUG
         auto error = glGetError();
         if (error != 0) {
             STARFISH_ASSERT_NOT_REACHED();
         }
+#endif
     }
 
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst)
     {
+        glUseProgram(texShaderProgram);
+
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
         SkPoint pt;
@@ -463,10 +598,14 @@ public:
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, tid);
         auto uTexture = glGetUniformLocation(texShaderProgram, "uTexture");
+        auto uAlpha = glGetUniformLocation(texShaderProgram, "uAlpha");
+        float a = m_state.back().opacity;
+        glUniform1f(uAlpha, a);
         glUniform1i(uTexture, 0);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glBindTexture(GL_TEXTURE_2D, 0);
+        checkError();
     }
 
     virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,

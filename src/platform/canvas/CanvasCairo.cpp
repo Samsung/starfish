@@ -342,7 +342,7 @@ public:
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_color = clr_;
-#ifdef STARFISH_ANDROID
+#ifdef PORT_PIXEL_ORDER_RGBA
         cairo_set_source_rgba(m_canvas, clr_.B(), clr_.G(), clr_.R(), clr_.A());
 #else
         cairo_set_source_rgba(m_canvas, clr_.R(), clr_.G(), clr_.B(), clr_.A());
@@ -1252,7 +1252,7 @@ private:
         if (lastState().m_textDecorationData.hasUnderLine()) {
             cairo_set_line_width(canvas, lineWidth);
 
-#ifdef STARFISH_ANDROID
+#ifdef PORT_PIXEL_ORDER_RGBA
             cairo_set_source_rgba(
                 canvas, lastState().m_textDecorationData.underLineColor().B(),
                 lastState().m_textDecorationData.underLineColor().G(),
@@ -1277,7 +1277,7 @@ private:
         if (lastState().m_textDecorationData.hasLineThrough()) {
             cairo_set_line_width(canvas, lineWidth);
 
-#ifdef STARFISH_ANDROID
+#ifdef PORT_PIXEL_ORDER_RGBA
             cairo_set_source_rgba(
                 canvas, lastState().m_textDecorationData.lineThroughColor().R(),
                 lastState().m_textDecorationData.lineThroughColor().G(),
