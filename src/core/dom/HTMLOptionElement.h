@@ -88,7 +88,6 @@ public:
 private:
     bool m_dirtiness;
     bool m_selectedness;
-    bool m_drawOptionBox;
 };
 }
 #endif

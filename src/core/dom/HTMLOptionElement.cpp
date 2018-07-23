@@ -46,7 +46,6 @@ HTMLOptionElement::HTMLOptionElement(Document* document, String* text,
     : HTMLFormControl(document)
     , m_dirtiness(false)
     , m_selectedness(false)
-    , m_drawOptionBox(false)
 {
     if (!text->equals(String::emptyString)) {
         setTextContent(text);
@@ -114,6 +113,7 @@ void HTMLOptionElement::setDirtiness(bool dirtiness)
     m_dirtiness = dirtiness;
 }
 
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-option-selectedness
 bool HTMLOptionElement::selectedness()
 {
     return m_selectedness;
@@ -244,21 +244,34 @@ bool HTMLOptionElement::handleDefaultEvent(Event* event)
     return false;
 }
 
+// 1:
+// https://html.spec.whatwg.org/multipage/form-elements.html#concept-option-selectedness
+// 2: The selected IDL attribute, on getting, must return true if the element's
+// selectedness is true, and false otherwise. On setting, it must set the
+// element's selectedness to the new value, set its dirtiness to true, and then
+// cause the element to ask for a reset.
 void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
                                             String* val, bool attributeCreated,
                                             bool attributeRemoved)
 {
     HTMLFormControl::didAttributeChanged(name, old, val, attributeCreated,
                                          attributeRemoved);
-    if (name == starFish()->staticStrings()->m_selected && !m_dirtiness) {
-        // Setting`selected` attribute can affect selectness only when
-        // its dirtiness flag is false.
-        setSelectedness(!attributeRemoved);
-        HTMLSelectElement* select = selectElement();
-        if (select) {
-            select->resetFromOption(this);
+
+    if (name == starFish()->staticStrings()->m_selected) {
+        if (!m_dirtiness) {
+            // Adding `selected` attribute affects selectness only when its
+            // dirtiness flag is false.
+            if (attributeCreated) {
+                setSelectedness(true);
+            } else if (attributeRemoved) {
+                setSelectedness(false);
+            }
+
+            HTMLSelectElement* select = selectElement();
+            if (select) {
+                select->resetFromOption(this);
+            }
         }
-        return;
     }
 }
 }

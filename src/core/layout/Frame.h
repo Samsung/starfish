@@ -46,6 +46,7 @@ class FrameTableColBox;
 class FrameTableRowBox;
 class FrameTableSectionBox;
 class FrameInputBox;
+class FrameSelectBox;
 class FrameSVGBox;
 class FrameText;
 class FrameCounterText;
@@ -1305,6 +1306,12 @@ public:
     {
         STARFISH_ASSERT(isFrameInputBox());
         return (FrameInputBox*)this;
+    }
+
+    FrameSelectBox* asFrameSelectBox()
+    {
+        STARFISH_ASSERT(isFrameSelectBox());
+        return (FrameSelectBox*)this;
     }
 
     FrameSVGBox* asFrameSVGBox()
