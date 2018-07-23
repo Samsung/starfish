@@ -528,10 +528,6 @@ public:
         drawRect(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
-    {
-    }
-
     void checkError()
     {
 #ifndef NDEBUG
@@ -606,17 +602,6 @@ public:
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         glBindTexture(GL_TEXTURE_2D, 0);
         checkError();
-    }
-
-    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
-                                 float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat)
-    {
-    }
-
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
-    {
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

@@ -1639,6 +1639,7 @@ public:
         ComputePurpose purpose;
         bool ignoreTransformOnce;
         bool isForSpecialValueForTableCell;
+        bool isVisibleRectCollapsible;
         StackingContext* sourceStackingContext;
         FrameBox* sourceFrameBox;
         SkMatrix& tranformMatrix;
@@ -1653,6 +1654,7 @@ public:
             , ignoreTransformOnce(purpose >= GraphicsBufferBySelf ? true
                                                                   : false)
             , isForSpecialValueForTableCell(false)
+            , isVisibleRectCollapsible(purpose >= GraphicsBufferBySelf)
             , sourceStackingContext(sourceStackingContext)
             , sourceFrameBox(nullptr)
             , tranformMatrix(tranformMatrix)
@@ -1667,6 +1669,7 @@ public:
             , ignoreTransformOnce(purpose >= GraphicsBufferBySelf ? true
                                                                   : false)
             , isForSpecialValueForTableCell(false)
+            , isVisibleRectCollapsible(purpose >= GraphicsBufferBySelf)
             , sourceStackingContext(nullptr)
             , sourceFrameBox(sourceFrameBox)
             , tranformMatrix(tranformMatrix)

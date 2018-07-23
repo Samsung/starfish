@@ -244,23 +244,6 @@ public:
         m_canvas->restore();
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
-    {
-        double surfaceWidth = 0, surfaceHeight = 0;
-        int stride = data->stride();
-
-        SkBitmap bitmap;
-        surfaceWidth = data->width();
-        surfaceHeight = data->height();
-        bitmap.installPixels(
-            SkImageInfo::MakeN32Premul(surfaceWidth, surfaceHeight),
-            data->data(), stride);
-        STARFISH_ASSERT(surfaceWidth);
-        STARFISH_ASSERT(surfaceHeight);
-        STARFISH_ASSERT(stride);
-        drawImageSkia(&bitmap, dst, surfaceWidth, surfaceHeight);
-    }
-
     virtual void drawSurface(CanvasSurface* data, const Unit::Rect& dst)
     {
         SkBitmap bitmap;
@@ -268,68 +251,6 @@ public:
             SkImageInfo::MakeN32Premul(data->imageWidth(), data->imageHeight()),
             data->data(), data->bufferStride());
         drawImageSkia(&bitmap, dst, data->imageWidth(), data->imageHeight());
-    }
-
-    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
-                                 float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat)
-    {
-        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        ww = dst.width();
-        hh = dst.height();
-
-        float x = 0.0, y = 0.0;
-        if (xRepeat) {
-            x = (dst.x() - floor(dst.x() / imageWidth) * imageWidth) -
-                imageWidth;
-        } else {
-            xx += dst.x();
-        }
-        if (yRepeat) {
-            y = (dst.y() - floor(dst.y() / imageHeight) * imageHeight) -
-                imageHeight;
-        } else {
-            yy += dst.y();
-        }
-
-        SkBitmap bitmap;
-
-        void* imgData = data->data();
-        double surfaceWidth = 0, surfaceHeight = 0;
-
-        if (imgData) {
-            int stride = data->stride();
-            bitmap.installPixels(
-                SkImageInfo::MakeN32Premul(data->width(), data->height()),
-                imgData, stride);
-
-            surfaceWidth = data->width();
-            surfaceHeight = data->height();
-        } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        }
-
-        SkMatrix matrix;
-        matrix.setScaleTranslate(imageWidth / data->width(),
-                                 imageHeight / data->height(), dst.x(),
-                                 dst.y());
-
-        auto shader =
-            SkShader::MakeBitmapShader(bitmap, SkShader::kRepeat_TileMode,
-                                       SkShader::kRepeat_TileMode, &matrix);
-
-        SkPaint paint;
-        paint.setShader(shader);
-        auto rect = SkRect::MakeXYWH(x, y, dst.width(), dst.height());
-        m_canvas->save();
-        m_canvas->drawRect(rect, paint);
-        m_canvas->restore();
-    }
-
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

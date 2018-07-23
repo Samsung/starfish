@@ -197,7 +197,7 @@ protected:
     int m_virtualCursorY;
     int m_virtualCursorSpeed;
     uint64_t m_virtualCursorMoveingLastTimestamp;
-    NativeImageData* m_virtualCursorImageData;
+    CanvasSurface* m_virtualCursorCanvasSurface;
 #endif
 };
 }

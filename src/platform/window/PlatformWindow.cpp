@@ -229,7 +229,7 @@ PlatformWindow::PlatformWindow(StarFish* starFish)
     , m_virtualCursorY(-1)
     , m_virtualCursorSpeed(0)
     , m_virtualCursorMoveingLastTimestamp(0)
-    , m_virtualCursorImageData(nullptr)
+    , m_virtualCursorCanvasSurface(nullptr)
 #endif
 {
 }
@@ -511,12 +511,17 @@ void PlatformWindow::paintVirtualCursor(Canvas* canvas)
     if (m_virtualCursorY == -1) {
         m_virtualCursorY = height() / 2;
     }
-    if (!m_virtualCursorImageData) {
-        m_virtualCursorImageData = NativeImageData::create(
-            (const char*)g_virtualCursorPNGData, g_virtualCursorPNGDataSize);
+    if (!m_virtualCursorCanvasSurface) {
+        m_virtualCursorCanvasSurface = CanvasSurface::create(this, 25, 36);
+        Canvas* c = Canvas::create(starFish(), m_virtualCursorCanvasSurface);
+        c->drawImage(
+            NativeImageData::create((const char*)g_virtualCursorPNGData,
+                                    g_virtualCursorPNGDataSize),
+            Unit::Rect(0, 0, 25, 36));
+        delete c;
     }
 
-    canvas->drawImage(m_virtualCursorImageData,
+    canvas->drawImage(m_virtualCursorCanvasSurface,
                       Unit::Rect(m_virtualCursorX, m_virtualCursorY, 25, 36));
 }
 #endif

@@ -70,13 +70,6 @@ public:
     virtual void punchHole(const Unit::Rect& rt) = 0;
 
     virtual void drawSurface(CanvasSurface* data, const Unit::Rect& dst) = 0;
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst) = 0;
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, bool xRepeat,
-                           bool yRepeat) = 0;
-    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
-                                 float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat) = 0;
 
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;
     virtual void applyMatrixTo(LayoutRect& lp) = 0;

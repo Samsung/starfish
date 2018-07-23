@@ -258,6 +258,9 @@ public:
     virtual void didLoadFinished()
     {
         m_node->setNeedsPainting();
+        if (m_node->isHTMLHtmlElement() || m_node->isHTMLBodyElement()) {
+            m_node->document()->setNeedsPainting();
+        }
     }
 
     Node* m_node;
