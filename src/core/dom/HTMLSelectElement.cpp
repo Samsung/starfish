@@ -499,7 +499,7 @@ void HTMLSelectElement::onDropdownMenuItemSelected(int position)
     GCVector<HTMLOptionElement*> list;
     computeListOfOptionElements(this, list);
 
-    if (0 < position && (size_t)position < list.size()) {
+    if (0 <= position && (size_t)position < list.size()) {
         if (!multiple()) {
             if (!list[position]->selectedness()) {
                 setSelectedIndex(position);
