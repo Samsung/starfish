@@ -37,7 +37,7 @@
 
 namespace StarFish {
 
-class CompositorImplSkia : public Compositor {
+class CompositorSkia : public Compositor {
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
@@ -56,7 +56,7 @@ class CompositorImplSkia : public Compositor {
     }
 
 public:
-    CompositorImplSkia(StarFish* starfish, CanvasSurface* data)
+    CompositorSkia(StarFish* starfish, CanvasSurface* data)
     {
         m_starfish = starfish;
         m_canvas = nullptr;
@@ -71,7 +71,7 @@ public:
         m_opacityVector.push_back(1);
         save();
     }
-    CompositorImplSkia(StarFish* starfish, void* data)
+    CompositorSkia(StarFish* starfish, void* data)
     {
         struct dummy {
             SkCanvas* canvas;
@@ -92,7 +92,7 @@ public:
         save();
     }
 
-    ~CompositorImplSkia()
+    ~CompositorSkia()
     {
         restore();
         STARFISH_ASSERT(m_stateSize == 0);
@@ -313,7 +313,7 @@ protected:
 
 Compositor* Compositor::create(StarFish* starfish, void* data)
 {
-    return new CompositorImplSkia(starfish, data);
+    return new CompositorSkia(starfish, data);
 }
 
 Compositor* Compositor::create(StarFish* starfish, CanvasSurface* surface)
