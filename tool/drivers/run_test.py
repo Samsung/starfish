@@ -45,6 +45,14 @@ def run_csswg_test(list, backend, font_dep, out_file=None):
                                     expected_namer=get_exp_img_namer(font_dep, backend))
     return default_result_summarizer(result)
 
+# CSSWG WITH REMOTE Server
+def run_csswg_with_remote_test(list, backend, font_dep, out_file=None):
+    import basics.starfish_pixel_with_remote_test as pixeltest
+    from tests.csswg_test import get_exp_img_namer
+    result = pixeltest.run_parallel(list, backend, nproc, ahem_font=(not font_dep),
+                                    expected_namer=get_exp_img_namer(font_dep, backend))
+    return default_result_summarizer(result)
+
 # Bidi Test
 def run_bidi_test(list, backend, font_dep, out_file=None):
     import basics.starfish_pixel_test as pixeltest
@@ -94,6 +102,7 @@ tests["dom_conformance"] = run_dom_conformance_test
 tests["vendor_basic"] = run_vendor_basic_test
 tests["vendor_pixel"] = run_vendor_pixel_test
 tests["csswg"] = run_csswg_test
+tests["csswg_with_remote"] = run_csswg_with_remote_test
 tests["bidi"] = run_bidi_test
 tests["wpt_basic"] = run_wpt_basic_test
 tests["wpt_ref"] = run_wpt_reference_test
