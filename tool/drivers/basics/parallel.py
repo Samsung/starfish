@@ -22,9 +22,14 @@ def run_test_pool(case_runner, in_path, nproc,
                 line = line.strip()
                 if len(line) == 0:
                     continue
-                content = line.split()[0]
+                splited = line.split();
+                content = splited[0]
+
                 if (len(content) > 0) and content[0] != '#':
-                    tcs.append((idx, content))
+                    if len(splited) >= 2:
+                        tcs.append((idx, [content, splited[1]]))
+                    else:
+                        tcs.append((idx, content))
                     idx = idx + 1
     except IOError:
         print "No such file " + in_path
