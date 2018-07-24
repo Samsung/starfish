@@ -274,7 +274,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             ResourceURL* rurl =
                 new ResourceURL(url, document()->baseURL()->baseURI());
 
-            if (document()->preloadScanner() && !async() && !defer()) {
+            if (document()->preloadScanner() && !async() && !defer() &&
+                inParser) {
                 auto ps = document()->preloadScanner();
                 for (size_t i = 0; i < ps->preloadedJS().size(); i++) {
                     Resource* res = ps->preloadedJS()[i];
