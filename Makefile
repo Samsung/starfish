@@ -1113,6 +1113,7 @@ web_platform_test_new_css_cairo:
 
 web_platform_test_new_html_cairo:
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/html/wpt_html_dev.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic test_new/tc_list/page-visibility/wpt_page_visibility.res basic -p$(TEST_NPROCS)
 
 web_platform_test_new_all_cairo:
 	make web_platform_test_new_css_cairo
