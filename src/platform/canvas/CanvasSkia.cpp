@@ -346,8 +346,10 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        m_canvas->drawRect(
-            SkRect::MakeXYWH(rt.x(), rt.y(), rt.width(), rt.height()), m_paint);
+
+        drawRect({ rt.x(), rt.y() }, { rt.x() + rt.width(), rt.y() },
+                 { rt.x() + rt.width(), rt.y() + rt.height() },
+                 { rt.x(), rt.y() + rt.height() });
     }
 
     virtual void drawRect(const LayoutRect& rt)
@@ -364,7 +366,8 @@ public:
         yy = ry.floor();
         ww = snapSizeToPixel(rt.width(), rx);
         hh = snapSizeToPixel(rt.height(), ry);
-        m_canvas->drawRect(SkRect::MakeXYWH(xx, yy, ww, hh), m_paint);
+        drawRect({ xx, yy }, { xx + ww, yy }, { xx + ww, yy + hh },
+                 { xx, yy + hh });
     }
 
     virtual void drawRect(LayoutLocation p1, LayoutLocation p2,
@@ -374,7 +377,6 @@ public:
             return;
         }
         m_canvas->save();
-        beginPath();
         moveTo(p1.x(), p1.y());
         lineTo(p2.x(), p2.y());
         lineTo(p3.x(), p3.y());
