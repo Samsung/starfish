@@ -49,8 +49,9 @@ struct WindowGlue {
     jmethodID m_shouldOverrideUrlLoading;
     jmethodID m_onProgressed;
     jmethodID m_onDownloadStart;
-
     jmethodID m_showDropdownMenu;
+    jmethodID m_showIME;
+    jmethodID m_hideIME;
 
     WindowGlue()
     {
@@ -83,6 +84,30 @@ void callOnDownloadStart(LWE::WebContainer* view, const char* url,
 
 void callShowDropdownMenu(LWE::WebContainer* view,
                           const std::vector<std::string>* list);
+
+void showIME(void* view);
+void hideIME(void* view);
+
+LWE::KeyValue virtualKeyCodeToKeyValue(char ch, bool capsLockOrShiftPressed)
+{
+    switch (ch) {
+    case 13:
+        return LWE::KeyValue::EnterKey;
+    case 8:
+        return LWE::KeyValue::BackspaceKey;
+    default:
+        break;
+    }
+    if (StarFish::String::isASCIIPrintableKey(ch)) {
+        if (isalpha(ch)) {
+            if (!capsLockOrShiftPressed) {
+                ch = tolower(ch);
+            }
+        }
+        return (LWE::KeyValue)ch;
+    }
+    return LWE::KeyValue::UnidentifiedKey;
+}
 
 static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
                             const char signature[])
@@ -135,9 +160,11 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
         env->GetMethodID(clazz, "onDownloadStart",
                          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/"
                          "String;Ljava/lang/String;J)V");
-
     g_WindowGlue.m_showDropdownMenu =
         env->GetMethodID(clazz, "showDropdownMenu", "([Ljava/lang/String;)V");
+
+    g_WindowGlue.m_showIME = env->GetMethodID(clazz, "showSoftKeyboard", "()V");
+    g_WindowGlue.m_hideIME = env->GetMethodID(clazz, "hideSoftKeyboard", "()V");
 
     env->DeleteLocalRef(clazz);
 
@@ -544,6 +571,54 @@ void runAllRemainingIdler()
                               g_WindowGlue.m_runAllRemainingIdler);
 }
 
+void showIME(void* view)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_showIME) {
+        LOGE("showIME error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
+                        g_WindowGlue.m_showIME);
+}
+
+void hideIME(void* view)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_hideIME) {
+        LOGE("hideIME error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
+                        g_WindowGlue.m_hideIME);
+}
+
 void flushRenderingCB(void* view, const LWE::WebContainer::RenderResult& result)
 {
     JNIEnv* env = g_WindowGlue.m_env;
@@ -654,6 +729,12 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
            const std::vector<std::string>* list) -> void {
             callShowDropdownMenu(view, list);
         });
+
+    webContainer->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
+        [](LWE::WebContainer* wv) -> void { showIME(wv); });
+
+    webContainer->RegisterOnHideSoftwareKeyboardIfPossibleHandler(
+        [](LWE::WebContainer* wv) -> void { hideIME(wv); });
 
     jobject java_webview = env->NewGlobalRef(thiz);
     g_webViews.insert(
@@ -969,6 +1050,69 @@ Java_com_samsung_android_mobileservice_lwe_WebView_dispatchMouseUp(
     webContainer->DispatchMouseUpEvent(LWE::MouseButtonValue::NoButton,
                                        LWE::MouseButtonsValue::NoButtonDown, x,
                                        y);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_dispatchKeyDown(
+    JNIEnv* env, jobject thiz, jlong wv, jint keyCode, jint modifier)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->DispatchKeyDownEvent(
+        virtualKeyCodeToKeyValue((char)keyCode, modifier), 0);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_dispatchKeyUp(
+    JNIEnv* env, jobject thiz, jlong wv, jint keyCode, jint modifier)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->DispatchKeyUpEvent(
+        virtualKeyCodeToKeyValue((char)keyCode, modifier), 0);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_dispatchKeyPress(
+    JNIEnv* env, jobject thiz, jlong wv, jint keyCode, jint modifier)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->DispatchKeyPressEvent(
+        virtualKeyCodeToKeyValue((char)keyCode, modifier), 0);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_dispatchCompositionStart(
+    JNIEnv* env, jobject thiz, jlong wv, jstring keyValue)
+{
+    const char* nativeString = env->GetStringUTFChars(keyValue, 0);
+    const std::string keyString = std::string(nativeString);
+    env->ReleaseStringUTFChars(keyValue, nativeString);
+
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->DispatchCompositionStartEvent(keyString);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_dispatchCompositionUpdate(
+    JNIEnv* env, jobject thiz, jlong wv, jstring keyValue)
+{
+    const char* nativeString = env->GetStringUTFChars(keyValue, 0);
+    const std::string keyString = std::string(nativeString);
+    env->ReleaseStringUTFChars(keyValue, nativeString);
+
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->DispatchCompositionUpdateEvent(keyString);
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_WebView_dispatchCompositionEnd(
+    JNIEnv* env, jobject thiz, jlong wv, jstring keyValue)
+{
+    const char* nativeString = env->GetStringUTFChars(keyValue, 0);
+    const std::string keyString = std::string(nativeString);
+    env->ReleaseStringUTFChars(keyValue, nativeString);
+
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->DispatchCompositionEndEvent(keyString);
 }
 
 #endif
