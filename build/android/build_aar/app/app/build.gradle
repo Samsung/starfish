@@ -1,10 +1,8 @@
-//apply plugin: 'com.android.application'
 apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 26
     defaultConfig {
-//        applicationId "android.sec.com.lightweightwebengine"
         minSdkVersion 24
         targetSdkVersion 26
         versionCode 1
@@ -13,7 +11,7 @@ android {
         externalNativeBuild {
             cmake {
                 cppFlags "-std=c++11 -fexceptions"
-                arguments "-DANDROID_TOOLCHAIN=gcc"
+                // arguments "-DANDROID_TOOLCHAIN=gcc"
             }
         }
     }
@@ -36,7 +34,13 @@ android {
             path "CMakeLists.txt"
         }
     }
-
+    sourceSets {
+        main {
+            java {
+                srcDir '../../../../../src/public/bridge/android/java'
+            }
+        }
+    }
     libraryVariants.all { variant ->
         variant.outputs.all { output ->
             if (outputFile != null && outputFileName.endsWith('.aar')) {
