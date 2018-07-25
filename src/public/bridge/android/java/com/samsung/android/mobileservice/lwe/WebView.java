@@ -35,10 +35,16 @@ import android.os.Trace;
 import android.util.AttributeSet;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.inputmethod.BaseInputConnection;
+import android.view.inputmethod.CompletionInfo;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputConnection;
+import android.view.inputmethod.InputMethodManager;
 import android.webkit.DownloadListener;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
@@ -48,6 +54,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Spinner;
 import android.widget.SpinnerAdapter;
 import java.lang.reflect.Method;
+import java.security.Key;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -58,6 +65,11 @@ public class WebView extends SurfaceView {
     static {
         System.loadLibrary("lightweightwebengine");
     }
+
+    public enum IMEComposingStatus {
+        NORMAL, COMPOSING_START,COMPOSING_END
+    }
+
     static class TimerData {
         Runnable runnable;
         int fn;
@@ -80,7 +92,6 @@ public class WebView extends SurfaceView {
     protected static Integer mWebViewThreadLocker = new Integer(0);
     protected static Looper mWebViewThreadLooper;
     protected static Thread mWebViewThread;
-//    protected Runnable mRendering = null;
 
     protected Bitmap mScreenBuffer;
     protected long mWebViewInternalHandle;
@@ -97,8 +108,97 @@ public class WebView extends SurfaceView {
     private int mCacheMode = Settings.LOAD_DEFAULT;
     private String mDefaultUserAgent = null;
     private String mUserAgentString = null;
+    private IMEComposingStatus mComposingStatus = IMEComposingStatus.NORMAL;
+    private String mIMEComposingStr=null;
+    private View mLWEView=null;
+    private InputMethodManager mIMM = null;
+    @Override
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs){
+        return new IMEInputConnection(this);
+    }
+
+    public class IMEInputConnection extends BaseInputConnection
+    {
+        public IMEInputConnection(View view){
+            super(view,true);
+            mComposingStatus = IMEComposingStatus.NORMAL;
+        }
+
+        @Override
+        public boolean commitText(CharSequence text,int newCursorPosition){
+            final String newText = text.toString();
+            synchronized (mWebViewThreadLocker) {
+                if (mWebViewHandler != null) {
+                    mWebViewHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mWebViewInternalHandle != 0) {
+                                int keyCode = (int)newText.charAt(0);
+                                // only ascii printable
+                                if(keyCode>=32&&keyCode<=126){
+                                    dispatchKeyDown(mWebViewInternalHandle,keyCode,0);
+                                    dispatchKeyUp(mWebViewInternalHandle,keyCode,0);
+                                    // dispatchKeyPress(mWebViewInternalHandle,keyCode,0);
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            return super.commitText(text,newCursorPosition);
+        }
+
+        @Override
+        public boolean setComposingText(CharSequence text,int newCursorPosition) {
+            final String newText = text.toString();
+            synchronized (mWebViewThreadLocker) {
+                if (mWebViewHandler != null) {
+                    mWebViewHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mWebViewInternalHandle != 0) {
+                                mIMEComposingStr=newText.toString();
+                                if (mComposingStatus == IMEComposingStatus.NORMAL) {
+                                    mIMEComposingStr=newText.toString();
+                                    dispatchCompositionStart(mWebViewInternalHandle,newText.toString());
+                                    mComposingStatus = IMEComposingStatus.COMPOSING_START;
+                                }
+                                dispatchCompositionUpdate(mWebViewInternalHandle,newText.toString());
+                            }
+                        }
+                    });
+                }
+            }
+
+            return super.setComposingText(text,newCursorPosition);
+        }
+
+        @Override
+        public boolean finishComposingText(){
+            synchronized (mWebViewThreadLocker) {
+                if (mWebViewHandler != null && mIMEComposingStr!=null) {
+                    mWebViewHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (mWebViewInternalHandle != 0) {
+                                if(mComposingStatus==IMEComposingStatus.COMPOSING_START){
+                                    dispatchCompositionEnd(mWebViewInternalHandle,mIMEComposingStr);
+                                    mComposingStatus = IMEComposingStatus.NORMAL;
+                                    mIMEComposingStr=null;
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+            return super.finishComposingText();
+        }
+
+    }
 
     protected void initWebView(){
+        mLWEView = this;
+        mIMM = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         DPR = getContext().getResources().getDisplayMetrics().xdpi/150;
         localStoragePath = getContext().getDataDir().getAbsolutePath()+"/StarFish-localStorage";
         cookiePath = getContext().getDataDir().getAbsolutePath()+"/StarFish-cookie";
@@ -197,6 +297,40 @@ public class WebView extends SurfaceView {
             }
         });
 
+        setOnKeyListener(new View.OnKeyListener(){
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event){
+                int keyValue=0;
+                switch (keyCode){
+                    case KeyEvent.KEYCODE_ENTER:
+                        keyValue = 13; // ascii - CR
+                        break;
+                    case KeyEvent.KEYCODE_DEL:
+                        keyValue = 8; // ascii - BS
+                        break;
+                }
+                final int key = keyValue;
+                final int eventAction = event.getAction();
+                synchronized (mWebViewThreadLocker) {
+                    if (mWebViewHandler != null && key!=0) {
+                        mWebViewHandler.post(new Runnable() {
+                            @Override
+                            public void run() {
+                                if (mWebViewInternalHandle != 0) {
+                                    if(eventAction==KeyEvent.ACTION_DOWN){
+                                        dispatchKeyDown(mWebViewInternalHandle,key,0);
+                                    }else if(eventAction== KeyEvent.ACTION_UP){
+                                        dispatchKeyUp(mWebViewInternalHandle,key,0);
+                                    }
+                                }
+                            }
+                        });
+                    }
+                }
+                return true;
+            }
+        });
+
         setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, final MotionEvent motionEvent) {
@@ -239,7 +373,6 @@ public class WebView extends SurfaceView {
 
         @Override
         public void onViewDetachedFromWindow(View v){
-
             synchronized (mWebViewThreadLocker) {
                 if (mWebViewHandler != null) {
                     mWebViewHandler.post(new Runnable() {
@@ -276,6 +409,41 @@ public class WebView extends SurfaceView {
     }
 
     // Called by JNI
+
+    private void showSoftKeyboard(){
+        this.post(new Runnable() {
+            @Override
+            public void run() {
+                if(mLWEView!=null){
+                    setFocusableInTouchMode(true);
+                    setFocusable(true);
+                    if(mIMM==null) {
+                        mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    }
+                    mIMM.showSoftInput(mLWEView,InputMethodManager.SHOW_IMPLICIT);
+                    mComposingStatus = IMEComposingStatus.NORMAL;
+                }
+            }
+        });
+    }
+
+    private void hideSoftKeyboard(){
+        this.post(new Runnable() {
+            @Override
+            public void run() {
+                if(mLWEView!=null && mIMM!=null) {
+                    setFocusableInTouchMode(false);
+                    setFocusable(false);
+                    if(mIMM==null) {
+                        mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    }
+                    mIMM.hideSoftInputFromWindow(mLWEView.getWindowToken(),0);
+                    mComposingStatus = IMEComposingStatus.NORMAL;
+                }
+            }
+        });
+    }
+
 
     private void onLoadResource(String url) {
         if(mWebViewClient!=null){
@@ -663,18 +831,26 @@ public class WebView extends SurfaceView {
     static native public void dispatchMouseMove(long starFish, float x, float y,boolean isLButtonPressed, boolean isRButtonPressed);
     static native public void dispatchMouseUp(long starFish, float x, float y);
 
+    static native public void dispatchKeyDown(long starFish,int keyValue,int modifier);
+    static native public void dispatchKeyUp(long starFish,int keyValue,int modifier);
+    static native public void dispatchKeyPress(long starFish,int keyValue,int modifier);
+    static native public void dispatchCompositionStart(long starFish,String Value);
+    static native public void dispatchCompositionUpdate(long starFish,String Value);
+    static native public void dispatchCompositionEnd(long starFish,String Value);
+
     private void showDropdownMenu(String[] list) {
         // ArrayList<String> itemList = new ArrayList(Arrays.asList(list));
         // TODO: display a dropdownmenu from this thread
     }
 
     public void onDropdownMenuItemSelected(int position) {
+        final int positionIdx = position;
         if (mWebViewHandler != null) {
             mWebViewHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (mWebViewInternalHandle != 0) {
-                        onDropdownMenuItemSelected(mWebViewInternalHandle, position);
+                        onDropdownMenuItemSelected(mWebViewInternalHandle, positionIdx);
                     }
                 }
             });
