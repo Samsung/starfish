@@ -1103,13 +1103,26 @@ react_test:
 ################################################################################
 
 web_platform_test_new_css_cairo:
+
+web_platform_test_new_css_css21_cairo:
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part1.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part2.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part3.res cairo -p$(TEST_NPROCS)
+#	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css21_dev_basic.res basic -p$(TEST_NPROCS)
+
+web_platform_test_new_css_mediaqueries_cairo:
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_mediaqueries-3_dev.res cairo -p$(TEST_NPROCS)
+
+web_platform_test_new_css_selectors_cairo:
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_selectors-3_dev_pixel.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_selectors-3_dev_basic.res basic -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_selectors-4_dev_pixel.res cairo -p$(TEST_NPROCS)
 #	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_selectors-4_dev_basic.res basic -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel.res cairo -p$(TEST_NPROCS)
-#	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css21_dev_basic.res basic -p$(TEST_NPROCS)
+
+web_platform_test_new_css_all_cairo:
+	make web_platform_test_new_css_css21_cairo
+	make web_platform_test_new_css_mediaqueries_cairo
+	make web_platform_test_new_css_selectors_cairo
 
 web_platform_test_new_others_cairo:
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/html/wpt_html_dev.res basic -p$(TEST_NPROCS)
@@ -1117,7 +1130,7 @@ web_platform_test_new_others_cairo:
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/page-visibility/wpt_page_visibility.res basic -p$(TEST_NPROCS)
 
 web_platform_test_new_all_cairo:
-	make web_platform_test_new_css_cairo
+	make web_platform_test_new_css_all_cairo
 	make web_platform_test_new_others_cairo
 
 ################################################################################
