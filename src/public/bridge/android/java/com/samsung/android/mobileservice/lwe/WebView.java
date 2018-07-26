@@ -581,7 +581,7 @@ public class WebView extends SurfaceView {
                 if (canvas != null) {
                     Paint paint = new Paint();
                     paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
-                    Rect updateRect = new Rect(updatedX,updatedY,updatedWidth,updatedHeight);
+                    Rect updateRect = new Rect(0,0,mWindowWidth,mWindowHeight);
                     canvas.drawBitmap(mScreenBuffer, updateRect, updateRect, paint);
                     getHolder().unlockCanvasAndPost(canvas);
                 }
