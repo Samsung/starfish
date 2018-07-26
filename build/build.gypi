@@ -17,7 +17,6 @@
             'STARFISH_ENABLE_TTS',
             'STARFISH_IGNORE_CROSS_ORIGIN',
             'STARFISH_ENABLE_HTTPCACHE',
-            'STARFISH_ENABLE_CSS_FILTER'
 
             # 'STARFISH_ENABLE_TEST',
             # 'STARFISH_ENABLE_PROFILING',
@@ -30,7 +29,6 @@
             'STARFISH_TIZEN_OBS',
             'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_IGNORE_CROSS_ORIGIN',
-            'STARFISH_ENABLE_CSS_FILTER'
             # 'STARFISH_ENABLE_MULTIMEDIA',
             'TIZEN_DEVICE_API',
             'SIZE_MAX=0xffffffff',

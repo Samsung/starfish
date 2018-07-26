@@ -1449,7 +1449,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     if (!canRejectPainting) {
         if (owner()->style()->hasAvailableFilter() ||
             m_ancestorsThatHasFilters.size()) {
-#ifdef STARFISH_ENABLE_CSS_FILTER
+#ifndef PORT_CANVAS_BACKEND_EFL
             FilterContext filterContext(&canvas, this);
             m_owner->paintStackingContextContent(canvas);
 #endif
