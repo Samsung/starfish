@@ -292,6 +292,12 @@ public:
         return deviceRect;
     }
 
+    virtual void unsetDevicePixelRatio()
+    {
+        m_canvas->scale(1 / m_starfish->screenInfo().devicePixelRatio,
+                        1 / m_starfish->screenInfo().devicePixelRatio);
+    }
+
     virtual void setColor(const Unit::Color& clr)
     {
         STARFISH_ASSERT(m_canvas);

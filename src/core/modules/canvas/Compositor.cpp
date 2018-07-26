@@ -74,6 +74,10 @@ public:
     {
         m_compositor->resetClip();
     }
+    virtual void unsetDevicePixelRatio()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
     virtual void setColor(const Unit::Color& clr)
     {
         m_compositor->setColor(clr);
