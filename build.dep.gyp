@@ -104,17 +104,25 @@
             ],
             'include_dirs': [
                 'third_party/skia_matrix',
+                'third_party/skia_matrix/include/core',
+                'third_party/skia_matrix/include/private',
             ],
             'sources': [
-                'third_party/skia_matrix/SkMath.cpp',
-                'third_party/skia_matrix/SkPoint.cpp',
-                'third_party/skia_matrix/SkRect.cpp',
-                'third_party/skia_matrix/SkMatrix.cpp',
-                'third_party/skia_matrix/SkDebug.cpp',
+                'third_party/skia_matrix/src/core/SkMath.cpp',
+                'third_party/skia_matrix/src/core/SkPoint.cpp',
+                'third_party/skia_matrix/src/core/SkRect.cpp',
+                'third_party/skia_matrix/src/core/SkMatrix.cpp',
+                'third_party/skia_matrix/src/core/SkString.cpp',
+                'third_party/skia_matrix/src/core/SkStringUtils.cpp',
+                'third_party/skia_matrix/src/core/SkUtils.cpp',
+                'third_party/skia_matrix/src/ports/SkDebug_stdio.cpp',
+                'third_party/skia_matrix/src/ports/SkMemory_malloc.cpp',
             ],
             'all_dependent_settings': {
                 'include_dirs': [
                     'third_party/skia_matrix',
+                    'third_party/skia_matrix/include/core',
+                    'third_party/skia_matrix/include/private',
                 ],
             },
         },
@@ -644,7 +652,7 @@
                 {
                     'files': [
                         'third_party/android/skia/out/Debug/Shared/libskia.so',
-                       
+
                     ],
                     'destination': '<(PRODUCT_DIR)/../debug/lib',
                 },
