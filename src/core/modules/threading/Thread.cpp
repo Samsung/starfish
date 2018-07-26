@@ -87,14 +87,19 @@ void Thread::finishUnjoined()
     if (!m_currentUnjoined) {
         return;
     }
-    Locker<Mutex> l(*m_currentUnjoined->m_thread->m_mutex);
-    m_alive = false;
-    if (m_currentUnjoined->m_joinHandle != SIZE_MAX) {
-        m_currentUnjoined->m_messageLoop->removeIdlerWithNoGCRooting(
-            m_currentUnjoined->m_joinHandle);
+
+    {
+        Locker<Mutex> l(*m_currentUnjoined->m_thread->m_mutex);
+        m_alive = false;
+        if (m_currentUnjoined->m_joinHandle != SIZE_MAX) {
+            m_currentUnjoined->m_messageLoop->removeIdlerWithNoGCRooting(
+                m_currentUnjoined->m_joinHandle);
+        }
     }
+
     void* ret;
     pthread_join(m_currentUnjoined->m_tid, &ret);
+
     m_starFish->removeActiveThread(this);
     GC_FREE(m_currentUnjoined);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
