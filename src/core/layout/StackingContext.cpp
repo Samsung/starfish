@@ -1076,19 +1076,9 @@ public:
 
     ~FilterContext()
     {
-        if (m_ownerStackingContext->needsGraphicsBuffer()) {
-            const auto& info = m_originCanvas->renderTargetInfo();
-            ShadowBlur sb(info.m_buffer, info.m_width, info.m_height,
-                          info.m_stride);
-            applyBlurFilter(sb);
-        } else {
-            ShadowBlur sb(m_nativeImageToApplyFilter->data(),
-                          m_nativeImageToApplyFilter->width(),
-                          m_nativeImageToApplyFilter->height(),
-                          m_nativeImageToApplyFilter->stride());
+        applyAllFilter();
 
-            applyBlurFilter(sb);
-
+        if (!m_ownerStackingContext->needsGraphicsBuffer()) {
             Unit::Rect rect(0, 0, m_nativeImageToApplyFilter->width(),
                             m_nativeImageToApplyFilter->height());
             float offset = ceil(m_maxRadiusOffset / 2);
@@ -1102,6 +1092,7 @@ public:
             (*m_origin) = m_originCanvas;
         }
     }
+
     void changeCurrentCanvasToOriginal()
     {
         (*m_origin) = m_originCanvas;
@@ -1114,27 +1105,39 @@ public:
         }
     }
 
-    void flus()
-    {
-    }
-
 private:
-    void applyBlurFilter(ShadowBlur& shadowBlur)
+    void applyAllFilter()
     {
         auto style = m_ownerStackingContext->owner()->style();
-        Length standardDeviation;
-        if (style->hasAvailableFilter() &&
-            style->filter()->getStandardDeviationOfBlurFilter(
-                standardDeviation)) {
-            shadowBlur.process(standardDeviation.numberData() * 2);
+        auto starFish = m_ownerStackingContext->owner()->node()->starFish();
+
+        uint8_t* buffer;
+        size_t width, height, stride;
+
+        if (m_ownerStackingContext->needsGraphicsBuffer()) {
+            const auto& info = m_originCanvas->renderTargetInfo();
+            buffer = info.m_buffer;
+            width = info.m_width;
+            height = info.m_height;
+            stride = info.m_stride;
+        } else {
+            buffer = m_nativeImageToApplyFilter->data();
+            width = m_nativeImageToApplyFilter->width();
+            height = m_nativeImageToApplyFilter->height();
+            stride = m_nativeImageToApplyFilter->stride();
+        }
+
+        if (style->hasAvailableFilter()) {
+            for (auto filter : *style->filter()) {
+                filter->apply(starFish, buffer, width, height, stride);
+            }
         }
 
         for (auto ancestor :
              m_ownerStackingContext->ancestorsThatHasFilters()) {
             auto s = ancestor->owner()->style();
-            if (s->filter()->getStandardDeviationOfBlurFilter(
-                    standardDeviation)) {
-                shadowBlur.process(standardDeviation.numberData() * 2);
+            for (auto filter : *style->filter()) {
+                filter->apply(starFish, buffer, width, height, stride);
             }
         }
     }

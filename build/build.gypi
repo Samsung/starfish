@@ -17,6 +17,7 @@
             'STARFISH_ENABLE_TTS',
             'STARFISH_IGNORE_CROSS_ORIGIN',
             'STARFISH_ENABLE_HTTPCACHE',
+            'STARFISH_ENABLE_CSS_FILTER'
 
             # 'STARFISH_ENABLE_TEST',
             # 'STARFISH_ENABLE_PROFILING',
@@ -29,6 +30,7 @@
             'STARFISH_TIZEN_OBS',
             'STARFISH_ENABLE_DOMPARSER',
             'STARFISH_IGNORE_CROSS_ORIGIN',
+            'STARFISH_ENABLE_CSS_FILTER'
             # 'STARFISH_ENABLE_MULTIMEDIA',
             'TIZEN_DEVICE_API',
             'SIZE_MAX=0xffffffff',
@@ -331,7 +333,6 @@
             ['platform=="linux" and backend=="efl_cairo"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO',
-                    'STARFISH_ENABLE_CSS_FILTER'
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
@@ -348,7 +349,6 @@
             ['platform=="linux" and backend=="efl_skia"', {
                 'defines_extra': [
                     'STARFISH_EFL_SKIA',
-                    'STARFISH_ENABLE_CSS_FILTER'
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',

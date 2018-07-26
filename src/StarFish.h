@@ -351,6 +351,11 @@ public:
         return m_proxyURL;
     }
 
+    GCVector<Thread*>& parallelJobExecutorThreadPool()
+    {
+        return m_parallelJobExecutorThreadPool;
+    }
+
 protected:
     void enter();
     void exit();
@@ -400,6 +405,7 @@ protected:
     AtomicStringMap m_atomicStringMap;
     GCUnorderedMap<String*, size_t> m_caseInsensitiveAttrSet;
     GCVector<Thread*> m_activeThreadList;
+    GCVector<Thread*> m_parallelJobExecutorThreadPool;
     Mutex* m_activeThreadListMutex;
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCache* m_httpCache;

@@ -23,6 +23,8 @@
 #include "core/style/CSSParser.h"
 #include "core/style/Style.h"
 #include "core/style/FilterFunctions.h"
+#include "core/modules/threading/ParallelJobExecutor.h"
+#include "core/modules/canvas/ShadowBlur.h"
 
 namespace StarFish {
 
@@ -69,6 +71,15 @@ CSSFilterFunction* UnsupportedFilterFunction::toCSSFilterFunction() const
                           String::createASCIIString("unsupported")));
 }
 
+void UnsupportedFilterFunction::apply(StarFish* starfish, uint8_t* buffer,
+                                      size_t width, size_t height,
+                                      size_t stride) const
+{
+    STARFISH_LOG_INFO("%s is unsupported\n",
+                      CSSFilterFunction::typeToString(m_type));
+    return;
+}
+
 BlurFilterFunction::BlurFilterFunction(const CSSFilterFunction& from)
     : BlurFilterFunction(from.data().cssLengthValue().toLength())
 {
@@ -88,6 +99,87 @@ CSSFilterFunction* BlurFilterFunction::toCSSFilterFunction() const
         FilterFunctionType::BlurFilterFunctionType,
         CSSStyleValuePair(CSSStyleValuePair::ValueKind::Length,
                           CSSLength(m_stdDeviation.fixed())));
+}
+
+void BlurFilterFunction::apply(StarFish* starfish, uint8_t* buffer,
+                               size_t width, size_t height, size_t stride) const
+{
+    float sigma = m_stdDeviation.numberData();
+
+    int extraHeight = 3 * (sigma * 0.5f);
+    int numberOfThreadsToRequest =
+        (width * height) / (100 * 100 + extraHeight * width);
+    struct Params {
+        float sigma;
+        uint8_t* fragmentedBuffer;
+        size_t width;
+        size_t height;
+        size_t stride;
+    };
+
+    auto blurFitlerWorker = [](void* data) -> void* {
+        auto params = (Params*)data;
+        ShadowBlur blur(params->fragmentedBuffer, params->width, params->height,
+                        params->stride);
+        blur.process(params->sigma * 2);
+        return nullptr;
+    };
+
+    ParallelJobExecutor<Params>* parallelJobExecutor =
+        new ParallelJobExecutor<Params>(starfish, blurFitlerWorker,
+                                        numberOfThreadsToRequest);
+
+    int num = parallelJobExecutor->numberOfThread();
+
+    if (num > 1) {
+        const int blockHeight = height / num;
+        const int jobsWithExtra = width % num;
+        int currentY = 0;
+
+        for (int i = 0; i < num; ++i) {
+            auto& params = parallelJobExecutor->parameters(i);
+
+            int startY = !i ? 0 : currentY - extraHeight;
+            currentY += i < jobsWithExtra ? blockHeight + 1 : blockHeight;
+            int endY = i == num - 1 ? currentY : currentY + extraHeight;
+            int blockSize = (endY - startY) * stride;
+
+            params.sigma = sigma;
+            params.width = width;
+            params.height = endY - startY;
+            params.stride = stride;
+            if (i == 0) {
+                params.fragmentedBuffer = buffer;
+            } else {
+                params.fragmentedBuffer = new uint8_t[blockSize];
+                memcpy(params.fragmentedBuffer, buffer + startY * stride,
+                       blockSize);
+            }
+        }
+
+        parallelJobExecutor->execute();
+
+        currentY = 0;
+        for (int i = 1; i < num; ++i) {
+            auto& params = parallelJobExecutor->parameters(i);
+            int sourceOffset;
+            int destinationOffset;
+            int size;
+            int adjustedBlockHeight =
+                i < jobsWithExtra ? blockHeight + 1 : blockHeight;
+
+            currentY += adjustedBlockHeight;
+            sourceOffset = extraHeight * stride;
+            destinationOffset = currentY * stride;
+            size = adjustedBlockHeight * stride;
+
+            memcpy(buffer + destinationOffset,
+                   params.fragmentedBuffer + sourceOffset, size);
+            delete[] params.fragmentedBuffer;
+        }
+    }
+
+    return;
 }
 
 FilterFunctions* FilterFunctions::create(const CSSStyleValuePair& from)
