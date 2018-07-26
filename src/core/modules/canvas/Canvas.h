@@ -161,6 +161,8 @@ public:
         return rt;
     }
 
+    virtual void unsetDevicePixelRatio() = 0;
+
     // reset transform matrix & clip
     virtual void resetMatrixAndClip() = 0;
     // reset transform clip

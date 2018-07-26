@@ -338,6 +338,11 @@ public:
         return deviceRect;
     }
 
+    virtual void unsetDevicePixelRatio()
+    {
+        cairo_surface_set_device_scale(m_surface, 1, 1);
+    }
+
     virtual void setColor(const Unit::Color& clr_)
     {
         STARFISH_ASSERT(m_canvas);

@@ -417,6 +417,11 @@ public:
         return rt;
     }
 
+    virtual void unsetDevicePixelRatio()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void clip(const Unit::Rect& rt)
     {
         lastState().m_didClip = true;

@@ -1007,6 +1007,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                         NativeImageData::create(bufImageSize, bufImageSize);
                     Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
                                                              nativeImage);
+                    cv->unsetDevicePixelRatio();
                     auto shadowColor =
                         shadow->hasColor() ? shadow->color() : s->color();
                     cv->setColor(shadowColor);
@@ -1151,6 +1152,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                         ceil(shadowRect.height() + radiusOffset));
                     Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
                                                              nativeImage);
+                    cv->unsetDevicePixelRatio();
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
 
                     if (shadow->hasColor()) {
@@ -1248,6 +1250,7 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
                     ceil(ImageRect.width()), ceil(ImageRect.height()));
                 Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
                                                          nativeImage);
+                cv->unsetDevicePixelRatio();
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
 
                 if (shadow->hasColor()) {
