@@ -24,10 +24,16 @@
 #ifndef __StarFishParallelJobExecutor__
 #define __StarFishParallelJobExecutor__
 
-#define MAX_THREAD 8
-
 namespace StarFish {
 class Thread;
+
+static int numberOfCores()
+{
+    int ret = 1;
+    long sysconfResult = sysconf(_SC_NPROCESSORS_ONLN);
+    ret = sysconfResult < 0 ? 1 : static_cast<int>(sysconfResult);
+    return ret;
+}
 
 template <typename ParameterType>
 class ParallelJobExecutor : public gc, public StarFishHoldable {
@@ -41,10 +47,15 @@ public:
     {
         STARFISH_ASSERT(isMainThread());
         STARFISH_ASSERT(m_jobWorker);
-        // TODO : use appropriate worker size such as available number of cores
-        if (requestWorkerSize > MAX_THREAD) {
-            requestWorkerSize = MAX_THREAD;
+
+        int max = numberOfCores();
+        if (!requestWorkerSize || requestWorkerSize > max) {
+            requestWorkerSize = static_cast<unsigned>(max);
         }
+#ifdef STARFISH_ENABLE_TEST
+        STARFISH_LOG_INFO("ParallelJobExecutor worker size is : %d\n",
+                          requestWorkerSize);
+#endif
         auto& threadPool = m_starFish->parallelJobExecutorThreadPool();
         for (int i = 0; i < requestWorkerSize; ++i) {
             if (threadPool.size() < static_cast<size_t>(i) + 1U) {
@@ -85,5 +96,4 @@ private:
     ParallelJobWorker m_jobWorker;
 };
 }
-#undef MAX_THREAD
 #endif
