@@ -451,7 +451,11 @@ bool HTMLSelectElement::handleDefaultEvent(Event* event)
                 HTMLOptionElement* option =
                     event->target()->asHTMLOptionElement();
                 if (option->selectElement() == this) {
-                    showDropdownMenu();
+                    if (displaySize() == 1) {
+                        showDropdownMenu();
+                    } else {
+                        // TODO: select / deselect items from a list
+                    }
                 }
             }
         }
@@ -476,10 +480,12 @@ void HTMLSelectElement::showDropdownMenu()
     // calls the platform's dropdownmenu UI
     struct Param {
         std::vector<std::string>* list;
+        int checkedPosition;
     };
 
     Param* p = new Param();
     p->list = new std::vector<std::string>();
+    p->checkedPosition = selectedIndex();
 
     GCVector<HTMLOptionElement*> list;
     computeListOfOptionElements(this, list);

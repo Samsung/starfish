@@ -19,7 +19,9 @@
 
 package com.samsung.android.mobileservice.lwe;
 
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -838,12 +840,19 @@ public class WebView extends SurfaceView {
     static native public void dispatchCompositionUpdate(long starFish,String Value);
     static native public void dispatchCompositionEnd(long starFish,String Value);
 
-    private void showDropdownMenu(String[] list) {
-        // ArrayList<String> itemList = new ArrayList(Arrays.asList(list));
-        // TODO: display a dropdownmenu from this thread
+    private void showDropdownMenu(String[] list, int checkedPosition) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setSingleChoiceItems(list, checkedPosition,
+            new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                onDropdownMenuItemSelected(which);
+            }
+        });
+
+        builder.show();
     }
 
-    public void onDropdownMenuItemSelected(int position) {
+    private void onDropdownMenuItemSelected(int position) {
         final int positionIdx = position;
         if (mWebViewHandler != null) {
             mWebViewHandler.post(new Runnable() {

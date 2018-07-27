@@ -170,7 +170,8 @@ public:
 
     void RegisterShowDropdownMenuHandler(
         const std::function<void(LWE::WebContainer*,
-                                 const std::vector<std::string>*)>& cb);
+                                 const std::vector<std::string>*,
+                                 int checkedPosition)>& cb);
     void callHandler(const std::string& handler, void* param);
 
     void UpdateBuffer(void* buffer, uint width, uint height, uint stride);

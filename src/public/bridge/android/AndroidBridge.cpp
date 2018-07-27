@@ -83,7 +83,8 @@ void callOnDownloadStart(LWE::WebContainer* view, const char* url,
                          const char* mimetype, long contentLength);
 
 void callShowDropdownMenu(LWE::WebContainer* view,
-                          const std::vector<std::string>* list);
+                          const std::vector<std::string>* list,
+                          int checkedPosition);
 
 void showIME(void* view);
 void hideIME(void* view);
@@ -161,7 +162,7 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
                          "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/"
                          "String;Ljava/lang/String;J)V");
     g_WindowGlue.m_showDropdownMenu =
-        env->GetMethodID(clazz, "showDropdownMenu", "([Ljava/lang/String;)V");
+        env->GetMethodID(clazz, "showDropdownMenu", "([Ljava/lang/String;I)V");
 
     g_WindowGlue.m_showIME = env->GetMethodID(clazz, "showSoftKeyboard", "()V");
     g_WindowGlue.m_hideIME = env->GetMethodID(clazz, "hideSoftKeyboard", "()V");
@@ -372,7 +373,8 @@ void callOnDownloadStart(LWE::WebContainer* view, const char* url,
 }
 
 void callShowDropdownMenu(LWE::WebContainer* view,
-                          const std::vector<std::string>* list)
+                          const std::vector<std::string>* list,
+                          int checkedPosition)
 {
     LOGI("ShowDropdownMenu: started");
     JNIEnv* env = g_WindowGlue.m_env;
@@ -400,9 +402,10 @@ void callShowDropdownMenu(LWE::WebContainer* view,
         jstring str = env->NewStringUTF((*list)[i].c_str());
         env->SetObjectArrayElement(jlist, i, str);
     }
+    jint jcheckedPosition = checkedPosition;
 
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_showDropdownMenu,
-                        jlist);
+                        jlist, jcheckedPosition);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -725,9 +728,9 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
         });
 
     webContainer->RegisterShowDropdownMenuHandler(
-        [](LWE::WebContainer* view,
-           const std::vector<std::string>* list) -> void {
-            callShowDropdownMenu(view, list);
+        [](LWE::WebContainer* view, const std::vector<std::string>* list,
+           int checkedPosition) -> void {
+            callShowDropdownMenu(view, list, checkedPosition);
         });
 
     webContainer->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
