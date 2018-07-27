@@ -119,16 +119,19 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
         currentFrame = current->frame()->asFrameInputBox();
     }
 
-    ctx.setCurrentBlockContainer(currentFrame);
+    if (current->childNeedsFrameTreeBuild() || force) {
+        ctx.setCurrentBlockContainer(currentFrame);
 
-    STARFISH_ASSERT(current->isHTMLTextEditable());
+        STARFISH_ASSERT(current->isHTMLTextEditable());
 
-    HTMLTextEditable* textEditable = current->asHTMLTextEditable();
-    if (textEditable->shouldCreateFrameText()) {
-        currentFrame->appendChild(createFrameText(textEditable));
+        HTMLTextEditable* textEditable = current->asHTMLTextEditable();
+        if (textEditable->shouldCreateFrameText()) {
+            currentFrame->appendChild(createFrameText(textEditable));
+            currentFrame->markNeedsLayout();
+        }
+
+        ctx.setCurrentBlockContainer(parent);
     }
-
-    ctx.setCurrentBlockContainer(parent);
 
     STARFISH_ASSERT(currentFrame);
     return currentFrame;
