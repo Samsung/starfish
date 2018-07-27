@@ -77,7 +77,6 @@ void HTMLTextEditable::didStateChanged(int oldState, int newState)
                 },
                 500, this);
             starFish()->platformWindow()->showSoftwareKeyboardIfPossible();
-            setNeedsFrameTreeBuildWithoutSelf();
         } else if (oldGotFocus && !newGotFocus) {
             starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
             m_shouldDrawCaret = false;
@@ -121,6 +120,9 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
     m_currentCaretPosition = std::min(m_currentCaretPosition, value->length());
 
     String* oldValue = value;
+    if (shouldUsePlaceholder()) {
+        value = String::emptyString;
+    }
     if (event->isKeyboardEvent() && event->type()->equals("keydown")) {
         bool isUseful = false;
         switch (event->asKeyboardEvent()->keyValue()) {

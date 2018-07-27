@@ -1376,7 +1376,7 @@ const GCAtomicVector<Element*>& Document::focusRing()
                     if (m_nodeIndex < o.m_nodeIndex) {
                         return true;
                     } else {
-                        STARFISH_ASSERT(m_nodeIndex > o.m_nodeIndex);
+                        STARFISH_ASSERT(m_nodeIndex >= o.m_nodeIndex);
                         return false;
                     }
                 }

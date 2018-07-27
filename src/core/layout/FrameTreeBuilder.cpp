@@ -1040,6 +1040,11 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
         }
     } else {
         currentFrame = current->frame();
+        if (currentFrame && currentFrame->isFrameInputBox() &&
+            current->childNeedsFrameTreeBuild()) {
+            FrameInputBox::buildFrameTree(current, ctx, false);
+            current->clearChildNeedsFrameTreeBuild();
+        }
     }
 
     // display is none or current that can't be inserted
