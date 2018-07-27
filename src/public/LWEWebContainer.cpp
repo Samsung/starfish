@@ -442,7 +442,8 @@ void WebContainer::RegisterOnDownloadStartHandler(
 
 void WebContainer::RegisterShowDropdownMenuHandler(
     const std::function<void(LWE::WebContainer*,
-                             const std::vector<std::string>*)>& cb)
+                             const std::vector<std::string>*,
+                             int checkedPosition)>& cb)
 {
     TO_STARFISH(m_starfish)
         ->platformWindow()
@@ -450,10 +451,11 @@ void WebContainer::RegisterShowDropdownMenuHandler(
                                   [this, cb](void* param) -> void {
                                       struct Param {
                                           std::vector<std::string>* list;
+                                          int checkedPosition;
                                       };
 
                                       Param* p = (Param*)param;
-                                      cb(this, p->list);
+                                      cb(this, p->list, p->checkedPosition);
                                       delete p->list;
                                       delete p;
                                   });
