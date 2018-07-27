@@ -1126,6 +1126,7 @@ web_platform_test_new_css_all_cairo:
 web_platform_test_new_others_cairo:
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/html/wpt_html_dev.res basic -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py csswg_with_remote test_new/tc_list/html/wpt_html_dev_pixel.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic test_new/tc_list/dom/wpt_dom_basic.res basic -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/page-visibility/wpt_page_visibility.res basic -p$(TEST_NPROCS)
 
 web_platform_test_new_all_cairo:
