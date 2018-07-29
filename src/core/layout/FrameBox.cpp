@@ -3172,7 +3172,8 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
             p = layoutParent()->asFrameBox();
             while (true) {
                 if (p->isEstablishesStackingContext()) {
-                    if (p->canOwnsStackingContext()) {
+                    if (p->canOwnsStackingContext() ||
+                        p->shouldApplyOverflow()) {
                         break;
                     }
                 }
