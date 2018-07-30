@@ -828,8 +828,8 @@ RenderResult WebView::rendering(bool force)
         mainBrowsingContext()->clearingBeforePaint(canvas);
         renderResult.didPaintingOrCompositing = true;
         renderResult.updateRect =
-            LayoutRect(0, 0, canvas->renderTargetInfo().m_width,
-                       canvas->renderTargetInfo().m_height);
+            LayoutRect(0, 0, starFish()->platformWindow()->width(),
+                       starFish()->platformWindow()->height());
         delete canvas;
 
         renderResult.didPaintingOrCompositing = false;
@@ -969,6 +969,10 @@ RenderResult WebView::rendering(bool force)
                 }
                 rt.setX(0);
             }
+            if (rt.x() >= screen.width()) {
+                rt.setX(0);
+                rt.setWidth(0);
+            }
             if (rt.y() < 0) {
                 if (rt.height() + rt.y() > 0) {
                     rt.setHeight(rt.height() + rt.y());
@@ -977,13 +981,27 @@ RenderResult WebView::rendering(bool force)
                 }
                 rt.setY(0);
             }
+            if (rt.y() >= screen.height()) {
+                rt.setY(0);
+                rt.setHeight(0);
+            }
+            STARFISH_RELEASE_ASSERT(rt.width() >= 0);
+            STARFISH_RELEASE_ASSERT(rt.height() >= 0);
             if (rt.maxX() > screen.maxX()) {
-                rt.setWidth((rt.width() - (rt.maxX() - screen.maxX())).abs());
+                LayoutUnit widthWillBe = screen.maxX() - rt.x();
+                rt.setWidth(widthWillBe);
             }
             if (rt.maxY() > screen.maxY()) {
-                rt.setHeight((rt.height() - (rt.maxY() - screen.maxY())).abs());
+                LayoutUnit heightWillBe = screen.maxY() - rt.y();
+                rt.setHeight(heightWillBe);
             }
             renderResult.updateRect = rt;
+
+            STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
+                              (float)renderResult.updateRect.x(),
+                              (float)renderResult.updateRect.y(),
+                              (float)renderResult.updateRect.width(),
+                              (float)renderResult.updateRect.height());
 
             refHolder = std::move(prevDrawnStackingContextInfo);
         }

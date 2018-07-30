@@ -1519,13 +1519,19 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         if (deviceLayerClipRect.y() < 0) {
             deviceLayerClipRect.setY(0);
         }
-        if ((int)deviceLayerClipRect.width() >
+        if ((int)deviceLayerClipRect.maxX() >
             (int)m_rareData->m_buffer->bufferWidth()) {
-            deviceLayerClipRect.setWidth(m_rareData->m_buffer->bufferWidth());
+            deviceLayerClipRect.setWidth(
+                deviceLayerClipRect.width() -
+                ((int)deviceLayerClipRect.maxX() -
+                 (int)m_rareData->m_buffer->bufferWidth()));
         }
-        if ((int)deviceLayerClipRect.height() >
+        if ((int)deviceLayerClipRect.maxY() >
             (int)m_rareData->m_buffer->bufferHeight()) {
-            deviceLayerClipRect.setHeight(m_rareData->m_buffer->bufferHeight());
+            deviceLayerClipRect.setHeight(
+                deviceLayerClipRect.height() -
+                ((int)deviceLayerClipRect.maxY() -
+                 (int)m_rareData->m_buffer->bufferHeight()));
         }
         if ((bool)deviceLayerClipRect.width() ||
             (bool)deviceLayerClipRect.height()) {

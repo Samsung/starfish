@@ -281,6 +281,10 @@ public:
     {
         STARFISH_LOG_INFO("WindowImplEFL::close()\n");
 
+        if (m_imfContext) {
+            ecore_imf_context_del(m_imfContext);
+        }
+
         if (m_renderingAnimator) {
             ecore_animator_freeze(m_renderingAnimator);
             ecore_animator_del(m_renderingAnimator);
@@ -343,10 +347,6 @@ public:
             m_nonIMEKeyEventBox = nullptr;
         }
 
-        if (m_imfContext) {
-            ecore_imf_context_del(m_imfContext);
-        }
-
         evas_event_callback_del(evas_object_evas_get(m_mainBox),
                                 EVAS_CALLBACK_RENDER_POST, m_renderingHandler);
 
@@ -397,6 +397,38 @@ public:
         if (g_currentWnd == this) {
             g_currentWnd = nullptr;
         }
+    }
+
+    virtual void onResize() override
+    {
+#if (defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
+     defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)) && \
+    !defined(PORT_COMPOSITOR_BACKEND_GL)
+        ProfilerTimer t(starFish(), "WindowImplEFL resize");
+        int w, h;
+        evas_object_image_size_get(m_canvasAdpater, &w, &h);
+        if (w != width() || h != height()) {
+            evas_object_image_size_set(m_canvasAdpater, 1, 1);
+            evas_object_image_fill_set(m_canvasAdpater, 0, 0, 1, 1);
+        }
+#elif defined(PORT_COMPOSITOR_BACKEND_GL)
+        ProfilerTimer t(starFish(), "WindowImplEFL resize");
+        int w, h;
+        evas_object_image_size_get(m_glAdpater, &w, &h);
+        if (w != width() || h != height()) {
+            STARFISH_LOG_INFO("WindowImpleEFL::resize %d %d\n", w, h);
+            evas_object_image_native_surface_set(m_glAdpater, NULL);
+            evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
+            evas_object_resize(m_glAdpater, width(), height());
+            evas_object_image_size_set(m_glAdpater, width(), height());
+            Evas_Native_Surface ns;
+            m_glSfc =
+                evas_gl_surface_create(m_glEvasgl, m_glCfg, width(), height());
+            evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
+            evas_object_image_native_surface_set(m_glAdpater, &ns);
+        }
+#endif
+        PlatformWindow::onResize();
     }
 
     virtual void onIdle() override
@@ -584,7 +616,9 @@ public:
         if (m_buffer) {
             evas_gl_make_current(m_window->m_glEvasgl, m_window->m_glSfc,
                                  m_window->m_glCtx);
-            m_window->m_glGlapi->glDeleteTextures(1, &m_textureID);
+            if (m_textureID) {
+                m_window->m_glGlapi->glDeleteTextures(1, &m_textureID);
+            }
             g_totalCanvasSurfaceGLSize -=
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
             free(m_buffer);
@@ -633,6 +667,11 @@ public:
             m_bufferStride = m_bufferWidth * 4;
             m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
                                               sizeof(uint32_t));
+
+            g_totalCanvasSurfaceGLSize +=
+                m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
+                              g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
         }
     }
 
@@ -673,18 +712,18 @@ public:
         STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
 
         m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D,
-                                             GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+                                             GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D,
-                                             GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+                                             GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+        m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                                             GL_CLAMP_TO_EDGE);
+        m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                                             GL_CLAMP_TO_EDGE);
 
         m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, 0);
         STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
-
-        g_totalCanvasSurfaceGLSize +=
-            m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
-        STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
-                          g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
     }
 
     virtual void* unwrap()
@@ -1300,9 +1339,10 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     // Set a surface config
     wnd->m_glCfg = evas_gl_config_new();
     wnd->m_glCfg->color_format = EVAS_GL_RGBA_8888;
-    wnd->m_glCfg->depth_bits = EVAS_GL_DEPTH_NONE; // Othe config options
+    wnd->m_glCfg->depth_bits = EVAS_GL_DEPTH_NONE;
     wnd->m_glCfg->stencil_bits = EVAS_GL_STENCIL_BIT_1;
-    wnd->m_glCfg->options_bits = EVAS_GL_OPTIONS_NONE;
+    wnd->m_glCfg->multisample_bits = EVAS_GL_MULTISAMPLE_NONE;
+    // wnd->m_glCfg->options_bits = EVAS_GL_OPTIONS_DIRECT;
 
     // Create a surface and context
     wnd->m_glSfc =
@@ -1315,6 +1355,20 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     evas_gl_native_surface_get(wnd->m_glEvasgl, wnd->m_glSfc, &ns);
     evas_object_image_native_surface_set(wnd->m_glAdpater, &ns);
     evas_object_show(wnd->m_glAdpater);
+
+    evas_object_image_pixels_dirty_set(wnd->m_glAdpater, EINA_TRUE);
+    evas_object_image_pixels_get_callback_set(
+        wnd->m_glAdpater,
+        [](void* data, Evas_Object* o) {
+            WindowImplEFL* wnd = (WindowImplEFL*)data;
+            evas_gl_make_current(wnd->m_glEvasgl, wnd->m_glSfc, wnd->m_glCtx);
+
+            wnd->m_glGlapi->glClearColor(0, 0, 0, 0);
+            wnd->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                                    GL_STENCIL_BUFFER_BIT);
+            wnd->m_glGlapi->glFlush();
+        },
+        wnd);
 #endif
 
 #if (defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
@@ -1642,41 +1696,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         wnd->m_mainBox, EVAS_CALLBACK_RESIZE,
         [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
-#if (defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
-     defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)) && \
-    !defined(PORT_COMPOSITOR_BACKEND_GL)
-            ProfilerTimer t(wnd->starFish(), "WindowImplEFL resize");
-            int w, h;
-            evas_object_image_size_get(wnd->m_canvasAdpater, &w, &h);
-            if (w != wnd->width() || h != wnd->height()) {
-                evas_object_image_size_set(wnd->m_canvasAdpater, 1, 1);
-                evas_object_image_fill_set(wnd->m_canvasAdpater, 0, 0, 1, 1);
-                StarFishEnterer enter(wnd->starFish());
-                wnd->onResize();
-            }
-#elif defined(PORT_COMPOSITOR_BACKEND_GL)
-            ProfilerTimer t(wnd->starFish(), "WindowImplEFL resize");
-            int w, h;
-            evas_object_image_size_get(wnd->m_glAdpater, &w, &h);
-            if (w != wnd->width() || h != wnd->height()) {
-                evas_object_image_native_surface_set(wnd->m_glAdpater, NULL);
-                evas_gl_surface_destroy(wnd->m_glEvasgl, wnd->m_glSfc);
-                evas_object_resize(wnd->m_glAdpater, wnd->width(),
-                                   wnd->height());
-                evas_object_image_size_set(wnd->m_glAdpater, wnd->width(),
-                                           wnd->height());
-                Evas_Native_Surface ns;
-                wnd->m_glSfc = evas_gl_surface_create(
-                    wnd->m_glEvasgl, wnd->m_glCfg, wnd->width(), wnd->height());
-                evas_gl_native_surface_get(wnd->m_glEvasgl, wnd->m_glSfc, &ns);
-                evas_object_image_native_surface_set(wnd->m_glAdpater, &ns);
-                StarFishEnterer enter(wnd->starFish());
-                wnd->onResize();
-            }
-#else
             StarFishEnterer enter(wnd->starFish());
             wnd->onResize();
-#endif
         },
         wnd);
     evas_object_event_callback_add(

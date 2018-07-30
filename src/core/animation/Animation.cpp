@@ -934,6 +934,7 @@ void TransformAnimationTask::detachedFromElement()
         }
     }
 
+    current->setNeedsStyleRecalc();
     current->clearRunningTransformAnimation();
 }
 
@@ -1069,9 +1070,10 @@ void AnimationExecutor::startIfNeeds()
                             didWork = true;
                         }
                     }
+
                     if (didWork &&
                         wv->starFish()->platformWindow()->canRendering()) {
-                        wv->starFish()->platformWindow()->rendering();
+                        wv->starFish()->platformWindow()->setNeedsRendering();
                     }
                     return didWork;
                 },
@@ -1129,6 +1131,11 @@ void AnimationExecutor::step()
                 task->dumpString()->toUTF8NonGCString().data(),
                 task->targetElement()->id()->toUTF8NonGCString().data(),
                 task->targetElement()->className()->toUTF8NonGCString().data());
+#else
+            STARFISH_LOG_INFO(
+                "[START][%lums][%p] (id:%s, className:%s)\n", currentTickCount,
+                task, task->targetElement()->id()->toUTF8NonGCString().data(),
+                task->targetElement()->className()->toUTF8NonGCString().data());
 #endif
             task->m_startTimeMs = currentTickCount + task->m_delayMs;
         }
@@ -1148,6 +1155,15 @@ void AnimationExecutor::step()
                     "[ END ][%lums][%p] %s (id:%s, className:%s)\n",
                     currentTickCount, task,
                     task->dumpString()->toUTF8NonGCString().data(),
+                    task->targetElement()->id()->toUTF8NonGCString().data(),
+                    task->targetElement()
+                        ->className()
+                        ->toUTF8NonGCString()
+                        .data());
+#else
+                STARFISH_LOG_INFO(
+                    "[ END ][%lums][%p] (id:%s, className:%s)\n",
+                    currentTickCount, task,
                     task->targetElement()->id()->toUTF8NonGCString().data(),
                     task->targetElement()
                         ->className()
