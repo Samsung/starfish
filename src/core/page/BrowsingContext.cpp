@@ -772,7 +772,7 @@ void BrowsingContext::didFocusEvent()
 }
 
 // https://www.w3.org/TR/html5/editing.html#focusing-steps
-void BrowsingContext::setFocusedNode(Node* n)
+void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
 {
     didFocusEvent();
 
@@ -819,22 +819,24 @@ void BrowsingContext::setFocusedNode(Node* n)
     // Run the unfocusing steps for this element.
     releaseFocusedNode(e);
 
-    m_focusedNode = e->asNode();
-    m_activeElement = e;
+    if (!byMouseEvent) {
+        m_focusedNode = e->asNode();
+        m_activeElement = e;
 
-    e->setState(Node::NodeStateFocused, true);
+        e->setState(Node::NodeStateFocused, true);
 
-    // focus event
-    String* eventType = starFish()->staticStrings()->m_focus.localName();
-    Event* event = new FocusEvent(document(), eventType,
-                                  FocusEventInit(false, false, relatedTarget));
-    document()->dispatchEventByUA(e->asNode(), event);
+        // focus event
+        String* eventType = starFish()->staticStrings()->m_focus.localName();
+        Event* event = new FocusEvent(
+            document(), eventType, FocusEventInit(false, false, relatedTarget));
+        document()->dispatchEventByUA(e->asNode(), event);
 
-    // focusin event
-    eventType = starFish()->staticStrings()->m_focusin.localName();
-    event = new FocusEvent(document(), eventType,
-                           FocusEventInit(true, false, relatedTarget));
-    document()->dispatchEventByUA(e->asNode(), event);
+        // focusin event
+        eventType = starFish()->staticStrings()->m_focusin.localName();
+        event = new FocusEvent(document(), eventType,
+                               FocusEventInit(true, false, relatedTarget));
+        document()->dispatchEventByUA(e->asNode(), event);
+    }
 }
 
 // https://www.w3.org/TR/html5/editing.html#unfocusing-steps
@@ -1028,7 +1030,7 @@ void BrowsingContext::handleActiveAndFocus(MouseEventKind kind,
     if (kind == MouseEventKind::MouseEventDown) { // TouchEventStart
         m_touchDownPoint = Unit::Location(posX, posY);
         setActiveNode(targetNode);
-        setFocusedNode(targetNode);
+        setFocusedNode(targetNode, true);
     } else if (kind == MouseEventKind::MouseEventUp) { // TouchEventEnd
         releaseActiveNode();
     }
@@ -1617,7 +1619,7 @@ void BrowsingContext::focusNavigation(bool forward)
 
     if (focusRing[current]) {
         focusRing[current]->scrollIntoViewIfNeeded();
-        setFocusedNode(focusRing[current]);
+        setFocusedNode(focusRing[current], false);
     } else {
         releaseFocusedNode(nullptr);
     }
