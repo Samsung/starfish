@@ -184,7 +184,7 @@ public:
     void releaseHoveredNode();
 
     Node* focusedNode();
-    void setFocusedNode(Node* n);
+    void setFocusedNode(Node* n, bool byMouseEvent);
     void releaseFocusedNode(Node* n, bool resetActiveElement = true);
     Element* activeElement();
 

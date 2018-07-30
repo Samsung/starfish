@@ -1562,7 +1562,7 @@ void Document::setDesignMode(String* value)
     if (m_designMode) {
         // TODO : immediately reset the document's active range's start and end
         // boundary points to be at the start of the Document
-        browsingContext()->setFocusedNode(this);
+        browsingContext()->setFocusedNode(this, false);
     }
 }
 

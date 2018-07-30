@@ -374,7 +374,7 @@ void HTMLFormControl::didNodeInsertedToDocumentTree()
                     element->document()->browsingContext()->setActiveNode(
                         element);
                     element->document()->browsingContext()->setFocusedNode(
-                        element);
+                        element, false);
                 }
             },
             this);
