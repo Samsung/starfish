@@ -17,6 +17,8 @@
  *  USA
  */
 
+// #define STARFISH_ENABLE_PROFILE_TIMER
+
 #include "StarFishConfig.h"
 #include "StarFish.h"
 
@@ -29,6 +31,17 @@
 
 #include <vector>
 #include <SkMatrix.h>
+#include <clipper.hpp>
+
+#include <earcut.hpp>
+// The number type to use for tessellation
+using Coord = double;
+// The index type. Defaults to uint32_t, but you can also pass uint16_t if you
+// know that your
+// data won't have more than 65536 vertices.
+using N = uint32_t;
+// Create array
+using Point = std::array<Coord, 2>;
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
 #include <Evas_GL.h>
@@ -185,9 +198,11 @@
 namespace StarFish {
 
 struct CompositorImplGLState {
+    bool matrixStaysInRect;
     SkMatrix matrix;
     float opacity;
     Unit::Color color;
+    ClipperLib::Paths clipPaths;
 };
 
 class CompositorImplGL : public Compositor {
@@ -198,6 +213,10 @@ public:
     GLuint texShaderProgram;
     GLuint texVertexShader;
     GLuint texFragmentShader;
+
+    GLuint texWithAlphaShaderProgram;
+    GLuint texWithAlphaVertexShader;
+    GLuint texWithAlphaFragmentShader;
 
     GLuint rectShaderProgram;
     GLuint rectVertexShader;
@@ -248,21 +267,17 @@ public:
                    starfish->platformWindow()->height());
 
         m_state.push_back(CompositorImplGLState());
+        m_state.back().matrixStaysInRect = true;
         m_state.back().matrix = SkMatrix::I();
         m_state.back().opacity = 1;
-
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         GLchar texVertexSource[] =
             "uniform mat4 uScreen;\n"
             "attribute vec2 aPosition;\n"
             "attribute vec2 aTexPos;\n"
             "varying vec2 vTexPos;\n"
-            "uniform float uAlpha;\n"
-            "varying float vAlpha;\n"
             "void main() {\n"
             "  vTexPos = aTexPos;\n"
-            "  vAlpha = uAlpha;\n"
             "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
             "}";
 
@@ -270,14 +285,9 @@ public:
             "precision mediump float;\n"
             "uniform sampler2D uTexture;\n"
             "varying vec2 vTexPos;\n"
-            "varying float vAlpha;\n"
             "void main(void)\n"
             "{\n"
             "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
-            "  gl_FragColor.a *= vAlpha;\n"
-            "  gl_FragColor.r *= vAlpha;\n"
-            "  gl_FragColor.g *= vAlpha;\n"
-            "  gl_FragColor.b *= vAlpha;\n"
             "}";
 
         texVertexShader = loadShader(GL_VERTEX_SHADER, texVertexSource);
@@ -322,9 +332,62 @@ public:
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
 
+        GLchar texWithAlphaVertexSource[] =
+            "uniform mat4 uScreen;\n"
+            "attribute vec2 aPosition;\n"
+            "attribute vec2 aTexPos;\n"
+            "varying vec2 vTexPos;\n"
+            "uniform float uAlpha;\n"
+            "varying float vAlpha;\n"
+            "void main() {\n"
+            "  vTexPos = aTexPos;\n"
+            "  vAlpha = uAlpha;\n"
+            "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
+            "}";
+
+        GLchar texWithAlphaFragmentSource[] =
+            "precision mediump float;\n"
+            "uniform sampler2D uTexture;\n"
+            "varying vec2 vTexPos;\n"
+            "varying float vAlpha;\n"
+            "void main(void)\n"
+            "{\n"
+            "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
+            "  gl_FragColor.a *= vAlpha;\n"
+            "  gl_FragColor.r *= vAlpha;\n"
+            "  gl_FragColor.g *= vAlpha;\n"
+            "  gl_FragColor.b *= vAlpha;\n"
+            "}";
+
+        texWithAlphaVertexShader =
+            loadShader(GL_VERTEX_SHADER, texWithAlphaVertexSource);
+        checkError();
+        texWithAlphaFragmentShader =
+            loadShader(GL_FRAGMENT_SHADER, texWithAlphaFragmentSource);
+        checkError();
+
+        texWithAlphaShaderProgram = glCreateProgram();
+        checkError();
+
+        glAttachShader(texWithAlphaShaderProgram, texWithAlphaVertexShader);
+        checkError();
+        glAttachShader(texWithAlphaShaderProgram, texWithAlphaFragmentShader);
+        checkError();
+
+        glLinkProgram(texWithAlphaShaderProgram);
+        checkError();
+
+        glUseProgram(texWithAlphaShaderProgram);
+        checkError();
+
+        uScreenPos = glGetUniformLocation(texWithAlphaShaderProgram, "uScreen");
+        uTexture = glGetUniformLocation(texWithAlphaShaderProgram, "uTexture");
+
+        glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
+        checkError();
+
         GLchar rectVertexSource[] =
             "uniform mat4 uScreen;\n"
-            "attribute vec2 aTexPos;\n"
             "attribute vec2 aPosition;\n"
             "uniform float uR;\n"
             "varying float vR;\n"
@@ -388,6 +451,12 @@ public:
         glDeleteShader(texFragmentShader);
         checkError();
 
+        glDeleteProgram(texWithAlphaShaderProgram);
+        glDeleteShader(texWithAlphaVertexShader);
+        checkError();
+        glDeleteShader(texWithAlphaFragmentShader);
+        checkError();
+
         glDeleteProgram(rectShaderProgram);
         glDeleteShader(rectVertexShader);
         checkError();
@@ -402,13 +471,20 @@ public:
     virtual void clearColor(const Unit::Color& clr)
     {
         glClearColor(clr.R(), clr.G(), clr.B(), clr.A());
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
+                GL_STENCIL_BUFFER_BIT);
     }
 
     // state
     virtual void save()
     {
         auto s = m_state.back();
+        CompositorImplGLState newState;
+        newState.matrixStaysInRect = s.matrixStaysInRect;
+        newState.color = s.color;
+        newState.matrix = s.matrix;
+        newState.opacity = s.opacity;
+        newState.clipPaths = s.clipPaths;
         m_state.push_back(s);
     }
 
@@ -427,6 +503,10 @@ public:
     virtual void rotate(double angle)
     {
         m_state.back().matrix.preRotate(angle);
+
+        if (!m_state.back().matrix.rectStaysRect()) {
+            m_state.back().matrixStaysInRect = false;
+        }
     }
 
     virtual void translate(double x, double y)
@@ -452,6 +532,25 @@ public:
 
     virtual void clip(const Unit::Rect& rt)
     {
+        ClipperLib::Path path;
+        SkPoint pt;
+        pt = SkPoint::Make(rt.x(), rt.y());
+        m_state.back().matrix.mapPoints(&pt, 1);
+        path.emplace_back(pt.x(), pt.y());
+
+        pt = SkPoint::Make(rt.x() + rt.width(), rt.y());
+        m_state.back().matrix.mapPoints(&pt, 1);
+        path.emplace_back(pt.x(), pt.y());
+
+        pt = SkPoint::Make(rt.x() + rt.width(), rt.y() + rt.height());
+        m_state.back().matrix.mapPoints(&pt, 1);
+        path.emplace_back(pt.x(), pt.y());
+
+        pt = SkPoint::Make(rt.x(), rt.y() + rt.height());
+        m_state.back().matrix.mapPoints(&pt, 1);
+        path.emplace_back(pt.x(), pt.y());
+
+        m_state.back().clipPaths.push_back(path);
     }
 
     virtual void setColor(const Unit::Color& clr_)
@@ -471,8 +570,6 @@ public:
 
     virtual void drawRect(const Unit::Rect& rt)
     {
-        glUseProgram(rectShaderProgram);
-
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
         SkPoint pt;
@@ -497,30 +594,128 @@ public:
         dest[3][0] = pt.x();
         dest[3][1] = pt.y();
 
-        auto aPosition = glGetAttribLocation(rectShaderProgram, "aPosition");
+        if (m_state.back().clipPaths.size()) {
+            ClipperLib::Paths result = computeClippath(dest);
+            if (result.size()) {
+                if (m_state.back().matrixStaysInRect && result.size() == 1 &&
+                    result[0].size() == 4) {
+                    glUseProgram(rectShaderProgram);
 
-        float data[] = {
-            dest[0][0], dest[0][1], // V1
-            dest[1][0], dest[1][1], // V2
-            dest[2][0], dest[2][1], // V3
-            dest[3][0], dest[3][1]  // V4
-        };
+                    auto aPosition =
+                        glGetAttribLocation(rectShaderProgram, "aPosition");
 
-        glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0, &data[0]);
-        glEnableVertexAttribArray(aPosition);
+                    float data[] = {
+                        (float)result[0][0].X, (float)result[0][0].Y,
+                        (float)result[0][1].X, (float)result[0][1].Y,
+                        (float)result[0][2].X, (float)result[0][2].Y,
+                        (float)result[0][3].X, (float)result[0][3].Y
+                    };
+                    glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
+                                          &data[0]);
+                    glEnableVertexAttribArray(aPosition);
 
-        auto uA = glGetUniformLocation(rectShaderProgram, "uA");
-        auto uR = glGetUniformLocation(rectShaderProgram, "uR");
-        auto uG = glGetUniformLocation(rectShaderProgram, "uG");
-        auto uB = glGetUniformLocation(rectShaderProgram, "uB");
-        float a = m_state.back().opacity;
+                    auto uA = glGetUniformLocation(rectShaderProgram, "uA");
+                    auto uR = glGetUniformLocation(rectShaderProgram, "uR");
+                    auto uG = glGetUniformLocation(rectShaderProgram, "uG");
+                    auto uB = glGetUniformLocation(rectShaderProgram, "uB");
+                    float a = m_state.back().opacity;
 
-        glUniform1f(uA, a * m_state.back().color.A());
-        glUniform1f(uR, a * m_state.back().color.R());
-        glUniform1f(uG, a * m_state.back().color.G());
-        glUniform1f(uB, a * m_state.back().color.B());
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        checkError();
+                    glUniform1f(uA, a * m_state.back().color.A());
+                    glUniform1f(uR, a * m_state.back().color.R());
+                    glUniform1f(uG, a * m_state.back().color.G());
+                    glUniform1f(uB, a * m_state.back().color.B());
+
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                    checkError();
+
+                    glUseProgram(0);
+                } else {
+                    // polygon painting
+                    std::vector<std::vector<Point>> polygon;
+                    std::vector<Point> pointPerIndex;
+                    for (size_t i = 0; i < result.size(); i++) {
+                        polygon.push_back(std::vector<Point>());
+                        for (size_t j = 0; j < result[i].size(); j++) {
+                            polygon.back().push_back(
+                                { (double)result[i][j].X,
+                                  (double)result[i][j].Y });
+                            pointPerIndex.push_back({ (double)result[i][j].X,
+                                                      (double)result[i][j].Y });
+                        }
+                    }
+
+                    std::vector<N> indices = mapbox::earcut<N>(polygon);
+                    for (size_t i = 0; i < indices.size(); i += 3) {
+                        float trianglePoints[6] = {
+                            (float)pointPerIndex[indices[i]][0],
+                            (float)pointPerIndex[indices[i]][1],
+                            (float)pointPerIndex[indices[i + 1]][0],
+                            (float)pointPerIndex[indices[i + 1]][1],
+                            (float)pointPerIndex[indices[i + 2]][0],
+                            (float)pointPerIndex[indices[i + 2]][1]
+                        };
+                        glUseProgram(rectShaderProgram);
+                        auto aPosition =
+                            glGetAttribLocation(rectShaderProgram, "aPosition");
+
+                        glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
+                                              trianglePoints);
+                        glEnableVertexAttribArray(aPosition);
+
+                        auto uA = glGetUniformLocation(rectShaderProgram, "uA");
+                        auto uR = glGetUniformLocation(rectShaderProgram, "uR");
+                        auto uG = glGetUniformLocation(rectShaderProgram, "uG");
+                        auto uB = glGetUniformLocation(rectShaderProgram, "uB");
+                        float a = 1;
+
+                        glUniform1f(uA,
+                                    a * Unit::Color(255, 255, 255, 255).A());
+                        glUniform1f(uR,
+                                    a * Unit::Color(255, 255, 255, 255).R());
+                        glUniform1f(uG,
+                                    a * Unit::Color(255, 255, 255, 255).G());
+                        glUniform1f(uB,
+                                    a * Unit::Color(255, 255, 255, 255).B());
+
+                        glDrawArrays(GL_TRIANGLES, 0, 3);
+                        checkError();
+
+                        glUseProgram(0);
+                    }
+                }
+            }
+        } else {
+            float data[] = {
+                dest[0][0], dest[0][1], // V1
+                dest[1][0], dest[1][1], // V2
+                dest[2][0], dest[2][1], // V3
+                dest[3][0], dest[3][1]  // V4
+            };
+
+            glUseProgram(rectShaderProgram);
+
+            auto aPosition =
+                glGetAttribLocation(rectShaderProgram, "aPosition");
+
+            glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0, &data[0]);
+            glEnableVertexAttribArray(aPosition);
+
+            auto uA = glGetUniformLocation(rectShaderProgram, "uA");
+            auto uR = glGetUniformLocation(rectShaderProgram, "uR");
+            auto uG = glGetUniformLocation(rectShaderProgram, "uG");
+            auto uB = glGetUniformLocation(rectShaderProgram, "uB");
+            float a = m_state.back().opacity;
+
+            glUniform1f(uA, a * m_state.back().color.A());
+            glUniform1f(uR, a * m_state.back().color.R());
+            glUniform1f(uG, a * m_state.back().color.G());
+            glUniform1f(uB, a * m_state.back().color.B());
+
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            checkError();
+
+            glUseProgram(0);
+        }
     }
 
     virtual void drawRect(const LayoutRect& rt)
@@ -533,15 +728,68 @@ public:
 #ifndef NDEBUG
         auto error = glGetError();
         if (error != 0) {
-            STARFISH_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
 #endif
     }
 
+    // returns paths & paths stays in rect
+    ClipperLib::Paths computeClippath(float (&dest)[4][2])
+    {
+        ClipperLib::Clipper clipper;
+
+        ClipperLib::Path texture;
+        texture.emplace_back(dest[0][0], dest[0][1]);
+        texture.emplace_back(dest[2][0], dest[2][1]);
+        texture.emplace_back(dest[3][0], dest[3][1]);
+        texture.emplace_back(dest[1][0], dest[1][1]);
+
+        // clipping debug code
+        /*
+        puts("texture");
+        printf("%d,%d ", (int)texture[0].X, (int)texture[0].Y);
+        printf("%d,%d ", (int)texture[1].X, (int)texture[1].Y);
+        printf("%d,%d ", (int)texture[2].X, (int)texture[2].Y);
+        printf("%d,%d ", (int)texture[3].X, (int)texture[3].Y);
+        puts("");
+
+        puts("clipPathlog");
+        for (size_t i = 0; i < m_state.back().clipPaths.size(); i ++) {
+            printf("i=%d ", (int)i);
+
+            std::vector<float> pts;
+            for (size_t j = 0; j < m_state.back().clipPaths[i].size(); j ++) {
+                printf("%d,%d ", (int)m_state.back().clipPaths[i][j].X,
+        (int)m_state.back().clipPaths[i][j].Y);
+            }
+            puts("");
+        }
+        */
+
+        clipper.AddPath(texture, ClipperLib::PolyType::ptSubject, true);
+        clipper.AddPath(m_state.back().clipPaths[0],
+                        ClipperLib::PolyType::ptClip, true);
+
+        ClipperLib::Paths result;
+        clipper.Execute(ClipperLib::ClipType::ctIntersection, result);
+
+        for (size_t i = 1; i < m_state.back().clipPaths.size(); i++) {
+            clipper.Clear();
+            clipper.AddPaths(result, ClipperLib::PolyType::ptSubject, true);
+            clipper.AddPath(m_state.back().clipPaths[i],
+                            ClipperLib::PolyType::ptClip, true);
+
+            ClipperLib::Paths newResult;
+            clipper.Execute(ClipperLib::ClipType::ctIntersection, newResult);
+            result = newResult;
+        }
+
+        return result;
+    }
+
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst)
     {
-        glUseProgram(texShaderProgram);
-
+        INSTALL_PROFILE_TIMER(m_starfish, "CompositorGL::drawSurface");
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
         SkPoint pt;
@@ -566,47 +814,164 @@ public:
         dest[3][0] = pt.x();
         dest[3][1] = pt.y();
 
-        GLuint tid = (GLuint)(size_t)cs->unwrap();
+        bool stencilClippingEnabled = false;
+        bool shouldSkipTexturePainting = false;
+        if (m_state.back().clipPaths.size()) {
+            ClipperLib::Paths result = computeClippath(dest);
+            if (result.size()) {
+                stencilClippingEnabled = true;
 
-        auto aPosition = glGetAttribLocation(texShaderProgram, "aPosition");
-        auto aTexPos = glGetAttribLocation(texShaderProgram, "aTexPos");
+                glEnable(GL_STENCIL_TEST);
+                glClearStencil(0);
+                glClear(GL_STENCIL_BUFFER_BIT);
+                glColorMask(false, false, false, false);
+                glDepthMask(false);
+                glStencilFunc(GL_ALWAYS, 1, 1);
+                glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
-        float data[] = { dest[0][0], dest[0][1], // V1
-                         0.f,        0.f,        // Texture coordinate .for V1
+                std::vector<std::vector<Point>> polygon;
+                std::vector<Point> pointPerIndex;
+                for (size_t i = 0; i < result.size(); i++) {
+                    polygon.push_back(std::vector<Point>());
+                    for (size_t j = 0; j < result[i].size(); j++) {
+                        polygon.back().push_back(
+                            { (double)result[i][j].X, (double)result[i][j].Y });
+                        pointPerIndex.push_back(
+                            { (double)result[i][j].X, (double)result[i][j].Y });
+                    }
+                }
 
-                         dest[1][0], dest[1][1], // V2
-                         0.f,        1.f,
+                std::vector<N> indices = mapbox::earcut<N>(polygon);
+                for (size_t i = 0; i < indices.size(); i += 3) {
+                    float trianglePoints[6] = {
+                        (float)pointPerIndex[indices[i]][0],
+                        (float)pointPerIndex[indices[i]][1],
+                        (float)pointPerIndex[indices[i + 1]][0],
+                        (float)pointPerIndex[indices[i + 1]][1],
+                        (float)pointPerIndex[indices[i + 2]][0],
+                        (float)pointPerIndex[indices[i + 2]][1]
+                    };
+                    /*
+                    printf("trangle %f,%f-%f,%f-%f,%f ", trianglePoints[0],
+                    trianglePoints[1],
+                            trianglePoints[2], trianglePoints[3],
+                            trianglePoints[4], trianglePoints[5]);
+                     */
+                    glUseProgram(rectShaderProgram);
+                    auto aPosition =
+                        glGetAttribLocation(rectShaderProgram, "aPosition");
 
-                         dest[2][0], dest[2][1], // V3
-                         1.f,        0.f,
+                    glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
+                                          trianglePoints);
+                    glEnableVertexAttribArray(aPosition);
 
-                         dest[3][0], dest[3][1], // V4
-                         1.f,        1.f };
+                    auto uA = glGetUniformLocation(rectShaderProgram, "uA");
+                    auto uR = glGetUniformLocation(rectShaderProgram, "uR");
+                    auto uG = glGetUniformLocation(rectShaderProgram, "uG");
+                    auto uB = glGetUniformLocation(rectShaderProgram, "uB");
+                    float a = 1;
 
-        glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
-                              &data[0]);
-        glEnableVertexAttribArray(aPosition);
+                    glUniform1f(uA, a * Unit::Color(255, 255, 255, 255).A());
+                    glUniform1f(uR, a * Unit::Color(255, 255, 255, 255).R());
+                    glUniform1f(uG, a * Unit::Color(255, 255, 255, 255).G());
+                    glUniform1f(uB, a * Unit::Color(255, 255, 255, 255).B());
 
-        glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
-                              &data[2]);
-        glEnableVertexAttribArray(aTexPos);
+                    glDrawArrays(GL_TRIANGLES, 0, 3);
+                    checkError();
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, tid);
-        auto uTexture = glGetUniformLocation(texShaderProgram, "uTexture");
-        auto uAlpha = glGetUniformLocation(texShaderProgram, "uAlpha");
-        float a = m_state.back().opacity;
-        glUniform1f(uAlpha, a);
-        glUniform1i(uTexture, 0);
+                    glUseProgram(0);
+                }
 
-        glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        checkError();
+                glColorMask(true, true, true, true);
+                glDepthMask(true);
+                glStencilFunc(GL_EQUAL, 1, 1);
+                glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+            } else {
+                shouldSkipTexturePainting = true;
+            }
+        }
+
+        if (!shouldSkipTexturePainting) {
+            GLuint tid = (GLuint)(size_t)cs->unwrap();
+
+            float data[] = { dest[0][0], dest[0][1], // V1
+                             0.f,        0.f, // Texture coordinate .for V1
+
+                             dest[1][0], dest[1][1], // V2
+                             0.f,        1.f,
+
+                             dest[2][0], dest[2][1], // V3
+                             1.f,        0.f,
+
+                             dest[3][0], dest[3][1], // V4
+                             1.f,        1.f };
+            float a = m_state.back().opacity;
+            if (a == 1) {
+                glUseProgram(texShaderProgram);
+                auto aPosition =
+                    glGetAttribLocation(texShaderProgram, "aPosition");
+                auto aTexPos = glGetAttribLocation(texShaderProgram, "aTexPos");
+
+                glVertexAttribPointer(aPosition, 2, GL_FLOAT, false,
+                                      (2 + 2) * 4, &data[0]);
+                glEnableVertexAttribArray(aPosition);
+
+                glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                      &data[2]);
+                glEnableVertexAttribArray(aTexPos);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, tid);
+                auto uTexture =
+                    glGetUniformLocation(texShaderProgram, "uTexture");
+
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                checkError();
+                glUseProgram(0);
+            } else {
+                glUseProgram(texWithAlphaShaderProgram);
+                auto aPosition =
+                    glGetAttribLocation(texWithAlphaShaderProgram, "aPosition");
+                auto aTexPos =
+                    glGetAttribLocation(texWithAlphaShaderProgram, "aTexPos");
+
+                glVertexAttribPointer(aPosition, 2, GL_FLOAT, false,
+                                      (2 + 2) * 4, &data[0]);
+                glEnableVertexAttribArray(aPosition);
+
+                glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                      &data[2]);
+                glEnableVertexAttribArray(aTexPos);
+
+                glActiveTexture(GL_TEXTURE0);
+                glBindTexture(GL_TEXTURE_2D, tid);
+                auto uTexture =
+                    glGetUniformLocation(texWithAlphaShaderProgram, "uTexture");
+                auto uAlpha =
+                    glGetUniformLocation(texWithAlphaShaderProgram, "uAlpha");
+                glUniform1f(uAlpha, a);
+                glUniform1i(uTexture, 0);
+
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                checkError();
+                glUseProgram(0);
+            }
+        }
+
+        if (stencilClippingEnabled) {
+            glDisable(GL_STENCIL_TEST);
+        }
     }
 
     virtual void postMatrix(const SkMatrix& matrix)
     {
         m_state.back().matrix.preConcat(matrix);
+
+        if (!m_state.back().matrix.rectStaysRect()) {
+            m_state.back().matrixStaysInRect = false;
+        }
     }
 
     virtual void applyMatrixTo(LayoutLocation& lp)
@@ -634,10 +999,13 @@ public:
     virtual void resetMatrixAndClip()
     {
         m_state.back().matrix = SkMatrix::I();
+        m_state.back().clipPaths.clear();
+        m_state.back().matrixStaysInRect = true;
     }
 
     virtual void resetClip()
     {
+        m_state.back().clipPaths.clear();
     }
 
 protected:

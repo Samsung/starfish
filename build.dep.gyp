@@ -78,6 +78,22 @@
             },
         },
         {
+            'target_name': 'earcut.hpp',
+            'type': '<(deplib)',
+            'dependencies': [
+            ],
+            'include_dirs': [
+            ],
+            'sources': [
+            ],
+            'all_dependent_settings': {
+                'include_dirs': [
+                    'third_party/earcut.hpp/include/mapbox',
+                ],
+            },
+        },
+
+        {
             'target_name': 'js_binding',
             'type': 'none',
             'dependencies': [

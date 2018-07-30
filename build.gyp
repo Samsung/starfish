@@ -14,6 +14,7 @@
         'dependencies': [
             #'./build.dep.gyp:js_binding',
             './build.dep.gyp:clipper',
+            './build.dep.gyp:earcut.hpp',
             './build.dep.gyp:cppzmq',
             '<@(deps_extra)',
         ],

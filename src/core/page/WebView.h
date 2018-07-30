@@ -216,6 +216,11 @@ public:
         return m_activeAnimationExecutor.size();
     }
 
+    bool needsRendering()
+    {
+        return m_needsRendering;
+    }
+
     void addPaintingDirtyArea(const LayoutRect& rt)
     {
         m_paintingDirtyRect.unite(rt);
