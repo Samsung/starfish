@@ -593,6 +593,7 @@ LayoutRect FrameReplaced::computeObjectFit(const LayoutUnit& w,
             rect.width() <= intrinsicSize.width()) {
             break;
         }
+    // Fall through.
     case ObjectFitValue::NoneObjectFitValue:
         rect.setSize(intrinsicSize);
         break;
@@ -666,4 +667,4 @@ Frame* FrameReplaced::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 
     return FrameBox::hitTest(x, y, stage);
 }
-}
+} // namespace StarFish
