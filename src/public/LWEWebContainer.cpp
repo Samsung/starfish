@@ -396,12 +396,13 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
                 struct Param {
                     std::string url;
                     std::string referrerUrl;
+                    bool canNavigate;
                 };
 
                 Param* p = (Param*)param;
                 bool ret = cb(this, p->url);
 
-                if (ret == false) {
+                if ((ret == false) && p->canNavigate) {
                     // continue loading
                     TO_STARFISH(m_starfish)
                         ->messageLoop()

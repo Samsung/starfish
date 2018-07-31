@@ -321,20 +321,6 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
         delete data;
     }
 
-    if ((referrerURL != nullptr) && !force &&
-        (wv->starFish()->containsWebViewHandler("shouldOverrideUrlLoading"))) {
-        struct Param {
-            std::string url;
-            std::string referrerUrl;
-        };
-        Param* p = new Param();
-        p->url = url->urlString()->toUTF8NonGCString();
-        p->referrerUrl = referrerURL->urlString()->toUTF8NonGCString();
-        starFish()->callWebViewHandler(std::string("shouldOverrideUrlLoading"),
-                                       (void*)p);
-        return;
-    }
-
     InvokeNavigateData* data = new InvokeNavigateData();
     m_navigateInvokeIdler = data;
     data->extra = &m_navigateInvokeIdler;
