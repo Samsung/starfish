@@ -1183,8 +1183,8 @@ void HTMLTreeBuilder::processStartTagForInTable(AtomicHTMLToken* token)
             m_tree.insertSelfClosingHTMLElement(token);
             return;
         }
-        // Fall through to "anything else" case.
     }
+    // Fall through to "anything else" case.
     if (token->name() == s->m_formTagName) {
         parseError(token);
         if (m_tree.form()) {
@@ -2534,8 +2534,8 @@ ReprocessBuffer:
             return;
         }
         defaultForInitial();
-        // Fall through.
     }
+    // Fall through.
     case BeforeHTMLMode: {
         STARFISH_ASSERT(insertionMode() == BeforeHTMLMode);
         buffer.skipLeadingWhitespace();
@@ -2543,8 +2543,8 @@ ReprocessBuffer:
             return;
         }
         defaultForBeforeHTML();
-        // Fall through.
     }
+    // Fall through.
     case BeforeHeadMode: {
         STARFISH_ASSERT(insertionMode() == BeforeHeadMode);
         buffer.skipLeadingWhitespace();
@@ -2552,8 +2552,8 @@ ReprocessBuffer:
             return;
         }
         defaultForBeforeHead();
-        // Fall through.
     }
+    // Fall through.
     case InHeadMode: {
         STARFISH_ASSERT(insertionMode() == InHeadMode);
         String* leadingWhitespace = buffer.takeLeadingWhitespace();
@@ -2564,8 +2564,8 @@ ReprocessBuffer:
             return;
         }
         defaultForInHead();
-        // Fall through.
     }
+    // Fall through.
     case AfterHeadMode: {
         STARFISH_ASSERT(insertionMode() == AfterHeadMode);
         String* leadingWhitespace = buffer.takeLeadingWhitespace();
@@ -2576,8 +2576,8 @@ ReprocessBuffer:
             return;
         }
         defaultForAfterHead();
-        // Fall through.
     }
+    // Fall through.
     case InBodyMode:
     case InCaptionMode:
     case TemplateContentsMode:
@@ -2612,8 +2612,8 @@ ReprocessBuffer:
             processCharacterBufferForInBody(buffer);
             break;
         }
-        // Fall through.
     }
+    // Fall through.
     case InTableTextMode: {
         buffer.giveRemainingTo(m_pendingTableCharacters);
         break;
@@ -3165,4 +3165,4 @@ void HTMLTreeBuilder::parseError(AtomicHTMLToken*)
 {
 }
 
-} // namespace WebCore
+} // namespace StarFish
