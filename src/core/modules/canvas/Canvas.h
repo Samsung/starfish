@@ -50,11 +50,6 @@ public:
     }
 };
 
-inline double deg2rad(float degree)
-{
-    return degree * 3.14159265358979323846 / 180;
-}
-
 #ifndef STARFISH_CANVAS_SURFACE_MARGIN
 #define STARFISH_CANVAS_SURFACE_MARGIN 0
 #endif

@@ -104,6 +104,8 @@ public:
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
         m_canvas = m_surface->getCanvas();
+        m_paint.setAntiAlias(true);
+
         applyDevicePixelRatio(m_canvas);
         save();
     }
@@ -129,6 +131,8 @@ public:
         m_renderTargetInfo.m_stride = d->stride;
         m_shouldDestroySkia = false;
         m_shouldDestroySurface = false;
+        m_paint.setAntiAlias(true);
+
         save();
     }
 
@@ -139,6 +143,7 @@ public:
         m_surface = nullptr;
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = true;
+        m_paint.setAntiAlias(true);
 
         initFromBuffer(data->data(), data->bufferWidth(), data->bufferHeight(),
                        data->bufferStride());
@@ -153,6 +158,8 @@ public:
         m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
+        m_paint.setAntiAlias(true);
+
         initFromNativeImageData(data);
         save();
     }
@@ -216,7 +223,7 @@ public:
 
     virtual void rotate(double angle)
     {
-        m_canvas->rotate(angle);
+        m_canvas->rotate(convertFromRadToDeg(angle));
     }
 
     virtual void rotate(double angle, double ox, double oy)
@@ -964,7 +971,7 @@ public:
     {
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
-        m_canvas->clipPath(m_path);
+        m_canvas->clipPath(m_path, true);
         m_canvas->setMatrix(m);
     }
 
