@@ -154,17 +154,13 @@ void Location::setLocation(String* url, ResourceURL* referrerURL)
 void Location::assign(String* url)
 {
     ResourceURL* r = new ResourceURL(url, document()->baseURL()->urlString());
-    if (r->protocolKind() != ResourceURL::UNKNOWN) {
-        assign(r, document()->documentURI());
-    }
+    assign(r, document()->documentURI());
 }
 
 void Location::assign(String* url, ResourceURL* referrerURL)
 {
     ResourceURL* r = new ResourceURL(url, document()->baseURL()->urlString());
-    if (r->protocolKind() != ResourceURL::UNKNOWN) {
-        assign(r, referrerURL);
-    }
+    assign(r, referrerURL);
 }
 
 static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
@@ -235,15 +231,34 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
         cb = [this, url, referrerURL, force](
             bool isBrowsableContent,
             const std::unordered_map<std::string, std::string>& headers) {
-            if (isBrowsableContent) {
-                if (!url->isJavascriptURL()) {
+            bool canNavigate = isBrowsableContent &&
+                               (url->protocolKind() != ResourceURL::UNKNOWN);
+
+            if (starFish()->containsWebViewHandler(
+                    "shouldOverrideUrlLoading")) {
+                struct Param {
+                    std::string url;
+                    std::string referrerUrl;
+                    bool canNavigate;
+                };
+                Param* p = new Param();
+                p->url = url->urlString()->toUTF8NonGCString();
+                p->referrerUrl = referrerURL->urlString()->toUTF8NonGCString();
+                p->canNavigate = canNavigate;
+                starFish()->callWebViewHandler(
+                    std::string("shouldOverrideUrlLoading"), (void*)p);
+            } else {
+                if (canNavigate) {
                     if (force ||
                         !this->url()->urlString()->equals(url->urlString())) {
                         navigateImpl(document()->browsingContext(), url,
                                      referrerURL);
                     }
                 }
-            } else {
+            }
+
+            if (!isBrowsableContent &&
+                starFish()->containsWebViewHandler("onDownloadStart")) {
                 struct Param {
                     std::string url;
                     std::string userAgent;
