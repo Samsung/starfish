@@ -49,8 +49,10 @@ class CanvasStateSkia : public CanvasState {
 public:
     CanvasStateSkia()
         : CanvasState()
+        , m_fillType(SkPath::FillType::kWinding_FillType)
     {
     }
+    SkPath::FillType m_fillType;
 };
 
 class CanvasSkia : public Canvas {
@@ -200,6 +202,7 @@ public:
             state.m_font = lastState.m_font;
             state.m_visible = lastState.m_visible;
             state.m_textDecorationData = lastState.m_textDecorationData;
+            state.m_fillType = lastState.m_fillType;
         }
         m_state.push_back(state);
         m_canvas->save();
@@ -208,6 +211,9 @@ public:
     virtual void restore() // pop state stack and restore state
     {
         m_state.erase(m_state.end() - 1);
+        if (m_state.size()) {
+            m_path.setFillType(lastState().m_fillType);
+        }
         m_canvas->restore();
     }
 
@@ -248,8 +254,13 @@ public:
 
     virtual void clip(const Unit::Rect& rt)
     {
-        m_canvas->clipRect(
-            SkRect::MakeXYWH(rt.x(), rt.y(), rt.width(), rt.height()));
+        moveTo(rt.x(), rt.y());
+        lineTo(rt.x() + rt.width(), rt.y());
+        lineTo(rt.x() + rt.width(), rt.y() + rt.height());
+        lineTo(rt.x(), rt.y() + rt.height());
+        lineTo(rt.x(), rt.y());
+        closePath();
+        clipPath();
     }
 
     virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)
@@ -979,8 +990,10 @@ public:
     {
         if (shouldUseNonZeroFillRule) {
             m_path.setFillType(SkPath::kWinding_FillType);
+            lastState().m_fillType = SkPath::kWinding_FillType;
         } else {
             m_path.setFillType(SkPath::kEvenOdd_FillType);
+            lastState().m_fillType = SkPath::kEvenOdd_FillType;
         }
     }
 
