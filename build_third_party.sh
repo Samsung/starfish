@@ -36,6 +36,9 @@ if [ "$arch" == "x64" ]; then
         ninja -C out/Debug/Shared
     fi
 #TODO libtuv for x64
+	cd third_party/libtuv
+	make clean
+	TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=x86_64-linux make -j$NUMPROC
 
 elif [ "$arch" == "arm" ]; then
     #cd $STARFISH_ROOT

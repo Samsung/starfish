@@ -617,7 +617,7 @@
             'copies': [
                 {
                     'files': [
-                        'third_party/libtuv/build/x86_64-linux/debug/lib/libtuv.a',
+                        'third_party/libtuv/build/x86_64-linux/release/lib/libtuv.a',
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib',
                 },

@@ -58,7 +58,9 @@ struct DaliStarFishBinder {
     int w, h, s;
     bool canGoBack, canGoForward;
     bool isRunning;
-    std::function<void(LWE::WebContainer*, void*)> onRenderedHandler;
+    std::function<void(LWE::WebContainer*,
+                       const LWE::WebContainer::RenderResult&)>
+        onRenderedHandler;
     std::function<void(LWE::WebContainer*, LWE::ResourceError)> onReceivedError;
     std::function<void(LWE::WebContainer*, const std::string&)>
         onPageFinishedHandler;
@@ -247,8 +249,9 @@ extern "C" __attribute__((visibility("default"))) void createInstance(
             "/tmp/StarFish_Cookies.txt", "/tmp/StarFish-cache");
         TO_WEBCONTAINER(binder)
             ->RegisterOnRenderedHandler(
-                [binder](LWE::WebContainer* container, void* buffer) {
-                    binder->onRenderedHandler(container, buffer);
+                [binder](LWE::WebContainer* container,
+                         const LWE::WebContainer::RenderResult& renderResult) {
+                    binder->onRenderedHandler(container, renderResult);
                 });
         TO_WEBCONTAINER(binder)
             ->RegisterOnReceivedErrorHandler(
@@ -304,7 +307,9 @@ extern "C" __attribute__((visibility("default"))) void loadURL(
 extern "C" __attribute__((visibility("default"))) void
 registerOnRenderedHandler(
     DaliStarFishBinder* binder,
-    const std::function<void(LWE::WebContainer* c, void* buf)>& callback)
+    const std::function<
+        void(LWE::WebContainer* c,
+             const LWE::WebContainer::RenderResult& renderResult)>& callback)
 {
     STARFISH_ASSERT(binder);
     auto cb = [callback](void* data) {
