@@ -299,25 +299,28 @@ public:
         LayoutRect deviceRect;
         cairo_matrix_t m;
         cairo_get_matrix(m_canvas, &m);
-        double x = rt.x();
-        double y = rt.y();
+        double xSoFar = rt.x();
+        double ySoFar = rt.y();
+        double maxXSoFar = rt.maxX();
+        double maxYSoFar = rt.maxY();
 
-        double maxX = rt.maxX();
-        double maxY = rt.maxY();
+        cairo_matrix_transform_point(&m, &xSoFar, &ySoFar);
+        cairo_matrix_transform_point(&m, &maxXSoFar, &maxYSoFar);
+
+        double x = std::min(xSoFar, maxXSoFar);
+        double y = std::min(ySoFar, maxYSoFar);
+        double maxX = std::max(xSoFar, maxXSoFar);
+        double maxY = std::max(ySoFar, maxYSoFar);
 
         int ix, iy, iMaxX, iMaxY;
 
-        cairo_matrix_transform_point(&m, &x, &y);
         cairo_user_to_device(m_canvas, &x, &y);
-        ix = x = floor(x) - 1;
-        iy = y = floor(y) - 1;
-        cairo_device_to_user(m_canvas, &x, &y);
+        ix = floor(x) - 1;
+        iy = floor(y) - 1;
 
-        cairo_matrix_transform_point(&m, &maxX, &maxY);
         cairo_user_to_device(m_canvas, &maxX, &maxY);
-        iMaxX = maxX = ceil(maxX) + 1;
-        iMaxY = maxY = ceil(maxY) + 1;
-        cairo_device_to_user(m_canvas, &maxX, &maxY);
+        iMaxX = ceil(maxX) + 1;
+        iMaxY = ceil(maxY) + 1;
 
         deviceRect.setX(std::min(ix, iMaxX));
         deviceRect.setY(std::min(iy, iMaxY));
@@ -326,13 +329,17 @@ public:
 
         cairo_matrix_t m2;
         cairo_matrix_init_identity(&m2);
+        double oldScale;
+        cairo_surface_get_device_scale(m_surface, &oldScale, &oldScale);
+        cairo_surface_set_device_scale(m_surface, 1, 1);
         cairo_set_matrix(m_canvas, &m2);
-        cairo_move_to(m_canvas, x, y);
-        cairo_line_to(m_canvas, maxX, y);
-        cairo_line_to(m_canvas, maxX, maxY);
-        cairo_line_to(m_canvas, x, maxY);
-        cairo_line_to(m_canvas, x, y);
+        cairo_move_to(m_canvas, ix, iy);
+        cairo_line_to(m_canvas, iMaxX, iy);
+        cairo_line_to(m_canvas, iMaxX, iMaxY);
+        cairo_line_to(m_canvas, ix, iMaxY);
+        cairo_line_to(m_canvas, ix, iy);
         cairo_clip(m_canvas);
+        cairo_surface_set_device_scale(m_surface, oldScale, oldScale);
         cairo_set_matrix(m_canvas, &m);
 
         return deviceRect;

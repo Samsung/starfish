@@ -71,6 +71,10 @@ extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
+std::function<void()> g_screenShotCallback;
+namespace StarFish {
+void doWptTestEnd();
+}
 #endif
 
 const uint32_t REPEAT_DURATION = 1000;
@@ -449,17 +453,18 @@ public:
                 m_glPaintingSurface->notifyUpdateRegion(
                     (int)ret.updateRect.x(), (int)ret.updateRect.y(),
                     (int)ret.updateRect.width(), (int)ret.updateRect.height());
-                // m_glPaintingSurface->notifyUpdateRegion(0, 0, width(),
-                // height());
                 struct dummy {
                     Evas_GL_API* evasGLAPI;
                 } d;
                 d.evasGLAPI = m_glGlapi;
+                float oldDPR = m_starFish->screenInfo().devicePixelRatio;
+                m_starFish->screenInfo().devicePixelRatio = 1;
                 Compositor* c = Compositor::create(starFish(), &d);
                 c->clearColor(Unit::Color(0, 0, 0, 0));
                 c->drawSurface(m_glPaintingSurface,
                                Unit::Rect(0, 0, width(), height()));
                 delete c;
+                m_starFish->screenInfo().devicePixelRatio = oldDPR;
             }
         }
 #else
@@ -1672,6 +1677,21 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         WindowImplEFL* wnd = (WindowImplEFL*)data;
         wnd->m_canRendering = true;
         wnd->m_lastRenderingTime = tickCount();
+
+#if defined(STARFISH_ENABLE_TEST) && defined(PORT_COMPOSITOR_BACKEND_GL)
+        const char* path = getenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT");
+        if (path && strlen(path)) {
+            evas_object_image_save(wnd->m_glAdpater, path, nullptr, nullptr);
+            g_screenShotCallback();
+            setenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT", "", 1);
+
+            const char* wait =
+                getenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT_WPT_TESTEND");
+            if (wait && strlen(wait)) {
+                doWptTestEnd();
+            }
+        }
+#endif
     };
 
     evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
@@ -2060,10 +2080,12 @@ void WindowImplEFL::setNeedsRendering()
 Canvas* WindowImplEFL::preparePainting()
 {
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
+    float DPR = starFish()->screenInfo().devicePixelRatio;
     if (!m_glPaintingSurface) {
-        m_glPaintingSurface = CanvasSurface::create(this, width(), height());
+        m_glPaintingSurface =
+            CanvasSurface::create(this, width() / DPR, height() / DPR);
     }
-    m_glPaintingSurface->attachNativeBuffer(width(), height());
+    m_glPaintingSurface->attachNativeBuffer(width() / DPR, height() / DPR);
     return Canvas::create(starFish(), m_glPaintingSurface);
 #endif
 #if defined(PORT_GRAPHIC_BACKEND_EFL)
@@ -2495,12 +2517,18 @@ void WindowImplEFL::clearResources()
 }
 
 #if defined(STARFISH_ENABLE_TEST) && !defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
-void screenShotInRendering(StarFish* starfish, const char* path)
+void screenShotInRendering(StarFish* starfish, const char* path,
+                           std::function<void()> callback)
 {
-#if !defined(PORT_GRAPHIC_BACKEND_EFL)
     WindowImplEFL* wnd = (WindowImplEFL*)starfish->platformWindow();
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    setenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT", path, 1);
+    g_screenShotCallback = callback;
+    return;
+#elif !defined(PORT_GRAPHIC_BACKEND_EFL)
     if (!starfish->platformWindow()->webView()->didCompositeBefore()) {
         evas_object_image_save(wnd->m_canvasAdpater, path, nullptr, nullptr);
+        callback();
         return;
     }
 #endif
@@ -2522,6 +2550,7 @@ void screenShotInRendering(StarFish* starfish, const char* path)
         starfish->removePointerFromRootSet(g_surfaceForScreehShot);
     }
     g_surfaceForScreehShot = nullptr;
+    callback();
 }
 #endif
 } // namespace StarFish

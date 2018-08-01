@@ -270,23 +270,28 @@ public:
             return LayoutRect(0, 0, 0, 0);
         }
         LayoutRect deviceRect;
-        double x = rt.x();
-        double y = rt.y();
-        double maxX = rt.maxX();
-        double maxY = rt.maxY();
+        double xSoFar = rt.x();
+        double ySoFar = rt.y();
+        double maxXSoFar = rt.maxX();
+        double maxYSoFar = rt.maxY();
 
         SkMatrix m = m_canvas->getTotalMatrix();
         SkPoint point;
-        m.mapXY(x, y, &point);
-        x = point.x();
-        y = point.y();
+        m.mapXY(xSoFar, ySoFar, &point);
+        SoFarx = point.x();
+        SoFary = point.y();
 
-        x = floor(x);
-        y = floor(y);
+        m.mapXY(maxXSoFar, maxYSoFar, &point);
+        maxXSoFar = point.x();
+        maxYSoFar = point.y();
 
-        m.mapXY(maxX, maxY, &point);
-        maxX = point.x();
-        maxY = point.y();
+        double x = std::min(xSoFar, maxXSoFar);
+        double y = std::min(ySoFar, maxYSoFar);
+        double maxX = std::max(xSoFar, maxXSoFar);
+        double maxY = std::max(ySoFar, maxYSoFar);
+
+        x = floor(x) - 1;
+        y = floor(y) - 1;
 
         maxX = ceil(maxX) + 1;
         maxY = ceil(maxY) + 1;
