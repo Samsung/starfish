@@ -77,7 +77,8 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 namespace StarFish {
 #if defined(STARFISH_ENABLE_TEST)
 // should be defined in each window port
-void screenShotInRendering(StarFish* starfish, const char* path);
+void screenShotInRendering(StarFish* starfish, const char* path,
+                           std::function<void()> callback);
 #endif
 
 #if defined(STARFISH_ENABLE_TEST) && !defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
@@ -120,8 +121,9 @@ static std::string rtCreatePngName(int id)
 static void rtScreenShot(StarFish* starfish)
 {
     std::string capturePng = rtCreatePngName(g_referenceTestState);
-    screenShotInRendering(starfish, capturePng.c_str());
-    STARFISH_LOG_INFO("STARFISH_RTCAPTURED %s\n", capturePng.c_str());
+    screenShotInRendering(starfish, capturePng.c_str(), [capturePng]() {
+        STARFISH_LOG_INFO("STARFISH_RTCAPTURED %s\n", capturePng.c_str());
+    });
 }
 // WPT Reference Test
 static bool rtPixelDiff(StarFish* starfish)
@@ -942,6 +944,12 @@ RenderResult WebView::rendering(bool force)
                 if (mainFrame->firstChild() && m_rootStackingContext) {
                     m_rootStackingContext->paintStackingContext(canvas, ctx);
                 }
+
+                canvas->translate(scrollX, scrollY);
+                mainBrowsingContext()->window()->scrolling()->paintScrollbars(
+                    canvas, mainFrame, mainFrame->appliedOverflowX(),
+                    mainFrame->appliedOverflowY());
+
                 canvas->restore();
                 m_didCompositeBefore = false;
                 repaintRect.setX(repaintRect.x() - scrollX);
@@ -1006,14 +1014,6 @@ RenderResult WebView::rendering(bool force)
             refHolder = std::move(prevDrawnStackingContextInfo);
         }
 
-        if (!m_needsComposite) {
-            FrameBlockBox* mainFrame =
-                mainBrowsingContext()->document()->frame()->asFrameBlockBox();
-            mainBrowsingContext()->window()->scrolling()->paintScrollbars(
-                canvas, mainFrame, mainFrame->appliedOverflowX(),
-                mainFrame->appliedOverflowY());
-        }
-
         m_needsPainting = false;
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
         if (!m_needsComposite) {
@@ -1038,13 +1038,14 @@ RenderResult WebView::rendering(bool force)
                 starFish()->platformWindow()->prepareCompositor();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
-
+#if defined(PORT_COMPOSITOR_BACKEND_EFL)
             float devicePixelRatio = starFish()->screenInfo().devicePixelRatio;
             compositor->translate(starFish()->posX() / devicePixelRatio,
                                   starFish()->posY() / devicePixelRatio);
             compositor->clip(Unit::Rect(
                 0, 0, starFish()->platformWindow()->width() / devicePixelRatio,
                 starFish()->platformWindow()->height() / devicePixelRatio));
+#endif
 
             compositor->save();
             compositor->translate(-mainFrame->scrollLeft(),
@@ -1150,11 +1151,12 @@ RenderResult WebView::rendering(bool force)
 
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
-            screenShotInRendering(starFish(), path);
-            if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
-                strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
-                exit(0);
-            }
+            screenShotInRendering(starFish(), path, []() {
+                if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
+                    strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
+                    exit(0);
+                }
+            });
         }
 
 #ifdef STARFISH_ENABLE_PROFILE_LOADING

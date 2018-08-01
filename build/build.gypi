@@ -365,6 +365,27 @@
                     './build.dep.gyp:libskia.x64.release',
                 ],
             }],
+            ['platform=="linux" and backend=="glfw_cairo_gl"', {
+                'defines_extra': [
+                    'STARFISH_GLFW_CAIRO_GL',
+                ],
+                'cflags_extra': [
+                    '<@(cflags_extra)',
+                    '-fno-rtti',
+                ],
+                'libraries_extra': [
+                    '<@(libraries_extra)',
+                    '-ljpeg',
+                    '-lgif',
+                    '-lGL',
+                    '-lGLESv2',
+                    '-lglfw',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:efl_cairo.x64',
+                    './build.dep.gyp:skia_matrix',
+                ],
+            }],
             ['platform=="tizen" and backend=="efl_cairo"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO',

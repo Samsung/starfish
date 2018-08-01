@@ -29,9 +29,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
-#if defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
 #include <Ecore.h>
-#endif
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
 #include <Elementary.h>
@@ -56,10 +54,7 @@ MessageLoop::MessageLoop(StarFish* sf)
 
 void MessageLoop::run()
 {
-#if defined(PORT_WINDOW_BACKEND_EFL) || \
-    defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
     ecore_main_loop_begin();
-#endif
 }
 
 struct InvokeNavigateData : public gc {

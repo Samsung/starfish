@@ -29,6 +29,10 @@
 #include "core/page/WebView.h"
 #include <pthread.h>
 
+#if defined(PORT_EVENTLOOP_BACKEND_EFL)
+#include <Ecore.h>
+#endif
+
 #if !defined(STARFISH_WINDOWS)
 
 #if defined(STARFISH_DALI)
@@ -136,8 +140,6 @@ extern "C" void dispatchKeyUpEvent(DaliStarFishBinder* binder,
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
 #include <Elementary.h>
-#elif defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
-#include <Ecore.h>
 #endif
 
 bool hasEnding(std::string const& fullString, std::string const& ending)
@@ -867,7 +869,7 @@ int main(int argc, char* argv[])
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
     elm_config_accel_preference_set("opengl");
 #endif
-#elif defined(PORT_WINDOW_BACKEND_EFL_HEADLESS)
+#elif defined(PORT_EVENTLOOP_BACKEND_EFL)
     ecore_init();
     ecore_app_args_set(argc, (const char**)argv);
 #endif

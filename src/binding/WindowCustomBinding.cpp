@@ -37,7 +37,7 @@ using namespace Escargot;
 namespace StarFish {
 
 #ifdef STARFISH_ENABLE_TEST
-void customExit(int returnCode, Window* window)
+void customExit(int returnCode)
 {
     exit(returnCode);
 }
@@ -401,13 +401,13 @@ static ValueRef* testAssertFunction(ExecutionStateRef* state,
         }
         std::string errString = "[FAIL]assertion fail";
         STARFISH_LOG_ERROR("%s\n", errString.data());
-        customExit(-1, window);
+        customExit(-1);
     } else {
         if (argv[0]->toBoolean(state)) {
         } else {
             std::string errString = "[FAIL]assertion fail";
             STARFISH_LOG_ERROR("%s\n", errString.data());
-            customExit(-1, window);
+            customExit(-1);
         }
     }
     gotTestAssert = true;
@@ -426,27 +426,37 @@ static ValueRef* testEndFunction(ExecutionStateRef* state, ValueRef* thisValue,
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
     GENERATE_WINDOW();
-    customExit(0, window);
+    customExit(0);
     fflush(stdout);
     fflush(stderr);
 
     return scriptUndefined();
 }
 
-static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
-                                    ValueRef* thisValue, size_t argc,
-                                    ValueRef** argv, bool isNewExpression)
+void doWptTestEnd()
 {
     if (gotTestAssert) {
-        GENERATE_WINDOW();
         puts("[PASS]");
         STARFISH_LOG_ERROR("%s\n", "[PASS]");
-        customExit(0, window);
+        customExit(0);
     }
     const char* hide = getenv("HIDE_WINDOW");
     if ((hide && strlen(hide))) {
         ::exit(0);
     }
+}
+
+static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
+                                    ValueRef* thisValue, size_t argc,
+                                    ValueRef** argv, bool isNewExpression)
+{
+    const char* path = getenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT");
+    if (path && strlen(path)) {
+        // wait for screen shot
+        setenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT_WPT_TESTEND", "1", 1);
+        return ValueRef::createUndefined();
+    }
+    doWptTestEnd();
     return ValueRef::createUndefined();
 }
 
@@ -511,7 +521,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
 
         STARFISH_LOG_ERROR("%s\n", "[FAIL]testImgDiff fail");
 
-        customExit(-1, window);
+        customExit(-1);
     }
 
     pclose(fp);

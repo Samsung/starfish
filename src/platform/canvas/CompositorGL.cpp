@@ -230,7 +230,7 @@ public:
         // Create the shader object
         shader = glCreateShader(type);
 
-        if (shader == 0) {
+        if (glGetError()) {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
 
@@ -249,6 +249,13 @@ public:
         return shader;
     }
 
+    void applyDevicePixelRatio()
+    {
+        m_state.back().matrix.preScale(
+            m_starfish->screenInfo().devicePixelRatio,
+            m_starfish->screenInfo().devicePixelRatio);
+    }
+
     CompositorImplGL(StarFish* starfish, void* data)
     {
         m_starfish = starfish;
@@ -261,7 +268,6 @@ public:
 #endif
 
         glEnable(GL_BLEND);
-        glEnable(GL_TEXTURE_2D);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glViewport(0, 0, starfish->platformWindow()->width(),
                    starfish->platformWindow()->height());
@@ -441,6 +447,8 @@ public:
         uScreenPos = glGetUniformLocation(rectShaderProgram, "uScreen");
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
+
+        applyDevicePixelRatio();
     }
 
     ~CompositorImplGL()
@@ -1001,6 +1009,7 @@ public:
         m_state.back().matrix = SkMatrix::I();
         m_state.back().clipPaths.clear();
         m_state.back().matrixStaysInRect = true;
+        applyDevicePixelRatio();
     }
 
     virtual void resetClip()
