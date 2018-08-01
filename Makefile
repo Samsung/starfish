@@ -1107,6 +1107,7 @@ web_platform_test_new_css_css21_cairo:
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part2.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part3.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part4.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part5.res cairo -p$(TEST_NPROCS)
 #	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css21_dev_basic.res basic -p$(TEST_NPROCS)
 
 web_platform_test_new_css_mediaqueries_cairo:
