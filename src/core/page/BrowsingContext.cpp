@@ -819,24 +819,26 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
     // Run the unfocusing steps for this element.
     releaseFocusedNode(e);
 
-    if (!byMouseEvent) {
-        m_focusedNode = e->asNode();
-        m_activeElement = e;
-
-        e->setState(Node::NodeStateFocused, true);
-
-        // focus event
-        String* eventType = starFish()->staticStrings()->m_focus.localName();
-        Event* event = new FocusEvent(
-            document(), eventType, FocusEventInit(false, false, relatedTarget));
-        document()->dispatchEventByUA(e->asNode(), event);
-
-        // focusin event
-        eventType = starFish()->staticStrings()->m_focusin.localName();
-        event = new FocusEvent(document(), eventType,
-                               FocusEventInit(true, false, relatedTarget));
-        document()->dispatchEventByUA(e->asNode(), event);
+    if (byMouseEvent && !e->isHTMLFormControl()) {
+        return;
     }
+
+    m_focusedNode = e->asNode();
+    m_activeElement = e;
+
+    e->setState(Node::NodeStateFocused, true);
+
+    // focus event
+    String* eventType = starFish()->staticStrings()->m_focus.localName();
+    Event* event = new FocusEvent(document(), eventType,
+                                  FocusEventInit(false, false, relatedTarget));
+    document()->dispatchEventByUA(e->asNode(), event);
+
+    // focusin event
+    eventType = starFish()->staticStrings()->m_focusin.localName();
+    event = new FocusEvent(document(), eventType,
+                           FocusEventInit(true, false, relatedTarget));
+    document()->dispatchEventByUA(e->asNode(), event);
 }
 
 // https://www.w3.org/TR/html5/editing.html#unfocusing-steps
