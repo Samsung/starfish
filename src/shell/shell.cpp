@@ -62,7 +62,9 @@ struct DaliStarFishBinder {
     int w, h, s;
     bool canGoBack, canGoForward;
     bool isRunning;
-    std::function<void(LWE::WebContainer*, void*)> onRenderedHandler;
+    std::function<void(LWE::WebContainer*,
+                       const LWE::WebContainer::RenderResult&)>
+        onRenderedHandler;
     std::function<void(LWE::WebContainer*, LWE::ResourceError)> onReceivedError;
     std::function<void(LWE::WebContainer*, const std::string&)>
         onPageFinishedHandler;
@@ -108,7 +110,9 @@ extern "C" void stopLoop(DaliStarFishBinder* binder);
 
 extern "C" void registerOnRenderedHandler(
     DaliStarFishBinder* binder,
-    const std::function<void(LWE::WebContainer* c, void* buf)>& callback);
+    const std::function<
+        void(LWE::WebContainer* c,
+             const LWE::WebContainer::RenderResult& renderResult)>& callback);
 extern "C" void registerOnPageStartedHandler(
     DaliStarFishBinder* binder,
     const std::function<void(LWE::WebContainer*, const std::string&)>&
@@ -545,23 +549,25 @@ void DaliShellController::InnerCreate(Application& application)
             .KeyEventSignal()
             .Connect(this, &DaliShellController::keyEventHandler);
 
-        mLWEBinder->onRenderedHandler = [this](LWE::WebContainer* c,
-                                               void* buf) {
-            STARFISH_LOG_INFO("[Dali Shell] onRenderedHandler()\n");
-            int w = c->width();
-            int h = c->height();
-            if (mLWEBinder->w != w || mLWEBinder->h != h) {
-                return;
-            }
+        mLWEBinder->onRenderedHandler =
+            [this](LWE::WebContainer* c,
+                   const LWE::WebContainer::RenderResult& renderResult) {
+                STARFISH_LOG_INFO("[Dali Shell] onRenderedHandler()\n");
+                int w = c->width();
+                int h = c->height();
+                if (mLWEBinder->w != w || mLWEBinder->h != h) {
+                    return;
+                }
 #if defined(STARFISH_DALI_TBMSURFACE)
-            memcpy(tbmSurfaceInfo.planes[0].ptr, buf,
-                   mLWEBinder->w * mLWEBinder->h * sizeof(uint32_t));
+                memcpy(tbmSurfaceInfo.planes[0].ptr, buf,
+                       mLWEBinder->w * mLWEBinder->h * sizeof(uint32_t));
 #else
-            memcpy(bufferImage.GetBuffer(), buf,
-                   mLWEBinder->w * mLWEBinder->h * sizeof(uint32_t));
+                memcpy(bufferImage.GetBuffer(),
+                       renderResult.updatedBufferAddress,
+                       mLWEBinder->w * mLWEBinder->h * sizeof(uint32_t));
 #endif
-            isNeedsUpdate = true;
-        };
+                isNeedsUpdate = true;
+            };
 
         mLWEBinder->onReceivedError = [](LWE::WebContainer* container,
                                          LWE::ResourceError error) {
