@@ -46,6 +46,7 @@ public:
 
     virtual void layout(LayoutContext& ctx,
                         Frame::LayoutWantToResolve resolveWhat) override;
+    virtual void paintBackgroundAndBorders(Canvas* canvas) override;
     virtual void paintContent(PaintingContext& ctx) override;
 
     void* operator new(size_t size);
