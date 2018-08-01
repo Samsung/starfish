@@ -1123,11 +1123,16 @@ web_platform_test_new_css_backgrounds_cairo:
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_background-3_dev.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_background-3_dev_basic.res cairo -p$(TEST_NPROCS)
 
+web_platform_test_new_css_color_cairo:
+	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_background-3_dev_basic.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css-color-3_dev.res cairo -p$(TEST_NPROCS)
+
 web_platform_test_new_css_all_cairo:
 	make web_platform_test_new_css_css21_cairo
 	make web_platform_test_new_css_mediaqueries_cairo
 	make web_platform_test_new_css_selectors_cairo
 	make web_platform_test_new_css_backgrounds_cairo
+	make web_platform_test_new_css_color_cairo
 
 web_platform_test_new_others_cairo:
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/html/wpt_html_dev.res basic -p$(TEST_NPROCS)
