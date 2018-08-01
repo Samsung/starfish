@@ -50,9 +50,11 @@ public:
     CanvasStateSkia()
         : CanvasState()
         , m_fillType(SkPath::FillType::kWinding_FillType)
+        , m_strokeWidth(0.0f)
     {
     }
     SkPath::FillType m_fillType;
+    float m_strokeWidth;
 };
 
 class CanvasSkia : public Canvas {
@@ -106,7 +108,6 @@ public:
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
         m_surface = SkSurface::MakeRasterDirect(info, buffer, stride);
         m_canvas = m_surface->getCanvas();
-        m_paint.setAntiAlias(true);
 
         applyDevicePixelRatio(m_canvas);
         save();
@@ -133,7 +134,6 @@ public:
         m_renderTargetInfo.m_stride = d->stride;
         m_shouldDestroySkia = false;
         m_shouldDestroySurface = false;
-        m_paint.setAntiAlias(true);
 
         save();
     }
@@ -145,7 +145,6 @@ public:
         m_surface = nullptr;
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = true;
-        m_paint.setAntiAlias(true);
 
         initFromBuffer(data->data(), data->bufferWidth(), data->bufferHeight(),
                        data->bufferStride());
@@ -160,7 +159,6 @@ public:
         m_starfish = starfish;
         m_canvas = nullptr;
         m_surface = nullptr;
-        m_paint.setAntiAlias(true);
 
         initFromNativeImageData(data);
         save();
@@ -278,8 +276,8 @@ public:
         SkMatrix m = m_canvas->getTotalMatrix();
         SkPoint point;
         m.mapXY(xSoFar, ySoFar, &point);
-        SoFarx = point.x();
-        SoFary = point.y();
+        xSoFar = point.x();
+        ySoFar = point.y();
 
         m.mapXY(maxXSoFar, maxYSoFar, &point);
         maxXSoFar = point.x();
@@ -325,7 +323,6 @@ public:
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_color = clr;
-        m_paint.setColor(SkColorSetARGB(clr.a(), clr.r(), clr.g(), clr.b()));
     }
 
     virtual void beginOpacityLayer(float c)
@@ -619,6 +616,18 @@ public:
 #endif
     }
 
+    static inline void setImageRenderingMode(
+        SkPaint& paint, ImageRenderingValue imageRenderingMode)
+    {
+        if (imageRenderingMode == ImageRenderingAutoValue) {
+            paint.setFilterQuality(SkFilterQuality::kLast_SkFilterQuality);
+        } else if (imageRenderingMode == ImageRenderingPixelatedValue) {
+            paint.setFilterQuality(SkFilterQuality::kNone_SkFilterQuality);
+        } else if (imageRenderingMode == ImageRenderingCrispEdgesValue) {
+            paint.setFilterQuality(SkFilterQuality::kLow_SkFilterQuality);
+        }
+    }
+
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
                            ImageRenderingValue imageRenderingMode)
     {
@@ -629,6 +638,10 @@ public:
         auto w = data->width();
         auto h = data->height();
 
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        setImageRenderingMode(paint, imageRenderingMode);
+
         SkBitmap bitmap;
         bitmap.installPixels(SkImageInfo::MakeN32Premul(w, h), (void*)pixels,
                              data->stride());
@@ -636,7 +649,7 @@ public:
         m_canvas->drawBitmapRect(
             bitmap, SkIRect::MakeWH(w, h),
             SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
-            &m_paint);
+            &paint);
     }
 
     virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst,
@@ -650,13 +663,17 @@ public:
         auto w = data->imageWidth();
         auto h = data->imageHeight();
 
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        setImageRenderingMode(paint, imageRenderingMode);
+
         SkBitmap bitmap;
         bitmap.installPixels(SkImageInfo::MakeN32Premul(w, h), (void*)pixels,
                              data->bufferStride());
         m_canvas->drawBitmapRect(
             bitmap, SkIRect::MakeWH(w, h),
             SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
-            &m_paint);
+            &paint);
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
@@ -672,6 +689,10 @@ public:
         auto w = data->width();
         auto h = data->height();
 
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        setImageRenderingMode(paint, imageRenderingMode);
+
         SkBitmap bitmap;
         bitmap.installPixels(SkImageInfo::MakeN32Premul(w, h), (void*)pixels,
                              data->stride());
@@ -685,7 +706,7 @@ public:
             m_canvas->drawBitmapRect(
                 subset, SkIRect::MakeWH(src.width(), src.height()),
                 SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
-                &m_paint);
+                &paint);
 
         } else {
             double xx = dst.x(), yy = dst.y(), ww = dst.width(),
@@ -948,10 +969,17 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        m_paint.setStyle(SkPaint::kStroke_Style);
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setStyle(SkPaint::kStroke_Style);
+        paint.setStrokeWidth(lastState().m_strokeWidth);
+        paint.setColor(
+            SkColorSetARGB(lastState().m_color.a(), lastState().m_color.r(),
+                           lastState().m_color.g(), lastState().m_color.b()));
+
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
-        m_canvas->drawPath(m_path, m_paint);
+        m_canvas->drawPath(m_path, paint);
         m_canvas->setMatrix(m);
     }
 
@@ -970,10 +998,17 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        m_paint.setStyle(SkPaint::kFill_Style);
+
+        SkPaint paint;
+        paint.setAntiAlias(true);
+        paint.setStyle(SkPaint::kFill_Style);
+        paint.setColor(
+            SkColorSetARGB(lastState().m_color.a(), lastState().m_color.r(),
+                           lastState().m_color.g(), lastState().m_color.b()));
+
         SkMatrix m = m_canvas->getTotalMatrix();
         m_canvas->resetMatrix();
-        m_canvas->drawPath(m_path, m_paint);
+        m_canvas->drawPath(m_path, paint);
         m_canvas->setMatrix(m);
     }
 
@@ -1004,7 +1039,8 @@ public:
 
     virtual void setStrokeWidth(float width)
     {
-        m_paint.setStrokeWidth(width);
+        STARFISH_ASSERT(m_canvas);
+        lastState().m_strokeWidth = width;
     }
 
     virtual void setDash(double* dashes, int dashCnt, double offset)
@@ -1050,7 +1086,6 @@ protected:
     std::vector<CanvasStateSkia> m_state;
     SkCanvas* m_canvas;
     sk_sp<SkSurface> m_surface;
-    SkPaint m_paint;
     SkPath m_path;
 
     bool m_shouldDestroySkia;
