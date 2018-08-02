@@ -39,11 +39,30 @@
 #include <GLES2/gl2.h>
 
 #ifdef PORT_WINDOW_BACKEND_GLFW
-#define GLFW_INCLUDE_ES2
+#define GLFW_INCLUDE_ES3
 #include <GLFW/glfw3.h>
 #endif
 
+#if defined(STARFISH_ENABLE_TEST)
+#include <cairo.h>
+#endif
+
 namespace StarFish {
+
+#if defined(STARFISH_ENABLE_TEST)
+std::function<void()> g_screenShotCallback;
+std::string g_screenShotPath;
+class WindowImplGL;
+void screenShotImpl(WindowImplGL* wnd, const char* path,
+                    std::function<void()> callback);
+void screenShotInRendering(StarFish* starfish, const char* path,
+                           std::function<void()> callback)
+{
+    g_screenShotCallback = callback;
+    g_screenShotPath = path;
+    return;
+}
+#endif
 
 class WindowImplGL : public PlatformWindow {
 public:
@@ -88,11 +107,43 @@ public:
 
     virtual void setNeedsRendering() override;
 
+    virtual RenderResult rendering() override
+    {
+        glMakeCurrent();
+        RenderResult ret = PlatformWindow::rendering();
+        if (ret.didPaintingOrCompositing) {
+            if (webView()->didCompositeBefore()) {
+            } else {
+                m_glPaintingSurface->notifyUpdateRegion(
+                    (int)ret.updateRect.x(), (int)ret.updateRect.y(),
+                    (int)ret.updateRect.width(), (int)ret.updateRect.height());
+                float oldDPR = m_starFish->screenInfo().devicePixelRatio;
+                m_starFish->screenInfo().devicePixelRatio = 1;
+                Compositor* c = Compositor::create(starFish(), (void*)nullptr);
+                c->clearColor(Unit::Color(0, 0, 0, 0));
+                c->drawSurface(m_glPaintingSurface,
+                               Unit::Rect(0, 0, width(), height()));
+                delete c;
+                m_starFish->screenInfo().devicePixelRatio = oldDPR;
+            }
+            glSwapBuffers();
+        }
+
+#if defined(STARFISH_ENABLE_TEST)
+        if (g_screenShotCallback) {
+            screenShotImpl(this, g_screenShotPath.data(), g_screenShotCallback);
+            g_screenShotCallback = nullptr;
+        }
+#endif
+        return ret;
+    }
+
     virtual void clearResources();
     virtual Canvas* preparePainting();
     virtual Compositor* prepareCompositor();
 
     virtual void glMakeCurrent() = 0;
+    virtual void glSwapBuffers() = 0;
 
     uint32_t m_width;
     uint32_t m_height;
@@ -347,6 +398,64 @@ protected:
     size_t m_pixelRatio;
 };
 
+#if defined(STARFISH_ENABLE_TEST)
+void screenShotImpl(WindowImplGL* wnd, const char* path,
+                    std::function<void()> callback)
+{
+    glFinish();
+
+    auto deviceWidth = wnd->width();
+    auto deviceHeight = wnd->height();
+    auto rowLength = deviceWidth * 4;
+
+    auto dataLength = rowLength * deviceHeight;
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    uint8_t* buffer = new uint8_t[dataLength];
+    glReadPixels(0, 0, deviceWidth, deviceHeight, GL_RGBA, GL_UNSIGNED_BYTE,
+                 buffer);
+
+    // convert to rgba to bgra for cairo
+    for (int y = 0; y < deviceHeight; y++) {
+        for (int x = 0; x < deviceWidth; x++) {
+            uint8_t* head = &buffer[rowLength * y + x * 4];
+            std::swap(head[0], head[2]);
+        }
+    }
+
+    // flip W
+    /*
+        for (int y = 0; y < deviceHeight; y++) {
+            uint32_t* head = (uint32_t*)&buffer[rowLength * y];
+            for (int x = 0; x < deviceWidth / 2; x++) {
+                std::swap(head[x], head[deviceWidth - x - 1]);
+            }
+        }
+    */
+    // flip H
+    for (int y = 0; y < deviceHeight / 2; y++) {
+        uint32_t* head = (uint32_t*)&buffer[rowLength * y];
+        uint32_t* head2 =
+            (uint32_t*)&buffer[rowLength * (deviceHeight - y - 1)];
+        for (int x = 0; x < deviceWidth; x++) {
+            std::swap(head[x], head2[x]);
+        }
+    }
+
+    cairo_surface_t* png_buffer;
+    png_buffer = cairo_image_surface_create_for_data(
+        (unsigned char*)buffer, CAIRO_FORMAT_ARGB32, deviceWidth, deviceHeight,
+        rowLength);
+
+    cairo_surface_write_to_png(png_buffer, path);
+    cairo_surface_destroy(png_buffer);
+
+    delete buffer;
+    callback();
+}
+#endif
+
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
 {
     return new CanvasSurfaceGL(wnd, w, h);
@@ -380,11 +489,12 @@ void WindowImplGL::setNeedsRendering()
 
 Canvas* WindowImplGL::preparePainting()
 {
+    float DPR = starFish()->screenInfo().devicePixelRatio;
     if (!m_glPaintingSurface) {
         m_glPaintingSurface =
-            CanvasSurface::create(this, (size_t)width(), (size_t)height());
+            CanvasSurface::create(this, width() / DPR, height() / DPR);
     }
-    m_glPaintingSurface->attachNativeBuffer((size_t)width(), (size_t)height());
+    m_glPaintingSurface->attachNativeBuffer(width() / DPR, height() / DPR);
     return Canvas::create(starFish(), m_glPaintingSurface);
 }
 
@@ -407,15 +517,6 @@ void WindowImplGL::clearResources()
     webView()->clearStackingContext();
 }
 
-#if defined(STARFISH_ENABLE_TEST)
-void screenShotInRendering(StarFish* starfish, const char* path,
-                           std::function<void()> callback)
-{
-    WindowImplGL* wnd = (WindowImplGL*)starfish->platformWindow();
-    // TODO
-}
-#endif
-
 #ifdef PORT_WINDOW_BACKEND_GLFW
 
 static void error_callback(int error, const char* description)
@@ -434,42 +535,31 @@ public:
             exit(-1);
 
         glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_ES_API);
-        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 2);
+        glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         m_glWindow = glfwCreateWindow(width, height, "StarFish", NULL, NULL);
+
+        glMakeCurrent();
+#if defined(STARFISH_ENABLE_TEST)
+        // for screen shot
+        glfwSwapInterval(0);
+#endif
     }
 
-    virtual void glMakeCurrent()
+    virtual void glMakeCurrent() override
     {
         glfwMakeContextCurrent(m_glWindow);
+    }
+
+    virtual void glSwapBuffers() override
+    {
+        glfwSwapBuffers(m_glWindow);
     }
 
     virtual void onIdle() override
     {
         PlatformWindow::onIdle();
         glfwPollEvents();
-    }
-
-    virtual RenderResult rendering() override
-    {
-        // ProfilerTimer renderingTimer(starFish(), "WindowImplEFL::rendering");
-        glMakeCurrent();
-        RenderResult ret = WindowImplGL::rendering();
-        if (ret.didPaintingOrCompositing) {
-            if (webView()->didCompositeBefore()) {
-            } else {
-                m_glPaintingSurface->notifyUpdateRegion(
-                    (int)ret.updateRect.x(), (int)ret.updateRect.y(),
-                    (int)ret.updateRect.width(), (int)ret.updateRect.height());
-                Compositor* c = Compositor::create(starFish(), (void*)nullptr);
-                c->clearColor(Unit::Color(0, 0, 0, 0));
-                c->drawSurface(m_glPaintingSurface,
-                               Unit::Rect(0, 0, width(), height()));
-                delete c;
-            }
-            glfwSwapBuffers(m_glWindow);
-        }
-        return ret;
     }
 
     GLFWwindow* m_glWindow;

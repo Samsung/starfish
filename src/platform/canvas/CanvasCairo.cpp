@@ -205,7 +205,11 @@ public:
         if (clr.a() == 0) {
             cairo_set_operator(m_canvas, CAIRO_OPERATOR_CLEAR);
         } else {
+#ifdef PORT_PIXEL_ORDER_RGBA
+            cairo_set_source_rgba(m_canvas, clr.B(), clr.G(), clr.R(), clr.A());
+#else
             cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
+#endif
             cairo_set_operator(m_canvas, CAIRO_OPERATOR_SOURCE);
         }
         cairo_paint(m_canvas);
@@ -821,8 +825,13 @@ public:
         for (size_t i = 0; i < size; ++i) {
             const auto& color = info->colorStops[i]->color();
             const auto& offset = info->colorStops[i]->offset().percent();
+#ifdef PORT_PIXEL_ORDER_RGBA
+            cairo_pattern_add_color_stop_rgba(pt, offset, color.B(), color.G(),
+                                              color.R(), color.A());
+#else
             cairo_pattern_add_color_stop_rgba(pt, offset, color.R(), color.G(),
                                               color.B(), color.A());
+#endif
         }
 
         cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
@@ -867,8 +876,13 @@ public:
         for (size_t i = 0; i < size; ++i) {
             const auto& color = info->colorStops[i]->color();
             const auto& offset = info->colorStops[i]->offset().percent();
+#ifdef PORT_PIXEL_ORDER_RGBA
+            cairo_pattern_add_color_stop_rgba(pt, offset, color.B(), color.G(),
+                                              color.R(), color.A());
+#else
             cairo_pattern_add_color_stop_rgba(pt, offset, color.R(), color.G(),
                                               color.B(), color.A());
+#endif
         }
         cairo_arc(m_canvas, info->x2, info->y2, info->r2, 0, 2 * M_PI);
         cairo_set_source(m_canvas, pt);
@@ -1291,9 +1305,9 @@ private:
 
 #ifdef PORT_PIXEL_ORDER_RGBA
             cairo_set_source_rgba(
-                canvas, lastState().m_textDecorationData.lineThroughColor().R(),
+                canvas, lastState().m_textDecorationData.lineThroughColor().B(),
                 lastState().m_textDecorationData.lineThroughColor().G(),
-                lastState().m_textDecorationData.lineThroughColor().B(),
+                lastState().m_textDecorationData.lineThroughColor().R(),
                 lastState().m_textDecorationData.lineThroughColor().A());
 #else
             cairo_set_source_rgba(
