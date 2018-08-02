@@ -35,10 +35,6 @@ CFLAGS_COMMON+=" -DESCARGOT "
 CFLAGS_COMMON+=" -Wno-unused-variable -Wno-unused-function "
 CFLAGS_COMMON+=" -fdata-sections -ffunction-sections " # To exclude unused code from final binary
 CFLAGS_COMMON+=" -DUSE_GET_STACKBASE_FOR_MAIN -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA " # Everything in global data is false reference
-if [[ "$2" == "gear" ]]; then
-    CFLAGS_COMMON+=" -DTIZEN "
-    echo Build for gear
-fi
 LDFLAGS_COMMON=
 
 # HOST flags : linux / wearable / mobile / tv -------------
@@ -102,7 +98,7 @@ function build_gc_for_linux() {
         GCCONFFLAGS_LIBTYPE=GCCONFFLAGS_$libtype CFLAGS_LIBTYPE=CFLAGS_$libtype LDFLAGS_LIBTYPE=LDFLAGS_$libtype
 
         GCCONFFLAGS="$GCCONFFLAGS_COMMON ${!GCCONFFLAGS_HOST} ${!GCCONFFLAGS_ARCH} ${!GCCONFFLAGS_MODE} ${!GCCONFFLAGS_LIBTYPE}"
-        CFLAGS="$CFLAGS_COMMON ${!CFLAGS_HOST} ${!CFLAGS_ARCH} ${!CFLAGS_MODE} ${!CFLAGS_LIBTYPE}"
+        CFLAGS="$CFLAGS_COMMON ${!CFLAGS_HOST} ${!CFLAGS_ARCH} ${!CFLAGS_MODE} ${!CFLAGS_LIBTYPE} ${CFLAGS}"
         LDFLAGS="$LDFLAGS_COMMON ${!LDFLAGS_HOST} ${!LDFLAGS_ARCH} ${!LDFLAGS_MODE} ${!LDFLAGS_LIBTYPE}"
 
         if [[ $INCREMENTAL == false ]]; then
@@ -202,7 +198,7 @@ function build_gc_for_tizen_obs() {
         GCCONFFLAGS_LIBTYPE=GCCONFFLAGS_$libtype CFLAGS_LIBTYPE=CFLAGS_$libtype LDFLAGS_LIBTYPE=LDFLAGS_$libtype
 
         GCCONFFLAGS="$GCCONFFLAGS_COMMON ${!GCCONFFLAGS_HOST} ${!GCCONFFLAGS_MODE} ${!GCCONFFLAGS_LIBTYPE}"
-        CFLAGS="$CFLAGS_COMMON ${!CFLAGS_HOST} ${!CFLAGS_MODE} ${!CFLAGS_LIBTYPE}"
+        CFLAGS="$CFLAGS_COMMON ${!CFLAGS_HOST} ${!CFLAGS_MODE} ${!CFLAGS_LIBTYPE} -DTIZEN ${CFLAGS}"
         LDFLAGS="$LDFLAGS_COMMON ${!LDFLAGS_HOST} ${!LDFLAGS_MODE} ${!LDFLAGS_LIBTYPE}"
         if [[ $LTO == true ]]; then
             CFLAGS+= "-flto -ffat-lto-objects"
