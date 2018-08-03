@@ -34,7 +34,10 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
+#include "core/modules/message_loop/Timer.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "platform/window/PlatformWindow.h"
+#include "platform/event/PlatformKeyEventData.h"
 
 #include <GLES2/gl2.h>
 
@@ -92,7 +95,7 @@ public:
         return m_height;
     }
 
-    virtual void resizeTo(int w, int h)
+    virtual void resizeTo(int w, int h) override
     {
         if (w != (int)m_width || h != (int)m_height) {
             m_width = w;
@@ -100,7 +103,7 @@ public:
             PlatformWindow::resizeTo(w, h);
         }
     }
-    virtual void* unwrap()
+    virtual void* unwrap() override
     {
         return nullptr;
     }
@@ -138,9 +141,17 @@ public:
         return ret;
     }
 
-    virtual void clearResources();
-    virtual Canvas* preparePainting();
-    virtual Compositor* prepareCompositor();
+    virtual void clearResources() override;
+    virtual Canvas* preparePainting() override;
+    virtual void willCompositing() override
+    {
+        if (m_glPaintingSurface) {
+            m_glPaintingSurface->detachNativeBuffer();
+            m_glPaintingSurface = nullptr;
+        }
+    }
+
+    virtual Compositor* prepareCompositor() override;
 
     virtual void glMakeCurrent() = 0;
     virtual void glSwapBuffers() = 0;
@@ -150,7 +161,6 @@ public:
     size_t m_renderingAnimator;
     CanvasSurface* m_glPaintingSurface;
     bool m_didPaintingOrCompositing;
-
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
     bool m_isKeyDown;
@@ -386,7 +396,6 @@ public:
 protected:
     WindowImplGL* m_window;
     unsigned char* m_buffer;
-    CanvasSurface* m_glPaintingSurface;
     GLuint m_textureID;
     size_t m_width;
     size_t m_height;
@@ -521,14 +530,23 @@ void WindowImplGL::clearResources()
 
 static void error_callback(int error, const char* description)
 {
-    fputs(description, stderr);
-    STARFISH_CRASH();
+    STARFISH_LOG_ERROR("%s\n", description);
 }
+
+static void cursor_position_callback(GLFWwindow* window, double xpos,
+                                     double ypos);
+static void mouse_button_callback(GLFWwindow* window, int button, int action,
+                                  int mods);
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
+static void window_size_callback(GLFWwindow* window, int width, int height);
+static void key_callback(GLFWwindow* window, int key, int scancode, int action,
+                         int mods);
 
 class WindowImplGLFW : public WindowImplGL {
 public:
     WindowImplGLFW(StarFish* sf, int32_t width, int32_t height)
         : WindowImplGL(sf, width, height)
+        , m_isMouseLbuttonDown(false)
     {
         glfwSetErrorCallback(error_callback);
         if (!glfwInit())
@@ -539,7 +557,34 @@ public:
         glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 0);
         m_glWindow = glfwCreateWindow(width, height, "StarFish", NULL, NULL);
 
+        if (m_glWindow == nullptr) {
+            STARFISH_LOG_ERROR(
+                "failed to create OpenGL ES 3.0 context. try OpenGL 3.0 "
+                "instead\n");
+            glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
+            m_glWindow =
+                glfwCreateWindow(width, height, "StarFish", NULL, NULL);
+            if (m_glWindow == nullptr) {
+                STARFISH_LOG_ERROR(
+                    "failed to create OpenGL 3.0 context. please check your "
+                    "environment...\n");
+                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            }
+        }
+
         glMakeCurrent();
+
+        m_pollTimer = starFish()->timer()->addTimer(
+            0.01, nullptr, [](Window* wnd, void* data) { glfwPollEvents(); },
+            this, true);
+
+        glfwSetWindowUserPointer(m_glWindow, this);
+        glfwSetCursorPosCallback(m_glWindow, cursor_position_callback);
+        glfwSetMouseButtonCallback(m_glWindow, mouse_button_callback);
+        glfwSetScrollCallback(m_glWindow, scroll_callback);
+        glfwSetWindowSizeCallback(m_glWindow, window_size_callback);
+        glfwSetKeyCallback(m_glWindow, key_callback);
+
 #if defined(STARFISH_ENABLE_TEST)
         // for screen shot
         glfwSwapInterval(0);
@@ -562,8 +607,113 @@ public:
         glfwPollEvents();
     }
 
+    virtual RenderResult rendering() override
+    {
+        return WindowImplGL::rendering();
+    }
+
+    virtual void close() override
+    {
+        starFish()->timer()->removeTimer(m_pollTimer);
+    }
+
+    bool m_isMouseLbuttonDown;
+    size_t m_pollTimer;
     GLFWwindow* m_glWindow;
 };
+
+static void cursor_position_callback(GLFWwindow* window, double xpos,
+                                     double ypos)
+{
+    WindowImplGLFW* wnd = (WindowImplGLFW*)glfwGetWindowUserPointer(window);
+    StarFishEnterer enter(wnd->starFish());
+    unsigned char buttons =
+        wnd->m_isMouseLbuttonDown ? MouseButtonsValue::LeftButtonDown : 0;
+    MouseData mdata(0, buttons, xpos, ypos, 0);
+    wnd->dispatchMouseEvent(MouseEventKind::MouseEventMove, mdata);
+}
+
+static void mouse_button_callback(GLFWwindow* window, int button, int action,
+                                  int mods)
+{
+    WindowImplGLFW* wnd = (WindowImplGLFW*)glfwGetWindowUserPointer(window);
+    if (button == GLFW_MOUSE_BUTTON_LEFT) {
+        StarFishEnterer enter(wnd->starFish());
+        unsigned char buttons =
+            wnd->m_isMouseLbuttonDown ? MouseButtonsValue::LeftButtonDown : 0;
+        double xpos, ypos;
+        glfwGetCursorPos(window, &xpos, &ypos);
+        MouseData mdata(0, buttons, xpos, ypos, 0);
+        if (action == GLFW_PRESS) {
+            wnd->m_isMouseLbuttonDown = true;
+            wnd->dispatchMouseEvent(MouseEventKind::MouseEventDown, mdata);
+        } else {
+            wnd->m_isMouseLbuttonDown = false;
+            wnd->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
+        }
+    }
+}
+
+static void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
+{
+    WindowImplGLFW* wnd = (WindowImplGLFW*)glfwGetWindowUserPointer(window);
+    double xpos, ypos;
+    glfwGetCursorPos(window, &xpos, &ypos);
+    wnd->dispatchMouseWheelEvent(xpos, ypos, -yoffset, true);
+}
+
+static void window_size_callback(GLFWwindow* window, int width, int height)
+{
+    WindowImplGLFW* wnd = (WindowImplGLFW*)glfwGetWindowUserPointer(window);
+    wnd->resizeTo(width, height);
+}
+
+static void key_callback(GLFWwindow* window, int key, int scancode, int action,
+                         int mods)
+{
+    KeyValue keyValue = KeyValue::UnidentifiedKey;
+
+    switch (key) {
+    case GLFW_KEY_ESCAPE:
+        keyValue = KeyValue::EscapeKey;
+        break;
+    case GLFW_KEY_ENTER:
+        keyValue = KeyValue::EnterKey;
+        break;
+    case GLFW_KEY_SPACE:
+        keyValue = KeyValue::SpaceKey;
+        break;
+    case GLFW_KEY_BACKSPACE:
+        keyValue = KeyValue::BackspaceKey;
+        break;
+    case GLFW_KEY_LEFT:
+        keyValue = KeyValue::ArrowLeftKey;
+        break;
+    case GLFW_KEY_RIGHT:
+        keyValue = KeyValue::ArrowRightKey;
+        break;
+    case GLFW_KEY_DOWN:
+        keyValue = KeyValue::ArrowDownKey;
+        break;
+    case GLFW_KEY_UP:
+        keyValue = KeyValue::ArrowUpKey;
+        break;
+    default:
+        keyValue = KeyValue::UnidentifiedKey;
+        break;
+    }
+
+    PlatformKeyEventData pkdata(keyValue);
+    WindowImplGLFW* wnd = (WindowImplGLFW*)glfwGetWindowUserPointer(window);
+    StarFishEnterer enter(wnd->starFish());
+    // TODO (repeat, modifiers)
+    if (action == GLFW_PRESS) {
+        wnd->dispatchKeyEvent(KeyEventKind::KeyEventDown, pkdata);
+        wnd->dispatchKeyEvent(KeyEventKind::KeyEventPress, pkdata);
+    } else {
+        wnd->dispatchKeyEvent(KeyEventKind::KeyEventUp, pkdata);
+    }
+}
 
 PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                        int height)

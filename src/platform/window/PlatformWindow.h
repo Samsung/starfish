@@ -73,6 +73,9 @@ public:
     virtual void clearResources() = 0;
     virtual void setNeedsRendering() = 0;
     virtual Canvas* preparePainting() = 0;
+    virtual void willCompositing()
+    {
+    }
     virtual Compositor* prepareCompositor() = 0;
     virtual void showSoftwareKeyboardIfPossible()
     {
