@@ -412,6 +412,18 @@ void LengthAnimationTask::attachedToElement()
         targetElement()->style()->setMarginTop(m_fromValue.getLength());
         return;
     }
+#define GEN_SIDE(Side)                                                \
+    else if (m_property == CSSStyleValuePair::KeyKind::Side)          \
+    {                                                                 \
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();                         \
+        targetElement()->style()->set##Side(m_fromValue.getLength()); \
+        return;                                                       \
+    }
+    GEN_SIDE(Left)
+    GEN_SIDE(Right)
+    GEN_SIDE(Top)
+    GEN_SIDE(Bottom)
+#undef GEN_SIDE
 
     if (m_toValue.getLength().isDefinite(false)) {
         m_toFixedValue =
@@ -517,7 +529,21 @@ void LengthAnimationTask::execute(float progress)
         STARFISH_ASSERT_INPUT_LENGTH_FIXED();
         style->setMarginTop(interpolateLength(progress));
         current->setNeedsLayout();
-    } else {
+    }
+#define GEN_SIDE(Side)                                       \
+    else if (m_property == CSSStyleValuePair::KeyKind::Side) \
+    {                                                        \
+        STARFISH_ASSERT_INPUT_LENGTH_FIXED();                \
+        style->set##Side(interpolateLength(progress));       \
+        current->setNeedsLayout();                           \
+    }
+    GEN_SIDE(Left)
+    GEN_SIDE(Right)
+    GEN_SIDE(Top)
+    GEN_SIDE(Bottom)
+#undef GEN_SIDE
+    else
+    {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 }
