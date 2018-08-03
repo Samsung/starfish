@@ -192,6 +192,7 @@ public:
     virtual void clearResources() override;
     virtual Canvas* preparePainting() override;
     virtual Compositor* prepareCompositor() override;
+    virtual void willCompositing() override;
 
     virtual void showSoftwareKeyboardIfPossible() override
     {
@@ -653,8 +654,8 @@ public:
 
             m_pixelRatio = 1;
 
-            while ((m_width / m_pixelRatio * windowDevicePixelRatio > 20000) ||
-                   (m_height / m_pixelRatio * windowDevicePixelRatio > 20000)) {
+            while ((m_width / m_pixelRatio * windowDevicePixelRatio > 4096) ||
+                   (m_height / m_pixelRatio * windowDevicePixelRatio > 4096)) {
                 m_pixelRatio++;
             }
 
@@ -714,7 +715,7 @@ public:
         m_window->m_glGlapi->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
                                           m_bufferWidth, m_bufferHeight, 0,
                                           GL_RGBA, GL_UNSIGNED_BYTE, m_buffer);
-        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+        STARFISH_RELEASE_ASSERT(m_window->m_glGlapi->glGetError() == 0);
 
         m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D,
                                              GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -728,7 +729,7 @@ public:
 
         m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
         m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, 0);
-        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+        STARFISH_RELEASE_ASSERT(m_window->m_glGlapi->glGetError() == 0);
     }
 
     virtual void* unwrap()
@@ -798,7 +799,7 @@ public:
                              m_window->m_glCtx);
 
         m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, m_textureID);
-        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+        STARFISH_RELEASE_ASSERT(m_window->m_glGlapi->glGetError() == 0);
 
         m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
@@ -817,12 +818,13 @@ public:
                 GL_TEXTURE_2D, 0, x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data);
         }
         GLuint error;
-        STARFISH_ASSERT((error = m_window->m_glGlapi->glGetError()) == 0);
+        STARFISH_RELEASE_ASSERT((error = m_window->m_glGlapi->glGetError()) ==
+                                0);
 
         m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 
         m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, 0);
-        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
+        STARFISH_RELEASE_ASSERT(m_window->m_glGlapi->glGetError() == 0);
     }
 
 protected:
@@ -1374,6 +1376,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             wnd->m_glGlapi->glFlush();
         },
         wnd);
+
 #endif
 
 #if (defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
@@ -2274,6 +2277,16 @@ Canvas* WindowImplEFL::preparePainting()
     d.stride = rowBytes;
     return Canvas::createDirect(starFish(), &d);
 
+#endif
+}
+
+void WindowImplEFL::willCompositing()
+{
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    if (m_glPaintingSurface) {
+        m_glPaintingSurface->detachNativeBuffer();
+        m_glPaintingSurface = nullptr;
+    }
 #endif
 }
 

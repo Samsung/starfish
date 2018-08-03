@@ -1197,6 +1197,11 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                         reuse = true;
                         m_rareData->m_buffer = iter->second.graphicsBuffer;
                         iter->second.graphicsBuffer = nullptr;
+                    } else {
+                        if (iter->second.graphicsBuffer) {
+                            iter->second.graphicsBuffer->detachNativeBuffer();
+                            iter->second.graphicsBuffer = nullptr;
+                        }
                     }
                 }
 

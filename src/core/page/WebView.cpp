@@ -684,9 +684,21 @@ void WebView::layoutIfNeeds()
                         auto se = ctx->screenExtent();
 
                         if (ctx->needsGraphicsBuffer()) {
+                            LayoutUnit minX = ctx->visibleRect().x();
+                            LayoutUnit maxX = ctx->visibleRect().maxX();
+                            LayoutUnit minY = ctx->visibleRect().y();
+                            LayoutUnit maxY = ctx->visibleRect().maxY();
+
+                            minX = minX.floor();
+                            maxX = maxX.ceil();
+                            minY = minY.floor();
+                            maxY = maxY.ceil();
+
+                            size_t bufferWidth = (int)(maxX - minX);
+                            size_t bufferHeight = (int)(maxY - minY);
+
                             totalSurfaceBufferSize +=
-                                (int)(ctx->visibleRect().width() *
-                                      ctx->visibleRect().height() * 4);
+                                (int)(bufferWidth * bufferHeight * 4);
                         }
 
                         if (ctx->owner()->node() &&
@@ -845,7 +857,6 @@ RenderResult WebView::rendering(bool force)
 
     layoutIfNeeds();
 
-    PrevDrawnStackingContextInfoMap refHolder;
     if (m_needsPainting) {
         INSTALL_PROFILE_TIMER(starFish(), "painting");
 
@@ -928,6 +939,28 @@ RenderResult WebView::rendering(bool force)
                     (float)repaintRect.height());
             }
 #endif
+            {
+                // remove definitely useless graphics buffer first.
+                auto iter = prevDrawnStackingContextInfo.begin();
+                while (iter != prevDrawnStackingContextInfo.end()) {
+                    if (iter->second.graphicsBuffer) {
+                        if (!iter->first->frame() ||
+                            !iter->first->frame()->isFrameBox() ||
+                            !iter->first->frame()
+                                 ->asFrameBox()
+                                 ->stackingContext() ||
+                            !iter->first->frame()
+                                 ->asFrameBox()
+                                 ->stackingContext()
+                                 ->needsGraphicsBuffer()) {
+                            iter->second.graphicsBuffer->detachNativeBuffer();
+                            iter->second.graphicsBuffer = nullptr;
+                        }
+                    }
+                    iter++;
+                }
+            }
+
             StackingContext::PaintingStackingContextContext ctx(
                 m_needsComposite, prevDrawnStackingContextInfo, repaintRect,
                 scrollX, scrollY);
@@ -960,6 +993,7 @@ RenderResult WebView::rendering(bool force)
                     repaintRect.x() * d, repaintRect.y() * d,
                     repaintRect.width() * d, repaintRect.height() * d);
             } else {
+                starFish()->platformWindow()->willCompositing();
                 STARFISH_ASSERT(
                     m_rootStackingContext ==
                     mainFrame->firstChild()->asFrameBox()->stackingContext());
@@ -1011,7 +1045,13 @@ RenderResult WebView::rendering(bool force)
                               (float)renderResult.updateRect.width(),
                               (float)renderResult.updateRect.height());
 
-            refHolder = std::move(prevDrawnStackingContextInfo);
+            auto iter = prevDrawnStackingContextInfo.begin();
+            while (iter != prevDrawnStackingContextInfo.end()) {
+                if (iter->second.graphicsBuffer) {
+                    iter->second.graphicsBuffer->detachNativeBuffer();
+                }
+                iter++;
+            }
         }
 
         m_needsPainting = false;
@@ -1094,14 +1134,6 @@ RenderResult WebView::rendering(bool force)
             delete compositor;
         }
         m_needsComposite = false;
-    }
-
-    auto iter = refHolder.begin();
-    while (iter != refHolder.end()) {
-        if (iter->second.graphicsBuffer) {
-            iter->second.graphicsBuffer->detachNativeBuffer();
-        }
-        iter++;
     }
 
     m_needsRendering = false;
