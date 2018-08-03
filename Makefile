@@ -1130,6 +1130,9 @@ web_platform_test_new_css_color_cairo:
 web_platform_test_new_cssom_view_cairo:
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_cssom-view-1_dev_basic.res cairo -p$(TEST_NPROCS)
 
+web_platform_test_new_css_flexbox_cairo:
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css-flexbox-1_dev.res cairo -p$(TEST_NPROCS)
+
 web_platform_test_new_css_all_cairo:
 	make web_platform_test_new_css_css21_cairo
 	make web_platform_test_new_css_mediaqueries_cairo
@@ -1137,6 +1140,7 @@ web_platform_test_new_css_all_cairo:
 	make web_platform_test_new_css_backgrounds_cairo
 	make web_platform_test_new_css_color_cairo
 	make web_platform_test_new_cssom_view_cairo
+	make web_platform_test_new_css_flexbox_cairo
 
 web_platform_test_new_others_cairo:
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/html/wpt_html_dev.res basic -p$(TEST_NPROCS)
