@@ -1087,6 +1087,10 @@ bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys)
                                CSSStyleValuePair::TextDecoration);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::Transform);
         RETURN_NEED_TRANSITION(CSSStyleValuePair::Width);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::Left);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::Right);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::Top);
+        RETURN_NEED_TRANSITION(CSSStyleValuePair::Bottom);
     }
 
     return false;
@@ -1414,7 +1418,24 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
                                             duration, delay, timingFunction));
             }
         }
+
+#define GEN_SIDE(Side, side)                                                   \
+    if (NEED_TRANSITION(CSSStyleValuePair::Side)) {                            \
+        AnimatedValue v1, v2;                                                  \
+        if (AnimationUtil::lengthToAnimatedValue(                              \
+                oldStyle->side(), newStyle->side(), element, v1, v2)) {        \
+            executor->registerAnimation(                                       \
+                new LengthAnimationTask(element, CSSStyleValuePair::Side, v1,  \
+                                        v2, duration, delay, timingFunction)); \
+        }                                                                      \
     }
+        GEN_SIDE(Left, left)
+        GEN_SIDE(Right, right)
+        GEN_SIDE(Top, top)
+        GEN_SIDE(Bottom, bottom)
+#undef GEN_SIDE
+    }
+
     executor->attachAll();
 }
 

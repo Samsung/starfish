@@ -308,15 +308,16 @@ bool AnimationUtil::backgroundPosYToAnimatedValue(
     return true;
 }
 
-static bool marginToAnimationValue(const Length& oldMargin,
-                                   const Length& newMargin, Element* element,
-                                   AnimatedValue& from, AnimatedValue& to)
+bool AnimationUtil::lengthToAnimatedValue(const Length& oldLength,
+                                          const Length& newLength,
+                                          Element* element, AnimatedValue& from,
+                                          AnimatedValue& to)
 {
-    if (!oldMargin.isDefinite(false) || !newMargin.isDefinite(false)) {
+    if (!oldLength.isDefinite(false) || !newLength.isDefinite(false)) {
         return false;
     }
-    from = Length(Length::Fixed, oldMargin.specifiedValue(0, element));
-    to = Length(Length::Fixed, newMargin.specifiedValue(0, element));
+    from = Length(Length::Fixed, oldLength.specifiedValue(0, element));
+    to = Length(Length::Fixed, newLength.specifiedValue(0, element));
     return true;
 }
 
@@ -332,8 +333,8 @@ bool AnimationUtil::marginTopToAnimatedValue(ComputedStyle* oldStyle,
         newStyle->display() == DisplayValue::InlineDisplayValue) {
         return false;
     }
-    return marginToAnimationValue(oldStyle->margin().top(),
-                                  newStyle->margin().top(), element, from, to);
+    return lengthToAnimatedValue(oldStyle->margin().top(),
+                                 newStyle->margin().top(), element, from, to);
 }
 
 bool AnimationUtil::marginRightToAnimatedValue(ComputedStyle* oldStyle,
@@ -342,9 +343,8 @@ bool AnimationUtil::marginRightToAnimatedValue(ComputedStyle* oldStyle,
                                                AnimatedValue& from,
                                                AnimatedValue& to)
 {
-    return marginToAnimationValue(oldStyle->margin().right(),
-                                  newStyle->margin().right(), element, from,
-                                  to);
+    return lengthToAnimatedValue(oldStyle->margin().right(),
+                                 newStyle->margin().right(), element, from, to);
 }
 
 bool AnimationUtil::marginBottomToAnimatedValue(ComputedStyle* oldStyle,
@@ -359,9 +359,9 @@ bool AnimationUtil::marginBottomToAnimatedValue(ComputedStyle* oldStyle,
         newStyle->display() == DisplayValue::InlineDisplayValue) {
         return false;
     }
-    return marginToAnimationValue(oldStyle->margin().bottom(),
-                                  newStyle->margin().bottom(), element, from,
-                                  to);
+    return lengthToAnimatedValue(oldStyle->margin().bottom(),
+                                 newStyle->margin().bottom(), element, from,
+                                 to);
 }
 
 bool AnimationUtil::marginLeftToAnimatedValue(ComputedStyle* oldStyle,
@@ -370,7 +370,7 @@ bool AnimationUtil::marginLeftToAnimatedValue(ComputedStyle* oldStyle,
                                               AnimatedValue& from,
                                               AnimatedValue& to)
 {
-    return marginToAnimationValue(oldStyle->margin().left(),
-                                  newStyle->margin().left(), element, from, to);
+    return lengthToAnimatedValue(oldStyle->margin().left(),
+                                 newStyle->margin().left(), element, from, to);
 }
 }

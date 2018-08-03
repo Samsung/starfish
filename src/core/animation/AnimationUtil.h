@@ -57,6 +57,9 @@ public:
                                           ComputedStyle* newStyle,
                                           Element* element, AnimatedValue& from,
                                           AnimatedValue& to);
+    static bool lengthToAnimatedValue(const Length& oldLength,
+                                      const Length& newLength, Element* element,
+                                      AnimatedValue& from, AnimatedValue& to);
 };
 }
 
