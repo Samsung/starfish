@@ -6408,7 +6408,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
                     }
                 }
             } else if (element->isHTMLOptionElement()) {
-                if (element->asHTMLOptionElement()->selected()) {
+                if (element->asHTMLOptionElement()->selectedness()) {
                     return true;
                 }
             }
