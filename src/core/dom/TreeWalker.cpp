@@ -23,6 +23,7 @@
 #include "core/dom/NodeFilter.h"
 #include "core/dom/Traverse.h"
 #include "core/page/Window.h"
+#include "core/dom/DOMException.h"
 
 namespace StarFish {
 
@@ -352,6 +353,7 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
         ScriptValue thisValue = node->window()->scriptValue();
         ScriptValue ret = callHandleNodeFilterFunction(
             scriptBindingInstance(), m_filter, argv, 1, thisValue, error);
+
         if (isBooleanScriptValue(ret)) {
             if (scriptValueAsBoolean(ret)) {
                 return NodeFilter::FILTERACCEPT;
@@ -367,7 +369,9 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
             } else {
                 return NodeFilter::FILTERREJECT;
             }
-        } else if (!ret || isNullOrUndefinedScriptValue(ret)) {
+        } else {
+            throw new DOMException(node->document(),
+                                   DOMException::Code::SCRIPT_TYPE_ERR);
             return NodeFilter::FILTERREJECT;
         }
     }

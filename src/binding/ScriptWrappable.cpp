@@ -565,6 +565,9 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
             instance->ownerWindow()->dispatchErrorEvent(errorInfo);
             loggingJSErrorInfo(instance, sbresult);
             error = true;
+            ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+            state->throwException(ValueRef::create(sbresult.error));
+            state->destroy();
         } else {
             result = sbresult.result;
         }
