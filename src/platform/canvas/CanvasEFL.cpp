@@ -197,7 +197,7 @@ public:
         m_objList = NULL;
         m_forceMapMode = m_directDraw = false;
         m_eventLayer = NULL;
-        m_image = (Evas_Object*)data->unwrap();
+        m_image = (Evas_Object*)data->textureInfo().fragments[0].textureID;
         void* buffer = evas_object_image_data_get(m_image, EINA_TRUE);
         m_buffer = buffer;
         m_prevDrawnImageMap = nullptr;
@@ -1644,7 +1644,8 @@ public:
         float ww = sss.width();
         float hh = sss.height();
 
-        Evas_Object* eo = (Evas_Object*)data->unwrap();
+        Evas_Object* eo =
+            (Evas_Object*)data->textureInfo().fragments[0].textureID;
         if (!eo) {
             eo = evas_object_image_add(m_canvas);
             evas_object_image_filled_set(eo, EINA_TRUE);
@@ -1684,7 +1685,8 @@ public:
 #ifndef STARFISH_TIZEN_TV
             evas_object_image_colorspace_set(
                 eo,
-                evas_object_image_colorspace_get((Evas_Object*)data->unwrap()));
+                evas_object_image_colorspace_get(
+                    (Evas_Object*)data->textureInfo().fragments[0].textureID));
 #endif
             evas_object_image_filled_set(eo, EINA_TRUE);
             evas_object_image_alpha_set(eo, EINA_TRUE);

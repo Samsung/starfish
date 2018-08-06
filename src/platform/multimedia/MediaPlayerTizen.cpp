@@ -425,9 +425,19 @@ public:
     {
     }
 
-    virtual void* unwrap()
+    virtual CanvasSurfaceTextureInfo textureInfo()
     {
-        return m_imageObject;
+        CanvasSurfaceTextureInfo info;
+        CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment fragment;
+
+        fragment.textureID = (size_t)m_imageObject;
+        fragment.srcX = 0;
+        fragment.srcY = 0;
+        fragment.srcWidth = 1;
+        fragment.srcHeight = 1;
+
+        info.fragments.push_back(fragment);
+        return info;
     }
 
     virtual uint8_t* data()

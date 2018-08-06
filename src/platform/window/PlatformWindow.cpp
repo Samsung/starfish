@@ -91,13 +91,6 @@ public:
             float windowDevicePixelRatio =
                 m_window->starFish()->screenInfo().devicePixelRatio;
 
-            if ((int)w < m_window->starFish()->screenInfo().rect.width()) {
-                w += STARFISH_CANVAS_SURFACE_MARGIN;
-            }
-            if ((int)h < m_window->starFish()->screenInfo().rect.height()) {
-                h += STARFISH_CANVAS_SURFACE_MARGIN;
-            }
-
             m_pixelRatio = 1;
 
             while ((m_width / m_pixelRatio * windowDevicePixelRatio > 20000) ||
@@ -141,11 +134,6 @@ public:
 
         STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
         STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
-    }
-
-    virtual void* unwrap()
-    {
-        return nullptr;
     }
 
     virtual uint8_t* data()

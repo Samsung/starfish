@@ -50,9 +50,17 @@ public:
     }
 };
 
-#ifndef STARFISH_CANVAS_SURFACE_MARGIN
-#define STARFISH_CANVAS_SURFACE_MARGIN 0
-#endif
+struct CanvasSurfaceTextureInfo {
+    struct CanvasSurfaceTextureInfoFragment {
+        size_t textureID;
+        float srcX;      // [0~1]
+        float srcY;      // [0~1]
+        float srcWidth;  // [0~1]
+        float srcHeight; // [0~1]
+    };
+
+    std::vector<CanvasSurfaceTextureInfoFragment> fragments;
+};
 
 class CanvasSurface : public gc {
 protected:
@@ -63,7 +71,6 @@ protected:
 public:
     static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h);
     virtual void attachNativeBuffer(size_t w, size_t h) = 0;
-    virtual void* unwrap() = 0;
     virtual uint8_t* data() = 0;
     virtual void resize(size_t w, size_t h) = 0;
     virtual void clear() = 0;
@@ -73,6 +80,11 @@ public:
     }
     virtual ~CanvasSurface()
     {
+    }
+
+    virtual CanvasSurfaceTextureInfo textureInfo()
+    {
+        return CanvasSurfaceTextureInfo();
     }
 
     // width / pixelRatio == imageWidth
@@ -94,6 +106,11 @@ public:
     {
     }
 #endif
+
+    virtual bool isCanvasSurfaceGL()
+    {
+        return false;
+    }
 };
 
 struct DrawImageInfo {

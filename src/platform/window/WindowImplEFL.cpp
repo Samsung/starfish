@@ -96,6 +96,10 @@ static size_t g_totalCanvasSurfaceEFLSize;
 static PlatformWindow* g_currentWnd = nullptr;
 static void* g_focusedWin = nullptr;
 
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+Evas_GL_API* g_evasGLAPI;
+#endif
+
 class WindowImplEFL : public PlatformWindow {
 public:
     WindowImplEFL(StarFish* sf)
@@ -441,6 +445,14 @@ public:
         PlatformWindow::onIdle();
     }
 
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+    virtual void glMakeCurrent()
+    {
+        evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
+        g_evasGLAPI = m_glGlapi;
+    }
+#endif
+
     virtual RenderResult rendering() override
     {
         m_inRendering = true;
@@ -448,19 +460,15 @@ public:
         RenderResult ret = PlatformWindow::rendering();
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
         if (ret.didPaintingOrCompositing) {
-            evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
+            glMakeCurrent();
             if (webView()->didCompositeBefore()) {
             } else {
                 m_glPaintingSurface->notifyUpdateRegion(
                     (int)ret.updateRect.x(), (int)ret.updateRect.y(),
                     (int)ret.updateRect.width(), (int)ret.updateRect.height());
-                struct dummy {
-                    Evas_GL_API* evasGLAPI;
-                } d;
-                d.evasGLAPI = m_glGlapi;
                 float oldDPR = m_starFish->screenInfo().devicePixelRatio;
                 m_starFish->screenInfo().devicePixelRatio = 1;
-                Compositor* c = Compositor::create(starFish(), &d);
+                Compositor* c = Compositor::create(starFish(), (void*)nullptr);
                 c->clearColor(Unit::Color(0, 0, 0, 0));
                 c->drawSurface(m_glPaintingSurface,
                                Unit::Rect(0, 0, width(), height()));
@@ -592,261 +600,6 @@ public:
     size_t m_keyboardTimeoutId;
 };
 
-#if defined(PORT_COMPOSITOR_BACKEND_GL)
-static size_t g_totalCanvasSurfaceGLSize;
-class CanvasSurfaceGL : public CanvasSurface {
-public:
-    CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h)
-    {
-        m_window = (WindowImplEFL*)wnd;
-        m_width = w;
-        m_height = h;
-        m_imageWidth = m_bufferWidth = m_width = -1;
-        m_imageHeight = m_bufferHeight = m_height = -1;
-        m_pixelRatio = 1;
-        m_textureID = 0;
-        m_buffer = nullptr;
-
-        attachNativeBuffer(w, h);
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           CanvasSurfaceGL* s =
-                                               (CanvasSurfaceGL*)obj;
-                                           s->detachNativeBuffer();
-                                       },
-                                       NULL, NULL, NULL);
-    }
-
-    virtual void detachNativeBuffer()
-    {
-        if (m_buffer) {
-            evas_gl_make_current(m_window->m_glEvasgl, m_window->m_glSfc,
-                                 m_window->m_glCtx);
-            if (m_textureID) {
-                m_window->m_glGlapi->glDeleteTextures(1, &m_textureID);
-            }
-            g_totalCanvasSurfaceGLSize -=
-                m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
-            free(m_buffer);
-            m_buffer = nullptr;
-            m_textureID = 0;
-            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
-                              g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
-        }
-    }
-
-    void attachNativeBuffer(size_t w, size_t h)
-    {
-        if (m_width != w || m_height != h) {
-            detachNativeBuffer();
-            m_width = w;
-            m_height = h;
-
-            float windowDevicePixelRatio =
-                m_window->starFish()->screenInfo().devicePixelRatio;
-
-            if ((int)w < m_window->starFish()->screenInfo().rect.width()) {
-                w += STARFISH_CANVAS_SURFACE_MARGIN;
-            }
-            if ((int)h < m_window->starFish()->screenInfo().rect.height()) {
-                h += STARFISH_CANVAS_SURFACE_MARGIN;
-            }
-
-            m_pixelRatio = 1;
-
-            while ((m_width / m_pixelRatio * windowDevicePixelRatio > 4096) ||
-                   (m_height / m_pixelRatio * windowDevicePixelRatio > 4096)) {
-                m_pixelRatio++;
-            }
-
-            m_imageWidth =
-                std::max((size_t)1, (size_t)(m_width / m_pixelRatio *
-                                             windowDevicePixelRatio));
-            m_imageHeight =
-                std::max((size_t)1, (size_t)(m_height / m_pixelRatio *
-                                             windowDevicePixelRatio));
-
-            m_bufferWidth = std::max(
-                (size_t)1, (size_t)(w / m_pixelRatio * windowDevicePixelRatio));
-            m_bufferHeight = std::max(
-                (size_t)1, (size_t)(h / m_pixelRatio * windowDevicePixelRatio));
-            m_bufferStride = m_bufferWidth * 4;
-            m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
-                                              sizeof(uint32_t));
-
-            g_totalCanvasSurfaceGLSize +=
-                m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
-            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
-                              g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
-        }
-    }
-
-    virtual void resize(size_t w, size_t h)
-    {
-        STARFISH_RELEASE_ASSERT(w <= m_bufferWidth * m_pixelRatio);
-        STARFISH_RELEASE_ASSERT(h <= m_bufferHeight * m_pixelRatio);
-
-        m_width = w;
-        m_height = h;
-
-        m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
-        m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
-
-        STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
-        STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
-    }
-
-    void ensureGenerateTexture()
-    {
-        if (m_textureID) {
-            return;
-        }
-        evas_gl_make_current(m_window->m_glEvasgl, m_window->m_glSfc,
-                             m_window->m_glCtx);
-
-        m_window->m_glGlapi->glGenTextures(1, &m_textureID);
-        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
-
-        m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, m_textureID);
-        STARFISH_ASSERT(m_window->m_glGlapi->glGetError() == 0);
-
-        m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-        m_window->m_glGlapi->glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA,
-                                          m_bufferWidth, m_bufferHeight, 0,
-                                          GL_RGBA, GL_UNSIGNED_BYTE, m_buffer);
-        STARFISH_RELEASE_ASSERT(m_window->m_glGlapi->glGetError() == 0);
-
-        m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D,
-                                             GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D,
-                                             GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-        m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                                             GL_CLAMP_TO_EDGE);
-        m_window->m_glGlapi->glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                                             GL_CLAMP_TO_EDGE);
-
-        m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-        m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, 0);
-        STARFISH_RELEASE_ASSERT(m_window->m_glGlapi->glGetError() == 0);
-    }
-
-    virtual void* unwrap()
-    {
-        ensureGenerateTexture();
-        return (void*)((size_t)m_textureID);
-    }
-
-    virtual uint8_t* data()
-    {
-        return m_buffer;
-    }
-
-    virtual size_t width()
-    {
-        return m_width;
-    }
-
-    virtual size_t height()
-    {
-        return m_height;
-    }
-
-    virtual size_t bufferWidth()
-    {
-        return m_bufferWidth;
-    }
-
-    virtual size_t bufferHeight()
-    {
-        return m_bufferHeight;
-    }
-
-    virtual size_t imageWidth()
-    {
-        return m_imageWidth;
-    }
-
-    virtual size_t imageHeight()
-    {
-        return m_imageHeight;
-    }
-
-    virtual size_t pixelRatio()
-    {
-        return m_pixelRatio;
-    }
-
-    virtual size_t bufferStride()
-    {
-        return m_bufferStride;
-    }
-
-    virtual void clear()
-    {
-        size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
-        memset(m_buffer, 0x00, end);
-    }
-
-    virtual void notifyUpdateRegion(size_t x, size_t y, size_t w, size_t h)
-    {
-        if (m_textureID == 0) {
-            ensureGenerateTexture();
-            return;
-        }
-        evas_gl_make_current(m_window->m_glEvasgl, m_window->m_glSfc,
-                             m_window->m_glCtx);
-
-        m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, m_textureID);
-        STARFISH_RELEASE_ASSERT(m_window->m_glGlapi->glGetError() == 0);
-
-        m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-        auto data = m_buffer;
-        data += y * m_bufferWidth * 4;
-        x = 0;
-        w = m_bufferWidth;
-
-        if (data == m_buffer && x == 0 && y == 0 && w == m_bufferWidth &&
-            h == m_bufferHeight) {
-            m_window->m_glGlapi->glTexImage2D(
-                GL_TEXTURE_2D, 0, GL_RGBA, m_bufferWidth, m_bufferHeight, 0,
-                GL_RGBA, GL_UNSIGNED_BYTE, m_buffer);
-        } else {
-            m_window->m_glGlapi->glTexSubImage2D(
-                GL_TEXTURE_2D, 0, x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, data);
-        }
-        GLuint error;
-        STARFISH_RELEASE_ASSERT((error = m_window->m_glGlapi->glGetError()) ==
-                                0);
-
-        m_window->m_glGlapi->glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-
-        m_window->m_glGlapi->glBindTexture(GL_TEXTURE_2D, 0);
-        STARFISH_RELEASE_ASSERT(m_window->m_glGlapi->glGetError() == 0);
-    }
-
-protected:
-    WindowImplEFL* m_window;
-    unsigned char* m_buffer;
-    GLuint m_textureID;
-    size_t m_width;
-    size_t m_height;
-    size_t m_imageWidth;
-    size_t m_imageHeight;
-    size_t m_bufferWidth;
-    size_t m_bufferHeight;
-    size_t m_bufferStride;
-    size_t m_pixelRatio;
-};
-
-CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
-{
-    return new CanvasSurfaceGL(wnd, w, h);
-}
-#endif
-
 #if defined(PORT_COMPOSITOR_BACKEND_EFL)
 class CanvasSurfaceEFL : public CanvasSurface {
 public:
@@ -947,13 +700,6 @@ public:
             m_width = w;
             m_height = h;
 
-            if ((int)w < m_window->starFish()->screenInfo().rect.width()) {
-                w += STARFISH_CANVAS_SURFACE_MARGIN;
-            }
-            if ((int)h < m_window->starFish()->screenInfo().rect.height()) {
-                h += STARFISH_CANVAS_SURFACE_MARGIN;
-            }
-
             size_t v = 20000;
             void* address = nullptr;
             do {
@@ -1019,9 +765,19 @@ public:
         STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
     }
 
-    virtual void* unwrap()
+    virtual CanvasSurfaceTextureInfo textureInfo()
     {
-        return m_image;
+        CanvasSurfaceTextureInfo info;
+        CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment fragment;
+
+        fragment.textureID = (size_t)m_image;
+        fragment.srcX = 0;
+        fragment.srcY = 0;
+        fragment.srcWidth = 1;
+        fragment.srcHeight = 1;
+
+        info.fragments.push_back(fragment);
+        return info;
     }
 
     virtual size_t width()
@@ -1368,7 +1124,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         wnd->m_glAdpater,
         [](void* data, Evas_Object* o) {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
-            evas_gl_make_current(wnd->m_glEvasgl, wnd->m_glSfc, wnd->m_glCtx);
+            wnd->glMakeCurrent();
 
             wnd->m_glGlapi->glClearColor(0, 0, 0, 0);
             wnd->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
@@ -2037,14 +1793,14 @@ void WindowImplEFL::setNeedsRendering()
     WindowImplEFL* wnd = this;
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
     evas_object_image_pixels_dirty_set(wnd->m_glAdpater, EINA_TRUE);
-    evas_object_image_pixels_get_callback_set(
-        m_glAdpater,
-        [](void* data, Evas_Object* o) {
-            WindowImplEFL* wnd = (WindowImplEFL*)data;
-            evas_gl_make_current(wnd->m_glEvasgl, wnd->m_glSfc, wnd->m_glCtx);
-            wnd->rendering();
-        },
-        this);
+    evas_object_image_pixels_get_callback_set(m_glAdpater,
+                                              [](void* data, Evas_Object* o) {
+                                                  WindowImplEFL* wnd =
+                                                      (WindowImplEFL*)data;
+                                                  wnd->glMakeCurrent();
+                                                  wnd->rendering();
+                                              },
+                                              this);
 #else
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
@@ -2294,7 +2050,7 @@ Compositor* WindowImplEFL::prepareCompositor()
 {
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
     WindowImplEFL* wnd = (WindowImplEFL*)this;
-    evas_gl_make_current(wnd->m_glEvasgl, wnd->m_glSfc, wnd->m_glCtx);
+    wnd->glMakeCurrent();
     if (m_glPaintingSurface) {
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;

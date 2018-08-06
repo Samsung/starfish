@@ -76,6 +76,10 @@ public:
     virtual void willCompositing()
     {
     }
+    virtual void glMakeCurrent()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
     virtual Compositor* prepareCompositor() = 0;
     virtual void showSoftwareKeyboardIfPossible()
     {
