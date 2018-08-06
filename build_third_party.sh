@@ -48,7 +48,7 @@ elif [ "$arch" == "arm" ]; then
     ./build/build_escargot.sh tizen_obs_arm
 
     cd $STARFISH_ROOT
-    build_gc.sh tizen_obs_arm
+    ./build/build_gc.sh tizen_obs_arm
 
     cd $STARFISH_ROOT
     cd third_party/libtuv
