@@ -2055,12 +2055,7 @@ Compositor* WindowImplEFL::prepareCompositor()
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;
     }
-    struct dummy {
-        Evas_GL_API* evasGLAPI;
-    } d;
-    d.evasGLAPI = m_glGlapi;
-
-    return Compositor::create(starFish(), &d);
+    return Compositor::create(starFish(), (void*)nullptr);
 #endif
 
 #if defined(PORT_COMPOSITOR_BACKEND_SKIA)

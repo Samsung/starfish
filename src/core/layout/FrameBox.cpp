@@ -3407,7 +3407,8 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
     ctx.uniteRect(outline);
 
-    for (int i = 0; cs && i < 2; ++i) {
+    size_t len = isInlineTextBox() ? 2 : 1;
+    for (size_t i = 0; cs && i < len; ++i) {
         CanvasShadowDataList list;
         LayoutRect owner = frameRect();
         owner.setX(0);
