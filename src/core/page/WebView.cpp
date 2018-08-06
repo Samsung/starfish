@@ -930,15 +930,10 @@ RenderResult WebView::rendering(bool force)
             repaintRect.setWidth(repaintRect.width() + 2);
             repaintRect.setHeight(repaintRect.height() + 2);
 
-#ifdef STARFISH_ENABLE_TEST
-            if ((starFish()->startUpFlag() &
-                 StarFishStartUpFlag::enableDebugRepaintRegion)) {
-                STARFISH_LOG_INFO(
-                    "repaint region %f %f %f %f\n", (float)repaintRect.x(),
-                    (float)repaintRect.y(), (float)repaintRect.width(),
-                    (float)repaintRect.height());
-            }
-#endif
+            STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
+                              (float)repaintRect.x(), (float)repaintRect.y(),
+                              (float)repaintRect.width(),
+                              (float)repaintRect.height());
             {
                 // remove definitely useless graphics buffer first.
                 auto iter = prevDrawnStackingContextInfo.begin();
@@ -1039,12 +1034,13 @@ RenderResult WebView::rendering(bool force)
             }
             renderResult.updateRect = rt;
 
-            STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
+            /*
+            STARFISH_LOG_INFO("repaint region(device) %f %f %f %f\n",
                               (float)renderResult.updateRect.x(),
                               (float)renderResult.updateRect.y(),
                               (float)renderResult.updateRect.width(),
                               (float)renderResult.updateRect.height());
-
+             */
             auto iter = prevDrawnStackingContextInfo.begin();
             while (iter != prevDrawnStackingContextInfo.end()) {
                 if (iter->second.graphicsBuffer) {

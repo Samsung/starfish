@@ -17,7 +17,7 @@
  *  USA
  */
 
-// #define STARFISH_ENABLE_PROFILE_TIMER
+#define STARFISH_ENABLE_PROFILE_TIMER
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
@@ -197,6 +197,328 @@ using Point = std::array<Coord, 2>;
 
 namespace StarFish {
 
+#if defined(PORT_WINDOW_BACKEND_EFL)
+extern Evas_GL_API* g_evasGLAPI;
+#endif
+
+#define CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE 512
+static size_t g_totalCanvasSurfaceGLSize;
+
+class CanvasSurfaceGL : public CanvasSurface {
+public:
+    CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h)
+    {
+        m_window = (PlatformWindow*)wnd;
+        m_width = w;
+        m_height = h;
+        m_imageWidth = m_bufferWidth = m_width = -1;
+        m_imageHeight = m_bufferHeight = m_height = -1;
+        m_buffer = nullptr;
+
+        attachNativeBuffer(w, h);
+        GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                       [](void* obj, void* cd) {
+                                           CanvasSurfaceGL* s =
+                                               (CanvasSurfaceGL*)obj;
+                                           s->detachNativeBuffer();
+                                       },
+                                       NULL, NULL, NULL);
+    }
+
+    virtual bool isCanvasSurfaceGL()
+    {
+        return true;
+    }
+
+    virtual void detachNativeBuffer()
+    {
+        if (m_buffer) {
+            m_window->glMakeCurrent();
+            for (size_t i = 0; i < m_textureFragments.size(); i++) {
+                GLuint id = m_textureFragments[i].textureID;
+                glDeleteTextures(1, &id);
+            }
+            m_textureFragments.clear();
+            m_dirtyTextureFragments.clear();
+            m_dirtyAreaTextureFragments.clear();
+            g_totalCanvasSurfaceGLSize -=
+                m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+            free(m_buffer);
+            m_buffer = nullptr;
+            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
+                              g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
+        }
+    }
+
+    void attachNativeBuffer(size_t w, size_t h)
+    {
+        if (m_width != w || m_height != h) {
+            detachNativeBuffer();
+            m_width = w;
+            m_height = h;
+
+            float windowDevicePixelRatio =
+                m_window->starFish()->screenInfo().devicePixelRatio;
+
+            m_imageWidth =
+                std::max((size_t)1, (size_t)(m_width * windowDevicePixelRatio));
+            m_imageHeight = std::max(
+                (size_t)1, (size_t)(m_height * windowDevicePixelRatio));
+
+            m_bufferWidth =
+                std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
+            m_bufferHeight =
+                std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
+            m_bufferStride = m_bufferWidth * 4;
+            m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
+                                              sizeof(uint32_t));
+
+            g_totalCanvasSurfaceGLSize +=
+                m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
+                              g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
+        }
+    }
+
+    virtual void resize(size_t w, size_t h)
+    {
+        STARFISH_RELEASE_ASSERT(w <= m_bufferWidth);
+        STARFISH_RELEASE_ASSERT(h <= m_bufferHeight);
+
+        m_width = w;
+        m_height = h;
+
+        m_imageWidth = std::max((size_t)1, m_width);
+        m_imageHeight = std::max((size_t)1, m_height);
+
+        STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
+        STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
+    }
+
+    void checkError()
+    {
+#ifndef NDEBUG
+        auto error = glGetError();
+        if (error != 0) {
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+#endif
+    }
+
+    void ensureGenerateTexture()
+    {
+        m_window->glMakeCurrent();
+        size_t wTextureCount =
+            ceil((float)m_bufferWidth / CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
+        size_t hTextureCount =
+            ceil((float)m_bufferHeight / CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
+
+        size_t coveredRowsCount = 0;
+        for (size_t y = 0; y < hTextureCount; y++) {
+            size_t coveredColsCount = 0;
+            for (size_t x = 0; x < wTextureCount; x++) {
+                GLuint textureID;
+
+                size_t texureDataX = coveredColsCount;
+                size_t texureDataY = coveredRowsCount;
+                size_t texureDataWidth =
+                    std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                             m_bufferWidth - coveredColsCount);
+                size_t texureDataHeight =
+                    std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                             m_bufferHeight - coveredRowsCount);
+
+                glGenTextures(1, &textureID);
+                glBindTexture(GL_TEXTURE_2D, textureID);
+                glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                checkError();
+
+                glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, texureDataWidth,
+                             texureDataHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                             nullptr);
+                checkError();
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                                GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER,
+                                GL_LINEAR);
+
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                                GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                                GL_CLAMP_TO_EDGE);
+                checkError();
+
+                glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                checkError();
+
+                CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment
+                    fragment;
+                fragment.textureID = textureID;
+                fragment.srcX = texureDataX / (float)m_bufferWidth;
+                fragment.srcY = texureDataY / (float)m_bufferHeight;
+                fragment.srcWidth = texureDataWidth / (float)m_bufferWidth;
+                fragment.srcHeight = texureDataHeight / (float)m_bufferHeight;
+
+                m_textureFragments.push_back(fragment);
+                m_dirtyTextureFragments.push_back(true);
+                m_dirtyAreaTextureFragments.push_back(
+                    Unit::Rect(0, 0, texureDataWidth, texureDataHeight));
+
+                coveredColsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+            }
+
+            coveredRowsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+        }
+    }
+
+    virtual uint8_t* data()
+    {
+        return m_buffer;
+    }
+
+    virtual size_t width()
+    {
+        return m_width;
+    }
+
+    virtual size_t height()
+    {
+        return m_height;
+    }
+
+    virtual size_t bufferWidth()
+    {
+        return m_bufferWidth;
+    }
+
+    virtual size_t bufferHeight()
+    {
+        return m_bufferHeight;
+    }
+
+    virtual size_t imageWidth()
+    {
+        return m_imageWidth;
+    }
+
+    virtual size_t imageHeight()
+    {
+        return m_imageHeight;
+    }
+
+    virtual size_t pixelRatio()
+    {
+        return 1;
+    }
+
+    virtual size_t bufferStride()
+    {
+        return m_bufferStride;
+    }
+
+    virtual void clear()
+    {
+        size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+        memset(m_buffer, 0x00, end);
+    }
+
+    virtual void notifyUpdateRegion(size_t dirtyX, size_t dirtyY,
+                                    size_t dirtyWidth, size_t dirtyHeight)
+    {
+        if (m_textureFragments.size() == 0) {
+            ensureGenerateTexture();
+            return;
+        }
+
+        m_window->glMakeCurrent();
+        size_t wTextureCount =
+            ceil((float)m_bufferWidth / CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
+        size_t hTextureCount =
+            ceil((float)m_bufferHeight / CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
+        size_t fragmentIndex = 0;
+
+        size_t coveredRowsCount = 0;
+        for (size_t y = 0; y < hTextureCount; y++) {
+            size_t coveredColsCount = 0;
+            for (size_t x = 0; x < wTextureCount; x++) {
+                GLuint textureID;
+
+                size_t texureDataX = coveredColsCount;
+                size_t texureDataY = coveredRowsCount;
+                size_t texureDataWidth =
+                    std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                             m_bufferWidth - coveredColsCount);
+                size_t texureDataHeight =
+                    std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                             m_bufferHeight - coveredRowsCount);
+                CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment&
+                    fragment = m_textureFragments[fragmentIndex];
+
+                Unit::Rect tRect(texureDataX, texureDataY, texureDataWidth,
+                                 texureDataHeight);
+                Unit::Rect dRect(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
+
+                if (tRect.intersects(dRect)) {
+                    m_dirtyTextureFragments[fragmentIndex] = true;
+                    size_t xx = std::max(texureDataX, x) - texureDataX;
+                    size_t xxEnd = dirtyX + dirtyWidth + 1 - texureDataX;
+                    if (xxEnd > texureDataWidth) {
+                        xxEnd = texureDataWidth;
+                    }
+                    size_t yy = std::max(texureDataY, y) - texureDataY;
+                    size_t yyEnd = dirtyY + dirtyHeight + 1 - texureDataY;
+                    if (yyEnd > texureDataHeight) {
+                        yyEnd = texureDataHeight;
+                    }
+                    m_dirtyAreaTextureFragments[fragmentIndex].unite(
+                        Unit::Rect(xx, yy, xxEnd - xx, yyEnd - yy));
+                }
+
+                fragmentIndex++;
+                coveredColsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+            }
+
+            coveredRowsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+        }
+    }
+
+    virtual CanvasSurfaceTextureInfo textureInfo()
+    {
+        if (m_textureFragments.size() == 0) {
+            ensureGenerateTexture();
+        }
+        CanvasSurfaceTextureInfo info;
+        info.fragments = std::vector<
+            CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>(
+            m_textureFragments.data(),
+            m_textureFragments.data() + m_textureFragments.size());
+        return info;
+    }
+
+protected:
+    friend class CompositorImplGL;
+    PlatformWindow* m_window;
+    unsigned char* m_buffer;
+    size_t m_width;
+    size_t m_height;
+    size_t m_imageWidth;
+    size_t m_imageHeight;
+    size_t m_bufferWidth;
+    size_t m_bufferHeight;
+    size_t m_bufferStride;
+    GCAtomicVector<CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>
+        m_textureFragments;
+    GCAtomicVector<bool> m_dirtyTextureFragments;
+    GCAtomicVector<Unit::Rect> m_dirtyAreaTextureFragments;
+};
+
+CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
+{
+    return new CanvasSurfaceGL(wnd, w, h);
+}
+
 struct CompositorImplGLState {
     bool matrixStaysInRect;
     SkMatrix matrix;
@@ -206,9 +528,6 @@ struct CompositorImplGLState {
 };
 
 class CompositorImplGL : public Compositor {
-#if defined(PORT_WINDOW_BACKEND_EFL)
-    Evas_GL_API* g_evasGLAPI;
-#endif
 public:
     GLuint texShaderProgram;
     GLuint texVertexShader;
@@ -259,14 +578,6 @@ public:
     CompositorImplGL(StarFish* starfish, void* data)
     {
         m_starfish = starfish;
-#if defined(PORT_WINDOW_BACKEND_EFL)
-        struct dummy {
-            Evas_GL_API* evasGLAPI;
-        };
-        dummy* d = (dummy*)data;
-        g_evasGLAPI = d->evasGLAPI;
-#endif
-
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glViewport(0, 0, starfish->platformWindow()->width(),
@@ -447,6 +758,9 @@ public:
         uScreenPos = glGetUniformLocation(rectShaderProgram, "uScreen");
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
+
+        clip(Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
+                        m_starfish->platformWindow()->height()));
 
         applyDevicePixelRatio();
     }
@@ -795,10 +1109,104 @@ public:
         return result;
     }
 
+    void drawTexture(CanvasSurface* cs, float dest[4][2], GLuint textureID)
+    {
+        float data[] = { dest[0][0], dest[0][1], // V1
+                         0.f,        0.f,        // Texture coordinate .for V1
+
+                         dest[1][0], dest[1][1], // V2
+                         0.f,        1.f,
+
+                         dest[2][0], dest[2][1], // V3
+                         1.f,        0.f,
+
+                         dest[3][0], dest[3][1], // V4
+                         1.f,        1.f };
+        float a = m_state.back().opacity;
+        if (a == 1) {
+            glUseProgram(texShaderProgram);
+            auto aPosition = glGetAttribLocation(texShaderProgram, "aPosition");
+            auto aTexPos = glGetAttribLocation(texShaderProgram, "aTexPos");
+
+            glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                  &data[0]);
+            glEnableVertexAttribArray(aPosition);
+
+            glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                  &data[2]);
+            glEnableVertexAttribArray(aTexPos);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            auto uTexture = glGetUniformLocation(texShaderProgram, "uTexture");
+
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            checkError();
+            glUseProgram(0);
+        } else {
+            glUseProgram(texWithAlphaShaderProgram);
+            auto aPosition =
+                glGetAttribLocation(texWithAlphaShaderProgram, "aPosition");
+            auto aTexPos =
+                glGetAttribLocation(texWithAlphaShaderProgram, "aTexPos");
+
+            glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                  &data[0]);
+            glEnableVertexAttribArray(aPosition);
+
+            glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                  &data[2]);
+            glEnableVertexAttribArray(aTexPos);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, textureID);
+            auto uTexture =
+                glGetUniformLocation(texWithAlphaShaderProgram, "uTexture");
+            auto uAlpha =
+                glGetUniformLocation(texWithAlphaShaderProgram, "uAlpha");
+            glUniform1f(uAlpha, a);
+            glUniform1i(uTexture, 0);
+
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            checkError();
+            glUseProgram(0);
+        }
+    }
+
+    Unit::Rect boundingRect(const ClipperLib::Path& path)
+    {
+        int minX = 0, minY = 0, maxX = 0, maxY = 0;
+
+        if (path.size()) {
+            minX = path[0].X;
+            minY = path[0].Y;
+            maxX = path[0].X;
+            maxY = path[0].Y;
+        }
+
+        for (size_t i = 1; i < path.size(); i++) {
+            minX = std::min((int)path[i].X, minX);
+            minY = std::min((int)path[i].Y, minY);
+            maxX = std::max((int)path[i].X, maxX);
+            maxY = std::max((int)path[i].Y, maxY);
+        }
+
+        return Unit::Rect(minX, minY, std::abs(maxX - minX),
+                          std::abs(maxY - minY));
+    }
+
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst)
     {
+        if (!cs->isCanvasSurfaceGL()) {
+            return;
+        }
+
         INSTALL_PROFILE_TIMER(m_starfish, "CompositorGL::drawSurface");
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
+
+        CanvasSurfaceGL* csGL = (CanvasSurfaceGL*)cs;
 
         SkPoint pt;
         pt = SkPoint::Make(dst.x(), dst.y());
@@ -824,7 +1232,12 @@ public:
 
         bool stencilClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
+        Unit::Rect visibleArea =
+            Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
+                       m_starfish->platformWindow()->height());
+
         if (m_state.back().clipPaths.size()) {
+            visibleArea = Unit::Rect(0, 0, 0, 0);
             ClipperLib::Paths result = computeClippath(dest);
             if (result.size()) {
                 stencilClippingEnabled = true;
@@ -847,6 +1260,8 @@ public:
                         pointPerIndex.push_back(
                             { (double)result[i][j].X, (double)result[i][j].Y });
                     }
+
+                    visibleArea.unite(boundingRect(result[i]));
                 }
 
                 std::vector<N> indices = mapbox::earcut<N>(polygon);
@@ -900,71 +1315,121 @@ public:
         }
 
         if (!shouldSkipTexturePainting) {
-            GLuint tid = (GLuint)(size_t)cs->unwrap();
+            auto textureInfo = cs->textureInfo();
 
-            float data[] = { dest[0][0], dest[0][1], // V1
-                             0.f,        0.f, // Texture coordinate .for V1
+            size_t wTextureCount = ceil((float)cs->bufferWidth() /
+                                        CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
+            size_t hTextureCount = ceil((float)cs->bufferHeight() /
+                                        CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
 
-                             dest[1][0], dest[1][1], // V2
-                             0.f,        1.f,
+            size_t coveredRowsCount = 0;
+            size_t i = 0;
+            for (size_t y = 0; y < hTextureCount; y++) {
+                size_t coveredColsCount = 0;
+                for (size_t x = 0; x < wTextureCount; x++) {
+                    size_t texureDataX = coveredColsCount;
+                    size_t texureDataY = coveredRowsCount;
+                    size_t texureDataWidth =
+                        std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                                 cs->bufferWidth() - coveredColsCount);
+                    size_t texureDataHeight =
+                        std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                                 cs->bufferHeight() - coveredRowsCount);
 
-                             dest[2][0], dest[2][1], // V3
-                             1.f,        0.f,
+                    float newDest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
-                             dest[3][0], dest[3][1], // V4
-                             1.f,        1.f };
-            float a = m_state.back().opacity;
-            if (a == 1) {
-                glUseProgram(texShaderProgram);
-                auto aPosition =
-                    glGetAttribLocation(texShaderProgram, "aPosition");
-                auto aTexPos = glGetAttribLocation(texShaderProgram, "aTexPos");
+                    auto& fragment = textureInfo.fragments[i];
+                    float oldW = dst.width();
+                    float oldH = dst.height();
+                    Unit::Rect newDst(oldW * fragment.srcX + dst.x(),
+                                      oldH * fragment.srcY + dst.y(),
+                                      oldW * fragment.srcWidth,
+                                      oldH * fragment.srcHeight);
 
-                glVertexAttribPointer(aPosition, 2, GL_FLOAT, false,
-                                      (2 + 2) * 4, &data[0]);
-                glEnableVertexAttribArray(aPosition);
+                    SkPoint pt;
+                    pt = SkPoint::Make(newDst.x(), newDst.y());
 
-                glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
-                                      &data[2]);
-                glEnableVertexAttribArray(aTexPos);
+                    m_state.back().matrix.mapPoints(&pt, 1);
+                    newDest[0][0] = pt.x();
+                    newDest[0][1] = pt.y();
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, tid);
-                auto uTexture =
-                    glGetUniformLocation(texShaderProgram, "uTexture");
+                    pt = SkPoint::Make(newDst.x(), newDst.maxY());
+                    m_state.back().matrix.mapPoints(&pt, 1);
+                    newDest[1][0] = pt.x();
+                    newDest[1][1] = pt.y();
 
-                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                checkError();
-                glUseProgram(0);
-            } else {
-                glUseProgram(texWithAlphaShaderProgram);
-                auto aPosition =
-                    glGetAttribLocation(texWithAlphaShaderProgram, "aPosition");
-                auto aTexPos =
-                    glGetAttribLocation(texWithAlphaShaderProgram, "aTexPos");
+                    pt = SkPoint::Make(newDst.maxX(), newDst.y());
+                    m_state.back().matrix.mapPoints(&pt, 1);
+                    newDest[2][0] = pt.x();
+                    newDest[2][1] = pt.y();
 
-                glVertexAttribPointer(aPosition, 2, GL_FLOAT, false,
-                                      (2 + 2) * 4, &data[0]);
-                glEnableVertexAttribArray(aPosition);
+                    pt = SkPoint::Make(newDst.maxX(), newDst.maxY());
+                    m_state.back().matrix.mapPoints(&pt, 1);
+                    newDest[3][0] = pt.x();
+                    newDest[3][1] = pt.y();
 
-                glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
-                                      &data[2]);
-                glEnableVertexAttribArray(aTexPos);
+                    float minX = newDest[0][0], minY = newDest[0][1],
+                          maxX = newDest[0][0], maxY = newDest[0][1];
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, tid);
-                auto uTexture =
-                    glGetUniformLocation(texWithAlphaShaderProgram, "uTexture");
-                auto uAlpha =
-                    glGetUniformLocation(texWithAlphaShaderProgram, "uAlpha");
-                glUniform1f(uAlpha, a);
-                glUniform1i(uTexture, 0);
+                    for (size_t i = 1; i < 4; i++) {
+                        minX = std::min(newDest[i][0], minX);
+                        minY = std::min(newDest[i][1], minY);
+                        maxX = std::max(newDest[i][0], maxX);
+                        maxY = std::max(newDest[i][1], maxY);
+                    }
 
-                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                checkError();
-                glUseProgram(0);
+                    Unit::Rect screenBoundingRect(minX, minY,
+                                                  std::abs(maxX - minX),
+                                                  std::abs(maxY - minY));
+
+                    if (screenBoundingRect.intersects(visibleArea)) {
+                        GLuint tid = (GLuint)fragment.textureID;
+
+                        if (csGL->m_dirtyTextureFragments[i]) {
+                            INSTALL_PROFILE_TIMER(m_starfish,
+                                                  "update texture tile..");
+                            glBindTexture(GL_TEXTURE_2D, tid);
+                            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                            checkError();
+
+                            size_t xx =
+                                csGL->m_dirtyAreaTextureFragments[i].x();
+                            size_t xxEnd =
+                                csGL->m_dirtyAreaTextureFragments[i].maxX();
+                            size_t yy =
+                                csGL->m_dirtyAreaTextureFragments[i].y();
+                            size_t yyEnd =
+                                csGL->m_dirtyAreaTextureFragments[i].maxY();
+
+                            auto bData = csGL->data();
+                            auto bStride = csGL->bufferStride();
+
+                            for (; yy < yyEnd; yy++) {
+                                auto data = bData;
+                                data += ((yy + texureDataY) * bStride);
+                                data += ((texureDataX + xx) * 4);
+                                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, yy,
+                                                xxEnd - xx, 1, GL_RGBA,
+                                                GL_UNSIGNED_BYTE, data);
+                                checkError();
+                            }
+
+                            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+                            glBindTexture(GL_TEXTURE_2D, 0);
+                            checkError();
+
+                            csGL->m_dirtyTextureFragments[i] = false;
+                            csGL->m_dirtyAreaTextureFragments[i] =
+                                Unit::Rect(0, 0, 0, 0);
+                        }
+                        drawTexture(cs, newDest, tid);
+                    }
+
+                    i++;
+                    coveredColsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+                }
+
+                coveredRowsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
             }
         }
 
@@ -1009,12 +1474,17 @@ public:
         m_state.back().matrix = SkMatrix::I();
         m_state.back().clipPaths.clear();
         m_state.back().matrixStaysInRect = true;
+
+        clip(Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
+                        m_starfish->platformWindow()->height()));
         applyDevicePixelRatio();
     }
 
     virtual void resetClip()
     {
         m_state.back().clipPaths.clear();
+        clip(Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
+                        m_starfish->platformWindow()->height()));
     }
 
 protected:
