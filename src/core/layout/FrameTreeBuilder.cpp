@@ -203,7 +203,8 @@ Frame* FrameTreeBuilder::findNearestBlockStartPositionOfFrameTreeBuildCandidate(
     } else {
         while (f) {
             if (!f->isAnonymous() && !f->didSpiltFrameInline() &&
-                (f->isBlockLevel(true) || f->isFrameTableCellBox())) {
+                (f->isBlockLevel(true) || f->isFrameTableCellBox() ||
+                 f->isFrameInputBox())) {
                 break;
             }
             f = f->parent();
