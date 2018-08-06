@@ -79,7 +79,9 @@ void FrameReplacedIFrame::computeVisibleRect(
     FrameBox::ComputeVisibleRectContext& ctx)
 {
     Frame::ComputeVisibleRectContextFragment f(ctx, this);
-    tryUniteVisibleRect(ctx);
+    if (!tryUniteVisibleRect(ctx)) {
+        return;
+    }
 
     HTMLIFrameElement* v = node()->asHTMLIFrameElement();
     if (v->browsingContext()) {

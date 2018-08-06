@@ -787,7 +787,10 @@ public:
 
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
-        glFlush();
+        {
+            INSTALL_PROFILE_TIMER(m_starfish, "glFlush");
+            glFlush();
+        }
     }
 
     virtual void clearColor(const Unit::Color& clr)
@@ -1203,7 +1206,6 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_starfish, "CompositorGL::drawSurface");
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
         CanvasSurfaceGL* csGL = (CanvasSurfaceGL*)cs;
