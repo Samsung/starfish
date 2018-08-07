@@ -82,8 +82,9 @@ void MediaPlayerTizen::disposePlayer()
 void MediaPlayerTizen::setNativePlayerDisplayMode()
 {
     player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_CROPPED_FULL);
-    player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_EVAS,
-                       m_canvasSurface->unwrap());
+    player_set_display(
+        m_nativePlayer, PLAYER_DISPLAY_TYPE_EVAS,
+        (void*)m_canvasSurface->textureInfo().fragments[0].textureID);
 }
 
 void MediaPlayerTizen::setPlayerDisplayVideoAtPausedState(int& ret)
