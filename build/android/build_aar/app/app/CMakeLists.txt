@@ -68,13 +68,10 @@ file(GLOB_RECURSE STARFISH_SRC "${STARFISH_ROOT_PATH}/src/*.cpp" )
 list(REMOVE_ITEM STARFISH_SRC ${STARFISH_ROOT_PATH}/src/shell/shell.cpp)
 add_definitions("-fno-rtti
                 -Wno-format-nonliteral
-                -fsignaling-nans
                 -Wno-invalid-offsetof
                 -fvisibility=hidden
                 -fno-omit-frame-pointer
                 -fstack-protector
-                -Wno-unused-but-set-variable
-                -Wno-unused-but-set-parameter
                 -Wno-unused-parameter
                 -Wno-unused-result
                 -Wno-unused-variable
@@ -84,7 +81,21 @@ add_definitions("-fno-rtti
                 -fno-math-errno
                 -fdata-sections
                 -ffunction-sections
-                -frounding-math ")
+                -fno-fast-math
+                -fno-unsafe-math-optimizations
+                -fdenormal-fp-math=ieee
+                -Wno-parentheses-equality
+                -Wno-unused-parameter
+                -Wno-dynamic-class-memaccess
+                -Wno-deprecated-register
+                -Wno-expansion-to-defined
+                -Wno-return-type
+                -Wno-type-limits
+                -Wno-unused-result
+                -mthumb
+                -march=armv7-a
+                -mfloat-abi=softfp
+                -mfpu=neon")
 add_library( # Sets the name of the library.
              lightweightwebengine
              # Sets the library as a shared library.

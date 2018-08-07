@@ -34,6 +34,7 @@ public:
         , m_isAlreadyStarted(false)
         , m_isParserInserted(false)
         , m_didScriptExecuted(false)
+        , m_shouldResumeParsing(false)
     {
 #ifdef STARFISH_TC_COVERAGE
         STARFISH_LOG_INFO("+++tag:script\n");
@@ -69,6 +70,15 @@ public:
 
     bool defer();
     void setDefer(bool b);
+
+    bool shouldResumeParsing()
+    {
+        return m_shouldResumeParsing;
+    }
+    void setShouldResumeParsing(bool b)
+    {
+        m_shouldResumeParsing = b;
+    }
 
     virtual void didCharacterDataModified(String* before,
                                           String* after) override;
@@ -109,6 +119,7 @@ protected:
     bool m_isAlreadyStarted;
     bool m_isParserInserted;
     bool m_didScriptExecuted;
+    bool m_shouldResumeParsing;
 };
 }
 
