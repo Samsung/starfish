@@ -313,6 +313,7 @@ public:
         Canvas* canvas, StackingContext* sCtx, FrameBox* owner,
         const StackingContext::PaintingStackingContextContext& ctx)
         : m_canvas(canvas)
+        , m_ownerContext(sCtx)
     {
         canvas->save();
 
@@ -524,9 +525,11 @@ public:
     ~CanvasStateRestorer()
     {
         m_canvas->restore();
+        m_ownerContext->ancestorsThatHasFilters().clear();
     }
 
     Canvas* m_canvas;
+    StackingContext* m_ownerContext;
 };
 
 class CompositorStateRestorer {
@@ -1015,6 +1018,9 @@ public:
         , m_nativeImageToApplyFilter(nullptr)
         , m_canvasToApplyFilter(nullptr)
     {
+#ifndef NDEBUG
+        STARFISH_LOG_INFO("Begin FilterContext\n");
+#endif
         auto style = m_ownerStackingContext->owner()->style();
 
         Length standardDeviation;
@@ -1076,21 +1082,9 @@ public:
 
     ~FilterContext()
     {
-        applyAllFilter();
-
-        if (!m_ownerStackingContext->needsGraphicsBuffer()) {
-            Unit::Rect rect(0, 0, m_nativeImageToApplyFilter->width(),
-                            m_nativeImageToApplyFilter->height());
-            float offset = ceil(m_maxRadiusOffset / 2);
-
-            m_originCanvas->translate(-offset, -offset);
-            m_originCanvas->drawImage(m_nativeImageToApplyFilter, rect);
-            m_originCanvas->translate(offset, offset);
-
-            delete m_nativeImageToApplyFilter;
-            delete m_canvasToApplyFilter;
-            (*m_origin) = m_originCanvas;
-        }
+#ifndef NDEBUG
+        STARFISH_LOG_INFO("End FilterContext\n");
+#endif
     }
 
     void changeCurrentCanvasToOriginal()
@@ -1105,10 +1099,8 @@ public:
         }
     }
 
-private:
     void applyAllFilter()
     {
-        auto style = m_ownerStackingContext->owner()->style();
         auto starFish = m_ownerStackingContext->owner()->node()->starFish();
 
         uint8_t* buffer;
@@ -1127,6 +1119,7 @@ private:
             stride = m_nativeImageToApplyFilter->stride();
         }
 
+        auto style = m_ownerStackingContext->owner()->style();
         if (style->hasAvailableFilter()) {
             for (auto filter : *style->filter()) {
                 filter->apply(starFish, buffer, width, height, stride);
@@ -1135,13 +1128,28 @@ private:
 
         for (auto ancestor :
              m_ownerStackingContext->ancestorsThatHasFilters()) {
-            auto s = ancestor->owner()->style();
+            style = ancestor->owner()->style();
             for (auto filter : *style->filter()) {
                 filter->apply(starFish, buffer, width, height, stride);
             }
         }
+
+        if (!m_ownerStackingContext->needsGraphicsBuffer()) {
+            Unit::Rect rect(0, 0, m_nativeImageToApplyFilter->width(),
+                            m_nativeImageToApplyFilter->height());
+            float offset = ceil(m_maxRadiusOffset / 2);
+
+            m_originCanvas->translate(-offset, -offset);
+            m_originCanvas->drawImage(m_nativeImageToApplyFilter, rect);
+            m_originCanvas->translate(offset, offset);
+
+            delete m_nativeImageToApplyFilter;
+            delete m_canvasToApplyFilter;
+            (*m_origin) = m_originCanvas;
+        }
     }
 
+private:
     Canvas** m_origin;
     Canvas* m_originCanvas;
     StackingContext* m_ownerStackingContext;
@@ -1378,9 +1386,10 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     if (!canRejectPainting) {
         if (owner()->style()->hasAvailableFilter() ||
             m_ancestorsThatHasFilters.size()) {
-#ifdef STARFISH_ENABLE_CSS_FILTER
+#ifndef PORT_CANVAS_BACKEND_EFL
             FilterContext filterContext(&canvas, this);
             m_owner->paintBackgroundAndBorders(canvas);
+            filterContext.applyAllFilter();
 #endif
         } else {
             m_owner->paintBackgroundAndBorders(canvas);
@@ -1457,6 +1466,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 #ifndef PORT_CANVAS_BACKEND_EFL
             FilterContext filterContext(&canvas, this);
             m_owner->paintStackingContextContent(canvas);
+            filterContext.applyAllFilter();
 #endif
         } else {
             m_owner->paintStackingContextContent(canvas);

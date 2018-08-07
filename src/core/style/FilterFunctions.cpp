@@ -104,9 +104,9 @@ CSSFilterFunction* BlurFilterFunction::toCSSFilterFunction() const
 void BlurFilterFunction::apply(StarFish* starfish, uint8_t* buffer,
                                size_t width, size_t height, size_t stride) const
 {
-    float sigma = m_stdDeviation.numberData();
+    float sigma = m_stdDeviation.numberData() * 2;
 
-    int extraHeight = 3 * (sigma * 0.5f);
+    int extraHeight = 3 * (m_stdDeviation.numberData());
     int numberOfThreadsToRequest =
         (width * height) / (100 * 100 + extraHeight * width);
     struct Params {
@@ -121,7 +121,7 @@ void BlurFilterFunction::apply(StarFish* starfish, uint8_t* buffer,
         auto params = (Params*)data;
         ShadowBlur blur(params->fragmentedBuffer, params->width, params->height,
                         params->stride);
-        blur.process(params->sigma * 2);
+        blur.process(params->sigma);
         return nullptr;
     };
 
@@ -177,6 +177,10 @@ void BlurFilterFunction::apply(StarFish* starfish, uint8_t* buffer,
                    params.fragmentedBuffer + sourceOffset, size);
             delete[] params.fragmentedBuffer;
         }
+    } else {
+        // Fallback
+        ShadowBlur blur(buffer, width, height, stride);
+        blur.process(sigma);
     }
 
     return;

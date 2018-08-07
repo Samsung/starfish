@@ -31,7 +31,10 @@ static int numberOfCores()
 {
     int ret = 1;
     long sysconfResult = sysconf(_SC_NPROCESSORS_ONLN);
-    ret = sysconfResult < 0 ? 1 : static_cast<int>(sysconfResult);
+
+    if (sysconfResult > 0) {
+        ret = static_cast<int>(sysconfResult);
+    }
     return ret;
 }
 
