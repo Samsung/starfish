@@ -280,11 +280,10 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 for (size_t i = 0; i < ps->preloadedJS().size(); i++) {
                     Resource* res = ps->preloadedJS()[i];
                     if (*res->url() == *rurl) {
+                        setShouldResumeParsing(!forceSync);
                         if (res->isReceiving()) {
-                            bool shouldResumeParsing =
-                                inParser && !forceSync && !async();
                             res->addResourceClient(new ScriptDownloadClient(
-                                this, res, shouldResumeParsing));
+                                this, res, shouldResumeParsing()));
                             res->addResourceClient(
                                 new ElementResourceClient(this, res, true));
                             return true;
@@ -292,9 +291,11 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                             webView()->starFish()->messageLoop()->addIdler(
                                 document()->browsingContext(),
                                 [](size_t id, void* res, void* self) {
+                                    HTMLScriptElement* scriptElement =
+                                        (HTMLScriptElement*)self;
                                     ScriptDownloadClient download(
-                                        (HTMLScriptElement*)self,
-                                        (Resource*)res, true);
+                                        scriptElement, (Resource*)res,
+                                        scriptElement->shouldResumeParsing());
                                     download.didLoadFinished();
                                     ElementResourceClient onload(
                                         (HTMLScriptElement*)self,
@@ -318,9 +319,9 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 res->addResourceClient(
                     new DeferredScriptDownloadClient(this, res));
             } else {
-                bool shouldResumeParsing = inParser && !forceSync && !async();
+                setShouldResumeParsing(inParser && !forceSync && !async());
                 res->addResourceClient(
-                    new ScriptDownloadClient(this, res, shouldResumeParsing));
+                    new ScriptDownloadClient(this, res, shouldResumeParsing()));
             }
             res->addResourceClient(new ElementResourceClient(this, res, true));
             res->request(forceSync
