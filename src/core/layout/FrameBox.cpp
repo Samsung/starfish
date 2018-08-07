@@ -1710,51 +1710,62 @@ void FrameBox::paintDottedLine(Canvas* canvas, const LayoutLocation& p1,
                                const LayoutLocation& p5,
                                const LayoutLocation& p6, BoxSide side)
 {
-    // This is chromium's style for dotted.
-    double squares[] = { 1.0, 1.0 };
-    int nsquare = sizeof(squares) / sizeof(squares[0]);
-    double offset = 0.0;
-
     LayoutUnit x1, x2, y1, y2;
     LayoutUnit width;
     if (side == TopSide) {
         width = borderTop();
-        x1 = p2.x();
-        y1 = p2.y() + width / 2;
-        x2 = p4.x();
-        y2 = p4.y() + width / 2;
+        x1 = p1.x() + width / 2;
+        y1 = p1.y() + width / 2;
+        x2 = p5.x() - width / 2;
+        y2 = p5.y() + width / 2;
     } else if (side == RightSide) {
         width = borderRight();
-        x1 = p2.x() - width / 2;
-        y1 = p2.y();
-        x2 = p4.x() - width / 2;
-        y2 = p4.y();
+        x1 = p1.x() - width / 2;
+        y1 = p1.y() + width / 2;
+        x2 = p5.x() - width / 2;
+        y2 = p5.y() - width / 2;
     } else if (side == BottomSide) {
         width = borderBottom();
-        x1 = p2.x();
-        y1 = p2.y() - width / 2;
-        x2 = p4.x();
-        y2 = p4.y() - width / 2;
+        x1 = p1.x() + width / 2;
+        y1 = p1.y() - width / 2;
+        x2 = p5.x() - width / 2;
+        y2 = p5.y() - width / 2;
     } else {
         width = borderLeft();
-        x1 = p2.x() + width / 2;
-        y1 = p2.y();
-        x2 = p4.x() + width / 2;
-        y2 = p4.y();
+        x1 = p1.x() + width / 2;
+        y1 = p1.y() + width / 2;
+        x2 = p5.x() + width / 2;
+        y2 = p5.y() - width / 2;
     }
 
-    squares[0] *= width.toDouble();
-    squares[1] *= width.toDouble();
+    LayoutUnit dist =
+        sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) - (width * 2.0f);
+    LayoutUnit numberOf = dist / (width * 2);
 
-    canvas->drawRect(p1, p2, p3, p3);
+    size_t interval = numberOf.toDouble();
+    if (dist < width) {
+        interval = 0;
+    }
+
+    if (dist + (width * 2.0f) < width) {
+        return;
+    }
+    interval += 1;
+
     canvas->save();
-    canvas->setDash(squares, nsquare, offset);
-    canvas->setStrokeWidth(width.toFloat());
-    canvas->moveTo(x1.toDouble(), y1.toDouble());
-    canvas->lineTo(x2.toDouble(), y2.toDouble());
-    canvas->stroke();
+
+    LayoutUnit x, y;
+
+    double ratio = 0.0f;
+    for (size_t i = 0; i <= interval; i++) {
+        x = (1.0f - ratio) * x1 + ratio * x2;
+        y = (1.0f - ratio) * y1 + ratio * y2;
+        canvas->arc(x, y, width / 2, 0.0, 2 * M_PI);
+        canvas->fill();
+        ratio += (1.0f / interval);
+    }
+
     canvas->restore();
-    canvas->drawRect(p4, p5, p6, p6);
 }
 
 void FrameBox::paintDashedLine(Canvas* canvas, const LayoutLocation& p1,
