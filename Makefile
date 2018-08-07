@@ -1110,38 +1110,45 @@ web_platform_test_new_css_css21_cairo:
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part5.res cairo -p$(TEST_NPROCS)
 #	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css21_dev_basic.res basic -p$(TEST_NPROCS)
 
-web_platform_test_new_css_mediaqueries_cairo:
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_mediaqueries-3_dev.res cairo -p$(TEST_NPROCS)
-
-web_platform_test_new_css_selectors_cairo:
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_selectors-3_dev_pixel.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_selectors-3_dev_basic.res basic -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_selectors-4_dev_pixel.res cairo -p$(TEST_NPROCS)
-#	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_selectors-4_dev_basic.res basic -p$(TEST_NPROCS)
-
 web_platform_test_new_css_backgrounds_cairo:
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_background-3_dev.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_background-3_dev_basic.res cairo -p$(TEST_NPROCS)
 
 web_platform_test_new_css_color_cairo:
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_background-3_dev_basic.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css-color-3_dev.res cairo -p$(TEST_NPROCS)
-
-web_platform_test_new_cssom_view_cairo:
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_cssom-view-1_dev_basic.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css-color-3_dev_basic.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css-color-4_dev_pixel.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css-color-4_dev_basic.res cairo -p$(TEST_NPROCS)
 
 web_platform_test_new_css_flexbox_cairo:
 	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css-flexbox-1_dev.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css-flexbox-1_dev_basic.res basic -p$(TEST_NPROCS)
 
+web_platform_test_new_cssom_view_cairo:
+	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_cssom-view-1_dev_basic.res cairo -p$(TEST_NPROCS)
+
+web_platform_test_new_css_transforms_cairo:
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css-transforms-1_dev_pixel.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css-transforms-1_dev_basic.res basic -p$(TEST_NPROCS)
+
+web_platform_test_new_mediaqueries_cairo:
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_mediaqueries-3_dev.res cairo -p$(TEST_NPROCS)
+
+web_platform_test_new_selectors_cairo:
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_selectors-3_dev_pixel.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_selectors-3_dev_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_selectors-4_dev_pixel.res cairo -p$(TEST_NPROCS)
+#	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_selectors-4_dev_basic.res basic -p$(TEST_NPROCS)
+
 web_platform_test_new_css_all_cairo:
 	make web_platform_test_new_css_css21_cairo
-	make web_platform_test_new_css_mediaqueries_cairo
-	make web_platform_test_new_css_selectors_cairo
 	make web_platform_test_new_css_backgrounds_cairo
 	make web_platform_test_new_css_color_cairo
-	make web_platform_test_new_cssom_view_cairo
 	make web_platform_test_new_css_flexbox_cairo
+	make web_platform_test_new_cssom_view_cairo
+	make web_platform_test_new_css_transforms_cairo
+	make web_platform_test_new_mediaqueries_cairo
+	make web_platform_test_new_selectors_cairo
 
 web_platform_test_new_others_cairo:
 	./tool/drivers/run_test.py multi_basic test_new/tc_list/html/wpt_html_dev.res basic -p$(TEST_NPROCS)
