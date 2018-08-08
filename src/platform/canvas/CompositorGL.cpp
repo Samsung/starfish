@@ -599,7 +599,9 @@ public:
             "}";
 
         GLchar texFragmentSource[] =
-            "precision mediump float;\n"
+            "#ifdef GL_ES\n"
+            "  precision mediump float;\n"
+            "#endif\n"
             "uniform sampler2D uTexture;\n"
             "varying vec2 vTexPos;\n"
             "void main(void)\n"
@@ -663,7 +665,9 @@ public:
             "}";
 
         GLchar texWithAlphaFragmentSource[] =
-            "precision mediump float;\n"
+            "#ifdef GL_ES\n"
+            "  precision mediump float;\n"
+            "#endif\n"
             "uniform sampler2D uTexture;\n"
             "varying vec2 vTexPos;\n"
             "varying float vAlpha;\n"
@@ -723,7 +727,9 @@ public:
             "}";
 
         GLchar rectFragmentSource[] =
-            "precision mediump float;\n"
+            "#ifdef GL_ES\n"
+            "  precision mediump float;\n"
+            "#endif\n"
             "varying float vR;\n"
             "varying float vG;\n"
             "varying float vB;\n"
