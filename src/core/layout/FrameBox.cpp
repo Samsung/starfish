@@ -1739,7 +1739,8 @@ void FrameBox::paintDottedLine(Canvas* canvas, const LayoutLocation& p1,
     }
 
     LayoutUnit dist =
-        sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) - (width * 2.0f);
+        sqrt(float((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1))) -
+        (float(width * 2.0f));
     LayoutUnit numberOf = dist / (width * 2);
 
     size_t interval = numberOf.toDouble();
