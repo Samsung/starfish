@@ -656,8 +656,8 @@ public:
             "attribute vec2 aPosition;\n"
             "attribute vec2 aTexPos;\n"
             "varying vec2 vTexPos;\n"
-            "uniform float uAlpha;\n"
-            "varying float vAlpha;\n"
+            "uniform vec4 uAlpha;\n"
+            "varying vec4 vAlpha;\n"
             "void main() {\n"
             "  vTexPos = aTexPos;\n"
             "  vAlpha = uAlpha;\n"
@@ -670,14 +670,10 @@ public:
             "#endif\n"
             "uniform sampler2D uTexture;\n"
             "varying vec2 vTexPos;\n"
-            "varying float vAlpha;\n"
+            "varying vec4 vAlpha;\n"
             "void main(void)\n"
             "{\n"
-            "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
-            "  gl_FragColor.a *= vAlpha;\n"
-            "  gl_FragColor.r *= vAlpha;\n"
-            "  gl_FragColor.g *= vAlpha;\n"
-            "  gl_FragColor.b *= vAlpha;\n"
+            "  gl_FragColor = texture2D(uTexture, vTexPos) * vAlpha;\n"
             "}";
 
         texWithAlphaVertexShader =
@@ -710,19 +706,10 @@ public:
         GLchar rectVertexSource[] =
             "uniform mat4 uScreen;\n"
             "attribute vec2 aPosition;\n"
-            "uniform float uR;\n"
-            "varying float vR;\n"
-            "uniform float uG;\n"
-            "varying float vG;\n"
-            "uniform float uB;\n"
-            "varying float vB;\n"
-            "uniform float uA;\n"
-            "varying float vA;\n"
+            "uniform vec4 uColor;\n"
+            "varying vec4 vColor;\n"
             "void main() {\n"
-            "  vR = uR;\n"
-            "  vG = uG;\n"
-            "  vB = uB;\n"
-            "  vA = uA;\n"
+            "  vColor = uColor;\n"
             "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
             "}";
 
@@ -730,16 +717,10 @@ public:
             "#ifdef GL_ES\n"
             "  precision mediump float;\n"
             "#endif\n"
-            "varying float vR;\n"
-            "varying float vG;\n"
-            "varying float vB;\n"
-            "varying float vA;\n"
+            "varying vec4 vColor;\n"
             "void main(void)\n"
             "{\n"
-            "  gl_FragColor.a = vA;\n"
-            "  gl_FragColor.r = vR;\n"
-            "  gl_FragColor.g = vG;\n"
-            "  gl_FragColor.b = vB;\n"
+            "  gl_FragColor = vColor;\n"
             "}";
 
         rectVertexShader = loadShader(GL_VERTEX_SHADER, rectVertexSource);
@@ -945,16 +926,14 @@ public:
                                           &data[0]);
                     glEnableVertexAttribArray(aPosition);
 
-                    auto uA = glGetUniformLocation(rectShaderProgram, "uA");
-                    auto uR = glGetUniformLocation(rectShaderProgram, "uR");
-                    auto uG = glGetUniformLocation(rectShaderProgram, "uG");
-                    auto uB = glGetUniformLocation(rectShaderProgram, "uB");
+                    auto uColor =
+                        glGetUniformLocation(rectShaderProgram, "uColor");
                     float a = m_state.back().opacity;
 
-                    glUniform1f(uA, a * m_state.back().color.A());
-                    glUniform1f(uR, a * m_state.back().color.R());
-                    glUniform1f(uG, a * m_state.back().color.G());
-                    glUniform1f(uB, a * m_state.back().color.B());
+                    glUniform4f(uColor, a * Unit::Color(255, 255, 255, 255).R(),
+                                a * Unit::Color(255, 255, 255, 255).G(),
+                                a * Unit::Color(255, 255, 255, 255).B(),
+                                a * Unit::Color(255, 255, 255, 255).A());
 
                     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
                     checkError();
@@ -993,20 +972,15 @@ public:
                                               trianglePoints);
                         glEnableVertexAttribArray(aPosition);
 
-                        auto uA = glGetUniformLocation(rectShaderProgram, "uA");
-                        auto uR = glGetUniformLocation(rectShaderProgram, "uR");
-                        auto uG = glGetUniformLocation(rectShaderProgram, "uG");
-                        auto uB = glGetUniformLocation(rectShaderProgram, "uB");
+                        auto uColor =
+                            glGetUniformLocation(rectShaderProgram, "uColor");
                         float a = 1;
 
-                        glUniform1f(uA,
+                        glUniform4f(uColor,
+                                    a * Unit::Color(255, 255, 255, 255).R(),
+                                    a * Unit::Color(255, 255, 255, 255).G(),
+                                    a * Unit::Color(255, 255, 255, 255).B(),
                                     a * Unit::Color(255, 255, 255, 255).A());
-                        glUniform1f(uR,
-                                    a * Unit::Color(255, 255, 255, 255).R());
-                        glUniform1f(uG,
-                                    a * Unit::Color(255, 255, 255, 255).G());
-                        glUniform1f(uB,
-                                    a * Unit::Color(255, 255, 255, 255).B());
 
                         glDrawArrays(GL_TRIANGLES, 0, 3);
                         checkError();
@@ -1031,16 +1005,13 @@ public:
             glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0, &data[0]);
             glEnableVertexAttribArray(aPosition);
 
-            auto uA = glGetUniformLocation(rectShaderProgram, "uA");
-            auto uR = glGetUniformLocation(rectShaderProgram, "uR");
-            auto uG = glGetUniformLocation(rectShaderProgram, "uG");
-            auto uB = glGetUniformLocation(rectShaderProgram, "uB");
+            auto uColor = glGetUniformLocation(rectShaderProgram, "uColor");
             float a = m_state.back().opacity;
 
-            glUniform1f(uA, a * m_state.back().color.A());
-            glUniform1f(uR, a * m_state.back().color.R());
-            glUniform1f(uG, a * m_state.back().color.G());
-            glUniform1f(uB, a * m_state.back().color.B());
+            glUniform4f(uColor, a * Unit::Color(255, 255, 255, 255).R(),
+                        a * Unit::Color(255, 255, 255, 255).G(),
+                        a * Unit::Color(255, 255, 255, 255).B(),
+                        a * Unit::Color(255, 255, 255, 255).A());
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             checkError();
@@ -1174,7 +1145,7 @@ public:
                 glGetUniformLocation(texWithAlphaShaderProgram, "uTexture");
             auto uAlpha =
                 glGetUniformLocation(texWithAlphaShaderProgram, "uAlpha");
-            glUniform1f(uAlpha, a);
+            glUniform4f(uAlpha, a, a, a, a);
             glUniform1i(uTexture, 0);
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1296,17 +1267,13 @@ public:
                                           trianglePoints);
                     glEnableVertexAttribArray(aPosition);
 
-                    auto uA = glGetUniformLocation(rectShaderProgram, "uA");
-                    auto uR = glGetUniformLocation(rectShaderProgram, "uR");
-                    auto uG = glGetUniformLocation(rectShaderProgram, "uG");
-                    auto uB = glGetUniformLocation(rectShaderProgram, "uB");
+                    auto uColor =
+                        glGetUniformLocation(rectShaderProgram, "uColor");
                     float a = 1;
-
-                    glUniform1f(uA, a * Unit::Color(255, 255, 255, 255).A());
-                    glUniform1f(uR, a * Unit::Color(255, 255, 255, 255).R());
-                    glUniform1f(uG, a * Unit::Color(255, 255, 255, 255).G());
-                    glUniform1f(uB, a * Unit::Color(255, 255, 255, 255).B());
-
+                    glUniform4f(uColor, a * Unit::Color(255, 255, 255, 255).R(),
+                                a * Unit::Color(255, 255, 255, 255).G(),
+                                a * Unit::Color(255, 255, 255, 255).B(),
+                                a * Unit::Color(255, 255, 255, 255).A());
                     glDrawArrays(GL_TRIANGLES, 0, 3);
                     checkError();
 
