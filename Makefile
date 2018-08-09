@@ -1089,7 +1089,7 @@ reftest_all_cairo:
 	make web_platform_test_all_cairo
 	make vendor_test_all_cairo
 	make csswg_test_all_cairo
-	make web_platform_test_new_all_cairo
+	make wpt_all_cairo
 
 bidi_test_cairo:
 	./tool/drivers/run_test.py bidi tool/reftest/cairo/bidi.res cairo --font-dep -p$(TEST_NPROCS)
@@ -1102,66 +1102,62 @@ react_test:
 # Test-new Cairo backend
 ################################################################################
 
-web_platform_test_new_css_css21_cairo:
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part1.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part2.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part3.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part4.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css21_dev_pixel_part5.res cairo -p$(TEST_NPROCS)
-#	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css21_dev_basic.res basic -p$(TEST_NPROCS)
+wpt_css_css21_cairo:
+#	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css21_dev_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_pixel.res cairo -p$(TEST_NPROCS)
 
-web_platform_test_new_css_backgrounds_cairo:
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_background-3_dev.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_background-3_dev_basic.res cairo -p$(TEST_NPROCS)
+wpt_css_backgrounds_cairo:
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_basic.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_pixel.res cairo -p$(TEST_NPROCS)
 
-web_platform_test_new_css_color_cairo:
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css-color-3_dev.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css-color-3_dev_basic.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css-color-4_dev_pixel.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css-color-4_dev_basic.res cairo -p$(TEST_NPROCS)
+wpt_css_color_cairo:
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-4_dev_pixel.res cairo -p$(TEST_NPROCS)
 
-web_platform_test_new_css_flexbox_cairo:
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css-flexbox-1_dev.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css-flexbox-1_dev_basic.res basic -p$(TEST_NPROCS)
+wpt_css_flexbox_cairo:
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-flexbox-1_dev_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-flexbox-1_dev_pixel.res cairo -p$(TEST_NPROCS)
 
-web_platform_test_new_cssom_view_cairo:
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_cssom-view-1_dev_basic.res cairo -p$(TEST_NPROCS)
+wpt_cssom_view_cairo:
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_cssom-view-1_dev_basic.res cairo -p$(TEST_NPROCS)
 
-web_platform_test_new_css_transforms_cairo:
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_css-transforms-1_dev_pixel.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_css-transforms-1_dev_basic.res basic -p$(TEST_NPROCS)
+wpt_css_transforms_cairo:
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-transforms-1_dev_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_pixel.res cairo -p$(TEST_NPROCS)
 
-web_platform_test_new_mediaqueries_cairo:
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_mediaqueries-3_dev.res cairo -p$(TEST_NPROCS)
+wpt_mediaqueries_cairo:
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_mediaqueries-3_dev_pixel.res cairo -p$(TEST_NPROCS)
 
-web_platform_test_new_selectors_cairo:
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_selectors-3_dev_pixel.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_selectors-3_dev_basic.res basic -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py csswg test_new/tc_list/css/wpt_css_selectors-4_dev_pixel.res cairo -p$(TEST_NPROCS)
-#	./tool/drivers/run_test.py multi_basic test_new/tc_list/css/wpt_css_selectors-4_dev_basic.res basic -p$(TEST_NPROCS)
+wpt_selectors_cairo:
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-3_dev_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-3_dev_pixel.res cairo -p$(TEST_NPROCS)
+#	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-4_dev_pixel.res cairo -p$(TEST_NPROCS)
 
-web_platform_test_new_css_all_cairo:
-	make web_platform_test_new_css_css21_cairo
-	make web_platform_test_new_css_backgrounds_cairo
-	make web_platform_test_new_css_color_cairo
-	make web_platform_test_new_css_flexbox_cairo
-	make web_platform_test_new_cssom_view_cairo
-	make web_platform_test_new_css_transforms_cairo
-	make web_platform_test_new_mediaqueries_cairo
-	make web_platform_test_new_selectors_cairo
+wpt_css_all_cairo:
+	make wpt_css_css21_cairo
+	make wpt_css_backgrounds_cairo
+	make wpt_css_color_cairo
+	make wpt_css_flexbox_cairo
+	make wpt_cssom_view_cairo
+	make wpt_css_transforms_cairo
+	make wpt_mediaqueries_cairo
+	make wpt_selectors_cairo
 
-web_platform_test_new_others_cairo:
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/html/wpt_html_dev.res basic -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py csswg_with_remote test_new/tc_list/html/wpt_html_dev_pixel.res cairo -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/dom/wpt_dom_basic.res basic -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/domparsing/wpt_dom_parsing_basic.res basic -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/xhr/wpt_xhr.basic.res basic -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic test_new/tc_list/page-visibility/wpt_page_visibility.res basic -p$(TEST_NPROCS)
-#	./tool/drivers/run_test.py multi_basic test_new/tc_list/domxpath/wpt_dom_xpath_basic.res basic -p$(TEST_NPROCS)
+wpt_others_cairo:
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/html_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg_with_remote tool/reftest/cairo/wpt/html_pixel.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_parsing_basic.res basic -p$(TEST_NPROCS)
+#	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_xpath_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/page_visibility_basic.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/xhr_basic.res basic -p$(TEST_NPROCS)
 
-web_platform_test_new_all_cairo:
-	make web_platform_test_new_css_all_cairo
-	make web_platform_test_new_others_cairo
+wpt_all_cairo:
+	make wpt_css_all_cairo
+	make wpt_others_cairo
 
 ################################################################################
 
