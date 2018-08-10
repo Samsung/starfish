@@ -146,8 +146,8 @@ public:
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = true;
 
-        initFromBuffer(data->data(), data->bufferWidth(), data->bufferHeight(),
-                       data->bufferStride());
+        initFromBuffer(data->mapBuffer(), data->bufferWidth(),
+                       data->bufferHeight(), data->bufferStride());
 
         save();
     }
@@ -659,7 +659,7 @@ public:
             return;
         }
 
-        auto pixels = data->data();
+        auto pixels = data->mapBuffer();
         auto w = data->imageWidth();
         auto h = data->imageHeight();
 
@@ -674,6 +674,8 @@ public:
             bitmap, SkIRect::MakeWH(w, h),
             SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
             &paint);
+
+        data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,

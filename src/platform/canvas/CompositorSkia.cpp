@@ -249,8 +249,9 @@ public:
         SkBitmap bitmap;
         bitmap.installPixels(
             SkImageInfo::MakeN32Premul(data->imageWidth(), data->imageHeight()),
-            data->data(), data->bufferStride());
+            data->mapBuffer(), data->bufferStride());
         drawImageSkia(&bitmap, dst, data->imageWidth(), data->imageHeight());
+        data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

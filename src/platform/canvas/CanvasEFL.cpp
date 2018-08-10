@@ -1644,6 +1644,8 @@ public:
         float ww = sss.width();
         float hh = sss.height();
 
+        auto dataBuf = data->mapBuffer();
+
         Evas_Object* eo =
             (Evas_Object*)data->textureInfo().fragments[0].textureID;
         if (!eo) {
@@ -1655,7 +1657,7 @@ public:
             evas_object_anti_alias_set(eo, EINA_TRUE);
             evas_object_image_size_set(eo, data->bufferWidth(),
                                        data->bufferHeight());
-            evas_object_image_data_set(eo, data->data());
+            evas_object_image_data_set(eo, dataBuf);
             if (m_objList) {
                 m_objList->push_back(eo);
             }
@@ -1671,6 +1673,7 @@ public:
         evas_object_show(eo);
         if (isVideoSurface) {
             restore();
+            data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
             return;
         }
 
@@ -1694,7 +1697,7 @@ public:
             size_t h = data->imageHeight();
             size_t w = data->imageWidth();
             size_t st = data->bufferStride();
-            uint8_t* ptr = data->data();
+            uint8_t* ptr = dataBuf;
             uint8_t* dst = (uint8_t*)evas_object_image_data_get(eo, EINA_TRUE);
             size_t dstSt = evas_object_image_stride_get(eo);
             for (size_t y = 0; y < h; y++) {
@@ -1848,6 +1851,7 @@ public:
         evas_map_free(map);
 
         restore();
+        data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

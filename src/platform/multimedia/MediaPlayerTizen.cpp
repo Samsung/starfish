@@ -440,7 +440,7 @@ public:
         return info;
     }
 
-    virtual uint8_t* data()
+    virtual uint8_t* mapBuffer()
     {
         return m_buffer;
     }

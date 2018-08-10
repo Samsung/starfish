@@ -336,12 +336,13 @@ public:
     {
         cairo_surface_t* image;
         image = cairo_image_surface_create_for_data(
-            (unsigned char*)data->data(), CAIRO_FORMAT_ARGB32,
+            (unsigned char*)data->mapBuffer(), CAIRO_FORMAT_ARGB32,
             data->imageWidth(), data->imageHeight(), data->bufferStride());
         checkError();
         drawImageCairo(image, dst, data->imageWidth(), data->imageHeight(),
                        true);
         cairo_surface_destroy(image);
+        data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
     }
 
     virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,

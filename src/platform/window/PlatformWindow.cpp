@@ -136,7 +136,7 @@ public:
         STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
     }
 
-    virtual uint8_t* data()
+    virtual uint8_t* mapBuffer()
     {
         return m_buffer;
     }
