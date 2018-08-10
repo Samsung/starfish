@@ -97,6 +97,7 @@ static PlatformWindow* g_currentWnd = nullptr;
 static void* g_focusedWin = nullptr;
 
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
+Evas_GL* g_evaslGL;
 Evas_GL_API* g_evasGLAPI;
 #endif
 
@@ -450,6 +451,7 @@ public:
     {
         evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
         g_evasGLAPI = m_glGlapi;
+        g_evaslGL = m_glEvasgl;
     }
 #endif
 
@@ -463,7 +465,7 @@ public:
             glMakeCurrent();
             if (webView()->didCompositeBefore()) {
             } else {
-                m_glPaintingSurface->notifyUpdateRegion(
+                m_glPaintingSurface->unMapBufferAndNotifyUpdateRegion(
                     (int)ret.updateRect.x(), (int)ret.updateRect.y(),
                     (int)ret.updateRect.width(), (int)ret.updateRect.height());
                 float oldDPR = m_starFish->screenInfo().devicePixelRatio;
@@ -640,7 +642,8 @@ public:
                                        NULL, NULL, NULL);
     }
 
-    virtual void notifyUpdateRegion(size_t x, size_t y, size_t w, size_t h)
+    virtual void unMapBufferAndNotifyUpdateRegion(size_t x, size_t y, size_t w,
+                                                  size_t h)
     {
         evas_object_image_data_update_add(m_image, x, y, w, h);
     }
@@ -665,7 +668,7 @@ public:
         evas_object_del(image);
     }
 
-    virtual uint8_t* data()
+    virtual uint8_t* mapBuffer()
     {
         void* address = evas_object_image_data_get(m_image, EINA_TRUE);
         STARFISH_ASSERT(address);
@@ -1135,6 +1138,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             wnd->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                                     GL_STENCIL_BUFFER_BIT);
             wnd->m_glGlapi->glFlush();
+
+            wnd->m_canRendering = true;
 
             STARFISH_LOG_INFO("gl version info\n");
             STARFISH_LOG_INFO("%s\n",
@@ -1808,14 +1813,15 @@ void WindowImplEFL::setNeedsRendering()
     WindowImplEFL* wnd = this;
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
     evas_object_image_pixels_dirty_set(wnd->m_glAdpater, EINA_TRUE);
-    evas_object_image_pixels_get_callback_set(m_glAdpater,
-                                              [](void* data, Evas_Object* o) {
-                                                  WindowImplEFL* wnd =
-                                                      (WindowImplEFL*)data;
-                                                  wnd->glMakeCurrent();
-                                                  wnd->rendering();
-                                              },
-                                              this);
+    evas_object_image_pixels_get_callback_set(
+        m_glAdpater,
+        [](void* data, Evas_Object* o) {
+            WindowImplEFL* wnd = (WindowImplEFL*)data;
+            StarFishEnterer enter(wnd->starFish());
+            wnd->glMakeCurrent();
+            wnd->rendering();
+        },
+        this);
 #else
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
@@ -1975,14 +1981,6 @@ Canvas* WindowImplEFL::preparePainting()
                 this, width() / starFish()->screenInfo().devicePixelRatio,
                 height() / starFish()->screenInfo().devicePixelRatio);
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
-            STARFISH_LOG_INFO(
-                "WindowImplEFL::preparePainting buffer info(screen shot) "
-                "%p -> "
-                "%p\n",
-                g_surfaceForScreehShot->data(),
-                g_surfaceForScreehShot->data() +
-                    (g_surfaceForScreehShot->bufferStride() *
-                     g_surfaceForScreehShot->bufferHeight()));
             Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
             return c;
         }
@@ -2203,15 +2201,6 @@ Compositor* WindowImplEFL::prepareCompositor()
                 this, width() / starFish()->screenInfo().devicePixelRatio,
                 height() / starFish()->screenInfo().devicePixelRatio);
 
-            STARFISH_LOG_INFO(
-                "WindowImplEFL::preparePainting buffer info(screen shot) "
-                "%p -> "
-                "%p\n",
-                g_surfaceForScreehShot->data(),
-                g_surfaceForScreehShot->data() +
-                    (g_surfaceForScreehShot->bufferStride() *
-                     g_surfaceForScreehShot->bufferHeight()));
-
             Compositor* c =
                 Compositor::create(starFish(), g_surfaceForScreehShot);
             return c;
@@ -2314,8 +2303,8 @@ void screenShotInRendering(StarFish* starfish, const char* path,
     STARFISH_ASSERT(g_surfaceForScreehShot);
     cairo_surface_t* png_buffer;
     png_buffer = cairo_image_surface_create_for_data(
-        (unsigned char*)g_surfaceForScreehShot->data(), CAIRO_FORMAT_ARGB32,
-        starfish->platformWindow()->width(),
+        (unsigned char*)g_surfaceForScreehShot->mapBuffer(),
+        CAIRO_FORMAT_ARGB32, starfish->platformWindow()->width(),
         starfish->platformWindow()->height(),
         g_surfaceForScreehShot->bufferStride());
 
@@ -2325,6 +2314,7 @@ void screenShotInRendering(StarFish* starfish, const char* path,
     cairo_surface_destroy(png_buffer);
 
     if (g_surfaceForScreehShot) {
+        g_surfaceForScreehShot->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
         g_surfaceForScreehShot->detachNativeBuffer();
         starfish->removePointerFromRootSet(g_surfaceForScreehShot);
     }

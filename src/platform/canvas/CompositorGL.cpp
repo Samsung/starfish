@@ -49,6 +49,14 @@ using Point = std::array<Coord, 2>;
 #include <GLES3/gl3.h>
 #endif
 
+#ifndef GL_TEXTURE_EXTERNAL_OES
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
+#endif
+
+#if defined(STARFISH_TIZEN)
+#include <tbm_surface.h>
+#endif
+
 #if defined(PORT_WINDOW_BACKEND_EFL)
 #define glActiveTexture g_evasGLAPI->glActiveTexture
 #define glAttachShader g_evasGLAPI->glAttachShader
@@ -304,12 +312,14 @@ namespace StarFish {
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
 extern Evas_GL_API* g_evasGLAPI;
+extern Evas_GL* g_evaslGL;
 #endif
 
 static size_t g_totalCanvasSurfaceGLSize;
 static size_t g_textureTileSize = 512;
 static bool g_needsCheckCompatibility = true;
 static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
+static bool g_isSupportExtensionEGLImageExternal = false;
 static size_t g_maxTextureSize;
 
 class CanvasSurfaceGL : public CanvasSurface {
@@ -322,6 +332,11 @@ public:
         m_imageWidth = m_bufferWidth = m_width = -1;
         m_imageHeight = m_bufferHeight = m_height = -1;
         m_buffer = nullptr;
+        m_isEGLImageExternal = false;
+
+#if defined(STARFISH_TIZEN)
+        m_tbmSurface = nullptr;
+#endif
 
         if (g_needsCheckCompatibility) {
             m_window->glMakeCurrent();
@@ -338,9 +353,17 @@ public:
                 major = 2;
             }
 
-            if (major >= 3) { // support ..
+            if (major >= 3) {
                 g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = true;
             }
+
+            g_isSupportExtensionEGLImageExternal =
+                strstr((const char*)glGetString(GL_EXTENSIONS),
+                       "GL_OES_EGL_image_external") != nullptr;
+
+#ifndef STARFISH_TIZEN
+            g_isSupportExtensionEGLImageExternal = false;
+#endif
 
             g_needsCheckCompatibility = false;
             checkError();
@@ -364,8 +387,21 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        if (m_buffer) {
-            m_window->glMakeCurrent();
+        m_window->glMakeCurrent();
+        if (m_isEGLImageExternal && m_textureFragments.size()) {
+#if defined(STARFISH_TIZEN)
+            g_evasGLAPI->evasglDestroyImage(m_eglImage);
+            m_eglImage = nullptr;
+            tbm_surface_destroy(m_tbmSurface);
+            m_tbmSurface = nullptr;
+#endif
+        }
+        if (m_textureFragments.size()) {
+            if (m_isEGLImageExternal) {
+            } else {
+                free(m_buffer);
+            }
+
             for (size_t i = 0; i < m_textureFragments.size(); i++) {
                 GLuint id = m_textureFragments[i].textureID;
                 glDeleteTextures(1, &id);
@@ -376,12 +412,13 @@ public:
             g_totalCanvasSurfaceGLSize -=
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
 
-            free(m_buffer);
             m_buffer = nullptr;
 
             STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
                               g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
         }
+
+        m_isEGLImageExternal = false;
     }
 
     void attachNativeBuffer(size_t w, size_t h)
@@ -403,14 +440,36 @@ public:
                 std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
             m_bufferHeight =
                 std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
-            m_bufferStride = m_bufferWidth * 4;
 
-            m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
-                                              sizeof(uint32_t));
+            if (g_isSupportExtensionEGLImageExternal &&
+                m_bufferWidth <= g_maxTextureSize &&
+                m_bufferHeight <= g_maxTextureSize) {
+                m_isEGLImageExternal = true;
+#if defined(STARFISH_TIZEN)
+                m_tbmSurface = tbm_surface_create(m_bufferWidth, m_bufferHeight,
+                                                  TBM_FORMAT_ABGR8888);
+                tbm_surface_info_s surfaceInfo;
+                tbm_surface_map(m_tbmSurface, TBM_SURF_OPTION_WRITE,
+                                &surfaceInfo);
+
+                STARFISH_RELEASE_ASSERT(surfaceInfo.num_planes == 1);
+                m_bufferStride = surfaceInfo.planes[0].stride;
+                m_buffer = nullptr;
+                tbm_surface_unmap(m_tbmSurface);
+#endif
+            } else {
+                m_isEGLImageExternal = false;
+                m_bufferStride = m_bufferWidth * 4;
+                m_buffer = (unsigned char*)malloc(
+                    m_bufferWidth * m_bufferHeight * sizeof(uint32_t));
+            }
+
             g_totalCanvasSurfaceGLSize +=
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
             STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
                               g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
+
+            ensureGenerateTexture();
         }
     }
 
@@ -442,6 +501,63 @@ public:
     void ensureGenerateTexture()
     {
         m_window->glMakeCurrent();
+
+        STARFISH_RELEASE_ASSERT(m_textureFragments.size() == 0);
+        if (m_isEGLImageExternal) {
+#if defined(STARFISH_TIZEN)
+            CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment fragment;
+            {
+                STARFISH_RELEASE_ASSERT(m_tbmSurface);
+                STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
+                int eglImgAttr[] = { EVAS_GL_IMAGE_PRESERVED, GL_TRUE, 0 };
+                m_eglImage = g_evasGLAPI->evasglCreateImage(
+                    EVAS_GL_NATIVE_SURFACE_TIZEN, (void*)(intptr_t)m_tbmSurface,
+                    eglImgAttr);
+                checkError();
+            }
+            {
+                GLuint textureID;
+                glGenTextures(1, &textureID);
+                glActiveTexture(GL_TEXTURE0);
+
+                glBindTexture(GL_TEXTURE_EXTERNAL_OES, textureID);
+                checkError();
+
+                glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER,
+                                GL_LINEAR);
+                glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER,
+                                GL_LINEAR);
+
+                glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S,
+                                GL_CLAMP_TO_EDGE);
+                glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T,
+                                GL_CLAMP_TO_EDGE);
+
+                checkError();
+
+                g_evasGLAPI->glEvasGLImageTargetTexture2DOES(
+                    GL_TEXTURE_EXTERNAL_OES, m_eglImage);
+                checkError();
+
+                glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
+                checkError();
+
+                fragment.textureID = textureID;
+                fragment.srcX = 0;
+                fragment.srcY = 0;
+                fragment.srcWidth = 1;
+                fragment.srcHeight = 1;
+
+                m_textureFragments.push_back(fragment);
+                FragmentFlags flags;
+                flags.m_isDirty = true;
+                m_textureFragmentsFlags.push_back(flags);
+                m_dirtyAreaTextureFragments.push_back(
+                    Unit::Rect(0, 0, m_bufferWidth, m_bufferHeight));
+            }
+#endif
+            return;
+        }
 
         size_t wTextureCount = ceil((float)m_bufferWidth / g_textureTileSize);
         size_t hTextureCount = ceil((float)m_bufferHeight / g_textureTileSize);
@@ -509,8 +625,22 @@ public:
         }
     }
 
-    virtual uint8_t* data()
+    virtual uint8_t* mapBuffer()
     {
+        if (m_isEGLImageExternal) {
+            if (m_buffer) {
+                return m_buffer;
+            }
+#if defined(STARFISH_TIZEN)
+            tbm_surface_info_s surfaceInfo;
+            tbm_surface_map(m_tbmSurface, TBM_SURF_OPTION_WRITE, &surfaceInfo);
+            STARFISH_RELEASE_ASSERT(surfaceInfo.num_planes == 1);
+            STARFISH_RELEASE_ASSERT(surfaceInfo.planes[0].stride ==
+                                    m_bufferStride);
+            m_buffer = surfaceInfo.planes[0].ptr;
+#endif
+            return m_buffer;
+        }
         return m_buffer;
     }
 
@@ -560,11 +690,19 @@ public:
         memset(m_buffer, 0x00, end);
     }
 
-    virtual void notifyUpdateRegion(size_t dirtyX, size_t dirtyY,
-                                    size_t dirtyWidth, size_t dirtyHeight)
+    virtual void unMapBufferAndNotifyUpdateRegion(size_t dirtyX, size_t dirtyY,
+                                                  size_t dirtyWidth,
+                                                  size_t dirtyHeight) override
     {
         if (m_textureFragments.size() == 0) {
-            ensureGenerateTexture();
+            return;
+        }
+
+        if (m_isEGLImageExternal) {
+#if defined(STARFISH_TIZEN)
+            tbm_surface_unmap(m_tbmSurface);
+#endif
+            m_buffer = nullptr;
             return;
         }
 
@@ -620,9 +758,6 @@ public:
 
     virtual CanvasSurfaceTextureInfo textureInfo()
     {
-        if (m_textureFragments.size() == 0) {
-            ensureGenerateTexture();
-        }
         CanvasSurfaceTextureInfo info;
         info.fragments = std::vector<
             CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>(
@@ -649,6 +784,12 @@ protected:
     };
     GCAtomicVector<FragmentFlags> m_textureFragmentsFlags;
     GCAtomicVector<Unit::Rect> m_dirtyAreaTextureFragments;
+
+    bool m_isEGLImageExternal;
+#if defined(STARFISH_TIZEN)
+    tbm_surface_h m_tbmSurface;
+    EvasGLImage m_eglImage;
+#endif
 };
 
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
@@ -666,18 +807,6 @@ struct CompositorImplGLState {
 
 class CompositorImplGL : public Compositor {
 public:
-    GLuint texShaderProgram;
-    GLuint texVertexShader;
-    GLuint texFragmentShader;
-
-    GLuint texWithAlphaShaderProgram;
-    GLuint texWithAlphaVertexShader;
-    GLuint texWithAlphaFragmentShader;
-
-    GLuint rectShaderProgram;
-    GLuint rectVertexShader;
-    GLuint rectFragmentShader;
-
     GLuint loadShader(GLenum type, const GLchar* shaderSrc)
     {
         GLuint shader;
@@ -838,6 +967,89 @@ public:
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
 
+        if (g_isSupportExtensionEGLImageExternal) {
+            GLchar texFragmentSourceEGLImageExternal[] =
+                "#extension GL_OES_EGL_image_external : require\n"
+                "#ifdef GL_ES\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform samplerExternalOES uTexture;\n"
+                "varying vec2 vTexPos;\n"
+                "void main(void)\n"
+                "{\n"
+                "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
+                "}";
+
+            texFragmentShaderEGLImageExternal = loadShader(
+                GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
+            checkError();
+
+            texShaderProgramEGLImageExternal = glCreateProgram();
+            checkError();
+
+            glAttachShader(texShaderProgramEGLImageExternal, texVertexShader);
+            checkError();
+            glAttachShader(texShaderProgramEGLImageExternal,
+                           texFragmentShaderEGLImageExternal);
+            checkError();
+
+            glLinkProgram(texShaderProgramEGLImageExternal);
+            checkError();
+
+            glUseProgram(texShaderProgramEGLImageExternal);
+            checkError();
+
+            uScreenPos = glGetUniformLocation(texShaderProgramEGLImageExternal,
+                                              "uScreen");
+
+            glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
+            checkError();
+
+            GLchar texWithAlphaFragmentSourceEGLImageExternal[] =
+                "#extension GL_OES_EGL_image_external : require\n"
+                "#ifdef GL_ES\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform samplerExternalOES uTexture;\n"
+                "varying vec2 vTexPos;\n"
+                "varying vec4 vAlpha;\n"
+                "void main(void)\n"
+                "{\n"
+                "  gl_FragColor = texture2D(uTexture, vTexPos) * vAlpha;\n"
+                "}";
+
+            texWithAlphaFragmentShaderEGLImageExternal = loadShader(
+                GL_FRAGMENT_SHADER, texWithAlphaFragmentSourceEGLImageExternal);
+            checkError();
+
+            texWithAlphaShaderProgramEGLImageExternal = glCreateProgram();
+            checkError();
+
+            glAttachShader(texWithAlphaShaderProgramEGLImageExternal,
+                           texWithAlphaVertexShader);
+            checkError();
+            glAttachShader(texWithAlphaShaderProgramEGLImageExternal,
+                           texWithAlphaFragmentShaderEGLImageExternal);
+            checkError();
+
+            glLinkProgram(texWithAlphaShaderProgramEGLImageExternal);
+            checkError();
+
+            glUseProgram(texWithAlphaShaderProgramEGLImageExternal);
+            checkError();
+
+            uScreenPos = glGetUniformLocation(
+                texWithAlphaShaderProgramEGLImageExternal, "uScreen");
+
+            glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
+            checkError();
+        } else {
+            texShaderProgramEGLImageExternal = 0;
+            texFragmentShaderEGLImageExternal = 0;
+            texWithAlphaShaderProgramEGLImageExternal = 0;
+            texWithAlphaFragmentShaderEGLImageExternal = 0;
+        }
+
         GLchar rectVertexSource[] =
             "uniform mat4 uScreen;\n"
             "attribute vec2 aPosition;\n"
@@ -889,6 +1101,22 @@ public:
 
     ~CompositorImplGL()
     {
+        {
+            INSTALL_PROFILE_TIMER(
+                m_starfish,
+                "CompositorImplGL::~CompositorImplGL wait for sync");
+            glFlush();
+        }
+
+        if (g_isSupportExtensionEGLImageExternal) {
+            glDeleteProgram(texShaderProgramEGLImageExternal);
+            glDeleteShader(texFragmentShaderEGLImageExternal);
+            checkError();
+            glDeleteProgram(texWithAlphaShaderProgramEGLImageExternal);
+            glDeleteShader(texWithAlphaFragmentShaderEGLImageExternal);
+            checkError();
+        }
+
         glDeleteProgram(texShaderProgram);
         glDeleteShader(texVertexShader);
         checkError();
@@ -909,10 +1137,6 @@ public:
 
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
-        {
-            INSTALL_PROFILE_TIMER(m_starfish, "glFlush");
-            glFlush();
-        }
     }
 
     virtual void clearColor(const Unit::Color& clr)
@@ -1041,6 +1265,8 @@ public:
         dest[3][0] = pt.x();
         dest[3][1] = pt.y();
 
+        auto currentColor = m_state.back().color;
+
         if (m_state.back().clipPaths.size()) {
             ClipperLib::Paths result = computeClippath(dest);
             if (result.size()) {
@@ -1051,12 +1277,21 @@ public:
                     auto aPosition =
                         glGetAttribLocation(rectShaderProgram, "aPosition");
 
-                    float data[] = {
-                        (float)result[0][0].X, (float)result[0][0].Y,
-                        (float)result[0][1].X, (float)result[0][1].Y,
-                        (float)result[0][2].X, (float)result[0][2].Y,
-                        (float)result[0][3].X, (float)result[0][3].Y
-                    };
+                    float minX = (float)result[0][0].X,
+                          minY = (float)result[0][0].Y,
+                          maxX = (float)result[0][0].X,
+                          maxY = (float)result[0][0].Y;
+
+                    for (size_t i = 1; i < 4; i++) {
+                        minX = std::min((float)result[0][i].X, minX);
+                        minY = std::min((float)result[0][i].Y, minY);
+                        maxX = std::max((float)result[0][i].X, maxX);
+                        maxY = std::max((float)result[0][i].Y, maxY);
+                    }
+
+                    float data[] = { minX, minY, minX, maxY,
+                                     maxX, minY, maxX, maxY };
+
                     glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
                                           &data[0]);
                     glEnableVertexAttribArray(aPosition);
@@ -1065,10 +1300,9 @@ public:
                         glGetUniformLocation(rectShaderProgram, "uColor");
                     float a = m_state.back().opacity;
 
-                    glUniform4f(uColor, a * Unit::Color(255, 255, 255, 255).R(),
-                                a * Unit::Color(255, 255, 255, 255).G(),
-                                a * Unit::Color(255, 255, 255, 255).B(),
-                                a * Unit::Color(255, 255, 255, 255).A());
+                    glUniform4f(uColor, a * currentColor.R(),
+                                a * currentColor.G(), a * currentColor.B(),
+                                a * currentColor.A());
 
                     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
                     checkError();
@@ -1109,13 +1343,11 @@ public:
 
                         auto uColor =
                             glGetUniformLocation(rectShaderProgram, "uColor");
-                        float a = 1;
+                        float a = m_state.back().opacity;
 
-                        glUniform4f(uColor,
-                                    a * Unit::Color(255, 255, 255, 255).R(),
-                                    a * Unit::Color(255, 255, 255, 255).G(),
-                                    a * Unit::Color(255, 255, 255, 255).B(),
-                                    a * Unit::Color(255, 255, 255, 255).A());
+                        glUniform4f(uColor, a * currentColor.R(),
+                                    a * currentColor.G(), a * currentColor.B(),
+                                    a * currentColor.A());
 
                         glDrawArrays(GL_TRIANGLES, 0, 3);
                         checkError();
@@ -1143,10 +1375,8 @@ public:
             auto uColor = glGetUniformLocation(rectShaderProgram, "uColor");
             float a = m_state.back().opacity;
 
-            glUniform4f(uColor, a * Unit::Color(255, 255, 255, 255).R(),
-                        a * Unit::Color(255, 255, 255, 255).G(),
-                        a * Unit::Color(255, 255, 255, 255).B(),
-                        a * Unit::Color(255, 255, 255, 255).A());
+            glUniform4f(uColor, a * currentColor.R(), a * currentColor.G(),
+                        a * currentColor.B(), a * currentColor.A());
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             checkError();
@@ -1319,6 +1549,11 @@ public:
             return;
         }
 
+        auto textureInfo = cs->textureInfo();
+        if (textureInfo.fragments.size() == 0) {
+            return;
+        }
+
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
         CanvasSurfaceGL* csGL = (CanvasSurfaceGL*)cs;
@@ -1426,7 +1661,68 @@ public:
         }
 
         if (!shouldSkipTexturePainting) {
-            auto textureInfo = cs->textureInfo();
+            if (csGL->m_isEGLImageExternal) {
+                float data[] = { dest[0][0], dest[0][1], // V1
+                                 0.f,        0.f, // Texture coordinate .for V1
+
+                                 dest[1][0], dest[1][1], // V2
+                                 0.f,        1.f,
+
+                                 dest[2][0], dest[2][1], // V3
+                                 1.f,        0.f,
+
+                                 dest[3][0], dest[3][1], // V4
+                                 1.f,        1.f };
+                float a = m_state.back().opacity;
+                if (a == 1) {
+                    glUseProgram(texShaderProgramEGLImageExternal);
+                    glBindTexture(GL_TEXTURE_EXTERNAL_OES,
+                                  csGL->m_textureFragments[0].textureID);
+                    auto aPosition = glGetAttribLocation(
+                        texShaderProgramEGLImageExternal, "aPosition");
+                    auto aTexPos = glGetAttribLocation(
+                        texShaderProgramEGLImageExternal, "aTexPos");
+
+                    glVertexAttribPointer(aPosition, 2, GL_FLOAT, false,
+                                          (2 + 2) * 4, &data[0]);
+                    glEnableVertexAttribArray(aPosition);
+
+                    glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false,
+                                          (2 + 2) * 4, &data[2]);
+                    glEnableVertexAttribArray(aTexPos);
+
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                    glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
+                    checkError();
+                    glUseProgram(0);
+                } else {
+                    glUseProgram(texWithAlphaShaderProgramEGLImageExternal);
+                    glBindTexture(GL_TEXTURE_EXTERNAL_OES,
+                                  csGL->m_textureFragments[0].textureID);
+                    auto aPosition = glGetAttribLocation(
+                        texWithAlphaShaderProgramEGLImageExternal, "aPosition");
+                    auto aTexPos = glGetAttribLocation(
+                        texWithAlphaShaderProgramEGLImageExternal, "aTexPos");
+
+                    glVertexAttribPointer(aPosition, 2, GL_FLOAT, false,
+                                          (2 + 2) * 4, &data[0]);
+                    glEnableVertexAttribArray(aPosition);
+
+                    glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false,
+                                          (2 + 2) * 4, &data[2]);
+                    glEnableVertexAttribArray(aTexPos);
+
+                    auto uAlpha = glGetUniformLocation(
+                        texWithAlphaShaderProgramEGLImageExternal, "uAlpha");
+                    glUniform4f(uAlpha, a, a, a, a);
+
+                    glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+                    glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
+                    checkError();
+                    glUseProgram(0);
+                }
+                return;
+            }
 
             size_t wTextureCount =
                 ceil((float)cs->bufferWidth() / g_textureTileSize);
@@ -1509,7 +1805,7 @@ public:
                             size_t yyEnd =
                                 csGL->m_dirtyAreaTextureFragments[i].maxY();
 
-                            auto bData = csGL->data();
+                            auto bData = csGL->mapBuffer();
                             auto bStride = csGL->bufferStride();
 
                             glActiveTexture(GL_TEXTURE0);
@@ -1552,6 +1848,7 @@ public:
                             csGL->m_textureFragmentsFlags[i].m_isDirty = false;
                             csGL->m_dirtyAreaTextureFragments[i] =
                                 Unit::Rect(0, 0, 0, 0);
+                            csGL->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
                         }
                         drawTexture(cs, newDest, tid);
                     }
@@ -1621,6 +1918,24 @@ public:
 protected:
     StarFish* m_starfish;
     std::vector<CompositorImplGLState> m_state;
+
+    GLuint texShaderProgram;
+    GLuint texVertexShader;
+    GLuint texFragmentShader;
+
+    GLuint texWithAlphaShaderProgram;
+    GLuint texWithAlphaVertexShader;
+    GLuint texWithAlphaFragmentShader;
+
+    GLuint rectShaderProgram;
+    GLuint rectVertexShader;
+    GLuint rectFragmentShader;
+
+    GLuint texShaderProgramEGLImageExternal;
+    GLuint texFragmentShaderEGLImageExternal;
+
+    GLuint texWithAlphaShaderProgramEGLImageExternal;
+    GLuint texWithAlphaFragmentShaderEGLImageExternal;
 };
 
 Compositor* Compositor::create(StarFish* starfish, void* data)

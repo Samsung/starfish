@@ -117,7 +117,7 @@ public:
         if (ret.didPaintingOrCompositing) {
             if (webView()->didCompositeBefore()) {
             } else {
-                m_glPaintingSurface->notifyUpdateRegion(
+                m_glPaintingSurface->unMapBufferAndNotifyUpdateRegion(
                     (int)ret.updateRect.x(), (int)ret.updateRect.y(),
                     (int)ret.updateRect.width(), (int)ret.updateRect.height());
                 float oldDPR = m_starFish->screenInfo().devicePixelRatio;

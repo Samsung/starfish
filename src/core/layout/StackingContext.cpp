@@ -961,6 +961,7 @@ void StackingContext::applyStackingContextProperties(
             m_rareData->m_visibleRect.height()) {
             // TODO implement sub-visible rect painting & compositing
             LayoutRect visibleRect = m_owner->frameVisibleRect();
+
             if (m_rareData->m_visibleRect.width() < visibleRect.width() ||
                 m_rareData->m_visibleRect.height() < visibleRect.height()) {
                 m_rareData->m_visibleRect.setWidth(std::max(
@@ -1231,7 +1232,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         oldCanvas = canvas;
         if (m_rareData->m_buffer->pixelRatio() != 1) {
             canvas = Canvas::createGenericCanvas(
-                m_owner->node()->starFish(), m_rareData->m_buffer->data(),
+                m_owner->node()->starFish(), m_rareData->m_buffer->mapBuffer(),
                 m_rareData->m_buffer->bufferWidth(),
                 m_rareData->m_buffer->bufferHeight());
         } else {
@@ -1550,10 +1551,12 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         }
         if ((bool)deviceLayerClipRect.width() ||
             (bool)deviceLayerClipRect.height()) {
-            m_rareData->m_buffer->notifyUpdateRegion(
+            m_rareData->m_buffer->unMapBufferAndNotifyUpdateRegion(
                 (int)deviceLayerClipRect.x(), (int)deviceLayerClipRect.y(),
                 (int)deviceLayerClipRect.width(),
                 (int)deviceLayerClipRect.height());
+        } else {
+            m_rareData->m_buffer->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
         }
         delete canvas;
     }

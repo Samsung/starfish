@@ -71,11 +71,12 @@ protected:
 public:
     static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h);
     virtual void attachNativeBuffer(size_t w, size_t h) = 0;
-    virtual uint8_t* data() = 0;
+    virtual uint8_t* mapBuffer() = 0;
     virtual void resize(size_t w, size_t h) = 0;
     virtual void clear() = 0;
     virtual void detachNativeBuffer() = 0;
-    virtual void notifyUpdateRegion(size_t x, size_t y, size_t w, size_t h)
+    virtual void unMapBufferAndNotifyUpdateRegion(size_t x, size_t y, size_t w,
+                                                  size_t h)
     {
     }
     virtual ~CanvasSurface()

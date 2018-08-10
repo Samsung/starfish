@@ -846,7 +846,6 @@ RenderResult WebView::rendering(bool force)
                        starFish()->platformWindow()->height());
         delete canvas;
 
-        renderResult.didPaintingOrCompositing = false;
         return renderResult;
     }
 
