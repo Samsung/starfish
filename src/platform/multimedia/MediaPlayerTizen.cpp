@@ -38,7 +38,7 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
-#include <Elementary.h>
+#include <Evas.h>
 
 namespace StarFish {
 

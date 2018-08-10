@@ -1110,8 +1110,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     // Create a surface and context
     wnd->m_glSfc =
         evas_gl_surface_create(wnd->m_glEvasgl, wnd->m_glCfg, width, height);
+#if defined(STARFISH_TIZEN_5_0)
+    wnd->m_glCtx = evas_gl_context_version_create(
+        wnd->m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
+#else
     wnd->m_glCtx = evas_gl_context_version_create(
         wnd->m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
+#endif
     //-//
 
     Evas_Native_Surface ns;
@@ -1130,6 +1135,16 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             wnd->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                                     GL_STENCIL_BUFFER_BIT);
             wnd->m_glGlapi->glFlush();
+
+            STARFISH_LOG_INFO("gl version info\n");
+            STARFISH_LOG_INFO("%s\n",
+                              (char*)wnd->m_glGlapi->glGetString(GL_VERSION));
+            STARFISH_LOG_INFO("gl renderer info\n");
+            STARFISH_LOG_INFO("%s\n",
+                              (char*)wnd->m_glGlapi->glGetString(GL_RENDERER));
+            STARFISH_LOG_INFO("gl extension info\n");
+            STARFISH_LOG_INFO(
+                "%s\n", (char*)wnd->m_glGlapi->glGetString(GL_EXTENSIONS));
         },
         wnd);
 
