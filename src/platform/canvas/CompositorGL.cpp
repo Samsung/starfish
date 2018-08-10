@@ -46,7 +46,7 @@ using Point = std::array<Coord, 2>;
 #if defined(PORT_WINDOW_BACKEND_EFL)
 #include <Evas_GL.h>
 #else
-#include <GLES2/gl2.h>
+#include <GLES3/gl3.h>
 #endif
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
@@ -193,6 +193,111 @@ using Point = std::array<Coord, 2>;
 #define glVertexAttrib4fv g_evasGLAPI->glVertexAttrib4fv
 #define glVertexAttribPointer g_evasGLAPI->glVertexAttribPointer
 #define glViewport g_evasGLAPI->glViewport
+#define glBeginQuery g_evasGLAPI->glBeginQuery
+#define glBeginTransformFeedback g_evasGLAPI->glBeginTransformFeedback
+#define glBindBufferBase g_evasGLAPI->glBindBufferBase
+#define glBindBufferRange g_evasGLAPI->glBindBufferRange
+#define glBindSampler g_evasGLAPI->glBindSampler
+#define glBindTransformFeedback g_evasGLAPI->glBindTransformFeedback
+#define glBindVertexArray g_evasGLAPI->glBindVertexArray
+#define glBlitFramebuffer g_evasGLAPI->glBlitFramebuffer
+#define glClearBufferfi g_evasGLAPI->glClearBufferfi
+#define glClearBufferfv g_evasGLAPI->glClearBufferfv
+#define glClearBufferiv g_evasGLAPI->glClearBufferiv
+#define glClearBufferuiv g_evasGLAPI->glClearBufferuiv
+#define glClientWaitSync g_evasGLAPI->glClientWaitSync
+#define glCompressedTexImage3D g_evasGLAPI->glCompressedTexImage3D
+#define glCompressedTexSubImage3D g_evasGLAPI->glCompressedTexSubImage3D
+#define glCopyBufferSubData g_evasGLAPI->glCopyBufferSubData
+#define glCopyTexSubImage3D g_evasGLAPI->glCopyTexSubImage3D
+#define glDeleteQueries g_evasGLAPI->glDeleteQueries
+#define glDeleteSamplers g_evasGLAPI->glDeleteSamplers
+#define glDeleteSync g_evasGLAPI->glDeleteSync
+#define glDeleteTransformFeedbacks g_evasGLAPI->glDeleteTransformFeedbacks
+#define glDeleteVertexArrays g_evasGLAPI->glDeleteVertexArrays
+#define glDrawArraysInstanced g_evasGLAPI->glDrawArraysInstanced
+#define glDrawBuffers g_evasGLAPI->glDrawBuffers
+#define glDrawElementsInstanced g_evasGLAPI->glDrawElementsInstanced
+#define glDrawRangeElements g_evasGLAPI->glDrawRangeElements
+#define glEndQuery g_evasGLAPI->glEndQuery
+#define glEndTransformFeedback g_evasGLAPI->glEndTransformFeedback
+#define glFenceSync g_evasGLAPI->glFenceSync
+#define glFlushMappedBufferRange g_evasGLAPI->glFlushMappedBufferRange
+#define glFramebufferTextureLayer g_evasGLAPI->glFramebufferTextureLayer
+#define glGenQueries g_evasGLAPI->glGenQueries
+#define glGenSamplers g_evasGLAPI->glGenSamplers
+#define glGenTransformFeedbacks g_evasGLAPI->glGenTransformFeedbacks
+#define glGenVertexArrays g_evasGLAPI->glGenVertexArrays
+#define glGetActiveUniformBlockiv g_evasGLAPI->glGetActiveUniformBlockiv
+#define glGetActiveUniformBlockName g_evasGLAPI->glGetActiveUniformBlockName
+#define glGetActiveUniformsiv g_evasGLAPI->glGetActiveUniformsiv
+#define glGetBufferParameteri64v g_evasGLAPI->glGetBufferParameteri64v
+#define glGetBufferPointerv g_evasGLAPI->glGetBufferPointerv
+#define glGetFragDataLocation g_evasGLAPI->glGetFragDataLocation
+#define glGetInteger64i_v g_evasGLAPI->glGetInteger64i_v
+#define glGetInteger64v g_evasGLAPI->glGetInteger64v
+#define glGetIntegeri_v g_evasGLAPI->glGetIntegeri_v
+#define glGetInternalformativ g_evasGLAPI->glGetInternalformativ
+#define glGetProgramBinary g_evasGLAPI->glGetProgramBinary
+#define glGetQueryiv g_evasGLAPI->glGetQueryiv
+#define glGetQueryObjectuiv g_evasGLAPI->glGetQueryObjectuiv
+#define glGetSamplerParameterfv g_evasGLAPI->glGetSamplerParameterfv
+#define glGetSamplerParameteriv g_evasGLAPI->glGetSamplerParameteriv
+#define glGetStringi g_evasGLAPI->glGetStringi
+#define glGetSynciv g_evasGLAPI->glGetSynciv
+#define glGetTransformFeedbackVarying g_evasGLAPI->glGetTransformFeedbackVarying
+#define glGetUniformBlockIndex g_evasGLAPI->glGetUniformBlockIndex
+#define glGetUniformIndices g_evasGLAPI->glGetUniformIndices
+#define glGetUniformuiv g_evasGLAPI->glGetUniformuiv
+#define glGetVertexAttribIiv g_evasGLAPI->glGetVertexAttribIiv
+#define glGetVertexAttribIuiv g_evasGLAPI->glGetVertexAttribIuiv
+#define glInvalidateFramebuffer g_evasGLAPI->glInvalidateFramebuffer
+#define glInvalidateSubFramebuffer g_evasGLAPI->glInvalidateSubFramebuffer
+#define glIsQuery g_evasGLAPI->glIsQuery
+#define glIsSampler g_evasGLAPI->glIsSampler
+#define glIsSync g_evasGLAPI->glIsSync
+#define glIsTransformFeedback g_evasGLAPI->glIsTransformFeedback
+#define glIsVertexArray g_evasGLAPI->glIsVertexArray
+#define glMapBufferRange g_evasGLAPI->glMapBufferRange
+#define glPauseTransformFeedback g_evasGLAPI->glPauseTransformFeedback
+#define glProgramBinary g_evasGLAPI->glProgramBinary
+#define glProgramParameteri g_evasGLAPI->glProgramParameteri
+#define glReadBuffer g_evasGLAPI->glReadBuffer
+#define glRenderbufferStorageMultisample \
+    g_evasGLAPI->glRenderbufferStorageMultisample
+#define glResumeTransformFeedback g_evasGLAPI->glResumeTransformFeedback
+#define glSamplerParameterf g_evasGLAPI->glSamplerParameterf
+#define glSamplerParameterfv g_evasGLAPI->glSamplerParameterfv
+#define glSamplerParameteri g_evasGLAPI->glSamplerParameteri
+#define glSamplerParameteriv g_evasGLAPI->glSamplerParameteriv
+#define glTexImage3D g_evasGLAPI->glTexImage3D
+#define glTexStorage2D g_evasGLAPI->glTexStorage2D
+#define glTexStorage3D g_evasGLAPI->glTexStorage3D
+#define glTexSubImage3D g_evasGLAPI->glTexSubImage3D
+#define glTransformFeedbackVaryings g_evasGLAPI->glTransformFeedbackVaryings
+#define glUniform1ui g_evasGLAPI->glUniform1ui
+#define glUniform1uiv g_evasGLAPI->glUniform1uiv
+#define glUniform2ui g_evasGLAPI->glUniform2ui
+#define glUniform2uiv g_evasGLAPI->glUniform2uiv
+#define glUniform3ui g_evasGLAPI->glUniform3ui
+#define glUniform3uiv g_evasGLAPI->glUniform3uiv
+#define glUniform4ui g_evasGLAPI->glUniform4ui
+#define glUniform4uiv g_evasGLAPI->glUniform4uiv
+#define glUniformBlockBinding g_evasGLAPI->glUniformBlockBinding
+#define glUniformMatrix2x3fv g_evasGLAPI->glUniformMatrix2x3fv
+#define glUniformMatrix3x2fv g_evasGLAPI->glUniformMatrix3x2fv
+#define glUniformMatrix2x4fv g_evasGLAPI->glUniformMatrix2x4fv
+#define glUniformMatrix4x2fv g_evasGLAPI->glUniformMatrix4x2fv
+#define glUniformMatrix3x4fv g_evasGLAPI->glUniformMatrix3x4fv
+#define glUniformMatrix4x3fv g_evasGLAPI->glUniformMatrix4x3fv
+#define glUnmapBuffer g_evasGLAPI->glUnmapBuffer
+#define glVertexAttribDivisor g_evasGLAPI->glVertexAttribDivisor
+#define glVertexAttribI4i g_evasGLAPI->glVertexAttribI4i
+#define glVertexAttribI4iv g_evasGLAPI->glVertexAttribI4iv
+#define glVertexAttribI4ui g_evasGLAPI->glVertexAttribI4ui
+#define glVertexAttribI4uiv g_evasGLAPI->glVertexAttribI4uiv
+#define glVertexAttribIPointer g_evasGLAPI->glVertexAttribIPointer
+#define glWaitSync g_evasGLAPI->glWaitSync
 #endif
 
 namespace StarFish {
@@ -201,8 +306,11 @@ namespace StarFish {
 extern Evas_GL_API* g_evasGLAPI;
 #endif
 
-#define CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE 512
 static size_t g_totalCanvasSurfaceGLSize;
+static size_t g_textureTileSize = 512;
+static bool g_needsCheckCompatibility = true;
+static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
+static size_t g_maxTextureSize;
 
 class CanvasSurfaceGL : public CanvasSurface {
 public:
@@ -215,7 +323,31 @@ public:
         m_imageHeight = m_bufferHeight = m_height = -1;
         m_buffer = nullptr;
 
+        if (g_needsCheckCompatibility) {
+            m_window->glMakeCurrent();
+            GLint siz;
+            glGetIntegerv(GL_MAX_TEXTURE_SIZE, &siz);
+            checkError();
+            g_maxTextureSize = siz;
+
+            bool isOpenGLES3 = true;
+            int major;
+            glGetIntegerv(GL_MAJOR_VERSION, &major);
+            if (glGetError()) {
+                isOpenGLES3 = false;
+                major = 2;
+            }
+
+            if (major >= 3) { // support ..
+                g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = true;
+            }
+
+            g_needsCheckCompatibility = false;
+            checkError();
+        }
+
         attachNativeBuffer(w, h);
+        checkError();
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            CanvasSurfaceGL* s =
@@ -239,12 +371,14 @@ public:
                 glDeleteTextures(1, &id);
             }
             m_textureFragments.clear();
-            m_dirtyTextureFragments.clear();
+            m_textureFragmentsFlags.clear();
             m_dirtyAreaTextureFragments.clear();
             g_totalCanvasSurfaceGLSize -=
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+
             free(m_buffer);
             m_buffer = nullptr;
+
             STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
                               g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
         }
@@ -270,9 +404,9 @@ public:
             m_bufferHeight =
                 std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
             m_bufferStride = m_bufferWidth * 4;
+
             m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
                                               sizeof(uint32_t));
-
             g_totalCanvasSurfaceGLSize +=
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
             STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
@@ -298,7 +432,7 @@ public:
     void checkError()
     {
 #ifndef NDEBUG
-        auto error = glGetError();
+        volatile auto error = glGetError();
         if (error != 0) {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -308,10 +442,9 @@ public:
     void ensureGenerateTexture()
     {
         m_window->glMakeCurrent();
-        size_t wTextureCount =
-            ceil((float)m_bufferWidth / CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
-        size_t hTextureCount =
-            ceil((float)m_bufferHeight / CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
+
+        size_t wTextureCount = ceil((float)m_bufferWidth / g_textureTileSize);
+        size_t hTextureCount = ceil((float)m_bufferHeight / g_textureTileSize);
 
         size_t coveredRowsCount = 0;
         for (size_t y = 0; y < hTextureCount; y++) {
@@ -322,13 +455,14 @@ public:
                 size_t texureDataX = coveredColsCount;
                 size_t texureDataY = coveredRowsCount;
                 size_t texureDataWidth =
-                    std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                    std::min((size_t)g_textureTileSize,
                              m_bufferWidth - coveredColsCount);
                 size_t texureDataHeight =
-                    std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                    std::min((size_t)g_textureTileSize,
                              m_bufferHeight - coveredRowsCount);
 
                 glGenTextures(1, &textureID);
+                glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, textureID);
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
                 checkError();
@@ -362,14 +496,16 @@ public:
                 fragment.srcHeight = texureDataHeight / (float)m_bufferHeight;
 
                 m_textureFragments.push_back(fragment);
-                m_dirtyTextureFragments.push_back(true);
+                FragmentFlags flags;
+                flags.m_isDirty = true;
+                m_textureFragmentsFlags.push_back(flags);
                 m_dirtyAreaTextureFragments.push_back(
                     Unit::Rect(0, 0, texureDataWidth, texureDataHeight));
 
-                coveredColsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+                coveredColsCount += g_textureTileSize;
             }
 
-            coveredRowsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+            coveredRowsCount += g_textureTileSize;
         }
     }
 
@@ -433,10 +569,8 @@ public:
         }
 
         m_window->glMakeCurrent();
-        size_t wTextureCount =
-            ceil((float)m_bufferWidth / CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
-        size_t hTextureCount =
-            ceil((float)m_bufferHeight / CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
+        size_t wTextureCount = ceil((float)m_bufferWidth / g_textureTileSize);
+        size_t hTextureCount = ceil((float)m_bufferHeight / g_textureTileSize);
         size_t fragmentIndex = 0;
 
         size_t coveredRowsCount = 0;
@@ -448,10 +582,10 @@ public:
                 size_t texureDataX = coveredColsCount;
                 size_t texureDataY = coveredRowsCount;
                 size_t texureDataWidth =
-                    std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                    std::min((size_t)g_textureTileSize,
                              m_bufferWidth - coveredColsCount);
                 size_t texureDataHeight =
-                    std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                    std::min((size_t)g_textureTileSize,
                              m_bufferHeight - coveredRowsCount);
                 CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment&
                     fragment = m_textureFragments[fragmentIndex];
@@ -461,7 +595,7 @@ public:
                 Unit::Rect dRect(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
 
                 if (tRect.intersects(dRect)) {
-                    m_dirtyTextureFragments[fragmentIndex] = true;
+                    m_textureFragmentsFlags[fragmentIndex].m_isDirty = true;
                     size_t xx = std::max(texureDataX, x) - texureDataX;
                     size_t xxEnd = dirtyX + dirtyWidth + 1 - texureDataX;
                     if (xxEnd > texureDataWidth) {
@@ -477,10 +611,10 @@ public:
                 }
 
                 fragmentIndex++;
-                coveredColsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+                coveredColsCount += g_textureTileSize;
             }
 
-            coveredRowsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+            coveredRowsCount += g_textureTileSize;
         }
     }
 
@@ -510,7 +644,10 @@ protected:
     size_t m_bufferStride;
     GCAtomicVector<CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>
         m_textureFragments;
-    GCAtomicVector<bool> m_dirtyTextureFragments;
+    struct FragmentFlags {
+        bool m_isDirty;
+    };
+    GCAtomicVector<FragmentFlags> m_textureFragmentsFlags;
     GCAtomicVector<Unit::Rect> m_dirtyAreaTextureFragments;
 };
 
@@ -629,7 +766,6 @@ public:
         checkError();
 
         auto uScreenPos = glGetUniformLocation(texShaderProgram, "uScreen");
-        auto uTexture = glGetUniformLocation(texShaderProgram, "uTexture");
 
         float uScreen[] = { 2.f / m_starfish->platformWindow()->width(),
                             0.f,
@@ -698,7 +834,6 @@ public:
         checkError();
 
         uScreenPos = glGetUniformLocation(texWithAlphaShaderProgram, "uScreen");
-        uTexture = glGetUniformLocation(texWithAlphaShaderProgram, "uTexture");
 
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
@@ -1028,7 +1163,7 @@ public:
     void checkError()
     {
 #ifndef NDEBUG
-        auto error = glGetError();
+        volatile auto error = glGetError();
         if (error != 0) {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -1119,6 +1254,7 @@ public:
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, textureID);
             auto uTexture = glGetUniformLocation(texShaderProgram, "uTexture");
+            glUniform1i(uTexture, 0);
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             glBindTexture(GL_TEXTURE_2D, 0);
@@ -1292,10 +1428,10 @@ public:
         if (!shouldSkipTexturePainting) {
             auto textureInfo = cs->textureInfo();
 
-            size_t wTextureCount = ceil((float)cs->bufferWidth() /
-                                        CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
-            size_t hTextureCount = ceil((float)cs->bufferHeight() /
-                                        CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE);
+            size_t wTextureCount =
+                ceil((float)cs->bufferWidth() / g_textureTileSize);
+            size_t hTextureCount =
+                ceil((float)cs->bufferHeight() / g_textureTileSize);
 
             size_t coveredRowsCount = 0;
             size_t i = 0;
@@ -1305,10 +1441,10 @@ public:
                     size_t texureDataX = coveredColsCount;
                     size_t texureDataY = coveredRowsCount;
                     size_t texureDataWidth =
-                        std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                        std::min((size_t)g_textureTileSize,
                                  cs->bufferWidth() - coveredColsCount);
                     size_t texureDataHeight =
-                        std::min((size_t)CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE,
+                        std::min((size_t)g_textureTileSize,
                                  cs->bufferHeight() - coveredRowsCount);
 
                     float newDest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
@@ -1360,12 +1496,9 @@ public:
                     if (screenBoundingRect.intersects(visibleArea)) {
                         GLuint tid = (GLuint)fragment.textureID;
 
-                        if (csGL->m_dirtyTextureFragments[i]) {
+                        if (csGL->m_textureFragmentsFlags[i].m_isDirty) {
                             INSTALL_PROFILE_TIMER(m_starfish,
                                                   "update texture tile..");
-                            glBindTexture(GL_TEXTURE_2D, tid);
-                            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-                            checkError();
 
                             size_t xx =
                                 csGL->m_dirtyAreaTextureFragments[i].x();
@@ -1379,21 +1512,44 @@ public:
                             auto bData = csGL->data();
                             auto bStride = csGL->bufferStride();
 
-                            for (; yy < yyEnd; yy++) {
+                            glActiveTexture(GL_TEXTURE0);
+                            glBindTexture(GL_TEXTURE_2D, tid);
+                            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                            checkError();
+
+                            if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
+                                glPixelStorei(GL_UNPACK_ROW_LENGTH,
+                                              csGL->bufferWidth());
+                                glPixelStorei(GL_UNPACK_SKIP_PIXELS, xx);
+                                glPixelStorei(GL_UNPACK_SKIP_ROWS, yy);
+
                                 auto data = bData;
-                                data += ((yy + texureDataY) * bStride);
-                                data += ((texureDataX + xx) * 4);
-                                glTexSubImage2D(GL_TEXTURE_2D, 0, 0, yy,
-                                                xxEnd - xx, 1, GL_RGBA,
+                                data += (texureDataY * bStride);
+                                data += (texureDataX * 4);
+                                glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
+                                                xxEnd - xx, yyEnd - yy, GL_RGBA,
                                                 GL_UNSIGNED_BYTE, data);
-                                checkError();
+
+                                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+                                glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+                                glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+                            } else {
+                                for (; yy < yyEnd; yy++) {
+                                    auto data = bData;
+                                    data += ((yy + texureDataY) * bStride);
+                                    data += ((texureDataX + xx) * 4);
+                                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, yy,
+                                                    xxEnd - xx, 1, GL_RGBA,
+                                                    GL_UNSIGNED_BYTE, data);
+                                    checkError();
+                                }
                             }
 
                             glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
                             glBindTexture(GL_TEXTURE_2D, 0);
                             checkError();
 
-                            csGL->m_dirtyTextureFragments[i] = false;
+                            csGL->m_textureFragmentsFlags[i].m_isDirty = false;
                             csGL->m_dirtyAreaTextureFragments[i] =
                                 Unit::Rect(0, 0, 0, 0);
                         }
@@ -1401,10 +1557,10 @@ public:
                     }
 
                     i++;
-                    coveredColsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+                    coveredColsCount += g_textureTileSize;
                 }
 
-                coveredRowsCount += CANVAS_SURFACE_GL_TEXTURE_TILE_SIZE;
+                coveredRowsCount += g_textureTileSize;
             }
         }
 
