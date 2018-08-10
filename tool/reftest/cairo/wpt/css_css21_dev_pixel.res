@@ -1727,7 +1727,7 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-026.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-027.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-028.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-029.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-030.htm
+test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-030.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-031.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-032.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-033.htm
