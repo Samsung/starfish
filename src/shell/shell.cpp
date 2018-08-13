@@ -353,6 +353,7 @@ public:
         , mHeight(height)
         , mApplication(application)
         , mLWEBinder(nullptr)
+        , mThreadHandle(0)
         , mUrl(url)
         , mIsMouseLbuttonDown(false)
 #if defined(STARFISH_DALI_TBMSURFACE)
