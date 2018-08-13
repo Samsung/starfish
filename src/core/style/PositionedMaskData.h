@@ -27,7 +27,8 @@ namespace StarFish {
 class MaskLayer : public gc {
 public:
     MaskLayer()
-        : m_sizeIsLength(true)
+        : m_image(nullptr)
+        , m_sizeIsLength(true)
     {
     }
 

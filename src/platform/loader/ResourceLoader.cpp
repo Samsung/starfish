@@ -55,6 +55,7 @@ ResourceLoader::ResourceLoader(Document* document)
     , m_resourceCacheSize(0)
     , m_downloadedResourceContentSize(0)
     , m_loadProgress(0)
+    , m_loadProgressState(Normal)
 {
 }
 

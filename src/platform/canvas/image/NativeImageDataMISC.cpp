@@ -422,21 +422,13 @@ private:
             m_image = malloc(m_stride);
 
             unsigned char* buffer_array[1];
-            if (dHandle->out_color_space == JCS_GRAYSCALE) {
-                while (dHandle->output_scanline < dHandle->output_height) {
-                    buffer_array[0] = (unsigned char*)m_image +
-                                      (dHandle->output_scanline) * m_stride;
-                    jpeg_read_scanlines(dHandle, buffer_array, 1);
-                    break;
-                }
-            } else {
-                while (dHandle->output_scanline < dHandle->output_height) {
-                    buffer_array[0] = (unsigned char*)m_image +
-                                      (dHandle->output_scanline) * m_stride;
-                    jpeg_read_scanlines(dHandle, buffer_array, 1);
-                    break;
-                }
+            while (dHandle->output_scanline < dHandle->output_height) {
+                buffer_array[0] = (unsigned char*)m_image +
+                                  (dHandle->output_scanline) * m_stride;
+                jpeg_read_scanlines(dHandle, buffer_array, 1);
+                break;
             }
+
             free(m_image);
             m_image = nullptr;
             return;

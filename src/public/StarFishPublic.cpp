@@ -236,7 +236,6 @@ void initMainThread(void* (*f)(void*))
     pthread_attr_init(&attr);
     pthread_create(&t, &attr, f, NULL);
 
-    pthread_mutex_lock(g_initMutex);
     pthread_mutex_unlock(g_initMutex);
 }
 
@@ -244,6 +243,11 @@ class StarFishController : public Dali::ConnectionTracker {
 public:
     StarFishController(StarFishInstance* instance)
         : m_isInit(false)
+        , m_isMouseLbuttonDown(false)
+        , m_width(0)
+        , m_height(0)
+        , m_windowX(0)
+        , m_windowY(0)
     {
         m_instance = instance;
     }
@@ -728,12 +732,11 @@ extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(
 #if defined(STARFISH_DALI)
     struct dummy {
         StarFish::StarFish* starfish;
-        char data[128];
+        std::string data;
     };
     dummy* d = new dummy;
     d->starfish = TO_STARFISH(instance);
-
-    strcpy(d->data, path);
+    d->data = std::string(path);
     TO_STARFISH(instance)
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(
@@ -743,7 +746,7 @@ extern "C" STARFISH_EXPORT void starfishLoadHTMLDocument(
                 StarFish::StarFish* m_sf = d->starfish;
                 StarFish::StarFishEnterer enter(m_sf);
                 m_sf->loadHTMLDocument(
-                    StarFish::String::fromUTF8(&(d->data)[0]));
+                    StarFish::String::fromUTF8(d->data.c_str()));
                 delete d;
             },
             d);

@@ -67,12 +67,27 @@ public:
         : PlatformWindow(sf)
         , m_width(width)
         , m_height(height)
+        , m_renderingAnimator(SIZE_MAX)
         , m_internalBuffer(nullptr)
+        , m_stride(0)
         , m_didPaintingOrCompositing(true)
+        , m_lastMouseX(0)
+        , m_lastMouseY(0)
+        , m_isMouseLbuttonDown(false)
+        , m_isKeyDown(false)
+        , m_canRendering(false)
+        , m_lastClickedTimestamp(0)
+        , m_clickedCount(0)
+        , m_lastKeyPressedTimestamp(0)
+        , m_offsetYDueToSoftwareKeyboard(0)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
+        , m_surface(nullptr)
+        , m_cairo(nullptr)
+#endif
+#if defined(PORT_CANVAS_BACKEND_SKIA)
+        , m_skia(nullptr)
+#endif
     {
-        m_renderingAnimator = SIZE_MAX;
-        m_lastKeyPressedTimestamp = 0;
-        m_offsetYDueToSoftwareKeyboard = 0;
     }
 
     virtual int32_t width() override
