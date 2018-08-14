@@ -743,7 +743,7 @@ double Element::scrollLeftProperty(bool layoutIfNeeds)
 {
     // NOTE DOM interface only
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeds();
+        window()->browsingContext()->webView()->layoutIfNeeds(false);
     }
 
     if (document()->rootElement() == this) {
@@ -777,7 +777,7 @@ double Element::scrollLeftProperty(bool layoutIfNeeds)
 double Element::scrollLeft(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeds();
+        window()->browsingContext()->webView()->layoutIfNeeds(false);
     }
 
     if (!frame() || !frame()->isFrameBlockBox()) {
@@ -806,7 +806,7 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
 {
     // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeds();
+        window()->browsingContext()->webView()->layoutIfNeeds(false);
     }
 
     if (!window()) {
@@ -842,15 +842,17 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
         s = 0;
     }
 
-    ensureRareElementMembers()->m_scrollLeft = s;
-    webView()->setNeedsComputeStackingContextProperties();
-    setNeedsPainting();
+    if (ensureRareElementMembers()->m_scrollLeft != (LayoutUnit)s) {
+        ensureRareElementMembers()->m_scrollLeft = s;
+        webView()->setNeedsComputeStackingContextProperties();
+        setNeedsPainting();
+    }
 }
 
 double Element::scrollTopProperty(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeds();
+        window()->browsingContext()->webView()->layoutIfNeeds(false);
     }
 
     if (document()->rootElement() == this) {
@@ -882,7 +884,7 @@ double Element::scrollTopProperty(bool layoutIfNeeds)
 double Element::scrollTop(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeds();
+        window()->browsingContext()->webView()->layoutIfNeeds(false);
     }
 
     if (!frame() || !frame()->isFrameBlockBox()) {
@@ -902,7 +904,7 @@ double Element::scrollTop(bool layoutIfNeeds)
 bool Element::canScrollVerticaly(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeds();
+        window()->browsingContext()->webView()->layoutIfNeeds(false);
     }
 
     if (!frame() || !frame()->isFrameBlockBox()) {
@@ -919,7 +921,7 @@ bool Element::canScrollVerticaly(bool layoutIfNeeds)
 bool Element::canScrollHorizontally(bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeds();
+        window()->browsingContext()->webView()->layoutIfNeeds(false);
     }
 
     if (!frame() || !frame()->isFrameBlockBox()) {
@@ -943,7 +945,7 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
 {
     // https://drafts.csswg.org/cssom-view/#dom-element-scrolltop
     if (layoutIfNeeds) {
-        window()->browsingContext()->webView()->layoutIfNeeds();
+        window()->browsingContext()->webView()->layoutIfNeeds(false);
     }
 
     if (!window()) {
@@ -979,14 +981,16 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
         s = 0;
     }
 
-    ensureRareElementMembers()->m_scrollTop = s;
-    webView()->setNeedsComputeStackingContextProperties();
-    setNeedsPainting();
+    if (ensureRareElementMembers()->m_scrollTop != (LayoutUnit)s) {
+        ensureRareElementMembers()->m_scrollTop = s;
+        webView()->setNeedsComputeStackingContextProperties();
+        setNeedsPainting();
+    }
 }
 
 uint32_t Element::scrollWidth()
 {
-    window()->browsingContext()->webView()->layoutIfNeeds();
+    window()->browsingContext()->webView()->layoutIfNeeds(false);
     if (!frame()) {
         return 0;
     }
@@ -998,7 +1002,7 @@ uint32_t Element::scrollWidth()
 
 uint32_t Element::scrollHeight()
 {
-    window()->browsingContext()->webView()->layoutIfNeeds();
+    window()->browsingContext()->webView()->layoutIfNeeds(false);
     if (!frame()) {
         return 0;
     }

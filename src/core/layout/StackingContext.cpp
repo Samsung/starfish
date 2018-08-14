@@ -108,8 +108,8 @@ struct StackingContext::ComputeStackingContextContext {
 StackingContextRareData::StackingContextRareData()
     : m_visibleRect(0, 0, 0, 0)
     , m_buffer(nullptr)
-    , m_matrix()
-    , m_screenMatrix()
+    , m_matrix(SkMatrix::I())
+    , m_screenMatrix(SkMatrix::I())
 {
 }
 

@@ -1152,8 +1152,8 @@ void AnimationExecutor::step()
         if (task->m_startTimeMs == 0) {
 #ifndef NDEBUG
             STARFISH_LOG_INFO(
-                "[START][%lums][%p] %s (id:%s, className:%s)\n",
-                currentTickCount, task,
+                "[START][%lums][%p, node %p] %s (id:%s, className:%s)\n",
+                currentTickCount, task, task->targetElement(),
                 task->dumpString()->toUTF8NonGCString().data(),
                 task->targetElement()->id()->toUTF8NonGCString().data(),
                 task->targetElement()->className()->toUTF8NonGCString().data());
