@@ -71,7 +71,6 @@ extern "C" Ecore_Window ecore_evas_window_get(const Ecore_Evas* e);
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
-std::function<void()> g_screenShotCallback;
 namespace StarFish {
 void doWptTestEnd();
 }
@@ -1458,21 +1457,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         WindowImplEFL* wnd = (WindowImplEFL*)data;
         wnd->m_canRendering = true;
         wnd->m_lastRenderingTime = tickCount();
-
-#if defined(STARFISH_ENABLE_TEST) && defined(PORT_COMPOSITOR_BACKEND_GL)
-        const char* path = getenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT");
-        if (path && strlen(path)) {
-            evas_object_image_save(wnd->m_glAdpater, path, nullptr, nullptr);
-            g_screenShotCallback();
-            setenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT", "", 1);
-
-            const char* wait =
-                getenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT_WPT_TESTEND");
-            if (wait && strlen(wait)) {
-                doWptTestEnd();
-            }
-        }
-#endif
     };
 
     evas_event_callback_add(evas_object_evas_get(wnd->m_mainBox),
@@ -2300,11 +2284,7 @@ void screenShotInRendering(StarFish* starfish, const char* path,
                            std::function<void()> callback)
 {
     WindowImplEFL* wnd = (WindowImplEFL*)starfish->platformWindow();
-#if defined(PORT_COMPOSITOR_BACKEND_GL)
-    setenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT", path, 1);
-    g_screenShotCallback = callback;
-    return;
-#elif !defined(PORT_GRAPHIC_BACKEND_EFL)
+#if !defined(PORT_GRAPHIC_BACKEND_EFL)
     if (!starfish->platformWindow()->webView()->didCompositeBefore()) {
         evas_object_image_save(wnd->m_canvasAdpater, path, nullptr, nullptr);
         callback();

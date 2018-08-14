@@ -584,7 +584,7 @@ void WebView::clearBlobURLStore()
     GCUnorderedSet<BlobURLStore>().swap(m_urlBlobStore);
 }
 
-void WebView::layoutIfNeeds()
+void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
 {
     INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering::layoutIfNeeds");
     bool didLayout = false;
@@ -631,186 +631,188 @@ void WebView::layoutIfNeeds()
         break;
     }
 
-    if (didLayout || !m_rootStackingContext ||
-        m_needsEstablishesStackingContext) {
-        INSTALL_PROFILE_TIMER(starFish(), "establishesStackingContext");
-        clearStackingContext();
+    if (shouldCareStackingContextNow) {
+        if (!m_rootStackingContext || m_needsEstablishesStackingContext) {
+            INSTALL_PROFILE_TIMER(starFish(), "establishesStackingContext");
+            clearStackingContext();
 #ifdef STARFISH_ENABLE_TEST
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableComputedStyleDump) {
-            // dump style
-            m_topLevelBrowsingContext->document()->styleResolver().dumpDOMStyle(
-                m_topLevelBrowsingContext->document());
-        }
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableFrameTreeDump) {
-            FrameTreeBuilder::dumpFrameTree(
-                m_topLevelBrowsingContext->document(), 0);
-        }
+            if (m_starFish->startUpFlag() &
+                StarFishStartUpFlag::enableComputedStyleDump) {
+                // dump style
+                m_topLevelBrowsingContext->document()
+                    ->styleResolver()
+                    .dumpDOMStyle(m_topLevelBrowsingContext->document());
+            }
+            if (m_starFish->startUpFlag() &
+                StarFishStartUpFlag::enableFrameTreeDump) {
+                FrameTreeBuilder::dumpFrameTree(
+                    m_topLevelBrowsingContext->document(), 0);
+            }
 #endif
 
-        m_topLevelBrowsingContext->document()
-            ->frame()
-            ->establishesStackingContextIfNeedsAndComputingPaintingFlags();
-        if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
-            m_rootStackingContext = m_topLevelBrowsingContext->document()
+            m_topLevelBrowsingContext->document()
+                ->frame()
+                ->establishesStackingContextIfNeedsAndComputingPaintingFlags();
+            if (m_topLevelBrowsingContext->document()->frame()->firstChild()) {
+                m_rootStackingContext = m_topLevelBrowsingContext->document()
+                                            ->frame()
+                                            ->firstChild()
+                                            ->asFrameBox()
+                                            ->stackingContext();
+            } else {
+                m_rootStackingContext = nullptr;
+            }
+            m_needsEstablishesStackingContext = false;
+            setNeedsComputeStackingContextProperties();
+        }
+
+        if (m_needsComputeStackingContextProperties) {
+            {
+                INSTALL_PROFILE_TIMER(starFish(),
+                                      "computeStackingContextProperties");
+                if (m_topLevelBrowsingContext->document()
+                        ->frame()
+                        ->firstChild() &&
+                    m_rootStackingContext) {
+                    m_rootStackingContext->computeStackingContextProperties();
+                }
+                m_needsComputeStackingContextProperties = false;
+            }
+
+#ifdef STARFISH_ENABLE_TEST
+            if (m_starFish->startUpFlag() &
+                StarFishStartUpFlag::enableStackingContextDump) {
+                size_t totalSurfaceBufferSize = 0;
+                if (m_rootStackingContext) {
+                    STARFISH_ASSERT(mainBrowsingContext()
+                                        ->document()
                                         ->frame()
                                         ->firstChild()
                                         ->asFrameBox()
-                                        ->stackingContext();
-        } else {
-            m_rootStackingContext = nullptr;
-        }
-        m_needsEstablishesStackingContext = false;
-        setNeedsComputeStackingContextProperties();
-    }
+                                        ->isRootElement());
+                    StackingContext* ctx = mainBrowsingContext()
+                                               ->document()
+                                               ->frame()
+                                               ->firstChild()
+                                               ->asFrameBox()
+                                               ->stackingContext();
 
-    if (m_needsComputeStackingContextProperties) {
-        {
-            INSTALL_PROFILE_TIMER(starFish(),
-                                  "computeStackingContextProperties");
-            if (m_topLevelBrowsingContext->document()->frame()->firstChild() &&
-                m_rootStackingContext) {
-                m_rootStackingContext->computeStackingContextProperties();
-            }
-            m_needsComputeStackingContextProperties = false;
-        }
-
-#ifdef STARFISH_ENABLE_TEST
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableStackingContextDump) {
-            size_t totalSurfaceBufferSize = 0;
-            if (m_rootStackingContext) {
-                STARFISH_ASSERT(mainBrowsingContext()
-                                    ->document()
-                                    ->frame()
-                                    ->firstChild()
-                                    ->asFrameBox()
-                                    ->isRootElement());
-                StackingContext* ctx = mainBrowsingContext()
-                                           ->document()
-                                           ->frame()
-                                           ->firstChild()
-                                           ->asFrameBox()
-                                           ->stackingContext();
-
-                std::function<void(StackingContext*, int)> dumpSC =
-                    [&dumpSC, &totalSurfaceBufferSize](StackingContext* ctx,
-                                                       int depth) {
-                        for (int i = 0; i < depth; i++) {
-                            printf("  ");
-                        }
-
-                        auto fr = ctx->visibleRect();
-                        auto se = ctx->screenExtent();
-
-                        if (ctx->needsGraphicsBuffer()) {
-                            LayoutUnit minX = ctx->visibleRect().x();
-                            LayoutUnit maxX = ctx->visibleRect().maxX();
-                            LayoutUnit minY = ctx->visibleRect().y();
-                            LayoutUnit maxY = ctx->visibleRect().maxY();
-
-                            minX = minX.floor();
-                            maxX = maxX.ceil();
-                            minY = minY.floor();
-                            maxY = maxY.ceil();
-
-                            size_t bufferWidth = (int)(maxX - minX);
-                            size_t bufferHeight = (int)(maxY - minY);
-
-                            totalSurfaceBufferSize +=
-                                (int)(bufferWidth * bufferHeight * 4);
-                        }
-
-                        if (ctx->owner()->node() &&
-                            ctx->owner()->node()->isHTMLElement()) {
-                            std::string className;
-                            HTMLElement* element =
-                                ctx->owner()->node()->asHTMLElement();
-                            for (unsigned i = 0;
-                                 i < element->classNames().size(); i++) {
-                                auto s = element->classNames()[i]
-                                             .string()
-                                             ->toUTF8NonGCString();
-                                className += s;
-                                className += " ";
-                            }
-
-                            auto utf8DataLog1 =
-                                element->localName()->toUTF8NonGCString();
-                            auto utf8DataLog2 =
-                                element->id()->toUTF8NonGCString();
-                            printf(
-                                "StackingContext[%d][%p, node %p %s id:%s "
-                                "className:%s"
-                                ", frame %p, buf? %d opacity %f "
-                                "screenExtent %f %f %f %f visibleRect "
-                                "%d "
-                                "%d %d %d]",
-                                depth / 2, ctx, element, utf8DataLog1.data(),
-                                utf8DataLog2.data(), className.data(),
-                                ctx->owner(), (int)ctx->needsGraphicsBuffer(),
-                                ctx->owner()->style()->opacity(), (float)se.x(),
-                                (float)se.y(), (float)se.width(),
-                                (float)se.height(), (int)fr.x(), (int)fr.y(),
-                                (int)fr.width(), (int)fr.height());
-                        } else {
-                            printf(
-                                "StackingContext[%d][%p, anonymous node"
-                                ", frame %p, buf %d opacity %f "
-                                "screenExtent %f %f %f %f visibleRect %d "
-                                "%d %d %d]",
-                                depth / 2, ctx, ctx->owner(),
-                                (int)ctx->needsGraphicsBuffer(),
-                                ctx->owner()->style()->opacity(), (float)se.x(),
-                                (float)se.y(), (float)se.width(),
-                                (float)se.height(), (int)fr.x(), (int)fr.y(),
-                                (int)fr.width(), (int)fr.height());
-                        }
-
-                        auto reason = ctx->needsGraphicsBufferReason();
-                        if (reason) {
-                            printf(" buf reason? %d", (int)reason);
-                        }
-
-                        SkMatrix m = ctx->transformMatrix();
-                        if (!m.isIdentity()) {
-                            printf(" matrix [%f %f %f][%f %f %f][%f %f %f]",
-                                   m.getScaleX(), m.getSkewX(),
-                                   m.getTranslateX(), m.getSkewY(),
-                                   m.getScaleY(), m.getTranslateY(),
-                                   m.getPerspX(), m.getPerspY(), m.get(8));
-                        }
-                        printf("\n");
-
-                        auto iter = ctx->childContexts().begin();
-                        while (iter != ctx->childContexts().end()) {
-                            StackingContextChild* child = *iter;
-                            int32_t num = child->at(0)->zIndex();
-
-                            for (int i = 0; i < depth + 1; i++) {
+                    std::function<void(StackingContext*, int)> dumpSC =
+                        [&dumpSC, &totalSurfaceBufferSize](StackingContext* ctx,
+                                                           int depth) {
+                            for (int i = 0; i < depth; i++) {
                                 printf("  ");
                             }
 
-                            printf("z-index: %d\n", (int)num);
+                            auto fr = ctx->visibleRect();
+                            auto se = ctx->screenExtent();
 
-                            auto iter2 = child->begin();
-                            while (iter2 != child->end()) {
-                                dumpSC(*iter2, depth + 2);
-                                iter2++;
+                            if (ctx->needsGraphicsBuffer()) {
+                                LayoutUnit minX = ctx->visibleRect().x();
+                                LayoutUnit maxX = ctx->visibleRect().maxX();
+                                LayoutUnit minY = ctx->visibleRect().y();
+                                LayoutUnit maxY = ctx->visibleRect().maxY();
+
+                                size_t bufferWidth = (int)(maxX - minX);
+                                size_t bufferHeight = (int)(maxY - minY);
+
+                                totalSurfaceBufferSize +=
+                                    (int)(bufferWidth * bufferHeight * 4);
                             }
 
-                            iter++;
-                        }
-                    };
+                            if (ctx->owner()->node() &&
+                                ctx->owner()->node()->isHTMLElement()) {
+                                std::string className;
+                                HTMLElement* element =
+                                    ctx->owner()->node()->asHTMLElement();
+                                for (unsigned i = 0;
+                                     i < element->classNames().size(); i++) {
+                                    auto s = element->classNames()[i]
+                                                 .string()
+                                                 ->toUTF8NonGCString();
+                                    className += s;
+                                    className += " ";
+                                }
 
-                dumpSC(ctx, 0);
+                                auto utf8DataLog1 =
+                                    element->localName()->toUTF8NonGCString();
+                                auto utf8DataLog2 =
+                                    element->id()->toUTF8NonGCString();
+                                printf(
+                                    "StackingContext[%d][%p, node %p %s id:%s "
+                                    "className:%s"
+                                    ", frame %p, buf? %d opacity %f "
+                                    "screenExtent %f %f %f %f visibleRect "
+                                    "%d "
+                                    "%d %d %d]",
+                                    depth / 2, ctx, element,
+                                    utf8DataLog1.data(), utf8DataLog2.data(),
+                                    className.data(), ctx->owner(),
+                                    (int)ctx->needsGraphicsBuffer(),
+                                    ctx->owner()->style()->opacity(),
+                                    (float)se.x(), (float)se.y(),
+                                    (float)se.width(), (float)se.height(),
+                                    (int)fr.x(), (int)fr.y(), (int)fr.width(),
+                                    (int)fr.height());
+                            } else {
+                                printf(
+                                    "StackingContext[%d][%p, anonymous node"
+                                    ", frame %p, buf %d opacity %f "
+                                    "screenExtent %f %f %f %f visibleRect %d "
+                                    "%d %d %d]",
+                                    depth / 2, ctx, ctx->owner(),
+                                    (int)ctx->needsGraphicsBuffer(),
+                                    ctx->owner()->style()->opacity(),
+                                    (float)se.x(), (float)se.y(),
+                                    (float)se.width(), (float)se.height(),
+                                    (int)fr.x(), (int)fr.y(), (int)fr.width(),
+                                    (int)fr.height());
+                            }
 
-                printf("total buffer Size -> %f\n",
-                       totalSurfaceBufferSize / 1024.f / 1024.f);
+                            auto reason = ctx->needsGraphicsBufferReason();
+                            if (reason) {
+                                printf(" buf reason? %d", (int)reason);
+                            }
+
+                            SkMatrix m = ctx->transformMatrix();
+                            if (!m.isIdentity()) {
+                                printf(" matrix [%f %f %f][%f %f %f][%f %f %f]",
+                                       m.getScaleX(), m.getSkewX(),
+                                       m.getTranslateX(), m.getSkewY(),
+                                       m.getScaleY(), m.getTranslateY(),
+                                       m.getPerspX(), m.getPerspY(), m.get(8));
+                            }
+                            printf("\n");
+
+                            auto iter = ctx->childContexts().begin();
+                            while (iter != ctx->childContexts().end()) {
+                                StackingContextChild* child = *iter;
+                                int32_t num = child->at(0)->zIndex();
+
+                                for (int i = 0; i < depth + 1; i++) {
+                                    printf("  ");
+                                }
+
+                                printf("z-index: %d\n", (int)num);
+
+                                auto iter2 = child->begin();
+                                while (iter2 != child->end()) {
+                                    dumpSC(*iter2, depth + 2);
+                                    iter2++;
+                                }
+
+                                iter++;
+                            }
+                        };
+
+                    dumpSC(ctx, 0);
+
+                    printf("total buffer Size -> %f\n",
+                           totalSurfaceBufferSize / 1024.f / 1024.f);
+                }
             }
-        }
 #endif
+        }
     }
 
     clearStack<102400>();

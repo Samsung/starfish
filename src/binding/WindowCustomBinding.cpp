@@ -450,12 +450,6 @@ static ValueRef* wptTestEndFunction(ExecutionStateRef* state,
                                     ValueRef* thisValue, size_t argc,
                                     ValueRef** argv, bool isNewExpression)
 {
-    const char* path = getenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT");
-    if (path && strlen(path)) {
-        // wait for screen shot
-        setenv("GL_COMPOSITOR_WAIT_SCREEN_SHOT_WPT_TESTEND", "1", 1);
-        return ValueRef::createUndefined();
-    }
     doWptTestEnd();
     return ValueRef::createUndefined();
 }

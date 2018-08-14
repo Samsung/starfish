@@ -72,7 +72,7 @@ public:
         m_width = 0;
         m_height = 0;
         m_stride = 0;
-        m_hasTransparentPixel = false;
+        m_hasTransparentPixel = true;
 
         if (buf && len != 0) {
             decodeImage(nullptr, nullptr, buf, len, shouldDecodingInstantly);
@@ -348,6 +348,7 @@ private:
         png_set_bgr(png);
         png_read_update_info(png, info);
 
+        m_hasTransparentPixel = false;
         png_uint_32 rowbytes = png_get_rowbytes(png, info);
         m_stride = rowbytes;
         if (needsDecoding) {
@@ -437,6 +438,7 @@ private:
         dstSize = m_stride * m_height;
         m_image = malloc(dstSize);
 
+        m_hasTransparentPixel = false;
         unsigned char* buffer_array[1];
         if (dHandle->out_color_space == JCS_GRAYSCALE) {
             while (dHandle->output_scanline < dHandle->output_height) {
@@ -663,7 +665,7 @@ private:
         m_width = Width;
         m_height = Height;
         m_stride = Width * 4;
-        m_hasTransparentPixel = true;
+        m_hasTransparentPixel = false;
 
         if (needsDecoding) {
             WICRect Rect = { 0, 0, (int)Width, (int)Height };
@@ -806,6 +808,7 @@ private:
         m_stride = m_width * 4;
 
         if (needsDecoding) {
+            m_hasTransparentPixel = false;
             screenBuffer = (GifRowType*)malloc(m_height * sizeof(GifRowType));
             if (screenBuffer == NULL) {
                 STARFISH_LOG_ERROR("Gif Open Error: malloc failed\n");

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#define STARFISH_ENABLE_PROFILE_TIMER
+// #define STARFISH_ENABLE_PROFILE_TIMER
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
@@ -496,7 +496,8 @@ public:
     }
 
     void setImageRenderingModeToPattern(cairo_pattern_t* resizePattern,
-                                        ImageRenderingValue imageRenderingMode)
+                                        ImageRenderingValue imageRenderingMode,
+                                        size_t targetWidth, size_t targetHeight)
     {
         auto anti = cairo_get_antialias(m_canvas);
         cairo_filter_t autoFilterMode;
@@ -506,6 +507,17 @@ public:
             autoFilterMode = anti >= CAIRO_ANTIALIAS_GOOD ? CAIRO_FILTER_GOOD
                                                           : CAIRO_FILTER_FAST;
         }
+#ifndef CANVAS_CAIRO_IMAGE_POOR_ANTIALIAS
+#define CANVAS_CAIRO_IMAGE_POOR_ANTIALIAS 300
+#endif
+#ifndef STARFISH_ENABLE_TEST
+        if (targetWidth < CANVAS_CAIRO_IMAGE_POOR_ANTIALIAS ||
+            targetHeight < CANVAS_CAIRO_IMAGE_POOR_ANTIALIAS) {
+            // image is small enough to using poor antialias
+            autoFilterMode = CAIRO_FILTER_FAST;
+        }
+#endif
+
 #if defined(STARFISH_ANDROID)
         autoFilterMode = CAIRO_FILTER_FAST;
 #endif
@@ -545,7 +557,8 @@ public:
         cairo_matrix_init_identity(&matrix);
         cairo_matrix_scale(&matrix, surfaceWidth / ww, surfaceHeight / hh);
         cairo_pattern_set_matrix(resizePattern, &matrix);
-        setImageRenderingModeToPattern(resizePattern, imageRenderingMode);
+        setImageRenderingModeToPattern(resizePattern, imageRenderingMode, ww,
+                                       hh);
         cairo_pattern_set_extend(resizePattern, CAIRO_EXTEND_PAD);
 
         cairo_set_source(m_canvas, resizePattern);
@@ -713,7 +726,7 @@ public:
             cairo_matrix_translate(&matrix, -x, -y);
 
             cairo_pattern_set_matrix(pattern, &matrix);
-            setImageRenderingModeToPattern(pattern, imageRenderingMode);
+            setImageRenderingModeToPattern(pattern, imageRenderingMode, ww, hh);
             cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
 
             cairo_translate(m_canvas, xx, yy);
@@ -784,7 +797,7 @@ public:
             cairo_matrix_translate(&matrix, -x, -y);
 
             cairo_pattern_set_matrix(pattern, &matrix);
-            setImageRenderingModeToPattern(pattern, imageRenderingMode);
+            setImageRenderingModeToPattern(pattern, imageRenderingMode, ww, hh);
             cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
 
             cairo_translate(m_canvas, xx, yy);
