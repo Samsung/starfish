@@ -952,43 +952,14 @@ regression_test_bidi.tizen_wearable_arm.debug:
 	$(CXX) -O3 -g3 --std=c++11 $(CXXFLAGS) $(LDFLAGS) -o tool/imgdiff/imgdiffEvas.exe tool/imgdiff/imgdiffEvas.cpp
 	./tool/reftest/setup_bidi_test.sh true
 
+test_all:
+	make reftest_all
+	make bidi_test
+	make internal_test
+
 ################################################################################
 # Test Cairo backend
 ################################################################################
-
-csswg_test_css1_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css1.res cairo -p$(TEST_NPROCS)
-csswg_test_css21_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css21.res cairo -p$(TEST_NPROCS)
-csswg_test_css21_tables_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css21_tables.res cairo -p$(TEST_NPROCS)
-csswg_test_css3_color_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_color.res cairo -p$(TEST_NPROCS)
-csswg_test_css3_backgrounds_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_backgrounds.res cairo -p$(TEST_NPROCS)
-csswg_test_css3_transforms_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_transforms.res cairo -p$(TEST_NPROCS)
-csswg_test_css3_selectors_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_css3_selectors.res cairo -p$(TEST_NPROCS)
-csswg_test_mediaqueries3_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_mediaqueries3.res cairo -p$(TEST_NPROCS)
-csswg_test_manual_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_manual.res cairo --font-dep -p$(TEST_NPROCS)
-csswg_test_rtl_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_rtl.res cairo -p$(TEST_NPROCS)
-csswg_test_flex_cairo:
-	./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_flex.res cairo -p$(TEST_NPROCS)
-csswg_test_all_cairo:
-	make csswg_test_css1_cairo
-	make csswg_test_css21_cairo
-	make csswg_test_css21_tables_cairo
-	make csswg_test_css3_color_cairo
-	make csswg_test_css3_transforms_cairo
-	make csswg_test_css3_backgrounds_cairo
-	make csswg_test_css3_selectors_cairo
-	make csswg_test_mediaqueries3_cairo
-	make csswg_test_flex_cairo
-	make csswg_test_manual_cairo
 
 internal_test_cairo:
 	./tool/drivers/run_test.py basic tool/reftest/cairo/internal.res common -p$(TEST_NPROCS)
@@ -1022,29 +993,6 @@ dom_conformance_all_cairo:
 	make dom_conformance_test_webkit_cairo
 	make dom_conformance_test_blink_cairo
 	make dom_conformance_test_gecko_cairo
-
-web_platform_test_dom_cairo:
-	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_dom.res common -p$(TEST_NPROCS)
-web_platform_test_dom_events_cairo:
-	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_dom_events.res common -p$(TEST_NPROCS)
-web_platform_test_html_cairo:
-	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_html.res common -p$(TEST_NPROCS)
-web_platform_test_page_visibility_cairo:
-	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_page_visibility.res common -p$(TEST_NPROCS)
-web_platform_test_progress_events_cairo:
-	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_progress_events.res common -p$(TEST_NPROCS)
-web_platform_test_xhr_cairo:
-	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_xhr.res common -p$(TEST_NPROCS)
-web_platform_test_css_cairo:
-	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_css.res common -p$(TEST_NPROCS)
-web_platform_test_all_cairo:
-	make web_platform_test_dom_cairo
-	make web_platform_test_dom_events_cairo
-	make web_platform_test_html_cairo
-	make web_platform_test_page_visibility_cairo
-	make web_platform_test_progress_events_cairo
-	make web_platform_test_xhr_cairo
-	make web_platform_test_css_cairo
 
 vendor_test_blink_fast_dom_cairo:
 	./tool/drivers/run_test.py vendor_basic tool/reftest/cairo/blink_fast_dom.res common -p$(TEST_NPROCS)
@@ -1083,24 +1031,6 @@ vendor_test_all_cairo:
 	make vendor_test_webkit_fast_html_cairo
 	make vendor_test_webkit_fast_css_cairo
 	make vendor_test_webkit_fast_etc_cairo
-
-reftest_all_cairo:
-	make dom_conformance_all_cairo
-	make web_platform_test_all_cairo
-	make vendor_test_all_cairo
-	make csswg_test_all_cairo
-	make wpt_all_cairo
-
-bidi_test_cairo:
-	./tool/drivers/run_test.py bidi tool/reftest/cairo/bidi.res cairo --font-dep -p$(TEST_NPROCS)
-
-react_test:
-	cd ./test/cairo/reftest/vendor/react/ && ./generator.py
-	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/react.res common -p$(TEST_NPROCS)
-
-################################################################################
-# Test-new Cairo backend
-################################################################################
 
 wpt_css_css21_cairo:
 #	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css21_dev_basic.res basic -p$(TEST_NPROCS)
@@ -1163,17 +1093,24 @@ wpt_all_cairo:
 	make wpt_css_all_cairo
 	make wpt_others_cairo
 
-################################################################################
+reftest_all_cairo:
+	make dom_conformance_all_cairo
+	make vendor_test_all_cairo
+	make wpt_all_cairo
 
-test_all:
-	make reftest_all
-	make bidi_test
-	make internal_test
+bidi_test_cairo:
+	./tool/drivers/run_test.py bidi tool/reftest/cairo/bidi.res cairo --font-dep -p$(TEST_NPROCS)
+
+react_test:
+	cd ./test/cairo/reftest/vendor/react/ && ./generator.py
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/react.res common -p$(TEST_NPROCS)
 
 test_all_cairo:
 	make reftest_all_cairo
 	make bidi_test_cairo
 	make internal_test_cairo
+
+################################################################################
 
 reftest_emulator_2.3:
 	./tool/reftest/reftest_runner.sh emulator 2.3 all
