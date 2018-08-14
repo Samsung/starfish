@@ -34,6 +34,7 @@
 #include "core/dom/HTMLFieldSetElement.h"
 #include "core/dom/HTMLLabelElement.h"
 #include "core/dom/HTMLLegendElement.h"
+#include "core/dom/HTMLBaseElement.h"
 #include "core/dom/Node.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/dom/Traverse.h"
@@ -722,10 +723,21 @@ void HTMLFormElement::submit(HTMLElement* submitter)
     }
     if (formTarget->equals(String::emptyString)) {
         formTarget = target();
-    }
+        if (formTarget->equals(String::emptyString)) {
+            Node* baseElem =
+                document()->childMatchedBy(document(), [](Node* node) {
+                    if (node->isHTMLBaseElement() &&
+                        !node->asHTMLBaseElement()->target()->equals(
+                            String::emptyString)) {
+                        return true;
+                    }
+                    return false;
+                });
 
-    if (!formTarget->equals(String::emptyString)) {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            if (baseElem) {
+                formTarget = baseElem->asHTMLBaseElement()->target();
+            }
+        }
     }
 
     if (url->isNetworkURL() || url->isFileURL()) {
@@ -740,16 +752,22 @@ void HTMLFormElement::submitData(ResourceURL* url,
                                  ResourceRequest::EncodeType enctype,
                                  ResourceRequest::MethodType method)
 {
+    mutateActionUrl(url, formDataSet, enctype, method);
+}
+
+void HTMLFormElement::mutateActionUrl(ResourceURL* url,
+                                      GCVector<FormDataSetItem*>* formDataSet,
+                                      ResourceRequest::EncodeType enctype,
+                                      ResourceRequest::MethodType method)
+{
     if (m_plannedNavigationTaskId != (size_t)-1) {
         starFish()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
     }
 
     FormSubmitData* dataToSubmit =
         new FormSubmitData(formDataSet, enctype, method);
-    String* urlStr = url->urlString();
-    if (method == ResourceRequest::GET_METHOD) {
-        urlStr = urlStr->concat("?")->concat(dataToSubmit->toString());
-    }
+    String* urlStr =
+        url->urlString()->concat("?")->concat(dataToSubmit->toString());
 
     DocumentURL* urlToOpen = new DocumentURL(urlStr, dataToSubmit);
     auto fn = [](size_t handle, void* data1, void* data2) {
