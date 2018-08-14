@@ -183,7 +183,7 @@ public:
 
     virtual void clear()
     {
-        size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+        size_t end = m_bufferStride * m_bufferHeight;
         memset(m_buffer, 0x00, end);
     }
 

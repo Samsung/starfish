@@ -130,6 +130,7 @@ void* StackingContextRareData::operator new(size_t size)
 StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     : m_catchedMatrixChangedWhileComputeStackingContextProperties(false)
     , m_needsGraphicsBuffer(false)
+    , m_hasGraphicsBufferButPaintingSkipped(false)
     , m_hasNon2DRectTransform(false)
     , m_isVisibleRectComputedForNonGraphicsLayer(false)
     , m_needsGraphicsBufferReason(
@@ -418,9 +419,6 @@ public:
                 LayoutRect visibleRect = sc->visibleRect();
                 LayoutUnit minX = visibleRect.x();
                 LayoutUnit minY = visibleRect.y();
-
-                minX = minX.floor();
-                minY = minY.floor();
 
                 canvas->translate(-minX, -minY);
                 if (ctx.willCompositing) {
@@ -951,6 +949,15 @@ void StackingContext::applyStackingContextProperties(
                 : Frame::ComputeVisibleRectContext::GraphicsBufferByOtherLayer,
             this, l, m_rareData->m_visibleRect);
 
+        LayoutUnit minX, minY, maxX, maxY;
+        minX = m_rareData->m_visibleRect.x().floor();
+        minY = m_rareData->m_visibleRect.y().floor();
+        maxX = m_rareData->m_visibleRect.maxX().ceil();
+        maxY = m_rareData->m_visibleRect.maxY().ceil();
+
+        m_rareData->m_visibleRect =
+            LayoutRect(minX, minY, maxX - minX, maxY - minY);
+
         if (shouldPaintWindowBackgroundImage) {
             ctx.isVisibleRectCollapsible = false;
         }
@@ -974,6 +981,26 @@ void StackingContext::applyStackingContextProperties(
         }
     } else {
         m_isVisibleRectComputedForNonGraphicsLayer = false;
+    }
+
+    LayoutRect screenRect =
+        LayoutRect(0, 0, m_owner->node()->window()->innerWidth(),
+                   m_owner->node()->window()->innerHeight());
+    bool canSkipPaintingForThisLayer =
+        willBeComposited && !m_owner->needsGraphicsBuffer() &&
+        (!screenRect.containsInVisual(m_screenExtent) &&
+         !screenRect.intersects(m_screenExtent));
+
+    if (canSkipPaintingForThisLayer) {
+        m_rareData->m_visibleRect.setWidth(0);
+        m_rareData->m_visibleRect.setHeight(0);
+        m_hasGraphicsBufferButPaintingSkipped = true;
+    } else if (m_hasGraphicsBufferButPaintingSkipped &&
+               !canSkipPaintingForThisLayer) {
+        m_hasGraphicsBufferButPaintingSkipped = false;
+        m_owner->node()->setNeedsPainting();
+    } else {
+        m_hasGraphicsBufferButPaintingSkipped = false;
     }
 
     if (compositedBefore != willBeComposited) {
@@ -1173,11 +1200,6 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     LayoutUnit minY = visibleRect.y();
     LayoutUnit maxY = visibleRect.maxY();
 
-    minX = minX.floor();
-    maxX = maxX.ceil();
-    minY = minY.floor();
-    maxY = maxY.ceil();
-
     size_t bufferWidth = (int)(maxX - minX);
     size_t bufferHeight = (int)(maxY - minY);
 
@@ -1272,6 +1294,17 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                 ctx.layerClipRect.setHeight(ctx.layerClipRect.height().ceil() +
                                             1);
                 needsInitialClip = true;
+
+                if (ctx.layerClipRect.x() <= 0 && ctx.layerClipRect.y() <= 0 &&
+                    ctx.layerClipRect.maxX() >=
+                        (int)m_rareData->m_buffer->width() &&
+                    ctx.layerClipRect.maxY() >=
+                        (int)m_rareData->m_buffer->height()) {
+                    needsInitialClip = false;
+                    ctx.layerClipRect =
+                        LayoutRect(0, 0, m_rareData->m_buffer->width(),
+                                   m_rareData->m_buffer->height());
+                }
             }
         } else if (isOverlappedWithScreenClipRect || gotNewBuffer) {
         } else {
@@ -1289,7 +1322,12 @@ void StackingContext::paintStackingContext(Canvas* canvas,
             deviceLayerClipRect = canvas->pixelSnappedClip(ctx.layerClipRect);
         }
 
-        canvas->clearColor(Unit::Color(0, 0, 0, 0));
+        if (needsInitialClip) {
+            canvas->clearColor(Unit::Color(0, 0, 0, 0));
+        } else {
+            m_rareData->m_buffer->clear();
+        }
+
         if (isRootContext()) {
             m_owner->node()
                 ->document()
@@ -1467,10 +1505,12 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 #ifndef PORT_CANVAS_BACKEND_EFL
             FilterContext filterContext(&canvas, this);
             m_owner->paintStackingContextContent(canvas);
+            m_owner->paintOutline(canvas);
             filterContext.applyAllFilter();
 #endif
         } else {
             m_owner->paintStackingContextContent(canvas);
+            m_owner->paintOutline(canvas);
         }
     }
 
@@ -1593,11 +1633,6 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         LayoutUnit maxX = visibleRect.maxX();
         LayoutUnit minY = visibleRect.y();
         LayoutUnit maxY = visibleRect.maxY();
-
-        minX = minX.floor();
-        maxX = maxX.ceil();
-        minY = minY.floor();
-        maxY = maxY.ceil();
 
         size_t bufferWidth = (int)(maxX - minX);
         size_t bufferHeight = (int)(maxY - minY);

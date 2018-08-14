@@ -104,6 +104,8 @@ enum PaintingInlineStage {
     PaintingInlineStageEnd
 };
 
+LayoutRect computeBoxExtent(LayoutRect rt, const SkMatrix& m);
+
 class FrameBox : public Frame {
     friend struct MBPRestorer;
     friend struct MinMaxWidthHeightRestorer;
@@ -125,6 +127,7 @@ public:
     virtual void dump(int depth)
     {
         Frame::dump(depth);
+        printf(" layoutParent(%p) ", layoutParent());
         printf(" frameRect(%g,%g,%g,%g) ", (float)x(), (float)y(),
                (float)width(), (float)height());
         printf(" padding(%g,%g,%g,%g) ", (float)paddingTop(),
