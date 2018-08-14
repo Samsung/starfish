@@ -9,9 +9,7 @@ test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css3-transform-sca
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css3-transform-scale.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css-scale-nested-001.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css-skew-001.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css-skew-002.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css-transform-animate-translate-implied-y.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css-transform-inherit-rotate.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css-transform-inherit-scale.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css-transform-scale-001.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/css-transform-scale-002.htm
@@ -785,13 +783,10 @@ test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-applies-
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-background-006.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-background-007.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-background-008.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-compound-001.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-containing-block-dynamic-1a.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-containing-block-dynamic-1b.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-descendant-001.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-display-001.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-display-002.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-display-003.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-display-004.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-fixed-bg-001.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-fixed-bg-002.htm
@@ -802,7 +797,6 @@ test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-display-
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-fixed-bg-007.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-generated-001.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-generated-002.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-iframe-001.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-image-001.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-inherit-001.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-inherit-002.htm
@@ -838,10 +832,6 @@ test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-matrix-0
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-matrix-008.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-001.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-002.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-003.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-004.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-005.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-006.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-007.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-008.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-009.htm
@@ -849,13 +839,8 @@ test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-0
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-011.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-012.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-013.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-01.htm
+test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-01.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-name-001.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-name-002.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-name-003.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-name-004.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-name-005.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-name-006.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-origin-name-007.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-overflow-001.htm
@@ -873,11 +858,6 @@ test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-propagat
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-root-bg-002.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-root-bg-003.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-root-bg-004.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-rotate-001.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-rotate-002.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-rotate-003.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-rotate-004.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-rotate-005.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-rotate-006.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-rotate-007.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-rounding-001.htm
@@ -888,7 +868,6 @@ test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-scale-te
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-scalex-001.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-scaley-001.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-singular-001.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transforms-rotate-degree-45.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transforms-rotate-degree-90.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transforms-rotate-translate-scale.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transforms-rotateY-degree-60.htm
