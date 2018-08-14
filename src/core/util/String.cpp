@@ -1226,6 +1226,27 @@ void StringUtils::tokenize(String* src, const char* tokens, size_t tokensLength,
     }
 }
 
+void StringUtils::wordTokenizer(String* s, GCVector<StringView>& tokens)
+{
+    size_t start = 0, end = 0;
+    do {
+        start = end;
+        while ((start < s->length()) && String::isSpaceOrNewline((*s)[start])) {
+            start++;
+        }
+
+        end = start;
+        if (end >= s->length()) {
+            break;
+        }
+
+        while ((end < s->length()) && !String::isSpaceOrNewline((*s)[end])) {
+            end++;
+        }
+        tokens.push_back(StringView(s, start, end));
+    } while (end < s->length());
+}
+
 bool StringUtils::equalsIgnoreCase(const std::string& a, const std::string& b)
 {
     unsigned int sz = a.size();

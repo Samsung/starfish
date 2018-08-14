@@ -492,7 +492,16 @@ void HTMLSelectElement::showDropdownMenu()
     for (auto item : list) {
         if (item->isHTMLOptionElement()) {
             auto o = item->asHTMLOptionElement();
-            p->list->push_back(o->text()->toUTF8NonGCString().data());
+            GCVector<StringView> tokens;
+            StringUtils::wordTokenizer(o->text(), tokens);
+            StringBuilder sb;
+            for (size_t i = 0; i < tokens.size(); i++) {
+                sb.appendString(tokens[i].substring());
+                if (i < tokens.size() - 1) {
+                    sb.appendChar(' ');
+                }
+            }
+            p->list->push_back(sb.finalize()->toUTF8NonGCString().data());
         }
     }
 

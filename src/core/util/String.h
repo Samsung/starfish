@@ -1078,6 +1078,7 @@ public:
     // token is only 1-byte char now.
     static void tokenize(String* src, const char* tokens, size_t tokensLength,
                          GCVector<StringView>& result);
+    static void wordTokenizer(String* s, GCVector<StringView>& tokens);
     static bool equalsIgnoreCase(const std::string& a, const std::string& b);
     static void ltrim(std::string& s);
     static void rtrim(std::string& s);
