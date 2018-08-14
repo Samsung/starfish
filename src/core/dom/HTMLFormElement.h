@@ -216,6 +216,12 @@ private:
     void submitData(ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
                     ResourceRequest::EncodeType encodeType,
                     ResourceRequest::MethodType methodType);
+
+    void mutateActionUrl(ResourceURL* url,
+                         GCVector<FormDataSetItem*>* formDataSet,
+                         ResourceRequest::EncodeType enctype,
+                         ResourceRequest::MethodType method);
+
     void clearPlannedNavigationTask();
     bool isFormAssociatedElement(Node* node);
     void computeFormSubmittableElements(Node* parent,
