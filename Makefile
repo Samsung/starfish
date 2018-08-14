@@ -1115,6 +1115,7 @@ wpt_css_backgrounds_cairo:
 wpt_css_color_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_manual.res cairo --font-dep -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res cairo -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-4_dev_pixel.res cairo -p$(TEST_NPROCS)
 
