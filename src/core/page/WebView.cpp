@@ -217,6 +217,26 @@ void WebView::close()
 {
     STARFISH_LOG_INFO("WebView::close()\n");
     mainBrowsingContext()->dispose();
+
+    if (m_rootStackingContext) {
+        StackingContext* ctx = m_rootStackingContext;
+        std::function<void(StackingContext*)> clearSC =
+            [&](StackingContext* ctx) {
+                ctx->clearGraphicsBuffer();
+                auto iter = ctx->childContexts().begin();
+                while (iter != ctx->childContexts().end()) {
+                    StackingContextChild* child = *iter;
+                    auto iter2 = child->begin();
+                    while (iter2 != child->end()) {
+                        clearSC(*iter2);
+                        iter2++;
+                    }
+                    iter++;
+                }
+            };
+        clearSC(ctx);
+        m_rootStackingContext = nullptr;
+    }
 }
 
 void WebView::initStorage()

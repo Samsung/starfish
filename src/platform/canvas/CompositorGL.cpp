@@ -387,10 +387,13 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        m_window->glMakeCurrent();
+        if (!m_window->isClosed())
+            m_window->glMakeCurrent();
         if (m_isEGLImageExternal && m_textureFragments.size()) {
 #if defined(STARFISH_TIZEN)
-            g_evasGLAPI->evasglDestroyImage(m_eglImage);
+            if (!m_window->isClosed())
+                g_evasGLAPI->evasglDestroyImage(m_eglImage);
+
             m_eglImage = nullptr;
             tbm_surface_destroy(m_tbmSurface);
             m_tbmSurface = nullptr;
@@ -402,9 +405,11 @@ public:
                 free(m_buffer);
             }
 
-            for (size_t i = 0; i < m_textureFragments.size(); i++) {
-                GLuint id = m_textureFragments[i].textureID;
-                glDeleteTextures(1, &id);
+            if (!m_window->isClosed()) {
+                for (size_t i = 0; i < m_textureFragments.size(); i++) {
+                    GLuint id = m_textureFragments[i].textureID;
+                    glDeleteTextures(1, &id);
+                }
             }
             m_textureFragments.clear();
             m_textureFragmentsFlags.clear();

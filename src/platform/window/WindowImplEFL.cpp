@@ -565,6 +565,8 @@ public:
 
     void (*m_resizeHandler)(void* data, Evas* evas, Evas_Object* obj,
                             void* event_info);
+    void (*m_closeWindowHandler)(void* data, Evas* evas, Evas_Object* obj,
+                                 void* event_info);
     void (*m_renderingHandler)(void* data, Evas* evas, void* event_info);
     void (*m_mouseDownEventHandler)(void* data, Evas* evas, Evas_Object* obj,
                                     void* event_info);
@@ -1490,6 +1492,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     } else {
         wnd->m_resizeHandler = nullptr;
     }
+
+    wnd->m_closeWindowHandler = [](void* data, Evas* e, Evas_Object* obj,
+                                   void* event_info) {
+        WindowImplEFL* wnd = (WindowImplEFL*)data;
+        wnd->setClosed();
+
+    };
+    evas_object_event_callback_add(wnd->m_window, EVAS_CALLBACK_RESIZE,
+                                   wnd->m_resizeHandler, wnd);
 
     evas_object_event_callback_add(
         wnd->m_mainBox, EVAS_CALLBACK_RESIZE,
