@@ -507,16 +507,6 @@ public:
             autoFilterMode = anti >= CAIRO_ANTIALIAS_GOOD ? CAIRO_FILTER_GOOD
                                                           : CAIRO_FILTER_FAST;
         }
-#ifndef CANVAS_CAIRO_IMAGE_POOR_ANTIALIAS
-#define CANVAS_CAIRO_IMAGE_POOR_ANTIALIAS 300
-#endif
-#ifndef STARFISH_ENABLE_TEST
-        if (targetWidth < CANVAS_CAIRO_IMAGE_POOR_ANTIALIAS ||
-            targetHeight < CANVAS_CAIRO_IMAGE_POOR_ANTIALIAS) {
-            // image is small enough to using poor antialias
-            autoFilterMode = CAIRO_FILTER_FAST;
-        }
-#endif
 
 #if defined(STARFISH_ANDROID)
         autoFilterMode = CAIRO_FILTER_FAST;
