@@ -6578,13 +6578,13 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         } else if (style->transitionLayerSize() > 0) {
             if (oldStyle &&
                 damage != ComputedStyleDamage::ComputedStyleDamageNone &&
-                oldFrame && needsToApplyTransition(style, damagedKeys)) {
+                needsToApplyTransition(style, damagedKeys)) {
                 if (!element->webView()->inRendering()) {
                     element->document()
                         ->animationExecutor()
                         ->addPendingAnimation(element, oldStyle, style,
                                               oldFrame);
-                } else {
+                } else if (oldFrame) {
                     applyTransition(element, oldStyle, oldFrame, style,
                                     damagedKeys);
                 }
