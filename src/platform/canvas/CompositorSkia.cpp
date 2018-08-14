@@ -64,8 +64,8 @@ public:
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = true;
 
-        initFromBuffer(data->data(), data->bufferWidth(), data->bufferHeight(),
-                       data->bufferStride());
+        initFromBuffer(data->mapBuffer(), data->bufferWidth(),
+                       data->bufferHeight(), data->bufferStride());
 
         m_stateSize = 0;
         m_opacityVector.push_back(1);
