@@ -159,6 +159,11 @@ public:
         return m_isClosed;
     }
 
+    void setClosed()
+    {
+        m_isClosed = true;
+    }
+
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     void paintVirtualCursor(Canvas* canvas);
 #endif

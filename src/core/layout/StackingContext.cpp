@@ -202,6 +202,7 @@ int32_t StackingContext::zIndex()
 void StackingContext::clearGraphicsBuffer()
 {
     if (m_rareData && m_rareData->m_buffer) {
+        m_rareData->m_buffer->detachNativeBuffer();
         m_rareData->m_buffer = nullptr;
     }
 }
@@ -1335,7 +1336,10 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                 ->paintWindowBackground(canvas);
         }
     } else {
-        clearGraphicsBuffer();
+        if (m_rareData && m_rareData->m_buffer) {
+            m_rareData->m_buffer->detachNativeBuffer();
+            m_rareData->m_buffer = nullptr;
+        }
     }
 
     {
