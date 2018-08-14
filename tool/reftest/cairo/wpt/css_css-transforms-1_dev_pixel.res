@@ -906,7 +906,6 @@ test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-table-00
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-table-005.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-transformable-inline-block.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-transformable-inline-table.htm
-#test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-transformable-list-item.htm
 #test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-transformable-table-caption.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-transformable-table-cell.htm
 test_new/web_platform_test/css/dist/css-transforms-1_dev/html/transform-transformable-table-footer-group.htm

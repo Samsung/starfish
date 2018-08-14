@@ -410,7 +410,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/abspos-zero-width-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/adjacent-floats-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/after-content-display-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/after-content-display-002.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/after-content-display-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/after-content-display-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/after-content-display-005.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/after-content-display-006.htm
@@ -1659,7 +1658,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-008.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-applies-to-013.htm
@@ -1692,7 +1690,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-018.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-applies-to-013.htm
@@ -1854,7 +1851,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-175.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-color-applies-to-013.htm
@@ -1880,7 +1876,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-style-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-style-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-style-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-style-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-style-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-style-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-style-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-style-applies-to-013.htm
@@ -1958,7 +1953,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-width-095.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-width-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-width-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-width-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-width-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-width-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-width-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-bottom-width-applies-to-013.htm
@@ -2031,7 +2025,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-color-012.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-color-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-color-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-color-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-color-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-color-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-color-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-color-applies-to-013.htm
@@ -2441,7 +2434,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-left-018.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-left-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-left-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-applies-to-013.htm
@@ -2603,7 +2595,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-left-color-175.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-color-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-color-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-color-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-left-color-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-left-color-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-color-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-color-applies-to-013.htm
@@ -2629,7 +2620,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-left-style-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-style-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-style-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-style-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-left-style-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-left-style-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-style-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-style-applies-to-013.htm
@@ -2706,7 +2696,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-left-width-095.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-width-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-width-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-width-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-left-width-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-left-width-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-width-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-left-width-applies-to-013.htm
@@ -2742,7 +2731,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-right-018.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-right-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-right-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-applies-to-013.htm
@@ -2904,7 +2892,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-right-color-175.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-color-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-color-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-color-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-right-color-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-right-color-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-color-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-color-applies-to-013.htm
@@ -2930,7 +2917,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-right-style-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-style-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-style-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-style-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-right-style-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-right-style-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-style-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-style-applies-to-013.htm
@@ -3007,7 +2993,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-right-width-094.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-width-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-width-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-width-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-right-width-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-right-width-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-width-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-right-width-applies-to-013.htm
@@ -3175,7 +3160,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-top-018.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-top-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-top-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-applies-to-013.htm
@@ -3337,7 +3321,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-top-color-175.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-color-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-color-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-color-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-top-color-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-top-color-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-color-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-color-applies-to-013.htm
@@ -3363,7 +3346,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-top-style-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-style-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-style-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-style-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-top-style-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-top-style-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-style-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-style-applies-to-013.htm
@@ -3441,7 +3423,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-top-width-095.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-width-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-width-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-width-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-top-width-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-top-width-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-width-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-top-width-applies-to-013.htm
@@ -3469,7 +3450,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/border-width-014.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-width-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-width-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-width-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/border-width-applies-to-010.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/border-width-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-width-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/border-width-applies-to-013.htm
@@ -3520,7 +3500,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/bottom-offset-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/bottom-offset-percentage-001.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/box-generation-001.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/box-generation-002.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/box-generation-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/box-offsets-abs-pos-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/box-offsets-rel-pos-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/box-offsets-rel-pos-002.htm
@@ -3547,11 +3526,8 @@ test_new/web_platform_test/css/dist/css21_dev/html4/c11-import-000.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/c12-grouping-000.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/c13-inheritance-000.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/c13-inh-underlin-000.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/c14-classes-000.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/c15-ids-000.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/c15-ids-001.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/c16-descendant-000.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/c16-descendant-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/c16-descendant-002.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/c17-comments-000.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/c17-comments-001.htm
@@ -4214,7 +4190,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/color-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/color-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/color-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/color-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/color-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/color-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/color-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/color-applies-to-013.htm
@@ -4342,7 +4317,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/content-056.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/content-057.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/content-063.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/content-065.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/content-066.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/content-067.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/content-068.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/content-070.htm
@@ -4548,7 +4522,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/counter-increment-applies-to
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-increment-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-increment-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-increment-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/counter-increment-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-increment-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-increment-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-increment-applies-to-013.htm
@@ -4631,7 +4604,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/counter-reset-applies-to-006
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-reset-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-reset-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-reset-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/counter-reset-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-reset-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-reset-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/counter-reset-applies-to-013.htm
@@ -4763,7 +4735,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/direction-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/direction-applies-to-007.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/direction-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/direction-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/direction-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/direction-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/direction-applies-to-012.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/direction-applies-to-013.htm
@@ -4799,7 +4770,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/direction-applies-to-015.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/direction-unicode-bidi-028.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/display-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/display-002.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/display-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/display-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/display-005.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/display-006.htm
@@ -4853,7 +4823,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/empty-cells-013.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/empty-cells-014.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/empty-cells-applies-to-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/empty-cells-applies-to-002.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/empty-cells-applies-to-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/empty-cells-applies-to-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/empty-cells-applies-to-005.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/empty-cells-applies-to-006.htm
@@ -5361,7 +5330,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-002.ht
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-005.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-009.htm
@@ -5376,7 +5344,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-017.ht
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-018.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-019.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-020.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-021.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-022.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-023.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/first-letter-selector-024.htm
@@ -5536,7 +5503,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/float-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/float-applies-to-008a.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/float-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/float-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/float-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/float-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/float-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/float-applies-to-013.htm
@@ -6154,8 +6120,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/height-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/height-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/height-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/height-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/height-applies-to-010a.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/height-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/height-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/height-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/height-applies-to-013.htm
@@ -6485,7 +6449,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/left-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/left-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/left-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/left-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/left-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/left-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/left-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/left-applies-to-013.htm
@@ -6674,7 +6637,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/line-height-applies-to-006.h
 test_new/web_platform_test/css/dist/css21_dev/html4/line-height-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/line-height-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/line-height-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/line-height-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/line-height-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/line-height-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/line-height-applies-to-013.htm
@@ -6695,7 +6657,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/line-height-oof-descendants-
 test_new/web_platform_test/css/dist/css21_dev/html4/list-alignment-001.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/list-bidi-000.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/lists-alpha-wrap-001.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/lists-backgrounds-001.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/list-style-001.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/list-style-002.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/list-style-003.htm
@@ -6865,7 +6826,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/margin-009.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/margin-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/margin-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-applies-to-012.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/margin-applies-to-013.htm
@@ -6898,7 +6858,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/margin-bottom-104.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-bottom-113.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-bottom-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-bottom-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/margin-bottom-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-bottom-applies-to-011.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/margin-bottom-applies-to-012.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/margin-bottom-applies-to-013.htm
@@ -7045,7 +7004,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/margin-left-104.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-left-113.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-left-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-left-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/margin-left-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-left-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-left-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-left-applies-to-013.htm
@@ -7074,7 +7032,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/margin-right-104.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-right-113.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-right-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-right-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/margin-right-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-right-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-right-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-right-applies-to-013.htm
@@ -7105,13 +7062,11 @@ test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-104.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-113.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-applies-to-013.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-applies-to-014.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/margin-top-applies-to-015.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/markers-rtl-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/matching-brackets-001.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/matching-brackets-002.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/matching-brackets-003.htm
@@ -7199,7 +7154,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/max-height-applies-to-006.ht
 #test_new/web_platform_test/css/dist/css21_dev/html4/max-height-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/max-height-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/max-height-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/max-height-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/max-height-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/max-height-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/max-height-applies-to-013.htm
@@ -7293,7 +7247,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/max-width-applies-to-004.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/max-width-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/max-width-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/max-width-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/max-width-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/max-width-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/max-width-applies-to-012.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/max-width-applies-to-013.htm
@@ -7385,7 +7338,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/min-height-applies-to-006.ht
 #test_new/web_platform_test/css/dist/css21_dev/html4/min-height-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-height-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-height-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/min-height-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-height-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-height-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-height-applies-to-013.htm
@@ -7470,7 +7422,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/min-width-applies-to-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-width-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-width-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-width-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/min-width-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-width-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/min-width-applies-to-012.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/min-width-applies-to-013.htm
@@ -7583,7 +7534,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/outline-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/outline-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-applies-to-011.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/outline-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-applies-to-013.htm
@@ -7746,7 +7696,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/outline-color-applies-to-006
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-color-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-color-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-color-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/outline-color-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-color-applies-to-011.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/outline-color-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-color-applies-to-013.htm
@@ -7870,7 +7819,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/outline-width-applies-to-006
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-width-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-width-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-width-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/outline-width-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-width-applies-to-011.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/outline-width-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/outline-width-applies-to-013.htm
@@ -7920,7 +7868,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/padding-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/padding-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-applies-to-013a.htm
@@ -7961,7 +7908,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/padding-bottom-103.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-bottom-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-bottom-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-bottom-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/padding-bottom-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-bottom-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-bottom-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-bottom-applies-to-013.htm
@@ -7998,7 +7944,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/padding-left-103.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-left-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-left-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-left-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/padding-left-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-left-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-left-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-left-applies-to-013.htm
@@ -8036,7 +7981,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/padding-right-103.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-right-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-right-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-right-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/padding-right-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-right-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-right-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-right-applies-to-013.htm
@@ -8077,7 +8021,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/padding-top-103.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-top-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-top-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-top-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/padding-top-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-top-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-top-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/padding-top-applies-to-013.htm
@@ -8176,7 +8119,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/position-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/position-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/position-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/position-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/position-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/position-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/position-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/position-applies-to-013.htm
@@ -8361,7 +8303,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/right-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/right-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/right-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/right-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/right-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/right-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/right-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/right-applies-to-013.htm
@@ -8992,7 +8933,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/text-align-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-align-005.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-align-applies-to-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-align-applies-to-002.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/text-align-applies-to-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-align-applies-to-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-align-applies-to-005.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/text-align-applies-to-006.htm
@@ -9223,7 +9163,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/text-indent-114.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-indent-115.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-indent-applies-to-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-indent-applies-to-002.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/text-indent-applies-to-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-indent-applies-to-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-indent-applies-to-005.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/text-indent-applies-to-006.htm
@@ -9328,7 +9267,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/top-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/top-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/top-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/top-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/top-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/top-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/top-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/top-applies-to-013.htm
@@ -9444,9 +9382,7 @@ test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-113.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-114.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-115.htm
 #test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-116.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-117a.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-117.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-118a.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-118.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-119.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-120.htm
@@ -9460,7 +9396,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-applies-to-00
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/vertical-align-applies-to-013.htm
@@ -9522,7 +9457,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/white-space-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/white-space-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/white-space-applies-to-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/white-space-applies-to-002.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/white-space-applies-to-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/white-space-applies-to-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/white-space-applies-to-005.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/white-space-applies-to-006.htm
@@ -9713,7 +9647,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/width-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/width-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/width-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/width-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/width-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/width-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/width-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/width-applies-to-013.htm
@@ -9773,7 +9706,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/word-spacing-100.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/word-spacing-101.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/word-spacing-applies-to-001.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/word-spacing-applies-to-002.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/word-spacing-applies-to-003.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/word-spacing-applies-to-004.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/word-spacing-applies-to-005.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/word-spacing-applies-to-006.htm
@@ -9834,7 +9766,6 @@ test_new/web_platform_test/css/dist/css21_dev/html4/z-index-applies-to-006.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/z-index-applies-to-007.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/z-index-applies-to-008.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/z-index-applies-to-009.htm
-#test_new/web_platform_test/css/dist/css21_dev/html4/z-index-applies-to-010.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/z-index-applies-to-011.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/z-index-applies-to-012.htm
 test_new/web_platform_test/css/dist/css21_dev/html4/z-index-applies-to-013.htm
