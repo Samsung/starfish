@@ -43,6 +43,7 @@ using N = uint32_t;
 // Create array
 using Point = std::array<Coord, 2>;
 
+// We only Support OpenGL ES 2.0+ context
 #if defined(PORT_WINDOW_BACKEND_EFL)
 #include <Evas_GL.h>
 #else
@@ -312,7 +313,6 @@ namespace StarFish {
 
 #if defined(PORT_WINDOW_BACKEND_EFL)
 extern Evas_GL_API* g_evasGLAPI;
-extern Evas_GL* g_evaslGL;
 #endif
 
 static size_t g_totalCanvasSurfaceGLSize;
@@ -686,7 +686,7 @@ public:
 
     virtual void clear()
     {
-        size_t end = m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+        size_t end = m_bufferStride * m_bufferHeight;
         memset(m_buffer, 0x00, end);
     }
 
@@ -864,6 +864,9 @@ public:
             "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
             "}";
 
+        // We only Support OpenGL ES 2.0+ context
+        // but some develoment environment only support desktop context
+        // so we add `#ifdef GL_ES` for debug purpose
         GLchar texFragmentSource[] =
             "#ifdef GL_ES\n"
             "  precision mediump float;\n"

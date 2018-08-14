@@ -854,21 +854,7 @@ void LayoutContext::pushIntoInlineNonReplacedBoxPool(InlineNonReplacedBox* b)
 
 void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
 {
-    SkMatrix m = tranformMatrix;
-
-    // If Frame has `skew, rotate, 3d-transform`, Frame must own it's graphics
-    // buffer.
-    // If matrix is not rect, we should ignore child visible rects from here
-    if (!m.rectStaysRect()) {
-        return;
-    }
-    SkRect skRect = SkRect::MakeXYWH((float)r.x(), (float)r.y(),
-                                     (float)r.width(), (float)r.height());
-
-    m.mapRect(&skRect);
-    skRect.sort();
-    LayoutRect tmp =
-        LayoutRect(skRect.x(), skRect.y(), skRect.width(), skRect.height());
+    LayoutRect tmp = computeBoxExtent(r, tranformMatrix);
 
     for (size_t i = 0; i < boundMaxExtentDueToOverflow.size(); i++) {
         LayoutRect rt = std::get<0>(boundMaxExtentDueToOverflow[i]);
@@ -952,11 +938,11 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
         // If Frame has `skew, rotate, 3d-transform`, Frame must own it's
         // graphics buffer.
         // If matrix is not rect, we should ignore child visible rects from here
-        if (!m.rectStaysRect()) {
+        SkMatrix test;
+        if (!m.invert(&test)) {
             shouldStopComputingBecauseMatrixInvalidFromHere = true;
             return;
         }
-        STARFISH_ASSERT(m.rectStaysRect());
 
         auto to = fragmentBox->stackingContext()->transformOrigin();
 
@@ -982,17 +968,9 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
         if (overflowXWasApplyed || overflowYWasApplyed) {
             LayoutRect rt = fragmentBox->frameVisibleRect();
 
-            SkRect skRect =
-                SkRect::MakeXYWH((float)rt.x(), (float)rt.y(),
-                                 (float)rt.width(), (float)rt.height());
-
-            ctx.tranformMatrix.mapRect(&skRect);
-            skRect.sort();
-            LayoutRect tmp = LayoutRect(skRect.x(), skRect.y(), skRect.width(),
-                                        skRect.height());
-
             ctx.boundMaxExtentDueToOverflow.push_back(
-                std::make_tuple(tmp, overflowXWasApplyed, overflowYWasApplyed));
+                std::make_tuple(computeBoxExtent(rt, ctx.tranformMatrix),
+                                overflowXWasApplyed, overflowYWasApplyed));
         }
     }
 }

@@ -1238,6 +1238,17 @@ public:
                py <= (y() + height());
     }
 
+    bool containsInVisual(const LayoutRect& rt) const
+    {
+        if (containsInVisual(rt.x(), rt.y()) &&
+            containsInVisual(rt.maxX(), rt.y()) &&
+            containsInVisual(rt.x(), rt.maxY()) &&
+            containsInVisual(rt.maxX(), rt.maxY())) {
+            return true;
+        }
+        return false;
+    }
+
     void unite(const LayoutRect& other)
     {
         if (other.isEmpty()) {

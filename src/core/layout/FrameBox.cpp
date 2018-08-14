@@ -3608,9 +3608,12 @@ LayoutUnit FrameBox::outlineThickness()
     return outlineWidth + outlineOffset;
 }
 
-static LayoutRect computeBoxExtent(LayoutRect rt, const SkMatrix& m)
+LayoutRect computeBoxExtent(LayoutRect rt, const SkMatrix& m)
 {
-    if (m.rectStaysRect()) {
+    auto tp = m.getType();
+    if (!(tp & SkMatrix::TypeMask::kScale_Mask) &&
+        !(tp & SkMatrix::TypeMask::kAffine_Mask) &&
+        !(tp & SkMatrix::TypeMask::kPerspective_Mask)) {
         SkRect skRect = SkRect::MakeXYWH((float)rt.x(), (float)rt.y(),
                                          (float)rt.width(), (float)rt.height());
         m.mapRect(&skRect);
@@ -3732,8 +3735,12 @@ SkMatrix FrameBox::computeScreenMatrix()
             }
 
             LayoutLocation pos;
-            if (fBox == this || fBox->isFrameDocument()) {
+            if (fBox == this || (fBox->layoutParent() == nullptr)) {
                 pos = fBox->absolutePoint(lastParentBox);
+            } else if (fBox->isFrameDocument()) {
+                pos = fBox->absolutePoint(lastParentBox);
+                pos.setX(pos.x() - fBox->node()->window()->scrollX(false));
+                pos.setY(pos.y() - fBox->node()->window()->scrollY(false));
             } else {
                 pos = fBox->absolutePointIncludingScroll(lastParentBox);
             }

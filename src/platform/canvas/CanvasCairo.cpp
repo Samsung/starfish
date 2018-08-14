@@ -17,7 +17,7 @@
  *  USA
  */
 
-// #define STARFISH_ENABLE_PROFILE_TIMER
+#define STARFISH_ENABLE_PROFILE_TIMER
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
@@ -816,6 +816,8 @@ public:
             return;
         }
 
+        INSTALL_PROFILE_TIMER(m_starfish,
+                              "CanvasImplCairo::drawLinearGradient");
         cairo_save(m_canvas);
 
         cairo_pattern_t* pt;
@@ -849,6 +851,10 @@ public:
         if (!lastState().m_visible) {
             return;
         }
+
+        INSTALL_PROFILE_TIMER(m_starfish,
+                              "CanvasImplCairo::drawRadialGradient");
+
         cairo_save(m_canvas);
         cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
         cairo_clip(m_canvas);
