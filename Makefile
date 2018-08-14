@@ -1128,6 +1128,7 @@ wpt_cssom_view_cairo:
 wpt_css_transforms_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-transforms-1_dev_basic.res basic -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_pixel.res cairo -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_manual.res cairo --font-dep -p$(TEST_NPROCS)
 
 wpt_mediaqueries_cairo:
 	./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_mediaqueries-3_dev_pixel.res cairo -p$(TEST_NPROCS)
