@@ -59,7 +59,7 @@ def _gen_diff(outs):
     list = RE_RTCAPTURED.findall(outs)
     if len(list) != 2:
         return
-    diff_cmd = ["test/tool/image_diff", "--diff",
+    diff_cmd = ["test/tools/image_diff/image_diff", "--diff",
                 list[0][20:], list[1][20:], "diff.png"]
     subprocess.call(diff_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
     print "Check 'diff.png'"

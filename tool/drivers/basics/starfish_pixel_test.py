@@ -78,7 +78,7 @@ def pixel_diff(tc_file, tc_result_png, tc_expected_png, handler):
             os.makedirs(dir_name)
         copyfile(tc_result_png, image_1)
         copyfile(tc_expected_png, image_2)
-        gen_cmd = ["test/tool/image_diff", "--diff",
+        gen_cmd = ["test/tools/image_diff/image_diff", "--diff",
                             image_1, image_2, image_3]
         subprocess.call(gen_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
         print utils.PColors.red("Check images: " + base_path + "*.png")
