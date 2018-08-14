@@ -30,7 +30,13 @@ class Thread;
 static int numberOfCores()
 {
     int ret = 1;
+#ifndef STARFISH_WINDOWS
     long sysconfResult = sysconf(_SC_NPROCESSORS_ONLN);
+#else
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    long sysconfResult = sysinfo.dwNumberOfProcessors;
+#endif
 
     if (sysconfResult > 0) {
         ret = static_cast<int>(sysconfResult);

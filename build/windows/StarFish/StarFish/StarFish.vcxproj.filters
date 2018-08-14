@@ -21,24 +21,6 @@
     <ClCompile Include="..\..\..\..\third_party\clipper\cpp\clipper.cpp">
       <Filter>3rdparty</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkMatrix.cpp">
-      <Filter>3rdparty</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkPoint.cpp">
-      <Filter>3rdparty</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkRect.cpp">
-      <Filter>3rdparty</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkDebug.cpp">
-      <Filter>3rdparty</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkFloatBits.cpp">
-      <Filter>3rdparty</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\third_party\skia_matrix\SkMath.cpp">
-      <Filter>3rdparty</Filter>
-    </ClCompile>
     <ClCompile Include="StarFishWinformBridge.cpp">
       <Filter>bridge</Filter>
     </ClCompile>
@@ -876,9 +858,6 @@
     <ClCompile Include="..\..\..\..\src\binding\XMLHttpRequestEventTargetBinding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\public\AndroidBridge.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\core\animation\Animation.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -907,9 +886,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\core\style\CSSStyleLookupTrie.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\..\src\public\DaliBridge.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\core\dom\Document.cpp">
@@ -1979,6 +1955,33 @@
     </ClCompile>
     <ClCompile Include="..\..\..\..\src\binding\BlobBinding.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\core\SkMatrix.cpp">
+      <Filter>3rdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\core\SkPoint.cpp">
+      <Filter>3rdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\core\SkRect.cpp">
+      <Filter>3rdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\core\SkMath.cpp">
+      <Filter>3rdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\core\SkStringUtils.cpp">
+      <Filter>3rdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\core\SkUtils.cpp">
+      <Filter>3rdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\core\SkString.cpp">
+      <Filter>3rdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\ports\SkDebug_stdio.cpp">
+      <Filter>3rdparty</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\ports\SkMemory_malloc.cpp">
+      <Filter>3rdparty</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

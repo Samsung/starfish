@@ -1,6 +1,11 @@
 # Build generated
 out
-StarFish
+./StarFish
+build/windows/StarFish/Debug
+build/windows/StarFish/Release
+build/windows/StarFish/StarFish/Release/
+build/windows/StarFish/StarFishNativeConsoleShell/Release/
+build/windows/StarFish/StarFishWindowsShell/obj/
 *.pyc
 *.class
 cmake_install.cmake
