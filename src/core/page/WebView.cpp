@@ -1108,8 +1108,6 @@ RenderResult WebView::rendering(bool force)
             compositor->save();
             compositor->translate(-mainFrame->scrollLeft(),
                                   -mainFrame->scrollTop());
-            Canvas* canvas = Compositor::createCanvasAdaptor(compositor);
-
             bool colorFill = false;
             if (mainBrowsingContext()->hasRootElementBackground() ||
                 mainBrowsingContext()->hasBodyElementBackground()) {
@@ -1135,19 +1133,20 @@ RenderResult WebView::rendering(bool force)
             }
 
             if (!colorFill) {
-                mainBrowsingContext()->clearingBeforePaint(canvas);
+                mainBrowsingContext()->clearingBeforePaint(compositor);
             }
 
             m_rootStackingContext->compositeStackingContext(compositor);
 
             compositor->restore();
+
             mainBrowsingContext()->window()->scrolling()->paintScrollbars(
-                canvas, mainFrame, mainFrame->appliedOverflowX(),
+                compositor, mainFrame, mainFrame->appliedOverflowX(),
                 mainFrame->appliedOverflowY());
 
             m_didCompositeBefore = true;
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-            starFish()->platformWindow()->paintVirtualCursor(canvas);
+            starFish()->platformWindow()->paintVirtualCursor(compositor);
 #endif
             delete compositor;
         }

@@ -160,12 +160,14 @@ public:
     }
 };
 
-Compositor* Compositor::create(StarFish* starfish, void* data)
+Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
+                               void* data)
 {
     return new CompositorEFL(starfish, data);
 }
 
-Compositor* Compositor::create(StarFish* starfish, CanvasSurface* surface)
+Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
+                               CanvasSurface* surface)
 {
     return new CompositorEFL(starfish, surface);
 }

@@ -123,12 +123,14 @@ public:
     }
 };
 
-Compositor* Compositor::create(StarFish* starfish, void* data)
+Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
+                               void* data)
 {
     return new CompositorMock(starfish, data);
 }
 
-Compositor* Compositor::create(StarFish* starfish, CanvasSurface* surface)
+Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
+                               CanvasSurface* surface)
 {
     return new CompositorMock(starfish, surface);
 }

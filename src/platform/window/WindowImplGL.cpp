@@ -74,6 +74,7 @@ public:
         , m_width(width)
         , m_height(height)
         , m_glPaintingSurface(nullptr)
+        , m_compostiorContext(nullptr)
         , m_didPaintingOrCompositing(true)
     {
         m_renderingAnimator = SIZE_MAX;
@@ -113,6 +114,11 @@ public:
     virtual RenderResult rendering() override
     {
         glMakeCurrent();
+
+        if (!m_compostiorContext) {
+            m_compostiorContext = Compositor::initCompositorContext(this);
+        }
+
         RenderResult ret = PlatformWindow::rendering();
         if (ret.didPaintingOrCompositing) {
             if (webView()->didCompositeBefore()) {
@@ -122,7 +128,8 @@ public:
                     (int)ret.updateRect.width(), (int)ret.updateRect.height());
                 float oldDPR = m_starFish->screenInfo().devicePixelRatio;
                 m_starFish->screenInfo().devicePixelRatio = 1;
-                Compositor* c = Compositor::create(starFish(), (void*)nullptr);
+                Compositor* c = Compositor::create(
+                    starFish(), m_compostiorContext, (void*)nullptr);
                 c->clearColor(Unit::Color(0, 0, 0, 0));
                 c->drawSurface(m_glPaintingSurface,
                                Unit::Rect(0, 0, width(), height()));
@@ -159,6 +166,7 @@ public:
     uint32_t m_height;
     size_t m_renderingAnimator;
     CanvasSurface* m_glPaintingSurface;
+    CompositorContext* m_compostiorContext;
     bool m_didPaintingOrCompositing;
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
@@ -268,7 +276,7 @@ Compositor* WindowImplGL::prepareCompositor()
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;
     }
-    return Compositor::create(starFish(), (void*)nullptr);
+    return Compositor::create(starFish(), m_compostiorContext, (void*)nullptr);
 }
 
 void WindowImplGL::clearResources()
@@ -278,6 +286,9 @@ void WindowImplGL::clearResources()
         m_renderingAnimator = SIZE_MAX;
     }
     webView()->clearStackingContext();
+
+    Compositor::destroyCompositorContext(m_compostiorContext);
+    m_compostiorContext = nullptr;
 }
 
 #ifdef PORT_WINDOW_BACKEND_GLFW

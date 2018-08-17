@@ -54,7 +54,7 @@ MessageLoop::MessageLoop(StarFish* sf)
     , m_runningPoolWorkerCount(0)
 #endif
 {
-    ecore_animator_frametime_set(1 / 60.0);
+    ecore_animator_frametime_set(1 / 120.0);
 }
 
 void MessageLoop::run()

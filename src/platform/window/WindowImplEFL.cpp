@@ -142,7 +142,7 @@ public:
         m_offsetYDueToSoftwareKeyboard = 0;
         m_softKeyboardOrigin = nullptr;
         m_lastRenderingTime = tickCount();
-
+        m_compostiorContext = nullptr;
 #ifdef STARFISH_TIZEN_TN
         m_focusInHandler = nullptr;
 #endif
@@ -190,6 +190,27 @@ public:
 
     virtual bool canRendering()
     {
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+        if (!m_canRendering) {
+            if (m_glSync) {
+                auto result = m_glGlapi->evasglClientWaitSync(
+                    m_glEvasgl, m_glSync, 0, 0ull);
+                auto error = m_glGlapi->glGetError();
+                if (error) {
+                    // STARFISH_LOG_INFO("evasglClientWaitSync got error\n");
+                    m_canRendering = true;
+                } else if (result == EVAS_GL_CONDITION_SATISFIED) {
+                    // STARFISH_LOG_INFO(
+                    //     "evasglClientWaitSync return "
+                    //     "EVAS_GL_CONDITION_SATISFIED\n");
+                    m_canRendering = true;
+                } else {
+                    STARFISH_LOG_INFO(
+                        "evasglClientWaitSync said we needs wait\n");
+                }
+            }
+        }
+#endif
         return m_canRendering;
     }
 
@@ -301,6 +322,10 @@ public:
         }
 
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
+        if (m_glSync) {
+            m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
+        }
+        Compositor::destroyCompositorContext(m_compostiorContext);
         evas_object_hide(m_glAdpater);
         evas_object_image_native_surface_set(m_glAdpater, NULL);
         evas_gl_context_destroy(m_glEvasgl, m_glCtx);
@@ -469,13 +494,15 @@ public:
                     (int)ret.updateRect.width(), (int)ret.updateRect.height());
                 float oldDPR = m_starFish->screenInfo().devicePixelRatio;
                 m_starFish->screenInfo().devicePixelRatio = 1;
-                Compositor* c = Compositor::create(starFish(), (void*)nullptr);
+                Compositor* c = Compositor::create(
+                    starFish(), m_compostiorContext, (void*)nullptr);
                 c->clearColor(Unit::Color(0, 0, 0, 0));
                 c->drawSurface(m_glPaintingSurface,
                                Unit::Rect(0, 0, width(), height()));
                 delete c;
                 m_starFish->screenInfo().devicePixelRatio = oldDPR;
             }
+            m_canRendering = false;
         }
 #else
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
@@ -544,8 +571,9 @@ public:
     Evas_GL_Config* m_glCfg;
     Evas_GL* m_glEvasgl;
     Evas_GL_API* m_glGlapi;
+    EvasGLSync m_glSync;
 #endif
-
+    CompositorContext* m_compostiorContext;
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
     Evas_Object* m_canvasAdpater;
     cairo_surface_t* m_canvasAdpaterSurface;
@@ -1121,7 +1149,15 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
     wnd->m_glCtx = evas_gl_context_version_create(
         wnd->m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
 #endif
-    //-//
+
+    if (wnd->m_glGlapi->evasglCreateSync) {
+        wnd->m_glSync = wnd->m_glGlapi->evasglCreateSync(
+            wnd->m_glEvasgl, EVAS_GL_SYNC_FENCE, nullptr);
+    } else {
+        wnd->m_glSync = nullptr;
+    }
+
+    wnd->m_compostiorContext = Compositor::initCompositorContext(wnd);
 
     Evas_Native_Surface ns;
     evas_gl_native_surface_get(wnd->m_glEvasgl, wnd->m_glSfc, &ns);
@@ -1139,21 +1175,8 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
             wnd->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                                     GL_STENCIL_BUFFER_BIT);
             wnd->m_glGlapi->glFlush();
-
-            wnd->m_canRendering = true;
-
-            STARFISH_LOG_INFO("gl version info\n");
-            STARFISH_LOG_INFO("%s\n",
-                              (char*)wnd->m_glGlapi->glGetString(GL_VERSION));
-            STARFISH_LOG_INFO("gl renderer info\n");
-            STARFISH_LOG_INFO("%s\n",
-                              (char*)wnd->m_glGlapi->glGetString(GL_RENDERER));
-            STARFISH_LOG_INFO("gl extension info\n");
-            STARFISH_LOG_INFO(
-                "%s\n", (char*)wnd->m_glGlapi->glGetString(GL_EXTENSIONS));
         },
         wnd);
-
 #endif
 
 #if (defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
@@ -1455,7 +1478,13 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
                                  void* event_info) -> void {
         STARFISH_ASSERT(isMainThread());
         WindowImplEFL* wnd = (WindowImplEFL*)data;
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+        if (!wnd->m_glSync) {
+            wnd->m_canRendering = true;
+        }
+#else
         wnd->m_canRendering = true;
+#endif
         wnd->m_lastRenderingTime = tickCount();
     };
 
@@ -1807,16 +1836,19 @@ void WindowImplEFL::setNeedsRendering()
 {
     WindowImplEFL* wnd = this;
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
-    evas_object_image_pixels_dirty_set(wnd->m_glAdpater, EINA_TRUE);
     evas_object_image_pixels_get_callback_set(
         m_glAdpater,
         [](void* data, Evas_Object* o) {
             WindowImplEFL* wnd = (WindowImplEFL*)data;
+            if (!wnd->canRendering()) {
+                evas_object_image_pixels_dirty_set(wnd->m_glAdpater, EINA_TRUE);
+                return;
+            }
             StarFishEnterer enter(wnd->starFish());
-            wnd->glMakeCurrent();
             wnd->rendering();
         },
-        this);
+        wnd);
+    evas_object_image_pixels_dirty_set(wnd->m_glAdpater, EINA_TRUE);
 #else
     // refresh rendering animator
     if (wnd->m_renderingAnimator) {
@@ -1839,7 +1871,7 @@ void WindowImplEFL::setNeedsRendering()
             }
 #endif
 
-            if (!wnd->m_canRendering) {
+            if (!wnd->canRendering()) {
                 return ECORE_CALLBACK_RENEW;
             }
 
@@ -2063,7 +2095,7 @@ Compositor* WindowImplEFL::prepareCompositor()
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;
     }
-    return Compositor::create(starFish(), (void*)nullptr);
+    return Compositor::create(starFish(), m_compostiorContext, (void*)nullptr);
 #endif
 
 #if defined(PORT_COMPOSITOR_BACKEND_SKIA)
@@ -2118,7 +2150,7 @@ Compositor* WindowImplEFL::prepareCompositor()
     d.w = width() + starFish()->posX();
     d.h = height() + starFish()->posY();
 
-    return Compositor::create(starFish(), &d);
+    return Compositor::create(starFish(), m_compostiorContext, &d);
 #endif
 
 #if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
@@ -2131,8 +2163,8 @@ Compositor* WindowImplEFL::prepareCompositor()
                 this, width() / starFish()->screenInfo().devicePixelRatio,
                 height() / starFish()->screenInfo().devicePixelRatio);
             starFish()->addPointerInRootSet(g_surfaceForScreehShot);
-            Compositor* c =
-                Compositor::create(starFish(), g_surfaceForScreehShot);
+            Compositor* c = Compositor::create(starFish(), m_compostiorContext,
+                                               g_surfaceForScreehShot);
             return c;
         }
     }
@@ -2184,7 +2216,7 @@ Compositor* WindowImplEFL::prepareCompositor()
     d.surface = m_canvasAdpaterSurface;
     d.w = width();
     d.h = height();
-    return Compositor::create(starFish(), &d);
+    return Compositor::create(starFish(), m_compostiorContext, &d);
 #endif
 #if defined(PORT_COMPOSITOR_BACKEND_EFL)
 #ifdef STARFISH_ENABLE_TEST
@@ -2196,8 +2228,8 @@ Compositor* WindowImplEFL::prepareCompositor()
                 this, width() / starFish()->screenInfo().devicePixelRatio,
                 height() / starFish()->screenInfo().devicePixelRatio);
 
-            Compositor* c =
-                Compositor::create(starFish(), g_surfaceForScreehShot);
+            Compositor* c = Compositor::create(starFish(), m_compostiorContext,
+                                               g_surfaceForScreehShot);
             return c;
         }
     }
@@ -2234,7 +2266,7 @@ Compositor* WindowImplEFL::prepareCompositor()
     m_objectList.clear();
     m_objectList.shrink_to_fit();
 
-    Compositor* c = Compositor::create(starFish(), d);
+    Compositor* c = Compositor::create(starFish(), m_compostiorContext, d);
     delete d;
 
 #if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \

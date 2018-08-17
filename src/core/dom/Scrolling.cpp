@@ -27,6 +27,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 
 namespace StarFish {
 
@@ -144,7 +145,8 @@ void Scrolling::onGlobalPointingEvent(float x, float y,
     }
 }
 
-void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
+template <typename T>
+void Scrolling::paintScrollbars(T canvas, FrameBlockBox* frame,
                                 OverflowValue ox, OverflowValue oy)
 {
 #ifndef STARFISH_SCROLLBAR_THICKNESS
@@ -221,4 +223,11 @@ void Scrolling::paintScrollbars(Canvas* canvas, FrameBlockBox* frame,
     }
     canvas->restore();
 }
+
+template void Scrolling::paintScrollbars<Canvas*>(Canvas*, FrameBlockBox*,
+                                                  OverflowValue, OverflowValue);
+template void Scrolling::paintScrollbars<Compositor*>(Compositor*,
+                                                      FrameBlockBox*,
+                                                      OverflowValue,
+                                                      OverflowValue);
 }

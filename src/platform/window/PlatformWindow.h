@@ -165,7 +165,8 @@ public:
     }
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-    void paintVirtualCursor(Canvas* canvas);
+    template <typename T>
+    void paintVirtualCursor(T canvas);
 #endif
     WebView* webView()
     {
