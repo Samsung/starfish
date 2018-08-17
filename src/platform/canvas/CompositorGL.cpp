@@ -17,7 +17,7 @@
  *  USA
  */
 
-#define STARFISH_ENABLE_PROFILE_TIMER
+// #define STARFISH_ENABLE_PROFILE_TIMER
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
@@ -322,6 +322,303 @@ static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
 static bool g_isSupportExtensionEGLImageExternal = false;
 static size_t g_maxTextureSize;
 
+class CompositorContext {
+public:
+    GLuint m_texShaderProgram;
+    GLuint m_texVertexShader;
+    GLuint m_texFragmentShader;
+
+    GLuint m_texWithAlphaShaderProgram;
+    GLuint m_texWithAlphaFragmentShader;
+
+    GLuint m_rectShaderProgram;
+    GLuint m_rectVertexShader;
+    GLuint m_rectFragmentShader;
+
+    GLuint m_texShaderProgramEGLImageExternal;
+    GLuint m_texFragmentShaderEGLImageExternal;
+
+    GLuint m_texWithAlphaShaderProgramEGLImageExternal;
+    GLuint m_texWithAlphaFragmentShaderEGLImageExternal;
+};
+
+static void checkError()
+{
+#ifndef NDEBUG
+    volatile auto error = glGetError();
+    if (error != 0) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+#endif
+}
+
+static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
+{
+    GLuint shader;
+    GLint compiled;
+
+    // Create the shader object
+    shader = glCreateShader(type);
+
+    if (glGetError()) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    // Load the shader source
+    glShaderSource(shader, 1, &shaderSrc, NULL);
+
+    // Compile the shader
+    glCompileShader(shader);
+
+    // Check the compile status
+    glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+
+    if (!compiled) {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    return shader;
+}
+
+void Compositor::destroyCompositorContext(CompositorContext* ctx)
+{
+    delete ctx;
+}
+
+CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
+{
+    wnd->glMakeCurrent();
+
+    if (g_needsCheckCompatibility) {
+        GLint siz;
+        glGetIntegerv(GL_MAX_TEXTURE_SIZE, &siz);
+        checkError();
+        g_maxTextureSize = siz;
+
+        bool isOpenGLES3 = true;
+        int major;
+        glGetIntegerv(GL_MAJOR_VERSION, &major);
+        if (glGetError()) {
+            isOpenGLES3 = false;
+            major = 2;
+        }
+
+        if (major >= 3) {
+            g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = true;
+        }
+
+        g_isSupportExtensionEGLImageExternal =
+            strstr((const char*)glGetString(GL_EXTENSIONS),
+                   "GL_OES_EGL_image_external") != nullptr;
+
+#ifndef STARFISH_TIZEN
+        g_isSupportExtensionEGLImageExternal = false;
+#endif
+
+        g_needsCheckCompatibility = false;
+        checkError();
+    }
+
+    CompositorContext* compositorContext = new CompositorContext;
+
+    GLchar texVertexSource[] =
+        "uniform mat4 uScreen;\n"
+        "attribute vec2 aPosition;\n"
+        "attribute vec2 aTexPos;\n"
+        "varying vec2 vTexPos;\n"
+        "void main() {\n"
+        "  vTexPos = aTexPos;\n"
+        "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
+        "}";
+
+    // We only Support OpenGL ES 2.0+ context
+    // but some develoment environment only support desktop context
+    // so we add `#ifdef GL_ES` for debug purpose
+    GLchar texFragmentSource[] =
+        "#ifdef GL_ES\n"
+        "  precision mediump float;\n"
+        "#endif\n"
+        "uniform sampler2D uTexture;\n"
+        "varying vec2 vTexPos;\n"
+        "void main(void)\n"
+        "{\n"
+        "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
+        "}";
+
+    compositorContext->m_texVertexShader =
+        loadShader(GL_VERTEX_SHADER, texVertexSource);
+    checkError();
+    compositorContext->m_texFragmentShader =
+        loadShader(GL_FRAGMENT_SHADER, texFragmentSource);
+    checkError();
+
+    compositorContext->m_texShaderProgram = glCreateProgram();
+    checkError();
+
+    glAttachShader(compositorContext->m_texShaderProgram,
+                   compositorContext->m_texVertexShader);
+    checkError();
+    glAttachShader(compositorContext->m_texShaderProgram,
+                   compositorContext->m_texFragmentShader);
+    checkError();
+
+    glLinkProgram(compositorContext->m_texShaderProgram);
+    checkError();
+
+    glUseProgram(compositorContext->m_texShaderProgram);
+    checkError();
+
+    GLchar texWithAlphaFragmentSource[] =
+        "#ifdef GL_ES\n"
+        "  precision mediump float;\n"
+        "#endif\n"
+        "uniform sampler2D uTexture;\n"
+        "varying vec2 vTexPos;\n"
+        "uniform vec4 uAlpha;\n"
+        "void main(void)\n"
+        "{\n"
+        "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
+        "}";
+
+    compositorContext->m_texWithAlphaFragmentShader =
+        loadShader(GL_FRAGMENT_SHADER, texWithAlphaFragmentSource);
+    checkError();
+
+    compositorContext->m_texWithAlphaShaderProgram = glCreateProgram();
+    checkError();
+
+    glAttachShader(compositorContext->m_texWithAlphaShaderProgram,
+                   compositorContext->m_texVertexShader);
+    checkError();
+    glAttachShader(compositorContext->m_texWithAlphaShaderProgram,
+                   compositorContext->m_texWithAlphaFragmentShader);
+    checkError();
+
+    glLinkProgram(compositorContext->m_texWithAlphaShaderProgram);
+    checkError();
+
+    glUseProgram(compositorContext->m_texWithAlphaShaderProgram);
+    checkError();
+
+    if (g_isSupportExtensionEGLImageExternal) {
+        GLchar texFragmentSourceEGLImageExternal[] =
+            "#extension GL_OES_EGL_image_external : require\n"
+            "#ifdef GL_ES\n"
+            "  precision mediump float;\n"
+            "#endif\n"
+            "uniform samplerExternalOES uTexture;\n"
+            "varying vec2 vTexPos;\n"
+            "void main(void)\n"
+            "{\n"
+            "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
+            "}";
+
+        compositorContext->m_texFragmentShaderEGLImageExternal =
+            loadShader(GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
+        checkError();
+
+        compositorContext->m_texShaderProgramEGLImageExternal =
+            glCreateProgram();
+        checkError();
+
+        glAttachShader(compositorContext->m_texShaderProgramEGLImageExternal,
+                       compositorContext->m_texVertexShader);
+        checkError();
+        glAttachShader(compositorContext->m_texShaderProgramEGLImageExternal,
+                       compositorContext->m_texFragmentShaderEGLImageExternal);
+        checkError();
+
+        glLinkProgram(compositorContext->m_texShaderProgramEGLImageExternal);
+        checkError();
+
+        glUseProgram(compositorContext->m_texShaderProgramEGLImageExternal);
+        checkError();
+
+        GLchar texWithAlphaFragmentSourceEGLImageExternal[] =
+            "#extension GL_OES_EGL_image_external : require\n"
+            "#ifdef GL_ES\n"
+            "  precision mediump float;\n"
+            "#endif\n"
+            "uniform samplerExternalOES uTexture;\n"
+            "varying vec2 vTexPos;\n"
+            "uniform vec4 uAlpha;\n"
+            "void main(void)\n"
+            "{\n"
+            "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
+            "}";
+
+        compositorContext->m_texWithAlphaFragmentShaderEGLImageExternal =
+            loadShader(GL_FRAGMENT_SHADER,
+                       texWithAlphaFragmentSourceEGLImageExternal);
+        checkError();
+
+        compositorContext->m_texWithAlphaShaderProgramEGLImageExternal =
+            glCreateProgram();
+        checkError();
+
+        glAttachShader(
+            compositorContext->m_texWithAlphaShaderProgramEGLImageExternal,
+            compositorContext->m_texVertexShader);
+        checkError();
+        glAttachShader(
+            compositorContext->m_texWithAlphaShaderProgramEGLImageExternal,
+            compositorContext->m_texWithAlphaFragmentShaderEGLImageExternal);
+        checkError();
+
+        glLinkProgram(
+            compositorContext->m_texWithAlphaShaderProgramEGLImageExternal);
+        checkError();
+
+        glUseProgram(
+            compositorContext->m_texWithAlphaShaderProgramEGLImageExternal);
+        checkError();
+
+    } else {
+        compositorContext->m_texShaderProgramEGLImageExternal = 0;
+        compositorContext->m_texFragmentShaderEGLImageExternal = 0;
+        compositorContext->m_texWithAlphaShaderProgramEGLImageExternal = 0;
+        compositorContext->m_texWithAlphaFragmentShaderEGLImageExternal = 0;
+    }
+
+    GLchar rectVertexSource[] =
+        "uniform mat4 uScreen;\n"
+        "attribute vec2 aPosition;\n"
+        "void main() {\n"
+        "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
+        "}";
+
+    GLchar rectFragmentSource[] =
+        "#ifdef GL_ES\n"
+        "  precision mediump float;\n"
+        "#endif\n"
+        "uniform vec4 uColor;\n"
+        "void main(void)\n"
+        "{\n"
+        "  gl_FragColor = uColor;\n"
+        "}";
+
+    compositorContext->m_rectVertexShader =
+        loadShader(GL_VERTEX_SHADER, rectVertexSource);
+    checkError();
+    compositorContext->m_rectFragmentShader =
+        loadShader(GL_FRAGMENT_SHADER, rectFragmentSource);
+    checkError();
+
+    compositorContext->m_rectShaderProgram = glCreateProgram();
+    checkError();
+
+    glAttachShader(compositorContext->m_rectShaderProgram,
+                   compositorContext->m_rectVertexShader);
+    checkError();
+    glAttachShader(compositorContext->m_rectShaderProgram,
+                   compositorContext->m_rectFragmentShader);
+    checkError();
+
+    glLinkProgram(compositorContext->m_rectShaderProgram);
+    checkError();
+
+    return compositorContext;
+}
+
 class CanvasSurfaceGL : public CanvasSurface {
 public:
     CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h)
@@ -337,37 +634,6 @@ public:
 #if defined(STARFISH_TIZEN)
         m_tbmSurface = nullptr;
 #endif
-
-        if (g_needsCheckCompatibility) {
-            m_window->glMakeCurrent();
-            GLint siz;
-            glGetIntegerv(GL_MAX_TEXTURE_SIZE, &siz);
-            checkError();
-            g_maxTextureSize = siz;
-
-            bool isOpenGLES3 = true;
-            int major;
-            glGetIntegerv(GL_MAJOR_VERSION, &major);
-            if (glGetError()) {
-                isOpenGLES3 = false;
-                major = 2;
-            }
-
-            if (major >= 3) {
-                g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = true;
-            }
-
-            g_isSupportExtensionEGLImageExternal =
-                strstr((const char*)glGetString(GL_EXTENSIONS),
-                       "GL_OES_EGL_image_external") != nullptr;
-
-#ifndef STARFISH_TIZEN
-            g_isSupportExtensionEGLImageExternal = false;
-#endif
-
-            g_needsCheckCompatibility = false;
-            checkError();
-        }
 
         attachNativeBuffer(w, h);
         checkError();
@@ -491,16 +757,6 @@ public:
 
         STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
         STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
-    }
-
-    void checkError()
-    {
-#ifndef NDEBUG
-        volatile auto error = glGetError();
-        if (error != 0) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-#endif
     }
 
     void ensureGenerateTexture()
@@ -812,33 +1068,6 @@ struct CompositorImplGLState {
 
 class CompositorImplGL : public Compositor {
 public:
-    GLuint loadShader(GLenum type, const GLchar* shaderSrc)
-    {
-        GLuint shader;
-        GLint compiled;
-
-        // Create the shader object
-        shader = glCreateShader(type);
-
-        if (glGetError()) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-
-        // Load the shader source
-        glShaderSource(shader, 1, &shaderSrc, NULL);
-
-        // Compile the shader
-        glCompileShader(shader);
-
-        // Check the compile status
-        glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
-
-        if (!compiled) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-        return shader;
-    }
-
     void applyDevicePixelRatio()
     {
         m_state.back().matrix.preScale(
@@ -846,9 +1075,12 @@ public:
             m_starfish->screenInfo().devicePixelRatio);
     }
 
-    CompositorImplGL(StarFish* starfish, void* data)
+    CompositorImplGL(StarFish* starfish, CompositorContext* compositorContext,
+                     void* data)
     {
+        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
         m_starfish = starfish;
+        m_compositorContext = compositorContext;
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         glViewport(0, 0, starfish->platformWindow()->width(),
@@ -859,50 +1091,9 @@ public:
         m_state.back().matrix = SkMatrix::I();
         m_state.back().opacity = 1;
 
-        GLchar texVertexSource[] =
-            "uniform mat4 uScreen;\n"
-            "attribute vec2 aPosition;\n"
-            "attribute vec2 aTexPos;\n"
-            "varying vec2 vTexPos;\n"
-            "void main() {\n"
-            "  vTexPos = aTexPos;\n"
-            "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
-            "}";
-
-        // We only Support OpenGL ES 2.0+ context
-        // but some develoment environment only support desktop context
-        // so we add `#ifdef GL_ES` for debug purpose
-        GLchar texFragmentSource[] =
-            "#ifdef GL_ES\n"
-            "  precision mediump float;\n"
-            "#endif\n"
-            "uniform sampler2D uTexture;\n"
-            "varying vec2 vTexPos;\n"
-            "void main(void)\n"
-            "{\n"
-            "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
-            "}";
-
-        texVertexShader = loadShader(GL_VERTEX_SHADER, texVertexSource);
-        checkError();
-        texFragmentShader = loadShader(GL_FRAGMENT_SHADER, texFragmentSource);
-        checkError();
-
-        texShaderProgram = glCreateProgram();
-        checkError();
-
-        glAttachShader(texShaderProgram, texVertexShader);
-        checkError();
-        glAttachShader(texShaderProgram, texFragmentShader);
-        checkError();
-
-        glLinkProgram(texShaderProgram);
-        checkError();
-
-        glUseProgram(texShaderProgram);
-        checkError();
-
-        auto uScreenPos = glGetUniformLocation(texShaderProgram, "uScreen");
+        glUseProgram(m_compositorContext->m_texShaderProgram);
+        auto uScreenPos = glGetUniformLocation(
+            m_compositorContext->m_texShaderProgram, "uScreen");
 
         float uScreen[] = { 2.f / m_starfish->platformWindow()->width(),
                             0.f,
@@ -924,182 +1115,43 @@ public:
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
 
-        GLchar texWithAlphaVertexSource[] =
-            "uniform mat4 uScreen;\n"
-            "attribute vec2 aPosition;\n"
-            "attribute vec2 aTexPos;\n"
-            "varying vec2 vTexPos;\n"
-            "uniform vec4 uAlpha;\n"
-            "varying vec4 vAlpha;\n"
-            "void main() {\n"
-            "  vTexPos = aTexPos;\n"
-            "  vAlpha = uAlpha;\n"
-            "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
-            "}";
-
-        GLchar texWithAlphaFragmentSource[] =
-            "#ifdef GL_ES\n"
-            "  precision mediump float;\n"
-            "#endif\n"
-            "uniform sampler2D uTexture;\n"
-            "varying vec2 vTexPos;\n"
-            "varying vec4 vAlpha;\n"
-            "void main(void)\n"
-            "{\n"
-            "  gl_FragColor = texture2D(uTexture, vTexPos) * vAlpha;\n"
-            "}";
-
-        texWithAlphaVertexShader =
-            loadShader(GL_VERTEX_SHADER, texWithAlphaVertexSource);
-        checkError();
-        texWithAlphaFragmentShader =
-            loadShader(GL_FRAGMENT_SHADER, texWithAlphaFragmentSource);
-        checkError();
-
-        texWithAlphaShaderProgram = glCreateProgram();
-        checkError();
-
-        glAttachShader(texWithAlphaShaderProgram, texWithAlphaVertexShader);
-        checkError();
-        glAttachShader(texWithAlphaShaderProgram, texWithAlphaFragmentShader);
-        checkError();
-
-        glLinkProgram(texWithAlphaShaderProgram);
-        checkError();
-
-        glUseProgram(texWithAlphaShaderProgram);
-        checkError();
-
-        uScreenPos = glGetUniformLocation(texWithAlphaShaderProgram, "uScreen");
+        glUseProgram(m_compositorContext->m_texWithAlphaShaderProgram);
+        uScreenPos = glGetUniformLocation(
+            m_compositorContext->m_texWithAlphaShaderProgram, "uScreen");
 
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
 
         if (g_isSupportExtensionEGLImageExternal) {
-            GLchar texFragmentSourceEGLImageExternal[] =
-                "#extension GL_OES_EGL_image_external : require\n"
-                "#ifdef GL_ES\n"
-                "  precision mediump float;\n"
-                "#endif\n"
-                "uniform samplerExternalOES uTexture;\n"
-                "varying vec2 vTexPos;\n"
-                "void main(void)\n"
-                "{\n"
-                "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
-                "}";
-
-            texFragmentShaderEGLImageExternal = loadShader(
-                GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
-            checkError();
-
-            texShaderProgramEGLImageExternal = glCreateProgram();
-            checkError();
-
-            glAttachShader(texShaderProgramEGLImageExternal, texVertexShader);
-            checkError();
-            glAttachShader(texShaderProgramEGLImageExternal,
-                           texFragmentShaderEGLImageExternal);
-            checkError();
-
-            glLinkProgram(texShaderProgramEGLImageExternal);
-            checkError();
-
-            glUseProgram(texShaderProgramEGLImageExternal);
-            checkError();
-
-            uScreenPos = glGetUniformLocation(texShaderProgramEGLImageExternal,
-                                              "uScreen");
-
-            glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
-            checkError();
-
-            GLchar texWithAlphaFragmentSourceEGLImageExternal[] =
-                "#extension GL_OES_EGL_image_external : require\n"
-                "#ifdef GL_ES\n"
-                "  precision mediump float;\n"
-                "#endif\n"
-                "uniform samplerExternalOES uTexture;\n"
-                "varying vec2 vTexPos;\n"
-                "varying vec4 vAlpha;\n"
-                "void main(void)\n"
-                "{\n"
-                "  gl_FragColor = texture2D(uTexture, vTexPos) * vAlpha;\n"
-                "}";
-
-            texWithAlphaFragmentShaderEGLImageExternal = loadShader(
-                GL_FRAGMENT_SHADER, texWithAlphaFragmentSourceEGLImageExternal);
-            checkError();
-
-            texWithAlphaShaderProgramEGLImageExternal = glCreateProgram();
-            checkError();
-
-            glAttachShader(texWithAlphaShaderProgramEGLImageExternal,
-                           texWithAlphaVertexShader);
-            checkError();
-            glAttachShader(texWithAlphaShaderProgramEGLImageExternal,
-                           texWithAlphaFragmentShaderEGLImageExternal);
-            checkError();
-
-            glLinkProgram(texWithAlphaShaderProgramEGLImageExternal);
-            checkError();
-
-            glUseProgram(texWithAlphaShaderProgramEGLImageExternal);
-            checkError();
-
+            glUseProgram(
+                m_compositorContext->m_texShaderProgramEGLImageExternal);
             uScreenPos = glGetUniformLocation(
-                texWithAlphaShaderProgramEGLImageExternal, "uScreen");
+                m_compositorContext->m_texShaderProgramEGLImageExternal,
+                "uScreen");
 
             glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
             checkError();
-        } else {
-            texShaderProgramEGLImageExternal = 0;
-            texFragmentShaderEGLImageExternal = 0;
-            texWithAlphaShaderProgramEGLImageExternal = 0;
-            texWithAlphaFragmentShaderEGLImageExternal = 0;
+
+            glUseProgram(m_compositorContext
+                             ->m_texWithAlphaShaderProgramEGLImageExternal);
+            uScreenPos = glGetUniformLocation(
+                m_compositorContext
+                    ->m_texWithAlphaShaderProgramEGLImageExternal,
+                "uScreen");
+
+            glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
+            checkError();
         }
 
-        GLchar rectVertexSource[] =
-            "uniform mat4 uScreen;\n"
-            "attribute vec2 aPosition;\n"
-            "uniform vec4 uColor;\n"
-            "varying vec4 vColor;\n"
-            "void main() {\n"
-            "  vColor = uColor;\n"
-            "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
-            "}";
-
-        GLchar rectFragmentSource[] =
-            "#ifdef GL_ES\n"
-            "  precision mediump float;\n"
-            "#endif\n"
-            "varying vec4 vColor;\n"
-            "void main(void)\n"
-            "{\n"
-            "  gl_FragColor = vColor;\n"
-            "}";
-
-        rectVertexShader = loadShader(GL_VERTEX_SHADER, rectVertexSource);
-        checkError();
-        rectFragmentShader = loadShader(GL_FRAGMENT_SHADER, rectFragmentSource);
+        glUseProgram(m_compositorContext->m_rectShaderProgram);
         checkError();
 
-        rectShaderProgram = glCreateProgram();
-        checkError();
-
-        glAttachShader(rectShaderProgram, rectVertexShader);
-        checkError();
-        glAttachShader(rectShaderProgram, rectFragmentShader);
-        checkError();
-
-        glLinkProgram(rectShaderProgram);
-        checkError();
-
-        glUseProgram(rectShaderProgram);
-        checkError();
-
-        uScreenPos = glGetUniformLocation(rectShaderProgram, "uScreen");
+        uScreenPos = glGetUniformLocation(
+            m_compositorContext->m_rectShaderProgram, "uScreen");
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
+
+        glUseProgram(0);
 
         clip(Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
                         m_starfish->platformWindow()->height()));
@@ -1109,46 +1161,14 @@ public:
 
     ~CompositorImplGL()
     {
-        {
-            INSTALL_PROFILE_TIMER(
-                m_starfish,
-                "CompositorImplGL::~CompositorImplGL wait for sync");
-            glFlush();
-        }
-
-        if (g_isSupportExtensionEGLImageExternal) {
-            glDeleteProgram(texShaderProgramEGLImageExternal);
-            glDeleteShader(texFragmentShaderEGLImageExternal);
-            checkError();
-            glDeleteProgram(texWithAlphaShaderProgramEGLImageExternal);
-            glDeleteShader(texWithAlphaFragmentShaderEGLImageExternal);
-            checkError();
-        }
-
-        glDeleteProgram(texShaderProgram);
-        glDeleteShader(texVertexShader);
-        checkError();
-        glDeleteShader(texFragmentShader);
-        checkError();
-
-        glDeleteProgram(texWithAlphaShaderProgram);
-        glDeleteShader(texWithAlphaVertexShader);
-        checkError();
-        glDeleteShader(texWithAlphaFragmentShader);
-        checkError();
-
-        glDeleteProgram(rectShaderProgram);
-        glDeleteShader(rectVertexShader);
-        checkError();
-        glDeleteShader(rectFragmentShader);
-        checkError();
-
+        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
     }
 
     virtual void clearColor(const Unit::Color& clr)
     {
+        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
         glClearColor(clr.R(), clr.G(), clr.B(), clr.A());
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
                 GL_STENCIL_BUFFER_BIT);
@@ -1249,6 +1269,7 @@ public:
 
     virtual void drawRect(const Unit::Rect& rt)
     {
+        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
         SkPoint pt;
@@ -1280,10 +1301,10 @@ public:
             if (result.size()) {
                 if (m_state.back().matrixStaysInRect && result.size() == 1 &&
                     result[0].size() == 4) {
-                    glUseProgram(rectShaderProgram);
+                    glUseProgram(m_compositorContext->m_rectShaderProgram);
 
-                    auto aPosition =
-                        glGetAttribLocation(rectShaderProgram, "aPosition");
+                    auto aPosition = glGetAttribLocation(
+                        m_compositorContext->m_rectShaderProgram, "aPosition");
 
                     float minX = (float)result[0][0].X,
                           minY = (float)result[0][0].Y,
@@ -1304,8 +1325,8 @@ public:
                                           &data[0]);
                     glEnableVertexAttribArray(aPosition);
 
-                    auto uColor =
-                        glGetUniformLocation(rectShaderProgram, "uColor");
+                    auto uColor = glGetUniformLocation(
+                        m_compositorContext->m_rectShaderProgram, "uColor");
                     float a = m_state.back().opacity;
 
                     glUniform4f(uColor, a * currentColor.R(),
@@ -1341,16 +1362,17 @@ public:
                             (float)pointPerIndex[indices[i + 2]][0],
                             (float)pointPerIndex[indices[i + 2]][1]
                         };
-                        glUseProgram(rectShaderProgram);
-                        auto aPosition =
-                            glGetAttribLocation(rectShaderProgram, "aPosition");
+                        glUseProgram(m_compositorContext->m_rectShaderProgram);
+                        auto aPosition = glGetAttribLocation(
+                            m_compositorContext->m_rectShaderProgram,
+                            "aPosition");
 
                         glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
                                               trianglePoints);
                         glEnableVertexAttribArray(aPosition);
 
-                        auto uColor =
-                            glGetUniformLocation(rectShaderProgram, "uColor");
+                        auto uColor = glGetUniformLocation(
+                            m_compositorContext->m_rectShaderProgram, "uColor");
                         float a = m_state.back().opacity;
 
                         glUniform4f(uColor, a * currentColor.R(),
@@ -1372,15 +1394,16 @@ public:
                 dest[3][0], dest[3][1]  // V4
             };
 
-            glUseProgram(rectShaderProgram);
+            glUseProgram(m_compositorContext->m_rectShaderProgram);
 
-            auto aPosition =
-                glGetAttribLocation(rectShaderProgram, "aPosition");
+            auto aPosition = glGetAttribLocation(
+                m_compositorContext->m_rectShaderProgram, "aPosition");
 
             glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0, &data[0]);
             glEnableVertexAttribArray(aPosition);
 
-            auto uColor = glGetUniformLocation(rectShaderProgram, "uColor");
+            auto uColor = glGetUniformLocation(
+                m_compositorContext->m_rectShaderProgram, "uColor");
             float a = m_state.back().opacity;
 
             glUniform4f(uColor, a * currentColor.R(), a * currentColor.G(),
@@ -1396,16 +1419,6 @@ public:
     virtual void drawRect(const LayoutRect& rt)
     {
         drawRect(Unit::Rect(rt.x(), rt.y(), rt.width(), rt.height()));
-    }
-
-    void checkError()
-    {
-#ifndef NDEBUG
-        volatile auto error = glGetError();
-        if (error != 0) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-#endif
     }
 
     // returns paths & paths stays in rect
@@ -1477,9 +1490,11 @@ public:
                          1.f,        1.f };
         float a = m_state.back().opacity;
         if (a == 1) {
-            glUseProgram(texShaderProgram);
-            auto aPosition = glGetAttribLocation(texShaderProgram, "aPosition");
-            auto aTexPos = glGetAttribLocation(texShaderProgram, "aTexPos");
+            glUseProgram(m_compositorContext->m_texShaderProgram);
+            auto aPosition = glGetAttribLocation(
+                m_compositorContext->m_texShaderProgram, "aPosition");
+            auto aTexPos = glGetAttribLocation(
+                m_compositorContext->m_texShaderProgram, "aTexPos");
 
             glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
                                   &data[0]);
@@ -1491,7 +1506,8 @@ public:
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, textureID);
-            auto uTexture = glGetUniformLocation(texShaderProgram, "uTexture");
+            auto uTexture = glGetUniformLocation(
+                m_compositorContext->m_texShaderProgram, "uTexture");
             glUniform1i(uTexture, 0);
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1499,11 +1515,11 @@ public:
             checkError();
             glUseProgram(0);
         } else {
-            glUseProgram(texWithAlphaShaderProgram);
-            auto aPosition =
-                glGetAttribLocation(texWithAlphaShaderProgram, "aPosition");
-            auto aTexPos =
-                glGetAttribLocation(texWithAlphaShaderProgram, "aTexPos");
+            glUseProgram(m_compositorContext->m_texWithAlphaShaderProgram);
+            auto aPosition = glGetAttribLocation(
+                m_compositorContext->m_texWithAlphaShaderProgram, "aPosition");
+            auto aTexPos = glGetAttribLocation(
+                m_compositorContext->m_texWithAlphaShaderProgram, "aTexPos");
 
             glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
                                   &data[0]);
@@ -1515,10 +1531,10 @@ public:
 
             glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, textureID);
-            auto uTexture =
-                glGetUniformLocation(texWithAlphaShaderProgram, "uTexture");
-            auto uAlpha =
-                glGetUniformLocation(texWithAlphaShaderProgram, "uAlpha");
+            auto uTexture = glGetUniformLocation(
+                m_compositorContext->m_texWithAlphaShaderProgram, "uTexture");
+            auto uAlpha = glGetUniformLocation(
+                m_compositorContext->m_texWithAlphaShaderProgram, "uAlpha");
             glUniform4f(uAlpha, a, a, a, a);
             glUniform1i(uTexture, 0);
 
@@ -1557,6 +1573,8 @@ public:
             return;
         }
 
+        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
+
         auto textureInfo = cs->textureInfo();
         if (textureInfo.fragments.size() == 0) {
             return;
@@ -1589,6 +1607,7 @@ public:
         dest[3][1] = pt.y();
 
         bool stencilClippingEnabled = false;
+        bool scissorClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
         Unit::Rect visibleArea =
             Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
@@ -1598,71 +1617,91 @@ public:
             visibleArea = Unit::Rect(0, 0, 0, 0);
             ClipperLib::Paths result = computeClippath(dest);
             if (result.size()) {
-                stencilClippingEnabled = true;
+                if (m_state.back().matrixStaysInRect && result.size() == 1 &&
+                    result[0].size() == 4) {
+                    scissorClippingEnabled = true;
 
-                glEnable(GL_STENCIL_TEST);
-                glClearStencil(0);
-                glClear(GL_STENCIL_BUFFER_BIT);
-                glColorMask(false, false, false, false);
-                glDepthMask(false);
-                glStencilFunc(GL_ALWAYS, 1, 1);
-                glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+                    float minX = (float)result[0][0].X,
+                          minY = (float)result[0][0].Y,
+                          maxX = (float)result[0][0].X,
+                          maxY = (float)result[0][0].Y;
 
-                std::vector<std::vector<Point>> polygon;
-                std::vector<Point> pointPerIndex;
-                for (size_t i = 0; i < result.size(); i++) {
-                    polygon.push_back(std::vector<Point>());
-                    for (size_t j = 0; j < result[i].size(); j++) {
-                        polygon.back().push_back(
-                            { (double)result[i][j].X, (double)result[i][j].Y });
-                        pointPerIndex.push_back(
-                            { (double)result[i][j].X, (double)result[i][j].Y });
+                    for (size_t i = 1; i < 4; i++) {
+                        minX = std::min((float)result[0][i].X, minX);
+                        minY = std::min((float)result[0][i].Y, minY);
+                        maxX = std::max((float)result[0][i].X, maxX);
+                        maxY = std::max((float)result[0][i].Y, maxY);
                     }
 
-                    visibleArea.unite(boundingRect(result[i]));
+                    visibleArea =
+                        Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+
+                    glEnable(GL_SCISSOR_TEST);
+                    glScissor(minX,
+                              m_starfish->platformWindow()->height() - maxY,
+                              maxX - minX, maxY - minY);
+                } else {
+                    stencilClippingEnabled = true;
+
+                    glEnable(GL_STENCIL_TEST);
+                    glClearStencil(0);
+                    glClear(GL_STENCIL_BUFFER_BIT);
+                    glColorMask(false, false, false, false);
+                    glStencilFunc(GL_ALWAYS, 1, 1);
+                    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+                    std::vector<std::vector<Point>> polygon;
+                    std::vector<Point> pointPerIndex;
+                    for (size_t i = 0; i < result.size(); i++) {
+                        polygon.push_back(std::vector<Point>());
+                        for (size_t j = 0; j < result[i].size(); j++) {
+                            polygon.back().push_back(
+                                { (double)result[i][j].X,
+                                  (double)result[i][j].Y });
+                            pointPerIndex.push_back({ (double)result[i][j].X,
+                                                      (double)result[i][j].Y });
+                        }
+
+                        visibleArea.unite(boundingRect(result[i]));
+                    }
+
+                    std::vector<N> indices = mapbox::earcut<N>(polygon);
+                    for (size_t i = 0; i < indices.size(); i += 3) {
+                        float trianglePoints[6] = {
+                            (float)pointPerIndex[indices[i]][0],
+                            (float)pointPerIndex[indices[i]][1],
+                            (float)pointPerIndex[indices[i + 1]][0],
+                            (float)pointPerIndex[indices[i + 1]][1],
+                            (float)pointPerIndex[indices[i + 2]][0],
+                            (float)pointPerIndex[indices[i + 2]][1]
+                        };
+                        glUseProgram(m_compositorContext->m_rectShaderProgram);
+                        auto aPosition = glGetAttribLocation(
+                            m_compositorContext->m_rectShaderProgram,
+                            "aPosition");
+
+                        glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
+                                              trianglePoints);
+                        glEnableVertexAttribArray(aPosition);
+
+                        auto uColor = glGetUniformLocation(
+                            m_compositorContext->m_rectShaderProgram, "uColor");
+                        float a = 1;
+                        glUniform4f(uColor,
+                                    a * Unit::Color(255, 255, 255, 255).R(),
+                                    a * Unit::Color(255, 255, 255, 255).G(),
+                                    a * Unit::Color(255, 255, 255, 255).B(),
+                                    a * Unit::Color(255, 255, 255, 255).A());
+                        glDrawArrays(GL_TRIANGLES, 0, 3);
+                        checkError();
+
+                        glUseProgram(0);
+                    }
+
+                    glColorMask(true, true, true, true);
+                    glStencilFunc(GL_EQUAL, 1, 1);
+                    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
                 }
-
-                std::vector<N> indices = mapbox::earcut<N>(polygon);
-                for (size_t i = 0; i < indices.size(); i += 3) {
-                    float trianglePoints[6] = {
-                        (float)pointPerIndex[indices[i]][0],
-                        (float)pointPerIndex[indices[i]][1],
-                        (float)pointPerIndex[indices[i + 1]][0],
-                        (float)pointPerIndex[indices[i + 1]][1],
-                        (float)pointPerIndex[indices[i + 2]][0],
-                        (float)pointPerIndex[indices[i + 2]][1]
-                    };
-                    /*
-                    printf("trangle %f,%f-%f,%f-%f,%f ", trianglePoints[0],
-                    trianglePoints[1],
-                            trianglePoints[2], trianglePoints[3],
-                            trianglePoints[4], trianglePoints[5]);
-                     */
-                    glUseProgram(rectShaderProgram);
-                    auto aPosition =
-                        glGetAttribLocation(rectShaderProgram, "aPosition");
-
-                    glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
-                                          trianglePoints);
-                    glEnableVertexAttribArray(aPosition);
-
-                    auto uColor =
-                        glGetUniformLocation(rectShaderProgram, "uColor");
-                    float a = 1;
-                    glUniform4f(uColor, a * Unit::Color(255, 255, 255, 255).R(),
-                                a * Unit::Color(255, 255, 255, 255).G(),
-                                a * Unit::Color(255, 255, 255, 255).B(),
-                                a * Unit::Color(255, 255, 255, 255).A());
-                    glDrawArrays(GL_TRIANGLES, 0, 3);
-                    checkError();
-
-                    glUseProgram(0);
-                }
-
-                glColorMask(true, true, true, true);
-                glDepthMask(true);
-                glStencilFunc(GL_EQUAL, 1, 1);
-                glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
             } else {
                 shouldSkipTexturePainting = true;
             }
@@ -1683,13 +1722,16 @@ public:
                                  1.f,        1.f };
                 float a = m_state.back().opacity;
                 if (a == 1) {
-                    glUseProgram(texShaderProgramEGLImageExternal);
+                    glUseProgram(m_compositorContext
+                                     ->m_texShaderProgramEGLImageExternal);
                     glBindTexture(GL_TEXTURE_EXTERNAL_OES,
                                   csGL->m_textureFragments[0].textureID);
                     auto aPosition = glGetAttribLocation(
-                        texShaderProgramEGLImageExternal, "aPosition");
+                        m_compositorContext->m_texShaderProgramEGLImageExternal,
+                        "aPosition");
                     auto aTexPos = glGetAttribLocation(
-                        texShaderProgramEGLImageExternal, "aTexPos");
+                        m_compositorContext->m_texShaderProgramEGLImageExternal,
+                        "aTexPos");
 
                     glVertexAttribPointer(aPosition, 2, GL_FLOAT, false,
                                           (2 + 2) * 4, &data[0]);
@@ -1704,13 +1746,19 @@ public:
                     checkError();
                     glUseProgram(0);
                 } else {
-                    glUseProgram(texWithAlphaShaderProgramEGLImageExternal);
+                    glUseProgram(
+                        m_compositorContext
+                            ->m_texWithAlphaShaderProgramEGLImageExternal);
                     glBindTexture(GL_TEXTURE_EXTERNAL_OES,
                                   csGL->m_textureFragments[0].textureID);
                     auto aPosition = glGetAttribLocation(
-                        texWithAlphaShaderProgramEGLImageExternal, "aPosition");
+                        m_compositorContext
+                            ->m_texWithAlphaShaderProgramEGLImageExternal,
+                        "aPosition");
                     auto aTexPos = glGetAttribLocation(
-                        texWithAlphaShaderProgramEGLImageExternal, "aTexPos");
+                        m_compositorContext
+                            ->m_texWithAlphaShaderProgramEGLImageExternal,
+                        "aTexPos");
 
                     glVertexAttribPointer(aPosition, 2, GL_FLOAT, false,
                                           (2 + 2) * 4, &data[0]);
@@ -1721,7 +1769,9 @@ public:
                     glEnableVertexAttribArray(aTexPos);
 
                     auto uAlpha = glGetUniformLocation(
-                        texWithAlphaShaderProgramEGLImageExternal, "uAlpha");
+                        m_compositorContext
+                            ->m_texWithAlphaShaderProgramEGLImageExternal,
+                        "uAlpha");
                     glUniform4f(uAlpha, a, a, a, a);
 
                     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
@@ -1729,148 +1779,155 @@ public:
                     checkError();
                     glUseProgram(0);
                 }
-                return;
-            }
+            } else {
+                size_t wTextureCount =
+                    ceil((float)cs->bufferWidth() / g_textureTileSize);
+                size_t hTextureCount =
+                    ceil((float)cs->bufferHeight() / g_textureTileSize);
 
-            size_t wTextureCount =
-                ceil((float)cs->bufferWidth() / g_textureTileSize);
-            size_t hTextureCount =
-                ceil((float)cs->bufferHeight() / g_textureTileSize);
+                size_t coveredRowsCount = 0;
+                size_t i = 0;
+                for (size_t y = 0; y < hTextureCount; y++) {
+                    size_t coveredColsCount = 0;
+                    for (size_t x = 0; x < wTextureCount; x++) {
+                        size_t texureDataX = coveredColsCount;
+                        size_t texureDataY = coveredRowsCount;
+                        size_t texureDataWidth =
+                            std::min((size_t)g_textureTileSize,
+                                     cs->bufferWidth() - coveredColsCount);
+                        size_t texureDataHeight =
+                            std::min((size_t)g_textureTileSize,
+                                     cs->bufferHeight() - coveredRowsCount);
 
-            size_t coveredRowsCount = 0;
-            size_t i = 0;
-            for (size_t y = 0; y < hTextureCount; y++) {
-                size_t coveredColsCount = 0;
-                for (size_t x = 0; x < wTextureCount; x++) {
-                    size_t texureDataX = coveredColsCount;
-                    size_t texureDataY = coveredRowsCount;
-                    size_t texureDataWidth =
-                        std::min((size_t)g_textureTileSize,
-                                 cs->bufferWidth() - coveredColsCount);
-                    size_t texureDataHeight =
-                        std::min((size_t)g_textureTileSize,
-                                 cs->bufferHeight() - coveredRowsCount);
+                        float newDest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
-                    float newDest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
+                        auto& fragment = textureInfo.fragments[i];
+                        float oldW = dst.width();
+                        float oldH = dst.height();
+                        Unit::Rect newDst(oldW * fragment.srcX + dst.x(),
+                                          oldH * fragment.srcY + dst.y(),
+                                          oldW * fragment.srcWidth,
+                                          oldH * fragment.srcHeight);
 
-                    auto& fragment = textureInfo.fragments[i];
-                    float oldW = dst.width();
-                    float oldH = dst.height();
-                    Unit::Rect newDst(oldW * fragment.srcX + dst.x(),
-                                      oldH * fragment.srcY + dst.y(),
-                                      oldW * fragment.srcWidth,
-                                      oldH * fragment.srcHeight);
+                        SkPoint pt;
+                        pt = SkPoint::Make(newDst.x(), newDst.y());
 
-                    SkPoint pt;
-                    pt = SkPoint::Make(newDst.x(), newDst.y());
+                        m_state.back().matrix.mapPoints(&pt, 1);
+                        newDest[0][0] = pt.x();
+                        newDest[0][1] = pt.y();
 
-                    m_state.back().matrix.mapPoints(&pt, 1);
-                    newDest[0][0] = pt.x();
-                    newDest[0][1] = pt.y();
+                        pt = SkPoint::Make(newDst.x(), newDst.maxY());
+                        m_state.back().matrix.mapPoints(&pt, 1);
+                        newDest[1][0] = pt.x();
+                        newDest[1][1] = pt.y();
 
-                    pt = SkPoint::Make(newDst.x(), newDst.maxY());
-                    m_state.back().matrix.mapPoints(&pt, 1);
-                    newDest[1][0] = pt.x();
-                    newDest[1][1] = pt.y();
+                        pt = SkPoint::Make(newDst.maxX(), newDst.y());
+                        m_state.back().matrix.mapPoints(&pt, 1);
+                        newDest[2][0] = pt.x();
+                        newDest[2][1] = pt.y();
 
-                    pt = SkPoint::Make(newDst.maxX(), newDst.y());
-                    m_state.back().matrix.mapPoints(&pt, 1);
-                    newDest[2][0] = pt.x();
-                    newDest[2][1] = pt.y();
+                        pt = SkPoint::Make(newDst.maxX(), newDst.maxY());
+                        m_state.back().matrix.mapPoints(&pt, 1);
+                        newDest[3][0] = pt.x();
+                        newDest[3][1] = pt.y();
 
-                    pt = SkPoint::Make(newDst.maxX(), newDst.maxY());
-                    m_state.back().matrix.mapPoints(&pt, 1);
-                    newDest[3][0] = pt.x();
-                    newDest[3][1] = pt.y();
+                        float minX = newDest[0][0], minY = newDest[0][1],
+                              maxX = newDest[0][0], maxY = newDest[0][1];
 
-                    float minX = newDest[0][0], minY = newDest[0][1],
-                          maxX = newDest[0][0], maxY = newDest[0][1];
-
-                    for (size_t i = 1; i < 4; i++) {
-                        minX = std::min(newDest[i][0], minX);
-                        minY = std::min(newDest[i][1], minY);
-                        maxX = std::max(newDest[i][0], maxX);
-                        maxY = std::max(newDest[i][1], maxY);
-                    }
-
-                    Unit::Rect screenBoundingRect(minX, minY,
-                                                  std::abs(maxX - minX),
-                                                  std::abs(maxY - minY));
-
-                    if (screenBoundingRect.intersects(visibleArea)) {
-                        GLuint tid = (GLuint)fragment.textureID;
-
-                        if (csGL->m_textureFragmentsFlags[i].m_isDirty) {
-                            INSTALL_PROFILE_TIMER(m_starfish,
-                                                  "update texture tile..");
-
-                            size_t xx =
-                                csGL->m_dirtyAreaTextureFragments[i].x();
-                            size_t xxEnd =
-                                csGL->m_dirtyAreaTextureFragments[i].maxX();
-                            size_t yy =
-                                csGL->m_dirtyAreaTextureFragments[i].y();
-                            size_t yyEnd =
-                                csGL->m_dirtyAreaTextureFragments[i].maxY();
-
-                            auto bData = csGL->mapBuffer();
-                            auto bStride = csGL->bufferStride();
-
-                            glActiveTexture(GL_TEXTURE0);
-                            glBindTexture(GL_TEXTURE_2D, tid);
-                            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-                            checkError();
-
-                            if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
-                                glPixelStorei(GL_UNPACK_ROW_LENGTH,
-                                              csGL->bufferWidth());
-                                glPixelStorei(GL_UNPACK_SKIP_PIXELS, xx);
-                                glPixelStorei(GL_UNPACK_SKIP_ROWS, yy);
-
-                                auto data = bData;
-                                data += (texureDataY * bStride);
-                                data += (texureDataX * 4);
-                                glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
-                                                xxEnd - xx, yyEnd - yy, GL_RGBA,
-                                                GL_UNSIGNED_BYTE, data);
-
-                                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-                                glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-                                glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-                            } else {
-                                for (; yy < yyEnd; yy++) {
-                                    auto data = bData;
-                                    data += ((yy + texureDataY) * bStride);
-                                    data += ((texureDataX + xx) * 4);
-                                    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, yy,
-                                                    xxEnd - xx, 1, GL_RGBA,
-                                                    GL_UNSIGNED_BYTE, data);
-                                    checkError();
-                                }
-                            }
-
-                            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-                            glBindTexture(GL_TEXTURE_2D, 0);
-                            checkError();
-
-                            csGL->m_textureFragmentsFlags[i].m_isDirty = false;
-                            csGL->m_dirtyAreaTextureFragments[i] =
-                                Unit::Rect(0, 0, 0, 0);
-                            csGL->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
+                        for (size_t i = 1; i < 4; i++) {
+                            minX = std::min(newDest[i][0], minX);
+                            minY = std::min(newDest[i][1], minY);
+                            maxX = std::max(newDest[i][0], maxX);
+                            maxY = std::max(newDest[i][1], maxY);
                         }
-                        drawTexture(cs, newDest, tid);
+
+                        Unit::Rect screenBoundingRect(minX, minY,
+                                                      std::abs(maxX - minX),
+                                                      std::abs(maxY - minY));
+
+                        if (screenBoundingRect.intersects(visibleArea)) {
+                            GLuint tid = (GLuint)fragment.textureID;
+
+                            if (csGL->m_textureFragmentsFlags[i].m_isDirty) {
+                                INSTALL_PROFILE_TIMER(m_starfish,
+                                                      "update texture tile..");
+
+                                size_t xx =
+                                    csGL->m_dirtyAreaTextureFragments[i].x();
+                                size_t xxEnd =
+                                    csGL->m_dirtyAreaTextureFragments[i].maxX();
+                                size_t yy =
+                                    csGL->m_dirtyAreaTextureFragments[i].y();
+                                size_t yyEnd =
+                                    csGL->m_dirtyAreaTextureFragments[i].maxY();
+
+                                auto bData = csGL->mapBuffer();
+                                auto bStride = csGL->bufferStride();
+
+                                glActiveTexture(GL_TEXTURE0);
+                                glBindTexture(GL_TEXTURE_2D, tid);
+                                glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                                checkError();
+
+                                if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
+                                    glPixelStorei(GL_UNPACK_ROW_LENGTH,
+                                                  csGL->bufferWidth());
+                                    glPixelStorei(GL_UNPACK_SKIP_PIXELS, xx);
+                                    glPixelStorei(GL_UNPACK_SKIP_ROWS, yy);
+
+                                    auto data = bData;
+                                    data += (texureDataY * bStride);
+                                    data += (texureDataX * 4);
+                                    glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
+                                                    xxEnd - xx, yyEnd - yy,
+                                                    GL_RGBA, GL_UNSIGNED_BYTE,
+                                                    data);
+
+                                    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+                                    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+                                    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+                                } else {
+                                    for (; yy < yyEnd; yy++) {
+                                        auto data = bData;
+                                        data += ((yy + texureDataY) * bStride);
+                                        data += ((texureDataX + xx) * 4);
+                                        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, yy,
+                                                        xxEnd - xx, 1, GL_RGBA,
+                                                        GL_UNSIGNED_BYTE, data);
+                                        checkError();
+                                    }
+                                }
+
+                                glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+                                glBindTexture(GL_TEXTURE_2D, 0);
+                                checkError();
+
+                                csGL->m_textureFragmentsFlags[i].m_isDirty =
+                                    false;
+                                csGL->m_dirtyAreaTextureFragments[i] =
+                                    Unit::Rect(0, 0, 0, 0);
+                                csGL->unMapBufferAndNotifyUpdateRegion(0, 0, 0,
+                                                                       0);
+                            }
+                            drawTexture(cs, newDest, tid);
+                        }
+
+                        i++;
+                        coveredColsCount += g_textureTileSize;
                     }
 
-                    i++;
-                    coveredColsCount += g_textureTileSize;
+                    coveredRowsCount += g_textureTileSize;
                 }
-
-                coveredRowsCount += g_textureTileSize;
             }
         }
 
         if (stencilClippingEnabled) {
             glDisable(GL_STENCIL_TEST);
+        }
+        if (scissorClippingEnabled) {
+            glScissor(0, 0, m_starfish->platformWindow()->width(),
+                      m_starfish->platformWindow()->height());
+            glDisable(GL_SCISSOR_TEST);
         }
     }
 
@@ -1925,33 +1982,18 @@ public:
 
 protected:
     StarFish* m_starfish;
+    CompositorContext* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;
-
-    GLuint texShaderProgram;
-    GLuint texVertexShader;
-    GLuint texFragmentShader;
-
-    GLuint texWithAlphaShaderProgram;
-    GLuint texWithAlphaVertexShader;
-    GLuint texWithAlphaFragmentShader;
-
-    GLuint rectShaderProgram;
-    GLuint rectVertexShader;
-    GLuint rectFragmentShader;
-
-    GLuint texShaderProgramEGLImageExternal;
-    GLuint texFragmentShaderEGLImageExternal;
-
-    GLuint texWithAlphaShaderProgramEGLImageExternal;
-    GLuint texWithAlphaFragmentShaderEGLImageExternal;
 };
 
-Compositor* Compositor::create(StarFish* starfish, void* data)
+Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
+                               void* data)
 {
-    return new CompositorImplGL(starfish, data);
+    return new CompositorImplGL(starfish, ctx, data);
 }
 
-Compositor* Compositor::create(StarFish* starfish, CanvasSurface* surface)
+Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
+                               CanvasSurface* surface)
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }

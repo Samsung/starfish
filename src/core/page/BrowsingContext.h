@@ -208,7 +208,8 @@ public:
         return m_compositionStartEventDefeaultPrevented;
     }
 
-    void clearingBeforePaint(Canvas* canvas);
+    template <typename T>
+    void clearingBeforePaint(T canvas);
     void paintWindowBackground(Canvas* canvas);
 
     bool isTopLevelBrowsingContext()

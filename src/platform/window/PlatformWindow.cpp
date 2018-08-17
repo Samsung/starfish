@@ -487,7 +487,8 @@ void PlatformWindow::callHandler(const std::string& handlerName, void* param)
 }
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-void PlatformWindow::paintVirtualCursor(Canvas* canvas)
+template <typename T>
+void PlatformWindow::paintVirtualCursor(T canvas)
 {
     if (m_virtualCursorX == -1) {
         m_virtualCursorX = width() / 2;
@@ -508,6 +509,8 @@ void PlatformWindow::paintVirtualCursor(Canvas* canvas)
     canvas->drawImage(m_virtualCursorCanvasSurface,
                       Unit::Rect(m_virtualCursorX, m_virtualCursorY, 25, 36));
 }
+template void PlatformWindow::paintVirtualCursor<Canvas*>(Canvas*);
+template void PlatformWindow::paintVirtualCursor<Compositor*>(Compositor*);
 #endif
 
 void PlatformWindow::onResize()

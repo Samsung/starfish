@@ -26,6 +26,7 @@ class NativeImageData;
 class PlatformWindow;
 class Canvas;
 class CanvasSurface;
+class CompositorContext;
 
 class Compositor : public gc {
 protected:
@@ -34,9 +35,12 @@ protected:
     }
 
 public:
-    static Canvas* createCanvasAdaptor(Compositor* compositor);
-    static Compositor* create(StarFish* starfish, void* data);
-    static Compositor* create(StarFish* starfish, CanvasSurface* surface);
+    static Compositor* create(StarFish* starfish, CompositorContext* ctx,
+                              void* data);
+    static Compositor* create(StarFish* starfish, CompositorContext* ctx,
+                              CanvasSurface* surface);
+    static CompositorContext* initCompositorContext(PlatformWindow* wnd);
+    static void destroyCompositorContext(CompositorContext* ctx);
 
     virtual ~Compositor()
     {

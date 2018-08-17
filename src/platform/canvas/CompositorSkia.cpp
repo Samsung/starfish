@@ -312,12 +312,14 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Compositor* Compositor::create(StarFish* starfish, void* data)
+Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
+                               void* data)
 {
     return new CompositorSkia(starfish, data);
 }
 
-Compositor* Compositor::create(StarFish* starfish, CanvasSurface* surface)
+Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
+                               CanvasSurface* surface)
 {
     return new CompositorSkia(starfish, surface);
 }

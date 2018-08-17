@@ -55,6 +55,7 @@
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
@@ -501,7 +502,8 @@ bool BrowsingContext::layoutIfNeeds()
     return ret;
 }
 
-void BrowsingContext::clearingBeforePaint(Canvas* canvas)
+template <typename T>
+void BrowsingContext::clearingBeforePaint(T canvas)
 {
 #ifdef STARFISH_TIZEN_TRANSPARENT_BACKGROUND
     canvas->clearColor(Unit::Color(0, 0, 0, 0));
@@ -550,6 +552,9 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
         }
     }
 }
+
+template void BrowsingContext::clearingBeforePaint<Canvas*>(Canvas*);
+template void BrowsingContext::clearingBeforePaint<Compositor*>(Compositor*);
 
 void BrowsingContext::markHasPendingStyleSheet()
 {
