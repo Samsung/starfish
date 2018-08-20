@@ -115,7 +115,7 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
         return false;
     }
 
-    String* value = visibleValue();
+    String* value = this->value();
     m_currentCaretPosition = std::min(m_currentCaretPosition, value->length());
 
     String* oldValue = value;
