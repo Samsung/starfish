@@ -80,7 +80,6 @@ void HTMLTextEditable::didStateChanged(int oldState, int newState)
         } else if (oldGotFocus && !newGotFocus) {
             starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
             m_shouldDrawCaret = false;
-            m_currentCaretPosition = 0;
             m_currentEditingText = String::emptyString;
             window()->clearInterval(m_caretBlinkingIntervalId);
         }

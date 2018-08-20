@@ -233,6 +233,10 @@ void FrameInputBox::layout(LayoutContext& ctx,
             STARFISH_ASSERT(lastEndIndex < cPos);
             x = paddingLeft() + borderLeft();
             y = lastY;
+            auto str = textEditable->visibleValue();
+            if (String::isNewline(str->charAt(str->length() - 1))) {
+                y += fontHeight;
+            }
         }
     }
     textEditable->currentCaretLayoutLocation().setX(x);
@@ -269,7 +273,7 @@ void FrameInputBox::paintCaret(Canvas* canvas)
     y = textEditable->currentCaretLayoutLocation().y();
     canvas->save();
     canvas->setColor(node()->style()->caretColor());
-    canvas->drawRect(LayoutRect(x - scrollLeft(), y, caretThickness,
+    canvas->drawRect(LayoutRect(x, y, caretThickness,
                                 style()->font()->metrics().m_fontHeight));
     canvas->restore();
 }
