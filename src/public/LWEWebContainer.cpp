@@ -393,26 +393,30 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
         ->registerWebViewHandler(
             std::string("shouldOverrideUrlLoading"),
             [this, cb](void* param) -> void {
-                struct Param {
-                    std::string url;
-                    std::string referrerUrl;
+                struct Param : public gc {
+                    StarFish::ResourceURL* url;
+                    StarFish::ResourceURL* referrerUrl;
                     bool canNavigate;
+                    bool force;
+
+                    static void* operator new(size_t s)
+                    {
+                        return GC_MALLOC_UNCOLLECTABLE(s);
+                    }
                 };
 
                 Param* p = (Param*)param;
-                bool ret = cb(this, p->url);
+                bool ret =
+                    cb(this, p->url->urlString()->toUTF8NonGCString().data());
 
                 if ((ret == false) && p->canNavigate) {
                     // continue loading
                     TO_STARFISH(m_starfish)
                         ->messageLoop()
-                        ->invokeNavigate(
-                            TO_STARFISH(m_starfish)
-                                ->platformWindow()
-                                ->webView(),
-                            new StarFish::ResourceURL(p->url.c_str()),
-                            new StarFish::ResourceURL(p->referrerUrl.c_str()),
-                            true);
+                        ->invokeNavigate(TO_STARFISH(m_starfish)
+                                             ->platformWindow()
+                                             ->webView(),
+                                         p->url, p->referrerUrl, true);
                 }
                 delete p;
             });
@@ -443,8 +447,7 @@ void WebContainer::RegisterOnDownloadStartHandler(
 
 void WebContainer::RegisterShowDropdownMenuHandler(
     const std::function<void(LWE::WebContainer*,
-                             const std::vector<std::string>*,
-                             int checkedPosition)>& cb)
+                             const std::vector<std::string>*, int)>& cb)
 {
     TO_STARFISH(m_starfish)
         ->platformWindow()
@@ -458,6 +461,25 @@ void WebContainer::RegisterShowDropdownMenuHandler(
                                       Param* p = (Param*)param;
                                       cb(this, p->list, p->checkedPosition);
                                       delete p->list;
+                                      delete p;
+                                  });
+}
+
+void WebContainer::RegisterShowAlertHandler(
+    const std::function<void(LWE::WebContainer*, const std::string&,
+                             const std::string&)>& cb)
+{
+    TO_STARFISH(m_starfish)
+        ->platformWindow()
+        ->registerCallbackHandler(std::string("showAlert"),
+                                  [this, cb](void* param) -> void {
+                                      struct Param {
+                                          std::string title;
+                                          std::string message;
+                                      };
+
+                                      Param* p = (Param*)param;
+                                      cb(this, p->title, p->message);
                                       delete p;
                                   });
 }

@@ -50,6 +50,7 @@ struct WindowGlue {
     jmethodID m_onProgressed;
     jmethodID m_onDownloadStart;
     jmethodID m_showDropdownMenu;
+    jmethodID m_showAlert;
     jmethodID m_showIME;
     jmethodID m_hideIME;
 
@@ -85,6 +86,8 @@ void callOnDownloadStart(LWE::WebContainer* view, const char* url,
 void callShowDropdownMenu(LWE::WebContainer* view,
                           const std::vector<std::string>* list,
                           int checkedPosition);
+void callShowAlert(LWE::WebContainer* view, const std::string& title,
+                   const std::string& message);
 
 void showIME(void* view);
 void hideIME(void* view);
@@ -163,7 +166,8 @@ Java_com_samsung_android_mobileservice_lwe_WebView_init(JNIEnv* env,
                          "String;Ljava/lang/String;J)V");
     g_WindowGlue.m_showDropdownMenu =
         env->GetMethodID(clazz, "showDropdownMenu", "([Ljava/lang/String;I)V");
-
+    g_WindowGlue.m_showAlert = env->GetMethodID(
+        clazz, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
     g_WindowGlue.m_showIME = env->GetMethodID(clazz, "showSoftKeyboard", "()V");
     g_WindowGlue.m_hideIME = env->GetMethodID(clazz, "hideSoftKeyboard", "()V");
 
@@ -406,6 +410,34 @@ void callShowDropdownMenu(LWE::WebContainer* view,
 
     env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_showDropdownMenu,
                         jlist, jcheckedPosition);
+}
+
+void callShowAlert(LWE::WebContainer* view, const std::string& title,
+                   const std::string& message)
+{
+    LOGI("showAlert: started");
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv: version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_showAlert) {
+        LOGE("showAlert: error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    jstring jtitle = env->NewStringUTF(title.c_str());
+    jstring jmessage = env->NewStringUTF(message.c_str());
+    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_showAlert,
+                        jtitle, jmessage);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -731,6 +763,12 @@ Java_com_samsung_android_mobileservice_lwe_WebView_Create(
         [](LWE::WebContainer* view, const std::vector<std::string>* list,
            int checkedPosition) -> void {
             callShowDropdownMenu(view, list, checkedPosition);
+        });
+
+    webContainer->RegisterShowAlertHandler(
+        [](LWE::WebContainer* view, const std::string& title,
+           const std::string& message) -> void {
+            callShowAlert(view, title, message);
         });
 
     webContainer->RegisterOnShowSoftwareKeyboardIfPossibleHandler(

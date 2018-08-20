@@ -56,8 +56,8 @@ interface Window : EventTarget {
   [Unimplemented] readonly attribute ApplicationCache applicationCache;
 
   // user prompts
-  [Unimplemented] void alert();
-  [Unimplemented] void alert(DOMString message);
+  void alert();
+  void alert(DOMString message);
   [Unimplemented] boolean confirm(optional DOMString message = "");
   [Unimplemented] DOMString? prompt(optional DOMString message = "", optional DOMString default = "");
   [Unimplemented] void print();
