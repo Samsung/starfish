@@ -104,6 +104,8 @@ bool HTMLInputElement::shouldCreateFrameText()
         return true;
     } else if (typeString->equals("url")) {
         return true;
+    } else if (typeString->equals("number")) {
+        return true;
     }
 
     return false;
@@ -192,6 +194,22 @@ void HTMLInputElement::sanitizeValue()
         m_value = String::fromDouble(val);
     } else if (type()->equals("number")) {
         // TODO
+        for (size_t i = 0; i < m_value->length(); i++) {
+            size_t pos = i;
+            char32_t ch = m_value->charAt(pos);
+            if (!isdigit(ch)) {
+                m_value = String::emptyString;
+                break;
+            }
+        }
+
+        if (m_value->length()) {
+            size_t pos = m_value->length() - 1;
+            char32_t ch = m_value->charAt(pos);
+            if (!isdigit(ch)) {
+                m_value = m_value->substring(0, pos);
+            }
+        }
     }
 }
 
@@ -506,7 +524,10 @@ bool HTMLInputElement::isSizableType()
         return true;
     } else if (typeString->equals("search")) {
         return true;
+    } else if (typeString->equals("number")) {
+        return true;
     }
+
     return false;
 }
 
@@ -541,17 +562,6 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
         }
 
         setNeedsFrameTreeBuild();
-
-        // TODO: fire correct inputevent
-        // TODO: we should fire this event in handleDefaultEvent
-        InputEvent* event =
-            new InputEvent(document(), String::createASCIIString("input"));
-        event->setCancelable(false);
-        event->setBubbles(true);
-        event->setComposed(true);
-        event->setData(val);
-        event->setInputType(String::createASCIIString("insertText"));
-        dispatchEventByUA(event);
     } else if (name == starFish()->staticStrings()->m_checked) {
         if (!m_dirtyCheckness) {
             if (attributeCreated) {
@@ -669,6 +679,8 @@ bool HTMLInputElement::ignoreLineBreaks()
     } else if (typeString->equals("submit")) {
         return true;
     } else if (typeString->equals("button")) {
+        return true;
+    } else if (typeString->equals("number")) {
         return true;
     }
     return false;

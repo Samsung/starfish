@@ -65,6 +65,7 @@
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "platform/loader/ResourceLoader.h"
+#include "core/dom/InputEvent.h"
 
 namespace StarFish {
 
@@ -1583,6 +1584,19 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
                 window()->scrollToWithoutLayout(sx, sy);
             }
         }
+    }
+
+    // After editing, this 'oninput' event is called.
+    if (target->isHTMLInputElement()) {
+        InputEvent* event =
+            new InputEvent(document(), String::createASCIIString("input"));
+        event->setCancelable(false);
+        event->setBubbles(true);
+        event->setComposed(true);
+        event->setData(target->asHTMLInputElement()->value());
+        event->setInputType(String::createASCIIString("insertText"));
+
+        document()->window()->dispatchEventByUA(target, event);
     }
 }
 
