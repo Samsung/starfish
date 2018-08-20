@@ -271,4 +271,4 @@ http://10.113.111.47:8000/dom/nodes/Document-getElementById.html
 #http://10.113.111.47:8000/dom/nodes/Document-getElementsByTagName.html
 #http://10.113.111.47:8000/dom/nodes/MutationObserver-disconnect.html
 #http://10.113.111.47:8000/dom/nodes/Node-cloneNode.html
-#http://10.113.111.47:8000/dom/nodes/Node-appendChild.html
+http://10.113.111.47:8000/dom/nodes/Node-appendChild.html
