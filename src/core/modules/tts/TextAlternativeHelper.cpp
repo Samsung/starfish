@@ -43,7 +43,6 @@ TextAlternativeHelper::TextAlternativeHelper(StarFish* starfish)
 
 String* TextAlternativeHelper::getComputedTextAlternative(Node* node)
 {
-    node->document()->browsingContext()->webView()->layoutIfNeeds();
     appendTextAlternativeIfNeeds(node);
     return finalize();
 }

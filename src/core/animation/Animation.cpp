@@ -1098,7 +1098,7 @@ void AnimationExecutor::startIfNeeds()
                     }
 
                     if (didWork) {
-                        wv->starFish()->platformWindow()->setNeedsRendering();
+                        wv->setNeedsRendering();
                     }
                     return didWork;
                 },
