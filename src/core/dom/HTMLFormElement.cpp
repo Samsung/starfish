@@ -752,7 +752,13 @@ void HTMLFormElement::submitData(ResourceURL* url,
                                  ResourceRequest::EncodeType enctype,
                                  ResourceRequest::MethodType method)
 {
-    mutateActionUrl(url, formDataSet, enctype, method);
+    if (method == ResourceRequest::MethodType::GET_METHOD) {
+        mutateActionUrl(url, formDataSet, enctype, method);
+    } else if (method == ResourceRequest::MethodType::POST_METHOD) {
+        submitAsEntityBody(url, formDataSet, enctype, method);
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
 }
 
 void HTMLFormElement::mutateActionUrl(ResourceURL* url,
@@ -773,7 +779,6 @@ void HTMLFormElement::mutateActionUrl(ResourceURL* url,
     auto fn = [](size_t handle, void* data1, void* data2) {
         HTMLFormElement* formElement = (HTMLFormElement*)data1;
         DocumentURL* urlToOpen = (DocumentURL*)data2;
-        // force open
         formElement->document()->window()->location()->assign(
             urlToOpen, formElement->document()->documentURI());
         formElement->clearPlannedNavigationTask();
@@ -781,6 +786,41 @@ void HTMLFormElement::mutateActionUrl(ResourceURL* url,
 
     m_plannedNavigationTaskId = starFish()->messageLoop()->addIdler(
         document()->browsingContext(), fn, this, urlToOpen);
+}
+
+void HTMLFormElement::submitAsEntityBody(
+    ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
+    ResourceRequest::EncodeType enctype, ResourceRequest::MethodType method)
+{
+    if (enctype ==
+        ResourceRequest::EncodeType::APPLICATION_X_WWW_FORM_URLENCODED) {
+        if (m_plannedNavigationTaskId != (size_t)-1) {
+            starFish()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
+        }
+
+        FormSubmitData* dataToSubmit =
+            new FormSubmitData(formDataSet, enctype, method);
+
+        DocumentURL* urlToOpen =
+            new DocumentURL(url->urlString(), dataToSubmit);
+        auto fn = [](size_t handle, void* data1, void* data2) {
+            HTMLFormElement* formElement = (HTMLFormElement*)data1;
+            DocumentURL* urlToOpen = (DocumentURL*)data2;
+            // force open as the url does not change in method="post"
+            formElement->document()->window()->location()->assign(
+                urlToOpen, formElement->document()->documentURI(), true);
+            formElement->clearPlannedNavigationTask();
+        };
+
+        m_plannedNavigationTaskId = starFish()->messageLoop()->addIdler(
+            document()->browsingContext(), fn, this, urlToOpen);
+    } else if (enctype == ResourceRequest::EncodeType::MULTIPART_FORM_DATA) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else if (enctype == ResourceRequest::EncodeType::TEXT_PLAIN) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    } else {
+        // Do nothing for an invalid enctype
+    }
 }
 
 void HTMLFormElement::clearPlannedNavigationTask()
