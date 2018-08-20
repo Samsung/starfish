@@ -221,6 +221,10 @@ private:
                          GCVector<FormDataSetItem*>* formDataSet,
                          ResourceRequest::EncodeType enctype,
                          ResourceRequest::MethodType method);
+    void submitAsEntityBody(ResourceURL* url,
+                            GCVector<FormDataSetItem*>* formDataSet,
+                            ResourceRequest::EncodeType enctype,
+                            ResourceRequest::MethodType method);
 
     void clearPlannedNavigationTask();
     bool isFormAssociatedElement(Node* node);
