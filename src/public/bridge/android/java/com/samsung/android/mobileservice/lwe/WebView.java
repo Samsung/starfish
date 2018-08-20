@@ -866,5 +866,15 @@ public class WebView extends SurfaceView {
         }
     }
 
+    private void showAlert(String title, String message) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+        builder.setTitle(title);
+        builder.setMessage(message);
+        builder.setPositiveButton("OK", null);
+
+        AlertDialog dialog = builder.create();
+        dialog.show();
+    }
+
     native private void onDropdownMenuItemSelected(long starFish, int position);
 }

@@ -566,6 +566,27 @@ void Window::clearInterval(int32_t id)
     m_starFish->timer()->removeTimer(id);
 }
 
+void Window::alert()
+{
+    alert(String::emptyString);
+}
+
+void Window::alert(String* message)
+{
+    // calls the platform's alert UI
+    struct Param {
+        std::string title;
+        std::string message;
+    };
+
+    Param* p = new Param();
+    p->title =
+        document()->location()->url()->origin()->toUTF8NonGCString().data();
+    p->message = message->toUTF8NonGCString().data();
+    document()->starFish()->platformWindow()->callHandler(
+        std::string("showAlert"), (void*)p);
+}
+
 void Window::processUrlFragment(String* name)
 {
     Node* n = document()->getElementById(name);

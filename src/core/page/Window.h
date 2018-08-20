@@ -234,6 +234,9 @@ public:
                          void* data);
     void clearInterval(int32_t id);
 
+    void alert();
+    void alert(String* message);
+
     // Other methods
     BrowsingContext* browsingContext()
     {

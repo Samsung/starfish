@@ -236,15 +236,22 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
 
             if (starFish()->containsWebViewHandler(
                     "shouldOverrideUrlLoading")) {
-                struct Param {
-                    std::string url;
-                    std::string referrerUrl;
+                struct Param : public gc {
+                    ResourceURL* url;
+                    ResourceURL* referrerUrl;
                     bool canNavigate;
+                    bool force;
+
+                    static void* operator new(size_t s)
+                    {
+                        return GC_MALLOC_UNCOLLECTABLE(s);
+                    }
                 };
                 Param* p = new Param();
-                p->url = url->urlString()->toUTF8NonGCString();
-                p->referrerUrl = referrerURL->urlString()->toUTF8NonGCString();
+                p->url = url;
+                p->referrerUrl = referrerURL;
                 p->canNavigate = canNavigate;
+                p->force = force;
                 starFish()->callWebViewHandler(
                     std::string("shouldOverrideUrlLoading"), (void*)p);
             } else {
