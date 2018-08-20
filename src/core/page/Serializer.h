@@ -553,6 +553,9 @@ public:
         m_transferConsumed = true;
     }
 
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
 protected:
     bool m_transferConsumed;
 };
