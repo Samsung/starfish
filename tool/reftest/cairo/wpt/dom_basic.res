@@ -266,8 +266,8 @@ http://10.113.111.47:8000/dom/nodes/Document-createProcessingInstruction.html
 #http://10.113.111.47:8000/dom/nodes/Element-children.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-26.htm
 http://10.113.111.47:8000/dom/nodes/Document-getElementById.html
-#http://10.113.111.47:8000/dom/nodes/Node-nodeValue.html
-#http://10.113.111.47:8000/dom/nodes/CharacterData-remove.html
+http://10.113.111.47:8000/dom/nodes/Node-nodeValue.html
+http://10.113.111.47:8000/dom/nodes/CharacterData-remove.html
 #http://10.113.111.47:8000/dom/nodes/Document-getElementsByTagName.html
 #http://10.113.111.47:8000/dom/nodes/MutationObserver-disconnect.html
 #http://10.113.111.47:8000/dom/nodes/Node-cloneNode.html

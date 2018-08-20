@@ -321,6 +321,8 @@ Nullable<String*> Node::nodeValue() const
     case TEXT_NODE:
     case COMMENT_NODE:
         return asCharacterData()->data();
+    case PROCESSING_INSTRUCTION_NODE:
+        return asProcessingInstruction()->data();
     default:
         return nullptr;
     }
@@ -340,6 +342,9 @@ void Node::setNodeValue(Nullable<String*> val)
     case TEXT_NODE:
     case COMMENT_NODE:
         asCharacterData()->setData(str);
+        break;
+    case PROCESSING_INSTRUCTION_NODE:
+        asProcessingInstruction()->setData(str);
         break;
     default:
         break;
@@ -1105,7 +1110,8 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
             "Child is not null and its parent is not parent.");
     }
     if (!(node->isDocumentType() || node->isElement() || node->isText() ||
-          node->isComment() || node->isDocumentFragment())) {
+          node->isProcessingInstruction() || node->isComment() ||
+          node->isDocumentFragment())) {
         throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Node is not a DocumentFragment, DocumentType, "
                                "Element, Text, ProcessingInstruction, or "
