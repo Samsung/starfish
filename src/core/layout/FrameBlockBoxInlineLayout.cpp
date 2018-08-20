@@ -1425,7 +1425,7 @@ void InlineBoxLayoutParentBox::moveToNewLineBox(LineFormattingContext* ctx,
 
 void InlineBoxLayoutParentBox::mergeInlineTextBoxes(LineFormattingContext* ctx)
 {
-    if (ctx->m_shouldConsiderTextOverflow) {
+    if (ctx->m_shouldConsiderTextOverflow || ctx->m_block->isFrameInputBox()) {
         return;
     }
 
