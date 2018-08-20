@@ -195,6 +195,7 @@ public:
     sk_sp<SkSurface> m_surface;
     SkCanvas* m_skia;
 #endif
+    CompositorContext* m_compostiorContext;
 };
 
 PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
@@ -202,6 +203,7 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
 {
     auto wnd = new WindowImplGB(sf, width, height);
     wnd->m_starFish = sf;
+    wnd->m_compostiorContext = Compositor::initCompositorContext(wnd);
     return wnd;
 }
 
@@ -219,7 +221,7 @@ void WindowImplGB::setNeedsRendering()
         nullptr,
         [](size_t handle, void* data) {
             WindowImplGB* wnd = (WindowImplGB*)data;
-            if (!wnd->starFish()) {
+            if (!wnd->starFish() || wnd->m_internalBuffer == nullptr) {
                 return;
             }
             ((WindowImplGB*)wnd)->m_renderingAnimator = SIZE_MAX;
@@ -302,7 +304,7 @@ Compositor* WindowImplGB::prepareCompositor()
     d.surface = m_surface;
     d.w = width();
     d.h = height();
-    return Compositor::create(starFish(), &d);
+    return Compositor::create(starFish(), m_compostiorContext, &d);
 
 #endif
 #if defined(PORT_CANVAS_BACKEND_SKIA)
@@ -316,7 +318,7 @@ Compositor* WindowImplGB::prepareCompositor()
     d.surface = m_surface;
     d.w = width();
     d.h = height();
-    return Compositor::create(starFish(), &d);
+    return Compositor::create(starFish(), m_compostiorContext, &d);
 #endif
     return nullptr;
 }
