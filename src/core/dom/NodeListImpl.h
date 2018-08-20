@@ -133,7 +133,7 @@ public:
                  bool canCache, bool includeRoot = false)
         : m_canCache(canCache)
         , m_includeRoot(includeRoot)
-        , m_isCacheValid(true)
+        , m_isCacheValid(false)
         , m_root(root)
         , m_filter(filter)
         , m_data(data)
