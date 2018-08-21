@@ -164,6 +164,7 @@ public:
     Comment* createComment(String* data);
     ProcessingInstruction* createProcessingInstruction(String* target,
                                                        String* data);
+    Node* importNode(Node* node, bool deep = false);
 
     // Moved to Node as it is common to Document and Element
     // HTMLCollection* getElementsByTagName(String* qualifiedName);

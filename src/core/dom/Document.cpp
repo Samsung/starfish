@@ -878,6 +878,32 @@ ProcessingInstruction* Document::createProcessingInstruction(String* target,
     return new ProcessingInstruction(this, data, target);
 }
 
+Node* Document::importNode(Node* node, bool deep)
+{
+    // If node is a document or a shadow root,
+    // throws a "NotSupportedError" DOMException.
+    // TODO: check shadow root node
+    if (node->isDocument()) {
+        throw new DOMException(this, DOMException::Code::NOT_SUPPORTED_ERR,
+                               nullptr);
+    }
+
+    Node* newNode = node->clone();
+    STARFISH_ASSERT(newNode);
+    newNode->setDocument(this);
+
+    if (deep) {
+        for (Node* child = node->firstChild(); child;
+             child = child->nextSibling()) {
+            Node* newChild = importNode(child, true);
+            STARFISH_ASSERT(newChild);
+            newChild->setDocument(this);
+            newNode->appendChild(newChild);
+        }
+    }
+    return newNode;
+}
+
 Attr* Document::createAttribute(String* name)
 {
     return createAttribute(createAttributeName(name));
