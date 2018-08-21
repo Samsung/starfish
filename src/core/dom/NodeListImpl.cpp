@@ -41,7 +41,31 @@ bool isChildElement(Node* node, void* data, GCVector<Node*>* collection)
     return node->parentNode() == parent && node->isElement();
 };
 
-bool isSameTagName(Node* node, void* data, GCVector<Node*>* collection)
+struct HTMLTagCollectionData : public gc {
+    QualifiedName* name;
+    QualifiedName* lowerName;
+};
+
+bool isSameHTMLTagName(Node* node, void* data, GCVector<Node*>* collection)
+{
+    HTMLTagCollectionData* tagNames = (HTMLTagCollectionData*)data;
+    QualifiedName* tagName = tagNames->name;
+    QualifiedName* lowerTagName = tagNames->lowerName;
+    if (node->isElement()) {
+        QualifiedName* testName =
+            node->isHTMLElement() ? lowerTagName : tagName;
+        if (node->asElement()->name().localNameAtomic() ==
+            testName->localNameAtomic()) {
+            return true;
+        }
+        if (testName->localName()->equals("*")) {
+            return true;
+        }
+    }
+    return false;
+};
+
+bool isSameXMLTagName(Node* node, void* data, GCVector<Node*>* collection)
 {
     QualifiedName* tagName = (QualifiedName*)data;
     if (node->isElement()) {

@@ -1616,9 +1616,17 @@ void Node::parserTakeAllChildrenFrom(Node* oldParent)
     }
 }
 
+struct HTMLTagCollectionData : public gc {
+    QualifiedName* name;
+    QualifiedName* lowerName;
+};
+
 HTMLCollection* Node::getElementsByTagName(String* name)
 {
-    return getElementsByTagName(document()->createAttributeName(name));
+    QualifiedName qname(
+        AtomicString::emptyAtomicString(),
+        AtomicString::createAtomicString(window()->starFish(), name));
+    return getElementsByTagName(qname);
 }
 
 HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
@@ -1631,9 +1639,19 @@ HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
     if (list) {
         return list;
     }
-
-    list = new HTMLCollection(this, NodeListImpl::TagNameFilter,
-                              new QualifiedName(qualifiedName), true);
+    if (document()->isXMLDocument()) {
+        list = new HTMLCollection(this, NodeListImpl::XMLTagNameFilter,
+                                  new QualifiedName(qualifiedName), true);
+    } else {
+        HTMLTagCollectionData* data = new HTMLTagCollectionData;
+        data->name = new QualifiedName(qualifiedName);
+        data->lowerName = new QualifiedName(
+            AtomicString::emptyAtomicString(),
+            AtomicString::createAttrAtomicString(window()->starFish(),
+                                                 qualifiedName.localName()));
+        list = new HTMLCollection(this, NodeListImpl::HTMLTagNameFilter, data,
+                                  true);
+    }
     rareData->putActiveHtmlCollectionListWithQuery(
         activeLists, qualifiedName.localName(), list);
     return list;
