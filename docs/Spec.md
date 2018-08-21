@@ -215,6 +215,7 @@ section are supported.
 |  | method | void close() | Closes the input stream that was opened by the document.open() method |
 |  | method | void write(text...) | In general, adds the given string(s) to the Document's input stream. |
 |  | method | void writeln(text...) | Adds the given string(s) to the Document's input stream, followed by a newline character |
+|  | method | Node importNode(Node node, optional boolean deep = false) | Creates a new copy of the specified Node or DocumentFragment from another document. |
 | [Document](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
 |  | attribute | body | Returns body element or null if not exists |
 |  | attribute | head | Returns head element or null if not exists |
