@@ -28,7 +28,8 @@ class Element;
 typedef bool (*NodeListFilterFunction)(Node*, void*, GCVector<Node*>*);
 bool isChildNode(Node* node, void* data, GCVector<Node*>* collection);
 bool isChildElement(Node* node, void* data, GCVector<Node*>* collection);
-bool isSameTagName(Node* node, void* data, GCVector<Node*>* collection);
+bool isSameXMLTagName(Node* node, void* data, GCVector<Node*>* collection);
+bool isSameHTMLTagName(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameTagNameNS(Node* node, void* data, GCVector<Node*>* collection);
 bool hasClassNames(Node* node, void* data, GCVector<Node*>* collection);
 bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection);
@@ -48,7 +49,8 @@ public:
         None,
         ChildNodeFilter,
         ChildElementFilter,
-        TagNameFilter,
+        HTMLTagNameFilter,
+        XMLTagNameFilter,
         TagNameNSFilter,
         ClassNamesFilter,
         NamedAccessFilter,
@@ -78,8 +80,11 @@ public:
         case ChildElementFilter:
             m_filter = isChildElement;
             break;
-        case TagNameFilter:
-            m_filter = isSameTagName;
+        case HTMLTagNameFilter:
+            m_filter = isSameHTMLTagName;
+            break;
+        case XMLTagNameFilter:
+            m_filter = isSameXMLTagName;
             break;
         case TagNameNSFilter:
             m_filter = isSameTagNameNS;
