@@ -140,6 +140,12 @@
 "    padding-left: 40px;"
 "    list-style-type: decimal;"
 "}"
+"s {"
+"    text-decoration: line-through;"
+"}"
+"u {"
+"    text-decoration: underline;"
+"}"
 "ul ul, ol ul {"
 "    list-style-type: circle;"
 "}"
@@ -312,6 +318,10 @@
 "    margin-bottom: 1em;"
 "    margin-left: 40px;"
 "    margin-right: 40px;"
+"}"
+"mark {"
+"    background-color: yellow;"
+"    color: black;"
 "}"
 #if !defined(STARFISH_ENABLE_TEST)
 // old test expect images are doesn't consider this rule
