@@ -21,14 +21,28 @@ package com.samsung.android.mobileservice.lwe;
 
 import android.net.Uri;
 import android.webkit.ValueCallback;
-import android.webkit.WebResourceRequest;
 
-public class WebViewClient {
-    public void onLoadResource(WebView view, String url){}
-    public void onReceivedError(WebView view,ResourceError error){}
-    public void onPageFinished(WebView view, String url){}
-    public void onPageStarted(WebView view, String url){}
-    public void onProgressChanged(WebView view, int newProgress){}
-    public boolean shouldOverrideUrlLoading (WebView view, String request) { return false; }
-    public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> Uris){ return false; }
+public class SemWebViewClient {
+    public void onLoadResource(SemWebView view, String url) {
+    }
+
+    public void onReceivedError(SemWebView view, SemResourceError error) {
+    }
+
+    public void onPageFinished(SemWebView view, String url) {
+    }
+
+    public void onPageStarted(SemWebView view, String url) {
+    }
+
+    public void onProgressChanged(SemWebView view, int newProgress) {
+    }
+
+    public boolean shouldOverrideUrlLoading(SemWebView view, String request) {
+        return false;
+    }
+
+    public boolean onShowFileChooser(SemWebView webView, ValueCallback<Uri[]> uris) {
+        return false;
+    }
 }

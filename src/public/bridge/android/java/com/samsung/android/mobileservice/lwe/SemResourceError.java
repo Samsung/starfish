@@ -18,21 +18,21 @@
  */
 package com.samsung.android.mobileservice.lwe;
 
-public class ResourceError {
+public class SemResourceError {
 
     private int mErrorCode = 0;
     private String mErrorDescription = null;
 
-    ResourceError(int code, String description){
+    SemResourceError(int code, String description) {
         mErrorCode = code;
         mErrorDescription = description;
     }
 
-    public String getDescription(){
+    public String getDescription() {
         return mErrorDescription;
     }
 
-    public int getErrorCode(){
+    public int getErrorCode() {
         return mErrorCode;
     }
 }
