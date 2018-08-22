@@ -94,8 +94,12 @@ explicitly specified.
 |  | type | MIME-type | Only video/mp4 and audio/mp4 are supported. |
 |  [object](https://www.w3.org/TR/html5/embedded-content-0.html#the-object-element) |  |  |  |
 |  [strong](https://www.w3.org/TR/html5/text-level-semantics.html#the-strong-element) |  |  |  |
-|  [b](https://www.w3.org/TR/html5/text-level-semantics.html#the-b-element) |  |  |  |
+|  [s](https://www.w3.org/TR/html5/text-level-semantics.html#the-s-element) |  |  |  |
+|  [dfn](https://www.w3.org/TR/html5/text-level-semantics.html#the-dfn-element) |  |  |  |
 |  [i](https://www.w3.org/TR/html5/text-level-semantics.html#the-i-element) |  |  |  |
+|  [b](https://www.w3.org/TR/html5/text-level-semantics.html#the-b-element) |  |  |  |
+|  [u](https://www.w3.org/TR/html5/text-level-semantics.html#the-u-element) |  |  |  |
+|  [mark](https://www.w3.org/TR/html5/text-level-semantics.html#the-mark-element) |  |  |  |
 |  [font](https://www.w3.org/TR/html401/present/graphics.html#edef-FONT) | color |  | Obsolete features. |
 |  | size | Possible values:<br>- An integer between 1 and 7. This sets the font to some fixed size, whose rendering depends on the user agent. Not all user agents may render all seven sizes.<br>-A relative increase in font size. The value "+1" means one size larger. The value "-3" means three sizes smaller. All sizes belong to the scale of 1 to 7. | Obsolete features. |
 |  [fieldset](https://www.w3.org/TR/html5/forms.html#the-fieldset-element) |  |  |  |
