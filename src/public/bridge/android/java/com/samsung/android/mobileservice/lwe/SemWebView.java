@@ -53,7 +53,7 @@ import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 
-public class WebView extends SurfaceView {
+public class SemWebView extends SurfaceView {
     static {
         System.loadLibrary("lightweightwebengine");
     }
@@ -97,13 +97,13 @@ public class WebView extends SurfaceView {
     private boolean mCanGoBack = false;
     private boolean mCanGoForward = false;
     private String mCurrentURL = null;
-    private WebViewClient mWebViewClient = null;
+    private SemWebViewClient mWebViewClient = null;
     private DownloadListener mDownloadListener = null;
 
-    private int mCacheMode = Settings.LOAD_DEFAULT;
+    private int mCacheMode = SemWebSettings.LOAD_DEFAULT;
     private String mDefaultUserAgent = null;
     private String mUserAgentString = null;
-    private WebView.ImeComposingStatus mComposingStatus = WebView.ImeComposingStatus.NORMAL;
+    private SemWebView.ImeComposingStatus mComposingStatus = SemWebView.ImeComposingStatus.NORMAL;
     private String mIMEComposingStr = null;
     private View mLWEView = null;
     private InputMethodManager mIMM = null;
@@ -116,13 +116,13 @@ public class WebView extends SurfaceView {
      */
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        return new WebView.ImeInputConnection(this);
+        return new SemWebView.ImeInputConnection(this);
     }
 
     public class ImeInputConnection extends BaseInputConnection {
         public ImeInputConnection(View view) {
             super(view, true);
-            mComposingStatus = WebView.ImeComposingStatus.NORMAL;
+            mComposingStatus = SemWebView.ImeComposingStatus.NORMAL;
         }
 
         @Override
@@ -159,11 +159,11 @@ public class WebView extends SurfaceView {
                         public void run() {
                             if (mWebViewInternalHandle != 0) {
                                 mIMEComposingStr = newText.toString();
-                                if (mComposingStatus == WebView.ImeComposingStatus.NORMAL) {
+                                if (mComposingStatus == SemWebView.ImeComposingStatus.NORMAL) {
                                     mIMEComposingStr = newText.toString();
                                     dispatchCompositionStart(mWebViewInternalHandle,
                                                              newText.toString());
-                                    mComposingStatus = WebView.ImeComposingStatus.COMPOSING_START;
+                                    mComposingStatus = SemWebView.ImeComposingStatus.COMPOSING_START;
                                 }
                                 dispatchCompositionUpdate(mWebViewInternalHandle,
                                                           newText.toString());
@@ -185,10 +185,10 @@ public class WebView extends SurfaceView {
                         public void run() {
                             if (mWebViewInternalHandle != 0) {
                                 if (mComposingStatus ==
-                                    WebView.ImeComposingStatus.COMPOSING_START) {
+                                    SemWebView.ImeComposingStatus.COMPOSING_START) {
                                     dispatchCompositionEnd(mWebViewInternalHandle,
                                                            mIMEComposingStr);
-                                    mComposingStatus = WebView.ImeComposingStatus.NORMAL;
+                                    mComposingStatus = SemWebView.ImeComposingStatus.NORMAL;
                                     mIMEComposingStr = null;
                                 }
                             }
@@ -401,19 +401,19 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public WebView(Context context) {
+    public SemWebView(Context context) {
         super(context);
         initWebView();
         super.addOnAttachStateChangeListener(new StateChangeListener());
     }
 
-    public WebView(Context context, AttributeSet attrs) {
+    public SemWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
         initWebView();
         super.addOnAttachStateChangeListener(new StateChangeListener());
     }
 
-    public WebView(Context context, AttributeSet attrs, int defStyle) {
+    public SemWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs);
         initWebView();
         super.addOnAttachStateChangeListener(new StateChangeListener());
@@ -432,7 +432,7 @@ public class WebView extends SurfaceView {
         mCanGoForward = canGoForward;
         if (mWebViewClient != null) {
             //TODO
-            mWebViewClient.onReceivedError(this, new ResourceError(errorCode, "NotSupported"));
+            mWebViewClient.onReceivedError(this, new SemResourceError(errorCode, "NotSupported"));
         }
     }
 
@@ -488,7 +488,7 @@ public class WebView extends SurfaceView {
                         mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                     }
                     mIMM.showSoftInput(mLWEView, InputMethodManager.SHOW_IMPLICIT);
-                    mComposingStatus = WebView.ImeComposingStatus.NORMAL;
+                    mComposingStatus = SemWebView.ImeComposingStatus.NORMAL;
                 }
             }
         });
@@ -505,7 +505,7 @@ public class WebView extends SurfaceView {
                         mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                     }
                     mIMM.hideSoftInputFromWindow(mLWEView.getWindowToken(), 0);
-                    mComposingStatus = WebView.ImeComposingStatus.NORMAL;
+                    mComposingStatus = SemWebView.ImeComposingStatus.NORMAL;
                 }
             }
         });
@@ -615,7 +615,7 @@ public class WebView extends SurfaceView {
                     public void run() {
                         if (mWebViewInternalHandle == 0) {
                             mWebViewInternalHandle =
-                                WebView.this.create(mWindowWidth, mWindowHeight, sDpr,
+                                SemWebView.this.create(mWindowWidth, mWindowHeight, sDpr,
                                                     mUserAgentString, sLocale, sTimezone,
                                                     sLocalStoragePath, sCookiePath, sCachePath);
                         }
@@ -884,8 +884,8 @@ public class WebView extends SurfaceView {
      *
      * @return a Settings object that can be used to control this WebView's settings
      */
-    public Settings getSettings() {
-        return new Settings(mDefaultUserAgent, mUserAgentString, mCacheMode);
+    public SemWebSettings getSettings() {
+        return new SemWebSettings(mDefaultUserAgent, mUserAgentString, mCacheMode);
     }
 
     /**
@@ -893,7 +893,7 @@ public class WebView extends SurfaceView {
      *
      * @param settings a Settings object that is used to control this WebView's settings
      */
-    public void setSettings(Settings settings) {
+    public void setSettings(SemWebSettings settings) {
         if (settings == null) {
             return;
         }
@@ -919,7 +919,7 @@ public class WebView extends SurfaceView {
      *
      * @param client an implementation of WebViewClient
      */
-    public void setWebViewClient(WebViewClient client) {
+    public void setWebViewClient(SemWebViewClient client) {
         mWebViewClient = client;
     }
 

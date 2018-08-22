@@ -19,7 +19,7 @@
 
 package com.samsung.android.mobileservice.lwe;
 
-public class Settings {
+public class SemWebSettings {
     public static final int LOAD_DEFAULT = -1;
     // static final int LOAD_NORMAL = 0;
     public static final int LOAD_CACHE_ELSE_NETWORK = 1;
@@ -31,7 +31,7 @@ public class Settings {
     private String mDefaultUserAgent = null;
     private String mUserAgentString = null;
 
-    Settings(String dua, String ua, int cacheMode) {
+    SemWebSettings(String dua, String ua, int cacheMode) {
         mDefaultUserAgent = dua;
         mUserAgentString = ua;
         setCacheMode(cacheMode);
