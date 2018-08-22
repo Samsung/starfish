@@ -77,6 +77,7 @@ static void removeSSLLocks(void)
 #endif
 static NetworkSharedResourceManager* g_networkSharedResourceMangerInstance =
     nullptr;
+static Mutex* g_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST + 1];
 
 static bool domainMatch(String* cookieDomain, String* host)
 {
@@ -290,20 +291,14 @@ NetworkSharedResourceManager::~NetworkSharedResourceManager()
 #if !defined(OS_WINDOWS)
     removeSSLLocks();
 #endif
-    removeMutexes();
 }
 
 void NetworkSharedResourceManager::initMutexes()
 {
     for (int i = 0; i < curl_lock_data::CURL_LOCK_DATA_LAST + 1; ++i) {
-        m_mutexes[i] = new (NoGC) Mutex();
-    }
-}
-
-void NetworkSharedResourceManager::removeMutexes()
-{
-    for (int i = 0; i < curl_lock_data::CURL_LOCK_DATA_LAST + 1; ++i) {
-        delete m_mutexes[i];
+        if (g_mutexes[i] == nullptr) {
+            g_mutexes[i] = new (NoGC) Mutex();
+        }
     }
 }
 
@@ -344,13 +339,13 @@ void NetworkSharedResourceManager::initCookieSession()
 
 Mutex* NetworkSharedResourceManager::resourceMutex(curl_lock_data data)
 {
-    return m_mutexes[data];
+    return g_mutexes[data];
 }
 
 CurlHandleData NetworkSharedResourceManager::getCurlHandleData(
     const std::string& host)
 {
-    Locker<Mutex> locker(*m_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST]);
+    Locker<Mutex> locker(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST]);
     CurlHandleData ret = { nullptr, 0 };
     auto iter = m_curlHandleDataCache.find(host);
 
@@ -369,7 +364,7 @@ CurlHandleData NetworkSharedResourceManager::getCurlHandleData(
 void NetworkSharedResourceManager::cachingCurlHandleData(
     const std::string& host, CurlHandleData& cd)
 {
-    Locker<Mutex> locker(*m_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST]);
+    Locker<Mutex> locker(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST]);
     pruningIfNeed();
     cd.lastUsedTime = tickCount();
 
@@ -411,7 +406,7 @@ void NetworkSharedResourceManager::clearAllCurlHandleDataCache()
         "NetworkSharedResourceManager::clearAllCurlHandleDataCache(size:%d)\n",
         (int)m_curlHandleDataCache.size());
 #endif
-    Locker<Mutex> locker(*m_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST]);
+    Locker<Mutex> locker(*g_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST]);
     while (m_curlHandleDataCache.size()) {
         CurlHandleData cd = m_curlHandleDataCache.begin()->second;
         curl_easy_cleanup(cd.curl);

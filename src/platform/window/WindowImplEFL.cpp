@@ -1331,12 +1331,6 @@ PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
         sf->dispatchKeyEvent(KeyEventKind::KeyEventDown, pkdata);
         sf->dispatchKeyEvent(KeyEventKind::KeyEventPress, pkdata);
         sf->m_isKeyDown = true;
-
-#ifdef STARFISH_TIZEN_TV
-        if ((strncmp(ev->key, "XF86Exit", 8) == 0)) {
-            evas_object_del(sf->m_window);
-        }
-#endif
     };
     evas_object_event_callback_add(wnd->m_nonIMEKeyEventBox,
                                    EVAS_CALLBACK_KEY_DOWN,
