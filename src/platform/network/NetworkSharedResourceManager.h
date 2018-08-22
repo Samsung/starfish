@@ -73,14 +73,12 @@ private:
     ~NetworkSharedResourceManager();
 
     void initMutexes();
-    void removeMutexes();
 
     CURLSH* m_curlShareHandle;
     CurlHandleDataMultiMap m_curlHandleDataCache;
     uint64_t m_lastCachePruneTime;
     size_t m_cacheClearTimerID;
     std::string m_cookieStoreFilePath;
-    Mutex* m_mutexes[curl_lock_data::CURL_LOCK_DATA_LAST + 1];
 };
 }
 
