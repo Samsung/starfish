@@ -33,9 +33,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.os.Message;
 import android.os.SystemClock;
-import android.os.Trace;
 import android.util.AttributeSet;
-import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -43,22 +41,14 @@ import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
-import android.view.inputmethod.CompletionInfo;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
 import android.webkit.DownloadListener;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
-import android.webkit.WebResourceRequest;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.Spinner;
-import android.widget.SpinnerAdapter;
+
 import java.lang.reflect.Method;
-import java.security.Key;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -68,8 +58,10 @@ public class WebView extends SurfaceView {
         System.loadLibrary("lightweightwebengine");
     }
 
-    public enum IMEComposingStatus {
-        NORMAL, COMPOSING_START,COMPOSING_END
+    public enum ImeComposingStatus {
+        NORMAL,
+        COMPOSING_START,
+        COMPOSING_END
     }
 
     static class TimerData {
@@ -77,23 +69,24 @@ public class WebView extends SurfaceView {
         int fn;
         int data;
     }
-    static HashMap<String, TimerData> mTimerMap = new HashMap<>();
-    static HashMap<String, TimerData> mIdlerMap = new HashMap<>();
-    static AtomicInteger mTimerUID = new AtomicInteger(0);
 
-    protected static String TAG = "StarFish";
-    protected static float DPR = 1;
+    static HashMap<String, TimerData> sTimerMap = new HashMap<>();
+    static HashMap<String, TimerData> sIdlerMap = new HashMap<>();
+    static AtomicInteger sTimerUid = new AtomicInteger(0);
 
-    protected static String LOCALE = "ko-KR";
-    protected static String TIMEZONE = "Asia/Seoul";
-    protected static String localStoragePath;
-    protected static String cookiePath;
-    protected static String cachePath;
+    protected static String sTag = "StarFish";
+    protected static float sDpr = 1;
 
-    protected static Handler mWebViewHandler;
-    protected static Integer mWebViewThreadLocker = new Integer(0);
-    protected static Looper mWebViewThreadLooper;
-    protected static Thread mWebViewThread;
+    protected static String sLocale = "ko-KR";
+    protected static String sTimezone = "Asia/Seoul";
+    protected static String sLocalStoragePath;
+    protected static String sCookiePath;
+    protected static String sCachePath;
+
+    protected static Handler sWebViewHandler;
+    protected static Integer sWebViewThreadLocker = new Integer(0);
+    protected static Looper sWebViewThreadLooper;
+    protected static Thread sWebViewThread;
 
     protected Bitmap mScreenBuffer;
     protected long mWebViewInternalHandle;
@@ -110,36 +103,42 @@ public class WebView extends SurfaceView {
     private int mCacheMode = Settings.LOAD_DEFAULT;
     private String mDefaultUserAgent = null;
     private String mUserAgentString = null;
-    private IMEComposingStatus mComposingStatus = IMEComposingStatus.NORMAL;
-    private String mIMEComposingStr=null;
-    private View mLWEView=null;
+    private WebView.ImeComposingStatus mComposingStatus = WebView.ImeComposingStatus.NORMAL;
+    private String mIMEComposingStr = null;
+    private View mLWEView = null;
     private InputMethodManager mIMM = null;
+
+    /**
+     * Creates a new InputConnection for an InputMethod to interact with the WebView.
+     *
+     * @param outAttrs Fill in with attribute information about the connection.
+     * @return InputConnection
+     */
     @Override
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs){
-        return new IMEInputConnection(this);
+    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
+        return new WebView.ImeInputConnection(this);
     }
 
-    public class IMEInputConnection extends BaseInputConnection
-    {
-        public IMEInputConnection(View view){
-            super(view,true);
-            mComposingStatus = IMEComposingStatus.NORMAL;
+    public class ImeInputConnection extends BaseInputConnection {
+        public ImeInputConnection(View view) {
+            super(view, true);
+            mComposingStatus = WebView.ImeComposingStatus.NORMAL;
         }
 
         @Override
-        public boolean commitText(CharSequence text,int newCursorPosition){
+        public boolean commitText(CharSequence text, int newCursorPosition) {
             final String newText = text.toString();
-            synchronized (mWebViewThreadLocker) {
-                if (mWebViewHandler != null) {
-                    mWebViewHandler.post(new Runnable() {
+            synchronized (sWebViewThreadLocker) {
+                if (sWebViewHandler != null) {
+                    sWebViewHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             if (mWebViewInternalHandle != 0) {
-                                int keyCode = (int)newText.charAt(0);
+                                int keyCode = (int) newText.charAt(0);
                                 // only ascii printable
-                                if(keyCode>=32&&keyCode<=126){
-                                    dispatchKeyDown(mWebViewInternalHandle,keyCode,0);
-                                    dispatchKeyUp(mWebViewInternalHandle,keyCode,0);
+                                if ((32 <= keyCode) && (keyCode <= 126)) {
+                                    dispatchKeyDown(mWebViewInternalHandle, keyCode, 0);
+                                    dispatchKeyUp(mWebViewInternalHandle, keyCode, 0);
                                     // dispatchKeyPress(mWebViewInternalHandle,keyCode,0);
                                 }
                             }
@@ -147,46 +146,50 @@ public class WebView extends SurfaceView {
                     });
                 }
             }
-            return super.commitText(text,newCursorPosition);
+            return super.commitText(text, newCursorPosition);
         }
 
         @Override
-        public boolean setComposingText(CharSequence text,int newCursorPosition) {
+        public boolean setComposingText(CharSequence text, int newCursorPosition) {
             final String newText = text.toString();
-            synchronized (mWebViewThreadLocker) {
-                if (mWebViewHandler != null) {
-                    mWebViewHandler.post(new Runnable() {
+            synchronized (sWebViewThreadLocker) {
+                if (sWebViewHandler != null) {
+                    sWebViewHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             if (mWebViewInternalHandle != 0) {
-                                mIMEComposingStr=newText.toString();
-                                if (mComposingStatus == IMEComposingStatus.NORMAL) {
-                                    mIMEComposingStr=newText.toString();
-                                    dispatchCompositionStart(mWebViewInternalHandle,newText.toString());
-                                    mComposingStatus = IMEComposingStatus.COMPOSING_START;
+                                mIMEComposingStr = newText.toString();
+                                if (mComposingStatus == WebView.ImeComposingStatus.NORMAL) {
+                                    mIMEComposingStr = newText.toString();
+                                    dispatchCompositionStart(mWebViewInternalHandle,
+                                                             newText.toString());
+                                    mComposingStatus = WebView.ImeComposingStatus.COMPOSING_START;
                                 }
-                                dispatchCompositionUpdate(mWebViewInternalHandle,newText.toString());
+                                dispatchCompositionUpdate(mWebViewInternalHandle,
+                                                          newText.toString());
                             }
                         }
                     });
                 }
             }
 
-            return super.setComposingText(text,newCursorPosition);
+            return super.setComposingText(text, newCursorPosition);
         }
 
         @Override
-        public boolean finishComposingText(){
-            synchronized (mWebViewThreadLocker) {
-                if (mWebViewHandler != null && mIMEComposingStr!=null) {
-                    mWebViewHandler.post(new Runnable() {
+        public boolean finishComposingText() {
+            synchronized (sWebViewThreadLocker) {
+                if (sWebViewHandler != null && mIMEComposingStr != null) {
+                    sWebViewHandler.post(new Runnable() {
                         @Override
                         public void run() {
                             if (mWebViewInternalHandle != 0) {
-                                if(mComposingStatus==IMEComposingStatus.COMPOSING_START){
-                                    dispatchCompositionEnd(mWebViewInternalHandle,mIMEComposingStr);
-                                    mComposingStatus = IMEComposingStatus.NORMAL;
-                                    mIMEComposingStr=null;
+                                if (mComposingStatus ==
+                                    WebView.ImeComposingStatus.COMPOSING_START) {
+                                    dispatchCompositionEnd(mWebViewInternalHandle,
+                                                           mIMEComposingStr);
+                                    mComposingStatus = WebView.ImeComposingStatus.NORMAL;
+                                    mIMEComposingStr = null;
                                 }
                             }
                         }
@@ -198,39 +201,43 @@ public class WebView extends SurfaceView {
 
     }
 
-    protected void initWebView(){
+    private void initWebView() {
         mLWEView = this;
-        mIMM = (InputMethodManager)getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        DPR = getContext().getResources().getDisplayMetrics().xdpi/150;
-        localStoragePath = getContext().getDataDir().getAbsolutePath()+"/StarFish-localStorage";
-        cookiePath = getContext().getDataDir().getAbsolutePath()+"/StarFish-cookie";
-        cachePath = getContext().getCacheDir().getAbsolutePath()+"/StarFish-cache";
+        mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+        sDpr = getContext().getResources().getDisplayMetrics().xdpi / 150;
+        sLocalStoragePath = getContext().getDataDir().getAbsolutePath() + "/StarFish-localStorage";
+        sCookiePath = getContext().getDataDir().getAbsolutePath() + "/StarFish-cookie";
+        sCachePath = getContext().getCacheDir().getAbsolutePath() + "/StarFish-cache";
         init();
-        synchronized (mWebViewThreadLocker) {
+        synchronized (sWebViewThreadLocker) {
             mDefaultUserAgent = getDefaultUserAgent();
-            if(mUserAgentString==null){
+            if (mUserAgentString == null) {
                 mUserAgentString = mDefaultUserAgent;
             }
         }
         getHolder().setFormat(PixelFormat.RGBA_8888);
         getHolder().addCallback(new SurfaceHolder.Callback() {
             @Override
-            public void surfaceCreated(SurfaceHolder surfaceHolder) {}
+            public void surfaceCreated(SurfaceHolder surfaceHolder) {
+            }
 
             @Override
-            public void surfaceChanged(SurfaceHolder surfaceHolder, int i, final int w, final int h) {
-                synchronized (mWebViewThreadLocker) {
+            public void surfaceChanged(SurfaceHolder surfaceHolder, int i, final int w,
+                                       final int h) {
+                synchronized (sWebViewThreadLocker) {
                     mWindowWidth = w;
                     mWindowHeight = h;
-                    mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
-                    if (mWebViewHandler != null) {
-                        mWebViewHandler.post(new Runnable() {
+                    mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight,
+                                                        Bitmap.Config.ARGB_8888);
+                    if (sWebViewHandler != null) {
+                        sWebViewHandler.post(new Runnable() {
                             @Override
-                            public void run()
-                            {
-                                if (mWebViewInternalHandle != 0 && mScreenBuffer!=null) {
-                                    updateBuffer(mWebViewInternalHandle,mScreenBuffer, mWindowWidth, mWindowHeight,mWindowWidth*4);
-                                    Resume(mWebViewInternalHandle);
+                            public void run() {
+                                if (mWebViewInternalHandle != 0 && mScreenBuffer != null) {
+                                    updateBuffer(mWebViewInternalHandle, mScreenBuffer,
+                                                 mWindowWidth, mWindowHeight,
+                                                 mWindowWidth * 4);
+                                    resume(mWebViewInternalHandle);
                                 }
                             }
                         });
@@ -240,15 +247,14 @@ public class WebView extends SurfaceView {
 
             @Override
             public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-                synchronized (mWebViewThreadLocker) {
+                synchronized (sWebViewThreadLocker) {
                     mScreenBuffer = null;
-                    if (mWebViewHandler != null) {
-                        mWebViewHandler.post(new Runnable() {
+                    if (sWebViewHandler != null) {
+                        sWebViewHandler.post(new Runnable() {
                             @Override
-                            public void run()
-                            {
+                            public void run() {
                                 if (mWebViewInternalHandle != 0) {
-                                    Pause(mWebViewInternalHandle);
+                                    pause(mWebViewInternalHandle);
                                 }
                             }
                         });
@@ -257,38 +263,38 @@ public class WebView extends SurfaceView {
             }
         });
 
-        synchronized (mWebViewThreadLocker) {
-            if (mWebViewThread == null) {
-                mWebViewThread = new Thread() {
+        synchronized (sWebViewThreadLocker) {
+            if (sWebViewThread == null) {
+                sWebViewThread = new Thread() {
 
                     @Override
                     public void run() {
                         Looper.prepare();
 
-                        mWebViewHandler = new Handler() {
+                        sWebViewHandler = new Handler() {
                             public void handleMessage(Message msg) {
                                 // process incoming messages here
                             }
                         };
 
-                        synchronized (mWebViewThreadLocker) {
-                            mWebViewThreadLooper = Looper.myLooper();
+                        synchronized (sWebViewThreadLocker) {
+                            sWebViewThreadLooper = Looper.myLooper();
                         }
 
                         Looper.loop();
-                        mWebViewHandler = null;
+                        sWebViewHandler = null;
                     }
                 };
-                mWebViewThread.setPriority(Thread.MAX_PRIORITY);
-                mWebViewThread.start();
+                sWebViewThread.setPriority(Thread.MAX_PRIORITY);
+                sWebViewThread.start();
             }
         }
 
         post(new Runnable() {
             @Override
             public void run() {
-                synchronized (mWebViewThreadLocker) {
-                    if (getWidth() == 0 || mWebViewHandler == null) {
+                synchronized (sWebViewThreadLocker) {
+                    if (getWidth() == 0 || sWebViewHandler == null) {
                         post(this);
                         return;
                     }
@@ -299,11 +305,11 @@ public class WebView extends SurfaceView {
             }
         });
 
-        setOnKeyListener(new View.OnKeyListener(){
+        setOnKeyListener(new View.OnKeyListener() {
             @Override
-            public boolean onKey(View v, int keyCode, KeyEvent event){
-                int keyValue=0;
-                switch (keyCode){
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                int keyValue = 0;
+                switch (keyCode) {
                     case KeyEvent.KEYCODE_ENTER:
                         keyValue = 13; // ascii - CR
                         break;
@@ -313,16 +319,16 @@ public class WebView extends SurfaceView {
                 }
                 final int key = keyValue;
                 final int eventAction = event.getAction();
-                synchronized (mWebViewThreadLocker) {
-                    if (mWebViewHandler != null && key!=0) {
-                        mWebViewHandler.post(new Runnable() {
+                synchronized (sWebViewThreadLocker) {
+                    if (sWebViewHandler != null && key != 0) {
+                        sWebViewHandler.post(new Runnable() {
                             @Override
                             public void run() {
                                 if (mWebViewInternalHandle != 0) {
-                                    if(eventAction==KeyEvent.ACTION_DOWN){
-                                        dispatchKeyDown(mWebViewInternalHandle,key,0);
-                                    }else if(eventAction== KeyEvent.ACTION_UP){
-                                        dispatchKeyUp(mWebViewInternalHandle,key,0);
+                                    if (eventAction == KeyEvent.ACTION_DOWN) {
+                                        dispatchKeyDown(mWebViewInternalHandle, key, 0);
+                                    } else if (eventAction == KeyEvent.ACTION_UP) {
+                                        dispatchKeyUp(mWebViewInternalHandle, key, 0);
                                     }
                                 }
                             }
@@ -344,9 +350,9 @@ public class WebView extends SurfaceView {
                 final float viewX = screenX - location[0];
                 final float viewY = screenY - location[1];
 
-                synchronized (mWebViewThreadLocker) {
-                    if (mWebViewHandler != null) {
-                        mWebViewHandler.post(new Runnable() {
+                synchronized (sWebViewThreadLocker) {
+                    if (sWebViewHandler != null) {
+                        sWebViewHandler.post(new Runnable() {
                             @Override
                             public void run() {
                                 if (mWebViewInternalHandle != 0) {
@@ -354,10 +360,12 @@ public class WebView extends SurfaceView {
                                         dispatchMouseDown(mWebViewInternalHandle, viewX, viewY);
                                     } else if (motionEvent.getAction() == MotionEvent.ACTION_UP) {
                                         dispatchMouseUp(mWebViewInternalHandle, viewX, viewY);
-                                    } else if (motionEvent.getAction() == MotionEvent.ACTION_CANCEL) {
+                                    } else if (motionEvent.getAction() ==
+                                               MotionEvent.ACTION_CANCEL) {
                                         dispatchMouseUp(mWebViewInternalHandle, viewX, viewY);
                                     } else if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
-                                        dispatchMouseMove(mWebViewInternalHandle, viewX, viewY,true,false);
+                                        dispatchMouseMove(mWebViewInternalHandle, viewX, viewY,
+                                                          true, false);
                                     }
                                 }
                             }
@@ -369,22 +377,23 @@ public class WebView extends SurfaceView {
         });
     }
 
-    class StateChangeListener implements View.OnAttachStateChangeListener{
+    class StateChangeListener implements View.OnAttachStateChangeListener {
         @Override
-        public void onViewAttachedToWindow(View v){}
+        public void onViewAttachedToWindow(View v) {
+        }
 
         @Override
-        public void onViewDetachedFromWindow(View v){
-            synchronized (mWebViewThreadLocker) {
-                if (mWebViewHandler != null) {
-                    mWebViewHandler.post(new Runnable() {
+        public void onViewDetachedFromWindow(View v) {
+            synchronized (sWebViewThreadLocker) {
+                if (sWebViewHandler != null) {
+                    sWebViewHandler.post(new Runnable() {
                         @Override
                         public void run() {
-                        if (mWebViewInternalHandle != 0) {
-                            Destroy(mWebViewInternalHandle);
-                        }
-                        mWebViewInternalHandle = 0;
-                        mWebViewClient = null;
+                            if (mWebViewInternalHandle != 0) {
+                                destroy(mWebViewInternalHandle);
+                            }
+                            mWebViewInternalHandle = 0;
+                            mWebViewClient = null;
                         }
                     });
                 }
@@ -392,7 +401,7 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public WebView(Context context){
+    public WebView(Context context) {
         super(context);
         initWebView();
         super.addOnAttachStateChangeListener(new StateChangeListener());
@@ -410,86 +419,51 @@ public class WebView extends SurfaceView {
         super.addOnAttachStateChangeListener(new StateChangeListener());
     }
 
-    // Called by JNI
 
-    private void showSoftKeyboard(){
-        this.post(new Runnable() {
-            @Override
-            public void run() {
-                if(mLWEView!=null){
-                    setFocusableInTouchMode(true);
-                    setFocusable(true);
-                    if(mIMM==null) {
-                        mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    }
-                    mIMM.showSoftInput(mLWEView,InputMethodManager.SHOW_IMPLICIT);
-                    mComposingStatus = IMEComposingStatus.NORMAL;
-                }
-            }
-        });
-    }
-
-    private void hideSoftKeyboard(){
-        this.post(new Runnable() {
-            @Override
-            public void run() {
-                if(mLWEView!=null && mIMM!=null) {
-                    setFocusableInTouchMode(false);
-                    setFocusable(false);
-                    if(mIMM==null) {
-                        mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                    }
-                    mIMM.hideSoftInputFromWindow(mLWEView.getWindowToken(),0);
-                    mComposingStatus = IMEComposingStatus.NORMAL;
-                }
-            }
-        });
-    }
-
-
+    // Listener called from native code
     private void onLoadResource(String url) {
-        if(mWebViewClient!=null){
-            mWebViewClient.onLoadResource(this,url);
+        if (mWebViewClient != null) {
+            mWebViewClient.onLoadResource(this, url);
         }
     }
 
-    private void onReceivedError(int errorCode,boolean canGoBack, boolean canGoForward){
+    private void onReceivedError(int errorCode, boolean canGoBack, boolean canGoForward) {
         mCanGoBack = canGoBack;
         mCanGoForward = canGoForward;
-        if(mWebViewClient!=null){
+        if (mWebViewClient != null) {
             //TODO
-            mWebViewClient.onReceivedError(this,new ResourceError(errorCode,"NotSupported"));
+            mWebViewClient.onReceivedError(this, new ResourceError(errorCode, "NotSupported"));
         }
     }
 
-    private void onPageFinished(String url,boolean canGoBack, boolean canGoForward){
+    private void onPageFinished(String url, boolean canGoBack, boolean canGoForward) {
         mCurrentURL = url;
         mCanGoBack = canGoBack;
         mCanGoForward = canGoForward;
-        if(mWebViewClient!=null){
-            mWebViewClient.onPageFinished(this,url);
+        if (mWebViewClient != null) {
+            mWebViewClient.onPageFinished(this, url);
         }
     }
 
-    private void onPageStarted(String url,boolean canGoBack, boolean canGoForward){
+    private void onPageStarted(String url, boolean canGoBack, boolean canGoForward) {
         mCurrentURL = url;
         mCanGoBack = canGoBack;
         mCanGoForward = canGoForward;
-        if(mWebViewClient!=null){
-            mWebViewClient.onPageStarted(this,url);
+        if (mWebViewClient != null) {
+            mWebViewClient.onPageStarted(this, url);
         }
     }
 
-    private boolean shouldOverrideUrlLoading (String request) {
+    private boolean shouldOverrideUrlLoading(String request) {
         if (mWebViewClient != null) {
             return mWebViewClient.shouldOverrideUrlLoading(this, request);
         }
         return false;
     }
 
-    private void onProgressChanged(int newProgres){
-        if(mWebViewClient!=null){
-            mWebViewClient.onProgressChanged(this,newProgres);
+    private void onProgressChanged(int newProgres) {
+        if (mWebViewClient != null) {
+            mWebViewClient.onProgressChanged(this, newProgres);
         }
     }
 
@@ -497,29 +471,65 @@ public class WebView extends SurfaceView {
                                  String mimetype, long contentLength) {
         if (mDownloadListener != null) {
             mDownloadListener.onDownloadStart(url, userAgent, contentDisposition,
-                                              mimetype, contentLength);
+                mimetype, contentLength);
         }
     }
 
     // public boolean onShowFileChooser(WebView webView, ValueCallback<Uri[]> Uris)
 
-    // Called by JNI
-    static private int registerTimerMap(final HashMap<String, TimerData> map,int ms, int fn, int data) {
+    private void showSoftKeyboard() {
+        this.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mLWEView != null) {
+                    setFocusableInTouchMode(true);
+                    setFocusable(true);
+                    if (mIMM == null) {
+                        mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    }
+                    mIMM.showSoftInput(mLWEView, InputMethodManager.SHOW_IMPLICIT);
+                    mComposingStatus = WebView.ImeComposingStatus.NORMAL;
+                }
+            }
+        });
+    }
+
+    private void hideSoftKeyboard() {
+        this.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mLWEView != null && mIMM != null) {
+                    setFocusableInTouchMode(false);
+                    setFocusable(false);
+                    if (mIMM == null) {
+                        mIMM = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
+                    }
+                    mIMM.hideSoftInputFromWindow(mLWEView.getWindowToken(), 0);
+                    mComposingStatus = WebView.ImeComposingStatus.NORMAL;
+                }
+            }
+        });
+    }
+
+    static private int registerTimerMap(final HashMap<String, TimerData> map, int ms, int fn,
+                                        int data) {
         final int mms = ms;
-        final int uid = mTimerUID.addAndGet(1);
+        final int uid = sTimerUid.addAndGet(1);
         Runnable r = new Runnable() {
             @Override
             public void run() {
-                if (map.containsKey(uid+"")) {
-                    TimerData td = map.get(uid+"");
-//                     Log.e(TAG, String.format("java serviceQueueTimer %d %d %d call!!", uid, (int)td.fn, (int)td.data));
+                if (map.containsKey(uid + "")) {
+                    TimerData td = map.get(uid + "");
+                    // Log.e(sTag, String.format("java serviceQueueTimer %d %d %d called", uid,
+                    // (int)td.fn, (int)td.data));
                     boolean ret = serviceQueueTimer(uid, td.fn, td.data);
-//                     Log.e(TAG, String.format("java serviceQueueTimer %d %d %d callend!!", uid, (int)td.fn, (int)td.data));
+                    // Log.e(sTag, String.format("java serviceQueueTimer %d %d %d call ended", uid,
+                    // (int)td.fn, (int)td.data));
                     if (ret) {
-                        mWebViewHandler.postDelayed(this, mms);
+                        sWebViewHandler.postDelayed(this, mms);
                     } else {
-                        if (map.containsKey(uid+"")) {
-                            map.remove(uid+"");
+                        if (map.containsKey(uid + "")) {
+                            map.remove(uid + "");
                         }
                     }
 
@@ -533,57 +543,54 @@ public class WebView extends SurfaceView {
 
         synchronized (map) {
             final long current = SystemClock.uptimeMillis();
-            map.put(uid+"", td);
-            mWebViewHandler.postDelayed(r, ms);
+            map.put(uid + "", td);
+            sWebViewHandler.postDelayed(r, ms);
         }
         return uid;
     }
 
     static private int startIdler(int ms, int fn, int data) {
-        return registerTimerMap(mIdlerMap,ms,fn,data);
+        return registerTimerMap(sIdlerMap, ms, fn, data);
     }
 
     static private int startTimer(int ms, int fn, int data) {
-        return registerTimerMap(mTimerMap,ms,fn,data);
+        return registerTimerMap(sTimerMap, ms, fn, data);
     }
 
-    static private void cancelTimer(int uid)
-    {
-        if (mTimerMap.containsKey(uid+"")) {
-            TimerData r = mTimerMap.get(uid+"");
-            mWebViewHandler.removeCallbacks(r.runnable);
-            mTimerMap.remove(uid+"");
+    static private void cancelTimer(int uid) {
+        if (sTimerMap.containsKey(uid + "")) {
+            TimerData r = sTimerMap.get(uid + "");
+            sWebViewHandler.removeCallbacks(r.runnable);
+            sTimerMap.remove(uid + "");
         }
     }
 
-    static private void cancelIdler(int uid)
-    {
-        if (mIdlerMap.containsKey(uid+"")) {
-            TimerData r = mIdlerMap.get(uid+"");
-            mWebViewHandler.removeCallbacks(r.runnable);
-            mIdlerMap.remove(uid+"");
+    static private void cancelIdler(int uid) {
+        if (sIdlerMap.containsKey(uid + "")) {
+            TimerData r = sIdlerMap.get(uid + "");
+            sWebViewHandler.removeCallbacks(r.runnable);
+            sIdlerMap.remove(uid + "");
         }
     }
 
-    static private void runAllRemainingIdler()
-    {
-        while(!mIdlerMap.isEmpty()){
-            String key = mIdlerMap.keySet().iterator().next();
-            TimerData r = mIdlerMap.get(key);
-            mWebViewHandler.removeCallbacks(r.runnable);
+    static private void runAllRemainingIdler() {
+        while (!sIdlerMap.isEmpty()) {
+            String key = sIdlerMap.keySet().iterator().next();
+            TimerData r = sIdlerMap.get(key);
+            sWebViewHandler.removeCallbacks(r.runnable);
             r.runnable.run();
-            mIdlerMap.remove(key);
+            sIdlerMap.remove(key);
         }
     }
 
-    private void flushRendering(int updatedX,int updatedY,int updatedWidth,int updatedHeight) {
-        synchronized (mWebViewThreadLocker) {
+    private void flushRendering(int updatedX, int updatedY, int updatedWidth, int updatedHeight) {
+        synchronized (sWebViewThreadLocker) {
             if (mScreenBuffer != null && mWebViewInternalHandle != 0) {
                 Canvas canvas = getHolder().lockCanvas();
                 if (canvas != null) {
                     Paint paint = new Paint();
                     paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
-                    Rect updateRect = new Rect(0,0,mWindowWidth,mWindowHeight);
+                    Rect updateRect = new Rect(0, 0, mWindowWidth, mWindowHeight);
                     canvas.drawBitmap(mScreenBuffer, updateRect, updateRect, paint);
                     getHolder().unlockCanvasAndPost(canvas);
                 }
@@ -591,35 +598,63 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public void loadUrl(final String URL){
-        synchronized (mWebViewThreadLocker) {
-            if (mWebViewHandler != null) {
-                mWebViewHandler.post(new Runnable() {
+    /**
+     * Loads the given URL.
+     *
+     * @param url the URL of the resource to load
+     */
+    public void loadUrl(final String url) {
+        if (url == null) {
+            return;
+        }
+
+        synchronized (sWebViewThreadLocker) {
+            if (sWebViewHandler != null) {
+                sWebViewHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (mWebViewInternalHandle == 0) {
-                            mWebViewInternalHandle = WebView.this.Create(mWindowWidth, mWindowHeight, DPR, mUserAgentString,LOCALE,TIMEZONE,localStoragePath,cookiePath,cachePath);
+                            mWebViewInternalHandle =
+                                WebView.this.create(mWindowWidth, mWindowHeight, sDpr,
+                                                    mUserAgentString, sLocale, sTimezone,
+                                                    sLocalStoragePath, sCookiePath, sCachePath);
                         }
-                        loadUrl(mWebViewInternalHandle, URL);
+                        loadUrl(mWebViewInternalHandle, url);
                     }
                 });
             }
         }
     }
 
-    public String getUrl(){
+    /**
+     * Gets the URL for the current page.
+     *
+     * @return the URL for the current page
+     */
+    public String getUrl() {
         return mCurrentURL;
     }
 
-    public void loadData(String data){
+    /**
+     * Loads the given data into this WebView using a 'data' scheme URL.
+     *
+     * @param data a String of data in the given encoding
+     */
+    public void loadData(String data) {
+        if (data == null) {
+            return;
+        }
+
         final String htmlData = data;
-        synchronized (mWebViewThreadLocker) {
-            if (mWebViewHandler != null) {
-                mWebViewHandler.post(new Runnable() {
+        synchronized (sWebViewThreadLocker) {
+            if (sWebViewHandler != null) {
+                sWebViewHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (mWebViewInternalHandle == 0) {
-                            mWebViewInternalHandle = Create(mWindowWidth, mWindowHeight, DPR, mUserAgentString,LOCALE,TIMEZONE,localStoragePath,cookiePath,cachePath);
+                            mWebViewInternalHandle =
+                                create(mWindowWidth, mWindowHeight, sDpr, mUserAgentString, sLocale,
+                                       sTimezone, sLocalStoragePath, sCookiePath, sCachePath);
                         }
                         loadData(mWebViewInternalHandle, htmlData);
                     }
@@ -628,14 +663,18 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public void reload(){
-        synchronized (mWebViewThreadLocker) {
-            if (mWebViewHandler != null) {
-                mWebViewHandler.post(new Runnable() {
+    /**
+     * Reloads the current URL.
+     *
+     */
+    public void reload() {
+        synchronized (sWebViewThreadLocker) {
+            if (sWebViewHandler != null) {
+                sWebViewHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (mWebViewInternalHandle != 0) {
-                            Reload(mWebViewInternalHandle);
+                            reload(mWebViewInternalHandle);
                         }
                     }
                 });
@@ -643,14 +682,18 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public void stopLoading(){
-        synchronized (mWebViewThreadLocker) {
-            if (mWebViewHandler != null) {
-                mWebViewHandler.post(new Runnable() {
+    /**
+     * Stops the current load.
+     *
+     */
+    public void stopLoading() {
+        synchronized (sWebViewThreadLocker) {
+            if (sWebViewHandler != null) {
+                sWebViewHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (mWebViewInternalHandle != 0) {
-                            StopLoading(mWebViewInternalHandle);
+                            stopLoading(mWebViewInternalHandle);
                         }
                     }
                 });
@@ -658,14 +701,18 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public void goBack(){
-        synchronized (mWebViewThreadLocker) {
-            if (mWebViewHandler != null) {
-                mWebViewHandler.post(new Runnable() {
+    /**
+     * Goes back in the history of this WebView.
+     *
+     */
+    public void goBack() {
+        synchronized (sWebViewThreadLocker) {
+            if (sWebViewHandler != null) {
+                sWebViewHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (mWebViewInternalHandle != 0) {
-                            GoBack(mWebViewInternalHandle);
+                            goBack(mWebViewInternalHandle);
                         }
                     }
                 });
@@ -673,14 +720,18 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public void goForward(){
-        synchronized (mWebViewThreadLocker) {
-            if (mWebViewHandler != null) {
-                mWebViewHandler.post(new Runnable() {
+    /**
+     * Goes forward in the history of this WebView.
+     *
+     */
+    public void goForward() {
+        synchronized (sWebViewThreadLocker) {
+            if (sWebViewHandler != null) {
+                sWebViewHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (mWebViewInternalHandle != 0) {
-                            GoForward(mWebViewInternalHandle);
+                            goForward(mWebViewInternalHandle);
                         }
                     }
                 });
@@ -688,28 +739,52 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public boolean canGoBack(){
+    /**
+     * Gets whether this WebView has a back history item.
+     *
+     * @return true if this WebView has a back history item
+     */
+    public boolean canGoBack() {
         return mCanGoBack;
     }
 
-    public boolean canGoForward(){
+    /**
+     * Gets whether this WebView has a forward history item.
+     *
+     * @return true if this WebView has a forward history item
+     */
+    public boolean canGoForward() {
         return mCanGoForward;
     }
 
-    public void addJavascriptInterface(final Object nativeCB,final String globalObjName){
-        if (mWebViewHandler != null) {
-            mWebViewHandler.post(new Runnable() {
+    /**
+     * Injects the supplied Java object into this WebView.
+     *
+     * @param object the Java object to inject into this WebView's JavaScript context.
+     *               null values are ignored.
+     * @param name the name used to expose the object in JavaScript
+     *
+     */
+    public void addJavascriptInterface(final Object object, final String name) {
+        if ((object == null) || (name == null)) {
+            return;
+        }
+
+        if (sWebViewHandler != null) {
+            sWebViewHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (mWebViewInternalHandle != 0) {
-                        Method[] methods = nativeCB.getClass().getMethods();
+                        Method[] methods = object.getClass().getMethods();
                         for (Method m : methods) {
                             if (m.isAnnotationPresent(JavascriptInterface.class)) {
-                                if(m.getReturnType().toString().equals("class java.lang.String") &&
-                                        m.getParameterTypes()[0].toString().equals("class java.lang.String")) {
-                                    addJavascriptInterface(mWebViewInternalHandle, globalObjName, m.getName(), nativeCB);
-                                }else{
-                                    Log.d(TAG,"ERROR: addJavascriptInterface : invalid signature");
+                                if (m.getReturnType().toString().equals("class java.lang.String") &&
+                                    m.getParameterTypes()[0].toString().equals(
+                                        "class java.lang.String")) {
+                                    addJavascriptInterface(mWebViewInternalHandle, name,
+                                                           m.getName(), object);
+                                } else {
+                                    Log.d(sTag, "ERROR: addJavascriptInterface : invalid signature");
                                 }
                             }
                         }
@@ -719,27 +794,40 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public void removeJavascriptInterface(final String globalObjName){
-        if (mWebViewHandler != null) {
-            mWebViewHandler.post(new Runnable() {
+    /**
+     * Removes a previously injected Java object from this WebView.
+     *
+     * @param name the name used to expose the object in JavaScript. This value must never be null.
+     */
+    public void removeJavascriptInterface(final String name) {
+        if (name == null) {
+            return;
+        }
+
+        if (sWebViewHandler != null) {
+            sWebViewHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (mWebViewInternalHandle != 0) {
-                        removeJavascriptInterface(mWebViewInternalHandle, globalObjName);
+                        removeJavascriptInterface(mWebViewInternalHandle, name);
                     }
                 }
             });
         }
     }
 
-    public void clearCache(){
-        synchronized (mWebViewThreadLocker) {
-            if (mWebViewHandler != null) {
-                mWebViewHandler.post(new Runnable() {
+    /**
+     * Clears the resource cache.
+     *
+     */
+    public void clearCache() {
+        synchronized (sWebViewThreadLocker) {
+            if (sWebViewHandler != null) {
+                sWebViewHandler.post(new Runnable() {
                     @Override
                     public void run() {
                         if (mWebViewInternalHandle != 0) {
-                            ClearCache(mWebViewInternalHandle);
+                            clearCache(mWebViewInternalHandle);
                         }
                     }
                 });
@@ -747,16 +835,26 @@ public class WebView extends SurfaceView {
         }
     }
 
+    /**
+     * Asynchronously evaluates JavaScript in the context of the currently displayed page.
+     *
+     * @param script
+     * @param resultCallback
+     */
+    public void evaluateJavascript(final String script,
+                                   final ValueCallback<String> resultCallback) {
+        if ((script == null) || (resultCallback == null)) {
+            return;
+        }
 
-    public void evaluateJavascript(final String scriptData, final ValueCallback<String> resultCB) {
-        if (mWebViewHandler != null) {
-            mWebViewHandler.post(new Runnable() {
+        if (sWebViewHandler != null) {
+            sWebViewHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (mWebViewInternalHandle != 0) {
-                        String resultStr = EvaluateJavaScript(mWebViewInternalHandle,scriptData);
-                        if (resultCB != null) {
-                            resultCB.onReceiveValue(resultStr);
+                        String resultStr = evaluateJavaScript(mWebViewInternalHandle, script);
+                        if (resultCallback != null) {
+                            resultCallback.onReceiveValue(resultStr);
                         }
                     }
                 }
@@ -764,28 +862,46 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public void clearHistory(){
-        if (mWebViewHandler != null) {
-            mWebViewHandler.post(new Runnable() {
+    /**
+     * Tells this WebView to clear its internal back/forward list.
+     *
+     */
+    public void clearHistory() {
+        if (sWebViewHandler != null) {
+            sWebViewHandler.post(new Runnable() {
                 @Override
                 public void run() {
-                if (mWebViewInternalHandle != 0) {
-                    ClearHistory(mWebViewInternalHandle);
-                }
+                    if (mWebViewInternalHandle != 0) {
+                        clearHistory(mWebViewInternalHandle);
+                    }
                 }
             });
         }
     }
 
-    public Settings getSettings(){
-        return new Settings(mDefaultUserAgent,mUserAgentString,mCacheMode);
+    /**
+     * Gets the Settings object used to control the settings for this WebView.
+     *
+     * @return a Settings object that can be used to control this WebView's settings
+     */
+    public Settings getSettings() {
+        return new Settings(mDefaultUserAgent, mUserAgentString, mCacheMode);
     }
 
-    public void setSettings(Settings setttings){
-        final String UA = mUserAgentString = setttings.getUserAgentString();
-        final int cacheMode = mCacheMode = setttings.getCacheMode();
-        if (mWebViewHandler != null) {
-            mWebViewHandler.post(new Runnable() {
+    /**
+     * Set a settings
+     *
+     * @param settings a Settings object that is used to control this WebView's settings
+     */
+    public void setSettings(Settings settings) {
+        if (settings == null) {
+            return;
+        }
+
+        final String UA = mUserAgentString = settings.getUserAgentString();
+        final int cacheMode = mCacheMode = settings.getCacheMode();
+        if (sWebViewHandler != null) {
+            sWebViewHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (mWebViewInternalHandle != 0) {
@@ -797,65 +913,81 @@ public class WebView extends SurfaceView {
         }
     }
 
-    public void setWebViewClient(WebViewClient client){
+    /**
+     * Sets the WebViewClient that will receive various notifications and requests.
+     * This will replace the current handler.
+     *
+     * @param client an implementation of WebViewClient
+     */
+    public void setWebViewClient(WebViewClient client) {
         mWebViewClient = client;
     }
-    public void setDownloadListener(DownloadListener listener) { mDownloadListener = listener; }
 
-    native public void loadUrl(long starFish, String url);
-    native public void loadData(long starFish, String data);
-    native public String EvaluateJavaScript(long starFish, String data);
-
-    native public long Create(int initialNaturalWidth, int initialNaturalHeight, float devicePixelRatio, String userAgentString,String locale,String timezoneID,String localstoragePath,String cookiePath, String cachePath);
-    native public void Destroy(long starFish);
-    native public void GoBack(long starFish);
-    native public void GoForward(long starFish);
-    native public void Reload(long starFish);
-    native public void StopLoading(long starFish);
-    native public void ClearHistory(long starFish);
-    native public void ClearCache(long starFish);
-    native public void Pause(long starFish);
-    native public void Resume(long starFish);
-
-    native public void addJavascriptInterface(long starFish, String objectName, String functionName, Object instance);
-    native public void removeJavascriptInterface(long starFish, String objectName);
+    /**
+     * Registers the interface to be used when content can not be handled by the rendering engine,
+     * and should be downloaded instead. This will replace the current handler.
+     *
+     * @param listener an implementation of DownloadListener
+     */
+    public void setDownloadListener(DownloadListener listener) {
+        mDownloadListener = listener;
+    }
 
 
-    // For internal purpose
-    native public String getDefaultUserAgent();
-    native public void setUserAgentString(long starFish, String userAgent);
-    native public void setCacheMode(long starFish, int mode);
-
-    static native public void init();
-    static native public void updateBuffer(long starFish, Bitmap b, int w, int h, int stride);
-    static native public boolean serviceQueueTimer(int uid, int fn, int data);
-    static native public void dispatchMouseDown(long starFish, float x, float y);
-    static native public void dispatchMouseMove(long starFish, float x, float y,boolean isLButtonPressed, boolean isRButtonPressed);
-    static native public void dispatchMouseUp(long starFish, float x, float y);
-
-    static native public void dispatchKeyDown(long starFish,int keyValue,int modifier);
-    static native public void dispatchKeyUp(long starFish,int keyValue,int modifier);
-    static native public void dispatchKeyPress(long starFish,int keyValue,int modifier);
-    static native public void dispatchCompositionStart(long starFish,String Value);
-    static native public void dispatchCompositionUpdate(long starFish,String Value);
-    static native public void dispatchCompositionEnd(long starFish,String Value);
+    // Following methods are internal use only
+    native private void loadUrl(long starFish, String url);
+    native private void loadData(long starFish, String data);
+    native private long create(int initialNaturalWidth, int initialNaturalHeight,
+                               float devicePixelRatio, String userAgentString, String locale,
+                               String timezoneID, String localstoragePath, String cookiePath,
+                               String cachePath);
+    native private void destroy(long starFish);
+    native private void goBack(long starFish);
+    native private void goForward(long starFish);
+    native private void reload(long starFish);
+    native private void stopLoading(long starFish);
+    native private void clearHistory(long starFish);
+    native private void clearCache(long starFish);
+    native private void pause(long starFish);
+    native private void resume(long starFish);
+    native private void addJavascriptInterface(long starFish, String objectName,
+                                               String functionName, Object instance);
+    native private void removeJavascriptInterface(long starFish, String objectName);
+    native private String evaluateJavaScript(long starFish, String data);
+    native private String getDefaultUserAgent();
+    native private void setUserAgentString(long starFish, String userAgent);
+    native private void setCacheMode(long starFish, int mode);
+    static native private void init();
+    static native private void updateBuffer(long starFish, Bitmap b, int w, int h, int stride);
+    static native private boolean serviceQueueTimer(int uid, int fn, int data);
+    static native private void dispatchMouseDown(long starFish, float x, float y);
+    static native private void dispatchMouseMove(long starFish, float x, float y,
+                                                 boolean isLButtonPressed,
+                                                 boolean isRButtonPressed);
+    static native private void dispatchMouseUp(long starFish, float x, float y);
+    static native private void dispatchKeyDown(long starFish, int keyValue, int modifier);
+    static native private void dispatchKeyUp(long starFish, int keyValue, int modifier);
+    static native private void dispatchKeyPress(long starFish, int keyValue, int modifier);
+    static native private void dispatchCompositionStart(long starFish, String Value);
+    static native private void dispatchCompositionUpdate(long starFish, String Value);
+    static native private void dispatchCompositionEnd(long starFish, String Value);
 
     private void showDropdownMenu(String[] list, int checkedPosition) {
         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
         builder.setSingleChoiceItems(list, checkedPosition,
             new DialogInterface.OnClickListener() {
-            public void onClick(DialogInterface dialog, int which) {
-                onDropdownMenuItemSelected(which);
-            }
-        });
+                public void onClick(DialogInterface dialog, int which) {
+                    onDropdownMenuItemSelected(which);
+                }
+            });
 
         builder.show();
     }
 
     private void onDropdownMenuItemSelected(int position) {
         final int positionIdx = position;
-        if (mWebViewHandler != null) {
-            mWebViewHandler.post(new Runnable() {
+        if (sWebViewHandler != null) {
+            sWebViewHandler.post(new Runnable() {
                 @Override
                 public void run() {
                     if (mWebViewInternalHandle != 0) {
