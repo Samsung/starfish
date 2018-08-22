@@ -952,10 +952,12 @@ RenderResult WebView::rendering(bool force)
             repaintRect.setWidth(repaintRect.width() + 2);
             repaintRect.setHeight(repaintRect.height() + 2);
 
+            /*
             STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
                               (float)repaintRect.x(), (float)repaintRect.y(),
                               (float)repaintRect.width(),
                               (float)repaintRect.height());
+             */
             {
                 // remove definitely useless graphics buffer first.
                 auto iter = prevDrawnStackingContextInfo.begin();
