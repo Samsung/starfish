@@ -21,7 +21,7 @@ package com.samsung.android.mobileservice.lwe;
 
 public class Settings {
     public static final int LOAD_DEFAULT = -1;
-//    static final int LOAD_NORMAL = 0;
+    // static final int LOAD_NORMAL = 0;
     public static final int LOAD_CACHE_ELSE_NETWORK = 1;
     public static final int LOAD_NO_CACHE = 2;
     public static final int LOAD_CACHE_ONLY = 3;
@@ -31,31 +31,31 @@ public class Settings {
     private String mDefaultUserAgent = null;
     private String mUserAgentString = null;
 
-    Settings(String DUA, String UA, int cacheMode){
-        mDefaultUserAgent = DUA;
-        mUserAgentString = UA;
+    Settings(String dua, String ua, int cacheMode) {
+        mDefaultUserAgent = dua;
+        mUserAgentString = ua;
         setCacheMode(cacheMode);
     }
 
-    public String getDefaultUserAgent(){
+    public String getDefaultUserAgent() {
         return mDefaultUserAgent;
     }
 
-    public String getUserAgentString(){
+    public String getUserAgentString() {
         return mUserAgentString;
     }
 
-    public int getCacheMode(){
+    public int getCacheMode() {
         return mCacheMode;
     }
 
-    public void setUserAgentString(String ua){
+    public void setUserAgentString(String ua) {
         mUserAgentString = ua;
     }
 
-    public void setCacheMode(int mode){
-        if(mode==LOAD_DEFAULT || mode==LOAD_NO_CACHE){
-            mCacheMode  = mode;
+    public void setCacheMode(int mode) {
+        if (mode == LOAD_DEFAULT || mode == LOAD_NO_CACHE) {
+            mCacheMode = mode;
         }
     }
 
