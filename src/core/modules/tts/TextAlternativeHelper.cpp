@@ -240,7 +240,7 @@ bool TextAlternativeHelper::appendFromAriaByTypeIfNeeds(Node* node,
     StringUtils::tokenize(value, " ", 1, tokens);
     size_t oldSize = m_textAlts.size();
 
-    if (node->document()) {
+    if (!node->document()) {
         return false;
     }
 
