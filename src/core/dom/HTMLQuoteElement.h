@@ -26,7 +26,7 @@ namespace StarFish {
 
 class HTMLQuoteElement : public HTMLElement {
 public:
-    HTMLQuoteElement(Document* document, AtomicString name);
+    HTMLQuoteElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -35,17 +35,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLQuoteElement() const override;
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override
-    {
-        return m_name;
-    }
-
     void setCite(String* cite);
     String* cite();
-
-protected:
-    QualifiedName m_name;
 };
 }
 

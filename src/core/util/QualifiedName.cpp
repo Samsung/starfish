@@ -89,9 +89,25 @@ bool QualifiedName::checkNameProductionRule(String* str)
     if (length == 0) {
         return false;
     }
-
-    if (!checkNameProductionRuleStart_internal(str->charAt(0))) {
-        return false;
+    bool start = true;
+    bool sawColon = false;
+    for (unsigned i = 0; i < length; ++i) {
+        if (str->charAt(i) == ':') {
+            if (sawColon) {
+                return false;
+            }
+            sawColon = true;
+            start = true;
+        } else if (start) {
+            if (!checkNameProductionRuleStart_internal(str->charAt(i))) {
+                return false;
+            }
+            start = false;
+        } else {
+            if (!checkNameProductionRule_internal(str->charAt(i))) {
+                return false;
+            }
+        }
     }
 
     for (unsigned i = 1; i < length; ++i) {

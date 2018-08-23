@@ -60,11 +60,6 @@ void HTMLTableColElement::styleForPresentationAttribute(
     }
 }
 
-QualifiedName HTMLTableColElement::name()
-{
-    return starFish()->staticStrings()->m_colTagName;
-}
-
 void HTMLTableColElement::setSpan(uint32_t span)
 {
     setAttribute(starFish()->staticStrings()->m_span, String::fromInt(span));

@@ -28,8 +28,8 @@ class SVGSVGElement;
 
 class SVGTextElement : public SVGElement {
 public:
-    SVGTextElement(Document* document)
-        : SVGElement(document)
+    SVGTextElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
     {
     }
 
@@ -37,7 +37,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSVGTextElement() const override;
 
-    virtual QualifiedName name() override;
     virtual bool needsGeometryAttributes() override
     {
         return true;

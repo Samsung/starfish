@@ -26,16 +26,14 @@ namespace StarFish {
 
 class SVGCircleElement : public SVGElement {
 public:
-    SVGCircleElement(Document* document)
-        : SVGElement(document)
+    SVGCircleElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGCircleElement() const override;
-
-    virtual QualifiedName name() override;
 
     virtual bool needsGeometryAttributes() override
     {

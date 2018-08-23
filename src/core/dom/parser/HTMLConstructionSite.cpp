@@ -467,7 +467,8 @@ void HTMLConstructionSite::insertHTMLHtmlStartTagBeforeHTML(
 {
     // TODO
     STARFISH_ASSERT(m_document);
-    HTMLHtmlElement* element = new HTMLHtmlElement(m_document);
+    HTMLHtmlElement* element = new HTMLHtmlElement(
+        m_document, m_document->starFish()->staticStrings()->m_htmlTagName);
     setAttributes(element, token);
     attachLater(m_attachmentRoot, element);
     m_openElements.pushHTMLHtmlElement(new HTMLStackItem(
@@ -811,8 +812,11 @@ void HTMLConstructionSite::insertScriptElement(AtomicHTMLToken* token)
     // HTMLScriptElement* element = new
     // HTMLScriptElement(ownerDocumentForCurrentNode(), parserInserted,
     //                   alreadyStarted);
-    HTMLScriptElement* element =
-        new HTMLScriptElement(&ownerDocumentForCurrentNode());
+    HTMLScriptElement* element = new HTMLScriptElement(
+        &ownerDocumentForCurrentNode(), ownerDocumentForCurrentNode()
+                                            .starFish()
+                                            ->staticStrings()
+                                            ->m_scriptTagName);
     element->markParserInserted();
     setAttributes(element, token);
     // if (scriptingContentIsAllowed(m_parserContentPolicy)) {
@@ -930,10 +934,10 @@ Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token,
 
     if (namespaceURI == starFish()->staticStrings()->m_xhtmlNamespaceURI) {
         element = HTMLDocument::createHTMLElement(
-            &ownerDocumentForCurrentNode(), tagName.localNameAtomic());
+            &ownerDocumentForCurrentNode(), tagName);
     } else if (namespaceURI == starFish()->staticStrings()->m_svgNamespaceURI) {
         element = SVGDocument::createSVGElement(&ownerDocumentForCurrentNode(),
-                                                tagName.localNameAtomic());
+                                                tagName);
     } else {
         element = new NamedElement(&ownerDocumentForCurrentNode(), tagName);
     }
@@ -963,10 +967,11 @@ Element* HTMLConstructionSite::createHTMLElement(AtomicHTMLToken* token)
     // to occur after construction to allow better code sharing here.
     // Element* element = HTMLElementFactory::createHTMLElement(token->name(),
     //     document, form, true);
-    AtomicString tagName =
-        AtomicString::createAttrAtomicString(starFish(), token->name());
-    Element* element = HTMLDocument::createHTMLElement(
-        &ownerDocumentForCurrentNode(), tagName);
+    const QualifiedName qname = QualifiedName(
+        AtomicString::createAtomicString(starFish(), HTML_NAMESPACE),
+        AtomicString::createAttrAtomicString(starFish(), token->name()));
+    Element* element =
+        HTMLDocument::createHTMLElement(&ownerDocumentForCurrentNode(), qname);
     setAttributes(element, token);
     STARFISH_ASSERT(element->isHTMLElement());
     return element;

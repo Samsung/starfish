@@ -27,11 +27,6 @@
 
 namespace StarFish {
 
-QualifiedName HTMLBodyElement::name()
-{
-    return starFish()->staticStrings()->m_bodyTagName;
-}
-
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, blur);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, error);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, focus);

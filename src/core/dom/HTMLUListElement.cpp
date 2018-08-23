@@ -23,11 +23,6 @@
 #include "core/dom/HTMLUListElement.h"
 
 namespace StarFish {
-QualifiedName HTMLUListElement::name()
-{
-    return starFish()->staticStrings()->m_ulTagName;
-}
-
 void HTMLUListElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* value, bool attributeCreated,
                                            bool attributeRemoved)

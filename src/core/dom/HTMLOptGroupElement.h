@@ -27,8 +27,8 @@ namespace StarFish {
 
 class HTMLOptGroupElement : public HTMLFormControl {
 public:
-    HTMLOptGroupElement(Document* document)
-        : HTMLFormControl(document)
+    HTMLOptGroupElement(Document* document, const QualifiedName& qname)
+        : HTMLFormControl(document, qname)
     {
     }
 
@@ -38,9 +38,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLOptGroupElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     virtual bool isListedElement() override
     {

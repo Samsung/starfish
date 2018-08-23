@@ -28,16 +28,14 @@ class SVGSVGElement;
 
 class SVGRectElement : public SVGElement {
 public:
-    SVGRectElement(Document* document)
-        : SVGElement(document)
+    SVGRectElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGRectElement() const override;
-
-    virtual QualifiedName name() override;
 
     virtual bool needsGeometryAttributes() override
     {

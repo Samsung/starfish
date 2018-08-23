@@ -28,8 +28,9 @@
 
 namespace StarFish {
 
-HTMLButtonElement::HTMLButtonElement(Document* document)
-    : HTMLFormControl(document)
+HTMLButtonElement::HTMLButtonElement(Document* document,
+                                     const QualifiedName& qname)
+    : HTMLFormControl(document, qname)
 {
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
@@ -46,16 +47,6 @@ void* HTMLButtonElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-}
-
-String* HTMLButtonElement::localName()
-{
-    return starFish()->staticStrings()->m_buttonTagName.localName();
-}
-
-QualifiedName HTMLButtonElement::name()
-{
-    return starFish()->staticStrings()->m_buttonTagName;
 }
 
 String* HTMLButtonElement::type()

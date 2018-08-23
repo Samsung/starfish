@@ -29,8 +29,7 @@ namespace StarFish {
 class PseudoElement : public Element {
 public:
     PseudoElement(Document* document, StyleResolver::PseudoElementType pseudoId)
-        : Element(document)
-        , m_name(pseudoElementTagName(pseudoId))
+        : Element(document, pseudoElementTagName(document, pseudoId))
         , m_pseudoId(pseudoId)
     {
     }
@@ -42,12 +41,12 @@ public:
 
     virtual String* localName()
     {
-        return m_name.localName();
+        return name().localName();
     }
 
     virtual String* nodeName()
     {
-        return m_name.localName();
+        return name().localName();
     }
 
     StyleResolver::PseudoElementType getPseudoId() const
@@ -56,10 +55,9 @@ public:
     }
 
     QualifiedName pseudoElementTagName(
-        StyleResolver::PseudoElementType pseudoId);
+        Document* document, StyleResolver::PseudoElementType pseudoId);
 
 protected:
-    QualifiedName m_name;
     StyleResolver::PseudoElementType m_pseudoId;
 };
 

@@ -74,7 +74,8 @@ DocumentFragment* TextTrackCue::getCueAsHTML()
     if (!m_payloadAsHTML && document()) {
         m_payloadAsHTML = document()->createDocumentFragment();
         // FIXME : HTMLParser require context element -> make dummy element here
-        HTMLDivElement* dummyDiv = new HTMLDivElement(document());
+        HTMLDivElement* dummyDiv = new HTMLDivElement(
+            document(), starFish()->staticStrings()->m_divTagName);
         HTMLParser parser(starFish(), m_payloadAsHTML, dummyDiv, m_payload);
         parser.startParse();
         parser.parseStep();

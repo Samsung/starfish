@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLMetaElement : public HTMLElement {
 public:
-    HTMLMetaElement(Document* document)
-        : HTMLElement(document)
+    HTMLMetaElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
         , m_name(String::emptyString)
         , m_content(String::emptyString)
         , m_httpEquiv(String::emptyString)
@@ -43,9 +43,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLMetaElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 

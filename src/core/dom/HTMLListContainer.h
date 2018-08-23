@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLListContainer : public HTMLElement {
 public:
-    HTMLListContainer(Document* document)
-        : HTMLElement(document)
+    HTMLListContainer(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 

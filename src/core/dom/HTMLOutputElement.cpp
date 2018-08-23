@@ -23,8 +23,9 @@
 #include "core/dom/DOMTokenList.h"
 
 namespace StarFish {
-HTMLOutputElement::HTMLOutputElement(Document* document)
-    : HTMLFormControl(document)
+HTMLOutputElement::HTMLOutputElement(Document* document,
+                                     const QualifiedName& qname)
+    : HTMLFormControl(document, qname)
     , m_htmlForList(nullptr)
     , m_valueModeFlag(ValueModeFlag::defaultMode)
     , m_defaultValue(String::emptyString)
@@ -45,11 +46,6 @@ void* HTMLOutputElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-}
-
-QualifiedName HTMLOutputElement::name()
-{
-    return starFish()->staticStrings()->m_outputTagName;
 }
 
 DOMTokenList* HTMLOutputElement::htmlFor()

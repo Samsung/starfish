@@ -26,11 +26,6 @@
 
 namespace StarFish {
 
-QualifiedName HTMLVideoElement::name()
-{
-    return starFish()->staticStrings()->m_videoTagName;
-}
-
 uint32_t HTMLVideoElement::videoWidth()
 {
     return m_mediaPlayer ? m_mediaPlayer->videoWidth()

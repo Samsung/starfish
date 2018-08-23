@@ -26,17 +26,14 @@ namespace StarFish {
 
 class HTMLTHeadElement : public HTMLTableSectionElement {
 public:
-    HTMLTHeadElement(Document* document)
-        : HTMLTableSectionElement(document)
+    HTMLTHeadElement(Document* document, const QualifiedName& qname)
+        : HTMLTableSectionElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLTHeadElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 };
 }
 

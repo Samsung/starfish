@@ -27,8 +27,8 @@ namespace StarFish {
 
 class HTMLLegendElement : public HTMLFormControl {
 public:
-    HTMLLegendElement(Document* document)
-        : HTMLFormControl(document)
+    HTMLLegendElement(Document* document, const QualifiedName& qname)
+        : HTMLFormControl(document, qname)
     {
     }
 
@@ -38,9 +38,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLLegendElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     virtual bool isListedElement() override
     {

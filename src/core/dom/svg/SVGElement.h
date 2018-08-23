@@ -62,12 +62,7 @@ class SVGSVGElement;
 
 class SVGElement : public Element {
 public:
-    SVGElement(Document* document)
-        : Element(document)
-        , m_preserveAspectRatioValue(
-              NativeImageData::PreserveAspectRatioValue::None)
-    {
-    }
+    SVGElement(Document* document, const QualifiedName& qname);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -81,6 +76,11 @@ public:
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
+
+    virtual QualifiedName name()
+    {
+        return m_name;
+    }
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -133,26 +133,6 @@ public:
 
 protected:
     NativeImageData::PreserveAspectRatioValue m_preserveAspectRatioValue;
-};
-
-class SVGNamedElement : public SVGElement {
-public:
-    SVGNamedElement(Document* document, QualifiedName name)
-        : SVGElement(document)
-        , m_name(name)
-    {
-    }
-
-    virtual QualifiedName name()
-    {
-        return m_name;
-    }
-
-    void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
-
-protected:
-    QualifiedName m_name;
 };
 }
 

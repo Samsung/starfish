@@ -32,7 +32,7 @@ class HTMLOptionsCollection;
 
 class HTMLSelectElement : public HTMLFormControl {
 public:
-    HTMLSelectElement(Document* document);
+    HTMLSelectElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -66,9 +66,6 @@ public:
     using Node::remove;
     void remove(int index);
     bool defaultIndexedSetter(unsigned index, HTMLOptionElement* option);
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     HTMLCollection* selectedOptions();
 

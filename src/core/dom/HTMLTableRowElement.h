@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLTableRowElement : public HTMLTablePartElement {
 public:
-    HTMLTableRowElement(Document* document)
-        : HTMLTablePartElement(document)
+    HTMLTableRowElement(Document* document, const QualifiedName& qname)
+        : HTMLTablePartElement(document, qname)
         , m_cells(nullptr)
     {
     }
@@ -38,9 +38,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLTableRowElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

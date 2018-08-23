@@ -25,11 +25,6 @@
 
 namespace StarFish {
 
-QualifiedName HTMLBaseElement::name()
-{
-    return starFish()->staticStrings()->m_baseTagName;
-}
-
 String* HTMLBaseElement::href() const
 {
     Nullable<String*> hrefAttr =

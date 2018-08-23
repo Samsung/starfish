@@ -27,11 +27,6 @@
 
 namespace StarFish {
 
-QualifiedName HTMLHtmlElement::name()
-{
-    return starFish()->staticStrings()->m_htmlTagName;
-}
-
 void HTMLHtmlElement::didComputedStyleChanged(ComputedStyle* oldStyle,
                                               ComputedStyle* newStyle)
 {

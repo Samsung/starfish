@@ -25,11 +25,6 @@
 
 namespace StarFish {
 
-QualifiedName HTMLSourceElement::name()
-{
-    return starFish()->staticStrings()->m_sourceTagName;
-}
-
 String* HTMLSourceElement::src()
 {
     return getAttributeOrEmpty(starFish()->staticStrings()->m_src);

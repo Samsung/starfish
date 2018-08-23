@@ -44,6 +44,7 @@
 #include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLTitleElement.h"
 #include "core/dom/HTMLAnchorElement.h"
+#include "core/dom/HTMLUnknownElement.h"
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #include "core/dom/HTMLMediaElement.h"
 #endif
@@ -735,7 +736,10 @@ Element* Document::createElement(String* localName)
     if (isHTMLDocument()) {
         localNameAtomic = AtomicString::createAttrAtomicString(
             window()->starFish(), localName);
-        return HTMLDocument::createHTMLElement(this, localNameAtomic);
+        return HTMLDocument::createHTMLElement(
+            this, QualifiedName(AtomicString::createAtomicString(
+                                    window()->starFish(), HTML_NAMESPACE),
+                                localNameAtomic));
     } else {
         localNameAtomic =
             AtomicString::createAtomicString(window()->starFish(), localName);
@@ -766,10 +770,11 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     GCVector<StringView> tokens;
     StringUtils::tokenize(qualifiedName, ":", 1, tokens);
     if (tokens.size() > 2) {
-        throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
+        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
     } else if (tokens.size() == 2) {
         if (tokens[0].length() == 0 || tokens[1].length() == 0) {
-            throw new DOMException(this, DOMException::Code::NAMESPACE_ERR);
+            throw new DOMException(this,
+                                   DOMException::Code::INVALID_CHARACTER_ERR);
         }
         prefix = AtomicString::createAtomicString(starFish(), tokens[0]);
         localName = AtomicString::createAtomicString(starFish(), tokens[1]);
@@ -784,6 +789,7 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     }
 
     AtomicString nsURI;
+    ;
     if (ns.hasValue()) {
         nsURI = AtomicString::createAtomicString(starFish(), ns.getValue());
     }
@@ -811,26 +817,25 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
 
     if (prefix.hasValue()) {
         return QualifiedName(prefix.getValue(), nsURI, localName);
-    } else {
+    } else if (ns.hasValue()) {
         return QualifiedName(nsURI, localName);
+    } else {
+        return QualifiedName(localName);
     }
 }
 
 Element* Document::createElementNS(Nullable<String*> namespaceString,
                                    String* qualifiedName)
 {
-    if (!namespaceString.hasValue()) {
-        return createElement(qualifiedName);
-    }
     QualifiedName name =
         validateAndExtractQualifiedName(namespaceString, qualifiedName);
-    if (!name.prefix().hasValue() && name.namespaceURI().hasValue()) {
+    if (name.namespaceURI().hasValue()) {
         if (name.namespaceURI().getValue().string()->equals(HTML_NAMESPACE)) {
-            return HTMLDocument::createHTMLElement(this,
-                                                   name.localNameAtomic());
-        } else if (name.namespaceURI().getValue().string()->equals(
-                       SVG_NAMESPACE)) {
-            return SVGDocument::createSVGElement(this, name.localNameAtomic());
+            return HTMLDocument::createHTMLElement(this, name);
+        }
+
+        if (name.namespaceURI().getValue().string()->equals(SVG_NAMESPACE)) {
+            return SVGDocument::createSVGElement(this, name);
         }
     }
     return new NamedElement(this, name);
@@ -1062,7 +1067,8 @@ void Document::setTitle(String* titleString)
             // Otherwise:
             // Let element be the result of creating an element given the
             // document element's node document, title, and the HTML namespace.
-            element = new HTMLTitleElement(document());
+            element = new HTMLTitleElement(
+                document(), starFish()->staticStrings()->m_titleTagName);
         }
         // Append element to the head element.
         head->appendChild(title);

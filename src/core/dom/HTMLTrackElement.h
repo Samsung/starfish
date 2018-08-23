@@ -35,7 +35,7 @@ class HTMLTrackElement : public HTMLElement {
 public:
     enum ReadyState { NONE, LOADING, LOADED, IN_ERROR };
 
-    HTMLTrackElement(Document* document);
+    HTMLTrackElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -43,8 +43,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLTrackElement() const override;
-
-    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

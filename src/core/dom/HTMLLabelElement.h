@@ -26,17 +26,14 @@ namespace StarFish {
 
 class HTMLLabelElement : public HTMLElement {
 public:
-    HTMLLabelElement(Document* document)
-        : HTMLElement(document)
+    HTMLLabelElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLLabelElement() const override;
-
-    // 4.4 Interface Node
-    virtual QualifiedName name() override;
 
     // Interface Option
     HTMLFormElement* form();

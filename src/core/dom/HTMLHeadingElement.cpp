@@ -22,9 +22,9 @@
 #include "core/dom/HTMLHeadingElement.h"
 
 namespace StarFish {
-HTMLHeadingElement::HTMLHeadingElement(Document* document, AtomicString name)
-    : HTMLElement(document)
-    , m_name(starFish()->staticStrings()->m_xhtmlNamespaceURI, name)
+HTMLHeadingElement::HTMLHeadingElement(Document* document,
+                                       const QualifiedName& qname)
+    : HTMLElement(document, qname)
 {
 }
 

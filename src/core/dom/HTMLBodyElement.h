@@ -26,17 +26,14 @@ namespace StarFish {
 
 class HTMLBodyElement : public HTMLElement {
 public:
-    HTMLBodyElement(Document* document)
-        : HTMLElement(document)
+    HTMLBodyElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLBodyElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
 /* Other methods (not in DOM API) */
 

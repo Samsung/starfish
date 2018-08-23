@@ -27,8 +27,9 @@
 #include "core/dom/HTMLTableRowElement.h"
 
 namespace StarFish {
-HTMLTableSectionElement::HTMLTableSectionElement(Document* document)
-    : HTMLTablePartElement(document)
+HTMLTableSectionElement::HTMLTableSectionElement(Document* document,
+                                                 const QualifiedName& qname)
+    : HTMLTablePartElement(document, qname)
     , m_rows(nullptr)
 {
 }
@@ -84,7 +85,8 @@ HTMLElement* HTMLTableSectionElement::insertRow(long index)
         throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
     }
 
-    HTMLTableRowElement* row = new HTMLTableRowElement(document());
+    HTMLTableRowElement* row = new HTMLTableRowElement(
+        document(), starFish()->staticStrings()->m_trTagName);
     if (index == -1 || static_cast<size_t>(index) == rows->length()) {
         appendChild(row);
     } else {

@@ -336,11 +336,6 @@ void HTMLTableElement::styleForPresentationAttribute(
     }
 }
 
-QualifiedName HTMLTableElement::name()
-{
-    return starFish()->staticStrings()->m_tableTagName;
-}
-
 HTMLTableCaptionElement* HTMLTableElement::caption()
 {
     Node* child = firstChild();
@@ -372,7 +367,8 @@ HTMLTableCaptionElement* HTMLTableElement::createCaption()
 {
     HTMLTableCaptionElement* caption = this->caption();
     if (!caption) {
-        caption = new HTMLTableCaptionElement(document());
+        caption = new HTMLTableCaptionElement(
+            document(), starFish()->staticStrings()->m_captionTagName);
         insertBefore(caption, firstChild());
     }
     return caption;
@@ -429,7 +425,8 @@ HTMLTableSectionElement* HTMLTableElement::createTHead()
 {
     HTMLTableSectionElement* tHead = this->tHead();
     if (!tHead) {
-        tHead = new HTMLTHeadElement(document());
+        tHead = new HTMLTHeadElement(
+            document(), starFish()->staticStrings()->m_theadTagName);
         Node* child = firstChild();
         while (child) {
             if (!child->isHTMLTableCaptionElement() &&
@@ -495,7 +492,8 @@ HTMLTableSectionElement* HTMLTableElement::createTFoot()
 {
     HTMLTableSectionElement* tFoot = this->tFoot();
     if (!tFoot) {
-        tFoot = new HTMLTFootElement(document());
+        tFoot = new HTMLTFootElement(
+            document(), starFish()->staticStrings()->m_tfootTagName);
         Node* child = firstChild();
         while (child) {
             if (!child->isHTMLTableCaptionElement() &&
@@ -543,7 +541,8 @@ HTMLCollection* HTMLTableElement::tBodies()
 
 HTMLTableSectionElement* HTMLTableElement::createTBody()
 {
-    HTMLTableSectionElement* tBody = new HTMLTBodyElement(document());
+    HTMLTableSectionElement* tBody = new HTMLTBodyElement(
+        document(), starFish()->staticStrings()->m_tbodyTagName);
 
     Node* child = lastChild();
     Node* lastTBody = nullptr;
@@ -599,11 +598,13 @@ HTMLTableRowElement* HTMLTableElement::insertRow(int32_t index)
         throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
     }
 
-    HTMLTableRowElement* row = new HTMLTableRowElement(document());
+    HTMLTableRowElement* row = new HTMLTableRowElement(
+        document(), starFish()->staticStrings()->m_trTagName);
     HTMLCollection* tBodies = this->tBodies();
     size_t tBodiesLength = tBodies->length();
     if (rowsLength == 0 && tBodiesLength == 0) {
-        HTMLTBodyElement* tBody = new HTMLTBodyElement(document());
+        HTMLTBodyElement* tBody = new HTMLTBodyElement(
+            document(), starFish()->staticStrings()->m_tbodyTagName);
         tBody->appendChild(row);
         appendChild(tBody);
     } else if (rowsLength == 0) {

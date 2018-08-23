@@ -37,11 +37,6 @@ void* HTMLFieldSetElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName HTMLFieldSetElement::name()
-{
-    return starFish()->staticStrings()->m_fieldsetTagName;
-}
-
 String* HTMLFieldSetElement::type()
 {
     return String::createASCIIString("fieldset");

@@ -26,7 +26,7 @@ namespace StarFish {
 
 class HTMLTableSectionElement : public HTMLTablePartElement {
 public:
-    HTMLTableSectionElement(Document* document);
+    HTMLTableSectionElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

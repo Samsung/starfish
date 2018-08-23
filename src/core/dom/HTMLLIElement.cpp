@@ -24,11 +24,6 @@
 
 namespace StarFish {
 
-QualifiedName HTMLLIElement::name()
-{
-    return starFish()->staticStrings()->m_liTagName;
-}
-
 void HTMLLIElement::didAttributeChanged(QualifiedName name, String* old,
                                         String* value, bool attributeCreated,
                                         bool attributeRemoved)

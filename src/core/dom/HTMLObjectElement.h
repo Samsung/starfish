@@ -33,8 +33,8 @@ class HTMLObjectElementContent;
 
 class HTMLObjectElement : public HTMLElement {
 public:
-    HTMLObjectElement(Document* document)
-        : HTMLElement(document)
+    HTMLObjectElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
         m_content = nullptr;
     }
@@ -45,9 +45,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLObjectElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 

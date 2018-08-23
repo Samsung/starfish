@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLFontElement : public HTMLElement {
 public:
-    HTMLFontElement(Document* document)
-        : HTMLElement(document)
+    HTMLFontElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
         , m_hasColorAttribute(false)
         , m_hasSizeAttribute(false)
     {
@@ -39,8 +39,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLFontElement() const override;
-    virtual QualifiedName name() override;
-
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;

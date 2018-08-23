@@ -24,11 +24,6 @@
 
 namespace StarFish {
 
-QualifiedName SVGPolygonElement::name()
-{
-    return starFish()->staticStrings()->m_svgpolygonTagName;
-}
-
 void SVGPolygonElement::didAttributeChanged(QualifiedName name, String* old,
                                             String* value,
                                             bool attributeCreated,

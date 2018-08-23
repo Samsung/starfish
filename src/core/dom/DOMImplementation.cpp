@@ -106,10 +106,12 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
                          String::emptyString, String::emptyString);
     doc->appendChild(docType);
 
-    HTMLHtmlElement* html = new HTMLHtmlElement(doc);
+    HTMLHtmlElement* html = new HTMLHtmlElement(
+        doc, doc->starFish()->staticStrings()->m_htmlTagName);
     doc->appendChild(html);
 
-    HTMLHeadElement* head = new HTMLHeadElement(doc);
+    HTMLHeadElement* head = new HTMLHeadElement(
+        doc, doc->starFish()->staticStrings()->m_headTagName);
     html->appendChild(head);
 
     if (title.hasValue()) {
@@ -119,7 +121,8 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
         head->appendChild(titleElement);
     }
 
-    html->appendChild(new HTMLBodyElement(doc));
+    html->appendChild(new HTMLBodyElement(
+        doc, doc->starFish()->staticStrings()->m_bodyTagName));
 
     // doc’s origin is context object’s associated document’s origin.
     doc->setWebOrigin(m_document->webOrigin());

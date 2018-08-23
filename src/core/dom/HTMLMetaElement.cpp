@@ -48,11 +48,6 @@ void* HTMLMetaElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName HTMLMetaElement::name()
-{
-    return starFish()->staticStrings()->m_metaTagName;
-}
-
 void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
                                           String* value, bool attributeCreated,
                                           bool attributeRemoved)

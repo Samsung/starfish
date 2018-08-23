@@ -26,7 +26,7 @@ namespace StarFish {
 
 class HTMLModElement : public HTMLElement {
 public:
-    HTMLModElement(Document* document, AtomicString name);
+    HTMLModElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -35,20 +35,11 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLModElement() const override;
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override
-    {
-        return m_name;
-    }
-
     void setCite(String* cite);
     String* cite();
 
     void setDateTime(String* dateTime);
     String* dateTime();
-
-protected:
-    QualifiedName m_name;
 };
 }
 

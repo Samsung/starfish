@@ -78,6 +78,13 @@ static bool isEditable(Node* node)
     return !node->isElement() && node->parentNode()->isHTMLElement();
 }
 
+HTMLElement::HTMLElement(Document* document, const QualifiedName& qname)
+    : Element(document, qname)
+{
+    STARFISH_ASSERT(namespaceURI().hasValue());
+    STARFISH_ASSERT(name().hasSameNamespaceURI(HTML_NAMESPACE));
+}
+
 void* HTMLElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLElement));
@@ -313,10 +320,11 @@ void HTMLElement::setInnerText(String* text)
 
     GCVector<StringView> v;
     StringUtils::tokenize(text, "\r\n", 2, v);
+    const QualifiedName& brQname = starFish()->staticStrings()->m_brTagName;
     for (size_t i = 0; i < v.size(); i++) {
         appendChild(new Text(document(), new StringView(v[i])));
         if (i + 1 < v.size()) {
-            appendChild(new HTMLBRElement(document()));
+            appendChild(new HTMLBRElement(document(), brQname));
         }
     }
 }
@@ -396,10 +404,9 @@ bool HTMLElement::isContentEditable()
     return isEditinghost(this) || isEditable(this);
 }
 
-HTMLKnownElement::HTMLKnownElement(Document* document, AtomicString localName)
-    : HTMLElement(document)
-    , m_name(document->starFish()->staticStrings()->m_xhtmlNamespaceURI,
-             localName)
+HTMLKnownElement::HTMLKnownElement(Document* document,
+                                   const QualifiedName& qname)
+    : HTMLElement(document, qname)
 {
 }
 

@@ -113,8 +113,9 @@ protected:
     HTMLTrackElement* m_element;
 };
 
-HTMLTrackElement::HTMLTrackElement(Document* document)
-    : HTMLElement(document)
+HTMLTrackElement::HTMLTrackElement(Document* document,
+                                   const QualifiedName& qname)
+    : HTMLElement(document, qname)
     , m_track(new TextTrack(document))
     , m_VTTFileResource(nullptr)
     , m_hasPendingRequest(false)
@@ -138,11 +139,6 @@ void* HTMLTrackElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-}
-
-QualifiedName HTMLTrackElement::name()
-{
-    return starFish()->staticStrings()->m_trackTagName;
 }
 
 void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old,

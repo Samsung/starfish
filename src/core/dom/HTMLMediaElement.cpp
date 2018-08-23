@@ -53,8 +53,9 @@
 
 namespace StarFish {
 
-HTMLMediaElement::HTMLMediaElement(Document* document)
-    : HTMLElement(document)
+HTMLMediaElement::HTMLMediaElement(Document* document,
+                                   const QualifiedName& qname)
+    : HTMLElement(document, qname)
     , m_autoplayingFlag(true)
     , m_isPaused(true)
     , m_isSeeking(false)

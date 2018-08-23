@@ -35,7 +35,7 @@ class HTMLIFrameElement : public HTMLElement {
     friend class ResourceLoader;
 
 public:
-    HTMLIFrameElement(Document* document);
+    HTMLIFrameElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -43,9 +43,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLIFrameElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     /* DOM APIs */
     void setSrc(String* src);

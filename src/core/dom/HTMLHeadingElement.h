@@ -26,7 +26,7 @@ namespace StarFish {
 
 class HTMLHeadingElement : public HTMLElement {
 public:
-    HTMLHeadingElement(Document* document, AtomicString name);
+    HTMLHeadingElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -35,12 +35,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLHeadingElement() const override;
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override
-    {
-        return m_name;
-    }
-
     String* align();
     void setAlign(String* align);
     virtual void didAttributeChanged(QualifiedName name, String* old,
@@ -48,9 +42,6 @@ public:
                                      bool attributeRemoved) override;
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
-
-protected:
-    QualifiedName m_name;
 };
 }
 

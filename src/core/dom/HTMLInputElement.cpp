@@ -44,8 +44,9 @@ namespace StarFish {
 // 524288 is Chromium's
 static const int INITIAL_MAXLENGTH = 524288;
 
-HTMLInputElement::HTMLInputElement(Document* document)
-    : HTMLTextEditable(document)
+HTMLInputElement::HTMLInputElement(Document* document,
+                                   const QualifiedName& qname)
+    : HTMLTextEditable(document, qname)
     , m_dirtiness(false)
     , m_checkness(false)
     , m_dirtyCheckness(false)
@@ -74,11 +75,6 @@ void* HTMLInputElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-}
-
-QualifiedName HTMLInputElement::name()
-{
-    return starFish()->staticStrings()->m_inputTagName;
 }
 
 bool HTMLInputElement::shouldCreateFrameText()

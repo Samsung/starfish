@@ -31,7 +31,7 @@ class HTMLOutputElement : public HTMLFormControl {
 public:
     enum ValueModeFlag ENSURE_ENUM_UNSIGNED { defaultMode, valueMode };
 
-    HTMLOutputElement(Document* document);
+    HTMLOutputElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -40,8 +40,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLOutputElement() const override;
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name();
     DOMTokenList* htmlFor();
     virtual String* value() override;
     virtual void setValue(String* v) override;

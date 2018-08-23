@@ -27,11 +27,6 @@
 
 namespace StarFish {
 
-QualifiedName HTMLLabelElement::name()
-{
-    return starFish()->staticStrings()->m_labelTagName;
-}
-
 HTMLFormElement* HTMLLabelElement::form()
 {
     HTMLElement* element = control();

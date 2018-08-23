@@ -34,32 +34,32 @@
 namespace StarFish {
 
 Element* SVGDocument::createSVGElement(Document* document,
-                                       AtomicString localName)
+                                       const QualifiedName& qname)
 {
     StaticStrings* str = document->starFish()->staticStrings();
+    AtomicString localName = qname.localNameAtomic();
     if (str->m_svgsvgTagName == localName) {
-        return new SVGSVGElement(document);
+        return new SVGSVGElement(document, qname);
     } else if (str->m_svgrectTagName == localName) {
-        return new SVGRectElement(document);
+        return new SVGRectElement(document, qname);
     } else if (str->m_svggTagName == localName) {
-        return new SVGGElement(document);
+        return new SVGGElement(document, qname);
     } else if (str->m_svgpathTagName == localName) {
-        return new SVGPathElement(document);
+        return new SVGPathElement(document, qname);
     } else if (str->m_svgcircleTagName == localName) {
-        return new SVGCircleElement(document);
+        return new SVGCircleElement(document, qname);
     } else if (str->m_svgpolygonTagName == localName) {
-        return new SVGPolygonElement(document);
+        return new SVGPolygonElement(document, qname);
     } else if (str->m_svgpolylineTagName == localName) {
-        return new SVGPolylineElement(document);
+        return new SVGPolylineElement(document, qname);
     } else if (str->m_svgimageTagName == localName) {
-        return new SVGImageElement(document);
+        return new SVGImageElement(document, qname);
     } else if (str->m_svgtextTagName == localName) {
-        return new SVGTextElement(document);
+        return new SVGTextElement(document, qname);
     } else if (str->m_svgstyleTagName == localName) {
-        return new SVGStyleElement(document);
+        return new SVGStyleElement(document, qname);
     } else {
-        return new SVGNamedElement(
-            document, QualifiedName(str->m_svgNamespaceURI, localName));
+        return new SVGElement(document, qname);
     }
 }
 }

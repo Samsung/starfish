@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLTBodyElement : public HTMLTableSectionElement {
 public:
-    HTMLTBodyElement(Document* document)
-        : HTMLTableSectionElement(document)
+    HTMLTBodyElement(Document* document, const QualifiedName& qname)
+        : HTMLTableSectionElement(document, qname)
     {
     }
 
@@ -35,9 +35,6 @@ public:
     {
         return true;
     }
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 };
 }
 

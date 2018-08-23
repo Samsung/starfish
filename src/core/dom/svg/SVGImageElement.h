@@ -31,8 +31,8 @@ class SVGImageElement : public SVGElement {
     friend class SVGImageDownloadClient;
 
 public:
-    SVGImageElement(Document* document)
-        : SVGElement(document)
+    SVGImageElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
         , m_imageResource(nullptr)
         , m_imageData(nullptr)
     {
@@ -44,8 +44,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGImageElement() const override;
-
-    virtual QualifiedName name() override;
 
     virtual bool needsGeometryAttributes() override
     {

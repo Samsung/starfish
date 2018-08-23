@@ -24,11 +24,6 @@
 
 namespace StarFish {
 
-QualifiedName SVGCircleElement::name()
-{
-    return starFish()->staticStrings()->m_svgcircleTagName;
-}
-
 void SVGCircleElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* value, bool attributeCreated,
                                            bool attributeRemoved)

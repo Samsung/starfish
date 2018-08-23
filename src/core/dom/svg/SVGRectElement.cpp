@@ -24,11 +24,6 @@
 
 namespace StarFish {
 
-QualifiedName SVGRectElement::name()
-{
-    return starFish()->staticStrings()->m_svgrectTagName;
-}
-
 void SVGRectElement::didAttributeChanged(QualifiedName name, String* old,
                                          String* value, bool attributeCreated,
                                          bool attributeRemoved)

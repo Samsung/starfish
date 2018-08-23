@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLTableCaptionElement : public HTMLElement {
 public:
-    HTMLTableCaptionElement(Document* document)
-        : HTMLElement(document)
+    HTMLTableCaptionElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 
@@ -41,9 +41,6 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 };

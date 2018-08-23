@@ -42,8 +42,9 @@ static String* textAreaWrappingTransformation(String* rawValue)
     return rawValue;
 }
 
-HTMLTextAreaElement::HTMLTextAreaElement(Document* document)
-    : HTMLTextEditable(document)
+HTMLTextAreaElement::HTMLTextAreaElement(Document* document,
+                                         const QualifiedName& qname)
+    : HTMLTextEditable(document, qname)
 {
 }
 
@@ -115,11 +116,6 @@ void HTMLTextAreaElement::styleForPresentationAttribute(
     height.setLengthValue(
         CSSLength(CSSLength::EM, rows() + DEFAULT_ROWS_MARGIN));
     cssValues.push_back(height);
-}
-
-QualifiedName HTMLTextAreaElement::name()
-{
-    return starFish()->staticStrings()->m_textareaTagName;
 }
 
 bool HTMLTextAreaElement::supportsFocus()

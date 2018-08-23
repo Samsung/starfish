@@ -27,16 +27,14 @@ namespace StarFish {
 
 class HTMLVideoElement : public HTMLMediaElement {
 public:
-    HTMLVideoElement(Document* document)
-        : HTMLMediaElement(document)
+    HTMLVideoElement(Document* document, const QualifiedName& qname)
+        : HTMLMediaElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLVideoElement() const override;
-
-    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

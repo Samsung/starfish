@@ -24,11 +24,6 @@
 
 namespace StarFish {
 
-QualifiedName SVGTextElement::name()
-{
-    return starFish()->staticStrings()->m_svgtextTagName;
-}
-
 void SVGTextElement::didAttributeChanged(QualifiedName name, String* old,
                                          String* value, bool attributeCreated,
                                          bool attributeRemoved)

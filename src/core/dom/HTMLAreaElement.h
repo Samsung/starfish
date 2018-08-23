@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLAreaElement : public HTMLHyperlinkContainer {
 public:
-    HTMLAreaElement(Document* document)
-        : HTMLHyperlinkContainer(document)
+    HTMLAreaElement(Document* document, const QualifiedName& qname)
+        : HTMLHyperlinkContainer(document, qname)
         , m_relList(nullptr)
     {
     }
@@ -43,9 +43,6 @@ public:
 
     String* referrerPolicy();
     void setReferrerPolicy(String* policy);
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
 private:
     DOMTokenList* m_relList;

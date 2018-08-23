@@ -26,7 +26,7 @@ namespace StarFish {
 
 class HTMLButtonElement : public HTMLFormControl {
 public:
-    HTMLButtonElement(Document* document);
+    HTMLButtonElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -34,11 +34,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLButtonElement() const override;
-
-    // 4.4 Interface Node
-
-    virtual String* localName() override;
-    virtual QualifiedName name() override;
 
     // 4.10.6 Interface Button
     String* type() override;

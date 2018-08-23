@@ -35,9 +35,4 @@ void* HTMLParamElement::operator new(size_t size)
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
-
-QualifiedName HTMLParamElement::name()
-{
-    return starFish()->staticStrings()->m_paramTagName;
-}
 }

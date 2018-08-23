@@ -19,11 +19,21 @@
 
 #include "StarFishConfig.h"
 #include "StarFish.h"
+#include "core/dom/Document.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 
 namespace StarFish {
+
+SVGElement::SVGElement(Document* document, const QualifiedName& qname)
+    : Element(document, qname)
+    , m_preserveAspectRatioValue(
+          NativeImageData::PreserveAspectRatioValue::None)
+{
+    STARFISH_ASSERT(namespaceURI().hasValue());
+    STARFISH_ASSERT(name().hasSameNamespaceURI(SVG_NAMESPACE));
+}
 
 void* SVGElement::operator new(size_t size)
 {
@@ -259,19 +269,5 @@ int SVGElement::tabIndex()
         return Element::tabIndex();
     }
     return -1;
-}
-
-void* SVGNamedElement::operator new(size_t size)
-{
-    STARFISH_ASSERT(size == sizeof(SVGNamedElement));
-    static bool typeInited = false;
-    static GC_descr descr;
-    if (!typeInited) {
-        GC_word desc[GC_BITMAP_SIZE(SVGNamedElement)] = { 0 };
-        SVGElement::fillGCDescriptor(desc);
-        descr = GC_make_descriptor(desc, GC_WORD_LEN(SVGNamedElement));
-        typeInited = true;
-    }
-    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 }

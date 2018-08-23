@@ -46,8 +46,8 @@ public:
         SolidBorders,
     };
 
-    HTMLTableElement(Document* document)
-        : HTMLElement(document)
+    HTMLTableElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
         , m_tBodies(nullptr)
         , m_rows(nullptr)
         , m_hasBorder(false)
@@ -76,9 +76,6 @@ public:
     {
         return m_hasCellPaddingAttribute;
     }
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     HTMLTableCaptionElement* caption();
     void setCaption(HTMLTableCaptionElement* caption);

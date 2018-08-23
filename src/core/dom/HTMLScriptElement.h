@@ -29,8 +29,8 @@ class HTMLScriptElement : public HTMLElement {
     friend class DeferredScriptDownloadClient;
 
 public:
-    HTMLScriptElement(Document* document)
-        : HTMLElement(document)
+    HTMLScriptElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
         , m_isAlreadyStarted(false)
         , m_isParserInserted(false)
         , m_didScriptExecuted(false)
@@ -47,9 +47,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLScriptElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 

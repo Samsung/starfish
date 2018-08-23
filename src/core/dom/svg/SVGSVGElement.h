@@ -30,8 +30,8 @@ namespace StarFish {
 
 class SVGSVGElement : public SVGElement {
 public:
-    SVGSVGElement(Document* document)
-        : SVGElement(document)
+    SVGSVGElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
         , m_hasViewBox(false)
         , m_viewBox(0, 0, 0, 0)
     {
@@ -43,8 +43,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGSVGElement() const override;
-
-    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

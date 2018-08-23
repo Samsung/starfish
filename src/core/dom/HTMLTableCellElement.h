@@ -31,8 +31,8 @@ public:
     static const int MAX_COLSPAN = 1000;
     static const int MAX_ROWSPAN = 65534;
 
-    HTMLTableCellElement(Document* document)
-        : HTMLTablePartElement(document)
+    HTMLTableCellElement(Document* document, const QualifiedName& qname)
+        : HTMLTablePartElement(document, qname)
     {
     }
 

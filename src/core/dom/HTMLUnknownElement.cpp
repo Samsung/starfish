@@ -24,10 +24,8 @@
 
 namespace StarFish {
 HTMLUnknownElement::HTMLUnknownElement(Document* document,
-                                       AtomicString localName)
-    : HTMLElement(document)
-    , m_name(document->starFish()->staticStrings()->m_xhtmlNamespaceURI,
-             localName)
+                                       const QualifiedName& qname)
+    : HTMLElement(document, qname)
 {
 }
 

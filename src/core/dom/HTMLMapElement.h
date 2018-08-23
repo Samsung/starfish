@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLMapElement : public HTMLElement {
 public:
-    HTMLMapElement(Document* document)
-        : HTMLElement(document)
+    HTMLMapElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
         , m_areas(nullptr)
     {
     }
@@ -38,9 +38,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLMapElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     HTMLCollection* areas();
 

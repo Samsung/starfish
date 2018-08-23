@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLParamElement : public HTMLElement {
 public:
-    HTMLParamElement(Document* document)
-        : HTMLElement(document)
+    HTMLParamElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 
@@ -37,9 +37,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLParamElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 };
 }
 

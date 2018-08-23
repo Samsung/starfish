@@ -24,11 +24,6 @@
 #include "core/dom/HTMLOListElement.h"
 
 namespace StarFish {
-QualifiedName HTMLOListElement::name()
-{
-    return starFish()->staticStrings()->m_olTagName;
-}
-
 void HTMLOListElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* value, bool attributeCreated,
                                            bool attributeRemoved)
