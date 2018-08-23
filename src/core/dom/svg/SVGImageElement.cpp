@@ -42,11 +42,6 @@ void* SVGImageElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName SVGImageElement::name()
-{
-    return starFish()->staticStrings()->m_svgimageTagName;
-}
-
 class SVGImageDownloadClient : public ResourceClient {
 public:
     SVGImageDownloadClient(SVGImageElement* element, Resource* res)

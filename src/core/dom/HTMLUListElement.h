@@ -26,17 +26,14 @@ namespace StarFish {
 
 class HTMLUListElement : public HTMLListContainer {
 public:
-    HTMLUListElement(Document* document)
-        : HTMLListContainer(document)
+    HTMLUListElement(Document* document, const QualifiedName& qname)
+        : HTMLListContainer(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLUListElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     virtual void didAttributeChanged(QualifiedName name, String* old,
                                      String* value, bool attributeCreated,

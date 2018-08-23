@@ -26,11 +26,6 @@
 
 namespace StarFish {
 
-QualifiedName HTMLCanvasElement::name()
-{
-    return starFish()->staticStrings()->m_canvasTagName;
-}
-
 uint32_t HTMLCanvasElement::width()
 {
     Nullable<String*> width =

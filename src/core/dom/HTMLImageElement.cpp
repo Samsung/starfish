@@ -95,11 +95,6 @@ protected:
     HTMLImageElement* m_element;
 };
 
-QualifiedName HTMLImageElement::name()
-{
-    return starFish()->staticStrings()->m_imgTagName;
-}
-
 void HTMLImageElement::setSrc(String* src)
 {
     setAttribute(starFish()->staticStrings()->m_src, src);
@@ -244,25 +239,23 @@ void HTMLImageElement::loadImage(String* src)
 
 String* HTMLImageElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(
-        document()->starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLImageElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
-                     policy);
+        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
 
 String* HTMLImageElement::nameAttr()
 {
-    return getAttributeOrEmpty(document()->starFish()->staticStrings()->m_name);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
 }
 
 void HTMLImageElement::setNameAttr(String* name)
 {
-    setAttribute(document()->starFish()->staticStrings()->m_name, name);
+    setAttribute(starFish()->staticStrings()->m_name, name);
 }
 }

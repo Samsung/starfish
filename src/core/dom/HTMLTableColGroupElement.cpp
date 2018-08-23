@@ -34,9 +34,4 @@ void HTMLTableColGroupElement::styleForPresentationAttribute(
         additionalBorderRulesLeft(cssValues, "thin", "solid");
     }
 }
-
-QualifiedName HTMLTableColGroupElement::name()
-{
-    return starFish()->staticStrings()->m_colgroupTagName;
-}
 }

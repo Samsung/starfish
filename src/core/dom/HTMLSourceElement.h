@@ -27,17 +27,14 @@ namespace StarFish {
 
 class HTMLSourceElement : public HTMLElement {
 public:
-    HTMLSourceElement(Document* document)
-        : HTMLElement(document)
+    HTMLSourceElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLSourceElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 

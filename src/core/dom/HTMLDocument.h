@@ -57,7 +57,7 @@ public:
     virtual bool isHTMLDocument() const override;
 
     static Element* createHTMLElement(Document* document,
-                                      AtomicString localName);
+                                      const QualifiedName& qname);
 
     static bool isCaseSensitiveAttribute(Document* document,
                                          const QualifiedName& attributeName);

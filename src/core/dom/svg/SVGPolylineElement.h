@@ -26,16 +26,14 @@ namespace StarFish {
 
 class SVGPolylineElement : public SVGElement {
 public:
-    SVGPolylineElement(Document* document)
-        : SVGElement(document)
+    SVGPolylineElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGPolylineElement() const override;
-
-    virtual QualifiedName name() override;
 
     virtual bool needsGeometryAttributes() override
     {

@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLFieldSetElement : public HTMLFormControl {
 public:
-    HTMLFieldSetElement(Document* document)
-        : HTMLFormControl(document, false)
+    HTMLFieldSetElement(Document* document, const QualifiedName& qname)
+        : HTMLFormControl(document, qname, false)
     {
     }
 
@@ -38,8 +38,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isHTMLFieldSetElement() const override;
 
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
     virtual String* type() override;
 
     virtual bool isListedElement() override

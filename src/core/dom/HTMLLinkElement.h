@@ -32,8 +32,8 @@ class HTMLLinkElement : public HTMLElement {
     friend class StyleSheetDownloadClient;
 
 public:
-    HTMLLinkElement(Document* document)
-        : HTMLElement(document)
+    HTMLLinkElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
         , m_generatedSheet(nullptr)
         , m_styleSheetTextResource(nullptr)
         , m_relList(nullptr)
@@ -63,9 +63,6 @@ public:
 
     String* referrerPolicy();
     void setReferrerPolicy(String* policy);
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
     StyleSheet* sheet();

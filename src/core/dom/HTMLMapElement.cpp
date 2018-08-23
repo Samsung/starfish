@@ -38,11 +38,6 @@ void* HTMLMapElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName HTMLMapElement::name()
-{
-    return starFish()->staticStrings()->m_mapTagName;
-}
-
 HTMLCollection* HTMLMapElement::areas()
 {
     if (m_areas) {

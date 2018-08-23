@@ -54,11 +54,6 @@ void* HTMLLinkElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName HTMLLinkElement::name()
-{
-    return starFish()->staticStrings()->m_linkTagName;
-}
-
 String* HTMLLinkElement::href()
 {
     String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_href);
@@ -112,15 +107,13 @@ void HTMLLinkElement::setType(String* type)
 
 String* HTMLLinkElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(
-        document()->starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLLinkElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
-                     policy);
+        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
 

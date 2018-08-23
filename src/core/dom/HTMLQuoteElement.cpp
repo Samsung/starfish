@@ -23,9 +23,9 @@
 #include "core/dom/HTMLQuoteElement.h"
 
 namespace StarFish {
-HTMLQuoteElement::HTMLQuoteElement(Document* document, AtomicString name)
-    : HTMLElement(document)
-    , m_name(starFish()->staticStrings()->m_xhtmlNamespaceURI, name)
+HTMLQuoteElement::HTMLQuoteElement(Document* document,
+                                   const QualifiedName& qname)
+    : HTMLElement(document, qname)
 {
 }
 

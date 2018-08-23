@@ -86,7 +86,7 @@ public:
     String* placeholder();
 
 protected:
-    HTMLTextEditable(Document* document);
+    HTMLTextEditable(Document* document, const QualifiedName& qname);
 
     static inline void fillGCDescriptor(GC_word* desc)
     {

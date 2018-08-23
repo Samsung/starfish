@@ -96,10 +96,18 @@ static AttributeName properAttributeNameNS(Element* e, Nullable<String*> ns,
 String* Element::tagName()
 {
     // https://www.w3.org/TR/dom/#dom-element-tagname
-    if (isInHTMLNamespaceAndHTMLDocument(this)) {
-        return localName()->toASCIIUpper();
+    String* tagName = localName();
+    if (prefix().hasValue()) {
+        StringBuilder sb;
+        sb.appendString(prefix().getValue());
+        sb.appendChar(':');
+        sb.appendString(localName());
+        tagName = sb.finalize();
     }
-    return localName();
+    if (isInHTMLNamespaceAndHTMLDocument(this)) {
+        return tagName->toASCIIUpper();
+    }
+    return tagName;
 }
 
 Nullable<String*> Element::namespaceURI()
@@ -110,6 +118,11 @@ Nullable<String*> Element::namespaceURI()
     } else {
         return Nullable<String*>();
     }
+}
+
+QualifiedName Element::name()
+{
+    return m_name;
 }
 
 String* Element::nodeName()
@@ -1206,7 +1219,8 @@ void Element::setOuterHTML(String* text)
         // body as its local name,
         // The HTML namespace as its namespace, and
         // The context object's node document as its node document.
-        parent = new HTMLBodyElement(document());
+        parent = new HTMLBodyElement(
+            document(), starFish()->staticStrings()->m_bodyTagName);
     }
     // Let fragment be the result of invoking the fragment parsing algorithm
     // with the new value as markup, and parent as the context element.
@@ -1254,7 +1268,8 @@ void Element::insertAdjacentHTML(String* position, String* text)
         // body as its local name,
         // The HTML namespace as its namespace, and
         // The context object's node document as its node document.
-        context = new HTMLBodyElement(document());
+        context = new HTMLBodyElement(
+            document(), starFish()->staticStrings()->m_bodyTagName);
     }
 
     DocumentFragment* df = fragmentParsingAlgorithm(document(), text, context);
@@ -1344,11 +1359,9 @@ Node* Element::clone()
 {
     Element* newNode = nullptr;
     if (isHTMLElement()) {
-        newNode = HTMLDocument::createHTMLElement(document(),
-                                                  name().localNameAtomic());
+        newNode = HTMLDocument::createHTMLElement(document(), name());
     } else if (isSVGElement()) {
-        newNode = HTMLDocument::createHTMLElement(document(),
-                                                  name().localNameAtomic());
+        newNode = HTMLDocument::createHTMLElement(document(), name());
     } else {
         newNode = new NamedElement(document(), name());
     }

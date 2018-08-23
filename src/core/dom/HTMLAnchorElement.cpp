@@ -50,11 +50,6 @@ void* HTMLAnchorElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName HTMLAnchorElement::name()
-{
-    return starFish()->staticStrings()->m_aTagName;
-}
-
 void HTMLAnchorElement::didAttributeChanged(QualifiedName name, String* old,
                                             String* val, bool attributeCreated,
                                             bool attributeRemoved)
@@ -87,15 +82,13 @@ DOMTokenList* HTMLAnchorElement::relList()
 
 String* HTMLAnchorElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(
-        document()->starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLAnchorElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
-                     policy);
+        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
 

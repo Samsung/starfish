@@ -26,16 +26,14 @@ namespace StarFish {
 
 class SVGScriptElement : public SVGElement {
 public:
-    SVGScriptElement(Document* document)
-        : SVGElement(document)
+    SVGScriptElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGScriptElement() const override;
-
-    virtual QualifiedName name() override;
 
 protected:
 };

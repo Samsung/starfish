@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLStyleElement : public HTMLElement {
 public:
-    HTMLStyleElement(Document* document)
-        : HTMLElement(document)
+    HTMLStyleElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
         , m_generatedSheet(nullptr)
         , m_loaded(false)
     {
@@ -39,9 +39,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLStyleElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     virtual bool disabled() override;
     void setDisabled(bool disabled);

@@ -26,8 +26,8 @@
 namespace StarFish {
 class HTMLTablePartElement : public HTMLElement {
 public:
-    HTMLTablePartElement(Document* document)
-        : HTMLElement(document)
+    HTMLTablePartElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 

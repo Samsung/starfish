@@ -20,6 +20,7 @@
 #ifndef __StarFishHTMLImageElement__
 #define __StarFishHTMLImageElement__
 
+#include "core/dom/Document.h"
 #include "core/dom/HTMLElement.h"
 
 namespace StarFish {
@@ -32,7 +33,13 @@ class HTMLImageElement : public HTMLElement {
 
 public:
     HTMLImageElement(Document* document)
-        : HTMLElement(document)
+        : HTMLImageElement(document,
+                           document->starFish()->staticStrings()->m_imgTagName)
+    {
+    }
+
+    HTMLImageElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
         , m_imageResource(nullptr)
         , m_imageData(nullptr)
     {
@@ -57,9 +64,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLImageElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     /* HTMLImageElement related */
 

@@ -26,13 +26,10 @@ namespace StarFish {
 
 class HTMLTDElement : public HTMLTableCellElement {
 public:
-    HTMLTDElement(Document* document)
-        : HTMLTableCellElement(document)
+    HTMLTDElement(Document* document, const QualifiedName& qname)
+        : HTMLTableCellElement(document, qname)
     {
     }
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 };
 }
 

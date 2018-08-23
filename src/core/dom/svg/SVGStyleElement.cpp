@@ -48,11 +48,6 @@ void* SVGStyleElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName SVGStyleElement::name()
-{
-    return starFish()->staticStrings()->m_svgstyleTagName;
-}
-
 bool isCSSType(const char* type);
 
 String* SVGStyleElement::type()

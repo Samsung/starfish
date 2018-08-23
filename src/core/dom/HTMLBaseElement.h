@@ -26,17 +26,14 @@ namespace StarFish {
 
 class HTMLBaseElement : public HTMLElement {
 public:
-    HTMLBaseElement(Document* document)
-        : HTMLElement(document)
+    HTMLBaseElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLBaseElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     String* href() const;
     void setHref(String* href);

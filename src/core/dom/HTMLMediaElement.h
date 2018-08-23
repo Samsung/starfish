@@ -222,7 +222,7 @@ public:
         PRELOAD_AUTOMATIC,
     };
 
-    HTMLMediaElement(Document* document);
+    HTMLMediaElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

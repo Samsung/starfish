@@ -26,17 +26,14 @@ namespace StarFish {
 
 class HTMLTitleElement : public HTMLElement {
 public:
-    HTMLTitleElement(Document* document)
-        : HTMLElement(document)
+    HTMLTitleElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLTitleElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     String* text();
     void setText(String* title);

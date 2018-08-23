@@ -59,9 +59,4 @@ void HTMLTableCaptionElement::styleForPresentationAttribute(
         }
     }
 }
-
-QualifiedName HTMLTableCaptionElement::name()
-{
-    return starFish()->staticStrings()->m_captionTagName;
-}
 }

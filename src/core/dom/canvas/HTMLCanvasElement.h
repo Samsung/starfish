@@ -46,8 +46,8 @@ public:
         CanvasContextModeWebGL
     };
 
-    HTMLCanvasElement(Document* document)
-        : HTMLElement(document)
+    HTMLCanvasElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
         , m_renderingContext(nullptr)
         , m_contextMode(CanvasContextModeNone)
     {
@@ -56,7 +56,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLCanvasElement() const;
-    virtual QualifiedName name();
 
     uint32_t width();
     void setWidth(uint32_t value);

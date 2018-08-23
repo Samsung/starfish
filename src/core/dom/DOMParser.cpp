@@ -72,8 +72,8 @@ static void buildDocumentFromXML(
         }
 
         if (namespaceURI == sf->staticStrings()->m_xhtmlNamespaceURI) {
-            newNode =
-                HTMLDocument::createHTMLElement(parent->document(), localName);
+            newNode = HTMLDocument::createHTMLElement(
+                parent->document(), QualifiedName(namespaceURI, localName));
         } else if (namespaceURI == sf->staticStrings()->m_svgNamespaceURI) {
             newNode =
                 SVGDocument::createSVGElement(parent->document(), localName);

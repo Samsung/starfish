@@ -30,7 +30,7 @@ class HTMLInputElement : public HTMLTextEditable {
     friend class FrameInputBox;
 
 public:
-    HTMLInputElement(Document* document);
+    HTMLInputElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -43,9 +43,6 @@ public:
                                      String* value, bool attributeCreated,
                                      bool attributeRemoved) override;
     bool isPlaceholderVisible() override;
-
-    // 4.4 Interface Node
-    virtual QualifiedName name() override;
 
     // 4.10 Interface Input
     String* type() override;

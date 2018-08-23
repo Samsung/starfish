@@ -52,20 +52,13 @@ DOMTokenList* HTMLAreaElement::relList()
 
 String* HTMLAreaElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(
-        document()->starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLAreaElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
-                     policy);
+        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
     }
-}
-
-QualifiedName HTMLAreaElement::name()
-{
-    return starFish()->staticStrings()->m_areaTagName;
 }
 }

@@ -39,7 +39,7 @@ public:
     virtual bool isSVGDocument() const override;
 
     static Element* createSVGElement(Document* document,
-                                     AtomicString localName);
+                                     const QualifiedName& localName);
 
 protected:
 };

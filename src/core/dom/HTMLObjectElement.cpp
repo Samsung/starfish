@@ -40,11 +40,6 @@ void* HTMLObjectElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName HTMLObjectElement::name()
-{
-    return starFish()->staticStrings()->m_objectTagName;
-}
-
 void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old,
                                             String* value,
                                             bool attributeCreated,

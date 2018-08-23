@@ -368,11 +368,6 @@ void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
     executeScript();
 }
 
-QualifiedName HTMLScriptElement::name()
-{
-    return starFish()->staticStrings()->m_scriptTagName;
-}
-
 String* HTMLScriptElement::src()
 {
     String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_src);

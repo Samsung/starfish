@@ -21,6 +21,7 @@
 #ifndef __StarFishHTMLAudioElement__
 #define __StarFishHTMLAudioElement__
 
+#include "core/dom/Document.h"
 #include "core/dom/HTMLMediaElement.h"
 
 namespace StarFish {
@@ -28,12 +29,26 @@ namespace StarFish {
 class HTMLAudioElement : public HTMLMediaElement {
 public:
     HTMLAudioElement(Document* document)
-        : HTMLMediaElement(document)
+        : HTMLAudioElement(
+              document, document->starFish()->staticStrings()->m_audioTagName)
     {
     }
 
     HTMLAudioElement(Document* document, String* src)
-        : HTMLMediaElement(document)
+        : HTMLAudioElement(
+              document, document->starFish()->staticStrings()->m_audioTagName,
+              src)
+    {
+    }
+
+    HTMLAudioElement(Document* document, const QualifiedName& qname)
+        : HTMLMediaElement(document, qname)
+    {
+    }
+
+    HTMLAudioElement(Document* document, const QualifiedName& qname,
+                     String* src)
+        : HTMLMediaElement(document, qname)
     {
         setSrc(src);
     }
@@ -41,8 +56,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLAudioElement() const override;
-
-    virtual QualifiedName name() override;
 };
 }
 

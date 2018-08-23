@@ -98,124 +98,126 @@ void* HTMLDocument::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
+Element* HTMLDocument::createHTMLElement(Document* document,
+                                         const QualifiedName& qname)
 {
+    AtomicString name = qname.localNameAtomic();
     StaticStrings* str = document->starFish()->staticStrings();
     if (name == str->m_htmlTagName.localNameAtomic()) {
-        return new HTMLHtmlElement(document);
+        return new HTMLHtmlElement(document, qname);
     } else if (name == str->m_headTagName.localNameAtomic()) {
-        return new HTMLHeadElement(document);
+        return new HTMLHeadElement(document, qname);
     } else if (name == str->m_baseTagName.localNameAtomic()) {
-        return new HTMLBaseElement(document);
+        return new HTMLBaseElement(document, qname);
     } else if (name == str->m_styleTagName.localNameAtomic()) {
-        return new HTMLStyleElement(document);
+        return new HTMLStyleElement(document, qname);
     } else if (name == str->m_scriptTagName.localNameAtomic()) {
-        return new HTMLScriptElement(document);
+        return new HTMLScriptElement(document, qname);
     } else if (name == str->m_linkTagName.localNameAtomic()) {
-        return new HTMLLinkElement(document);
+        return new HTMLLinkElement(document, qname);
     } else if (name == str->m_metaTagName.localNameAtomic()) {
-        return new HTMLMetaElement(document);
+        return new HTMLMetaElement(document, qname);
     } else if (name == str->m_bodyTagName.localNameAtomic()) {
-        return new HTMLBodyElement(document);
+        return new HTMLBodyElement(document, qname);
     } else if (name == str->m_divTagName.localNameAtomic()) {
-        return new HTMLDivElement(document);
+        return new HTMLDivElement(document, qname);
     } else if (name == str->m_pTagName.localNameAtomic()) {
-        return new HTMLParagraphElement(document);
+        return new HTMLParagraphElement(document, qname);
     } else if (name == str->m_preTagName.localNameAtomic()) {
-        return new HTMLPreElement(document);
+        return new HTMLPreElement(document, qname);
     } else if (name == str->m_hrTagName.localNameAtomic()) {
-        return new HTMLHRElement(document);
+        return new HTMLHRElement(document, qname);
     } else if (name == str->m_spanTagName.localNameAtomic()) {
-        return new HTMLSpanElement(document);
+        return new HTMLSpanElement(document, qname);
     } else if (name == str->m_brTagName.localNameAtomic()) {
-        return new HTMLBRElement(document);
+        return new HTMLBRElement(document, qname);
     } else if (name == str->m_objectTagName.localNameAtomic()) {
-        return new HTMLObjectElement(document);
+        return new HTMLObjectElement(document, qname);
     } else if (name == str->m_imgTagName.localNameAtomic()) {
-        return new HTMLImageElement(document);
+        return new HTMLImageElement(document, qname);
     } else if (name == str->m_h1TagName.localNameAtomic() ||
                name == str->m_h2TagName.localNameAtomic() ||
                name == str->m_h3TagName.localNameAtomic() ||
                name == str->m_h4TagName.localNameAtomic() ||
                name == str->m_h5TagName.localNameAtomic() ||
                name == str->m_h6TagName.localNameAtomic()) {
-        return new HTMLHeadingElement(document, name);
+        return new HTMLHeadingElement(document, qname);
     } else if (name == str->m_liTagName.localNameAtomic()) {
-        return new HTMLLIElement(document);
+        return new HTMLLIElement(document, qname);
     } else if (name == str->m_ulTagName.localNameAtomic()) {
-        return new HTMLUListElement(document);
+        return new HTMLUListElement(document, qname);
     } else if (name == str->m_olTagName.localNameAtomic()) {
-        return new HTMLOListElement(document);
+        return new HTMLOListElement(document, qname);
     } else if (name == str->m_dlTagName.localNameAtomic()) {
-        return new HTMLDListElement(document);
+        return new HTMLDListElement(document, qname);
     } else if (name == str->m_tableTagName.localNameAtomic()) {
-        return new HTMLTableElement(document);
+        return new HTMLTableElement(document, qname);
     } else if (name == str->m_thTagName.localNameAtomic()) {
-        return new HTMLTHElement(document);
+        return new HTMLTHElement(document, qname);
     } else if (name == str->m_trTagName.localNameAtomic()) {
-        return new HTMLTableRowElement(document);
+        return new HTMLTableRowElement(document, qname);
     } else if (name == str->m_tdTagName.localNameAtomic()) {
-        return new HTMLTDElement(document);
+        return new HTMLTDElement(document, qname);
     } else if (name == str->m_captionTagName.localNameAtomic()) {
-        return new HTMLTableCaptionElement(document);
+        return new HTMLTableCaptionElement(document, qname);
     } else if (name == str->m_colgroupTagName.localNameAtomic()) {
-        return new HTMLTableColGroupElement(document);
+        return new HTMLTableColGroupElement(document, qname);
     } else if (name == str->m_colTagName.localNameAtomic()) {
-        return new HTMLTableColElement(document);
+        return new HTMLTableColElement(document, qname);
     } else if (name == str->m_theadTagName.localNameAtomic()) {
-        return new HTMLTHeadElement(document);
+        return new HTMLTHeadElement(document, qname);
     } else if (name == str->m_tbodyTagName.localNameAtomic()) {
-        return new HTMLTBodyElement(document);
+        return new HTMLTBodyElement(document, qname);
     } else if (name == str->m_tfootTagName.localNameAtomic()) {
-        return new HTMLTFootElement(document);
+        return new HTMLTFootElement(document, qname);
     } else if (name == str->m_iframeTagName.localNameAtomic()) {
-        return new HTMLIFrameElement(document);
+        return new HTMLIFrameElement(document, qname);
     } else if (name == str->m_aTagName.localNameAtomic()) {
-        return new HTMLAnchorElement(document);
+        return new HTMLAnchorElement(document, qname);
     } else if (name == str->m_formTagName.localNameAtomic()) {
-        return new HTMLFormElement(document);
+        return new HTMLFormElement(document, qname);
     } else if (name == str->m_inputTagName.localNameAtomic()) {
-        return new HTMLInputElement(document);
+        return new HTMLInputElement(document, qname);
     } else if (name == str->m_labelTagName.localNameAtomic()) {
-        return new HTMLLabelElement(document);
+        return new HTMLLabelElement(document, qname);
     } else if (name == str->m_titleTagName.localNameAtomic()) {
-        return new HTMLTitleElement(document);
+        return new HTMLTitleElement(document, qname);
     } else if (name == str->m_fontTagName.localNameAtomic()) {
-        return new HTMLFontElement(document);
+        return new HTMLFontElement(document, qname);
     } else if (name == str->m_fieldsetTagName.localNameAtomic()) {
-        return new HTMLFieldSetElement(document);
+        return new HTMLFieldSetElement(document, qname);
     } else if (name == str->m_legendTagName.localNameAtomic()) {
-        return new HTMLLegendElement(document);
+        return new HTMLLegendElement(document, qname);
     } else if (name == str->m_buttonTagName.localNameAtomic()) {
-        return new HTMLButtonElement(document);
+        return new HTMLButtonElement(document, qname);
     } else if (name == str->m_selectTagName.localNameAtomic()) {
-        return new HTMLSelectElement(document);
+        return new HTMLSelectElement(document, qname);
     } else if (name == str->m_textareaTagName.localNameAtomic()) {
-        return new HTMLTextAreaElement(document);
+        return new HTMLTextAreaElement(document, qname);
     } else if (name == str->m_optionTagName.localNameAtomic()) {
-        return new HTMLOptionElement(document);
+        return new HTMLOptionElement(document, qname, String::emptyString,
+                                     String::emptyString, false, false);
     } else if (name == str->m_optgroupTagName.localNameAtomic()) {
-        return new HTMLOptGroupElement(document);
+        return new HTMLOptGroupElement(document, qname);
     } else if (name == str->m_qTagName.localNameAtomic() ||
                name == str->m_blockquoteTagName.localNameAtomic()) {
-        return new HTMLQuoteElement(document, name);
+        return new HTMLQuoteElement(document, qname);
     } else if (name == str->m_delTagName.localNameAtomic() ||
                name == str->m_insTagName.localNameAtomic()) {
-        return new HTMLModElement(document, name);
+        return new HTMLModElement(document, qname);
     } else if (name == str->m_paramTagName.localNameAtomic()) {
-        return new HTMLParamElement(document);
+        return new HTMLParamElement(document, qname);
     } else if (name == str->m_mapTagName.localNameAtomic()) {
-        return new HTMLMapElement(document);
+        return new HTMLMapElement(document, qname);
     } else if (name == str->m_areaTagName.localNameAtomic()) {
-        return new HTMLAreaElement(document);
+        return new HTMLAreaElement(document, qname);
     } else if (name == str->m_outputTagName.localNameAtomic()) {
-        return new HTMLOutputElement(document);
+        return new HTMLOutputElement(document, qname);
     }
-#define DEFINE_KNOWN_ELEMENT(tagName)                               \
-    else if (name == str->m_##tagName##TagName.localNameAtomic())   \
-    {                                                               \
-        return new HTMLKnownElement(                                \
-            document, str->m_##tagName##TagName.localNameAtomic()); \
+#define DEFINE_KNOWN_ELEMENT(tagName)                             \
+    else if (name == str->m_##tagName##TagName.localNameAtomic()) \
+    {                                                             \
+        return new HTMLKnownElement(document, qname);             \
     }
     DEFINE_KNOWN_ELEMENT(center)
     DEFINE_KNOWN_ELEMENT(i)
@@ -245,32 +247,32 @@ Element* HTMLDocument::createHTMLElement(Document* document, AtomicString name)
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     else if (name == str->m_videoTagName.localNameAtomic())
     {
-        return new HTMLVideoElement(document);
+        return new HTMLVideoElement(document, qname);
     }
     else if (name == str->m_audioTagName.localNameAtomic())
     {
-        return new HTMLAudioElement(document);
+        return new HTMLAudioElement(document, qname);
     }
     else if (name == str->m_trackTagName.localNameAtomic())
     {
-        return new HTMLTrackElement(document);
+        return new HTMLTrackElement(document, qname);
     }
     else if (name == str->m_sourceTagName.localNameAtomic())
     {
-        return new HTMLSourceElement(document);
+        return new HTMLSourceElement(document, qname);
     }
 #endif
 #ifdef STARFISH_ENABLE_CANVAS
     else if (name == str->m_canvasTagName.localNameAtomic())
     {
-        return new HTMLCanvasElement(document);
+        return new HTMLCanvasElement(document, qname);
     }
 #endif
 
     auto s = name.string()->toUTF8NonGCString();
     STARFISH_LOG_INFO("HTMLDocument: invalid (or unsupported) element: %s\n",
                       s.data());
-    return new HTMLUnknownElement(document, name);
+    return new HTMLUnknownElement(document, qname);
 }
 
 static void createHtmlCaseInsensitiveAttributesSet(

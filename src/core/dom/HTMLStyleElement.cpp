@@ -59,11 +59,6 @@ bool isCSSType(const char* type)
     return false;
 }
 
-QualifiedName HTMLStyleElement::name()
-{
-    return starFish()->staticStrings()->m_styleTagName;
-}
-
 bool HTMLStyleElement::disabled()
 {
     if (!m_generatedSheet) {

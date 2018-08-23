@@ -23,11 +23,6 @@
 
 namespace StarFish {
 
-QualifiedName HTMLTitleElement::name()
-{
-    return starFish()->staticStrings()->m_titleTagName;
-}
-
 String* HTMLTitleElement::text()
 {
     Nullable<String*> value = textContent();

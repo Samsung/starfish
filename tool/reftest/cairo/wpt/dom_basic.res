@@ -255,7 +255,7 @@ http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/createHTMLD
 #http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_png.html
 #http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_txt.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-22.htm
-#http://10.113.111.47:8000/dom/nodes/Document-createElementNS.html
+http://10.113.111.47:8000/dom/nodes/Document-createElementNS.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-04.htm
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-07.htm
 #http://10.113.111.47:8000/dom/nodes/Document-importNode.html

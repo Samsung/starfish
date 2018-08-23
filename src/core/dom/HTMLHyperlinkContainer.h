@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLHyperlinkContainer : public HTMLElement {
 public:
-    HTMLHyperlinkContainer(Document* document)
-        : HTMLElement(document)
+    HTMLHyperlinkContainer(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 

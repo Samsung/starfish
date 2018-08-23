@@ -26,8 +26,8 @@ namespace StarFish {
 
 class SVGStyleElement : public SVGElement {
 public:
-    SVGStyleElement(Document* document)
-        : SVGElement(document)
+    SVGStyleElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
         , m_generatedSheet(nullptr)
         , m_loaded(false)
     {
@@ -36,8 +36,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGStyleElement() const override;
-
-    virtual QualifiedName name() override;
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

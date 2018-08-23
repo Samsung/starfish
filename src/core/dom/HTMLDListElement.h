@@ -26,17 +26,14 @@ namespace StarFish {
 
 class HTMLDListElement : public HTMLElement {
 public:
-    HTMLDListElement(Document* document)
-        : HTMLElement(document)
+    HTMLDListElement(Document* document, const QualifiedName& qname)
+        : HTMLElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLDListElement() const override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 };
 }
 

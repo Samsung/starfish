@@ -26,16 +26,14 @@ namespace StarFish {
 
 class SVGPathElement : public SVGElement {
 public:
-    SVGPathElement(Document* document)
-        : SVGElement(document)
+    SVGPathElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGPathElement() const override;
-
-    virtual QualifiedName name() override;
 
     virtual bool needsGeometryAttributes() override
     {

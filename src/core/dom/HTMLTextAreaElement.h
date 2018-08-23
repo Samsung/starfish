@@ -26,7 +26,7 @@ namespace StarFish {
 
 class HTMLTextAreaElement : public HTMLTextEditable {
 public:
-    HTMLTextAreaElement(Document* document);
+    HTMLTextAreaElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -43,7 +43,6 @@ public:
     bool isHTMLTextAreaElement() const override;
     bool isPlaceholderVisible() override;
 
-    QualifiedName name() override;
     Node* clone() override;
     String* type() override;
     String* value() override;

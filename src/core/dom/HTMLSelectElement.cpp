@@ -34,8 +34,9 @@
 
 namespace StarFish {
 
-HTMLSelectElement::HTMLSelectElement(Document* document)
-    : HTMLFormControl(document)
+HTMLSelectElement::HTMLSelectElement(Document* document,
+                                     const QualifiedName& qname)
+    : HTMLFormControl(document, qname)
     , m_selectedOptions(nullptr)
     , m_options(nullptr)
 {
@@ -55,11 +56,6 @@ void* HTMLSelectElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-}
-
-QualifiedName HTMLSelectElement::name()
-{
-    return starFish()->staticStrings()->m_selectTagName;
 }
 
 String* HTMLSelectElement::value()
@@ -219,7 +215,6 @@ unsigned HTMLSelectElement::length()
 void HTMLSelectElement::setLength(unsigned newLength)
 {
     unsigned currentLength = length();
-
     if (currentLength < newLength) {
         while (currentLength < newLength) {
             appendChild(new HTMLOptionElement(document()));

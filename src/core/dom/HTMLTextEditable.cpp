@@ -37,8 +37,9 @@ namespace StarFish {
 // 524288 is Chromium's
 static const int INITIAL_MAXLENGTH = 524288;
 
-HTMLTextEditable::HTMLTextEditable(Document* document)
-    : HTMLFormControl(document)
+HTMLTextEditable::HTMLTextEditable(Document* document,
+                                   const QualifiedName& qname)
+    : HTMLFormControl(document, qname)
     , m_dirtyValueFlag(false)
     , m_shouldDrawCaret(false)
     , m_caretBlinkingIntervalId(SIZE_MAX)

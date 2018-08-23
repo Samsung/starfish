@@ -25,11 +25,6 @@
 
 namespace StarFish {
 
-QualifiedName SVGPathElement::name()
-{
-    return starFish()->staticStrings()->m_svgpathTagName;
-}
-
 void SVGPathElement::didAttributeChanged(QualifiedName name, String* old,
                                          String* value, bool attributeCreated,
                                          bool attributeRemoved)

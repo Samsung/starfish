@@ -61,10 +61,11 @@ public:
 
 class Element : public Node {
 public:
-    Element(Document* document)
+    Element(Document* document, const QualifiedName& qname)
         : Node(document)
         , m_inlineStyle(nullptr)
         , m_tabIndex(0)
+        , m_name(qname)
         , m_id(AtomicString::emptyAtomicString())
     {
     }
@@ -381,6 +382,7 @@ protected:
 
     CSSStyleDeclaration* m_inlineStyle;
     int m_tabIndex;
+    QualifiedName m_name;
 
 private:
     AtomicString m_id;
@@ -391,9 +393,8 @@ private:
 // For elements other than html, xhtml, and svg elements
 class NamedElement : public Element {
 public:
-    NamedElement(Document* document, const QualifiedName& name)
-        : Element(document)
-        , m_name(name)
+    NamedElement(Document* document, const QualifiedName& qname)
+        : Element(document, qname)
     {
     }
 
@@ -401,19 +402,6 @@ public:
     {
         return m_name;
     }
-
-    virtual String* localName()
-    {
-        return m_name.localName();
-    }
-
-    virtual String* nodeName()
-    {
-        return m_name.localName();
-    }
-
-protected:
-    QualifiedName m_name;
 };
 }
 

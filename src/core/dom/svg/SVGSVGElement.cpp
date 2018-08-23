@@ -40,11 +40,6 @@ void* SVGSVGElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName SVGSVGElement::name()
-{
-    return starFish()->staticStrings()->m_svgsvgTagName;
-}
-
 void SVGSVGElement::didAttributeChanged(QualifiedName name, String* old,
                                         String* value, bool attributeCreated,
                                         bool attributeRemoved)

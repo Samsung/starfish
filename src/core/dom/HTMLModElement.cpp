@@ -23,9 +23,8 @@
 #include "core/dom/HTMLModElement.h"
 
 namespace StarFish {
-HTMLModElement::HTMLModElement(Document* document, AtomicString name)
-    : HTMLElement(document)
-    , m_name(starFish()->staticStrings()->m_xhtmlNamespaceURI, name)
+HTMLModElement::HTMLModElement(Document* document, const QualifiedName& qname)
+    : HTMLElement(document, qname)
 {
 }
 

@@ -26,16 +26,14 @@ namespace StarFish {
 
 class SVGPolygonElement : public SVGElement {
 public:
-    SVGPolygonElement(Document* document)
-        : SVGElement(document)
+    SVGPolygonElement(Document* document, const QualifiedName& qname)
+        : SVGElement(document, qname)
     {
     }
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isSVGPolygonElement() const override;
-
-    virtual QualifiedName name() override;
 
     virtual bool needsGeometryAttributes() override
     {

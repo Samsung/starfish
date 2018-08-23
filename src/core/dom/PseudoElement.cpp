@@ -34,11 +34,9 @@ static inline bool isSpaceForFirstLetter(char32_t c)
 }
 
 QualifiedName PseudoElement::pseudoElementTagName(
-    StyleResolver::PseudoElementType pseudoId)
+    Document* document, StyleResolver::PseudoElementType pseudoId)
 {
-    STARFISH_ASSERT(document());
-
-    StarFish* sf = starFish();
+    StarFish* sf = document->starFish();
     switch (pseudoId) {
     case StyleResolver::PseudoElementType::PseudoElementAfter:
         return QualifiedName(AtomicString(), AtomicString::createAtomicString(

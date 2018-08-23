@@ -132,7 +132,8 @@ public:
     virtual bool isResettableElement() = 0;
 
 protected:
-    HTMLFormControl(Document* document, bool supportTabIndex = true);
+    HTMLFormControl(Document* document, const QualifiedName& qname,
+                    bool supportTabIndex = true);
     void fireSubmitEvent();
 
     virtual void fireEvent(QualifiedName& type, bool bubbles, bool cancelable);
@@ -160,7 +161,7 @@ private:
 
 class HTMLFormElement : public HTMLFormControl {
 public:
-    HTMLFormElement(Document* document);
+    HTMLFormElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -168,9 +169,6 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLFormElement() const override;
-
-    // 4.4 Interface Node
-    virtual QualifiedName name() override;
 
     // 4.10 Interface Form
     String* action();

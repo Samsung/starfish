@@ -29,21 +29,35 @@
 namespace StarFish {
 
 HTMLOptionElement::HTMLOptionElement(Document* document)
-    : HTMLOptionElement(document, String::emptyString, String::emptyString,
-                        false)
+    : HTMLOptionElement(document,
+                        document->starFish()->staticStrings()->m_optionTagName,
+                        String::emptyString, String::emptyString, false, false)
 {
 }
 
 HTMLOptionElement::HTMLOptionElement(Document* document, String* text,
                                      String* value, bool defaultSelected)
-    : HTMLOptionElement(document, text, value, false, false)
+    : HTMLOptionElement(document,
+                        document->starFish()->staticStrings()->m_optionTagName,
+                        text, value, defaultSelected, false)
 {
 }
 
 HTMLOptionElement::HTMLOptionElement(Document* document, String* text,
                                      String* value, bool defaultSelected,
                                      bool selected)
-    : HTMLFormControl(document)
+    : HTMLOptionElement(document,
+                        document->starFish()->staticStrings()->m_optionTagName,
+                        text, value, defaultSelected, selected)
+{
+}
+
+HTMLOptionElement::HTMLOptionElement(Document* document,
+                                     const QualifiedName& qname, String* text,
+                                     String* value, bool defaultSelected,
+                                     bool selected)
+
+    : HTMLFormControl(document, qname)
     , m_dirtiness(false)
     , m_selectedness(false)
 {
@@ -75,11 +89,6 @@ void* HTMLOptionElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-}
-
-QualifiedName HTMLOptionElement::name()
-{
-    return starFish()->staticStrings()->m_optionTagName;
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-selected

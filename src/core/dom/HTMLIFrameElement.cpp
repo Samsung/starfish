@@ -41,18 +41,14 @@ void* HTMLIFrameElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-HTMLIFrameElement::HTMLIFrameElement(Document* document)
-    : HTMLElement(document)
+HTMLIFrameElement::HTMLIFrameElement(Document* document,
+                                     const QualifiedName& qname)
+    : HTMLElement(document, qname)
     , m_browsingContext(nullptr)
     , m_historyManager(nullptr)
 {
     m_tabIndexWasSetExplicitly = true;
     m_tabIndex = 0;
-}
-
-QualifiedName HTMLIFrameElement::name()
-{
-    return starFish()->staticStrings()->m_iframeTagName;
 }
 
 void HTMLIFrameElement::setSrc(String* src)
@@ -197,15 +193,13 @@ Window* HTMLIFrameElement::contentWindow() const
 
 String* HTMLIFrameElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(
-        document()->starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLIFrameElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(document()->starFish()->staticStrings()->m_referrerpolicy,
-                     policy);
+        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
 

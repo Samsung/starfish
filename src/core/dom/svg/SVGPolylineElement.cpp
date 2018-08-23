@@ -24,11 +24,6 @@
 
 namespace StarFish {
 
-QualifiedName SVGPolylineElement::name()
-{
-    return starFish()->staticStrings()->m_svgpolylineTagName;
-}
-
 void SVGPolylineElement::didAttributeChanged(QualifiedName name, String* old,
                                              String* value,
                                              bool attributeCreated,

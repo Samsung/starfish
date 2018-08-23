@@ -37,11 +37,6 @@ void* HTMLFontElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName HTMLFontElement::name()
-{
-    return starFish()->staticStrings()->m_fontTagName;
-}
-
 void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
                                           String* value, bool attributeCreated,
                                           bool attributeRemoved)

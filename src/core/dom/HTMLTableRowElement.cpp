@@ -43,11 +43,6 @@ void* HTMLTableRowElement::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-QualifiedName HTMLTableRowElement::name()
-{
-    return starFish()->staticStrings()->m_trTagName;
-}
-
 void HTMLTableRowElement::didAttributeChanged(QualifiedName name, String* old,
                                               String* value,
                                               bool attributeCreated,
@@ -177,7 +172,8 @@ HTMLTableCellElement* HTMLTableRowElement::insertCell(int32_t index)
         throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
     }
 
-    HTMLTDElement* cell = new HTMLTDElement(document());
+    HTMLTDElement* cell =
+        new HTMLTDElement(document(), starFish()->staticStrings()->m_tdTagName);
     if (index == -1 || static_cast<size_t>(index) == cells->length()) {
         appendChild(cell);
     } else {

@@ -26,10 +26,7 @@ namespace StarFish {
 
 class HTMLElement : public Element {
 public:
-    HTMLElement(Document* document)
-        : Element(document)
-    {
-    }
+    HTMLElement(Document* document, const QualifiedName& qname);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -37,6 +34,12 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isHTMLElement() const override;
+
+    /* 4.4 Interface Node */
+    virtual QualifiedName name() override
+    {
+        return m_name;
+    }
 
     /* Other methods (not in DOM API) */
 
@@ -181,19 +184,10 @@ protected:
 
 class HTMLKnownElement : public HTMLElement {
 public:
-    HTMLKnownElement(Document* document, AtomicString localName);
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override
-    {
-        return m_name;
-    }
+    HTMLKnownElement(Document* document, const QualifiedName& localName);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
-
-protected:
-    QualifiedName m_name;
 };
 }
 

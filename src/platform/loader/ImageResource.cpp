@@ -38,7 +38,8 @@ namespace StarFish {
 class MockHTMLIFrameElement : public HTMLIFrameElement {
 public:
     MockHTMLIFrameElement(Document* document, ImageResource* resource)
-        : HTMLIFrameElement(document)
+        : HTMLIFrameElement(
+              document, document->starFish()->staticStrings()->m_iframeTagName)
         , m_resource(resource)
     {
     }

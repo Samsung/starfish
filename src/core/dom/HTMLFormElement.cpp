@@ -116,8 +116,8 @@ String* FormSubmitData::toString()
     return b.finalize();
 }
 
-HTMLFormElement::HTMLFormElement(Document* document)
-    : HTMLFormControl(document, false)
+HTMLFormElement::HTMLFormElement(Document* document, const QualifiedName& qname)
+    : HTMLFormControl(document, qname, false)
     , m_elements(nullptr)
     , m_plannedNavigationTaskId((size_t)-1)
     , m_isLockedForReset(false)
@@ -125,8 +125,9 @@ HTMLFormElement::HTMLFormElement(Document* document)
     setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 
-HTMLFormControl::HTMLFormControl(Document* document, bool supportTabIndex)
-    : HTMLElement(document)
+HTMLFormControl::HTMLFormControl(Document* document, const QualifiedName& qname,
+                                 bool supportTabIndex)
+    : HTMLElement(document, qname)
     , m_value(String::emptyString)
     , m_supportTabIndex(supportTabIndex)
     , m_labels(nullptr)
@@ -540,11 +541,6 @@ void* HTMLFormElement::operator new(size_t size)
         typeInited = true;
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
-}
-
-QualifiedName HTMLFormElement::name()
-{
-    return starFish()->staticStrings()->m_formTagName;
 }
 
 String* HTMLFormElement::enctype()

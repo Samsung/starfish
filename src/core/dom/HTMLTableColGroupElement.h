@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLTableColGroupElement : public HTMLTableColElement {
 public:
-    HTMLTableColGroupElement(Document* document)
-        : HTMLTableColElement(document)
+    HTMLTableColGroupElement(Document* document, const QualifiedName& qname)
+        : HTMLTableColElement(document, qname)
     {
     }
 
@@ -38,9 +38,6 @@ public:
     {
         return true;
     }
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 };
 }
 

@@ -22,9 +22,4 @@
 #include "core/dom/HTMLDivElement.h"
 
 namespace StarFish {
-
-QualifiedName HTMLDivElement::name()
-{
-    return starFish()->staticStrings()->m_divTagName;
-}
 }

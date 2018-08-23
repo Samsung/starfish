@@ -26,8 +26,8 @@ namespace StarFish {
 
 class HTMLTableColElement : public HTMLTablePartElement {
 public:
-    HTMLTableColElement(Document* document)
-        : HTMLTablePartElement(document)
+    HTMLTableColElement(Document* document, const QualifiedName& qname)
+        : HTMLTablePartElement(document, qname)
     {
     }
 
@@ -41,9 +41,6 @@ public:
 
     virtual void styleForPresentationAttribute(
         CSSStyleValuePairVectorHolder& cssValues) override;
-
-    /* 4.4 Interface Node */
-    virtual QualifiedName name() override;
 
     /* Other methods (not in DOM API) */
 
