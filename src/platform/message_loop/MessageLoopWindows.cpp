@@ -178,6 +178,11 @@ void MessageLoop::run()
     }
 }
 
+void MessageLoop::stop()
+{
+    PostMessage(NULL, WM_QUIT, 0, 0);
+}
+
 size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
                              void* data)
 {

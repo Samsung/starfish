@@ -774,9 +774,11 @@ NodeList* Window::ensureFrames()
 }
 
 #ifdef STARFISH_ENABLE_TEST
-void Window::screenShot(std::string filePath)
+void Window::screenShot(std::string filePath, void (*callback)(void*),
+                        void* data)
 {
-    browsingContext()->starFish()->platformWindow()->screenShot(filePath);
+    browsingContext()->starFish()->platformWindow()->screenShot(filePath,
+                                                                callback, data);
 }
 #endif
 

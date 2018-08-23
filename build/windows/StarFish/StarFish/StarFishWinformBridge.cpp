@@ -29,28 +29,95 @@
 #include "LWEWebView.h"
 #include <fontconfig/fontconfig.h>
 
+#include <GL/glew.h>
+#include <GL/wglew.h>
+#pragma comment(lib, "Opengl32.lib")
+
 namespace StarFish {
 
 __declspec(thread) extern bool g_postLogMessageToThreadMessageQueue;
 
-struct WinfomRenderResult {
-    uint32_t x;
-    uint32_t y;
-    uint32_t width;
-    uint32_t height;
-};
-__declspec(thread) WinfomRenderResult* g_renderResult;
-
-extern "C" size_t STARFISH_EXPORT __stdcall getRenderResult(size_t webViewInstance)
+static void initError()
 {
-    LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
-    auto ret = g_renderResult;
-    g_renderResult = nullptr;
-    return (size_t)ret;
+    MessageBoxA(NULL, "GLEW is not initialized!", "", 0);
+    PostQuitMessage(-1);
+}
+
+HDC g_hDC;
+HGLRC g_hrc;
+
+extern "C" void __declspec(dllexport) __stdcall initGL(int* hWnd)
+{
+    // TODO add ReleaseDC
+    HDC hDC = GetDC((HWND)hWnd);
+    g_hDC = hDC;
+    PIXELFORMATDESCRIPTOR pfd;
+    memset(&pfd, 0, sizeof(PIXELFORMATDESCRIPTOR));
+    pfd.nSize = sizeof(PIXELFORMATDESCRIPTOR);
+    pfd.nVersion = 1;
+    pfd.dwFlags = PFD_DOUBLEBUFFER | PFD_SUPPORT_OPENGL | PFD_DRAW_TO_WINDOW;
+    pfd.iPixelType = PFD_TYPE_RGBA;
+    pfd.cColorBits = 32;
+    pfd.cDepthBits = 0;
+    pfd.cStencilBits = 1;
+    pfd.iLayerType = PFD_OVERLAY_PLANE;
+
+    int nPixelFormat = ChoosePixelFormat((HDC)hDC, &pfd);
+
+    if (nPixelFormat == 0)
+        initError();
+
+    BOOL bResult = SetPixelFormat((HDC)hDC, nPixelFormat, &pfd);
+
+    if (!bResult)
+        initError();
+
+    HGLRC tempContext = wglCreateContext((HDC)hDC);
+    wglMakeCurrent((HDC)hDC, tempContext);
+
+    GLenum err = glewInit();
+    if (GLEW_OK != err) {
+        initError();
+    }
+
+    int attribs[] = { WGL_CONTEXT_MAJOR_VERSION_ARB,
+                      3,
+                      WGL_CONTEXT_MINOR_VERSION_ARB,
+                      1,
+                      WGL_CONTEXT_FLAGS_ARB,
+                      0,
+                      0 };
+
+    if (wglewIsSupported("WGL_ARB_create_context") == 1) {
+        g_hrc = wglCreateContextAttribsARB((HDC)hDC, 0, attribs);
+        wglMakeCurrent(NULL, NULL);
+        wglDeleteContext(tempContext);
+        wglMakeCurrent((HDC)hDC, g_hrc);
+    } else { // It's not possible to make a GL 3.x context. Use the old style
+             // context (GL 2.1 and before)
+        g_hrc = tempContext;
+    }
+
+    // Checking GL version
+    const GLubyte* GLVersionString = glGetString(GL_VERSION);
+
+    // Or better yet, use the GL3 way to get the version number
+    int OpenGLVersion[2];
+    glGetIntegerv(GL_MAJOR_VERSION, &OpenGLVersion[0]);
+    glGetIntegerv(GL_MINOR_VERSION, &OpenGLVersion[1]);
+
+    if (OpenGLVersion[0] < 3) {
+        initError();
+    }
+
+    if (!g_hrc)
+        initError();
+
+    wglMakeCurrent(NULL, NULL);
 }
 
 extern "C" size_t STARFISH_EXPORT __stdcall createWebViewInstance(
-    uint32_t initialWidth, uint32_t initialHeight, void* initialBuffer, uint32_t initialBufferStride)
+    uint32_t initialWidth, uint32_t initialHeight)
 {
     FcInitLoadConfig();
     g_postLogMessageToThreadMessageQueue = true;
@@ -61,20 +128,21 @@ extern "C" size_t STARFISH_EXPORT __stdcall createWebViewInstance(
     std::string cookieStorage = getWindowsTempDir();
     cookieStorage += "\\StarFishLocalCookie.txt";
 
-    LWE::WebContainer* wv = LWE::WebContainer::Create(initialBuffer, initialWidth, initialHeight, initialBufferStride, 1, "ko-KR", "Asia/Seoul", localStorage.data(), cookieStorage.data(), "");
-    wv->RegisterOnPageStartedHandler([](LWE::WebContainer* wv, const std::string& url) {
-        void* buffer = LocalAlloc(LMEM_FIXED, url.size() + 1);
-        memcpy(buffer, url.data(), url.size());
-        PostMessage(NULL, 0x0408, (WPARAM)buffer, url.size());
-    });
-    wv->RegisterOnRenderedHandler([](LWE::WebContainer* wv, const LWE::WebContainer::RenderResult& result) {
-        WinfomRenderResult* r = new (LocalAlloc(LMEM_FIXED, sizeof (WinfomRenderResult))) WinfomRenderResult();
-        r->x = result.updatedX;
-        r->y = result.updatedY;
-        r->width = result.updatedWidth;
-        r->height = result.updatedHeight;
-        g_renderResult = r;
-    });
+    LWE::WebContainer* wv = LWE::WebContainer::CreateGL(
+        initialWidth, initialHeight, 
+        [](LWE::WebContainer*) { 
+        wglMakeCurrent(g_hDC, g_hrc);
+    },
+        [](LWE::WebContainer*) { 
+        SwapBuffers(g_hDC);
+    }, 1, "ko-KR",
+        "Asia/Seoul", localStorage.data(), cookieStorage.data(), "");
+    wv->RegisterOnPageStartedHandler(
+        [](LWE::WebContainer* wv, const std::string& url) {
+            void* buffer = LocalAlloc(LMEM_FIXED, url.size() + 1);
+            memcpy(buffer, url.data(), url.size());
+            PostMessage(NULL, 0x0408, (WPARAM)buffer, url.size());
+        });
     return (size_t)wv;
 }
 
@@ -88,8 +156,8 @@ extern "C" void STARFISH_EXPORT __stdcall loadURL(size_t webViewInstance,
 }
 
 extern "C" void STARFISH_EXPORT __stdcall setProxyURL(size_t webViewInstance,
-    size_t utf8URL,
-    uint32_t urlLength)
+                                                      size_t utf8URL,
+                                                      uint32_t urlLength)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
     auto s = wv->GetSettings();
@@ -98,7 +166,6 @@ extern "C" void STARFISH_EXPORT __stdcall setProxyURL(size_t webViewInstance,
     wv->SetSettings(s);
 }
 
-void processMessage(MessageLoop* self, const MSG& message);
 inline StarFish* fetchInstance(LWE::WebContainer* wv)
 {
     static_assert(sizeof(LWE::WebContainer) == sizeof(void*));
@@ -106,25 +173,25 @@ inline StarFish* fetchInstance(LWE::WebContainer* wv)
     return ((StarFish*)*p);
 }
 
-extern "C" void STARFISH_EXPORT __stdcall giveMessage(size_t webViewInstance,
-                                                      MSG msg)
+extern "C" void STARFISH_EXPORT __stdcall startMessageLoop(
+    size_t webViewInstance)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
-    processMessage(fetchInstance(wv)->messageLoop(), msg);
+    wv->RunMessageLoop();
 }
 
-extern "C" void STARFISH_EXPORT __stdcall updateDrawingBufferAddress(
-    size_t webViewInstance, uint32_t w, uint32_t h, void* buffer, uint32_t stride)
+extern "C" void STARFISH_EXPORT __stdcall stopMessageLoop(
+    size_t webViewInstance)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
-    wv->UpdateBuffer(buffer, w, h, stride);
+    wv->StopMessageLoop();
 }
 
 extern "C" void STARFISH_EXPORT __stdcall resizeWindow(size_t webViewInstance,
-                                                       uint32_t w, uint32_t h, void* buffer, uint32_t stride)
+                                                       uint32_t w, uint32_t h)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
-    wv->UpdateBuffer(buffer, w, h, stride);
+    wv->ResizeTo(w, h);
 }
 
 extern "C" void STARFISH_EXPORT __stdcall dispatchMouseDownEvent(
@@ -132,7 +199,7 @@ extern "C" void STARFISH_EXPORT __stdcall dispatchMouseDownEvent(
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
     wv->DispatchMouseDownEvent(MouseButtonValue::LeftButton,
-                  MouseButtonsValue::LeftButtonDown, x, y);
+                               MouseButtonsValue::LeftButtonDown, x, y);
 }
 
 extern "C" void STARFISH_EXPORT __stdcall dispatchMouseUpEvent(
@@ -140,7 +207,7 @@ extern "C" void STARFISH_EXPORT __stdcall dispatchMouseUpEvent(
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
     wv->DispatchMouseUpEvent(MouseButtonValue::NoButton,
-        MouseButtonsValue::NoButtonDown, x, y);
+                             MouseButtonsValue::NoButtonDown, x, y);
 }
 
 extern "C" void STARFISH_EXPORT __stdcall dispatchMouseMoveEvent(
@@ -149,10 +216,11 @@ extern "C" void STARFISH_EXPORT __stdcall dispatchMouseMoveEvent(
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
     wv->DispatchMouseMoveEvent(isLButtonPressed ? MouseButtonValue::LeftButton
-        : MouseButtonValue::NoButton,
-        isLButtonPressed
-        ? MouseButtonsValue::LeftButtonDown
-        : MouseButtonsValue::NoButtonDown, x, y);
+                                                : MouseButtonValue::NoButton,
+                               isLButtonPressed
+                                   ? MouseButtonsValue::LeftButtonDown
+                                   : MouseButtonsValue::NoButtonDown,
+                               x, y);
 }
 
 extern "C" void STARFISH_EXPORT __stdcall dispatchMouseWheelEvent(
@@ -162,7 +230,8 @@ extern "C" void STARFISH_EXPORT __stdcall dispatchMouseWheelEvent(
     wv->DispatchMouseWheelEvent(x, y, delta);
 }
 
-KeyValue virtualKeyCodeToKeyValue(uint32_t vKeyCode, uint32_t capsLockOrShiftPressed)
+KeyValue virtualKeyCodeToKeyValue(uint32_t vKeyCode,
+                                  uint32_t capsLockOrShiftPressed)
 {
     switch (vKeyCode) {
     case VK_LEFT:
@@ -195,42 +264,40 @@ extern "C" void STARFISH_EXPORT __stdcall dispatchKeyDownEvent(
     size_t webViewInstance, uint32_t keyCode, uint32_t capsLockOrShiftPressed)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
-    wv->DispatchKeyDownEvent(virtualKeyCodeToKeyValue(keyCode, capsLockOrShiftPressed));
+    wv->DispatchKeyDownEvent(
+        virtualKeyCodeToKeyValue(keyCode, capsLockOrShiftPressed));
 }
 
 extern "C" void STARFISH_EXPORT __stdcall dispatchKeyUpEvent(
     size_t webViewInstance, uint32_t keyCode, uint32_t capsLockOrShiftPressed)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
-    wv->DispatchKeyUpEvent(virtualKeyCodeToKeyValue(keyCode, capsLockOrShiftPressed));
+    wv->DispatchKeyUpEvent(
+        virtualKeyCodeToKeyValue(keyCode, capsLockOrShiftPressed));
 }
 
-extern "C" void STARFISH_EXPORT __stdcall dispatchCompositionStartEvent(size_t webViewInstance,
-    size_t utf8Str,
-    uint32_t strLength)
+extern "C" void STARFISH_EXPORT __stdcall dispatchCompositionStartEvent(
+    size_t webViewInstance, size_t utf8Str, uint32_t strLength)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
     wv->DispatchCompositionStartEvent(std::string((char*)utf8Str, strLength));
 }
 
-extern "C" void STARFISH_EXPORT __stdcall dispatchCompositionUpdateEvent(size_t webViewInstance,
-    size_t utf8Str,
-    uint32_t strLength)
+extern "C" void STARFISH_EXPORT __stdcall dispatchCompositionUpdateEvent(
+    size_t webViewInstance, size_t utf8Str, uint32_t strLength)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
     wv->DispatchCompositionUpdateEvent(std::string((char*)utf8Str, strLength));
 }
 
-extern "C" void STARFISH_EXPORT __stdcall dispatchCompositionEndEvent(size_t webViewInstance,
-    size_t utf8Str,
-    uint32_t strLength)
+extern "C" void STARFISH_EXPORT __stdcall dispatchCompositionEndEvent(
+    size_t webViewInstance, size_t utf8Str, uint32_t strLength)
 {
     LWE::WebContainer* wv = (LWE::WebContainer*)webViewInstance;
     wv->DispatchCompositionEndEvent(std::string((char*)utf8Str, strLength));
 }
 
-struct EvaluateJSResult
-{
+struct EvaluateJSResult {
     void* buf;
     size_t len;
 };

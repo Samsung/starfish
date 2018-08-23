@@ -338,7 +338,7 @@ public:
 
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
-    void screenShot(std::string filePath);
+    void screenShot(std::string filePath, void (*callback)(void*), void* data);
     void forceDisableOnloadCapture();
     void simulateClick(float x, float y);
     void simulateVisibilitychange(bool show);

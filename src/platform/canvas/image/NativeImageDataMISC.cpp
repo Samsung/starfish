@@ -645,7 +645,11 @@ private:
 
         // this function does not do any actual decoding
         if (FormatConverter->Initialize(FrameDecode,
+#ifdef PORT_PIXEL_ORDER_RGBA
+                                        GUID_WICPixelFormat32bppRGBA,
+#else
                                         GUID_WICPixelFormat32bppBGRA,
+#endif
                                         WICBitmapDitherTypeNone, nullptr, 0.0f,
                                         WICBitmapPaletteTypeCustom) != S_OK) {
             return false;

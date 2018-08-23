@@ -1321,6 +1321,12 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         canvas->translate(-minX, -minY);
         if (needsInitialClip) {
             deviceLayerClipRect = canvas->pixelSnappedClip(ctx.layerClipRect);
+        } else {
+            deviceLayerClipRect =
+                LayoutRect(0, 0, (float)m_rareData->m_buffer->bufferWidth() /
+                                     m_rareData->m_buffer->pixelRatio(),
+                           (float)m_rareData->m_buffer->bufferHeight() /
+                               m_rareData->m_buffer->pixelRatio());
         }
 
         if (needsInitialClip) {
@@ -1707,8 +1713,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 StackingContext* sCtx = *iter2;
                 compositor->save();
 
-                {
+                if (sCtx->needsGraphicsBuffer()) {
                     CompositorStateRestorer r(compositor, sCtx, m_owner);
+                    sCtx->compositeStackingContext(compositor);
+                } else {
                     sCtx->compositeStackingContext(compositor);
                 }
 
@@ -1732,8 +1740,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     StackingContext* sCtx = *iter2;
                     compositor->save();
 
-                    {
+                    if (sCtx->needsGraphicsBuffer()) {
                         CompositorStateRestorer r(compositor, sCtx, m_owner);
+                        sCtx->compositeStackingContext(compositor);
+                    } else {
                         sCtx->compositeStackingContext(compositor);
                     }
 

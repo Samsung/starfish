@@ -70,17 +70,15 @@ enum StarFishTestCompatibleMode {
 void addGCCollectionListener(void (*fn)(GC_EventType));
 
 // you must call close function
-// StarFish::StarFish function is NOT THREAD-SAFE
+// ctor of StarFish class is NOT THREAD-SAFE
 class StarFish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
-    friend class StarFishEnterer;
     friend class HTMLDocument; // m_caseInsensitiveAttrSet
 
 public:
-    StarFish(StarFishStartUpFlag flag, const char* locale,
-             const char* timezoneID, void* platformHandle, int w, int h, int x,
-             int y, float defaultFontSizeMultiplier, String* defaultFontName,
+    StarFish(const char* locale, const char* timezoneID, int w, int h,
+             float defaultFontSizeMultiplier, String* defaultFontName,
              const ScreenInfo& info, const char* localStorageFilePath,
              const char* cookieStoreFilePath,
              const char* httpCacheDirectorypath,
@@ -150,16 +148,6 @@ public:
     float defaultFontSizeMultiplier()
     {
         return m_defaultFontSizeMultiplier;
-    }
-
-    void* nativeHandle()
-    {
-        return m_nativeHandle;
-    }
-
-    bool shouldFitWindow()
-    {
-        return m_shouldFitWindow;
     }
 
     ScreenInfo& screenInfo()
@@ -268,29 +256,6 @@ public:
         return m_initialFontFamilyDatas;
     }
 
-#ifdef TIZEN_DEVICE_API
-    void setWidgetContext(const void* widgetContext)
-    {
-        m_widgetContext = widgetContext;
-    }
-
-    const void* widgetContext()
-    {
-        return m_widgetContext;
-    }
-#endif
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-    void enableUpdate()
-    {
-        m_updateFlag = true;
-    }
-
-    bool updateFlag()
-    {
-        return m_updateFlag;
-    }
-#endif
-
 #ifdef STARFISH_ENABLE_TEST
     void setTestCompatibleMode(StarFishTestCompatibleMode mode)
     {
@@ -302,44 +267,6 @@ public:
         return (StarFishTestCompatibleMode)m_testCompatibleMode;
     }
 #endif
-    void registerWebViewHandler(const std::string& handlerName,
-                                std::function<void(String*, int)> handler);
-    void registerWebViewHandler(const std::string& handlerName,
-                                std::function<void(void*)> handler);
-    bool containsWebViewHandler(const std::string& handlerName);
-    void callWebViewHandler(const std::string& handlerName, String* url,
-                            int param = 0);
-    void callWebViewHandler(const std::string& handlerName, void* data);
-
-    void setLWEWebView(void* webView)
-    {
-        m_lweWebView = webView;
-    }
-    void* LWEWebView()
-    {
-        return m_lweWebView;
-    }
-    void setPos(int x, int y)
-    {
-        m_posX = x;
-        m_posY = y;
-    }
-    int posX()
-    {
-        return m_posX;
-    }
-    int posY()
-    {
-        return m_posY;
-    }
-    void setWebViewDelegator(void* delegator)
-    {
-        m_lweWebViewControlDelegator = delegator;
-    }
-    void* LWEWebViewDelegator()
-    {
-        return m_lweWebViewControlDelegator;
-    }
 
     void setProxyURL(const std::string& url)
     {
@@ -356,15 +283,16 @@ public:
         return m_parallelJobExecutorThreadPool;
     }
 
-protected:
-    void enter();
-    void exit();
+    void registerWebViewHandler(const std::string& handlerName,
+                                std::function<void(String*, int)> handler);
+    void registerWebViewHandler(const std::string& handlerName,
+                                std::function<void(void*)> handler);
+    bool containsWebViewHandler(const std::string& handlerName);
+    void callWebViewHandler(const std::string& handlerName, String* url,
+                            int param = 0);
+    void callWebViewHandler(const std::string& handlerName, void* data);
 
-    size_t posPrefix(std::string str, std::string prefix)
-    {
-        std::transform(str.begin(), str.end(), str.begin(), tolower);
-        return str.find(prefix);
-    }
+protected:
     StaticStrings* m_staticStrings;
     icu::Locale m_locale;
     std::string m_proxyURL;
@@ -376,8 +304,6 @@ protected:
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;
     Timer* m_timer;
-    void* m_nativeHandle;
-    bool m_shouldFitWindow;
     PlatformWindow* m_platformWindow;
     PlatformFontSelector* m_platformFontSelector;
     PlatformFontCache* m_platformFontCache;
@@ -389,13 +315,6 @@ protected:
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* m_inspector;
 #endif
-#ifdef TIZEN_DEVICE_API
-    const void* m_widgetContext;
-#endif
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-    bool m_updateFlag;
-#endif
-    size_t m_enterCount;
     ScreenInfo m_screenInfo;
     String* m_localStorageFilePath;
     String* m_customUserAgentString;
@@ -418,35 +337,15 @@ protected:
 #ifdef STARFISH_ENABLE_TEST
     unsigned int m_testCompatibleMode;
 #endif
+
     std::unordered_map<std::string, std::function<void(String*, int)>>
         m_lweWebViewHandlers;
     std::unordered_map<std::string, std::function<void(void*)>>
         m_lweWebViewHandlersGeneral;
-    void* m_lweWebView;
-    int m_posX;
-    int m_posY;
-    void* m_lweWebViewControlDelegator;
 
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);
     String* resolvePath(String* filePath);
-};
-
-class StarFishEnterer {
-public:
-    StarFishEnterer(StarFish* instance)
-        : m_instance(instance)
-    {
-        m_instance->enter();
-    }
-
-    ~StarFishEnterer()
-    {
-        m_instance->exit();
-    }
-
-protected:
-    StarFish* m_instance;
 };
 
 #ifdef STARFISH_ENABLE_TEST

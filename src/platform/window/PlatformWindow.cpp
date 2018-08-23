@@ -27,6 +27,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/Compositor.h"
 #include "platform/window/VirtualCursor.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/event/PlatformKeyEventData.h"
@@ -44,8 +45,7 @@ bool g_forceRendering = false;
 
 namespace StarFish {
 
-#if !defined(PORT_COMPOSITOR_BACKEND_EFL) && \
-    !defined(PORT_COMPOSITOR_BACKEND_GL)
+#if !defined(PORT_COMPOSITOR_BACKEND_GL)
 static size_t g_totalCanvasSurfaceSimpleSize;
 class CanvasSurfaceSimple : public CanvasSurface {
 public:
@@ -210,6 +210,8 @@ PlatformWindow::PlatformWindow(StarFish* starFish)
     : m_isClosed(false)
     , m_starFish(starFish)
     , m_webView(nullptr)
+    , m_renderingAnimator(SIZE_MAX)
+    , m_compostiorContext(nullptr)
     , m_idleCleanerTimerID(SIZE_MAX)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     , m_isButtonOfVirtualCursorClicked(false)
@@ -421,6 +423,23 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
 #undef ADJEST_VIRTUAL_CURSOR_POSITION
 #endif
 
+    if (kind == KeyEventKind::KeyEventDown ||
+        kind == KeyEventKind::KeyEventUp) {
+        bool active = kind == KeyEventKind::KeyEventDown;
+        if (data.keyValue() == KeyValue::ShiftLeftKey ||
+            data.keyValue() == KeyValue::ShiftRightKey) {
+            m_eventModifierData.setShiftKey(active);
+        } else if (data.keyValue() == KeyValue::AltLeftKey ||
+                   data.keyValue() == KeyValue::AltRightKey) {
+            m_eventModifierData.setAltKey(active);
+        } else if (data.keyValue() == KeyValue::ControlLeftKey ||
+                   data.keyValue() == KeyValue::ControlRightKey) {
+            m_eventModifierData.setCtrlKey(active);
+        } else if (data.keyValue() == KeyValue::MetaKey) {
+            m_eventModifierData.setMetaKey(active);
+        }
+    }
+
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->dispatchKeyEvent(kind, data);
     }
@@ -433,6 +452,52 @@ void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
         webView()->mainBrowsingContext()->dispatchCompositionEvent(kind, data,
                                                                    node);
     }
+}
+
+void PlatformWindow::clearResources()
+{
+    if (m_renderingAnimator != SIZE_MAX) {
+        starFish()->messageLoop()->removeIdler(m_renderingAnimator);
+        m_renderingAnimator = SIZE_MAX;
+    }
+    webView()->clearStackingContext();
+
+    Compositor::destroyCompositorContext(m_compostiorContext);
+    m_compostiorContext = nullptr;
+}
+
+void PlatformWindow::setNeedsRendering()
+{
+    PlatformWindow* wnd = this;
+
+    if (m_setNeedsRenderingCallback) {
+        m_setNeedsRenderingCallback(this);
+        return;
+    }
+
+    // refresh rendering animator if needs
+    if (wnd->m_renderingAnimator != SIZE_MAX) {
+        if (webView()->hasActiveAnimationExecutor()) {
+            return;
+        }
+        starFish()->messageLoop()->removeIdler(m_renderingAnimator);
+        wnd->m_renderingAnimator = SIZE_MAX;
+    }
+
+    wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
+        nullptr,
+        [](size_t handle, void* data) {
+            PlatformWindow* wnd = (PlatformWindow*)data;
+            if (!wnd->starFish()) {
+                wnd->m_renderingAnimator = SIZE_MAX;
+                return;
+            }
+            wnd->m_renderingAnimator = SIZE_MAX;
+            if (wnd->width() != 0 && wnd->height() != 0) {
+                wnd->rendering();
+            }
+        },
+        wnd);
 }
 
 RenderResult PlatformWindow::rendering()
@@ -558,7 +623,8 @@ void PlatformWindow::registerOrUpdateIdleTimeCleaner()
 }
 
 #ifdef STARFISH_ENABLE_TEST
-void PlatformWindow::screenShot(std::string filePath)
+void PlatformWindow::screenShot(std::string filePath, void (*callback)(void*),
+                                void* data)
 {
     bool oldNeedsPainting = webView()->m_needsPainting;
     bool oldOnLoad = g_fireOnloadEvent;
@@ -573,6 +639,8 @@ void PlatformWindow::screenShot(std::string filePath)
 
     webView()->m_needsPainting = oldNeedsPainting;
     webView()->setNeedsRendering();
+
+    callback(data);
 }
 #endif
 }

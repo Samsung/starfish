@@ -36,6 +36,11 @@ public:
     {
     }
 
+    void setEventModifierData(EventModifierData d)
+    {
+        m_eventModifierData = d;
+    }
+
     bool ctrlKey() const
     {
         return m_eventModifierData.ctrlKey();

@@ -132,8 +132,6 @@ void BrowsingContext::open(ResourceURL* url, HistoryManager::Action type,
 
     m_isActive = true;
 
-    StarFishEnterer enter(m_starFish);
-
     if (isTopLevelBrowsingContext()) {
         m_window =
             Window::create(m_starFish, this, url,
@@ -653,7 +651,6 @@ void BrowsingContext::dispose()
         m_starFish->timer()->clear(this);
 
     if (m_window) {
-        StarFishEnterer enter(m_starFish);
         if (!document()->onLoadFired()) {
             document()
                 ->resourceLoader()
@@ -664,7 +661,6 @@ void BrowsingContext::dispose()
 
         if (scriptBindingInstance()) {
             {
-                StarFishEnterer enter(m_starFish);
                 scriptBindingInstance()->close();
             }
             document()->window()->deleteScriptBindingInstance();
@@ -1532,6 +1528,9 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
         // For keydown or keyup events, the value of charCode is 0.
         pkdata.setCharCode(0);
     }
+
+    pkdata.setEventModifierData(
+        starFish()->platformWindow()->eventModifierData());
 
     KeyboardEventInit kinitData(pkdata);
     KeyboardEvent* e = new KeyboardEvent(document(), eventType, kinitData);

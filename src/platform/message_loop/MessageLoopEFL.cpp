@@ -62,6 +62,11 @@ void MessageLoop::run()
     ecore_main_loop_begin();
 }
 
+void MessageLoop::stop()
+{
+    ecore_main_loop_quit();
+}
+
 struct InvokeNavigateData : public gc {
     WebView* wv;
     ResourceURL* url;
@@ -141,7 +146,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
             if (validateContext(id->m_ctx)) {
-                StarFishEnterer enter(id->m_ml->m_starFish);
                 id->m_fn((size_t)id, id->m_data);
             }
             if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
@@ -181,7 +185,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
             if (validateContext(id->m_ctx)) {
-                StarFishEnterer enter(id->m_ml->m_starFish);
                 ((void (*)(size_t, void*, void*))id->m_fn)(
                     (size_t)id, id->m_data, id->m_data1);
             }
@@ -223,7 +226,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
             if (validateContext(id->m_ctx)) {
-                StarFishEnterer enter(id->m_ml->m_starFish);
                 ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                     (size_t)id, id->m_data, id->m_data1, id->m_data2);
             }
@@ -273,7 +275,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                                            id);
                     }
                     if (id->m_valid && validateContext(id->m_ctx)) {
-                        StarFishEnterer enter(id->m_ml->m_starFish);
                         id->m_fn((size_t)id, id->m_data);
                     }
 
@@ -327,7 +328,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                                            id);
                     }
                     if (id->m_valid && validateContext(id->m_ctx)) {
-                        StarFishEnterer enter(id->m_ml->m_starFish);
                         ((void (*)(size_t, void*, void*))id->m_fn)(
                             (size_t)id, id->m_data, id->m_data1);
                     }

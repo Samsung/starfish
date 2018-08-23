@@ -29,7 +29,11 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/window/PlatformWindow.h"
 
-#include <vector>
+#if defined(STARFISH_ENABLE_TEST)
+#include <cairo.h>
+#endif
+
+#include <array>
 #include <SkMatrix.h>
 #include <clipper.hpp>
 
@@ -44,8 +48,14 @@ using N = uint32_t;
 using Point = std::array<Coord, 2>;
 
 // We only Support OpenGL ES 2.0+ context
-#if defined(PORT_WINDOW_BACKEND_EFL)
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Evas_GL.h>
+#elif defined(STARFISH_WINDOWS)
+#include <GL/glew.h>
+#include <GL/wglew.h>
+
+#include <Windows.h>
+#pragma comment(lib, "Opengl32.lib")
 #else
 #include <GLES3/gl3.h>
 #endif
@@ -58,7 +68,7 @@ using Point = std::array<Coord, 2>;
 #include <tbm_surface.h>
 #endif
 
-#if defined(PORT_WINDOW_BACKEND_EFL)
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #define glActiveTexture g_evasGLAPI->glActiveTexture
 #define glAttachShader g_evasGLAPI->glAttachShader
 #define glBindAttribLocation g_evasGLAPI->glBindAttribLocation
@@ -309,11 +319,11 @@ using Point = std::array<Coord, 2>;
 #define glWaitSync g_evasGLAPI->glWaitSync
 #endif
 
-namespace StarFish {
-
-#if defined(PORT_WINDOW_BACKEND_EFL)
-extern Evas_GL_API* g_evasGLAPI;
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+Evas_GL_API* g_evasGLAPI;
 #endif
+
+namespace StarFish {
 
 static size_t g_totalCanvasSurfaceGLSize;
 static size_t g_textureTileSize = 512;
@@ -393,6 +403,10 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         glGetIntegerv(GL_MAX_TEXTURE_SIZE, &siz);
         checkError();
         g_maxTextureSize = siz;
+
+        if (g_textureTileSize > g_maxTextureSize) {
+            g_textureTileSize = g_maxTextureSize;
+        }
 
         bool isOpenGLES3 = true;
         int major;
@@ -967,53 +981,59 @@ public:
             return;
         }
 
-        m_window->glMakeCurrent();
-        size_t wTextureCount = ceil((float)m_bufferWidth / g_textureTileSize);
-        size_t hTextureCount = ceil((float)m_bufferHeight / g_textureTileSize);
-        size_t fragmentIndex = 0;
+        if (dirtyWidth && dirtyHeight) {
+            m_window->glMakeCurrent();
+            size_t wTextureCount =
+                ceil((float)m_bufferWidth / g_textureTileSize);
+            size_t hTextureCount =
+                ceil((float)m_bufferHeight / g_textureTileSize);
+            size_t fragmentIndex = 0;
 
-        size_t coveredRowsCount = 0;
-        for (size_t y = 0; y < hTextureCount; y++) {
-            size_t coveredColsCount = 0;
-            for (size_t x = 0; x < wTextureCount; x++) {
-                GLuint textureID;
+            Unit::Rect dRect(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
 
-                size_t texureDataX = coveredColsCount;
-                size_t texureDataY = coveredRowsCount;
-                size_t texureDataWidth =
-                    std::min((size_t)g_textureTileSize,
-                             m_bufferWidth - coveredColsCount);
-                size_t texureDataHeight =
-                    std::min((size_t)g_textureTileSize,
-                             m_bufferHeight - coveredRowsCount);
-                CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment&
-                    fragment = m_textureFragments[fragmentIndex];
+            size_t coveredRowsCount = 0;
+            for (size_t y = 0; y < hTextureCount; y++) {
+                size_t coveredColsCount = 0;
+                for (size_t x = 0; x < wTextureCount; x++) {
+                    GLuint textureID;
 
-                Unit::Rect tRect(texureDataX, texureDataY, texureDataWidth,
-                                 texureDataHeight);
-                Unit::Rect dRect(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
+                    size_t texureDataX = coveredColsCount;
+                    size_t texureDataY = coveredRowsCount;
+                    size_t texureDataWidth =
+                        std::min((size_t)g_textureTileSize,
+                                 m_bufferWidth - coveredColsCount);
+                    size_t texureDataHeight =
+                        std::min((size_t)g_textureTileSize,
+                                 m_bufferHeight - coveredRowsCount);
+                    CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment&
+                        fragment = m_textureFragments[fragmentIndex];
 
-                if (tRect.intersects(dRect)) {
-                    m_textureFragmentsFlags[fragmentIndex].m_isDirty = true;
-                    size_t xx = std::max(texureDataX, x) - texureDataX;
-                    size_t xxEnd = dirtyX + dirtyWidth + 1 - texureDataX;
-                    if (xxEnd > texureDataWidth) {
-                        xxEnd = texureDataWidth;
+                    Unit::Rect tRect(texureDataX, texureDataY, texureDataWidth,
+                                     texureDataHeight);
+
+                    if (tRect.intersects(dRect)) {
+                        m_textureFragmentsFlags[fragmentIndex].m_isDirty = true;
+
+                        auto left = std::max(tRect.x(), dRect.x());
+                        auto right = std::min(tRect.maxX(), dRect.maxX());
+                        auto bottom = std::min(tRect.maxY(), dRect.maxY());
+                        auto top = std::max(tRect.y(), dRect.y());
+
+                        left -= texureDataX;
+                        right -= texureDataX;
+                        bottom -= texureDataY;
+                        top -= texureDataY;
+
+                        m_dirtyAreaTextureFragments[fragmentIndex].unite(
+                            Unit::Rect(left, top, right - left, bottom - top));
                     }
-                    size_t yy = std::max(texureDataY, y) - texureDataY;
-                    size_t yyEnd = dirtyY + dirtyHeight + 1 - texureDataY;
-                    if (yyEnd > texureDataHeight) {
-                        yyEnd = texureDataHeight;
-                    }
-                    m_dirtyAreaTextureFragments[fragmentIndex].unite(
-                        Unit::Rect(xx, yy, xxEnd - xx, yyEnd - yy));
+
+                    fragmentIndex++;
+                    coveredColsCount += g_textureTileSize;
                 }
 
-                fragmentIndex++;
-                coveredColsCount += g_textureTileSize;
+                coveredRowsCount += g_textureTileSize;
             }
-
-            coveredRowsCount += g_textureTileSize;
         }
     }
 
@@ -1376,6 +1396,7 @@ public:
                         float a = m_state.back().opacity;
 
                         glUniform4f(uColor, a * currentColor.R(),
+
                                     a * currentColor.G(), a * currentColor.B(),
                                     a * currentColor.A());
 
@@ -1891,8 +1912,9 @@ public:
                                         auto data = bData;
                                         data += ((yy + texureDataY) * bStride);
                                         data += ((texureDataX + xx) * 4);
-                                        glTexSubImage2D(GL_TEXTURE_2D, 0, 0, yy,
-                                                        xxEnd - xx, 1, GL_RGBA,
+                                        glTexSubImage2D(GL_TEXTURE_2D, 0, xx,
+                                                        yy, xxEnd - xx, 1,
+                                                        GL_RGBA,
                                                         GL_UNSIGNED_BYTE, data);
                                         checkError();
                                     }
@@ -1997,6 +2019,64 @@ Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
+
+#if defined(STARFISH_ENABLE_TEST)
+void screenShotImpl(PlatformWindow* wnd, const char* path,
+                    std::function<void()> callback)
+{
+    glFinish();
+
+    auto deviceWidth = wnd->width();
+    auto deviceHeight = wnd->height();
+    auto rowLength = deviceWidth * 4;
+
+    auto dataLength = rowLength * deviceHeight;
+
+    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    uint8_t* buffer = new uint8_t[dataLength];
+    glReadPixels(0, 0, deviceWidth, deviceHeight, GL_RGBA, GL_UNSIGNED_BYTE,
+                 buffer);
+
+    // convert to rgba to bgra for cairo
+    for (int y = 0; y < deviceHeight; y++) {
+        for (int x = 0; x < deviceWidth; x++) {
+            uint8_t* head = &buffer[rowLength * y + x * 4];
+            std::swap(head[0], head[2]);
+        }
+    }
+
+    // flip W
+    /*
+        for (int y = 0; y < deviceHeight; y++) {
+            uint32_t* head = (uint32_t*)&buffer[rowLength * y];
+            for (int x = 0; x < deviceWidth / 2; x++) {
+                std::swap(head[x], head[deviceWidth - x - 1]);
+            }
+        }
+    */
+    // flip H
+    for (int y = 0; y < deviceHeight / 2; y++) {
+        uint32_t* head = (uint32_t*)&buffer[rowLength * y];
+        uint32_t* head2 =
+            (uint32_t*)&buffer[rowLength * (deviceHeight - y - 1)];
+        for (int x = 0; x < deviceWidth; x++) {
+            std::swap(head[x], head2[x]);
+        }
+    }
+
+    cairo_surface_t* png_buffer;
+    png_buffer = cairo_image_surface_create_for_data(
+        (unsigned char*)buffer, CAIRO_FORMAT_ARGB32, deviceWidth, deviceHeight,
+        rowLength);
+
+    cairo_surface_write_to_png(png_buffer, path);
+    cairo_surface_destroy(png_buffer);
+
+    delete buffer;
+    callback();
+}
+#endif
 
 } // namespace StarFish
 

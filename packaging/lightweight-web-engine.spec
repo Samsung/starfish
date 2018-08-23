@@ -131,12 +131,18 @@ CXXFLAGS+=' -Os '
 
 %if "%{tizen_product}" == "tv"
 %define target tv
+
 %if "%{tizen_version_major}" == "4"
 CXXFLAGS+=' -DSTARFISH_TIZEN_4_0 '
 %endif
 %if "%{tizen_version_major}" == "5"
 CXXFLAGS+=' -DSTARFISH_TIZEN_5_0 '
 %endif
+
+# For Dali
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dcustom=vd %{?gyp_addition_command}
+ninja -C out_tizen/%{target}/release starfish.tizen.tv.release
+mv out_tizen/%{target}/release/lib/liblightweight-web-engine.%{target}.so out_tizen/%{target}/release/lib/liblightweight-web-engine-dali-plugin.so
 
 # For Cairo
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/%{target} --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=tv %{?gyp_addition_command}
@@ -212,8 +218,6 @@ cp -r out_tizen/%{target}/release/lib/tizen/*.so %{buildroot}%{_libdir}
 cp -r out_tizen/%{target}/release/lightweight-web-engine %{buildroot}%{_bindir}/%{bin}
 
 mkdir -p %{buildroot}%{_includedir}/%{name}/
-cp inc/StarFishPublic.h %{buildroot}%{_includedir}/%{name}/
-cp inc/StarFishExport.h %{buildroot}%{_includedir}/%{name}/
 cp inc/LWEWebView.h %{buildroot}%{_includedir}/%{name}/
 cp inc/PlatformIntegrationData.h %{buildroot}%{_includedir}/%{name}/
 

@@ -20,8 +20,7 @@
 // TODO Need update code
 
 #include "StarFishConfig.h"
-#if defined(PORT_EVENTLOOP_BACKEND_LIBUV) && \
-    (defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER))
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
 #include "StarFish.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -104,6 +103,10 @@ MessageLoop::MessageLoop(StarFish* sf)
 }
 
 void MessageLoop::run()
+{
+}
+
+void MessageLoop::stop()
 {
 }
 
