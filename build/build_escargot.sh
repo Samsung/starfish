@@ -12,7 +12,7 @@ function build_escargot_for_tizen() {
     #./build_third_party.sh tizen_obs_${ESCARGOT_ARCH} only_release
     mkdir -p out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release
     touch out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release/escargot
-    touch out/tizen_obs/${ESCARGOT_ARCH}/interpreter/debug/escargot
+    #touch out/tizen_obs/${ESCARGOT_ARCH}/interpreter/debug/escargot
 
     make tizen_obs_${ESCARGOT_ARCH}.interpreter.release.static -j$NUMPROC
 
