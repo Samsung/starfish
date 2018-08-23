@@ -59,6 +59,8 @@ String* keyValueToKey(KeyValue v)
 #ifdef STARFISH_TIZEN_TV
     else if (v == TVHomeKey) {
         return String::createASCIIString("XF86Home");
+    } else if (v == TVExitKey) {
+        return String::createASCIIString("XF86Exit");
     }
 #endif
     else {
@@ -207,6 +209,8 @@ uint32_t keyValueToKeyCode(KeyValue v, bool isForVirtualKeyCode)
         return 18;
     } else if (v == TVHomeKey) {
         return 10071;
+    } else if (v == TVExitKey) {
+        return 182;
     }
 #endif
     else {

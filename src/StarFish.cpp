@@ -72,37 +72,6 @@ extern Evas* g_internalCanvas;
 #ifdef STARFISH_ENABLE_TTS
 #include "core/modules/tts/TTS.h"
 #endif
-#if defined(STARFISH_TIZEN_TV)
-#include <cursor_module.h> //Include this header to enable and disable cursor
-
-#if !defined(STARFISH_TIZEN_5_0)
-#include <Ecore_Wayland.h>
-int vd_util_cursormod;
-void Initialize_CursorMod() // Initialize cursor module
-{
-    Eina_Inlist* globals = ecore_wl_globals_get();
-    Eina_Inlist* tmp;
-    Ecore_Wl_Global* global;
-
-    struct wl_display* display = ecore_wl_display_get();
-    struct wl_registry* registry = ecore_wl_registry_get();
-    struct wl_seat* seat = ecore_wl_input_seat_get(ecore_wl_input_get());
-    int id = -1;
-
-    EINA_INLIST_FOREACH_SAFE(globals, tmp, global)
-    {
-        if (!strcmp(global->interface, "tizen_cursor")) {
-            id = global->id;
-            vd_util_cursormod =
-                CursorModule_Initialize(display, registry, seat, id);
-        } else {
-            vd_util_cursormod = 0;
-        }
-    }
-}
-#endif
-
-#endif
 
 namespace StarFish {
 
@@ -371,19 +340,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #endif
 #endif
 
-#endif
-
-#if !defined(STARFISH_TIZEN_5_0)
-#if defined(STARFISH_TIZEN_TV) && !defined(STARFISH_DALI)
-    Initialize_CursorMod();
-    Ecore_Wl_Window* wl_window =
-        elm_win_wl_window_get((Evas_Object*)m_nativeHandle);
-    struct wl_surface* surface = ecore_wl_window_surface_get(wl_window);
-    Cursor_Set_Config(surface, TIZEN_CURSOR_CONFIG_CURSOR_AVAILABLE,
-                      NULL); // Enable cursor in application
-    CursorModule_Finalize(); // Finalize cursor module
-    vd_util_cursormod = 0;
-#endif
 #endif
 
     m_deviceKind = deviceKindUseTouchScreen;

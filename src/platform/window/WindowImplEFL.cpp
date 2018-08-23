@@ -1032,7 +1032,10 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
         return KeyValue::TVMenuKey;
     } else if (strcmp("XF86Home", ecoreKeyString) == 0) {
         return KeyValue::TVHomeKey;
+    } else if (strcmp("XF86Exit", ecoreKeyString) == 0) {
+        return KeyValue::TVExitKey;
     }
+
 #endif
     STARFISH_LOG_ERROR("WindowImplEFL - unimplemented key %s\n",
                        ecoreKeyString);

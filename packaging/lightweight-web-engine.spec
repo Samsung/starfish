@@ -81,7 +81,6 @@ BuildRequires: giflib-devel
 %if "%{tizen_product}" == "tv"
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
-BuildRequires: pkgconfig(vd-win-util)
 %endif
 %if "%{tizen_product}" == "gear"
 BuildRequires: pkgconfig(bundle)
