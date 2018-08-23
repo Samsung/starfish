@@ -159,7 +159,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         auto it = m_responseHeaderMap.find(HTTPHeaderMap::kContentType);
         if (it != m_responseHeaderMap.end()) {
             size_t pos = it->second.find(";");
-            if (pos != std::string::npos) {
+            if (pos == std::string::npos) {
                 m_responseMimeType = String::fromUTF8(it->second.data());
             } else {
                 m_responseMimeType =
