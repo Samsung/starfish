@@ -81,7 +81,6 @@ size_t Timer::addTimer(unsigned delay, Window* window,
             delay / 1000.0,
             [](void* data) -> Eina_Bool {
                 TimeoutData* td = (TimeoutData*)data;
-                StarFishEnterer enter(td->m_timer->m_starFish);
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
                 td->m_handler(td->m_window, td->m_data);
                 return ECORE_CALLBACK_RENEW;
@@ -93,7 +92,6 @@ size_t Timer::addTimer(unsigned delay, Window* window,
             ecore_timer_add(delay / 1000.0,
                             [](void* data) -> Eina_Bool {
                                 TimeoutData* td = (TimeoutData*)data;
-                                StarFishEnterer enter(td->m_timer->m_starFish);
                                 Timer* timer = td->m_timer;
                                 int32_t id = td->m_id;
                                 td->m_handler(td->m_window, td->m_data);
@@ -138,7 +136,6 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
     td->m_timerID = (Ecore_Timer*)ecore_animator_add(
         [](void* data) -> Eina_Bool {
             TimeoutData* td = (TimeoutData*)data;
-            StarFishEnterer enter(td->m_timer->m_starFish);
             auto a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
             td->m_handler(td->m_window, td->m_data);
             a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
@@ -169,7 +166,6 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
     ad->m_timerID = ecore_animator_add(
         [](void* data) -> Eina_Bool {
             AnimationTickData* ad = (AnimationTickData*)data;
-            StarFishEnterer enter(ad->m_timer->m_starFish);
             auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
             if (ad->m_handler(ad->m_data)) {
                 return ECORE_CALLBACK_RENEW;

@@ -3742,7 +3742,11 @@ SkMatrix FrameBox::computeScreenMatrix()
                 pos.setX(pos.x() - fBox->node()->window()->scrollX(false));
                 pos.setY(pos.y() - fBox->node()->window()->scrollY(false));
             } else {
-                pos = fBox->absolutePointIncludingScroll(lastParentBox);
+                pos = fBox->absolutePoint(lastParentBox);
+                if (fBox->isFrameBlockBox()) {
+                    pos.setX(pos.x() - fBox->asFrameBlockBox()->scrollLeft());
+                    pos.setY(pos.y() - fBox->asFrameBlockBox()->scrollTop());
+                }
             }
             m.postTranslate((float)pos.x(), (float)pos.y());
             lastParentBox = fBox;

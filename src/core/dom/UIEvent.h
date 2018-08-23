@@ -133,9 +133,6 @@ public:
 
     int32_t detail() const
     {
-#ifdef PORT_GRAPHIC_BACKEND_GENERAL_BUFFER
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-#endif
         return m_detail;
     }
 

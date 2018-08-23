@@ -349,7 +349,23 @@ void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
         m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight,
                               fixedLetterSpacing);
     } else {
-        if (sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest) {
+        bool regressionEnable =
+            sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+
+        if (regressionEnable) {
+            String** familyNameArray =
+                (String**)(&m_inheritedStyles.m_fontFamilyDatas[1]);
+            size_t familyNameArraySize =
+                m_inheritedStyles.m_fontFamilyDatas[0].m_length;
+
+            for (size_t i = 0; i < familyNameArraySize; i++) {
+                if (familyNameArray[i]->contains("ahem", false)) {
+                    regressionEnable = false;
+                }
+            }
+        }
+
+        if (regressionEnable) {
             String* str = String::fromUTF8("SamsungOne");
             m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight,
                                   fixedLetterSpacing);

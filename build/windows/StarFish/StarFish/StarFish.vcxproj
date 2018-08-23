@@ -587,6 +587,7 @@
     <ClCompile Include="..\..\..\..\src\platform\canvas\CanvasSkia.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\canvas\CompositorCairo.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\canvas\CompositorEFL.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\canvas\CompositorGL.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\canvas\CompositorMock.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\canvas\CompositorSkia.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\canvas\font\FontImplCairo.cpp" />
@@ -637,6 +638,7 @@
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplEFL.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplEFLHeadLess.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplGB.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\window\WindowImplGL.cpp" />
     <ClCompile Include="..\..\..\..\src\public\JavaScriptNativeHandler.cpp" />
     <ClCompile Include="..\..\..\..\src\public\LWEWebContainer.cpp" />
     <ClCompile Include="..\..\..\..\src\public\LWEWebView.cpp" />
@@ -724,6 +726,9 @@
     <ClCompile Include="StarFishLoggingAndConsoleBridge.cpp" />
     <ClCompile Include="StarFishWinformBridge.cpp" />
   </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{30238400-8542-41E4-9722-0F066B61EEE6}</ProjectGuid>
@@ -794,7 +799,7 @@
       <Optimization>Disabled</Optimization>
       <PreprocessorDefinitions>WIN32;STARFISH_WINDOWS;_ITERATOR_DEBUG_LEVEL=0;_TIMESPEC_DEFINED;_USE_MATH_DEFINES;GC_DEBUG;ESCARGOT_ENABLE_TYPEDARRAY;ESCARGOT_ENABLE_PROMISE;ESCARGOT_32;_DEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;STARFISH_ENABLE_MULTIMEDIA;STARFISH_ENABLE_DOMPARSER;STARFISH_IGNORE_CROSS_ORIGIN;STARFISH_IGNORE_SSL_VERIFYPEER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\..\..\..\..\src;.\..\..\..\..\inc;.\..\..\..\..\third_party\escargot\third_party\GCutil;.\..\..\..\..\third_party\escargot\third_party\GCutil\bdwgc\include;.\..\..\..\..\third_party\escargot\src\api;.\..\..\..\..\third_party\clipper\cpp;.\..\..\..\..\third_party\skia_matrix;.\..\..\..\..\third_party\MP4Parse\source\include;.\..\..\..\..\third_party\escargot\third_party\icu\include;.\..\..\..\..\third_party\windows_pthread\include;.\..\..\..\..\third_party\curl\include;.\..\..\..\..\third_party\cairo\src;.\..\..\..\..\third_party\cairo\build\windows\cairo\cairo;.\..\..\..\..\third_party\fontconfig;.\..\..\..\..\third_party\freetype2\include;.\..\..\..\..\third_party\giflib\lib;.\..\..\..\..\third_party\libpng;.\..\..\..\..\third_party\escargot\third_party\rapidjson\include;.\..\..\..\..\third_party\rapidxml;.\..\..\..\..\third_party\harfbuzz\src;.\..\..\..\..\third_party\webm;.\..\..\..\..\third_party\MP4Parse\source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\..\..\..\..\src;.\..\..\..\..\inc;.\..\..\..\..\third_party\escargot\third_party\GCutil;.\..\..\..\..\third_party\escargot\third_party\GCutil\bdwgc\include;.\..\..\..\..\third_party\escargot\src\api;.\..\..\..\..\third_party\clipper\cpp;.\..\..\..\..\third_party\skia_matrix;.\..\..\..\..\third_party\skia_matrix\include\core;.\..\..\..\..\third_party\skia_matrix\include\private;.\..\..\..\..\third_party\earcut.hpp\include\mapbox;.\..\..\..\..\third_party\MP4Parse\source\include;.\..\..\..\..\third_party\escargot\third_party\icu\include;.\..\..\..\..\third_party\windows_pthread\include;.\..\..\..\..\third_party\curl\include;.\..\..\..\..\third_party\cairo\src;.\..\..\..\..\third_party\cairo\build\windows\cairo\cairo;.\..\..\..\..\third_party\fontconfig;.\..\..\..\..\third_party\freetype2\include;.\..\..\..\..\third_party\giflib\lib;.\..\..\..\..\third_party\libpng;.\..\..\..\..\third_party\escargot\third_party\rapidjson\include;.\..\..\..\..\third_party\rapidxml;.\..\..\..\..\third_party\harfbuzz\src;.\..\..\..\..\third_party\webm;.\..\..\..\..\third_party\MP4Parse\source</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpp17</LanguageStandard>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
@@ -805,7 +810,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
       <StackReserveSize>4194304</StackReserveSize>
-      <AdditionalDependencies>.\..\..\..\..\third_party\windows_pthread\lib\x86\pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>.\..\..\..\..\third_party\windows_pthread\lib\x86\pthreadVC2.lib;.\..\..\..\..\build\windows\StarFish\glew19.0.1\glew.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -828,7 +833,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PreprocessorDefinitions>WIN32;STARFISH_WINDOWS;_TIMESPEC_DEFINED;_USE_MATH_DEFINES;ESCARGOT_ENABLE_TYPEDARRAY;ESCARGOT_ENABLE_PROMISE;ESCARGOT_32;NDEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;STARFISH_ENABLE_MULTIMEDIA;STARFISH_ENABLE_DOMPARSER;STARFISH_IGNORE_CROSS_ORIGIN;STARFISH_IGNORE_SSL_VERIFYPEER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>.\..\..\..\..\src;.\..\..\..\..\inc;.\..\..\..\..\third_party\escargot\third_party\GCutil;.\..\..\..\..\third_party\escargot\third_party\GCutil\bdwgc\include;.\..\..\..\..\third_party\escargot\src\api;.\..\..\..\..\third_party\clipper\cpp;.\..\..\..\..\third_party\skia_matrix;.\..\..\..\..\third_party\skia_matrix\include\private;.\..\..\..\..\third_party\skia_matrix\include\core;.\..\..\..\..\third_party\MP4Parse\source\include;.\..\..\..\..\third_party\escargot\third_party\icu\include;.\..\..\..\..\third_party\windows_pthread\include;.\..\..\..\..\third_party\curl\include;.\..\..\..\..\third_party\cairo\src;.\..\..\..\..\third_party\cairo\build\windows\cairo\cairo;.\..\..\..\..\third_party\fontconfig;.\..\..\..\..\third_party\freetype2\include;.\..\..\..\..\third_party\giflib\lib;.\..\..\..\..\third_party\libpng;.\..\..\..\..\third_party\escargot\third_party\rapidjson\include;.\..\..\..\..\third_party\rapidxml;.\..\..\..\..\third_party\harfbuzz\src;.\..\..\..\..\third_party\webm;.\..\..\..\..\third_party\MP4Parse\source</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.\..\..\..\..\src;.\..\..\..\..\inc;.\..\..\..\..\third_party\escargot\third_party\GCutil;.\..\..\..\..\third_party\escargot\third_party\GCutil\bdwgc\include;.\..\..\..\..\third_party\escargot\src\api;.\..\..\..\..\third_party\clipper\cpp;.\..\..\..\..\third_party\skia_matrix;.\..\..\..\..\third_party\skia_matrix\include\core;.\..\..\..\..\third_party\skia_matrix\include\private;.\..\..\..\..\third_party\earcut.hpp\include\mapbox;.\..\..\..\..\third_party\skia_matrix\include\private;.\..\..\..\..\third_party\skia_matrix\include\core;.\..\..\..\..\third_party\MP4Parse\source\include;.\..\..\..\..\third_party\escargot\third_party\icu\include;.\..\..\..\..\third_party\windows_pthread\include;.\..\..\..\..\third_party\curl\include;.\..\..\..\..\third_party\cairo\src;.\..\..\..\..\third_party\cairo\build\windows\cairo\cairo;.\..\..\..\..\third_party\fontconfig;.\..\..\..\..\third_party\freetype2\include;.\..\..\..\..\third_party\giflib\lib;.\..\..\..\..\third_party\libpng;.\..\..\..\..\third_party\escargot\third_party\rapidjson\include;.\..\..\..\..\third_party\rapidxml;.\..\..\..\..\third_party\harfbuzz\src;.\..\..\..\..\third_party\webm;.\..\..\..\..\third_party\MP4Parse\source</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <AdditionalOptions>/Oy-  /utf-8 %(AdditionalOptions)</AdditionalOptions>
       <LanguageStandard>stdcpp17</LanguageStandard>
@@ -842,7 +847,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Windows</SubSystem>
-      <AdditionalDependencies>.\..\..\..\..\third_party\windows_pthread\lib\x86\pthreadVC2.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>.\..\..\..\..\third_party\windows_pthread\lib\x86\pthreadVC2.lib;.\..\..\..\..\build\windows\StarFish\glew19.0.1\glew.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -863,5 +868,14 @@
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
+    <Import Project="..\packages\glew.redist.1.9.0.1\build\native\glew.redist.targets" Condition="Exists('..\packages\glew.redist.1.9.0.1\build\native\glew.redist.targets')" />
+    <Import Project="..\packages\glew.1.9.0.1\build\native\glew.targets" Condition="Exists('..\packages\glew.1.9.0.1\build\native\glew.targets')" />
   </ImportGroup>
+  <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
+    <PropertyGroup>
+      <ErrorText>This project references NuGet package(s) that are missing on this computer. Use NuGet Package Restore to download them.  For more information, see http://go.microsoft.com/fwlink/?LinkID=322105. The missing file is {0}.</ErrorText>
+    </PropertyGroup>
+    <Error Condition="!Exists('..\packages\glew.redist.1.9.0.1\build\native\glew.redist.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\glew.redist.1.9.0.1\build\native\glew.redist.targets'))" />
+    <Error Condition="!Exists('..\packages\glew.1.9.0.1\build\native\glew.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\packages\glew.1.9.0.1\build\native\glew.targets'))" />
+  </Target>
 </Project>

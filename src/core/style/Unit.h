@@ -207,9 +207,7 @@ namespace Unit {
 
         bool intersects(const Rect& other) const
         {
-            return !isEmpty() && !other.isEmpty() && x() < other.maxX() &&
-                   other.x() < maxX() && y() < other.maxY() &&
-                   other.y() < maxY();
+            return rectOverlap(*this, other);
         }
 
         Unit::Rect snapSizeToPixel()
@@ -237,6 +235,22 @@ namespace Unit {
         }
 
     private:
+        static bool valueInRange(float value, float min, float max)
+        {
+            return (value >= min) && (value <= max);
+        }
+
+        static bool rectOverlap(const Rect& A, const Rect& B)
+        {
+            bool xOverlap = valueInRange(A.x(), B.x(), B.x() + B.width()) ||
+                            valueInRange(B.x(), A.x(), A.x() + A.width());
+
+            bool yOverlap = valueInRange(A.y(), B.y(), B.y() + B.height()) ||
+                            valueInRange(B.y(), A.y(), A.y() + A.height());
+
+            return xOverlap && yOverlap;
+        }
+
         Location m_location;
         Size m_size;
     };

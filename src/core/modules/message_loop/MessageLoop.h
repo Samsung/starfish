@@ -59,6 +59,7 @@ public:
         BrowsingContext* ctx); // give nullptr to clear every idlers
 
     void run();
+    void stop();
     void close();
     void invokeNavigate(WebView* wv, ResourceURL* url, ResourceURL* referrerURL,
                         bool force = false);
@@ -123,6 +124,6 @@ public:
     }
 #endif
 };
-}
+} // namespace StarFish
 
 #endif

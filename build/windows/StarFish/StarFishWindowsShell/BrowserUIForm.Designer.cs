@@ -30,12 +30,11 @@
         {
             this.buttonNavigate = new System.Windows.Forms.Button();
             this.textBoxAddress = new System.Windows.Forms.TextBox();
-            this.pictureBoxBrowserContent = new System.Windows.Forms.PictureBox();
             this.buttonConsole = new System.Windows.Forms.Button();
             this.buttonResizeFHDHalf = new System.Windows.Forms.Button();
             this.buttonResizeFHD = new System.Windows.Forms.Button();
             this.textBoxFocusReceiver = new System.Windows.Forms.TextBox();
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxBrowserContent)).BeginInit();
+            this.panelBrowserContent = new System.Windows.Forms.Panel();
             this.SuspendLayout();
             // 
             // buttonNavigate
@@ -61,24 +60,6 @@
             this.textBoxAddress.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxAddress_KeyDown);
             this.textBoxAddress.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.textBoxAddress_KeyPress);
             this.textBoxAddress.KeyUp += new System.Windows.Forms.KeyEventHandler(this.textBoxAddress_KeyUp);
-            // 
-            // pictureBoxBrowserContent
-            // 
-            this.pictureBoxBrowserContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.pictureBoxBrowserContent.Location = new System.Drawing.Point(1, 23);
-            this.pictureBoxBrowserContent.Name = "pictureBoxBrowserContent";
-            this.pictureBoxBrowserContent.Size = new System.Drawing.Size(1214, 821);
-            this.pictureBoxBrowserContent.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
-            this.pictureBoxBrowserContent.TabIndex = 2;
-            this.pictureBoxBrowserContent.TabStop = false;
-            this.pictureBoxBrowserContent.Click += new System.EventHandler(this.pictureBoxBrowserContent_Click);
-            this.pictureBoxBrowserContent.MouseDown += new System.Windows.Forms.MouseEventHandler(this.pictureBoxBrowserContent_MouseDown);
-            this.pictureBoxBrowserContent.MouseEnter += new System.EventHandler(this.pictureBoxBrowserContent_MouseEnter);
-            this.pictureBoxBrowserContent.MouseLeave += new System.EventHandler(this.pictureBoxBrowserContent_MouseLeave);
-            this.pictureBoxBrowserContent.MouseMove += new System.Windows.Forms.MouseEventHandler(this.pictureBoxBrowserContent_MouseMove);
-            this.pictureBoxBrowserContent.MouseUp += new System.Windows.Forms.MouseEventHandler(this.pictureBoxBrowserContent_MouseUp);
             // 
             // buttonConsole
             // 
@@ -122,6 +103,22 @@
             this.textBoxFocusReceiver.KeyDown += new System.Windows.Forms.KeyEventHandler(this.textBoxFocusReceiver_KeyDown);
             this.textBoxFocusReceiver.KeyUp += new System.Windows.Forms.KeyEventHandler(this.textBoxFocusReceiver_KeyUp);
             // 
+            // panelBrowserContent
+            // 
+            this.panelBrowserContent.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panelBrowserContent.Location = new System.Drawing.Point(1, 23);
+            this.panelBrowserContent.Name = "panelBrowserContent";
+            this.panelBrowserContent.Size = new System.Drawing.Size(1211, 821);
+            this.panelBrowserContent.TabIndex = 7;
+            this.panelBrowserContent.Click += new System.EventHandler(this.panelBrowserContent_Click);
+            this.panelBrowserContent.MouseDown += new System.Windows.Forms.MouseEventHandler(this.panelBrowserContent_MouseDown);
+            this.panelBrowserContent.MouseEnter += new System.EventHandler(this.panelBrowserContent_MouseEnter);
+            this.panelBrowserContent.MouseLeave += new System.EventHandler(this.panelBrowserContent_MouseLeave);
+            this.panelBrowserContent.MouseMove += new System.Windows.Forms.MouseEventHandler(this.panelBrowserContent_MouseMove);
+            this.panelBrowserContent.MouseUp += new System.Windows.Forms.MouseEventHandler(this.panelBrowserContent_MouseUp);
+            // 
             // BrowserUIForm
             // 
             this.AllowDrop = true;
@@ -129,10 +126,10 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.ControlLightLight;
             this.ClientSize = new System.Drawing.Size(1215, 845);
+            this.Controls.Add(this.panelBrowserContent);
             this.Controls.Add(this.buttonResizeFHD);
             this.Controls.Add(this.buttonResizeFHDHalf);
             this.Controls.Add(this.buttonConsole);
-            this.Controls.Add(this.pictureBoxBrowserContent);
             this.Controls.Add(this.textBoxAddress);
             this.Controls.Add(this.buttonNavigate);
             this.Controls.Add(this.textBoxFocusReceiver);
@@ -146,7 +143,6 @@
             this.KeyDown += new System.Windows.Forms.KeyEventHandler(this.BrowserUIForm_KeyDown);
             this.KeyUp += new System.Windows.Forms.KeyEventHandler(this.BrowserUIForm_KeyUp);
             this.Resize += new System.EventHandler(this.BrowserUIForm_Resize);
-            ((System.ComponentModel.ISupportInitialize)(this.pictureBoxBrowserContent)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -156,10 +152,10 @@
 
         private System.Windows.Forms.Button buttonNavigate;
         private System.Windows.Forms.TextBox textBoxAddress;
-        private System.Windows.Forms.PictureBox pictureBoxBrowserContent;
         private System.Windows.Forms.Button buttonConsole;
         private System.Windows.Forms.Button buttonResizeFHDHalf;
         private System.Windows.Forms.Button buttonResizeFHD;
         private System.Windows.Forms.TextBox textBoxFocusReceiver;
+        private System.Windows.Forms.Panel panelBrowserContent;
     }
 }

@@ -50,27 +50,15 @@
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/Avplay.h"
 #endif
-
-#include <malloc.h>
-#if defined(PORT_WINDOW_BACKEND_EFL)
-#include <Elementary.h>
-#endif
-
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-extern Evas* g_internalCanvas;
-#endif
-
-#if defined(STARFISH_TIZEN_3_0) || defined(STARFISH_TIZEN_OBS)
-#include <Ecore.h>
-#elif !defined(STARFISH_ANDROID) && !defined(STARFISH_WINDOWS)
-#include <Ecore_X.h>
-#endif
-
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-#include <tizen.h>
-#endif
 #ifdef STARFISH_ENABLE_TTS
 #include "core/modules/tts/TTS.h"
+#endif
+
+#include <malloc.h>
+
+#ifdef STARFISH_ENABLE_TEST
+int g_testCompatibleMode;
+int g_startUpFlag;
 #endif
 
 namespace StarFish {
@@ -189,11 +177,9 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
     g_gcCollectionEventListenterList.push_back(fn);
 }
 
-StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
-                   const char* timezoneID, void* platformHandle, int w, int h,
-                   int x, int y, float defaultFontSizeMultiplier,
-                   String* defaultFontName, const ScreenInfo& info,
-                   const char* localStorageFilePath,
+StarFish::StarFish(const char* locale, const char* timezoneID, int w, int h,
+                   float defaultFontSizeMultiplier, String* defaultFontName,
+                   const ScreenInfo& info, const char* localStorageFilePath,
                    const char* cookieStoreFilePath,
                    const char* httpCacheDirectorypath,
                    String* customUserAgentString,
@@ -203,7 +189,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
     , m_screenScaleRatio(1)
-    , m_shouldFitWindow(true)
     , m_console(new Console(this))
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
     , m_avplay(new Avplay(this))
@@ -211,13 +196,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #if defined(STARFISH_ENABLE_INSPECTOR)
     , m_inspector(nullptr)
 #endif
-#if defined(TIZEN_DEVICE_API)
-    , m_widgetContext(nullptr)
-#endif
-#if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
-    , m_updateFlag(false)
-#endif
-    , m_enterCount(0)
     , m_screenInfo(info)
     , m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
     , m_customUserAgentString(customUserAgentString)
@@ -234,12 +212,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 #ifdef STARFISH_ENABLE_TEST
     , m_testCompatibleMode(StarFishTestCompatibleMode::Normal)
 #endif
-    , m_lweWebView(nullptr)
-    , m_posX(0)
-    , m_posY(0)
-    , m_lweWebViewControlDelegator(nullptr)
 {
-    m_nativeHandle = platformHandle;
     registerMainThread();
     if (!g_starFishGlobalInit) {
         g_starFishGlobalInit = true;
@@ -303,47 +276,14 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
         GC_set_force_unmap_on_gcollect(1);
     }
 
-#if defined(PORT_WINDOW_BACKEND_EFL)
-    Evas_Object* wndObj = nullptr;
-    if (!m_nativeHandle) {
-        wndObj = elm_win_add(NULL, STARFISH_NAME, ELM_WIN_BASIC);
-        elm_win_title_set(wndObj, STARFISH_NAME);
-        elm_win_autodel_set(wndObj, EINA_TRUE);
-        evas_object_resize(wndObj, w, h);
-        evas_object_move(wndObj, x, y);
-        m_nativeHandle = wndObj;
-    } else {
-        m_shouldFitWindow = false;
-        m_posX = x;
-        m_posY = y;
-    }
-#ifdef STARFISH_TIZEN
-#ifdef STARFISH_ENABLE_TRANSPARENT_WINDOW
-    // Set efl configuration for resizing window (Without this, Window'll be
-    // full-screen only )
-    elm_win_aux_hint_add(wndObj, "wm.policy.win.user.geometry", "1");
-
-    elm_win_alpha_set(wndObj, EINA_TRUE);
-    Evas_Object* bg = elm_bg_add(wndObj);
-    evas_object_color_set(bg, 0x00, 0x00, 0x00, 0x00);
-
-    evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(wndObj, bg);
-    evas_object_show(bg);
-#else
-    Evas_Object* bg = elm_bg_add(wndObj);
-    evas_object_color_set(bg, 0xff, 0xff, 0xff, 0xff);
-
-    evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
-    elm_win_resize_object_add(wndObj, bg);
-    evas_object_show(bg);
-#endif
-#endif
-
-#endif
-
     m_deviceKind = deviceKindUseTouchScreen;
-    m_startUpFlag = flag;
+#ifdef STARFISH_ENABLE_TEST
+    m_testCompatibleMode = g_testCompatibleMode;
+    m_startUpFlag = g_startUpFlag;
+#else
+    m_startUpFlag = 0;
+#endif
+
 #ifndef STARFISH_LINE_BREAK_ITERATOR_POOL_SIZE
 #define STARFISH_LINE_BREAK_ITERATOR_POOL_SIZE 4
 #endif
@@ -376,7 +316,7 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
     m_tts = new TTS(this);
 #endif
 
-    m_platformWindow = PlatformWindow::create(this, nativeHandle(), w, h);
+    m_platformWindow = PlatformWindow::create(this, w, h);
 
     WebView* webView = WebView::create(this);
     m_platformWindow->setWebView(webView);
@@ -385,27 +325,6 @@ StarFish::StarFish(StarFishStartUpFlag flag, const char* locale,
 void StarFish::run()
 {
     m_messageLoop->run();
-}
-
-void StarFish::enter()
-{
-    if (m_enterCount == 0) {
-#if defined(PORT_CANVAS_BACKEND_EFL) || defined(PORT_IMAGEDECODER_BACKEND_EFL)
-        g_internalCanvas =
-            evas_object_evas_get((Evas_Object*)m_platformWindow->unwrap());
-#endif
-    }
-    m_enterCount++;
-}
-
-void StarFish::exit()
-{
-    if (m_enterCount == 1) {
-#if defined(PORT_CANVAS_BACKEND_EFL) || defined(PORT_IMAGEDECODER_BACKEND_EFL)
-        g_internalCanvas = nullptr;
-#endif
-    }
-    m_enterCount--;
 }
 
 void StarFish::loadHTMLDocument(String* filePath)
@@ -440,13 +359,11 @@ String* StarFish::resolvePath(String* filePath)
 
 void StarFish::resume()
 {
-    StarFishEnterer enter(this);
     m_platformWindow->resume();
 }
 
 void StarFish::pause()
 {
-    StarFishEnterer enter(this);
     m_platformWindow->pause();
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();

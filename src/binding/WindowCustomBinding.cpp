@@ -276,8 +276,23 @@ static ValueRef* screenShotFunction(ExecutionStateRef* state,
         window->document()->documentURI()->baseURI()->toUTF8NonGCString();
     path = path.substr(strlen("file://"));
     path += argv[0]->toString(state)->toStdUTF8String().data();
-    window->screenShot(path);
-    window->setTimeout(screenShotTimeoutHandler, 100, argv[1]);
+
+    struct Data : public gc {
+        Window* window;
+        ValueRef* arg;
+    };
+
+    Data* d = new Data();
+    d->window = window;
+    d->arg = argv[1];
+
+    window->screenShot(path,
+                       [](void* data) {
+                           Data* d = (Data*)data;
+                           d->window->setTimeout(screenShotTimeoutHandler, 1,
+                                                 d->arg);
+                       },
+                       d);
     return ValueRef::createUndefined();
 }
 
@@ -295,11 +310,24 @@ static ValueRef* screenShotRelativePathFunction(ExecutionStateRef* state,
             ->concat(String::fromUTF8("/"))
             ->concat(String::fromUTF8(
                 getenv("SCREEN_SHOT_FILE") ? getenv("SCREEN_SHOT_FILE") : ""));
-    window->screenShot(path->toUTF8NonGCString());
-    callScriptFunction(
-        window->scriptBindingInstance(), argv[0], nullptr, 0,
-        ValueRef::create(
-            window->scriptBindingInstance()->scriptContext()->globalObject()));
+
+    struct Data : public gc {
+        Window* window;
+        ValueRef* arg;
+    };
+
+    Data* d = new Data();
+    d->window = window;
+    d->arg = argv[0];
+
+    window->screenShot(path->toUTF8NonGCString(),
+                       [](void* data) {
+                           Data* d = (Data*)data;
+                           d->window->setTimeout(screenShotTimeoutHandler, 1,
+                                                 d->arg);
+                       },
+                       d);
+
     return ValueRef::createUndefined();
 }
 

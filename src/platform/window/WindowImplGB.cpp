@@ -67,7 +67,6 @@ public:
         : PlatformWindow(sf)
         , m_width(width)
         , m_height(height)
-        , m_renderingAnimator(SIZE_MAX)
         , m_internalBuffer(nullptr)
         , m_stride(0)
         , m_didPaintingOrCompositing(true)
@@ -88,6 +87,7 @@ public:
         , m_skia(nullptr)
 #endif
     {
+        m_compostiorContext = Compositor::initCompositorContext(this);
     }
 
     virtual int32_t width() override
@@ -174,7 +174,6 @@ public:
 
     uint32_t m_width;
     uint32_t m_height;
-    size_t m_renderingAnimator;
     void* m_internalBuffer;
     size_t m_stride;
     bool m_didPaintingOrCompositing;
@@ -198,39 +197,12 @@ public:
     CompositorContext* m_compostiorContext;
 };
 
-PlatformWindow* PlatformWindow::create(StarFish* sf, void* win, int width,
-                                       int height)
+PlatformWindow* PlatformWindow::create(StarFish* sf, int width, int height)
 {
     auto wnd = new WindowImplGB(sf, width, height);
     wnd->m_starFish = sf;
     wnd->m_compostiorContext = Compositor::initCompositorContext(wnd);
     return wnd;
-}
-
-void WindowImplGB::setNeedsRendering()
-{
-    WindowImplGB* wnd = this;
-
-    // refresh rendering animator
-    if (wnd->m_renderingAnimator != SIZE_MAX) {
-        starFish()->messageLoop()->removeIdler(m_renderingAnimator);
-        wnd->m_renderingAnimator = SIZE_MAX;
-    }
-
-    wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
-        nullptr,
-        [](size_t handle, void* data) {
-            WindowImplGB* wnd = (WindowImplGB*)data;
-            if (!wnd->starFish() || wnd->m_internalBuffer == nullptr) {
-                return;
-            }
-            ((WindowImplGB*)wnd)->m_renderingAnimator = SIZE_MAX;
-            if (wnd->width() != 0 && wnd->height() != 0) {
-                StarFishEnterer enter(wnd->starFish());
-                wnd->rendering();
-            }
-        },
-        starFish()->platformWindow());
 }
 
 Canvas* WindowImplGB::preparePainting()
@@ -323,13 +295,5 @@ Compositor* WindowImplGB::prepareCompositor()
     return nullptr;
 }
 
-void WindowImplGB::clearResources()
-{
-    if (m_renderingAnimator != SIZE_MAX) {
-        starFish()->messageLoop()->removeIdler(m_renderingAnimator);
-        m_renderingAnimator = SIZE_MAX;
-    }
-    webView()->clearStackingContext();
-}
 } // namespace StarFish
 #endif

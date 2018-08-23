@@ -295,7 +295,7 @@ bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
         struct {
             uint16_t a;
             uint16_t b;
-        } small;
+        } tiny;
         uint32_t big;
     } spliter;
 
@@ -306,40 +306,40 @@ bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
             uint16_t b;
             uint16_t c;
             uint16_t d;
-        } small;
+        } tiny;
         uint64_t big;
     } spliter64;
 #endif
 
 #ifdef STARFISH_64
-    spliter.small.a = a0;
-    spliter.small.b = a1;
+    spliter.tiny.a = a0;
+    spliter.tiny.b = a1;
     store.m_a = spliter.big;
 
-    spliter.small.a = a2;
-    spliter.small.b = a3;
+    spliter.tiny.a = a2;
+    spliter.tiny.b = a3;
     store.m_b = spliter.big;
 
-    spliter64.small.a = a4;
-    spliter64.small.b = a5;
-    spliter64.small.c = a6;
-    spliter64.small.d = a7;
+    spliter64.tiny.a = a4;
+    spliter64.tiny.b = a5;
+    spliter64.tiny.c = a6;
+    spliter64.tiny.d = a7;
     store.m_blob = (void*)spliter64.big;
 #else
-    spliter.small.a = a0;
-    spliter.small.b = a1;
+    spliter.tiny.a = a0;
+    spliter.tiny.b = a1;
     store.m_a = spliter.big;
 
-    spliter.small.a = a2;
-    spliter.small.b = a3;
+    spliter.tiny.a = a2;
+    spliter.tiny.b = a3;
     store.m_b = spliter.big;
 
-    spliter.small.a = a4;
-    spliter.small.b = a5;
+    spliter.tiny.a = a4;
+    spliter.tiny.b = a5;
     store.m_c = spliter.big;
 
-    spliter.small.a = a6;
-    spliter.small.b = a7;
+    spliter.tiny.a = a6;
+    spliter.tiny.b = a7;
     store.m_blob = (void*)spliter.big;
 #endif
 
@@ -356,7 +356,7 @@ String* WebView::blobURLStoreToString(BlobURLStore store, String* origin)
         struct {
             uint16_t a;
             uint16_t b;
-        } small;
+        } tiny;
         uint32_t big;
     } spliter;
 
@@ -367,7 +367,7 @@ String* WebView::blobURLStoreToString(BlobURLStore store, String* origin)
             uint16_t b;
             uint16_t c;
             uint16_t d;
-        } small;
+        } tiny;
         uint64_t big;
     } spliter64;
 #endif
@@ -375,62 +375,62 @@ String* WebView::blobURLStoreToString(BlobURLStore store, String* origin)
     char buf[32];
 #ifdef STARFISH_64
     spliter.big = store.m_a;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
     url += buf;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
     url += buf;
     url += "-";
 
     spliter.big = store.m_b;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
     url += buf;
     url += "-";
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
     url += buf;
     url += "-";
 
     spliter64.big = (uint64_t)store.m_blob;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.a);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.a);
     url += buf;
     url += "-";
 
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.b);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.b);
     url += buf;
 
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.c);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.c);
     url += buf;
 
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.small.d);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.d);
     url += buf;
 #else
     spliter.big = store.m_a;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
     url += buf;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
     url += buf;
     url += "-";
 
     spliter.big = store.m_b;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
     url += buf;
     url += "-";
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
     url += buf;
     url += "-";
 
     spliter.big = store.m_c;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
     url += buf;
     url += "-";
 
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
     url += buf;
 
     spliter.big = (uint32_t)store.m_blob;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.a);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
     url += buf;
 
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.small.b);
+    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
     url += buf;
 #endif
     return String::createASCIIString(url.data());
@@ -951,13 +951,8 @@ RenderResult WebView::rendering(bool force)
             repaintRect.setY(repaintRect.y() - 1);
             repaintRect.setWidth(repaintRect.width() + 2);
             repaintRect.setHeight(repaintRect.height() + 2);
+            renderResult.computedRepaintRect = repaintRect;
 
-            /*
-            STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
-                              (float)repaintRect.x(), (float)repaintRect.y(),
-                              (float)repaintRect.width(),
-                              (float)repaintRect.height());
-             */
             {
                 // remove definitely useless graphics buffer first.
                 auto iter = prevDrawnStackingContextInfo.begin();

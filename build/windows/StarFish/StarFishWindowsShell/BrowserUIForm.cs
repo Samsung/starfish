@@ -27,7 +27,7 @@ namespace StarFishWindowsShell
         public BrowserUIForm()
         {
             InitializeComponent();
-            this.DoubleBuffered = true;
+            StarFish.initGL(panelBrowserContent.Handle);
             string[] args = Environment.GetCommandLineArgs();
             string url = "about:blank";
             if (args.Length > 1)
@@ -39,10 +39,9 @@ namespace StarFishWindowsShell
                 }
             }
             textBoxAddress.Text = url;
-            pictureBoxBrowserContent.MouseWheel += PictureBoxBrowserContent_MouseWheel;
-            mStarFish = new StarFish(this, pictureBoxBrowserContent.Width, pictureBoxBrowserContent.Height, url);
+            panelBrowserContent.MouseWheel += PanelBrowserContent_MouseWheel;
+            mStarFish = new StarFish(this, panelBrowserContent.Width, panelBrowserContent.Height, url);
             // applySettings();
-            mStarFish.OnScreenBufferUpdate = new StarFish.ScreenBufferUpdated(onUpdateScreenBitmapDelegate);
             mStarFish.OnLoadPageStart = new StarFish.LoadPageStart(onLoadPageStartDelegate);
             mStarFish.OnGotMessage = new StarFish.GotMessage(onGotMessage);
             mInitialTitle = this.Text;
@@ -55,6 +54,7 @@ namespace StarFishWindowsShell
             }
             Application.AddMessageFilter(this);
         }
+
 
         // P/Invoke declarations
         [DllImport("user32.dll")]
@@ -175,27 +175,6 @@ namespace StarFishWindowsShell
             mConsole = null;
         }
 
-        public void onUpdateScreenBitmapDelegate(Bitmap bitmap, uint x, uint y, uint width, uint height)
-        {
-            if (pictureBoxBrowserContent.Image == null || pictureBoxBrowserContent.Image.Width != bitmap.Width || pictureBoxBrowserContent.Image.Height != bitmap.Height)
-            {
-                Image old = pictureBoxBrowserContent.Image;
-                pictureBoxBrowserContent.Image = new Bitmap(bitmap.Width, bitmap.Height);
-                if (old != null)
-                {
-                    old.Dispose();
-                }
-            }
-
-            using (Graphics g = Graphics.FromImage(pictureBoxBrowserContent.Image))
-            {
-                var r = new Rectangle((int)x, (int)y, (int)width, (int)height);
-                g.DrawImage(bitmap, r, r, GraphicsUnit.Pixel);
-                pictureBoxBrowserContent.Refresh();
-            }
-            bitmap.Dispose();
-        }
-
         public void onGotMessage(string msg, StarFish.MessageKind kind)
         {
             if (mConsole != null)
@@ -214,8 +193,8 @@ namespace StarFishWindowsShell
         {
             if (this.WindowState != FormWindowState.Minimized)
             {
-                mStarFish.Resize(pictureBoxBrowserContent.Width * mPixelRatio, pictureBoxBrowserContent.Height * mPixelRatio);
-                this.Text = mInitialTitle + " " + pictureBoxBrowserContent.Width * mPixelRatio + "x" + pictureBoxBrowserContent.Height * mPixelRatio + "(x" + (1.0 / mPixelRatio) + ")";
+                mStarFish.Resize(panelBrowserContent.Width * mPixelRatio, panelBrowserContent.Height * mPixelRatio);
+                this.Text = mInitialTitle + " " + panelBrowserContent.Width * mPixelRatio + "x" + panelBrowserContent.Height * mPixelRatio + "(x" + (1.0 / mPixelRatio) + ")";
             }
         }
 
@@ -231,36 +210,6 @@ namespace StarFishWindowsShell
         private void buttonNavigate_Click(object sender, EventArgs e)
         {
             mStarFish.Navigate(textBoxAddress.Text);
-        }
-
-        private void pictureBoxBrowserContent_MouseMove(object sender, MouseEventArgs e)
-        {
-            mStarFish.dispatchMouseMoveEvent(e.X * mPixelRatio, e.Y * mPixelRatio, e.Button.HasFlag(MouseButtons.Left), e.Button.HasFlag(MouseButtons.Right));
-        }
-
-        private void pictureBoxBrowserContent_MouseUp(object sender, MouseEventArgs e)
-        {
-            mStarFish.dispatchMouseUpEvent(e.X * mPixelRatio, e.Y * mPixelRatio);
-        }
-
-        private void pictureBoxBrowserContent_MouseDown(object sender, MouseEventArgs e)
-        {
-            mStarFish.dispatchMouseDownEvent(e.X * mPixelRatio, e.Y * mPixelRatio);
-            textBoxFocusReceiver.Focus();
-        }
-
-        private void pictureBoxBrowserContent_MouseEnter(object sender, EventArgs e)
-        {
-            textBoxFocusReceiver.Focus();
-        }
-
-        private void pictureBoxBrowserContent_MouseLeave(object sender, EventArgs e)
-        {
-        }
-
-        private void PictureBoxBrowserContent_MouseWheel(object sender, MouseEventArgs e)
-        {
-            mStarFish.dispatchMouseWheelEvent(e.X * mPixelRatio, e.Y * mPixelRatio, -e.Delta / 120);
         }
 
         private void onLoadPageStartDelegate(string url)
@@ -321,24 +270,24 @@ namespace StarFishWindowsShell
         {
             WindowState = FormWindowState.Normal;
 
-            if (pictureBoxBrowserContent.Width < w)
+            if (panelBrowserContent.Width < w)
             {
-                this.Width = this.Width + (w - pictureBoxBrowserContent.Width);
+                this.Width = this.Width + (w - panelBrowserContent.Width);
             }
 
-            if (pictureBoxBrowserContent.Width > w)
+            if (panelBrowserContent.Width > w)
             {
-                this.Width = this.Width - (pictureBoxBrowserContent.Width - w);
+                this.Width = this.Width - (panelBrowserContent.Width - w);
             }
 
-            if (pictureBoxBrowserContent.Height < h)
+            if (panelBrowserContent.Height < h)
             {
-                this.Height = this.Height + (h - pictureBoxBrowserContent.Height);
+                this.Height = this.Height + (h - panelBrowserContent.Height);
             }
 
-            if (pictureBoxBrowserContent.Height > h)
+            if (panelBrowserContent.Height > h)
             {
-                this.Height = this.Height - (pictureBoxBrowserContent.Height - h);
+                this.Height = this.Height - (panelBrowserContent.Height - h);
             }
         }
 
@@ -372,11 +321,6 @@ namespace StarFishWindowsShell
             {
                 mStarFish.dispatchKeyUpEvent(e.KeyCode, Control.IsKeyLocked(Keys.CapsLock) || (e.Modifiers & Keys.Shift) != 0);
             }
-        }
-
-        private void pictureBoxBrowserContent_Click(object sender, EventArgs e)
-        {
-
         }
 
         private void BrowserUIForm_DragDrop(object sender, DragEventArgs e)
@@ -429,26 +373,63 @@ namespace StarFishWindowsShell
             }
             mStarFish.setProxyURL(url);
         }
+
+        private void panelBrowserContent_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void panelBrowserContent_MouseDown(object sender, MouseEventArgs e)
+        {
+            mStarFish.dispatchMouseDownEvent(e.X * mPixelRatio, e.Y * mPixelRatio);
+            textBoxFocusReceiver.Focus();
+        }
+
+        private void panelBrowserContent_MouseMove(object sender, MouseEventArgs e)
+        {
+            mStarFish.dispatchMouseMoveEvent(e.X * mPixelRatio, e.Y * mPixelRatio, e.Button.HasFlag(MouseButtons.Left), e.Button.HasFlag(MouseButtons.Right));
+        }
+
+        private void panelBrowserContent_MouseUp(object sender, MouseEventArgs e)
+        {
+            mStarFish.dispatchMouseUpEvent(e.X * mPixelRatio, e.Y * mPixelRatio);
+        }
+
+        private void panelBrowserContent_MouseEnter(object sender, EventArgs e)
+        {
+            textBoxFocusReceiver.Focus();
+        }
+
+        private void panelBrowserContent_MouseLeave(object sender, EventArgs e)
+        {
+
+        }
+
+        private void PanelBrowserContent_MouseWheel(object sender, MouseEventArgs e)
+        {
+            mStarFish.dispatchMouseWheelEvent(e.X * mPixelRatio, e.Y * mPixelRatio, -e.Delta / 120);
+        }
     }
 
 
     public class StarFish
     {
+
+        [DllImport("StarFish.dll")]
+        public static extern void initGL(IntPtr hwnd);
         [DllImport("StarFish.dll")]
         public static extern IntPtr createWebViewInstance(uint initialWidth,
-                                             uint initialHeight, IntPtr initialBuffer, uint initialBufferStride);
+                                             uint initialHeight);
         [DllImport("StarFish.dll")]
         public static extern IntPtr setProxyURL(IntPtr mWebViewInstance, IntPtr utf8URL, uint urlBufferLength);
         [DllImport("StarFish.dll")]
         public static extern void loadURL(IntPtr mWebViewInstance, IntPtr utf8URL, uint urlBufferLength);
         [DllImport("StarFish.dll")]
-        public static extern void giveMessage(IntPtr mWebViewInstance, MSG msg);
+        public static extern void startMessageLoop(IntPtr mWebViewInstance);
         [DllImport("StarFish.dll")]
-        public static extern uint updateDrawingBufferAddress(IntPtr mWebViewInstance, uint width, uint height, IntPtr buffer, uint stride);
+        public static extern void stopMessageLoop(IntPtr mWebViewInstance);
         [DllImport("StarFish.dll")]
-        public static extern void resizeWindow(IntPtr mWebViewInstance, uint width, uint height, IntPtr buffer, uint stride);
-        [DllImport("StarFish.dll")]
-        public static extern IntPtr getRenderResult(IntPtr mWebViewInstance);
+        public static extern void resizeWindow(IntPtr mWebViewInstance, uint width, uint height);
         [DllImport("StarFish.dll")]
         public static extern void dispatchMouseDownEvent(IntPtr mWebViewInstance, float x, float y);
         [DllImport("StarFish.dll")]
@@ -499,6 +480,19 @@ namespace StarFishWindowsShell
 
         [DllImport("kernel32.dll")]
         static extern uint GetCurrentThreadId();
+
+        public delegate int WndHookProc(int code, IntPtr wParam, IntPtr lParam);
+
+        [DllImport("user32.dll")]
+        static extern IntPtr SetWindowsHookEx(int idHook, WndHookProc callback, IntPtr hInstance, uint threadId);
+
+        [DllImport("user32.dll")]
+        static extern bool UnhookWindowsHookEx(IntPtr hInstance);
+
+        [DllImport("user32.dll")]
+        static extern int CallNextHookEx(IntPtr idHook, int nCode, IntPtr wParam, IntPtr lParam);
+
+
         public delegate void ScreenBufferUpdated(Bitmap bitmap, uint x, uint y, uint width, uint height);
         public delegate void LoadPageStart(string url);
 
@@ -514,8 +508,6 @@ namespace StarFishWindowsShell
         IntPtr mWebViewInstance;
         Thread mStarFishThread;
         uint mStarFishThreadID;
-        Bitmap mScreenBitmap;
-        BitmapData mScreenBitmapData;
         ArrayList mJSResultCallbackList;
         StarFishFontInitWaitForm mWaitingForm;
 
@@ -551,7 +543,7 @@ namespace StarFishWindowsShell
             {
                 System.Diagnostics.Debugger.Log(0, "", e.ToString());
             }
-            
+
         }
 
         public void OnCloseWaitingForm(Form form)
@@ -604,7 +596,7 @@ namespace StarFishWindowsShell
         public void dispatchMouseMoveEvent(int x, int y, bool isLButtonPressed, bool isRButtonPressed)
         {
             int lparam = makeLParam(x, y);
-            uint wparam = makeWParam(isLButtonPressed ? 1: 0, isRButtonPressed ? 1 : 0);
+            uint wparam = makeWParam(isLButtonPressed ? 1 : 0, isRButtonPressed ? 1 : 0);
             PostThreadMessage(mStarFishThreadID, 0x0406, new UIntPtr(wparam), new IntPtr(lparam));
         }
 
@@ -677,11 +669,6 @@ namespace StarFishWindowsShell
             PostThreadMessage(mStarFishThreadID, 0x0412, lpLength, lpData);
         }
 
-        void lockScreenBitmap()
-        {
-            mScreenBitmapData = mScreenBitmap.LockBits(new Rectangle(0, 0, mScreenBitmap.Width, mScreenBitmap.Height), ImageLockMode.WriteOnly, mScreenBitmap.PixelFormat);
-        }
-
         [StructLayout(LayoutKind.Sequential)]
         public struct WinfomRenderResult
         {
@@ -691,15 +678,213 @@ namespace StarFishWindowsShell
             public uint height;
         }
 
+        public int WndHookProcImpl(int code, IntPtr wParam, IntPtr lParam)
+        {
+            var msg = (MSG)Marshal.PtrToStructure(lParam, typeof(MSG));
+
+            if (msg.message == 0x0401)
+            {
+                stopMessageLoop(mWebViewInstance);
+            }
+            else if (msg.message == 0x0402)
+            {
+                uint w = (uint)msg.wParam;
+                uint h = (uint)msg.lParam;
+                resizeWindow(mWebViewInstance, w, h);
+            }
+            else if (msg.message == 0x0403)
+            {
+                int length = msg.wParam.ToInt32();
+                loadURL(mWebViewInstance, msg.lParam, (uint)length);
+                Marshal.FreeHGlobal(msg.lParam);
+            }
+            else if (msg.message == 0x0404)
+            {
+                int v = msg.lParam.ToInt32();
+                System.Int16 x = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
+                System.Int16 y = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
+                dispatchMouseDownEvent(mWebViewInstance, x, y);
+            }
+            else if (msg.message == 0x0405)
+            {
+                int v = msg.lParam.ToInt32();
+                System.Int16 x = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
+                System.Int16 y = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
+                dispatchMouseUpEvent(mWebViewInstance, x, y);
+            }
+            else if (msg.message == 0x0406)
+            {
+                int v = msg.lParam.ToInt32();
+                System.Int16 x = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
+                System.Int16 y = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
+                int v2 = msg.wParam.ToInt32();
+                System.Int16 l = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
+                System.Int16 r = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
+                dispatchMouseMoveEvent(mWebViewInstance, x, y, l == 1 ? true : false, r == 1 ? true : false);
+            }
+            else if (msg.message == 0x0407)
+            {
+                int v = msg.lParam.ToInt32();
+                System.Int16 x = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
+                System.Int16 y = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
+                int v2 = msg.wParam.ToInt32();
+                dispatchMouseWheelEvent(mWebViewInstance, x, y, v2);
+            }
+            else if (msg.message == 0x0408)
+            {
+                byte[] buf = new byte[(int)msg.lParam];
+                Marshal.Copy(msg.wParam, buf, 0, buf.Length);
+                string url = Encoding.UTF8.GetString(buf);
+                LocalFree(msg.wParam);
+
+                try
+                {
+                    lock (OnLoadPageStart)
+                    {
+                        mForm.Invoke(OnLoadPageStart, new object[] { url });
+                    }
+                }
+                catch (Exception e)
+                {
+                    System.Diagnostics.Debugger.Log(0, "", e.ToString());
+                }
+            }
+            else if (msg.message >= 0x0409 && msg.message <= 0x0411)
+            {
+                byte[] buf = new byte[(int)msg.lParam];
+                Marshal.Copy(msg.wParam, buf, 0, buf.Length);
+                string txt = Encoding.UTF8.GetString(buf);
+                LocalFree(msg.wParam);
+
+                MessageKind kind = MessageKind.Info;
+                if (msg.message == 0x0410)
+                {
+                    kind = MessageKind.Error;
+                }
+                else if (msg.message == 0x0411)
+                {
+                    kind = MessageKind.Warn;
+                }
+                try
+                {
+                    lock (OnGotMessage)
+                    {
+                        mForm.Invoke(OnGotMessage, new object[] { txt, kind });
+                    }
+                }
+                catch (Exception e)
+                {
+                    System.Diagnostics.Debugger.Log(0, "", e.ToString());
+                }
+
+            }
+            else if (msg.message == 0x0412)
+            {
+                EvaluateJSResult result = evaluateJS(mWebViewInstance, msg.lParam, (uint)msg.wParam.ToInt32());
+                Marshal.FreeHGlobal(msg.lParam);
+                byte[] buf = new byte[result.len];
+                Marshal.Copy(result.buf, buf, 0, buf.Length);
+                string txt = Encoding.UTF8.GetString(buf);
+                LocalFree(result.buf);
+
+                lock (mJSResultCallbackList)
+                {
+                    GotJSResult cb = (GotJSResult)mJSResultCallbackList[0];
+                    mJSResultCallbackList.RemoveAt(0);
+                    mForm.Invoke(cb, new object[] { txt });
+                }
+            }
+            else if (msg.message == 0x0413)
+            {
+                int keyCode = msg.lParam.ToInt32();
+                if ((msg.wParam.ToInt32() & 1) != 0)
+                {
+                    dispatchKeyUpEvent(mWebViewInstance, (uint)keyCode, (uint)(msg.wParam.ToInt32() & 1 << 3));
+                }
+                else
+                {
+                    dispatchKeyDownEvent(mWebViewInstance, (uint)keyCode, (uint)(msg.wParam.ToInt32() & 1 << 3));
+                }
+            }
+            else if (msg.message == 0x0510)
+            {
+                byte[] buf = new byte[(uint)msg.wParam.ToInt32()];
+                Marshal.Copy(msg.lParam, buf, 0, buf.Length);
+                string url = Encoding.UTF8.GetString(buf);
+                LocalFree(msg.lParam);
+
+                {
+                    byte[] bytes = Encoding.UTF8.GetBytes(url);
+                    unsafe
+                    {
+                        fixed (byte* burl = bytes)
+                        {
+                            setProxyURL(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
+                        }
+                    }
+
+                }
+            }
+            else if (msg.message == 0x0511 || msg.message == 0x0512 || msg.message == 0x0513)
+            {
+                byte[] buf = new byte[(uint)msg.wParam.ToInt32()];
+                Marshal.Copy(msg.lParam, buf, 0, buf.Length);
+                string str = Encoding.UTF8.GetString(buf);
+                LocalFree(msg.lParam);
+
+                {
+                    byte[] bytes = Encoding.UTF8.GetBytes(str);
+                    unsafe
+                    {
+                        fixed (byte* burl = bytes)
+                        {
+                            if (msg.message == 0x0511)
+                            {
+                                dispatchCompositionStartEvent(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
+                            }
+                            else if (msg.message == 0x0512)
+                            {
+                                dispatchCompositionUpdateEvent(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
+                            }
+                            else if (msg.message == 0x0513)
+                            {
+                                dispatchCompositionEndEvent(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
+                            }
+
+                        }
+                    }
+
+                }
+
+            }
+            else
+            {
+                var messageReturnValue = CallNextHookEx(new IntPtr(3), code, wParam, lParam);
+                try
+                {
+                    mForm.Invoke(new CloseWaitingForm(OnCloseWaitingForm), new object[] { mWaitingForm });
+                }
+                catch (Exception e)
+                {
+
+                }
+                return messageReturnValue;
+            }
+
+            return CallNextHookEx(new IntPtr(3), code, wParam, lParam);
+        }
+
         private void WorkThread(Object o)
         {
             mStarFishThreadID = GetCurrentThreadId();
+
+
+            IntPtr ret = SetWindowsHookEx(3, WndHookProcImpl, new IntPtr(), mStarFishThreadID);
+
             StartArg arg = (StartArg)o;
             int initialWidth = arg.initialWidth;
             int initialHeight = arg.initialHeight;
-            mScreenBitmap = new Bitmap(initialWidth, initialHeight, PixelFormat.Format32bppArgb);
-            lockScreenBitmap();
-            mWebViewInstance = StarFish.createWebViewInstance((uint)initialWidth, (uint)initialHeight, mScreenBitmapData.Scan0, (uint)mScreenBitmapData.Stride);
+            mWebViewInstance = StarFish.createWebViewInstance((uint)initialWidth, (uint)initialHeight);
 
             {
                 string url = arg.initialURL;
@@ -714,233 +899,7 @@ namespace StarFishWindowsShell
 
             }
 
-            MSG msg;
-            int hasMessage;
-            while ((hasMessage = GetMessage(out msg, IntPtr.Zero, 0, 0)) != 0)
-            {
-                if (hasMessage == -1)
-                {
-                    break;
-                }
-
-                if (msg.message == 0x0401)
-                {
-                    break;
-                }
-                else if (msg.message == 0x0402)
-                {
-                    uint w = (uint)msg.wParam;
-                    uint h = (uint)msg.lParam;
-                    mScreenBitmap.Dispose();
-                    mScreenBitmap = new Bitmap((int)w, (int)h, PixelFormat.Format32bppArgb);
-                    lockScreenBitmap();
-                    resizeWindow(mWebViewInstance, w, h, mScreenBitmapData.Scan0, (uint)mScreenBitmapData.Stride);
-                }
-                else if (msg.message == 0x0403)
-                {
-                    int length = msg.wParam.ToInt32();
-                    loadURL(mWebViewInstance, msg.lParam, (uint)length);
-                    Marshal.FreeHGlobal(msg.lParam);
-                }
-                else if (msg.message == 0x0404)
-                {
-                    int v = msg.lParam.ToInt32();
-                    System.Int16 x = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
-                    System.Int16 y = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
-                    dispatchMouseDownEvent(mWebViewInstance, x, y);
-                }
-                else if (msg.message == 0x0405)
-                {
-                    int v = msg.lParam.ToInt32();
-                    System.Int16 x = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
-                    System.Int16 y = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
-                    dispatchMouseUpEvent(mWebViewInstance, x, y);
-                }
-                else if (msg.message == 0x0406)
-                {
-                    int v = msg.lParam.ToInt32();
-                    System.Int16 x = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
-                    System.Int16 y = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
-                    int v2 = msg.wParam.ToInt32();
-                    System.Int16 l = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
-                    System.Int16 r = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
-                    dispatchMouseMoveEvent(mWebViewInstance, x, y, l == 1 ? true : false, r == 1 ? true : false);
-                }
-                else if (msg.message == 0x0407)
-                {
-                    int v = msg.lParam.ToInt32();
-                    System.Int16 x = BitConverter.ToInt16(BitConverter.GetBytes(v), 0);
-                    System.Int16 y = BitConverter.ToInt16(BitConverter.GetBytes(v), 2);
-                    int v2 = msg.wParam.ToInt32();
-                    dispatchMouseWheelEvent(mWebViewInstance, x, y, v2);
-                }
-                else if (msg.message == 0x0408)
-                {
-                    byte[] buf = new byte[(int)msg.lParam];
-                    Marshal.Copy(msg.wParam, buf, 0, buf.Length);
-                    string url = Encoding.UTF8.GetString(buf);
-                    LocalFree(msg.wParam);
-
-                    try
-                    {
-                        lock (OnLoadPageStart) { 
-                            mForm.Invoke(OnLoadPageStart, new object[] { url });
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        System.Diagnostics.Debugger.Log(0, "", e.ToString());
-                    }
-                }
-                else if (msg.message >= 0x0409 && msg.message <= 0x0411)
-                {
-                    byte[] buf = new byte[(int)msg.lParam];
-                    Marshal.Copy(msg.wParam, buf, 0, buf.Length);
-                    string txt = Encoding.UTF8.GetString(buf);
-                    LocalFree(msg.wParam);
-
-                    MessageKind kind = MessageKind.Info;
-                    if (msg.message == 0x0410)
-                    {
-                        kind = MessageKind.Error;
-                    }
-                    else if (msg.message == 0x0411)
-                    {
-                        kind = MessageKind.Warn;
-                    }
-                    try
-                    {
-                        lock (OnGotMessage)
-                        {
-                            mForm.Invoke(OnGotMessage, new object[] { txt, kind });
-                        }
-                    }
-                    catch (Exception e)
-                    {
-                        System.Diagnostics.Debugger.Log(0, "", e.ToString());
-                    }
-
-                }
-                else if (msg.message == 0x0412)
-                {
-                    EvaluateJSResult result = evaluateJS(mWebViewInstance, msg.lParam, (uint)msg.wParam.ToInt32());
-                    Marshal.FreeHGlobal(msg.lParam);
-                    byte[] buf = new byte[result.len];
-                    Marshal.Copy(result.buf, buf, 0, buf.Length);
-                    string txt = Encoding.UTF8.GetString(buf);
-                    LocalFree(result.buf);
-
-                    lock (mJSResultCallbackList)
-                    {
-                        GotJSResult cb = (GotJSResult)mJSResultCallbackList[0];
-                        mJSResultCallbackList.RemoveAt(0);
-                        mForm.Invoke(cb, new object[] { txt });
-                    }
-                }
-                else if (msg.message == 0x0413)
-                {
-                    int keyCode = msg.lParam.ToInt32();
-                    if ((msg.wParam.ToInt32() & 1) != 0)
-                    {
-                        dispatchKeyUpEvent(mWebViewInstance, (uint)keyCode, (uint)(msg.wParam.ToInt32() & 1<<3));
-                    }
-                    else
-                    {
-                        dispatchKeyDownEvent(mWebViewInstance, (uint)keyCode, (uint)(msg.wParam.ToInt32() & 1 << 3));
-                    }
-                }
-                else if (msg.message == 0x0510)
-                {
-                    byte[] buf = new byte[(uint)msg.wParam.ToInt32()];
-                    Marshal.Copy(msg.lParam, buf, 0, buf.Length);
-                    string url = Encoding.UTF8.GetString(buf);
-                    LocalFree(msg.lParam);
-
-                    {
-                        byte[] bytes = Encoding.UTF8.GetBytes(url);
-                        unsafe
-                        {
-                            fixed (byte* burl = bytes)
-                            {
-                                setProxyURL(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
-                            }
-                        }
-
-                    }
-                }
-                else if (msg.message == 0x0511 || msg.message == 0x0512 || msg.message == 0x0513)
-                {
-                    byte[] buf = new byte[(uint)msg.wParam.ToInt32()];
-                    Marshal.Copy(msg.lParam, buf, 0, buf.Length);
-                    string str = Encoding.UTF8.GetString(buf);
-                    LocalFree(msg.lParam);
-
-                    {
-                        byte[] bytes = Encoding.UTF8.GetBytes(str);
-                        unsafe
-                        {
-                            fixed (byte* burl = bytes)
-                            {
-                                if (msg.message == 0x0511)
-                                {
-                                    dispatchCompositionStartEvent(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
-                                }
-                                else if (msg.message == 0x0512)
-                                {
-                                    dispatchCompositionUpdateEvent(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
-                                }
-                                else if (msg.message == 0x0513)
-                                {
-                                    dispatchCompositionEndEvent(mWebViewInstance, (IntPtr)burl, (uint)bytes.Length);
-                                }
-
-                            }
-                        }
-
-                    }
-
-                }
-                else
-                {
-                    giveMessage(mWebViewInstance, msg);
-
-                    IntPtr renderResult = getRenderResult(mWebViewInstance);
-                    if (renderResult.ToInt32() != 0)
-                    {
-                        WinfomRenderResult result = (WinfomRenderResult)Marshal.PtrToStructure(renderResult, typeof(WinfomRenderResult));
-                        LocalFree(renderResult);
-
-                        try
-                        {
-                            mForm.Invoke(new CloseWaitingForm(OnCloseWaitingForm), new object[] { mWaitingForm });
-                        }
-                        catch (Exception e)
-                        {
-
-                        }
-
-                        mScreenBitmap.UnlockBits(mScreenBitmapData);
-                        mScreenBitmapData = null;
-                        Bitmap newBitmap = new Bitmap(mScreenBitmap.Width, mScreenBitmap.Height, PixelFormat.Format32bppArgb);
-                        try
-                        {
-                            lock (OnScreenBufferUpdate)
-                            {
-                                mForm.Invoke(OnScreenBufferUpdate, new object[] { mScreenBitmap, result.x, result.y, result.width, result.height });
-                            }
-                        }
-                        catch (Exception e)
-                        {
-                            System.Diagnostics.Debugger.Log(0, "", e.ToString());
-                            mScreenBitmap.Dispose();
-                        }
-                        mScreenBitmap = newBitmap;
-                        lockScreenBitmap();
-                        updateDrawingBufferAddress(mWebViewInstance, (uint)mScreenBitmap.Width, (uint)mScreenBitmap.Height, mScreenBitmapData.Scan0, (uint)mScreenBitmapData.Stride);
-                    }
-                }
-            }
-            
+            startMessageLoop(mWebViewInstance);
         }
 
     }

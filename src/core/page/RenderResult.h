@@ -27,6 +27,7 @@ class CanvasSurface;
 struct RenderResult {
     bool didPaintingOrCompositing;
     LayoutRect updateRect;
+    LayoutRect computedRepaintRect;
 };
 
 struct PrevDrawnStackingContextInfo {

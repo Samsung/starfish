@@ -31,9 +31,11 @@
 #include "PlatformIntegrationData.h"
 
 #include <functional>
+#include <vector>
 #include <string>
 
 namespace LWE {
+
 class LWE_EXPORT Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
@@ -63,67 +65,59 @@ private:
     std::string m_description;
 };
 
-class LWE_EXPORT WebView {
-private:
-    ~WebView()
-    {
-    } // use Destroy function instead of delete operator
-public:
-    static WebView* Create(void* starFish);
-    static WebView* Create(void* win, int x, int y, int width, int height);
-
-    Settings GetSettings();
-    void LoadURL(const std::string& url);
-    std::string GetURL();
-    void LoadData(const std::string& data);
-    void Reload();
-    void StopLoading();
-    void GoBack();
-    void GoForward();
-    bool CanGoBack();
-    bool CanGoForward();
-    void AddJavaScriptInterface(
-        const std::string& exposedObjectName, const std::string& jsFunctionName,
-        std::function<std::string(const std::string&)> cb);
-    std::string EvaluateJavaScript(const std::string& script);
-    void ClearHistory();
-    void Destroy();
-    void SetSettings(const Settings& setttings);
-    void RemoveJavascriptInterface(const std::string& exposedObjectName,
-                                   const std::string& jsFunctionName);
-    void ClearCache();
-    void RegisterOnReceivedErrorHandler(
-        std::function<void(LWE::WebView*, LWE::ResourceError)> cb);
-    void RegisterOnPageParsedHandler(
-        std::function<void(LWE::WebView*, const std::string&)> cb);
-    void RegisterOnPageLoadedHandler(
-        std::function<void(LWE::WebView*, const std::string&)> cb);
-    void RegisterOnPageStartedHandler(
-        std::function<void(LWE::WebView*, const std::string&)> cb);
-    void RegisterOnLoadResourceHandler(
-        std::function<void(LWE::WebView*, const std::string&)> cb);
-
-    void* unwrap();
-
-protected:
-    WebView(void* starFish);
-
-private:
-    void* m_starfish;
-};
-
 class LWE_EXPORT WebContainer {
 private:
+    // use Destroy function instead of using delete operator
     ~WebContainer()
     {
-    } // use Destroy function instead of delete operator
+    }
+
 public:
-    static WebContainer* Create(void* buffer, uint width, uint height,
-                                uint stride, float scaleFactor,
-                                const char* locale, const char* timezoneID,
+    // Function set for render to buffer
+    static WebContainer* Create(void* buffer, uint bufferWidth,
+                                uint bufferHeight, uint bufferStride,
+                                float devicePixelRatio, const char* locale,
+                                const char* timezoneID,
                                 const char* localStorageFilePath,
                                 const char* cookieStoreFilePath,
                                 const char* httpCacheDirectorypath);
+
+    struct RenderResult {
+        size_t updatedX;
+        size_t updatedY;
+        size_t updatedWidth;
+        size_t updatedHeight;
+
+        void* updatedBufferAddress;
+        size_t bufferImageWidth;
+        size_t bufferImageHeight;
+    };
+    void RegisterOnRenderedHandler(
+        const std::function<void(LWE::WebContainer*,
+                                 const RenderResult& renderResult)>& cb);
+    void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
+    // <--- end of function set for render to buffer
+
+    // Function set for render with OpenGL
+    static WebContainer* CreateGL(
+        uint width, uint height,
+        const std::function<void(LWE::WebContainer*)>& onGLMakeCurrent,
+        const std::function<void(LWE::WebContainer*)>& onGLSwapBuffers,
+        float devicePixelRatio, const char* locale, const char* timezoneID,
+        const char* localStorageFilePath, const char* cookieStoreFilePath,
+        const char* httpCacheDirectorypath);
+    void ResizeTo(size_t width, size_t height);
+    // <--- end of function set for render with OpenGL
+
+    // Function set for headless
+    // TODO
+    // <--- end of function set for headless
+
+    void RunMessageLoop();
+    void StopMessageLoop();
+    void AddIdleCallback(void (*callback)(void*), void* data);
+    size_t AddTimeout(void (*callback)(void*), void* data, size_t timeoutInMS);
+    void ClearTimeout(size_t handle);
 
     Settings GetSettings();
     void LoadURL(const std::string& url);
@@ -175,23 +169,7 @@ public:
         const std::function<void(LWE::WebContainer*, const std::string&,
                                  const std::string&)>& cb);
 
-    void callHandler(const std::string& handler, void* param);
-
-    void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
-
-    struct RenderResult {
-        size_t updatedX;
-        size_t updatedY;
-        size_t updatedWidth;
-        size_t updatedHeight;
-
-        void* updatedBufferAddress;
-        size_t bufferImageWidth;
-        size_t bufferImageHeight;
-    };
-    void RegisterOnRenderedHandler(
-        const std::function<void(LWE::WebContainer*,
-                                 const RenderResult& renderResult)>& cb);
+    void CallHandler(const std::string& handler, void* param);
 
     void SetUserAgentString(const std::string& userAgent);
     void SetCacheMode(int mode);
@@ -202,10 +180,9 @@ public:
     void DispatchMouseUpEvent(MouseButtonValue button,
                               MouseButtonsValue buttons, double x, double y);
     void DispatchMouseWheelEvent(double x, double y, int delta);
-    void DispatchKeyDownEvent(KeyValue keyCode,
-                              int modifier = 0); // modifiers not defined yet.
-    void DispatchKeyPressEvent(KeyValue keyCode, int modifier = 0);
-    void DispatchKeyUpEvent(KeyValue keyCode, int modifier = 0);
+    void DispatchKeyDownEvent(KeyValue keyCode);
+    void DispatchKeyPressEvent(KeyValue keyCode);
+    void DispatchKeyUpEvent(KeyValue keyCode);
 
     void DispatchCompositionStartEvent(
         const std::string& soFarCompositiedString);
@@ -217,8 +194,15 @@ public:
     void RegisterOnHideSoftwareKeyboardIfPossibleHandler(
         const std::function<void(LWE::WebContainer*)>& cb);
 
-    size_t width();
-    size_t height();
+    size_t Width();
+    size_t Height();
+
+    // You can control rendering flow through this function
+    // If you got callback, you must call `doRenderingFunction` after
+    void RegisterSetNeedsRenderingCallback(
+        const std::function<
+            void(LWE::WebContainer*,
+                 const std::function<void()>& doRenderingFunction)>& cb);
 
 protected:
     WebContainer(void* starFish);
@@ -226,6 +210,74 @@ protected:
 private:
     void* m_starfish;
 };
-}
+
+class LWE_EXPORT WebView {
+protected:
+    // use Destroy function instead of using delete operator
+    virtual ~WebView()
+    {
+    }
+
+public:
+    static WebView* Create(void* win, int x, int y, int width, int height,
+                           float devicePixelRatio, const char* locale,
+                           const char* timezoneID,
+                           const char* localStorageFilePath,
+                           const char* cookieStoreFilePath,
+                           const char* httpCacheDirectorypath);
+
+    virtual void Destroy();
+
+    Settings GetSettings();
+    void LoadURL(const std::string& url);
+    std::string GetURL();
+    void LoadData(const std::string& data);
+    void Reload();
+    void StopLoading();
+    void GoBack();
+    void GoForward();
+    bool CanGoBack();
+    bool CanGoForward();
+    void AddJavaScriptInterface(
+        const std::string& exposedObjectName, const std::string& jsFunctionName,
+        std::function<std::string(const std::string&)> cb);
+    std::string EvaluateJavaScript(const std::string& script);
+    void ClearHistory();
+    void SetSettings(const Settings& setttings);
+    void RemoveJavascriptInterface(const std::string& exposedObjectName,
+                                   const std::string& jsFunctionName);
+    void ClearCache();
+    void RegisterOnReceivedErrorHandler(
+        std::function<void(LWE::WebView*, LWE::ResourceError)> cb);
+    void RegisterOnPageParsedHandler(
+        std::function<void(LWE::WebView*, const std::string&)> cb);
+    void RegisterOnPageLoadedHandler(
+        std::function<void(LWE::WebView*, const std::string&)> cb);
+    void RegisterOnPageStartedHandler(
+        std::function<void(LWE::WebView*, const std::string&)> cb);
+    void RegisterOnLoadResourceHandler(
+        std::function<void(LWE::WebView*, const std::string&)> cb);
+
+    virtual void* Unwrap()
+    {
+        // Some platform returns associated native handle ex) Evas_Object*
+        return nullptr;
+    }
+
+    void RunMessageLoop();
+    void StopMessageLoop();
+
+protected:
+    WebView(void* impl)
+        : m_impl(impl)
+    {
+    }
+
+    virtual LWE::WebContainer* FetchWebContainer() = 0;
+
+    void* m_impl;
+};
+
+} // namespace LWE
 
 #endif

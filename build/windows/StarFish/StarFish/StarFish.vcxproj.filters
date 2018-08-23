@@ -1983,5 +1983,14 @@
     <ClCompile Include="..\..\..\..\third_party\skia_matrix\src\ports\SkMemory_malloc.cpp">
       <Filter>3rdparty</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\..\..\src\platform\canvas\CompositorGL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\..\..\src\platform\window\WindowImplGL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="packages.config" />
   </ItemGroup>
 </Project>

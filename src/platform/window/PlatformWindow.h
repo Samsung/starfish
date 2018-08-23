@@ -21,12 +21,14 @@
 #define __StarFishPlatformWindow__
 
 #include "core/page/RenderResult.h"
+#include "core/event/EventModifierData.h"
 
 namespace StarFish {
 
 class AnimationExecutor;
 class Canvas;
 class Compositor;
+class CompositorContext;
 class Node;
 class WebView;
 class NativeImageData;
@@ -60,8 +62,7 @@ enum class CompositionEventKind {
 class PlatformWindow : public gc {
 public:
     virtual ~PlatformWindow(){};
-    static PlatformWindow* create(StarFish* starFish, void* win, int width,
-                                  int height);
+    static PlatformWindow* create(StarFish* starFish, int width, int height);
 
     virtual int32_t width() = 0;
     virtual int32_t height() = 0;
@@ -70,15 +71,11 @@ public:
         onResize();
     }
     virtual void* unwrap() = 0;
-    virtual void clearResources() = 0;
-    virtual void setNeedsRendering() = 0;
+    virtual void clearResources();
+    void setNeedsRendering();
     virtual Canvas* preparePainting() = 0;
     virtual void willCompositing()
     {
-    }
-    virtual void glMakeCurrent()
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     virtual Compositor* prepareCompositor() = 0;
     virtual void showSoftwareKeyboardIfPossible()
@@ -99,7 +96,7 @@ public:
     }
     virtual void* drawingBufferAddress()
     {
-#if !defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+#if !defined(PORT_WINDOW_BACKEND_GB)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
 #endif
         return nullptr;
@@ -107,11 +104,20 @@ public:
     virtual void updateDrawingBufferAddress(void* buf, uint32_t width,
                                             uint32_t height, uint32_t stride)
     {
-#if defined(PORT_GRAPHIC_BACKEND_GENERAL_BUFFER)
+#if defined(PORT_WINDOW_BACKEND_GB)
         resizeTo(width, height);
 #else
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
 #endif
+    }
+
+    virtual void glMakeCurrent()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    virtual void glSwapBuffers()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
     void registerRenderingFinishedCallback(
@@ -119,6 +125,19 @@ public:
     {
         m_renderingFinishedCallback = cb;
     }
+
+    void registerGLMakeCurrentCallback(
+        const std::function<void(PlatformWindow* wnd)>& cb)
+    {
+        m_glMakeCurrentCallback = cb;
+    }
+
+    void registerGLSwapBuffersCallback(
+        const std::function<void(PlatformWindow* wnd)>& cb)
+    {
+        m_glSwapBufferCallback = cb;
+    }
+
     void registerShowSoftwareKeyboardIfPossibleCallback(
         const std::function<void()>& cb)
     {
@@ -128,6 +147,12 @@ public:
         const std::function<void()>& cb)
     {
         m_hideSoftwareKeyboardIfPossibleCallback = cb;
+    }
+
+    void registerSetNeedsRenderingCallback(
+        const std::function<void(PlatformWindow* wnd)>& cb)
+    {
+        m_setNeedsRenderingCallback = cb;
     }
 
     void registerCallbackHandler(const std::string& handlerName,
@@ -179,7 +204,7 @@ public:
     }
 
     void setWebView(WebView* webView);
-    void screenShot(std::string filePath);
+    void screenShot(std::string filePath, void (*callback)(void*), void* data);
     virtual void onResize();
     virtual void onIdle()
     {
@@ -187,18 +212,30 @@ public:
 
     void registerOrUpdateIdleTimeCleaner();
 
+    EventModifierData eventModifierData()
+    {
+        return m_eventModifierData;
+    }
+
 protected:
     PlatformWindow(StarFish* starFish);
 
     bool m_isClosed;
     StarFish* m_starFish;
     WebView* m_webView;
+    size_t m_renderingAnimator;
+    CompositorContext* m_compostiorContext;
     size_t m_idleCleanerTimerID;
+    EventModifierData m_eventModifierData;
 
+    std::function<void(PlatformWindow* wnd)> m_setNeedsRenderingCallback;
     std::function<void(const RenderResult& renderResult)>
         m_renderingFinishedCallback;
     std::function<void()> m_showSoftwareKeyboardIfPossibleCallback;
     std::function<void()> m_hideSoftwareKeyboardIfPossibleCallback;
+
+    std::function<void(PlatformWindow* wnd)> m_glMakeCurrentCallback;
+    std::function<void(PlatformWindow* wnd)> m_glSwapBufferCallback;
 
     std::unordered_map<std::string, std::function<void(void*)>>
         m_handlersToCallbacks;
@@ -212,6 +249,6 @@ protected:
     CanvasSurface* m_virtualCursorCanvasSurface;
 #endif
 };
-}
+} // namespace StarFish
 
 #endif

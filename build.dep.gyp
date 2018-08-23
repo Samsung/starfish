@@ -541,10 +541,10 @@
             'type': 'none',
             'all_dependent_settings': {
                 'include_dirs': [
-                    '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-imf-evas | sed s/-I//g) || true)',
+                    '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-imf-evas libtbm | sed s/-I//g) || true)',
                 ],
                 'libraries': [
-                    '<!@((pkg-config --silence-errors --libs-only-l libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-imf-evas) || true)',
+                    '<!@((pkg-config --silence-errors --libs-only-l libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-imf-evas libtbm) || true)',
                     '-lturbojpeg -lgif',
                 ],
             },
