@@ -271,6 +271,9 @@ public:
             m_builder.document()->m_referrer =
                 m_resource->resourceRequest()->referrer();
         }
+        if (m && !m->isEmpty() && !m->contains("charset", false)) {
+            m_builder.document()->setContentType(m);
+        }
         m_builder.document()->resourceLoader().updateDocumentOpenTime();
         load();
     }
