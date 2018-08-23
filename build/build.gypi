@@ -37,12 +37,12 @@
             #'STARFISH_ENABLE_TEST',
             #'STARFISH_MEDIAPLAYER_DEBUG',
         ],
-        # NOTE: specific #defines for each department
-        # e.g., 'defines_tizen' + 'defines_custom_vd' = defines used by the compiler
-        'defines_custom_unified': [
+        # NOTE: specific #defines for each profile
+        # e.g., defines used by the compiler = 'defines_tizen' + 'defines_unified_tv'
+        'defines_unified_common': [
             'STARFISH_ENABLE_MULTIMEDIA',
         ],
-        'defines_custom_vd': [
+        'defines_unified_tv': [
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_TIZEN_TV',
             #'STARFISH_ENABLE_AVPLAY',
@@ -52,13 +52,11 @@
             #'STARFISH_ENABLE_VIRTUAL_CURSOR',
             'USE_PRODUCT_FEATURE',
         ],
-        'defines_custom_im': [
+        'defines_unified_wearable': [
             # 'STARFISH_TIZEN_WEARABLE',
             'STARFISH_TIZEN_WEARABLE_WIDGET',
             'STARFISH_TIZEN_TRANSPARENT_BACKGROUND',
             #'STARFISH_ENABLE_MULTIMEDIA',
-        ],
-        'defines_custom_da': [
         ],
         'defines_tizen_headless': [
             'STARFISH_TIZEN_HEADLESS',
@@ -125,7 +123,7 @@
                 'component%': 'static_library',
                 'backend%': 'efl_cairo',
                 'platform%': 'linux',
-                'custom%': 'none',
+                'profile%': 'none',
                 'touchUi%': '1',
                 'deplib%': 'shared_library',
                 'compiler%': 'gcc',
@@ -133,7 +131,7 @@
             'component%':'<(component)',
             'backend%': '<(backend)',
             'platform%': '<(platform)',
-            'custom%': '<(custom)',
+            'profile%': '<(profile)',
             'touchUi%': '1',
             'cflags_extra%': [],
             'include_dirs_extra': [],
@@ -168,8 +166,6 @@
                     ],
                     'include_dirs_extra': [
                     ],
-                    'sources_extra': [
-                    ],
                     'libraries_extra': [
                     ],
                 }],
@@ -181,8 +177,6 @@
                         'third_party/deviceapi/src',
                     ],
                     'cflags_extra': [
-                    ],
-                    'sources_extra': [
                     ],
                     'libraries_extra': [
                         '-lrt',
@@ -197,8 +191,6 @@
                     ],
                     'cflags_extra': [
                     ],
-                    'sources_extra': [
-                    ],
                     'libraries_extra': [
                         '-lcapi-location-manager',
                     ],
@@ -207,8 +199,6 @@
                     'cflags_extra': [
                     ],
                     'include_dirs_extra': [
-                    ],
-                    'sources_extra': [
                     ],
                     'libraries_extra': [
                         '-ljpeg',
@@ -220,8 +210,6 @@
                     ],
                     'include_dirs_extra': [
                     ],
-                    'sources_extra': [
-                    ],
                     'libraries_extra': [
                         '-ljpeg',
                         '-lgif',
@@ -232,48 +220,19 @@
                     ],
                     'include_dirs_extra': [
                     ],
-                    'sources_extra': [
-                    ],
                     'libraries_extra': [
                         '-ljpeg',
                         '-lgif',
                     ],
                 }],
-                ['custom=="vd"', {
+                # profile: common || tv || wearable || mobile
+                # Use the following template if build options need to be added
+                # for each profile
+                ['profile=="tv"', {
                     'cflags_extra': [
                     ],
                     'include_dirs_extra': [
                         #'<@(include_dirs_extra)',
-                        #'src/platform/lwe_vd',
-                    ],
-                    'sources_extra': [
-                        #'<!@(find src/platform/lwe_vd -name *.cpp)',
-                    ],
-                    'libraries_extra': [
-                    ],
-                }],
-                ['custom=="im"', {
-                    'cflags_extra': [
-                    ],
-                    'include_dirs_extra': [
-                        #'<@(include_dirs_extra)',
-                        #'src/platform/lwe_im',
-                    ],
-                    'sources_extra': [
-                        #'<!@(find src/platform/lwe_im -name *.cpp)',
-                    ],
-                    'libraries_extra': [
-                    ],
-                }],
-                ['custom=="da"', {
-                    'cflags_extra': [
-                    ],
-                    'include_dirs_extra': [
-                        #'<@(include_dirs_extra)',
-                        #'src/platform/lwe_da',
-                    ],
-                    'sources_extra': [
-                        #'<!@(find src/platform/lwe_da -name *.cpp)',
                     ],
                     'libraries_extra': [
                     ],
@@ -284,12 +243,11 @@
         'component%':'<(component)',
         'backend%': '<(backend)',
         'platform%': '<(platform)',
-        'custom%': '<(custom)',
+        'profile%': '<(profile)',
         'deplib%': '<(deplib)',
         'libraries_compiler%': '<(libraries_compiler)',
         'cflags_compiler%': '<(cflags_compiler)',
         'include_dirs_extra%': '<(include_dirs_extra)',
-        'sources_extra%': '<(sources_extra)',
         'libraries_extra%': '<(libraries_extra)',
         'cflags_extra%': '<(cflags_extra)',
         'defines_extra%': [],
@@ -443,17 +401,6 @@
                     '<@(libraries_extra)',
                     '-lpthread',
                     '-Wl,-soname,liblightweight-web-engine-dali-plugin.so',
-                ],
-            }],
-            # Specific device apis are included by each department-specific gyp
-            ['platform=="tizen" and custom=="none"', {
-                'sources_extra': [
-                    '<!@(find third_party/deviceapi/src -name *.cpp)',
-                ],
-            }],
-            ['platform=="tizen" and custom=="im"', {
-                'sources_extra': [
-                    '<!@(find third_party/deviceapi/src -name *.cpp)',
                 ],
             }],
             ['touchUi=="0" and backend=="efl_cairo"', {

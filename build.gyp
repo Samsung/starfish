@@ -4,7 +4,6 @@
 
     'includes': [
         'build/build.gypi',
-        'build/build_vd.gypi'
     ],
     #'make_global_settings': [
     #    ['CXX', '/usr/bin/g++'],
@@ -31,10 +30,6 @@
            '<@(include_dirs_default)',
            '<@(include_dirs_extra)',
        ],
-       'sources': [
-           '<!@(find src -name *.cpp)',
-           '<@(sources_extra)',
-       ],
        'conditions': [
            ['component!="executable"', {
                'sources!' : [
@@ -42,6 +37,20 @@
                    '<(test_runner_file)',
                ],
            }],
+       ],
+       'variables' : {
+           'sources_extra%': [],
+           'conditions' : [
+               ['platform=="tizen"', {
+                   'sources_extra' : [
+                       '<!@(find third_party/deviceapi/src -name *.cpp)',
+                   ],
+               }],
+           ],
+       },
+       'sources': [
+           '<!@(find src -name *.cpp)',
+           '<@(sources_extra)',
        ],
        'conditions': [
            ['OS=="linux"', {
@@ -140,9 +149,9 @@
 
         },
         {
-            'target_name': 'starfish.tizen.unified.release',
+            'target_name': 'lwe.tizen.unified_common.release',
             'type': '<(component)',
-            'product_name': 'lightweight-web-engine.unified',
+            'product_name': 'lightweight-web-engine.common',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
@@ -155,11 +164,11 @@
             ],
             'defines': [
                 '<@(defines_tizen)',
-                '<@(defines_custom_unified)',
+                '<@(defines_unified_common)',
             ],
         },
         {
-            'target_name': 'starfish.tizen.tv.release',
+            'target_name': 'lwe.tizen.unified_tv.release',
             'type': '<(component)',
             'product_name': 'lightweight-web-engine.tv',
             'dependencies': [
@@ -175,13 +184,37 @@
             ],
             'defines': [
                 '<@(defines_tizen)',
-                '<@(defines_custom_vd)',
+                '<@(defines_unified_tv)',
             ],
         },
         {
-            'target_name': 'starfish.tizen.gear.release',
+            'target_name': 'lwe.tizen.prod_tv.release',
+            'type': 'static_library',
+            'product_name': 'lightweight-web-engine.prod_tv',
+            'dependencies': [
+                './build.dep.gyp:escargot.tizen.release',
+                './build.dep.gyp:gc.tizen.release',
+                # './build.dep.gyp:zmq.tizen',
+                './build.dep.gyp:capi-network-connection',
+                './build.dep.gyp:capi-media-player',
+                './build.dep.gyp:vconf',
+                './build.dep.gyp:mp4parse',
+                './build.dep.gyp:webm',
+                '<@(deps_release_extra)',
+            ],
+            'defines': [
+                '<@(defines_tizen)',
+                '<@(defines_unified_tv)',
+            ],
+            'sources!' : [
+                'src/platform/tts/TTSBase.cpp',
+                'src/platform/multimedia/MediaPlayerTizenBase.cpp',
+            ],
+        },
+        {
+            'target_name': 'lwe.tizen.unified_wearable.release',
             'type': '<(component)',
-            'product_name': 'lightweight-web-engine.gear',
+            'product_name': 'lightweight-web-engine.wearable',
             'dependencies': [
                 './build.dep.gyp:tizen-dlog',
                 './build.dep.gyp:tizen-bundle',
@@ -192,13 +225,13 @@
             ],
             'defines': [
                 '<@(defines_tizen)',
-                '<@(defines_custom_im)',
+                '<@(defines_unified_wearable)',
             ],
         },
         {
-            'target_name': 'starfish.tizen.speaker.release',
+            'target_name': 'lwe.tizen.unified_headless.release',
             'type': '<(component)',
-            'product_name': 'lightweight-web-engine.speaker',
+            'product_name': 'lightweight-web-engine.headless',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
@@ -215,6 +248,5 @@
                 '<@(defines_tizen_headless)',
             ],
         },
-
     ],
 }
