@@ -681,13 +681,6 @@ void StackingContext::computeTransformMatrix()
         m_hasNon2DRectTransform = m_owner->style()->has3DTransforms(m_owner) ||
                                   !m_rareData->m_matrix.rectStaysRect();
 
-#ifdef PORT_CANVAS_BACKEND_EFL
-        // force use graphics buffer with complex-transform
-        // because efl canvas can't deal well with complex-transform
-        m_hasNon2DRectTransform =
-            m_owner->style()->hasComplexTransforms(m_owner);
-#endif
-
         if (!m_rareData->m_matrix.isIdentity()) {
             /*
             STARFISH_LOG_INFO("matrix [%f %f %f][%f %f %f][%f %f %f]\n",
@@ -1091,7 +1084,7 @@ public:
                 NativeImageData::create(bufferWidth + ceil(m_maxRadiusOffset),
                                         bufferHeight + ceil(m_maxRadiusOffset));
 
-            m_canvasToApplyFilter = Canvas::createGenericCanvas(
+            m_canvasToApplyFilter = Canvas::create(
                 m_ownerStackingContext->owner()->node()->starFish(),
                 m_nativeImageToApplyFilter);
 
@@ -1253,15 +1246,8 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         info.graphicsBuffer = m_rareData->m_buffer;
 
         oldCanvas = canvas;
-        if (m_rareData->m_buffer->pixelRatio() != 1) {
-            canvas = Canvas::createGenericCanvas(
-                m_owner->node()->starFish(), m_rareData->m_buffer->mapBuffer(),
-                m_rareData->m_buffer->bufferWidth(),
-                m_rareData->m_buffer->bufferHeight());
-        } else {
-            canvas = Canvas::create(m_owner->node()->starFish(),
-                                    m_rareData->m_buffer);
-        }
+        canvas =
+            Canvas::create(m_owner->node()->starFish(), m_rareData->m_buffer);
 
         if (oldCanvas) {
             canvas->setTextDecorationData(oldCanvas->textDecorationData());
@@ -1435,11 +1421,9 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     if (!canRejectPainting) {
         if (owner()->style()->hasAvailableFilter() ||
             m_ancestorsThatHasFilters.size()) {
-#ifndef PORT_CANVAS_BACKEND_EFL
             FilterContext filterContext(&canvas, this);
             m_owner->paintBackgroundAndBorders(canvas);
             filterContext.applyAllFilter();
-#endif
         } else {
             m_owner->paintBackgroundAndBorders(canvas);
         }
@@ -1512,12 +1496,10 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     if (!canRejectPainting) {
         if (owner()->style()->hasAvailableFilter() ||
             m_ancestorsThatHasFilters.size()) {
-#ifndef PORT_CANVAS_BACKEND_EFL
             FilterContext filterContext(&canvas, this);
             m_owner->paintStackingContextContent(canvas);
             m_owner->paintOutline(canvas);
             filterContext.applyAllFilter();
-#endif
         } else {
             m_owner->paintStackingContextContent(canvas);
             m_owner->paintOutline(canvas);

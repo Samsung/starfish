@@ -113,31 +113,6 @@ public:
         save();
     }
 
-    CanvasSkia(StarFish* starfish, void* data)
-    {
-        struct dummy {
-            SkCanvas* canvas;
-            sk_sp<SkSurface> surface;
-            void* buffer;
-            int w;
-            int h;
-            size_t stride;
-        };
-        dummy* d = (dummy*)data;
-        m_starfish = starfish;
-        m_canvas = d->canvas;
-        m_surface = d->surface;
-
-        m_renderTargetInfo.m_buffer = (uint8_t*)d->buffer;
-        m_renderTargetInfo.m_width = d->w;
-        m_renderTargetInfo.m_height = d->h;
-        m_renderTargetInfo.m_stride = d->stride;
-        m_shouldDestroySkia = false;
-        m_shouldDestroySurface = false;
-
-        save();
-    }
-
     CanvasSkia(StarFish* starfish, CanvasSurface* data)
     {
         m_starfish = starfish;
@@ -748,13 +723,6 @@ public:
         }
     }
 
-    virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
-                                 size_t l, size_t t, size_t r, size_t b,
-                                 double scale, bool fill)
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
-
     virtual void drawRepeatImage(
         NativeImageData* data, const Unit::Rect& dst, float imageWidth,
         float imageHeight, bool xRepeat, bool yRepeat,
@@ -1094,23 +1062,18 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Canvas* Canvas::createDirect(StarFish* starfish, void* data)
-{
-    return new CanvasSkia(starfish, data);
-}
-
 Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
 {
     return new CanvasSkia(starfish, data);
 }
 
-Canvas* Canvas::createGenericCanvas(StarFish* starfish, void* data, size_t w,
-                                    size_t h)
+Canvas* Canvas::create(StarFish* starfish, uint8_t* data, size_t w, size_t h,
+                       size_t stride)
 {
-    return new CanvasSkia(starfish, data, w, h, w * 4);
+    return new CanvasSkia(starfish, data, w, h, stride);
 }
 
-Canvas* Canvas::createGenericCanvas(StarFish* starfish, NativeImageData* data)
+Canvas* Canvas::create(StarFish* starfish, NativeImageData* data)
 {
     return new CanvasSkia(starfish, data);
 }

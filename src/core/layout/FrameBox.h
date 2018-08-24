@@ -68,17 +68,11 @@ struct FrameBoxRareData : public gc {
     Frame* m_layoutParent;
     LayoutBoxSurroundData m_padding, m_border, m_margin;
     StackingContext* m_stackingContext;
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-    NativeImageData* m_bufferForBorderRadius;
-#endif
 
     FrameBoxRareData(Frame* layoutParent)
         : m_frameBoxRareDataTag(FRAMEBOX_RAREDATA_TAG)
         , m_layoutParent(layoutParent)
         , m_stackingContext(nullptr)
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-        , m_bufferForBorderRadius(nullptr)
-#endif
     {
     }
 
@@ -90,10 +84,6 @@ protected:
     {
         GC_set_bit(desc, GC_WORD_OFFSET(FrameBoxRareData, m_layoutParent));
         GC_set_bit(desc, GC_WORD_OFFSET(FrameBoxRareData, m_stackingContext));
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(FrameBoxRareData, m_bufferForBorderRadius));
-#endif
     }
 };
 

@@ -479,13 +479,13 @@ void FrameBox::paintOutline(Canvas* canvas)
             style()->outlineOffset().specifiedValue(cbContentWidth, this);
         LayoutUnit offset = outlineWidth + outlineOffset;
 
-        LayoutRect rt = frameRect();
+        LayoutRect rect = frameRect();
 
-        rt.setX(-offset);
-        rt.setY(-offset);
+        rect.setX(-offset);
+        rect.setY(-offset);
 
-        rt.setWidth(rt.width() + offset * 2);
-        rt.setHeight(rt.height() + offset * 2);
+        rect.setWidth(rect.width() + offset * 2);
+        rect.setHeight(rect.height() + offset * 2);
 
         if (s != BorderStyleValue::SolidBorderStyleValue) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -493,21 +493,26 @@ void FrameBox::paintOutline(Canvas* canvas)
 
         canvas->setColor(style()->outlineColor());
 
-        // top
-        canvas->drawPixelSnappedRect(LayoutRect(
-            rt.x(), rt.y(), rt.width() - outlineWidth, outlineWidth));
-        // right
-        canvas->drawPixelSnappedRect(
-            LayoutRect(rt.x() + rt.width() - outlineWidth, rt.y(), outlineWidth,
-                       rt.height() - outlineWidth));
-        // bottom
-        canvas->drawPixelSnappedRect(LayoutRect(
-            rt.x() + outlineWidth, rt.y() + rt.height() - outlineWidth,
-            rt.width() - outlineWidth, outlineWidth));
-        // left
-        canvas->drawPixelSnappedRect(LayoutRect(rt.x(), rt.y() + outlineWidth,
-                                                outlineWidth,
-                                                rt.height() - outlineWidth));
+        canvas->beginPath();
+
+        canvas->moveTo(rect.x().floor(), rect.y().floor());
+        canvas->lineTo(rect.maxX().floor(), rect.y().floor());
+        canvas->lineTo(rect.maxX().floor(), rect.maxY().floor());
+        canvas->lineTo(rect.x().floor(), rect.maxY().floor());
+        canvas->lineTo(rect.x().floor(), rect.y().floor());
+
+        canvas->lineTo((rect.x() + outlineWidth).floor(),
+                       (rect.y() + outlineWidth).floor());
+        canvas->lineTo((rect.x() + outlineWidth).floor(),
+                       (rect.maxY() - outlineWidth).floor());
+        canvas->lineTo((rect.maxX() - outlineWidth).floor(),
+                       (rect.maxY() - outlineWidth).floor());
+        canvas->lineTo((rect.maxX() - outlineWidth).floor(),
+                       (rect.y() + outlineWidth).floor());
+        canvas->lineTo((rect.x() + outlineWidth).floor(),
+                       (rect.y() + outlineWidth).floor());
+        canvas->lineTo(rect.x().floor(), rect.y().floor());
+        canvas->fill();
 
         canvas->restore();
     }
@@ -792,78 +797,6 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 
     canvas->save();
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-    Canvas* orgCanvas = canvas;
-    bool cairoCanvasUsed = false;
-#endif
-
-// apply clip if border-radius exists
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-    if (hasFrameBorderRadius()) {
-        const LayoutRect rect(0, 0, width(), height());
-        auto br = frameBorderRadius();
-        float arcR;
-        float topLeftHorizontal =
-            br.m_topLeftHorizontal.specifiedValue(width(), this);
-        float topLeftVertical =
-            br.m_topLeftVertical.specifiedValue(height(), this);
-        float topRightHorizontal =
-            br.m_topRightHorizontal.specifiedValue(width(), this);
-        float topRightVertical =
-            br.m_topRightVertical.specifiedValue(height(), this);
-        float bottomLeftHorizontal =
-            br.m_bottomLeftHorizontal.specifiedValue(width(), this);
-        float bottomLeftVertical =
-            br.m_bottomLeftVertical.specifiedValue(height(), this);
-        float bottomRightHorizontal =
-            br.m_bottomRightHorizontal.specifiedValue(width(), this);
-        float bottomRightVertical =
-            br.m_bottomRightVertical.specifiedValue(height(), this);
-
-        cairoCanvasUsed = true;
-        if (!ensureFrameBoxRareData()->m_bufferForBorderRadius ||
-            frameBoxRareData()->m_bufferForBorderRadius->width() !=
-                width().toUnsigned() ||
-            frameBoxRareData()->m_bufferForBorderRadius->height() !=
-                height().toUnsigned()) {
-            frameBoxRareData()->m_bufferForBorderRadius =
-                NativeImageData::create(width().toUnsigned(),
-                                        height().toUnsigned());
-        }
-
-        canvas = Canvas::createGenericCanvas(
-            node()->starFish(),
-            frameBoxRareData()->m_bufferForBorderRadius->data(),
-            frameBoxRareData()->m_bufferForBorderRadius->width(),
-            frameBoxRareData()->m_bufferForBorderRadius->height());
-    } else {
-        BorderData border = style()->border();
-        if (border.top().style() == BorderStyleValue::DashedBorderStyleValue ||
-            border.right().style() ==
-                BorderStyleValue::DashedBorderStyleValue ||
-            border.bottom().style() ==
-                BorderStyleValue::DashedBorderStyleValue ||
-            border.left().style() == BorderStyleValue::DashedBorderStyleValue) {
-            cairoCanvasUsed = true;
-            if (!ensureFrameBoxRareData()->m_bufferForBorderRadius ||
-                frameBoxRareData()->m_bufferForBorderRadius->width() !=
-                    width().toUnsigned() ||
-                frameBoxRareData()->m_bufferForBorderRadius->height() !=
-                    height().toUnsigned()) {
-                frameBoxRareData()->m_bufferForBorderRadius =
-                    NativeImageData::create(width().toUnsigned(),
-                                            height().toUnsigned());
-            }
-
-            canvas = Canvas::createGenericCanvas(
-                node()->starFish(),
-                frameBoxRareData()->m_bufferForBorderRadius->data(),
-                frameBoxRareData()->m_bufferForBorderRadius->width(),
-                frameBoxRareData()->m_bufferForBorderRadius->height());
-        }
-    }
-#endif
-
     paintBoxShadows(canvas);
     const LayoutRect rect(0, 0, width(), height());
     applyBorderRadiusClippingIfNeeds(canvas, rect);
@@ -888,15 +821,6 @@ void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
     paintInsetBoxShadows(canvas);
 
     paintBorders(canvas, LayoutRect(0, 0, width(), height()));
-
-#if defined(PORT_GRAPHIC_BACKEND_EFL)
-    if (cairoCanvasUsed) {
-        delete canvas;
-        canvas = orgCanvas;
-        canvas->drawImage(ensureFrameBoxRareData()->m_bufferForBorderRadius,
-                          Unit::Rect(0, 0, width(), height()));
-    }
-#endif
 
     canvas->restore();
 }
@@ -1021,8 +945,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                                                    (double)topLeftHorizontal);
                     NativeImageData* nativeImage =
                         NativeImageData::create(bufImageSize, bufImageSize);
-                    Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
-                                                             nativeImage);
+                    Canvas* cv =
+                        Canvas::create(node()->starFish(), nativeImage);
                     cv->unsetDevicePixelRatio();
                     auto shadowColor =
                         shadow->hasColor() ? shadow->color() : s->color();
@@ -1166,8 +1090,8 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     NativeImageData* nativeImage = NativeImageData::create(
                         ceil(shadowRect.width() + radiusOffset),
                         ceil(shadowRect.height() + radiusOffset));
-                    Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
-                                                             nativeImage);
+                    Canvas* cv =
+                        Canvas::create(node()->starFish(), nativeImage);
                     cv->unsetDevicePixelRatio();
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
 
@@ -1264,8 +1188,7 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                 NativeImageData* nativeImage = NativeImageData::create(
                     ceil(ImageRect.width()), ceil(ImageRect.height()));
-                Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
-                                                         nativeImage);
+                Canvas* cv = Canvas::create(node()->starFish(), nativeImage);
                 cv->unsetDevicePixelRatio();
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
 
@@ -1450,8 +1373,7 @@ static inline void paintRepeatGradient(
 
     NativeImageData* nativeImage =
         NativeImageData::create(ceil(width), ceil(height));
-    Canvas* cv =
-        Canvas::createGenericCanvas(box->node()->starFish(), nativeImage);
+    Canvas* cv = Canvas::create(box->node()->starFish(), nativeImage);
     cv->clearColor(Unit::Color(0, 0, 0, 0));
 
     ImageValue* imageValue = style->backgroundImage(idx);
@@ -1830,16 +1752,14 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
     // draw border-image
     BorderData border = style()->border();
     if (border.hasBorderImageData()) {
-// Draw image borders at the four corners as shown below.
-//   ______________
-//  |_|          |_|
-//  |              |
-//  |              |
-//  |_            _|
-//  |_|__________|_|
-//
-
-#if !defined(PORT_CANVAS_BACKEND_EFL)
+        // Draw image borders at the four corners as shown below.
+        //   ______________
+        //  |_|          |_|
+        //  |              |
+        //  |              |
+        //  |_            _|
+        //  |_|__________|_|
+        //
         double bLWidth = border.left().width().specifiedValue(width(), this);
         double bTWidth = border.top().width().specifiedValue(height(), this);
         double bRWidth = border.right().width().specifiedValue(width(), this);
@@ -2050,82 +1970,6 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
         }
 
         canvas->setNeedsFastAntialias();
-#else
-        double bWidth = border.top().width().specifiedValue(height(), this);
-        double bImgWidth =
-            border.image().widths().top().specifiedValue(bWidth, this);
-        double bImgSlice =
-            border.image().slices().top().computedBorderImageSlice(height(),
-                                                                   this);
-
-        size_t imgWidth = border.image().imageData()->width();
-        size_t imgHeight = border.image().imageData()->height();
-
-        size_t lSlice = border.image().slices().left().computedBorderImageSlice(
-            imgWidth, this);
-        size_t tSlice = border.image().slices().top().computedBorderImageSlice(
-            imgHeight, this);
-        size_t rSlice =
-            border.image().slices().right().computedBorderImageSlice(imgWidth,
-                                                                     this);
-        size_t bSlice =
-            border.image().slices().bottom().computedBorderImageSlice(imgHeight,
-                                                                      this);
-
-        NativeImageData* imgData = border.image().imageData();
-
-        if (bImgSlice > imgWidth || bImgSlice > imgHeight) {
-            bImgSlice = std::min(imgWidth, imgHeight);
-        }
-
-        double value = std::min((float)width() / (bImgWidth * 2),
-                                (float)height() / (bImgWidth * 2));
-        if (value < 1) {
-            bImgWidth *= value;
-        }
-
-        double scale = bImgWidth / bImgSlice;
-        bool isFill = false;
-
-        if ((lSlice + rSlice > imgWidth) || (tSlice + bSlice > imgHeight)) {
-            float drawRect = std::min((float)width(), (float)height()) / 2.0;
-
-            if (drawRect > bImgWidth) {
-                drawRect = bImgWidth;
-            }
-
-            // left-top
-            canvas->drawBorderImage(
-                imgData, Unit::Rect(rect.x(), rect.y(), drawRect, drawRect),
-                lSlice, tSlice, 0, 0, scale, isFill);
-
-            // right-top
-            canvas->drawBorderImage(imgData,
-                                    Unit::Rect((float)rect.width() - drawRect,
-                                               rect.y(), drawRect, drawRect),
-                                    0, tSlice, rSlice, 0, scale, isFill);
-
-            // right-bottom
-            canvas->drawBorderImage(
-                imgData, Unit::Rect((float)rect.width() - drawRect,
-                                    (float)(rect.y() + height()) - drawRect,
-                                    drawRect, drawRect),
-                0, 0, rSlice, bSlice, scale, isFill);
-
-            // left-bottom
-            canvas->drawBorderImage(
-                imgData,
-                Unit::Rect(rect.x(), (float)(rect.y() + height()) - drawRect,
-                           drawRect, drawRect),
-                lSlice, 0, 0, bSlice, scale, isFill);
-        } else {
-            isFill = border.image().sliceFill();
-            canvas->drawBorderImage(
-                imgData,
-                Unit::Rect(rect.x(), rect.y(), rect.width(), rect.height()),
-                lSlice, tSlice, rSlice, bSlice, scale, isFill);
-        }
-#endif
     } else if (border.hasBorderStyle()) {
         if (hasFrameBorderRadius()) {
             LayoutRect borderRect = rect;
@@ -2573,38 +2417,6 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 (border.right().color() == border.bottom().color()) &&
                 (border.bottom().color() == border.left().color())) {
                 canvas->setColor(border.top().color());
-#ifdef PORT_GRAPHIC_BACKEND_EFL
-                // Draw solid borders fast around the given rect
-                // when all 4 colors are the same.
-                //    _______________
-                //   |_______________|
-                //   | |           | |
-                //   | |           | |
-                //   | |           | |
-                //   |_|___________|_|
-                //   |_______________|
-                //
-
-                // top
-                canvas->drawPixelSnappedRect(
-                    LayoutRect(rect.x(), rect.y(), rect.width(), borderTop()));
-
-                // right
-                canvas->drawPixelSnappedRect(
-                    LayoutRect(rect.x() + rect.width() - borderRight(),
-                               rect.y() + borderTop(), borderRight(),
-                               rect.height() - borderHeight()));
-
-                // bottom
-                canvas->drawPixelSnappedRect(LayoutRect(
-                    rect.x(), rect.y() + rect.height() - borderBottom(),
-                    width(), borderBottom()));
-
-                // left
-                canvas->drawPixelSnappedRect(
-                    LayoutRect(rect.x(), rect.y() + borderTop(), borderLeft(),
-                               rect.height() - borderHeight()));
-#else
                 canvas->beginPath();
 
                 canvas->moveTo(rect.x().floor(), rect.y().floor());
@@ -2625,7 +2437,6 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                                (rect.y() + borderTop()).floor());
                 canvas->lineTo(rect.x().floor(), rect.y().floor());
                 canvas->fill();
-#endif
             } else {
                 // Draw trapezium-like borders around the given rect
                 //    _______________

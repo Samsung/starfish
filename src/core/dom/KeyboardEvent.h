@@ -186,12 +186,6 @@ public:
 
     bool repeat() const
     {
-#ifndef NDEBUG
-#if !defined(PORT_GRAPHIC_BACKEND_EFL) && \
-    !defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO)
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-#endif
-#endif
         return m_keyboardEventData.repeat();
     }
 

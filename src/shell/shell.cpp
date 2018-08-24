@@ -380,13 +380,5 @@ int main(int argc, char* argv[])
     ecore_shutdown();
 #endif
 
-#ifndef NDEBUG
-    clearStack<102400>();
-#endif
-
-#if !defined(STARFISH_DALI)
-    GC_gcollect_and_unmap();
-#endif
-
     return 0;
 }

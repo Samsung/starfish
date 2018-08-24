@@ -27,10 +27,6 @@ namespace StarFish {
 
 class CompositorMock : public Compositor {
 public:
-    CompositorMock(StarFish* starfish, void* data)
-    {
-    }
-
     CompositorMock(StarFish* starfish, CanvasSurface* data)
     {
     }
@@ -123,16 +119,15 @@ public:
     }
 };
 
-Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
-                               void* data)
-{
-    return new CompositorMock(starfish, data);
-}
-
-Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
-                               CanvasSurface* surface)
+Compositor* Compositor::create2D(StarFish* starfish, CompositorContext* ctx,
+                                 CanvasSurface* surface)
 {
     return new CompositorMock(starfish, surface);
+}
+
+Compositor* Compositor::create3D(StarFish* starfish, CompositorContext* ctx)
+{
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 }
 

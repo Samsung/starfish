@@ -446,13 +446,6 @@ public:
         return m_fontSelector;
     }
 
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    FontSelector* fontSelectorGeneric()
-    {
-        return m_fontSelectorGeneric;
-    }
-#endif
-
     String* characterSet()
     {
         return m_characterSet;
@@ -648,9 +641,6 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resourceLoader));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fontSelector));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_preloadScanner));
-#if defined(PORT_CANVAS_BACKEND_EFL)
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fontSelectorGeneric));
-#endif
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webFontList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_loadedWebFontList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleResolver));
@@ -706,9 +696,6 @@ protected:
     String* m_contentType;
     ResourceLoader* m_resourceLoader;
     FontSelector* m_fontSelector;
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    FontSelector* m_fontSelectorGeneric;
-#endif
     GCVector<WebFont> m_webFontList;
     GCVector<FontResource*> m_loadedWebFontList;
     PreloadScanner* m_preloadScanner;

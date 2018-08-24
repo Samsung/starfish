@@ -80,9 +80,7 @@ public:
         m_imageData = cache->asImageResource()->m_imageData;
         Resource::didLoadFinished();
     }
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    static void doLoadFile(void*);
-#endif
+
 protected:
     bool m_shouldDecodingInstantly;
     NativeImageData* m_imageData;
