@@ -244,7 +244,7 @@ http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/createDocum
 http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_html.html
 http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_bmp.html
 #http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/xhr_responseType_document.html
-#http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_javascripturi.html
+http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_javascripturi.html
 #http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_mimeheader_02.html
 http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_jpg.html
 #http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_datauri_02.html
