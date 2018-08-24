@@ -29,7 +29,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "platform/window/PlatformWindow.h"
 
-#if defined(STARFISH_ENABLE_TEST)
+#if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
 #include <cairo.h>
 #endif
 
@@ -2019,6 +2019,7 @@ Compositor* Compositor::create2D(StarFish* starfish, CompositorContext* ctx,
 }
 
 #if defined(STARFISH_ENABLE_TEST)
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
 void screenShotImpl(PlatformWindow* wnd, const char* path,
                     std::function<void()> callback)
 {
@@ -2074,6 +2075,12 @@ void screenShotImpl(PlatformWindow* wnd, const char* path,
     delete buffer;
     callback();
 }
+#elif defined(PORT_CANVAS_BACKEND_SKIA)
+void screenShotImpl(PlatformWindow* wnd, const char* path,
+                    std::function<void()> callback)
+{
+}
+#endif
 #endif
 
 } // namespace StarFish
