@@ -229,7 +229,7 @@ public:
     virtual void Destroy();
 
     Settings GetSettings();
-    void LoadURL(const std::string& url);
+    virtual void LoadURL(const std::string& url);
     std::string GetURL();
     void LoadData(const std::string& data);
     void Reload();
@@ -264,8 +264,8 @@ public:
         return nullptr;
     }
 
-    void RunMessageLoop();
-    void StopMessageLoop();
+    virtual void RunMessageLoop();
+    virtual void StopMessageLoop();
 
 protected:
     WebView(void* impl)

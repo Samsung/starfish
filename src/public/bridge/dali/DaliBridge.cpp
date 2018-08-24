@@ -21,6 +21,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "LWEWebView.h"
+#include "DaliStarFishBinder.h"
 
 #if defined(STARFISH_TIZEN)
 #define STARFISH_DALI_TBMSURFACE
@@ -37,6 +38,136 @@
 #include "platform/event/PlatformKeyEventData.h"
 #include "core/event/KeyBoardEventData.h"
 
+LWE::KeyValue eventKeyToKeyboardData(const char* DALIKeyString,
+                                     bool isShiftPressed)
+{
+    LWE::KeyValue keyValue = LWE::KeyValue::UnidentifiedKey;
+    if (strcmp("Left", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::ArrowLeftKey;
+    } else if (strcmp("Right", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::ArrowRightKey;
+    } else if (strcmp("Up", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::ArrowUpKey;
+    } else if (strcmp("Down", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::ArrowDownKey;
+    } else if (strcmp("space", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::SpaceKey;
+    } else if (strcmp("Return", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::EnterKey;
+    } else if (strcmp("BackSpace", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::BackspaceKey;
+    } else if (strcmp("Escape", DALIKeyString) == 0) {
+        keyValue = LWE::KeyValue::EscapeKey;
+    } else if (strcmp("minus", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::MinusMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::UnderScoreMarkKey;
+        }
+    } else if (strcmp("equal", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::PlusMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::EqualitySignKey;
+        }
+    } else if (strcmp("bracketleft", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::LeftCurlyBracketMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::LeftSquareBracketKey;
+        }
+    } else if (strcmp("bracketright", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::RightCurlyBracketMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::RightSquareBracketKey;
+        }
+    } else if (strcmp("semicolon", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::ColonMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::SemiColonMarkKey;
+        }
+    } else if (strcmp("apostrophe", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::DoubleQuoteMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::SingleQuoteMarkKey;
+        }
+    } else if (strcmp("comma", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::LessThanMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::CommaMarkKey;
+        }
+    } else if (strcmp("period", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::GreaterThanSignKey;
+        } else {
+            keyValue = LWE::KeyValue::PeriodKey;
+        }
+    } else if (strcmp("slash", DALIKeyString) == 0) {
+        if (isShiftPressed) {
+            keyValue = LWE::KeyValue::QuestionMarkKey;
+        } else {
+            keyValue = LWE::KeyValue::SlashKey;
+        }
+    } else if (strlen(DALIKeyString) == 1) {
+        char ch = DALIKeyString[0];
+        if (ch >= '0' && ch <= '9') {
+            if (isShiftPressed) {
+                switch (ch) {
+                case '1':
+                    keyValue = LWE::KeyValue::ExclamationMarkKey;
+                    break;
+                case '2':
+                    keyValue = LWE::KeyValue::AtMarkKey;
+                    break;
+                case '3':
+                    keyValue = LWE::KeyValue::SharpMarkKey;
+                    break;
+                case '4':
+                    keyValue = LWE::KeyValue::DollarMarkKey;
+                    break;
+                case '5':
+                    keyValue = LWE::KeyValue::PercentMarkKey;
+                    break;
+                case '6':
+                    keyValue = LWE::KeyValue::CaretMarkKey;
+                    break;
+                case '7':
+                    keyValue = LWE::KeyValue::AmpersandMarkKey;
+                    break;
+                case '8':
+                    keyValue = LWE::KeyValue::AsteriskMarkKey;
+                    break;
+                case '9':
+                    keyValue = LWE::KeyValue::LeftParenthesisMarkKey;
+                    break;
+                case '0':
+                    keyValue = LWE::KeyValue::RightParenthesisMarkKey;
+                    break;
+                }
+            } else {
+                keyValue = (LWE::KeyValue)(LWE::KeyValue::Digit0Key + ch - '0');
+            }
+        } else if (ch >= 'a' && ch <= 'z') {
+            int kv = LWE::KeyValue::LowerAKey + ch - 'a';
+            if (isShiftPressed) {
+                kv -= ('z' - 'a');
+                kv -= 7;
+            }
+            keyValue = (LWE::KeyValue)kv;
+        }
+    }
+#ifdef STARFISH_TIZEN_TV
+    if ((strcmp("XF86Red", DALIKeyString) == 0)) {
+        keyValue = LWE::KeyValue::TabKey;
+    }
+#endif
+    return keyValue;
+}
+
 #define TO_HANDLE_DATA(ptr) ((UVAsyncHandleData*)ptr->data)
 
 uv_async_t gLauncherHandle;
@@ -50,36 +181,6 @@ struct UVAsyncHandleData {
 };
 
 static void* startMainThread(void* data);
-struct DaliStarFishBinder {
-    void* lweInstance;
-    void* buffer;
-    std::list<size_t> asyncHandlePool;
-    std::string url;
-    int w, h, s;
-    bool canGoBack, canGoForward;
-    bool isRunning;
-    std::function<void(LWE::WebContainer*,
-                       const LWE::WebContainer::RenderResult&)>
-        onRenderedHandler;
-    std::function<void(LWE::WebContainer*, LWE::ResourceError)> onReceivedError;
-    std::function<void(LWE::WebContainer*, const std::string&)>
-        onPageFinishedHandler;
-    std::function<void(LWE::WebContainer*, const std::string&)>
-        onPageStartedHandler;
-    std::function<void(LWE::WebContainer*, const std::string&)>
-        onLoadResourceHandler;
-    DaliStarFishBinder()
-        : lweInstance(nullptr)
-        , buffer(nullptr)
-        , w(0)
-        , h(0)
-        , s(0)
-        , canGoBack(false)
-        , canGoForward(false)
-        , isRunning(false)
-    {
-    }
-};
 
 #define TO_WEBCONTAINER(ptr) ((WebContainer*)ptr->lweInstance)
 
@@ -237,16 +338,11 @@ extern "C" __attribute__((visibility("default"))) void createInstance(
     auto cb = [](void* data) {
         // STARFISH_LOG_INFO("[StarFish] createInstance()\n");
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
-
-        if (binder->buffer) {
-            free(binder->buffer);
-            binder->buffer = nullptr;
-        }
-        binder->buffer = malloc(binder->w * binder->h * sizeof(uint32_t));
         binder->lweInstance = WebContainer::Create(
-            binder->buffer, binder->w, binder->h, binder->s, 1.0, "ko-KR",
-            "Asia/Seoul", "/tmp/StarFish_localStorage.txt",
-            "/tmp/StarFish_Cookies.txt", "/tmp/StarFish-cache");
+            binder->outputBuffer, binder->outputWidth, binder->outputHeight,
+            binder->outputStride, 1.0, "ko-KR", "Asia/Seoul",
+            "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
+            "/tmp/StarFish-cache");
         TO_WEBCONTAINER(binder)
             ->RegisterOnRenderedHandler(
                 [binder](LWE::WebContainer* container,
@@ -327,16 +423,16 @@ extern "C" __attribute__((visibility("default"))) void setSize(
     auto cb = [](void* data) {
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
 
-        if (binder->buffer) {
-            free(binder->buffer);
-            binder->buffer = nullptr;
+        if (binder->outputBuffer) {
+            free(binder->outputBuffer);
+            binder->outputBuffer = nullptr;
         }
-        binder->buffer = malloc(binder->w * binder->h * sizeof(uint32_t));
-        // STARFISH_LOG_INFO("[StarFish] setSize()
-        // [binder->buffer:%p][w:%d][h:%d]\n",binder->buffer, binder->w,
-        // binder->h);
+        binder->outputBuffer = (uint8_t*)malloc(
+            binder->outputWidth * binder->outputHeight * sizeof(uint32_t));
+        binder->outputStride = binder->outputWidth * sizeof(uint32_t);
         TO_WEBCONTAINER(binder)
-            ->UpdateBuffer(binder->buffer, binder->w, binder->h, binder->s);
+            ->UpdateBuffer(binder->outputBuffer, binder->outputWidth,
+                           binder->outputHeight, binder->outputStride);
     };
     sendAsyncHandle(binder, cb);
 }
