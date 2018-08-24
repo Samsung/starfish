@@ -196,7 +196,7 @@ public:
         m_imageWidth = m_bufferWidth = m_width = w;
         m_imageHeight = m_bufferHeight = m_height = h;
         m_pixelRatio = 1;
-        m_buffer = nullptr;
+        m_buffer = buffer;
     }
 
     virtual void detachNativeBuffer()
