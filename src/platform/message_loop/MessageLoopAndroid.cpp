@@ -96,19 +96,17 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     id->m_data = data;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler =
-        startIdler(0,
-                   [](int, void* data) -> bool {
-                       IdlerData* id = (IdlerData*)data;
-                       removeIderFromList(id->m_ml->m_idlers, id);
-                       if (validateContext(id->m_ctx)) {
-                           StarFishEnterer enter(id->m_ml->m_starFish);
-                           id->m_fn((size_t)id, id->m_data);
-                       }
-                       GC_FREE(id);
-                       return false;
-                   },
-                   id);
+    id->m_idler = startIdler(0,
+                             [](int, void* data) -> bool {
+                                 IdlerData* id = (IdlerData*)data;
+                                 removeIderFromList(id->m_ml->m_idlers, id);
+                                 if (validateContext(id->m_ctx)) {
+                                     id->m_fn((size_t)id, id->m_data);
+                                 }
+                                 GC_FREE(id);
+                                 return false;
+                             },
+                             id);
     return (size_t)id;
 }
 
@@ -126,20 +124,18 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data1 = data1;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler =
-        startIdler(0,
-                   [](int, void* data) -> bool {
-                       IdlerData* id = (IdlerData*)data;
-                       removeIderFromList(id->m_ml->m_idlers, id);
-                       if (validateContext(id->m_ctx)) {
-                           StarFishEnterer enter(id->m_ml->m_starFish);
-                           ((void (*)(size_t, void*, void*))id->m_fn)(
-                               (size_t)id, id->m_data, id->m_data1);
-                       }
-                       GC_FREE(id);
-                       return false;
-                   },
-                   id);
+    id->m_idler = startIdler(0,
+                             [](int, void* data) -> bool {
+                                 IdlerData* id = (IdlerData*)data;
+                                 removeIderFromList(id->m_ml->m_idlers, id);
+                                 if (validateContext(id->m_ctx)) {
+                                     ((void (*)(size_t, void*, void*))id->m_fn)(
+                                         (size_t)id, id->m_data, id->m_data1);
+                                 }
+                                 GC_FREE(id);
+                                 return false;
+                             },
+                             id);
 
     return (size_t)id;
 }
@@ -165,7 +161,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
             if (validateContext(id->m_ctx)) {
-                StarFishEnterer enter(id->m_ml->m_starFish);
                 ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                     (size_t)id, id->m_data, id->m_data1, id->m_data2);
             }
@@ -203,7 +198,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                 removeIderFromList(id->m_ml->m_idlersFromOtherThread, id);
             }
             if (id->m_valid && validateContext(id->m_ctx)) {
-                StarFishEnterer enter(id->m_ml->m_starFish);
                 id->m_fn((size_t)id, id->m_data);
             }
             delete id;
@@ -241,7 +235,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                 removeIderFromList(id->m_ml->m_idlersFromOtherThread, id);
             }
             if (id->m_valid && validateContext(id->m_ctx)) {
-                StarFishEnterer enter(id->m_ml->m_starFish);
                 ((void (*)(size_t, void*, void*))id->m_fn)(
                     (size_t)id, id->m_data, id->m_data1);
             }

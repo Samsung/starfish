@@ -308,12 +308,35 @@ inline void clearStack()
 #error
 #endif
 
+// https://sourceforge.net/p/predef/wiki/Architectures/
 #if INTPTR_MAX == INT32_MAX
 #define STARFISH_32
 #elif INTPTR_MAX == INT64_MAX
 #define STARFISH_64
 #else
 #error "Environment not 32 or 64-bit."
+#endif
+
+#if defined(__amd64__) || defined(__amd64) || defined(__x86_64__) || \
+    defined(__x86_64) || defined(_M_X64) || defined(_M_AMD64)
+#define STARFISH_X86_64
+
+#elif defined(i386) || defined(__i386) || defined(__i386__) ||      \
+    defined(__IA32__) || defined(_M_IX86) || defined(__X86__) ||    \
+    defined(_X86_) || defined(__THW_INTEL__) || defined(__I86__) || \
+    defined(__INTEL__) || defined(__386)
+#define STARFISH_X86
+
+#elif defined(__arm__) || defined(__thumb__) || defined(_ARM) || \
+    defined(_M_ARM) || defined(_M_ARMT) || defined(__arm) || defined(__arm)
+#define STARFISH_ARM
+#if defined(__aarch64__)
+#undef STARFISH_ARM
+#define STARFISH_ARM64
+#endif
+
+#else
+#error "Could't find cpu arch."
 #endif
 
 #if defined(OS_WINDOWS)

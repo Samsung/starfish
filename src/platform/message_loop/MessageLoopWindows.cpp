@@ -85,7 +85,6 @@ public:
             STARFISH_ASSERT(message.message == IDLE_MESSAGE);
             IdlerData* id = (IdlerData*)message.wParam;
             if (id->m_shouldExecute) {
-                StarFishEnterer enter(id->m_ml->m_starFish);
                 if (message.lParam == 1) {
                     id->m_fn((size_t)id, id->m_data);
                 } else if (message.lParam == 2) {
@@ -109,7 +108,6 @@ public:
             STARFISH_ASSERT(message.message == IDLE_MESSAGE_FROM_OTHER_THREAD);
             IdlerData* id = (IdlerData*)message.wParam;
             if (id->m_shouldExecute) {
-                StarFishEnterer enter(self->starFish());
                 if (message.lParam == 1) {
                     id->m_fn((size_t)id, id->m_data);
                 } else if (message.lParam == 2) {

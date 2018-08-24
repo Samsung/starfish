@@ -85,14 +85,12 @@ size_t Timer::addTimer(unsigned delay, Window* window,
                 KillTimer(NULL, timerId);
                 auto iter = td->m_timer->m_timeoutHandler.find(td->m_id);
                 if (iter != td->m_timer->m_timeoutHandler.end()) {
-                    StarFishEnterer enter(td->m_timer->m_starFish);
                     td->m_timer->m_timeoutHandler.erase(iter);
                     td->m_handler(td->m_window, td->m_data);
                     GC_FREE(td);
                     g_windowsTimerData.erase((size_t)timerId);
                 }
             } else {
-                StarFishEnterer enter(td->m_timer->m_starFish);
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
                 td->m_handler(td->m_window, td->m_data);
             }
@@ -131,7 +129,6 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
                  [](HWND, UINT, UINT_PTR timerId, DWORD) {
                      TimeoutData* td =
                          (TimeoutData*)g_windowsTimerData[timerId];
-                     StarFishEnterer enter(td->m_timer->m_starFish);
                      Timer* timer = td->m_timer;
                      int32_t id = td->m_id;
                      td->m_handler(td->m_window, td->m_data);
@@ -163,7 +160,6 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
                  [](HWND, UINT, UINT_PTR timerId, DWORD) {
                      AnimationTickData* ad =
                          (AnimationTickData*)g_windowsTimerData[timerId];
-                     StarFishEnterer enter(ad->m_timer->m_starFish);
                      auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
                      if (ad->m_handler(ad->m_data)) {
                          return;

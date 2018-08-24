@@ -42,6 +42,13 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 
 namespace StarFish {
 
+#ifdef STARFISH_ENABLE_TEST
+void screenShotInRendering(StarFish*, char const*, std::function<void()>)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+#endif
+
 class WindowImplGB : public PlatformWindow {
 public:
     WindowImplGB(StarFish* sf, int32_t width, int32_t height)
@@ -63,7 +70,7 @@ public:
         return m_height;
     }
 
-    virtual void resizeTo(int w, int h)
+    virtual void resizeTo(int w, int h) override
     {
         if (w != (int)m_width || h != (int)m_height) {
             m_width = w;
@@ -73,7 +80,8 @@ public:
     }
 
     virtual void updateDrawingBufferAddress(void* buf, uint32_t width,
-                                            uint32_t height, uint32_t stride)
+                                            uint32_t height,
+                                            uint32_t stride) override
     {
         if (buf != nullptr) {
             PlatformWindow::updateDrawingBufferAddress(buf, width, height,
@@ -83,19 +91,18 @@ public:
         }
     }
 
-    virtual void* unwrap()
+    virtual void* unwrap() override
     {
         return nullptr;
     }
 
-    virtual void* drawingBufferAddress()
+    virtual void* drawingBufferAddress() override
     {
         return m_internalBuffer;
     }
 
-    virtual void clearResources();
-    virtual Canvas* preparePainting();
-    virtual Compositor* prepareCompositor();
+    virtual Canvas* preparePainting() override;
+    virtual Compositor* prepareCompositor() override;
 
     uint32_t m_width;
     uint32_t m_height;
