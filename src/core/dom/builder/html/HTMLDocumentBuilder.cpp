@@ -283,7 +283,26 @@ public:
         Document* document = m_builder.document();
 
         if (m_htmlSource->isEmpty()) {
-            m_htmlSource = createBlankHTMLSource();
+            if (resource() && resource()->url() &&
+                resource()->url()->urlString() &&
+                resource()->url()->urlString()->length() > 11 &&
+                resource()->url()->urlString()->startsWith("javascript:")) {
+                String* urlString = resource()->url()->urlString();
+                String* script =
+                    urlString->substring(11, urlString->length() - 11);
+                String* ret = toBrowserString(
+                    document->window()->scriptBindingInstance(),
+                    evaluateString(document->window()->scriptBindingInstance(),
+                                   script));
+
+                StringBuilder sb;
+                sb.appendString("<html><head></head><body><text>");
+                sb.appendString(ret);
+                sb.appendString("</text></body></html>");
+                m_htmlSource = sb.finalize();
+            } else {
+                m_htmlSource = createBlankHTMLSource();
+            }
         }
 
         document->m_preloadScanner = new PreloadScanner(document, m_htmlSource);
