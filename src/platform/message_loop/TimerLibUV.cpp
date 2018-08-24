@@ -85,14 +85,17 @@ size_t Timer::addTimer(unsigned delay, Window* window,
 
     uv_timer_init(uv_default_loop(), td->m_timerID);
     if (repetitive) {
-        uv_timer_start(td->m_timerID,
-                       [](uv_timer_t* handle) -> void {
-                           TimeoutData* td = (TimeoutData*)handle->data;
-                           auto a =
-                               td->m_timer->m_timeoutHandler.find(td->m_id);
-                           td->m_handler(td->m_window, td->m_data);
-                       },
-                       0, static_cast<uint64_t>(delay));
+        if (delay == 0) {
+            delay = 1;
+        }
+        uv_timer_start(
+            td->m_timerID,
+            [](uv_timer_t* handle) -> void {
+                TimeoutData* td = (TimeoutData*)handle->data;
+                auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
+                td->m_handler(td->m_window, td->m_data);
+            },
+            static_cast<uint64_t>(delay), static_cast<uint64_t>(delay));
     } else {
         uv_timer_start(td->m_timerID,
                        [](uv_timer_t* handle) -> void {
