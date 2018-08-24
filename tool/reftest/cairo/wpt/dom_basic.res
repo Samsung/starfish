@@ -240,7 +240,7 @@ http://10.113.111.47:8000/dom/nodes/getElementsByClassName-20.htm
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-17.htm
 #http://10.113.111.47:8000/dom/nodes/MutationObserver-takeRecords.html
 http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/createDocument.html
-#http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_gif.html
+http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_gif.html
 http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_html.html
 http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/contenttype_bmp.html
 http://10.113.111.47:8000/dom/nodes/Document-contentType/contentType/xhr_responseType_document.html
