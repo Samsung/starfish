@@ -30,9 +30,9 @@ if [ "$arch" == "x64" ]; then
         cd $STARFISH_ROOT
         cd ./third_party/android/skia/
         rm -rf out/
-        bin/gn gen out/Release/Shared --args="is_component_build=true is_debug=false target_cpu=\"x64\""
+        bin/gn gen out/Release/Shared --args="is_component_build=true is_debug=false is_rgba=true target_cpu=\"x64\""
+        bin/gn gen out/Debug/Shared --args="is_component_build=true is_rgba=true target_cpu=\"x64\""
         ninja -C out/Release/Shared
-        bin/gn gen out/Debug/Shared --args="is_component_build=true target_cpu=\"x64\""
         ninja -C out/Debug/Shared
     fi
 #TODO libtuv for x64
