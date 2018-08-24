@@ -220,9 +220,6 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     WebContainer* newWebContainer =
         new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(starfish);
 
-#if defined(STARFISH_ANDROID)
-    starfish->setLWEWebView(newWebContainer);
-#endif
     return newWebContainer;
 }
 
@@ -296,9 +293,6 @@ WebContainer* WebContainer::CreateGL(
             onGLSwapBuffers(newWebContainer);
         });
 
-#if defined(STARFISH_ANDROID)
-    starfish->setLWEWebView(newWebContainer);
-#endif
     return newWebContainer;
 }
 

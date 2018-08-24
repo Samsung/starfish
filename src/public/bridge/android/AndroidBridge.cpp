@@ -453,7 +453,7 @@ Java_com_samsung_android_mobileservice_lwe_SemWebView_onDropdownMenuItemSelected
     Param* p = new Param();
     p->position = position;
 
-    webContainer->callHandler(std::string("onDropdownMenuItemSelected"),
+    webContainer->CallHandler(std::string("onDropdownMenuItemSelected"),
                               (void*)p);
 }
 
@@ -1099,7 +1099,7 @@ Java_com_samsung_android_mobileservice_lwe_SemWebView_dispatchKeyDown(
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->DispatchKeyDownEvent(
-        virtualKeyCodeToKeyValue((char)keyCode, modifier), 0);
+        virtualKeyCodeToKeyValue((char)keyCode, modifier));
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1108,7 +1108,7 @@ Java_com_samsung_android_mobileservice_lwe_SemWebView_dispatchKeyUp(
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->DispatchKeyUpEvent(
-        virtualKeyCodeToKeyValue((char)keyCode, modifier), 0);
+        virtualKeyCodeToKeyValue((char)keyCode, modifier));
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -1117,7 +1117,7 @@ Java_com_samsung_android_mobileservice_lwe_SemWebView_dispatchKeyPress(
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->DispatchKeyPressEvent(
-        virtualKeyCodeToKeyValue((char)keyCode, modifier), 0);
+        virtualKeyCodeToKeyValue((char)keyCode, modifier));
 }
 
 extern "C" JNIEXPORT void JNICALL
