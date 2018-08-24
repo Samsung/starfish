@@ -21,6 +21,7 @@
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/DOMParser.h"
 #include "core/dom/ProgressEvent.h"
 #include "core/fileapi/Blob.h"
 #include "core/xml/XMLHttpRequest.h"
@@ -144,6 +145,19 @@ public:
                         m_xhr->m_resourceRequest->response().size());
                     m_xhr->m_resourceRequest->response().clear();
                     m_xhr->m_resourceRequest->response().shrink_to_fit();
+                } else if (m_xhr->m_responseType ==
+                           XMLHttpRequest::ResponseType::Document) {
+                    void* buffer =
+                        calloc(1, m_xhr->m_resourceRequest->response().size());
+                    memcpy(buffer, m_xhr->m_resourceRequest->response().data(),
+                           m_xhr->m_resourceRequest->response().size());
+                    DOMParser* parser = new DOMParser(m_xhr->document());
+                    m_xhr->m_responseXML = parser->parseFromString(
+                        String::fromUTF8(static_cast<const char*>(buffer)),
+                        request->responseMimeType());
+
+                    m_xhr->m_resourceRequest->response().clear();
+                    m_xhr->m_resourceRequest->response().shrink_to_fit();
                 } else {
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
@@ -184,6 +198,7 @@ void XMLHttpRequest::initResponseData()
     m_responseJsonObject = scriptNull();
     m_responseBlob = nullptr;
     m_responseArrayBuffer = scriptNull();
+    m_responseXML = nullptr;
 }
 
 void XMLHttpRequest::send(Nullable<String*> body)
@@ -363,6 +378,8 @@ ScriptValue XMLHttpRequest::response() const
         }
     } else if (m_responseType == ResponseType::ArrayBuffer) {
         result = m_responseArrayBuffer;
+    } else if (m_responseType == ResponseType::Document) {
+        result = m_responseXML->scriptValue();
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -391,6 +408,26 @@ String* XMLHttpRequest::responseText() const
     STARFISH_LOG_INFO("&&&responseText\n");
 #endif
     return m_responseText;
+}
+
+Document* XMLHttpRequest::responseXML() const
+{
+    if (!(m_responseType == ResponseType::Unspecified ||
+          m_responseType == ResponseType::Document)) {
+        throw new DOMException(
+            const_cast<XMLHttpRequest*>(this)
+                ->scriptBindingInstance()
+                ->ownerDocument(),
+            DOMException::INVALID_STATE_ERR,
+            "Failed to read the 'responseXML' property from 'XMLHttpRequest': "
+            "The value is only accessible if the object's 'responseType' is '' "
+            "or 'document'");
+    }
+
+#ifdef STARFISH_TC_COVERAGE
+    STARFISH_LOG_INFO("&&&responseXML\n");
+#endif
+    return m_responseXML;
 }
 
 uint32_t XMLHttpRequest::timeout() const
