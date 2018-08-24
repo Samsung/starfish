@@ -435,7 +435,6 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
     }
 }
 
-#if !defined(PORT_CANVAS_BACKEND_EFL)
 FontSelector* FontSelector::create(Document* document,
                                    PlatformFontSelector* platformFontSelector,
                                    PlatformFontCache* platformFontCache)
@@ -448,22 +447,6 @@ Font* Font::createEmptyFont(FontSelector* s)
 {
     return new FontImplCairo((FontSelectorImplCairo*)s);
 }
-
-#else
-FontSelector* FontSelector::createGenericFontSelector(
-    Document* document, PlatformFontSelector* platformFontSelector,
-    PlatformFontCache* platformFontCache)
-{
-    return new FontSelectorImplCairo(document, platformFontSelector,
-                                     platformFontCache);
-}
-
-Font* Font::createGenericEmptyFont(FontSelector* s)
-{
-    return new FontImplCairo((FontSelectorImplCairo*)s);
-}
-
-#endif
 }
 
 #endif

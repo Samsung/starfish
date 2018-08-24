@@ -109,11 +109,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_fontSelector(
           FontSelector::create(this, window->starFish()->platformFontSelector(),
                                window->starFish()->platformFontCache()))
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    , m_fontSelectorGeneric(FontSelector::createGenericFontSelector(
-          this, window->starFish()->platformFontSelector(),
-          window->starFish()->platformFontCache()))
-#endif
     , m_preloadScanner(nullptr)
     , m_styleResolver(new StyleResolver(this))
     , m_documentBuilder(nullptr)

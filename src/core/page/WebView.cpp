@@ -69,19 +69,11 @@ extern bool g_forceRendering;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
-#if defined(PORT_GRAPHIC_BACKEND_EFL_CAIRO) || \
-    defined(PORT_GRAPHIC_BACKEND_EFL) || defined(PORT_CANVAS_BACKEND_CAIRO)
-#include <cairo.h>
-#endif
-
 namespace StarFish {
 #if defined(STARFISH_ENABLE_TEST)
 // should be defined in each window port
 void screenShotInRendering(StarFish* starfish, const char* path,
                            std::function<void()> callback);
-#endif
-
-#if defined(STARFISH_ENABLE_TEST) && !defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
 // WPT Reference Test
 static Nullable<String*> rtExtractReference(Document* document)
 {
@@ -1165,7 +1157,7 @@ RenderResult WebView::rendering(bool force)
         v.clear();
     }
 
-#if defined(STARFISH_ENABLE_TEST) && !defined(PORT_GRAPHIC_BACKEND_EFL_SKIA)
+#if defined(STARFISH_ENABLE_TEST)
     {
         if (g_fireOnloadEvent &&
             starFish()->TestCompatibleMode() ==

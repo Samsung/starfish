@@ -4892,7 +4892,6 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
         canvas->setFont(s->font());
         canvas->setColor(s->color());
 
-#ifndef PORT_CANVAS_BACKEND_EFL
         bool hasShadow = s->textShadow() ? true : false;
 
         if (hasShadow) {
@@ -4914,8 +4913,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                 }
                 NativeImageData* nativeImage = NativeImageData::create(
                     width + ceil(radiusOffset), height + ceil(radiusOffset));
-                Canvas* cv = Canvas::createGenericCanvas(node()->starFish(),
-                                                         nativeImage);
+                Canvas* cv = Canvas::create(node()->starFish(), nativeImage);
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
                 cv->setFont(s->font());
                 auto tdc = canvas->textDecorationData();
@@ -4951,7 +4949,6 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
             canvas->restore();
         }
-#endif
         canvas->drawText(dx, dy, contentWidth(), txt);
     }
 }

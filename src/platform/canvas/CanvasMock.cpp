@@ -30,11 +30,6 @@ namespace StarFish {
 
 class CanvasMock : public Canvas {
 public:
-    CanvasMock(StarFish* starfish, void* data)
-    {
-        m_starfish = starfish;
-    }
-
     CanvasMock(StarFish* starfish, CanvasSurface* data)
     {
         m_starfish = starfish;
@@ -155,12 +150,6 @@ public:
     {
     }
 
-    virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
-                                 size_t l, size_t t, size_t r, size_t b,
-                                 double scale, bool fill)
-    {
-    }
-
     virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat)
@@ -212,20 +201,20 @@ protected:
     StarFish* m_starfish;
 };
 
-Canvas* Canvas::createDirect(StarFish* starfish, void* data)
-{
-    return new CanvasMock(starfish, data);
-}
-
 Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
 {
     return new CanvasMock(starfish, data);
 }
 
-Canvas* Canvas::createGenericCanvas(StarFish* starfish, void* data, size_t w,
-                                    size_t h)
+Canvas* Canvas::create(StarFish* starfish, uint8_t* data, size_t w, size_t h,
+                       size_t stride)
 {
-    return new CanvasMock(starfish, data);
+    return new CanvasMock(starfish, nullptr);
+}
+
+Canvas* Canvas::create(StarFish* starfish, NativeImageData* data)
+{
+    return new CanvasMock(starfish, nullptr);
 }
 }
 #endif

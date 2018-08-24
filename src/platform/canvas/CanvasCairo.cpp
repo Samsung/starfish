@@ -121,30 +121,6 @@ public:
         save();
     }
 
-    CanvasCairo(StarFish* starfish, void* data)
-    {
-        struct dummy {
-            cairo_t* cairo;
-            cairo_surface_t* surface;
-            int w;
-            int h;
-        };
-        dummy* d = (dummy*)data;
-        m_starfish = starfish;
-        m_canvas = (cairo_t*)d->cairo;
-        m_surface = (cairo_surface_t*)d->surface;
-
-        m_renderTargetInfo.m_buffer = cairo_image_surface_get_data(m_surface);
-        m_renderTargetInfo.m_width = d->w;
-        m_renderTargetInfo.m_height = d->h;
-        m_renderTargetInfo.m_stride = cairo_image_surface_get_stride(m_surface);
-
-        m_shouldDestroyCairo = false;
-        m_shouldDestroySurface = false;
-        init();
-        save();
-    }
-
     CanvasCairo(StarFish* starfish, CanvasSurface* data)
     {
         m_starfish = starfish;
@@ -467,16 +443,6 @@ public:
             return;
         }
 
-#if defined(PORT_CANVAS_BACKEND_EFL)
-        if (!lastState().m_font->isGenericFont()) {
-            Font* nonGenericFont = lastState().m_font;
-            auto font = nonGenericFont->fontSelector()->loadFont(
-                nullptr, 0, nonGenericFont->size(), nonGenericFont->style(),
-                nonGenericFont->weight());
-            setFont(font);
-        }
-#endif
-
         INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::drawText");
 
         LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
@@ -662,15 +628,6 @@ public:
             cairo_surface_destroy(image);
         }
         cairo_restore(m_canvas);
-    }
-
-    virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
-                                 size_t l, size_t t, size_t r, size_t b,
-                                 double scale, bool fill)
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        drawImage(data, dst, ImageRenderingAutoValue);
-        return;
     }
 
     virtual void drawRepeatImageCairo(cairo_surface_t* localSurface,
@@ -1377,25 +1334,18 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-#if !defined(PORT_CANVAS_BACKEND_EFL)
-Canvas* Canvas::createDirect(StarFish* starfish, void* data)
-{
-    return new CanvasCairo(starfish, data);
-}
-
 Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
 {
     return new CanvasCairo(starfish, data);
 }
-#endif
 
-Canvas* Canvas::createGenericCanvas(StarFish* starfish, void* data, size_t w,
-                                    size_t h)
+Canvas* Canvas::create(StarFish* starfish, uint8_t* data, size_t w, size_t h,
+                       size_t stride)
 {
     return new CanvasCairo(starfish, data, w, h, w * 4);
 }
 
-Canvas* Canvas::createGenericCanvas(StarFish* starfish, NativeImageData* data)
+Canvas* Canvas::create(StarFish* starfish, NativeImageData* data)
 {
     return new CanvasCairo(starfish, data);
 }

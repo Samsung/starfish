@@ -114,8 +114,8 @@ public:
                     (int)ret.updateRect.width(), (int)ret.updateRect.height());
                 float oldDPR = m_starFish->screenInfo().devicePixelRatio;
                 m_starFish->screenInfo().devicePixelRatio = 1;
-                Compositor* c = Compositor::create(
-                    starFish(), m_compostiorContext, (void*)nullptr);
+                Compositor* c =
+                    Compositor::create3D(starFish(), m_compostiorContext);
                 c->clearColor(Unit::Color(0, 0, 0, 0));
                 c->drawSurface(m_glPaintingSurface,
                                Unit::Rect(0, 0, width(), height()));
@@ -130,8 +130,7 @@ public:
                                   (float)ret.computedRepaintRect.y(),
                                   (float)ret.computedRepaintRect.width(),
                                   (float)ret.computedRepaintRect.height());
-                auto c = Compositor::create(starFish(), m_compostiorContext,
-                                            (void*)nullptr);
+                auto c = Compositor::create3D(starFish(), m_compostiorContext);
                 c->setColor(Unit::Color(255, 0, 0, 128));
                 c->drawRect(ret.computedRepaintRect);
                 delete c;
@@ -196,7 +195,7 @@ Compositor* WindowImplGL::prepareCompositor()
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;
     }
-    return Compositor::create(starFish(), m_compostiorContext, (void*)nullptr);
+    return Compositor::create3D(starFish(), m_compostiorContext);
 }
 
 PlatformWindow* PlatformWindow::create(StarFish* sf, int width, int height)

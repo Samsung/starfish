@@ -71,26 +71,6 @@ public:
         m_opacityVector.push_back(1);
         save();
     }
-    CompositorSkia(StarFish* starfish, void* data)
-    {
-        struct dummy {
-            SkCanvas* canvas;
-            sk_sp<SkSurface> surface;
-            int w;
-            int h;
-        };
-        dummy* d = (dummy*)data;
-        m_starfish = starfish;
-        m_canvas = d->canvas;
-        m_surface = d->surface;
-        m_width = d->w;
-        m_height = d->h;
-        m_shouldDestroySkia = false;
-        m_shouldDestroySurface = false;
-        m_stateSize = 0;
-        m_opacityVector.push_back(1);
-        save();
-    }
 
     ~CompositorSkia()
     {
@@ -312,17 +292,17 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
-                               void* data)
-{
-    return new CompositorSkia(starfish, data);
-}
-
-Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
-                               CanvasSurface* surface)
+Compositor* Compositor::create2D(StarFish* starfish, CompositorContext* ctx,
+                                 CanvasSurface* surface)
 {
     return new CompositorSkia(starfish, surface);
 }
+
+Compositor* Compositor::create3D(StarFish* starfish, CompositorContext* ctx)
+{
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+}
+
 } // namespace StarFish
 
 #endif

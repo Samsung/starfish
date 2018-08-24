@@ -85,9 +85,9 @@ protected:
             size_t h = (int)svgBox->height();
             NativeImageData* imageData = NativeImageData::create(w, h);
             imageData->clear();
-            Canvas* canvas = Canvas::createGenericCanvas(
+            Canvas* canvas = Canvas::create(
                 m_browsingContext->starFish(), imageData->data(),
-                imageData->width(), imageData->height());
+                imageData->width(), imageData->height(), imageData->stride());
             svgBox->paintReplaced(canvas);
             delete canvas;
 
@@ -104,63 +104,10 @@ protected:
     ImageResource* m_resource;
 };
 
-#if defined(PORT_CANVAS_BACKEND_EFL)
-void ImageResource::doLoadFile(void* data)
-{
-    Resource* res = (Resource*)data;
-    // special path for image resource
-    if (res->url()->isFileURL()) {
-        File* fio = File::create();
-        // NOTE
-        // we should special logic to load file url for image
-        // we can pass src of image to platform layer in efl
-        String* path = res->url()->urlStringWithoutSearchPart();
-        String* filePath = path->substring(7, path->length() - 7);
-        bool canLoad = fio->open(filePath, File::Read);
-        delete fio;
-        if (!canLoad) {
-            res->didLoadFailed();
-            return;
-        }
-        NativeImageData* id = NativeImageData::create(filePath);
-        if (!id) {
-            res->didLoadFailed();
-            return;
-        }
-        res->asImageResource()->m_imageData = id;
-        res->didLoadFinished();
-    } else {
-        res->didLoadFailed();
-    }
-}
-#endif
-
 void ImageResource::request(ResourceRequestSyncLevel syncLevel,
                             ResourceURL* referrerURL, bool allowCache)
 {
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    if (m_url->isFileURL() && !m_url->urlString()->endsWith(".svg", false)) {
-        if (!loader()->requestResourcePreprocess(this, syncLevel)) {
-            // cache miss
-            if (ResourceRequestSyncLevel::NeverSync != syncLevel) {
-                doLoadFile(this);
-            } else {
-                pushIdlerHandle(m_loader->starFish()->messageLoop()->addIdler(
-                    loader()->document()->browsingContext(),
-                    [](size_t handle, void* data) {
-                        Resource* res = (Resource*)data;
-                        res->removeIdlerHandle(handle);
-                        res->asImageResource()->doLoadFile(data);
-                    },
-                    this));
-            }
-        }
-    } else {
-        Resource::request(syncLevel, referrerURL, allowCache);
-    }
-#else
     Resource::request(syncLevel, referrerURL, allowCache);
-#endif
 }
 
 void ImageResource::didLoadFinished()
@@ -204,17 +151,6 @@ void ImageResource::didLoadFinished()
         }
     }
 
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    if (!m_url->isFileURL()) {
-        m_imageData =
-            NativeImageData::create(m_resourceRequest->response().data(),
-                                    m_resourceRequest->response().size());
-        if (!m_imageData) {
-            Resource::didLoadFailed();
-            return;
-        }
-    }
-#else
     m_imageData = NativeImageData::create(m_resourceRequest->response().data(),
                                           m_resourceRequest->response().size(),
                                           m_shouldDecodingInstantly);
@@ -222,7 +158,6 @@ void ImageResource::didLoadFinished()
         Resource::didLoadFailed();
         return;
     }
-#endif
     Resource::didLoadFinished();
 }
 }

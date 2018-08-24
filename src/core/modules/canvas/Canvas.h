@@ -70,6 +70,8 @@ protected:
 
 public:
     static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h);
+    static CanvasSurface* createCanvasTarget(uint8_t* buffer, size_t w,
+                                             size_t h, size_t stride);
     virtual void attachNativeBuffer(size_t w, size_t h) = 0;
     virtual uint8_t* mapBuffer() = 0;
     virtual void resize(size_t w, size_t h) = 0;
@@ -144,12 +146,10 @@ protected:
     }
 
 public:
-    static Canvas* createDirect(StarFish* starfish, void* data);
     static Canvas* create(StarFish* starfish, CanvasSurface* data);
-    static Canvas* createGenericCanvas(StarFish* starfish, void* data, size_t w,
-                                       size_t h);
-    static Canvas* createGenericCanvas(StarFish* starfish,
-                                       NativeImageData* data);
+    static Canvas* create(StarFish* starfish, uint8_t* data, size_t w, size_t h,
+                          size_t stride);
+    static Canvas* create(StarFish* starfish, NativeImageData* data);
 
     virtual ~Canvas()
     {
@@ -191,7 +191,7 @@ public:
     virtual void setTextDecorationData(TextDecorationData d) = 0;
     virtual void drawRect(const Unit::Rect& rt) = 0;
     virtual void drawRect(const LayoutRect& rt) = 0;
-    virtual void drawPixelSnappedRect(const LayoutRect& rt)
+    void drawPixelSnappedRect(const LayoutRect& rt)
     {
         LayoutUnit rx = rt.x();
         LayoutUnit ry = rt.y();
@@ -225,9 +225,6 @@ public:
         const DrawImageInfo& borderinfo,
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
-    virtual void drawBorderImage(NativeImageData* data, const Unit::Rect& dst,
-                                 size_t l, size_t t, size_t r, size_t b,
-                                 double scale, bool fill) = 0;
     virtual void drawRepeatImage(
         NativeImageData* data, const Unit::Rect& dst, float imageWidth,
         float imageHeight, bool xRepeat, bool yRepeat,

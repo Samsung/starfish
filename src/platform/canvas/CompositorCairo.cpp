@@ -68,27 +68,6 @@ public:
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_FAST);
         save();
     }
-    CompositorImplCairo(StarFish* starfish, void* data)
-    {
-        struct dummy {
-            cairo_t* cairo;
-            cairo_surface_t* surface;
-            int w;
-            int h;
-        };
-        dummy* d = (dummy*)data;
-        m_starfish = starfish;
-        m_canvas = (cairo_t*)d->cairo;
-        m_surface = (cairo_surface_t*)d->surface;
-        m_width = d->w;
-        m_height = d->h;
-        m_shouldDestroyCairo = false;
-        m_shouldDestroySurface = false;
-        m_stateSize = 0;
-        m_opacityVector.push_back(1);
-        cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_FAST);
-        save();
-    }
 
     ~CompositorImplCairo()
     {
@@ -477,16 +456,15 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
-                               void* data)
-{
-    return new CompositorImplCairo(starfish, data);
-}
-
-Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
-                               CanvasSurface* surface)
+Compositor* Compositor::create2D(StarFish* starfish, CompositorContext* ctx,
+                                 CanvasSurface* surface)
 {
     return new CompositorImplCairo(starfish, surface);
+}
+
+Compositor* Compositor::create3D(StarFish* starfish, CompositorContext* ctx)
+{
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
 } // namespace StarFish

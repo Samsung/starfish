@@ -397,9 +397,6 @@ void StarFish::close()
 #if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
 #endif
-#if defined(PORT_CANVAS_BACKEND_EFL) || defined(PORT_IMAGEDECODER_BACKEND_EFL)
-    g_internalCanvas = nullptr;
-#endif
     platformWindow()->webView()->close();
     m_threadPool->close();
     STARFISH_ASSERT(isMainThread());

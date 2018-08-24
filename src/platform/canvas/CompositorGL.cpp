@@ -1095,8 +1095,7 @@ public:
             m_starfish->screenInfo().devicePixelRatio);
     }
 
-    CompositorImplGL(StarFish* starfish, CompositorContext* compositorContext,
-                     void* data)
+    CompositorImplGL(StarFish* starfish, CompositorContext* compositorContext)
     {
         INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
         m_starfish = starfish;
@@ -2008,14 +2007,13 @@ protected:
     std::vector<CompositorImplGLState> m_state;
 };
 
-Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
-                               void* data)
+Compositor* Compositor::create3D(StarFish* starfish, CompositorContext* ctx)
 {
-    return new CompositorImplGL(starfish, ctx, data);
+    return new CompositorImplGL(starfish, ctx);
 }
 
-Compositor* Compositor::create(StarFish* starfish, CompositorContext* ctx,
-                               CanvasSurface* surface)
+Compositor* Compositor::create2D(StarFish* starfish, CompositorContext* ctx,
+                                 CanvasSurface* surface)
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }

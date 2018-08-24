@@ -90,9 +90,6 @@ protected:
 
 class Font : public gc {
     friend class FontSelector;
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    friend class FontSelectorImplEFL;
-#endif
 
 protected:
     Font()
@@ -173,13 +170,6 @@ public:
         return m_fontSelector;
     }
 
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    virtual bool isGenericFont() const
-    {
-        return true;
-    }
-#endif
-
 #ifdef STARFISH_ENABLE_TEST
 #define SPACE_SIZE_DENOMINATOR 60
     static inline size_t spaceSizeNumerator(char32_t c)
@@ -208,9 +198,6 @@ public:
 
 protected:
     static Font* createEmptyFont(FontSelector* s);
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    static Font* createGenericEmptyFont(FontSelector* s);
-#endif
 
     FontFaceList* m_fontFaceList;
     FontSelector* m_fontSelector;
@@ -274,17 +261,10 @@ class FontSelector : public DocumentHoldable, public gc {
     friend class Font;
 
 public:
-#if !defined(PORT_CANVAS_BACKEND_EFL)
     Font* loadFont(
         String* familyNameArray[], size_t familyNameArraySize, float size,
         char style = 0, char weight = 4, float letterSpacing = 0,
         FontKerningValue fontKerning = FontKerningValue::FontKerningAutoValue);
-#else
-    virtual Font* loadFont(
-        String* familyNameArray[], size_t familyNameArraySize, float size,
-        char style = 0, char weight = 4, float letterSpacing = 0,
-        FontKerningValue fontKerning = FontKerningValue::FontKerningAutoValue);
-#endif
 
     PlatformFontSelector* platformFontSelector()
     {
@@ -301,16 +281,6 @@ public:
     static FontSelector* create(Document* document,
                                 PlatformFontSelector* platformFontSelector,
                                 PlatformFontCache* platformFontCache);
-
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    static FontSelector* createGenericFontSelector(
-        Document* document, PlatformFontSelector* platformFontSelector,
-        PlatformFontCache* platformFontCache);
-    virtual bool isGenericFontSelector() const
-    {
-        return true;
-    }
-#endif
 
 protected:
     PlatformFontSelector* m_platformFontSelector;

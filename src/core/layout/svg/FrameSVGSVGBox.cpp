@@ -138,51 +138,6 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
 
 void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 {
-#if defined(PORT_CANVAS_BACKEND_EFL)
-    Canvas* outerCanvas = canvas;
-    outerCanvas->save();
-    outerCanvas->translate(borderLeft() + paddingLeft(),
-                           borderTop() + paddingTop());
-
-    if (!m_surface || (float)contentWidth() != m_surface->width() ||
-        (float)contentHeight() != m_surface->height()) {
-        m_surface = NativeImageData::create((float)contentWidth(),
-                                            (float)contentHeight());
-    }
-    m_surface->clear();
-
-    canvas =
-        Canvas::createGenericCanvas(node()->starFish(), m_surface->data(),
-                                    m_surface->width(), m_surface->height());
-
-    if (node()->asSVGSVGElement()->hasViewBox()) {
-        Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
-        float sx = contentWidth() / rt.width();
-        float sy = contentHeight() / rt.height();
-        float s = std::min(sx, sy);
-        float tx = rt.x();
-        float ty = rt.y();
-        canvas->scale(s, s);
-        canvas->translate(-tx, -ty);
-    }
-
-    PaintingContext ctx(canvas);
-    Frame* child = firstChild();
-    while (child) {
-        ctx.m_canvas->save();
-        ctx.m_canvas->translate(
-            child->asFrameBox()->x() - borderLeft() - paddingLeft(),
-            child->asFrameBox()->y() - borderTop() - paddingTop());
-        child->asFrameSVGBox()->paintContent(ctx);
-        ctx.m_canvas->restore();
-        child = child->next();
-    }
-    delete canvas;
-
-    outerCanvas->drawImage(m_surface,
-                           Unit::Rect(0, 0, contentWidth(), contentHeight()));
-    outerCanvas->restore();
-#else
     canvas->setNeedsGoodQualityAntialias();
     canvas->save();
     canvas->translate(borderLeft() + paddingLeft(), borderTop() + paddingTop());
@@ -242,6 +197,5 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
 
     canvas->restore();
     canvas->setNeedsFastAntialias();
-#endif
 }
 }
