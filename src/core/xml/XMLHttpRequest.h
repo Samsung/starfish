@@ -75,6 +75,7 @@ public:
 
     ScriptValue response() const;
     String* responseText() const;
+    ::StarFish::Document* responseXML() const;
 
     uint8_t readyState() const;
     uint16_t status() const;
@@ -119,6 +120,9 @@ protected:
 
     // for responseType = "arraybuffer"
     ScriptValue m_responseArrayBuffer;
+
+    // for responseType = "document"
+    ::StarFish::Document* m_responseXML;
 };
 }
 
