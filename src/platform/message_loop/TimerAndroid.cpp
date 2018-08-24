@@ -81,7 +81,6 @@ size_t Timer::addTimer(unsigned delay, Window* window,
             startTimer(delay,
                        [](int, void* data) -> bool {
                            TimeoutData* td = (TimeoutData*)data;
-                           StarFishEnterer enter(td->m_timer->m_starFish);
                            auto a =
                                td->m_timer->m_timeoutHandler.find(td->m_id);
                            td->m_handler(td->m_window, td->m_data);
@@ -94,7 +93,6 @@ size_t Timer::addTimer(unsigned delay, Window* window,
             startTimer(delay,
                        [](int, void* data) -> bool {
                            TimeoutData* td = (TimeoutData*)data;
-                           StarFishEnterer enter(td->m_timer->m_starFish);
                            Timer* timer = td->m_timer;
                            int32_t id = td->m_id;
                            td->m_handler(td->m_window, td->m_data);
@@ -139,7 +137,6 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
         10,
         [](int, void* data) -> bool {
             TimeoutData* td = (TimeoutData*)data;
-            StarFishEnterer enter(td->m_timer->m_starFish);
             auto a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
             td->m_handler(td->m_window, td->m_data);
             a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
@@ -171,7 +168,6 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
         startTimer(10,
                    [](int, void* data) -> bool {
                        AnimationTickData* ad = (AnimationTickData*)data;
-                       StarFishEnterer enter(ad->m_timer->m_starFish);
                        auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
                        if (ad->m_handler(ad->m_data)) {
                            return true;

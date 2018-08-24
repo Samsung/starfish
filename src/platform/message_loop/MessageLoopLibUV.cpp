@@ -86,7 +86,6 @@ MessageLoop::MessageLoop(StarFish* sf)
 
                         if (id) {
                             if (id->m_shouldExecute) {
-                                StarFishEnterer enter(ml->m_starFish);
                                 if (id->m_pararmNum == 1) {
                                     id->m_fn((size_t)id, id->m_data);
                                 } else if (id->m_pararmNum == 2) {
@@ -127,7 +126,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        StarFishEnterer enter(id->m_ml->m_starFish);
         id->m_fn((size_t)id, id->m_data);
         uv_idle_stop(handle);
         GC_FREE(id);
@@ -156,7 +154,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
         IdlerData* id = (IdlerData*)handle->data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        StarFishEnterer enter(id->m_ml->m_starFish);
         ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
                                                    id->m_data1);
         uv_idle_stop(handle);
@@ -189,7 +186,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
         IdlerData* id = (IdlerData*)handle->data;
         id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
 
-        StarFishEnterer enter(id->m_ml->m_starFish);
         ((void (*)(size_t, void*, void*, void*))id->m_fn)(
             (size_t)id, id->m_data, id->m_data1, id->m_data2);
         uv_idle_stop(handle);
@@ -330,7 +326,6 @@ void MessageLoop::close()
 
             if (id) {
                 if (id->m_shouldExecute) {
-                    StarFishEnterer enter(m_starFish);
                     if (id->m_pararmNum == 1)
                         id->m_fn((size_t)id, id->m_data);
                     else if (id->m_pararmNum == 2)
@@ -345,7 +340,6 @@ void MessageLoop::close()
             IdlerData* id = (IdlerData*)*m_idlers.begin();
             id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
 
-            StarFishEnterer enter(id->m_ml->m_starFish);
             ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                 (size_t)id, id->m_data, id->m_data1, id->m_data2);
             uv_idle_stop(id->m_idler_uv);
