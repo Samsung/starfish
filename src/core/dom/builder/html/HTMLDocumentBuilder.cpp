@@ -156,97 +156,102 @@ public:
     {
         ResourceClient::didLoadFinished();
         String* m = m_resource->resourceRequest()->responseMimeType();
-        EncodingResult er = detectAndRemoveBOM(m_buffer);
+        if (!m->startsWith("image/", false)) {
+            EncodingResult er = detectAndRemoveBOM(m_buffer);
 
-        if (!m->contains("charset", false) && er.m_skip == 0) {
-            size_t bufferLen = m_buffer.size();
-            std::string charSetInMeta;
-            for (size_t i = 0; i < bufferLen; i++) {
-                if (m_buffer[i] == '<') {
-                    char tagName[12];
-                    size_t tagNameLength = 0;
-                    bool gotChar = false;
-                    for (size_t j = i + 1; j < bufferLen; j++) {
-                        if (!gotChar) {
-                            if (!String::isSpaceOrNewline(m_buffer[j])) {
-                                if (!::StarFish::isalpha(m_buffer[j])) {
-                                    break;
-                                }
-                                gotChar = true;
-                                tagName[tagNameLength++] = tolower(m_buffer[j]);
-                            }
-                        } else {
-                            if (!::StarFish::isalpha(m_buffer[j])) {
-                                tagName[tagNameLength] = 0;
-                                if (memcmp("meta", tagName, 4) == 0) {
-                                    i = j;
-                                    bool closeFinded = false;
-                                    size_t attributeStart = j + 1;
-                                    for (size_t k = j + 1; k < bufferLen; k++) {
-                                        if (m_buffer[k] == '>') {
-                                            i = k;
-                                            closeFinded = true;
-                                            break;
-                                        }
+            if (!m->contains("charset", false) && er.m_skip == 0) {
+                size_t bufferLen = m_buffer.size();
+                std::string charSetInMeta;
+                for (size_t i = 0; i < bufferLen; i++) {
+                    if (m_buffer[i] == '<') {
+                        char tagName[12];
+                        size_t tagNameLength = 0;
+                        bool gotChar = false;
+                        for (size_t j = i + 1; j < bufferLen; j++) {
+                            if (!gotChar) {
+                                if (!String::isSpaceOrNewline(m_buffer[j])) {
+                                    if (!::StarFish::isalpha(m_buffer[j])) {
+                                        break;
                                     }
-
-                                    std::string attr;
-                                    for (size_t k = attributeStart; k < i;
-                                         k++) {
-                                        char c = m_buffer[k];
-                                        if (String::isSpaceOrNewline(c))
-                                            continue;
-                                        if (c == '\'') {
-                                            continue;
-                                        }
-                                        if (c == '\"') {
-                                            continue;
-                                        }
-                                        if (c == '/') {
-                                            continue;
-                                        }
-                                        attr += c;
-                                    }
-
-                                    if (closeFinded) {
-                                        const char* result =
-                                            sstrstr(attr.c_str(), attr.length(),
-                                                    "charset=", 8);
-                                        if (result) {
-                                            charSetInMeta = result;
-                                        }
-                                    }
-                                } else {
-                                    i = j;
-                                }
-                                if (charSetInMeta.length()) {
-                                    break;
+                                    gotChar = true;
+                                    tagName[tagNameLength++] =
+                                        tolower(m_buffer[j]);
                                 }
                             } else {
-                                if (tagNameLength >= 4) {
-                                    i = j;
-                                    break;
+                                if (!::StarFish::isalpha(m_buffer[j])) {
+                                    tagName[tagNameLength] = 0;
+                                    if (memcmp("meta", tagName, 4) == 0) {
+                                        i = j;
+                                        bool closeFinded = false;
+                                        size_t attributeStart = j + 1;
+                                        for (size_t k = j + 1; k < bufferLen;
+                                             k++) {
+                                            if (m_buffer[k] == '>') {
+                                                i = k;
+                                                closeFinded = true;
+                                                break;
+                                            }
+                                        }
+
+                                        std::string attr;
+                                        for (size_t k = attributeStart; k < i;
+                                             k++) {
+                                            char c = m_buffer[k];
+                                            if (String::isSpaceOrNewline(c))
+                                                continue;
+                                            if (c == '\'') {
+                                                continue;
+                                            }
+                                            if (c == '\"') {
+                                                continue;
+                                            }
+                                            if (c == '/') {
+                                                continue;
+                                            }
+                                            attr += c;
+                                        }
+
+                                        if (closeFinded) {
+                                            const char* result = sstrstr(
+                                                attr.c_str(), attr.length(),
+                                                "charset=", 8);
+                                            if (result) {
+                                                charSetInMeta = result;
+                                            }
+                                        }
+                                    } else {
+                                        i = j;
+                                    }
+                                    if (charSetInMeta.length()) {
+                                        break;
+                                    }
+                                } else {
+                                    if (tagNameLength >= 4) {
+                                        i = j;
+                                        break;
+                                    }
+                                    tagName[tagNameLength++] =
+                                        tolower(m_buffer[j]);
                                 }
-                                tagName[tagNameLength++] = tolower(m_buffer[j]);
                             }
                         }
                     }
                 }
+
+                if (charSetInMeta.length()) {
+                    m = String::fromUTF8(charSetInMeta.data());
+                }
+            } else if (!m->contains("charset", false)) {
+                m = String::fromUTF8(er.m_encoding);
             }
 
-            if (charSetInMeta.length()) {
-                m = String::fromUTF8(charSetInMeta.data());
-            }
-        } else if (!m->contains("charset", false)) {
-            m = String::fromUTF8(er.m_encoding);
+            TextConverter* converter = new TextConverter(
+                m, String::createASCIIString("UTF-8"),
+                m_buffer.data() + er.m_skip, m_buffer.size() - er.m_skip);
+            m_htmlSource = converter->convert(
+                m_buffer.data() + er.m_skip, m_buffer.size() - er.m_skip, true);
+            m_builder.document()->setCharacterSet(converter->encoding());
         }
-
-        TextConverter* converter = new TextConverter(
-            m, String::createASCIIString("UTF-8"), m_buffer.data() + er.m_skip,
-            m_buffer.size() - er.m_skip);
-        m_htmlSource = converter->convert(m_buffer.data() + er.m_skip,
-                                          m_buffer.size() - er.m_skip, true);
-        m_builder.document()->setCharacterSet(converter->encoding());
 
         String* contentLanguage =
             m_resource->resourceRequest()->contentLanguage();
@@ -283,10 +288,22 @@ public:
         Document* document = m_builder.document();
 
         if (m_htmlSource->isEmpty()) {
-            if (resource() && resource()->url() &&
-                resource()->url()->urlString() &&
-                resource()->url()->urlString()->length() > 11 &&
-                resource()->url()->urlString()->startsWith("javascript:")) {
+            String* m = m_resource->resourceRequest()->responseMimeType();
+            if (m->startsWith("image/", false)) {
+                String* urlString = resource()->url()->urlString();
+                StringBuilder sb;
+                sb.appendString("<html><head></head><body><img src=\"");
+                sb.appendString(urlString);
+                sb.appendString("\" alt=\"");
+                sb.appendString(urlString);
+                sb.appendString("\"></img></body></html>");
+                m_htmlSource = sb.finalize();
+
+            } else if (resource() && resource()->url() &&
+                       resource()->url()->urlString() &&
+                       resource()->url()->urlString()->length() > 11 &&
+                       resource()->url()->urlString()->startsWith(
+                           "javascript:")) {
                 String* urlString = resource()->url()->urlString();
                 String* script =
                     urlString->substring(11, urlString->length() - 11);
