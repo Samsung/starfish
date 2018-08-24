@@ -793,7 +793,7 @@ String* String::createBMPStringFromUTF32Source(
 #ifndef NDEBUG
     for (size_t i = 0; i < src.length(); i++) {
         const char32_t c = src[i];
-        STARFISH_ASSERT(c < 0xffff);
+        STARFISH_ASSERT(c <= 0xffff);
     }
 #endif
     BMPString ret;
