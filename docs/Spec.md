@@ -823,6 +823,8 @@ section are supported.
 |  | attribute | firstElementChild | Returns the Element that is the first child of this ParentNode, or null if there is none. |
 |  | attribute | lastElementChild | Returns the Element that is the last child of this ParentNode, or null if there is none. |
 |  | attribute | childElementCount | Returns an unsigned long giving the amount of children that the object has. |
+|  | method | void prepend((Node or DOMString)... nodes) | Inserts nodes before the first child of node, while replacing strings in nodes with equivalent Text nodes. |
+|  | method | void append((Node or DOMString)... nodes) | Inserts nodes after the last child of node, while replacing strings in nodes with equivalent Text nodes. |
 |  | method | Element? querySelector(DOMString selectors) | Returns the first Element with the current element as root that matches the specified group of selectors. |
 |  | method | NodeList querySelectorAll(DOMString selectors) | Returns a NodeList representing a list of elements with the current element as root that matches the specified group of selectors. |
 | [Text](https://dom.spec.whatwg.org/#text) | interface | Text | Text node whose data is data and node document is current global object’s associated Document. |
