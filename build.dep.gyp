@@ -29,6 +29,7 @@
                ],
                'cflags!' : [
                    '-fvisibility=hidden',
+                   '-fno-rtti',
                ],
                'ldflags' : [
                    '<@(libraries_compiler)',

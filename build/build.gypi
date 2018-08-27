@@ -39,10 +39,20 @@
         ],
         # NOTE: specific #defines for each profile
         # e.g., defines used by the compiler = 'defines_tizen' + 'defines_unified_tv'
-        'defines_unified_common': [
+        'defines_unified_mobile': [
             'STARFISH_ENABLE_MULTIMEDIA',
         ],
         'defines_unified_tv': [
+            #'STARFISH_ENABLE_MULTIMEDIA',
+            'STARFISH_TIZEN_TV',
+            #'STARFISH_ENABLE_AVPLAY',
+            'STARFISH_ENABLE_TRANSPARENT_WINDOW',
+            #'STARFISH_ENABLE_TTS',
+            #'STARFISH_ENABLE_BODY_FOCUS_RING',
+            #'STARFISH_ENABLE_VIRTUAL_CURSOR',
+            #'USE_PRODUCT_FEATURE',
+        ],
+        'defines_prod_tv': [
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_TIZEN_TV',
             #'STARFISH_ENABLE_AVPLAY',
@@ -57,11 +67,6 @@
             'STARFISH_TIZEN_WEARABLE_WIDGET',
             'STARFISH_TIZEN_TRANSPARENT_BACKGROUND',
             #'STARFISH_ENABLE_MULTIMEDIA',
-        ],
-        'defines_tizen_headless': [
-            'STARFISH_TIZEN_HEADLESS',
-            'STARFISH_ENABLE_SHELL',
-            # 'STARFISH_ENABLE_CANVAS',
         ],
         'defines_debug': [
             'GC_DEBUG', # bdwgc
@@ -225,11 +230,18 @@
                         '-lgif',
                     ],
                 }],
-                # profile: common || tv || wearable || mobile
+                ['backend!="dali"', {
+                    'cflags_extra': [
+                        # turn off rtti for all backends except dali
+                        '-fno-rtti',
+                    ],
+                }],
+                # profile: tv || wearable || mobile
                 # Use the following template if build options need to be added
                 # for each profile
-                ['profile=="tv"', {
+                ['profile=="wearable"', {
                     'cflags_extra': [
+                        '-Os',
                     ],
                     'include_dirs_extra': [
                         #'<@(include_dirs_extra)',
@@ -261,7 +273,6 @@
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
-                    '-fno-rtti',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl.x64',
@@ -274,7 +285,6 @@
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
-                    '-fno-rtti',
                     '-Wno-format-nonliteral',
                 ],
                 'libraries_extra': [
@@ -292,7 +302,6 @@
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
-                    '-fno-rtti',
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
@@ -308,7 +317,6 @@
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
-                    '-fno-rtti',
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
@@ -329,7 +337,6 @@
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
-                    '-fno-rtti',
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
@@ -350,7 +357,6 @@
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
-                    '-fno-rtti',
                     '-Wno-format-nonliteral',
                 ],
                 'libraries_extra': [
@@ -401,19 +407,6 @@
                     '<@(libraries_extra)',
                     '-lpthread',
                     '-Wl,-soname,liblightweight-web-engine-dali-plugin.so',
-                ],
-            }],
-            ['touchUi=="0" and backend=="efl_cairo"', {
-                'defines_extra': [
-                    'STARFISH_EFL_CAIRO_HEADLESS',
-                ],
-                'cflags_extra': [
-                ],
-                'libraries_extra': [
-                ],
-                'deps_extra': [
-                    './build.dep.gyp:efl_headless_cairo.tizen',
-                    './build.dep.gyp:skia_matrix',
                 ],
             }],
         ],

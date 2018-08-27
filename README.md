@@ -44,12 +44,10 @@ Default values are in **bold**.
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
 * -Ddeplib=[ **shared_library** | static_library ]<br>
   Generate third-party libraries as shared libraries or obj files
-* -Dbackend=[ efl | dali | **efl_cairo** ]<br>
-  Use either efl, dali, or efl_cairo as the backend graphics library
+* -Dbackend=[ dali | **gl** ]<br>
+  Use either dali, or gl as the backend graphics library
 * -Dplatform=[ **linux** | tizen ]<br>
   Compile Starfish for either linux or tizen platform
-* -Dcustom=[ **none** | vd | im | da ]<br>
-  Compile target-specific code for either VD, IM, or DA department.
 * -DtouchUi=[ 0 | **1** ]<br>
   Enable a touch UI.
 
@@ -62,9 +60,10 @@ ninja -C out/release target
 where target is either:
 
 * ``starfish.x64.release``
-* ``starfish.tizen.tv.release``
-* ``starfish.tizen.gear.release``
-* ``starfish.tizen.speaker.release``
+* ``starfish.x64.debug``
+* ``lwe.tizen.unified_tv.release``
+* ``lwe.tizen.unified_wearable.release``
+
 
 Debug build is available for x86\_64.
 
@@ -91,8 +90,8 @@ gbs -c ../gbs-conf/gbs.conf build -A armv7l -P profile.50std  --incremental --in
 The following build options are supported when building RPMs.
 Default values are in **bold**.
 
-* --define 'tizen_profile_name [ **tv** | headless | mobile | wearable ]'<br>
-  Genereate RPMs for either tv, iot, or mobile platform
+* --define 'build_profile [ tv | wearable | **all** ]'<br>
+  Genereate RPMs for either tv, and wearable platform
 
 ### Directory Structure
 Starfish is compiled to ``out/debug`` (or ``out/release``) directory.

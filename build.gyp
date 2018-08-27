@@ -149,9 +149,9 @@
 
         },
         {
-            'target_name': 'lwe.tizen.unified_common.release',
+            'target_name': 'lwe.tizen.unified_mobile.release',
             'type': '<(component)',
-            'product_name': 'lightweight-web-engine.common',
+            'product_name': 'lightweight-web-engine.mobile',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
@@ -164,13 +164,14 @@
             ],
             'defines': [
                 '<@(defines_tizen)',
-                '<@(defines_unified_common)',
+                '<@(defines_unified_mobile)',
             ],
         },
         {
             'target_name': 'lwe.tizen.unified_tv.release',
             'type': '<(component)',
             'product_name': 'lightweight-web-engine.tv',
+            #'soname_version': '0.0.1',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
@@ -188,6 +189,7 @@
             ],
         },
         {
+            # This rule should only be called by lwe_vd
             'target_name': 'lwe.tizen.prod_tv.release',
             'type': 'static_library',
             'product_name': 'lightweight-web-engine.prod_tv',
@@ -204,7 +206,7 @@
             ],
             'defines': [
                 '<@(defines_tizen)',
-                '<@(defines_unified_tv)',
+                '<@(defines_prod_tv)',
             ],
             'sources!' : [
                 'src/platform/tts/TTSBase.cpp',
@@ -226,26 +228,6 @@
             'defines': [
                 '<@(defines_tizen)',
                 '<@(defines_unified_wearable)',
-            ],
-        },
-        {
-            'target_name': 'lwe.tizen.unified_headless.release',
-            'type': '<(component)',
-            'product_name': 'lightweight-web-engine.headless',
-            'dependencies': [
-                './build.dep.gyp:escargot.tizen.release',
-                './build.dep.gyp:gc.tizen.release',
-                # './build.dep.gyp:zmq.tizen',
-                './build.dep.gyp:capi-network-connection',
-                './build.dep.gyp:capi-media-player',
-                './build.dep.gyp:mp4parse',
-                './build.dep.gyp:webm',
-                '<@(deps_release_extra)',
-            ],
-            'defines': [
-                '<@(defines_tizen)',
-                #'<@(defines_custom_im)',
-                '<@(defines_tizen_headless)',
             ],
         },
     ],
