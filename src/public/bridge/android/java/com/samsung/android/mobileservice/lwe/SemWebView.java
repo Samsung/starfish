@@ -52,19 +52,19 @@ public class SemWebView extends SurfaceView {
     public SemWebView(Context context) {
         super(context);
         delegate = getWebViewInstance();
-        delegate.initWebView(this,getContext());
+        delegate.initWebView(this);
     }
 
     public SemWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
         delegate = getWebViewInstance();
-        delegate.initWebView(this,getContext());
+        delegate.initWebView(this);
     }
 
     public SemWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs);
         delegate = getWebViewInstance();
-        delegate.initWebView(this,getContext());
+        delegate.initWebView(this);
     }
 
     /**

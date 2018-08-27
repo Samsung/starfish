@@ -226,13 +226,14 @@ public class LweWebViewImpl implements LweWebView{
         }
     }
 
-    public void initWebView(View appView,Context AppContext){
+    public void initWebView(View appView){
         mLWEView = (SemWebView)appView;
-        mIMM = (InputMethodManager) AppContext.getSystemService(Context.INPUT_METHOD_SERVICE);
-        sDpr = AppContext.getResources().getDisplayMetrics().xdpi / 150;
-        sLocalStoragePath = AppContext.getDataDir().getAbsolutePath() + "/StarFish-localStorage";
-        sCookiePath = AppContext.getDataDir().getAbsolutePath() + "/StarFish-cookie";
-        sCachePath = AppContext.getCacheDir().getAbsolutePath() + "/StarFish-cache";
+        Context appContext = mLWEView.getContext();
+        mIMM = (InputMethodManager) appContext.getSystemService(Context.INPUT_METHOD_SERVICE);
+        sDpr = appContext.getResources().getDisplayMetrics().xdpi / 150;
+        sLocalStoragePath = appContext.getDataDir().getAbsolutePath() + "/StarFish-localStorage";
+        sCookiePath = appContext.getDataDir().getAbsolutePath() + "/StarFish-cookie";
+        sCachePath = appContext.getCacheDir().getAbsolutePath() + "/StarFish-cache";
         init();
         synchronized (sWebViewThreadLocker) {
             mDefaultUserAgent = getDefaultUserAgent();

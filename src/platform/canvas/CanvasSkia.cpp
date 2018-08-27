@@ -595,7 +595,7 @@ public:
         SkPaint& paint, ImageRenderingValue imageRenderingMode)
     {
         if (imageRenderingMode == ImageRenderingAutoValue) {
-            paint.setFilterQuality(SkFilterQuality::kLast_SkFilterQuality);
+            paint.setFilterQuality(SkFilterQuality::kNone_SkFilterQuality);
         } else if (imageRenderingMode == ImageRenderingPixelatedValue) {
             paint.setFilterQuality(SkFilterQuality::kNone_SkFilterQuality);
         } else if (imageRenderingMode == ImageRenderingCrispEdgesValue) {
@@ -614,7 +614,6 @@ public:
         auto h = data->height();
 
         SkPaint paint;
-        paint.setAntiAlias(true);
         setImageRenderingMode(paint, imageRenderingMode);
 
         SkBitmap bitmap;
@@ -639,7 +638,6 @@ public:
         auto h = data->imageHeight();
 
         SkPaint paint;
-        paint.setAntiAlias(true);
         setImageRenderingMode(paint, imageRenderingMode);
 
         SkBitmap bitmap;
@@ -667,7 +665,6 @@ public:
         auto h = data->height();
 
         SkPaint paint;
-        paint.setAntiAlias(true);
         setImageRenderingMode(paint, imageRenderingMode);
 
         SkBitmap bitmap;

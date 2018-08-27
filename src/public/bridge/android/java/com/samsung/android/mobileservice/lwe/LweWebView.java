@@ -26,7 +26,7 @@ import android.webkit.DownloadListener;
 import android.webkit.ValueCallback;
 
 interface LweWebView {
-    void initWebView(View appView, Context AppContext);
+    void initWebView(View appView);
     String getDefaultUA();
     String getUA();
     int getCacheModeValue();
