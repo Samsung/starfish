@@ -111,7 +111,7 @@ http://10.113.111.47:8000/dom/nodes/Node-parentNode.html
 http://10.113.111.47:8000/dom/nodes/Element-removeAttributeNS.html
 #http://10.113.111.47:8000/dom/nodes/Element-getElementsByTagName.html
 http://10.113.111.47:8000/dom/nodes/ChildNode-after.html
-#http://10.113.111.47:8000/dom/nodes/ParentNode-append.html
+http://10.113.111.47:8000/dom/nodes/ParentNode-append.html
 http://10.113.111.47:8000/dom/nodes/Document-getElementsByClassName.html
 http://10.113.111.47:8000/dom/nodes/Node-isSameNode.html
 http://10.113.111.47:8000/dom/nodes/Element-getElementsByClassName.html
@@ -159,7 +159,7 @@ http://10.113.111.47:8000/dom/nodes/Node-parentElement.html
 #http://10.113.111.47:8000/dom/nodes/Document-URL.sub.html
 http://10.113.111.47:8000/dom/nodes/Element-previousElementSibling.html
 #http://10.113.111.47:8000/dom/nodes/Element-insertAdjacentElement.html
-#http://10.113.111.47:8000/dom/nodes/ParentNode-prepend.html
+http://10.113.111.47:8000/dom/nodes/ParentNode-prepend.html
 #http://10.113.111.47:8000/dom/nodes/Node-isEqualNode.html
 #http://10.113.111.47:8000/dom/nodes/Node-normalize.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-12.htm
@@ -232,7 +232,7 @@ http://10.113.111.47:8000/dom/nodes/getElementsByClassName-16.htm
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-03.htm
 #http://10.113.111.47:8000/dom/nodes/Node-properties.html
 #http://10.113.111.47:8000/dom/nodes/Node-isConnected.html
-#http://10.113.111.47:8000/dom/nodes/append-on-Document.html
+http://10.113.111.47:8000/dom/nodes/append-on-Document.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-19.htm
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-18.htm
 http://10.113.111.47:8000/dom/nodes/Element-firstElementChild.html

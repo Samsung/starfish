@@ -721,6 +721,18 @@ unsigned long Node::childElementCount()
     return count;
 }
 
+void Node::prepend(const GCVector<NodeOrDOMString>& nodes)
+{
+    Node* node = convertNodesIntoNode(nodes, document());
+    insertBefore(node, firstChild());
+}
+
+void Node::append(const GCVector<NodeOrDOMString>& nodes)
+{
+    Node* node = convertNodesIntoNode(nodes, document());
+    appendChild(node);
+}
+
 Node* Node::nearestParentElement()
 {
     Node* t = this;
@@ -1125,34 +1137,79 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                                "not a document.");
     }
     if (isDocument()) {
-        if (node->isElement()) {
-            if (child != nullptr) {
-                Node* c = firstChild();
-                while (c) {
-                    if (c->isElement() && child != c) {
-                        throw new DOMException(
-                            document(), DOMException::HIERARCHY_REQUEST_ERR,
-                            "parent has an element child, child is "
-                            "a doctype, or child is not null and a "
-                            "doctype is following child.");
-                    }
-                    c = c->nextSibling();
+        if (node->isDocumentFragment()) {
+            if (node->childElementCount() > 1) {
+                throw new DOMException(
+                    document(), DOMException::HIERARCHY_REQUEST_ERR,
+                    "If node has more than one element child or has a Text "
+                    "node child. Otherwise, if node has one element child and "
+                    "either parent has an element child, child is a doctype, "
+                    "or child is not null and a doctype is following child.");
+            }
+            Node* c = node->firstChild();
+            while (c) {
+                if (c->isText()) {
+                    throw new DOMException(
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
+                        "If node has more than one element child "
+                        "or has a Text node child. Otherwise, "
+                        "if node has one element child and either "
+                        "parent has an element child, child is a "
+                        "doctype, or child is not null and a "
+                        "doctype is following child.");
                 }
+                c = c->nextSibling();
+            }
+            if (node->childElementCount() == 1 &&
+                (childElementCount() || (child && child->isDocumentType()))) {
+                throw new DOMException(
+                    document(), DOMException::HIERARCHY_REQUEST_ERR,
+                    "If node has more than one element child "
+                    "or has a Text node child. Otherwise, "
+                    "if node has one element child and either "
+                    "parent has an element child, child is a "
+                    "doctype, or child is not null and a "
+                    "doctype is following child.");
+            }
+        } else if (node->isElement()) {
+            Node* c = firstChild();
+            while (c) {
+                if (c->isElement() && child != c) {
+                    throw new DOMException(
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
+                        "parent has an element child, child is "
+                        "a doctype, or child is not null and a "
+                        "doctype is following child.");
+                }
+                c = c->nextSibling();
+            }
+            if (child && child->isDocumentType()) {
+                throw new DOMException(document(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
+                                       "parent has an element child, child is "
+                                       "a doctype, or child is not null and a "
+                                       "doctype is following child.");
             }
         } else if (node->isDocumentType()) {
-            if (child != nullptr) {
-                Node* c = firstChild();
-                while (c) {
-                    if (c->isDocumentType() && child != c) {
-                        throw new DOMException(
-                            document(), DOMException::HIERARCHY_REQUEST_ERR,
-                            "parent has a doctype child, child is "
-                            "non-null and an element is preceding "
-                            "child, or child is null and parent has "
-                            "an element child.");
-                    }
-                    c = c->nextSibling();
+            Node* c = firstChild();
+            while (c) {
+                if (c->isDocumentType() && child != c) {
+                    throw new DOMException(
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
+                        "parent has a doctype child, child is "
+                        "non-null and an element is preceding "
+                        "child, or child is null and parent has "
+                        "an element child.");
                 }
+                c = c->nextSibling();
+            }
+            if (!child && childElementCount() > 0) {
+                throw new DOMException(document(),
+                                       DOMException::HIERARCHY_REQUEST_ERR,
+                                       "parent has a doctype child, child is "
+                                       "non-null and an element is preceding "
+                                       "child, or child is null and parent has "
+                                       "an element child.");
             }
         }
     }
