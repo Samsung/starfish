@@ -117,6 +117,7 @@ protected:
         , m_childNeedsStyleRecalc(true)
         , m_needsFrameTreeBuild(true)
         , m_childNeedsFrameTreeBuild(true)
+        , m_isConnected(false)
         , m_didInlineStyleModifiedAfterAttributeSet(false)
         , m_tabIndexWasSetExplicitly(false)
         , m_gotInheritedStyleDirty(false)
@@ -180,6 +181,21 @@ public:
     virtual void finishParsing()
     {
         m_inParsing = false;
+    }
+
+    bool isConnected() const
+    {
+        return m_isConnected;
+    }
+
+    void setConnected()
+    {
+        m_isConnected = true;
+    }
+
+    void clearConnected()
+    {
+        m_isConnected = false;
     }
 
     Document* ownerDocument() const
@@ -730,6 +746,7 @@ protected:
     bool m_childNeedsStyleRecalc : 1;
     bool m_needsFrameTreeBuild : 1;
     bool m_childNeedsFrameTreeBuild : 1;
+    bool m_isConnected : 1;
     // for Element
     bool m_didInlineStyleModifiedAfterAttributeSet : 1;
     bool m_tabIndexWasSetExplicitly : 1;
