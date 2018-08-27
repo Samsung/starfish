@@ -1190,6 +1190,10 @@ static void notifyNodeInsertedToDocumentTree(Node* head, Node* node)
         node->didNodeAdopted();
     }
 
+    if (head->isConnected()) {
+        node->setConnected();
+    }
+
     node->didNodeInsertedToDocumentTree();
     Node* child = node->firstChild();
     while (child) {
@@ -1419,6 +1423,7 @@ Node* Node::replaceChild(Node* child, Node* childToRemove)
 
 void notifyNodeRemoveFromDocumentTree(Node* node)
 {
+    node->clearConnected();
     node->didNodeRemovedFromDocumentTree();
     Node* child = node->firstChild();
     while (child) {

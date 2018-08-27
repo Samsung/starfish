@@ -21,7 +21,7 @@ interface Node : EventTarget {
 
   readonly attribute DOMString baseURI;
 
-  [Unimplemented] readonly attribute boolean isConnected;
+  readonly attribute boolean isConnected;
   readonly attribute Document? ownerDocument;
   [Unimplemented] Node getRootNode(optional GetRootNodeOptions options);
   readonly attribute Node? parentNode;

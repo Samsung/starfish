@@ -191,6 +191,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     auto df = new FrameDocument(this);
     setFrame(df);
     loadBuiltinPolyfill(window->starFish()->builtinPolyfillPathString());
+
+    m_isConnected = true;
 }
 
 NodeIterator* Document::createNodeIterator(Node* root, unsigned whatToShow,
