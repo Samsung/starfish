@@ -187,9 +187,9 @@ http://10.113.111.47:8000/dom/nodes/Element-firstElementChild-namespace.html
 #http://10.113.111.47:8000/dom/nodes/case.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-05.htm
 http://10.113.111.47:8000/dom/nodes/CharacterData-data.html
-#http://10.113.111.47:8000/dom/nodes/Node-contains.html
+http://10.113.111.47:8000/dom/nodes/Node-contains.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-01.htm
-#http://10.113.111.47:8000/dom/nodes/rootNode.html
+http://10.113.111.47:8000/dom/nodes/rootNode.html
 http://10.113.111.47:8000/dom/nodes/Element-childElementCount.html
 #http://10.113.111.47:8000/dom/nodes/Node-lookupNamespaceURI.html
 #http://10.113.111.47:8000/dom/nodes/Text-constructor.html
