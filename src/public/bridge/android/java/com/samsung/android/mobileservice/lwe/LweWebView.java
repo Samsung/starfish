@@ -24,7 +24,7 @@ import android.view.View;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
 
-interface LweWebView {
+public interface LweWebView {
     void initWebView(View appView);
     String getDefaultUA();
     String getUA();
