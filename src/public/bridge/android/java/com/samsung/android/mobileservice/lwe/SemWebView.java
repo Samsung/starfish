@@ -21,7 +21,7 @@ package com.samsung.android.mobileservice.lwe;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.view.SurfaceView;
+import android.view.TextureView;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
@@ -31,7 +31,7 @@ import dalvik.system.PathClassLoader;
 /**
  * A View that displays web pages.
  */
-public class SemWebView extends SurfaceView {
+public class SemWebView extends TextureView {
 
     static PathClassLoader pcl = null;
     static final String packageName = "com.samsung.android.mobileservice.lwe";
