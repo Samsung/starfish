@@ -53,6 +53,8 @@ struct WindowGlue {
     jmethodID m_showAlert;
     jmethodID m_showIME;
     jmethodID m_hideIME;
+    jmethodID m_glMakeCurrent;
+    jmethodID m_glSwapBuffers;
 
     WindowGlue()
     {
@@ -171,6 +173,11 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_init(JNIEnv* env,
         clazz, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
     g_WindowGlue.m_showIME = env->GetMethodID(clazz, "showSoftKeyboard", "()V");
     g_WindowGlue.m_hideIME = env->GetMethodID(clazz, "hideSoftKeyboard", "()V");
+
+    g_WindowGlue.m_glMakeCurrent =
+        env->GetMethodID(clazz, "glMakeCurrent", "()V");
+    g_WindowGlue.m_glSwapBuffers =
+        env->GetMethodID(clazz, "glSwapBuffers", "()V");
 
     env->DeleteLocalRef(clazz);
 
@@ -657,6 +664,52 @@ void hideIME(void* view)
                         g_WindowGlue.m_hideIME);
 }
 
+void glMakeCurrent(void* view)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv : version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_glMakeCurrent) {
+        LOGE("glMakeCurrent error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
+                        g_WindowGlue.m_glMakeCurrent);
+}
+
+void glSwapBuffers(void* view)
+{
+    JNIEnv* env = g_WindowGlue.m_env;
+    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+    if (getEnvStat == JNI_EDETACHED) {
+        if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
+            LOGE("Failed to attach");
+            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        }
+    } else if (getEnvStat == JNI_OK) {
+    } else if (getEnvStat == JNI_EVERSION) {
+        LOGE("GetEnv : version not supported");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+
+    if (!env || !g_WindowGlue.m_glSwapBuffers) {
+        LOGE("glMakeCurrent error");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
+                        g_WindowGlue.m_glSwapBuffers);
+}
+
 void flushRenderingCB(void* view, const LWE::WebContainer::RenderResult& result)
 {
     JNIEnv* env = g_WindowGlue.m_env;
@@ -704,9 +757,11 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_create(
     const char* cookiePathString = env->GetStringUTFChars(cookiePath, 0);
     const char* cachePathString = env->GetStringUTFChars(cachePath, 0);
 
-    LWE::WebContainer* webContainer = LWE::WebContainer::Create(
-        nullptr, w, h, 0, devicePixelRatio, localeString, timezoneIDString,
-        localstoragePathString, cookiePathString, cachePathString);
+    LWE::WebContainer* webContainer = LWE::WebContainer::CreateGL(
+        w, h, [](LWE::WebContainer* wc) { glMakeCurrent(wc); },
+        [](LWE::WebContainer* wc) { glSwapBuffers(wc); }, devicePixelRatio,
+        localeString, timezoneIDString, localstoragePathString,
+        cookiePathString, cachePathString);
 
     env->ReleaseStringUTFChars(locale, localeString);
     env->ReleaseStringUTFChars(timezoneID, timezoneIDString);
@@ -735,12 +790,6 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_create(
     webContainer->RegisterOnLoadResourceHandler(
         [](LWE::WebContainer* view, const std::string& url) -> void {
             callOnLoadResourceHandler(view, url.c_str());
-        });
-
-    webContainer->RegisterOnRenderedHandler(
-        [](LWE::WebContainer* wv,
-           const LWE::WebContainer::RenderResult& result) -> void {
-            flushRenderingCB(wv, result);
         });
 
     webContainer->RegisterShouldOverrideUrlLoadingHandler(

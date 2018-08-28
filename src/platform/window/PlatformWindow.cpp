@@ -334,6 +334,8 @@ void PlatformWindow::setNeedsRendering()
             wnd->m_renderingAnimator = SIZE_MAX;
             if (wnd->width() != 0 && wnd->height() != 0) {
                 wnd->rendering();
+            } else {
+                STARFISH_LOG_WARN("PlatformWindow size error\n");
             }
         },
         wnd);
