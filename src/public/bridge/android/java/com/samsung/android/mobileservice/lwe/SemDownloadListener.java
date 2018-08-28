@@ -1,0 +1,15 @@
+package com.samsung.android.mobileservice.lwe;
+
+public interface SemDownloadListener {
+    /**
+     * Notify the host application that a file should be downloaded
+     *
+     * @param url The full url to the content that should be downloaded
+     * @param userAgent The user agent to be used for the download.
+     * @param contentDisposition Content-disposition http header, if present.
+     * @param mimetype The mimetype of the content reported by the server
+     * @param contentLength The file size reported by the server
+     */
+    void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype,
+                         long contentLength);
+}
