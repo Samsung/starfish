@@ -219,11 +219,11 @@ http://10.113.111.47:8000/dom/nodes/Element-lastElementChild.html
 #http://10.113.111.47:8000/dom/nodes/Element-matches.html
 http://10.113.111.47:8000/dom/nodes/Element-nextElementSibling.html
 http://10.113.111.47:8000/dom/nodes/Element-insertAdjacentText.html
-#http://10.113.111.47:8000/dom/nodes/insert-adjacent.html
+http://10.113.111.47:8000/dom/nodes/insert-adjacent.html
 #http://10.113.111.47:8000/dom/nodes/DocumentType-remove.html
 http://10.113.111.47:8000/dom/nodes/DocumentType-literal.html
 http://10.113.111.47:8000/dom/nodes/CharacterData-surrogates.html
-#http://10.113.111.47:8000/dom/nodes/Node-removeChild.html
+http://10.113.111.47:8000/dom/nodes/Node-removeChild.html
 http://10.113.111.47:8000/dom/nodes/Document-createTextNode.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-29.htm
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-16.htm
