@@ -1175,7 +1175,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
         } else if (node->isElement()) {
             Node* c = firstChild();
             while (c) {
-                if (c->isElement() && child != c) {
+                if (c->isElement()) {
                     throw new DOMException(
                         document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "parent has an element child, child is "
