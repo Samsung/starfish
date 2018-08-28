@@ -190,6 +190,26 @@ void RareNodeMembers::invalidateActiveActiveNodeListCacheIfNeeded()
     }
 }
 
+GetRootNodeOptions::GetRootNodeOptions()
+    : GetRootNodeOptions(false)
+{
+}
+
+GetRootNodeOptions::GetRootNodeOptions(bool composed)
+    : m_composed(composed)
+{
+}
+
+bool GetRootNodeOptions::composed() const
+{
+    return m_composed;
+}
+
+void GetRootNodeOptions::setComposed(bool composed)
+{
+    m_composed = composed;
+}
+
 NodeList* Node::childNodes()
 {
     STARFISH_ASSERT(m_document);

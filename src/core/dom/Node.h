@@ -108,6 +108,21 @@ public:
     ActiveNodeListVector* m_activeNodeListVectorForName;
 };
 
+struct GetRootNodeOptions {
+public:
+    STARFISH_MAKE_STACK_ALLOCATED()
+    GetRootNodeOptions();
+
+    // Constructor for internal use
+    GetRootNodeOptions(bool composed);
+
+    bool composed() const;
+    void setComposed(bool composed);
+
+private:
+    bool m_composed;
+};
+
 class Node : public EventTarget {
 protected:
     Node(Document* document)
@@ -205,6 +220,25 @@ public:
         } else {
             return m_document;
         }
+    }
+
+    Node* getRootNode()
+    {
+        Node* n = this;
+        while (n) {
+            if (!n->parentNode()) {
+                break;
+            }
+            n = n->parentNode();
+        }
+        return n;
+    }
+
+    Node* getRootNode(GetRootNodeOptions options)
+    {
+        // TODO shadow-including root
+        STARFISH_ASSERT(!options.composed());
+        return getRootNode();
     }
 
     Node* parentNode() const

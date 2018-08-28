@@ -23,7 +23,7 @@ interface Node : EventTarget {
 
   readonly attribute boolean isConnected;
   readonly attribute Document? ownerDocument;
-  [Unimplemented] Node getRootNode(optional GetRootNodeOptions options);
+  Node getRootNode(optional GetRootNodeOptions options);
   readonly attribute Node? parentNode;
   readonly attribute Element? parentElement;
   boolean hasChildNodes();
@@ -58,4 +58,8 @@ interface Node : EventTarget {
   [CEReactions, RaisesException] Node appendChild(Node node);
   [CEReactions, RaisesException] Node replaceChild(Node node, Node child);
   [CEReactions, RaisesException] Node removeChild(Node child);
+};
+
+dictionary GetRootNodeOptions {
+  boolean composed = false;
 };

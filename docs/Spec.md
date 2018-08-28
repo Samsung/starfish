@@ -782,6 +782,7 @@ section are supported.
 |  | attribute | nodeType | Returns the node type |
 |  | attribute | nodeName | Retuns the node name |
 |  | attribute | ownerDocument | Returns the node document. Returns null for documents. |
+|  | attribute | Node getRootNode(optional GetRootNodeOptions options) | Returns the context object's root, which optionally includes the shadow root if it is available. |
 |  | attribute | parentNode | Returns the parent. |
 |  | attribute | parentElement | Returns the parent element. |
 |  | method | boolean hasChildNodes() | Returns whether node has children. |
