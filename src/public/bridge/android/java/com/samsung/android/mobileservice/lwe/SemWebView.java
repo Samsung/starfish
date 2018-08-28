@@ -28,6 +28,9 @@ import android.webkit.ValueCallback;
 import java.lang.reflect.Constructor;
 import dalvik.system.PathClassLoader;
 
+/**
+ * A View that displays web pages.
+ */
 public class SemWebView extends SurfaceView {
 
     static PathClassLoader pcl = null;
@@ -270,6 +273,17 @@ public class SemWebView extends SurfaceView {
     }
 
     /**
+     * Sets the lwe handler.
+     *
+     * @param client An implementation of WebLweClient
+     */
+    public void setWebLweClient(SemWebLweClient client) {
+        if (delegate != null) {
+            delegate.setWebLweClient(client);
+        }
+    }
+
+    /**
      * Registers the interface to be used when content can not be handled by the rendering engine,
      * and should be downloaded instead. This will replace the current handler.
      *
@@ -279,5 +293,4 @@ public class SemWebView extends SurfaceView {
         if(delegate!=null)
             delegate.setDownloadListener(listener);
     }
-
 }

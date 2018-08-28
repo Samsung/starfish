@@ -50,4 +50,5 @@ public interface LweWebView {
     void setSettings(SemWebSettings settings);
     void setWebViewClient(SemWebViewClient client);
     void setDownloadListener(SemDownloadListener listener);
+    void setWebLweClient(SemWebLweClient client);
 }
