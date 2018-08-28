@@ -882,26 +882,6 @@ void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
         }
     }
 
-    // ignore -coordinates
-    if (purpose == GraphicsBufferByOtherLayer) {
-        if (tmp.x() < 0) {
-            if (tmp.width() + tmp.x() < 0) {
-                return;
-            } else {
-                tmp.setWidth(tmp.width() + tmp.x());
-                tmp.setX(0);
-            }
-        }
-        if (tmp.y() < 0) {
-            if (tmp.height() + tmp.y() < 0) {
-                return;
-            } else {
-                tmp.setHeight(tmp.height() + tmp.y());
-                tmp.setY(0);
-            }
-        }
-    }
-
     auto prevValue = result;
     result.unite(tmp);
 
