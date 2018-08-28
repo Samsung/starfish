@@ -42,7 +42,6 @@ import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.InputConnection;
 import android.view.inputmethod.InputMethodManager;
-import android.webkit.DownloadListener;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 
@@ -96,6 +95,7 @@ public class LweWebViewImpl implements LweWebView{
     private boolean mCanGoForward = false;
     private String mCurrentURL = null;
     private SemWebViewClient mWebViewClient = null;
+    private SemWebLweClient mWebLweClient = null;
     private SemDownloadListener mDownloadListener = null;
 
     private int mCacheMode = SemWebSettings.LOAD_DEFAULT;
@@ -545,7 +545,7 @@ public class LweWebViewImpl implements LweWebView{
         mCanGoForward = canGoForward;
         if (mWebViewClient != null) {
             //TODO
-            mWebViewClient.onReceivedError(mLWEView, new SemResourceError(errorCode, "NotSupported"));
+            mWebViewClient.onReceivedError(mLWEView, new SemWebResourceError(errorCode, "NotSupported"));
         }
     }
 
@@ -575,8 +575,8 @@ public class LweWebViewImpl implements LweWebView{
     }
 
     private void onProgressChanged(int newProgres) {
-        if (mWebViewClient != null) {
-            mWebViewClient.onProgressChanged(mLWEView, newProgres);
+        if (mWebLweClient != null) {
+            mWebLweClient.onProgressChanged(mLWEView, newProgres);
         }
     }
 
@@ -859,6 +859,9 @@ public class LweWebViewImpl implements LweWebView{
 
     public void setWebViewClient(SemWebViewClient client) {
         mWebViewClient = client;
+    }
+    public void setWebLweClient(SemWebLweClient client) {
+        mWebLweClient = client;
     }
     public void setDownloadListener(SemDownloadListener listener) {
         mDownloadListener = listener;

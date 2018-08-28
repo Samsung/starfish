@@ -22,27 +22,60 @@ package com.samsung.android.mobileservice.lwe;
 import android.net.Uri;
 import android.webkit.ValueCallback;
 
+/**
+ * A Web view client for a SemWebView
+ */
 public class SemWebViewClient {
+    /**
+     * Notify the host application that the WebView will load the resource specified by the given
+     * url.
+     *
+     * @param view The WebView that is initiating the callback.
+     * @param url The url of the resource the WebView will load.
+     */
     public void onLoadResource(SemWebView view, String url) {
     }
 
-    public void onReceivedError(SemWebView view, SemResourceError error) {
+    /**
+     * Report an error to the host application.
+     *
+     * @param view The WebView that is initiating the callback.
+     * @param error Information about the error occurred.
+     */
+    public void onReceivedError(SemWebView view, SemWebResourceError error) {
     }
 
+    /**
+     * Notify the host application that a page has finished loading.
+     * When onPageFinished() is called, the rendering picture may not be updated yet.
+     *
+     * @param view The WebView that is initiating the callback.
+     * @param url The url of the page.
+     */
     public void onPageFinished(SemWebView view, String url) {
     }
 
+    /**
+     * Notify the host application that a page has started loading.
+     *
+     * @param view The WebView that is initiating the callback.
+     * @param url The url to be loaded.
+     */
     public void onPageStarted(SemWebView view, String url) {
     }
 
-    public void onProgressChanged(SemWebView view, int newProgress) {
-    }
-
+    /**
+     * Give the host application a chance to take control when a URL is about to be loaded in the
+     * current WebView. If a WebViewClient is not provided, by default WebView will continue to load
+     * the URL. If a WebViewClient is provided, returning true causes the current WebView to abort
+     * loading the URL, while returning false causes the WebView to continue loading the URL as
+     * usual.
+     *
+     * @param view The WebView that is initiating the callback.
+     * @param request Object containing the details of the request.
+     * @return
+     */
     public boolean shouldOverrideUrlLoading(SemWebView view, String request) {
-        return false;
-    }
-
-    public boolean onShowFileChooser(SemWebView webView, ValueCallback<Uri[]> uris) {
         return false;
     }
 }
