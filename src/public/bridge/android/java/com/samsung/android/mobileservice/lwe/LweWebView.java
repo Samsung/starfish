@@ -22,7 +22,6 @@ package com.samsung.android.mobileservice.lwe;
 import android.content.Context;
 import android.view.View;
 import android.view.inputmethod.InputConnection;
-import android.webkit.DownloadListener;
 import android.webkit.ValueCallback;
 
 interface LweWebView {
@@ -50,5 +49,5 @@ interface LweWebView {
 
     void setSettings(SemWebSettings settings);
     void setWebViewClient(SemWebViewClient client);
-    void setDownloadListener(DownloadListener listener);
+    void setDownloadListener(SemDownloadListener listener);
 }

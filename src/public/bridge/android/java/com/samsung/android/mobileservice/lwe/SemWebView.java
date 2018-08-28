@@ -24,7 +24,6 @@ import android.util.AttributeSet;
 import android.view.SurfaceView;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
-import android.webkit.DownloadListener;
 import android.webkit.ValueCallback;
 
 public class SemWebView extends SurfaceView {
@@ -247,7 +246,7 @@ public class SemWebView extends SurfaceView {
      *
      * @param listener an implementation of DownloadListener
      */
-    public void setDownloadListener(DownloadListener listener) {
+    public void setDownloadListener(SemDownloadListener listener) {
         if(delegate!=null)
             delegate.setDownloadListener(listener);
     }

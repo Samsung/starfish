@@ -94,7 +94,7 @@ public class LweWebViewImpl implements LweWebView{
     private boolean mCanGoForward = false;
     private String mCurrentURL = null;
     private SemWebViewClient mWebViewClient = null;
-    private DownloadListener mDownloadListener = null;
+    private SemDownloadListener mDownloadListener = null;
 
     private int mCacheMode = SemWebSettings.LOAD_DEFAULT;
     private String mDefaultUserAgent = null;
@@ -857,7 +857,7 @@ public class LweWebViewImpl implements LweWebView{
     public void setWebViewClient(SemWebViewClient client) {
         mWebViewClient = client;
     }
-    public void setDownloadListener(DownloadListener listener) {
+    public void setDownloadListener(SemDownloadListener listener) {
         mDownloadListener = listener;
     }
 
