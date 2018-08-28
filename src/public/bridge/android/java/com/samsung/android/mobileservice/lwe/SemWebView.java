@@ -25,10 +25,17 @@ import android.view.SurfaceView;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
+import java.lang.reflect.Constructor;
+import dalvik.system.PathClassLoader;
 
 public class SemWebView extends SurfaceView {
 
+    static PathClassLoader pcl = null;
+    static final String packageName = "com.samsung.android.mobileservice.lwe";
+    static final String LweWebViewImplName = "com.samsung.android.mobileservice.lwe.LweWebViewImpl";
+
     LweWebView delegate = null;
+
     /**
      * Creates a new InputConnection for an InputMethod to interact with the WebView.
      *
@@ -43,27 +50,49 @@ public class SemWebView extends SurfaceView {
     }
 
     private LweWebView getWebViewInstance(){
-        if(delegate==null)
-            return new LweWebViewImpl();
+        /*
+        LweWebView result=null;
+        if(delegate==null){
+            try {
+                if(pcl==null){
+                    String path = getContext().getPackageManager().getPackageInfo(packageName,0).applicationInfo.nativeLibraryDir;
+                    String dexpath = getContext().getPackageManager().getPackageInfo(packageName,0).applicationInfo.publicSourceDir;
+                    pcl= new PathClassLoader(dexpath,path,getContext().getClassLoader());
+                }
+                Class<?> cls = pcl.loadClass(LweWebViewImplName);
+                Constructor<?> cons = cls.getConstructor();
+                result = (LweWebView)cons.newInstance();
+            }catch (Exception e){}
+            return result;
+        }
+        */
+        {
+            // local mode for test  should be removed next time.
+            if(delegate==null)
+                return new LweWebViewImpl();
+        }
         return delegate;
     }
 
     public SemWebView(Context context) {
         super(context);
         delegate = getWebViewInstance();
-        delegate.initWebView(this);
+        if(delegate!=null)
+            delegate.initWebView(this);
     }
 
     public SemWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
         delegate = getWebViewInstance();
-        delegate.initWebView(this);
+        if(delegate!=null)
+            delegate.initWebView(this);
     }
 
     public SemWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs);
         delegate = getWebViewInstance();
-        delegate.initWebView(this);
+        if(delegate!=null)
+            delegate.initWebView(this);
     }
 
     /**
