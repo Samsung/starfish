@@ -85,7 +85,8 @@ public:
 
     void remove()
     {
-        // TODO
+        Node::remove();
+        m_document = nullptr;
     }
 
     bool isContainerNode() override

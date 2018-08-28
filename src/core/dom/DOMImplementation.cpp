@@ -53,7 +53,7 @@ XMLDocument* DOMImplementation::createDocument(
     // Let document be a new XMLDocument.
     XMLDocument* document = new XMLDocument(
         window(), scriptBindingInstance(), new ResourceURL("about:blank"),
-        String::createASCIIString("utf-8"), false);
+        String::createASCIIString("UTF-8"), false);
     // Let element be null.
     Element* element = nullptr;
     // If qualifiedName is not the empty string,
@@ -67,6 +67,8 @@ XMLDocument* DOMImplementation::createDocument(
     // If doctype is non-null, append doctype to document.
     if (doctype) {
         document->appendChild(doctype);
+        doctype->setDocument(document);
+        doctype->setParentNode(document);
     }
     // If element is non-null, append element to document.
     if (element) {
@@ -99,7 +101,7 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
     // Set doc’s content type to "text/html".
     Document* doc = new HTMLDocument(window(), scriptBindingInstance(),
                                      new ResourceURL("about:blank"),
-                                     String::createASCIIString("utf-8"), false);
+                                     String::createASCIIString("UTF-8"), false);
 
     DocumentType* docType =
         new DocumentType(doc, String::createASCIIString("html"),

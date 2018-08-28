@@ -230,7 +230,7 @@ http://10.113.111.47:8000/dom/nodes/getElementsByClassName-16.htm
 #http://10.113.111.47:8000/dom/nodes/Element-classlist.html
 #http://10.113.111.47:8000/dom/nodes/MutationObserver-attributes.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-03.htm
-#http://10.113.111.47:8000/dom/nodes/Node-properties.html
+http://10.113.111.47:8000/dom/nodes/Node-properties.html
 #http://10.113.111.47:8000/dom/nodes/Node-isConnected.html
 http://10.113.111.47:8000/dom/nodes/append-on-Document.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-19.htm
