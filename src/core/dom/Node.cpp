@@ -380,6 +380,7 @@ Nullable<String*> Node::textContent() const
         return asAttr()->value();
     case TEXT_NODE:
     case COMMENT_NODE:
+    case PROCESSING_INSTRUCTION_NODE:
         return asCharacterData()->data();
     default:
         return nullptr;

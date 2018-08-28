@@ -741,8 +741,7 @@ Element* Document::createElement(String* localName)
         localNameAtomic =
             AtomicString::createAtomicString(window()->starFish(), localName);
     }
-    return new NamedElement(this,
-                            QualifiedName(AtomicString(), localNameAtomic));
+    return new NamedElement(this, QualifiedName(localNameAtomic));
 }
 
 // https://dom.spec.whatwg.org/#validate-and-extract
