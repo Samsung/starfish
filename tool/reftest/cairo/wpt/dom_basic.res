@@ -143,7 +143,7 @@ http://10.113.111.47:8000/dom/nodes/Document-createAttribute.html
 http://10.113.111.47:8000/dom/nodes/CharacterData-appendChild.html
 #http://10.113.111.47:8000/dom/nodes/Element-tagName.html
 #http://10.113.111.47:8000/dom/nodes/Node-compareDocumentPosition.html
-#http://10.113.111.47:8000/dom/nodes/prepend-on-Document.html
+http://10.113.111.47:8000/dom/nodes/prepend-on-Document.html
 #http://10.113.111.47:8000/dom/nodes/Document-constructor.html
 http://10.113.111.47:8000/dom/nodes/Element-remove.html
 #http://10.113.111.47:8000/dom/nodes/attributes.html
@@ -213,7 +213,7 @@ http://10.113.111.47:8000/dom/nodes/getElementsByClassName-28.htm
 #http://10.113.111.47:8000/dom/nodes/MutationObserver-document.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-23.htm
 http://10.113.111.47:8000/dom/nodes/DOMImplementation-hasFeature.html
-#http://10.113.111.47:8000/dom/nodes/Node-insertBefore.html
+http://10.113.111.47:8000/dom/nodes/Node-insertBefore.html
 #http://10.113.111.47:8000/dom/nodes/MutationObserver-inner-outer.html
 http://10.113.111.47:8000/dom/nodes/Element-lastElementChild.html
 #http://10.113.111.47:8000/dom/nodes/Element-matches.html

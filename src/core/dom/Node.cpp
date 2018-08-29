@@ -1181,26 +1181,47 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                 }
                 c = c->nextSibling();
             }
-            if (node->childElementCount() == 1 &&
-                (childElementCount() || (child && child->isDocumentType()))) {
-                throw new DOMException(
-                    document(), DOMException::HIERARCHY_REQUEST_ERR,
-                    "If node has more than one element child "
-                    "or has a Text node child. Otherwise, "
-                    "if node has one element child and either "
-                    "parent has an element child, child is a "
-                    "doctype, or child is not null and a "
-                    "doctype is following child.");
+            if (node->childElementCount() == 1) {
+                if (childElementCount() || (child && child->isDocumentType())) {
+                    throw new DOMException(
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
+                        "If node has more than one element child "
+                        "or has a Text node child. Otherwise, "
+                        "if node has one element child and either "
+                        "parent has an element child, child is a "
+                        "doctype, or child is not null and a "
+                        "doctype is following child.");
+                } else if (child) {
+                    Node* next = child->nextSibling();
+                    while (next) {
+                        if (next->isDocumentType()) {
+                            throw new DOMException(
+                                document(), DOMException::HIERARCHY_REQUEST_ERR,
+                                "If node has more than one element child "
+                                "or has a Text node child. Otherwise, "
+                                "if node has one element child and either "
+                                "parent has an element child, child is a "
+                                "doctype, or child is not null and a "
+                                "doctype is following child.");
+                        }
+                        next = next->nextSibling();
+                    }
+                }
             }
         } else if (node->isElement()) {
             Node* c = firstChild();
+            bool checkFollwingDoctype = false;
             while (c) {
-                if (c->isElement()) {
+                if (c->isElement() ||
+                    (checkFollwingDoctype && c->isDocumentType())) {
                     throw new DOMException(
                         document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "parent has an element child, child is "
                         "a doctype, or child is not null and a "
                         "doctype is following child.");
+                }
+                if (child && c == child) {
+                    checkFollwingDoctype = true;
                 }
                 c = c->nextSibling();
             }
@@ -1211,10 +1232,16 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                                        "a doctype, or child is not null and a "
                                        "doctype is following child.");
             }
+
         } else if (node->isDocumentType()) {
             Node* c = firstChild();
+            bool checkPrecedingElement = (child != nullptr);
             while (c) {
-                if (c->isDocumentType() && child != c) {
+                if (c == child) {
+                    checkPrecedingElement = false;
+                }
+                if (c->isDocumentType() ||
+                    (checkPrecedingElement && c->isElement())) {
                     throw new DOMException(
                         document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "parent has a doctype child, child is "
@@ -1224,6 +1251,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                 }
                 c = c->nextSibling();
             }
+
             if (!child && childElementCount() > 0) {
                 throw new DOMException(document(),
                                        DOMException::HIERARCHY_REQUEST_ERR,
