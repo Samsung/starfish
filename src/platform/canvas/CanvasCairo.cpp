@@ -74,10 +74,9 @@ class CanvasCairo : public Canvas {
 
         m_surface = cairo_image_surface_create_for_data(
             (unsigned char*)buffer, CAIRO_FORMAT, width, height, stride);
-        cairo_surface_set_device_scale(
-            m_surface, m_starfish->screenInfo().devicePixelRatio,
-            m_starfish->screenInfo().devicePixelRatio);
         m_canvas = cairo_create(m_surface);
+
+        applyDevicePixelRatio();
     }
 
     void initFromNativeImageData(NativeImageData* data)
@@ -90,10 +89,9 @@ class CanvasCairo : public Canvas {
         m_surface = cairo_image_surface_create_for_data(
             (unsigned char*)data->data(), CAIRO_FORMAT, data->width(),
             data->height(), data->stride());
-        cairo_surface_set_device_scale(
-            m_surface, m_starfish->screenInfo().devicePixelRatio,
-            m_starfish->screenInfo().devicePixelRatio);
         m_canvas = cairo_create(m_surface);
+
+        applyDevicePixelRatio();
     }
 
     void init()
@@ -293,12 +291,8 @@ public:
         double maxY = std::max(ySoFar, maxYSoFar);
 
         int ix, iy, iMaxX, iMaxY;
-
-        cairo_user_to_device(m_canvas, &x, &y);
         ix = floor(x) - 1;
         iy = floor(y) - 1;
-
-        cairo_user_to_device(m_canvas, &maxX, &maxY);
         iMaxX = ceil(maxX) + 1;
         iMaxY = ceil(maxY) + 1;
 
@@ -309,9 +303,6 @@ public:
 
         cairo_matrix_t m2;
         cairo_matrix_init_identity(&m2);
-        double oldScale;
-        cairo_surface_get_device_scale(m_surface, &oldScale, &oldScale);
-        cairo_surface_set_device_scale(m_surface, 1, 1);
         cairo_set_matrix(m_canvas, &m2);
         cairo_move_to(m_canvas, ix, iy);
         cairo_line_to(m_canvas, iMaxX, iy);
@@ -319,7 +310,6 @@ public:
         cairo_line_to(m_canvas, ix, iMaxY);
         cairo_line_to(m_canvas, ix, iy);
         cairo_clip(m_canvas);
-        cairo_surface_set_device_scale(m_surface, oldScale, oldScale);
         cairo_set_matrix(m_canvas, &m);
 
         return deviceRect;
@@ -327,7 +317,14 @@ public:
 
     virtual void unsetDevicePixelRatio()
     {
-        cairo_surface_set_device_scale(m_surface, 1, 1);
+        scale(1 / m_starfish->screenInfo().devicePixelRatio,
+              1 / m_starfish->screenInfo().devicePixelRatio);
+    }
+
+    void applyDevicePixelRatio()
+    {
+        scale(m_starfish->screenInfo().devicePixelRatio,
+              m_starfish->screenInfo().devicePixelRatio);
     }
 
     virtual void setColor(const Unit::Color& clr_)
@@ -1015,6 +1012,7 @@ public:
     {
         cairo_reset_clip(m_canvas);
         cairo_identity_matrix(m_canvas);
+        applyDevicePixelRatio();
     }
 
     virtual void resetClip()

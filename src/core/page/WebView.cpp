@@ -891,10 +891,6 @@ RenderResult WebView::rendering(bool force)
 
         bool needsFullPainting = m_didCompositeBefore && !m_needsComposite;
 
-#if defined(STARFISH_EFL)
-        needsFullPainting = true;
-#endif
-
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
             mainBrowsingContext()
                 ->document()
@@ -1085,14 +1081,6 @@ RenderResult WebView::rendering(bool force)
                 starFish()->platformWindow()->prepareCompositor();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
-#if defined(PORT_COMPOSITOR_BACKEND_EFL)
-            float devicePixelRatio = starFish()->screenInfo().devicePixelRatio;
-            compositor->translate(starFish()->posX() / devicePixelRatio,
-                                  starFish()->posY() / devicePixelRatio);
-            compositor->clip(Unit::Rect(
-                0, 0, starFish()->platformWindow()->width() / devicePixelRatio,
-                starFish()->platformWindow()->height() / devicePixelRatio));
-#endif
 
             compositor->save();
             compositor->translate(-mainFrame->scrollLeft(),
@@ -1160,7 +1148,7 @@ RenderResult WebView::rendering(bool force)
 #if defined(STARFISH_ENABLE_TEST)
     {
         if (g_fireOnloadEvent &&
-            starFish()->TestCompatibleMode() ==
+            starFish()->testCompatibleMode() ==
                 StarFishTestCompatibleMode::ChromiumLayout) {
             if (g_enableDumpAsText && !g_DumpAsText_Async) {
                 fprintf(stdout, "#READY\n");
@@ -1212,6 +1200,14 @@ RenderResult WebView::rendering(bool force)
 #endif
 
     return renderResult;
+}
+
+void WebView::setNeedsFullRepainting()
+{
+    if (m_topLevelBrowsingContext && m_topLevelBrowsingContext->document()) {
+        m_topLevelBrowsingContext->document()->document()->setNeedsPainting();
+        STARFISH_LOG_INFO("WebView::setNeedsFullRepainting\n");
+    }
 }
 
 void WebView::clearStackingContext()

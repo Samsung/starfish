@@ -49,8 +49,9 @@ static void poller(void* data);
 class WebViewGLFW : public WebView {
 public:
     WebViewGLFW(void* winArg, int x, int y, int width, int height,
-                float devicePixelRatio, const char* locale,
-                const char* timezoneID, const char* localStorageFilePath,
+                float devicePixelRatio, const char* defaultFontName,
+                const char* locale, const char* timezoneID,
+                const char* localStorageFilePath,
                 const char* cookieStoreFilePath,
                 const char* httpCacheDirectorypath)
         : WebView(nullptr)
@@ -115,8 +116,8 @@ public:
                 glfwMakeContextCurrent(m_glWindow);
             },
             [this](LWE::WebContainer* wc) { glfwSwapBuffers(m_glWindow); },
-            devicePixelRatio, locale, timezoneID, localStorageFilePath,
-            cookieStoreFilePath, httpCacheDirectorypath);
+            devicePixelRatio, defaultFontName, locale, timezoneID,
+            localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
 
         m_impl = webContainer;
 
@@ -240,15 +241,16 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
 }
 
 WebView* WebView::Create(void* win, int x, int y, int width, int height,
-                         float devicePixelRatio, const char* locale,
-                         const char* timezoneID,
+                         float devicePixelRatio, const char* defaultFontName,
+                         const char* locale, const char* timezoneID,
                          const char* localStorageFilePath,
                          const char* cookieStoreFilePath,
                          const char* httpCacheDirectorypath)
 {
-    return new WebViewGLFW(win, x, y, width, height, devicePixelRatio, locale,
-                           timezoneID, localStorageFilePath,
-                           cookieStoreFilePath, httpCacheDirectorypath);
+    return new WebViewGLFW(win, x, y, width, height, devicePixelRatio,
+                           defaultFontName, locale, timezoneID,
+                           localStorageFilePath, cookieStoreFilePath,
+                           httpCacheDirectorypath);
 }
 }
 

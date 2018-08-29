@@ -131,8 +131,8 @@ bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
         return m_good = false;
     }
 
-    File* out = File::create();
-    if (!out->open(m_entryFileInfo.entryFilePath, File::Write)) {
+    auto out = File::open(m_entryFileInfo.entryFilePath, File::Write);
+    if (!out) {
         return m_good = false;
     }
 
@@ -144,7 +144,8 @@ bool HTTPCacheEntry::writeRawDataToEntryFile(std::vector<char>& rawData)
         m_entryFileInfo.byteLength = length;
     }
 
-    return m_good = ret & (out->close() == 0);
+    out.reset();
+    return m_good = ret;
 }
 
 bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
@@ -153,14 +154,14 @@ bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
 
     STARFISH_ASSERT(m_entryFileInfo.entryFilePath.compare("") != 0);
 
-    File* in = File::createInNonGCArea(); // Must free
-    if (!in->open(m_entryFileInfo.entryFilePath, File::Read)) {
+    auto in = File::open(m_entryFileInfo.entryFilePath, File::Read);
+    if (!in) {
         return m_good = false;
     }
 
-    m_good = in->readAll(out) & (in->close() == 0);
+    m_good = in->readAll(out);
 
-    free(in);
+    in.reset();
 
     return m_good;
 }
@@ -361,17 +362,15 @@ bool HTTPCacheEntry::isConsistent()
         return m_good;
     }
 
-    File* file = File::create();
+    auto file = File::open(m_entryFileInfo.entryFilePath, File::Read);
 
-    if (file->open(m_entryFileInfo.entryFilePath, File::Read)) {
+    if (file) {
         if (file->lastModificationTime() ==
                 m_entryFileInfo.lastModificationTime &&
             file->size() == m_entryFileInfo.byteLength) {
-            file->close();
             return true;
         }
     }
-    file->close();
     return m_good = false;
 }
 bool HTTPCacheEntry::good()

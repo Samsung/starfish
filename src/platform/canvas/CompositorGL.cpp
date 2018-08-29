@@ -730,6 +730,18 @@ public:
         return true;
     }
 
+#if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
+    virtual void dump(const char* path)
+    {
+        STARFISH_ASSERT(m_buffer);
+        auto surface = cairo_image_surface_create_for_data(
+            m_buffer, CAIRO_FORMAT_ARGB32, bufferWidth(), bufferHeight(),
+            bufferStride());
+        cairo_surface_write_to_png(surface, path);
+        cairo_surface_destroy(surface);
+    }
+#endif
+
     virtual void detachNativeBuffer()
     {
         if (!m_window->isClosed())
@@ -781,7 +793,7 @@ public:
         m_isEGLImageExternal = false;
     }
 
-    void attachNativeBuffer(size_t w, size_t h)
+    bool attachNativeBuffer(size_t w, size_t h)
     {
         if (m_width != w || m_height != h) {
             detachNativeBuffer();
@@ -846,7 +858,9 @@ public:
                               g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
 
             ensureGenerateTexture();
+            return true;
         }
+        return false;
     }
 
     virtual void resize(size_t w, size_t h)
@@ -1123,19 +1137,19 @@ public:
                 for (size_t x = 0; x < wTextureCount; x++) {
                     GLuint textureID;
 
-                    size_t texureDataX = coveredColsCount;
-                    size_t texureDataY = coveredRowsCount;
-                    size_t texureDataWidth =
+                    size_t textureDataX = coveredColsCount;
+                    size_t textureDataY = coveredRowsCount;
+                    size_t textureDataWidth =
                         std::min((size_t)g_textureTileSize,
                                  m_bufferWidth - coveredColsCount);
-                    size_t texureDataHeight =
+                    size_t textureDataHeight =
                         std::min((size_t)g_textureTileSize,
                                  m_bufferHeight - coveredRowsCount);
                     CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment&
                         fragment = m_textureFragments[fragmentIndex];
 
-                    Unit::Rect tRect(texureDataX, texureDataY, texureDataWidth,
-                                     texureDataHeight);
+                    Unit::Rect tRect(textureDataX, textureDataY,
+                                     textureDataWidth, textureDataHeight);
 
                     if (tRect.intersects(dRect)) {
                         m_textureFragmentsFlags[fragmentIndex].m_isDirty = true;
@@ -1145,10 +1159,10 @@ public:
                         auto bottom = std::min(tRect.maxY(), dRect.maxY());
                         auto top = std::max(tRect.y(), dRect.y());
 
-                        left -= texureDataX;
-                        right -= texureDataX;
-                        bottom -= texureDataY;
-                        top -= texureDataY;
+                        left -= textureDataX;
+                        right -= textureDataX;
+                        bottom -= textureDataY;
+                        top -= textureDataY;
 
                         m_dirtyAreaTextureFragments[fragmentIndex].unite(
                             Unit::Rect(left, top, right - left, bottom - top));

@@ -74,8 +74,8 @@ void addGCCollectionListener(void (*fn)(GC_EventType));
 class StarFish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
-    friend class HTMLDocument; // m_caseInsensitiveAttrSet
-
+    friend class HTMLDocument;                      // m_caseInsensitiveAttrSet
+    friend class FileURLResourceRequestJobDelegate; // Custom file IO
 public:
     StarFish(const char* locale, const char* timezoneID, int w, int h,
              float defaultFontSizeMultiplier, String* defaultFontName,
@@ -262,7 +262,7 @@ public:
         m_testCompatibleMode = mode;
     }
 
-    StarFishTestCompatibleMode TestCompatibleMode()
+    StarFishTestCompatibleMode testCompatibleMode()
     {
         return (StarFishTestCompatibleMode)m_testCompatibleMode;
     }
@@ -291,6 +291,26 @@ public:
     void callWebViewHandler(const std::string& handlerName, String* url,
                             int param = 0);
     void callWebViewHandler(const std::string& handlerName, void* data);
+
+    void registerCustomFileResourceRequestCallbacks(
+        std::function<const char*(const char* path)> resolveFilePathCallback,
+        std::function<void*(const char* path)> fileOpenCallback,
+        std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+            fileReadCallback,
+        std::function<long int(void* handle)> fileLengthCallback,
+        std::function<void(void* handle)> fileCloseCallback)
+    {
+        m_resolveFilePathCallback = resolveFilePathCallback;
+        m_fileOpenCallback = fileOpenCallback;
+        m_fileReadCallback = fileReadCallback;
+        m_fileLengthCallback = fileLengthCallback;
+        m_fileCloseCallback = fileCloseCallback;
+    }
+
+    std::unordered_map<std::string, void*>& publicLayerUserDataMap()
+    {
+        return m_publicLayerUserDataMap;
+    }
 
 protected:
     StaticStrings* m_staticStrings;
@@ -343,9 +363,19 @@ protected:
     std::unordered_map<std::string, std::function<void(void*)>>
         m_lweWebViewHandlersGeneral;
 
+    // function sets for implementing custom file IO for resource request
+    std::function<const char*(const char* path)> m_resolveFilePathCallback;
+    std::function<void*(const char* path)> m_fileOpenCallback;
+    std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+        m_fileReadCallback;
+    std::function<long int(void* handle)> m_fileLengthCallback;
+    std::function<void(void* handle)> m_fileCloseCallback;
+    // <----
+
+    std::unordered_map<std::string, void*> m_publicLayerUserDataMap;
+
 private:
     void initNetworkSharedResourceManager(const char* cookieStoreFilePath);
-    String* resolvePath(String* filePath);
 };
 
 #ifdef STARFISH_ENABLE_TEST

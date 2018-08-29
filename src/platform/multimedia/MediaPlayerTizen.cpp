@@ -417,8 +417,9 @@ public:
         evas_object_hide(m_imageObject);
     }
 
-    void attachNativeBuffer(size_t w, size_t h)
+    bool attachNativeBuffer(size_t w, size_t h)
     {
+        return false;
     }
 
     virtual void resize(size_t w, size_t h)

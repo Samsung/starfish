@@ -320,6 +320,10 @@ StarFish::StarFish(const char* locale, const char* timezoneID, int w, int h,
 
     WebView* webView = WebView::create(this);
     m_platformWindow->setWebView(webView);
+
+    // saidly.. few port layer needs this variable
+    m_publicLayerUserDataMap["__internalWebContainerImplementLayerVariable"] =
+        this;
 }
 
 void StarFish::run()
@@ -327,15 +331,7 @@ void StarFish::run()
     m_messageLoop->run();
 }
 
-void StarFish::loadHTMLDocument(String* filePath)
-{
-    String* resolvedPath = resolvePath(filePath);
-    ResourceURL* url = new ResourceURL(resolvedPath);
-    m_platformWindow->webView()->navigate(url, HistoryManager::Action::Add,
-                                          nullptr);
-}
-
-String* StarFish::resolvePath(String* filePath)
+static String* resolvePath(String* filePath)
 {
     String* resolvedPath = filePath;
     if (!filePath->startsWith("http") && !filePath->startsWith("about") &&
@@ -345,9 +341,11 @@ String* StarFish::resolvePath(String* filePath)
 #else
         String* prefix = String::fromUTF8("file://");
 #endif
-        Nullable<String*> result = File::absolutePath(filePath);
+        Nullable<std::string> result =
+            FileUtil::absolutePath(filePath->toUTF8NonGCString());
         if (result.hasValue()) {
-            resolvedPath = prefix->concat(result.getValue());
+            resolvedPath = prefix->concat(String::fromUTF8(
+                result.getValue().data(), result.getValue().length()));
         } else {
             // Will navigate to about:blank
             resolvedPath = prefix->concat(resolvedPath);
@@ -355,6 +353,14 @@ String* StarFish::resolvePath(String* filePath)
     }
 
     return resolvedPath;
+}
+
+void StarFish::loadHTMLDocument(String* filePath)
+{
+    String* resolvedPath = resolvePath(filePath);
+    ResourceURL* url = new ResourceURL(resolvedPath);
+    m_platformWindow->webView()->navigate(url, HistoryManager::Action::Add,
+                                          nullptr);
 }
 
 void StarFish::resume()
@@ -422,6 +428,8 @@ void StarFish::close()
     } else {
         g_singletonInstanceCnt--;
     }
+
+    m_publicLayerUserDataMap.clear();
 }
 
 String* StarFish::evaluate(String* s)

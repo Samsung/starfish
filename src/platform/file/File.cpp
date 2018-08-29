@@ -24,7 +24,25 @@
 #include <sys/stat.h>
 
 #if defined(OS_WINDOWS)
-size_t getline(char** lineptr, size_t* n, FILE* stream)
+#include <locale>
+#include <codecvt>
+#include <string>
+
+static std::wstring toWideString(const std::string& src)
+{
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    return converter.from_bytes(src);
+}
+
+static std::string toNarrowString(const std::wstring& src)
+{
+    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
+    return converter.to_bytes(src);
+}
+#endif
+
+#if defined(OS_WINDOWS)
+static size_t getline(char** lineptr, size_t* n, FILE* stream)
 {
     char* bufptr = NULL;
     char* p = bufptr;
@@ -80,37 +98,53 @@ size_t getline(char** lineptr, size_t* n, FILE* stream)
 
 namespace StarFish {
 
-const char* File::kFileModeStrList[] = { "r", "w", "w+" };
+bool FileUtil::removeFile(const std::string& filePath)
+{
+    return remove(filePath.data()) == 0;
+}
+
+Nullable<std::string> FileUtil::absolutePath(const std::string& filePath)
+{
+    std::string prefix("file://");
+    if (filePath.find("file://") == 0) {
+        auto s = sizeof("file://");
+        return absolutePath(filePath.substr(s, filePath.length() - s));
+    }
+
+#if defined(OS_WINDOWS)
+    wchar_t result[MAX_PATH];
+    auto wideString = toWideString(filePath);
+    auto result =
+        GetFullPathNameW(wideString.data(), sizeof(result), result, NULL);
+    // TODO convert into longPathString
+    if (result) {
+        return Nullable<std::string>(toNarrowString(result));
+    } else {
+        return Nullable<std::string>();
+    }
+#else
+    char* resolved = realpath(filePath.c_str(), NULL);
+    if (resolved) {
+        std::string result = std::string(resolved);
+        free(resolved);
+        return Nullable<std::string>(result);
+    }
+    return Nullable<std::string>();
+#endif
+}
 
 class FilePosix : public File {
 public:
-    FilePosix()
+    FilePosix(FILE* fp, const std::string& filePath)
         : File()
-        , m_fp(nullptr)
+        , m_path(filePath)
+        , m_fp(fp)
     {
     }
 
     ~FilePosix()
     {
-        close();
-    }
-
-    bool open(const char* filePath, FileMode filemode) override
-    {
-        close();
-        struct stat s;
-        memset(&s, 0, sizeof(struct stat));
-        stat(filePath, &s);
-        if ((s.st_mode & S_IFMT) == S_IFDIR) {
-            return false;
-        }
-
-        m_fp = fopen(filePath, fileModeToString(filemode));
-        if (m_fp) {
-            m_isOpen = true;
-            return m_isOpen;
-        }
-        return false;
+        fclose(m_fp);
     }
 
     size_t size() override
@@ -134,21 +168,7 @@ public:
 
     ssize_t readLine(char** out, size_t* len) override
     {
-        if (m_fp) {
-            return -1;
-        }
         return getline(out, len, m_fp);
-    }
-
-    int close() override
-    {
-        int ret = -1;
-        if (m_fp) {
-            ret = fclose(m_fp);
-            m_fp = nullptr;
-            m_isOpen = false;
-        }
-        return ret;
     }
 
     int seek(long offset, int whence) override
@@ -191,214 +211,31 @@ public:
     }
 
 private:
+    std::string m_path;
     FILE* m_fp;
 };
 
-#ifndef STARFISH_TIZEN_WEARABLE_WIDGET
-String* PathResolver::matchLocation(String* filePath)
+std::unique_ptr<File> File::open(const std::string& filePath, FileMode mode)
 {
-    return filePath;
-}
-#endif
-
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-
-typedef FILE* (*sfopen_cb)(const char* fileName);
-typedef long int (*sflength_cb)(FILE* fp);
-typedef size_t (*sfread_cb)(void* buf, size_t size, size_t count, FILE* fp);
-typedef int (*sfclose_cb)(FILE* fp);
-typedef const char* (*sfmatchLocation_cb)(const char* fileName);
-
-extern sfopen_cb open_cb;
-extern sflength_cb length_cb;
-extern sfread_cb read_cb;
-extern sfclose_cb close_cb;
-extern sfmatchLocation_cb matchLocation_cb;
-
-class FileTizen : public File {
-public:
-    FileTizen()
-        : File()
-        , m_fp(nullptr)
-    {
-    }
-
-    ~FileTizen()
-    {
-        close();
-    }
-
-    bool open(const char* filePath, FileMode filemode) override
-    {
-        close();
-        String* newName =
-            PathResolver::matchLocation(String::fromUTF8(filePath));
-
-        if (!newName) {
-            return false;
-        }
-
-        if (open_cb) {
-            auto s = newName->toUTF8NonGCString();
-            m_fp = open_cb(s.data());
-        } else {
-            m_fp = fopen(filePath, fileModeToString(filemode));
-        }
-        if (m_fp) {
-            m_isOpen = true;
-            return m_isOpen;
-        }
-        return false;
-    }
-
-    size_t size() override
-    {
-        if (length_cb) {
-            return length_cb(m_fp);
-        }
-        size_t currentPosition = ftell(m_fp);
-        seek(0, Whence::End);
-        size_t len = ftell(m_fp);
-        seek(currentPosition, Whence::Start);
-        return len;
-    }
-
-    size_t read(void* buf, size_t size, size_t count) override
-    {
-        if (read_cb) {
-            return read_cb(buf, size, count, m_fp);
-        }
-        return fread(buf, size, count, m_fp);
-    }
-
-    size_t write(void* buf, size_t size, size_t count) override
-    {
-        // TODO : It will connect to the Tizen file I/O interface.
-        return fwrite(buf, size, count, m_fp);
-    }
-
-    ssize_t readLine(char** out, size_t* len) override
-    {
-        if (m_fp) {
-            return -1;
-        }
-        return getline(out, len, m_fp);
-    }
-
-    int close() override
-    {
-        int res = -1;
-        if (m_fp) {
-            if (close_cb) {
-                res = close_cb(m_fp);
-            } else {
-                res = fclose(m_fp);
-            }
-            m_fp = nullptr;
-            m_isOpen = false;
-        }
-        return res;
-    }
-
-    int seek(long offset, int whence) override
-    {
-        return fseek(m_fp, offset, whence);
-    }
-
-    int flush() override
-    {
-        // TODO : It will connect to the Tizen file I/O interface.
-        return fflush(m_fp);
-    }
-
-    int eof() override
-    {
-        return feof(m_fp);
-    }
-
-    int64_t lastAccessTime() override
-    {
-        struct stat s;
-        memset(&s, 0, sizeof(struct stat));
-        stat(m_path.data(), &s);
-        return s.st_atime;
-    }
-
-    int64_t lastModificationTime() override
-    {
-        struct stat s;
-        memset(&s, 0, sizeof(struct stat));
-        stat(m_path.data(), &s);
-        return s.st_mtime;
-    }
-
-    int64_t lastChangeTime() override
-    {
-        struct stat s;
-        memset(&s, 0, sizeof(struct stat));
-        stat(m_path.data(), &s);
-        return s.st_ctime;
-    }
-
-private:
-    FILE* m_fp;
-};
-
-String* PathResolver::matchLocation(String* filePath)
-{
-    if (!matchLocation_cb) {
-        return filePath;
-    }
-    auto s = filePath->toUTF8NonGCString();
-    const char* ret = matchLocation_cb(s.data());
-    if (!ret) {
+    struct stat s;
+    memset(&s, 0, sizeof(struct stat));
+    stat(filePath.data(), &s);
+    if ((s.st_mode & S_IFMT) == S_IFDIR) {
         return nullptr;
     }
-    String* r = String::fromUTF8(ret);
-    free((char*)ret);
-    return r;
-}
 
-#endif
-
-File* File::create()
-{
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-    FileTizen* fio = new FileTizen();
-#else
-    FilePosix* fio = new FilePosix();
-#endif
-    return fio;
-}
-
-File* File::createInNonGCArea()
-{
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-    FileTizen* fio = new (malloc(sizeof(FileTizen))) FileTizen();
-#else
-    FilePosix* fio = new (malloc(sizeof(FilePosix))) FilePosix();
-#endif
-    return fio;
-}
-
-Nullable<String*> File::absolutePath(String* localPath)
-{
-#if defined(OS_WINDOWS)
-    if (localPath->startsWith("file://")) {
-        auto s = sizeof("file://");
-        return localPath->substring(s, localPath->length() - s);
-    } else {
-        return localPath;
+    const char* fileModeStrList[] = { "r", "w", "w+" };
+    const char* m = "r";
+    if (mode == FileMode::Write) {
+        m = "w";
+    } else if (mode == FileMode::ReadWrite) {
+        m = "w+";
     }
-#else
-    UTF8StringDataNonGCStd data = localPath->toUTF8NonGCString();
-    char* resolved = realpath(data.c_str(), NULL);
-    if (resolved) {
-        String* result = String::fromUTF8(resolved);
-        free(resolved);
-        return result;
+    FILE* fp = fopen(filePath.data(), m);
+    if (fp) {
+        return std::unique_ptr<File>(new FilePosix(fp, filePath));
     }
     return nullptr;
-#endif
 }
+
 } // namespace StarFish

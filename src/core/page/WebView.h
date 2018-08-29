@@ -197,6 +197,8 @@ public:
         }
     }
 
+    void setNeedsFullRepainting();
+
     bool inRendering()
     {
         return m_inRendering;

@@ -155,4 +155,37 @@ void WebView::StopMessageLoop()
 {
     FetchWebContainer()->StopMessageLoop();
 }
+
+void WebView::Pause()
+{
+    FetchWebContainer()->Pause();
+}
+
+void WebView::Resume()
+{
+    FetchWebContainer()->Resume();
+}
+
+void WebView::RegisterCustomFileResourceRequestHandlers(
+    std::function<const char*(const char* path)> resolveFilePathCallback,
+    std::function<void*(const char* path)> fileOpenCallback,
+    std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+        fileReadCallback,
+    std::function<long int(void* handle)> fileLengthCallback,
+    std::function<void(void* handle)> fileCloseCallback)
+{
+    FetchWebContainer()->RegisterCustomFileResourceRequestHandlers(
+        resolveFilePathCallback, fileOpenCallback, fileReadCallback,
+        fileLengthCallback, fileCloseCallback);
+}
+
+void WebView::SetUserData(const std::string& key, void* data)
+{
+    FetchWebContainer()->SetUserData(key, data);
+}
+
+void* WebView::GetUserData(const std::string& key)
+{
+    return FetchWebContainer()->GetUserData(key);
+}
 }

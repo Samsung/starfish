@@ -123,8 +123,8 @@ public:
                 m_starFish->screenInfo().devicePixelRatio = oldDPR;
             }
 #if defined(STARFISH_ENABLE_TEST)
-            if (starFish()->startUpFlag() &
-                StarFishStartUpFlag::enableDebugRepaintRegion) {
+            if ((starFish()->startUpFlag() &
+                 StarFishStartUpFlag::enableDebugRepaintRegion)) {
                 STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
                                   (float)ret.computedRepaintRect.x(),
                                   (float)ret.computedRepaintRect.y(),
@@ -168,6 +168,21 @@ public:
         m_glSwapBufferCallback(this);
     }
 
+    virtual void pause() override
+    {
+        // release m_glPaintingSurface && m_compostiorContext for reducing
+        // memory usage
+        if (m_glPaintingSurface) {
+            m_glPaintingSurface->detachNativeBuffer();
+            m_glPaintingSurface = nullptr;
+        }
+
+        Compositor::destroyCompositorContext(m_compostiorContext);
+        m_compostiorContext = nullptr;
+
+        PlatformWindow::pause();
+    }
+
     uint32_t m_width;
     uint32_t m_height;
     CanvasSurface* m_glPaintingSurface;
@@ -182,10 +197,14 @@ Canvas* WindowImplGL::preparePainting()
 {
     float DPR = starFish()->screenInfo().devicePixelRatio;
     if (!m_glPaintingSurface) {
+        webView()->setNeedsFullRepainting();
         m_glPaintingSurface =
             CanvasSurface::create(this, width() / DPR, height() / DPR);
     }
-    m_glPaintingSurface->attachNativeBuffer(width() / DPR, height() / DPR);
+    if (m_glPaintingSurface->attachNativeBuffer(width() / DPR,
+                                                height() / DPR)) {
+        webView()->setNeedsFullRepainting();
+    }
     return Canvas::create(starFish(), m_glPaintingSurface);
 }
 

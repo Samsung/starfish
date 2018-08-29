@@ -304,15 +304,15 @@ int main(int argc, char* argv[])
 #endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
-    LWE::WebView* webView =
-        LWE::WebView::Create(wndObj, x, y, width, height, scaleFactor, "ko-KR",
-                             "Asia/Seoul", "/tmp/StarFish_localStorage.txt",
-                             "/tmp/StarFish_Cookies.txt", cacheDir.data());
+    LWE::WebView* webView = LWE::WebView::Create(
+        wndObj, x, y, width, height, scaleFactor, "serif", "ko-KR",
+        "Asia/Seoul", "/tmp/StarFish_localStorage.txt",
+        "/tmp/StarFish_Cookies.txt", cacheDir.data());
 #else
-    LWE::WebView* webView =
-        LWE::WebView::Create(nullptr, x, y, width, height, scaleFactor, "ko-KR",
-                             "Asia/Seoul", "/tmp/StarFish_localStorage.txt",
-                             "/tmp/StarFish_Cookies.txt", cacheDir.data());
+    LWE::WebView* webView = LWE::WebView::Create(
+        nullptr, x, y, width, height, scaleFactor, "serif", "ko-KR",
+        "Asia/Seoul", "/tmp/StarFish_localStorage.txt",
+        "/tmp/StarFish_Cookies.txt", cacheDir.data());
 #endif
 
 #ifndef STARFISH_DALI

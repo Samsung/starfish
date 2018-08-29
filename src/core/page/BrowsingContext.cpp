@@ -243,6 +243,7 @@ void BrowsingContext::resolveStyleIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleSheetsRecalc) {
+            m_needsStyleRecalcForWholeDocument = true;
             INSTALL_PROFILE_TIMER(starFish(), "parse sheet & collect rules");
 
             m_needsStyleSheetsRecalc = false;
@@ -1727,6 +1728,10 @@ void BrowsingContext::pause()
 void BrowsingContext::resume()
 {
     STARFISH_LOG_INFO("BrowsingContext::resume\n");
+    if (isTopLevelBrowsingContext() && document()) {
+        webView()->setNeedsFullRepainting();
+    }
+
     if (m_isRunning) {
         return;
     }

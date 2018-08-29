@@ -60,7 +60,7 @@ public:
         }
     }
 
-    void attachNativeBuffer(size_t w, size_t h)
+    bool attachNativeBuffer(size_t w, size_t h)
     {
         if (m_width != w || m_height != h) {
             detachNativeBuffer();
@@ -97,7 +97,9 @@ public:
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
             STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
                               g_totalCanvasSurfaceSimpleSize / 1024.f / 1024.f);
+            return true;
         }
+        return false;
     }
 
     virtual void resize(size_t w, size_t h)
@@ -204,9 +206,10 @@ public:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    void attachNativeBuffer(size_t w, size_t h)
+    bool attachNativeBuffer(size_t w, size_t h)
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        return false;
     }
 
     virtual void resize(size_t w, size_t h)

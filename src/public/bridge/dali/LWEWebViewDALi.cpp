@@ -323,8 +323,9 @@ namespace LWE {
 class WebViewDALi : public WebView {
 public:
     WebViewDALi(void* winArg, int x, int y, int width, int height,
-                float devicePixelRatio, const char* locale,
-                const char* timezoneID, const char* localStorageFilePath,
+                float devicePixelRatio, const char* defaultFontName,
+                const char* locale, const char* timezoneID,
+                const char* localStorageFilePath,
                 const char* cookieStoreFilePath,
                 const char* httpCacheDirectorypath)
         : WebView(nullptr)
@@ -385,15 +386,16 @@ protected:
 };
 
 WebView* WebView::Create(void* win, int x, int y, int width, int height,
-                         float devicePixelRatio, const char* locale,
-                         const char* timezoneID,
+                         float devicePixelRatio, const char* defaultFontName,
+                         const char* locale, const char* timezoneID,
                          const char* localStorageFilePath,
                          const char* cookieStoreFilePath,
                          const char* httpCacheDirectorypath)
 {
-    return new WebViewDALi(win, x, y, width, height, devicePixelRatio, locale,
-                           timezoneID, localStorageFilePath,
-                           cookieStoreFilePath, httpCacheDirectorypath);
+    return new WebViewDALi(win, x, y, width, height, devicePixelRatio,
+                           defaultFontName, locale, timezoneID,
+                           localStorageFilePath, cookieStoreFilePath,
+                           httpCacheDirectorypath);
 }
 }
 

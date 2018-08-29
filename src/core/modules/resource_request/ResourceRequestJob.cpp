@@ -88,15 +88,39 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
                                                String* filePath)
 {
-    File* fio = File::create();
-    if (fio->open(filePath, File::Read)) {
+    std::string u8Path = filePath->toUTF8NonGCString();
+    if (res->starFish()->m_resolveFilePathCallback) {
+        // custom I/O path
+        u8Path = res->starFish()->m_resolveFilePathCallback(u8Path.data());
+
+        auto handle = res->starFish()->m_fileOpenCallback(u8Path.data());
+        if (!handle) {
+            auto s = res->m_url->urlString()->toUTF8NonGCString();
+            STARFISH_LOG_INFO("failed to open %s\n", s.data());
+            res->m_status = 0;
+            res->handleError(ResourceRequest::IN_ERROR);
+        }
+
+        res->m_status = 200;
+        res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
+        res->changeReadyState(ResourceRequest::LOADING, true);
+        size_t responseLength = res->starFish()->m_fileLengthCallback(handle);
+        res->m_response.resize(responseLength);
+        res->starFish()->m_fileReadCallback((uint8_t*)res->m_response.data(),
+                                            res->m_response.size(), handle);
+        res->starFish()->m_fileCloseCallback(handle);
+        res->handleResponseEOF();
+        return;
+    }
+    auto fio = File::open(u8Path, File::Read);
+    if (fio) {
         res->m_status = 200;
         res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
         res->changeReadyState(ResourceRequest::LOADING, true);
         size_t responseLength = fio->size();
         res->m_response.resize(responseLength);
         fio->read(res->m_response.data(), sizeof(const char), responseLength);
-        fio->close();
+        fio.reset();
         res->handleResponseEOF();
     } else {
         auto s = res->m_url->urlString()->toUTF8NonGCString();
@@ -104,7 +128,6 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
         res->m_status = 0;
         res->handleError(ResourceRequest::IN_ERROR);
     }
-    delete fio;
 }
 
 DataURLResourceRequestJobDelegate::DataURLResourceRequestJobDelegate(

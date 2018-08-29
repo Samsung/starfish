@@ -134,14 +134,16 @@ bool HTTPCache::initFromIndexFileIfPossible()
 {
     STARFISH_ASSERT(isMainThread());
 
-    File* in = File::create();
+    auto in = File::open(m_indexFilePath, File::FileMode::Read);
 
-    if (!in->open(m_indexFilePath, File::FileMode::Read)) {
+    if (!in) {
         return false;
     }
 
     Nullable<String*> data = in->readAll();
-    in->removeFile();
+    in.reset();
+
+    FileUtil::removeFile(m_indexFilePath->toUTF8NonGCString());
 
     if (!data.hasValue()) {
         return false;
@@ -166,6 +168,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
     }
 
     // Last line is "\n"
+
     for (auto row = table.begin(); row != table.end() - 1; row++) {
         GCVector<StringView> columns;
         StringUtils::tokenize(&(*row), HTTPCacheEntry::kSeparator, 1, columns);
@@ -446,8 +449,8 @@ bool HTTPCache::flush()
     STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
 
-    File* out = File::create();
-    if (!out->open(m_indexFilePath, File::FileMode::Write)) {
+    auto out = File::open(m_indexFilePath, File::FileMode::Write);
+    if (!out) {
         return false;
     }
 
@@ -455,13 +458,12 @@ bool HTTPCache::flush()
         auto tableItr = findEntryInCacheEntryTable(it);
         HTTPCacheEntry* entry = tableItr->second;
         if (!out->writeLine(entry->toString())) {
-            out->close();
             return false;
         }
     }
 
     unlock();
-    return (out->flush() == 0) & (out->close() == 0);
+    return (out->flush() == 0);
 }
 
 bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
@@ -482,13 +484,13 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
                 continue;
             }
 
-            File* fio = File::create();
-            if (fio->open(cacheEntry->entryFileInfo().entryFilePath,
-                          File::ReadWrite)) {
+            auto fio = File::open(cacheEntry->entryFileInfo().entryFilePath,
+                                  File::ReadWrite);
+            if (fio) {
                 auto info = cacheEntry->entryFileInfo();
                 size_t sizeOfBlock = calcBlocksSize(info.byteLength);
-                fio->removeFile();
-                fio->close();
+                fio.reset();
+                FileUtil::removeFile(cacheEntry->entryFileInfo().entryFilePath);
 
                 m_currentTotalSizeOfBlocks -= sizeOfBlock;
                 removedSize += sizeOfBlock;
@@ -540,10 +542,7 @@ void HTTPCache::expire()
 
     for (auto it = m_cacheEntryTable.begin(); it != m_cacheEntryTable.end();) {
         if (it->second->shouldExpire() || !it->second->good()) {
-            File* fio = File::create();
-            fio->open(it->second->entryFileInfo().entryFilePath, File::Read);
-            fio->removeFile();
-            fio->close();
+            FileUtil::removeFile(it->second->entryFileInfo().entryFilePath);
 
             size_t size =
                 calcBlocksSize(it->second->entryFileInfo().byteLength);
@@ -586,11 +585,12 @@ void HTTPCache::remove(HTTPCacheEntry* entry)
         return;
     }
 
-    File* fio = File::create();
+    auto fio =
+        File::open(entry->entryFileInfo().entryFilePath, File::ReadWrite);
 
-    if (fio->open(entry->entryFileInfo().entryFilePath, File::ReadWrite)) {
-        fio->removeFile();
-        fio->close();
+    if (fio) {
+        fio.reset();
+        FileUtil::removeFile(entry->entryFileInfo().entryFilePath);
         size_t size = calcBlocksSize(entry->entryFileInfo().byteLength);
         m_currentTotalSizeOfBlocks -= size;
     }
