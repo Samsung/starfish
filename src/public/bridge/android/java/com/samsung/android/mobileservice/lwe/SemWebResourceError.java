@@ -20,8 +20,8 @@ package com.samsung.android.mobileservice.lwe;
 
 
 /**
- * Encapsulates information about errors occured during loading of web resources.
- * See SemWebViewClient.onReceivedError(WebView, WebResourceRequest, WebResourceError)
+ * This class encapsulates information about errors occured during loading of Web resources.
+ * See SemWebViewClient.onReceivedError(WebView, WebResourceRequest, WebResourceError).
  */
 public class SemWebResourceError {
 
@@ -36,6 +36,9 @@ public class SemWebResourceError {
     /**
      * Gets the string describing the error. Descriptions are localized, and thus can be used for
      * communicating the problem to the user.
+     *
+     * @return The description of the error
+     * @since Lightweight Web Engine 1.0
      */
     public String getDescription() {
         return mErrorDescription;
@@ -43,9 +46,10 @@ public class SemWebResourceError {
 
     /**
      * Gets the error code of the error. The code corresponds to one of the ERROR_* constants in
-     * WebViewClient.
+     * SemWebViewClient.
      *
      * @return The error code of the error
+     * @since Lightweight Web Engine 1.0
      */
     public int getErrorCode() {
         return mErrorCode;

@@ -29,7 +29,7 @@ import java.lang.reflect.Constructor;
 import dalvik.system.PathClassLoader;
 
 /**
- * A View that displays web pages.
+ * This class is a view that displays Web pages.
  */
 public class SemWebView extends TextureView {
 
@@ -44,6 +44,7 @@ public class SemWebView extends TextureView {
      *
      * @param outAttrs Fill in with attribute information about the connection.
      * @return InputConnection
+     * @since Lightweight Web Engine 1.0
      */
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
@@ -101,7 +102,8 @@ public class SemWebView extends TextureView {
     /**
      * Loads the given URL.
      *
-     * @param url the URL of the resource to load
+     * @param url The URL of the resource to load
+     * @since Lightweight Web Engine 1.0
      */
     public void loadUrl(final String url) {
         if(delegate!=null)
@@ -111,7 +113,8 @@ public class SemWebView extends TextureView {
     /**
      * Gets the URL for the current page.
      *
-     * @return the URL for the current page
+     * @return The URL for the current page
+     * @since Lightweight Web Engine 1.0
      */
     public String getUrl() {
         if(delegate!=null)
@@ -122,7 +125,8 @@ public class SemWebView extends TextureView {
     /**
      * Loads the given data into this WebView using a 'data' scheme URL.
      *
-     * @param data a String of data in the given encoding
+     * @param data A String of data in the given encoding
+     * @since Lightweight Web Engine 1.0
      */
     public void loadData(String data) {
         if(delegate!=null)
@@ -132,6 +136,7 @@ public class SemWebView extends TextureView {
     /**
      * Reloads the current URL.
      *
+     * @since Lightweight Web Engine 1.0
      */
     public void reload() {
         if(delegate!=null)
@@ -141,6 +146,7 @@ public class SemWebView extends TextureView {
     /**
      * Stops the current load.
      *
+     * @since Lightweight Web Engine 1.0
      */
     public void stopLoading() {
         if(delegate!=null)
@@ -150,6 +156,7 @@ public class SemWebView extends TextureView {
     /**
      * Goes back in the history of this WebView.
      *
+     * @since Lightweight Web Engine 1.0
      */
     public void goBack() {
         if(delegate!=null)
@@ -159,6 +166,7 @@ public class SemWebView extends TextureView {
     /**
      * Goes forward in the history of this WebView.
      *
+     * @since Lightweight Web Engine 1.0
      */
     public void goForward() {
         if(delegate!=null)
@@ -168,7 +176,9 @@ public class SemWebView extends TextureView {
     /**
      * Gets whether this WebView has a back history item.
      *
-     * @return true if this WebView has a back history item
+     * @return {@code true} if this WebView has a back history item, <br>
+     *         {@code false} otherwise
+     * @since Lightweight Web Engine 1.0
      */
     public boolean canGoBack() {
         if(delegate!=null)
@@ -179,7 +189,9 @@ public class SemWebView extends TextureView {
     /**
      * Gets whether this WebView has a forward history item.
      *
-     * @return true if this WebView has a forward history item
+     * @return {@code true} if this WebView has a forward history item,
+     *         {@code false} otherwise
+     * @since Lightweight Web Engine 1.0
      */
     public boolean canGoForward() {
         if(delegate!=null)
@@ -190,10 +202,10 @@ public class SemWebView extends TextureView {
     /**
      * Injects the supplied Java object into this WebView.
      *
-     * @param object the Java object to inject into this WebView's JavaScript context.
+     * @param object The Java object to inject into this WebView's JavaScript context.
      *               null values are ignored.
-     * @param name the name used to expose the object in JavaScript
-     *
+     * @param name The name used to expose the object in JavaScript
+     * @since Lightweight Web Engine 1.0
      */
     public void addJavascriptInterface(final Object object, final String name) {
         if(delegate!=null)
@@ -203,7 +215,8 @@ public class SemWebView extends TextureView {
     /**
      * Removes a previously injected Java object from this WebView.
      *
-     * @param name the name used to expose the object in JavaScript. This value must never be null.
+     * @param name The name used to expose the object in JavaScript. This value must never be null.
+     * @since Lightweight Web Engine 1.0
      */
     public void removeJavascriptInterface(final String name) {
         if(delegate!=null)
@@ -213,6 +226,7 @@ public class SemWebView extends TextureView {
     /**
      * Clears the resource cache.
      *
+     * @since Lightweight Web Engine 1.0
      */
     public void clearCache() {
         if(delegate!=null)
@@ -222,8 +236,11 @@ public class SemWebView extends TextureView {
     /**
      * Asynchronously evaluates JavaScript in the context of the currently displayed page.
      *
-     * @param script
-     * @param resultCallback
+     * @param script The JavaScript to execute.
+     * @param resultCallback A callback to be invoked when the script execution completes with the
+     *                       result of the execution (if any). May be null if no notification of
+     *                       the result is required.
+     * @since Lightweight Web Engine 1.0
      */
     public void evaluateJavascript(final String script,
                                    final ValueCallback<String> resultCallback) {
@@ -234,6 +251,7 @@ public class SemWebView extends TextureView {
     /**
      * Tells this WebView to clear its internal back/forward list.
      *
+     * @since Lightweight Web Engine 1.0
      */
     public void clearHistory() {
         if(delegate!=null)
@@ -243,7 +261,8 @@ public class SemWebView extends TextureView {
     /**
      * Gets the Settings object used to control the settings for this WebView.
      *
-     * @return a Settings object that can be used to control this WebView's settings
+     * @return A Settings object that can be used to control this WebView's settings
+     * @since Lightweight Web Engine 1.0
      */
     public SemWebSettings getSettings() {
         if(delegate!=null)
@@ -254,7 +273,8 @@ public class SemWebView extends TextureView {
     /**
      * Set a settings
      *
-     * @param settings a Settings object that is used to control this WebView's settings
+     * @param settings A Settings object that is used to control this WebView's settings
+     * @since Lightweight Web Engine 1.0
      */
     public void setSettings(SemWebSettings settings) {
         if(delegate!=null)
@@ -265,7 +285,8 @@ public class SemWebView extends TextureView {
      * Sets the WebViewClient that will receive various notifications and requests.
      * This will replace the current handler.
      *
-     * @param client an implementation of WebViewClient
+     * @param client An implementation of SemWebViewClient
+     * @since Lightweight Web Engine 1.0
      */
     public void setWebViewClient(SemWebViewClient client) {
         if(delegate!=null)
@@ -275,7 +296,8 @@ public class SemWebView extends TextureView {
     /**
      * Sets the lwe handler.
      *
-     * @param client An implementation of WebLweClient
+     * @param client An implementation of SemWebLweClient
+     * @since Lightweight Web Engine 1.0
      */
     public void setWebLweClient(SemWebLweClient client) {
         if (delegate != null) {
@@ -287,7 +309,8 @@ public class SemWebView extends TextureView {
      * Registers the interface to be used when content can not be handled by the rendering engine,
      * and should be downloaded instead. This will replace the current handler.
      *
-     * @param listener an implementation of DownloadListener
+     * @param listener An implementation of SemDownloadListener
+     * @since Lightweight Web Engine 1.0
      */
     public void setDownloadListener(SemDownloadListener listener) {
         if(delegate!=null)

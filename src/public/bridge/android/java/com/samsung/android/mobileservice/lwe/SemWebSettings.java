@@ -20,11 +20,11 @@
 package com.samsung.android.mobileservice.lwe;
 
 /**
- * Manages settings state for a SemWebView.
+ * This class manages settings state for a SemWebView.
  */
 public class SemWebSettings {
     /**
-     * Default cache usage mode.
+     * Default cache usage mode
      */
     public static final int LOAD_DEFAULT = -1;
     // static final int LOAD_NORMAL = 0;
@@ -60,6 +60,7 @@ public class SemWebSettings {
      * different User-Agent if a call is made to setUserAgentString(String).
      *
      * @return A Context object used to access application assets
+     * @since Lightweight Web Engine 1.0
      */
     public String getDefaultUserAgent() {
         return mDefaultUserAgent;
@@ -69,6 +70,7 @@ public class SemWebSettings {
      * Gets the WebView's user-agent string.
      *
      * @return The WebView's user-agent string
+     * @since Lightweight Web Engine 1.0
      */
     public String getUserAgentString() {
         return mUserAgentString;
@@ -79,6 +81,7 @@ public class SemWebSettings {
      *
      * @return The current setting for overriding the cache mode
      * Value is LOAD_DEFAULT, or LOAD_NO_CACHE.
+     * @since Lightweight Web Engine 1.0
      */
     public int getCacheMode() {
         return mCacheMode;
@@ -89,6 +92,7 @@ public class SemWebSettings {
      * the system default value will be used.
      *
      * @param ua New user-agent string. This value may be null.
+     * @since Lightweight Web Engine 1.0
      */
     public void setUserAgentString(String ua) {
         mUserAgentString = ua;
@@ -98,6 +102,7 @@ public class SemWebSettings {
      * Overrides the way the cache is used.
      *
      * @param mode The mode to use. Value is LOAD_DEFAULT, or LOAD_NO_CACHE.
+     * @since Lightweight Web Engine 1.0
      */
     public void setCacheMode(int mode) {
         if (mode == LOAD_DEFAULT || mode == LOAD_NO_CACHE) {
@@ -111,5 +116,4 @@ public class SemWebSettings {
     void setJavaScriptEnable(boolean javaScriptEnable){
     }
     */
-
 }
