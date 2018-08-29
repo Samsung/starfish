@@ -66,6 +66,68 @@ using Point = std::array<Coord, 2>;
 
 #if defined(STARFISH_TIZEN)
 #include <tbm_surface.h>
+#elif defined(STARFISH_ANDROID)
+#define EGL_EGLEXT_PROTOTYPES
+#define GL_GLEXT_PROTOTYPES
+#include <android/hardware_buffer.h>
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES/gl.h>
+#include <GLES/glext.h>
+
+static void logEglError(const char* name) noexcept
+{
+    const char* err;
+    switch (eglGetError()) {
+    case EGL_NOT_INITIALIZED:
+        err = "EGL_NOT_INITIALIZED";
+        break;
+    case EGL_BAD_ACCESS:
+        err = "EGL_BAD_ACCESS";
+        break;
+    case EGL_BAD_ALLOC:
+        err = "EGL_BAD_ALLOC";
+        break;
+    case EGL_BAD_ATTRIBUTE:
+        err = "EGL_BAD_ATTRIBUTE";
+        break;
+    case EGL_BAD_CONTEXT:
+        err = "EGL_BAD_CONTEXT";
+        break;
+    case EGL_BAD_CONFIG:
+        err = "EGL_BAD_CONFIG";
+        break;
+    case EGL_BAD_CURRENT_SURFACE:
+        err = "EGL_BAD_CURRENT_SURFACE";
+        break;
+    case EGL_BAD_DISPLAY:
+        err = "EGL_BAD_DISPLAY";
+        break;
+    case EGL_BAD_SURFACE:
+        err = "EGL_BAD_SURFACE";
+        break;
+    case EGL_BAD_MATCH:
+        err = "EGL_BAD_MATCH";
+        break;
+    case EGL_BAD_PARAMETER:
+        err = "EGL_BAD_PARAMETER";
+        break;
+    case EGL_BAD_NATIVE_PIXMAP:
+        err = "EGL_BAD_NATIVE_PIXMAP";
+        break;
+    case EGL_BAD_NATIVE_WINDOW:
+        err = "EGL_BAD_NATIVE_WINDOW";
+        break;
+    case EGL_CONTEXT_LOST:
+        err = "EGL_CONTEXT_LOST";
+        break;
+    default:
+        err = "unknown";
+        break;
+    }
+    STARFISH_LOG_ERROR("%s failed with %s\n", name, err);
+}
+
 #endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
@@ -424,10 +486,9 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
             strstr((const char*)glGetString(GL_EXTENSIONS),
                    "GL_OES_EGL_image_external") != nullptr;
 
-#ifndef STARFISH_TIZEN
+#if !defined(STARFISH_TIZEN) && !defined(STARFISH_ANDROID)
         g_isSupportExtensionEGLImageExternal = false;
 #endif
-
         g_needsCheckCompatibility = false;
         checkError();
     }
@@ -647,6 +708,10 @@ public:
 
 #if defined(STARFISH_TIZEN)
         m_tbmSurface = nullptr;
+        m_eglImage = nullptr;
+#elif defined(STARFISH_ANDROID)
+        m_aHardwareBuffer = nullptr;
+        m_eglImage = nullptr;
 #endif
 
         attachNativeBuffer(w, h);
@@ -671,12 +736,22 @@ public:
             m_window->glMakeCurrent();
         if (m_isEGLImageExternal && m_textureFragments.size()) {
 #if defined(STARFISH_TIZEN)
-            if (!m_window->isClosed())
+            if (!m_window->isClosed()) {
                 g_evasGLAPI->evasglDestroyImage(m_eglImage);
+            }
 
             m_eglImage = nullptr;
             tbm_surface_destroy(m_tbmSurface);
             m_tbmSurface = nullptr;
+#elif defined(STARFISH_ANDROID)
+            if (!m_window->isClosed()) {
+                EGLDisplay display = eglGetCurrentDisplay();
+                eglDestroyImageKHR(display, m_eglImage);
+            }
+
+            m_eglImage = nullptr;
+            AHardwareBuffer_release(m_aHardwareBuffer);
+            m_aHardwareBuffer = nullptr;
 #endif
         }
         if (m_textureFragments.size()) {
@@ -741,6 +816,22 @@ public:
                 m_bufferStride = surfaceInfo.planes[0].stride;
                 m_buffer = nullptr;
                 tbm_surface_unmap(m_tbmSurface);
+#elif defined(STARFISH_ANDROID)
+                AHardwareBuffer_Desc desc{
+                    m_bufferWidth, m_bufferHeight, 1,
+                    AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
+                    AHARDWAREBUFFER_USAGE_CPU_WRITE_MASK |
+                        AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT |
+                        AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE,
+                    0, 0, 0
+                };
+
+                AHardwareBuffer_allocate(&desc, &m_aHardwareBuffer);
+                STARFISH_RELEASE_ASSERT(m_aHardwareBuffer);
+                AHardwareBuffer_Desc outDesc;
+                AHardwareBuffer_describe(m_aHardwareBuffer, &outDesc);
+                m_bufferStride = outDesc.stride * 4;
+                m_buffer = nullptr;
 #endif
             } else {
                 m_isEGLImageExternal = false;
@@ -779,8 +870,9 @@ public:
 
         STARFISH_RELEASE_ASSERT(m_textureFragments.size() == 0);
         if (m_isEGLImageExternal) {
-#if defined(STARFISH_TIZEN)
+#if defined(STARFISH_TIZEN) || defined(STARFISH_ANDROID)
             CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment fragment;
+#if defined(STARFISH_TIZEN)
             {
                 STARFISH_RELEASE_ASSERT(m_tbmSurface);
                 STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
@@ -790,6 +882,30 @@ public:
                     eglImgAttr);
                 checkError();
             }
+#elif defined(STARFISH_ANDROID)
+            {
+                STARFISH_RELEASE_ASSERT(m_aHardwareBuffer);
+                STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
+
+                EGLClientBuffer clientBuffer =
+                    eglGetNativeClientBufferANDROID(m_aHardwareBuffer);
+                if (UNLIKELY(!clientBuffer)) {
+                    logEglError("eglGetNativeClientBufferANDROID");
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
+                EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
+                                     EGL_NONE };
+                EGLDisplay display = eglGetCurrentDisplay();
+                // eglCreateImageKHR will add a ref to the AHardwareBuffer
+                m_eglImage = eglCreateImageKHR(display, EGL_NO_CONTEXT,
+                                               EGL_NATIVE_BUFFER_ANDROID,
+                                               clientBuffer, attribs);
+                if (UNLIKELY(!m_eglImage)) {
+                    logEglError("eglCreateImageKHR");
+                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                }
+            }
+#endif
             {
                 GLuint textureID;
                 glGenTextures(1, &textureID);
@@ -809,9 +925,13 @@ public:
                                 GL_CLAMP_TO_EDGE);
 
                 checkError();
-
+#if defined(STARFISH_TIZEN)
                 g_evasGLAPI->glEvasGLImageTargetTexture2DOES(
                     GL_TEXTURE_EXTERNAL_OES, m_eglImage);
+#elif defined(STARFISH_ANDROID)
+                glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES,
+                                             m_eglImage);
+#endif
                 checkError();
 
                 glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
@@ -913,6 +1033,10 @@ public:
             STARFISH_RELEASE_ASSERT(surfaceInfo.planes[0].stride ==
                                     m_bufferStride);
             m_buffer = surfaceInfo.planes[0].ptr;
+#elif defined(STARFISH_ANDROID)
+            AHardwareBuffer_lock(m_aHardwareBuffer,
+                                 AHARDWAREBUFFER_USAGE_CPU_WRITE_MASK, -1, NULL,
+                                 (void**)&m_buffer);
 #endif
             return m_buffer;
         }
@@ -976,6 +1100,8 @@ public:
         if (m_isEGLImageExternal) {
 #if defined(STARFISH_TIZEN)
             tbm_surface_unmap(m_tbmSurface);
+#elif defined(STARFISH_ANDROID)
+            AHardwareBuffer_unlock(m_aHardwareBuffer, nullptr);
 #endif
             m_buffer = nullptr;
             return;
@@ -1070,6 +1196,9 @@ protected:
 #if defined(STARFISH_TIZEN)
     tbm_surface_h m_tbmSurface;
     EvasGLImage m_eglImage;
+#elif defined(STARFISH_ANDROID)
+    AHardwareBuffer* m_aHardwareBuffer;
+    EGLImageKHR m_eglImage;
 #endif
 };
 
