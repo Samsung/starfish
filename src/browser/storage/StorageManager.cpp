@@ -238,16 +238,14 @@ unsigned long StorageManager::length(SecurityOriginData* securityOriginData)
 void StorageManager::jsonDocumentRead()
 {
     JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    File* m_fileIO = File::create();
-    bool canLoad = m_fileIO->open(m_localStoragePath, File::Read);
-    if (canLoad == true) {
-        Nullable<String*> filedata = m_fileIO->readAll();
+    auto fileIO = File::open(m_localStoragePath, File::Read);
+    if (fileIO) {
+        Nullable<String*> filedata = fileIO->readAll();
         if (filedata.hasValue()) {
             auto s = filedata.getValue()->toUTF8NonGCString();
             root->Parse(s.data());
         }
     }
-    m_fileIO->close();
 
     if (root->GetType() != rapidjson::kArrayType) {
         root->SetArray();
@@ -263,11 +261,9 @@ void StorageManager::jsonDocumentWrite()
     STARFISH_ASSERT(root->IsArray());
     root->Accept(writer);
 
-    File* m_fileIO = File::create();
-    bool canLoad = m_fileIO->open(m_localStoragePath, File::Write);
-    if (canLoad == true) {
-        m_fileIO->write((void*)buffer.GetString(), 1, buffer.GetSize());
+    auto fileIO = File::open(m_localStoragePath, File::Read);
+    if (fileIO) {
+        fileIO->write((void*)buffer.GetString(), 1, buffer.GetSize());
     }
-    m_fileIO->close();
 }
 }

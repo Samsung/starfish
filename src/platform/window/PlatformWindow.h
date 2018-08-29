@@ -68,6 +68,7 @@ public:
     virtual int32_t height() = 0;
     virtual void resizeTo(int w, int h)
     {
+        STARFISH_LOG_INFO("PlatformWindow::resizeTo %d %d\n", w, h);
         onResize();
     }
     virtual void* unwrap() = 0;

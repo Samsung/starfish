@@ -760,7 +760,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_create(
     LWE::WebContainer* webContainer = LWE::WebContainer::CreateGL(
         w, h, [](LWE::WebContainer* wc) { glMakeCurrent(wc); },
         [](LWE::WebContainer* wc) { glSwapBuffers(wc); }, devicePixelRatio,
-        localeString, timezoneIDString, localstoragePathString,
+        "serif", localeString, timezoneIDString, localstoragePathString,
         cookiePathString, cachePathString);
 
     env->ReleaseStringUTFChars(locale, localeString);

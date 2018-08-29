@@ -20,15 +20,20 @@
 #ifndef __StarFishFile__
 #define __StarFishFile__
 
-#define IDEAL_BUFFER_SIZE 262143
 namespace StarFish {
 
-class File : public gc_cleanup {
+class FileUtil {
+public:
+    static bool removeFile(const std::string& filePath);
+    static Nullable<std::string> absolutePath(const std::string& filePath);
+};
+
+class File {
 public:
     enum FileMode {
-        Read,
-        Write,
-        ReadWrite,
+        Read = 1,
+        Write = 1 << 1,
+        ReadWrite = Read | Write,
     };
 
     enum Whence {
@@ -37,33 +42,15 @@ public:
         End = SEEK_END,
     };
 
-    static File* create();
-    static File* createInNonGCArea();
+    static std::unique_ptr<File> open(String* filePath, FileMode mode)
+    {
+        return open(filePath->toUTF8NonGCString().data(), mode);
+    }
+    static std::unique_ptr<File> open(const std::string& filePath,
+                                      FileMode mode);
+
     virtual ~File()
     {
-    }
-
-    bool open(String* filePath, FileMode mode)
-    {
-        m_path = filePath->toUTF8NonGCString();
-        return open(m_path.data(), mode);
-    }
-
-    bool open(const std::string& filePath, FileMode mode)
-    {
-        m_path = filePath;
-        return open(m_path.data(), mode);
-    }
-
-    int removeFile()
-    {
-        close();
-        return remove(m_path.data());
-    }
-
-    bool isOpen()
-    {
-        return m_isOpen;
     }
 
     bool writeLine(String* str = String::emptyString)
@@ -106,10 +93,7 @@ public:
     template <class T>
     bool readAll(T& out)
     {
-        if (!isOpen()) {
-            return false;
-        }
-
+        const size_t IDEAL_BUFFER_SIZE = 262143;
         size_t expected = size();
 
         out.reserve(expected);
@@ -140,42 +124,18 @@ public:
 
     virtual int seek(long offset, int whence) = 0;
     virtual int flush() = 0;
-    virtual int close() = 0;
     virtual int eof() = 0;
     virtual int64_t lastAccessTime() = 0;
     virtual int64_t lastModificationTime() = 0;
     virtual int64_t lastChangeTime() = 0;
 
-    static Nullable<String*> absolutePath(String* localPath);
-
 protected:
     File()
-        : m_path()
-        , m_isOpen(false)
     {
     }
-
-    virtual bool open(const char* filePath, FileMode mode) = 0;
-
-    const char* fileModeToString(const FileMode var)
-    {
-        STARFISH_ASSERT(FileMode::Read <= var && var <= FileMode::ReadWrite);
-        return kFileModeStrList[var];
-    }
-
-    std::string m_path;
-    bool m_isOpen;
 
 private:
-    static const char* kFileModeStrList[];
-};
-
-class PathResolver {
-public:
-    PathResolver() = delete;
-    static String* matchLocation(String* filePath);
 };
 }
 
-#undef IDEAL_BUFFER_SIZE
 #endif

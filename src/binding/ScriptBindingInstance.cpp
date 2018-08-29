@@ -496,7 +496,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
 
     state->destroy();
 #ifdef STARFISH_ENABLE_TEST
-    if (ownerWindow()->starFish()->TestCompatibleMode() ==
+    if (ownerWindow()->starFish()->testCompatibleMode() ==
         StarFishTestCompatibleMode::Normal) {
         evaluateString(this, String::fromUTF8("delete this.testRunner"));
     }

@@ -168,26 +168,21 @@ static StarFish::ScriptValue nativeCallbackFunction(
 }
 
 static StarFish::StarFish* createStarfishInstance(
-    uint width, uint height, float scaleFactor, const char* locale,
-    const char* timezoneID, const char* localStorageFilePath,
-    const char* cookieStoreFilePath, const char* httpCacheDirectorypath)
+    uint width, uint height, float devicePixelRatio,
+    const char* defaultFontName, const char* locale, const char* timezoneID,
+    const char* localStorageFilePath, const char* cookieStoreFilePath,
+    const char* httpCacheDirectorypath)
 {
     std::string screenShot;
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
-
-    const char* defaultFontName = "serif";
-
-#if defined(STARFISH_DALI)
-    defaultFontName = "samsungOne";
-#endif
 
     StarFish::ScreenInfo info;
     info.rect.setWidth(width);
     info.rect.setHeight(height);
     info.availableRect.setWidth(width);
     info.availableRect.setHeight(height);
-    info.devicePixelRatio = scaleFactor;
+    info.devicePixelRatio = devicePixelRatio;
 
     StarFish::StarFish* starfish = new StarFish::StarFish(
         locale, timezoneID, width, height, 1,
@@ -200,6 +195,7 @@ static StarFish::StarFish* createStarfishInstance(
 
 WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
                                    uint stride, float scaleFactor,
+                                   const char* defaultFontName,
                                    const char* locale, const char* timezoneID,
                                    const char* localStorageFilePath,
                                    const char* cookieStoreFilePath,
@@ -211,8 +207,8 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     return nullptr;
 #endif
     auto starfish = createStarfishInstance(
-        width, height, scaleFactor, locale, timezoneID, localStorageFilePath,
-        cookieStoreFilePath, httpCacheDirectorypath);
+        width, height, scaleFactor, defaultFontName, locale, timezoneID,
+        localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
 
     starfish->platformWindow()->updateDrawingBufferAddress(buffer, width,
                                                            height, stride);
@@ -267,9 +263,9 @@ WebContainer* WebContainer::CreateGL(
     uint width, uint height,
     const std::function<void(LWE::WebContainer*)>& onGLMakeCurrent,
     const std::function<void(LWE::WebContainer*)>& onGLSwapBuffers,
-    float devicePixelRatio, const char* locale, const char* timezoneID,
-    const char* localStorageFilePath, const char* cookieStoreFilePath,
-    const char* httpCacheDirectorypath)
+    float devicePixelRatio, const char* defaultFontName, const char* locale,
+    const char* timezoneID, const char* localStorageFilePath,
+    const char* cookieStoreFilePath, const char* httpCacheDirectorypath)
 {
 #if !defined(PORT_WINDOW_BACKEND_GL)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
@@ -277,7 +273,7 @@ WebContainer* WebContainer::CreateGL(
 #endif
 
     auto starfish = createStarfishInstance(
-        width, height, devicePixelRatio, locale, timezoneID,
+        width, height, devicePixelRatio, defaultFontName, locale, timezoneID,
         localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
 
     WebContainer* newWebContainer =
@@ -371,6 +367,13 @@ void WebContainer::ClearTimeout(size_t handle)
 Settings WebContainer::GetSettings()
 {
     STARFISH_ASSERT(m_starfish);
+    void RegisterCustomFileResourceRequestHandlers(
+        std::function<const char*(const char* path)> resolveFilePathCallback,
+        std::function<void*(const char* path)> fileOpenCallback,
+        std::function<size_t(uint8_t * destBuffer, size_t size, void* handle)>
+            fileReadCallback,
+        std::function<long int(void* handle)> fileLengthCallback,
+        std::function<void(void* handle)> fileCloseCallback);
     Settings result(USER_AGENT(STARFISH_NAME, VERSION),
                     TO_STARFISH(m_starfish)->userAgent()->toUTF8NonGCString());
 
@@ -710,6 +713,20 @@ void WebContainer::RegisterShowAlertHandler(
                                   });
 }
 
+void WebContainer::RegisterCustomFileResourceRequestHandlers(
+    std::function<const char*(const char* path)> resolveFilePathCallback,
+    std::function<void*(const char* path)> fileOpenCallback,
+    std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+        fileReadCallback,
+    std::function<long int(void* handle)> fileLengthCallback,
+    std::function<void(void* handle)> fileCloseCallback)
+{
+    TO_STARFISH(m_starfish)
+        ->registerCustomFileResourceRequestCallbacks(
+            resolveFilePathCallback, fileOpenCallback, fileReadCallback,
+            fileLengthCallback, fileCloseCallback);
+}
+
 void WebContainer::CallHandler(const std::string& handler, void* param)
 {
     TO_STARFISH(m_starfish)->platformWindow()->callHandler(handler, param);
@@ -875,4 +892,15 @@ void WebContainer::RegisterSetNeedsRenderingCallback(
                 cb(this, fn);
             });
 }
+
+void WebContainer::SetUserData(const std::string& key, void* data)
+{
+    TO_STARFISH(m_starfish)->publicLayerUserDataMap()[key] = data;
+}
+
+void* WebContainer::GetUserData(const std::string& key)
+{
+    return TO_STARFISH(m_starfish)->publicLayerUserDataMap()[key];
+}
+
 } // namespace LWE

@@ -6617,6 +6617,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
     while (child) {
         if (child->isElement()) {
             ComputedStyle* oldStyle = child->style();
+
             auto damage =
                 resolveElementStyle(ctx, resolver, child->asElement(),
                                     parentElementStyle, inheritedStyleChanged);

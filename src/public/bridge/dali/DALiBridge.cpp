@@ -340,7 +340,7 @@ extern "C" __attribute__((visibility("default"))) void createInstance(
         DaliStarFishBinder* binder = (DaliStarFishBinder*)data;
         binder->lweInstance = WebContainer::Create(
             binder->outputBuffer, binder->outputWidth, binder->outputHeight,
-            binder->outputStride, 1.0, "ko-KR", "Asia/Seoul",
+            binder->outputStride, 1.0, "SamsungOne", "ko-KR", "Asia/Seoul",
             "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
             "/tmp/StarFish-cache");
         TO_WEBCONTAINER(binder)

@@ -1651,14 +1651,13 @@ void Document::loadBuiltinPolyfill(String* localPath)
         return;
     }
     STARFISH_LOG_INFO("Load built-in javascript polyfill\n");
-    File* in = File::create();
-    if (!in->open(localPath, File::FileMode::Read)) {
-        in->close();
+    auto in = File::open(localPath, File::FileMode::Read);
+    if (!in) {
         STARFISH_LOG_INFO("Invalid built-in polyfill path.\n");
         return;
     }
     Nullable<String*> data = in->readAll();
-    in->close();
+    in.reset();
     if (!data.hasValue()) {
         STARFISH_LOG_INFO("Invalid built-in polyfill content.\n");
         return;

@@ -45,7 +45,7 @@ public:
     int GetCacheMode() const;
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
-    void SetProxyURL(const std::string& ua);
+    void SetProxyURL(const std::string& proxyURL);
 
 private:
     std::string m_defaultUserAgent;
@@ -74,13 +74,11 @@ private:
 
 public:
     // Function set for render to buffer
-    static WebContainer* Create(void* buffer, uint bufferWidth,
-                                uint bufferHeight, uint bufferStride,
-                                float devicePixelRatio, const char* locale,
-                                const char* timezoneID,
-                                const char* localStorageFilePath,
-                                const char* cookieStoreFilePath,
-                                const char* httpCacheDirectorypath);
+    static WebContainer* Create(
+        void* buffer, uint bufferWidth, uint bufferHeight, uint bufferStride,
+        float devicePixelRatio, const char* defaultFontName, const char* locale,
+        const char* timezoneID, const char* localStorageFilePath,
+        const char* cookieStoreFilePath, const char* httpCacheDirectorypath);
 
     struct RenderResult {
         size_t updatedX;
@@ -103,9 +101,9 @@ public:
         uint width, uint height,
         const std::function<void(LWE::WebContainer*)>& onGLMakeCurrent,
         const std::function<void(LWE::WebContainer*)>& onGLSwapBuffers,
-        float devicePixelRatio, const char* locale, const char* timezoneID,
-        const char* localStorageFilePath, const char* cookieStoreFilePath,
-        const char* httpCacheDirectorypath);
+        float devicePixelRatio, const char* defaultFontName, const char* locale,
+        const char* timezoneID, const char* localStorageFilePath,
+        const char* cookieStoreFilePath, const char* httpCacheDirectorypath);
     void ResizeTo(size_t width, size_t height);
     // <--- end of function set for render with OpenGL
 
@@ -169,6 +167,14 @@ public:
         const std::function<void(LWE::WebContainer*, const std::string&,
                                  const std::string&)>& cb);
 
+    void RegisterCustomFileResourceRequestHandlers(
+        std::function<const char*(const char* path)> resolveFilePathCallback,
+        std::function<void*(const char* path)> fileOpenCallback,
+        std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+            fileReadCallback,
+        std::function<long int(void* handle)> fileLengthCallback,
+        std::function<void(void* handle)> fileCloseCallback);
+
     void CallHandler(const std::string& handler, void* param);
 
     void SetUserAgentString(const std::string& userAgent);
@@ -193,6 +199,9 @@ public:
         const std::function<void(LWE::WebContainer*)>& cb);
     void RegisterOnHideSoftwareKeyboardIfPossibleHandler(
         const std::function<void(LWE::WebContainer*)>& cb);
+
+    void SetUserData(const std::string& key, void* data);
+    void* GetUserData(const std::string& key);
 
     size_t Width();
     size_t Height();
@@ -220,8 +229,8 @@ protected:
 
 public:
     static WebView* Create(void* win, int x, int y, int width, int height,
-                           float devicePixelRatio, const char* locale,
-                           const char* timezoneID,
+                           float devicePixelRatio, const char* defaultFontName,
+                           const char* locale, const char* timezoneID,
                            const char* localStorageFilePath,
                            const char* cookieStoreFilePath,
                            const char* httpCacheDirectorypath);
@@ -238,6 +247,8 @@ public:
     void GoForward();
     bool CanGoBack();
     bool CanGoForward();
+    void Pause();
+    void Resume();
     void AddJavaScriptInterface(
         const std::string& exposedObjectName, const std::string& jsFunctionName,
         std::function<std::string(const std::string&)> cb);
@@ -257,6 +268,17 @@ public:
         std::function<void(LWE::WebView*, const std::string&)> cb);
     void RegisterOnLoadResourceHandler(
         std::function<void(LWE::WebView*, const std::string&)> cb);
+
+    void RegisterCustomFileResourceRequestHandlers(
+        std::function<const char*(const char* path)> resolveFilePathCallback,
+        std::function<void*(const char* path)> fileOpenCallback,
+        std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+            fileReadCallback,
+        std::function<long int(void* handle)> fileLengthCallback,
+        std::function<void(void* handle)> fileCloseCallback);
+
+    void SetUserData(const std::string& key, void* data);
+    void* GetUserData(const std::string& key);
 
     virtual void* Unwrap()
     {

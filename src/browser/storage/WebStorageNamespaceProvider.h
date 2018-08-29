@@ -37,7 +37,6 @@ public:
 
 private:
     WebStorageNamespaceProvider(String* localStoragePath);
-
     String* m_localStoragePath;
     GCUnorderedMap<String*, StorageNamespaceImpl*>
         m_localStoragePathToStorageNamespace;

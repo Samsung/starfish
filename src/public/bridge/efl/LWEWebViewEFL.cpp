@@ -228,8 +228,9 @@ const uint32_t CLICK_REFRESH_DELAY = 400;
 class WebViewEFL : public WebView {
 public:
     WebViewEFL(void* winArg, int x, int y, int width, int height,
-               float devicePixelRatio, const char* locale,
-               const char* timezoneID, const char* localStorageFilePath,
+               float devicePixelRatio, const char* defaultFontName,
+               const char* locale, const char* timezoneID,
+               const char* localStorageFilePath,
                const char* cookieStoreFilePath,
                const char* httpCacheDirectorypath)
         : WebView(nullptr)
@@ -289,6 +290,8 @@ public:
             [](void* data, Evas_Object* o) {
                 WebViewEFL* wv = (WebViewEFL*)data;
                 evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc, wv->m_glCtx);
+
+                STARFISH_LOG_INFO("clean up m_glAdpater\n");
 
                 wv->m_glGlapi->glClearColor(0, 0, 0, 0);
                 wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT |
@@ -411,6 +414,7 @@ public:
         evas_object_event_callback_add(m_glAdpater, EVAS_CALLBACK_MOUSE_MOVE,
                                        m_mouseMoveEventHandler, this);
 
+#if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         m_keyDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                    void* event_info) -> void {
             WebViewEFL* sf = (WebViewEFL*)data;
@@ -540,13 +544,6 @@ public:
                 evas_object_move(wv->m_glAdpater, x, y);
             },
             this);
-
-        m_closeWindowHandler = [](void* data, Evas* e, Evas_Object* obj,
-                                  void* event_info) {
-            WebViewEFL* wv = (WebViewEFL*)data;
-            // TODO
-            // setClosed();
-        };
 
         ecore_imf_init();
         // Register IMF callbacks
@@ -765,6 +762,8 @@ public:
                                                ECORE_IMF_AUTOCAPITAL_TYPE_NONE);
         ecore_imf_context_prediction_allow_set(m_imfContext, EINA_FALSE);
 
+#endif
+
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
             [this](LWE::WebContainer* wc) {
@@ -774,8 +773,8 @@ public:
             [this](LWE::WebContainer* wc) {
 
             },
-            devicePixelRatio, locale, timezoneID, localStorageFilePath,
-            cookieStoreFilePath, httpCacheDirectorypath);
+            devicePixelRatio, defaultFontName, locale, timezoneID,
+            localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
 
         webContainer->RegisterSetNeedsRenderingCallback(
             [this](::LWE::WebContainer* wc,
@@ -873,6 +872,7 @@ public:
 
     void ShowSoftwareKeyboardIfPossible()
     {
+#if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         if (ecore_imf_input_panel_hide() == EINA_FALSE) {
             FetchWebContainer()->AddIdleCallback(
                 [](void* data) {
@@ -893,10 +893,12 @@ public:
                 },
                 this, 100);
         }
+#endif
     }
 
     void HideSoftwareKeyboardIfPossible()
     {
+#if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         FetchWebContainer()->ClearTimeout(m_hideKeyboardTimeoutId);
         m_hideKeyboardTimeoutId = FetchWebContainer()->AddTimeout(
             [](void* data) {
@@ -906,6 +908,7 @@ public:
                 self->m_hideKeyboardTimeoutId = SIZE_MAX;
             },
             this, 100);
+#endif
     }
 
 protected:
@@ -918,8 +921,6 @@ protected:
 
     void (*m_resizeHandler)(void* data, Evas* evas, Evas_Object* obj,
                             void* event_info);
-    void (*m_closeWindowHandler)(void* data, Evas* evas, Evas_Object* obj,
-                                 void* event_info);
     void (*m_renderingPreHandler)(void* data, Evas* evas, void* event_info);
     void (*m_renderingPostHandler)(void* data, Evas* evas, void* event_info);
     void (*m_mouseDownEventHandler)(void* data, Evas* evas, Evas_Object* obj,
@@ -965,14 +966,15 @@ protected:
 };
 
 WebView* WebView::Create(void* win, int x, int y, int width, int height,
-                         float devicePixelRatio, const char* locale,
-                         const char* timezoneID,
+                         float devicePixelRatio, const char* defaultFontName,
+                         const char* locale, const char* timezoneID,
                          const char* localStorageFilePath,
                          const char* cookieStoreFilePath,
                          const char* httpCacheDirectorypath)
 {
-    return new WebViewEFL(win, x, y, width, height, devicePixelRatio, locale,
-                          timezoneID, localStorageFilePath, cookieStoreFilePath,
+    return new WebViewEFL(win, x, y, width, height, devicePixelRatio,
+                          defaultFontName, locale, timezoneID,
+                          localStorageFilePath, cookieStoreFilePath,
                           httpCacheDirectorypath);
 }
 }
