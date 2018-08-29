@@ -140,7 +140,7 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     , m_rareData(nullptr)
 {
     if (m_parent) {
-        int32_t num = owner->isPositioned() ? owner->style()->zIndex() : 0;
+        int32_t num = zIndex();
         auto iter = m_parent->m_childContexts.rbegin();
         size_t idx = m_parent->m_childContexts.size();
         StackingContextChild* target = nullptr;
