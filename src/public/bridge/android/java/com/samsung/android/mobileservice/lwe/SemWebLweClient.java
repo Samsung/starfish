@@ -1,7 +1,7 @@
 package com.samsung.android.mobileservice.lwe;
 
 /**
- * A Web LWE client for a SemWebView
+ * This class is a Web LWE client for a SemWebView.
  */
 public class SemWebLweClient {
     /**
@@ -9,7 +9,8 @@ public class SemWebLweClient {
      *
      * @param view The WebView that initiated the callback.
      * @param newProgress Current page loading progress, represented by an integer
-     *                    between 0 and 100.
+     *                    between 0 and 100
+     * @since Lightweight Web Engine 1.0
      */
     public void onProgressChanged(SemWebView view, int newProgress) {
     }

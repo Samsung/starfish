@@ -23,7 +23,7 @@ import android.net.Uri;
 import android.webkit.ValueCallback;
 
 /**
- * A Web view client for a SemWebView
+ * This class is a Web view client for a SemWebView.
  */
 public class SemWebViewClient {
     /**
@@ -32,6 +32,7 @@ public class SemWebViewClient {
      *
      * @param view The WebView that is initiating the callback.
      * @param url The url of the resource the WebView will load.
+     * @since Lightweight Web Engine 1.0
      */
     public void onLoadResource(SemWebView view, String url) {
     }
@@ -40,7 +41,8 @@ public class SemWebViewClient {
      * Report an error to the host application.
      *
      * @param view The WebView that is initiating the callback.
-     * @param error Information about the error occurred.
+     * @param error Information about the error occurred
+     * @since Lightweight Web Engine 1.0
      */
     public void onReceivedError(SemWebView view, SemWebResourceError error) {
     }
@@ -50,7 +52,8 @@ public class SemWebViewClient {
      * When onPageFinished() is called, the rendering picture may not be updated yet.
      *
      * @param view The WebView that is initiating the callback.
-     * @param url The url of the page.
+     * @param url The url of the page
+     * @since Lightweight Web Engine 1.0
      */
     public void onPageFinished(SemWebView view, String url) {
     }
@@ -59,7 +62,8 @@ public class SemWebViewClient {
      * Notify the host application that a page has started loading.
      *
      * @param view The WebView that is initiating the callback.
-     * @param url The url to be loaded.
+     * @param url The url to be loaded
+     * @since Lightweight Web Engine 1.0
      */
     public void onPageStarted(SemWebView view, String url) {
     }
@@ -72,8 +76,10 @@ public class SemWebViewClient {
      * usual.
      *
      * @param view The WebView that is initiating the callback.
-     * @param request Object containing the details of the request.
-     * @return
+     * @param request Object containing the details of the request
+     * @return {@code true} to cancel the current load, <br>
+     *         {@code false} otherwise
+     * @since Lightweight Web Engine 1.0
      */
     public boolean shouldOverrideUrlLoading(SemWebView view, String request) {
         return false;
