@@ -29,7 +29,7 @@ echo "Found: $repo"
 # Syncing with the current starfish repo
 
 git submodule init
-git submodule update binding_generator third_party/deviceapi third_party/escargot tool/gyp
+git submodule update
 
 cd third_party/escargot
 git submodule init
