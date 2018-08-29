@@ -1837,6 +1837,8 @@ public:
 
     bool isPositioned();
 
+    bool isSpecifiedZIndex();
+
     bool isNormalFlow() const
     {
         return m_flags.m_isNormalFlow;
