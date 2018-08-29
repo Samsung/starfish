@@ -19,7 +19,7 @@
 
 #include "StarFishConfig.h"
 #include "LWEWebView.h"
-#include "DaliStarFishBinder.h"
+#include "DALiStarFishBinder.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_DALI)
 #ifdef STARFISH_TIZEN
@@ -164,31 +164,6 @@ void DaliShellController::Create(Application& application)
     ((Dali::Toolkit::ImageView)mImageView)
         .KeyEventSignal()
         .Connect(this, &DaliShellController::keyEventHandler);
-
-    mApplication.GetWindow().ResizedSignal().Connect(
-        this, [this](Dali::Uint16Pair size) {
-            mLWEBinder->outputWidth = size.GetWidth();
-            mLWEBinder->outputHeight = size.GetHeight();
-            mLWEBinder->outputStride = mLWEBinder->outputWidth * 4;
-#if defined(STARFISH_DALI_TBMSURFACE)
-            tbm_surface_destroy(mTbmSurface);
-            mTbmSurface = tbm_surface_create(mLWEBinder->outputWidth,
-                                             mLWEBinder->outputHeight,
-                                             TBM_FORMAT_ABGR8888);
-            Dali::Any source(mTbmSurface);
-            mNativeImageSrc->SetSource(mTbmSurface);
-            ((Dali::Toolkit::ImageView)mImageView).SetImage(mNativeImage);
-#else
-        mBufferImage = Dali::BufferImage::New(mLWEBinder->outputWidth, mLWEBinder->outputHeight,
-                                             Dali::Pixel::RGBA8888);
-        ((Dali::Toolkit::ImageView)mImageView)
-            .SetImage(mBufferImage);
-#endif
-            mImageView.SetSize(mLWEBinder->outputWidth,
-                               mLWEBinder->outputHeight);
-            mImageView.SetPosition(0, 0);
-            setSize(mLWEBinder);
-        });
 
     mLWEBinder->onRenderedHandler = [this](
         LWE::WebContainer* c,

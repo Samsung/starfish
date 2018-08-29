@@ -21,7 +21,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "LWEWebView.h"
-#include "DaliStarFishBinder.h"
+#include "DALiStarFishBinder.h"
 
 #if defined(STARFISH_TIZEN)
 #define STARFISH_DALI_TBMSURFACE
