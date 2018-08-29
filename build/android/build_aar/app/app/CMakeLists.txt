@@ -15,6 +15,7 @@ set (CMAKE_CXX_STANDARD 11)
 set (STARFISH_ROOT_PATH ${CMAKE_SOURCE_DIR}/../../../../../ )
 set (PREBUILT_LIB_PATH ${CMAKE_SOURCE_DIR}/src/main/jniLibs/armeabi-v7a)
 set (ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/android )
+set(OPENGL_LIB GLESv3)
 
 add_definitions(-DESCARGOT -DHAVE_CONFIG_H -DPLATFORM_ANDROID -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA -DUSE_GET_STACKBASE_FOR_MAIN -DSTARFISH_ENABLE_DOMPARSER)
 add_definitions(-DSTARFISH_ANDROID -DESCARGOT_ENABLE_TYPEDARRAY -DESCARGOT_ENABLE_PROMISE -DANDROID=1 -DESCARGOT_32=1 -DNDEBUG -DSTARFISH_IGNORE_SSL_VERIFYPEER -DSTARFISH_ENABLE_HTTPCACHE )
@@ -39,6 +40,8 @@ include_directories(${STARFISH_ROOT_PATH}/third_party/MP4Parse/source/include)
 include_directories(${STARFISH_ROOT_PATH}/third_party/libav/out/linux/x64/release)
 include_directories(${STARFISH_ROOT_PATH}/third_party/zeromq/include)
 include_directories(${STARFISH_ROOT_PATH}/third_party/cppzmq)
+include_directories(${STARFISH_ROOT_PATH}/third_party/earcut.hpp/include/mapbox)
+include_directories(${STARFISH_ROOT_PATH}/third_party/third_party/clipper/cpp)
 
 include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include)
 include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/effects)
@@ -58,6 +61,7 @@ include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/harfbuzz_ng/src)
 include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/icu/icu4c/source/common)
 include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/icu/icu4c/source/i18n)
 
+file(GLOB CLIPPER_SRC "${STARFISH_ROOT_PATH}/third_party/clipper/cpp/clipper.cpp" )
 file(GLOB GCUTIL_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/*.cpp" )
 file(GLOB DOUBLEC_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/double_conversion/*.cc" )
 file(GLOB YARR_SRC "${STARFISH_ROOT_PATH}/third_party/escargot/third_party/yarr/*.cpp" )
@@ -107,6 +111,7 @@ add_library( # Sets the name of the library.
              ${DOUBLEC_SRC}
              ${YARR_SRC}
              ${ESCARGOT_SRC}
+             ${CLIPPER_SRC}
              )
 set_target_properties(lightweightwebengine PROPERTIES LINKER_LANGUAGE CXX)
 # Searches for a specified prebuilt library and stores the path as a
@@ -128,6 +133,7 @@ find_library( # Sets the name of the path variable.
 
 find_library( z-lib z )
 find_library( jnig-lib jnigraphics )
+find_library( android-lib android )
 
 LINK_DIRECTORIES("libs")
 
@@ -176,4 +182,6 @@ target_link_libraries( # Specifies the target library.
                        ${PREBUILT_LIB_PATH}/libgif.a
                        ${z-lib}
                        ${jnig-lib}
-                       ${log-lib} )
+                       ${log-lib}
+                       ${OPENGL_LIB}
+                       ${android-lib})
