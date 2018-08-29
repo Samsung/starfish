@@ -1096,6 +1096,16 @@ bool Frame::isPositioned()
     return style->position() != PositionValue::StaticPositionValue;
 }
 
+bool Frame::isSpecifiedZIndex()
+{
+    ComputedStyle* style = this->style();
+    if (!style) {
+        return false;
+    }
+
+    return style->isSpecifiedZIndex();
+}
+
 bool Frame::isAbsolutePositioned()
 {
     ComputedStyle* style = this->style();

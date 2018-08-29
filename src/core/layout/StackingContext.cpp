@@ -192,7 +192,8 @@ StackingContextRareData* StackingContext::ensureRareData()
 
 int32_t StackingContext::zIndex()
 {
-    if (m_owner->isPositioned()) {
+    if (m_owner->isPositioned() ||
+        (m_owner->isFlexItem() && m_owner->isSpecifiedZIndex())) {
         return m_owner->style()->zIndex();
     } else {
         return 0;
