@@ -799,9 +799,8 @@ public:
 
         m_hideKeyboardTimeoutId = m_keyboardTimeoutId = SIZE_MAX;
         m_impl = webContainer;
-
-        HideSoftwareKeyboardIfPossible();
     }
+
     virtual void Destroy() override
     {
         WebView::Destroy();
@@ -870,7 +869,8 @@ public:
 
     virtual void Focus() override
     {
-        HideSoftwareKeyboardIfPossible();
+        evas_object_focus_set(m_mainBox, EINA_FALSE);
+        evas_object_focus_set(m_nonIMEKeyEventBox, EINA_TRUE);
     }
 
     virtual void Blur() override

@@ -624,7 +624,7 @@ public:
                     }
                 }
 
-                if (overflowOrScroll.first) {
+                if (overflowOrScroll.first && self != b) {
                     Unit::Rect rt(b->borderLeft(), b->borderTop(),
                                   b->width() - b->borderWidth(),
                                   b->height() - b->borderHeight());
