@@ -19,8 +19,7 @@
 
 #include "StarFishConfig.h"
 #include "core/modules/location/Geolocation.h"
-#if defined(STARFISH_TIZEN_MOBILE) || \
-    defined(STARFISH_TIZEN_WEARABLE_WIDGET) || defined(STARFISH_TIZEN_TV)
+#if defined(STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED)
 #include "core/modules/location/Geoposition.h"
 #include "core/modules/location/Coordinates.h"
 #include "core/modules/location/PositionError.h"
@@ -98,12 +97,10 @@ public:
     } m_cachedLocation;
 };
 
-#if defined(STARFISH_TIZEN)
 Geolocation* Geolocation::create(Document* d)
 {
     return new GeolocationTizen(d);
 }
-#endif
 
 static void sendResult(LocationRequestInfoTizen* info)
 {

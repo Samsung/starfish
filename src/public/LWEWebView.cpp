@@ -188,4 +188,12 @@ void* WebView::GetUserData(const std::string& key)
 {
     return FetchWebContainer()->GetUserData(key);
 }
+
+void WebView::Focus()
+{
+}
+
+void WebView::Blur()
+{
+}
 }

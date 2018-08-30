@@ -86,6 +86,7 @@ inline bool isspace(char ch)
 }
 bool isdigit(char32_t ch);
 bool isalpha(char32_t ch);
+size_t utf32ToUtf16(char32_t i, char16_t* u);
 
 } // namespace StarFish
 

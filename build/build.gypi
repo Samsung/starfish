@@ -45,6 +45,7 @@
         'defines_unified_tv': [
             #'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_TIZEN_TV',
+            'STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED',
             #'STARFISH_ENABLE_AVPLAY',
             'STARFISH_ENABLE_TRANSPARENT_WINDOW',
             #'STARFISH_ENABLE_TTS',
@@ -55,6 +56,7 @@
         'defines_prod_tv': [
             'STARFISH_ENABLE_MULTIMEDIA',
             'STARFISH_TIZEN_TV',
+            'STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED',
             #'STARFISH_ENABLE_AVPLAY',
             'STARFISH_ENABLE_TRANSPARENT_WINDOW',
             'STARFISH_ENABLE_TTS',
@@ -66,6 +68,8 @@
             # 'STARFISH_TIZEN_WEARABLE',
             'STARFISH_TIZEN_WEARABLE_WIDGET',
             'STARFISH_TIZEN_TRANSPARENT_BACKGROUND',
+            'STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED',
+            'STARFISH_DISABLE_OVERFLOW_SCROLL',
             #'STARFISH_ENABLE_MULTIMEDIA',
         ],
         'defines_debug': [

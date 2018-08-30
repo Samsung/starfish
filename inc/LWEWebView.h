@@ -280,14 +280,16 @@ public:
     void SetUserData(const std::string& key, void* data);
     void* GetUserData(const std::string& key);
 
+    virtual void RunMessageLoop();
+    virtual void StopMessageLoop();
+
     virtual void* Unwrap()
     {
         // Some platform returns associated native handle ex) Evas_Object*
         return nullptr;
     }
-
-    virtual void RunMessageLoop();
-    virtual void StopMessageLoop();
+    virtual void Focus();
+    virtual void Blur();
 
 protected:
     WebView(void* impl)

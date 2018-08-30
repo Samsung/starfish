@@ -1381,7 +1381,7 @@ std::string StringUtils::toBase64HTMLDataURI(const std::string& src,
     return dataURI;
 }
 
-int utf32ToUtf16(char32_t i, char16_t* u)
+size_t utf32ToUtf16(char32_t i, char16_t* u)
 {
     if (i <= 0xffff) {
         if (i >= 0xd800 && i <= 0xdfff) {
