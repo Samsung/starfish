@@ -188,7 +188,7 @@ public:
 
     void submit();
 
-    void reset();
+    void reset() override;
 
     HTMLFormControlsCollection* elements();
     uint32_t length();

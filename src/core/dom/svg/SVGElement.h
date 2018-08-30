@@ -77,7 +77,7 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    virtual QualifiedName name()
+    virtual QualifiedName name() override
     {
         return m_name;
     }

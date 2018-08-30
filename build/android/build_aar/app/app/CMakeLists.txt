@@ -184,4 +184,5 @@ target_link_libraries( # Specifies the target library.
                        ${jnig-lib}
                        ${log-lib}
                        ${OPENGL_LIB}
-                       ${android-lib})
+                       ${android-lib}
+                       EGL)

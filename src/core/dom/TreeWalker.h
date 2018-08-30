@@ -80,7 +80,7 @@ public:
 
     ScriptValue filter();
 
-    virtual ScriptBindingInstance* scriptBindingInstance()
+    virtual ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_scriptBindingInstance;
     }
