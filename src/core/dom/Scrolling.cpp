@@ -35,6 +35,9 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                                    FrameBlockBox* frame, OverflowValue ox,
                                    OverflowValue oy)
 {
+#if defined(STARFISH_DISABLE_OVERFLOW_SCROLL)
+    return false;
+#endif
     bool horizontalScrollEnabled =
         ox >= OverflowValue::AutoOverflow &&
         frame->asFrameBlockBox()->hasBiggerContentThanFrameWidth();
@@ -111,6 +114,9 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
 void Scrolling::onGlobalPointingEvent(float x, float y,
                                       EventTarget::GlobalPointingEventKind kind)
 {
+#if defined(STARFISH_DISABLE_OVERFLOW_SCROLL)
+    return;
+#endif
     if (kind == EventTarget::GlobalPointingEventKindUp) {
         m_target->document()
             ->browsingContext()
@@ -149,6 +155,9 @@ template <typename T>
 void Scrolling::paintScrollbars(T canvas, FrameBlockBox* frame,
                                 OverflowValue ox, OverflowValue oy)
 {
+#if defined(STARFISH_DISABLE_OVERFLOW_SCROLL)
+    return;
+#endif
 #ifndef STARFISH_SCROLLBAR_THICKNESS
 #define STARFISH_SCROLLBAR_THICKNESS 4
 #endif

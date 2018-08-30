@@ -813,27 +813,13 @@ public:
         if (m_glSync) {
             m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
         }
+
         evas_object_hide(m_glAdpater);
         evas_object_image_native_surface_set(m_glAdpater, NULL);
         evas_gl_context_destroy(m_glEvasgl, m_glCtx);
         evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
         evas_gl_config_free(m_glCfg);
         evas_gl_free(m_glEvasgl);
-
-        if (m_glAdpater) {
-            evas_object_del(m_glAdpater);
-            m_glAdpater = nullptr;
-        }
-
-        if (m_nonIMEKeyEventBox) {
-            evas_object_del(m_nonIMEKeyEventBox);
-            m_nonIMEKeyEventBox = nullptr;
-        }
-
-        if (m_mainBox) {
-            evas_object_del(m_mainBox);
-            m_mainBox = nullptr;
-        }
 
         evas_event_callback_del(evas_object_evas_get(m_glAdpater),
                                 EVAS_CALLBACK_RENDER_POST,
@@ -861,13 +847,36 @@ public:
         evas_object_event_callback_del(m_glAdpater, EVAS_CALLBACK_KEY_UP,
                                        m_keyUpEventHandler);
 
-        evas_object_event_callback_del(m_glAdpater, EVAS_CALLBACK_FOCUS_IN,
-                                       m_focusInHandler);
+        if (m_glAdpater) {
+            evas_object_del(m_glAdpater);
+            m_glAdpater = nullptr;
+        }
+
+        if (m_nonIMEKeyEventBox) {
+            evas_object_del(m_nonIMEKeyEventBox);
+            m_nonIMEKeyEventBox = nullptr;
+        }
+
+        if (m_mainBox) {
+            evas_object_del(m_mainBox);
+            m_mainBox = nullptr;
+        }
     }
 
     virtual void* Unwrap() override
     {
         return m_mainBox;
+    }
+
+    virtual void Focus() override
+    {
+        HideSoftwareKeyboardIfPossible();
+    }
+
+    virtual void Blur() override
+    {
+        evas_object_focus_set(m_mainBox, EINA_FALSE);
+        evas_object_focus_set(m_nonIMEKeyEventBox, EINA_FALSE);
     }
 
     void ShowSoftwareKeyboardIfPossible()
@@ -935,9 +944,6 @@ protected:
                                   void* event_info);
     void (*m_keyUpEventHandler)(void* data, Evas* evas, Evas_Object* obj,
                                 void* event_info);
-    void (*m_clickEventHandler)(void* data, Evas_Object* obj, void* event_info);
-    void (*m_focusInHandler)(void* data, Evas* evas, Evas_Object* obj,
-                             void* event_info);
 
     Evas_Object* m_mainBox;
     Evas_Object* m_glAdpater;

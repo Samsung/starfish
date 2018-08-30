@@ -40,12 +40,29 @@ void* CharacterData::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+uint32_t CharacterData::length() const
+{
+    // https://www.w3.org/TR/DOM-Level-3-Core/core.html
+    // according spec, we should treat length as utf-16 unit offset.
+    const auto& s = data()->bufferAccessData();
+    if (s.bufferDataKind != StringBufferAccessData::UTF32Data) {
+        size_t len = 0;
+        for (size_t i = 0; i < s.length; i++) {
+            char32_t ch = s.charAt(i);
+            char16_t buf[2];
+            len += utf32ToUtf16(ch, buf);
+        }
+        return len;
+    } else {
+        return s.length;
+    }
+}
+
 String* CharacterData::substringData(unsigned long offset, unsigned long count)
 {
     // https://dom.spec.whatwg.org/#concept-cd-substring
-    String* d = data();
     // Let length be node’s length.
-    size_t length = d->length();
+    size_t length = CharacterData::length();
     // If offset is greater than length, then throw an IndexSizeError.
     if (offset > length) {
         throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR);
@@ -59,7 +76,16 @@ String* CharacterData::substringData(unsigned long offset, unsigned long count)
     if (offset + count > length) {
         subLength = length - offset;
     }
-    return d->substring(offset, subLength);
+
+    // https://www.w3.org/TR/DOM-Level-3-Core/core.html
+    // according spec, we should treat offset, length as utf-16 unit offset.
+    const auto& s = data()->bufferAccessData();
+    if (s.bufferDataKind != StringBufferAccessData::UTF32Data) {
+        return data()->substring(offset, subLength);
+    } else {
+        auto str = data()->toUTF16NonGCString().substr(offset, subLength);
+        return String::fromUTF16(str.data(), str.length());
+    }
 }
 
 void CharacterData::setData(String* data)
@@ -95,13 +121,26 @@ void CharacterData::insertData(unsigned long offset, String* newData)
     }
 
     // TODO Queue a mutation record of "characterData" for node with oldValue
-    // node’s data.
+
+    // https://www.w3.org/TR/DOM-Level-3-Core/core.html
+    // according spec, we should treat offset as utf-16 unit offset.
+
     String* oldValue = data();
-    StringBuilder sb;
-    sb.appendSubString(oldValue, 0, offset);
-    sb.appendString(newData);
-    sb.appendSubString(oldValue, offset, length);
-    setData(sb.finalize());
+    const auto& s = oldValue->bufferAccessData();
+
+    if (s.bufferDataKind != StringBufferAccessData::UTF32Data) {
+        StringBuilder sb;
+        sb.appendSubString(oldValue, 0, offset);
+        sb.appendString(newData);
+        sb.appendSubString(oldValue, offset, length);
+        setData(sb.finalize());
+    } else {
+        auto u16String = oldValue->toUTF16NonGCString();
+        auto u16NewString = newData->toUTF16NonGCString();
+        auto newString = u16String.substr(0, offset) + u16NewString +
+                         u16String.substr(offset);
+        setData(String::fromUTF16(newString.data(), newString.length()));
+    }
 }
 
 void CharacterData::deleteData(unsigned long offset, unsigned long count)
@@ -119,13 +158,21 @@ void CharacterData::deleteData(unsigned long offset, unsigned long count)
         count = length - offset;
     }
 
-    // TODO Queue a mutation record of "characterData" for node with oldValue
-    // node’s data.
-    String* oldValue = data();
-    StringBuilder sb;
-    sb.appendSubString(oldValue, 0, offset);
-    sb.appendSubString(oldValue, offset + count, length);
-    setData(sb.finalize());
+    // https://www.w3.org/TR/DOM-Level-3-Core/core.html
+    // according spec, we should treat offset, length as utf-16 unit offset.
+    const auto& s = data()->bufferAccessData();
+    if (s.bufferDataKind != StringBufferAccessData::UTF32Data) {
+        String* oldValue = data();
+        StringBuilder sb;
+        sb.appendSubString(oldValue, 0, offset);
+        sb.appendSubString(oldValue, offset + count, length);
+        setData(sb.finalize());
+    } else {
+        auto u16String = data()->toUTF16NonGCString();
+        auto newString =
+            u16String.substr(0, offset) + u16String.substr(offset + count);
+        setData(String::fromUTF16(newString.data(), newString.length()));
+    }
 }
 
 void CharacterData::replaceData(unsigned long offset, unsigned long count,
@@ -146,11 +193,23 @@ void CharacterData::replaceData(unsigned long offset, unsigned long count,
 
     // TODO Queue a mutation record of "characterData" for node with oldValue
     // node’s data.
-    String* oldValue = data();
-    StringBuilder sb;
-    sb.appendSubString(oldValue, 0, offset);
-    sb.appendString(newData);
-    sb.appendSubString(oldValue, offset + count, length);
-    setData(sb.finalize());
+
+    // https://www.w3.org/TR/DOM-Level-3-Core/core.html
+    // according spec, we should treat offset, length as utf-16 unit offset.
+    const auto& s = data()->bufferAccessData();
+    if (s.bufferDataKind != StringBufferAccessData::UTF32Data) {
+        String* oldValue = data();
+        StringBuilder sb;
+        sb.appendSubString(oldValue, 0, offset);
+        sb.appendString(newData);
+        sb.appendSubString(oldValue, offset + count, length);
+        setData(sb.finalize());
+    } else {
+        auto u16String = data()->toUTF16NonGCString();
+        auto newString = u16String.substr(0, offset) +
+                         newData->toUTF16NonGCString() +
+                         u16String.substr(offset + count);
+        setData(String::fromUTF16(newString.data(), newString.length()));
+    }
 }
 }

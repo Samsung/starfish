@@ -54,11 +54,7 @@ public:
 
     void setData(String* data);
 
-    uint32_t length() const
-    {
-        return m_data->length();
-    }
-
+    uint32_t length() const;
     bool isContainerNode() override
     {
         return false;

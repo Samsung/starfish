@@ -338,23 +338,6 @@ ScriptValue ScriptWrappable::scriptValue()
     return ValueRef::create(scriptObject());
 }
 
-static int utf32ToUtf16(char32_t i, char16_t* u)
-{
-    if (i < 0xffff) {
-        *u = (char16_t)(i & 0xffff);
-        return 1;
-    } else if (i < 0x10ffff) {
-        i -= 0x10000;
-        *u++ = 0xd800 | (i >> 10);
-        *u = 0xdc00 | (i & 0x3ff);
-        return 2;
-    } else {
-        // produce error char
-        *u = 0xFFFD;
-        return 1;
-    }
-}
-
 ScriptWrappable* toScriptWrappable(ScriptValue v)
 {
     if (v->isObject()) {
