@@ -30,7 +30,7 @@ interface Range {
     [Unimplemented,RaisesException, CEReactions] void deleteContents();
     [Unimplemented,NewObject, RaisesException, CEReactions] DocumentFragment extractContents();
     [Unimplemented,NewObject, RaisesException, CEReactions] DocumentFragment cloneContents();
-    [Unimplemented,RaisesException, CEReactions] void insertNode(Node node);
+    [RaisesException, CEReactions] void insertNode(Node node);
     [Unimplemented,RaisesException, CEReactions] void surroundContents(Node newParent);
 
     [NewObject] Range cloneRange();

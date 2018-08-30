@@ -20,6 +20,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/dom/Range.h"
+#include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/CharacterData.h"
@@ -248,6 +249,46 @@ short Range::compareBoundaryPoints(unsigned how, Range* sourceRange)
 
     STARFISH_ASSERT_NOT_REACHED();
     return 0;
+}
+
+void Range::insertNode(Node* node)
+{
+    Node* startNode = startContainer();
+    if (startNode->isProcessingInstruction() || startNode->isComment()) {
+        throw new DOMException(m_document, DOMException::HIERARCHY_REQUEST_ERR);
+    }
+    bool isStartText = startNode->isText();
+    if (isStartText && !startNode->parentNode()) {
+        throw new DOMException(m_document, DOMException::HIERARCHY_REQUEST_ERR);
+    }
+    if (startNode == node) {
+        throw new DOMException(m_document, DOMException::HIERARCHY_REQUEST_ERR);
+    }
+
+    Node* referenceNode =
+        isStartText ? startNode
+                    : Traverse::childAtOrNull(startNode, startOffset());
+    Node* parent = referenceNode ? referenceNode->parentNode() : startNode;
+    parent->validatePreinsert(node, referenceNode);
+
+    if (isStartText) {
+        referenceNode = startNode->asText()->splitText(startOffset());
+    }
+    if (node == referenceNode) {
+        referenceNode = referenceNode->nextSibling();
+    }
+
+    node->remove();
+
+    unsigned newOffset =
+        referenceNode ? referenceNode->index() : parent->nodeLength();
+    newOffset += node->isDocumentFragment() ? node->nodeLength() : 1;
+
+    parent->insertBefore(node, referenceNode);
+
+    if (collapsed()) {
+        setEnd(parent, newOffset);
+    }
 }
 
 Range* Range::cloneRange()

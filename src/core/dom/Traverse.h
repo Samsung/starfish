@@ -221,6 +221,19 @@ public:
         return child;
     }
 
+    static Node* childAtOrNull(Node* parent, unsigned index)
+    {
+        Node* child = parent->firstChild();
+        while (index) {
+            if (!child) {
+                return nullptr;
+            }
+            child = child->nextSibling();
+            index--;
+        }
+        return child;
+    }
+
     static Node* commonAncestor(Node* nodeA, Node* nodeB)
     {
         STARFISH_ASSERT(nodeA && nodeB);
