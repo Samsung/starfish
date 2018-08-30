@@ -108,11 +108,12 @@ public:
 
     short compareBoundaryPoints(unsigned how, Range* sourceRange);
 
+    void insertNode(Node* node);
+
     /*
     void deleteContents();
     DocumentFragment extractContents();
     DocumentFragment cloneContents();
-    void insertNode(Node node);
     void surroundContents(Node newParent);
     */
 

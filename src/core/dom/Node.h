@@ -306,6 +306,7 @@ public:
     unsigned index();
 
     Node* cloneNode(bool deep = false);
+    void validatePreinsert(Node* child, Node* childRef);
 
     unsigned short compareDocumentPosition(const Node* other);
 
@@ -754,7 +755,6 @@ public:
     }
 
 private:
-    void validatePreinsert(Node* child, Node* childRef);
     void validateReplace(Node* child, Node* childToRemove);
 
     void setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
