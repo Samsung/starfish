@@ -67,7 +67,7 @@ public:
         return m_referenceNode.m_node;
     }
 
-    virtual ScriptBindingInstance* scriptBindingInstance()
+    virtual ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_scriptBindingInstance;
     }

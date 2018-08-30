@@ -21,6 +21,7 @@
 #define __StarFishNodeFilter__
 
 #include "binding/ScriptWrappable.h"
+#include "core/dom/Document.h"
 
 namespace StarFish {
 
@@ -28,9 +29,23 @@ class NodeFilter final : public ScriptWrappable {
 public:
     enum { FILTERACCEPT = 1, FILTERREJECT = 2, FILTERSKIP = 3 };
 
-    void init(ScriptBindingInstance*, void*);
+    NodeFilter(Document* document)
+        : ScriptWrappable(this)
+        , m_scriptBindingInstance(document->scriptBindingInstance())
+    {
+    }
 
-    bool isNodeFilter() const;
+    virtual ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return m_scriptBindingInstance;
+    }
+
+    void init(ScriptBindingInstance*, void*) override;
+
+    bool isNodeFilter() const override;
+
+private:
+    ScriptBindingInstance* m_scriptBindingInstance;
 };
 }
 

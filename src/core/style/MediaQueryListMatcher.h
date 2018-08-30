@@ -18,7 +18,7 @@
  */
 
 #ifndef __StarFishMediaQueryListMatcher__
-#define __StarFishMediaQueryListMarcher__
+#define __StarFishMediaQueryListMatcher__
 
 #include "binding/DocumentHoldable.h"
 
