@@ -340,6 +340,19 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    webView->Focus();
+
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+    /// example code about diligently getting focus in EFL
+    auto focusInHandler = [](void* data, Evas* e, Evas_Object* obj,
+                             void* event_info) {
+        LWE::WebView* wv = (LWE::WebView*)data;
+        wv->Focus();
+    };
+    evas_object_event_callback_add(wndObj, EVAS_CALLBACK_FOCUS_IN,
+                                   focusInHandler, webView);
+#endif
+
 #if defined(PORT_EVENTLOOP_BACKEND_EFL) && \
     (defined(STARFISH_ENABLE_TEST) || defined(STARFISH_ENABLE_SHELL))
     pthread_t t;
