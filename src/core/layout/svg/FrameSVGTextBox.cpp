@@ -43,6 +43,7 @@ void FrameSVGTextBox::layoutSVG()
     LayoutContext ctx(node()->starFish(),
                       node()->document()->frame()->asFrameDocument());
     firstChild()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
+    firstChild()->establishesStackingContextIfNeedsAndComputingPaintingFlags();
 }
 
 void FrameSVGTextBox::paintSVG(PaintingContext& ctx)
