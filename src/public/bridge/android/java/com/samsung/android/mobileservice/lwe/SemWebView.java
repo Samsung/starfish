@@ -78,6 +78,12 @@ public class SemWebView extends TextureView {
         return delegate;
     }
 
+    /**
+     * Constructs a new SemWebView with an Activity Context object.
+     *
+     * @param context An Activity Context to access application assets
+     * @since Lightweight Web Engine 1.0
+     */
     public SemWebView(Context context) {
         super(context);
         delegate = getWebViewInstance();
@@ -85,6 +91,13 @@ public class SemWebView extends TextureView {
             delegate.initWebView(this);
     }
 
+    /**
+     * Constructs a new SemWebView with layout parameters.
+     *
+     * @param context An Activity Context to access application assets
+     * @param attrs An AttributeSet passed to our parent
+     * @since Lightweight Web Engine 1.0
+     */
     public SemWebView(Context context, AttributeSet attrs) {
         super(context, attrs);
         delegate = getWebViewInstance();
@@ -92,6 +105,16 @@ public class SemWebView extends TextureView {
             delegate.initWebView(this);
     }
 
+    /**
+     * Constructs a new SemWebView with layout parameters and a default style.
+     *
+     * @param context An Activity Context to access application assets
+     * @param attrs An AttributeSet passed to our parent
+     * @param defStyle An attribute in the current theme that contains a reference to a style
+     *                 resource that supplies default values for the view. Can be 0 to not look
+     *                 for defaults.
+     * @since Lightweight Web Engine 1.0
+     */
     public SemWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs);
         delegate = getWebViewInstance();

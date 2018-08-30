@@ -28,6 +28,14 @@ public class SemWebResourceError {
     private int mErrorCode = 0;
     private String mErrorDescription = null;
 
+    /**
+     * Creates a SemWebResourceError object.
+     *
+     * @hide Internal use only
+     * @param code ErrorCode
+     * @param description Description of the error message
+     * @since Lightweight Web Engine 1.0
+     */
     SemWebResourceError(int code, String description) {
         mErrorCode = code;
         mErrorDescription = description;
