@@ -5,6 +5,14 @@ package com.samsung.android.mobileservice.lwe;
  */
 public class SemWebLweClient {
     /**
+     * Constructs a new SemWebLweClient
+     *
+     * @since Lightweight Web Engine 1.0
+     */
+    public SemWebLweClient() {
+    }
+
+    /**
      * Tell the host application the current progress of loading a page.
      *
      * @param view The WebView that initiated the callback.

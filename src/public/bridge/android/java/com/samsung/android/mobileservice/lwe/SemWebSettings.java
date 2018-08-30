@@ -49,6 +49,15 @@ public class SemWebSettings {
     private String mDefaultUserAgent = null;
     private String mUserAgentString = null;
 
+    /**
+     * Creates a SemWebSettings object
+     *
+     * @hide Internal use only
+     * @param dua Default user agent
+     * @param ua User agent
+     * @param cacheMode Cache mode
+     * @since Lightweight Web Engine 1.0
+     */
     SemWebSettings(String dua, String ua, int cacheMode) {
         mDefaultUserAgent = dua;
         mUserAgentString = ua;

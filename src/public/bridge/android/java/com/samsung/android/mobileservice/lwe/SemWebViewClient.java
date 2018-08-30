@@ -27,6 +27,14 @@ import android.webkit.ValueCallback;
  */
 public class SemWebViewClient {
     /**
+     * Constructs a new SemWebViewClient
+     *
+     * @since Lightweight Web Engine 1.0
+     */
+    public SemWebViewClient() {
+    }
+
+    /**
      * Notify the host application that the WebView will load the resource specified by the given
      * url.
      *
