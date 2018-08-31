@@ -144,12 +144,6 @@ LINK_DIRECTORIES("libs")
 add_library( ft2-lib SHARED IMPORTED )
 set_target_properties( ft2-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libft2.so )
 
-add_library( icu1-lib SHARED IMPORTED )
-set_target_properties( icu1-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicui18n.so )
-
-add_library( icu2-lib SHARED IMPORTED )
-set_target_properties( icu2-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicuuc.so )
-
 add_library( png-lib SHARED IMPORTED )
 set_target_properties( png-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libpng.so )
 
@@ -170,8 +164,6 @@ set_target_properties( crypto-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PA
 
 target_link_libraries( # Specifies the target library.
                        lightweightwebengine
-                       icu1-lib
-                       icu2-lib
                        png-lib
                        skia-lib
                        hb-lib
@@ -180,6 +172,9 @@ target_link_libraries( # Specifies the target library.
                        crypto-lib
                        curl-lib
                        ${PREBUILT_LIB_PATH}/libgif.a
+                       ${PREBUILT_LIB_PATH}/libicui18n.a
+                       ${PREBUILT_LIB_PATH}/libicuuc.a
+                       ${PREBUILT_LIB_PATH}/libicudata.a
                        ${z-lib}
                        ${jnig-lib}
                        ${log-lib}
