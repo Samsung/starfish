@@ -669,7 +669,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     Length curFontSize = fontSize();
     Length rootFontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
     HTMLHtmlElement* root = current->document()->rootElement();
-    if (root->style()) {
+    if (root && root->style()) {
         rootFontSize = root->style()->fontSize();
     }
 
