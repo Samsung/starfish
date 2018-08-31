@@ -32,7 +32,6 @@ HTMLButtonElement::HTMLButtonElement(Document* document,
                                      const QualifiedName& qname)
     : HTMLFormControl(document, qname)
 {
-    setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
 }
 
 void* HTMLButtonElement::operator new(size_t size)
