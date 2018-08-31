@@ -317,6 +317,8 @@ public class LweWebViewImpl implements LweWebView{
         sCookiePath = appContext.getDataDir().getAbsolutePath() + "/StarFish-cookie";
         sCachePath = appContext.getCacheDir().getAbsolutePath() + "/StarFish-cache";
 
+        final Object initLock = new Object();
+
         synchronized (sWebViewThreadLocker) {
             if (sWebViewThread == null) {
                 sWebViewThread = new Thread() {
@@ -337,6 +339,9 @@ public class LweWebViewImpl implements LweWebView{
                         synchronized (sWebViewThreadLocker) {
                             sWebViewThreadLooper = Looper.myLooper();
                         }
+                        synchronized(initLock) {
+                            initLock.notifyAll();
+                        }
                         Looper.loop();
                         sWebViewHandler = null;
                     }
@@ -345,6 +350,12 @@ public class LweWebViewImpl implements LweWebView{
                 sWebViewThread.start();
             }
         }
+        synchronized(initLock) {
+            try{
+                initLock.wait();
+            }catch(Exception e){}
+        }
+
 
         mLWEView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
