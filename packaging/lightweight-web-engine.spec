@@ -108,12 +108,12 @@ Summary: lightweight-web-engine for tv
 lightweight-web-engine for tv
 %endif
 
-# %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-# %package profile_mobile
-# Summary: lightweight-web-engine for mobile
-# %description profile_mobile
-# lightweight-web-engine for mobile
-# %endif
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%package profile_mobile
+Summary: lightweight-web-engine for mobile
+%description profile_mobile
+lightweight-web-engine for mobile
+%endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %package profile_wearable
@@ -130,12 +130,12 @@ Summary: Devel files for lightweight-web-engine for tv
 Devel files for lightweight-web-engine for tv
 %endif
 
-# %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-# %package devel-profile_mobile
-# Summary: Devel files for lightweight-web-engine for mobile
-# %description devel-profile_mobile
-# Devel files for lightweight-web-engine for mobile
-# %endif
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%package devel-profile_mobile
+Summary: Devel files for lightweight-web-engine for mobile
+%description devel-profile_mobile
+Devel files for lightweight-web-engine for mobile
+%endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %package devel-profile_wearable
@@ -197,18 +197,18 @@ ninja -C out_tizen/tv/release lwe.tizen.unified_tv.release
 %endif
 
 
-# %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-# # For Dali
-# GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/mobile --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dprofile=mobile %{?gyp_addition_command}
-# ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
-# mv out_tizen/mobile/release/lib/liblightweight-web-engine.mobile.so out_tizen/mobile/release/lib/liblightweight-web-engine-dali-plugin.mobile.so
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+# For Dali
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/mobile --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dprofile=mobile %{?gyp_addition_command}
+ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
+mv out_tizen/mobile/release/lib/liblightweight-web-engine.mobile.so out_tizen/mobile/release/lib/liblightweight-web-engine-dali-plugin.mobile.so
 
 # For Cairo
-# GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/mobile --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dprofile=mobile %{?gyp_addition_command}
-# ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
-# GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/mobile --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=mobile %{?gyp_addition_command}
-# ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
-# %endif
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/mobile --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dprofile=mobile %{?gyp_addition_command}
+ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/mobile --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=mobile %{?gyp_addition_command}
+ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
+%endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 CFLAGS+=' -Os '
@@ -246,12 +246,12 @@ cp -fr out_tizen/tv/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/tv/release/lightweight-web-engine.tv %{buildroot}%{_bindir}
 %endif
 
-# %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-# mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
-# cp -fr out_tizen/mobile/release/lib/*.so %{buildroot}%{_libdir}/lwe/mobile
-# cp -fr out_tizen/mobile/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/mobile
-# cp -fr out_tizen/mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
-# %endif
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
+cp -fr out_tizen/mobile/release/lib/*.so %{buildroot}%{_libdir}/lwe/mobile
+cp -fr out_tizen/mobile/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/mobile
+cp -fr out_tizen/mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
+%endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
@@ -302,21 +302,21 @@ exit 0
 %endif
 
 #############################################
-# %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-# %post profile_mobile
-# pushd %{_libdir}
-# for FILE in `ls lwe/mobile/*.so | grep -v 'mobile.so'`; do
-#     ln -sf "$FILE" .
-# done
-# ln -sf lwe/tv/liblightweight-web-engine.mobile.so liblightweight-web-engine.so
-# ln -sf lwe/tv/liblightwegith-web-engine-dali-plugin.mobile.so liblightwegith-web-engine-dali-plugin.so
-# popd
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%post profile_mobile
+pushd %{_libdir}
+for FILE in `ls lwe/mobile/*.so | grep -v 'mobile.so'`; do
+   ln -sf "$FILE" .
+done
+ln -sf lwe/tv/liblightweight-web-engine.mobile.so liblightweight-web-engine.so
+ln -sf lwe/tv/liblightwegith-web-engine-dali-plugin.mobile.so liblightwegith-web-engine-dali-plugin.so
+popd
 
-# pushd %{_bindir}
-# ln -sf lightweight-web-engine.mobile %{bin}
-# popd
-# exit 0
-# %endif
+pushd %{_bindir}
+ln -sf lightweight-web-engine.mobile %{bin}
+popd
+exit 0
+%endif
 
 #############################################
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
@@ -351,12 +351,12 @@ exit 0
 %license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
 %endif
 
-# %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-# %files profile_mobile
-# %manifest %{name}.manifest
-# %{_libdir}/lwe/mobile/*.so
-# %license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
-# %endif
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%files profile_mobile
+%manifest %{name}.manifest
+%{_libdir}/lwe/mobile/*.so
+%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
+%endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %files profile_wearable
@@ -373,12 +373,12 @@ exit 0
 %{_libdir}/pkgconfig/*.pc
 %endif
 
-# %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-# %files devel-profile_mobile
-# %{_includedir}
-# %{_bindir}/lightweight-web-engine.mobile
-# %{_libdir}/pkgconfig/*.pc
-# %endif
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%files devel-profile_mobile
+%{_includedir}
+%{_bindir}/lightweight-web-engine.mobile
+%{_libdir}/pkgconfig/*.pc
+%endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %files devel-profile_wearable
