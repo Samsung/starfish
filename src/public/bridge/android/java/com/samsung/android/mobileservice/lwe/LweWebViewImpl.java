@@ -317,50 +317,57 @@ public class LweWebViewImpl implements LweWebView{
         sCookiePath = appContext.getDataDir().getAbsolutePath() + "/StarFish-cookie";
         sCachePath = appContext.getCacheDir().getAbsolutePath() + "/StarFish-cache";
 
+        synchronized (sWebViewThreadLocker) {
+            if (sWebViewThread == null) {
+                sWebViewThread = new Thread() {
+
+                    @Override
+                    public void run() {
+                        super.run();
+                        Looper.prepare();
+
+                        sWebViewHandler = new Handler() {
+                            @Override
+                            public void handleMessage(Message msg) {
+                                super.handleMessage(msg);
+                                // process incoming messages here
+                            }
+                        };
+
+                        synchronized (sWebViewThreadLocker) {
+                            sWebViewThreadLooper = Looper.myLooper();
+                        }
+                        Looper.loop();
+                        sWebViewHandler = null;
+                    }
+                };
+                sWebViewThread.setPriority(Thread.MAX_PRIORITY);
+                sWebViewThread.start();
+            }
+        }
+
         mLWEView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
             public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
                 initGLContext();
                 init();
-                synchronized (sWebViewThreadLocker) {
-                    if (sWebViewThread == null) {
-                        sWebViewThread = new Thread() {
-
-                            @Override
-                            public void run() {
-                                super.run();
-                                Looper.prepare();
-
-                                sWebViewHandler = new Handler() {
-                                    @Override
-                                    public void handleMessage(Message msg) {
-                                        super.handleMessage(msg);
-                                        // process incoming messages here
-                                    }
-                                };
-
-                                synchronized (sWebViewThreadLocker) {
-                                    sWebViewThreadLooper = Looper.myLooper();
-                                }
-                                Looper.loop();
-                                sWebViewHandler = null;
-                            }
-                        };
-                        sWebViewThread.setPriority(Thread.MAX_PRIORITY);
-                        sWebViewThread.start();
-                    }
-                }
-                mLWEView.post(new Runnable(){
+                sWebViewHandler.post(new Runnable(){
                     @Override
                     public void run() {
                         synchronized (sWebViewThreadLocker) {
                             if (mLWEView.getWidth() == 0 || sWebViewHandler == null) {
-                                mLWEView.post(this);
+                                sWebViewHandler.post(this);
                                 return;
                             }
                         }
                         mWindowWidth = mLWEView.getWidth();
                         mWindowHeight = mLWEView.getHeight();
+                        if (mWebViewInternalHandle == 0) {
+                            mWebViewInternalHandle =
+                                    create(mWindowWidth, mWindowHeight, sDpr,
+                                            mUserAgentString, sLocale, sTimezone,
+                                            sLocalStoragePath, sCookiePath, sCachePath);
+                        }
                     }
                 });
             }
@@ -561,9 +568,6 @@ public class LweWebViewImpl implements LweWebView{
     }
 
     private void flushRendering(int updatedX, int updatedY, int updatedWidth, int updatedHeight) {
-        synchronized (sWebViewThreadLocker) {
-
-        }
     }
 
     private void showDropdownMenu(String[] list, int checkedPosition) {
@@ -699,26 +703,41 @@ public class LweWebViewImpl implements LweWebView{
         if (url == null) {
             return;
         }
+        if(!isReadyWebViewInstance(new Runnable() {
+            @Override
+            public void run() {
+                loadUrl(url);
+            }
+        })){
+            return;
+        }
 
         synchronized (sWebViewThreadLocker) {
             if (sWebViewHandler != null) {
                 sWebViewHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (mWebViewInternalHandle == 0) {
-                            mWebViewInternalHandle =
-                                    create(mWindowWidth, mWindowHeight, sDpr,
-                                            mUserAgentString, sLocale, sTimezone,
-                                            sLocalStoragePath, sCookiePath, sCachePath);
-                        }
                         loadUrl(mWebViewInternalHandle, url);
                     }
                 });
             }
         }
     }
+
     public String getUrl() {
         return mCurrentURL;
+    }
+
+    private boolean isReadyWebViewInstance(Runnable r) {
+        if(sWebViewHandler != null){
+            if(mWebViewInternalHandle != 0){
+                return true;
+            }
+            synchronized (sWebViewThreadLocker) {
+                sWebViewHandler.post(r);
+            }
+        }
+        return false;
     }
 
     public void loadData(String data) {
@@ -727,16 +746,20 @@ public class LweWebViewImpl implements LweWebView{
         }
 
         final String htmlData = data;
+        if(!isReadyWebViewInstance(new Runnable() {
+            @Override
+            public void run() {
+                loadData(htmlData);
+            }
+        })){
+            return;
+        }
+
         synchronized (sWebViewThreadLocker) {
             if (sWebViewHandler != null) {
                 sWebViewHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (mWebViewInternalHandle == 0) {
-                            mWebViewInternalHandle =
-                                    create(mWindowWidth, mWindowHeight, sDpr, mUserAgentString, sLocale,
-                                            sTimezone, sLocalStoragePath, sCookiePath, sCachePath);
-                        }
                         loadData(mWebViewInternalHandle, htmlData);
                     }
                 });
