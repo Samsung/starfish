@@ -1495,3 +1495,14 @@ The following describes Web device APIs supported by lightweight web engine. Sup
 |----------------|-------------|------|
 | [Application](https://developer.tizen.org/dev-guide/4.0.0/org.tizen.web.apireference/html/device_api/tv/tizen/application.html) | The Application API provides a way to launch other applications and access application management. | |
 | [MessagePort](https://developer.tizen.org/dev-guide/4.0.0/org.tizen.web.apireference/html/device_api/tv/tizen/messageport.html) | The MessagePort API provides the functionality for communicating with other applications. | |
+
+## Accessible Rich Internet Applications (WAI-ARIA)
+The following describes WAI-ARIA supported by lightweight web engine. Please, see [here](https://www.w3.org/TR/wai-aria/) for more information about WAI-ARIA.
+
+\* States and Properties are as follows:
+| Type | Name | Description | Note |
+|------|------|-------------|------|
+| property | [aria-label](https://www.w3.org/TR/wai-aria/#aria-label) | Defines a string value that labels the current element. See related aria-labelledby.| |
+| property | [aria-labelledby](https://www.w3.org/TR/wai-aria/#aria-labelledby) | Identifies the element (or elements) that labels the current element. See related aria-describedby. | |
+| property | [aria-describedby](https://www.w3.org/TR/wai-aria/#aria-describedby)| Identifies the element (or elements) that describes the object. See related aria-labelledby.| |
+| state | [aria-hidden](https://www.w3.org/TR/wai-aria/#aria-hidden) | Indicates whether the element is exposed to an accessibility API. See related aria-disabled. | |
