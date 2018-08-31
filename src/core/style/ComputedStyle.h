@@ -26,7 +26,6 @@
 #include "core/style/ContentData.h"
 #include "core/style/CounterBaseList.h"
 #include "core/style/FlexBasisData.h"
-#include "core/style/DefaultStyle.h"
 #include "core/style/Style.h"
 #include "core/style/StyleBackgroundData.h"
 #include "core/style/StyleTransformData.h"
@@ -703,7 +702,7 @@ class ComputedStyle : public gc {
         void* operator new(size_t size);
     };
 
-    ComputedStyle(float mediumFontSize = DEFAULT_FONT_SIZE)
+    ComputedStyle(uint32_t mediumFontSize)
     {
         m_font = nullptr;
 

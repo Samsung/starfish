@@ -36,6 +36,8 @@
 
 namespace LWE {
 
+#define DEFAULT_FONT_SIZE 16
+
 class LWE_EXPORT Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
@@ -46,12 +48,14 @@ public:
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
     void SetProxyURL(const std::string& proxyURL);
+    void setDefaultFontSize(int size);
 
 private:
     std::string m_defaultUserAgent;
     std::string m_userAgent;
     std::string m_proxyURL;
     int m_cacheMode;
+    uint32_t m_defaultFontSize;
 };
 
 class LWE_EXPORT ResourceError {
@@ -179,6 +183,7 @@ public:
 
     void SetUserAgentString(const std::string& userAgent);
     void SetCacheMode(int mode);
+    void SetDefaultFontSize(uint32_t size);
     void DispatchMouseMoveEvent(MouseButtonValue button,
                                 MouseButtonsValue buttons, double x, double y);
     void DispatchMouseDownEvent(MouseButtonValue button,

@@ -3106,7 +3106,7 @@ protected:
     bool traverseAndTryAddSheet(Node* node, CSSStyleSheet* sheet,
                                 bool& originFound);
 
-    float m_mediumFontSize;
+    uint32_t m_mediumFontSize;
     GCVector<CSSStyleSheet*> m_sheets;
     CSSStyleSheet* m_styleSheetWithAllRules;
     bool m_usesFirstLineRule;

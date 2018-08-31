@@ -23,7 +23,6 @@
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/Node.h"
 #include "core/layout/Frame.h"
-#include "core/style/DefaultStyle.h"
 #include "core/style/Length.h"
 #include "core/style/CalcData.h"
 #include "core/page/Window.h"

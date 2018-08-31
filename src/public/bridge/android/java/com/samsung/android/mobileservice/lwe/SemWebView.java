@@ -289,7 +289,7 @@ public class SemWebView extends TextureView {
      */
     public SemWebSettings getSettings() {
         if(delegate!=null)
-            return new SemWebSettings(delegate.getDefaultUA(), delegate.getUA(), delegate.getCacheModeValue());
+            return new SemWebSettings(delegate.getDefaultUA(), delegate.getUA(), delegate.getCacheModeValue(), delegate.getDefaultFontSize());
         return null;
     }
 

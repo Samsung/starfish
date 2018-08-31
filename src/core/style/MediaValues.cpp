@@ -35,16 +35,7 @@ namespace StarFish {
 // TODO: We should check again whether the existing code is available or not for
 // the computation functions below.
 
-float defaultFontSize(Frame* frame)
-{
-    return frame->document()
-               ->window()
-               ->starFish()
-               ->defaultFontSizeMultiplier() *
-           DEFAULT_FONT_SIZE;
-}
-
-bool computeLengthImpl(double value, UnitType type, float defaultFontSize,
+bool computeLengthImpl(double value, UnitType type, uint32_t defaultFontSize,
                        double viewportWidth, double viewportHeight,
                        double& result)
 {
@@ -95,12 +86,13 @@ bool computeLengthImpl(double value, UnitType type, float defaultFontSize,
 
 bool MediaValues::computeLength(double value, UnitType type, double& result)
 {
-    return computeLength(value, type, defaultFontSize(m_frame), viewportWidth(),
-                         viewportHeight(), result);
+    return computeLength(value, type,
+                         m_frame->document()->starFish()->defaultFontSize(),
+                         viewportWidth(), viewportHeight(), result);
 }
 
 bool MediaValues::computeLength(double value, UnitType type,
-                                float defaultFontSize, double viewportWidth,
+                                uint32_t defaultFontSize, double viewportWidth,
                                 double viewportHeight, double& result)
 {
     double res;

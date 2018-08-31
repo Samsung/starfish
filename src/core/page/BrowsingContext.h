@@ -103,6 +103,8 @@ public:
     void setWholeDocumentNeedsStyleRecalc();
     void setNeedsStyleSheetsRecalc();
 
+    void updateDefaultFontSize();
+
     void setNeedsFrameTreeBuild()
     {
         if (!m_needsFrameTreeBuild) {

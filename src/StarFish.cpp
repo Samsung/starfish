@@ -178,7 +178,7 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
 }
 
 StarFish::StarFish(const char* locale, const char* timezoneID, int w, int h,
-                   float defaultFontSizeMultiplier, String* defaultFontName,
+                   uint32_t defaultFontSize, String* defaultFontName,
                    const ScreenInfo& info, const char* localStorageFilePath,
                    const char* cookieStoreFilePath,
                    const char* httpCacheDirectorypath,
@@ -187,7 +187,7 @@ StarFish::StarFish(const char* locale, const char* timezoneID, int w, int h,
 
     : m_locale(icu::Locale::createFromName(locale))
     , m_timezoneID(String::fromUTF8(timezoneID))
-    , m_defaultFontSizeMultiplier(defaultFontSizeMultiplier)
+    , m_defaultFontSize(defaultFontSize)
     , m_screenScaleRatio(1)
     , m_console(new Console(this))
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
@@ -483,6 +483,16 @@ void StarFish::removePointerFromRootSet(void* ptr)
         } else {
             iter->second--;
         }
+    }
+}
+
+void StarFish::setDefaultFontSize(uint32_t size)
+{
+    m_defaultFontSize = size;
+    if (m_platformWindow->webView()) {
+        m_platformWindow->webView()
+            ->mainBrowsingContext()
+            ->updateDefaultFontSize();
     }
 }
 

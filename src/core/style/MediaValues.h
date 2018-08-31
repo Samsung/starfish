@@ -31,7 +31,7 @@ public:
     }
 
     bool computeLength(double value, UnitType type, double& result);
-    bool computeLength(double value, UnitType type, float defaultFontSize,
+    bool computeLength(double value, UnitType type, uint32_t defaultFontSize,
                        double viewportWidth, double viewportHeight,
                        double& reslt);
 

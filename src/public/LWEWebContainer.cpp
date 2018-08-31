@@ -185,7 +185,7 @@ static StarFish::StarFish* createStarfishInstance(
     info.devicePixelRatio = devicePixelRatio;
 
     StarFish::StarFish* starfish = new StarFish::StarFish(
-        locale, timezoneID, width, height, 1,
+        locale, timezoneID, width, height, DEFAULT_FONT_SIZE,
         StarFish::String::createASCIIString(defaultFontName), info,
         localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath,
         StarFish::String::fromUTF8(customUserAgentString.data()),
@@ -768,6 +768,12 @@ void WebContainer::SetCacheMode(int mode)
         TO_STARFISH(m_starfish)->httpCache()->setCacheMode(mode);
     }
 #endif
+}
+
+void WebContainer::SetDefaultFontSize(uint32_t size)
+{
+    STARFISH_RELEASE_ASSERT(1 <= size && size <= 72);
+    TO_STARFISH(m_starfish)->setDefaultFontSize(size);
 }
 
 void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,

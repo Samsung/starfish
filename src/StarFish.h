@@ -78,7 +78,7 @@ class StarFish : public gc {
     friend class FileURLResourceRequestJobDelegate; // Custom file IO
 public:
     StarFish(const char* locale, const char* timezoneID, int w, int h,
-             float defaultFontSizeMultiplier, String* defaultFontName,
+             uint32_t defaultFontSize, String* defaultFontName,
              const ScreenInfo& info, const char* localStorageFilePath,
              const char* cookieStoreFilePath,
              const char* httpCacheDirectorypath,
@@ -145,11 +145,6 @@ public:
         return m_threadPool;
     }
 
-    float defaultFontSizeMultiplier()
-    {
-        return m_defaultFontSizeMultiplier;
-    }
-
     ScreenInfo& screenInfo()
     {
         return m_screenInfo;
@@ -186,6 +181,12 @@ public:
     {
         m_customUserAgentString = customUserAgentString;
     }
+
+    int defaultFontSize()
+    {
+        return m_defaultFontSize;
+    }
+    void setDefaultFontSize(uint32_t size);
 
     String* builtinPolyfillPathString()
     {
@@ -319,7 +320,7 @@ protected:
     LineBreakIteratorPool* m_lineBreakIteratorPool;
     String* m_timezoneID;
     unsigned int m_startUpFlag;
-    float m_defaultFontSizeMultiplier;
+    int m_defaultFontSize;
     float m_screenScaleRatio;
     StarFishDeviceKind m_deviceKind;
     MessageLoop* m_messageLoop;

@@ -1832,8 +1832,7 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
 
 StyleResolver::StyleResolver(Document* document)
     : DocumentHoldable(document)
-    , m_mediumFontSize(starFish()->defaultFontSizeMultiplier() *
-                       DEFAULT_FONT_SIZE)
+    , m_mediumFontSize(document->starFish()->defaultFontSize())
     , m_styleSheetWithAllRules(nullptr)
     , m_usesFirstLineRule(false)
     , m_mediaQueryEvaluator(nullptr)

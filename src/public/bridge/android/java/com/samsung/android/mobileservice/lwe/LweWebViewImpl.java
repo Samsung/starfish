@@ -100,6 +100,7 @@ public class LweWebViewImpl implements LweWebView{
     private SemDownloadListener mDownloadListener = null;
 
     private int mCacheMode = SemWebSettings.LOAD_DEFAULT;
+    private int mDefaultFontSize;
     private String mDefaultUserAgent = null;
     private String mUserAgentString = null;
     private LweWebViewImpl.ImeComposingStatus mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
@@ -280,6 +281,8 @@ public class LweWebViewImpl implements LweWebView{
     public int getCacheModeValue(){
         return mCacheMode;
     }
+
+    public int getDefaultFontSize() { return mDefaultFontSize; }
 
     class StateChangeListener implements View.OnAttachStateChangeListener {
         @Override
@@ -911,6 +914,7 @@ public class LweWebViewImpl implements LweWebView{
 
         final String UA = mUserAgentString = settings.getUserAgentString();
         final int cacheMode = mCacheMode = settings.getCacheMode();
+        final int defaultFontSize = mDefaultFontSize = settings.getDefaultFontSize();
         if (sWebViewHandler != null) {
             sWebViewHandler.post(new Runnable() {
                 @Override
@@ -918,6 +922,7 @@ public class LweWebViewImpl implements LweWebView{
                     if (mWebViewInternalHandle != 0) {
                         setUserAgentString(mWebViewInternalHandle, UA);
                         setCacheMode(mWebViewInternalHandle, cacheMode);
+                        setDefaultFontSize(mWebViewInternalHandle, defaultFontSize);
                     }
                 }
             });
@@ -969,6 +974,7 @@ public class LweWebViewImpl implements LweWebView{
     native private String getDefaultUserAgent();
     native private void setUserAgentString(long starFish, String userAgent);
     native private void setCacheMode(long starFish, int mode);
+    native private void setDefaultFontSize(long starFish, int size);
     static native private void init();
     static native private void updateBuffer(long starFish, Bitmap b, int w, int h, int stride);
     static native private boolean serviceQueueTimer(int uid, int fn, int data);

@@ -156,7 +156,8 @@ void FrameInputBox::layout(LayoutContext& ctx,
         bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
         if (style()->width().isAuto() || style()->height().isAuto() ||
             !style()->height().isDefinite(parentHasFixedHeight)) {
-            fontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
+            fontSize = Length(Length::Fixed,
+                              document()->starFish()->defaultFontSize());
         } else {
             LayoutUnit parentContentHeight;
             if (parentHasFixedHeight) {
