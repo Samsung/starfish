@@ -46,6 +46,7 @@ public class SemWebSettings {
 
 
     private int mCacheMode = LOAD_DEFAULT;
+    private int mDefaultFontSize = 16;
     private String mDefaultUserAgent = null;
     private String mUserAgentString = null;
 
@@ -56,12 +57,15 @@ public class SemWebSettings {
      * @param dua Default user agent
      * @param ua User agent
      * @param cacheMode Cache mode
+     * @param defaultFontSize default font size
      * @since Lightweight Web Engine 1.0
      */
-    SemWebSettings(String dua, String ua, int cacheMode) {
+    SemWebSettings(String dua, String ua, int cacheMode, int defaultFontSize) {
+
         mDefaultUserAgent = dua;
         mUserAgentString = ua;
         setCacheMode(cacheMode);
+        setDefaultFontSize(defaultFontSize);
     }
 
     /**
@@ -116,6 +120,27 @@ public class SemWebSettings {
     public void setCacheMode(int mode) {
         if (mode == LOAD_DEFAULT || mode == LOAD_NO_CACHE) {
             mCacheMode = mode;
+        }
+    }
+
+    /**
+     * Gets the WebView's default font size.
+     *
+     * @return Gets the WebView's default font size.
+     * @since Lightweight Web Engine 1.0
+     */
+    public int getDefaultFontSize() {
+        return mDefaultFontSize;
+    }
+
+    /**
+     * Sets the WebView's default font size.
+     * @param size A non-negative integer between 1 and 72. Any number outside the specified range will be pinned.
+     * @since Lightweight Web Engine 1.0
+     */
+    public void setDefaultFontSize(int size) {
+        if (1<= size && size <= 72) {
+            mDefaultFontSize = size;
         }
     }
 

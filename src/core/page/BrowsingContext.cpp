@@ -729,6 +729,16 @@ void BrowsingContext::setNeedsStyleSheetsRecalc()
     registerNeedsLayoutInWebView();
 }
 
+void BrowsingContext::updateDefaultFontSize()
+{
+    auto doc = document();
+    doc->setStyle(doc->styleResolver().resolveDocumentStyle(doc));
+    setNeedsStyleSheetsRecalc();
+
+    iterateChildContext(
+        [](BrowsingContext* ctx) { ctx->updateDefaultFontSize(); });
+}
+
 Node* BrowsingContext::hitTest(float x, float y)
 {
     webView()->layoutIfNeeds();

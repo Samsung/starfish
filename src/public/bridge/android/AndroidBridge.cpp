@@ -1097,6 +1097,14 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_setCacheMode(
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_setDefaultFontSize(
+    JNIEnv* env, jobject thiz, jlong wv, jint size)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    webContainer->SetDefaultFontSize(size);
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_clearCache(
     JNIEnv* env, jobject thiz, jlong wv)
 {

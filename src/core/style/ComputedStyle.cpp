@@ -667,7 +667,8 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     }
 
     Length curFontSize = fontSize();
-    Length rootFontSize = Length(Length::Fixed, DEFAULT_FONT_SIZE);
+    Length rootFontSize = Length(
+        Length::Fixed, current->document()->starFish()->defaultFontSize());
     HTMLHtmlElement* root = current->document()->rootElement();
     if (root && root->style()) {
         rootFontSize = root->style()->fontSize();
