@@ -83,11 +83,6 @@ public:
         return m_height;
     }
 
-    virtual void* unwrap() override
-    {
-        return nullptr;
-    }
-
     virtual void resizeTo(int w, int h) override
     {
         if (w != (int)m_width || h != (int)m_height) {

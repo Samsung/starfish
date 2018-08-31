@@ -91,11 +91,6 @@ public:
         }
     }
 
-    virtual void* unwrap() override
-    {
-        return nullptr;
-    }
-
     virtual void* drawingBufferAddress() override
     {
         return m_internalBuffer;

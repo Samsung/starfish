@@ -1014,12 +1014,6 @@ public:
     {
     }
 
-    virtual void* unwrap()
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return NULL;
-    }
-
     CanvasStateSkia& lastState()
     {
         STARFISH_ASSERT(m_state.size());

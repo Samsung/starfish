@@ -1159,8 +1159,8 @@ public:
                         m_textureFragmentsFlags[fragmentIndex].m_isDirty = true;
 
                         auto left = std::max(tRect.x(), dRect.x());
-                        auto right = std::min(tRect.maxX(), dRect.maxX());
-                        auto bottom = std::min(tRect.maxY(), dRect.maxY());
+                        auto right = std::min(tRect.maxX(), dRect.maxX() + 1);
+                        auto bottom = std::min(tRect.maxY(), dRect.maxY() + 1);
                         auto top = std::max(tRect.y(), dRect.y());
 
                         left -= textureDataX;

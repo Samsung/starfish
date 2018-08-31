@@ -31,6 +31,10 @@
 #include <Elementary.h>
 #include <EscargotPublic.h>
 
+#ifndef PORT_WEBVIEW_BRIDGE_EFL
+#error "You must need PORT_WEBVIEW_BRIDGE_EFL to use this"
+#endif
+
 namespace StarFish {
 
 using namespace Escargot;
@@ -198,8 +202,12 @@ void Avplay::open(String* url)
         printNativePlayerError(ret);
     }
 
-    player_display_h display_handle =
-        GET_DISPLAY(((Evas_Object*)starFish()->platformWindow()->unwrap()));
+    Evas_Object* wndObject =
+        (Evas_Object*)starFish()->publicLayerUserDataMap()
+            ["__internalLWEWebViewEFLNativeWindowEvasObject"];
+    STARFISH_RELEASE_ASSERT(wndObject);
+
+    player_display_h display_handle = GET_DISPLAY(wndObject);
     player_display_type_e display_type = PLAYER_DISPLAY_TYPE_OVERLAY;
     player_display_mode_e display_mode = PLAYER_DISPLAY_MODE_DST_ROI;
     player_set_display(m_nativePlayer, (player_display_type_e)display_type,

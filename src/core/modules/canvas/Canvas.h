@@ -328,8 +328,6 @@ public:
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
-    virtual void* unwrap() = 0;
-
     CanvasRenderTargetInfo& renderTargetInfo()
     {
         return m_renderTargetInfo;

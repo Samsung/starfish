@@ -38,6 +38,10 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
+#ifndef PORT_WEBVIEW_BRIDGE_EFL
+#error "You must need PORT_WEBVIEW_BRIDGE_EFL to use this"
+#endif
+
 #include <Evas.h>
 
 namespace StarFish {
@@ -398,7 +402,10 @@ public:
     CanvasSurfaceVideo(PlatformWindow* wnd)
     {
         m_buffer = (uint8_t*)malloc(4);
-        Evas_Object* wndObject = (Evas_Object*)wnd->unwrap();
+        Evas_Object* wndObject =
+            (Evas_Object*)wnd->starFish()->publicLayerUserDataMap()
+                ["__internalLWEWebViewEFLNativeWindowEvasObject"];
+        STARFISH_RELEASE_ASSERT(wndObject);
         m_imageObject =
             evas_object_image_filled_add(evas_object_evas_get(wndObject));
         evas_object_data_set(m_imageObject, "video", "1");

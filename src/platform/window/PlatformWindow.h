@@ -71,7 +71,6 @@ public:
         STARFISH_LOG_INFO("PlatformWindow::resizeTo %d %d\n", w, h);
         onResize();
     }
-    virtual void* unwrap() = 0;
     virtual void clearResources();
     void setNeedsRendering();
     virtual Canvas* preparePainting() = 0;
