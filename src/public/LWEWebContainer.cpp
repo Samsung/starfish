@@ -494,8 +494,9 @@ void WebContainer::Destroy()
 
     GC_FREE(this);
 
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
+    // do implicit calling GC funciton takes a lots time
+    // we should remove this if possible
+    GC_gcollect();
     GC_gcollect_and_unmap();
 }
 

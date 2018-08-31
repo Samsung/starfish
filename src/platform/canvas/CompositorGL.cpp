@@ -785,6 +785,10 @@ public:
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
 
             m_buffer = nullptr;
+            m_width = 0;
+            m_height = 0;
+            m_imageWidth = m_bufferWidth = m_width = 0;
+            m_imageHeight = m_bufferHeight = m_height = 0;
 
             STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
                               g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
