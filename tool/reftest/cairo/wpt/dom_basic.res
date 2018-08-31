@@ -204,7 +204,7 @@ http://10.113.111.47:8000/dom/nodes/getElementsByClassName-21.htm
 #http://10.113.111.47:8000/dom/nodes/Document-createElement-namespace-tests/xhtml_ns_changed.html
 #http://10.113.111.47:8000/dom/nodes/Document-createElement-namespace-tests/empty.html
 #http://10.113.111.47:8000/dom/nodes/Document-createElement-namespace-tests/bare_mathml.html
-#http://10.113.111.47:8000/dom/nodes/Element-hasAttributes.html
+http://10.113.111.47:8000/dom/nodes/Element-hasAttributes.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-30.htm
 http://10.113.111.47:8000/dom/nodes/CharacterData-substringData.html
 http://10.113.111.47:8000/dom/nodes/Element-childElement-null.html
