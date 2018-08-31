@@ -183,12 +183,6 @@ public:
     {
     }
 
-    virtual void* unwrap()
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        return nullptr;
-    }
-
     virtual void resetMatrixAndClip()
     {
     }

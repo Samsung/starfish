@@ -150,7 +150,7 @@ public:
 #endif
     }
 
-    virtual void* internalSurface()
+    virtual void* unwrap()
     {
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
         return m_imageSurface;
@@ -158,11 +158,6 @@ public:
 #if defined(PORT_CANVAS_BACKEND_SKIA)
         return nullptr;
 #endif
-    }
-
-    virtual void* unwrap()
-    {
-        return nullptr;
     }
 
     virtual size_t width()

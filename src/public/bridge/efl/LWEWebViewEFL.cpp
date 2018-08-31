@@ -799,6 +799,9 @@ public:
 
         m_hideKeyboardTimeoutId = m_keyboardTimeoutId = SIZE_MAX;
         m_impl = webContainer;
+
+        webContainer->SetUserData(
+            "__internalLWEWebViewEFLNativeWindowEvasObject", win);
     }
 
     virtual void Destroy() override

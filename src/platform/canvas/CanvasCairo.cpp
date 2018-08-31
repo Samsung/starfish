@@ -551,7 +551,7 @@ public:
         size_t surfaceWidth = data->width(), surfaceHeight = data->height();
 
         bool surfaceWasCreated = false;
-        cairo_surface_t* image = (cairo_surface_t*)data->internalSurface();
+        cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
         if (!image) {
             surfaceWasCreated = true;
             image = cairo_image_surface_create_for_data(
@@ -595,7 +595,7 @@ public:
         }
 
         bool surfaceWasCreated = false;
-        cairo_surface_t* srcImage = (cairo_surface_t*)data->internalSurface();
+        cairo_surface_t* srcImage = (cairo_surface_t*)data->unwrap();
         if (!srcImage) {
             surfaceWasCreated = true;
             srcImage = cairo_image_surface_create_for_data(
@@ -723,7 +723,7 @@ public:
         cairo_pattern_t* pattern;
         cairo_matrix_t matrix;
 
-        cairo_surface_t* image = (cairo_surface_t*)data->internalSurface();
+        cairo_surface_t* image = (cairo_surface_t*)data->unwrap();
 
         bool surfaceWasCreated = false;
         if (!image) {
@@ -994,12 +994,6 @@ public:
     virtual void setDash(double* dashes, int dashCnt, double offset)
     {
         cairo_set_dash(m_canvas, dashes, dashCnt, offset);
-    }
-
-    virtual void* unwrap()
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        return NULL;
     }
 
     CanvasStateCairo& lastState()

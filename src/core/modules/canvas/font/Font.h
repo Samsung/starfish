@@ -110,11 +110,6 @@ public:
 
     virtual LayoutUnit measureText(const StringView& sv) = 0;
 
-    virtual void* unwrap()
-    {
-        return nullptr;
-    }
-
     float spaceWidth()
     {
         return m_spaceWidth;

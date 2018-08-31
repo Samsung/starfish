@@ -59,11 +59,6 @@ public:
         return size() * str.length();
     }
 
-    virtual void* unwrap()
-    {
-        return nullptr;
-    }
-
 protected:
 };
 
