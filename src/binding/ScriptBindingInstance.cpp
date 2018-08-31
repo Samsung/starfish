@@ -399,17 +399,29 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
             true, false, true,                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data) -> ValueRef* { \
-                return fetchDocument(state->context())                         \
+                Document* document;                                            \
+                if (self->isGlobalObject() && self->extraData()) {             \
+                    document = ((Window*)self->extraData())->document();       \
+                } else {                                                       \
+                    document = fetchDocument(state->context());                \
+                }                                                              \
+                return document                                                \
                     ->scriptBindingInstance()                                  \
                     ->value##exportName();                                     \
             },                                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data,                \
                ValueRef* setterInputData) -> bool {                            \
-                fetchDocument(state->context())                                \
+                Document* document;                                            \
+                if (self->isGlobalObject() && self->extraData()) {             \
+                    document = ((Window*)self->extraData())->document();       \
+                } else {                                                       \
+                    document = fetchDocument(state->context());                \
+                }                                                              \
+                document                                                       \
                     ->scriptBindingInstance()                                  \
                     ->value##exportName();                                     \
-                fetchDocument(state->context())                                \
+                document                                                       \
                     ->scriptBindingInstance()                                  \
                     ->m_value##exportName = setterInputData;                   \
                 return true;                                                   \
