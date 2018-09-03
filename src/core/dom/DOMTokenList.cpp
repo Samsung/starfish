@@ -66,7 +66,10 @@ void DOMTokenList::tokenize(String* src, GCVector<StringView>& tokens)
             if (String::isSpaceOrNewline(ch) && !inQuotationMarks) {
                 if (!inParenthesis) {
                     isWhiteSpaceState = true;
-                    tokens.emplace_back(src, start, end);
+                    StringView token(src, start, end);
+                    if (!checkDuplicatedToken(tokens, token)) {
+                        tokens.push_back(token);
+                    }
                     end = start = i;
                 }
             } else {
@@ -76,7 +79,10 @@ void DOMTokenList::tokenize(String* src, GCVector<StringView>& tokens)
     }
 
     if (end - start) {
-        tokens.emplace_back(src, start, end);
+        StringView token(src, start, end);
+        if (!checkDuplicatedToken(tokens, token)) {
+            tokens.push_back(token);
+        }
     }
 }
 
@@ -111,6 +117,17 @@ void DOMTokenList::concatTokensInsideParentheses(GCVector<String*>* tokens)
         tokens->clear();
         tokens->assign(newTokens.begin(), newTokens.end());
     }
+}
+
+bool DOMTokenList::checkDuplicatedToken(GCVector<StringView>& tokens,
+                                        StringView token)
+{
+    for (unsigned i = 0; i < tokens.size(); i++) {
+        if (token.identicalCharacters(tokens[i])) {
+            return true;
+        }
+    }
+    return false;
 }
 
 uint32_t DOMTokenList::length()

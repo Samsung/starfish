@@ -1041,6 +1041,19 @@ public:
         return m_end - m_start;
     }
 
+    bool identicalCharacters(StringView& other) const
+    {
+        if (length() != other.length()) {
+            return false;
+        }
+        for (unsigned i = 0; i < length(); i++) {
+            if (charAt(i) != other.charAt(i)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
     virtual StringBufferAccessData bufferAccessData() const
     {
         auto srcData = m_string->bufferAccessData();
