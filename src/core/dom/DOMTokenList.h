@@ -44,6 +44,8 @@ public:
 
     static void tokenize(String* src, GCVector<StringView>& tokens);
     static void concatTokensInsideParentheses(GCVector<String*>* tokens);
+    static bool checkDuplicatedToken(GCVector<StringView>& tokens,
+                                     StringView token);
     uint32_t length();
     Nullable<String*> item(unsigned long index);
     bool contains(String* token);

@@ -104,7 +104,7 @@ http://10.113.111.47:8000/dom/lists/DOMTokenList-stringifier.html
 #http://10.113.111.47:8000/dom/lists/DOMTokenList-Iterable.html
 #http://10.113.111.47:8000/dom/lists/DOMTokenList-iteration.html
 #http://10.113.111.47:8000/dom/lists/DOMTokenList-coverage-for-attributes.html
-#http://10.113.111.47:8000/dom/lists/DOMTokenList-value.html
+http://10.113.111.47:8000/dom/lists/DOMTokenList-value.html
 #http://10.113.111.47:8000/dom/historical.html
 #http://10.113.111.47:8000/dom/nodes/MutationObserver-childList.html
 http://10.113.111.47:8000/dom/nodes/Node-parentNode.html
