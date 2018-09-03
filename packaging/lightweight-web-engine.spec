@@ -17,7 +17,7 @@
 # USA
 
 Name:          lightweight-web-engine
-Summary:       Lightweight Web Engine
+Summary:       Lightweight Web Engine for Tizen
 Version:       0.0.1
 Release:       0
 Group:         Development/Libraries
@@ -25,6 +25,8 @@ License:       LGPL-2.1+ and Apache-2.0 and BSD-2-Clause and BSD-3-Clause and BS
 Source:        %{name}-%{version}.tar.gz
 ExclusiveArch: %arm
 
+Requires(post): /sbin/ldconfig
+Requires(postun): /sbin/ldconfig
 
 # RPM ref: http://backreference.org/2011/09/17/some-tips-on-rpm-conditional-macros/
 
@@ -94,8 +96,12 @@ BuildRequires: giflib-devel
 BuildRequires: pkgconfig(bundle)
 %endif
 
+# Supporting multiprofiles
+Requires: %{name}-compat = %{version}-%{release}
+#Recommends: %{name}-profile_common = %{version}-%{release}
+
 %description
-Implementation of Lightweight Web Engine
+This package provides a Tizen specific implementation of Lightweight Web Engine.
 
 
 ##############################################
@@ -103,57 +109,76 @@ Implementation of Lightweight Web Engine
 ##############################################
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %package profile_tv
-Summary: lightweight-web-engine for tv
+Summary:     Lightweight Web Engine for tv
+Provides:    %{name}-compat = %{version}-%{release}
+Conflicts:   %{name}-profile_mobile = %{version}-%{release}
+Conflicts:   %{name}-profile_wearable = %{version}-%{release}
 %description profile_tv
-lightweight-web-engine for tv
+Lightweight Web Engine for tv
 %endif
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %package profile_mobile
-Summary: lightweight-web-engine for mobile
+Summary:     Lightweight Web Engine for mobile
+Provides:    %{name}-compat = %{version}-%{release}
+Conflicts:   %{name}-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-profile_wearable = %{version}-%{release}
 %description profile_mobile
-lightweight-web-engine for mobile
+Lightweight Web Engine for mobile
 %endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %package profile_wearable
-Summary: lightweight-web-engine for wearable
+Summary:     Lightweight Web Engine for wearable
+Provides:    %{name}-compat = %{version}-%{release}
+Conflicts:   %{name}-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-profile_mobile = %{version}-%{release}
 %description profile_wearable
-lightweight-web-engine for wearable
+Lightweight Web Engine for wearable
 %endif
 
+%package devel
+Summary:     Development files for Lightweight Web Engine
+Group:       Development/Libraries
+Requires:    %{name} = %{version}
+Requires:    %{name}-compat-devel = %{version}-%{release}
+%description devel
+Development files for Lightweight Web Engine. This package provides
+headers and package configs.
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %package devel-profile_tv
-Summary: Devel files for lightweight-web-engine for tv
+Summary:     Development files for Lightweight Web Engine for tv
+Provides:    %{name}-compat-devel = %{version}-%{release}
+Conflicts:   %{name}-devel-profile_mobile = %{version}-%{release}
+Conflicts:   %{name}-devel-profile_wearable = %{version}-%{release}
 %description devel-profile_tv
-Devel files for lightweight-web-engine for tv
+Development files for Lightweight Web Engine for tv. This package provides
+an standalone executable binary for tv.
 %endif
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %package devel-profile_mobile
-Summary: Devel files for lightweight-web-engine for mobile
+Summary:     Development files for Lightweight Web Engine for mobile
+Provides:    %{name}-compat-devel = %{version}-%{release}
+Conflicts:   %{name}-devel-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-devel-profile_wearable = %{version}-%{release}
 %description devel-profile_mobile
-Devel files for lightweight-web-engine for mobile
+Development files for Lightweight Web Engine for tv. This package provides
+an standalone executable binary for mobile.
 %endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %package devel-profile_wearable
-Summary: Devel files for lightweight-web-engine for wearable
+Summary:     Development files for Lightweight Web Engine for wearable
+Provides:    %{name}-compat-devel = %{version}-%{release}
+Conflicts:   %{name}-devel-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-devel-profile_mobile = %{version}-%{release}
 %description devel-profile_wearable
-Devel files for lightweight-web-engine for wearable
+Development files for Lightweight Web Engine for tv. This package provides
+an standalone executable binary for wearable.
 %endif
 
-
-##############################################
-# Devel
-##############################################
-%package devel
-Summary:    lightweight-web-engine development headers
-Group:      Development/Libraries
-Requires:   %{name} = %{version}
-%description devel
-lightweight-web-engine development headers
 
 ##############################################
 # Prep
@@ -292,7 +317,7 @@ for FILE in `ls lwe/tv/*.so | grep -v 'tv.so'`; do
     ln -sf "$FILE" .
 done
 ln -sf lwe/tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so
-ln -sf lwe/tv/liblightwegith-web-engine-dali-plugin.tv.so liblightwegith-web-engine-dali-plugin.so
+ln -sf lwe/tv/liblightweight-web-engine-dali-plugin.tv.so liblightweight-web-engine-dali-plugin.so
 popd
 
 pushd %{_bindir}
@@ -308,8 +333,8 @@ pushd %{_libdir}
 for FILE in `ls lwe/mobile/*.so | grep -v 'mobile.so'`; do
    ln -sf "$FILE" .
 done
-ln -sf lwe/tv/liblightweight-web-engine.mobile.so liblightweight-web-engine.so
-ln -sf lwe/tv/liblightwegith-web-engine-dali-plugin.mobile.so liblightwegith-web-engine-dali-plugin.so
+ln -sf lwe/mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so
+ln -sf lwe/mobile/liblightweight-web-engine-dali-plugin.mobile.so liblightweight-web-engine-dali-plugin.so
 popd
 
 pushd %{_bindir}
@@ -325,8 +350,8 @@ pushd %{_libdir}
 for FILE in `ls lwe/wearable/*.so | grep -v 'wearable.so'`; do
     ln -sf "$FILE" .
 done
-ln -sf lwe/tv/liblightweight-web-engine.wearable.so liblightweight-web-engine.so
-ln -sf lwe/tv/liblightwegith-web-engine-dali-plugin.wearable.so liblightwegith-web-engine-dali-plugin.so
+ln -sf lwe/wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so
+ln -sf lwe/wearable/liblightweight-web-engine-dali-plugin.wearable.so liblightweight-web-engine-dali-plugin.so
 popd
 
 pushd %{_bindir}
@@ -348,46 +373,41 @@ exit 0
 %files profile_tv
 %manifest %{name}.manifest
 %{_libdir}/lwe/tv/*.so
-%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
 %endif
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %files profile_mobile
 %manifest %{name}.manifest
 %{_libdir}/lwe/mobile/*.so
-%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
 %endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %files profile_wearable
 %manifest %{name}.manifest
 %{_libdir}/lwe/wearable/*.so
-%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
-%endif
-
-
-%if "%{rpm}" == "tv" || "%{rpm}" == "all"
-%files devel-profile_tv
-%{_includedir}
-%{_bindir}/lightweight-web-engine.tv
-%{_libdir}/pkgconfig/*.pc
-%endif
-
-%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
-%files devel-profile_mobile
-%{_includedir}
-%{_bindir}/lightweight-web-engine.mobile
-%{_libdir}/pkgconfig/*.pc
-%endif
-
-%if "%{rpm}" == "wearable" || "%{rpm}" == "all"
-%files devel-profile_wearable
-%{_includedir}
-%{_bindir}/lightweight-web-engine.wearable
-%{_libdir}/pkgconfig/*.pc
 %endif
 
 %files devel
 %{_includedir}
 %{_libdir}/pkgconfig/*.pc
 
+%if "%{rpm}" == "tv" || "%{rpm}" == "all"
+%files devel-profile_tv
+#%{_includedir}
+%{_bindir}/lightweight-web-engine.tv
+#%{_libdir}/pkgconfig/*.pc
+%endif
+
+%if "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%files devel-profile_mobile
+#%{_includedir}
+%{_bindir}/lightweight-web-engine.mobile
+#%{_libdir}/pkgconfig/*.pc
+%endif
+
+%if "%{rpm}" == "wearable" || "%{rpm}" == "all"
+%files devel-profile_wearable
+#%{_includedir}
+%{_bindir}/lightweight-web-engine.wearable
+#%{_libdir}/pkgconfig/*.pc
+%endif
