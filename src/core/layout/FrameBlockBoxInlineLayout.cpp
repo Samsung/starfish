@@ -2363,7 +2363,17 @@ bool LineFormattingContext::canInsertToLineBox(FrameBox* f, LayoutUnit width)
         LayoutUnit remainedWidth = fbCtx.m_originalLineBoxWidth -
                                    fbCtx.m_accumulatedLeftFloatingBoxWidth -
                                    fbCtx.m_accumulatedRightFloatingBoxWidth;
-        if (fbCtx.m_y == 0) {
+
+        // if (there is no float left and right boxes side &&
+        // there is no content in linebox) {
+        // we should insert float box into linebox
+        // }
+        if (m_currentLineWidth == 0 &&
+            (m_block->contentWidth() == fbCtx.m_originalLineBoxWidth) &&
+            fbCtx.m_accumulatedLeftFloatingBoxWidth == 0 &&
+            fbCtx.m_accumulatedRightFloatingBoxWidth == 0) {
+            return true;
+        } else if (fbCtx.m_y == 0) {
             return width <= (remainedWidth - m_currentLineWidth -
                              m_unprocessedStartingMBPWidth);
         } else {

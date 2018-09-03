@@ -66,7 +66,6 @@
 #include "core/layout/svg/FrameSVGSVGBox.h"
 
 namespace StarFish {
-void dump(Frame* frm, unsigned depth);
 
 FrameTreeBuilderContext::FrameTreeBuilderContext(
     FrameBlockBox* currentBlockContainer)
