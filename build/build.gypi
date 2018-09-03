@@ -40,7 +40,7 @@
         # NOTE: specific #defines for each profile
         # e.g., defines used by the compiler = 'defines_tizen' + 'defines_unified_tv'
         'defines_unified_mobile': [
-            'STARFISH_ENABLE_MULTIMEDIA',
+            #'STARFISH_ENABLE_MULTIMEDIA',
         ],
         'defines_unified_tv': [
             #'STARFISH_ENABLE_MULTIMEDIA',
@@ -130,7 +130,7 @@
         'variables': {
             'variables': {
                 'component%': 'static_library',
-                'backend%': 'efl_cairo',
+                'backend%': 'gl',
                 'platform%': 'linux',
                 'profile%': 'none',
                 'touchUi%': '1',
@@ -204,7 +204,7 @@
                         '-lcapi-location-manager',
                     ],
                 }],
-                ['backend=="efl_cairo"', {
+                ['backend=="gl"', {
                     'cflags_extra': [
                     ],
                     'include_dirs_extra': [
@@ -300,7 +300,7 @@
                     './build.dep.gyp:skia_matrix',
                 ],
             }],
-            ['platform=="linux" and backend=="efl_cairo"', {
+            ['platform=="linux" and backend=="gl"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO',
                 ],
@@ -355,7 +355,7 @@
                     './build.dep.gyp:skia_matrix',
                 ],
             }],
-            ['platform=="tizen" and backend=="efl_cairo"', {
+            ['platform=="tizen" and backend=="gl"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO',
                 ],
