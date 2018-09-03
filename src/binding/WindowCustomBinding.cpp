@@ -543,6 +543,14 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
 
         STARFISH_LOG_ERROR("%s\n", "[FAIL]testImgDiff fail");
 
+        puts("error html -->");
+        puts(window->document()
+                 ->body()
+                 ->parentElement()
+                 ->outerHTML()
+                 ->toUTF8NonGCString()
+                 .data());
+        puts("<--- error html");
         customExit(-1);
     }
 
