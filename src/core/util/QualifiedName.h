@@ -89,6 +89,38 @@ public:
         return m_localName;
     }
 
+    bool hasSameLocalName(const char* str) const
+    {
+        if (m_localName.string()) {
+            return m_localName.string()->equals(str);
+        }
+        return false;
+    }
+
+    bool hasSameLocalName(String* str) const
+    {
+        if (m_localName.string()) {
+            return m_localName.string()->equals(str);
+        }
+        return false;
+    }
+
+    bool hasSameLocalName(Nullable<String*> str) const
+    {
+        if (m_localName.string()) {
+            if (str.hasValue()) {
+                return m_localName.string()->equals(str.getValue());
+            } else {
+                return false;
+            }
+        } else {
+            if (str.hasValue()) {
+                return false;
+            }
+            return true;
+        }
+    }
+
     bool hasPrefix() const
     {
         return m_prefix.string() != nullptr;
@@ -113,6 +145,38 @@ public:
     void copyPrefixFrom(const QualifiedName& other)
     {
         m_prefix = other.m_prefix;
+    }
+
+    bool hasSamePrefix(const char* str) const
+    {
+        if (m_prefix.string()) {
+            return m_prefix.string()->equals(str);
+        }
+        return false;
+    }
+
+    bool hasSamePrefix(String* str) const
+    {
+        if (m_prefix.string()) {
+            return m_prefix.string()->equals(str);
+        }
+        return false;
+    }
+
+    bool hasSamePrefix(Nullable<String*> str) const
+    {
+        if (m_prefix.string()) {
+            if (str.hasValue()) {
+                return m_prefix.string()->equals(str.getValue());
+            } else {
+                return false;
+            }
+        } else {
+            if (str.hasValue()) {
+                return false;
+            }
+            return true;
+        }
     }
 
     Nullable<AtomicString> namespaceURI() const

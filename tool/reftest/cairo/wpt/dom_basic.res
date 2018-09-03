@@ -191,7 +191,7 @@ http://10.113.111.47:8000/dom/nodes/Node-contains.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-01.htm
 http://10.113.111.47:8000/dom/nodes/rootNode.html
 http://10.113.111.47:8000/dom/nodes/Element-childElementCount.html
-#http://10.113.111.47:8000/dom/nodes/Node-lookupNamespaceURI.html
+http://10.113.111.47:8000/dom/nodes/Node-lookupNamespaceURI.html
 http://10.113.111.47:8000/dom/nodes/Text-constructor.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-21.htm
 #http://10.113.111.47:8000/dom/nodes/Document-createElement-namespace-tests/xhtml.html
