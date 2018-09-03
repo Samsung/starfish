@@ -350,12 +350,13 @@ public class LweWebViewImpl implements LweWebView{
                 sWebViewThread.start();
             }
         }
-        synchronized(initLock) {
-            try{
-                initLock.wait();
-            }catch(Exception e){}
+        if(sWebViewThread==null){
+            synchronized(initLock) {
+                try {
+                    initLock.wait();
+                } catch (Exception e) {}
+            }
         }
-
 
         mLWEView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
