@@ -351,6 +351,14 @@ int main(int argc, char* argv[])
     };
     evas_object_event_callback_add(wndObj, EVAS_CALLBACK_FOCUS_IN,
                                    focusInHandler, webView);
+
+    auto destroyHandler = [](void* data, Evas* e, Evas_Object* obj,
+                             void* event_info) {
+        LWE::WebView* wv = (LWE::WebView*)data;
+        wv->Destroy();
+    };
+    evas_object_event_callback_add(wndObj, EVAS_CALLBACK_DEL, destroyHandler,
+                                   webView);
 #endif
 
 #if defined(PORT_EVENTLOOP_BACKEND_EFL) && \
@@ -393,7 +401,9 @@ int main(int argc, char* argv[])
 #endif
 
     webView->RunMessageLoop();
+#ifndef PORT_WEBVIEW_BRIDGE_EFL
     webView->Destroy();
+#endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     elm_shutdown();
