@@ -744,22 +744,17 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        if (!m_window->isClosed())
-            m_window->glMakeCurrent();
+        m_window->glMakeCurrent();
         if (m_isEGLImageExternal && m_textureFragments.size()) {
 #if defined(STARFISH_TIZEN)
-            if (!m_window->isClosed()) {
-                g_evasGLAPI->evasglDestroyImage(m_eglImage);
-            }
+            g_evasGLAPI->evasglDestroyImage(m_eglImage);
 
             m_eglImage = nullptr;
             tbm_surface_destroy(m_tbmSurface);
             m_tbmSurface = nullptr;
 #elif defined(STARFISH_ANDROID)
-            if (!m_window->isClosed()) {
-                EGLDisplay display = eglGetCurrentDisplay();
-                eglDestroyImageKHR(display, m_eglImage);
-            }
+            EGLDisplay display = eglGetCurrentDisplay();
+            eglDestroyImageKHR(display, m_eglImage);
 
             m_eglImage = nullptr;
             AHardwareBuffer_release(m_aHardwareBuffer);
@@ -772,12 +767,11 @@ public:
                 free(m_buffer);
             }
 
-            if (!m_window->isClosed()) {
-                for (size_t i = 0; i < m_textureFragments.size(); i++) {
-                    GLuint id = m_textureFragments[i].textureID;
-                    glDeleteTextures(1, &id);
-                }
+            for (size_t i = 0; i < m_textureFragments.size(); i++) {
+                GLuint id = m_textureFragments[i].textureID;
+                glDeleteTextures(1, &id);
             }
+
             m_textureFragments.clear();
             m_textureFragmentsFlags.clear();
             m_dirtyAreaTextureFragments.clear();

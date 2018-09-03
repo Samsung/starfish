@@ -179,16 +179,6 @@ public:
     virtual void resume();
     virtual void close();
 
-    bool isClosed()
-    {
-        return m_isClosed;
-    }
-
-    void setClosed()
-    {
-        m_isClosed = true;
-    }
-
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     template <typename T>
     void paintVirtualCursor(T canvas);
@@ -220,7 +210,6 @@ public:
 protected:
     PlatformWindow(StarFish* starFish);
 
-    bool m_isClosed;
     StarFish* m_starFish;
     WebView* m_webView;
     size_t m_renderingAnimator;

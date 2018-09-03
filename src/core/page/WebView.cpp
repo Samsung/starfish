@@ -824,9 +824,7 @@ void WebView::addDidRenderingCallback(BrowsingContext* ctx,
 void WebView::setNeedsRendering()
 {
     auto wnd = starFish()->platformWindow();
-    if (UNLIKELY(wnd->isClosed())) {
-        return;
-    }
+
     m_needsRendering = true;
     wnd->setNeedsRendering();
 }

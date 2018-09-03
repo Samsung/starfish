@@ -46,8 +46,7 @@ bool g_forceRendering = false;
 namespace StarFish {
 
 PlatformWindow::PlatformWindow(StarFish* starFish)
-    : m_isClosed(false)
-    , m_starFish(starFish)
+    : m_starFish(starFish)
     , m_webView(nullptr)
     , m_renderingAnimator(SIZE_MAX)
     , m_compostiorContext(nullptr)
@@ -85,7 +84,6 @@ void PlatformWindow::resume()
 void PlatformWindow::close()
 {
     STARFISH_LOG_INFO("PlatformWindow::close()\n");
-    m_isClosed = true;
     clearResources();
     if (m_idleCleanerTimerID != SIZE_MAX) {
         starFish()->timer()->removeTimer(m_idleCleanerTimerID);
