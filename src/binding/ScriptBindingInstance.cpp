@@ -405,9 +405,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
                 } else {                                                       \
                     document = fetchDocument(state->context());                \
                 }                                                              \
-                return document                                                \
-                    ->scriptBindingInstance()                                  \
-                    ->value##exportName();                                     \
+                return document->scriptBindingInstance()->value##exportName(); \
             },                                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data,                \
@@ -418,12 +416,9 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
                 } else {                                                       \
                     document = fetchDocument(state->context());                \
                 }                                                              \
-                document                                                       \
-                    ->scriptBindingInstance()                                  \
-                    ->value##exportName();                                     \
-                document                                                       \
-                    ->scriptBindingInstance()                                  \
-                    ->m_value##exportName = setterInputData;                   \
+                document->scriptBindingInstance()->value##exportName();        \
+                document->scriptBindingInstance()->m_value##exportName =       \
+                    setterInputData;                                           \
                 return true;                                                   \
             });                                                                \
     globalObject->defineNativeDataAccessorProperty(                            \

@@ -3546,7 +3546,7 @@ SkMatrix FrameBox::computeScreenMatrix()
             }
 
             LayoutLocation pos;
-            if (fBox == this || (fBox->layoutParent() == nullptr)) {
+            if (fBox == this) {
                 pos = fBox->absolutePoint(lastParentBox);
             } else if (fBox->isFrameDocument()) {
                 pos = fBox->absolutePoint(lastParentBox);

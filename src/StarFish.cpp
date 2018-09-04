@@ -65,109 +65,11 @@ namespace StarFish {
 
 #ifdef STARFISH_ENABLE_TEST
 bool g_enablePixelTest = false;
-bool g_memLogDump = false;
 bool g_enableDumpAsText = false;
 bool g_DumpAsText_Async = false;
 int g_referenceTestState = 0;
-
-FILE* fp_mem = NULL;
-static double process_mem_usage()
-{
-    double vm_usage = 0.0;
-    double resident_set = 0.0;
-
-    // 'file' stat seems to give the most reliable results
-
-    std::ifstream stat_stream("/proc/self/stat", std::ios_base::in);
-
-    // dummy vars for leading entries in stat that we don't care about
-    std::string pid, comm, state, ppid, pgrp, session, tty_nr;
-    std::string tpgid, flags, minflt, cminflt, majflt, cmajflt;
-    std::string utime, stime, cutime, cstime, priority, nice;
-    std::string O, itrealvalue, starttime;
-
-    // the two fields we want
-    unsigned long vsize;
-    long rss;
-
-    // don't care about the rest
-    stat_stream >> pid >> comm >> state >> ppid >> pgrp >> session >> tty_nr >>
-        tpgid >> flags >> minflt >> cminflt >> majflt >> cmajflt >> utime >>
-        stime >> cutime >> cstime >> priority >> nice >> O >> itrealvalue >>
-        starttime >> vsize >> rss;
-
-    stat_stream.close();
-
-    // in case x86-64 is configured to use 2MB pages
-    long page_size_kb = sysconf(_SC_PAGE_SIZE) / 1024;
-    vm_usage = vsize / 1024.0;
-    resident_set = rss * page_size_kb;
-
-    return resident_set;
-}
-
-#include <stdio.h>
-#include <string.h>
-
-struct smaps_sizes {
-    int KernelPageSize;
-    int MMUPageSize;
-    int Private_Clean;
-    int Private_Dirty;
-    int Pss;
-    int Referenced;
-    int Rss;
-    int Shared_Clean;
-    int Shared_Dirty;
-    int Size;
-    int Swap;
-};
-
-smaps_sizes getSmapsStats()
-{
-    // Setup our pipe for reading and execute our command.
-    char command[512];
-    snprintf(command, sizeof(command), "cat /proc/%d/smaps", getpid());
-    FILE* file = popen(command, "r");
-
-    struct smaps_sizes sizes;
-    memset(&sizes, 0, sizeof sizes);
-
-    char line[BUFSIZ];
-    while (fgets(line, sizeof line, file)) {
-        // puts(line);
-        char substr[32];
-        int n;
-        if (sscanf(line, "%31[^:]: %d", substr, &n) == 2) {
-            if (strcmp(substr, "KernelPageSize") == 0) {
-                sizes.KernelPageSize += n;
-            } else if (strcmp(substr, "MMUPageSize") == 0) {
-                sizes.MMUPageSize += n;
-            } else if (strcmp(substr, "Private_Clean") == 0) {
-                sizes.Private_Clean += n;
-            } else if (strcmp(substr, "Private_Dirty") == 0) {
-                sizes.Private_Dirty += n;
-            } else if (strcmp(substr, "Pss") == 0) {
-                sizes.Pss += n;
-            } else if (strcmp(substr, "Referenced") == 0) {
-                sizes.Referenced += n;
-            } else if (strcmp(substr, "Rss") == 0) {
-                sizes.Rss += n;
-            } else if (strcmp(substr, "Shared_Clean") == 0) {
-                sizes.Shared_Clean += n;
-            } else if (strcmp(substr, "Shared_Dirty") == 0) {
-                sizes.Shared_Dirty += n;
-            } else if (strcmp(substr, "Size") == 0) {
-                sizes.Size += n;
-            } else if (strcmp(substr, "Swap") == 0) {
-                sizes.Swap += n;
-            }
-        }
-    }
-    fclose(file);
-    return sizes;
-}
 #endif
+
 static int g_singletonInstanceCnt = 0;
 static bool g_starFishGlobalInit = false;
 typedef void (*GCCollectionEventListenter)(GC_EventType);
@@ -231,32 +133,6 @@ StarFish::StarFish(const char* locale, const char* timezoneID, int w, int h,
             STARFISH_LOG_ERROR("StarFish: GC warning\n");
             STARFISH_LOG_ERROR("%s\n", msg);
         });
-
-#ifdef STARFISH_SHOW_MEMSTATE
-        addGCCollectionListener([](GC_EventType evtType) {
-            if (GC_EVENT_PRE_START_WORLD == evtType) {
-#ifdef STARFISH_ENABLE_TEST
-                if (fp_mem && g_memLogDump)
-                    fprintf(fp_mem, "%f %f\n",
-                            GC_get_memory_use() / 1024.f / 1024.f,
-                            process_mem_usage() / 1024.f);
-
-                auto stat = getSmapsStats();
-
-                STARFISH_LOG_INFO(
-                    "Done GC: HeapSize: [%f MB , %f MB] RSS[%.1f MB] "
-                    "Private_Dirty[%.1fMB]\n",
-                    GC_get_memory_use() / 1024.f / 1024.f,
-                    GC_get_heap_size() / 1024.f / 1024.f,
-                    process_mem_usage() / 1024.f, stat.Private_Dirty / 1024.f);
-#else
-                STARFISH_LOG_INFO("did GC. GC heapSize[%f MB , %f MB]\n",
-                                  GC_get_memory_use() / 1024.f / 1024.f,
-                                  GC_get_heap_size() / 1024.f / 1024.f);
-#endif
-            }
-        });
-#endif
 
         GC_set_on_collection_event([](GC_EventType evtType) {
 
@@ -395,11 +271,6 @@ void StarFish::removeActiveThread(Thread* thread)
 
 void StarFish::close()
 {
-#ifdef STARFISH_ENABLE_TEST
-    if (fp_mem) {
-        fclose(fp_mem);
-    }
-#endif
 #if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
 #endif
