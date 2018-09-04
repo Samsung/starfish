@@ -54,8 +54,8 @@ bool isSameHTMLTagName(Node* node, void* data, GCVector<Node*>* collection)
     if (node->isElement()) {
         QualifiedName* testName =
             node->isHTMLElement() ? lowerTagName : tagName;
-        if (node->asElement()->name().localNameAtomic() ==
-            testName->localNameAtomic()) {
+        const QualifiedName& nodeName = node->asElement()->name();
+        if (nodeName.toString()->equals(testName->localName())) {
             return true;
         }
         if (testName->localName()->equals("*")) {
@@ -69,8 +69,8 @@ bool isSameXMLTagName(Node* node, void* data, GCVector<Node*>* collection)
 {
     QualifiedName* tagName = (QualifiedName*)data;
     if (node->isElement()) {
-        if (node->asElement()->name().localNameAtomic() ==
-            tagName->localNameAtomic()) {
+        const QualifiedName& nodeName = node->asElement()->name();
+        if (nodeName.toString()->equals(tagName->localName())) {
             return true;
         }
         if (tagName->localName()->equals("*")) {

@@ -85,12 +85,18 @@ static AttributeName properAttributeName(Element* e, String* name)
 static AttributeName properAttributeNameNS(Element* e, Nullable<String*> ns,
                                            String* name)
 {
-    return AttributeName(
-        QualifiedName(ns.hasValue() ? AtomicString::createAtomicString(
-                                          e->starFish(), ns.getValue())
-                                    : AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(e->starFish(), name)),
-        AttributeName::MatchNS);
+    if (ns.hasValue() && ns.getValue()->equals(String::emptyString)) {
+        ns = Nullable<String*>();
+    }
+
+    return AttributeName((ns.hasValue()
+                              ? QualifiedName(AtomicString::createAtomicString(
+                                                  e->starFish(), ns.getValue()),
+                                              AtomicString::createAtomicString(
+                                                  e->starFish(), name))
+                              : QualifiedName(AtomicString::createAtomicString(
+                                    e->starFish(), name))),
+                         AttributeName::MatchNS);
 }
 
 String* Element::tagName()
