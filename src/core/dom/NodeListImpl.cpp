@@ -84,22 +84,25 @@ bool isSameTagNameNS(Node* node, void* data, GCVector<Node*>* collection)
 {
     QualifiedName* tagNameNS = (QualifiedName*)data;
     if (node->isElement()) {
-        if (tagNameNS->namespaceURI().getValue().string()->equals("*")) {
-            if (tagNameNS->localName()->equals("*")) {
+        const QualifiedName& elementName = node->asElement()->name();
+        if (tagNameNS->hasNamespaceURI() &&
+            tagNameNS->hasSameNamespaceURI("*")) {
+            if (tagNameNS->hasSameLocalName("*")) {
                 return true;
             }
 
-            if (tagNameNS->equalsLocalName(node->asElement()->name())) {
+            if (tagNameNS->equalsLocalName(elementName)) {
                 return true;
             }
         } else {
-            if (tagNameNS->localName()->equals("*")) {
-                if (tagNameNS->equalsNamespace(node->asElement()->name())) {
+            if (tagNameNS->hasSameLocalName("*")) {
+                if (tagNameNS->equalsNamespace(elementName)) {
                     return true;
                 }
             }
 
-            if (node->asElement()->name() == *tagNameNS) {
+            if (tagNameNS->equalsNamespace(elementName) &&
+                tagNameNS->equalsLocalName(elementName)) {
                 return true;
             }
         }

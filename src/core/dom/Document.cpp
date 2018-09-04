@@ -1528,12 +1528,14 @@ QualifiedName Document::createAttributeNameNS(Nullable<String*> ns,
                                               String* localName)
 {
     // Case sensitive
-    AtomicString nsURI =
-        ns.hasValue()
-            ? AtomicString::createAtomicString(starFish(), ns.getValue())
-            : AtomicString::emptyAtomicString();
-    return QualifiedName(nsURI, AtomicString::createAtomicString(
-                                    window()->starFish(), localName));
+    const AtomicString& localNameAtomic =
+        AtomicString::createAtomicString(starFish(), localName);
+    if (ns.hasValue()) {
+        const AtomicString& nsAtomic =
+            AtomicString::createAtomicString(starFish(), ns.getValue());
+        return QualifiedName(nsAtomic, localNameAtomic);
+    }
+    return QualifiedName(localNameAtomic);
 }
 
 Range* Document::createRange()

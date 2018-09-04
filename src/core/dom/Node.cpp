@@ -146,7 +146,6 @@ void RareNodeMembers::putActiveHtmlCollectionListWithQuery(
     HTMLCollection* coll)
 {
     STARFISH_ASSERT(!hasQueryInActiveHtmlCollectionList(list, query));
-    STARFISH_ASSERT(query.first);
     STARFISH_ASSERT(query.second);
     STARFISH_ASSERT(coll);
     list->push_back(std::make_pair(query, coll));
@@ -1829,13 +1828,20 @@ HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
 
 HTMLCollection* Node::getElementsByTagNameNS(Nullable<String*> ns, String* name)
 {
+    if (ns.hasValue() && ns.getValue()->equals(String::emptyString)) {
+        ns = Nullable<String*>();
+    }
+
     QualifiedName qName(document()->createAttributeNameNS(ns, name));
     RareNodeMembers* rareData = ensureRareMembers();
     ActiveStringPairHTMLCollectionList* activeLists =
         rareData->ensureActiveHtmlCollectionListForTagNameNS();
     HTMLCollection* list = rareData->hasQueryInActiveHtmlCollectionList(
-        activeLists, std::make_pair(qName.namespaceURI().getValue().string(),
-                                    qName.localName()));
+        activeLists,
+        std::make_pair(qName.hasNamespaceURI()
+                           ? qName.namespaceURI().getValue().string()
+                           : nullptr,
+                       qName.localName()));
     if (list) {
         return list;
     }
@@ -1850,8 +1856,11 @@ HTMLCollection* Node::getElementsByTagNameNS(Nullable<String*> ns, String* name)
     }
 
     rareData->putActiveHtmlCollectionListWithQuery(
-        activeLists, std::make_pair(qName.namespaceURI().getValue().string(),
-                                    qName.localName()),
+        activeLists,
+        std::make_pair(qName.hasNamespaceURI()
+                           ? qName.namespaceURI().getValue().string()
+                           : nullptr,
+                       qName.localName()),
         list);
     return list;
 }
