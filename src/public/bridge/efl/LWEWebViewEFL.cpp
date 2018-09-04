@@ -259,7 +259,7 @@ public:
         m_glCfg->color_format = EVAS_GL_RGBA_8888;
         m_glCfg->depth_bits = EVAS_GL_DEPTH_NONE;
         m_glCfg->stencil_bits = EVAS_GL_STENCIL_BIT_1;
-        m_glCfg->multisample_bits = EVAS_GL_MULTISAMPLE_NONE;
+        m_glCfg->multisample_bits = EVAS_GL_MULTISAMPLE_MED;
         // m_glCfg->options_bits = EVAS_GL_OPTIONS_DIRECT;
 
         // Create a surface and context

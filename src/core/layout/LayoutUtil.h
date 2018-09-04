@@ -1280,8 +1280,7 @@ public:
 
     bool intersects(const LayoutRect& other) const
     {
-        return !isEmpty() && !other.isEmpty() && x() < other.maxX() &&
-               other.x() < maxX() && y() < other.maxY() && other.y() < maxY();
+        return rectOverlap(*this, other);
     }
 
     LayoutRect snapSizeToPixel() const
@@ -1297,6 +1296,22 @@ public:
     }
 
 private:
+    static bool valueInRange(LayoutUnit value, LayoutUnit min, LayoutUnit max)
+    {
+        return (value >= min) && (value < max);
+    }
+
+    static bool rectOverlap(const LayoutRect& A, const LayoutRect& B)
+    {
+        bool xOverlap = valueInRange(A.x(), B.x(), B.x() + B.width()) ||
+                        valueInRange(B.x(), A.x(), A.x() + A.width());
+
+        bool yOverlap = valueInRange(A.y(), B.y(), B.y() + B.height()) ||
+                        valueInRange(B.y(), A.y(), A.y() + A.height());
+
+        return xOverlap && yOverlap;
+    }
+
     LayoutLocation m_location;
     LayoutSize m_size;
 };

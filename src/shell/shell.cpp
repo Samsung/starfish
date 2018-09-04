@@ -28,6 +28,8 @@
 #endif
 
 #include <pthread.h>
+#include <stdio.h>
+#include <string.h>
 
 #ifdef STARFISH_ENABLE_TEST
 extern int g_testCompatibleMode;
@@ -95,6 +97,65 @@ int func_b()
 }
 
 #endif
+
+struct smaps_sizes {
+    int KernelPageSize;
+    int MMUPageSize;
+    int Private_Clean;
+    int Private_Dirty;
+    int Pss;
+    int Referenced;
+    int Rss;
+    int Shared_Clean;
+    int Shared_Dirty;
+    int Size;
+    int Swap;
+};
+
+smaps_sizes getSmapsStats()
+{
+    // Setup our pipe for reading and execute our command.
+    char command[512];
+    snprintf(command, sizeof(command), "cat /proc/%d/smaps", getpid());
+    FILE* file = popen(command, "r");
+
+    struct smaps_sizes sizes;
+    memset(&sizes, 0, sizeof sizes);
+
+    char line[BUFSIZ];
+    while (fgets(line, sizeof line, file)) {
+        // puts(line);
+        char substr[32];
+        int n;
+        if (sscanf(line, "%31[^:]: %d", substr, &n) == 2) {
+            if (strcmp(substr, "KernelPageSize") == 0) {
+                sizes.KernelPageSize += n;
+            } else if (strcmp(substr, "MMUPageSize") == 0) {
+                sizes.MMUPageSize += n;
+            } else if (strcmp(substr, "Private_Clean") == 0) {
+                sizes.Private_Clean += n;
+            } else if (strcmp(substr, "Private_Dirty") == 0) {
+                sizes.Private_Dirty += n;
+            } else if (strcmp(substr, "Pss") == 0) {
+                sizes.Pss += n;
+            } else if (strcmp(substr, "Referenced") == 0) {
+                sizes.Referenced += n;
+            } else if (strcmp(substr, "Rss") == 0) {
+                sizes.Rss += n;
+            } else if (strcmp(substr, "Shared_Clean") == 0) {
+                sizes.Shared_Clean += n;
+            } else if (strcmp(substr, "Shared_Dirty") == 0) {
+                sizes.Shared_Dirty += n;
+            } else if (strcmp(substr, "Size") == 0) {
+                sizes.Size += n;
+            } else if (strcmp(substr, "Swap") == 0) {
+                sizes.Swap += n;
+            }
+        }
+    }
+    fclose(file);
+    return sizes;
+}
 
 int main(int argc, char* argv[])
 {
@@ -213,10 +274,6 @@ int main(int argc, char* argv[])
             // regression test, pixel test only
             setenv("HIDE_WINDOW", "1", 1);
             flag |= StarFish::enableRegressionTest;
-        } else if (strcmp(argv[i], "--mem-log-dump") == 0) {
-#ifdef STARFISH_ENABLE_TEST
-            StarFish::g_memLogDump = true;
-#endif
         } else if (strcmp(argv[i], "--network-log-verbose") == 0) {
             setenv("NETWORK_LOG_VERBOSE", "1", 1);
         } else if (strstr(argv[i], "--posX=") == argv[i]) {
@@ -410,6 +467,20 @@ int main(int argc, char* argv[])
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL)
     ecore_shutdown();
 #endif
+
+    GC_gcollect();
+    GC_gcollect();
+    GC_gcollect();
+    GC_gcollect();
+    GC_gcollect_and_unmap();
+    GC_gcollect_and_unmap();
+
+    auto stat = getSmapsStats();
+    STARFISH_LOG_INFO(
+        "PSS[%.1f MB] "
+        "RSS[%.1f MB] "
+        "Private_Dirty[%.1fMB]\n",
+        stat.Pss / 1024.f, stat.Rss / 1024.f, stat.Private_Dirty / 1024.f);
 
     return 0;
 }

@@ -518,6 +518,21 @@ public:
                 }
             }
 
+            if (ctx && ctx->isIFrameStackingContext()) {
+                FrameBlockBox* document =
+                    ctx->owner()->layoutParent()->asFrameBlockBox();
+                FrameBox* iframeBox = ctx->owner()
+                                          ->node()
+                                          ->document()
+                                          ->browsingContext()
+                                          ->sourceElement()
+                                          ->frame()
+                                          ->asFrameBox();
+                canvas->translate(
+                    iframeBox->borderLeft() + iframeBox->paddingLeft(),
+                    iframeBox->borderTop() + iframeBox->paddingTop());
+            }
+
             iter++;
         }
         canvas->translate(dx, dy);
@@ -645,6 +660,21 @@ public:
                     compositor->translate(-b->asFrameBlockBox()->scrollLeft(),
                                           -b->asFrameBlockBox()->scrollTop());
                 }
+
+                if (ctx && ctx->isIFrameStackingContext()) {
+                    FrameBlockBox* document =
+                        ctx->owner()->layoutParent()->asFrameBlockBox();
+                    FrameBox* iframeBox = ctx->owner()
+                                              ->node()
+                                              ->document()
+                                              ->browsingContext()
+                                              ->sourceElement()
+                                              ->frame()
+                                              ->asFrameBox();
+                    compositor->translate(
+                        iframeBox->borderLeft() + iframeBox->paddingLeft(),
+                        iframeBox->borderTop() + iframeBox->paddingTop());
+                }
             }
 
             iter++;
@@ -771,6 +801,7 @@ void StackingContext::computeStackingContextProperties(
     bool compositedBySelf = selfNeedsGraphicsBuffer ||
                             m_owner->isRunningOpacityAnimation() ||
                             m_owner->isRunningTransformAnimation();
+
     if (compositedBySelf) {
         reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
         compositingState.compositeFlagInfoBecauseSelf[this] = true;
@@ -979,8 +1010,8 @@ void StackingContext::applyStackingContextProperties(
     }
 
     LayoutRect screenRect =
-        LayoutRect(0, 0, m_owner->node()->window()->innerWidth(),
-                   m_owner->node()->window()->innerHeight());
+        LayoutRect(0, 0, ctx.rootLayer->owner()->node()->window()->innerWidth(),
+                   ctx.rootLayer->owner()->node()->window()->innerHeight());
     bool canSkipPaintingForThisLayer =
         willBeComposited && !m_owner->needsGraphicsBuffer() &&
         (!screenRect.containsInVisual(m_screenExtent) &&
@@ -1407,11 +1438,9 @@ void StackingContext::paintStackingContext(Canvas* canvas,
             ensureRareData()->m_visibleRect = m_owner->frameVisibleRect();
             SkMatrix l = SkMatrix::I();
             Frame::ComputeVisibleRectContext ctx(
-                Frame::ComputeVisibleRectContext::Scrolling, owner(), l,
-                ensureRareData()->m_visibleRect);
-
+                Frame::ComputeVisibleRectContext::GraphicsBufferBySelf, this, l,
+                m_rareData->m_visibleRect);
             m_owner->computeVisibleRect(ctx);
-
             m_isVisibleRectComputedForNonGraphicsLayer = true;
         }
 
