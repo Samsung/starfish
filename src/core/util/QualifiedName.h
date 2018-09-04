@@ -179,6 +179,11 @@ public:
         }
     }
 
+    bool hasNamespaceURI()
+    {
+        return m_namespaceURI.string() != nullptr;
+    }
+
     Nullable<AtomicString> namespaceURI() const
     {
         if (m_namespaceURI.string() == nullptr) {

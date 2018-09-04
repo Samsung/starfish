@@ -180,10 +180,10 @@ http://10.113.111.47:8000/dom/nodes/Document-createTreeWalker.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-24.htm
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-08.htm
 #http://10.113.111.47:8000/dom/nodes/NodeList-Iterable.html
-#http://10.113.111.47:8000/dom/nodes/Document-getElementsByTagNameNS.html
+http://10.113.111.47:8000/dom/nodes/Document-getElementsByTagNameNS.html
 http://10.113.111.47:8000/dom/nodes/Element-firstElementChild-namespace.html
 #http://10.113.111.47:8000/dom/nodes/Node-nodeName.html
-#http://10.113.111.47:8000/dom/nodes/Element-getElementsByTagNameNS.html
+http://10.113.111.47:8000/dom/nodes/Element-getElementsByTagNameNS.html
 http://10.113.111.47:8000/dom/nodes/case.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-05.htm
 http://10.113.111.47:8000/dom/nodes/CharacterData-data.html
