@@ -286,9 +286,10 @@ cp -fr out_tizen/wearable/release/lightweight-web-engine.wearable %{buildroot}%{
 %endif
 
 # for devel files
-mkdir -p %{buildroot}%{_includedir}/%{name}/
+mkdir -p %{buildroot}%{_includedir}/%{name}/tuv
 cp inc/LWEWebView.h %{buildroot}%{_includedir}/%{name}/
 cp inc/PlatformIntegrationData.h %{buildroot}%{_includedir}/%{name}/
+cp third_party/libtuv/include/*.h %{buildroot}%{_includedir}/%{name}/tuv/
 
 mkdir -p %{buildroot}%{_libdir}/pkgconfig/
 cp *.pc %{buildroot}%{_libdir}/pkgconfig/
