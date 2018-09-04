@@ -86,6 +86,7 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
 #else
     , m_cacheMode(0)
 #endif
+    , m_defaultFontSize(DEFAULT_FONT_SIZE)
 {
 }
 
