@@ -1153,7 +1153,7 @@ private:
 
             size_t glyphAllocCount = 0;
             for (size_t i = 0; i < runs.size(); i++) {
-                FontCairoTextRun& run = runs[i];
+                const FontCairoTextRun& run = runs[i];
                 glyphAllocCount += run.m_glyphs.size();
             }
 
@@ -1162,7 +1162,7 @@ private:
 
             float xBias = 0;
             for (size_t i = 0; i < runs.size(); i++) {
-                FontCairoTextRun& run = runs[i];
+                const FontCairoTextRun& run = runs[i];
 
                 LayoutUnit letterSpacingValueSoFar;
                 if (run.m_ftFace == nullptr) {
