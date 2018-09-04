@@ -38,6 +38,8 @@
 #include "FontImplCairo.h"
 #include "core/style/UnitHelper.h"
 
+#define MIN_ENABLE_KERNING_SIZE 48
+
 namespace StarFish {
 
 FT_Library g_freeTypeInstance;
@@ -285,10 +287,10 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
     for (size_t i = 0; i < result.size(); i++) {
         FontCairoTextRun& run = result[i];
         float totalAdvance = 0;
+        hb_buffer_clear_contents(hbBuffer);
 
         hb_buffer_set_script(hbBuffer, run.m_script);
-        hb_buffer_guess_segment_properties(hbBuffer);
-        // hb_buffer_set_direction(hbBuffer, HB_DIRECTION_LTR);
+
         auto buf = run.m_text.bufferAccessData();
         if (buf.bufferDataKind == StringBufferAccessData::ASCIIData) {
             hb_buffer_add_utf8(hbBuffer, buf.asciiData(), buf.length, 0,
@@ -301,43 +303,70 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                                 buf.length, 0, buf.length);
         }
 
+        hb_buffer_guess_segment_properties(hbBuffer);
+        hb_buffer_set_flags(hbBuffer, HB_BUFFER_FLAG_DEFAULT);
+
         if (run.m_ftFace) {
+            bool hasKerning = FT_HAS_KERNING(run.m_ftFace);
             int ftSize = run.m_ftFace->size->metrics.y_ppem;
             hb_font_t* hbfont = run.m_hbFont;
 
-            hb_shape(hbfont, hbBuffer, &hbFeature, 1);
+            hb_shape_full(hbfont, hbBuffer, &hbFeature, 1, NULL);
 
-            hb_buffer_content_type_t t = hb_buffer_get_content_type(hbBuffer);
+            unsigned int glyphCount;
             hb_glyph_info_t* glyphInfos =
-                hb_buffer_get_glyph_infos(hbBuffer, 0);
+                hb_buffer_get_glyph_infos(hbBuffer, &glyphCount);
             hb_glyph_position_t* glyphPositions =
                 hb_buffer_get_glyph_positions(hbBuffer, 0);
-            size_t glyphCount = hb_buffer_get_length(hbBuffer);
 
             run.m_glyphs.reserve(glyphCount);
             run.m_glyphPositions.reserve(glyphCount);
 
+            uint32_t lastGlyph = 0;
             for (size_t k = 0; k < glyphCount; k++) {
-                uint16_t glyph = glyphInfos[k].codepoint;
-                float advance = glyphPositions[k].x_advance / 64.f *
-                                (float)intSize / (float)ftSize;
+                uint32_t glyph = glyphInfos[k].codepoint;
+                // NOTE
+                // harfbuzz returns advance
+                // but it looks incorrect & value seems different
+                // each calling with same font & size
+                // so I use freetype for computing kerning & advance
+
                 float xOffset = glyphPositions[k].x_offset / 64.f *
                                 (float)intSize / (float)ftSize;
                 float yOffset = glyphPositions[k].y_offset / 64.f *
                                 (float)intSize / (float)ftSize;
 
+                if (hasKerning && font->size() >= MIN_ENABLE_KERNING_SIZE &&
+                    k > 0) {
+                    FT_Vector kerning;
+                    FT_Get_Kerning(run.m_ftFace, lastGlyph, glyph,
+                                   FT_KERNING_UNSCALED, &kerning);
+                    LayoutUnit kerningAdvance =
+                        LayoutUnit((int)(kerning.x * intSize)) /
+                        LayoutUnit((int)(FontFaceImplCairo::unitsPerEMFromFT(
+                            run.m_ftFace)));
+                    totalAdvance += kerningAdvance;
+                }
+
                 run.m_glyphs.push_back(glyph);
                 run.m_glyphPositions.push_back(
                     LayoutLocation(xOffset + totalAdvance, yOffset));
 
-                totalAdvance += advance;
+                FT_Load_Glyph(run.m_ftFace, glyph, FT_LOAD_NO_SCALE);
+                LayoutUnit width =
+                    LayoutUnit((int)(run.m_ftFace->glyph->metrics.horiAdvance *
+                                     intSize)) /
+                    LayoutUnit((int)(FontFaceImplCairo::unitsPerEMFromFT(
+                        run.m_ftFace)));
+                totalAdvance += width;
+
+                lastGlyph = glyph;
             }
         } else {
             totalAdvance += font->spaceWidth() * run.m_text.length();
         }
 
         run.m_runWidth = totalAdvance;
-        hb_buffer_reset(hbBuffer);
     }
 
     hb_buffer_destroy(hbBuffer);
@@ -421,7 +450,7 @@ bool cairoBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
     if (f->fontKerning() == FontKerningAutoValue) {
         if (((FontFaceImplCairo*)(FontImplCairo*)f->fontFaceList()[0])
                 ->m_supportsKerning) {
-            if (f->size() >= 48) {
+            if (f->size() >= MIN_ENABLE_KERNING_SIZE) {
                 return false;
             }
         }

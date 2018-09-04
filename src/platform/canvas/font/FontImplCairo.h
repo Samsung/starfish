@@ -57,6 +57,15 @@ public:
 
 class FontFaceImplCairo : public FontFace {
 public:
+    static int unitsPerEMFromFT(FT_Face f)
+    {
+        auto unitsPerEM = f->units_per_EM;
+        if (unitsPerEM == 0) {
+            unitsPerEM = 2048; // fallback
+        }
+        return unitsPerEM;
+    }
+
     FontFaceImplCairo(FT_Face face, hb_font_t* hbFace,
                       uint8_t* dataBuffer = nullptr, size_t dataBufferSize = 0)
     {
@@ -74,10 +83,7 @@ public:
             m_xHeight = 0;
         }
 
-        m_unitsPerEM = m_face->units_per_EM;
-        if (m_unitsPerEM == 0) {
-            m_unitsPerEM = 2048; // fallback
-        }
+        m_unitsPerEM = unitsPerEMFromFT(m_face);
         m_ascender = m_face->ascender;
         m_descender = m_face->descender;
         if (m_ascender == 0 || m_descender == 0) {
