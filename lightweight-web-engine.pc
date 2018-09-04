@@ -1,6 +1,6 @@
 prefix=/usr
 exec_prefix=/usr
-libdir=/usr/lib
+libdir=/usr/lib/lwe
 includedir=/usr/include/lightweight-web-engine
 
 Name: lightweight-web-engine
