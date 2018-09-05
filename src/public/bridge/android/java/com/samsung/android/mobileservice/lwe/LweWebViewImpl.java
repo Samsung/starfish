@@ -40,7 +40,6 @@ import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 
-import java.lang.annotation.Native;
 import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -73,7 +72,7 @@ public class LweWebViewImpl implements LweWebView{
     static HashMap<String, TimerData> sIdlerMap = new HashMap<>();
     static AtomicInteger sTimerUid = new AtomicInteger(0);
 
-    private static String sTag = "StarFish";
+    private static String sTag = "LweWebViewImpl";
     private static float sDpr = 1;
 
     private static String sLocale = "ko-KR";
@@ -110,7 +109,6 @@ public class LweWebViewImpl implements LweWebView{
 
     private EGL10 mEgl;
     private EGLDisplay mEglDisplay;
-    private EGLConfig mEglConfig;
     private EGLContext mEglContext;
     private EGLSurface mEglSurface;
 
@@ -124,6 +122,10 @@ public class LweWebViewImpl implements LweWebView{
     }
 
     private void initGLContext() {
+        if (mEglSurface != null && mEglContext != null) {
+            return;
+        }
+
         final int RED_SIZE = 8;
         final int GREEN_SIZE = 8;
         final int BLUE_SIZE = 8;
@@ -131,7 +133,6 @@ public class LweWebViewImpl implements LweWebView{
 
         final int DEPTH_SIZE = 0;
         final int STENCIL_SIZE = 1;
-        final int SAMPLES = 0;
 
         mEgl = (EGL10) EGLContext.getEGL();
         mEglDisplay = mEgl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
@@ -148,30 +149,31 @@ public class LweWebViewImpl implements LweWebView{
         int[] configSpec = {
                 EGL10.EGL_RED_SIZE, RED_SIZE, EGL10.EGL_GREEN_SIZE, GREEN_SIZE, EGL10.EGL_BLUE_SIZE, BLUE_SIZE,
                 EGL10.EGL_ALPHA_SIZE, ALPHA_SIZE, EGL10.EGL_DEPTH_SIZE, DEPTH_SIZE, EGL10.EGL_STENCIL_SIZE, STENCIL_SIZE,
-                EGL10.EGL_RENDERABLE_TYPE, 4, EGL10.EGL_SAMPLE_BUFFERS, 1, EGL10.EGL_SAMPLES,
-                SAMPLES, EGL10.EGL_NONE
+                EGL10.EGL_NONE
         };
 
         int[] value = new int[1];
-        EGLConfig[] configs = new EGLConfig[1];
-        if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, configs, 1, value)) {
+        if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, null, 1, value)) {
+            throw new IllegalArgumentException("eglChooseConfig failed");
+        }
+        EGLConfig[] configs = new EGLConfig[value[0]];
+        if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, configs, value[0], value)) {
             throw new IllegalArgumentException("eglChooseConfig failed");
         }
 
-        mEglConfig = configs[0];
+        EGLConfig eglConfig = configs[0];
         for (EGLConfig c : configs) {
             int depth = findConfigAttrib(c, EGL10.EGL_DEPTH_SIZE, 0);
             int stencil = findConfigAttrib(c, EGL10.EGL_STENCIL_SIZE, 0);
-            int sample = findConfigAttrib(c, EGL10.EGL_STENCIL_SIZE, 0);
 
-            if ((depth >= DEPTH_SIZE) && (stencil >= STENCIL_SIZE) && (sample >= SAMPLES)) {
+            if ((depth >= DEPTH_SIZE) && (stencil >= STENCIL_SIZE)) {
                 int r = findConfigAttrib(c, EGL10.EGL_RED_SIZE, 0);
                 int g = findConfigAttrib(c, EGL10.EGL_GREEN_SIZE, 0);
                 int b = findConfigAttrib(c, EGL10.EGL_BLUE_SIZE, 0);
                 int a = findConfigAttrib(c, EGL10.EGL_ALPHA_SIZE, 0);
                 if ((r == RED_SIZE) && (g == GREEN_SIZE)
                         && (b == BLUE_SIZE) && (a == ALPHA_SIZE)) {
-                    mEglConfig = c;
+                    eglConfig = c;
                     break;
                 }
             }
@@ -180,8 +182,18 @@ public class LweWebViewImpl implements LweWebView{
         int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
         int[] attrib_list = {EGL_CONTEXT_CLIENT_VERSION, 3,EGL10.EGL_NONE };
 
-        mEglContext = mEgl.eglCreateContext(mEglDisplay, mEglConfig, EGL10.EGL_NO_CONTEXT, attrib_list);
-        mEglSurface = mEgl.eglCreateWindowSurface(mEglDisplay, mEglConfig, new Surface(mLWEView.getSurfaceTexture()), null);
+        mEglContext = mEgl.eglCreateContext(mEglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attrib_list);
+        mEglSurface = mEgl.eglCreateWindowSurface(mEglDisplay, eglConfig, mLWEView.getSurfaceTexture(), null);
+    }
+
+    private void destroyGLContext()
+    {
+        mEgl.eglDestroyContext(mEglDisplay, mEglContext);
+        mEgl.eglDestroySurface(mEglDisplay, mEglSurface);
+        mEgl.eglTerminate(mEglDisplay);
+        mEglDisplay = null;
+        mEglContext = null;
+        mEglSurface = null;
     }
 
     public InputConnection getInputConnectionInstance(View view){
@@ -301,6 +313,7 @@ public class LweWebViewImpl implements LweWebView{
                             }
                             mWebViewInternalHandle = 0;
                             mWebViewClient = null;
+                            destroyGLContext();
                         }
                     });
                 }
@@ -422,7 +435,6 @@ public class LweWebViewImpl implements LweWebView{
 
             @Override
             public void onSurfaceTextureUpdated(SurfaceTexture surface) {
-
             }
         });
 
