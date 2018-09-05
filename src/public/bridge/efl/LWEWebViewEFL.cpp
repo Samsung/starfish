@@ -29,7 +29,9 @@
 #include <Ecore_IMF_Evas.h>
 #include <Evas_GL.h>
 
+#if defined(PORT_WINDOW_BACKEND_GL)
 extern Evas_GL_API* g_evasGLAPI;
+#endif
 
 namespace LWE {
 
@@ -245,12 +247,14 @@ public:
         elm_box_layout_set(m_mainBox, elm_box_layout_cb, NULL, NULL);
         evas_object_show(m_mainBox);
 
-        m_glAdpater = evas_object_image_filled_add(evas_object_evas_get(win));
-        evas_object_resize(m_glAdpater, width, height);
-        evas_object_image_size_set(m_glAdpater, width, height);
+        m_graphicsAdapter =
+            evas_object_image_filled_add(evas_object_evas_get(win));
+        evas_object_resize(m_graphicsAdapter, width, height);
+        evas_object_image_size_set(m_graphicsAdapter, width, height);
 
-        elm_box_pack_end(m_mainBox, m_glAdpater);
+        elm_box_pack_end(m_mainBox, m_graphicsAdapter);
 
+#if defined(PORT_WINDOW_BACKEND_GL)
         m_glEvasgl = evas_gl_new(evas_object_evas_get(win));
         m_glGlapi = evas_gl_api_get(m_glEvasgl);
 
@@ -281,17 +285,17 @@ public:
 
         Evas_Native_Surface ns;
         evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
-        evas_object_image_native_surface_set(m_glAdpater, &ns);
-        evas_object_show(m_glAdpater);
+        evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
+        evas_object_show(m_graphicsAdapter);
 
-        evas_object_image_pixels_dirty_set(m_glAdpater, EINA_TRUE);
+        evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);
         evas_object_image_pixels_get_callback_set(
-            m_glAdpater,
+            m_graphicsAdapter,
             [](void* data, Evas_Object* o) {
                 WebViewEFL* wv = (WebViewEFL*)data;
                 evas_gl_make_current(wv->m_glEvasgl, wv->m_glSfc, wv->m_glCtx);
 
-                STARFISH_LOG_INFO("clean up m_glAdpater\n");
+                STARFISH_LOG_INFO("clean up m_graphicsAdapter\n");
 
                 wv->m_glGlapi->glClearColor(0, 0, 0, 0);
                 wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT |
@@ -300,7 +304,11 @@ public:
                 wv->m_glGlapi->glFlush();
             },
             this);
-
+#else
+        evas_object_image_content_hint_set(m_graphicsAdapter,
+                                           EVAS_IMAGE_CONTENT_HINT_DYNAMIC);
+        evas_object_show(m_graphicsAdapter);
+#endif
         m_isKeyDown = false;
         m_lastClickedTimestamp = 0;
         m_clickedCount = 0;
@@ -318,7 +326,7 @@ public:
             int currentPosY = ev->output.y;
 
             int x, y;
-            evas_object_geometry_get(sf->m_glAdpater, &x, &y, 0, 0);
+            evas_object_geometry_get(sf->m_graphicsAdapter, &x, &y, 0, 0);
             currentPosX -= x;
             currentPosY -= y;
 
@@ -341,7 +349,8 @@ public:
 
             return;
         };
-        evas_object_event_callback_add(m_glAdpater, EVAS_CALLBACK_MOUSE_DOWN,
+        evas_object_event_callback_add(m_graphicsAdapter,
+                                       EVAS_CALLBACK_MOUSE_DOWN,
                                        m_mouseDownEventHandler, this);
 
         m_mouseUpEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
@@ -352,7 +361,7 @@ public:
             int currentPosX = ev->output.x;
             int currentPosY = ev->output.y;
             int x, y;
-            evas_object_geometry_get(sf->m_glAdpater, &x, &y, 0, 0);
+            evas_object_geometry_get(sf->m_graphicsAdapter, &x, &y, 0, 0);
             currentPosX -= x;
             currentPosY -= y;
 
@@ -371,7 +380,8 @@ public:
             }
             return;
         };
-        evas_object_event_callback_add(m_glAdpater, EVAS_CALLBACK_MOUSE_UP,
+        evas_object_event_callback_add(m_graphicsAdapter,
+                                       EVAS_CALLBACK_MOUSE_UP,
                                        m_mouseUpEventHandler, this);
 
         m_mouseWheelEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
@@ -382,14 +392,15 @@ public:
             int currentPosX = ev->output.x;
             int currentPosY = ev->output.y;
             int x, y;
-            evas_object_geometry_get(wv->m_glAdpater, &x, &y, 0, 0);
+            evas_object_geometry_get(wv->m_graphicsAdapter, &x, &y, 0, 0);
             currentPosX -= x;
             currentPosY -= y;
             wv->FetchWebContainer()->DispatchMouseWheelEvent(
                 currentPosX, currentPosY, ev->z);
             return;
         };
-        evas_object_event_callback_add(m_glAdpater, EVAS_CALLBACK_MOUSE_WHEEL,
+        evas_object_event_callback_add(m_graphicsAdapter,
+                                       EVAS_CALLBACK_MOUSE_WHEEL,
                                        m_mouseWheelEventHandler, this);
 
         m_mouseMoveEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
@@ -400,7 +411,7 @@ public:
             int currentPosX = ev->cur.output.x;
             int currentPosY = ev->cur.output.y;
             int x, y;
-            evas_object_geometry_get(sf->m_glAdpater, &x, &y, 0, 0);
+            evas_object_geometry_get(sf->m_graphicsAdapter, &x, &y, 0, 0);
             currentPosX -= x;
             currentPosY -= y;
             unsigned char buttons = sf->m_isMouseLbuttonDown
@@ -411,7 +422,8 @@ public:
                 currentPosX, currentPosY);
             return;
         };
-        evas_object_event_callback_add(m_glAdpater, EVAS_CALLBACK_MOUSE_MOVE,
+        evas_object_event_callback_add(m_graphicsAdapter,
+                                       EVAS_CALLBACK_MOUSE_MOVE,
                                        m_mouseMoveEventHandler, this);
 
 #if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
@@ -506,11 +518,11 @@ public:
             wv->m_inEvasRendering = false;
         };
 
-        evas_event_callback_add(evas_object_evas_get(m_glAdpater),
+        evas_event_callback_add(evas_object_evas_get(m_graphicsAdapter),
                                 EVAS_CALLBACK_RENDER_PRE, m_renderingPreHandler,
                                 this);
 
-        evas_event_callback_add(evas_object_evas_get(m_glAdpater),
+        evas_event_callback_add(evas_object_evas_get(m_graphicsAdapter),
                                 EVAS_CALLBACK_RENDER_POST,
                                 m_renderingPostHandler, this);
 
@@ -519,18 +531,26 @@ public:
             WebViewEFL* wv = (WebViewEFL*)data;
             int w, h;
             evas_object_geometry_get(wv->m_mainBox, NULL, NULL, &w, &h);
-            evas_object_resize(wv->m_glAdpater, w, h);
+            evas_object_resize(wv->m_graphicsAdapter, w, h);
 
-            evas_object_image_native_surface_set(wv->m_glAdpater, NULL);
+#if defined(PORT_WINDOW_BACKEND_GL)
+            evas_object_image_native_surface_set(wv->m_graphicsAdapter, NULL);
             evas_gl_surface_destroy(wv->m_glEvasgl, wv->m_glSfc);
-            evas_object_image_size_set(wv->m_glAdpater, w, h);
+            evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
             Evas_Native_Surface ns;
             wv->m_glSfc =
                 evas_gl_surface_create(wv->m_glEvasgl, wv->m_glCfg, w, h);
             evas_gl_native_surface_get(wv->m_glEvasgl, wv->m_glSfc, &ns);
-            evas_object_image_native_surface_set(wv->m_glAdpater, &ns);
-
+            evas_object_image_native_surface_set(wv->m_graphicsAdapter, &ns);
             wv->FetchWebContainer()->ResizeTo(w, h);
+#else
+            evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
+            auto buf =
+                evas_object_image_data_get(wv->m_graphicsAdapter, EINA_TRUE);
+            evas_object_image_data_set(wv->m_graphicsAdapter, buf);
+            wv->FetchWebContainer()->UpdateBuffer(
+                buf, w, h, evas_object_image_stride_get(wv->m_graphicsAdapter));
+#endif
         };
         evas_object_event_callback_add(m_mainBox, EVAS_CALLBACK_RESIZE,
                                        m_resizeHandler, this);
@@ -541,7 +561,7 @@ public:
                 WebViewEFL* wv = (WebViewEFL*)data;
                 int x, y;
                 evas_object_geometry_get(wv->m_mainBox, &x, &y, NULL, NULL);
-                evas_object_move(wv->m_glAdpater, x, y);
+                evas_object_move(wv->m_graphicsAdapter, x, y);
             },
             this);
 
@@ -559,10 +579,10 @@ public:
 
         ecore_imf_context_client_window_set(
             m_imfContext,
-            (void*)ecore_evas_window_get(
-                ecore_evas_ecore_evas_get(evas_object_evas_get(m_glAdpater))));
-        ecore_imf_context_client_canvas_set(m_imfContext,
-                                            evas_object_evas_get(m_glAdpater));
+            (void*)ecore_evas_window_get(ecore_evas_ecore_evas_get(
+                evas_object_evas_get(m_graphicsAdapter))));
+        ecore_imf_context_client_canvas_set(
+            m_imfContext, evas_object_evas_get(m_graphicsAdapter));
 
         ecore_imf_context_retrieve_surrounding_callback_set(
             m_imfContext,
@@ -764,33 +784,47 @@ public:
 
 #endif
 
+#if defined(PORT_WINDOW_BACKEND_GL)
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
             [this](LWE::WebContainer* wc) {
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
                 g_evasGLAPI = m_glGlapi;
             },
-            [this](LWE::WebContainer* wc) {
+            [this](LWE::WebContainer* wc){
 
             },
             devicePixelRatio, defaultFontName, locale, timezoneID,
             localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
 
-        webContainer->RegisterSetNeedsRenderingCallback(
-            [this](::LWE::WebContainer* wc,
-                   const std::function<void()>& doRenderingFunction) {
-                evas_object_image_pixels_dirty_set(m_glAdpater, EINA_TRUE);
-                m_lastDoRenderingFunction = doRenderingFunction;
-                evas_object_image_pixels_get_callback_set(
-                    m_glAdpater,
-                    [](void* data, Evas_Object* o) {
-                        WebViewEFL* s = (WebViewEFL*)data;
-                        s->m_lastDoRenderingFunction();
-                        s->m_lastDoRenderingFunction = nullptr;
-                    },
-                    this);
-            });
-
+        webContainer->RegisterSetNeedsRenderingCallback([this](
+            ::LWE::WebContainer* wc,
+            const std::function<void()>& doRenderingFunction) {
+            evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);
+            m_lastDoRenderingFunction = doRenderingFunction;
+            evas_object_image_pixels_get_callback_set(
+                m_graphicsAdapter,
+                [](void* data, Evas_Object* o) {
+                    WebViewEFL* s = (WebViewEFL*)data;
+                    s->m_lastDoRenderingFunction();
+                    s->m_lastDoRenderingFunction = nullptr;
+                },
+                this);
+        });
+#else
+        auto buf = evas_object_image_data_get(m_graphicsAdapter, EINA_TRUE);
+        evas_object_image_data_set(m_graphicsAdapter, buf);
+        ::LWE::WebContainer* webContainer = ::LWE::WebContainer::Create(
+            buf, width, height, evas_object_image_stride_get(m_graphicsAdapter),
+            devicePixelRatio, defaultFontName, locale, timezoneID,
+            localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
+        webContainer->RegisterOnRenderedHandler([this](
+            ::LWE::WebContainer* c, ::LWE::WebContainer::RenderResult r) {
+            evas_object_image_data_update_add(m_graphicsAdapter, r.updatedX,
+                                              r.updatedY, r.updatedWidth,
+                                              r.updatedHeight);
+        });
+#endif
         webContainer->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
             [this](LWE::WebContainer*) { ShowSoftwareKeyboardIfPossible(); });
 
@@ -812,46 +846,50 @@ public:
             ecore_imf_context_del(m_imfContext);
         }
 
+        evas_object_hide(m_graphicsAdapter);
+#if defined(PORT_WINDOW_BACKEND_GL)
         if (m_glSync) {
             m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
         }
-
-        evas_object_hide(m_glAdpater);
-        evas_object_image_native_surface_set(m_glAdpater, NULL);
+        evas_object_image_native_surface_set(m_graphicsAdapter, NULL);
         evas_gl_context_destroy(m_glEvasgl, m_glCtx);
         evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
         evas_gl_config_free(m_glCfg);
         evas_gl_free(m_glEvasgl);
+#endif
 
-        evas_event_callback_del(evas_object_evas_get(m_glAdpater),
+        evas_event_callback_del(evas_object_evas_get(m_graphicsAdapter),
                                 EVAS_CALLBACK_RENDER_POST,
                                 m_renderingPostHandler);
 
-        evas_event_callback_del(evas_object_evas_get(m_glAdpater),
+        evas_event_callback_del(evas_object_evas_get(m_graphicsAdapter),
                                 EVAS_CALLBACK_RENDER_PRE,
                                 m_renderingPreHandler);
 
         if (m_resizeHandler) {
-            evas_object_event_callback_del(m_glAdpater, EVAS_CALLBACK_RESIZE,
-                                           m_resizeHandler);
+            evas_object_event_callback_del(
+                m_graphicsAdapter, EVAS_CALLBACK_RESIZE, m_resizeHandler);
         }
 
-        evas_object_event_callback_del(m_glAdpater, EVAS_CALLBACK_MOUSE_DOWN,
+        evas_object_event_callback_del(m_graphicsAdapter,
+                                       EVAS_CALLBACK_MOUSE_DOWN,
                                        m_mouseDownEventHandler);
-        evas_object_event_callback_del(m_glAdpater, EVAS_CALLBACK_MOUSE_UP,
-                                       m_mouseUpEventHandler);
-        evas_object_event_callback_del(m_glAdpater, EVAS_CALLBACK_MOUSE_WHEEL,
+        evas_object_event_callback_del(
+            m_graphicsAdapter, EVAS_CALLBACK_MOUSE_UP, m_mouseUpEventHandler);
+        evas_object_event_callback_del(m_graphicsAdapter,
+                                       EVAS_CALLBACK_MOUSE_WHEEL,
                                        m_mouseWheelEventHandler);
-        evas_object_event_callback_del(m_glAdpater, EVAS_CALLBACK_MOUSE_MOVE,
+        evas_object_event_callback_del(m_graphicsAdapter,
+                                       EVAS_CALLBACK_MOUSE_MOVE,
                                        m_mouseMoveEventHandler);
-        evas_object_event_callback_del(m_glAdpater, EVAS_CALLBACK_KEY_DOWN,
-                                       m_keyDownEventHandler);
-        evas_object_event_callback_del(m_glAdpater, EVAS_CALLBACK_KEY_UP,
+        evas_object_event_callback_del(
+            m_graphicsAdapter, EVAS_CALLBACK_KEY_DOWN, m_keyDownEventHandler);
+        evas_object_event_callback_del(m_graphicsAdapter, EVAS_CALLBACK_KEY_UP,
                                        m_keyUpEventHandler);
 
-        if (m_glAdpater) {
-            evas_object_del(m_glAdpater);
-            m_glAdpater = nullptr;
+        if (m_graphicsAdapter) {
+            evas_object_del(m_graphicsAdapter);
+            m_graphicsAdapter = nullptr;
         }
 
         if (m_nonIMEKeyEventBox) {
@@ -949,13 +987,15 @@ protected:
                                 void* event_info);
 
     Evas_Object* m_mainBox;
-    Evas_Object* m_glAdpater;
+    Evas_Object* m_graphicsAdapter;
+#if defined(PORT_WINDOW_BACKEND_GL)
     Evas_GL_Context* m_glCtx;
     Evas_GL_Surface* m_glSfc;
     Evas_GL_Config* m_glCfg;
     Evas_GL* m_glEvasgl;
     Evas_GL_API* m_glGlapi;
     EvasGLSync m_glSync;
+#endif
 
     Ecore_IMF_Context* m_imfContext;
 
