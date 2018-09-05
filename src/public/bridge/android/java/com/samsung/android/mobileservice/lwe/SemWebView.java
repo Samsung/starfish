@@ -22,10 +22,10 @@ package com.samsung.android.mobileservice.lwe;
 import android.content.Context;
 import android.util.AttributeSet;
 import android.view.TextureView;
+import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
-import java.lang.reflect.Constructor;
 import dalvik.system.PathClassLoader;
 
 /**
@@ -53,28 +53,19 @@ public class SemWebView extends TextureView {
         return null;
     }
 
-    private LweWebView getWebViewInstance(){
-        /*
-        LweWebView result=null;
-        if(delegate==null){
-            try {
-                if(pcl==null){
-                    String path = getContext().getPackageManager().getPackageInfo(packageName,0).applicationInfo.nativeLibraryDir;
-                    String dexpath = getContext().getPackageManager().getPackageInfo(packageName,0).applicationInfo.publicSourceDir;
-                    pcl= new PathClassLoader(dexpath,path,getContext().getClassLoader());
-                }
-                Class<?> cls = pcl.loadClass(LweWebViewImplName);
-                Constructor<?> cons = cls.getConstructor();
-                result = (LweWebView)cons.newInstance();
-            }catch (Exception e){}
-            return result;
-        }
-        */
-        {
-            // local mode for test  should be removed next time.
-            if(delegate==null)
-                return new LweWebViewImpl();
-        }
+    @Override
+    protected void onVisibilityChanged(View changedView, int visibility) {
+    }
+
+    @Override
+    protected void onWindowVisibilityChanged(int visibility) {
+        super.onWindowVisibilityChanged(visibility);
+    }
+
+    private LweWebView getWebViewInstance() {
+        // local mode for test  should be removed next time.
+        if(delegate==null)
+            return new LweWebViewImpl();
         return delegate;
     }
 

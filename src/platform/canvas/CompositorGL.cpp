@@ -1330,8 +1330,7 @@ public:
     {
         INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
         glClearColor(clr.R(), clr.G(), clr.B(), clr.A());
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT |
-                GL_STENCIL_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
     }
 
     // state

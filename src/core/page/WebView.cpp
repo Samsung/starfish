@@ -208,7 +208,9 @@ WebView::WebView(StarFish* starFish)
 void WebView::close()
 {
     STARFISH_LOG_INFO("WebView::close()\n");
-    mainBrowsingContext()->dispose();
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->dispose();
+    }
 
     if (m_rootStackingContext) {
         StackingContext* ctx = m_rootStackingContext;
