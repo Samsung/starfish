@@ -167,7 +167,7 @@ http://10.113.111.47:8000/dom/nodes/CharacterData-appendData.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-02.htm
 #http://10.113.111.47:8000/dom/nodes/getElementsByClassName-14.htm
 http://10.113.111.47:8000/dom/nodes/Text-splitText.html
-#http://10.113.111.47:8000/dom/nodes/remove-unscopable.html
+http://10.113.111.47:8000/dom/nodes/remove-unscopable.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-06.htm
 #http://10.113.111.47:8000/dom/nodes/Document-createElement-namespace.html
 #http://10.113.111.47:8000/dom/nodes/Node-parentNode-iframe.html
