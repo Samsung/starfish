@@ -481,6 +481,8 @@ bool Node::isEqualNode(Node* other)
         Element* thisNode = asElement();
         Element* otherNode = other->asElement();
         if (!(thisNode->localName()->equals(otherNode->localName())) ||
+            !(thisNode->prefix() == otherNode->prefix()) ||
+            !(thisNode->namespaceURI() == otherNode->namespaceURI()) ||
             !(thisNode->hasSameAttributes(otherNode))) {
             return false;
         }
@@ -490,6 +492,7 @@ bool Node::isEqualNode(Node* other)
         Attr* thisAttr = asAttr();
         Attr* otherAttr = other->asAttr();
         if (!(thisAttr->localName()->equals(otherAttr->localName())) ||
+            !(thisAttr->namespaceURI() == otherAttr->namespaceURI()) ||
             !(thisAttr->value()->equals(otherAttr->value()))) {
             return false;
         }
@@ -499,7 +502,8 @@ bool Node::isEqualNode(Node* other)
         ProcessingInstruction* thisNode = asProcessingInstruction();
         ProcessingInstruction* otherNode = other->asProcessingInstruction();
         if (!(thisNode->nodeName()->equals(otherNode->nodeName()) &&
-              thisNode->target()->equals(otherNode->target()))) {
+              thisNode->target()->equals(otherNode->target()) &&
+              thisNode->data()->equals(otherNode->data()))) {
             return false;
         }
         break;
@@ -518,16 +522,17 @@ bool Node::isEqualNode(Node* other)
     }
     }
 
-    if (childElementCount() != other->childElementCount()) {
-        return false;
-    }
+    Node* child = firstChild();
     Node* otherChild = other->firstChild();
-    for (Node* child = firstChild(); child; child = child->nextSibling()) {
+    while (child) {
         if (!child->isEqualNode(otherChild)) {
             return false;
         }
-        if (otherChild)
-            otherChild = otherChild->nextSibling();
+        child = child->nextSibling();
+        otherChild = otherChild->nextSibling();
+    }
+    if (otherChild) {
+        return false;
     }
 
     return true;

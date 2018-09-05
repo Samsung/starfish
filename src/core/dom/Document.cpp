@@ -731,15 +731,21 @@ Element* Document::createElement(String* localName)
 
     AtomicString localNameAtomic;
     if (isHTMLDocument()) {
+        AtomicString namespaceURI = AtomicString::createAtomicString(
+            window()->starFish(), HTML_NAMESPACE);
         localNameAtomic = AtomicString::createAttrAtomicString(
             window()->starFish(), localName);
         return HTMLDocument::createHTMLElement(
-            this, QualifiedName(AtomicString::createAtomicString(
-                                    window()->starFish(), HTML_NAMESPACE),
-                                localNameAtomic));
+            this, QualifiedName(namespaceURI, localNameAtomic));
     } else {
         localNameAtomic =
             AtomicString::createAtomicString(window()->starFish(), localName);
+        if (contentType()->equals("application/xhtml+xml")) {
+            AtomicString namespaceURI = AtomicString::createAtomicString(
+                window()->starFish(), HTML_NAMESPACE);
+            return new NamedElement(
+                this, QualifiedName(namespaceURI, localNameAtomic));
+        }
     }
     return new NamedElement(this, QualifiedName(localNameAtomic));
 }

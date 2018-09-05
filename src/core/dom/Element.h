@@ -206,7 +206,8 @@ public:
         }
 
         for (const Attribute& otherAttr : *(otherNode->getAttributes())) {
-            Nullable<String*> attr = getAttribute(otherAttr.name());
+            AttributeName attrName(otherAttr.name(), AttributeName::MatchNS);
+            Nullable<String*> attr = getAttribute(attrName);
             if (!attr.hasValue() ||
                 !attr.getValue()->equals(otherAttr.value())) {
                 return false;
