@@ -149,6 +149,24 @@
 
         },
         {
+            'target_name': 'lwe.tizen.unified_common.release',
+            'type': '<(component)',
+            'product_name': 'lightweight-web-engine.common',
+            'dependencies': [
+                './build.dep.gyp:escargot.tizen.release',
+                './build.dep.gyp:gc.tizen.release',
+                './build.dep.gyp:capi-network-connection',
+                './build.dep.gyp:capi-media-player',
+                './build.dep.gyp:mp4parse',
+                './build.dep.gyp:webm',
+                '<@(deps_release_extra)',
+            ],
+            'defines': [
+                '<@(defines_tizen)',
+                '<@(defines_unified_common)',
+            ],
+        },
+        {
             'target_name': 'lwe.tizen.unified_mobile.release',
             'type': '<(component)',
             'product_name': 'lightweight-web-engine.mobile',

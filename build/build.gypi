@@ -39,6 +39,8 @@
         ],
         # NOTE: specific #defines for each profile
         # e.g., defines used by the compiler = 'defines_tizen' + 'defines_unified_tv'
+        'defines_unified_common': [
+        ],
         'defines_unified_mobile': [
             #'STARFISH_ENABLE_MULTIMEDIA',
         ],
