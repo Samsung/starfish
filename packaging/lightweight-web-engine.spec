@@ -94,8 +94,11 @@ BuildRequires: giflib-devel
 BuildRequires: pkgconfig(bundle)
 
 # Supporting multiprofiles
+# Use profile_mobile as default, as it is both minimal and
+# platform-independent version of LWE at the time of writing
+# TODO: Creates a profile_common if this is no longer true.
 Requires: %{name}-profile = %{version}-%{release}
-#Recommends: %{name}-profile_common = %{version}-%{release}
+Recommends: %{name}-profile_mobile = %{version}-%{release}
 
 %description
 This package provides a Tizen specific implementation of Lightweight Web Engine.
