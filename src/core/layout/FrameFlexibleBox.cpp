@@ -36,15 +36,17 @@ void* FrameFlexibleBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-FlexFormattingContext::FlexFormattingContext(LayoutContext& ctx,
-                                             FrameFlexibleBox* container,
-                                             LayoutUnit availableWidth)
+FlexFormattingContext::FlexFormattingContext(
+    LayoutContext& ctx, FrameFlexibleBox* container, LayoutUnit availableWidth,
+    bool shouldRespectPercentageWidthOnComputingBasisSize)
     : m_layoutContext(ctx)
     , m_container(container)
     , m_isMainAxisInInlineAxis(m_container->isMainAxisInInlineAxis())
     , m_isLtrDirection(m_container->isLtrDirection())
     , m_isTtbDirection(m_container->isTtbDirection())
     , m_isSingleLine(m_container->isSingleLine())
+    , m_shouldRespectPercentageWidthOnComputingBasisSize(
+          shouldRespectPercentageWidthOnComputingBasisSize)
     , m_currentLineIdx(SIZE_MAX)
 {
     addNewLine();
@@ -99,7 +101,8 @@ LayoutUnit FlexFormattingContext::basisSize(FrameBox* flexItem)
     }
 
     LayoutUnit basisSize = m_container->basisSize(
-        m_layoutContext, m_availableMainSize, m_availableCrossSize, flexItem);
+        m_layoutContext, m_availableMainSize, m_availableCrossSize, flexItem,
+        m_shouldRespectPercentageWidthOnComputingBasisSize);
     m_basisSizes[flexItem] = basisSize;
     return basisSize;
 }
@@ -1063,10 +1066,10 @@ struct MinMaxWidthHeightRestorer {
     Length m_maxHeight;
 };
 
-LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
-                                       LayoutUnit availableMainSize,
-                                       LayoutUnit availableCrossSize,
-                                       FrameBox* flexItem)
+LayoutUnit FrameFlexibleBox::basisSize(
+    LayoutContext& ctx, LayoutUnit availableMainSize,
+    LayoutUnit availableCrossSize, FrameBox* flexItem,
+    bool shouldRespectPercentageWidthOnComputingBasisSize)
 {
     bool isMainAxisInInlineAxis = this->isMainAxisInInlineAxis();
     LayoutUnit basisSize = intMaxForLayoutUnit;
@@ -1151,6 +1154,10 @@ LayoutUnit FrameFlexibleBox::basisSize(LayoutContext& ctx,
         if (flexBasis.isWidth()) {
             if (flexBasis.width().isAuto()) {
                 width = oldWidth;
+                if (!shouldRespectPercentageWidthOnComputingBasisSize &&
+                    width.isPercent()) {
+                    width = Length();
+                }
             } else {
                 width = flexBasis.width();
             }

@@ -4516,7 +4516,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
         ctx.updatePreferredWidth(w);
     } else {
         FlexFormattingContext fCtx(ctx.layoutContext(), this,
-                                   ctx.remainingWidth());
+                                   ctx.remainingWidth(), false);
         Frame* f = firstChild();
         // TODO: Implement following
         // https://www.w3.org/TR/css-flexbox-1/#intrinsic-sizes
