@@ -1,10 +1,10 @@
-apply plugin: 'com.android.application'
-// apply plugin: 'com.android.library'
+//apply plugin: 'com.android.application'
+ apply plugin: 'com.android.library'
 
 android {
     compileSdkVersion 26
     defaultConfig {
-        applicationId "com.samsung.android.mobileservice.lwe"
+//        applicationId "com.samsung.android.mobileservice.lwe"
         minSdkVersion 26
         targetSdkVersion 26
         versionCode 1
@@ -47,13 +47,13 @@ android {
             }
         }
     }
-    // libraryVariants.all { variant ->
-    //     variant.outputs.all { output ->
-    //         if (outputFile != null && outputFileName.endsWith('.aar')) {
-    //             outputFileName = "LightweightWebEngine-0.1.aar"
-    //         }
-    //     }
-    // }
+     libraryVariants.all { variant ->
+         variant.outputs.all { output ->
+             if (outputFile != null && outputFileName.endsWith('.aar')) {
+                 outputFileName = "lightweight-web-engine.aar"
+             }
+         }
+     }
 }
 
 dependencies {
