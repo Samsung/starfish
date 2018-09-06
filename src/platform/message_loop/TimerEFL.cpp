@@ -36,8 +36,8 @@
 
 namespace StarFish {
 
-Timer::Timer(StarFish* sf)
-    : m_starFish(sf)
+Timer::Timer(WebView* wv)
+    : m_webView(wv)
 {
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;
@@ -192,13 +192,13 @@ void Timer::removeWindowAnimator(size_t reqID)
         TimeoutData* td = (TimeoutData*)handlerData->second;
         ecore_animator_freeze((Ecore_Animator*)td->m_timerID);
         ecore_animator_del((Ecore_Animator*)td->m_timerID);
-        m_starFish->messageLoop()->addIdler(td->m_window->browsingContext(),
-                                            [](size_t, void* data) {
-                                                TimeoutData* td =
-                                                    (TimeoutData*)data;
-                                                GC_FREE(td);
-                                            },
-                                            td);
+        m_webView->messageLoop()->addIdler(td->m_window->browsingContext(),
+                                           [](size_t, void* data) {
+                                               TimeoutData* td =
+                                                   (TimeoutData*)data;
+                                               GC_FREE(td);
+                                           },
+                                           td);
         m_requestAnimationFrameHandler.erase(handlerData);
     }
 }
@@ -263,9 +263,9 @@ void Timer::clear(BrowsingContext* ctx)
     }
 }
 
-void Timer::close()
+void Timer::destroy()
 {
-    STARFISH_LOG_INFO("TimerEFL::close\n");
+    STARFISH_LOG_INFO("TimerEFL::destroy\n");
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;

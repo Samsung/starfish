@@ -36,7 +36,7 @@ public:
     }
     void addWork(BrowsingContext* ctx, ThreadWorker fn, void* data);
     void clearWork(BrowsingContext* ctx); // give nullptr to clear every idlers
-    void close();
+    void destroy();
 
 protected:
     bool m_isClosed;

@@ -26,6 +26,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/style/CSSStyleLookupTrie.h"
 
@@ -239,15 +240,15 @@ Document* fetchDocument(ContextRef* ctx)
     return window->document();
 }
 
-StarFish* fetchStarFish(ContextRef* ctx)
+WebView* fetchWebView(ContextRef* ctx)
 {
     Window* window = (Window*)ctx->globalObject()->extraData();
-    return window->starFish();
+    return window->webView();
 }
 
 StaticStrings* fetchStaticStrings(ContextRef* ctx)
 {
-    return fetchStarFish(ctx)->staticStrings();
+    return fetchWebView(ctx)->starFish()->staticStrings();
 }
 
 String* toBrowserString(ExecutionStateRef* state, ValueRef* v)

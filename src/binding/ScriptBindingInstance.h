@@ -71,7 +71,7 @@ public:
     ScriptBindingInstance(ScriptEngineInstance* engineInstance,
                           Window* ownerWindow);
     void initBinding(Document* ownerDocument);
-    void close();
+    void destroy();
 
     Document* ownerDocument()
     {

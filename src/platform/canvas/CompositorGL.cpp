@@ -27,6 +27,7 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
 #if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
@@ -799,7 +800,7 @@ public:
             m_height = h;
 
             float windowDevicePixelRatio =
-                m_window->starFish()->screenInfo().devicePixelRatio;
+                m_window->webView()->screenInfo().devicePixelRatio;
 
             m_imageWidth =
                 std::max((size_t)1, (size_t)(m_width * windowDevicePixelRatio));
@@ -1235,19 +1236,18 @@ public:
     void applyDevicePixelRatio()
     {
         m_state.back().matrix.preScale(
-            m_starfish->screenInfo().devicePixelRatio,
-            m_starfish->screenInfo().devicePixelRatio);
+            m_webView->screenInfo().devicePixelRatio,
+            m_webView->screenInfo().devicePixelRatio);
     }
 
-    CompositorImplGL(StarFish* starfish, CompositorContext* compositorContext)
+    CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
-        m_starfish = starfish;
+        m_webView = webView;
         m_compositorContext = compositorContext;
         glEnable(GL_BLEND);
         glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        glViewport(0, 0, starfish->platformWindow()->width(),
-                   starfish->platformWindow()->height());
+        glViewport(0, 0, m_webView->platformWindow()->width(),
+                   m_webView->platformWindow()->height());
 
         m_state.push_back(CompositorImplGLState());
         m_state.back().matrixStaysInRect = true;
@@ -1258,12 +1258,12 @@ public:
         auto uScreenPos = glGetUniformLocation(
             m_compositorContext->m_texShaderProgram, "uScreen");
 
-        float uScreen[] = { 2.f / m_starfish->platformWindow()->width(),
+        float uScreen[] = { 2.f / m_webView->platformWindow()->width(),
                             0.f,
                             0.f,
                             0.f,
                             0.f,
-                            -2.f / m_starfish->platformWindow()->height(),
+                            -2.f / m_webView->platformWindow()->height(),
                             0.f,
                             0.f,
                             0.f,
@@ -1316,22 +1316,20 @@ public:
 
         glUseProgram(0);
 
-        clip(Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
-                        m_starfish->platformWindow()->height()));
+        clip(Unit::Rect(0, 0, m_webView->platformWindow()->width(),
+                        m_webView->platformWindow()->height()));
 
         applyDevicePixelRatio();
     }
 
     ~CompositorImplGL()
     {
-        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
     }
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
         glClearColor(clr.R(), clr.G(), clr.B(), clr.A());
         glClear(GL_COLOR_BUFFER_BIT);
     }
@@ -1431,7 +1429,6 @@ public:
 
     virtual void drawRect(const Unit::Rect& rt)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
         SkPoint pt;
@@ -1736,8 +1733,6 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_starfish, __PRETTY_FUNCTION__);
-
         auto textureInfo = cs->textureInfo();
         if (textureInfo.fragments.size() == 0) {
             return;
@@ -1773,8 +1768,8 @@ public:
         bool scissorClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
         Unit::Rect visibleArea =
-            Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
-                       m_starfish->platformWindow()->height());
+            Unit::Rect(0, 0, m_webView->platformWindow()->width(),
+                       m_webView->platformWindow()->height());
 
         if (m_state.back().clipPaths.size()) {
             visibleArea = Unit::Rect(0, 0, 0, 0);
@@ -1801,7 +1796,7 @@ public:
 
                     glEnable(GL_SCISSOR_TEST);
                     glScissor(minX,
-                              m_starfish->platformWindow()->height() - maxY,
+                              m_webView->platformWindow()->height() - maxY,
                               maxX - minX, maxY - minY);
                 } else {
                     stencilClippingEnabled = true;
@@ -2012,7 +2007,7 @@ public:
                             GLuint tid = (GLuint)fragment.textureID;
 
                             if (csGL->m_textureFragmentsFlags[i].m_isDirty) {
-                                INSTALL_PROFILE_TIMER(m_starfish,
+                                INSTALL_PROFILE_TIMER(m_webView,
                                                       "update texture tile..");
 
                                 size_t xx =
@@ -2089,8 +2084,8 @@ public:
             glDisable(GL_STENCIL_TEST);
         }
         if (scissorClippingEnabled) {
-            glScissor(0, 0, m_starfish->platformWindow()->width(),
-                      m_starfish->platformWindow()->height());
+            glScissor(0, 0, m_webView->platformWindow()->width(),
+                      m_webView->platformWindow()->height());
             glDisable(GL_SCISSOR_TEST);
         }
     }
@@ -2132,30 +2127,30 @@ public:
         m_state.back().clipPaths.clear();
         m_state.back().matrixStaysInRect = true;
 
-        clip(Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
-                        m_starfish->platformWindow()->height()));
+        clip(Unit::Rect(0, 0, m_webView->platformWindow()->width(),
+                        m_webView->platformWindow()->height()));
         applyDevicePixelRatio();
     }
 
     virtual void resetClip()
     {
         m_state.back().clipPaths.clear();
-        clip(Unit::Rect(0, 0, m_starfish->platformWindow()->width(),
-                        m_starfish->platformWindow()->height()));
+        clip(Unit::Rect(0, 0, m_webView->platformWindow()->width(),
+                        m_webView->platformWindow()->height()));
     }
 
 protected:
-    StarFish* m_starfish;
+    WebView* m_webView;
     CompositorContext* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;
 };
 
-Compositor* Compositor::create3D(StarFish* starfish, CompositorContext* ctx)
+Compositor* Compositor::create3D(WebView* webView, CompositorContext* ctx)
 {
-    return new CompositorImplGL(starfish, ctx);
+    return new CompositorImplGL(webView, ctx);
 }
 
-Compositor* Compositor::create2D(StarFish* starfish, CompositorContext* ctx,
+Compositor* Compositor::create2D(WebView* webView, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -2181,8 +2176,8 @@ void screenShotImpl(PlatformWindow* wnd, const char* path,
                  buffer);
 
     // convert to rgba to bgra for cairo
-    for (int y = 0; y < deviceHeight; y++) {
-        for (int x = 0; x < deviceWidth; x++) {
+    for (uint32_t y = 0; y < deviceHeight; y++) {
+        for (uint32_t x = 0; x < deviceWidth; x++) {
             uint8_t* head = &buffer[rowLength * y + x * 4];
             std::swap(head[0], head[2]);
         }
@@ -2190,19 +2185,19 @@ void screenShotImpl(PlatformWindow* wnd, const char* path,
 
     // flip W
     /*
-        for (int y = 0; y < deviceHeight; y++) {
+        for (uint32_t y = 0; y < deviceHeight; y++) {
             uint32_t* head = (uint32_t*)&buffer[rowLength * y];
-            for (int x = 0; x < deviceWidth / 2; x++) {
+            for (uint32_t x = 0; x < deviceWidth / 2; x++) {
                 std::swap(head[x], head[deviceWidth - x - 1]);
             }
         }
     */
     // flip H
-    for (int y = 0; y < deviceHeight / 2; y++) {
+    for (uint32_t y = 0; y < deviceHeight / 2; y++) {
         uint32_t* head = (uint32_t*)&buffer[rowLength * y];
         uint32_t* head2 =
             (uint32_t*)&buffer[rowLength * (deviceHeight - y - 1)];
-        for (int x = 0; x < deviceWidth; x++) {
+        for (uint32_t x = 0; x < deviceWidth; x++) {
             std::swap(head[x], head2[x]);
         }
     }

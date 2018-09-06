@@ -69,22 +69,19 @@
 
 namespace StarFish {
 
-BrowsingContext* BrowsingContext::create(StarFish* starFish, WebView* webView)
+BrowsingContext* BrowsingContext::create(WebView* webView)
 {
     STARFISH_ASSERT(webView);
-    return new BrowsingContext(starFish, webView);
+    return new BrowsingContext(webView);
 }
 
 BrowsingContext* BrowsingContext::create(HTMLIFrameElement* sourceElement)
 {
-    return new BrowsingContext(
-        sourceElement->starFish(),
-        sourceElement->document()->browsingContext()->webView(), sourceElement);
+    return new BrowsingContext(sourceElement->webView(), sourceElement);
 }
 
-BrowsingContext::BrowsingContext(StarFish* starFish, WebView* webView,
-                                 HTMLIFrameElement* source)
-    : StarFishHoldable(starFish)
+BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source)
+    : WebViewHoldable(webView)
     , m_webView(webView)
     , m_window(nullptr)
     , m_parentBrowsingContext(source ? source->document()->browsingContext()
@@ -133,24 +130,22 @@ void BrowsingContext::open(ResourceURL* url, HistoryManager::Action type,
     m_isActive = true;
 
     if (isTopLevelBrowsingContext()) {
-        m_window =
-            Window::create(m_starFish, this, url,
-                           starFish()->platformWindow()->width() /
-                               starFish()->screenInfo().devicePixelRatio,
-                           starFish()->platformWindow()->height() /
-                               starFish()->screenInfo().devicePixelRatio);
+        m_window = Window::create(this, url,
+                                  webView()->platformWindow()->width() /
+                                      webView()->screenInfo().devicePixelRatio,
+                                  webView()->platformWindow()->height() /
+                                      webView()->screenInfo().devicePixelRatio);
     } else {
         if (m_sourceElement->frame()) {
-            m_window = Window::create(m_starFish, this, url,
-                                      (uint32_t)m_sourceElement->frame()
-                                          ->asFrameBox()
-                                          ->contentWidth(),
-                                      (uint32_t)m_sourceElement->frame()
-                                          ->asFrameBox()
-                                          ->contentHeight());
+            m_window =
+                Window::create(this, url, (uint32_t)m_sourceElement->frame()
+                                              ->asFrameBox()
+                                              ->contentWidth(),
+                               (uint32_t)m_sourceElement->frame()
+                                   ->asFrameBox()
+                                   ->contentHeight());
         } else {
-            m_window = Window::create(m_starFish, this, url,
-                                      STARFISH_DEFAULT_IFRAME_WIDTH,
+            m_window = Window::create(this, url, STARFISH_DEFAULT_IFRAME_WIDTH,
                                       STARFISH_DEFAULT_IFRAME_HEIGHT);
         }
     }
@@ -646,10 +641,11 @@ void BrowsingContext::dispose()
 
     m_globalPointingEventListener.clear();
 
-    if (isTopLevelBrowsingContext())
-        m_starFish->timer()->clear(nullptr);
-    else
-        m_starFish->timer()->clear(this);
+    if (isTopLevelBrowsingContext()) {
+        webView()->timer()->clear(nullptr);
+    } else {
+        webView()->timer()->clear(this);
+    }
 
     if (m_window) {
         if (!document()->onLoadFired()) {
@@ -662,7 +658,7 @@ void BrowsingContext::dispose()
 
         if (scriptBindingInstance()) {
             {
-                scriptBindingInstance()->close();
+                scriptBindingInstance()->destroy();
             }
             document()->window()->deleteScriptBindingInstance();
         }
@@ -679,8 +675,8 @@ void BrowsingContext::dispose()
             webView()->removeScriptEngineInstance();
         }
 
-        m_starFish->platformWindow()->clearResources();
-        m_starFish->messageLoop()->clearPendingIdlers(this);
+        webView()->platformWindow()->clearResources();
+        webView()->messageLoop()->clearPendingIdlers(this);
 
         auto& prevDrawnInfo = webView()->prevDrawnStackingContextInfo();
         auto iter = prevDrawnInfo.begin();
@@ -694,7 +690,7 @@ void BrowsingContext::dispose()
 
         m_webView->initRenderingFlags();
     } else {
-        m_starFish->messageLoop()->clearPendingIdlers(this);
+        webView()->messageLoop()->clearPendingIdlers(this);
     }
 
     m_rootMap.clear();
@@ -732,6 +728,7 @@ void BrowsingContext::setNeedsStyleSheetsRecalc()
 void BrowsingContext::updateDefaultFontSize()
 {
     auto doc = document();
+    doc->styleResolver().m_mediumFontSize = webView()->defaultFontSize();
     doc->setStyle(doc->styleResolver().resolveDocumentStyle(doc));
     setNeedsStyleSheetsRecalc();
 
@@ -754,8 +751,7 @@ Node* BrowsingContext::hitTest(float x, float y)
             frame = frame->parent();
         }
 #ifdef STARFISH_ENABLE_TEST
-        if (m_starFish->startUpFlag() &
-            StarFishStartUpFlag::enableHitTestDump) {
+        if (webView()->startUpFlag() & StarFishStartUpFlag::enableHitTestDump) {
             printf("hitTest Result-> ");
             frame->node()->dump();
             puts("");
@@ -1175,7 +1171,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     // - Check whether touch position moved away from original position
     //   to release active nodes.
     bool checkRelease = kind == TouchEventKind::TouchEventMove &&
-                        (starFish()->deviceKind() & deviceKindUseTouchScreen);
+                        (webView()->deviceKind() & deviceKindUseTouchScreen);
     Node* targetNode = nullptr;
     double targetX = 0;
     double targetY = 0;
@@ -1541,7 +1537,7 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
     }
 
     pkdata.setEventModifierData(
-        starFish()->platformWindow()->eventModifierData());
+        webView()->platformWindow()->eventModifierData());
 
     KeyboardEventInit kinitData(pkdata);
     KeyboardEvent* e = new KeyboardEvent(document(), eventType, kinitData);

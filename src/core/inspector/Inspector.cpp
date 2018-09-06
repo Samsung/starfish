@@ -22,6 +22,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "Inspector.h"
+#include "core/page/WebView.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
@@ -33,8 +34,8 @@ struct Request {
     rapidjson::Document document;
 };
 
-Inspector::Inspector(StarFish* starFish)
-    : m_starFish(starFish)
+Inspector::Inspector(WebView* wv)
+    : m_webView(wv)
     , m_zmqContext(new zmq::context_t(1))
     , m_zmqSocket(nullptr)
     , m_addr()
@@ -174,7 +175,7 @@ void Inspector::commandEvaluator(size_t, void* data)
 {
     Request* r = (Request*)data;
     if (std::string(r->document["command"].GetString()) == "eval") {
-        String* result = r->inspector->m_starFish->evaluate(
+        String* result = r->inspector->m_webView->evaluateJavaScript(
             String::fromUTF8(r->document["content"].GetString()));
         if (result->length()) {
             r->inspector->sendInfoMessage(result);
@@ -240,7 +241,7 @@ void* Inspector::worker(void* data)
 
                     delete r;
                 } else {
-                    self->m_starFish->messageLoop()
+                    self->m_webView->messageLoop()
                         ->addIdlerWithNoGCRootingInOtherThread(
                             nullptr, Inspector::commandEvaluator, r);
                 }
@@ -264,12 +265,12 @@ void* Inspector::worker(void* data)
 
 void Inspector::run(uint32_t port)
 {
-    m_ioThread = new Thread(m_starFish);
+    m_ioThread = new Thread(m_webView);
     m_addr = "tcp://0.0.0.0:";
     m_addr += std::to_string(port);
     STARFISH_LOG_INFO("inspector open server %s\n", m_addr.c_str());
     try {
-        m_ioThread->run(m_starFish->messageLoop(), Inspector::worker, this);
+        m_ioThread->run(m_webView->messageLoop(), Inspector::worker, this);
     } catch (...) {
         m_ioThread = nullptr;
     }

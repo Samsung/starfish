@@ -23,6 +23,7 @@
 #include "core/style/ComputedStyle.h"
 #include "core/style/WebFont.h"
 #include "core/dom/Document.h"
+#include "core/page/WebView.h"
 #include "platform/loader/ResourceLoader.h"
 
 #ifdef PORT_CANVAS_BACKEND_SKIA
@@ -306,7 +307,7 @@ Font* FontSelector::loadFont(String* familyNameArray[],
     }
 
     UTF8StringDataNonGCStd familyName = document()
-                                            ->starFish()
+                                            ->webView()
                                             ->initialFontFamilyDatas()[1]
                                             .m_familyName->toUTF8NonGCString();
     UTF8StringDataNonGCStd cacheStr =

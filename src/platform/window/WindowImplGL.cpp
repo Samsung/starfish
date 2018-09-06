@@ -47,7 +47,7 @@ std::string g_screenShotPath;
 class WindowImplGL;
 void screenShotImpl(PlatformWindow* wnd, const char* path,
                     std::function<void()> callback);
-void screenShotInRendering(StarFish* starfish, const char* path,
+void screenShotInRendering(WebView* wv, const char* path,
                            std::function<void()> callback)
 {
     g_screenShotCallback = callback;
@@ -58,7 +58,7 @@ void screenShotInRendering(StarFish* starfish, const char* path,
 
 class WindowImplGL : public PlatformWindow {
 public:
-    WindowImplGL(StarFish* sf, int32_t width, int32_t height)
+    WindowImplGL(StarFish* sf, uint32_t width, uint32_t height)
         : PlatformWindow(sf)
         , m_width(width)
         , m_height(height)
@@ -73,19 +73,19 @@ public:
         m_isKeyDown = false;
     }
 
-    virtual int32_t width() override
+    virtual uint32_t width() override
     {
         return m_width;
     }
 
-    virtual int32_t height() override
+    virtual uint32_t height() override
     {
         return m_height;
     }
 
-    virtual void resizeTo(int w, int h) override
+    virtual void resizeTo(uint32_t w, uint32_t h) override
     {
-        if (w != (int)m_width || h != (int)m_height) {
+        if (w != m_width || h != m_height) {
             m_width = w;
             m_height = h;
             PlatformWindow::resizeTo(w, h);
@@ -107,25 +107,25 @@ public:
                 m_glPaintingSurface->unMapBufferAndNotifyUpdateRegion(
                     (int)ret.updateRect.x(), (int)ret.updateRect.y(),
                     (int)ret.updateRect.width(), (int)ret.updateRect.height());
-                float oldDPR = m_starFish->screenInfo().devicePixelRatio;
-                m_starFish->screenInfo().devicePixelRatio = 1;
+                float oldDPR = webView()->screenInfo().devicePixelRatio;
+                webView()->mutableScreenInfo().devicePixelRatio = 1;
                 Compositor* c =
-                    Compositor::create3D(starFish(), m_compostiorContext);
+                    Compositor::create3D(webView(), m_compostiorContext);
                 c->clearColor(Unit::Color(0, 0, 0, 0));
                 c->drawSurface(m_glPaintingSurface,
                                Unit::Rect(0, 0, width(), height()));
                 delete c;
-                m_starFish->screenInfo().devicePixelRatio = oldDPR;
+                webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
             }
 #if defined(STARFISH_ENABLE_TEST)
-            if ((starFish()->startUpFlag() &
+            if ((webView()->startUpFlag() &
                  StarFishStartUpFlag::enableDebugRepaintRegion)) {
                 STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
                                   (float)ret.computedRepaintRect.x(),
                                   (float)ret.computedRepaintRect.y(),
                                   (float)ret.computedRepaintRect.width(),
                                   (float)ret.computedRepaintRect.height());
-                auto c = Compositor::create3D(starFish(), m_compostiorContext);
+                auto c = Compositor::create3D(webView(), m_compostiorContext);
                 c->setColor(Unit::Color(255, 0, 0, 128));
                 c->drawRect(ret.computedRepaintRect);
                 delete c;
@@ -190,7 +190,7 @@ public:
 
 Canvas* WindowImplGL::preparePainting()
 {
-    float DPR = starFish()->screenInfo().devicePixelRatio;
+    float DPR = webView()->screenInfo().devicePixelRatio;
     if (!m_glPaintingSurface) {
         webView()->setNeedsFullRepainting();
         m_glPaintingSurface =
@@ -200,7 +200,7 @@ Canvas* WindowImplGL::preparePainting()
                                                 height() / DPR)) {
         webView()->setNeedsFullRepainting();
     }
-    return Canvas::create(starFish(), m_glPaintingSurface);
+    return Canvas::create(webView(), m_glPaintingSurface);
 }
 
 Compositor* WindowImplGL::prepareCompositor()
@@ -209,10 +209,11 @@ Compositor* WindowImplGL::prepareCompositor()
         m_glPaintingSurface->detachNativeBuffer();
         m_glPaintingSurface = nullptr;
     }
-    return Compositor::create3D(starFish(), m_compostiorContext);
+    return Compositor::create3D(webView(), m_compostiorContext);
 }
 
-PlatformWindow* PlatformWindow::create(StarFish* sf, int width, int height)
+PlatformWindow* PlatformWindow::create(StarFish* sf, uint32_t width,
+                                       uint32_t height)
 {
     return new WindowImplGL(sf, width, height);
 }

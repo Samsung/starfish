@@ -20,15 +20,17 @@
 #ifndef __JavaScriptNativeHandler__
 #define __JavaScriptNativeHandler__
 
-namespace StarFish {
-class ScriptWrappable;
-class StarFishHoldable;
+#include "binding/WebViewHoldable.h"
 
-class JavaScriptNativeHandler : public ScriptWrappable,
-                                public StarFishHoldable {
+namespace StarFish {
+
+class ScriptWrappable;
+class WebViewHoldable;
+
+class JavaScriptNativeHandler : public ScriptWrappable, public WebViewHoldable {
 public:
     typedef std::function<std::string(std::string)> NativeFunctionPtr;
-    JavaScriptNativeHandler(StarFish* starFish, String* functionName,
+    JavaScriptNativeHandler(WebView* wv, String* functionName,
                             NativeFunctionPtr nativeCallback);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override

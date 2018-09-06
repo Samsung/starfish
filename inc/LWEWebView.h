@@ -115,8 +115,6 @@ public:
     // TODO
     // <--- end of function set for headless
 
-    void RunMessageLoop();
-    void StopMessageLoop();
     void AddIdleCallback(void (*callback)(void*), void* data);
     size_t AddTimeout(void (*callback)(void*), void* data, size_t timeoutInMS);
     void ClearTimeout(size_t handle);
@@ -219,10 +217,10 @@ public:
                  const std::function<void()>& doRenderingFunction)>& cb);
 
 protected:
-    WebContainer(void* starFish);
+    WebContainer(void* webView);
 
 private:
-    void* m_starfish;
+    void* m_impl;
 };
 
 class LWE_EXPORT WebView {
@@ -284,9 +282,6 @@ public:
 
     void SetUserData(const std::string& key, void* data);
     void* GetUserData(const std::string& key);
-
-    virtual void RunMessageLoop();
-    virtual void StopMessageLoop();
 
     virtual void* Unwrap()
     {

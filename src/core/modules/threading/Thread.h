@@ -20,7 +20,7 @@
 #ifndef __StarFishThread__
 #define __StarFishThread__
 
-#include "binding/StarFishHoldable.h"
+#include "binding/WebViewHoldable.h"
 namespace StarFish {
 
 class MessageLoop;
@@ -32,6 +32,7 @@ typedef void* (*ThreadWorker)(void*);
 void registerMainThread();
 bool isMainThread();
 size_t mainThreadID();
+size_t numberOfCores();
 
 struct ThreadData {
     ThreadData(Thread* t, MessageLoop* m, ThreadWorker w, void* d)
@@ -53,9 +54,9 @@ struct ThreadData {
     size_t m_joinHandle;
 };
 
-class Thread : public gc, public StarFishHoldable {
+class Thread : public gc, public WebViewHoldable {
 public:
-    Thread(StarFish* starFish);
+    Thread(WebView* wv);
     ~Thread()
     {
     }

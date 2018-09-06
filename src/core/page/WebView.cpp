@@ -44,6 +44,8 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/threading/Thread.h"
+#include "core/modules/threading/ThreadPool.h"
 #include "core/util/URL.h"
 
 #include "core/dom/HTMLDocument.h"
@@ -59,6 +61,17 @@
 #include "browser/storage/WebStorageNamespaceProvider.h"
 #include "browser/history/HistoryManager.h"
 #include "binding/ScriptEngineInstance.h"
+#include "core/inspector/Inspector.h"
+#include "core/extra/Console.h"
+#include "core/style/ComputedStyle.h"
+#include "platform/file/File.h"
+
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+#include "core/extra/Avplay.h"
+#endif
+#ifdef STARFISH_ENABLE_TTS
+#include "core/modules/tts/TTS.h"
+#endif
 
 #ifdef STARFISH_ENABLE_TEST
 #include "core/extra/Console.h"
@@ -67,12 +80,15 @@
 extern bool g_fireOnloadEvent;
 extern bool g_forceRendering;
 extern StarFish::CanvasSurface* g_surfaceForScreehShot;
+
+int g_testCompatibleMode;
+int g_startUpFlag;
 #endif
 
 namespace StarFish {
 #if defined(STARFISH_ENABLE_TEST)
 // should be defined in each window port
-void screenShotInRendering(StarFish* starfish, const char* path,
+void screenShotInRendering(WebView* wv, const char* path,
                            std::function<void()> callback);
 // WPT Reference Test
 static Nullable<String*> rtExtractReference(Document* document)
@@ -88,7 +104,7 @@ static Nullable<String*> rtExtractReference(Document* document)
     return Nullable<String*>();
 }
 // WPT Reference Test
-static void rtShouldTrue(bool condition, StarFish* starfish, const char* msg)
+static void rtShouldTrue(bool condition, WebView* wv, const char* msg)
 {
     if (!condition) {
         STARFISH_LOG_INFO("STARFISH_RTERROR %s\n", msg);
@@ -100,7 +116,7 @@ static void rtShouldLoaded(Document* document, const char* msg)
 {
     HTMLCollection* error =
         document->getElementsByTagName(String::createASCIIString("sfrtfailed"));
-    rtShouldTrue((!error->length()), document->starFish(), msg);
+    rtShouldTrue((!error->length()), document->webView(), msg);
 }
 // WPT Reference Test
 static std::string rtCreatePngName(int id)
@@ -110,22 +126,22 @@ static std::string rtCreatePngName(int id)
     return buf;
 }
 // WPT Reference Test
-static void rtScreenShot(StarFish* starfish)
+static void rtScreenShot(WebView* wv)
 {
     std::string capturePng = rtCreatePngName(g_referenceTestState);
-    screenShotInRendering(starfish, capturePng.c_str(), [capturePng]() {
+    screenShotInRendering(wv, capturePng.c_str(), [capturePng]() {
         STARFISH_LOG_INFO("STARFISH_RTCAPTURED %s\n", capturePng.c_str());
     });
 }
 // WPT Reference Test
-static bool rtPixelDiff(StarFish* starfish)
+static bool rtPixelDiff(WebView* wv)
 {
     std::string cmd = "./tool/imgdiff/imgdiff ";
     cmd += rtCreatePngName(1);
     cmd += " ";
     cmd += rtCreatePngName(2);
     FILE* fp = popen(cmd.c_str(), "r");
-    rtShouldTrue(fp, starfish, "INVALID_IMGDIFF");
+    rtShouldTrue(fp, wv, "INVALID_IMGDIFF");
 
     int ch;
     std::string output;
@@ -138,33 +154,33 @@ static bool rtPixelDiff(StarFish* starfish)
 // WPT Reference Test
 static void rtDoTest(Document* document)
 {
-    StarFish* starfish = document->starFish();
+    WebView* wv = document->webView();
     if (g_referenceTestState == 1) {
         // Case1: Running TC
         rtShouldLoaded(document, "TC_LOAD_FAIL");
 
         Nullable<String*> url = rtExtractReference(document);
-        rtShouldTrue(url.hasValue(), starfish, "WRONG_REF_URL");
+        rtShouldTrue(url.hasValue(), wv, "WRONG_REF_URL");
 
-        rtScreenShot(starfish);
+        rtScreenShot(wv);
         g_referenceTestState = 2;
 
-        starfish->messageLoop()->addIdler(
+        wv->messageLoop()->addIdler(
             nullptr,
             [](size_t, void* data0, void* data1) {
                 Document* document = (Document*)data0;
                 g_fireOnloadEvent = false;
                 ResourceURL* url = new ResourceURL(
                     (String*)data1, document->baseURL()->baseURI());
-                document->starFish()->platformWindow()->webView()->navigate(
-                    url, HistoryManager::Action::Add, nullptr);
+                document->webView()->navigate(url, HistoryManager::Action::Add,
+                                              nullptr);
             },
             document, url.getValue());
     } else if (g_referenceTestState == 2) {
         // Case2: Running Reference
         rtShouldLoaded(document, "REF_LOAD_FAIL");
-        rtScreenShot(starfish);
-        if (rtPixelDiff(starfish)) {
+        rtScreenShot(wv);
+        if (rtPixelDiff(wv)) {
             STARFISH_LOG_INFO("STARFISH_RTPASS\n");
         } else {
             STARFISH_LOG_INFO("STARFISH_RTFAIL\n");
@@ -174,13 +190,24 @@ static void rtDoTest(Document* document)
 }
 #endif
 
-WebView* WebView::create(StarFish* starFish)
+WebView* WebView::create(StarFish* starFish, const char* locale,
+                         const char* timezoneID, uint32_t w, uint32_t h,
+                         uint32_t defaultFontSize, String* defaultFontName,
+                         const ScreenInfo& info, String* customUserAgentString,
+                         String* builtinPolyfillPathString)
 {
-    return new WebView(starFish);
+    return new WebView(starFish, locale, timezoneID, w, h, defaultFontSize,
+                       defaultFontName, info, customUserAgentString,
+                       builtinPolyfillPathString);
 }
 
-WebView::WebView(StarFish* starFish)
+WebView::WebView(StarFish* starFish, const char* locale, const char* timezoneID,
+                 uint32_t w, uint32_t h, uint32_t defaultFontSize,
+                 String* defaultFontName, const ScreenInfo& info,
+                 String* customUserAgentString,
+                 String* builtinPolyfillPathString)
     : StarFishHoldable(starFish)
+    , m_platformWindow(PlatformWindow::create(starFish, w, h))
     , m_topLevelBrowsingContext(nullptr)
     , m_scriptEngineInstance(nullptr)
     , m_storageNamespaceProvider(nullptr)
@@ -199,18 +226,71 @@ WebView::WebView(StarFish* starFish)
     , m_didCompositeBefore(false)
     , m_rootStackingContext(nullptr)
     , m_activeAnimatorForAnimationExecutor(SIZE_MAX)
+    , m_messageLoop(new MessageLoop(this))
+    , m_timer(new Timer(this))
+    , m_console(new Console(this))
+#ifdef STARFISH_ENABLE_TTS
+    , m_tts(new TTS(this))
+#endif
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
+    , m_avplay(new Avplay(this))
+#endif
+#if defined(STARFISH_ENABLE_INSPECTOR)
+    , m_inspector(nullptr)
+#endif
+    , m_locale(icu::Locale::createFromName(locale))
+    , m_timezoneID(String::fromUTF8(timezoneID))
+    , m_defaultFontSize(defaultFontSize)
+    , m_screenInfo(info)
+    , m_customUserAgentString(customUserAgentString)
+    , m_builtinPolyfillPathString(builtinPolyfillPathString)
+#ifdef STARFISH_ENABLE_TEST
+    , m_testCompatibleMode(StarFishTestCompatibleMode::Normal)
+#endif
 {
+    m_platformWindow->setWebView(this);
+    m_deviceKind = deviceKindUseTouchScreen;
+#ifdef STARFISH_ENABLE_TEST
+    m_testCompatibleMode = g_testCompatibleMode;
+    m_startUpFlag = g_startUpFlag;
+#else
+    m_startUpFlag = 0;
+#endif
+
+    m_messageLoop = new MessageLoop(this);
+    m_timer = new Timer(this);
+#ifndef STARFISH_THREAD_POOL_SIZE
+#define STARFISH_THREAD_POOL_SIZE 6
+#endif
+    m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
     m_historyManager = HistoryManager::create(this);
     initRenderingFlags();
     initStorage();
+
+    m_initialFontFamilyDatas = (new (GC_MALLOC(sizeof(FontFamilyData) * 2))
+                                    FontFamilyData[2]{ 1, defaultFontName });
+
+    m_platformFontSelector = PlatformFontSelector::create(this);
+    m_platformFontCache = PlatformFontCache::create(this);
+
+    // saidly.. few port layer needs this variable
+    m_publicLayerUserDataMap["__internalWebContainerImplementLayerVariable"] =
+        this;
+    m_starFish->m_webViewInstanceCount++;
 }
 
-void WebView::close()
+void WebView::destroy()
 {
-    STARFISH_LOG_INFO("WebView::close()\n");
+#if defined(STARFISH_ENABLE_INSPECTOR)
+    delete m_inspector;
+    m_inspector = nullptr;
+#endif
+
+    STARFISH_LOG_INFO("WebView::destroy()\n");
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispose();
     }
+    mainBrowsingContext()->dispose();
 
     if (m_rootStackingContext) {
         StackingContext* ctx = m_rootStackingContext;
@@ -231,6 +311,28 @@ void WebView::close()
         clearSC(ctx);
         m_rootStackingContext = nullptr;
     }
+
+    m_threadPool->destroy();
+    STARFISH_ASSERT(isMainThread());
+    // NOTE: Iterate copied list.
+    //       joinIfNeeds() may modify m_activeThreadList.
+    GCVector<Thread*> copies = m_activeThreadList;
+    for (auto th : copies) {
+        th->joinIfNeeds();
+    }
+    m_messageLoop->destroy();
+    m_timer->destroy();
+
+    m_publicLayerUserDataMap.clear();
+
+    delete m_platformFontCache;
+    delete m_platformFontSelector;
+
+    m_platformWindow->destroy();
+
+    m_starFish->m_webViewInstanceCount--;
+
+    this->WebView::~WebView();
 }
 
 void WebView::initStorage()
@@ -244,6 +346,37 @@ void WebView::initStorage()
         m_storageNamespaceProvider->createSessionStorageNamespace();
 }
 
+static String* resolvePath(String* filePath)
+{
+    String* resolvedPath = filePath;
+    if (!filePath->startsWith("http") && !filePath->startsWith("about") &&
+        !filePath->startsWith("data:")) {
+#if defined(OS_WINDOWS)
+        String* prefix = String::fromUTF8("file:///");
+#else
+        String* prefix = String::fromUTF8("file://");
+#endif
+        Nullable<std::string> result =
+            FileUtil::absolutePath(filePath->toUTF8NonGCString());
+        if (result.hasValue()) {
+            resolvedPath = prefix->concat(String::fromUTF8(
+                result.getValue().data(), result.getValue().length()));
+        } else {
+            // Will navigate to about:blank
+            resolvedPath = prefix->concat(resolvedPath);
+        }
+    }
+
+    return resolvedPath;
+}
+
+void WebView::loadHTMLDocument(String* filePath) // navigate function helper
+{
+    String* resolvedPath = resolvePath(filePath);
+    ResourceURL* url = new ResourceURL(resolvedPath);
+    navigate(url, HistoryManager::Action::Add, nullptr);
+}
+
 void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
                        ResourceURL* referrerURL)
 {
@@ -254,12 +387,27 @@ void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->dispose();
     }
-    starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
-    m_topLevelBrowsingContext = BrowsingContext::create(starFish(), this);
+    platformWindow()->hideSoftwareKeyboardIfPossible();
+    m_topLevelBrowsingContext = BrowsingContext::create(this);
     m_topLevelBrowsingContext->webView()->createScriptEngineInstance();
     m_topLevelBrowsingContext->open(url, type, referrerURL);
-    starFish()->callWebViewHandler(std::string("OnPageStarted"),
-                                   url->urlString());
+    callPublicWebViewHandler(std::string("OnPageStarted"), url->urlString());
+}
+
+String* WebView::userAgent()
+{
+    String* custom = customUserAgentString();
+    if (custom->length()) {
+        return custom;
+    }
+    return String::createASCIIString(USER_AGENT(STARFISH_NAME, VERSION));
+}
+
+String* WebView::evaluateJavaScript(String* s)
+{
+    return toBrowserString(
+        mainBrowsingContext()->scriptBindingInstance(),
+        evaluateString(mainBrowsingContext()->scriptBindingInstance(), s));
 }
 
 bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
@@ -630,15 +778,13 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
             INSTALL_PROFILE_TIMER(starFish(), "establishesStackingContext");
             clearStackingContext();
 #ifdef STARFISH_ENABLE_TEST
-            if (m_starFish->startUpFlag() &
-                StarFishStartUpFlag::enableComputedStyleDump) {
+            if (startUpFlag() & StarFishStartUpFlag::enableComputedStyleDump) {
                 // dump style
                 m_topLevelBrowsingContext->document()
                     ->styleResolver()
                     .dumpDOMStyle(m_topLevelBrowsingContext->document());
             }
-            if (m_starFish->startUpFlag() &
-                StarFishStartUpFlag::enableFrameTreeDump) {
+            if (startUpFlag() & StarFishStartUpFlag::enableFrameTreeDump) {
                 FrameTreeBuilder::dumpFrameTree(
                     m_topLevelBrowsingContext->document(), 0);
             }
@@ -674,7 +820,7 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
             }
 
 #ifdef STARFISH_ENABLE_TEST
-            if (m_starFish->startUpFlag() &
+            if (startUpFlag() &
                 StarFishStartUpFlag::enableStackingContextDump) {
                 size_t totalSurfaceBufferSize = 0;
                 if (m_rootStackingContext) {
@@ -825,7 +971,7 @@ void WebView::addDidRenderingCallback(BrowsingContext* ctx,
 
 void WebView::setNeedsRendering()
 {
-    auto wnd = starFish()->platformWindow();
+    auto wnd = platformWindow();
 
     m_needsRendering = true;
     wnd->setNeedsRendering();
@@ -853,12 +999,11 @@ RenderResult WebView::rendering(bool force)
               .documentOpenTime()) < 1000)) {
         STARFISH_LOG_INFO("delay rendering due to pending stylesheet\n");
         m_needsRendering = false;
-        Canvas* canvas = starFish()->platformWindow()->preparePainting();
+        Canvas* canvas = platformWindow()->preparePainting();
         mainBrowsingContext()->clearingBeforePaint(canvas);
         renderResult.didPaintingOrCompositing = true;
-        renderResult.updateRect =
-            LayoutRect(0, 0, starFish()->platformWindow()->width(),
-                       starFish()->platformWindow()->height());
+        renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
+                                             platformWindow()->height());
         delete canvas;
 
         return renderResult;
@@ -875,9 +1020,8 @@ RenderResult WebView::rendering(bool force)
         INSTALL_PROFILE_TIMER(starFish(), "painting");
 
         renderResult.didPaintingOrCompositing = true;
-        renderResult.updateRect =
-            LayoutRect(0, 0, starFish()->platformWindow()->width(),
-                       starFish()->platformWindow()->height());
+        renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
+                                             platformWindow()->height());
 
         // painting
         Canvas* canvas = nullptr;
@@ -968,7 +1112,7 @@ RenderResult WebView::rendering(bool force)
                 scrollX, scrollY);
 
             if (!m_needsComposite) {
-                canvas = starFish()->platformWindow()->preparePainting();
+                canvas = platformWindow()->preparePainting();
                 canvas->save();
                 canvas->pixelSnappedClip(repaintRect);
                 canvas->translate(-scrollX, -scrollY);
@@ -990,20 +1134,20 @@ RenderResult WebView::rendering(bool force)
                 repaintRect.setX(repaintRect.x() - scrollX);
                 repaintRect.setY(repaintRect.y() - scrollY);
 
-                float d = starFish()->screenInfo().devicePixelRatio;
+                float d = screenInfo().devicePixelRatio;
                 renderResult.updateRect = LayoutRect(
                     repaintRect.x() * d, repaintRect.y() * d,
                     repaintRect.width() * d, repaintRect.height() * d);
             } else {
-                starFish()->platformWindow()->willCompositing();
+                platformWindow()->willCompositing();
                 STARFISH_ASSERT(
                     m_rootStackingContext ==
                     mainFrame->firstChild()->asFrameBox()->stackingContext());
                 m_rootStackingContext->paintStackingContext(nullptr, ctx);
             }
 
-            LayoutRect screen(0, 0, starFish()->platformWindow()->width(),
-                              starFish()->platformWindow()->height());
+            LayoutRect screen(0, 0, platformWindow()->width(),
+                              platformWindow()->height());
             LayoutRect rt = renderResult.updateRect;
             if (rt.x() < 0) {
                 if (rt.width() + rt.x() > 0) {
@@ -1060,7 +1204,7 @@ RenderResult WebView::rendering(bool force)
         m_needsPainting = false;
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
         if (!m_needsComposite) {
-            starFish()->platformWindow()->paintVirtualCursor(canvas);
+            platformWindow()->paintVirtualCursor(canvas);
         }
 #endif
 
@@ -1071,14 +1215,12 @@ RenderResult WebView::rendering(bool force)
     if (m_needsComposite) {
         INSTALL_PROFILE_TIMER(starFish(), "composite");
         renderResult.didPaintingOrCompositing = true;
-        renderResult.updateRect =
-            LayoutRect(0, 0, starFish()->platformWindow()->width(),
-                       starFish()->platformWindow()->height());
+        renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
+                                             platformWindow()->height());
 
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
             m_rootStackingContext->needsGraphicsBuffer()) {
-            Compositor* compositor =
-                starFish()->platformWindow()->prepareCompositor();
+            Compositor* compositor = platformWindow()->prepareCompositor();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
 
@@ -1123,7 +1265,7 @@ RenderResult WebView::rendering(bool force)
 
             m_didCompositeBefore = true;
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
-            starFish()->platformWindow()->paintVirtualCursor(compositor);
+            platformWindow()->paintVirtualCursor(compositor);
 #endif
             delete compositor;
         }
@@ -1148,7 +1290,7 @@ RenderResult WebView::rendering(bool force)
 #if defined(STARFISH_ENABLE_TEST)
     {
         if (g_fireOnloadEvent &&
-            starFish()->testCompatibleMode() ==
+            testCompatibleMode() ==
                 StarFishTestCompatibleMode::ChromiumLayout) {
             if (g_enableDumpAsText && !g_DumpAsText_Async) {
                 fprintf(stdout, "#READY\n");
@@ -1177,7 +1319,7 @@ RenderResult WebView::rendering(bool force)
 
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
-            screenShotInRendering(starFish(), path, []() {
+            screenShotInRendering(this, path, []() {
                 if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
                     strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
                     exit(0);
@@ -1242,8 +1384,7 @@ void WebView::initRenderingFlags()
     m_needsComposite = false;
 
     m_paintingDirtyRect =
-        LayoutRect(0, 0, starFish()->platformWindow()->width(),
-                   starFish()->platformWindow()->height());
+        LayoutRect(0, 0, platformWindow()->width(), platformWindow()->height());
 }
 
 Node* WebView::focusedNode()
@@ -1313,5 +1454,133 @@ void WebView::onIdle()
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->onIdle();
     }
+}
+
+void WebView::setDefaultFontSize(uint32_t size)
+{
+    m_defaultFontSize = size;
+    mainBrowsingContext()->updateDefaultFontSize();
+}
+
+void WebView::addActiveThread(Thread* thread)
+{
+    STARFISH_ASSERT(isMainThread());
+    m_activeThreadList.push_back(thread);
+}
+
+void WebView::removeActiveThread(Thread* thread)
+{
+    STARFISH_ASSERT(isMainThread());
+    auto it =
+        std::find(m_activeThreadList.begin(), m_activeThreadList.end(), thread);
+    if (it != m_activeThreadList.end()) {
+        m_activeThreadList.erase(it);
+    }
+}
+
+#if defined(STARFISH_ENABLE_INSPECTOR)
+void WebView::setupInspector(uint32_t portNumber)
+{
+    STARFISH_ASSERT(m_inspector == nullptr);
+    m_inspector = new Inspector(this);
+    m_inspector->run(portNumber);
+}
+#endif
+
+void WebView::registerPublicWebViewHandler(
+    const std::string& handlerName, std::function<void(String*, int)> handler)
+{
+    auto it = m_publicWebViewHandlers.find(handlerName);
+    if (it == m_publicWebViewHandlers.end()) {
+        m_publicWebViewHandlers.insert(std::make_pair(handlerName, handler));
+    } else {
+        it->second = handler;
+    }
+}
+
+void WebView::registerPublicWebViewHandler(const std::string& handlerName,
+                                           std::function<void(void*)> handler)
+{
+    auto it = m_publicWebViewHandlersGeneral.find(handlerName);
+    if (it == m_publicWebViewHandlersGeneral.end()) {
+        m_publicWebViewHandlersGeneral.insert(
+            std::make_pair(handlerName, handler));
+    } else {
+        it->second = handler;
+    }
+}
+
+bool WebView::containsPublicWebViewHandler(const std::string& handlerName)
+{
+    auto it = m_publicWebViewHandlersGeneral.find(handlerName);
+    if (it != m_publicWebViewHandlersGeneral.end()) {
+        return true;
+    }
+
+    return false;
+}
+
+void WebView::callPublicWebViewHandler(const std::string& handlerName,
+                                       String* url, int param)
+{
+    auto it = m_publicWebViewHandlers.find(handlerName);
+    if (it == m_publicWebViewHandlers.end()) {
+        return;
+    }
+
+    struct dummy : public gc {
+        std::string handlerName;
+        WebView* webView;
+        String* url;
+        int int_param;
+    };
+    dummy* d = new dummy;
+    d->handlerName = handlerName;
+    d->webView = this;
+    d->url = url;
+    d->int_param = param;
+    messageLoop()->addIdler(
+        nullptr,
+        [](size_t, void* data) {
+            dummy* d = (dummy*)data;
+            auto it = d->webView->m_publicWebViewHandlers.find(d->handlerName);
+            if (it != d->webView->m_publicWebViewHandlers.end()) {
+                (it->second)(d->url, d->int_param);
+            }
+            delete d;
+        },
+        d);
+}
+
+void WebView::callPublicWebViewHandler(const std::string& handlerName,
+                                       void* param)
+{
+    auto it = m_publicWebViewHandlersGeneral.find(handlerName);
+    if (it == m_publicWebViewHandlersGeneral.end()) {
+        return;
+    }
+
+    struct Env {
+        WebView* webView;
+        std::string handlerName;
+        void* param;
+    };
+    Env* env = new Env();
+    env->webView = this;
+    env->handlerName = handlerName;
+    env->param = param;
+
+    messageLoop()->addIdler(
+        nullptr,
+        [](size_t, void* env) {
+            Env* e = (Env*)env;
+            auto it =
+                e->webView->m_publicWebViewHandlersGeneral.find(e->handlerName);
+            if (it != e->webView->m_publicWebViewHandlersGeneral.end()) {
+                (it->second)(e->param);
+            }
+            delete e;
+        },
+        env);
 }
 }

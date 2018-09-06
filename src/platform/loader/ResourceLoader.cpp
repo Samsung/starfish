@@ -144,7 +144,7 @@ public:
         clearAlive();
         // TODO
         int errorCode = 1;
-        resource()->loader()->document()->starFish()->callWebViewHandler(
+        resource()->loader()->document()->webView()->callPublicWebViewHandler(
             std::string("OnReceivedError"), resource()->url()->urlString(),
             errorCode);
     }
@@ -154,7 +154,7 @@ public:
         ResourceClient::didLoadFinished();
         clearAlive();
         resource()->loader()->updateLoadProgress();
-        resource()->loader()->document()->starFish()->callWebViewHandler(
+        resource()->loader()->document()->webView()->callPublicWebViewHandler(
             std::string("OnLoadResource"), resource()->url()->urlString());
     }
 
@@ -510,7 +510,7 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
         } else {
             STARFISH_ASSERT(syncLevel ==
                             Resource::ResourceRequestSyncLevel::NeverSync);
-            starFish()->messageLoop()->addIdler(
+            webView()->messageLoop()->addIdler(
                 document()->browsingContext(),
                 [](size_t, void* data, void* data2) {
                     Resource* org = (Resource*)data;
@@ -520,12 +520,12 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
                 org, now);
         }
     } else if (s == Resource::State::Failed) {
-        starFish()->messageLoop()->addIdler(document()->browsingContext(),
-                                            [](size_t, void* data) {
-                                                Resource* now = (Resource*)data;
-                                                now->didLoadFailed();
-                                            },
-                                            now);
+        webView()->messageLoop()->addIdler(document()->browsingContext(),
+                                           [](size_t, void* data) {
+                                               Resource* now = (Resource*)data;
+                                               now->didLoadFailed();
+                                           },
+                                           now);
     } else {
         org->addResourceClient(new ResourceWatcher(org, now));
     }
@@ -537,67 +537,60 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
         m_isDocumentInOpenState && !m_document->m_onLoadFired) {
         m_isDocumentInOpenState = false;
         m_document->m_onLoadFired = true;
-        starFish()->platformWindow()->registerOrUpdateIdleTimeCleaner();
-        starFish()->messageLoop()->addIdler(
+        webView()->messageLoop()->addIdler(
             document()->browsingContext(),
             [](size_t, void* data) {
                 Document* doc = (Document*)data;
                 doc->webView()->setNeedsRendering();
-                doc->starFish()
-                    ->platformWindow()
-                    ->webView()
-                    ->addDidRenderingCallback(
-                        doc->browsingContext(),
-                        [](void* data) {
-                            Document* doc = (Document*)data;
-                            doc->window()->setTimeout(
-                                [](Window* window, void* data) {
-                                    Document* doc = window->document();
-                                    doc->setReadyState(
-                                        DocumentReadyStateComplete);
-                                    if (!doc->doesParticipateInRendering()) {
-                                        return;
-                                    }
-                                    String* eventType =
-                                        doc->starFish()
-                                            ->staticStrings()
-                                            ->m_load.localName();
-                                    Event* e =
-                                        new Event(doc, eventType,
-                                                  EventInit(false, false));
-                                    doc->window()->dispatchEventByUA(e);
-                                    if (!doc->browsingContext()
-                                             ->isTopLevelBrowsingContext()) {
-                                        doc->browsingContext()
-                                            ->sourceElement()
-                                            ->childBrowsingContextLoaded();
-                                    } else {
-                                        doc->starFish()->callWebViewHandler(
-                                            std::string("OnPageLoaded"),
-                                            doc->urlString());
-                                    }
+                doc->webView()->addDidRenderingCallback(
+                    doc->browsingContext(),
+                    [](void* data) {
+                        Document* doc = (Document*)data;
+                        doc->window()->setTimeout(
+                            [](Window* window, void* data) {
+                                Document* doc = window->document();
+                                doc->setReadyState(DocumentReadyStateComplete);
+                                if (!doc->doesParticipateInRendering()) {
+                                    return;
+                                }
+                                String* eventType = doc->starFish()
+                                                        ->staticStrings()
+                                                        ->m_load.localName();
+                                Event* e = new Event(doc, eventType,
+                                                     EventInit(false, false));
+                                doc->window()->dispatchEventByUA(e);
+                                if (!doc->browsingContext()
+                                         ->isTopLevelBrowsingContext()) {
+                                    doc->browsingContext()
+                                        ->sourceElement()
+                                        ->childBrowsingContextLoaded();
+                                } else {
+                                    doc->webView()->callPublicWebViewHandler(
+                                        std::string("OnPageLoaded"),
+                                        doc->urlString());
+                                }
 #ifdef STARFISH_ENABLE_TEST
-                                    if (doc->browsingContext()
-                                            ->isTopLevelBrowsingContext()) {
-                                        // We need to wait few milliseconds
-                                        // because some tests has
-                                        // setTimeout(0,...) in
-                                        // onload
-                                        // handler
-                                        doc->window()->setTimeout(
-                                            [](Window* window, void* data) {
-                                                g_fireOnloadEvent = true;
-                                                window->document()
-                                                    ->setNeedsPainting();
-                                                window->window()->testStart();
-                                            },
-                                            10, nullptr);
-                                    }
+                                if (doc->browsingContext()
+                                        ->isTopLevelBrowsingContext()) {
+                                    // We need to wait few milliseconds
+                                    // because some tests has
+                                    // setTimeout(0,...) in
+                                    // onload
+                                    // handler
+                                    doc->window()->setTimeout(
+                                        [](Window* window, void* data) {
+                                            g_fireOnloadEvent = true;
+                                            window->document()
+                                                ->setNeedsPainting();
+                                            window->window()->testStart();
+                                        },
+                                        10, nullptr);
+                                }
 #endif
-                                },
-                                0, nullptr);
-                        },
-                        doc);
+                            },
+                            0, nullptr);
+                    },
+                    doc);
             },
             document());
     }
@@ -622,8 +615,8 @@ void ResourceLoader::startLoadProgressTracking()
 {
     resetLoadProgress();
     m_loadProgress = 10;
-    starFish()->callWebViewHandler(std::string("OnProgressChanged"), nullptr,
-                                   m_loadProgress);
+    webView()->callPublicWebViewHandler(std::string("OnProgressChanged"),
+                                        nullptr, m_loadProgress);
 }
 
 void ResourceLoader::setLoadProgressState(LoadProgressState state)
@@ -660,8 +653,8 @@ void ResourceLoader::updateLoadProgress()
         }
         loadProgress = m_loadProgress;
     }
-    starFish()->callWebViewHandler(std::string("OnProgressChanged"), nullptr,
-                                   loadProgress);
+    webView()->callPublicWebViewHandler(std::string("OnProgressChanged"),
+                                        nullptr, loadProgress);
 }
 
 void ResourceLoader::markDocumentOpenState()

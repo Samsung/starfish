@@ -25,6 +25,7 @@
 #include "core/dom/MessagePort.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Serializer.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 
 namespace StarFish {
@@ -130,7 +131,7 @@ void MessagePort::postMessage(ScriptValue message,
         return;
     }
     // NOTE addIder would hold serializedRecord
-    starFish()->messageLoop()->addIdler(
+    webView()->messageLoop()->addIdler(
         document()->browsingContext(),
         [](size_t handle, void* data, void* data1) {
             MessagePort* self = (MessagePort*)data;
@@ -249,7 +250,7 @@ void PortMessageQueue::registerTaskToMessageLoop(MessagePort* target,
                                                  MessageEvent* event)
 {
     STARFISH_ASSERT(m_enabled);
-    target->starFish()->messageLoop()->addIdler(
+    target->webView()->messageLoop()->addIdler(
         target->document()->browsingContext(),
         [](size_t, void* data, void* data1) {
             MessagePort* target = (MessagePort*)data;

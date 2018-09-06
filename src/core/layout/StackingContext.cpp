@@ -1117,7 +1117,7 @@ public:
                                         bufferHeight + ceil(m_maxRadiusOffset));
 
             m_canvasToApplyFilter = Canvas::create(
-                m_ownerStackingContext->owner()->node()->starFish(),
+                m_ownerStackingContext->owner()->node()->webView(),
                 m_nativeImageToApplyFilter);
 
             m_canvasToApplyFilter->clearColor(Unit::Color(0, 0, 0, 0));
@@ -1155,7 +1155,7 @@ public:
 
     void applyAllFilter()
     {
-        auto starFish = m_ownerStackingContext->owner()->node()->starFish();
+        auto webView = m_ownerStackingContext->owner()->node()->webView();
 
         uint8_t* buffer;
         size_t width, height, stride;
@@ -1176,7 +1176,7 @@ public:
         auto style = m_ownerStackingContext->owner()->style();
         if (style->hasAvailableFilter()) {
             for (auto filter : *style->filter()) {
-                filter->apply(starFish, buffer, width, height, stride);
+                filter->apply(webView, buffer, width, height, stride);
             }
         }
 
@@ -1184,7 +1184,7 @@ public:
              m_ownerStackingContext->ancestorsThatHasFilters()) {
             style = ancestor->owner()->style();
             for (auto filter : *style->filter()) {
-                filter->apply(starFish, buffer, width, height, stride);
+                filter->apply(webView, buffer, width, height, stride);
             }
         }
 
@@ -1264,7 +1264,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 
                 if (!reuse) {
                     m_rareData->m_buffer = CanvasSurface::create(
-                        m_owner->node()->starFish()->platformWindow(),
+                        m_owner->node()->webView()->platformWindow(),
                         bufferWidth, bufferHeight);
                     gotNewBuffer = true;
                 }
@@ -1279,13 +1279,13 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 
         oldCanvas = canvas;
         canvas =
-            Canvas::create(m_owner->node()->starFish(), m_rareData->m_buffer);
+            Canvas::create(m_owner->node()->webView(), m_rareData->m_buffer);
 
         if (oldCanvas) {
             canvas->setTextDecorationData(oldCanvas->textDecorationData());
         }
 
-        float dpr = m_owner->node()->starFish()->screenInfo().devicePixelRatio;
+        float dpr = m_owner->node()->webView()->screenInfo().devicePixelRatio;
         bool needsInitialClip = false;
         ctx.layerClipRect = LayoutRect(0, 0, m_rareData->m_buffer->width(),
                                        m_rareData->m_buffer->height());
@@ -1662,7 +1662,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         if (bufferWidth && bufferHeight) {
             owner()->willCompsiteStackingContext(compositor);
 #ifdef STARFISH_ENABLE_TEST
-            if (owner()->node()->starFish()->startUpFlag() &
+            if (owner()->node()->webView()->startUpFlag() &
                 StarFishStartUpFlag::enableDebugGraphicsLayer) {
                 // debug compositing method
                 switch (m_needsGraphicsBufferReason) {

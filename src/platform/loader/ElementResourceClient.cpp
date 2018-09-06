@@ -24,6 +24,7 @@
 #include "core/dom/Event.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/WebView.h"
 
 namespace StarFish {
 
@@ -41,7 +42,7 @@ void ElementResourceClient::didLoadFinished()
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->starFish()->messageLoop()->addIdler(
+        m_element->webView()->messageLoop()->addIdler(
             m_element->document()->browsingContext(), fn, m_element);
     }
 }
@@ -60,7 +61,7 @@ void ElementResourceClient::didLoadFailed()
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->starFish()->messageLoop()->addIdler(
+        m_element->webView()->messageLoop()->addIdler(
             m_element->document()->browsingContext(), fn, m_element);
     }
 }

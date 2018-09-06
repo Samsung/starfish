@@ -44,12 +44,12 @@ namespace StarFish {
 
 FT_Library g_freeTypeInstance;
 
-PlatformFontSelector* PlatformFontSelector::create(StarFish* sf)
+PlatformFontSelector* PlatformFontSelector::create(WebView* sf)
 {
     return new PlatformFontSelectorImplCairo(sf);
 }
 
-PlatformFontCache* PlatformFontCache::create(StarFish* sf)
+PlatformFontCache* PlatformFontCache::create(WebView* sf)
 {
     return new PlatformFontCacheImplCairo();
 }

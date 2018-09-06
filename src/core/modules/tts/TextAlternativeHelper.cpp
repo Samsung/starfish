@@ -35,8 +35,8 @@
 
 namespace StarFish {
 
-TextAlternativeHelper::TextAlternativeHelper(StarFish* starfish)
-    : StarFishHoldable(starfish)
+TextAlternativeHelper::TextAlternativeHelper(WebView* webView)
+    : WebViewHoldable(webView)
     , m_inAriaLabelledbyOrArialDescribedBy(false)
 {
 }
@@ -202,7 +202,7 @@ bool TextAlternativeHelper::isAriaHidden(Node* node)
     }
 
     String* value = node->asElement()->getAttributeOrEmpty(
-        starFish()->staticStrings()->m_ariaHidden);
+        webView()->starFish()->staticStrings()->m_ariaHidden);
     if (value->equalsIgnoreCase("true")) {
         return true;
     }
@@ -225,11 +225,11 @@ bool TextAlternativeHelper::appendFromAriaByTypeIfNeeds(Node* node,
     switch (type) {
     case AriaByType::AriaLabelledBy:
         value = node->asElement()->getAttributeOrEmpty(
-            starFish()->staticStrings()->m_ariaLabelledby);
+            webView()->starFish()->staticStrings()->m_ariaLabelledby);
         break;
     case AriaByType::ArialDescribedBy:
         value = node->asElement()->getAttributeOrEmpty(
-            starFish()->staticStrings()->m_ariaDescribedby);
+            webView()->starFish()->staticStrings()->m_ariaDescribedby);
         break;
     default:
         STARFISH_ASSERT_NOT_REACHED();
@@ -265,7 +265,7 @@ bool TextAlternativeHelper::appendFromAriaByTypeIfNeeds(Node* node,
 bool TextAlternativeHelper::appendFromAriaLabelIfNeeds(Node* node)
 {
     String* value = node->asElement()->getAttributeOrEmpty(
-        starFish()->staticStrings()->m_ariaLabel);
+        webView()->starFish()->staticStrings()->m_ariaLabel);
     return appendTextAlterNative(value);
 }
 
@@ -274,7 +274,7 @@ bool TextAlternativeHelper::appendFromAltAttributeIfNeeds(Node* node)
     // StarFish doesn't support the "role" attribute,
     // so just get from the alt attribute
     String* value = node->asElement()->getAttributeOrEmpty(
-        starFish()->staticStrings()->m_alt);
+        webView()->starFish()->staticStrings()->m_alt);
     return appendTextAlterNative(value);
 }
 
@@ -290,7 +290,7 @@ bool TextAlternativeHelper::appendFromEmbeddedControlIfNeeds(Node* node)
         if (node->asHTMLInputElement()->isEditableType() ||
             node->asHTMLInputElement()->type()->equals("button")) {
             value = node->asElement()->getAttributeOrEmpty(
-                starFish()->staticStrings()->m_value);
+                webView()->starFish()->staticStrings()->m_value);
         }
     } else if (node->isHTMLTextEditable()) {
         // TODO input | textarea -> HTMLTextEditable
@@ -300,8 +300,8 @@ bool TextAlternativeHelper::appendFromEmbeddedControlIfNeeds(Node* node)
                                     ->asHTMLSelectElement()
                                     ->firstSelectedOptionElement();
         if (oe) {
-            value =
-                oe->getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+            value = oe->getAttributeOrEmpty(
+                webView()->starFish()->staticStrings()->m_value);
         }
     }
 

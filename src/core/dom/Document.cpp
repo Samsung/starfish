@@ -106,9 +106,9 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_characterSet(charSet)
     , m_contentType(String::createASCIIString("application/xml"))
     , m_resourceLoader(new ResourceLoader(this))
-    , m_fontSelector(
-          FontSelector::create(this, window->starFish()->platformFontSelector(),
-                               window->starFish()->platformFontCache()))
+    , m_fontSelector(FontSelector::create(this,
+                                          webView()->platformFontSelector(),
+                                          webView()->platformFontCache()))
     , m_preloadScanner(nullptr)
     , m_styleResolver(new StyleResolver(this))
     , m_documentBuilder(nullptr)
@@ -190,7 +190,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     auto df = new FrameDocument(this);
     setFrame(df);
-    loadBuiltinPolyfill(window->starFish()->builtinPolyfillPathString());
+    loadBuiltinPolyfill(webView()->builtinPolyfillPathString());
 
     m_isConnected = true;
 }
@@ -543,7 +543,7 @@ void Document::resumeDocumentParsing()
 {
     STARFISH_ASSERT(m_pendingDocumentParsingIdlerHandle == SIZE_MAX);
     m_pendingDocumentParsingIdlerHandle =
-        window()->starFish()->messageLoop()->addIdler(
+        window()->webView()->messageLoop()->addIdler(
             browsingContext(),
             [](size_t handle, void* data) {
                 Document* document = (Document*)data;
@@ -561,7 +561,7 @@ void Document::endDocumentParsing()
             ResourceLoader::LoadProgressState::ParsingEnd);
     }
     if (m_pendingDocumentParsingIdlerHandle != SIZE_MAX) {
-        window()->starFish()->messageLoop()->removeIdler(
+        window()->webView()->messageLoop()->removeIdler(
             m_pendingDocumentParsingIdlerHandle);
         m_pendingDocumentParsingIdlerHandle = SIZE_MAX;
     }
@@ -639,8 +639,8 @@ void Document::notifyDomContentLoaded()
     if (browsingContext()->isTopLevelBrowsingContext()) {
         m_resourceLoader->setLoadProgressState(
             ResourceLoader::LoadProgressState::DomContentLoaded);
-        starFish()->callWebViewHandler(std::string("OnPageParsed"),
-                                       this->urlString());
+        webView()->callPublicWebViewHandler(std::string("OnPageParsed"),
+                                            this->urlString());
     }
 }
 
@@ -1250,7 +1250,7 @@ void Document::processBaseElement()
     }
     if (baseElementURL) {
         if (baseElementURL->isDataURL()) {
-            starFish()->console()->error(String::createASCIIString(
+            webView()->console()->error(String::createASCIIString(
                 "'data:' URLs may not be used as base URLs for a document."));
         }
     }

@@ -637,14 +637,14 @@ bool Element::handleDefaultEvent(Event* event)
         }
     }
 #ifdef STARFISH_ENABLE_TTS
-    StarFish* sf = document()->window()->starFish();
-    if (sf->tts()->isTTSEnabled()) {
+    WebView* wv = document()->window()->webView();
+    if (wv->tts()->isTTSEnabled()) {
         if (isHTMLElement() && isFocusable() && event->isFocusEvent() &&
             event->type()->equals("focus")) {
-            TextAlternativeHelper tah(sf);
+            TextAlternativeHelper tah(wv);
             String* altText = tah.getComputedTextAlternative(this);
             if (altText->length()) {
-                sf->tts()->speech(altText);
+                wv->tts()->speech(altText);
             }
         }
     }

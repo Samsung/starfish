@@ -71,7 +71,7 @@ CSSFilterFunction* UnsupportedFilterFunction::toCSSFilterFunction() const
                           String::createASCIIString("unsupported")));
 }
 
-void UnsupportedFilterFunction::apply(StarFish* starfish, uint8_t* buffer,
+void UnsupportedFilterFunction::apply(WebView* webView, uint8_t* buffer,
                                       size_t width, size_t height,
                                       size_t stride) const
 {
@@ -101,8 +101,8 @@ CSSFilterFunction* BlurFilterFunction::toCSSFilterFunction() const
                           CSSLength(m_stdDeviation.fixed())));
 }
 
-void BlurFilterFunction::apply(StarFish* starfish, uint8_t* buffer,
-                               size_t width, size_t height, size_t stride) const
+void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
+                               size_t height, size_t stride) const
 {
     float sigma = m_stdDeviation.numberData() * 2;
 
@@ -126,7 +126,7 @@ void BlurFilterFunction::apply(StarFish* starfish, uint8_t* buffer,
     };
 
     ParallelJobExecutor<Params>* parallelJobExecutor =
-        new ParallelJobExecutor<Params>(starfish, blurFitlerWorker,
+        new ParallelJobExecutor<Params>(webView, blurFitlerWorker,
                                         numberOfThreadsToRequest);
 
     int num = parallelJobExecutor->numberOfThread();

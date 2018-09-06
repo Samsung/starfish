@@ -24,6 +24,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
 #include "core/dom/Document.h"
+#include "core/page/WebView.h"
 
 namespace StarFish {
 
@@ -46,7 +47,7 @@ bool Geolocation::getCurrentPositionPreprocessing(
     int32_t maximumAge)
 {
     if (timeout == 0) {
-        m_document->starFish()->messageLoop()->addIdler(
+        m_document->webView()->messageLoop()->addIdler(
             m_document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
                 Document* sf = (Document*)data;
@@ -68,7 +69,7 @@ void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
     if (getCurrentPositionPreprocessing(cb, cbData, errorCb, errorCbData,
                                         enableHighAccuracy, timeout,
                                         maximumAge)) {
-        m_document->starFish()->messageLoop()->addIdler(
+        m_document->webView()->messageLoop()->addIdler(
             m_document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
                 Document* sf = (Document*)data;

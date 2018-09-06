@@ -23,6 +23,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/tts/TTS.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/WebView.h"
 
 namespace StarFish {
 
@@ -41,7 +42,7 @@ void TTS::speech(String* text)
 {
     STARFISH_ASSERT(isMainThread());
     if (text && text != String::emptyString) {
-        m_starFish->messageLoop()->addIdler(
+        webView()->messageLoop()->addIdler(
             nullptr,
             [](size_t, void* data) {
                 String* text = (String*)data;

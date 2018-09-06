@@ -392,7 +392,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
         [](void* obj, void* cd) {
             PLAYER_LOGI("MediaPlayerTizen::~MediaPlayerTizen\n");
             MediaPlayerTizen* player = (MediaPlayerTizen*)obj;
-            player->close();
+            player->destroy();
         },
         NULL, NULL, NULL);
 }
@@ -403,7 +403,7 @@ public:
     {
         m_buffer = (uint8_t*)malloc(4);
         Evas_Object* wndObject =
-            (Evas_Object*)wnd->starFish()->publicLayerUserDataMap()
+            (Evas_Object*)wnd->webView()->publicLayerUserDataMap()
                 ["__internalLWEWebViewEFLNativeWindowEvasObject"];
         STARFISH_RELEASE_ASSERT(wndObject);
         m_imageObject =
@@ -513,7 +513,7 @@ CanvasSurface* MediaPlayerTizen::createGraphicsBuffer(size_t visibleWidth,
 void MediaPlayerTizen::handlePlayerError()
 {
     if (!isMainThread()) {
-        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->document()->browsingContext(),
             [](size_t, void* data) {
@@ -530,7 +530,7 @@ void MediaPlayerTizen::handlePlayerError()
     } else if (m_seekState == SEEKSTATE_SEEKING) {
         handleSeeked();
     }
-    close();
+    destroy();
 }
 
 void MediaPlayerTizen::fillBufferIfNeeded(StreamType type)
@@ -676,10 +676,10 @@ void MediaPlayerTizen::handleSeeked()
         } else {
             // Fail
             m_container->mediaPlayerNotifySeekFailureItsContainer();
-            close();
+            destroy();
         }
     } else {
-        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->document()->browsingContext(),
             [](size_t, void* data) {
@@ -698,7 +698,7 @@ void MediaPlayerTizen::handleSeekTimeout()
         m_seekingTimer = SIZE_MAX;
         handleSeeked();
     } else {
-        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->document()->browsingContext(),
             [](size_t, void* data) {
@@ -753,7 +753,7 @@ void MediaPlayerTizen::handleEnded()
             }
         }
     } else {
-        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->document()->browsingContext(),
             [](size_t, void* data) {
@@ -764,13 +764,13 @@ void MediaPlayerTizen::handleEnded()
     }
 }
 
-void MediaPlayerTizen::close()
+void MediaPlayerTizen::destroy()
 {
     STARFISH_ASSERT(isMainThread());
     if (!m_alive) {
         return;
     }
-    PLAYER_LOGI("MediaPlayerTizen::close()\n");
+    PLAYER_LOGI("MediaPlayerTizen::destroy()\n");
     if (m_inPrepare) {
         m_foundError = true;
         handlePrepared();
@@ -861,7 +861,7 @@ void MediaPlayerTizen::pause()
 void MediaPlayerTizen::initDisplay()
 {
     m_canvasSurface =
-        new CanvasSurfaceVideo(m_container->starFish()->platformWindow());
+        new CanvasSurfaceVideo(m_container->webView()->platformWindow());
 }
 
 void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)
@@ -970,7 +970,7 @@ void MediaPlayerTizen::handlePrepared()
 {
     if (!isMainThread()) {
         PLAYER_LOGI("MediaPlayerTizen::handlePrepared in non-MainThread\n");
-        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->document()->browsingContext(),
             [](size_t, void* user_data) {
@@ -986,7 +986,7 @@ void MediaPlayerTizen::handlePrepared()
         if (m_container) {
             m_container->giveupFetchingResource();
         }
-        close();
+        destroy();
         return;
     }
 
@@ -1031,7 +1031,7 @@ void MediaPlayerTizen::handlePrepared()
             printNativePlayerError(ret);
             m_foundError = true;
             m_container->giveupFetchingResource();
-            close();
+            destroy();
             return;
         }
     }
@@ -1220,8 +1220,8 @@ void MediaPlayerTizen::prepareMediaSource()
         }
 
         *m_playerDeadFlag = false;
-        Thread* t = new Thread(m_container->starFish());
-        t->run(m_container->starFish()->messageLoop(), threadFillingBuffer,
+        Thread* t = new Thread(m_container->webView());
+        t->run(m_container->webView()->messageLoop(), threadFillingBuffer,
                this);
     }
 #endif
@@ -1247,7 +1247,7 @@ void MediaPlayerTizen::fillBuffer(MediaStream* stream)
 void MediaPlayerTizen::enterUnderrunState()
 {
     if (!isMainThread()) {
-        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->document()->browsingContext(),
             [](size_t, void* data) {
@@ -1297,7 +1297,7 @@ void MediaPlayerTizen::enterUnderrunState()
 void MediaPlayerTizen::exitUnderrunState()
 {
     if (!isMainThread()) {
-        MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+        MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
             m_container->document()->browsingContext(),
             [](size_t, void* data) {

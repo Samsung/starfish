@@ -18,31 +18,32 @@
  */
 
 #include "StarFishConfig.h"
-#include "StarFish.h"
 #include "binding/ScriptEngineInstance.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/MessageLoop.h"
+
+#include "StarFish.h"
 
 #include <EscargotPublic.h>
 using namespace Escargot;
 
 namespace StarFish {
 
-ScriptEngineInstance::ScriptEngineInstance(StarFish* starFish)
-    : StarFishHoldable(starFish)
+ScriptEngineInstance::ScriptEngineInstance(WebView* wv)
+    : WebViewHoldable(wv)
 {
     // Set this flag to process const keyword temporary
     setenv("ESCARGOT_TREAT_CONST_AS_VAR", "1", 1);
 
     Escargot::Globals::initialize();
     m_engineInstance = VMInstanceRef::create(
-        starFish->locale().getName(),
-        starFish->timezoneID()->toUTF8NonGCString().data());
+        wv->locale().getName(), wv->timezoneID()->toUTF8NonGCString().data());
     m_engineInstance->setNewPromiseJobListener([](ExecutionStateRef* state,
                                                   JobRef* job) {
         Window* window = (Window*)state->context()->globalObject()->extraData();
-        window->starFish()->messageLoop()->addIdler(
+        window->webView()->messageLoop()->addIdler(
             window->browsingContext(),
             [](size_t, void* data, void* data2) {
                 Window* window = (Window*)data;

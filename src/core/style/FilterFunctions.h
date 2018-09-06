@@ -55,7 +55,7 @@ public:
         return b && m_type == b->type();
     }
 
-    virtual void apply(StarFish* starfish, uint8_t* buffer, size_t width,
+    virtual void apply(WebView* webView, uint8_t* buffer, size_t width,
                        size_t height, size_t stride) const = 0;
 
 protected:
@@ -76,7 +76,7 @@ public:
 
     String* toString() const override;
     CSSFilterFunction* toCSSFilterFunction() const override;
-    void apply(StarFish* starfish, uint8_t* buffer, size_t width, size_t height,
+    void apply(WebView* webView, uint8_t* buffer, size_t width, size_t height,
                size_t stride) const override;
 };
 
@@ -129,7 +129,7 @@ public:
         return m_stdDeviation == ((BlurFilterFunction*)b)->standardDeviation();
     }
 
-    void apply(StarFish* starfish, uint8_t* buffer, size_t width, size_t height,
+    void apply(WebView* webView, uint8_t* buffer, size_t width, size_t height,
                size_t stride) const override;
 
 private:

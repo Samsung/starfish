@@ -286,7 +286,6 @@ protected:
     bool m_isAttachedToParent;
     bool m_updating;
     size_t m_initSegmentCount;
-    StarFish* m_starFish;
     Demuxer* m_demuxer;
     TimeRanges* m_buffered;
     double m_timestampOffset;

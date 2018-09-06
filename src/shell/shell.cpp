@@ -20,6 +20,7 @@
 #include "LWEWebView.h"
 
 #include "StarFish.h"
+#include "core/page/WebView.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Elementary.h>
@@ -30,6 +31,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <string.h>
+#include <malloc.h>
 
 #ifdef STARFISH_ENABLE_TEST
 extern int g_testCompatibleMode;
@@ -174,6 +176,14 @@ int main(int argc, char* argv[])
 #ifndef NDEBUG
     setbuf(stdout, NULL);
     setbuf(stderr, NULL);
+#endif
+
+#if !defined(STARFISH_ANDROID) && !defined(STARFISH_WINDOWS)
+    // Changing these options can reducing {malloc, free} internal memory pool
+    // usage
+    // for big chunk ex) packets for MSE
+    mallopt(M_MMAP_THRESHOLD, 2048);
+    mallopt(M_MMAP_MAX, 1024 * 1024);
 #endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
@@ -457,7 +467,12 @@ int main(int argc, char* argv[])
         webView);
 #endif
 
-    webView->RunMessageLoop();
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+    elm_run();
+#elif defined(PORT_EVENTLOOP_BACKEND_EFL)
+    ecore_main_loop_begin();
+#endif
+
 #ifndef PORT_WEBVIEW_BRIDGE_EFL
     webView->Destroy();
 #endif

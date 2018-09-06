@@ -1084,7 +1084,7 @@ void AnimationExecutor::startIfNeeds()
             window()->webView()->m_activeAnimatorForAnimationExecutor ==
             SIZE_MAX);
         window()->webView()->m_activeAnimatorForAnimationExecutor =
-            window()->starFish()->timer()->addAnimator(
+            window()->webView()->timer()->addAnimator(
                 window(),
                 [](void* data) -> bool {
                     WebView* wv = (WebView*)data;
@@ -1121,7 +1121,7 @@ void AnimationExecutor::stop()
         STARFISH_ASSERT(
             window()->webView()->m_activeAnimatorForAnimationExecutor !=
             SIZE_MAX);
-        window()->starFish()->timer()->removeGenericAnimator(
+        window()->webView()->timer()->removeGenericAnimator(
             window()->webView()->m_activeAnimatorForAnimationExecutor);
         window()->webView()->m_activeAnimatorForAnimationExecutor = SIZE_MAX;
     }

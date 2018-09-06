@@ -22,6 +22,7 @@
 #include "StarFish.h"
 #include "core/dom/Document.h"
 #include "core/modules/location/Geolocation.h"
+#include "core/page/WebView.h"
 #if defined(OS_WINDOWS)
 #include <Windows.h>
 #else
@@ -59,7 +60,7 @@ ScriptBindingInstance* Navigator::scriptBindingInstance()
 
 String* Navigator::userAgent()
 {
-    return starFish()->userAgent();
+    return webView()->userAgent();
 }
 
 String* Navigator::platform()
@@ -89,6 +90,6 @@ String* Navigator::platform()
 
 String* Navigator::language()
 {
-    return String::fromUTF8(starFish()->locale().getName());
+    return String::fromUTF8(webView()->locale().getName());
 }
 } // namespace StarFish

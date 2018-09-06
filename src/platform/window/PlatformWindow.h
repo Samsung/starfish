@@ -62,11 +62,12 @@ enum class CompositionEventKind {
 class PlatformWindow : public gc {
 public:
     virtual ~PlatformWindow(){};
-    static PlatformWindow* create(StarFish* starFish, int width, int height);
+    static PlatformWindow* create(StarFish* starFish, uint32_t width,
+                                  uint32_t height);
 
-    virtual int32_t width() = 0;
-    virtual int32_t height() = 0;
-    virtual void resizeTo(int w, int h)
+    virtual uint32_t width() = 0;
+    virtual uint32_t height() = 0;
+    virtual void resizeTo(uint32_t w, uint32_t h)
     {
         STARFISH_LOG_INFO("PlatformWindow::resizeTo %d %d\n", w, h);
         onResize();
@@ -177,7 +178,7 @@ public:
     virtual RenderResult rendering();
     virtual void pause();
     virtual void resume();
-    virtual void close();
+    virtual void destroy();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     template <typename T>
@@ -199,8 +200,6 @@ public:
     virtual void onIdle()
     {
     }
-
-    void registerOrUpdateIdleTimeCleaner();
 
     EventModifierData eventModifierData()
     {

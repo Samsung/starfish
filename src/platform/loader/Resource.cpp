@@ -26,6 +26,7 @@
 #include "platform/loader/ResourceURL.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 
 namespace StarFish {
@@ -180,7 +181,7 @@ void Resource::didLoadCanceled()
     }
     auto iter2 = m_requstedIdlers.begin();
     while (iter2 != m_requstedIdlers.end()) {
-        m_loader->starFish()->messageLoop()->removeIdler(*iter2);
+        m_loader->webView()->messageLoop()->removeIdler(*iter2);
         iter2++;
     }
     m_requstedIdlers.clear();

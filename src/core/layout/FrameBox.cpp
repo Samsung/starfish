@@ -945,8 +945,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                                                    (double)topLeftHorizontal);
                     NativeImageData* nativeImage =
                         NativeImageData::create(bufImageSize, bufImageSize);
-                    Canvas* cv =
-                        Canvas::create(node()->starFish(), nativeImage);
+                    Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                     cv->unsetDevicePixelRatio();
                     auto shadowColor =
                         shadow->hasColor() ? shadow->color() : s->color();
@@ -1090,8 +1089,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     NativeImageData* nativeImage = NativeImageData::create(
                         ceil(shadowRect.width() + radiusOffset),
                         ceil(shadowRect.height() + radiusOffset));
-                    Canvas* cv =
-                        Canvas::create(node()->starFish(), nativeImage);
+                    Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                     cv->unsetDevicePixelRatio();
                     cv->clearColor(Unit::Color(0, 0, 0, 0));
 
@@ -1188,7 +1186,7 @@ void FrameBox::paintInsetBoxShadows(Canvas* canvas)
 
                 NativeImageData* nativeImage = NativeImageData::create(
                     ceil(ImageRect.width()), ceil(ImageRect.height()));
-                Canvas* cv = Canvas::create(node()->starFish(), nativeImage);
+                Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                 cv->unsetDevicePixelRatio();
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
 
@@ -1373,7 +1371,7 @@ static inline void paintRepeatGradient(
 
     NativeImageData* nativeImage =
         NativeImageData::create(ceil(width), ceil(height));
-    Canvas* cv = Canvas::create(box->node()->starFish(), nativeImage);
+    Canvas* cv = Canvas::create(box->node()->webView(), nativeImage);
     cv->clearColor(Unit::Color(0, 0, 0, 0));
 
     ImageValue* imageValue = style->backgroundImage(idx);

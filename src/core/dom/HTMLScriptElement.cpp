@@ -288,7 +288,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                                 new ElementResourceClient(this, res, true));
                             return true;
                         } else if (res->isFinished()) {
-                            webView()->starFish()->messageLoop()->addIdler(
+                            webView()->messageLoop()->addIdler(
                                 document()->browsingContext(),
                                 [](size_t id, void* res, void* self) {
                                     HTMLScriptElement* scriptElement =

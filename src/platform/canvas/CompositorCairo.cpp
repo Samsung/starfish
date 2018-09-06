@@ -25,6 +25,7 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
 #include <vector>
@@ -44,17 +45,17 @@ class CompositorImplCairo : public Compositor {
         m_surface = cairo_image_surface_create_for_data(
             (unsigned char*)buffer, CAIRO_FORMAT, width, height, stride);
         cairo_surface_set_device_scale(
-            m_surface, m_starfish->screenInfo().devicePixelRatio,
-            m_starfish->screenInfo().devicePixelRatio);
+            m_surface, m_webView->screenInfo().devicePixelRatio,
+            m_webView->screenInfo().devicePixelRatio);
         m_canvas = cairo_create(m_surface);
         m_width = width;
         m_height = height;
     }
 
 public:
-    CompositorImplCairo(StarFish* starfish, CanvasSurface* data)
+    CompositorImplCairo(WebView* webView, CanvasSurface* data)
     {
-        m_starfish = starfish;
+        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
         m_shouldDestroyCairo = true;
@@ -445,7 +446,7 @@ public:
     }
 
 protected:
-    StarFish* m_starfish;
+    WebView* m_webView;
     std::vector<float> m_opacityVector;
     size_t m_stateSize;
     cairo_surface_t* m_surface;
@@ -456,13 +457,13 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Compositor* Compositor::create2D(StarFish* starfish, CompositorContext* ctx,
+Compositor* Compositor::create2D(WebView* wv, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
-    return new CompositorImplCairo(starfish, surface);
+    return new CompositorImplCairo(wv, surface);
 }
 
-Compositor* Compositor::create3D(StarFish* starfish, CompositorContext* ctx)
+Compositor* Compositor::create3D(WebView* wv, CompositorContext* ctx)
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }

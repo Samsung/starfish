@@ -135,7 +135,7 @@ class MockMediaPlayer : public MediaPlayer {
     friend class MediaPlayer;
 
 public:
-    virtual void close();
+    virtual void destroy();
 
     virtual void play();
 

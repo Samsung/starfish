@@ -21,19 +21,20 @@
 #include "StarFish.h"
 #include "core/extra/Console.h"
 #include "core/inspector/Inspector.h"
+#include "core/page/WebView.h"
 
 namespace StarFish {
 
-Console::Console(StarFish* starFish)
-    : m_starFish(starFish)
+Console::Console(WebView* webView)
+    : m_webView(webView)
 {
 }
 
 void Console::log(String* m)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
-    if (m_starFish->inspector()) {
-        m_starFish->inspector()->sendInfoMessage(m);
+    if (m_webView->inspector()) {
+        m_webView->inspector()->sendInfoMessage(m);
     }
 #endif
     STARFISH_LOG_INFO("console.log: %s\n", m->toUTF8NonGCString().c_str());
@@ -42,8 +43,8 @@ void Console::log(String* m)
 void Console::info(String* m)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
-    if (m_starFish->inspector()) {
-        m_starFish->inspector()->sendInfoMessage(m);
+    if (m_webView->inspector()) {
+        m_webView->inspector()->sendInfoMessage(m);
     }
 #endif
     STARFISH_LOG_INFO("console.info: %s\n", m->toUTF8NonGCString().c_str());
@@ -52,8 +53,8 @@ void Console::info(String* m)
 void Console::error(String* m)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
-    if (m_starFish->inspector()) {
-        m_starFish->inspector()->sendErrorMessage(m);
+    if (m_webView->inspector()) {
+        m_webView->inspector()->sendErrorMessage(m);
     }
 #endif
     STARFISH_LOG_ERROR("console.error: %s\n", m->toUTF8NonGCString().c_str());
@@ -62,8 +63,8 @@ void Console::error(String* m)
 void Console::warn(String* m)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
-    if (m_starFish->inspector()) {
-        m_starFish->inspector()->sendWarnMessage(m);
+    if (m_webView->inspector()) {
+        m_webView->inspector()->sendWarnMessage(m);
     }
 #endif
     STARFISH_LOG_ERROR("console.warn: %s\n", m->toUTF8NonGCString().c_str());
@@ -72,8 +73,8 @@ void Console::warn(String* m)
 void Console::debug(String* m)
 {
 #if defined(STARFISH_ENABLE_INSPECTOR)
-    if (m_starFish->inspector()) {
-        m_starFish->inspector()->sendDebugMessage(m);
+    if (m_webView->inspector()) {
+        m_webView->inspector()->sendDebugMessage(m);
     }
 #endif
     STARFISH_LOG_ERROR("console.debug: %s\n", m->toUTF8NonGCString().data());

@@ -27,6 +27,7 @@
 #include "core/dom/HTMLTextEditable.h"
 #include "core/dom/Text.h"
 #include "core/dom/PseudoElement.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 
 #include "core/layout/Frame.h"
@@ -156,8 +157,8 @@ void FrameInputBox::layout(LayoutContext& ctx,
         bool parentHasFixedHeight = ctx.parentHasFixedHeight(this);
         if (style()->width().isAuto() || style()->height().isAuto() ||
             !style()->height().isDefinite(parentHasFixedHeight)) {
-            fontSize = Length(Length::Fixed,
-                              document()->starFish()->defaultFontSize());
+            fontSize =
+                Length(Length::Fixed, document()->webView()->defaultFontSize());
         } else {
             LayoutUnit parentContentHeight;
             if (parentHasFixedHeight) {

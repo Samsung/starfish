@@ -50,7 +50,6 @@ PlatformWindow::PlatformWindow(StarFish* starFish)
     , m_webView(nullptr)
     , m_renderingAnimator(SIZE_MAX)
     , m_compostiorContext(nullptr)
-    , m_idleCleanerTimerID(SIZE_MAX)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     , m_isButtonOfVirtualCursorClicked(false)
     , m_virtualCursorX(-1)
@@ -81,13 +80,10 @@ void PlatformWindow::resume()
     }
 }
 
-void PlatformWindow::close()
+void PlatformWindow::destroy()
 {
-    STARFISH_LOG_INFO("PlatformWindow::close()\n");
+    STARFISH_LOG_INFO("PlatformWindow::destroy()\n");
     clearResources();
-    if (m_idleCleanerTimerID != SIZE_MAX) {
-        starFish()->timer()->removeTimer(m_idleCleanerTimerID);
-    }
 }
 
 void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
@@ -95,15 +91,14 @@ void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
 {
     for (size_t i = 0; i < touchCount; i++) {
         touches[i].setScreenX(touches[i].screenX() /
-                              starFish()->screenInfo().devicePixelRatio);
+                              webView()->screenInfo().devicePixelRatio);
         touches[i].setScreenY(touches[i].screenY() /
-                              starFish()->screenInfo().devicePixelRatio);
+                              webView()->screenInfo().devicePixelRatio);
         touches[i].setClientX(touches[i].clientX() /
-                              starFish()->screenInfo().devicePixelRatio);
+                              webView()->screenInfo().devicePixelRatio);
         touches[i].setClientY(touches[i].clientY() /
-                              starFish()->screenInfo().devicePixelRatio);
+                              webView()->screenInfo().devicePixelRatio);
     }
-    registerOrUpdateIdleTimeCleaner();
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->dispatchTouchEvent(kind, touches,
                                                              touchCount);
@@ -112,11 +107,10 @@ void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
 
 void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
-    data.setScreenX(data.screenX() / starFish()->screenInfo().devicePixelRatio);
-    data.setScreenY(data.screenY() / starFish()->screenInfo().devicePixelRatio);
-    data.setClientX(data.clientX() / starFish()->screenInfo().devicePixelRatio);
-    data.setClientY(data.clientY() / starFish()->screenInfo().devicePixelRatio);
-    registerOrUpdateIdleTimeCleaner();
+    data.setScreenX(data.screenX() / webView()->screenInfo().devicePixelRatio);
+    data.setScreenY(data.screenY() / webView()->screenInfo().devicePixelRatio);
+    data.setClientX(data.clientX() / webView()->screenInfo().devicePixelRatio);
+    data.setClientY(data.clientY() / webView()->screenInfo().devicePixelRatio);
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->dispatchMouseEvent(kind, data);
     }
@@ -125,9 +119,8 @@ void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
                                              int z, bool isVerticalWheelEvent)
 {
-    screenX /= starFish()->screenInfo().devicePixelRatio;
-    screenY /= starFish()->screenInfo().devicePixelRatio;
-    registerOrUpdateIdleTimeCleaner();
+    screenX /= webView()->screenInfo().devicePixelRatio;
+    screenY /= webView()->screenInfo().devicePixelRatio;
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->dispatchMouseWheelEvent(
             screenX, screenY, z, isVerticalWheelEvent);
@@ -139,7 +132,6 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
 {
     STARFISH_LOG_INFO("PlatformWindow::dispatchKeyEvent %d\n",
                       (int)data.keyValue());
-    registerOrUpdateIdleTimeCleaner();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     if (!isIMEEnabledNow()) {
@@ -293,7 +285,7 @@ void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
 void PlatformWindow::clearResources()
 {
     if (m_renderingAnimator != SIZE_MAX) {
-        starFish()->messageLoop()->removeIdler(m_renderingAnimator);
+        webView()->messageLoop()->removeIdler(m_renderingAnimator);
         m_renderingAnimator = SIZE_MAX;
     }
     webView()->clearStackingContext();
@@ -316,11 +308,11 @@ void PlatformWindow::setNeedsRendering()
         if (webView()->hasActiveAnimationExecutor()) {
             return;
         }
-        starFish()->messageLoop()->removeIdler(m_renderingAnimator);
+        webView()->messageLoop()->removeIdler(m_renderingAnimator);
         wnd->m_renderingAnimator = SIZE_MAX;
     }
 
-    wnd->m_renderingAnimator = starFish()->messageLoop()->addIdler(
+    wnd->m_renderingAnimator = webView()->messageLoop()->addIdler(
         nullptr,
         [](size_t handle, void* data) {
             PlatformWindow* wnd = (PlatformWindow*)data;
@@ -376,7 +368,7 @@ void PlatformWindow::callHandler(const std::string& handlerName, void* param)
     env->handlerName = handlerName;
     env->param = param;
 
-    starFish()->messageLoop()->addIdler(
+    webView()->messageLoop()->addIdler(
         nullptr,
         [](size_t, void* env) {
             Env* e = (Env*)env;
@@ -401,7 +393,7 @@ void PlatformWindow::paintVirtualCursor(T canvas)
     }
     if (!m_virtualCursorCanvasSurface) {
         m_virtualCursorCanvasSurface = CanvasSurface::create(this, 25, 36);
-        Canvas* c = Canvas::create(starFish(), m_virtualCursorCanvasSurface);
+        Canvas* c = Canvas::create(webView(), m_virtualCursorCanvasSurface);
         c->drawImage(
             NativeImageData::create((const char*)g_virtualCursorPNGData,
                                     g_virtualCursorPNGDataSize),
@@ -428,36 +420,10 @@ void PlatformWindow::onResize()
 #endif
     if (webView()->mainBrowsingContext()) {
         webView()->mainBrowsingContext()->window()->resize(
-            width() / starFish()->screenInfo().devicePixelRatio,
-            height() / starFish()->screenInfo().devicePixelRatio);
+            width() / webView()->screenInfo().devicePixelRatio,
+            height() / webView()->screenInfo().devicePixelRatio);
         webView()->setNeedsPainting();
     }
-}
-
-#define IDLE_TIMER_TIMEOUT 1500
-void PlatformWindow::registerOrUpdateIdleTimeCleaner()
-{
-    if (m_idleCleanerTimerID != SIZE_MAX) {
-        starFish()->timer()->removeTimer(m_idleCleanerTimerID);
-    }
-
-    m_idleCleanerTimerID = starFish()->timer()->addTimer(
-        IDLE_TIMER_TIMEOUT, nullptr,
-        [](Window* wnd, void* data) {
-            PlatformWindow* pwnd = (PlatformWindow*)data;
-
-            pwnd->onIdle();
-            pwnd->webView()->onIdle();
-            // STARFISH_LOG_INFO("Do idle time GC\n");
-            auto fn = GC_get_on_collection_event();
-            GC_set_on_collection_event(nullptr);
-            clearStack<102400>();
-            GC_gcollect_and_unmap();
-            GC_set_on_collection_event(fn);
-
-            pwnd->registerOrUpdateIdleTimeCleaner();
-        },
-        this, false);
 }
 
 #ifdef STARFISH_ENABLE_TEST

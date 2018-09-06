@@ -155,7 +155,7 @@ public:
 
     MediaPlayerTizen(HTMLMediaElement* element);
 
-    virtual void close();
+    virtual void destroy();
     virtual void play();
     virtual void pause();
 

@@ -49,7 +49,7 @@ enum class KeyEventKind;
 enum class MouseEventKind;
 enum class CompositionEventKind;
 
-class BrowsingContext : public gc, public StarFishHoldable {
+class BrowsingContext : public gc, public WebViewHoldable {
     friend class PlatformWindow;
     friend class Window;
     friend class HTMLHtmlElement;
@@ -60,7 +60,7 @@ class BrowsingContext : public gc, public StarFishHoldable {
     friend class FrameReplacedIFrame;
 
 public:
-    static BrowsingContext* create(StarFish* starFish, WebView* webView);
+    static BrowsingContext* create(WebView* webView);
     static BrowsingContext* create(HTMLIFrameElement* sourceElement);
     virtual ~BrowsingContext()
     {
@@ -268,8 +268,7 @@ private:
     void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
     void focusNavigation(bool forward = true);
 
-    BrowsingContext(StarFish* starFish, WebView* webView,
-                    HTMLIFrameElement* source = nullptr);
+    BrowsingContext(WebView* webView, HTMLIFrameElement* source = nullptr);
 
     void setNeedsRendering();
     void registerNeedsLayoutInWebView();

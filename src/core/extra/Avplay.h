@@ -22,7 +22,7 @@
 #define __StarFishAvplay__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/StarFishHoldable.h"
+#include "binding/WebViewHoldable.h"
 #include <media/player.h>
 
 namespace StarFish {
@@ -47,7 +47,7 @@ class StarFish;
     F(setListener)          \
     F(seekTo)
 
-class Avplay : public gc, public StarFishHoldable {
+class Avplay : public gc, public WebViewHoldable {
 public:
     enum AVPLAY_CALLBACK_TYPE {
         prepare_async_CALLBACK,
@@ -62,7 +62,7 @@ public:
         onstreamcompleted_CALLBACK
     };
 
-    Avplay(StarFish* starFish);
+    Avplay(WebView* wv);
     ~Avplay();
 
     void open(String* url);

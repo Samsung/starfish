@@ -146,16 +146,6 @@ void WebView::RegisterOnLoadResourceHandler(
         [this, cb](LWE::WebContainer*, const std::string& a) { cb(this, a); });
 }
 
-void WebView::RunMessageLoop()
-{
-    FetchWebContainer()->RunMessageLoop();
-}
-
-void WebView::StopMessageLoop()
-{
-    FetchWebContainer()->StopMessageLoop();
-}
-
 void WebView::Pause()
 {
     FetchWebContainer()->Pause();

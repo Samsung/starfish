@@ -36,8 +36,8 @@ void runAllRemainingIdler();
 
 namespace StarFish {
 
-MessageLoop::MessageLoop(StarFish* sf)
-    : StarFishHoldable(sf)
+MessageLoop::MessageLoop(WebView* sf)
+    : WebViewHoldable(sf)
     , m_idlersFromOtherThreadMutex(new Mutex())
     , m_navigateInvokeIdler(nullptr)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
@@ -338,7 +338,7 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
         data);
 }
 
-void MessageLoop::close()
+void MessageLoop::destroy()
 {
     m_inClosingState = true;
     if (m_navigateInvokeIdler) {

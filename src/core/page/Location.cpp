@@ -167,8 +167,8 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
                          ResourceURL* referrerURL)
 {
     if (ctx->isTopLevelBrowsingContext()) {
-        ctx->starFish()->messageLoop()->invokeNavigate(ctx->webView(), url,
-                                                       referrerURL);
+        ctx->webView()->messageLoop()->invokeNavigate(ctx->webView(), url,
+                                                      referrerURL);
     } else {
         ctx->sourceElement()->navigate(url, HistoryManager::Action::Add,
                                        referrerURL);
@@ -234,7 +234,7 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
             bool canNavigate = isBrowsableContent &&
                                (url->protocolKind() != ResourceURL::UNKNOWN);
 
-            if (starFish()->containsWebViewHandler(
+            if (webView()->containsPublicWebViewHandler(
                     "shouldOverrideUrlLoading")) {
                 struct Param : public gc {
                     ResourceURL* url;
@@ -252,7 +252,7 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
                 p->referrerUrl = referrerURL;
                 p->canNavigate = canNavigate;
                 p->force = force;
-                starFish()->callWebViewHandler(
+                webView()->callPublicWebViewHandler(
                     std::string("shouldOverrideUrlLoading"), (void*)p);
             } else {
                 if (canNavigate) {
@@ -265,7 +265,7 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
             }
 
             if (!isBrowsableContent &&
-                starFish()->containsWebViewHandler("onDownloadStart")) {
+                webView()->containsPublicWebViewHandler("onDownloadStart")) {
                 struct Param {
                     std::string url;
                     std::string userAgent;
@@ -277,7 +277,7 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
                 Param* p = new Param();
                 p->url = url->urlString()->toUTF8NonGCString();
                 p->userAgent =
-                    document()->starFish()->userAgent()->toUTF8NonGCString();
+                    document()->webView()->userAgent()->toUTF8NonGCString();
 
                 auto it = headers.find("Content-Disposition");
                 if (it != headers.end()) {
@@ -300,7 +300,7 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
                     p->contentLength = -1;
                 }
 
-                document()->starFish()->callWebViewHandler(
+                document()->webView()->callPublicWebViewHandler(
                     std::string("onDownloadStart"), (void*)p);
             }
         };

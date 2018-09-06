@@ -24,10 +24,10 @@
 #include "binding/StarFishHoldable.h"
 
 namespace StarFish {
-class TTS : public gc, public StarFishHoldable {
+class TTS : public gc, public WebViewHoldable {
 public:
-    TTS(StarFish* starFish)
-        : StarFishHoldable(starFish)
+    TTS(WebView* webView)
+        : WebViewHoldable(webView)
         , m_isTTSEnabled(false)
     {
         init();
