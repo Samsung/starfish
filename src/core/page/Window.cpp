@@ -254,7 +254,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                         origin->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         reason);
-        starFish()->console()->error(String::fromUTF8(msg));
+        webView()->console()->error(String::fromUTF8(msg));
         return;
     }
 #endif

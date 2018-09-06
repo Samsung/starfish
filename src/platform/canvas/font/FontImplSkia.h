@@ -137,7 +137,7 @@ public:
 
 class PlatformFontSelectorImplSkia : public PlatformFontSelector {
 public:
-    PlatformFontSelectorImplSkia(StarFish* sf);
+    PlatformFontSelectorImplSkia(WebView* sf);
 
     ~PlatformFontSelectorImplSkia()
     {
