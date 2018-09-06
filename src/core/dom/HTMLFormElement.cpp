@@ -41,6 +41,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Location.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/page/History.h"
 #include "browser/history/HistoryManager.h"
@@ -321,8 +322,7 @@ void HTMLFormControl::fireSubmitEvent()
             new Event(node->document(), eventType, EventInit(true, true));
         node->EventTarget::dispatchEventByUA(node, e);
     };
-    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn,
-                                        this);
+    webView()->messageLoop()->addIdler(document()->browsingContext(), fn, this);
 }
 
 void HTMLFormControl::didAttributeChanged(QualifiedName name, String* old,
@@ -368,7 +368,7 @@ void HTMLFormControl::didNodeInsertedToDocumentTree()
 
     // https://www.w3.org/TR/html5/editing.html#focusing-steps
     if (isAutofocusable()) {
-        starFish()->messageLoop()->addIdler(
+        webView()->messageLoop()->addIdler(
             document()->browsingContext(),
             [](size_t handle, void* data) {
                 HTMLFormControl* element = (HTMLFormControl*)data;
@@ -609,8 +609,8 @@ void HTMLFormControl::queueEvent(QualifiedName& eventType, bool bubbles,
         Event* e = (Event*)data1;
         element->EventTarget::dispatchEventByUA(element, e);
     };
-    starFish()->messageLoop()->addIdler(document()->browsingContext(), fn, this,
-                                        e);
+    webView()->messageLoop()->addIdler(document()->browsingContext(), fn, this,
+                                       e);
 }
 
 void HTMLFormControl::fireEvent(QualifiedName& eventType, bool bubbles,
@@ -763,7 +763,7 @@ void HTMLFormElement::mutateActionUrl(ResourceURL* url,
                                       ResourceRequest::MethodType method)
 {
     if (m_plannedNavigationTaskId != (size_t)-1) {
-        starFish()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
+        webView()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
     }
 
     FormSubmitData* dataToSubmit =
@@ -780,7 +780,7 @@ void HTMLFormElement::mutateActionUrl(ResourceURL* url,
         formElement->clearPlannedNavigationTask();
     };
 
-    m_plannedNavigationTaskId = starFish()->messageLoop()->addIdler(
+    m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
         document()->browsingContext(), fn, this, urlToOpen);
 }
 
@@ -791,7 +791,7 @@ void HTMLFormElement::submitAsEntityBody(
     if (enctype ==
         ResourceRequest::EncodeType::APPLICATION_X_WWW_FORM_URLENCODED) {
         if (m_plannedNavigationTaskId != (size_t)-1) {
-            starFish()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
+            webView()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
         }
 
         FormSubmitData* dataToSubmit =
@@ -808,7 +808,7 @@ void HTMLFormElement::submitAsEntityBody(
             formElement->clearPlannedNavigationTask();
         };
 
-        m_plannedNavigationTaskId = starFish()->messageLoop()->addIdler(
+        m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
             document()->browsingContext(), fn, this, urlToOpen);
     } else if (enctype == ResourceRequest::EncodeType::MULTIPART_FORM_DATA) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,34 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishThreadPool__
-#define __StarFishThreadPool__
-
-#include "core/modules/threading/Mutex.h"
-#include "core/modules/threading/Semaphore.h"
-#include "core/modules/threading/Thread.h"
+#include "StarFishConfig.h"
+#include "StarFish.h"
+#include "binding/WebViewHoldable.h"
+#include "core/page/WebView.h"
 
 namespace StarFish {
 
-class BrowsingContext;
-
-class ThreadPool : public gc {
-public:
-    ThreadPool(size_t maxThreadCount, MessageLoop* ml);
-    ~ThreadPool()
-    {
-    }
-    void addWork(BrowsingContext* ctx, ThreadWorker fn, void* data);
-    void clearWork(BrowsingContext* ctx); // give nullptr to clear every idlers
-    void destroy();
-
-protected:
-    bool m_isClosed;
-    MessageLoop* m_messageLoop;
-    GCVector<Thread*> m_threads;
-    std::list<std::pair<ThreadWorker, void*>> m_workerQueue;
-    Mutex* m_workerQueueMutex;
-};
+StarFish* WebViewHoldable::starFish() const
+{
+    return webView()->starFish();
 }
-
-#endif
+}

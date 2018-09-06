@@ -27,6 +27,7 @@
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "platform/window/PlatformWindow.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -198,13 +199,13 @@ static ValueRef* debugPauseFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->starFish()->messageLoop()->addIdler(window->browsingContext(),
-                                                [](size_t, void* data, void*) {
-                                                    StarFish* sf =
-                                                        (StarFish*)data;
-                                                    sf->pause();
-                                                },
-                                                window->starFish(), nullptr);
+    window->webView()->messageLoop()->addIdler(window->browsingContext(),
+                                               [](size_t, void* data, void*) {
+                                                   PlatformWindow* sf =
+                                                       (PlatformWindow*)data;
+                                                   sf->pause();
+                                               },
+                                               window->webView(), nullptr);
     return scriptUndefined();
 }
 
@@ -214,13 +215,13 @@ static ValueRef* debugResumeFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->starFish()->messageLoop()->addIdler(window->browsingContext(),
-                                                [](size_t, void* data, void*) {
-                                                    StarFish* sf =
-                                                        (StarFish*)data;
-                                                    sf->resume();
-                                                },
-                                                window->starFish(), nullptr);
+    window->webView()->messageLoop()->addIdler(window->browsingContext(),
+                                               [](size_t, void* data, void*) {
+                                                   PlatformWindow* sf =
+                                                       (PlatformWindow*)data;
+                                                   sf->resume();
+                                               },
+                                               window->webView(), nullptr);
     return scriptUndefined();
 }
 

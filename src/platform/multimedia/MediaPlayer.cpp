@@ -27,6 +27,7 @@
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/mediasource/MediaSource.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 
 namespace StarFish {
@@ -69,7 +70,7 @@ Window* MediaPlayer::window()
 CanvasSurface* MediaPlayer::createGraphicsBuffer(size_t visibleWidth,
                                                  size_t visibleHeight)
 {
-    return CanvasSurface::create(window()->starFish()->platformWindow(), 1, 1);
+    return CanvasSurface::create(window()->webView()->platformWindow(), 1, 1);
 }
 
 SourceBuffer* MediaPlayer::activeSourceBuffer(StreamType type)

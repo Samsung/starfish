@@ -42,8 +42,8 @@
 
 namespace StarFish {
 
-MessageLoop::MessageLoop(StarFish* sf)
-    : StarFishHoldable(sf)
+MessageLoop::MessageLoop(WebView* wv)
+    : WebViewHoldable(wv)
     , m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
     , m_navigateInvokeIdler(nullptr)
@@ -55,16 +55,6 @@ MessageLoop::MessageLoop(StarFish* sf)
 #endif
 {
     ecore_animator_frametime_set(1 / 120.0);
-}
-
-void MessageLoop::run()
-{
-    ecore_main_loop_begin();
-}
-
-void MessageLoop::stop()
-{
-    ecore_main_loop_quit();
 }
 
 struct InvokeNavigateData : public gc {
@@ -80,7 +70,7 @@ struct InvokeNavigateData : public gc {
     }
 };
 
-void MessageLoop::close()
+void MessageLoop::destroy()
 {
     m_inClosingState = true;
     if (m_navigateInvokeIdler) {

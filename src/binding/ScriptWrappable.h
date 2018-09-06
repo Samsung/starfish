@@ -66,7 +66,7 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     Escargot::ScriptNativeFunctionPointer setter, bool isEnumerable = true,
     bool isConfigurable = true);
 
-StarFish* fetchStarFish(Escargot::ContextRef* context);
+WebView* fetchWebView(Escargot::ContextRef* context);
 Window* fetchWindow(Escargot::ContextRef* context);
 Document* fetchDocument(Escargot::ContextRef* context);
 StaticStrings* fetchStaticStrings(Escargot::ContextRef* context);

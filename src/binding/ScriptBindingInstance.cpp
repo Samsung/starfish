@@ -26,12 +26,13 @@
 #include "core/dom/Element.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/extra/Console.h"
+#include "core/page/BrowsingContext.h"
 #include "core/page/History.h"
 #include "core/page/Location.h"
 #include "core/page/Navigator.h"
-#include "core/page/BrowsingContext.h"
-#include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/Avplay.h"
@@ -74,7 +75,7 @@ ScriptBindingInstance::ScriptBindingInstance(
     STARFISH_ENUM_BINDING_NAMES(FOR_EACH_SCRIPT_FN)
 #undef FOR_EACH_SCRIPT_FN
 }
-void ScriptBindingInstance::close()
+void ScriptBindingInstance::destroy()
 {
     if (m_ownerWindow->browsingContext()->isTopLevelBrowsingContext()) {
         m_scriptContext->vmInstance()->clearCachesRelatedWithContext();
@@ -105,13 +106,13 @@ static ValueRef* _logConsoleFunction(ExecutionStateRef* state,
                                      ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchStarFish(state->context())
+    fetchWebView(state->context())
         ->console()
         ->log(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchStarFish(state->context())
+        fetchWebView(state->context())
             ->console()
             ->log(toBrowserStringForConsole(state, val));
     }
@@ -124,13 +125,13 @@ static ValueRef* _infoConsoleFunction(ExecutionStateRef* state,
                                       ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchStarFish(state->context())
+    fetchWebView(state->context())
         ->console()
         ->info(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchStarFish(state->context())
+        fetchWebView(state->context())
             ->console()
             ->info(toBrowserStringForConsole(state, val));
     }
@@ -142,13 +143,13 @@ static ValueRef* _errorConsoleFunction(ExecutionStateRef* state,
                                        ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchStarFish(state->context())
+    fetchWebView(state->context())
         ->console()
         ->error(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchStarFish(state->context())
+        fetchWebView(state->context())
             ->console()
             ->error(toBrowserStringForConsole(state, val));
     }
@@ -160,13 +161,13 @@ static ValueRef* _warnConsoleFunction(ExecutionStateRef* state,
                                       ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchStarFish(state->context())
+    fetchWebView(state->context())
         ->console()
         ->warn(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchStarFish(state->context())
+        fetchWebView(state->context())
             ->console()
             ->warn(toBrowserStringForConsole(state, val));
     }
@@ -178,13 +179,13 @@ static ValueRef* _debugConsoleFunction(ExecutionStateRef* state,
                                        ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchStarFish(state->context())
+    fetchWebView(state->context())
         ->console()
         ->debug(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchStarFish(state->context())
+        fetchWebView(state->context())
             ->console()
             ->debug(toBrowserStringForConsole(state, val));
     }
@@ -242,7 +243,7 @@ static ValueRef* _openAvplayFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
                                      ValueRef** argv, bool isNewExpression)
 {
-    fetchStarFish(state->context())
+    fetchWebView(state->context())
         ->avplay()
         ->open(toBrowserString(state, argv[0]));
     return ValueRef::createUndefined();
@@ -252,7 +253,7 @@ static ValueRef* _prepareAvplayFunction(ExecutionStateRef* state,
                                         ValueRef* thisValue, size_t argc,
                                         ValueRef** argv, bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->prepare();
+    fetchWebView(state->context())->avplay()->prepare();
     return ValueRef::createUndefined();
 }
 
@@ -265,7 +266,7 @@ static ValueRef* _setDisplayRectAvplayFunction(ExecutionStateRef* state,
     double arg2 = argv[1]->toNumber(state);
     double arg3 = argv[2]->toNumber(state);
     double arg4 = argv[3]->toNumber(state);
-    fetchStarFish(state->context())
+    fetchWebView(state->context())
         ->avplay()
         ->setDisplayRect(arg1, arg2, arg3, arg4);
     return ValueRef::createUndefined();
@@ -275,7 +276,7 @@ static ValueRef* _playAvplayFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
                                      ValueRef** argv, bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->play();
+    fetchWebView(state->context())->avplay()->play();
     return ValueRef::createUndefined();
 }
 
@@ -283,7 +284,7 @@ static ValueRef* _closeAvplayFunction(ExecutionStateRef* state,
                                       ValueRef* thisValue, size_t argc,
                                       ValueRef** argv, bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->close();
+    fetchWebView(state->context())->avplay()->close();
     return ValueRef::createUndefined();
 }
 
@@ -291,7 +292,7 @@ static ValueRef* _pauseAvplayFunction(ExecutionStateRef* state,
                                       ValueRef* thisValue, size_t argc,
                                       ValueRef** argv, bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->pause();
+    fetchWebView(state->context())->avplay()->pause();
     return ValueRef::createUndefined();
 }
 
@@ -299,7 +300,7 @@ static ValueRef* _stopAvplayFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
                                      ValueRef** argv, bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->stop();
+    fetchWebView(state->context())->avplay()->stop();
     return ValueRef::createUndefined();
 }
 
@@ -307,7 +308,7 @@ static ValueRef* _suspendAvplayFunction(ExecutionStateRef* state,
                                         ValueRef* thisValue, size_t argc,
                                         ValueRef** argv, bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->suspend();
+    fetchWebView(state->context())->avplay()->suspend();
     return ValueRef::createUndefined();
 }
 
@@ -315,7 +316,7 @@ static ValueRef* _restoreAvplayFunction(ExecutionStateRef* state,
                                         ValueRef* thisValue, size_t argc,
                                         ValueRef** argv, bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->restore();
+    fetchWebView(state->context())->avplay()->restore();
     return ValueRef::createUndefined();
 }
 
@@ -323,7 +324,7 @@ static ValueRef* _getStateAvplayFunction(ExecutionStateRef* state,
                                          ValueRef* thisValue, size_t argc,
                                          ValueRef** argv, bool isNewExpression)
 {
-    String* ret = fetchStarFish(state->context())->avplay()->getState();
+    String* ret = fetchWebView(state->context())->avplay()->getState();
     return ValueRef::create(toJSString(ret));
 }
 
@@ -333,7 +334,7 @@ static ValueRef* _getCurrentTimeAvplayFunction(ExecutionStateRef* state,
                                                bool isNewExpression)
 {
     return ValueRef::create(
-        fetchStarFish(state->context())->avplay()->getCurrentTime());
+        fetchWebView(state->context())->avplay()->getCurrentTime());
 }
 
 static ValueRef* _getDurationAvplayFunction(ExecutionStateRef* state,
@@ -342,7 +343,7 @@ static ValueRef* _getDurationAvplayFunction(ExecutionStateRef* state,
                                             bool isNewExpression)
 {
     return ValueRef::create(
-        fetchStarFish(state->context())->avplay()->getDuration());
+        fetchWebView(state->context())->avplay()->getDuration());
 }
 
 static ValueRef* _setStreamingPropertyAvplayFunction(ExecutionStateRef* state,
@@ -353,7 +354,7 @@ static ValueRef* _setStreamingPropertyAvplayFunction(ExecutionStateRef* state,
 {
     String* arg1 = toBrowserString(state, argv[0]);
     String* arg2 = toBrowserString(state, argv[1]);
-    fetchStarFish(state->context())->avplay()->setStreamingProperty(arg1, arg2);
+    fetchWebView(state->context())->avplay()->setStreamingProperty(arg1, arg2);
     return ValueRef::createUndefined();
 }
 
@@ -362,7 +363,7 @@ static ValueRef* _prepareAsyncAvplayFunction(ExecutionStateRef* state,
                                              ValueRef** argv,
                                              bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->prepareAsync(argv[0]);
+    fetchWebView(state->context())->avplay()->prepareAsync(argv[0]);
     return ValueRef::createUndefined();
 }
 
@@ -371,7 +372,7 @@ static ValueRef* _setListenerAvplayFunction(ExecutionStateRef* state,
                                             ValueRef** argv,
                                             bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->setListener(argv[0]);
+    fetchWebView(state->context())->avplay()->setListener(argv[0]);
     return ValueRef::createUndefined();
 }
 
@@ -379,7 +380,7 @@ static ValueRef* _seekToAvplayFunction(ExecutionStateRef* state,
                                        ValueRef* thisValue, size_t argc,
                                        ValueRef** argv, bool isNewExpression)
 {
-    fetchStarFish(state->context())->avplay()->seekTo(argv[0]->toNumber(state));
+    fetchWebView(state->context())->avplay()->seekTo(argv[0]->toNumber(state));
     return ValueRef::createUndefined();
 }
 #endif
@@ -503,7 +504,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
 
     state->destroy();
 #ifdef STARFISH_ENABLE_TEST
-    if (ownerWindow()->starFish()->testCompatibleMode() ==
+    if (ownerWindow()->webView()->testCompatibleMode() ==
         StarFishTestCompatibleMode::Normal) {
         evaluateString(this, String::fromUTF8("delete this.testRunner"));
     }

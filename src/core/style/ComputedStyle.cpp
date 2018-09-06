@@ -343,14 +343,14 @@ void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
     }
 
 #ifdef STARFISH_ENABLE_TEST
-    StarFish* sf = consumer->starFish();
+    WebView* wv = consumer->webView();
     if (g_enablePixelTest) {
         String* str = String::fromUTF8("StarFishAhem");
         m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight,
                               fixedLetterSpacing);
     } else {
         bool regressionEnable =
-            sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+            wv->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
 
         if (regressionEnable) {
             String** familyNameArray =
@@ -396,7 +396,6 @@ void ComputedStyle::loadBackgroundImage(
     Node* consumer,
     ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
 {
-    StarFish* sf = consumer->starFish();
     size_t bgIndex = 0;
     while (bgIndex < backgroundLayerSize()) {
         ImageValue* bImg = backgroundImage(bgIndex);
@@ -433,8 +432,9 @@ void ComputedStyle::loadBackgroundImage(
                 res->addResourceClient(
                     new BackgroundImageResourceClient(res, consumer));
 #ifdef STARFISH_ENABLE_TEST
+                WebView* wv = consumer->webView();
                 bool enableRegressionTest =
-                    sf->startUpFlag() &
+                    wv->startUpFlag() &
                     StarFishStartUpFlag::enableRegressionTest;
                 res->request(
                     (g_enablePixelTest || enableRegressionTest)
@@ -459,7 +459,6 @@ void ComputedStyle::loadBorderImage(
     Node* consumer,
     ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
 {
-    StarFish* sf = consumer->starFish();
     BorderData border = this->border();
     if (!border.image().url()->equals(String::emptyString)) {
         ResourceURL* u = new ResourceURL(
@@ -489,8 +488,9 @@ void ComputedStyle::loadBorderImage(
             res->addResourceClient(
                 new BackgroundImageResourceClient(res, consumer));
 #ifdef STARFISH_ENABLE_TEST
+            WebView* wv = consumer->webView();
             bool enableRegressionTest =
-                sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+                wv->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
             res->request(
                 (g_enablePixelTest || enableRegressionTest)
                     ? Resource::ResourceRequestSyncLevel::AlwaysSync
@@ -510,7 +510,6 @@ void ComputedStyle::loadListStyleImage(
     Node* consumer,
     ComputedStyle* prevComputedStyleValueForReferenceLoadedResources)
 {
-    StarFish* sf = consumer->starFish();
     const ListStyleData& listStyle = listStyleData();
     if (listStyle.image()->length() > 0) {
         ResourceURL* u = new ResourceURL(
@@ -536,8 +535,9 @@ void ComputedStyle::loadListStyleImage(
             res->addResourceClient(
                 new BackgroundImageResourceClient(res, consumer));
 #ifdef STARFISH_ENABLE_TEST
+            WebView* wv = consumer->webView();
             bool enableRegressionTest =
-                sf->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+                wv->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
             res->request(
                 (g_enablePixelTest || enableRegressionTest)
                     ? Resource::ResourceRequestSyncLevel::AlwaysSync
@@ -668,7 +668,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
 
     Length curFontSize = fontSize();
     Length rootFontSize = Length(
-        Length::Fixed, current->document()->starFish()->defaultFontSize());
+        Length::Fixed, current->document()->webView()->defaultFontSize());
     HTMLHtmlElement* root = current->document()->rootElement();
     if (root && root->style()) {
         rootFontSize = root->style()->fontSize();

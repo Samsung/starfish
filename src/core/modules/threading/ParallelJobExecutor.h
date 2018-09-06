@@ -19,7 +19,8 @@
 
 #include "StarFish.h"
 #include "binding/StarFishHoldable.h"
-#include "Thread.h"
+#include "core/modules/threading/Thread.h"
+#include "core/page/WebView.h"
 
 #ifndef __StarFishParallelJobExecutor__
 #define __StarFishParallelJobExecutor__
@@ -27,31 +28,14 @@
 namespace StarFish {
 class Thread;
 
-static int numberOfCores()
-{
-    int ret = 1;
-#ifndef STARFISH_WINDOWS
-    long sysconfResult = sysconf(_SC_NPROCESSORS_ONLN);
-#else
-    SYSTEM_INFO sysinfo;
-    GetSystemInfo(&sysinfo);
-    long sysconfResult = sysinfo.dwNumberOfProcessors;
-#endif
-
-    if (sysconfResult > 0) {
-        ret = static_cast<int>(sysconfResult);
-    }
-    return ret;
-}
-
 template <typename ParameterType>
-class ParallelJobExecutor : public gc, public StarFishHoldable {
+class ParallelJobExecutor : public gc, public WebViewHoldable {
 public:
     using ParallelJobWorker = void* (*)(void*); // Same as ThreadWorker
 
-    ParallelJobExecutor(StarFish* starfish, ParallelJobWorker worker,
+    ParallelJobExecutor(WebView* wv, ParallelJobWorker worker,
                         int requestWorkerSize)
-        : StarFishHoldable(starfish)
+        : WebViewHoldable(wv)
         , m_jobWorker(worker)
     {
         STARFISH_ASSERT(isMainThread());
@@ -65,10 +49,10 @@ public:
         STARFISH_LOG_INFO("ParallelJobExecutor worker size is : %d\n",
                           requestWorkerSize);
 #endif
-        auto& threadPool = m_starFish->parallelJobExecutorThreadPool();
+        auto& threadPool = webView()->parallelJobExecutorThreadPool();
         for (int i = 0; i < requestWorkerSize; ++i) {
             if (threadPool.size() < static_cast<size_t>(i) + 1U) {
-                threadPool.push_back(new Thread(m_starFish));
+                threadPool.push_back(new Thread(webView()));
             }
             m_threadVector.push_back(threadPool[i]);
             m_paramVector.push_back(ParameterType());
@@ -90,7 +74,7 @@ public:
         STARFISH_ASSERT(isMainThread());
         // excute
         for (size_t i = 0; i < m_threadVector.size(); ++i) {
-            m_threadVector[i]->run(m_starFish->messageLoop(), m_jobWorker,
+            m_threadVector[i]->run(webView()->messageLoop(), m_jobWorker,
                                    &m_paramVector[i]);
         }
         // join

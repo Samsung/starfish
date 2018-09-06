@@ -20,7 +20,7 @@
 #ifndef __StarFishScriptEngineInstance__
 #define __StarFishScriptEngineInstance__
 
-#include "binding/StarFishHoldable.h"
+#include "binding/WebViewHoldable.h"
 
 namespace Escargot {
 class VMInstanceRef;
@@ -30,9 +30,9 @@ namespace StarFish {
 
 typedef Escargot::VMInstanceRef* ScriptEngine;
 
-class ScriptEngineInstance : public StarFishHoldable, public gc {
+class ScriptEngineInstance : public WebViewHoldable, public gc {
 public:
-    ScriptEngineInstance(StarFish* starFish);
+    ScriptEngineInstance(WebView* wv);
 
     ScriptEngine engineInstance()
     {

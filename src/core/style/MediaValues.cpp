@@ -87,7 +87,7 @@ bool computeLengthImpl(double value, UnitType type, uint32_t defaultFontSize,
 bool MediaValues::computeLength(double value, UnitType type, double& result)
 {
     return computeLength(value, type,
-                         m_frame->document()->starFish()->defaultFontSize(),
+                         m_frame->document()->webView()->defaultFontSize(),
                          viewportWidth(), viewportHeight(), result);
 }
 

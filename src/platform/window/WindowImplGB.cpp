@@ -43,7 +43,7 @@ extern StarFish::CanvasSurface* g_surfaceForScreehShot;
 namespace StarFish {
 
 #ifdef STARFISH_ENABLE_TEST
-void screenShotInRendering(StarFish*, char const*, std::function<void()>)
+void screenShotInRendering(WebView*, char const*, std::function<void()>)
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
@@ -51,7 +51,7 @@ void screenShotInRendering(StarFish*, char const*, std::function<void()>)
 
 class WindowImplGB : public PlatformWindow {
 public:
-    WindowImplGB(StarFish* sf, int32_t width, int32_t height)
+    WindowImplGB(StarFish* sf, uint32_t width, uint32_t height)
         : PlatformWindow(sf)
         , m_width(width)
         , m_height(height)
@@ -60,19 +60,19 @@ public:
     {
     }
 
-    virtual int32_t width() override
+    virtual uint32_t width() override
     {
         return m_width;
     }
 
-    virtual int32_t height() override
+    virtual uint32_t height() override
     {
         return m_height;
     }
 
-    virtual void resizeTo(int w, int h) override
+    virtual void resizeTo(uint32_t w, uint32_t h) override
     {
-        if (w != (int)m_width || h != (int)m_height) {
+        if (w != m_width || h != m_height) {
             m_width = w;
             m_height = h;
             PlatformWindow::resizeTo(w, h);
@@ -105,7 +105,8 @@ public:
     size_t m_stride;
 };
 
-PlatformWindow* PlatformWindow::create(StarFish* sf, int width, int height)
+PlatformWindow* PlatformWindow::create(StarFish* sf, uint32_t width,
+                                       uint32_t height)
 {
     return new WindowImplGB(sf, width, height);
 }
@@ -117,16 +118,16 @@ Canvas* WindowImplGB::preparePainting()
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot = CanvasSurface::create(
-                this, width() / starFish()->screenInfo().devicePixelRatio,
-                height() / starFish()->screenInfo().devicePixelRatio);
-            Canvas* c = Canvas::create(starFish(), g_surfaceForScreehShot);
+                this, width() / webView()->screenInfo().devicePixelRatio,
+                height() / webView()->screenInfo().devicePixelRatio);
+            Canvas* c = Canvas::create(webView(), g_surfaceForScreehShot);
             return c;
         }
     }
 #endif
     CanvasSurface* target = CanvasSurface::createCanvasTarget(
         (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
-    Canvas* canvas = Canvas::create(starFish(), target);
+    Canvas* canvas = Canvas::create(webView(), target);
     return canvas;
 }
 
@@ -137,16 +138,16 @@ Compositor* WindowImplGB::prepareCompositor()
         const char* path = getenv("SCREEN_SHOT");
         if (path && strlen(path) && g_fireOnloadEvent) {
             g_surfaceForScreehShot = CanvasSurface::create(
-                this, width() / starFish()->screenInfo().devicePixelRatio,
-                height() / starFish()->screenInfo().devicePixelRatio);
-            return Compositor::create2D(starFish(), m_compostiorContext,
+                this, width() / webView()->screenInfo().devicePixelRatio,
+                height() / webView()->screenInfo().devicePixelRatio);
+            return Compositor::create2D(webView(), m_compostiorContext,
                                         g_surfaceForScreehShot);
         }
     }
 #endif
     CanvasSurface* target = CanvasSurface::createCanvasTarget(
         (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
-    return Compositor::create2D(starFish(), m_compostiorContext, target);
+    return Compositor::create2D(webView(), m_compostiorContext, target);
 }
 
 } // namespace StarFish

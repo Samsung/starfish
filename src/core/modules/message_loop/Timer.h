@@ -28,11 +28,10 @@ typedef bool (*GenericAnimationHandler)(void* data);
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
 class Timer : public gc {
-    friend class StarFish;
     friend class Window;
 
 public:
-    Timer(StarFish* sf);
+    Timer(WebView* wv);
     size_t addTimer(unsigned delay, Window* window,
                     WindowSetTimeoutHandler handler, void* data,
                     bool repetitive);
@@ -47,9 +46,9 @@ public:
 
     void clear(BrowsingContext* ctx); // give nullptr to clear every tiemr
 
-    void close();
+    void destroy();
 
-    StarFish* m_starFish;
+    WebView* m_webView;
 
     int32_t m_timeoutCounter;
     GCUnorderedMap<int32_t, void*> m_timeoutHandler;

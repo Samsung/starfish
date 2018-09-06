@@ -30,6 +30,7 @@
 #include "core/dom/Node.h"
 #include "core/dom/Traverse.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
@@ -462,7 +463,7 @@ bool HTMLSelectElement::handleDefaultEvent(Event* event)
 void HTMLSelectElement::showDropdownMenu()
 {
     // register the callback to be called when an item is selected
-    document()->starFish()->platformWindow()->registerCallbackHandler(
+    webView()->platformWindow()->registerCallbackHandler(
         std::string("onDropdownMenuItemSelected"), [this](void* param) -> void {
             struct Param {
                 int position;
@@ -500,8 +501,8 @@ void HTMLSelectElement::showDropdownMenu()
         }
     }
 
-    document()->starFish()->platformWindow()->callHandler(
-        std::string("showDropdownMenu"), (void*)p);
+    webView()->platformWindow()->callHandler(std::string("showDropdownMenu"),
+                                             (void*)p);
 }
 
 void HTMLSelectElement::onDropdownMenuItemSelected(int position)

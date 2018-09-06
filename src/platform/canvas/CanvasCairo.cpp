@@ -25,13 +25,13 @@
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 
 #include "core/modules/canvas/Canvas.h"
-#include "core/style/GradientData.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/ShadowBlur.h"
+#include "core/style/GradientData.h"
 #include "core/style/UnitHelper.h"
+#include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
-
 #include "platform/canvas/font/FontImplCairo.h"
 
 #include <vector>
@@ -104,12 +104,12 @@ class CanvasCairo : public Canvas {
     }
 
 public:
-    CanvasCairo(StarFish* starfish, void* buffer, int width, int height,
+    CanvasCairo(WebView* webView, void* buffer, int width, int height,
                 int stride)
     {
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
-        m_starfish = starfish;
+        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
         {
@@ -119,9 +119,9 @@ public:
         save();
     }
 
-    CanvasCairo(StarFish* starfish, CanvasSurface* data)
+    CanvasCairo(WebView* webView, CanvasSurface* data)
     {
-        m_starfish = starfish;
+        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
         m_shouldDestroyCairo = true;
@@ -134,11 +134,11 @@ public:
         save();
     }
 
-    CanvasCairo(StarFish* starfish, NativeImageData* data)
+    CanvasCairo(WebView* webView, NativeImageData* data)
     {
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = false;
-        m_starfish = starfish;
+        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
         {
@@ -174,7 +174,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::clear");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::clear");
         cairo_save(m_canvas);
         if (clr.a() == 0) {
             cairo_set_operator(m_canvas, CAIRO_OPERATOR_CLEAR);
@@ -248,7 +248,7 @@ public:
 
     virtual void beginOpacityLayer(float c)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::beginOpacityLayer");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::beginOpacityLayer");
         save();
         lastState().m_opacity = c;
         cairo_push_group(m_canvas);
@@ -256,7 +256,7 @@ public:
 
     virtual void endOpacityLayer()
     {
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::endOpacityLayer");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::endOpacityLayer");
         cairo_pop_group_to_source(m_canvas);
         cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
         restore();
@@ -317,14 +317,14 @@ public:
 
     virtual void unsetDevicePixelRatio()
     {
-        scale(1 / m_starfish->screenInfo().devicePixelRatio,
-              1 / m_starfish->screenInfo().devicePixelRatio);
+        scale(1 / m_webView->screenInfo().devicePixelRatio,
+              1 / m_webView->screenInfo().devicePixelRatio);
     }
 
     void applyDevicePixelRatio()
     {
-        scale(m_starfish->screenInfo().devicePixelRatio,
-              m_starfish->screenInfo().devicePixelRatio);
+        scale(m_webView->screenInfo().devicePixelRatio,
+              m_webView->screenInfo().devicePixelRatio);
     }
 
     virtual void setColor(const Unit::Color& clr_)
@@ -381,7 +381,7 @@ public:
     void drawCairoRect(float xx, float yy, float ww, float hh,
                        bool isHole = false)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::drawCairoRect");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawCairoRect");
         cairo_save(m_canvas);
         if (isHole) {
             cairo_set_source_rgba(m_canvas, 0, 0, 0, 0);
@@ -440,7 +440,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::drawText");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawText");
 
         LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
@@ -489,7 +489,7 @@ public:
                         double surfaceWidth, double surfaceHeight,
                         ImageRenderingValue imageRenderingMode)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::drawImageCairo");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawImageCairo");
 
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
         xx = dst.x();
@@ -637,7 +637,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::drawRepeatImage");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawRepeatImage");
 
         cairo_save(m_canvas);
         double xx = dst.x(), yy = dst.y(), ww = dst.width(), hh = dst.height();
@@ -699,7 +699,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasImplCairo::drawRepeatImage");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawRepeatImage");
 
         cairo_save(m_canvas);
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
@@ -773,8 +773,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_starfish,
-                              "CanvasImplCairo::drawLinearGradient");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawLinearGradient");
         cairo_save(m_canvas);
 
         cairo_pattern_t* pt;
@@ -809,8 +808,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_starfish,
-                              "CanvasImplCairo::drawRadialGradient");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawRadialGradient");
 
         cairo_save(m_canvas);
         cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
@@ -1317,7 +1315,7 @@ private:
     }
 
 protected:
-    StarFish* m_starfish;
+    WebView* m_webView;
     std::vector<CanvasStateCairo> m_state;
     cairo_surface_t* m_surface;
     cairo_t* m_canvas;
@@ -1326,20 +1324,20 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
+Canvas* Canvas::create(WebView* webView, CanvasSurface* data)
 {
-    return new CanvasCairo(starfish, data);
+    return new CanvasCairo(webView, data);
 }
 
-Canvas* Canvas::create(StarFish* starfish, uint8_t* data, size_t w, size_t h,
+Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
                        size_t stride)
 {
-    return new CanvasCairo(starfish, data, w, h, w * 4);
+    return new CanvasCairo(webView, data, w, h, w * 4);
 }
 
-Canvas* Canvas::create(StarFish* starfish, NativeImageData* data)
+Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 {
-    return new CanvasCairo(starfish, data);
+    return new CanvasCairo(webView, data);
 }
 }
 

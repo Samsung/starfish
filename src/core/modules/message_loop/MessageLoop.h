@@ -24,19 +24,26 @@
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 #include "core/modules/threading/Locker.h"
 #endif
-#include "binding/StarFishHoldable.h"
+#include "binding/WebViewHoldable.h"
 
 namespace StarFish {
 
 class BrowsingContext;
 
-class MessageLoop : public gc, public StarFishHoldable {
+struct MessageLoopContext : public gc {
+public:
+    std::unordered_set<size_t> m_idlers;
+    std::unordered_set<size_t> m_idlersFromOtherThread;
+    std::list<size_t> m_idlersFromOtherThreadForUV;
+};
+
+class MessageLoop : public gc, public WebViewHoldable {
     friend class MessageLoopImpl;
-    friend class StarFish;
+    friend class WebView;
     friend class Window;
 
 public:
-    MessageLoop(StarFish* sf);
+    MessageLoop(WebView* wv);
     size_t addIdler(BrowsingContext* ctx, void (*fn)(size_t handle, void*),
                     void* data);
     size_t addIdler(BrowsingContext* ctx,
@@ -58,9 +65,7 @@ public:
     void clearPendingIdlers(
         BrowsingContext* ctx); // give nullptr to clear every idlers
 
-    void run();
-    void stop();
-    void close();
+    void destroy();
     void invokeNavigate(WebView* wv, ResourceURL* url, ResourceURL* referrerURL,
                         bool force = false);
 

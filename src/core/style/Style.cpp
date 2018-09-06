@@ -1832,7 +1832,7 @@ bool CSSStyleValuePair::updateValueUnitTransitionProperty(
 
 StyleResolver::StyleResolver(Document* document)
     : DocumentHoldable(document)
-    , m_mediumFontSize(document->starFish()->defaultFontSize())
+    , m_mediumFontSize(document->webView()->defaultFontSize())
     , m_styleSheetWithAllRules(nullptr)
     , m_usesFirstLineRule(false)
     , m_mediaQueryEvaluator(nullptr)
@@ -1850,7 +1850,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
     ret->m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
 #endif
     ret->m_inheritedStyles.m_fontFamilyDatas =
-        doc->starFish()->initialFontFamilyDatas();
+        doc->webView()->initialFontFamilyDatas();
     ret->m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->m_inheritedStyles.m_whiteSpace =
@@ -2454,7 +2454,7 @@ void StyleResolver::apply(Element* element,
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::Initial) {
                 style->m_inheritedStyles.m_fontFamilyDatas =
-                    element->document()->starFish()->initialFontFamilyDatas();
+                    element->document()->webView()->initialFontFamilyDatas();
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::KeywordValueKind) {
                 FontFamilyData* data =

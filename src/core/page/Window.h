@@ -172,9 +172,8 @@ class Window : public EventTarget {
     friend class StyleRuleImport;
 
 public:
-    static Window* create(StarFish* starfish, BrowsingContext* browsingContext,
-                          ResourceURL* url, uint32_t initialWidth,
-                          uint32_t initialHeight);
+    static Window* create(BrowsingContext* browsingContext, ResourceURL* url,
+                          uint32_t initialWidth, uint32_t initialHeight);
     virtual ~Window()
     {
     }
@@ -197,6 +196,8 @@ public:
 #endif
         return DocumentHoldable::document();
     }
+
+    StarFish* starFish();
 
     // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
     Window* parent();
@@ -241,11 +242,6 @@ public:
     BrowsingContext* browsingContext()
     {
         return m_browsingContext;
-    }
-
-    StarFish* starFish() const
-    {
-        return m_starFish;
     }
 
     ScriptBindingInstance* scriptBindingInstance() override
@@ -436,12 +432,11 @@ public:
 
 private:
     void initFlags();
-    Window(StarFish* starFish, BrowsingContext* browsingContext,
-           ResourceURL* url, uint32_t initialWidth, uint32_t initialHeight);
+    Window(BrowsingContext* browsingContext, ResourceURL* url,
+           uint32_t initialWidth, uint32_t initialHeight);
     Window();
     NodeList* ensureFrames();
 
-    StarFish* m_starFish;
     BrowsingContext* m_browsingContext;
     ScriptBindingInstance* m_scriptBindingInstance;
     History* m_history;

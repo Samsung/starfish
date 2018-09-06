@@ -71,7 +71,7 @@ public:
     };
 
     static MediaPlayer* create(HTMLMediaElement* element);
-    virtual void close() = 0;
+    virtual void destroy() = 0;
     virtual void play() = 0;
     virtual void pause() = 0;
     virtual void seek(double time) = 0;

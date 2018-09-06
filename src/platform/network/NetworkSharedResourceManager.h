@@ -41,7 +41,7 @@ class NetworkSharedResourceManager {
 public:
     typedef std::multimap<std::string, CurlHandleData> CurlHandleDataMultiMap;
     static NetworkSharedResourceManager* getInstance();
-    static void close();
+    static void destroy();
 
     CURLSH* curlShareHandle() const; // Do not free
     std::string cookieStoreFilePath() const;

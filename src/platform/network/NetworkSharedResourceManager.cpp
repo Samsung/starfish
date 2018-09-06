@@ -249,10 +249,10 @@ NetworkSharedResourceManager* NetworkSharedResourceManager::getInstance()
     return g_networkSharedResourceMangerInstance;
 }
 
-void NetworkSharedResourceManager::close()
+void NetworkSharedResourceManager::destroy()
 {
     STARFISH_ASSERT(g_networkSharedResourceMangerInstance);
-    STARFISH_LOG_INFO("NetworkSharedResourceManager::close()\n");
+    STARFISH_LOG_INFO("NetworkSharedResourceManager::destroy()\n");
     delete g_networkSharedResourceMangerInstance;
     g_networkSharedResourceMangerInstance = nullptr;
 }

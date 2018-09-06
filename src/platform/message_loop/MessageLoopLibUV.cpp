@@ -54,8 +54,8 @@ struct IdlerData {
     bool m_isMainThreadData;
 };
 
-MessageLoop::MessageLoop(StarFish* sf)
-    : StarFishHoldable(sf)
+MessageLoop::MessageLoop(WebView* sf)
+    : WebViewHoldable(sf)
     , m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
     , m_navigateInvokeIdler(nullptr)
@@ -302,7 +302,7 @@ struct InvokeNavigateData : public gc {
     }
 };
 
-void MessageLoop::close()
+void MessageLoop::destroy()
 {
     m_inClosingState = true;
     if (m_navigateInvokeIdler) {

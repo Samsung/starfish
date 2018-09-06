@@ -36,6 +36,7 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/ThreadPool.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 
 #define STARFISH_FRAME_EVICTION_BACKWARD_DUR 500
@@ -398,7 +399,6 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
     , m_isAttachedToParent(false)
     , m_updating(false)
     , m_initSegmentCount(0)
-    , m_starFish(document->starFish())
     , m_demuxer(nullptr)
     , m_buffered(nullptr)
     , m_timestampOffset(0)
@@ -1059,7 +1059,7 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
 // https://www.w3.org/TR/media-source/#sourcebuffer-buffer-append
 void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 {
-    m_starFish->threadPool()->addWork(
+    webView()->threadPool()->addWork(
         document()->browsingContext(),
         [](void* data) -> void* {
             SourceBufferData* inputBuffer = (SourceBufferData*)data;
@@ -1072,7 +1072,8 @@ void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
             // Segment Parser Loop
             size_t processedSize = tryDemuxing(inputBuffer);
             // Add post task to main
-            inputBuffer->m_sourceBuffer->m_starFish->messageLoop()
+            inputBuffer->m_sourceBuffer->webView()
+                ->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
                     nullptr,
                     [](size_t, void* data, void* data1) {

@@ -35,8 +35,8 @@
 
 namespace StarFish {
 
-Timer::Timer(StarFish* sf)
-    : m_starFish(sf)
+Timer::Timer(WebView* sf)
+    : m_webView(sf)
 {
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;
@@ -286,7 +286,7 @@ void Timer::clear(BrowsingContext* ctx)
     }
 }
 
-void Timer::close()
+void Timer::destroy()
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {

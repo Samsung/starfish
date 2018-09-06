@@ -21,6 +21,7 @@
 #include "StarFish.h"
 #include "Thread.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/page/WebView.h"
 #include "Mutex.h"
 #include "Locker.h"
 #if !defined(OS_WINDOWS)
@@ -31,6 +32,23 @@
 #endif
 
 namespace StarFish {
+
+size_t numberOfCores()
+{
+    size_t ret = 1;
+#ifndef STARFISH_WINDOWS
+    long sysconfResult = sysconf(_SC_NPROCESSORS_ONLN);
+#else
+    SYSTEM_INFO sysinfo;
+    GetSystemInfo(&sysinfo);
+    long sysconfResult = sysinfo.dwNumberOfProcessors;
+#endif
+
+    if (sysconfResult > 0) {
+        ret = static_cast<int>(sysconfResult);
+    }
+    return ret;
+}
 
 #if !defined(OS_WINDOWS)
 pid_t mainTid;
@@ -73,8 +91,8 @@ size_t mainThreadID()
 }
 #endif
 
-Thread::Thread(StarFish* starFish)
-    : StarFishHoldable(starFish)
+Thread::Thread(WebView* wv)
+    : WebViewHoldable(wv)
     , m_alive(false)
     , m_mutex(new Mutex())
     , m_currentUnjoined(nullptr)
@@ -100,7 +118,7 @@ void Thread::finishUnjoined()
     void* ret;
     pthread_join(m_currentUnjoined->m_tid, &ret);
 
-    m_starFish->removeActiveThread(this);
+    webView()->removeActiveThread(this);
     GC_FREE(m_currentUnjoined);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     m_currentUnjoined->m_messageLoop->decreaseUnjoinedThreadCount();
@@ -115,7 +133,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
 
     finishUnjoined();
     Locker<Mutex> l(*m_mutex);
-    m_starFish->addActiveThread(this);
+    webView()->addActiveThread(this);
     m_currentUnjoined = new (GC_MALLOC_UNCOLLECTABLE(sizeof(ThreadData)))
         ThreadData(this, msgLoop, fn, data);
 #ifdef STARFISH_MESSAGELOOP_DEBUG

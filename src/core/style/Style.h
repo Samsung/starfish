@@ -2938,7 +2938,7 @@ class StyleResolver : public DocumentHoldable, public gc {
         StyleResolver* resolver, Element* element,
         const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& begin,
         const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& end);
-
+    friend class BrowsingContext; // for updating m_mediumFontSize
 public:
     enum PseudoElementType ENSURE_ENUM_UNSIGNED {
         PseudoElementNone,

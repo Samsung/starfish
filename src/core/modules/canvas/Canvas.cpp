@@ -20,6 +20,7 @@
 #include "StarFishConfig.h"
 #include "Canvas.h"
 #include "StarFish.h"
+#include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
@@ -72,7 +73,7 @@ public:
             m_height = h;
 
             float windowDevicePixelRatio =
-                m_window->starFish()->screenInfo().devicePixelRatio;
+                m_window->webView()->screenInfo().devicePixelRatio;
 
             m_pixelRatio = 1;
 

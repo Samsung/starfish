@@ -27,6 +27,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/util/URL.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 
 namespace StarFish {
@@ -100,19 +101,19 @@ void ResourceRequest::clearIdlers()
 {
     auto iter2 = m_requstedIdlers.begin();
     while (iter2 != m_requstedIdlers.end()) {
-        starFish()->messageLoop()->removeIdler(*iter2);
+        webView()->messageLoop()->removeIdler(*iter2);
         iter2++;
     }
     m_requstedIdlers.clear();
 
     if (m_pendingOnHeaderReceivedEventIdlerHandle != SIZE_MAX) {
-        starFish()->messageLoop()->removeIdlerWithNoGCRooting(
+        webView()->messageLoop()->removeIdlerWithNoGCRooting(
             m_pendingOnHeaderReceivedEventIdlerHandle);
         m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
     }
 
     if (m_pendingOnProgressEventIdlerHandle != SIZE_MAX) {
-        starFish()->messageLoop()->removeIdlerWithNoGCRooting(
+        webView()->messageLoop()->removeIdlerWithNoGCRooting(
             m_pendingOnProgressEventIdlerHandle);
         m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
     }
@@ -201,7 +202,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
     }
 
     if (m_readyState == ReadyState::DONE) {
-        starFish()->messageLoop()->addIdler(
+        webView()->messageLoop()->addIdler(
             document()->browsingContext(),
             [](size_t, void* data, void* data2) {
                 ResourceRequest* self = (ResourceRequest*)data2;

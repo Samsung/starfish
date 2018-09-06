@@ -33,7 +33,7 @@ class StarFish;
 
 class Console : public gc {
 public:
-    Console(StarFish* starFish);
+    Console(WebView* webView);
     void log(String* m);
     void info(String* m);
     void error(String* m);
@@ -41,7 +41,7 @@ public:
     void debug(String* m);
 
 protected:
-    StarFish* m_starFish;
+    WebView* m_webView;
 };
 }
 

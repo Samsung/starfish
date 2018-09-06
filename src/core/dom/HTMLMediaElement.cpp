@@ -37,6 +37,7 @@
 #include "core/modules/mediasource/SourceBufferList.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/util/URL.h"
 #include "platform/multimedia/MediaPlayer.h"
@@ -284,7 +285,7 @@ void HTMLMediaElement::load()
 void HTMLMediaElement::closeMediaPlayer()
 {
     if (m_mediaPlayer) {
-        m_mediaPlayer->close();
+        m_mediaPlayer->destroy();
         m_mediaPlayer = nullptr;
     }
 }
@@ -1138,7 +1139,7 @@ void HTMLMediaElement::abortEveryPendingOperation(
     }
 
     if (m_currentPendingOperationHandle != SIZE_MAX) {
-        starFish()->messageLoop()->removeIdler(m_currentPendingOperationHandle);
+        webView()->messageLoop()->removeIdler(m_currentPendingOperationHandle);
         m_currentPendingOperationHandle = SIZE_MAX;
         m_currentPendingOperationCount = 0;
     }
@@ -1163,7 +1164,7 @@ void HTMLMediaElement::processNextOperationQueue()
         STARFISH_ASSERT(!next->isPlayRequest());
         m_operationQueue.pop_front();
 
-        m_currentPendingOperationHandle = starFish()->messageLoop()->addIdler(
+        m_currentPendingOperationHandle = webView()->messageLoop()->addIdler(
             document()->browsingContext(),
             [](size_t, void* data) {
                 MediaOperationQueueData* queueData =

@@ -301,7 +301,7 @@ void MockMediaPlayer::prepare(ResourceURL* url)
     m_videoWidth = STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS;
     m_videoHeight = STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS;
 
-    MessageLoop* msgLoop = m_container->starFish()->messageLoop();
+    MessageLoop* msgLoop = m_container->webView()->messageLoop();
     msgLoop->addIdler(
         m_container->document()->browsingContext(),
         [](size_t, void* data) {
@@ -418,7 +418,7 @@ void MockMediaPlayer::fillBufferIfNeeded(StreamType type)
         fillBuffer(stream);
     }
 }
-void MockMediaPlayer::close()
+void MockMediaPlayer::destroy()
 {
     m_alive = false;
     pause();

@@ -86,7 +86,7 @@ protected:
             NativeImageData* imageData = NativeImageData::create(w, h);
             imageData->clear();
             Canvas* canvas = Canvas::create(
-                m_browsingContext->starFish(), imageData->data(),
+                m_browsingContext->webView(), imageData->data(),
                 imageData->width(), imageData->height(), imageData->stride());
             svgBox->paintReplaced(canvas);
             delete canvas;

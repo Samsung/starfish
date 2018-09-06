@@ -28,6 +28,7 @@
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/util/URL.h"
+#include "core/page/WebView.h"
 
 namespace StarFish {
 
@@ -72,7 +73,7 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->m_isSync) {
         worker(m_orgProxy, filePath);
     } else {
-        size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
+        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
@@ -89,11 +90,11 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
                                                String* filePath)
 {
     std::string u8Path = filePath->toUTF8NonGCString();
-    if (res->starFish()->m_resolveFilePathCallback) {
+    if (res->webView()->m_resolveFilePathCallback) {
         // custom I/O path
-        u8Path = res->starFish()->m_resolveFilePathCallback(u8Path.data());
+        u8Path = res->webView()->m_resolveFilePathCallback(u8Path.data());
 
-        auto handle = res->starFish()->m_fileOpenCallback(u8Path.data());
+        auto handle = res->webView()->m_fileOpenCallback(u8Path.data());
         if (!handle) {
             auto s = res->m_url->urlString()->toUTF8NonGCString();
             STARFISH_LOG_INFO("failed to open %s\n", s.data());
@@ -104,11 +105,11 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
         res->m_status = 200;
         res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
         res->changeReadyState(ResourceRequest::LOADING, true);
-        size_t responseLength = res->starFish()->m_fileLengthCallback(handle);
+        size_t responseLength = res->webView()->m_fileLengthCallback(handle);
         res->m_response.resize(responseLength);
-        res->starFish()->m_fileReadCallback((uint8_t*)res->m_response.data(),
-                                            res->m_response.size(), handle);
-        res->starFish()->m_fileCloseCallback(handle);
+        res->webView()->m_fileReadCallback((uint8_t*)res->m_response.data(),
+                                           res->m_response.size(), handle);
+        res->webView()->m_fileCloseCallback(handle);
         res->handleResponseEOF();
         return;
     }
@@ -144,7 +145,7 @@ void DataURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->m_isSync) {
         worker(m_orgProxy, m_orgProxy->m_url->urlString());
     } else {
-        size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
+        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
@@ -209,7 +210,7 @@ void AboutURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->m_isSync) {
         worker(m_orgProxy, m_orgProxy->m_url->urlString());
     } else {
-        size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
+        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
@@ -250,7 +251,7 @@ void JavaScriptURLResourceRequestJobDelegate::send(String* body,
     if (m_orgProxy->m_isSync) {
         worker(m_orgProxy, m_orgProxy->m_url->urlString());
     } else {
-        size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
+        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
@@ -284,7 +285,7 @@ void UnknownURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->m_isSync) {
         worker(m_orgProxy, m_orgProxy->m_url->urlString());
     } else {
-        size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
+        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
@@ -320,7 +321,7 @@ void BlobURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->m_isSync) {
         worker(m_orgProxy, m_orgProxy->m_url->urlString());
     } else {
-        size_t handle = m_orgProxy->starFish()->messageLoop()->addIdler(
+        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;

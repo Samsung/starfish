@@ -35,6 +35,7 @@
 
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
+#include "core/page/WebView.h"
 #include "core/modules/canvas/font/Font.h"
 
 namespace StarFish {
@@ -269,8 +270,8 @@ public:
 
 class PlatformFontSelectorImplCairo : public PlatformFontSelector {
 public:
-    PlatformFontSelectorImplCairo(StarFish* sf)
-        : PlatformFontSelector(sf)
+    PlatformFontSelectorImplCairo(WebView* wv)
+        : PlatformFontSelector(wv)
     {
         if (!g_freeTypeInstance) {
             FT_Error error;
@@ -379,7 +380,7 @@ public:
         std::transform(after.begin(), after.end(), after.begin(), tolower);
 
         if (familyName !=
-            m_starfish->initialFontFamilyDatas()[1]
+            m_webView->initialFontFamilyDatas()[1]
                 .m_familyName->toUTF8NonGCString()) {
             if (after != familyName) {
                 if (!isGenericName) {

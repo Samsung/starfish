@@ -37,6 +37,7 @@
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/page/WebView.h"
 
 #ifndef STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS
 #define STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS 5000
@@ -147,7 +148,7 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
 void NetworkURLWorkerHelper::workerAbortHandeler(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
-    nwd->request->starFish()
+    nwd->request->webView()
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(
             nullptr,
@@ -206,15 +207,15 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 
     if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
         SIZE_MAX) {
-        if (nwd->request->starFish()->timer()) {
-            nwd->request->starFish()->timer()->removeTimer(
+        if (nwd->request->webView()->timer()) {
+            nwd->request->webView()->timer()->removeTimer(
                 NetworkSharedResourceManager::getInstance()
                     ->cacheClearTimerID());
         }
     }
 
-    if (nwd->request->starFish()->timer()) {
-        size_t timerID = nwd->request->starFish()->timer()->addTimer(
+    if (nwd->request->webView()->timer()) {
+        size_t timerID = nwd->request->webView()->timer()->addTimer(
             STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS,
             nwd->request->document()->window(),
             [](Window* wnd, void* data) {
@@ -258,7 +259,7 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(int res,
                   NetworkURLWorkerData::reqCnt
             : 0);
 #endif
-    nwd->request->starFish()
+    nwd->request->webView()
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(nullptr, this->responseHandler,
                                                nwd);
@@ -332,7 +333,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         urlUTF8Data, hostUTF8Data, method, headers, bodyUTF8Data));
     nwd->httpTransaction->setTimeout(
         static_cast<unsigned long>(m_orgProxy->m_timeout));
-    nwd->httpTransaction->setProxyURL(m_orgProxy->starFish()->proxyURL());
+    nwd->httpTransaction->setProxyURL(m_orgProxy->webView()->proxyURL());
 
     nwd->httpTransaction->setProgressCallbackAndData(curlProgressCallback, nwd);
     nwd->httpTransaction->setWriteHeaderCallbackAndData(curlWriteHeaderCallback,
@@ -351,8 +352,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 
         if (pos != header.end()) {
             nwd->helper = new AsyncNetworkWorkHelper();
-            Thread* t = new Thread(m_orgProxy->starFish());
-            t->run(m_orgProxy->starFish()->messageLoop(),
+            Thread* t = new Thread(m_orgProxy->webView());
+            t->run(m_orgProxy->webView()->messageLoop(),
                    [](void* data) -> void* {
                        NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;
                        NetworkURLResourceRequestJobDelegate::worker(d);
@@ -361,7 +362,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
                    nwd);
         } else {
             nwd->helper = new AsyncNetworkWorkHelper();
-            m_orgProxy->starFish()->threadPool()->addWork(
+            m_orgProxy->webView()->threadPool()->addWork(
                 m_orgProxy->document()->browsingContext(),
                 NetworkURLResourceRequestJobDelegate::worker, nwd);
         }
@@ -386,13 +387,13 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     //  * Max-Forwards, Origin, Proxy-Authorization, Range, Referer, TE,
     //  * User-Agent ...
     std::string tmpStr;
-    tmpStr = m_orgProxy->starFish()->locale().getName();
+    tmpStr = m_orgProxy->webView()->locale().getName();
     std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
     tmpStr = tmpStr + " , en-US , en";
     headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
     headers.setHeader(
         HTTPHeaderMap::kUserAgent,
-        m_orgProxy->starFish()->userAgent()->toUTF8NonGCString().data());
+        m_orgProxy->webView()->userAgent()->toUTF8NonGCString().data());
 
     headers.setHeader(HTTPHeaderMap::kHost,
                       m_orgProxy->url()->host()->toUTF8NonGCString().data());
@@ -561,7 +562,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
             request->changeProgress(ResourceRequest::PROGRESS, true);
         } else {
             request->m_pendingOnProgressEventIdlerHandle =
-                request->starFish()
+                request->webView()
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
                         nullptr,

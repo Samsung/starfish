@@ -26,6 +26,7 @@
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
+#include "core/page/WebView.h"
 #include "platform/multimedia/MediaPlayer.h"
 
 namespace StarFish {
@@ -67,7 +68,7 @@ void FrameReplacedVideo::createGraphicsBuffer(CanvasSurface** surfaceHolder,
                 visibleWidth, visibleHeight);
         } else {
             *surfaceHolder = CanvasSurface::create(
-                node()->starFish()->platformWindow(), 1, 1);
+                node()->webView()->platformWindow(), 1, 1);
         }
     }
 }

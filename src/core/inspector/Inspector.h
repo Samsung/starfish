@@ -27,7 +27,7 @@ namespace StarFish {
 
 class Inspector : public gc {
 public:
-    Inspector(StarFish* starFish);
+    Inspector(WebView* webView);
     ~Inspector();
 
     void sendInfoMessage(String* m);
@@ -42,7 +42,7 @@ private:
     static void commandEvaluator(size_t, void* data);
 
 protected:
-    StarFish* m_starFish;
+    WebView* m_webView;
     zmq::context_t* m_zmqContext;
     zmq::socket_t* m_zmqSocket;
     Thread* m_ioThread;

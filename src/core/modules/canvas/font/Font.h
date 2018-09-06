@@ -206,14 +206,14 @@ protected:
 
 class PlatformFontSelector : public gc {
 public:
-    PlatformFontSelector(StarFish* sf)
+    PlatformFontSelector(WebView* wv)
     {
-        m_starfish = sf;
+        m_webView = wv;
     }
     virtual ~PlatformFontSelector()
     {
     }
-    static PlatformFontSelector* create(StarFish* sf);
+    static PlatformFontSelector* create(WebView* sf);
     virtual UTF8StringDataNonGCStd findFont(
         const UTF8StringDataNonGCStd& familyName, bool isGenericName,
         char style = 0, char weight = 4)
@@ -227,7 +227,7 @@ public:
     }
 
 protected:
-    StarFish* m_starfish;
+    WebView* m_webView;
 };
 
 class PlatformFontCache : public gc {
@@ -236,7 +236,7 @@ class PlatformFontCache : public gc {
     friend class FontSelectorImplSkia;
 #endif
 public:
-    static PlatformFontCache* create(StarFish* sf);
+    static PlatformFontCache* create(WebView* wv);
     virtual ~PlatformFontCache()
     {
     }

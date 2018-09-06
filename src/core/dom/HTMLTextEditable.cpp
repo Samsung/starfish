@@ -26,6 +26,7 @@
 #include "core/dom/KeyboardEvent.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace StarFish {
@@ -77,9 +78,9 @@ void HTMLTextEditable::didStateChanged(int oldState, int newState)
                     e->setNeedsPainting();
                 },
                 500, this);
-            starFish()->platformWindow()->showSoftwareKeyboardIfPossible();
+            webView()->platformWindow()->showSoftwareKeyboardIfPossible();
         } else if (oldGotFocus && !newGotFocus) {
-            starFish()->platformWindow()->hideSoftwareKeyboardIfPossible();
+            webView()->platformWindow()->hideSoftwareKeyboardIfPossible();
             m_shouldDrawCaret = false;
             m_currentEditingText = String::emptyString;
             window()->clearInterval(m_caretBlinkingIntervalId);

@@ -62,18 +62,15 @@
 
 namespace StarFish {
 
-Window* Window::create(StarFish* starFish, BrowsingContext* browsingContext,
-                       ResourceURL* url, uint32_t initialWidth,
-                       uint32_t initialHeight)
+Window* Window::create(BrowsingContext* browsingContext, ResourceURL* url,
+                       uint32_t initialWidth, uint32_t initialHeight)
 {
-    return new Window(starFish, browsingContext, url, initialWidth,
-                      initialHeight);
+    return new Window(browsingContext, url, initialWidth, initialHeight);
 }
 
-Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
-               ResourceURL* url, uint32_t initialWidth, uint32_t initialHeight)
+Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
+               uint32_t initialWidth, uint32_t initialHeight)
     : EventTarget(nullptr)
-    , m_starFish(starFish)
     , m_browsingContext(browsingContext)
     , m_history(nullptr)
     , m_navigator(nullptr)
@@ -103,6 +100,11 @@ Window::Window(StarFish* starFish, BrowsingContext* browsingContext,
     m_navigator = new Navigator(m_document);
     m_location = new Location(m_document);
     m_scriptBindingInstance->initBinding(m_document);
+}
+
+StarFish* Window::starFish()
+{
+    return browsingContext()->webView()->starFish();
 }
 
 void Window::deleteScriptBindingInstance()
@@ -258,7 +260,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
 #endif
     // NOTE addIder would hold serializedRecord
     if (browsingContext()) {
-        starFish()->messageLoop()->addIdler(
+        webView()->messageLoop()->addIdler(
             browsingContext(),
             [](size_t handle, void* data, void* data1) {
                 Window* window = (Window*)data;
@@ -517,20 +519,20 @@ void Window::forceDisableOnloadCapture()
 
 void Window::simulateClick(float x, float y)
 {
-    TouchData data(x * starFish()->screenInfo().devicePixelRatio,
-                   y * starFish()->screenInfo().devicePixelRatio);
-    m_starFish->platformWindow()->dispatchTouchEvent(
+    TouchData data(x * webView()->screenInfo().devicePixelRatio,
+                   y * webView()->screenInfo().devicePixelRatio);
+    webView()->platformWindow()->dispatchTouchEvent(
         TouchEventKind::TouchEventStart, &data, 1);
-    m_starFish->platformWindow()->dispatchTouchEvent(
+    webView()->platformWindow()->dispatchTouchEvent(
         TouchEventKind::TouchEventEnd, &data, 1);
 }
 
 void Window::simulateVisibilitychange(bool show)
 {
     if (show) {
-        m_starFish->resume();
+        webView()->platformWindow()->resume();
     } else {
-        m_starFish->pause();
+        webView()->platformWindow()->pause();
     }
 }
 
@@ -544,26 +546,26 @@ uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
                             void* data)
 {
     STARFISH_RELEASE_ASSERT(browsingContext()->m_isActive);
-    return m_starFish->timer()->addTimer(delay, this, handler, data, false);
+    return webView()->timer()->addTimer(delay, this, handler, data, false);
 }
 
 void Window::clearTimeout(int32_t id)
 {
     STARFISH_RELEASE_ASSERT(browsingContext()->m_isActive);
-    m_starFish->timer()->removeTimer(id);
+    webView()->timer()->removeTimer(id);
 }
 
 uint32_t Window::setInterval(WindowSetTimeoutHandler handler, int32_t delay,
                              void* data)
 {
     STARFISH_RELEASE_ASSERT(browsingContext()->m_isActive);
-    return m_starFish->timer()->addTimer(delay, this, handler, data, true);
+    return webView()->timer()->addTimer(delay, this, handler, data, true);
 }
 
 void Window::clearInterval(int32_t id)
 {
     STARFISH_RELEASE_ASSERT(browsingContext()->m_isActive);
-    m_starFish->timer()->removeTimer(id);
+    webView()->timer()->removeTimer(id);
 }
 
 void Window::alert()
@@ -583,8 +585,8 @@ void Window::alert(String* message)
     p->title =
         document()->location()->url()->origin()->toUTF8NonGCString().data();
     p->message = message->toUTF8NonGCString().data();
-    document()->starFish()->platformWindow()->callHandler(
-        std::string("showAlert"), (void*)p);
+    webView()->platformWindow()->callHandler(std::string("showAlert"),
+                                             (void*)p);
 }
 
 void Window::processUrlFragment(String* name)
@@ -777,8 +779,8 @@ NodeList* Window::ensureFrames()
 void Window::screenShot(std::string filePath, void (*callback)(void*),
                         void* data)
 {
-    browsingContext()->starFish()->platformWindow()->screenShot(filePath,
-                                                                callback, data);
+    browsingContext()->webView()->platformWindow()->screenShot(filePath,
+                                                               callback, data);
 }
 #endif
 
@@ -786,12 +788,12 @@ uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler,
                                        void* data)
 {
     STARFISH_RELEASE_ASSERT(browsingContext()->m_isActive);
-    return m_starFish->timer()->addAnimator(this, handler, data);
+    return webView()->timer()->addAnimator(this, handler, data);
 }
 
 void Window::cancelAnimationFrame(int32_t reqID)
 {
-    m_starFish->timer()->removeWindowAnimator(reqID);
+    webView()->timer()->removeWindowAnimator(reqID);
 }
 
 String* Window::name()

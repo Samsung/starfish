@@ -18,14 +18,14 @@
  */
 
 #ifdef STARFISH_ENABLE_TTS
-#include "binding/StarFishHoldable.h"
+#include "binding/WebViewHoldable.h"
 
 namespace StarFish {
 class Node;
 
-class TextAlternativeHelper : public gc, public StarFishHoldable {
+class TextAlternativeHelper : public gc, public WebViewHoldable {
 public:
-    TextAlternativeHelper(StarFish* starfish);
+    TextAlternativeHelper(WebView* webView);
 
     // https://www.w3.org/TR/2014/REC-wai-aria-implementation-20140320/#mapping_additional_nd_te
     String* getComputedTextAlternative(Node* node);

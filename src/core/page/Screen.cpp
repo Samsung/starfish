@@ -20,48 +20,49 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/page/Screen.h"
+#include "core/page/WebView.h"
 #include "platform/public/ScreenInfo.h"
 
 namespace StarFish {
 
 int32_t Screen::availWidth() const
 {
-    return starFish()->screenInfo().availableRect.size().width();
+    return webView()->screenInfo().availableRect.size().width();
 }
 
 int32_t Screen::availHeight() const
 {
-    return starFish()->screenInfo().availableRect.size().height();
+    return webView()->screenInfo().availableRect.size().height();
 }
 
 int32_t Screen::width() const
 {
-    return starFish()->screenInfo().rect.size().width();
+    return webView()->screenInfo().rect.size().width();
 }
 
 int32_t Screen::height() const
 {
-    return starFish()->screenInfo().rect.size().height();
+    return webView()->screenInfo().rect.size().height();
 }
 
 uint32_t Screen::colorDepth() const
 {
-    return starFish()->screenInfo().depth;
+    return webView()->screenInfo().depth;
 }
 
 uint32_t Screen::pixelDepth() const
 {
-    return starFish()->screenInfo().depth;
+    return webView()->screenInfo().depth;
 }
 
 float Screen::devicePixelRatio() const
 {
     // TODO: consider page zoom factor.
-    return starFish()->screenInfo().devicePixelRatio;
+    return webView()->screenInfo().devicePixelRatio;
 }
 
 bool Screen::isMonochrome() const
 {
-    return starFish()->screenInfo().isMonochrome;
+    return webView()->screenInfo().isMonochrome;
 }
 }

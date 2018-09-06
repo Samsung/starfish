@@ -147,10 +147,10 @@ protected:
     }
 
 public:
-    static Canvas* create(StarFish* starfish, CanvasSurface* data);
-    static Canvas* create(StarFish* starfish, uint8_t* data, size_t w, size_t h,
+    static Canvas* create(WebView* webView, CanvasSurface* data);
+    static Canvas* create(WebView* webView, uint8_t* data, size_t w, size_t h,
                           size_t stride);
-    static Canvas* create(StarFish* starfish, NativeImageData* data);
+    static Canvas* create(WebView* webView, NativeImageData* data);
 
     virtual ~Canvas()
     {

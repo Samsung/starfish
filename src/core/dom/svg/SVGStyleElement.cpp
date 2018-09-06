@@ -29,6 +29,7 @@
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 
 namespace StarFish {
@@ -47,8 +48,6 @@ void* SVGStyleElement::operator new(size_t size)
     }
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
-
-bool isCSSType(const char* type);
 
 String* SVGStyleElement::type()
 {
@@ -158,7 +157,7 @@ void SVGStyleElement::removeStyleSheet()
 
 void SVGStyleElement::dispatchLoadEvent()
 {
-    starFish()->messageLoop()->addIdler(
+    webView()->messageLoop()->addIdler(
         document()->browsingContext(),
         [](size_t handle, void* data) {
             SVGStyleElement* element = (SVGStyleElement*)data;

@@ -21,15 +21,14 @@
 #include "StarFish.h"
 
 #include "binding/ScriptWrappable.h"
-#include "binding/StarFishHoldable.h"
-
 #include "JavaScriptNativeHandler.h"
+
 namespace StarFish {
 
 JavaScriptNativeHandler::JavaScriptNativeHandler(
-    StarFish* starFish, String* functionName, NativeFunctionPtr nativeCallback)
+    WebView* wv, String* functionName, NativeFunctionPtr nativeCallback)
     : ScriptWrappable(this)
-    , StarFishHoldable(starFish)
+    , WebViewHoldable(wv)
     , m_name(functionName)
     , m_callback(nativeCallback)
 {
@@ -43,7 +42,6 @@ JavaScriptNativeHandler::JavaScriptNativeHandler(
 
 String* JavaScriptNativeHandler::callNativeHandler(String* param)
 {
-    STARFISH_ASSERT(starFish());
     STARFISH_ASSERT(m_callback);
     return String::fromUTF8(m_callback(param->toUTF8NonGCString()).c_str());
 }
