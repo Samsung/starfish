@@ -45,8 +45,10 @@ struct FlexLine {
 
 class FlexFormattingContext {
 public:
-    FlexFormattingContext(LayoutContext& ctx, FrameFlexibleBox* container,
-                          LayoutUnit availableWidth);
+    FlexFormattingContext(
+        LayoutContext& ctx, FrameFlexibleBox* container,
+        LayoutUnit availableWidth,
+        bool shouldRespectPercentageWidthOnComputingBasisSize = true);
 
     void computeAvailableSpace(LayoutUnit availableWidth);
 
@@ -97,6 +99,7 @@ private:
     bool m_isLtrDirection;
     bool m_isTtbDirection;
     bool m_isSingleLine;
+    bool m_shouldRespectPercentageWidthOnComputingBasisSize;
     LayoutUnit m_availableMainSize;
     LayoutUnit m_availableCrossSize;
     size_t m_currentLineIdx;
@@ -126,7 +129,8 @@ public:
     }
 
     LayoutUnit basisSize(LayoutContext& ctx, LayoutUnit availableMainSize,
-                         LayoutUnit availableCrossSize, FrameBox* flexItem);
+                         LayoutUnit availableCrossSize, FrameBox* flexItem,
+                         bool shouldRespectPercentageWidthOnComputingBasisSize);
     bool isMainAxisInInlineAxis();
     bool isSingleLine();
     bool isLtrDirection();
