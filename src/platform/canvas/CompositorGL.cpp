@@ -830,7 +830,8 @@ public:
                 AHardwareBuffer_Desc desc{
                     m_bufferWidth, m_bufferHeight, 1,
                     AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
-                    AHARDWAREBUFFER_USAGE_CPU_WRITE_MASK |
+                    AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN |
+                        AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN |
                         AHARDWAREBUFFER_USAGE_GPU_COLOR_OUTPUT |
                         AHARDWAREBUFFER_USAGE_GPU_SAMPLED_IMAGE,
                     0, 0, 0
@@ -1047,8 +1048,9 @@ public:
             m_buffer = surfaceInfo.planes[0].ptr;
 #elif defined(STARFISH_ANDROID)
             AHardwareBuffer_lock(m_aHardwareBuffer,
-                                 AHARDWAREBUFFER_USAGE_CPU_WRITE_MASK, -1, NULL,
-                                 (void**)&m_buffer);
+                                 AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN |
+                                     AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN,
+                                 -1, NULL, (void**)&m_buffer);
 #endif
             return m_buffer;
         }
@@ -1113,7 +1115,8 @@ public:
 #if defined(STARFISH_TIZEN)
             tbm_surface_unmap(m_tbmSurface);
 #elif defined(STARFISH_ANDROID)
-            AHardwareBuffer_unlock(m_aHardwareBuffer, nullptr);
+            int32_t fence = -1;
+            AHardwareBuffer_unlock(m_aHardwareBuffer, &fence);
 #endif
             m_buffer = nullptr;
             return;
