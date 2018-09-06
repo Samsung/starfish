@@ -101,14 +101,6 @@ MessageLoop::MessageLoop(WebView* sf)
     }
 }
 
-void MessageLoop::run()
-{
-}
-
-void MessageLoop::stop()
-{
-}
-
 size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
                              void* data)
 {

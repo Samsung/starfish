@@ -49,7 +49,7 @@ static void _videoPlayerPrepareCB(void* user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerPrepareCB()\n");
     Avplay* self = (Avplay*)user_data;
-    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+    self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
         browsingContext(self),
         [](size_t, void* data) {
             Avplay* self = (Avplay*)data;
@@ -62,7 +62,7 @@ static void _videoPlayerCompletedCB(void* user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerCompletedCB()\n");
     Avplay* self = (Avplay*)user_data;
-    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+    self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
         browsingContext(self),
         [](size_t, void* data) {
             Avplay* self = (Avplay*)data;
@@ -77,7 +77,7 @@ static void _videoPlayerbufferingCBNative(int percent, void* user_data)
     Avplay* self = (Avplay*)user_data;
     if (percent < 100) {
         self->setBufferingPercent(percent);
-        self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
             browsingContext(self),
             [](size_t, void* data) {
                 Avplay* self = (Avplay*)data;
@@ -86,7 +86,7 @@ static void _videoPlayerbufferingCBNative(int percent, void* user_data)
             user_data);
     } else if (percent == 100) {
         self->setBufferingPercent(percent);
-        self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+        self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
             browsingContext(self),
             [](size_t, void* data) {
                 Avplay* self = (Avplay*)data;
@@ -105,7 +105,7 @@ static void _videoPlayerErrorEventCBNative(int error_code, void* user_data)
 {
     STARFISH_LOG_INFO("avplay::_videoPlayerErrorEventCBNative()\n");
     Avplay* self = (Avplay*)user_data;
-    self->starFish()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+    self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
         browsingContext(self),
         [](size_t, void* data) {
             Avplay* self = (Avplay*)data;
