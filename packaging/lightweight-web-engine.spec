@@ -18,8 +18,8 @@
 
 Name:          lightweight-web-engine
 Summary:       Lightweight Web Engine for Tizen
-Version:       0.0.1
-Release:       0
+Version:       0.8.0
+Release:       1
 Group:         Development/Libraries
 License:       LGPL-2.1+ and Apache-2.0 and BSD-2-Clause and BSD-3-Clause and BSL-1.0 and LGPL-3.0+ and MIT
 Source:        %{name}-%{version}.tar.gz
@@ -97,7 +97,7 @@ BuildRequires: pkgconfig(bundle)
 # Use profile_mobile as default, as it is both minimal and
 # platform-independent version of LWE at the time of writing
 # TODO: Creates a profile_common if this is no longer true.
-Requires: %{name}-profile = %{version}-%{release}
+Requires: %{name}-compat = %{version}-%{release}
 Recommends: %{name}-profile_mobile = %{version}-%{release}
 
 %description
@@ -110,8 +110,7 @@ This package provides a Tizen specific implementation of Lightweight Web Engine.
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %package profile_tv
 Summary:     Lightweight Web Engine for tv
-Requires:    %{name} = %{version}
-Provides:    %{name}-profile = %{version}-%{release}
+Provides:    %{name}-compat = %{version}-%{release}
 Conflicts:   %{name}-profile_mobile = %{version}-%{release}
 Conflicts:   %{name}-profile_wearable = %{version}-%{release}
 %description profile_tv
@@ -121,8 +120,7 @@ Lightweight Web Engine for tv
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %package profile_mobile
 Summary:     Lightweight Web Engine for mobile
-Requires:    %{name} = %{version}
-Provides:    %{name}-profile = %{version}-%{release}
+Provides:    %{name}-compat = %{version}-%{release}
 Conflicts:   %{name}-profile_tv = %{version}-%{release}
 Conflicts:   %{name}-profile_wearable = %{version}-%{release}
 %description profile_mobile
@@ -132,8 +130,7 @@ Lightweight Web Engine for mobile
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %package profile_wearable
 Summary:     Lightweight Web Engine for wearable
-Requires:    %{name} = %{version}
-Provides:    %{name}-profile = %{version}-%{release}
+Provides:    %{name}-compat = %{version}-%{release}
 Conflicts:   %{name}-profile_tv = %{version}-%{release}
 Conflicts:   %{name}-profile_mobile = %{version}-%{release}
 %description profile_wearable
@@ -143,7 +140,7 @@ Lightweight Web Engine for wearable
 %package devel
 Summary:     Development files for Lightweight Web Engine
 Group:       Development/Libraries
-Requires:    %{name}-profile = %{version}
+Requires:    %{name} = %{version}
 %description devel
 Development files for Lightweight Web Engine. This package provides
 headers and package configs.
@@ -269,6 +266,7 @@ mkdir -p %{buildroot}%{_bindir}
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/tv/release/lib/*.so %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/tv/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/tv
 %endif
 %if "%{rpm}" == "tv"
@@ -278,6 +276,7 @@ cp -fr out_tizen/tv/release/lightweight-web-engine.tv %{buildroot}%{_bindir}
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
 cp -fr out_tizen/mobile/release/lib/*.so %{buildroot}%{_libdir}/lwe/mobile
+cp -fr out_tizen/mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
 cp -fr out_tizen/mobile/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/mobile
 %endif
 %if "%{rpm}" == "mobile"
@@ -287,6 +286,7 @@ cp -fr out_tizen/mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bin
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
 cp -fr out_tizen/wearable/release/lib/*.so %{buildroot}%{_libdir}/lwe/wearable
+cp -fr out_tizen/wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
 cp -fr out_tizen/wearable/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/wearable
 %endif
 %if "%{rpm}" == "wearable"
@@ -304,6 +304,11 @@ cp *.pc %{buildroot}%{_libdir}/pkgconfig/
 mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 cp *.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 
+pushd %{buildroot}%{_libdir}/lwe
+rm -fr *.so*
+ln -s liblightweight-web-engine.so.1 liblightweight-web-engine.so
+ln -s liblightweight-web-engine-dali-plugin.so.1 liblightweight-web-engine-dali-plugin.so
+popd
 
 ##############################################
 ## Scripts
@@ -327,8 +332,8 @@ pushd %{_libdir}/lwe
 for FILE in `ls tv/*.so | grep -v 'tv.so'`; do
     ln -sf "$FILE" .
 done
-ln -sf tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so
-ln -sf tv/liblightweight-web-engine-dali-plugin.tv.so liblightweight-web-engine-dali-plugin.so
+ln -sf tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so.1
+ln -sf tv/liblightweight-web-engine-dali-plugin.tv.so liblightweight-web-engine-dali-plugin.so.1
 popd
 %endif
 %if "%{rpm}" == "tv"
@@ -345,8 +350,8 @@ pushd %{_libdir}/lwe
 for FILE in `ls mobile/*.so | grep -v 'mobile.so'`; do
    ln -sf "$FILE" .
 done
-ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so
-ln -sf mobile/liblightweight-web-engine-dali-plugin.mobile.so liblightweight-web-engine-dali-plugin.so
+ln -sf mobile/liblightweight-web-engine.mobile.so liblightweight-web-engine.so.1
+ln -sf mobile/liblightweight-web-engine-dali-plugin.mobile.so liblightweight-web-engine-dali-plugin.so.1
 popd
 %endif
 %if "%{rpm}" == "mobile"
@@ -363,8 +368,8 @@ pushd %{_libdir}/lwe
 for FILE in `ls wearable/*.so | grep -v 'wearable.so'`; do
     ln -sf "$FILE" .
 done
-ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so
-ln -sf wearable/liblightweight-web-engine-dali-plugin.wearable.so liblightweight-web-engine-dali-plugin.so
+ln -sf wearable/liblightweight-web-engine.wearable.so liblightweight-web-engine.so.1
+ln -sf wearable/liblightweight-web-engine-dali-plugin.wearable.so liblightweight-web-engine-dali-plugin.so.1
 popd
 %endif
 %if "%{rpm}" == "wearable"
@@ -381,27 +386,32 @@ exit 0
 
 %files
 %manifest %{name}.manifest
-%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %files profile_tv
 %manifest %{name}.manifest
-%{_libdir}/lwe/tv/*.so
+%{_libdir}/lwe/*.so*
+%{_libdir}/lwe/tv/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
+%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
 %endif
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %files profile_mobile
 %manifest %{name}.manifest
-%{_libdir}/lwe/mobile/*.so
+%{_libdir}/lwe/*.so*
+%{_libdir}/lwe/mobile/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
+%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
 %endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %files profile_wearable
 %manifest %{name}.manifest
-%{_libdir}/lwe/wearable/*.so
+%{_libdir}/lwe/*.so*
+%{_libdir}/lwe/wearable/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
+%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
 %endif
 
 %files devel

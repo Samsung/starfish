@@ -295,7 +295,7 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
-                    '-Wl,-soname,liblightweight-web-engine.so',
+                    '-Wl,-soname,liblightweight-web-engine.so.1',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl.tizen',
@@ -367,7 +367,7 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
-                    '-Wl,-soname,liblightweight-web-engine.so',
+                    '-Wl,-soname,liblightweight-web-engine.so.1',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.tizen',
@@ -412,7 +412,7 @@
                 'libraries_extra': [
                     '<@(libraries_extra)',
                     '-lpthread',
-                    '-Wl,-soname,liblightweight-web-engine-dali-plugin.so',
+                    '-Wl,-soname,liblightweight-web-engine-dali-plugin.so.1',
                 ],
             }],
         ],
