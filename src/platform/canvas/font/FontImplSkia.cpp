@@ -32,6 +32,7 @@
 #include <hb-icu.h>
 #include "core/modules/canvas/font/Font.h"
 #include "FontImplSkia.h"
+#include "core/page/WebView.h"
 #include "core/style/UnitHelper.h"
 
 static const int FONT_SIZE_SCALE = 64;
@@ -163,12 +164,12 @@ static inline char skFontStyleWeightToChar(int w)
     return ret;
 }
 
-PlatformFontSelector* PlatformFontSelector::create(StarFish* sf)
+PlatformFontSelector* PlatformFontSelector::create(WebView* wv)
 {
-    return new PlatformFontSelectorImplSkia(sf);
+    return new PlatformFontSelectorImplSkia(wv);
 }
 
-PlatformFontCache* PlatformFontCache::create(StarFish* sf)
+PlatformFontCache* PlatformFontCache::create(WebView* wv)
 {
     return new PlatformFontCacheImplSkia();
 }
@@ -607,8 +608,8 @@ bool skiaBackendCanUseSimpleFontPath(Font* f, const StringView& sv)
     }
 }
 
-PlatformFontSelectorImplSkia::PlatformFontSelectorImplSkia(StarFish* sf)
-    : PlatformFontSelector(sf)
+PlatformFontSelectorImplSkia::PlatformFontSelectorImplSkia(WebView* wv)
+    : PlatformFontSelector(wv)
 {
 }
 
@@ -629,10 +630,10 @@ sk_sp<SkTypeface> PlatformFontSelectorImplSkia::findAndLoadFontFace(
         fm->matchFamilyStyle(u8FamilyName.c_str(), fontStyle));
 
     if (result == nullptr) {
-        if (StringUtils::equalsIgnoreCase(
-                u8FamilyName.c_str(), m_starfish->initialFontFamilyDatas()[1]
-                                          .m_familyName->toUTF8NonGCString()
-                                          .c_str())) {
+        if (StringUtils::equalsIgnoreCase(u8FamilyName.c_str(),
+                                          m_webView->initialFontFamilyDatas()[1]
+                                              .m_familyName->toUTF8NonGCString()
+                                              .c_str())) {
             result = SkTypeface::MakeFromName(u8FamilyName.c_str(), fontStyle);
         }
     }

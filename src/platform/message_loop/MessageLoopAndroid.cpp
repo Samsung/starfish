@@ -49,14 +49,6 @@ MessageLoop::MessageLoop(WebView* sf)
 {
 }
 
-void MessageLoop::run()
-{
-}
-
-void MessageLoop::stop()
-{
-}
-
 struct IdlerData {
     void (*m_fn)(size_t, void*);
     void* m_data;

@@ -27,6 +27,7 @@
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/style/GradientData.h"
 #include "core/style/UnitHelper.h"
+#include "core/page/WebView.h"
 
 #include "SkBitmap.h"
 #include "SkCanvas.h"
@@ -89,17 +90,17 @@ class CanvasSkia : public Canvas {
 
     void applyDevicePixelRatio(SkCanvas* canvas)
     {
-        canvas->scale(m_starfish->screenInfo().devicePixelRatio,
-                      m_starfish->screenInfo().devicePixelRatio);
+        canvas->scale(m_webView->screenInfo().devicePixelRatio,
+                      m_webView->screenInfo().devicePixelRatio);
     }
 
 public:
-    CanvasSkia(StarFish* starfish, void* buffer, int width, int height,
+    CanvasSkia(WebView* webView, void* buffer, int width, int height,
                int stride)
     {
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = true;
-        m_starfish = starfish;
+        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
         m_renderTargetInfo.m_width = width;
@@ -113,9 +114,9 @@ public:
         save();
     }
 
-    CanvasSkia(StarFish* starfish, CanvasSurface* data)
+    CanvasSkia(WebView* webView, CanvasSurface* data)
     {
-        m_starfish = starfish;
+        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
         m_shouldDestroySkia = true;
@@ -127,11 +128,11 @@ public:
         save();
     }
 
-    CanvasSkia(StarFish* starfish, NativeImageData* data)
+    CanvasSkia(WebView* webView, NativeImageData* data)
     {
         m_shouldDestroySkia = true;
         m_shouldDestroySurface = false;
-        m_starfish = starfish;
+        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
 
@@ -154,7 +155,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::clear");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::clear");
         m_canvas->save();
         if (clr.a() == 0) {
             m_canvas->clear(SK_ColorTRANSPARENT);
@@ -290,8 +291,8 @@ public:
 
     virtual void unsetDevicePixelRatio()
     {
-        m_canvas->scale(1 / m_starfish->screenInfo().devicePixelRatio,
-                        1 / m_starfish->screenInfo().devicePixelRatio);
+        m_canvas->scale(1 / m_webView->screenInfo().devicePixelRatio,
+                        1 / m_webView->screenInfo().devicePixelRatio);
     }
 
     virtual void setColor(const Unit::Color& clr)
@@ -302,7 +303,7 @@ public:
 
     virtual void beginOpacityLayer(float c)
     {
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::beginOpacityLayer");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::beginOpacityLayer");
         save();
         lastState().m_opacity = c;
         m_canvas->saveLayerAlpha(nullptr,
@@ -311,7 +312,7 @@ public:
 
     virtual void endOpacityLayer()
     {
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::endOpacityLayer");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::endOpacityLayer");
         m_canvas->restore();
         restore();
     }
@@ -573,7 +574,7 @@ public:
         if (!lastState().m_visible || size == 0 || sv.length() == 0) {
             return;
         }
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::drawText");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::drawText");
 
         LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
@@ -729,7 +730,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        INSTALL_PROFILE_TIMER(m_starfish, "CanvasSkia::drawRepeatImage");
+        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::drawRepeatImage");
         auto pixels = data->data();
         auto dataW = data->width();
         auto dataH = data->height();
@@ -1043,7 +1044,7 @@ public:
     }
 
 protected:
-    StarFish* m_starfish;
+    WebView* m_webView;
     std::vector<CanvasStateSkia> m_state;
     SkCanvas* m_canvas;
     sk_sp<SkSurface> m_surface;
@@ -1053,20 +1054,20 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
+Canvas* Canvas::create(WebView* webview, CanvasSurface* data)
 {
-    return new CanvasSkia(starfish, data);
+    return new CanvasSkia(webview, data);
 }
 
-Canvas* Canvas::create(StarFish* starfish, uint8_t* data, size_t w, size_t h,
+Canvas* Canvas::create(WebView* starfish, uint8_t* data, size_t w, size_t h,
                        size_t stride)
 {
     return new CanvasSkia(starfish, data, w, h, stride);
 }
 
-Canvas* Canvas::create(StarFish* starfish, NativeImageData* data)
+Canvas* Canvas::create(WebView* webview, NativeImageData* data)
 {
-    return new CanvasSkia(starfish, data);
+    return new CanvasSkia(webview, data);
 }
 }
 #endif
