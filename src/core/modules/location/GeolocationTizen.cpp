@@ -26,6 +26,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/profiling/Profiling.h"
 #include "core/page/Window.h"
+#include "core/page/WebView.h"
 #include "core/dom/Document.h"
 #include "StarFish.h"
 
@@ -121,7 +122,7 @@ static void sendResult(LocationRequestInfoTizen* info)
 static void handleError(int error, LocationRequestInfoTizen* info)
 {
     if (error == TIZEN_ERROR_PERMISSION_DENIED) {
-        info->document->starFish()->messageLoop()->addIdler(
+        info->document->webView()->messageLoop()->addIdler(
             info->document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
                 Document* d = (Document*)data;
@@ -132,7 +133,7 @@ static void handleError(int error, LocationRequestInfoTizen* info)
             },
             info->document, (void*)info->errorCb, info->errorCbData);
     } else {
-        info->document->starFish()->messageLoop()->addIdler(
+        info->document->webView()->messageLoop()->addIdler(
             info->document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
                 Document* d = (Document*)data;
@@ -184,7 +185,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
             info->horizontalAccuracy = m_cachedLocation.horizontalAccuracy;
             info->verticalAccuracy = m_cachedLocation.verticalAccuracy;
             info->timestamp = m_cachedLocation.timestamp;
-            info->document->starFish()->messageLoop()->addIdler(
+            info->document->webView()->messageLoop()->addIdler(
                 document()->browsingContext(),
                 [](size_t, void* data) {
                     LocationRequestInfoTizen* info =
@@ -265,7 +266,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                 info->geolocation->m_cachedLocation.verticalAccuracy =
                     info->verticalAccuracy;
 
-                info->document->starFish()->messageLoop()->addIdler(
+                info->document->webView()->messageLoop()->addIdler(
                     info->document->browsingContext(),
                     [](size_t, void* data) {
                         LocationRequestInfoTizen* info =
@@ -291,7 +292,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                     LocationRequestInfoTizen* info =
                         (LocationRequestInfoTizen*)data;
                     info->shouldContinueRequest = false;
-                    info->document->starFish()->messageLoop()->addIdler(
+                    info->document->webView()->messageLoop()->addIdler(
                         info->document->browsingContext(),
                         [](size_t, void* data, void* data2, void* data3) {
                             Document* d = (Document*)data;

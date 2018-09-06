@@ -1049,21 +1049,6 @@ public:
         m_controller->destroy();
     }
 
-    void RunMessageLoop() override
-    {
-        static int fakeArgc;
-        static char** fakeArgv;
-        m_application = Application::New(&fakeArgc, &fakeArgv);
-        m_controller = new DALiShellController(
-            m_application, m_mainThreadHandle, m_width, m_height, m_url);
-        m_application.MainLoop();
-    }
-
-    void StopMessageLoop() override
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
-
 protected:
     Application m_application;
     pthread_t m_mainThreadHandle;
