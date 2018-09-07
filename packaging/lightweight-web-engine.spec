@@ -304,10 +304,16 @@ cp *.pc %{buildroot}%{_libdir}/pkgconfig/
 mkdir -p %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 cp *.conf %{buildroot}%{_sysconfdir}/ld.so.conf.d/
 
+# symbolic links
 pushd %{buildroot}%{_libdir}/lwe
 rm -fr *.so*
 ln -s liblightweight-web-engine.so.1 liblightweight-web-engine.so
 ln -s liblightweight-web-engine-dali-plugin.so.1 liblightweight-web-engine-dali-plugin.so
+popd
+
+pushd %{buildroot}%{_libdir}
+ln -s lwe/liblightweight-web-engine.so liblightweight-web-engine.so
+ln -s lwe/liblightweight-web-engine-dali-plugin.so liblightweight-web-engine-dali-plugin.so
 popd
 
 ##############################################
@@ -390,6 +396,7 @@ exit 0
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 %files profile_tv
 %manifest %{name}.manifest
+%{_libdir}/*.so
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/tv/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
@@ -399,6 +406,7 @@ exit 0
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %files profile_mobile
 %manifest %{name}.manifest
+%{_libdir}/*.so
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/mobile/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
@@ -408,6 +416,7 @@ exit 0
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 %files profile_wearable
 %manifest %{name}.manifest
+%{_libdir}/*.so
 %{_libdir}/lwe/*.so*
 %{_libdir}/lwe/wearable/*.so*
 %{_sysconfdir}/ld.so.conf.d/*.conf
