@@ -385,7 +385,7 @@ void WebContainer::LoadData(const std::string& data)
 
 void WebContainer::Reload()
 {
-    TO_LOCATION(m_impl)->reload(true);
+    TO_LOCATION(m_impl)->reload();
 }
 
 void WebContainer::StopLoading()
