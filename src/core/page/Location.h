@@ -60,7 +60,7 @@ public:
     void assign(String* url);
     void assign(String* url, ResourceURL* referrerURL);
     void replace(String* url);
-    void reload(bool force = false);
+    void reload(bool force = true);
 
     void setHref(String* newURL);
     void setHost(String* newHost);
