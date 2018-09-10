@@ -1043,6 +1043,13 @@ public:
     void LoadURL(const std::string& url) override
     {
         m_url = url;
+
+        static int fakeArgc;
+        static char** fakeArgv;
+        m_application = Application::New(&fakeArgc, &fakeArgv);
+        m_controller = new DALiShellController(
+            m_application, m_mainThreadHandle, m_width, m_height, m_url);
+        m_application.MainLoop();
     }
 
     virtual void Destroy() override
