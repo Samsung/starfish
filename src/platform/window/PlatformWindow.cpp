@@ -50,6 +50,7 @@ PlatformWindow::PlatformWindow(StarFish* starFish)
     , m_webView(nullptr)
     , m_renderingAnimator(SIZE_MAX)
     , m_compostiorContext(nullptr)
+    , m_idleCleanerTimerID(0)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     , m_isButtonOfVirtualCursorClicked(false)
     , m_virtualCursorX(-1)

@@ -1033,6 +1033,7 @@ public:
                 const char* cookieStoreFilePath,
                 const char* httpCacheDirectorypath)
         : WebView(nullptr)
+        , m_mainThreadHandle(0)
         , m_controller(nullptr)
         , m_width(width)
         , m_height(height)
