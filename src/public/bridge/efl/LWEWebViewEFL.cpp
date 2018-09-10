@@ -237,6 +237,7 @@ public:
                const char* httpCacheDirectorypath)
         : WebView(nullptr)
     {
+        STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
         Evas_Object* win = (Evas_Object*)winArg;
         m_nonIMEKeyEventBox = elm_label_add(win);
         evas_object_show(m_nonIMEKeyEventBox);

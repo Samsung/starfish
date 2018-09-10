@@ -7,7 +7,7 @@
     ],
     'variables' : {
         'variables': {
-            'backend%': 'efl',
+            #'backend%': 'efl',
         },
     },
     #'make_global_settings': [

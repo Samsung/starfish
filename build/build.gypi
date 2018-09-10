@@ -285,9 +285,8 @@
                     './build.dep.gyp:skia_matrix',
                 ],
             }],
-            ['platform=="tizen" and backend=="efl"', {
+            ['platform=="tizen" and backend=="glfw_cairo_gb"', {
                 'defines_extra': [
-                    'STARFISH_EFL',
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
@@ -295,10 +294,12 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
+                    '-ljpeg',
+                    '-lgif',
                     '-Wl,-soname,liblightweight-web-engine.so.1',
                 ],
                 'deps_extra': [
-                    './build.dep.gyp:efl.tizen',
+                    './build.dep.gyp:efl_cairo.tizen',
                     './build.dep.gyp:skia_matrix',
                 ],
             }],
