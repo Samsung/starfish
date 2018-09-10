@@ -107,18 +107,10 @@ static void removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
     list.erase(list.find((size_t)id));
 }
 
-static bool validateContext(BrowsingContext* context)
-{
-    // NOTE null value of context means the idler does not related with browsing
-    // context
-    return !context || context->isActive();
-}
-
 size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
                              void* data)
 {
     STARFISH_ASSERT(isMainThread());
-    STARFISH_ASSERT(validateContext(ctx));
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -135,9 +127,9 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
-            if (validateContext(id->m_ctx)) {
-                id->m_fn((size_t)id, id->m_data);
-            }
+
+            id->m_fn((size_t)id, id->m_data);
+
             if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
                 id->m_ml->m_idlersFromOtherThread.size() == 0) {
                 ecore_main_loop_quit();
@@ -156,7 +148,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
                              void* data1)
 {
     STARFISH_ASSERT(isMainThread());
-    STARFISH_ASSERT(validateContext(ctx));
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -174,10 +165,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
-            if (validateContext(id->m_ctx)) {
-                ((void (*)(size_t, void*, void*))id->m_fn)(
-                    (size_t)id, id->m_data, id->m_data1);
-            }
+            ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
+                                                       id->m_data1);
 
             if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
                 id->m_ml->m_idlersFromOtherThread.size() == 0) {
@@ -196,7 +185,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
                              void* data, void* data1, void* data2)
 {
     STARFISH_ASSERT(isMainThread());
-    STARFISH_ASSERT(validateContext(ctx));
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -215,10 +203,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
-            if (validateContext(id->m_ctx)) {
-                ((void (*)(size_t, void*, void*, void*))id->m_fn)(
-                    (size_t)id, id->m_data, id->m_data1, id->m_data2);
-            }
+            ((void (*)(size_t, void*, void*, void*))id->m_fn)(
+                (size_t)id, id->m_data, id->m_data1, id->m_data2);
 
             if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
                 id->m_ml->m_idlersFromOtherThread.size() == 0) {
@@ -264,7 +250,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                         removeIderFromList(id->m_ml->m_idlersFromOtherThread,
                                            id);
                     }
-                    if (id->m_valid && validateContext(id->m_ctx)) {
+                    if (id->m_valid) {
                         id->m_fn((size_t)id, id->m_data);
                     }
 
@@ -317,7 +303,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                         removeIderFromList(id->m_ml->m_idlersFromOtherThread,
                                            id);
                     }
-                    if (id->m_valid && validateContext(id->m_ctx)) {
+                    if (id->m_valid) {
                         ((void (*)(size_t, void*, void*))id->m_fn)(
                             (size_t)id, id->m_data, id->m_data1);
                     }

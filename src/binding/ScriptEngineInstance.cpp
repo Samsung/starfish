@@ -48,7 +48,7 @@ ScriptEngineInstance::ScriptEngineInstance(WebView* wv)
             [](size_t, void* data, void* data2) {
                 Window* window = (Window*)data;
 
-                if (!window->browsingContext()->isActive()) {
+                if (!window->webView()->isActive()) {
                     return;
                 }
 

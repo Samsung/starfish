@@ -124,6 +124,7 @@ StarFish::StarFish(const char* localStorageFilePath,
 
 void StarFish::destroy()
 {
+    STARFISH_LOG_INFO("StarFish::destroy");
     NetworkSharedResourceManager::destroy();
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCache::destory();

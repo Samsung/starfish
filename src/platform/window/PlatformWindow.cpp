@@ -68,15 +68,15 @@ void PlatformWindow::setWebView(WebView* webView)
 
 void PlatformWindow::pause()
 {
-    if (webView()->mainBrowsingContext()) {
-        webView()->mainBrowsingContext()->pause();
+    if (webView()) {
+        webView()->pause();
     }
 }
 
 void PlatformWindow::resume()
 {
-    if (webView()->mainBrowsingContext()) {
-        webView()->mainBrowsingContext()->resume();
+    if (webView()) {
+        webView()->resume();
     }
 }
 
