@@ -313,15 +313,49 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
 
 void Location::replace(String* url)
 {
+    struct Params {
+        String* url;
+        BrowsingContext* browsingContext;
+    };
+
     if (ResourceURL::isValidURL(url)) {
         if (document()->browsingContext()->isTopLevelBrowsingContext()) {
-            document()->browsingContext()->webView()->navigate(
-                new ResourceURL(url), HistoryManager::Action::Replace,
-                document()->documentURI());
+            Params* p = new (NoGC) Params();
+            p->url = url;
+            p->browsingContext = document()->browsingContext();
+            document()->browsingContext()->webView()->messageLoop()->addIdler(
+                nullptr,
+                [](size_t, void* data) {
+                    Params* p = (Params*)data;
+                    BrowsingContext* context =
+                        (BrowsingContext*)p->browsingContext;
+                    context->webView()->navigate(
+                        new ResourceURL(p->url),
+                        HistoryManager::Action::Replace,
+                        context->webView()
+                            ->mainBrowsingContext()
+                            ->document()
+                            ->documentURI());
+                    GC_FREE(p);
+                },
+                p);
         } else {
-            document()->browsingContext()->sourceElement()->navigate(
-                new ResourceURL(url), HistoryManager::Action::Replace,
-                document()->documentURI());
+            Params* p = new (NoGC) Params();
+            p->url = url;
+            p->browsingContext = document()->browsingContext();
+            document()->browsingContext()->webView()->messageLoop()->addIdler(
+                nullptr,
+                [](size_t, void* data) {
+                    Params* p = (Params*)data;
+                    BrowsingContext* context =
+                        (BrowsingContext*)p->browsingContext;
+                    context->sourceElement()->navigate(
+                        new ResourceURL(p->url),
+                        HistoryManager::Action::Replace,
+                        context->document()->documentURI());
+                    GC_FREE(p);
+                },
+                p);
         }
     }
 }
