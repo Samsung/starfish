@@ -210,6 +210,13 @@ public:
     Node* focusedNode();
     BrowsingContext* focusedBrowsingContext();
     void blur();
+    void pause();
+    void resume();
+
+    bool isActive()
+    {
+        return m_isActive;
+    }
 
     void setNeedsComputeStackingContextProperties()
     {
@@ -511,6 +518,8 @@ private:
     bool m_needsPainting;
     bool m_needsComposite;
     bool m_didCompositeBefore; // last state of enabling composite
+    bool m_isActive; // false means that is paused, then rendering callbacks
+                     // will be skipped.
     LayoutRect m_paintingDirtyRect;
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;

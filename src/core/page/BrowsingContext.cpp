@@ -89,8 +89,6 @@ BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source)
     , m_sourceElement(source)
     , m_pendingStyleSheetCount(0)
     , m_pendingRenderingCount(0)
-    , m_isRunning(false)
-    , m_isActive(false)
     , m_touchDownPoint(0, 0)
     , m_lastMouseMovePoint(std::numeric_limits<float>::quiet_NaN(),
                            std::numeric_limits<float>::quiet_NaN())
@@ -118,7 +116,6 @@ void BrowsingContext::initFlags()
 
     m_hasRootElementBackground = false;
     m_hasBodyElementBackground = false;
-    m_isRunning = true;
     m_pendingStyleSheetCount = 0;
 }
 
@@ -126,8 +123,6 @@ void BrowsingContext::open(ResourceURL* url, HistoryManager::Action type,
                            ResourceURL* referrerURL)
 {
     initFlags();
-
-    m_isActive = true;
 
     if (isTopLevelBrowsingContext()) {
         m_window = Window::create(this, url,
@@ -668,8 +663,6 @@ void BrowsingContext::dispose()
         }
     }
 
-    m_isActive = false;
-
     if (isTopLevelBrowsingContext()) {
         if (webView()->scriptEngineInstance()) {
             webView()->removeScriptEngineInstance();
@@ -1117,10 +1110,6 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
 bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
                                          TouchData* touches, size_t count)
 {
-    if (!m_isRunning) {
-        return false;
-    }
-
     if (m_globalPointingEventListener.size()) {
         float x, y;
         if (kind == TouchEventKind::TouchEventStart ||
@@ -1260,9 +1249,6 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
 
 bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
-    if (!m_isRunning) {
-        return false;
-    }
     // MouseEventEnter/MouseEventOut are not supported yet
     if (kind >= MouseEventKind::MouseEventEnter) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -1399,10 +1385,6 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 bool BrowsingContext::dispatchMouseWheelEvent(float screenX, float screenY,
                                               int z, bool isVerticalWheelEvent)
 {
-    if (!m_isRunning) {
-        return false;
-    }
-
     double wx = window()->scrollX(false) + screenX;
     double wy = window()->scrollY(false) + screenY;
     // Hit test to validate event position
@@ -1717,13 +1699,6 @@ void BrowsingContext::dispatchCompositionEvent(CompositionEventKind kind,
 
 void BrowsingContext::pause()
 {
-    STARFISH_LOG_INFO("BrowsingContext::pause\n");
-    if (!m_isRunning) {
-        return;
-    }
-
-    m_isRunning = false;
-
     document()->setVisibilityState(VisibilityState::VisibilityStateHidden);
 
     document()->resourceLoader().cachePruning();
@@ -1733,17 +1708,6 @@ void BrowsingContext::pause()
 
 void BrowsingContext::resume()
 {
-    STARFISH_LOG_INFO("BrowsingContext::resume\n");
-    if (isTopLevelBrowsingContext() && document()) {
-        webView()->setNeedsFullRepainting();
-    }
-
-    if (m_isRunning) {
-        return;
-    }
-
-    m_isRunning = true;
-
     document()->setVisibilityState(VisibilityState::VisibilityStateVisible);
 
     iterateChildContext([](BrowsingContext* ctx) { ctx->resume(); });
@@ -1823,9 +1787,7 @@ void BrowsingContext::removeGlobalPointingEventInterceptListener(
 void BrowsingContext::addPointerInRootSet(void* ptr)
 {
     STARFISH_ASSERT(isMainThread());
-    if (!isActive()) {
-        return;
-    }
+
     auto iter = m_rootMap.find(ptr);
     if (iter == m_rootMap.end()) {
         m_rootMap.insert(std::make_pair(ptr, 1));
@@ -1837,9 +1799,7 @@ void BrowsingContext::addPointerInRootSet(void* ptr)
 void BrowsingContext::removePointerFromRootSet(void* ptr)
 {
     STARFISH_ASSERT(isMainThread());
-    if (!isActive()) {
-        return;
-    }
+
     auto iter = m_rootMap.find(ptr);
     if (iter != m_rootMap.end()) {
         if (iter->second == 1) {

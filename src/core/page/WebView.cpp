@@ -224,6 +224,7 @@ WebView::WebView(StarFish* starFish, const char* locale, const char* timezoneID,
     , m_needsPainting(false)
     , m_needsComposite(false)
     , m_didCompositeBefore(false)
+    , m_isActive(false)
     , m_rootStackingContext(nullptr)
     , m_activeAnimatorForAnimationExecutor(SIZE_MAX)
     , m_messageLoop(new MessageLoop(this))
@@ -286,11 +287,12 @@ void WebView::destroy()
     m_inspector = nullptr;
 #endif
 
-    STARFISH_LOG_INFO("WebView::destroy()\n");
+    pause();
+
+    STARFISH_LOG_INFO("WebView::destroy\n");
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispose();
     }
-    mainBrowsingContext()->dispose();
 
     if (m_rootStackingContext) {
         StackingContext* ctx = m_rootStackingContext;
@@ -982,7 +984,7 @@ RenderResult WebView::rendering(bool force)
     RenderResult renderResult;
     renderResult.didPaintingOrCompositing = false;
 
-    if (!m_needsRendering) {
+    if (!m_needsRendering || !m_isActive) {
         return renderResult;
     }
 
@@ -1382,7 +1384,7 @@ void WebView::initRenderingFlags()
     m_needsRendering = false;
     m_needsPainting = false;
     m_needsComposite = false;
-
+    m_isActive = true;
     m_paintingDirtyRect =
         LayoutRect(0, 0, platformWindow()->width(), platformWindow()->height());
 }
@@ -1447,6 +1449,35 @@ void WebView::blur()
         return;
     }
     mainBrowsingContext()->releaseFocusedNode(nullptr);
+}
+
+void WebView::pause()
+{
+    if (m_isActive == false) {
+        return;
+    }
+    STARFISH_LOG_INFO("WebView::pause\n");
+    m_isActive = false;
+
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->pause();
+    }
+}
+
+void WebView::resume()
+{
+    if (m_isActive) {
+        return;
+    }
+    STARFISH_LOG_INFO("WebView::resume\n");
+    m_isActive = true;
+
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->resume();
+        if (mainBrowsingContext()->document()) {
+            setNeedsFullRepainting();
+        }
+    }
 }
 
 void WebView::onIdle()

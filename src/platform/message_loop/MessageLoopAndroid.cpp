@@ -69,18 +69,10 @@ static void removeIderFromList(std::unordered_set<size_t>& list, IdlerData* id)
     }
 }
 
-static bool validateContext(BrowsingContext* context)
-{
-    // NOTE null value of context means the idler does not related with browsing
-    // context
-    return !context || context->isActive();
-}
-
 size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
                              void* data)
 {
     STARFISH_ASSERT(isMainThread());
-    STARFISH_ASSERT(validateContext(ctx));
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -92,9 +84,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
                              [](int, void* data) -> bool {
                                  IdlerData* id = (IdlerData*)data;
                                  removeIderFromList(id->m_ml->m_idlers, id);
-                                 if (validateContext(id->m_ctx)) {
-                                     id->m_fn((size_t)id, id->m_data);
-                                 }
+                                 id->m_fn((size_t)id, id->m_data);
+
                                  GC_FREE(id);
                                  return false;
                              },
@@ -107,7 +98,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
                              void* data1)
 {
     STARFISH_ASSERT(isMainThread());
-    STARFISH_ASSERT(validateContext(ctx));
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -120,10 +110,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
                              [](int, void* data) -> bool {
                                  IdlerData* id = (IdlerData*)data;
                                  removeIderFromList(id->m_ml->m_idlers, id);
-                                 if (validateContext(id->m_ctx)) {
-                                     ((void (*)(size_t, void*, void*))id->m_fn)(
-                                         (size_t)id, id->m_data, id->m_data1);
-                                 }
+                                 ((void (*)(size_t, void*, void*))id->m_fn)(
+                                     (size_t)id, id->m_data, id->m_data1);
                                  GC_FREE(id);
                                  return false;
                              },
@@ -137,7 +125,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
                              void* data, void* data1, void* data2)
 {
     STARFISH_ASSERT(isMainThread());
-    STARFISH_ASSERT(validateContext(ctx));
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
     id->m_isMainThreadData = true;
@@ -147,19 +134,17 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data2 = data2;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler = startIdler(
-        0,
-        [](int, void* data) -> bool {
-            IdlerData* id = (IdlerData*)data;
-            removeIderFromList(id->m_ml->m_idlers, id);
-            if (validateContext(id->m_ctx)) {
-                ((void (*)(size_t, void*, void*, void*))id->m_fn)(
-                    (size_t)id, id->m_data, id->m_data1, id->m_data2);
-            }
-            GC_FREE(id);
-            return false;
-        },
-        id);
+    id->m_idler =
+        startIdler(0,
+                   [](int, void* data) -> bool {
+                       IdlerData* id = (IdlerData*)data;
+                       removeIderFromList(id->m_ml->m_idlers, id);
+                       ((void (*)(size_t, void*, void*, void*))id->m_fn)(
+                           (size_t)id, id->m_data, id->m_data1, id->m_data2);
+                       GC_FREE(id);
+                       return false;
+                   },
+                   id);
 
     return (size_t)id;
 }
@@ -189,7 +174,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                 Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
                 removeIderFromList(id->m_ml->m_idlersFromOtherThread, id);
             }
-            if (id->m_valid && validateContext(id->m_ctx)) {
+            if (id->m_valid) {
                 id->m_fn((size_t)id, id->m_data);
             }
             delete id;
@@ -226,7 +211,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                 Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
                 removeIderFromList(id->m_ml->m_idlersFromOtherThread, id);
             }
-            if (id->m_valid && validateContext(id->m_ctx)) {
+            if (id->m_valid) {
                 ((void (*)(size_t, void*, void*))id->m_fn)(
                     (size_t)id, id->m_data, id->m_data1);
             }
