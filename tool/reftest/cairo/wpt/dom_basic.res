@@ -161,7 +161,7 @@ http://10.113.111.47:8000/dom/nodes/Element-previousElementSibling.html
 #http://10.113.111.47:8000/dom/nodes/Element-insertAdjacentElement.html
 http://10.113.111.47:8000/dom/nodes/ParentNode-prepend.html
 http://10.113.111.47:8000/dom/nodes/Node-isEqualNode.html
-#http://10.113.111.47:8000/dom/nodes/Node-normalize.html
+http://10.113.111.47:8000/dom/nodes/Node-normalize.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-12.htm
 http://10.113.111.47:8000/dom/nodes/CharacterData-appendData.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-02.htm

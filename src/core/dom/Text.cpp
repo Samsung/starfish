@@ -122,7 +122,6 @@ Node* Text::mergeWithTextSiblings()
         }
 
         appendData(nextText->data());
-        nextText->setData(String::emptyString);
         nextText->remove();
     }
 
