@@ -14,6 +14,9 @@ CMakeFiles
 build.ninja
 rules.ninja
 
+build/android/build_aar/app/app/build/
+build/android/build_shell/app/build
+
 # Binding Generator generated
 src/binding/*Binding.cpp
 src/binding/*Union.h
