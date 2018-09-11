@@ -66,6 +66,17 @@
             #'STARFISH_ENABLE_VIRTUAL_CURSOR',
             'USE_PRODUCT_FEATURE',
         ],
+        'defines_prod_tv_dali': [
+            #'STARFISH_ENABLE_MULTIMEDIA',
+            'STARFISH_TIZEN_TV',
+            'STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED',
+            #'STARFISH_ENABLE_AVPLAY',
+            'STARFISH_ENABLE_TRANSPARENT_WINDOW',
+            'STARFISH_ENABLE_TTS',
+            #'STARFISH_ENABLE_BODY_FOCUS_RING',
+            #'STARFISH_ENABLE_VIRTUAL_CURSOR',
+            'USE_PRODUCT_FEATURE',
+        ],
         'defines_unified_wearable': [
             # 'STARFISH_TIZEN_WEARABLE',
             'STARFISH_TIZEN_WEARABLE_WIDGET',
