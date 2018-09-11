@@ -279,26 +279,8 @@ public:
         return m_classNames;
     }
 
-    bool hasClassName(String* className)
-    {
-        for (unsigned i = 0; i < m_classNames.size(); i++) {
-            if (className->equals(m_classNames[i].string())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool hasClassName(AtomicString className)
-    {
-        size_t len = m_classNames.size();
-        for (unsigned i = 0; i < len; i++) {
-            if (className == m_classNames[i]) {
-                return true;
-            }
-        }
-        return false;
-    }
+    bool hasClassName(String* className);
+    bool hasClassName(AtomicString className);
 
     void setStyleAttr(String* style);
 

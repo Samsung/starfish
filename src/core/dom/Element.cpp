@@ -1463,6 +1463,38 @@ void Element::setClassName(String* className)
     setAttribute(starFish()->staticStrings()->m_class, className);
 }
 
+bool Element::hasClassName(String* className)
+{
+    bool containsOnlyASCIIChars = className->containsOnlyASCIIChars();
+    for (unsigned i = 0; i < m_classNames.size(); i++) {
+        if (document()->inQuirksMode() && containsOnlyASCIIChars) {
+            if (className->equalsIgnoreCase(m_classNames[i].string())) {
+                return true;
+            }
+        } else if (className->equals(m_classNames[i].string())) {
+            return true;
+        }
+    }
+    return false;
+}
+
+bool Element::hasClassName(AtomicString className)
+{
+    size_t len = m_classNames.size();
+    String* classNameString = className.string();
+    bool containsOnlyASCIIChars = classNameString->containsOnlyASCIIChars();
+    for (unsigned i = 0; i < len; i++) {
+        if (document()->inQuirksMode() && containsOnlyASCIIChars) {
+            if (classNameString->equalsIgnoreCase(m_classNames[i].string())) {
+                return true;
+            }
+        } else if (className == m_classNames[i]) {
+            return true;
+        }
+    }
+    return false;
+}
+
 void Element::setStyleAttr(String* style)
 {
     setAttribute(starFish()->staticStrings()->m_style, style);
