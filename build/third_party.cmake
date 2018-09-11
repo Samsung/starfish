@@ -4,250 +4,37 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 # THIRD PARTY
 #######################################################
 
-# JS BINDING
+# STARFISH THIRDPARTY
+#EXECUTE_PROCESS (
+#    WORKING_DIRECTORY ${STARFISH_ROOT}
+#    COMMAND git submodule init
+#    COMMAND git submodule update binding_generator tool/gyp third_party
+#)
 
+# ESCARGOT THIRDPARTY
+EXECUTE_PROCESS (
+    WORKING_DIRECTORY ${ESCARGOT_ROOT}
+    COMMAND git submodule init
+    COMMAND git submodule update third_party
+)
+
+# JS BINDING
 EXECUTE_PROCESS (
     COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding
 )
-FILE (GLOB STARFISH_BINDING_OUTPUT_LIST ${STARFISH_ROOT}/src/binding/*.cpp)
-#SET (STARFISH_BINDING_OUTPUT_LIST
-#    ${STARFISH_ROOT}/src/binding/ArrayBufferViewOrArrayBufferBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/AttrBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/BlobBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/BlobCustomBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/BufferSourceOrBlobOrDOMStringBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CanvasGradientBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CanvasPatternBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CanvasRenderingContext2DBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CDATASectionBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CharacterDataBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CharacterDataCustomBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CommentBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CompositionEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CompositionEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CoordinatesBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSConditionRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSCounterStyleRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSFontFaceRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSGroupingRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSImportRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSKeyframesRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSKeywordValueBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSMediaRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSNamespaceRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSNumericTypeBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSNumericValueBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSRuleListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSStyleDeclarationBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSStyleRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSStyleSheetBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSStyleValueBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSSupportsRuleBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CSSUnitValueBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CustomEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/CustomEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DocumentBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DocumentCustomBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DocumentFragmentBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DocumentHoldable.cpp
-#    ${STARFISH_ROOT}/src/binding/DocumentTypeBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMExceptionBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMImplementationBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMParserBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMPointBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMPointInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMPointReadOnlyBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMQuadBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMRectBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMRectListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMRectReadOnlyBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMSettableTokenListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMStringListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMStringMapBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMStringOrCanvasGradientOrCanvasPatternBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMStringOrFunctionBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/DOMTokenListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/doubleOrAutoKeywordBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/doubleOrCSSNumericValueBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ErrorEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ErrorEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/EventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/EventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/EventModifierInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/EventOrDOMStringBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/EventSourceBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/EventSourceInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/EventTargetBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/FocusEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/FocusEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/GeolocationBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/GeolocationCustomBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/GeopositionBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HistoryBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLAnchorElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLAreaElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLAudioElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLBaseElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLBodyElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLBRElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLButtonElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLCanvasElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLCollectionBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLDivElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLDListElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLDocumentBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLElementOrlongBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLFieldSetElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLFontElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLFormControlsCollectionBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLFormElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLHeadElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLHeadingElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLHRElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLHtmlElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLIFrameElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLImageElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLInputElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLInputElementCustomBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLLabelElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLLegendElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLLIElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLLinkElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLMapElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLMediaElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLMetaElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLModElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLObjectElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLOListElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLOptGroupElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLOptionElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLOptionElementOrHTMLOptGroupElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLOptionsCollectionBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLOutputElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLParagraphElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLParamElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLPreElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLQuoteElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLScriptElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLScriptElementOrSVGScriptElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLSelectElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLSourceElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLSpanElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLStyleElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTableCaptionElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTableCellElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTableColElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTableElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTableRowElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTableSectionElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTextAreaElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTFootElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTHeadElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTHElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTitleElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLTrackElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLUListElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLUnknownElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/HTMLVideoElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ImageBitmapRenderingContextBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ImageDataBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/InputEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/InputEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/KeyboardEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/KeyboardEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/LocationBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MediaListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MediaQueryListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MediaQueryListEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MediaQueryListEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MediaSourceBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MessageChannelBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MessageEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MessageEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MessagePortBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MouseEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/MouseEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/NamedNodeMapBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/NavigatorBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/NodeBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/NodeFilterBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/NodeIteratorBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/NodeListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/NodeOrDOMStringBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/Path2DBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/PositionErrorBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ProcessingInstructionBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ProgressEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ProgressEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/RangeBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ScreenBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ScriptBindingInstance.cpp
-#    ${STARFISH_ROOT}/src/binding/ScriptEngineInstance.cpp
-#    ${STARFISH_ROOT}/src/binding/ScriptWrappable.cpp
-#    ${STARFISH_ROOT}/src/binding/ScrollOptionsBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/ScrollToOptionsBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SourceBufferBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SourceBufferListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/StorageBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/StyleSheetBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/StyleSheetListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGAnimatedLengthBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGCircleElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGDocumentBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGGElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGImageElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGLengthBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGPathElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGPolygonElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGPolylineElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGRectElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGScriptElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGStyleElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGSVGElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/SVGTextElementBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/testRunnerBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TextBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TextTrackBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TextTrackCueBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TextTrackCueListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TextTrackListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TimeRangesBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TouchBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TouchEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TouchInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TouchListBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TransitionEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TransitionEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/TreeWalkerBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/UIEventBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/UIEventInitBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/URLBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/VTTCueBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/WebGLRenderingContextBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/WindowBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/WindowCustomBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/WindowHoldable.cpp
-#    ${STARFISH_ROOT}/src/binding/XMLDocumentBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/XMLHttpRequestBinding.cpp
-#    ${STARFISH_ROOT}/src/binding/XMLHttpRequestEventTargetBinding.cpp
-#)
 
-SET (THIRD_PARTY_CXXFLAGS_DEFAULT -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fno-omit-frame-pointer -fstack-protector -fPIC)
 
-SET (THIRD_PARTY_CXXFLAGS ${THIRD_PARTY_CXXFLAGS_DEFAULT} ${LWE_CXXFLAGS_COMPILER} ${LWE_CXXFLAGS_MODE})
+SET (THIRD_PARTY_CXXFLAGS_COMMON -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fno-omit-frame-pointer -fstack-protector -fPIC)
 
-# SKIA
-FILE (GLOB SKIA_LIST ${THIRD_PARTY_ROOT}/skia_matrix/*.cpp)
-ADD_LIBRARY (skia SHARED ${SKIA_LIST})
-TARGET_INCLUDE_DIRECTORIES (skia PUBLIC ${THIRD_PARTY_ROOT}/skia_matrix)
-TARGET_COMPILE_DEFINITIONS (skia PUBLIC ${LWE_DEFINITIONS})
-TARGET_COMPILE_OPTIONS (skia PUBLIC ${THIRD_PARTY_CXXFLAGS})
+SET (THIRD_PARTY_CXXFLAGS ${THIRD_PARTY_CXXFLAGS_COMMON} ${LWE_CXXFLAGS_COMPILER} ${LWE_CXXFLAGS_MODE})
+
+# SKIA_MATRIX
+FILE (GLOB_RECURSE SKIA_MATRIX_SRC_CORE ${THIRD_PARTY_ROOT}/skia_matrix/src/core/*.cpp)
+FILE (GLOB_RECURSE SKIA_MATRIX_SRC_PORTS ${THIRD_PARTY_ROOT}/skia_matrix/src/ports/*.cpp)
+ADD_LIBRARY (skia_matrix SHARED ${SKIA_MATRIX_SRC_CORE} ${SKIA_MATRIX_SRC_PORTS})
+TARGET_INCLUDE_DIRECTORIES (skia_matrix PUBLIC ${THIRD_PARTY_ROOT}/skia_matrix ${THIRD_PARTY_ROOT}/skia_matrix/include/core ${THIRD_PARTY_ROOT}/skia_matrix/include/private)
+TARGET_COMPILE_DEFINITIONS (skia_matrix PUBLIC ${LWE_DEFINITIONS})
+TARGET_COMPILE_OPTIONS (skia_matrix PUBLIC ${THIRD_PARTY_CXXFLAGS})
 
 # CLIPPER
 ADD_LIBRARY (clipper SHARED ${THIRD_PARTY_ROOT}/clipper/cpp/clipper.cpp)
@@ -271,55 +58,288 @@ TARGET_INCLUDE_DIRECTORIES (webm PUBLIC ${THIRD_PARTY_ROOT}/webm/)
 TARGET_COMPILE_DEFINITIONS (webm PUBLIC ${LWE_DEFINITIONS})
 TARGET_COMPILE_OPTIONS (webm PUBLIC ${THIRD_PARTY_CXXFLAGS})
 
-#######################################################
-# PREPARE THIRD PARTY LIBRARY FILES
-#######################################################
+# ZERO MQ
+SET (ZMQ_CFLAGS_COMMON -g3 -fPIC)
+IF (${CUSTOM} STREQUAL "unified_wearable")
+    SET (ZMQ_CFLAGS_CUSTOM -Os)
+ENDIF()
+
+IF (${ARCH} STREQUAL "x86")
+    SET (ZMQ_CFLAGS_ARCH -m32)
+ELSEIF (${ARCH} STREQUAL "tizen")
+    SET (ZMQ_CFLAGS_ARCH -march=armv7-a -mthumb -finline-limit=64)
+ENDIF()
+
+IF (${MODE} STREQUAL "debug")
+    SET (ZMQ_CFLAGS_MODE -O0)
+ELSE()
+    SET (ZMQ_CFLAGS_MODE -O2)
+ENDIF()
+
+SET (ZMQ_CFLAGS
+    ${ZMQ_CFLAGS_COMMON}
+    ${ZMQ_CFLAGS_ARCH}
+    ${ZMQ_CFLAGS_MODE}
+)
+
+SET (ZMQ_BUILDDIR ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared) 
+
+ADD_CUSTOM_TARGET (ZMQ_PRECONF
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${ZMQ_BUILDDIR}
+)
+
+ADD_CUSTOM_TARGET (ZMQ_CONF
+        WORKING_DIRECTORY ${ZMQ_BUILDDIR}
+        DEPENDS ZMQ_PRECONF
+        COMMAND ../../../../configure --enable-static CFLAGS="${ZMQ_CFLAGS}" LDFLAGS="${CFLAGS}" CXXFLAGS="${CFLAGS}"
+)
+
+FILE (GLOB_RECURSE ZERO_MQ_SRC ${THIRD_PARTY_ROOT}/zeromq/src/*.cpp)
+SET (ZERO_MQ_TWEETNACL ${THIRD_PARTY_ROOT}/zeromq/tweetnacl/src/tweetnacl.c ${THIRD_PARTY_ROOT}/zeromq/tweetnacl/contrib/randombytes/devurandom.c)
+ADD_LIBRARY (zmq SHARED ${ZERO_MQ_SRC} ${ZERO_MQ_TWEETNACL})
+TARGET_INCLUDE_DIRECTORIES (zmq PUBLIC ${THIRD_PARTY_ROOT}/zeromq/include/ ${THIRD_PARTY_ROOT}/zeromq/tweetnacl/src/ ${THIRD_PARTY_ROOT}/zeromq/tweetnacl/contrib/randombytes/ ${ZMQ_BUILDDIR}/src/)
+TARGET_COMPILE_DEFINITIONS (zmq PUBLIC ${LWE_DEFINITIONS})
+TARGET_COMPILE_OPTIONS (zmq PUBLIC ${ZMQ_CFLAGS})
+ADD_DEPENDENCIES (zmq ZMQ_CONF)
+
+# LIBTUV
+SET (TUV_DEFINITIONS_COMMON
+    -DBUILDTESTER=no
+    -DBUILD_HOST_HELPER=no
+    -DCREATE_SHARED_LIB=yes
+    -DTARGET_BOARD=None
+)
+
+IF (${MODE} STREQUAL "debug")
+    SET (TUV_DEFINITIONS_MODE -DCMAKE_BUILD_TYPE=release)
+ELSE()
+    SET (TUV_DEFINITIONS_MODE -DCMAKE_BUILD_TYPE=debug)
+ENDIF()
 
 IF (${ARCH} STREQUAL "tizen")
-    SET (TUV_TARGET ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/debug/lib/libtuv.so)
-    SET (ESCARGOT_TARGET ${ESCARGOT_ROOT}/libescargot.a)
-    SET (GC_TARGET ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.a)
-
-    SET (TUV_LIB "${OUTPUT_DIRECTORY}/lib/libtuv.so")
-    SET (ESCARGOT_LIB "${OUTPUT_DIRECTORY}/lib/libescargot.a")
-    SET (GC_LIB "${OUTPUT_DIRECTORY}/lib/libgc.a")
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_TARGET} ${ESCARGOT_TARGET} ${GC_TARGET}
-                        COMMENT "Build Third_Party for arm"
-                        COMMAND ./build_third_party.sh arm
-    )
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LIB} ${ESCARGOT_LIB} ${GC_LIB}
-                        DEPENDS ${TUV_TARGET} ${ESCARGOT_TARGET} ${GC_TARGET}
-                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/libtuv/build/noarch-tizen/release/lib/libtuv.so ${OUTPUT_DIRECTORY}/lib
-                        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/libescargot.a ${OUTPUT_DIRECTORY}/lib
-                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/tizen_obs/arm/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib
-    )
-
+    SET (TUV_DEFINITIONS_ARCH -DTARGET_PLATFORM=noarch-tizen)
 ELSE()
-    SET (ZMQ_TARGET ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5 ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5.0.1)
-    SET (ESCARGOT_TARGET ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a)
-    SET (GC_TARGET ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so.1 ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so.1.0.3)
+    SET (TUV_DEFINITIONS_ARCH -DTARGET_PLATFORM=x86_64-linux)
+ENDIF()
 
-    SET (ZMQ_LIB "${OUTPUT_DIRECTORY}/lib/libzmq.so")
-    SET (ESCARGOT_LIB "${OUTPUT_DIRECTORY}/lib/libescargot.a")
-    SET (GC_LIB "${OUTPUT_DIRECTORY}/lib/libgc.so")
-    
-    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_TARGET} ${ESCARGOT_TARGET} ${GC_TARGET}
-                        COMMENT "Build Third_Party for x64"
-                        COMMAND ./build_third_party.sh x64
-    )
-                        
-    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_LIB} ${ESCARGOT_LIB} ${GC_LIB}
-                        DEPENDS ${ZMQ_TARGET} ${ESCARGOT_TARGET} ${GC_TARGET}
-                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so ${OUTPUT_DIRECTORY}/lib/
-                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5 ${OUTPUT_DIRECTORY}/lib/
-                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libzmq.so.5.0.1 ${OUTPUT_DIRECTORY}/lib/
-                        COMMAND ${CMAKE_COMMAND} -E copy ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/libescargot.a ${OUTPUT_DIRECTORY}/lib/
-#                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.a ${OUTPUT_DIRECTORY}/lib/
-                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so ${OUTPUT_DIRECTORY}/lib/
-                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so.1 ${OUTPUT_DIRECTORY}/lib/
-                        COMMAND ${CMAKE_COMMAND} -E copy ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared/.libs/libgc.so.1.0.3 ${OUTPUT_DIRECTORY}/lib/
+SET (TUV_DEFINITIONS
+    ${TUV_DEFINITIONS_COMMON}
+    ${TUV_DEFINITIONS_MODE}
+    ${TUV_DEFINITIONS_ARCH}
+)
+
+SET (TUV_CFLAGS_COMMON -fno-builtin)
+IF (${MODE} STREQUAL "debug")
+    SET (TUV_CFLAGS_MODE -O0 -g -DDEBUG)
+ELSE()
+    SET (TUV_CFLAGS_MODE -O2 -DNDEBUG)
+ENDIF()
+
+SET (TUV_CFLAGS
+    ${TUV_CFLAGS_COMMON}
+    ${TUV_CFLAGS_MODE}
+)
+
+SET (TUV_SRC
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/async.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/core.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/fs.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/getaddrinfo.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/loop.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/loop-watcher.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/poll.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/process.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/stream.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/tcp.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/thread.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/timer.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/udp.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/linux-core.c
+    ${THIRD_PARTY_ROOT}/libtuv/src/unix/linux-syscalls.c
+)
+
+ADD_LIBRARY (tuv SHARED ${TUV_SRC})
+TARGET_INCLUDE_DIRECTORIES (tuv PUBLIC ${THIRD_PARTY_ROOT}/libtuv/include ${THIRD_PARTY_ROOT}/libtuv/src)
+TARGET_COMPILE_DEFINITIONS (tuv PUBLIC ${TUV_DEFINITIONS})
+TARGET_COMPILE_OPTIONS (tuv PUBLIC ${TUV_CFLAGS})
+
+# LIBSKIA
+IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
+    SET (BUILD_TYPE "Release")
+    IF (${MODE} STREQUAL "debug")
+        SET (BUILD_TYPE "Debug")
+    ENDIF()
+    ADD_CUSTOM_COMMAND (OUTPUT ${OUTPUT_DIRECTORY}/${MODE}/lib
+                        DEPENDS ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so
+                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so ${OUTPUT_DIRECTORY}/${MODE}/lib
     )
 ENDIF()
 
+# GC
+SET (GC_DEFINITIONS_COMMON -DHAVE_CONFIG_H -DESCARGOT -DUSE_GET_STACKBASE_FOR_MAIN -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA)
+IF (${MODE} STREQUAL "debug")
+SET (GC_DEFINITIONS_MODE -DGC_DEBUG)
+ENDIF()
+SET (GC_DEFINITIONS
+    ${LWE_DEFINITIONS}
+    ${GC_DEFINITIONS_COMMON}
+    ${GC_DEFINITIONS_MODE}
+)
+
+SET (GC_CFLAGS_COMMON -g3 -fPIC -Wno-unused-variable -Wno-unused-function -fdata-sections -ffunction-sections)
+
+IF (${CUSTOM} STREQUAL "unified_wearable")
+    SET (GC_CFLAGS_CUSTOM -Os)
+ENDIF()
+
+IF (${ARCH} STREQUAL "x86")
+    SET (GC_CFLAGS_ARCH -m32)
+    SET (GC_LDFLAGS_ARCH -m32)
+ELSEIF (${ARCH} STREQUAL "tizen")
+    SET (GC_CFLAGS_ARCH -march=armv7-a -mthumb -finline-limit=64)
+ENDIF()
+
+IF (${MODE} STREQUAL "debug")
+    SET (GC_CFLAGS_MODE -O0)
+ELSE()
+    SET (GC_CFLAGS_MODE -O2)
+ENDIF()
+
+SET (GC_CFLAGS
+    ${GC_CFLAGS_COMMON}
+    ${GC_CFLAGS_ARCH}
+    ${GC_CFLAGS_MODE}
+)
+
+SET (GC_CONFFLAGS_COMMON --enable-munmap --disable-parallel-mark --enable-large-config --disable-pthread --disable-threads)
+IF (${MODE} STREQUAL "debug")
+    SET (GC_CONFFLAGS_MODE --enable-debug --enable-gc-debug)
+ELSE()
+    SET (GC_CONFFLAGS_MODE --disable-debug --disable-gc-debug)
+ENDIF()
+SET (GC_CONFFLAGS
+    ${GC_CONFFLAGS_COMMON}
+    ${GC_CONFFLAGS_MODE}
+)
+
+SET (GC_SRC
+    ${GCUTIL_ROOT}/bdwgc/allchblk.c
+    ${GCUTIL_ROOT}/bdwgc/alloc.c
+    ${GCUTIL_ROOT}/bdwgc/backgraph.c
+    ${GCUTIL_ROOT}/bdwgc/blacklst.c
+    ${GCUTIL_ROOT}/bdwgc/checksums.c
+    #${GCUTIL_ROOT}/bdwgc/darwin_stop_world.c
+    ${GCUTIL_ROOT}/bdwgc/dbg_mlc.c
+    ${GCUTIL_ROOT}/bdwgc/dyn_load.c
+    ${GCUTIL_ROOT}/bdwgc/finalize.c
+    ${GCUTIL_ROOT}/bdwgc/fnlz_mlc.c
+    #${GCUTIL_ROOT}/bdwgc/gc_cpp.cc
+    ${GCUTIL_ROOT}/bdwgc/gc_dlopen.c
+    ${GCUTIL_ROOT}/bdwgc/gcj_mlc.c
+    ${GCUTIL_ROOT}/bdwgc/headers.c
+    ${GCUTIL_ROOT}/bdwgc/mach_dep.c
+    ${GCUTIL_ROOT}/bdwgc/malloc.c
+    ${GCUTIL_ROOT}/bdwgc/mallocx.c
+    ${GCUTIL_ROOT}/bdwgc/mark.c
+    ${GCUTIL_ROOT}/bdwgc/mark_rts.c
+    ${GCUTIL_ROOT}/bdwgc/misc.c
+    ${GCUTIL_ROOT}/bdwgc/new_hblk.c
+    ${GCUTIL_ROOT}/bdwgc/obj_map.c
+    ${GCUTIL_ROOT}/bdwgc/os_dep.c
+    #${GCUTIL_ROOT}/bdwgc/pthread_start.c
+    #${GCUTIL_ROOT}/bdwgc/pthread_stop_world.c
+    #${GCUTIL_ROOT}/bdwgc/pthread_support.c
+    ${GCUTIL_ROOT}/bdwgc/pcr_interface.c
+    ${GCUTIL_ROOT}/bdwgc/ptr_chck.c
+    ${GCUTIL_ROOT}/bdwgc/real_malloc.c
+    ${GCUTIL_ROOT}/bdwgc/reclaim.c
+    #${GCUTIL_ROOT}/bdwgc/sparc_mach_dep.S
+    ${GCUTIL_ROOT}/bdwgc/specific.c
+    ${GCUTIL_ROOT}/bdwgc/stubborn.c
+    ${GCUTIL_ROOT}/bdwgc/thread_local_alloc.c
+    ${GCUTIL_ROOT}/bdwgc/typd_mlc.c 
+    #${GCUTIL_ROOT}/bdwgc/win32_threads.c 
+    ${GCUTIL_ROOT}/bdwgc/cord/cordbscs.c
+    ${GCUTIL_ROOT}/bdwgc/cord/cordprnt.c
+    ${GCUTIL_ROOT}/bdwgc/cord/cordxtra.c
+)
+
+SET (GC_BUILDDIR ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared) 
+
+ADD_CUSTOM_TARGET (GC_PRECONF
+        WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
+        COMMAND autoreconf -vif
+        COMMAND automake --add-missing
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${GC_BUILDDIR}
+)
+
+ADD_CUSTOM_TARGET (GC_CONF
+        WORKING_DIRECTORY ${GC_BUILDDIR}
+        DEPENDS GC_PRECONF
+        COMMAND ../../../../configure ${GC_CONFFLAGS} CFLAGS="${GC_CFLAGS}" LDFLAGS="${GC_LDFLAGS}"
+)
+
+ADD_LIBRARY (gc SHARED ${GC_SRC})
+TARGET_INCLUDE_DIRECTORIES (gc PUBLIC ${GCUTIL_ROOT}/bdwgc/include/ ${GC_BUILDDIR}/include/)
+TARGET_COMPILE_DEFINITIONS (gc PUBLIC ${GC_DEFINITIONS})
+TARGET_COMPILE_OPTIONS (gc PUBLIC ${GC_CFLAGS})
+ADD_DEPENDENCIES (gc GC_CONF)
+
+
+# ESCARGOT
+SET (ESCARGOT_CXXFLAGS_COMMON "-DESCARGOT -std=c++0x -g3 -fno-math-errno -fdata-sections -ffunction-sections -frounding-math -fsignaling-nans -fno-omit-frame-pointer -fvisibility=hidden -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-type-limits -Wno-unused-result -Wno-unused-variable -Wno-invalid-offsetof -Wno-deprecated-declarations -DESCARGOT_ENABLE_TYPEDARRAY -DESCARGOT_ENABLE_PROMISE -fPIC")
+SET (ESCARGOT_LDFLAGS_COMMON "-fvisibility=hidden -Wl,--gc-sections")
+
+IF (${HOST} STREQUAL "linux")
+    SET (ESCARGOT_CXXFLAGS_HOST "-fno-rtti -DENABLE_ICU -DENABLE_INTL")
+    SET (ESCARGOT_LDFLAGS_HOST "-lpthread -lrt")
+ENDIF()
+
+IF (${ARCH} STREQUAL "x64")
+    SET (ESCARGOT_CXXFLAGS_ARCH "-DESCARGOT_64=1")
+ELSEIF (${ARCH} STREQUAL "x86")
+    SET (ESCARGOT_CXXFLAGS_ARCH "-DESCARGOT_32=1")
+    IF (NOT ${HOST} STREQUAL "tizen_obs")
+        SET (ESCARGOT_CXXFLAGS_ARCH "${ESCARGOT_CXXFLAGS_ARCH} -m32 -mfpmath=sse -msse -msse2")
+        SET (ESCARGOT_LDFLAGS_ARCH "-m32")
+    ENDIF()
+ELSEIF (${ARCH} STREQUAL "arm")
+    SET (ESCARGOT_CXXFLAGS_ARCH "-DESCARGOT_32=1")
+    IF (NOT ${HOST} STREQUAL "tizen_obs")
+        SET (ESCARGOT_CXXFLAGS_ARCH "${ESCARGOT_CXXFLAGS_ARCH} -march=armv7-a -mthumb")
+    ENDIF()
+ENDIF()
+
+IF (${MODE} STREQUAL "debug")
+    SET (ESCARGOT_CXXFLAGS_MODE "-O0 -D_GLIBCXX_DEBUG -Wall -Wextra -Werror -DGC_DEBUG")
+ELSE()
+    SET (ESCARGOT_CXXFLAGS_MODE "-O2 -DNDEBUG -fno-stack-protector")
+ENDIF()
+
+SET (ESCARGOT_CXXFLAGS "${ESCARGOT_CXXFLAGS_COMMON} ${ESCARGOT_CXXFLAGS_HOST} ${ESCARGOT_CXXFLAGS_ARCH} ${ESCARGOT_CXXFLAGS_MODE}")
+SET (ESCARGOT_LDFLAGS  "${ESCARGOT_LDFLAGS_COMMON} ${ESCARGOT_LDFLAGS_HOST} ${ESCARGOT_LDFLAGS_ARCH} ${ESCARGOT_LDFLAGS_MODE}")
+
+FILE (GLOB SRC_API_LIST ${ESCARGOT_ROOT}/src/api/*.cpp)
+FILE (GLOB SRC_HEAP_LIST ${ESCARGOT_ROOT}/src/heap/*.cpp)
+FILE (GLOB SRC_INTERPRETER_LIST ${ESCARGOT_ROOT}/src/interpreter/*.cpp)
+FILE (GLOB SRC_PARSER_LIST ${ESCARGOT_ROOT}/src/parser/*.cpp)
+FILE (GLOB SRC_PARSER_AST_LIST ${ESCARGOT_ROOT}/src/parser/ast/*.cpp)
+FILE (GLOB SRC_PARSER_ESPRIMA_LIST ${ESCARGOT_ROOT}/src/parser/esprima_cpp/*.cpp)
+FILE (GLOB SRC_RUNTIME_LIST ${ESCARGOT_ROOT}/src/runtime/*.cpp)
+FILE (GLOB SRC_UTIL_LIST ${ESCARGOT_ROOT}/src/util/*.cpp)
+
+FILE (GLOB YARR_LIST ${ESCARGOT_THIRD_PARTY_ROOT}/yarr/*.cpp)
+FILE (GLOB DOUBLE_CONVERSION_LIST ${ESCARGOT_THIRD_PARTY_ROOT}/double_conversion/*.cc)
+FILE (GLOB GCUTIL_LIST ${GCUTIL_ROOT}/*.cpp)
+
+SET (ESCARGOT_SRC ${SRC_API_LIST} ${SRC_HEAP_LIST} ${SRC_INTERPRETER_LIST} 
+     ${SRC_PARSER_LIST} ${SRC_PARSER_AST_LIST} ${SRC_PARSER_ESPRIMA_LIST} 
+     ${SRC_RUNTIME_LIST} ${SRC_UTIL_LIST} ${YARR_LIST} 
+     ${DOUBLE_CONVERSION_LIST} ${GCUTIL_LIST})
+
+ADD_LIBRARY (escargot STATIC ${ESCARGOT_SRC})
+TARGET_INCLUDE_DIRECTORIES (escargot PUBLIC ${ESCARGOT_ROOT}/src/ ${GCUTIL_ROOT}/bdwgc/include/ ${GCUTIL_ROOT}/ ${ESCARGOT_THIRD_PARTY_ROOT}/checked_arithmetic/ ${ESCARGOT_THIRD_PARTY_ROOT}/double_conversion/ ${ESCARGOT_THIRD_PARTY_ROOT}/rapidjson/include/ ${ESCARGOT_THIRD_PARTY_ROOT}/yarr/)
+SET_TARGET_PROPERTIES (escargot PROPERTIES 
+                       COMPILE_FLAGS "${ESCARGOT_CXXFLAGS}" 
+                       LINK_FLAGS "${ESCARGOT_LDFLAGS}"
+)

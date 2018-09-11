@@ -37,7 +37,7 @@ SET (LWE_DEFINES_DEFAULT
 
 IF (${ARCH} STREQUAL "x64")
     SET (LWE_DEFINES_ARCH
-        -DSTARFISH_ENABLE_MULTIMEDIA
+        #-DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_ENABLE_INSPECTOR
         -DSTARFISH_ENABLE_DOMPARSER
         -DSTARFISH_ENABLE_TTS
@@ -60,14 +60,33 @@ ELSEIF (${ARCH} STREQUAL "tizen")
     )
 ENDIF()
 
-IF (${CUSTOM} STREQUAL "unified")
+IF (${HOST} STREQUAL "linux")
+    SET (LWE_DEFINES_HOST
+        -DSTARFISH_LINUX
+    )
+ENDIF()
+
+IF (${CUSTOM} STREQUAL "unified_mobile")
     SET (LWE_DEFINES_CUSTOM
         -DSTARFISH_ENABLE_MULTIMEDIA
     )
-ELSEIF (${CUSTOM} STREQUAL "vd")
+ELSEIF (${CUSTOM} STREQUAL "unified_tv")
+    SET (LWE_DEFINES_CUSTOM
+        #-DSTARFISH_ENABLE_MULTIMEDIA
+        -DSTARFISH_TIZEN_TV
+        -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
+        #-DSTARFISH_ENABLE_AVPLAY
+        -DSTARFISH_ENABLE_TRANSPARENT_WINDOW
+        #-DSTARFISH_ENABLE_TTS
+        #-DSTARFISH_ENABLE_BODY_FOCUS_RING
+        #-DSTARFISH_ENABLE_VIRTUAL_CURSOR
+        #-DUSE_PRODUCT_FEATURE
+    )
+ELSEIF (${CUSTOM} STREQUAL "prod_tv")
     SET (LWE_DEFINES_CUSTOM
         -DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_TIZEN_TV
+        -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
         #-DSTARFISH_ENABLE_AVPLAY
         -DSTARFISH_ENABLE_TRANSPARENT_WINDOW
         -DSTARFISH_ENABLE_TTS
@@ -75,20 +94,14 @@ ELSEIF (${CUSTOM} STREQUAL "vd")
         #-DSTARFISH_ENABLE_VIRTUAL_CURSOR
         -DUSE_PRODUCT_FEATURE
     )
-ELSEIF (${CUSTOM} STREQUAL "im")
+ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
     SET (LWE_DEFINES_CUSTOM
-        #-DSTARFISH_TIZEN_WEARABLE
+        #-DSTARFISH_TIZEN_WEABLE
         -DSTARFISH_TIZEN_WEARABLE_WIDGET
-        -DSTARFISH_TIZEN_TRANSPARENT_BACKGROUND
-        -DSTARFISH_ENABLE_MULTIMEDIA
-    )
-ELSEIF (${CUSTOM} STREQUAL "da")
-    # NOTHING
-ELSEIF (${CUSTOM} STREQUAL "headless" AND ${ARCH} STREQUAL "tizen")
-    SET (LWE_DEFINES_CUSTOM
-        -DSTARFISH_TIZEN_HEADLESS
-        -DSTARFISH_ENABLE_SHELL
-        # -DSTARFISH_ENABLE_CANVAS
+        -DSTARFISH_TIZEN_TRANSPARENT_BACCKGROUND
+        -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
+        -DSTARFISH_DISABLE_OVERFLOW_SCROLL
+        #-DSTARFISH_ENABLE_MULTIMEDIA
     )
 ENDIF()
 
@@ -106,18 +119,19 @@ ENDIF()
 IF (${BACKEND} STREQUAL "efl")
     SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL)
 ELSEIF (${BACKEND} STREQUAL "efl_cairo")
-    IF (${TOUCH_UI} STREQUAL "0")
-        SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_CAIRO_HEADLESS)
-    ELSE()
-        SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_CAIRO)
-    ENDIF()
+    SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_CAIRO)
 ELSEIF (${BACKEND} STREQUAL "dali")
     SET (LWE_DEFINES_BACKEND -DSTARFISH_DALI -DGC_THREADS)
+ELSEIF (${BACKEND} STREQUAL "efl_skia")
+    SET (LWE_DEFINES_BACKEND -DSTARFISH_EFL_SKIA)
+ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl")
+    SET (LWE_DEFINES_BACKEND -DSTARFISH_GLFW_CAIRO_GL)
 ENDIF()
 
 SET (LWE_DEFINITIONS
     ${LWE_DEFINES_DEFAULT}
     ${LWE_DEFINES_ARCH}
+    ${LWE_DEFINES_HOST}
     ${LWE_DEFINES_CUSTOM}
     ${LWE_DEFINES_MODE}
     ${LWE_DEFINES_BACKEND}
@@ -127,7 +141,7 @@ SET (LWE_DEFINITIONS
 # CXXFLAGS
 #######################################################
 
-SET (LWE_CXXFLAGS_DEFAULT -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fvisibility=hidden -fno-omit-frame-pointer -fstack-protector -fPIC)
+SET (LWE_CXXFLAGS_DEFAULT -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-maybe-uninitialized -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fvisibility=hidden -fno-omit-frame-pointer -fstack-protector -fPIC)
 
 IF (${COMPILER} STREQUAL "gcc")
     SET (LWE_CXXFLAGS_COMPILER -frounding-math -fsignaling-nans -Wno-unused-but-set-variable -Wno-unused-but-set-parameter)
@@ -135,7 +149,7 @@ ELSEIF (${COMPILER} STREQUAL "clang")
     SET (LWE_CXXFLAGS_COMPILER -fno-fast-math -fno-unsafe-math-optimizations -fdenormal-fp-math=ieee -stdlib=libc++ -Wno-expansion-to-defined -Wno-dynamic-class-memaccess)
 ENDIF()
 
-IF (${ARCH} STREQUAL "tizen" AND ${CUSTOM} STREQUAL "gear")
+IF (${ARCH} STREQUAL "tizen" AND ${CUSTOM} STREQUAL "unified_wearable")
     SET (LWE_CXXFLAGS_MODE -Os)
 ELSEIF (${MODE} STREQUAL "debug" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Debug")
     SET (LWE_CXXFLAGS_MODE -O0)
@@ -143,7 +157,9 @@ ELSEIF (${MODE} STREQUAL "release" OR "${CMAKE_BUILD_TYPE}" STREQUAL "Release")
     SET (LWE_CXXFLAGS_MODE -O2)
 ENDIF()
 
-IF (${HOST} STREQUAL "linux")
+IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
+    SET (LWE_CXXFLAGS_HOST -fno-rtti)
+ELSEIF (${HOST} STREQUAL "linux")
     SET (LWE_CXXFLAGS_HOST -fno-rtti -fvisibility=hidden)
     SET (LWE_LDFLAGS "-Wl,--gc-sections -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib")
 ELSEIF (${ARCH} STREQUAL "tizen")
@@ -169,22 +185,24 @@ ELSEIF (${BACKEND} STREQUAL "efl" AND ${ARCH} STREQUAL "tizen")
 ELSEIF (${BACKEND} STREQUAL "efl_cairo" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ELSEIF (${BACKEND} STREQUAL "efl_cairo" AND ${ARCH} STREQUAL "tizen")
-    pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-imf-evas)
-ELSEIF (${BACKEND} STREQUAL "efl_cairo" AND ${ARCH} STREQUAL "tizen" AND ${CUSTOM} STREQUAL "headless")
+    pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-imf-evas libtbm)
+ELSEIF (${BACKEND} STREQUAL "efl_cairo" AND ${ARCH} STREQUAL "tizen" AND ${CUSTOM} STREQUAL "speaker")
     pkg_check_modules (STARFISH_BACKEND REQUIRED dlog ecore)
 ELSEIF (${BACKEND} STREQUAL "dali" AND ${ARCH} STREQUAL "x64")
     pkg_check_moudles (STARFISH_BACKEDN REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore)
 ELSEIF (${BACKEND} STREQUAL "dali" AND ${ARCH} STREQUAL "tizen")
     pkg_check_moudles (STARFISH_BACKEDN REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore)
+ELSEIF (${BACKEND} STREQUAL "efl_skia" AND ${ARCH} STREQUAL "x64")
+    pkg_check_moudles (STARFISH_BACKEDN REQUIRED libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas)
 ENDIF()
 
 IF (${ARCH} STREQUAL "tizen")
     IF (${CUSTOM} STREQUAL "unified")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-media-player capi-network-connection)
-    ELSEIF (${CUSTOM} STREQUAL "gear")
+    ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-media-player bundle capi-network-connection)
-    ELSEIF (${CUSTOM} STREQUAL "vd")
-        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED vconf vconf-internal-keys-tv vd-win-util capi-network-connection capi-media-player)
+    ELSEIF (${CUSTOM} STREQUAL "unified_tv" OR ${CUSTOM} STREQUAL "prod_tv")
+        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED vconf capi-network-connection capi-media-player)
     ELSEIF (${CUSTOM} STREQUAL "speaker")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-network-connection capi-media-player)
     ENDIF()
@@ -209,6 +227,13 @@ ENDIF()
 
 IF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "dali")
     SET (STARFISH_LIBRARIES_BACKEND jpeg gif)
+ELSEIF (${BACKEND} STREQUAL "efl_skia")
+    SET (STARFISH_LIBRARIES_BACKEND jpeg gif)
+    IF (${ARCH} STREQUAL "x64")
+        SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} turbojpeg gif skia)
+    ENDIF()
+ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl")
+    SET (STARFISH_LIBRARIES_BACKEND jpeg gif GL GLESv2 glfw)
 ENDIF()
 
 IF (${ARCH} STREQUAL "tizen")
@@ -244,14 +269,6 @@ SET (STARFISH_INCLUDE_DIRS_DEFAULT
    ${THIRD_PARTY_LIBS_INCLUDE_DIRS}
 )
 
-IF (${CUSTOM} STREQUAL "vd")
-    SET (STARFISH_INCLUDE_DIRS_CUSTOM ${STARFISH_ROOT}/src/platform/lwe_vd)
-ELSEIF (${CUSTOM} STREQUAL "im")
-    SET (STARFISH_INCLUDE_DIRS_CUSTOM ${STARFISH_ROOT}/src/platform/lwe_im)
-ELSEIF (${CUSTOM} STREQUAL "da")
-    SET (STARFISH_INCLUDE_DIRS_CUSTOM ${STARFISH_ROOT}/src/platform/lwe_da)
-ENDIF()
-
 IF (${BACKEND} STREQUAL "dali")
     SET (STARFISH_DALI_ADDTIONAL_INCLUDE_DIRS /usr/include/dali ${THIRD_PARTY_ROOT}/libtuv/include ${THIRD_PARTY_ROOT}/libtuv/src)
     IF (${ARCH} STREQUAL "x64")
@@ -259,10 +276,20 @@ IF (${BACKEND} STREQUAL "dali")
     ELSEIF (${ARCH} STREQUAL "tizen")
         SET (STARFISH_DALI_ADDTIONAL_LIBRARIES -Llib/tizen tuv dali-core dali-adaptor dali-toolkit)
     ENDIF()
+ELSEIF (${BACKEND} STREQUAL "efl_skia" AND ${ARCH} STREQUAL "x64")
+    SET (STARFISH_SKIA_ADDTIONAL_INCLUDE_DIRS
+        ${THIRD_PARTY_ROOT}/android/skia/include
+        ${THIRD_PARTY_ROOT}/android/skia/include/effects
+        ${THIRD_PARTY_ROOT}/android/skia/include/config
+        ${THIRD_PARTY_ROOT}/android/skia/include/core
+        ${THIRD_PARTY_ROOT}/android/skia/include/image
+        ${THIRD_PARTY_ROOT}/android/skia/include/gpu
+        ${THIRD_PARTY_ROOT}/android/skia/include/ports
+    )
 ENDIF()
 
 IF (${ARCH} STREQUAL "tizen" OR ${TOUCH_UI} STREQUAL "1")
-    SET (STARFISH_INCLUDE_ADDITIONAL /usr/include/location)
+    SET (STARFISH_TIZEN_ADDTIONAL_INCLUDE_DIRS /usr/include/location)
 ENDIF()
 
 IF (${ARCH} STREQUAL "tizen")
@@ -273,3 +300,9 @@ IF (${ARCH} STREQUAL "tizen")
         /usr/include/media
     )
 ENDIF()
+
+SET (STARFISH_INCLUDE_ADDTIONAL_DIRS
+    ${STARFISH_DALI_ADDTIONAL_INCLUDE_DIRS}
+    ${STARFISH_SKIA_ADDTIONAL_INCLUDE_DIRS}
+    ${STARFISH_TIZEN_ADDTIONAL_INCLUDE_DIRS}
+)
