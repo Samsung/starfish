@@ -160,10 +160,10 @@ void HTMLIFrameElement::loadSrc()
     String* s = src();
     if (s->length()) {
         navigate(new ResourceURL(s, document()->baseURL()->baseURI()),
-                 HistoryManager::Action::Intact, document()->documentURI());
+                 HistoryManagerAction::Intact, document()->documentURI());
     } else {
         navigate(new ResourceURL(String::createASCIIString("about:blank")),
-                 HistoryManager::Action::Intact, document()->documentURI());
+                 HistoryManagerAction::Intact, document()->documentURI());
     }
 }
 
@@ -203,7 +203,7 @@ void HTMLIFrameElement::setReferrerPolicy(String* policy)
     }
 }
 
-void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManager::Action type,
+void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
                                  ResourceURL* referrerURL)
 {
     if (ResourceURL::isValidURL(url->urlString())) {

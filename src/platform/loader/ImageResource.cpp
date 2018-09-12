@@ -144,8 +144,7 @@ void ImageResource::didLoadFinished()
             m_mockFrameForSVGDocument->navigate(
                 new ResourceURL(
                     String::fromUTF8(dataURI.data(), dataURI.length())),
-                HistoryManager::Action::Add,
-                loader()->document()->documentURI());
+                HistoryManagerAction::Add, loader()->document()->documentURI());
             m_imageData = nullptr;
             return;
         }

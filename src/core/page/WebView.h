@@ -154,7 +154,7 @@ public:
     }
 
     void loadHTMLDocument(String* filePath); // navigate function helper
-    void navigate(ResourceURL* url, HistoryManager::Action type,
+    void navigate(ResourceURL* url, HistoryManagerAction type,
                   ResourceURL* referrerURL);
 
     ScriptEngineInstance* scriptEngineInstance()

@@ -29,6 +29,7 @@
 namespace StarFish {
 
 class BrowsingContext;
+enum class HistoryManagerAction;
 
 struct MessageLoopContext : public gc {
 public:
@@ -67,7 +68,7 @@ public:
 
     void destroy();
     void invokeNavigate(WebView* wv, ResourceURL* url, ResourceURL* referrerURL,
-                        bool force = false);
+                        HistoryManagerAction action, bool force = false);
 
 protected:
     bool m_inClosingState;

@@ -21,7 +21,7 @@
 #define __StarFishBrowsingContext__
 
 #include "binding/StarFishHoldable.h"
-#include "browser/history/HistoryManager.h"
+#include "binding/WebViewHoldable.h"
 
 namespace StarFish {
 
@@ -43,11 +43,14 @@ class MouseData;
 class TouchData;
 class PlatformKeyEventData;
 class Canvas;
+class EventTarget;
+class HistoryManager;
 
 enum class TouchEventKind;
 enum class KeyEventKind;
 enum class MouseEventKind;
 enum class CompositionEventKind;
+enum class HistoryManagerAction;
 
 class BrowsingContext : public gc, public WebViewHoldable {
     friend class PlatformWindow;
@@ -256,7 +259,7 @@ private:
     // Don't call function directly
     // you can use this function from WebView::navigate or
     // HTMLIFrameElement::navigate
-    void open(ResourceURL* url, HistoryManager::Action type,
+    void open(ResourceURL* url, HistoryManagerAction type,
               ResourceURL* referrerURL);
 
     void didFocusEvent();

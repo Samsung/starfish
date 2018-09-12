@@ -80,7 +80,7 @@ public:
         return m_browsingContext;
     }
 
-    void navigate(ResourceURL* url, HistoryManager::Action type,
+    void navigate(ResourceURL* url, HistoryManagerAction type,
                   ResourceURL* referrerURL);
 
     String* nameAttr();

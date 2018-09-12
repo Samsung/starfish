@@ -164,14 +164,13 @@ void Location::assign(String* url, ResourceURL* referrerURL)
 }
 
 static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
-                         ResourceURL* referrerURL)
+                         ResourceURL* referrerURL, HistoryManagerAction action)
 {
     if (ctx->isTopLevelBrowsingContext()) {
         ctx->webView()->messageLoop()->invokeNavigate(ctx->webView(), url,
-                                                      referrerURL);
+                                                      referrerURL, action);
     } else {
-        ctx->sourceElement()->navigate(url, HistoryManager::Action::Add,
-                                       referrerURL);
+        ctx->sourceElement()->navigate(url, action, referrerURL);
     }
 }
 
@@ -270,7 +269,7 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
                     if (force ||
                         !this->url()->urlString()->equals(url->urlString())) {
                         navigateImpl(document()->browsingContext(), url,
-                                     referrerURL);
+                                     referrerURL, HistoryManagerAction::Add);
                     }
                 }
             }
@@ -324,50 +323,9 @@ void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
 
 void Location::replace(String* url)
 {
-    struct Params {
-        String* url;
-        BrowsingContext* browsingContext;
-    };
-
     if (ResourceURL::isValidURL(url)) {
-        if (document()->browsingContext()->isTopLevelBrowsingContext()) {
-            Params* p = new (NoGC) Params();
-            p->url = url;
-            p->browsingContext = document()->browsingContext();
-            document()->browsingContext()->webView()->messageLoop()->addIdler(
-                nullptr,
-                [](size_t, void* data) {
-                    Params* p = (Params*)data;
-                    BrowsingContext* context =
-                        (BrowsingContext*)p->browsingContext;
-                    context->webView()->navigate(
-                        new ResourceURL(p->url),
-                        HistoryManager::Action::Replace,
-                        context->webView()
-                            ->mainBrowsingContext()
-                            ->document()
-                            ->documentURI());
-                    GC_FREE(p);
-                },
-                p);
-        } else {
-            Params* p = new (NoGC) Params();
-            p->url = url;
-            p->browsingContext = document()->browsingContext();
-            document()->browsingContext()->webView()->messageLoop()->addIdler(
-                nullptr,
-                [](size_t, void* data) {
-                    Params* p = (Params*)data;
-                    BrowsingContext* context =
-                        (BrowsingContext*)p->browsingContext;
-                    context->sourceElement()->navigate(
-                        new ResourceURL(p->url),
-                        HistoryManager::Action::Replace,
-                        context->document()->documentURI());
-                    GC_FREE(p);
-                },
-                p);
-        }
+        navigateImpl(document()->browsingContext(), new ResourceURL(url),
+                     document()->documentURI(), HistoryManagerAction::Replace);
     }
 }
 

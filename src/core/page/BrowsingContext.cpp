@@ -119,7 +119,7 @@ void BrowsingContext::initFlags()
     m_pendingStyleSheetCount = 0;
 }
 
-void BrowsingContext::open(ResourceURL* url, HistoryManager::Action type,
+void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
                            ResourceURL* referrerURL)
 {
     initFlags();
@@ -151,13 +151,13 @@ void BrowsingContext::open(ResourceURL* url, HistoryManager::Action type,
     // url->urlString()->toUTF8String().data());
 
     switch (type) {
-    case HistoryManager::Action::Add:
+    case HistoryManagerAction::Add:
         historyManager()->push(document(), url);
         break;
-    case HistoryManager::Action::Replace:
+    case HistoryManagerAction::Replace:
         historyManager()->replace(document(), url);
         break;
-    case HistoryManager::Action::Intact:
+    case HistoryManagerAction::Intact:
     default:
         break;
     }
