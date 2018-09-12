@@ -70,6 +70,7 @@ struct InvokeNavigateData {
     ResourceURL* url;
     ResourceURL* referrerURL;
     UINT_PTR timerID;
+    HistoryManagerAction action;
 };
 
 __declspec(thread) InvokeNavigateData* g_invokeNavigateData;
@@ -131,7 +132,7 @@ public:
             STARFISH_ASSERT(message.message == IDLE_MESSAGE_INVOKE_NAVIGATE);
             if ((size_t)g_invokeNavigateData == (size_t)message.wParam) {
                 g_invokeNavigateData->wv->navigate(
-                    g_invokeNavigateData->url, HistoryManager::Action::Add,
+                    g_invokeNavigateData->url, g_invokeNavigateData->action,
                     g_invokeNavigateData->referrerURL);
                 g_invokeNavigateData = nullptr;
             }
@@ -305,7 +306,8 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
 }
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ResourceURL* referrerURL, bool force)
+                                 ResourceURL* referrerURL,
+                                 HistoryManagerAction action, bool force)
 {
     InvokeNavigateData* data =
         new (GC_MALLOC_UNCOLLECTABLE(sizeof(InvokeNavigateData)))
@@ -314,6 +316,7 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
     data->wv = wv;
     data->url = url;
     data->referrerURL = referrerURL;
+    data->action = action;
     PostMessage(NULL, IDLE_MESSAGE_INVOKE_NAVIGATE, (size_t)data, 0);
 }
 } // namespace StarFish

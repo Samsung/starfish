@@ -286,6 +286,7 @@ struct InvokeNavigateData : public gc {
     ResourceURL* url;
     ResourceURL* referrerURL;
     uv_idle_t* idler;
+    HistoryManagerAction action;
     void** extra;
 
     static void* operator new(size_t s)
@@ -362,7 +363,8 @@ void MessageLoop::destroy()
 }
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ResourceURL* referrerURL, bool force)
+                                 ResourceURL* referrerURL,
+                                 HistoryManagerAction action, bool force)
 {
     if (m_navigateInvokeIdler != nullptr) {
         auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
@@ -377,13 +379,13 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
     data->wv = wv;
     data->url = url;
     data->referrerURL = referrerURL;
+    data->action = action;
     data->idler = (uv_idle_t*)malloc(sizeof(uv_idle_t));
     uv_idle_init(uv_default_loop(), data->idler);
     data->idler->data = data;
     uv_idle_start(data->idler, [](uv_idle_t* handle) {
         InvokeNavigateData* data = (InvokeNavigateData*)handle->data;
-        data->wv->navigate(data->url, HistoryManager::Action::Add,
-                           data->referrerURL);
+        data->wv->navigate(data->url, data->action, data->referrerURL);
         *(data->extra) = nullptr;
         uv_idle_stop(handle);
         delete data;

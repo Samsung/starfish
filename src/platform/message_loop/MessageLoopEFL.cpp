@@ -62,6 +62,7 @@ struct InvokeNavigateData : public gc {
     ResourceURL* url;
     ResourceURL* referrerURL;
     Ecore_Animator* idler;
+    HistoryManagerAction action;
     void** extra;
 
     static void* operator new(size_t s)
@@ -384,7 +385,8 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
 }
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ResourceURL* referrerURL, bool force)
+                                 ResourceURL* referrerURL,
+                                 HistoryManagerAction action, bool force)
 {
     if (m_navigateInvokeIdler != nullptr) {
         auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
@@ -399,11 +401,11 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
     data->wv = wv;
     data->url = url;
     data->referrerURL = referrerURL;
+    data->action = action;
     data->idler = ecore_animator_add(
         [](void* d) -> Eina_Bool {
             InvokeNavigateData* data = (InvokeNavigateData*)d;
-            data->wv->navigate(data->url, HistoryManager::Action::Add,
-                               data->referrerURL);
+            data->wv->navigate(data->url, data->action, data->referrerURL);
             *(data->extra) = nullptr;
             delete data;
             return ECORE_CALLBACK_CANCEL;

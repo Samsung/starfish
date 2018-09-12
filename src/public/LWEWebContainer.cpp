@@ -618,8 +618,9 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
                     // continue loading
                     TO_WEBVIEW(m_impl)
                         ->messageLoop()
-                        ->invokeNavigate(TO_WEBVIEW(m_impl), p->url,
-                                         p->referrerUrl, true);
+                        ->invokeNavigate(
+                            TO_WEBVIEW(m_impl), p->url, p->referrerUrl,
+                            StarFish::HistoryManagerAction::Add, true);
                 }
                 delete p;
             });

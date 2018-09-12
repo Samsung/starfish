@@ -164,18 +164,10 @@ static void rtDoTest(Document* document)
 
         rtScreenShot(wv);
         g_referenceTestState = 2;
-
-        wv->messageLoop()->addIdler(
-            nullptr,
-            [](size_t, void* data0, void* data1) {
-                Document* document = (Document*)data0;
-                g_fireOnloadEvent = false;
-                ResourceURL* url = new ResourceURL(
-                    (String*)data1, document->baseURL()->baseURI());
-                document->webView()->navigate(url, HistoryManager::Action::Add,
-                                              nullptr);
-            },
-            document, url.getValue());
+        ResourceURL* resourceURL =
+            new ResourceURL(url.getValue(), document->baseURL()->baseURI());
+        wv->messageLoop()->invokeNavigate(wv, resourceURL, nullptr,
+                                          HistoryManagerAction::Add);
     } else if (g_referenceTestState == 2) {
         // Case2: Running Reference
         rtShouldLoaded(document, "REF_LOAD_FAIL");
@@ -376,10 +368,10 @@ void WebView::loadHTMLDocument(String* filePath) // navigate function helper
 {
     String* resolvedPath = resolvePath(filePath);
     ResourceURL* url = new ResourceURL(resolvedPath);
-    navigate(url, HistoryManager::Action::Add, nullptr);
+    navigate(url, HistoryManagerAction::Add, nullptr);
 }
 
-void WebView::navigate(ResourceURL* url, HistoryManager::Action type,
+void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
                        ResourceURL* referrerURL)
 {
     clearBlobURLStore();

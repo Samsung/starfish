@@ -30,12 +30,13 @@ class WebView;
 class HTMLIFrameElement;
 class HTMLFormElement;
 
+enum class HistoryManagerAction { Add, Replace, Intact };
+
 class HistoryManager : public gc {
     friend class HTMLFormElement;
 
 public:
     const uint32_t MAX_ENTRY_SIZE = 256;
-    enum Action { Add, Replace, Intact };
     class HistoryEntry : public gc {
     public:
         HistoryEntry(SerializedTypedData* state, String* title,

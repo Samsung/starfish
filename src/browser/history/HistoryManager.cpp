@@ -26,6 +26,7 @@
 #include "platform/loader/ResourceURL.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Serializer.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
 namespace StarFish {
 
@@ -121,13 +122,14 @@ bool HistoryManager::go(int delta)
     if (checkHistoryEntry(delta, true)) {
         switch (m_owner) {
         case OwnerIsWebView:
-            m_webView->navigate(
-                currentEntry()->url(), Intact,
-                m_webView->mainBrowsingContext()->document()->documentURI());
+            m_webView->messageLoop()->invokeNavigate(
+                m_webView, currentEntry()->url(),
+                m_webView->mainBrowsingContext()->document()->documentURI(),
+                HistoryManagerAction::Intact);
             break;
         case OwnerIsHTMLIFrame:
             m_iframe->navigate(
-                currentEntry()->url(), Intact,
+                currentEntry()->url(), HistoryManagerAction::Intact,
                 m_iframe->browsingContext()->document()->documentURI());
             break;
         }
