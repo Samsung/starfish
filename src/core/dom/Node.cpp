@@ -432,6 +432,7 @@ void Node::setTextContent(Nullable<String*> val)
         break;
     case TEXT_NODE:
     case COMMENT_NODE:
+    case PROCESSING_INSTRUCTION_NODE:
         asCharacterData()->setData(str);
         break;
     default:
