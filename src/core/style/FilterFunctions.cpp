@@ -106,8 +106,8 @@ void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
 {
     float sigma = m_stdDeviation.numberData() * 2;
 
-    int extraHeight = 3 * (m_stdDeviation.numberData());
-    int numberOfThreadsToRequest =
+    size_t extraHeight = 3 * (m_stdDeviation.numberData());
+    size_t numberOfThreadsToRequest =
         (width * height) / (100 * 100 + extraHeight * width);
     struct Params {
         float sigma;
@@ -129,20 +129,20 @@ void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
         new ParallelJobExecutor<Params>(webView, blurFitlerWorker,
                                         numberOfThreadsToRequest);
 
-    int num = parallelJobExecutor->numberOfThread();
+    size_t num = parallelJobExecutor->numberOfThread();
 
     if (num > 1) {
-        const int blockHeight = height / num;
-        const int jobsWithExtra = width % num;
+        const size_t blockHeight = height / num;
+        const size_t jobsWithExtra = width % num;
         int currentY = 0;
 
-        for (int i = 0; i < num; ++i) {
+        for (size_t i = 0; i < num; ++i) {
             auto& params = parallelJobExecutor->parameters(i);
 
-            int startY = !i ? 0 : currentY - extraHeight;
+            size_t startY = !i ? 0 : currentY - extraHeight;
             currentY += i < jobsWithExtra ? blockHeight + 1 : blockHeight;
-            int endY = i == num - 1 ? currentY : currentY + extraHeight;
-            int blockSize = (endY - startY) * stride;
+            size_t endY = i == num - 1 ? currentY : currentY + extraHeight;
+            size_t blockSize = (endY - startY) * stride;
 
             params.sigma = sigma;
             params.width = width;
@@ -160,12 +160,12 @@ void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
         parallelJobExecutor->execute();
 
         currentY = 0;
-        for (int i = 1; i < num; ++i) {
+        for (size_t i = 1; i < num; ++i) {
             auto& params = parallelJobExecutor->parameters(i);
-            int sourceOffset;
-            int destinationOffset;
-            int size;
-            int adjustedBlockHeight =
+            size_t sourceOffset;
+            size_t destinationOffset;
+            size_t size;
+            size_t adjustedBlockHeight =
                 i < jobsWithExtra ? blockHeight + 1 : blockHeight;
 
             currentY += adjustedBlockHeight;

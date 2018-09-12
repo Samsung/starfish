@@ -64,7 +64,7 @@ public:
         return m_paramVector[index];
     }
 
-    int numberOfThread()
+    size_t numberOfThread()
     {
         return m_threadVector.size();
     }
