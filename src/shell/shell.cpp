@@ -15,7 +15,7 @@
  *  License along with this library; if not, write to the Free Software
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
-*/
+ */
 #include "StarFishConfig.h"
 #include "LWEWebView.h"
 
@@ -100,6 +100,7 @@ int func_b()
 
 #endif
 
+#if defined(STARFISH_ENABLE_TEST)
 struct smaps_sizes {
     int KernelPageSize;
     int MMUPageSize;
@@ -158,6 +159,7 @@ smaps_sizes getSmapsStats()
     fclose(file);
     return sizes;
 }
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -490,12 +492,14 @@ int main(int argc, char* argv[])
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
 
+#if defined(STARFISH_ENABLE_TEST)
     auto stat = getSmapsStats();
     STARFISH_LOG_INFO(
         "PSS[%.1f MB] "
         "RSS[%.1f MB] "
         "Private_Dirty[%.1fMB]\n",
         stat.Pss / 1024.f, stat.Rss / 1024.f, stat.Private_Dirty / 1024.f);
+#endif
 
     return 0;
 }

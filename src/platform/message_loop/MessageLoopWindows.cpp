@@ -50,8 +50,8 @@ struct IdlerData {
     UINT_PTR m_timerID;
 };
 
-MessageLoop::MessageLoop(StarFish* sf)
-    : StarFishHoldable(sf)
+MessageLoop::MessageLoop(WebView* wv)
+    : WebViewHoldable(wv)
     , m_idlersFromOtherThreadMutex(new Mutex())
     , m_navigateInvokeIdler(nullptr)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
@@ -153,32 +153,22 @@ void processMessage(MessageLoop* self, const MSG& message)
     MessageLoopImpl::processMessage(self, message);
 }
 
-void MessageLoop::close()
+void MessageLoop::destroy()
 {
     m_inClosingState = true;
     g_invokeNavigateData = nullptr;
 
     if (m_idlers.size() != 0 || m_idlersFromOtherThread.size() != 0) {
-        run();
-    }
-}
-
-void MessageLoop::run()
-{
-    MSG message;
-    BOOL ret;
-    while ((ret = GetMessage(&message, NULL, 0, 0)) != 0) {
-        if (ret == -1) {
-            // handle the error and possibly exit
-        } else {
-            processMessage(this, message);
+        MSG message;
+        BOOL ret;
+        while ((ret = GetMessage(&message, NULL, 0, 0)) != 0) {
+            if (ret == -1) {
+                // handle the error and possibly exit
+            } else {
+                processMessage(this, message);
+            }
         }
     }
-}
-
-void MessageLoop::stop()
-{
-    PostMessage(NULL, WM_QUIT, 0, 0);
 }
 
 size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),

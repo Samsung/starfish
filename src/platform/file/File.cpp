@@ -113,11 +113,10 @@ Nullable<std::string> FileUtil::absolutePath(const std::string& filePath)
 
 #if defined(OS_WINDOWS)
     wchar_t result[MAX_PATH];
-    auto wideString = toWideString(filePath);
-    auto result =
-        GetFullPathNameW(wideString.data(), sizeof(result), result, NULL);
+    std::wstring wideString = toWideString(filePath);
+    DWORD dresult = GetFullPathNameW(wideString.data(), MAX_PATH, result, NULL);
     // TODO convert into longPathString
-    if (result) {
+    if (dresult) {
         return Nullable<std::string>(toNarrowString(result));
     } else {
         return Nullable<std::string>();

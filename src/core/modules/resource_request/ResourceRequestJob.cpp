@@ -64,6 +64,7 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     // this area doesn't require lock.
     // reading file does not require thread
     String* path = m_orgProxy->m_url->getUrlPathString();
+    path = decodeURL(path);
 #if defined(OS_WINDOWS)
     String* filePath = path->substring(8, path->length() - 8);
 #else
@@ -411,4 +412,4 @@ String* decodeURL(String* src, size_t idx)
         return String::createASCIIStringFromUTF32Source(ret);
     }
 }
-}
+} // namespace StarFish
