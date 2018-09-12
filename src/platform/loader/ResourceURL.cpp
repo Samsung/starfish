@@ -1041,7 +1041,7 @@ ReferrerURL::ReferrerURL(String* referrer, String* policy)
     : ReferrerURL(referrer)
 {
     if (url()) {
-        m_policy = policyFromString(policy);
+        m_policy = ReferrerURL::policyFromString(policy);
     }
 }
 
@@ -1055,7 +1055,7 @@ ReferrerURL::ReferrerURL(ResourceURL* referrer, String* policy)
     : ReferrerURL(referrer)
 {
     if (url()) {
-        m_policy = policyFromString(policy);
+        m_policy = ReferrerURL::policyFromString(policy);
     }
 }
 
@@ -1079,6 +1079,7 @@ String* ReferrerURL::referrerString(ResourceURL* url)
     switch (m_policy) {
     case NoReferrer:
         return String::emptyString;
+    case Empty:
     case NoReferrerWhenDowngrade:
         if (protocolKind() == HTTPS_PROTOCOL &&
             url->protocolKind() == HTTP_PROTOCOL) {
@@ -1147,8 +1148,9 @@ ReferrerURL::ReferrerPolicy ReferrerURL::policyFromString(String* policy)
 {
     if (policy->equalsIgnoreCase("no-referrer")) {
         return NoReferrer;
-    } else if (policy->isEmpty() ||
-               policy->equalsIgnoreCase("no-referrer-when-downgrade")) {
+    } else if (policy->isEmpty()) {
+        return Empty;
+    } else if (policy->equalsIgnoreCase("no-referrer-when-downgrade")) {
         return NoReferrerWhenDowngrade;
     } else if (policy->equalsIgnoreCase("origin")) {
         return Origin;

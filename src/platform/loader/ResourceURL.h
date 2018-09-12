@@ -269,7 +269,8 @@ public:
         SameOrigin,
         StrictOrigin,
         StrictOriginWhenCrossOrigin,
-        UnsafeUrl
+        UnsafeUrl,
+        Empty, // default
     };
 
     ReferrerURL(String* url);
@@ -288,11 +289,10 @@ public:
     String* referrerString(ResourceURL* url);
     ReferrerPolicy policy();
     static bool isValidPolicy(String* policy);
+    static ReferrerPolicy policyFromString(String* policy);
 
 private:
     ReferrerPolicy m_policy;
-
-    ReferrerPolicy policyFromString(String* policy);
 };
 }
 
