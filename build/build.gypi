@@ -85,6 +85,13 @@
             'STARFISH_DISABLE_OVERFLOW_SCROLL',
             #'STARFISH_ENABLE_MULTIMEDIA',
         ],
+        'defines_prod_wearable': [
+            'STARFISH_TIZEN_WEARABLE_WIDGET',
+            'STARFISH_TIZEN_TRANSPARENT_BACKGROUND',
+            'STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED',
+            'STARFISH_DISABLE_OVERFLOW_SCROLL',
+            #'STARFISH_ENABLE_MULTIMEDIA',
+        ],
         'defines_debug': [
             'GC_DEBUG', # bdwgc
             '_GLIBCXX_DEBUG',
@@ -143,7 +150,7 @@
         'variables': {
             'variables': {
                 'component%': 'static_library',
-                'backend%': 'gl',
+                'backend%': 'efl_cairo_gl',
                 'platform%': 'linux',
                 'profile%': 'none',
                 'touchUi%': '1',
@@ -217,7 +224,27 @@
                         '-lcapi-location-manager',
                     ],
                 }],
-                ['backend=="gl"', {
+                ['backend=="efl_cairo"', {
+                    'cflags_extra': [
+                    ],
+                    'include_dirs_extra': [
+                    ],
+                    'libraries_extra': [
+                        '-ljpeg',
+                        '-lgif',
+                    ],
+                }],
+                ['backend=="efl_cairo_gl"', {
+                    'cflags_extra': [
+                    ],
+                    'include_dirs_extra': [
+                    ],
+                    'libraries_extra': [
+                        '-ljpeg',
+                        '-lgif',
+                    ],
+                }],
+                ['backend=="glfw_cairo_gl"', {
                     'cflags_extra': [
                     ],
                     'include_dirs_extra': [
@@ -284,19 +311,7 @@
         'deps_debug_extra%': [],
         'deps_release_extra%': [],
         'conditions': [
-            ['platform=="linux" and backend=="efl"', {
-                'defines_extra': [
-                    'STARFISH_EFL',
-                ],
-                'cflags_extra': [
-                    '<@(cflags_extra)',
-                ],
-                'deps_extra': [
-                    './build.dep.gyp:efl.x64',
-                    './build.dep.gyp:skia_matrix',
-                ],
-            }],
-            ['platform=="tizen" and backend=="glfw_cairo_gb"', {
+            ['platform=="tizen" and backend=="efl_cairo"', {
                 'defines_extra': [
                 ],
                 'cflags_extra': [
@@ -305,8 +320,6 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
-                    '-ljpeg',
-                    '-lgif',
                     '-Wl,-soname,liblightweight-web-engine.so.1',
                 ],
                 'deps_extra': [
@@ -314,7 +327,7 @@
                     './build.dep.gyp:skia_matrix',
                 ],
             }],
-            ['platform=="linux" and backend=="gl"', {
+            ['platform=="linux" and backend=="efl_cairo_gl"', {
                 'defines_extra': [
                     'STARFISH_EFL_CAIRO',
                 ],
@@ -326,6 +339,23 @@
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.x64',
+                    './build.dep.gyp:skia_matrix',
+                ],
+            }],
+            ['platform=="tizen" and backend=="efl_cairo_gl"', {
+                'defines_extra': [
+                    'STARFISH_EFL_CAIRO',
+                ],
+                'cflags_extra': [
+                    '<@(cflags_extra)',
+                    '-Wno-format-nonliteral',
+                ],
+                'libraries_extra': [
+                    '<@(libraries_extra)',
+                    '-Wl,-soname,liblightweight-web-engine.so.1',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:efl_cairo.tizen',
                     './build.dep.gyp:skia_matrix',
                 ],
             }],
@@ -358,31 +388,12 @@
                 ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
-                    '-ljpeg',
-                    '-lgif',
                     '-lGL',
                     '-lGLESv2',
                     '-lglfw',
                 ],
                 'deps_extra': [
                     './build.dep.gyp:efl_cairo.x64',
-                    './build.dep.gyp:skia_matrix',
-                ],
-            }],
-            ['platform=="tizen" and backend=="gl"', {
-                'defines_extra': [
-                    'STARFISH_EFL_CAIRO',
-                ],
-                'cflags_extra': [
-                    '<@(cflags_extra)',
-                    '-Wno-format-nonliteral',
-                ],
-                'libraries_extra': [
-                    '<@(libraries_extra)',
-                    '-Wl,-soname,liblightweight-web-engine.so.1',
-                ],
-                'deps_extra': [
-                    './build.dep.gyp:efl_cairo.tizen',
                     './build.dep.gyp:skia_matrix',
                 ],
             }],

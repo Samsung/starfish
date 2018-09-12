@@ -273,5 +273,23 @@
                 '<@(defines_unified_wearable)',
             ],
         },
+        {
+            # This rule should only be called by lwe_im
+            'target_name': 'lwe.tizen.prod_wearable.release',
+            'type': 'static_library',
+            'product_name': 'lightweight-web-engine.prod_wearable',
+            'dependencies': [
+                './build.dep.gyp:tizen-dlog',
+                './build.dep.gyp:tizen-bundle',
+                './build.dep.gyp:escargot.tizen.release',
+                './build.dep.gyp:gc.tizen.release',
+                './build.dep.gyp:capi-network-connection',
+                '<@(deps_release_extra)',
+            ],
+            'defines': [
+                '<@(defines_tizen)',
+                '<@(defines_prod_wearable)',
+            ],
+        },
     ],
 }

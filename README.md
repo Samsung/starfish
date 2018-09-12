@@ -1,8 +1,16 @@
 # StarFish
 ## Abstract
-Starfish is a lightweight Web browser engine for mobile and wearable devices.
+Starfish is a lightweight Web browser engine for TV, mobile and wearable devices.
 
-## How to Compile
+## Supported Platforms
+The following platforms are supported.
+
+* Ubuntu 18.04, 16.04, 14.04
+* Tizen
+* Windows
+* Android
+
+## How to Compile: Ubuntu
 
 ### Install required packages
 
@@ -32,7 +40,7 @@ git submodule update
 
 ```sh
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
-ninja -C out/debug starfish.x64.debug
+ninja -C out/release starfish.x64.release
 ```
 
 #### Build options
@@ -44,10 +52,10 @@ Default values are in **bold**.
   Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
 * -Ddeplib=[ **shared_library** | static_library ]<br>
   Generate third-party libraries as shared libraries or obj files
-* -Dbackend=[ dali | **gl** ]<br>
-  Use either dali, or gl as the backend graphics library
+* -Dbackend=[ efl_cairo | **efl_cairo_gl**  | efl_skia | dali ]<br>
+  Use either cairo, cairo_gl, skia, or dali as the backend graphics library
 * -Dplatform=[ **linux** | tizen ]<br>
-  Compile Starfish for either linux or tizen platform
+  Compile Starfish for either Linux or Tizen platform
 * -DtouchUi=[ 0 | **1** ]<br>
   Enable a touch UI.
 
@@ -61,23 +69,30 @@ where target is either:
 
 * ``starfish.x64.release``
 * ``starfish.x64.debug``
-* ``lwe.tizen.unified_tv.release``
-* ``lwe.tizen.unified_wearable.release``
 
+### Directory Structure
+Starfish is compiled to ``out/release`` (or ``out/debug``) directory.
+The structure is as follows.
 
-Debug build is available for x86\_64.
-
-```sh
-ninja -C out/debug starfish.x64.debug
+```
+out
+  + release
+    + Starfish.x64.release // Starfish binary
+    + lib                  // contains shared libraries that Starfish needs
 ```
 
+### How to run
+```sh
+./out/release/Starfish.x64.release 'html/file/path'
+```
+
+## How to Compile: Tizen
 ### GBS Build
 
 Get ``gbs-conf``
 ```sh
 git clone https://github.sec.samsung.net/RS7-TizenPM/gbs-conf
 vi gbs-conf/gbs.conf
-# Uncomment the profile to use in [general] section, and
 # fill out 'user' and 'passwd'
 ```
 
@@ -90,26 +105,8 @@ gbs -c ../gbs-conf/gbs.conf build -A armv7l -P profile.50std  --incremental --in
 The following build options are supported when building RPMs.
 Default values are in **bold**.
 
-* --define 'build_profile [ tv | wearable | **all** ]'<br>
-  Genereate RPMs for either tv, and wearable platform
-
-### Directory Structure
-Starfish is compiled to ``out/debug`` (or ``out/release``) directory.
-The structure is as follows.
-
-```
-out
-  + debug
-    + Starfish.x64.debug // Starfish binary
-    + lib                // contains shared libraries that Starfish needs
-```
-
-## How to run
-```sh
-./out/debug/Starfish.x64.debug html_file_path
-```
-
-~~Use `./run.sh [html_file_path]` to run StarFish~~
+* --define 'build_profile [ tv | mobile | wearable | **all** ]'<br>
+  Genereate RPMs for TV, mobile, and wearable platforms.
 
 
 ## Testing

@@ -245,9 +245,9 @@ ninja -C out_tizen/wearable/release lwe.tizen.unified_wearable.release
 mv out_tizen/wearable/release/lib/liblightweight-web-engine.wearable.so out_tizen/wearable/release/lib/liblightweight-web-engine-dali-plugin.wearable.so
 
 # For Cairo
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/wearable --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=glfw_cairo_gb -Dprofile=wearable %{?gyp_addition_command}
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/wearable --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=efl_cairo -Dprofile=wearable %{?gyp_addition_command}
 ninja -C out_tizen/wearable/release lwe.tizen.unified_wearable.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/wearable --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dbackend=glfw_cairo_gb -Dprofile=wearable %{?gyp_addition_command}
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/wearable --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dbackend=efl_cairo -Dprofile=wearable %{?gyp_addition_command}
 ninja -C out_tizen/wearable/release lwe.tizen.unified_wearable.release
 %endif
 
