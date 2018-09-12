@@ -197,6 +197,7 @@ public:
         ResourceClient::didLoadFailed();
     }
 
+    // https://html.spec.whatwg.org/multipage/browsing-the-web.html#process-a-navigate-response
     virtual void didHeaderReceived(
         const std::unordered_map<std::string, std::string>& headers) override
     {
@@ -204,6 +205,16 @@ public:
         if (itr != headers.end()) {
             String* mimetype = String::createASCIIString(itr->second.c_str());
             if (mimetype->contains("application", false)) {
+                m_cb(false, headers);
+                return;
+            }
+        }
+
+        itr = headers.find("Content-Disposition");
+        if (itr != headers.end()) {
+            String* contentDisposition =
+                String::createASCIIString(itr->second.c_str());
+            if (contentDisposition->contains("attachment")) {
                 m_cb(false, headers);
                 return;
             }
