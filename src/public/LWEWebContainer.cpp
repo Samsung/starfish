@@ -158,7 +158,7 @@ static StarFish::ScriptValue nativeCallbackFunction(
 StarFish::StarFish* g_starFishInstance;
 
 static StarFish::WebView* createStarfishInstance(
-    uint width, uint height, float devicePixelRatio,
+    unsigned width, unsigned height, float devicePixelRatio,
     const char* defaultFontName, const char* locale, const char* timezoneID,
     const char* localStorageFilePath, const char* cookieStoreFilePath,
     const char* httpCacheDirectorypath)
@@ -187,13 +187,11 @@ static StarFish::WebView* createStarfishInstance(
     return webView;
 }
 
-WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
-                                   uint stride, float scaleFactor,
-                                   const char* defaultFontName,
-                                   const char* locale, const char* timezoneID,
-                                   const char* localStorageFilePath,
-                                   const char* cookieStoreFilePath,
-                                   const char* httpCacheDirectorypath)
+WebContainer* WebContainer::Create(
+    void* buffer, unsigned width, unsigned height, unsigned stride,
+    float scaleFactor, const char* defaultFontName, const char* locale,
+    const char* timezoneID, const char* localStorageFilePath,
+    const char* cookieStoreFilePath, const char* httpCacheDirectorypath)
 {
 #if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
@@ -213,8 +211,8 @@ WebContainer* WebContainer::Create(void* buffer, uint width, uint height,
     return newWebContainer;
 }
 
-void WebContainer::UpdateBuffer(void* buffer, uint width, uint height,
-                                uint stride)
+void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
+                                unsigned stride)
 {
 #if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
@@ -253,7 +251,7 @@ void WebContainer::RegisterOnRenderedHandler(
 }
 
 WebContainer* WebContainer::CreateGL(
-    uint width, uint height,
+    unsigned width, unsigned height,
     const std::function<void(LWE::WebContainer*)>& onGLMakeCurrent,
     const std::function<void(LWE::WebContainer*)>& onGLSwapBuffers,
     float devicePixelRatio, const char* defaultFontName, const char* locale,

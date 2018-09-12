@@ -545,26 +545,22 @@ void Window::testStart()
 uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
                             void* data)
 {
-    STARFISH_RELEASE_ASSERT(webView()->isActive());
     return webView()->timer()->addTimer(delay, this, handler, data, false);
 }
 
 void Window::clearTimeout(int32_t id)
 {
-    STARFISH_RELEASE_ASSERT(webView()->isActive());
     webView()->timer()->removeTimer(id);
 }
 
 uint32_t Window::setInterval(WindowSetTimeoutHandler handler, int32_t delay,
                              void* data)
 {
-    STARFISH_RELEASE_ASSERT(webView()->isActive());
     return webView()->timer()->addTimer(delay, this, handler, data, true);
 }
 
 void Window::clearInterval(int32_t id)
 {
-    STARFISH_RELEASE_ASSERT(webView()->isActive());
     webView()->timer()->removeTimer(id);
 }
 

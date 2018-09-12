@@ -1079,6 +1079,7 @@ private:
         FT_UInt glyph_index = 0;
         FT_Face lastFontFace = nullptr;
         cairo_font_face_t* fontFace = nullptr;
+        cairo_scaled_font_t* scaledFontFace = nullptr;
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
         int size = f->size();
 
@@ -1112,15 +1113,28 @@ private:
                     }
                     if (lastFontFace != g.first.first->freetypeFace()) {
                         if (fontFace) {
+                            cairo_set_scaled_font(canvas, scaledFontFace);
                             cairo_show_glyphs(canvas, glyphs, glyphCount);
                             glyphCount = 0;
+                            cairo_scaled_font_destroy(scaledFontFace);
                             cairo_font_face_destroy(fontFace);
                         }
                         lastFontFace = g.first.first->freetypeFace();
                         fontFace = cairo_ft_font_face_create_for_ft_face(
                             lastFontFace, 0);
-                        cairo_set_font_face(canvas, fontFace);
-                        cairo_set_font_size(canvas, size);
+
+                        cairo_matrix_t sizeMatrix;
+                        cairo_matrix_init(&sizeMatrix, size, 0, 0, size, 0, 0);
+
+                        cairo_matrix_t identityMatrix;
+                        cairo_matrix_init_identity(&identityMatrix);
+
+                        cairo_font_options_t* fontOptions =
+                            cairo_font_options_create();
+                        scaledFontFace = cairo_scaled_font_create(
+                            fontFace, &sizeMatrix, &identityMatrix,
+                            fontOptions);
+                        cairo_font_options_destroy(fontOptions);
                     }
                     glyphs[glyphCount].index = g.second.first;
                     glyphs[glyphCount].x = xBias + letterSpacingValueSoFar;
@@ -1155,8 +1169,8 @@ private:
                 glyphAllocCount += run.m_glyphs.size();
             }
 
-            glyphs =
-                ALLOCA(glyphAllocCount * sizeof(cairo_glyph_t), cairo_glyph_t);
+            glyphs = ALLOCA_BIG(glyphAllocCount * sizeof(cairo_glyph_t),
+                                cairo_glyph_t);
 
             float xBias = 0;
             for (size_t i = 0; i < runs.size(); i++) {
@@ -1186,15 +1200,29 @@ private:
                     } else {
                         if (run.m_ftFace != lastFontFace) {
                             if (lastFontFace) {
+                                cairo_set_scaled_font(canvas, scaledFontFace);
                                 cairo_show_glyphs(canvas, glyphs, glyphCount);
                                 glyphCount = 0;
+                                cairo_scaled_font_destroy(scaledFontFace);
                                 cairo_font_face_destroy(fontFace);
                             }
                             lastFontFace = run.m_ftFace;
                             fontFace = cairo_ft_font_face_create_for_ft_face(
                                 lastFontFace, 0);
-                            cairo_set_font_face(canvas, fontFace);
-                            cairo_set_font_size(canvas, size);
+
+                            cairo_matrix_t sizeMatrix;
+                            cairo_matrix_init(&sizeMatrix, size, 0, 0, size, 0,
+                                              0);
+
+                            cairo_matrix_t identityMatrix;
+                            cairo_matrix_init_identity(&identityMatrix);
+
+                            cairo_font_options_t* fontOptions =
+                                cairo_font_options_create();
+                            scaledFontFace = cairo_scaled_font_create(
+                                fontFace, &sizeMatrix, &identityMatrix,
+                                fontOptions);
+                            cairo_font_options_destroy(fontOptions);
                         }
 
                         for (size_t j = 0; j < run.m_glyphs.size(); j++) {
@@ -1214,8 +1242,10 @@ private:
             }
         }
         if (glyphCount) {
+            cairo_set_scaled_font(canvas, scaledFontFace);
             cairo_show_glyphs(canvas, glyphs, glyphCount);
         }
+        cairo_scaled_font_destroy(scaledFontFace);
         cairo_font_face_destroy(fontFace);
         cairo_translate(canvas, -dx, -dy - fontMetrics.m_ascender);
     }

@@ -24,7 +24,7 @@ namespace StarFish {
 
 class ResourceRequest;
 
-String* decodeURL(String* src, size_t idx);
+String* decodeURL(String* src, size_t startIndex = 0);
 
 class ResourceRequestJobInterface {
 public:

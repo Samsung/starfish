@@ -33,6 +33,7 @@
 #include <functional>
 #include <vector>
 #include <string>
+#include <cstdint>
 
 namespace LWE {
 
@@ -78,11 +79,14 @@ private:
 
 public:
     // Function set for render to buffer
-    static WebContainer* Create(
-        void* buffer, uint bufferWidth, uint bufferHeight, uint bufferStride,
-        float devicePixelRatio, const char* defaultFontName, const char* locale,
-        const char* timezoneID, const char* localStorageFilePath,
-        const char* cookieStoreFilePath, const char* httpCacheDirectorypath);
+    static WebContainer* Create(void* buffer, unsigned bufferWidth,
+                                unsigned bufferHeight, unsigned bufferStride,
+                                float devicePixelRatio,
+                                const char* defaultFontName, const char* locale,
+                                const char* timezoneID,
+                                const char* localStorageFilePath,
+                                const char* cookieStoreFilePath,
+                                const char* httpCacheDirectorypath);
 
     struct RenderResult {
         size_t updatedX;
@@ -97,12 +101,13 @@ public:
     void RegisterOnRenderedHandler(
         const std::function<void(LWE::WebContainer*,
                                  const RenderResult& renderResult)>& cb);
-    void UpdateBuffer(void* buffer, uint width, uint height, uint stride);
+    void UpdateBuffer(void* buffer, unsigned width, unsigned height,
+                      unsigned stride);
     // <--- end of function set for render to buffer
 
     // Function set for render with OpenGL
     static WebContainer* CreateGL(
-        uint width, uint height,
+        unsigned width, unsigned height,
         const std::function<void(LWE::WebContainer*)>& onGLMakeCurrent,
         const std::function<void(LWE::WebContainer*)>& onGLSwapBuffers,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
