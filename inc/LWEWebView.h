@@ -143,6 +143,9 @@ public:
     void Pause();
     void Resume();
 
+    void Focus();
+    void Blur();
+
     void SetSettings(const Settings& setttings);
     void RemoveJavascriptInterface(const std::string& exposedObjectName,
                                    const std::string& jsFunctionName);

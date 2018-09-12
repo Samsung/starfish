@@ -323,6 +323,10 @@ public class LweWebViewImpl implements LweWebView{
     public void initWebView(final View appView){
         mLWEView = (SemWebView)appView;
         Context appContext = mLWEView.getContext();
+
+        mLWEView.setFocusable(true);
+        mLWEView.setFocusableInTouchMode(true);
+
         mIMM = (InputMethodManager) appContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         sDpr = appContext.getResources().getDisplayMetrics().xdpi / 150;
         sLocalStoragePath = appContext.getDataDir().getAbsolutePath() + "/StarFish-localStorage";
@@ -369,6 +373,28 @@ public class LweWebViewImpl implements LweWebView{
                 } catch (Exception e) {}
             }
         }
+
+
+        mLWEView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                final boolean hasfocus = hasFocus;
+                sWebViewHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        synchronized (sWebViewThreadLocker) {
+                            if (mWebViewInternalHandle != 0) {
+                                if (hasfocus) {
+                                    focus(mWebViewInternalHandle);
+                                } else {
+                                    blur(mWebViewInternalHandle);
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        });
 
         mLWEView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
             @Override
@@ -481,13 +507,16 @@ public class LweWebViewImpl implements LweWebView{
         mLWEView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, final MotionEvent motionEvent) {
-
                 int[] location = new int[2];
                 view.getLocationOnScreen(location);
                 float screenX = motionEvent.getRawX();
                 float screenY = motionEvent.getRawY();
                 final float viewX = screenX - location[0];
                 final float viewY = screenY - location[1];
+
+                if (mLWEView.hasFocus() == false) {
+                    mLWEView.requestFocus();
+                }
 
                 synchronized (sWebViewThreadLocker) {
                     if (sWebViewHandler != null) {
@@ -692,11 +721,16 @@ public class LweWebViewImpl implements LweWebView{
             @Override
             public void run() {
                 if (mLWEView != null) {
-                    mLWEView.setFocusableInTouchMode(true);
-                    mLWEView.setFocusable(true);
                     if (mIMM == null) {
                         mIMM = (InputMethodManager) mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                     }
+
+                    if (mLWEView.hasFocus() == false) {
+                        if (mLWEView.requestFocus() == false) {
+                            Log.w(sTag,"Failed to request focus");
+                        }
+                    }
+
                     mIMM.showSoftInput(mLWEView, InputMethodManager.SHOW_IMPLICIT);
                     mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
                 }
@@ -709,8 +743,7 @@ public class LweWebViewImpl implements LweWebView{
             @Override
             public void run() {
                 if (mLWEView != null && mIMM != null) {
-                    mLWEView.setFocusableInTouchMode(false);
-                    mLWEView.setFocusable(false);
+
                     if (mIMM == null) {
                         mIMM = (InputMethodManager) mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
                     }
@@ -1013,6 +1046,9 @@ public class LweWebViewImpl implements LweWebView{
     native private void clearCache(long starFish);
     native private void pause(long starFish);
     native private void resume(long starFish);
+    native private void focus(long starFish);
+    native private void blur(long starFish);
+
     native private void addJavascriptInterface(long starFish, String objectName,
                                                String functionName, Object instance);
     native private void removeJavascriptInterface(long starFish, String objectName);
