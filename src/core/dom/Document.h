@@ -165,6 +165,7 @@ public:
     ProcessingInstruction* createProcessingInstruction(String* target,
                                                        String* data);
     Node* importNode(Node* node, bool deep = false);
+    Node* adoptNode(Node* node);
 
     // Moved to Node as it is common to Document and Element
     // HTMLCollection* getElementsByTagName(String* qualifiedName);

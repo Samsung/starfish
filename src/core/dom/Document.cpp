@@ -57,6 +57,7 @@
 #include "core/dom/Range.h"
 #include "core/dom/NodeIterator.h"
 #include "core/dom/TreeWalker.h"
+#include "core/dom/NamedNodeMap.h"
 #include "core/dom/NodeFilter.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
@@ -909,6 +910,39 @@ Node* Document::importNode(Node* node, bool deep)
         }
     }
     return newNode;
+}
+
+Node* Document::adoptNode(Node* node)
+{
+    // If node is a document, then throw a "NotSupportedError" DOMException.
+    // TODO check shadow root node
+    if (node->isDocument()) {
+        throw new DOMException(this, DOMException::Code::NOT_SUPPORTED_ERR,
+                               nullptr);
+    }
+
+    Node* oldDocument = node->document();
+    if (node->parentNode()) {
+        node->remove();
+    }
+
+    if (this != oldDocument) {
+        node->setDocument(this);
+        Node* next = node->firstChild();
+        while (next) {
+            next->setDocument(this);
+            if (next->isElement()) {
+                NamedNodeMap* map = next->asElement()->attributes();
+                for (unsigned i = 0; i < map->length(); i++) {
+                    Attr* attr = map->item(i);
+                    attr->setDocument(this);
+                }
+            }
+            next = Traverse::next(next, node);
+        }
+    }
+
+    return node;
 }
 
 Attr* Document::createAttribute(String* name)

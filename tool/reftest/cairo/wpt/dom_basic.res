@@ -121,7 +121,7 @@ http://10.113.111.47:8000/dom/nodes/CharacterData-replaceData.html
 #http://10.113.111.47:8000/dom/nodes/query-target-in-load-event.part.html
 #http://10.113.111.47:8000/dom/nodes/Element-webkitMatchesSelector.html
 http://10.113.111.47:8000/dom/nodes/Element-siblingElement-null.html
-#http://10.113.111.47:8000/dom/nodes/Comment-constructor.html
+http://10.113.111.47:8000/dom/nodes/Comment-constructor.html
 http://10.113.111.47:8000/dom/nodes/Element-childElementCount-nochild.html
 #http://10.113.111.47:8000/dom/nodes/ParentNode-querySelector-All.html
 http://10.113.111.47:8000/dom/nodes/getElementsByClassName-31.htm
@@ -154,11 +154,11 @@ http://10.113.111.47:8000/dom/nodes/getElementsByClassName-27.htm
 http://10.113.111.47:8000/dom/nodes/Node-baseURI.html
 http://10.113.111.47:8000/dom/nodes/ChildNode-replaceWith.html
 http://10.113.111.47:8000/dom/nodes/Document-createComment.html
-#http://10.113.111.47:8000/dom/nodes/Document-adoptNode.html
+http://10.113.111.47:8000/dom/nodes/Document-adoptNode.html
 http://10.113.111.47:8000/dom/nodes/Node-parentElement.html
 #http://10.113.111.47:8000/dom/nodes/Document-URL.sub.html
 http://10.113.111.47:8000/dom/nodes/Element-previousElementSibling.html
-#http://10.113.111.47:8000/dom/nodes/Element-insertAdjacentElement.html
+http://10.113.111.47:8000/dom/nodes/Element-insertAdjacentElement.html
 http://10.113.111.47:8000/dom/nodes/ParentNode-prepend.html
 http://10.113.111.47:8000/dom/nodes/Node-isEqualNode.html
 http://10.113.111.47:8000/dom/nodes/Node-normalize.html

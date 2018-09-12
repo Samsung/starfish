@@ -52,7 +52,7 @@ interface Document : Node {
   [NewObject, RaisesException] ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data);
 
   [CEReactions, NewObject] Node importNode(Node node, optional boolean deep = false);
-  [Unimplemented, CEReactions] Node adoptNode(Node node);
+  [CEReactions, RaisesException] Node adoptNode(Node node);
 
   [NewObject, RaisesException] Attr createAttribute(DOMString localName);
   [NewObject, RaisesException] Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName);

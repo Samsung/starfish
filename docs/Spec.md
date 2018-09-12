@@ -212,7 +212,7 @@ section are supported.
 |  | method | Text createTextNode(DOMString data) | Returns a Text node whose data is data. |
 |  | method | Comment createComment(DOMString data) | Returns a Comment node whose data is data. |
 | [Document](https://dom.spec.whatwg.org/#interface-document) | method | CDATASection createCDATASection(DOMString data) | Returns a CDATASection node whose data is data. |
-| | method | ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data) | Return a new ProcessingInstruction node, with target set to target, data set to data |
+|  | method | ProcessingInstruction createProcessingInstruction(DOMString target, DOMString data) | Return a new ProcessingInstruction node, with target set to target, data set to data |
 |  | method | Attr createAttribute(DOMString localName) | Return a new attribute whose local name is localName and node document is context object. |
 |  | method | Attr createAttributeNS(DOMString? namespace, DOMString qualifiedName) | Creates an attribute of the given qualified name and namespace URI. |
 |  | method | Document open( [ type [, replace ] ] ) | Causes the Document to be replaced in-place |
@@ -220,6 +220,7 @@ section are supported.
 |  | method | void write(text...) | In general, adds the given string(s) to the Document's input stream. |
 |  | method | void writeln(text...) | Adds the given string(s) to the Document's input stream, followed by a newline character |
 |  | method | Node importNode(Node node, optional boolean deep = false) | Creates a new copy of the specified Node or DocumentFragment from another document. |
+|  | method | Node adoptNode(Node node) | Moves node from another document and returns it. |
 | [Document](https://html.spec.whatwg.org/multipage/dom.html#the-document-object) | attribute | location | Return this Document object's relevant global object's Location object |
 |  | attribute | body | Returns body element or null if not exists |
 |  | attribute | head | Returns head element or null if not exists |

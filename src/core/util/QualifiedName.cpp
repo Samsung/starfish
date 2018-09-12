@@ -102,6 +102,7 @@ bool QualifiedName::checkNameProductionRule(String* str)
             if (!checkNameProductionRuleStart_internal(str->charAt(i))) {
                 return false;
             }
+            sawColon = false;
             start = false;
         } else {
             if (!checkNameProductionRule_internal(str->charAt(i))) {
