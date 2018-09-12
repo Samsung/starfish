@@ -76,10 +76,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public SemWebView(Context context) {
-        super(context);
-        delegate = getWebViewInstance();
-        if(delegate!=null)
-            delegate.initWebView(this);
+        this(context, null);
     }
 
     /**
@@ -90,10 +87,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public SemWebView(Context context, AttributeSet attrs) {
-        super(context, attrs);
-        delegate = getWebViewInstance();
-        if(delegate!=null)
-            delegate.initWebView(this);
+        this(context, attrs, 0);
     }
 
     /**
@@ -107,7 +101,8 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public SemWebView(Context context, AttributeSet attrs, int defStyle) {
-        super(context, attrs);
+        super(context, attrs, defStyle);
+
         delegate = getWebViewInstance();
         if(delegate!=null)
             delegate.initWebView(this);

@@ -1,28 +1,28 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:orientation="vertical"
     tools:context="com.samsung.lwe.shell.ShellActivity">
-
     <android.support.design.widget.TextInputLayout
         android:id="@+id/inputLayout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
-
+        android:layout_height="wrap_content"
+        tools:layout_editor_absoluteX="0dp"
+        tools:layout_editor_absoluteY="57dp">
         <android.support.design.widget.TextInputEditText
             android:id="@+id/editText"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="hint"
+            android:hint="@string/url"
             android:inputType="text"
             android:maxLines="1" />
-
-        <com.samsung.android.mobileservice.lwe.SemWebView
-            android:id="@+id/webView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_weight="1" />
     </android.support.design.widget.TextInputLayout>
-</android.support.constraint.ConstraintLayout>
+
+    <com.samsung.android.mobileservice.lwe.SemWebView
+        android:id="@+id/webView"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+</LinearLayout>

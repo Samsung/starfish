@@ -479,6 +479,18 @@ void WebContainer::Pause()
     TO_WEBVIEW(m_impl)->platformWindow()->pause();
 }
 
+void WebContainer::Focus()
+{
+    // TODO
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+
+void WebContainer::Blur()
+{
+    STARFISH_ASSERT(m_impl);
+    TO_WEBVIEW(m_impl)->platformWindow()->webView()->blur();
+}
+
 void WebContainer::SetSettings(const Settings& settings)
 {
     STARFISH_ASSERT(m_impl);

@@ -966,6 +966,24 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_pause(JNIEnv* env,
 }
 
 extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_focus(JNIEnv* env,
+                                                                jobject thiz,
+                                                                jlong data)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->Focus();
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_blur(JNIEnv* env,
+                                                               jobject thiz,
+                                                               jlong data)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->Blur();
+}
+
+extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_addJavascriptInterface(
     JNIEnv* env, jobject thiz, jlong wv, jstring objName, jstring funtionName,
     jobject instance)
