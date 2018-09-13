@@ -1088,11 +1088,14 @@ wpt_others_cairo:
 #	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_xpath_basic.res basic -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/page_visibility_basic.res basic -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/xhr_basic.res basic -p$(TEST_NPROCS)
-	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_request.res basic -p$(TEST_NPROCS)
+
+wpt_pwa_cairo:
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_basic.res basic -p$(TEST_NPROCS)
 
 wpt_all_cairo:
 	make wpt_css_all_cairo
 	make wpt_others_cairo
+	make wpt_pwa_cairo
 
 reftest_all_cairo:
 	make dom_conformance_all_cairo
