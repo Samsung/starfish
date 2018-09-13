@@ -129,7 +129,7 @@ public:
         return 0;
     }
 
-    static Node* next(Node* current, const Node* stayWithin)
+    static Node* next(const Node* current, const Node* stayWithin)
     {
         if (current->hasChildNodes()) {
             return current->firstChild();
@@ -143,7 +143,7 @@ public:
         return nextAncestorSibling(current, stayWithin);
     }
 
-    static Node* previous(Node* current, const Node* stayWithin)
+    static Node* previous(const Node* current, const Node* stayWithin)
     {
         if (current == stayWithin) {
             return nullptr;
