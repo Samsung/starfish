@@ -306,7 +306,7 @@ public:
     unsigned index();
 
     Node* cloneNode(bool deep = false);
-    void validatePreinsert(Node* child, Node* childRef);
+    void validatePreinsert(Node* node, Node* child);
 
     unsigned short compareDocumentPosition(const Node* other);
 
@@ -440,6 +440,9 @@ public:
     }
 
     unsigned nodeLength() const;
+
+    bool isSpecificTypeNodeFollowing(NodeType type) const;
+    bool isSpecificTypeNodePreceding(NodeType type) const;
 
     // MUST uses same bit with StyleResolver::StyleDamageFrom
     enum StyleChangeReason {
@@ -755,7 +758,7 @@ public:
     }
 
 private:
-    void validateReplace(Node* child, Node* childToRemove);
+    void validateReplace(Node* node, Node* child);
 
     void setSiblingsNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
     void setChildrenNeedsStyleRecalcIfNeeded(StyleChangeReason reason);
