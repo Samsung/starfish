@@ -3203,7 +3203,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
 
     bool ret = !shouldApplyOverflow();
-    LayoutRect outline = frameVisibleOutlineRect();
+    LayoutRect outline = frameVisibleRect();
 
     if (ctx.isVisibleRectCollapsible && isFrameBlockBox()) {
         BorderData border = cs->border();
