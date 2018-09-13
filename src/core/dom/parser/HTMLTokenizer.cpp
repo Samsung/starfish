@@ -54,12 +54,9 @@ namespace StarFish {
 QualifiedName AtomicHTMLToken::nameForAttribute(
     const HTMLToken::Attribute& attribute) const
 {
-    return QualifiedName(
-        AtomicString::emptyAtomicString(),
-        AtomicString::createAttrAtomicString(
-            m_starFish,
-            StringDataUTF32::createASCIIStringFromUTF32SourceIfPossible(
-                attribute.name)));
+    return QualifiedName(AtomicString::createAttrAtomicString(
+        m_starFish, StringDataUTF32::createASCIIStringFromUTF32SourceIfPossible(
+                        attribute.name)));
 }
 
 bool AtomicHTMLToken::usesName() const

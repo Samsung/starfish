@@ -1555,11 +1555,9 @@ QualifiedName Document::createAttributeName(String* name)
 {
     if (isXMLDocument()) {
         return QualifiedName(
-            AtomicString::emptyAtomicString(),
             AtomicString::createAtomicString(window()->starFish(), name));
     } else {
         return QualifiedName(
-            AtomicString::emptyAtomicString(),
             AtomicString::createAttrAtomicString(window()->starFish(), name));
     }
 }
