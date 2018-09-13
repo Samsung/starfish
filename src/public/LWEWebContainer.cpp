@@ -65,6 +65,37 @@
 
 namespace LWE {
 
+StarFish::StarFish* g_starFishInstance;
+
+void LWE::Initialize(const char* localStorageDataFilePath,
+                     const char* cookieStoreDataFilePath,
+                     const char* httpCacheDataDirectorypath)
+{
+    STARFISH_RELEASE_ASSERT(!IsInitialized());
+    g_starFishInstance = new (NoGC)
+        StarFish::StarFish(localStorageDataFilePath, cookieStoreDataFilePath,
+                           httpCacheDataDirectorypath);
+}
+
+bool LWE::IsInitialized()
+{
+    return g_starFishInstance;
+}
+
+void LWE::Finalize()
+{
+    STARFISH_RELEASE_ASSERT(IsInitialized());
+    STARFISH_RELEASE_ASSERT(g_starFishInstance->webViewInstanceCount() == 0);
+
+    g_starFishInstance->destroy();
+    g_starFishInstance = nullptr;
+
+    // do implicit calling GC funciton takes a lots time
+    // we should remove this if possible
+    GC_gcollect();
+    GC_gcollect_and_unmap();
+}
+
 Settings::Settings(const std::string& default_ua, const std::string& ua)
     : m_defaultUserAgent(default_ua)
     , m_userAgent(ua)
@@ -73,7 +104,7 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
 #else
     , m_cacheMode(0)
 #endif
-    , m_defaultFontSize(DEFAULT_FONT_SIZE)
+    , m_defaultFontSize(LWE_DEFAULT_FONT_SIZE)
 {
 }
 
@@ -155,15 +186,18 @@ static StarFish::ScriptValue nativeCallbackFunction(
     return StarFish::scriptUndefined();
 }
 
-StarFish::StarFish* g_starFishInstance;
-
-static StarFish::WebView* createStarfishInstance(
-    unsigned width, unsigned height, float devicePixelRatio,
-    const char* defaultFontName, const char* locale, const char* timezoneID,
-    const char* localStorageFilePath, const char* cookieStoreFilePath,
-    const char* httpCacheDirectorypath)
+static StarFish::WebView* createWebViewInstance(unsigned width, unsigned height,
+                                                float devicePixelRatio,
+                                                const char* defaultFontName,
+                                                const char* locale,
+                                                const char* timezoneID)
 {
-    std::string screenShot;
+    if (!LWE::IsInitialized()) {
+        STARFISH_LOG_ERROR(
+            "You must call LWE::Initialize function before using WebContainer "
+            "or WebView");
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
 
@@ -174,33 +208,28 @@ static StarFish::WebView* createStarfishInstance(
     info.availableRect.setHeight(height);
     info.devicePixelRatio = devicePixelRatio;
 
-    if (g_starFishInstance == nullptr) {
-        g_starFishInstance = new StarFish::StarFish(
-            localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
-    }
-
     ::StarFish::WebView* webView = ::StarFish::WebView::create(
         g_starFishInstance, locale, timezoneID, width, height,
-        DEFAULT_FONT_SIZE, StarFish::String::createASCIIString(defaultFontName),
-        info, StarFish::String::fromUTF8(customUserAgentString.data()),
+        LWE_DEFAULT_FONT_SIZE,
+        StarFish::String::createASCIIString(defaultFontName), info,
+        StarFish::String::fromUTF8(customUserAgentString.data()),
         StarFish::String::fromUTF8(builtinPolyfillPathString.data()));
     return webView;
 }
 
-WebContainer* WebContainer::Create(
-    void* buffer, unsigned width, unsigned height, unsigned stride,
-    float scaleFactor, const char* defaultFontName, const char* locale,
-    const char* timezoneID, const char* localStorageFilePath,
-    const char* cookieStoreFilePath, const char* httpCacheDirectorypath)
+WebContainer* WebContainer::Create(void* buffer, unsigned width,
+                                   unsigned height, unsigned stride,
+                                   float scaleFactor,
+                                   const char* defaultFontName,
+                                   const char* locale, const char* timezoneID)
 {
 #if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
     return nullptr;
 #endif
-    auto webView = createStarfishInstance(
-        width, height, scaleFactor, defaultFontName, locale, timezoneID,
-        localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
+    auto webView = createWebViewInstance(width, height, scaleFactor,
+                                         defaultFontName, locale, timezoneID);
 
     webView->platformWindow()->updateDrawingBufferAddress(buffer, width, height,
                                                           stride);
@@ -224,8 +253,8 @@ void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
 }
 
 void WebContainer::RegisterOnRenderedHandler(
-    const std::function<void(LWE::WebContainer*,
-                             const LWE::WebContainer::RenderResult&)>& cb)
+    const std::function<void(WebContainer*, const WebContainer::RenderResult&)>&
+        cb)
 {
 #if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
@@ -235,7 +264,7 @@ void WebContainer::RegisterOnRenderedHandler(
         ->platformWindow()
         ->registerRenderingFinishedCallback([this, cb](
             const StarFish::RenderResult& renderResult) {
-            LWE::WebContainer::RenderResult result;
+            WebContainer::RenderResult result;
             result.updatedX = (int)renderResult.updateRect.x();
             result.updatedY = (int)renderResult.updateRect.y();
             result.updatedWidth = (int)renderResult.updateRect.width();
@@ -252,20 +281,18 @@ void WebContainer::RegisterOnRenderedHandler(
 
 WebContainer* WebContainer::CreateGL(
     unsigned width, unsigned height,
-    const std::function<void(LWE::WebContainer*)>& onGLMakeCurrent,
-    const std::function<void(LWE::WebContainer*)>& onGLSwapBuffers,
+    const std::function<void(WebContainer*)>& onGLMakeCurrent,
+    const std::function<void(WebContainer*)>& onGLSwapBuffers,
     float devicePixelRatio, const char* defaultFontName, const char* locale,
-    const char* timezoneID, const char* localStorageFilePath,
-    const char* cookieStoreFilePath, const char* httpCacheDirectorypath)
+    const char* timezoneID)
 {
 #if !defined(PORT_WINDOW_BACKEND_GL)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 #endif
 
-    auto webView = createStarfishInstance(
-        width, height, devicePixelRatio, defaultFontName, locale, timezoneID,
-        localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
+    auto webView = createWebViewInstance(width, height, devicePixelRatio,
+                                         defaultFontName, locale, timezoneID);
 
     WebContainer* newWebContainer =
         new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(webView);
@@ -455,16 +482,6 @@ void WebContainer::Destroy()
     m_impl = nullptr;
 
     GC_FREE(this);
-
-    if (g_starFishInstance->webViewInstanceCount() == 0) {
-        g_starFishInstance->destroy();
-        g_starFishInstance = nullptr;
-    }
-
-    // do implicit calling GC funciton takes a lots time
-    // we should remove this if possible
-    GC_gcollect();
-    GC_gcollect_and_unmap();
 }
 
 void WebContainer::Resume()
@@ -536,7 +553,7 @@ void WebContainer::ClearCache()
 }
 
 void WebContainer::RegisterOnReceivedErrorHandler(
-    const std::function<void(LWE::WebContainer*, LWE::ResourceError)>& cb)
+    const std::function<void(WebContainer*, ResourceError)>& cb)
 {
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
@@ -548,7 +565,7 @@ void WebContainer::RegisterOnReceivedErrorHandler(
 }
 
 void WebContainer::RegisterOnPageParsedHandler(
-    std::function<void(LWE::WebContainer*, const std::string&)> cb)
+    std::function<void(WebContainer*, const std::string&)> cb)
 {
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
@@ -559,7 +576,7 @@ void WebContainer::RegisterOnPageParsedHandler(
 }
 
 void WebContainer::RegisterOnPageLoadedHandler(
-    std::function<void(LWE::WebContainer*, const std::string&)> cb)
+    std::function<void(WebContainer*, const std::string&)> cb)
 {
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
@@ -570,7 +587,7 @@ void WebContainer::RegisterOnPageLoadedHandler(
 }
 
 void WebContainer::RegisterOnPageStartedHandler(
-    const std::function<void(LWE::WebContainer*, const std::string&)>& cb)
+    const std::function<void(WebContainer*, const std::string&)>& cb)
 {
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
@@ -581,7 +598,7 @@ void WebContainer::RegisterOnPageStartedHandler(
 }
 
 void WebContainer::RegisterOnLoadResourceHandler(
-    const std::function<void(LWE::WebContainer*, const std::string&)>& cb)
+    const std::function<void(WebContainer*, const std::string&)>& cb)
 {
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
@@ -592,7 +609,7 @@ void WebContainer::RegisterOnLoadResourceHandler(
 }
 
 void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
-    const std::function<bool(LWE::WebContainer*, const std::string&)>& cb)
+    const std::function<bool(WebContainer*, const std::string&)>& cb)
 {
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
@@ -627,7 +644,7 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
 }
 
 void WebContainer::RegisterOnDownloadStartHandler(
-    const std::function<void(LWE::WebContainer*, const std::string&,
+    const std::function<void(WebContainer*, const std::string&,
                              const std::string&, const std::string&,
                              const std::string&, long)>& cb)
 {
@@ -652,8 +669,8 @@ void WebContainer::RegisterOnDownloadStartHandler(
 }
 
 void WebContainer::RegisterShowDropdownMenuHandler(
-    const std::function<void(LWE::WebContainer*,
-                             const std::vector<std::string>*, int)>& cb)
+    const std::function<void(WebContainer*, const std::vector<std::string>*,
+                             int)>& cb)
 {
     TO_WEBVIEW(m_impl)
         ->platformWindow()
@@ -672,7 +689,7 @@ void WebContainer::RegisterShowDropdownMenuHandler(
 }
 
 void WebContainer::RegisterShowAlertHandler(
-    const std::function<void(LWE::WebContainer*, const std::string&,
+    const std::function<void(WebContainer*, const std::string&,
                              const std::string&)>& cb)
 {
     TO_WEBVIEW(m_impl)
@@ -720,7 +737,7 @@ size_t WebContainer::Height()
 }
 
 void WebContainer::RegisterOnProgressChangedHandler(
-    const std::function<void(LWE::WebContainer*, int)>& cb)
+    const std::function<void(WebContainer*, int)>& cb)
 {
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
@@ -846,7 +863,7 @@ void WebContainer::DispatchCompositionEndEvent(
                                          soFarCompositiedString.length()));
 }
 void WebContainer::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
-    const std::function<void(LWE::WebContainer*)>& cb)
+    const std::function<void(WebContainer*)>& cb)
 {
     TO_WEBVIEW(m_impl)
         ->platformWindow()
@@ -855,7 +872,7 @@ void WebContainer::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
 }
 
 void WebContainer::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
-    const std::function<void(LWE::WebContainer*)>& cb)
+    const std::function<void(WebContainer*)>& cb)
 {
     TO_WEBVIEW(m_impl)
         ->platformWindow()
@@ -864,8 +881,8 @@ void WebContainer::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
 }
 
 void WebContainer::RegisterSetNeedsRenderingCallback(
-    const std::function<void(LWE::WebContainer*, const std::function<void()>&
-                                                     doRenderingFunction)>& cb)
+    const std::function<void(
+        WebContainer*, const std::function<void()>& doRenderingFunction)>& cb)
 {
     TO_WEBVIEW(m_impl)
         ->platformWindow()

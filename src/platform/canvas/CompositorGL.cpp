@@ -745,24 +745,25 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        m_window->glMakeCurrent();
-        if (m_isEGLImageExternal && m_textureFragments.size()) {
-#if defined(STARFISH_TIZEN)
-            g_evasGLAPI->evasglDestroyImage(m_eglImage);
-
-            m_eglImage = nullptr;
-            tbm_surface_destroy(m_tbmSurface);
-            m_tbmSurface = nullptr;
-#elif defined(STARFISH_ANDROID)
-            EGLDisplay display = eglGetCurrentDisplay();
-            eglDestroyImageKHR(display, m_eglImage);
-
-            m_eglImage = nullptr;
-            AHardwareBuffer_release(m_aHardwareBuffer);
-            m_aHardwareBuffer = nullptr;
-#endif
-        }
         if (m_textureFragments.size()) {
+            m_window->glMakeCurrent();
+            if (m_isEGLImageExternal) {
+#if defined(STARFISH_TIZEN)
+                g_evasGLAPI->evasglDestroyImage(m_eglImage);
+
+                m_eglImage = nullptr;
+                tbm_surface_destroy(m_tbmSurface);
+                m_tbmSurface = nullptr;
+#elif defined(STARFISH_ANDROID)
+                EGLDisplay display = eglGetCurrentDisplay();
+                eglDestroyImageKHR(display, m_eglImage);
+
+                m_eglImage = nullptr;
+                AHardwareBuffer_release(m_aHardwareBuffer);
+                m_aHardwareBuffer = nullptr;
+#endif
+            }
+
             if (m_isEGLImageExternal) {
             } else {
                 free(m_buffer);
@@ -787,9 +788,9 @@ public:
 
             STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
                               g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
-        }
 
-        m_isEGLImageExternal = false;
+            m_isEGLImageExternal = false;
+        }
     }
 
     bool attachNativeBuffer(size_t w, size_t h)

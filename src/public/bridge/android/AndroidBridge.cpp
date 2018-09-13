@@ -755,11 +755,15 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_create(
     const char* cookiePathString = env->GetStringUTFChars(cookiePath, 0);
     const char* cachePathString = env->GetStringUTFChars(cachePath, 0);
 
+    if (!LWE::IsInitialized()) {
+        LWE::Initialize(localstoragePathString, cookiePathString,
+                        cachePathString);
+    }
+
     LWE::WebContainer* webContainer = LWE::WebContainer::CreateGL(
         w, h, [](LWE::WebContainer* wc) { glMakeCurrent(wc); },
         [](LWE::WebContainer* wc) { glSwapBuffers(wc); }, devicePixelRatio,
-        "serif", localeString, timezoneIDString, localstoragePathString,
-        cookiePathString, cachePathString);
+        "serif", localeString, timezoneIDString);
 
     env->ReleaseStringUTFChars(locale, localeString);
     env->ReleaseStringUTFChars(timezoneID, timezoneIDString);

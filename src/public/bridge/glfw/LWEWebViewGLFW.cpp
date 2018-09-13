@@ -48,12 +48,10 @@ static void poller(void* data);
 
 class WebViewGLFW : public WebView {
 public:
-    WebViewGLFW(void* winArg, int x, int y, int width, int height,
-                float devicePixelRatio, const char* defaultFontName,
-                const char* locale, const char* timezoneID,
-                const char* localStorageFilePath,
-                const char* cookieStoreFilePath,
-                const char* httpCacheDirectorypath)
+    WebViewGLFW(void* winArg, unsigned x, unsigned y, unsigned width,
+                unsigned height, float devicePixelRatio,
+                const char* defaultFontName, const char* locale,
+                const char* timezoneID)
         : WebView(nullptr)
     {
         glfwSetErrorCallback(error_callback);
@@ -112,12 +110,9 @@ public:
 
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
-            [this](LWE::WebContainer* wc) {
-                glfwMakeContextCurrent(m_glWindow);
-            },
-            [this](LWE::WebContainer* wc) { glfwSwapBuffers(m_glWindow); },
-            devicePixelRatio, defaultFontName, locale, timezoneID,
-            localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
+            [this](WebContainer* wc) { glfwMakeContextCurrent(m_glWindow); },
+            [this](WebContainer* wc) { glfwSwapBuffers(m_glWindow); },
+            devicePixelRatio, defaultFontName, locale, timezoneID);
 
         m_impl = webContainer;
 
@@ -231,7 +226,6 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
     }
 
     WebViewGLFW* wnd = (WebViewGLFW*)glfwGetWindowUserPointer(window);
-    // TODO (repeat, modifiers)
     if (action == GLFW_PRESS) {
         wnd->FetchWebContainer()->DispatchKeyDownEvent(keyValue);
         wnd->FetchWebContainer()->DispatchKeyPressEvent(keyValue);
@@ -240,17 +234,13 @@ static void key_callback(GLFWwindow* window, int key, int scancode, int action,
     }
 }
 
-WebView* WebView::Create(void* win, int x, int y, int width, int height,
-                         float devicePixelRatio, const char* defaultFontName,
-                         const char* locale, const char* timezoneID,
-                         const char* localStorageFilePath,
-                         const char* cookieStoreFilePath,
-                         const char* httpCacheDirectorypath)
+WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
+                         unsigned height, float devicePixelRatio,
+                         const char* defaultFontName, const char* locale,
+                         const char* timezoneID)
 {
     return new WebViewGLFW(win, x, y, width, height, devicePixelRatio,
-                           defaultFontName, locale, timezoneID,
-                           localStorageFilePath, cookieStoreFilePath,
-                           httpCacheDirectorypath);
+                           defaultFontName, locale, timezoneID);
 }
 }
 

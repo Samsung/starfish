@@ -129,6 +129,12 @@ void StarFish::destroy()
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCache::destory();
 #endif
+
+    delete m_lineBreakIteratorPool;
+    m_lineBreakIteratorPool = nullptr;
+
+    this->StarFish::~StarFish();
+    GC_FREE(this);
 }
 
 void StarFish::initNetworkSharedResourceManager(const char* cookieStoreFilePath)

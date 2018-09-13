@@ -55,6 +55,13 @@ public:
     {
     }
 
+    ~LineBreakIteratorPool()
+    {
+        for (size_t i = 0; i < m_pool.size(); ++i) {
+            closeLineBreakIterator(m_pool[i].second);
+        }
+    }
+
     icu::BreakIterator* get(const icu::Locale& locale,
                             LineBreakIteratorMode mode, bool isCJK)
     {

@@ -92,6 +92,16 @@ public:
         }
     }
 
+    virtual void destroy()
+    {
+        PlatformWindow::destroy();
+
+        if (m_glPaintingSurface) {
+            m_glPaintingSurface->detachNativeBuffer();
+            m_glPaintingSurface = nullptr;
+        }
+    }
+
     virtual RenderResult rendering() override
     {
         glMakeCurrent();
