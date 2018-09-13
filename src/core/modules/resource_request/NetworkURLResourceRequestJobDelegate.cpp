@@ -554,6 +554,11 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
     const char* memPtr = (const char*)ptr;
 
     auto& entityBody = request->response();
+
+    if (entityBody.capacity() < entityBody.size() + realSize) {
+        entityBody.reserve(entityBody.size() + realSize);
+    }
+
     entityBody.insert(entityBody.end(), memPtr, memPtr + realSize);
 
     if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {

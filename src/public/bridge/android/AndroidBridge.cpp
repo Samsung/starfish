@@ -755,9 +755,9 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_create(
     const char* cookiePathString = env->GetStringUTFChars(cookiePath, 0);
     const char* cachePathString = env->GetStringUTFChars(cachePath, 0);
 
-    if (!LWE::IsInitialized()) {
-        LWE::Initialize(localstoragePathString, cookiePathString,
-                        cachePathString);
+    if (!LWE::LWE::IsInitialized()) {
+        LWE::LWE::Initialize(localstoragePathString, cookiePathString,
+                             cachePathString);
     }
 
     LWE::WebContainer* webContainer = LWE::WebContainer::CreateGL(
