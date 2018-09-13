@@ -83,7 +83,7 @@ bool checkNameProductionRule_internal(char32_t c)
     return true;
 }
 
-bool QualifiedName::checkNameProductionRule(String* str)
+bool QualifiedName::checkNameProductionRule(String* str, bool isAttribute)
 {
     size_t length = str->length();
     if (length == 0) {
@@ -97,7 +97,9 @@ bool QualifiedName::checkNameProductionRule(String* str)
                 return false;
             }
             sawColon = true;
-            start = true;
+            if (!isAttribute) {
+                start = true;
+            }
         } else if (start) {
             if (!checkNameProductionRuleStart_internal(str->charAt(i))) {
                 return false;

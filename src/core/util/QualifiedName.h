@@ -56,7 +56,7 @@ public:
     {
     }
 
-    static bool checkNameProductionRule(String* str);
+    static bool checkNameProductionRule(String* str, bool isAttribute = false);
     bool operator==(const QualifiedName& src) const
     {
         return m_prefix == src.m_prefix &&
@@ -179,7 +179,7 @@ public:
         }
     }
 
-    bool hasNamespaceURI()
+    bool hasNamespaceURI() const
     {
         return m_namespaceURI.string() != nullptr;
     }

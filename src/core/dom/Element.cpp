@@ -71,14 +71,12 @@ static bool isInHTMLNamespaceAndHTMLDocument(Element* e)
 static AttributeName properAttributeName(Element* e, String* name)
 {
     if (isInHTMLNamespaceAndHTMLDocument(e)) {
-        return AttributeName(QualifiedName(AtomicString::emptyAtomicString(),
-                                           AtomicString::createAttrAtomicString(
-                                               e->starFish(), name)),
+        return AttributeName(QualifiedName(AtomicString::createAttrAtomicString(
+                                 e->starFish(), name)),
                              AttributeName::MatchName);
     }
     return AttributeName(
-        QualifiedName(AtomicString::emptyAtomicString(),
-                      AtomicString::createAtomicString(e->starFish(), name)),
+        QualifiedName(AtomicString::createAtomicString(e->starFish(), name)),
         AttributeName::MatchName);
 }
 
@@ -275,7 +273,7 @@ void Element::setAttribute(const QualifiedName& name, String* value)
 
 void Element::setAttribute(String* name, String* value)
 {
-    if (!QualifiedName::checkNameProductionRule(name)) {
+    if (!QualifiedName::checkNameProductionRule(name, true)) {
         throw new DOMException(document(),
                                DOMException::Code::INVALID_CHARACTER_ERR);
     }
