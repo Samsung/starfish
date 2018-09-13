@@ -372,16 +372,17 @@ int main(int argc, char* argv[])
 #endif
 #endif
 
+    LWE::LWE::Initialize("/tmp/StarFish_localStorage.txt",
+                         "/tmp/StarFish_Cookies.txt", cacheDir.data());
+
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
-    LWE::WebView* webView = LWE::WebView::Create(
-        wndObj, x, y, width, height, scaleFactor, "serif", "ko-KR",
-        "Asia/Seoul", "/tmp/StarFish_localStorage.txt",
-        "/tmp/StarFish_Cookies.txt", cacheDir.data());
+    LWE::WebView* webView =
+        LWE::WebView::Create(wndObj, x, y, width, height, scaleFactor, "serif",
+                             "ko-KR", "Asia/Seoul");
 #else
-    LWE::WebView* webView = LWE::WebView::Create(
-        nullptr, x, y, width, height, scaleFactor, "serif", "ko-KR",
-        "Asia/Seoul", "/tmp/StarFish_localStorage.txt",
-        "/tmp/StarFish_Cookies.txt", cacheDir.data());
+    LWE::WebView* webView =
+        LWE::WebView::Create(nullptr, x, y, width, height, scaleFactor, "serif",
+                             "ko-KR", "Asia/Seoul");
 #endif
 
 #ifndef STARFISH_DALI
@@ -484,6 +485,8 @@ int main(int argc, char* argv[])
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL)
     ecore_shutdown();
 #endif
+
+    LWE::LWE::Finalize();
 
     GC_gcollect();
     GC_gcollect();

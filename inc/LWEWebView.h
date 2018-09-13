@@ -37,7 +37,17 @@
 
 namespace LWE {
 
-#define DEFAULT_FONT_SIZE 16
+class LWE_EXPORT LWE {
+public:
+    // You must call Initialize function before using WebContainer or WebView
+    static void Initialize(const char* localStorageDataFilePath,
+                           const char* cookieStoreDataFilePath,
+                           const char* httpCacheDataDirectorypath);
+    static bool IsInitialized();
+    static void Finalize();
+};
+
+#define LWE_DEFAULT_FONT_SIZE 16
 
 class LWE_EXPORT Settings {
 public:
@@ -83,10 +93,7 @@ public:
                                 unsigned bufferHeight, unsigned bufferStride,
                                 float devicePixelRatio,
                                 const char* defaultFontName, const char* locale,
-                                const char* timezoneID,
-                                const char* localStorageFilePath,
-                                const char* cookieStoreFilePath,
-                                const char* httpCacheDirectorypath);
+                                const char* timezoneID);
 
     struct RenderResult {
         size_t updatedX;
@@ -99,7 +106,7 @@ public:
         size_t bufferImageHeight;
     };
     void RegisterOnRenderedHandler(
-        const std::function<void(LWE::WebContainer*,
+        const std::function<void(WebContainer*,
                                  const RenderResult& renderResult)>& cb);
     void UpdateBuffer(void* buffer, unsigned width, unsigned height,
                       unsigned stride);
@@ -108,11 +115,10 @@ public:
     // Function set for render with OpenGL
     static WebContainer* CreateGL(
         unsigned width, unsigned height,
-        const std::function<void(LWE::WebContainer*)>& onGLMakeCurrent,
-        const std::function<void(LWE::WebContainer*)>& onGLSwapBuffers,
+        const std::function<void(WebContainer*)>& onGLMakeCurrent,
+        const std::function<void(WebContainer*)>& onGLSwapBuffers,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
-        const char* timezoneID, const char* localStorageFilePath,
-        const char* cookieStoreFilePath, const char* httpCacheDirectorypath);
+        const char* timezoneID);
     void ResizeTo(size_t width, size_t height);
     // <--- end of function set for render with OpenGL
 
@@ -152,29 +158,29 @@ public:
     void ClearCache();
 
     void RegisterOnReceivedErrorHandler(
-        const std::function<void(LWE::WebContainer*, LWE::ResourceError)>& cb);
+        const std::function<void(WebContainer*, ResourceError)>& cb);
     void RegisterOnPageParsedHandler(
-        std::function<void(LWE::WebContainer*, const std::string&)> cb);
+        std::function<void(WebContainer*, const std::string&)> cb);
     void RegisterOnPageLoadedHandler(
-        std::function<void(LWE::WebContainer*, const std::string&)> cb);
+        std::function<void(WebContainer*, const std::string&)> cb);
     void RegisterOnPageStartedHandler(
-        const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
+        const std::function<void(WebContainer*, const std::string&)>& cb);
     void RegisterOnLoadResourceHandler(
-        const std::function<void(LWE::WebContainer*, const std::string&)>& cb);
+        const std::function<void(WebContainer*, const std::string&)>& cb);
     void RegisterShouldOverrideUrlLoadingHandler(
-        const std::function<bool(LWE::WebContainer*, const std::string&)>& cb);
+        const std::function<bool(WebContainer*, const std::string&)>& cb);
     void RegisterOnProgressChangedHandler(
-        const std::function<void(LWE::WebContainer*, int progress)>& cb);
+        const std::function<void(WebContainer*, int progress)>& cb);
     void RegisterOnDownloadStartHandler(
-        const std::function<void(LWE::WebContainer*, const std::string&,
+        const std::function<void(WebContainer*, const std::string&,
                                  const std::string&, const std::string&,
                                  const std::string&, long)>& cb);
 
     void RegisterShowDropdownMenuHandler(
-        const std::function<void(LWE::WebContainer*,
-                                 const std::vector<std::string>*, int)>& cb);
+        const std::function<void(WebContainer*, const std::vector<std::string>*,
+                                 int)>& cb);
     void RegisterShowAlertHandler(
-        const std::function<void(LWE::WebContainer*, const std::string&,
+        const std::function<void(WebContainer*, const std::string&,
                                  const std::string&)>& cb);
 
     void RegisterCustomFileResourceRequestHandlers(
@@ -207,9 +213,9 @@ public:
         const std::string& soFarCompositiedString);
     void DispatchCompositionEndEvent(const std::string& soFarCompositiedString);
     void RegisterOnShowSoftwareKeyboardIfPossibleHandler(
-        const std::function<void(LWE::WebContainer*)>& cb);
+        const std::function<void(WebContainer*)>& cb);
     void RegisterOnHideSoftwareKeyboardIfPossibleHandler(
-        const std::function<void(LWE::WebContainer*)>& cb);
+        const std::function<void(WebContainer*)>& cb);
 
     void SetUserData(const std::string& key, void* data);
     void* GetUserData(const std::string& key);
@@ -220,9 +226,8 @@ public:
     // You can control rendering flow through this function
     // If you got callback, you must call `doRenderingFunction` after
     void RegisterSetNeedsRenderingCallback(
-        const std::function<
-            void(LWE::WebContainer*,
-                 const std::function<void()>& doRenderingFunction)>& cb);
+        const std::function<void(WebContainer*, const std::function<void()>&
+                                                    doRenderingFunction)>& cb);
 
 protected:
     WebContainer(void* webView);
@@ -239,12 +244,10 @@ protected:
     }
 
 public:
-    static WebView* Create(void* win, int x, int y, int width, int height,
-                           float devicePixelRatio, const char* defaultFontName,
-                           const char* locale, const char* timezoneID,
-                           const char* localStorageFilePath,
-                           const char* cookieStoreFilePath,
-                           const char* httpCacheDirectorypath);
+    static WebView* Create(void* win, unsigned x, unsigned y, unsigned width,
+                           unsigned height, float devicePixelRatio,
+                           const char* defaultFontName, const char* locale,
+                           const char* timezoneID);
 
     virtual void Destroy();
 
@@ -270,15 +273,15 @@ public:
                                    const std::string& jsFunctionName);
     void ClearCache();
     void RegisterOnReceivedErrorHandler(
-        std::function<void(LWE::WebView*, LWE::ResourceError)> cb);
+        std::function<void(WebView*, ResourceError)> cb);
     void RegisterOnPageParsedHandler(
-        std::function<void(LWE::WebView*, const std::string&)> cb);
+        std::function<void(WebView*, const std::string&)> cb);
     void RegisterOnPageLoadedHandler(
-        std::function<void(LWE::WebView*, const std::string&)> cb);
+        std::function<void(WebView*, const std::string&)> cb);
     void RegisterOnPageStartedHandler(
-        std::function<void(LWE::WebView*, const std::string&)> cb);
+        std::function<void(WebView*, const std::string&)> cb);
     void RegisterOnLoadResourceHandler(
-        std::function<void(LWE::WebView*, const std::string&)> cb);
+        std::function<void(WebView*, const std::string&)> cb);
 
     void RegisterCustomFileResourceRequestHandlers(
         std::function<const char*(const char* path)> resolveFilePathCallback,
@@ -305,7 +308,7 @@ protected:
     {
     }
 
-    virtual LWE::WebContainer* FetchWebContainer() = 0;
+    virtual WebContainer* FetchWebContainer() = 0;
 
     void* m_impl;
 };

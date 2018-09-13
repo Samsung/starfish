@@ -28,9 +28,9 @@ namespace StarFish {
 template <typename KeyType, typename ValueType>
 class IterationSource : public gc {
 public:
-    virtual bool next(ExecutionStateRef* state, KeyType& key, ValueType& value) = 0;
+    virtual bool next(ExecutionStateRef* state, KeyType& key,
+                      ValueType& value) = 0;
 };
-
 }
 
 #endif

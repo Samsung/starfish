@@ -229,12 +229,10 @@ const uint32_t CLICK_REFRESH_DELAY = 400;
 
 class WebViewEFL : public WebView {
 public:
-    WebViewEFL(void* winArg, int x, int y, int width, int height,
-               float devicePixelRatio, const char* defaultFontName,
-               const char* locale, const char* timezoneID,
-               const char* localStorageFilePath,
-               const char* cookieStoreFilePath,
-               const char* httpCacheDirectorypath)
+    WebViewEFL(void* winArg, unsigned x, unsigned y, unsigned width,
+               unsigned height, float devicePixelRatio,
+               const char* defaultFontName, const char* locale,
+               const char* timezoneID)
         : WebView(nullptr)
     {
         STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
@@ -788,15 +786,14 @@ public:
 #if defined(PORT_WINDOW_BACKEND_GL)
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
-            [this](LWE::WebContainer* wc) {
+            [this](WebContainer* wc) {
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
                 g_evasGLAPI = m_glGlapi;
             },
-            [this](LWE::WebContainer* wc){
+            [this](WebContainer* wc){
 
             },
-            devicePixelRatio, defaultFontName, locale, timezoneID,
-            localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
+            devicePixelRatio, defaultFontName, locale, timezoneID);
 
         webContainer->RegisterSetNeedsRenderingCallback([this](
             ::LWE::WebContainer* wc,
@@ -817,8 +814,7 @@ public:
         evas_object_image_data_set(m_graphicsAdapter, buf);
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::Create(
             buf, width, height, evas_object_image_stride_get(m_graphicsAdapter),
-            devicePixelRatio, defaultFontName, locale, timezoneID,
-            localStorageFilePath, cookieStoreFilePath, httpCacheDirectorypath);
+            devicePixelRatio, defaultFontName, locale, timezoneID);
         webContainer->RegisterOnRenderedHandler([this](
             ::LWE::WebContainer* c, ::LWE::WebContainer::RenderResult r) {
             evas_object_image_data_update_add(m_graphicsAdapter, r.updatedX,
@@ -827,10 +823,10 @@ public:
         });
 #endif
         webContainer->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
-            [this](LWE::WebContainer*) { ShowSoftwareKeyboardIfPossible(); });
+            [this](WebContainer*) { ShowSoftwareKeyboardIfPossible(); });
 
         webContainer->RegisterOnHideSoftwareKeyboardIfPossibleHandler(
-            [this](LWE::WebContainer* t) { HideSoftwareKeyboardIfPossible(); });
+            [this](WebContainer* t) { HideSoftwareKeyboardIfPossible(); });
 
         m_hideKeyboardTimeoutId = m_keyboardTimeoutId = SIZE_MAX;
         m_impl = webContainer;
@@ -911,12 +907,16 @@ public:
 
     virtual void Focus() override
     {
+        WebView::Focus();
+
         evas_object_focus_set(m_mainBox, EINA_FALSE);
         evas_object_focus_set(m_nonIMEKeyEventBox, EINA_TRUE);
     }
 
     virtual void Blur() override
     {
+        WebView::Blur();
+
         evas_object_focus_set(m_mainBox, EINA_FALSE);
         evas_object_focus_set(m_nonIMEKeyEventBox, EINA_FALSE);
     }
@@ -1015,17 +1015,13 @@ protected:
     std::function<void()> m_lastDoRenderingFunction;
 };
 
-WebView* WebView::Create(void* win, int x, int y, int width, int height,
-                         float devicePixelRatio, const char* defaultFontName,
-                         const char* locale, const char* timezoneID,
-                         const char* localStorageFilePath,
-                         const char* cookieStoreFilePath,
-                         const char* httpCacheDirectorypath)
+WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
+                         unsigned height, float devicePixelRatio,
+                         const char* defaultFontName, const char* locale,
+                         const char* timezoneID)
 {
     return new WebViewEFL(win, x, y, width, height, devicePixelRatio,
-                          defaultFontName, locale, timezoneID,
-                          localStorageFilePath, cookieStoreFilePath,
-                          httpCacheDirectorypath);
+                          defaultFontName, locale, timezoneID);
 }
 }
 

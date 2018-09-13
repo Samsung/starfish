@@ -142,7 +142,7 @@ public:
     bool mCanGoBack, mCanGoForward;
     bool mIsRunning;
 
-    LWE::WebContainer* mWebContainer;
+    WebContainer* mWebContainer;
     std::list<size_t> mAsyncHandlePool;
 
 #if defined(STARFISH_DALI_TBMSURFACE)
@@ -152,15 +152,13 @@ public:
 #else
     Dali::BufferImage mBufferImage;
 #endif
-    std::function<void(LWE::WebContainer*,
-                       const LWE::WebContainer::RenderResult&)>
+    std::function<void(WebContainer*, const WebContainer::RenderResult&)>
         onRenderedHandler;
-    std::function<void(LWE::WebContainer*, LWE::ResourceError)> onReceivedError;
-    std::function<void(LWE::WebContainer*, const std::string&)>
+    std::function<void(WebContainer*, ResourceError)> onReceivedError;
+    std::function<void(WebContainer*, const std::string&)>
         onPageFinishedHandler;
-    std::function<void(LWE::WebContainer*, const std::string&)>
-        onPageStartedHandler;
-    std::function<void(LWE::WebContainer*, const std::string&)>
+    std::function<void(WebContainer*, const std::string&)> onPageStartedHandler;
+    std::function<void(WebContainer*, const std::string&)>
         onLoadResourceHandler;
 
 private:
@@ -189,85 +187,84 @@ private:
         return true;
     }
 
-    LWE::KeyValue keyStringToKeyValue(const char* DALIKeyString,
-                                      bool isShiftPressed)
+    KeyValue keyStringToKeyValue(const char* DALIKeyString, bool isShiftPressed)
     {
-        LWE::KeyValue keyValue = LWE::KeyValue::UnidentifiedKey;
+        KeyValue keyValue = KeyValue::UnidentifiedKey;
         if (strcmp("Left", DALIKeyString) == 0) {
-            keyValue = LWE::KeyValue::ArrowLeftKey;
+            keyValue = KeyValue::ArrowLeftKey;
         } else if (strcmp("Right", DALIKeyString) == 0) {
-            keyValue = LWE::KeyValue::ArrowRightKey;
+            keyValue = KeyValue::ArrowRightKey;
         } else if (strcmp("Up", DALIKeyString) == 0) {
-            keyValue = LWE::KeyValue::ArrowUpKey;
+            keyValue = KeyValue::ArrowUpKey;
         } else if (strcmp("Down", DALIKeyString) == 0) {
-            keyValue = LWE::KeyValue::ArrowDownKey;
+            keyValue = KeyValue::ArrowDownKey;
         } else if (strcmp("space", DALIKeyString) == 0) {
-            keyValue = LWE::KeyValue::SpaceKey;
+            keyValue = KeyValue::SpaceKey;
         } else if (strcmp("Return", DALIKeyString) == 0) {
-            keyValue = LWE::KeyValue::EnterKey;
+            keyValue = KeyValue::EnterKey;
         } else if (strcmp("Tab", DALIKeyString) == 0) {
-            return LWE::KeyValue::TabKey;
+            return KeyValue::TabKey;
         } else if (strcmp("BackSpace", DALIKeyString) == 0) {
-            keyValue = LWE::KeyValue::BackspaceKey;
+            keyValue = KeyValue::BackspaceKey;
         } else if (strcmp("Escape", DALIKeyString) == 0) {
-            keyValue = LWE::KeyValue::EscapeKey;
+            keyValue = KeyValue::EscapeKey;
         } else if (strcmp("Delete", DALIKeyString) == 0) {
-            return LWE::KeyValue::DeleteKey;
+            return KeyValue::DeleteKey;
         } else if (strcmp("at", DALIKeyString) == 0) {
-            return LWE::KeyValue::AtMarkKey;
+            return KeyValue::AtMarkKey;
         } else if (strcmp("minus", DALIKeyString) == 0) {
             if (isShiftPressed) {
-                keyValue = LWE::KeyValue::MinusMarkKey;
+                keyValue = KeyValue::MinusMarkKey;
             } else {
-                keyValue = LWE::KeyValue::UnderScoreMarkKey;
+                keyValue = KeyValue::UnderScoreMarkKey;
             }
         } else if (strcmp("equal", DALIKeyString) == 0) {
             if (isShiftPressed) {
-                keyValue = LWE::KeyValue::PlusMarkKey;
+                keyValue = KeyValue::PlusMarkKey;
             } else {
-                keyValue = LWE::KeyValue::EqualitySignKey;
+                keyValue = KeyValue::EqualitySignKey;
             }
         } else if (strcmp("bracketleft", DALIKeyString) == 0) {
             if (isShiftPressed) {
-                keyValue = LWE::KeyValue::LeftCurlyBracketMarkKey;
+                keyValue = KeyValue::LeftCurlyBracketMarkKey;
             } else {
-                keyValue = LWE::KeyValue::LeftSquareBracketKey;
+                keyValue = KeyValue::LeftSquareBracketKey;
             }
         } else if (strcmp("bracketright", DALIKeyString) == 0) {
             if (isShiftPressed) {
-                keyValue = LWE::KeyValue::RightCurlyBracketMarkKey;
+                keyValue = KeyValue::RightCurlyBracketMarkKey;
             } else {
-                keyValue = LWE::KeyValue::RightSquareBracketKey;
+                keyValue = KeyValue::RightSquareBracketKey;
             }
         } else if (strcmp("semicolon", DALIKeyString) == 0) {
             if (isShiftPressed) {
-                keyValue = LWE::KeyValue::ColonMarkKey;
+                keyValue = KeyValue::ColonMarkKey;
             } else {
-                keyValue = LWE::KeyValue::SemiColonMarkKey;
+                keyValue = KeyValue::SemiColonMarkKey;
             }
         } else if (strcmp("apostrophe", DALIKeyString) == 0) {
             if (isShiftPressed) {
-                keyValue = LWE::KeyValue::DoubleQuoteMarkKey;
+                keyValue = KeyValue::DoubleQuoteMarkKey;
             } else {
-                keyValue = LWE::KeyValue::SingleQuoteMarkKey;
+                keyValue = KeyValue::SingleQuoteMarkKey;
             }
         } else if (strcmp("comma", DALIKeyString) == 0) {
             if (isShiftPressed) {
-                keyValue = LWE::KeyValue::LessThanMarkKey;
+                keyValue = KeyValue::LessThanMarkKey;
             } else {
-                keyValue = LWE::KeyValue::CommaMarkKey;
+                keyValue = KeyValue::CommaMarkKey;
             }
         } else if (strcmp("period", DALIKeyString) == 0) {
             if (isShiftPressed) {
-                keyValue = LWE::KeyValue::GreaterThanSignKey;
+                keyValue = KeyValue::GreaterThanSignKey;
             } else {
-                keyValue = LWE::KeyValue::PeriodKey;
+                keyValue = KeyValue::PeriodKey;
             }
         } else if (strcmp("slash", DALIKeyString) == 0) {
             if (isShiftPressed) {
-                keyValue = LWE::KeyValue::QuestionMarkKey;
+                keyValue = KeyValue::QuestionMarkKey;
             } else {
-                keyValue = LWE::KeyValue::SlashKey;
+                keyValue = KeyValue::SlashKey;
             }
         } else if (strlen(DALIKeyString) == 1) {
             char ch = DALIKeyString[0];
@@ -275,52 +272,51 @@ private:
                 if (isShiftPressed) {
                     switch (ch) {
                     case '1':
-                        keyValue = LWE::KeyValue::ExclamationMarkKey;
+                        keyValue = KeyValue::ExclamationMarkKey;
                         break;
                     case '2':
-                        keyValue = LWE::KeyValue::AtMarkKey;
+                        keyValue = KeyValue::AtMarkKey;
                         break;
                     case '3':
-                        keyValue = LWE::KeyValue::SharpMarkKey;
+                        keyValue = KeyValue::SharpMarkKey;
                         break;
                     case '4':
-                        keyValue = LWE::KeyValue::DollarMarkKey;
+                        keyValue = KeyValue::DollarMarkKey;
                         break;
                     case '5':
-                        keyValue = LWE::KeyValue::PercentMarkKey;
+                        keyValue = KeyValue::PercentMarkKey;
                         break;
                     case '6':
-                        keyValue = LWE::KeyValue::CaretMarkKey;
+                        keyValue = KeyValue::CaretMarkKey;
                         break;
                     case '7':
-                        keyValue = LWE::KeyValue::AmpersandMarkKey;
+                        keyValue = KeyValue::AmpersandMarkKey;
                         break;
                     case '8':
-                        keyValue = LWE::KeyValue::AsteriskMarkKey;
+                        keyValue = KeyValue::AsteriskMarkKey;
                         break;
                     case '9':
-                        keyValue = LWE::KeyValue::LeftParenthesisMarkKey;
+                        keyValue = KeyValue::LeftParenthesisMarkKey;
                         break;
                     case '0':
-                        keyValue = LWE::KeyValue::RightParenthesisMarkKey;
+                        keyValue = KeyValue::RightParenthesisMarkKey;
                         break;
                     }
                 } else {
-                    keyValue =
-                        (LWE::KeyValue)(LWE::KeyValue::Digit0Key + ch - '0');
+                    keyValue = (KeyValue)(KeyValue::Digit0Key + ch - '0');
                 }
             } else if (ch >= 'a' && ch <= 'z') {
-                int kv = LWE::KeyValue::LowerAKey + ch - 'a';
+                int kv = KeyValue::LowerAKey + ch - 'a';
                 if (isShiftPressed) {
                     kv -= ('z' - 'a');
                     kv -= 7;
                 }
-                keyValue = (LWE::KeyValue)kv;
+                keyValue = (KeyValue)kv;
             }
         }
 #ifdef STARFISH_TIZEN_TV
         if ((strcmp("XF86Red", DALIKeyString) == 0)) {
-            keyValue = LWE::KeyValue::TabKey;
+            keyValue = KeyValue::TabKey;
         }
 #endif
         return keyValue;
@@ -330,10 +326,10 @@ public:
     void keyEventHandler(const Dali::KeyEvent& event)
     {
         // STARFISH_LOG_INFO("[DALi Shell] keyEventHandler()\n");
-        LWE::KeyValue keyValue = LWE::KeyValue::UnidentifiedKey;
+        KeyValue keyValue = KeyValue::UnidentifiedKey;
         if (32 < event.keyPressed.c_str()[0] &&
             127 > event.keyPressed.c_str()[0]) {
-            keyValue = (LWE::KeyValue)event.keyPressed.c_str()[0];
+            keyValue = (KeyValue)event.keyPressed.c_str()[0];
         } else {
             keyValue = keyStringToKeyValue(event.keyPressedName.c_str(),
                                            event.keyModifier & 1);
@@ -376,9 +372,9 @@ public:
         auto cb = [x, y](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseDownEvent()\n");
             TO_CONTAINER(data)
-                ->DispatchMouseDownEvent(LWE::MouseButtonValue::LeftButton,
-                                         LWE::MouseButtonsValue::LeftButtonDown,
-                                         x, y);
+                ->DispatchMouseDownEvent(MouseButtonValue::LeftButton,
+                                         MouseButtonsValue::LeftButtonDown, x,
+                                         y);
         };
         sendAsyncHandle(this, cb);
     }
@@ -393,9 +389,8 @@ public:
         auto cb = [x, y](void* data) {
             // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseUpEvent()\n");
             TO_CONTAINER(data)
-                ->DispatchMouseUpEvent(LWE::MouseButtonValue::NoButton,
-                                       LWE::MouseButtonsValue::NoButtonDown, x,
-                                       y);
+                ->DispatchMouseUpEvent(MouseButtonValue::NoButton,
+                                       MouseButtonsValue::NoButtonDown, x, y);
         };
         sendAsyncHandle(this, cb);
     }
@@ -412,16 +407,16 @@ public:
             // STARFISH_LOG_INFO("[DALi Shell] dispatchMouseMoveEvent()\n");
             TO_CONTAINER(data)
                 ->DispatchMouseMoveEvent(
-                    isLButtonPressed ? LWE::MouseButtonValue::LeftButton
-                                     : LWE::MouseButtonValue::NoButton,
-                    isLButtonPressed ? LWE::MouseButtonsValue::LeftButtonDown
-                                     : LWE::MouseButtonsValue::NoButtonDown,
+                    isLButtonPressed ? MouseButtonValue::LeftButton
+                                     : MouseButtonValue::NoButton,
+                    isLButtonPressed ? MouseButtonsValue::LeftButtonDown
+                                     : MouseButtonsValue::NoButtonDown,
                     x, y);
         };
         sendAsyncHandle(this, cb);
     }
 
-    void dispatchKeyDownEvent(LWE::KeyValue keyCode)
+    void dispatchKeyDownEvent(KeyValue keyCode)
     {
         STARFISH_ASSERT(mWebContainer);
         if (!mIsRunning) {
@@ -435,7 +430,7 @@ public:
         sendAsyncHandle(this, cb);
     }
 
-    void dispatchKeyPressEvent(LWE::KeyValue keyCode)
+    void dispatchKeyPressEvent(KeyValue keyCode)
     {
         STARFISH_ASSERT(mWebContainer);
         if (!mIsRunning) {
@@ -449,7 +444,7 @@ public:
         sendAsyncHandle(this, cb);
     }
 
-    void dispatchKeyUpEvent(LWE::KeyValue keyCode)
+    void dispatchKeyUpEvent(KeyValue keyCode)
     {
         STARFISH_ASSERT(mWebContainer);
         if (!mIsRunning) {
@@ -470,29 +465,27 @@ public:
         auto cb = [](void* data) {
             DALiShellController* controller = (DALiShellController*)data;
             STARFISH_LOG_INFO("[DALi Shell] createInstance()\n");
-            controller->mWebContainer = LWE::WebContainer::Create(
+            controller->mWebContainer = WebContainer::Create(
                 controller->mOutputBuffer, controller->mOutputWidth,
                 controller->mOutputHeight, controller->mOutputStride, 1.0,
-                "SamsungOne", "ko-KR", "Asia/Seoul",
-                "/tmp/StarFish_localStorage.txt", "/tmp/StarFish_Cookies.txt",
-                "/tmp/StarFish-cache");
+                "SamsungOne", "ko-KR", "Asia/Seoul");
             TO_CONTAINER(data)
                 ->RegisterOnRenderedHandler([controller](
-                    LWE::WebContainer* container,
-                    const LWE::WebContainer::RenderResult& renderResult) {
+                    WebContainer* container,
+                    const WebContainer::RenderResult& renderResult) {
                     controller->onRenderedHandler(container, renderResult);
                 });
             TO_CONTAINER(data)
                 ->RegisterOnReceivedErrorHandler(
-                    [controller](LWE::WebContainer* container,
-                                 LWE::ResourceError error) -> void {
+                    [controller](WebContainer* container,
+                                 ResourceError error) -> void {
                         controller->mCanGoBack = container->CanGoBack();
                         controller->mCanGoForward = container->CanGoForward();
                         controller->onReceivedError(container, error);
                     });
             TO_CONTAINER(data)
                 ->RegisterOnPageStartedHandler(
-                    [controller](LWE::WebContainer* container,
+                    [controller](WebContainer* container,
                                  const std::string& url) -> void {
                         controller->mURL = url;
                         controller->mCanGoBack = container->CanGoBack();
@@ -501,7 +494,7 @@ public:
                     });
             TO_CONTAINER(data)
                 ->RegisterOnPageLoadedHandler(
-                    [controller](LWE::WebContainer* container,
+                    [controller](WebContainer* container,
                                  const std::string& url) -> void {
                         controller->mURL = url;
                         controller->mCanGoBack = container->CanGoBack();
@@ -510,7 +503,7 @@ public:
                     });
             TO_CONTAINER(data)
                 ->RegisterOnLoadResourceHandler(
-                    [controller](LWE::WebContainer* container,
+                    [controller](WebContainer* container,
                                  const std::string& url) -> void {
                         controller->mURL = url;
                         controller->mCanGoBack = container->CanGoBack();
@@ -533,8 +526,8 @@ public:
 
     void registerOnRenderedHandler(
         const std::function<void(
-            LWE::WebContainer* c,
-            const LWE::WebContainer::RenderResult& renderResult)>& callback)
+            WebContainer* c, const WebContainer::RenderResult& renderResult)>&
+            callback)
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [callback](void* data) {
@@ -706,8 +699,7 @@ public:
     }
 
     void registerOnReceivedErrorHandler(
-        const std::function<void(LWE::WebContainer*, LWE::ResourceError)>&
-            callback)
+        const std::function<void(WebContainer*, ResourceError)>& callback)
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [callback](void* data) {
@@ -719,8 +711,7 @@ public:
     }
 
     void registerOnPageStartedHandler(
-        const std::function<void(LWE::WebContainer*, const std::string&)>&
-            callback)
+        const std::function<void(WebContainer*, const std::string&)>& callback)
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [callback](void* data) {
@@ -732,8 +723,7 @@ public:
     }
 
     void registerOnPageFinishedHandler(
-        const std::function<void(LWE::WebContainer*, const std::string&)>&
-            callback)
+        const std::function<void(WebContainer*, const std::string&)>& callback)
     {
         STARFISH_ASSERT(mWebContainer);
         auto cb = [callback](void* data) {
@@ -788,9 +778,8 @@ void DALiShellController::Create(Application& application)
     Stage::GetCurrent().KeyEventSignal().Connect(
         this, &DALiShellController::keyEventHandler);
 
-    onRenderedHandler = [this](
-        LWE::WebContainer* c,
-        const LWE::WebContainer::RenderResult& renderResult) {
+    onRenderedHandler = [this](WebContainer* c,
+                               const WebContainer::RenderResult& renderResult) {
         // STARFISH_LOG_INFO("[DALi Shell] onRenderedHandler()\n");
 
         Locker l(gMutex);
@@ -831,19 +820,17 @@ void DALiShellController::Create(Application& application)
 #endif
     };
 
-    onReceivedError = [](LWE::WebContainer* container,
-                         LWE::ResourceError error) {
+    onReceivedError = [](WebContainer* container, ResourceError error) {
         // STARFISH_LOG_INFO("[DALi Shell] onReceivedError()\n");
     };
-    onPageStartedHandler = [](LWE::WebContainer* container,
-                              const std::string& url) {
+    onPageStartedHandler = [](WebContainer* container, const std::string& url) {
         // STARFISH_LOG_INFO("[DALi Shell] onPageStartedHandler()\n");
     };
-    onPageFinishedHandler = [](LWE::WebContainer* container,
+    onPageFinishedHandler = [](WebContainer* container,
                                const std::string& url) {
         // STARFISH_LOG_INFO("[DALi Shell] onPageFinishedHandler()\n");
     };
-    onLoadResourceHandler = [](LWE::WebContainer* container,
+    onLoadResourceHandler = [](WebContainer* container,
                                const std::string& url) {
         // STARFISH_LOG_INFO("[DALi Shell] onLoadResourceHandler()\n");
     };
@@ -1026,12 +1013,10 @@ namespace LWE {
 
 class WebViewDALi : public WebView {
 public:
-    WebViewDALi(void* winArg, int x, int y, int width, int height,
-                float devicePixelRatio, const char* defaultFontName,
-                const char* locale, const char* timezoneID,
-                const char* localStorageFilePath,
-                const char* cookieStoreFilePath,
-                const char* httpCacheDirectorypath)
+    WebViewDALi(void* winArg, unsigned x, unsigned y, unsigned width,
+                unsigned height, float devicePixelRatio,
+                const char* defaultFontName, const char* locale,
+                const char* timezoneID)
         : WebView(nullptr)
         , m_mainThreadHandle(0)
         , m_controller(nullptr)
@@ -1070,17 +1055,13 @@ protected:
     int m_width, m_height;
 };
 
-WebView* WebView::Create(void* win, int x, int y, int width, int height,
-                         float devicePixelRatio, const char* defaultFontName,
-                         const char* locale, const char* timezoneID,
-                         const char* localStorageFilePath,
-                         const char* cookieStoreFilePath,
-                         const char* httpCacheDirectorypath)
+WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
+                         unsigned height, float devicePixelRatio,
+                         const char* defaultFontName, const char* locale,
+                         const char* timezoneID)
 {
     return new WebViewDALi(win, x, y, width, height, devicePixelRatio,
-                           defaultFontName, locale, timezoneID,
-                           localStorageFilePath, cookieStoreFilePath,
-                           httpCacheDirectorypath);
+                           defaultFontName, locale, timezoneID);
 }
 }
 

@@ -112,38 +112,38 @@ void WebView::ClearCache()
 }
 
 void WebView::RegisterOnReceivedErrorHandler(
-    std::function<void(LWE::WebView*, LWE::ResourceError)> cb)
+    std::function<void(WebView*, ResourceError)> cb)
 {
-    FetchWebContainer()->RegisterOnReceivedErrorHandler([this, cb](
-        LWE::WebContainer*, LWE::ResourceError err) { cb(this, err); });
+    FetchWebContainer()->RegisterOnReceivedErrorHandler(
+        [this, cb](WebContainer*, ResourceError err) { cb(this, err); });
 }
 
 void WebView::RegisterOnPageParsedHandler(
-    std::function<void(LWE::WebView*, const std::string&)> cb)
+    std::function<void(WebView*, const std::string&)> cb)
 {
     FetchWebContainer()->RegisterOnPageParsedHandler(
-        [this, cb](LWE::WebContainer*, const std::string& a) { cb(this, a); });
+        [this, cb](WebContainer*, const std::string& a) { cb(this, a); });
 }
 
 void WebView::RegisterOnPageLoadedHandler(
-    std::function<void(LWE::WebView*, const std::string&)> cb)
+    std::function<void(WebView*, const std::string&)> cb)
 {
     FetchWebContainer()->RegisterOnPageLoadedHandler(
-        [this, cb](LWE::WebContainer*, const std::string& a) { cb(this, a); });
+        [this, cb](WebContainer*, const std::string& a) { cb(this, a); });
 }
 
 void WebView::RegisterOnPageStartedHandler(
-    std::function<void(LWE::WebView*, const std::string&)> cb)
+    std::function<void(WebView*, const std::string&)> cb)
 {
     FetchWebContainer()->RegisterOnPageStartedHandler(
-        [this, cb](LWE::WebContainer*, const std::string& a) { cb(this, a); });
+        [this, cb](WebContainer*, const std::string& a) { cb(this, a); });
 }
 
 void WebView::RegisterOnLoadResourceHandler(
-    std::function<void(LWE::WebView*, const std::string&)> cb)
+    std::function<void(WebView*, const std::string&)> cb)
 {
     FetchWebContainer()->RegisterOnPageLoadedHandler(
-        [this, cb](LWE::WebContainer*, const std::string& a) { cb(this, a); });
+        [this, cb](WebContainer*, const std::string& a) { cb(this, a); });
 }
 
 void WebView::Pause()
@@ -181,9 +181,11 @@ void* WebView::GetUserData(const std::string& key)
 
 void WebView::Focus()
 {
+    FetchWebContainer()->Focus();
 }
 
 void WebView::Blur()
 {
+    FetchWebContainer()->Blur();
 }
 }
