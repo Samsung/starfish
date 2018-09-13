@@ -654,7 +654,7 @@ section are supported.
 |    | attribute |  frame  |  Contains the type of the external borders of the table.  |
 |    | attribute |  rules  |  Contains the type of the internal borders of the table.  |
 |    | attribute |  summary  |  Contains a description of the purpose or the structure of the table.  |
-|    | attribute |  width  |  Contains the length in pixels or in percentage of the desired width fo the entire table.  | 
+|    | attribute |  width  |  Contains the length in pixels or in percentage of the desired width fo the entire table.  |
 |    | attribute |  bgColor  | Contains the background color of the cells.  |
 |    | attribute |  cellPadding  |  Contains the width in pixels of the horizontal and vertical sapce between cell content and cell borders.  |
 |    | attribute |  cellSpacing  |  Contains the width in pixels of the horizontal and vertical separation between cells.  |
@@ -674,7 +674,7 @@ section are supported.
 |    | attribute |  deleteCell  |  Removes the cell at the given position in the row.  |
 |    | attribute |  bgColor  |  Returns the background color of the cells. |
 |    | attribute |  align  |  Returns an enumerated value reflecting the align attribute.  |
-| [HTMLTableCaptionElement](https://html.spec.whatwg.org/multipage/tables.html#htmltablecaptionelement) | interface |  HTMLTableCaptionElement | Represents the title of the table that is its parent, if it has a parent and that is a table element. | 
+| [HTMLTableCaptionElement](https://html.spec.whatwg.org/multipage/tables.html#htmltablecaptionelement) | interface |  HTMLTableCaptionElement | Represents the title of the table that is its parent, if it has a parent and that is a table element. |
 |  | attribute |  align | Represents an enumerated attribute indicating alignment of the caption with respect to the table. |
 |  [HTMLTableCellElement](https://html.spec.whatwg.org/#htmltablecellelement)  |  attribute  |  colSpan  |  colspan content attribute  |
 |    | attribute |  rowSpan  |  rowspan content attribute  |
@@ -1500,10 +1500,9 @@ The following describes Web device APIs supported by lightweight web engine. Sup
 ## Accessible Rich Internet Applications (WAI-ARIA)
 The following describes WAI-ARIA supported by lightweight web engine. Please, see [here](https://www.w3.org/TR/wai-aria/) for more information about WAI-ARIA.
 
-\* States and Properties are as follows:
-| Type | Name | Description | Note |
-|------|------|-------------|------|
-| property | [aria-label](https://www.w3.org/TR/wai-aria/#aria-label) | Defines a string value that labels the current element. See related aria-labelledby.| |
-| property | [aria-labelledby](https://www.w3.org/TR/wai-aria/#aria-labelledby) | Identifies the element (or elements) that labels the current element. See related aria-describedby. | |
-| property | [aria-describedby](https://www.w3.org/TR/wai-aria/#aria-describedby)| Identifies the element (or elements) that describes the object. See related aria-labelledby.| |
-| state | [aria-hidden](https://www.w3.org/TR/wai-aria/#aria-hidden) | Indicates whether the element is exposed to an accessibility API. See related aria-disabled. | |
+| Interface | Type | Name | Description | Note |
+|-----------|------|------|-------------|------|
+| [WAI-ARIA](https://www.w3.org/TR/wai-aria/) | property | [aria-label](https://www.w3.org/TR/wai-aria/#aria-label) | Defines a string value that labels the current element. See related aria-labelledby.| |
+| | property | [aria-labelledby](https://www.w3.org/TR/wai-aria/#aria-labelledby) | Identifies the element (or elements) that labels the current element. See related aria-describedby. | |
+| | property | [aria-describedby](https://www.w3.org/TR/wai-aria/#aria-describedby)| Identifies the element (or elements) that describes the object. See related aria-labelledby.| |
+| | state | [aria-hidden](https://www.w3.org/TR/wai-aria/#aria-hidden) | Indicates whether the element is exposed to an accessibility API. See related aria-disabled. | |
