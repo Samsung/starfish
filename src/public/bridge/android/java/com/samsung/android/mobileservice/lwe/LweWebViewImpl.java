@@ -473,7 +473,7 @@ public class LweWebViewImpl implements LweWebView{
         mLWEView.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                int keyValue = 0;
+                char keyValue = (char)event.getUnicodeChar();
                 switch (keyCode) {
                     case KeyEvent.KEYCODE_ENTER:
                         keyValue = 13; // ascii - CR
@@ -482,7 +482,7 @@ public class LweWebViewImpl implements LweWebView{
                         keyValue = 8; // ascii - BS
                         break;
                 }
-                final int key = keyValue;
+                final char key = keyValue;
                 final int eventAction = event.getAction();
                 synchronized (sWebViewThreadLocker) {
                     if (sWebViewHandler != null && key != 0) {
