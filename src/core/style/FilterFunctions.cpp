@@ -106,7 +106,7 @@ void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
 {
     float sigma = m_stdDeviation.numberData() * 2;
 
-    size_t extraHeight = 3 * (m_stdDeviation.numberData());
+    size_t extraHeight = 3 * (sigma * 0.5);
     size_t numberOfThreadsToRequest =
         (width * height) / (100 * 100 + extraHeight * width);
     struct Params {
@@ -133,7 +133,7 @@ void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
 
     if (num > 1) {
         const size_t blockHeight = height / num;
-        const size_t jobsWithExtra = width % num;
+        const size_t jobsWithExtra = height % num;
         int currentY = 0;
 
         for (size_t i = 0; i < num; ++i) {
