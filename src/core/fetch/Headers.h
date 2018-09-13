@@ -44,7 +44,7 @@ public:
     {
         return m_instance;
     }
-    virtual bool isHeaders() const override;
+    virtual bool isHeaders() const;
 
     static bool isValidHTTPToken(const String* name);
     static bool isValidHTTPHeaderValue(const String* value);
