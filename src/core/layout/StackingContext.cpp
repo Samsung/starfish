@@ -165,6 +165,14 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
                                              target);
         }
         target->push_back(this);
+
+        StackingContext* ancestor = m_parent;
+        while (ancestor) {
+            if (ancestor->owner()->style()->hasAvailableFilter()) {
+                ancestorsThatHasFilters().push_back(ancestor);
+            }
+            ancestor = ancestor->parent();
+        }
     }
 }
 
@@ -319,15 +327,6 @@ public:
         , m_ownerContext(sCtx)
     {
         canvas->save();
-
-        StackingContext* ancestor = sCtx->parent();
-        while (ancestor) {
-            if (ancestor->owner()->style()->hasAvailableFilter()) {
-                sCtx->ancestorsThatHasFilters().push_back(ancestor);
-            }
-            ancestor = ancestor->parent();
-        }
-
         FrameBox* self = sCtx->owner();
 
         if (self->style()->position() != FixedPositionValue) {
@@ -540,7 +539,6 @@ public:
     ~CanvasStateRestorer()
     {
         m_canvas->restore();
-        m_ownerContext->ancestorsThatHasFilters().clear();
     }
 
     Canvas* m_canvas;
@@ -1449,8 +1447,9 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     }
 
     if (!canRejectPainting) {
-        if (owner()->style()->hasAvailableFilter() ||
-            m_ancestorsThatHasFilters.size()) {
+        if ((owner()->style()->hasAvailableFilter() ||
+             m_ancestorsThatHasFilters.size()) &&
+            !hasGraphicsBuffer) {
             FilterContext filterContext(&canvas, this);
             m_owner->paintBackgroundAndBorders(canvas);
             filterContext.applyAllFilter();

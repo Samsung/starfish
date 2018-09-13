@@ -681,6 +681,7 @@ void FlexFormattingContext::computeCrossSize()
                 m_layoutContext.pushBlockBoxAligningAtFirstBaseline(
                     flexItem->asFrameBlockBox());
             }
+            flexItem->markNeedsLayout();
             if (m_isMainAxisInInlineAxis) {
                 MainSizeFixer fixer(flexItem, m_isMainAxisInInlineAxis);
                 auto resolveWhat = Frame::LayoutWantToResolve::ResolveHeight;
@@ -1145,6 +1146,8 @@ LayoutUnit FrameFlexibleBox::basisSize(
     bool containingBlockOfFlexItemContentWidthDamaged =
         containingBlockOfFlexItem->contentWidthDamaged();
     bool oldNeedsPainting = containingBlockOfFlexItem->needsPainting();
+
+    flexItem->markNeedsLayout();
 
     if (isMainAxisInInlineAxis) {
         containingBlockOfFlexItem->setContentWidth(availableMainSize);
