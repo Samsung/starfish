@@ -1,0 +1,19 @@
+// https://fetch.spec.whatwg.org/#headers-class
+
+// NOTE transfer: sequence<sequence<ByteString>> or record<ByteString, ByteString>
+// -> any
+typedef any HeadersInit;
+
+[
+  Constructor(optional any init),
+  ConstructorCallWith=Document,
+  Exposed=(Window,Worker),
+  RaisesException=Constructor
+] interface Headers {
+  [RaisesException] void append(ByteString name, ByteString value);
+  [Rename=deleteHeader, RaisesException]void delete(ByteString name);
+  [RaisesException] ByteString? get(ByteString name);
+  [RaisesException] boolean has(ByteString name);
+  [RaisesException] void set(ByteString name, ByteString value);
+  iterable<ByteString, ByteString>;
+};
