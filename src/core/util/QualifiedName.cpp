@@ -83,29 +83,49 @@ bool checkNameProductionRule_internal(char32_t c)
     return true;
 }
 
-bool QualifiedName::checkNameProductionRule(String* str, bool isAttribute)
+bool QualifiedName::checkNameProductionRule(String* str)
 {
     size_t length = str->length();
     if (length == 0) {
         return false;
     }
-    bool start = true;
+
+    if (!checkNameProductionRuleStart_internal(str->charAt(0))) {
+        return false;
+    }
+
+    for (unsigned i = 1; i < length; ++i) {
+        if (!checkNameProductionRule_internal(str->charAt(i))) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+bool QualifiedName::validateQualifiedName(String* str)
+{
+    size_t length = str->length();
+    if (length == 0) {
+        return false;
+    }
+
+    bool startName = true;
     bool sawColon = false;
+    unsigned colonPosition;
     for (unsigned i = 0; i < length; ++i) {
         if (str->charAt(i) == ':') {
             if (sawColon) {
                 return false;
             }
+            startName = true;
             sawColon = true;
-            if (!isAttribute) {
-                start = true;
-            }
-        } else if (start) {
+            colonPosition = i;
+        } else if (startName) {
             if (!checkNameProductionRuleStart_internal(str->charAt(i))) {
                 return false;
             }
-            sawColon = false;
-            start = false;
+            startName = false;
         } else {
             if (!checkNameProductionRule_internal(str->charAt(i))) {
                 return false;
@@ -113,8 +133,8 @@ bool QualifiedName::checkNameProductionRule(String* str, bool isAttribute)
         }
     }
 
-    for (unsigned i = 1; i < length; ++i) {
-        if (!checkNameProductionRule_internal(str->charAt(i))) {
+    if (sawColon) {
+        if (colonPosition == 0 || colonPosition == length - 1) {
             return false;
         }
     }
