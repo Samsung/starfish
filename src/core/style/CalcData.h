@@ -184,7 +184,7 @@ public:
 
     void setValue(CalcValueData data)
     {
-        m_data = data;
+        memcpy(&m_data, &data, sizeof(CalcValueData));
     }
 
     float numberValue() const
