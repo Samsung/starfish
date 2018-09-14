@@ -27,6 +27,7 @@
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/XMLDocument.h"
+#include "core/dom/Text.h"
 
 namespace StarFish {
 
@@ -35,7 +36,7 @@ DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
                                                     String* systemId)
 {
     // Validate qualifiedName.
-    if (!QualifiedName::checkNameProductionRule(qualifiedName)) {
+    if (!QualifiedName::validateQualifiedName(qualifiedName)) {
         throw new DOMException(document(), DOMException::INVALID_CHARACTER_ERR);
     }
 
@@ -61,8 +62,7 @@ XMLDocument* DOMImplementation::createDocument(
     // steps,
     // given document, namespace, qualifiedName, and an empty dictionary.
     if (qualifiedName->length()) {
-        element =
-            m_document->createElementNS(namespaceParameter, qualifiedName);
+        element = document->createElementNS(namespaceParameter, qualifiedName);
     }
     // If doctype is non-null, append doctype to document.
     if (doctype) {
@@ -119,7 +119,7 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
     if (title.hasValue()) {
         Element* titleElement =
             doc->createElement(String::createASCIIString("title"));
-        titleElement->setTextContent(title);
+        titleElement->appendChild(new Text(doc, title.getValue()));
         head->appendChild(titleElement);
     }
 

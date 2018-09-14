@@ -273,7 +273,7 @@ void Element::setAttribute(const QualifiedName& name, String* value)
 
 void Element::setAttribute(String* name, String* value)
 {
-    if (!QualifiedName::checkNameProductionRule(name, true)) {
+    if (!QualifiedName::checkNameProductionRule(name)) {
         throw new DOMException(document(),
                                DOMException::Code::INVALID_CHARACTER_ERR);
     }

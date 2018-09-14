@@ -416,14 +416,12 @@ void Node::setTextContent(Nullable<String*> val)
     switch (nodeType()) {
     case DOCUMENT_FRAGMENT_NODE:
     case ELEMENT_NODE: {
-        Text* node = new Text(document(), str);
-
         while (firstChild()) {
             removeChild(firstChild());
         }
 
         if (!str->equals(String::emptyString)) {
-            appendChild(node);
+            appendChild(new Text(document(), str));
         }
         break;
     }

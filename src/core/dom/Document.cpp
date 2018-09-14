@@ -220,6 +220,9 @@ ScriptBindingInstance* Document::scriptBindingInstance()
 
 Location* Document::location()
 {
+    if (window()->document() != this) {
+        return nullptr;
+    }
     return window()->location();
 }
 
@@ -760,7 +763,7 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
         ns = Nullable<String*>();
     }
     // Validate qualifiedName.
-    if (!QualifiedName::checkNameProductionRule(qualifiedName)) {
+    if (!QualifiedName::validateQualifiedName(qualifiedName)) {
         throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
     }
     // Let prefix be null.
@@ -962,10 +965,8 @@ Attr* Document::createAttribute(QualifiedName localName)
 
 Attr* Document::createAttributeNS(Nullable<String*> ns, String* name)
 {
-    if (!QualifiedName::checkNameProductionRule(name)) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
-    }
-    return new Attr(this, validateAndExtractQualifiedName(ns, name));
+    QualifiedName qName = validateAndExtractQualifiedName(ns, name);
+    return new Attr(this, qName);
 }
 
 HTMLHtmlElement* Document::rootElement()

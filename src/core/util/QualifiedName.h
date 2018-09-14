@@ -56,7 +56,9 @@ public:
     {
     }
 
-    static bool checkNameProductionRule(String* str, bool isAttribute = false);
+    static bool checkNameProductionRule(String* str);
+    static bool validateQualifiedName(String* str);
+
     bool operator==(const QualifiedName& src) const
     {
         return m_prefix == src.m_prefix &&
