@@ -23,7 +23,7 @@ Release:       1
 Group:         Development/Libraries
 License:       LGPL-2.1+ and Apache-2.0 and BSD-2-Clause and BSD-3-Clause and BSL-1.0 and LGPL-3.0+ and MIT
 Source:        %{name}-%{version}.tar.gz
-ExclusiveArch: %arm
+#ExclusiveArch: %arm
 
 Requires(post): /sbin/ldconfig
 Requires(postun): /sbin/ldconfig
@@ -204,7 +204,19 @@ CXXFLAGS+=' -DSTARFISH_TIZEN_5_0 '
 ##############################################
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%ifarch armv7l
 ./build_third_party.sh arm
+%endif
+%ifarch aarch64
+./build_third_party.sh aarch64
+%endif
+%ifarch i686
+./build_third_party.sh i686
+%endif
+%ifarch x86_64
+./build_third_party.sh x86_64
+%endif
+
 %endif
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
@@ -237,7 +249,19 @@ ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 CFLAGS+=' -Os '
 CXXFLAGS+=' -Os '
+
+%ifarch armv7l
 ./build_third_party.sh arm gear
+%endif
+%ifarch aarch64
+./build_third_party.sh aarch64 gear
+%endif
+%ifarch i686
+./build_third_party.sh i686 gear
+%endif
+%ifarch x86_64
+./build_third_party.sh x86_64 gear
+%endif
 
 # For Dali
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/wearable --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dprofile=wearable %{?gyp_addition_command}

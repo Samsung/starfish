@@ -20,6 +20,63 @@ function build_escargot_for_tizen() {
     cd $ROOT
 }
 
+function build_escargot_for_tizen_aarch64() {
+    ROOT=`pwd`
+    export ESCARGOT_ARCH=aarch64
+
+    cd third_party/escargot/
+    mkdir -p include
+    make install_header_to_include
+
+    #./build_third_party.sh tizen_obs_${ESCARGOT_ARCH} only_release
+    mkdir -p out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release
+    touch out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release/escargot
+    #touch out/tizen_obs/${ESCARGOT_ARCH}/interpreter/debug/escargot
+
+    make tizen_obs_${ESCARGOT_ARCH}.interpreter.release.static -j$NUMPROC
+
+    cp out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release/libescargot.a ./
+    cd $ROOT
+}
+
+function build_escargot_for_tizen_i686() {
+    ROOT=`pwd`
+    export ESCARGOT_ARCH=i586
+
+    cd third_party/escargot/
+    mkdir -p include
+    make install_header_to_include
+
+    #./build_third_party.sh tizen_obs_${ESCARGOT_ARCH} only_release
+    mkdir -p out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release
+    touch out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release/escargot
+    #touch out/tizen_obs/${ESCARGOT_ARCH}/interpreter/debug/escargot
+
+    make tizen_obs_${ESCARGOT_ARCH}.interpreter.release.static -j$NUMPROC
+
+    cp out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release/libescargot.a ./
+    cd $ROOT
+}
+
+function build_escargot_for_tizen_x86_64() {
+    ROOT=`pwd`
+    export ESCARGOT_ARCH=x86_64
+
+    cd third_party/escargot/
+    mkdir -p include
+    make install_header_to_include
+
+    #./build_third_party.sh tizen_obs_${ESCARGOT_ARCH} only_release
+    mkdir -p out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release
+    touch out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release/escargot
+    #touch out/tizen_obs/${ESCARGOT_ARCH}/interpreter/debug/escargot
+
+    make tizen_obs_${ESCARGOT_ARCH}.interpreter.release.static -j$NUMPROC
+
+    cp out/tizen_obs/${ESCARGOT_ARCH}/interpreter/release/libescargot.a ./
+    cd $ROOT
+}
+
 function build_escargot_for_linux() {
     ROOT=`pwd`
     cd third_party/escargot/
@@ -34,8 +91,12 @@ function build_escargot_for_linux() {
 
 if [[ $1 == tizen_obs_arm ]]; then
     build_escargot_for_tizen
-elif [[ $1 == tizen_obs_i386 ]]; then
-    echo "TODO"
+elif [[ $1 == tizen_obs_aarch64 ]]; then
+    build_escargot_for_tizen_aarch64
+elif [[ $1 == tizen_obs_i686 ]]; then
+    build_escargot_for_tizen_i686
+elif [[ $1 == tizen_obs_x86_64 ]]; then
+    build_escargot_for_tizen_x86_64
 else # full build
     build_escargot_for_linux
 fi

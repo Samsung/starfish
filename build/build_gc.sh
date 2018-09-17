@@ -51,7 +51,7 @@ CFLAGS_x86=" -m32 "
 LDFLAGS_x86=" -m32 "
 
 GCCONFFLAGS_arm=
-CFLAGS_arm=" -march=armv7-a -mthumb -finline-limit=64 "
+#CFLAGS_arm=" -march=armv7-a -mthumb -finline-limit=64 "
 LDFLAGS_arm=
 
 # MODE flags : debug / release ----------------------------
@@ -183,14 +183,16 @@ function build_gc_for_tizen_obs() {
     for host in wearable; do
     for arch in $1; do
     for mode in release; do
-    for libtype in shared static; do
-        echo =========================================================================
+    for libtype in shared; do
+        echo "==============================================="
         echo Building bdwgc for $host $arch $mode $libtype
+        echo "==============================================="
 
         cd $BDWGC_ROOT
         BUILDDIR=out/tizen_obs/$arch/$mode.$libtype
         rm -rf $BUILDDIR
         mkdir -p $BUILDDIR
+        touch $BUILDDIR/bdwgc
         cd $BUILDDIR
 
         GCCONFFLAGS_HOST=GCCONFFLAGS_$host CFLAGS_HOST=CFLAGS_$host LDFLAGS_HOST=LDFLAGS_$host
@@ -209,8 +211,12 @@ function build_gc_for_tizen_obs() {
         ../../../../configure $GCCONFFLAGS CFLAGS="$CFLAGS" LDFLAGS="$LDFLAGS $CFLAGS" \
             ARFLAGS="$PLUGINFLAGS" NMFLAGS="$PLUGINFLAGS" RANLIBFLAGS="$PLUGINFLAGS"
         make -j
+        cd $BDWGC_ROOT
+        cp $BUILDDIR/.libs/libgc.a ./
 
+        echo "=================================================="
         echo Building bdwgc for $host $arch $mode $libtype done
+        echo "=================================================="
         cd -
     done
     done
@@ -221,8 +227,12 @@ function build_gc_for_tizen_obs() {
 
 if [[ $1 == tizen_obs_arm ]]; then
     build_gc_for_tizen_obs arm $2
-elif [[ $1 == tizen_obs_i386 ]]; then
-    build_gc_for_tizen_obs i386 $2
+elif [[ $1 == tizen_obs_aarch64 ]]; then
+    build_gc_for_tizen_obs aarch64 $2
+elif [[ $1 == tizen_obs_i686 ]]; then
+    build_gc_for_tizen_obs i686 $2
+elif [[ $1 == tizen_obs_x86_64 ]]; then
+    build_gc_for_tizen_obs x86_64 $2
 else # full build
     build_gc_for_linux
 

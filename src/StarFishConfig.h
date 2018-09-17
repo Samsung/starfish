@@ -331,10 +331,9 @@ inline void clearStack()
 #elif defined(__arm__) || defined(__thumb__) || defined(_ARM) || \
     defined(_M_ARM) || defined(_M_ARMT) || defined(__arm) || defined(__arm)
 #define STARFISH_ARM
-#if defined(__aarch64__)
-#undef STARFISH_ARM
+
+#elif defined(__aarch64__)
 #define STARFISH_ARM64
-#endif
 
 #else
 #error "Could't find cpu arch."

@@ -393,7 +393,7 @@
             'copies': [
                 {
                     'files': [
-                        './third_party/escargot/third_party/GCutil/bdwgc/out/tizen_obs/arm/release.shared/.libs/libgc.a'
+                        './third_party/escargot/third_party/GCutil/bdwgc/libgc.a'
                     ],
                     'destination': '<(PRODUCT_DIR)/../release/lib/tizen',
                 },

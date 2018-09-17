@@ -5,6 +5,12 @@ if [ "$1" == "x64" ]; then
     arch="x64"
 elif [ "$1" == "arm" ]; then
     arch="arm"
+elif [ "$1" == "aarch64" ]; then
+    arch="aarch64"
+elif [ "$1" == "i686" ]; then
+    arch="i686"
+elif [ "$1" == "x86_64" ]; then
+    arch="x86_64"
 fi
 
 echo "=================================="
@@ -56,8 +62,44 @@ elif [ "$arch" == "arm" ]; then
     make clean
     TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
     cd -
+elif [ "$arch" == "aarch64" ]; then
+    cd $STARFISH_ROOT
+    ./build/build_escargot.sh tizen_obs_aarch64
+
+    cd $STARFISH_ROOT
+    ./build/build_gc.sh tizen_obs_aarch64
+
+    cd $STARFISH_ROOT
+    cd third_party/libtuv
+    make clean
+    TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
+    cd -
+elif [ "$arch" == "i686" ]; then
+    cd $STARFISH_ROOT
+    ./build/build_escargot.sh tizen_obs_i686
+
+    cd $STARFISH_ROOT
+    ./build/build_gc.sh tizen_obs_i686
+
+    cd $STARFISH_ROOT
+    cd third_party/libtuv
+    make clean
+    TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
+    cd -
+elif [ "$arch" == "x86_64" ]; then
+    cd $STARFISH_ROOT
+    ./build/build_escargot.sh tizen_obs_x86_64
+
+    cd $STARFISH_ROOT
+    ./build/build_gc.sh tizen_obs_x86_64
+
+    cd $STARFISH_ROOT
+    cd third_party/libtuv
+    make clean
+    TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
+    cd -
 else
-    echo "Unknown option"
+    echo "Unknown option: $arch"
 fi
 
 
