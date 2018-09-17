@@ -538,6 +538,22 @@
             },
         },
         {
+            'target_name': 'glfw_cairo.x64',
+            'type': 'none',
+            'all_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu | sed s/-I//g) || true)',
+                    'third_party/libtuv/include',
+                    'third_party/libtuv/src'
+                ],
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu) || true)',
+                    '-lturbojpeg -lgif -ljpeg',
+                    '-Llib -ltuv',
+                ],
+            },
+        },
+        {
             'target_name': 'efl_cairo.tizen',
             'type': 'none',
             'all_dependent_settings': {

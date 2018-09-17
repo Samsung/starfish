@@ -587,7 +587,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                                     window->document()->setNeedsPainting();
                                     window->window()->testStart();
                                 },
-                                10, nullptr);
+                                250, nullptr);
                         }
 #endif
                     },

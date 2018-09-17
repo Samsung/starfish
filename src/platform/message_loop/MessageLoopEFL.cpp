@@ -412,5 +412,19 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
         },
         data);
 }
+
+void MessageLoop::init()
+{
+}
+
+void MessageLoop::run()
+{
+    ecore_main_loop_begin();
+}
+
+void MessageLoop::stop()
+{
+    ecore_main_loop_quit();
+}
 }
 #endif

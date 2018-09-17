@@ -31,13 +31,6 @@ namespace StarFish {
 class BrowsingContext;
 enum class HistoryManagerAction;
 
-struct MessageLoopContext : public gc {
-public:
-    std::unordered_set<size_t> m_idlers;
-    std::unordered_set<size_t> m_idlersFromOtherThread;
-    std::list<size_t> m_idlersFromOtherThreadForUV;
-};
-
 class MessageLoop : public gc, public WebViewHoldable {
     friend class MessageLoopImpl;
     friend class WebView;
@@ -70,13 +63,23 @@ public:
     void invokeNavigate(WebView* wv, ResourceURL* url, ResourceURL* referrerURL,
                         HistoryManagerAction action, bool force = false);
 
+    // methods not related with WebView Context
+    static void init();
+    static void run();
+    static void stop();
+    static size_t runOnMainThreadSync(const std::function<size_t()>& functor);
+
 protected:
     bool m_inClosingState;
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
     std::unordered_set<size_t> m_idlersFromOtherThread;
-    std::list<size_t> m_idlersFromOtherThreadForUV;
     void* m_navigateInvokeIdler;
+
+#if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    std::list<size_t> m_idlersFromOtherThreadForUV;
+    void* m_idlerThreadAsyncHandle;
+#endif
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 public:
     Mutex* m_countingMutex;

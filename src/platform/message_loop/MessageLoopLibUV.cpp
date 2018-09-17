@@ -38,8 +38,10 @@ namespace StarFish {
 
 void on_close_handle(uv_handle_t* handle);
 
-uv_async_t m_idler_thread_async_handle;
-bool isGlobalInit = true;
+static uv_async_t g_idlerThreadSyncHandle;
+static size_t g_uvRunCount;
+static pthread_mutex_t g_threadSyncExecuteGuard;
+static pthread_mutex_t g_threadSyncFlowControler;
 
 struct IdlerData {
     void (*m_fn)(size_t, void*);
@@ -47,7 +49,7 @@ struct IdlerData {
     void* m_data1;
     void* m_data2;
     int m_pararmNum;
-    uv_idle_t* m_idler_uv;
+    uv_timer_t* m_idler_uv;
     MessageLoop* m_ml;
     BrowsingContext* m_ctx;
     volatile bool m_shouldExecute;
@@ -66,39 +68,43 @@ MessageLoop::MessageLoop(WebView* sf)
     , m_runningPoolWorkerCount(0)
 #endif
 {
-    if (isGlobalInit) {
-        isGlobalInit = false;
-        uv_async_init(
-            uv_default_loop(), &m_idler_thread_async_handle,
-            [](uv_async_t* handle) {
-                {
-                    MessageLoop* ml = (MessageLoop*)handle->data;
-                    // TODO: need to lock following whole section
-                    while (!ml->m_idlersFromOtherThreadForUV.empty()) {
-                        IdlerData* id = nullptr;
-                        {
-                            Locker<Mutex> l(*ml->m_idlersFromOtherThreadMutex);
-                            id = (IdlerData*)*ml->m_idlersFromOtherThreadForUV
-                                     .begin();
-                            ml->m_idlersFromOtherThreadForUV.erase(
-                                ml->m_idlersFromOtherThreadForUV.begin());
-                        }
+    m_idlerThreadAsyncHandle = malloc(sizeof(uv_async_t));
 
-                        if (id) {
-                            if (id->m_shouldExecute) {
-                                if (id->m_pararmNum == 1) {
-                                    id->m_fn((size_t)id, id->m_data);
-                                } else if (id->m_pararmNum == 2) {
-                                    ((void (*)(size_t, void*, void*))id->m_fn)(
-                                        (size_t)id, id->m_data, id->m_data1);
-                                }
+    uv_async_init(
+        uv_default_loop(), (uv_async_t*)m_idlerThreadAsyncHandle,
+        [](uv_async_t* handle) {
+            {
+                MessageLoop* ml = (MessageLoop*)handle->data;
+
+                std::list<size_t> jobs;
+                {
+                    Locker<Mutex> l(*ml->m_idlersFromOtherThreadMutex);
+                    jobs = std::move(ml->m_idlersFromOtherThreadForUV);
+                }
+
+                while (!jobs.empty()) {
+                    IdlerData* id = nullptr;
+                    {
+                        id = (IdlerData*)*jobs.begin();
+                        jobs.erase(jobs.begin());
+                    }
+
+                    if (id) {
+                        if (id->m_shouldExecute) {
+                            if (id->m_pararmNum == 1) {
+                                id->m_fn((size_t)id, id->m_data);
+                            } else if (id->m_pararmNum == 2) {
+                                ((void (*)(size_t, void*, void*))id->m_fn)(
+                                    (size_t)id, id->m_data, id->m_data1);
                             }
-                            delete id;
                         }
+                        delete id;
                     }
                 }
-            });
-    }
+            }
+        });
+
+    ((uv_async_t*)m_idlerThreadAsyncHandle)->data = this;
 }
 
 size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
@@ -112,17 +118,20 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     id->m_pararmNum = 1;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
-    uv_idle_init(uv_default_loop(), id->m_idler_uv);
+    id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
+    uv_timer_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
-    uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        id->m_fn((size_t)id, id->m_data);
-        uv_idle_stop(handle);
-        GC_FREE(id);
-        uv_close((uv_handle_t*)handle, on_close_handle);
-    });
+    uv_timer_start(id->m_idler_uv,
+                   [](uv_timer_t* handle) {
+                       IdlerData* id = (IdlerData*)handle->data;
+                       id->m_ml->m_idlers.erase(
+                           id->m_ml->m_idlers.find((size_t)id));
+                       id->m_fn((size_t)id, id->m_data);
+                       uv_timer_stop(handle);
+                       GC_FREE(id);
+                       uv_close((uv_handle_t*)handle, on_close_handle);
+                   },
+                   0, 0);
 
     return (size_t)id;
 }
@@ -140,19 +149,22 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_pararmNum = 2;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
-    uv_idle_init(uv_default_loop(), id->m_idler_uv);
+    id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
+    uv_timer_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
-    uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
-        ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                   id->m_data1);
-        uv_idle_stop(handle);
-        GC_FREE(id);
-        uv_close((uv_handle_t*)handle, on_close_handle);
+    uv_timer_start(
+        id->m_idler_uv,
+        [](uv_timer_t* handle) {
+            IdlerData* id = (IdlerData*)handle->data;
+            id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
+            ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
+                                                       id->m_data1);
+            uv_timer_stop(handle);
+            GC_FREE(id);
+            uv_close((uv_handle_t*)handle, on_close_handle);
 
-    });
+        },
+        0, 0);
     return (size_t)id;
 }
 
@@ -171,20 +183,23 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_pararmNum = 3;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler_uv = (uv_idle_t*)malloc(sizeof(uv_idle_t));
-    uv_idle_init(uv_default_loop(), id->m_idler_uv);
+    id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
+    uv_timer_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
-    uv_idle_start(id->m_idler_uv, [](uv_idle_t* handle) {
-        IdlerData* id = (IdlerData*)handle->data;
-        id->m_ml->m_idlers.erase(id->m_ml->m_idlers.find((size_t)id));
+    uv_timer_start(id->m_idler_uv,
+                   [](uv_timer_t* handle) {
+                       IdlerData* id = (IdlerData*)handle->data;
+                       id->m_ml->m_idlers.erase(
+                           id->m_ml->m_idlers.find((size_t)id));
 
-        ((void (*)(size_t, void*, void*, void*))id->m_fn)(
-            (size_t)id, id->m_data, id->m_data1, id->m_data2);
-        uv_idle_stop(handle);
-        GC_FREE(id);
-        uv_close((uv_handle_t*)handle, on_close_handle);
+                       ((void (*)(size_t, void*, void*, void*))id->m_fn)(
+                           (size_t)id, id->m_data, id->m_data1, id->m_data2);
+                       uv_timer_stop(handle);
+                       GC_FREE(id);
+                       uv_close((uv_handle_t*)handle, on_close_handle);
 
-    });
+                   },
+                   0, 0);
     return (size_t)id;
 }
 
@@ -210,8 +225,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThreadForUV.push_back((size_t)id);
     }
 
-    m_idler_thread_async_handle.data = this;
-    uv_async_send(&m_idler_thread_async_handle);
+    uv_async_send((uv_async_t*)m_idlerThreadAsyncHandle);
     return (size_t)id;
 }
 
@@ -234,8 +248,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
         m_idlersFromOtherThreadForUV.push_back((size_t)id);
     }
 
-    m_idler_thread_async_handle.data = this;
-    uv_async_send(&m_idler_thread_async_handle);
+    uv_async_send((uv_async_t*)m_idlerThreadAsyncHandle);
     return (size_t)id;
 }
 
@@ -244,7 +257,7 @@ void MessageLoop::removeIdler(size_t handle)
     STARFISH_ASSERT(isMainThread());
     IdlerData* id = (IdlerData*)handle;
     m_idlers.erase(m_idlers.find(handle));
-    uv_idle_stop(id->m_idler_uv);
+    uv_timer_stop(id->m_idler_uv);
     uv_close((uv_handle_t*)id->m_idler_uv, on_close_handle);
     GC_FREE(id);
 }
@@ -262,7 +275,7 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_ctx == ctx || ctx == nullptr) {
             iter = m_idlers.erase(iter);
-            uv_idle_stop(id->m_idler_uv);
+            uv_timer_stop(id->m_idler_uv);
             uv_close((uv_handle_t*)id->m_idler_uv, on_close_handle);
             GC_FREE(id);
         } else {
@@ -285,7 +298,7 @@ struct InvokeNavigateData : public gc {
     WebView* wv;
     ResourceURL* url;
     ResourceURL* referrerURL;
-    uv_idle_t* idler;
+    uv_timer_t* idler;
     HistoryManagerAction action;
     void** extra;
 
@@ -299,7 +312,7 @@ void MessageLoop::destroy()
 {
     m_inClosingState = true;
     if (m_navigateInvokeIdler) {
-        uv_idle_stop(((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
+        uv_timer_stop(((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
         uv_close(
             (uv_handle_t*)((InvokeNavigateData*)m_navigateInvokeIdler)->idler,
             on_close_handle);
@@ -335,7 +348,7 @@ void MessageLoop::destroy()
 
             ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                 (size_t)id, id->m_data, id->m_data1, id->m_data2);
-            uv_idle_stop(id->m_idler_uv);
+            uv_timer_stop(id->m_idler_uv);
             uv_close((uv_handle_t*)id->m_idler_uv, on_close_handle);
             GC_FREE(id);
         }
@@ -360,6 +373,8 @@ void MessageLoop::destroy()
         id->m_shouldExecute = false;
         iter2++;
     }
+
+    uv_close((uv_handle_t*)m_idlerThreadAsyncHandle, on_close_handle);
 }
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
@@ -368,7 +383,7 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
 {
     if (m_navigateInvokeIdler != nullptr) {
         auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
-        uv_idle_stop(data->idler);
+        uv_timer_stop(data->idler);
         uv_close((uv_handle_t*)data->idler, on_close_handle);
         delete data;
     }
@@ -380,17 +395,80 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
     data->url = url;
     data->referrerURL = referrerURL;
     data->action = action;
-    data->idler = (uv_idle_t*)malloc(sizeof(uv_idle_t));
-    uv_idle_init(uv_default_loop(), data->idler);
+    data->idler = (uv_timer_t*)malloc(sizeof(uv_timer_t));
+    uv_timer_init(uv_default_loop(), data->idler);
     data->idler->data = data;
-    uv_idle_start(data->idler, [](uv_idle_t* handle) {
-        InvokeNavigateData* data = (InvokeNavigateData*)handle->data;
-        data->wv->navigate(data->url, data->action, data->referrerURL);
-        *(data->extra) = nullptr;
-        uv_idle_stop(handle);
-        delete data;
-        uv_close((uv_handle_t*)handle, on_close_handle);
-    });
+    uv_timer_start(
+        data->idler,
+        [](uv_timer_t* handle) {
+            InvokeNavigateData* data = (InvokeNavigateData*)handle->data;
+            data->wv->navigate(data->url, data->action, data->referrerURL);
+            *(data->extra) = nullptr;
+            uv_timer_stop(handle);
+            delete data;
+            uv_close((uv_handle_t*)handle, on_close_handle);
+        },
+        0, 0);
+}
+
+void MessageLoop::init()
+{
+    static bool needsInit = true;
+    if (UNLIKELY(needsInit)) {
+        needsInit = false;
+        pthread_mutex_init(&g_threadSyncExecuteGuard, NULL);
+        pthread_mutex_init(&g_threadSyncFlowControler, NULL);
+
+        uv_async_init(uv_default_loop(), &g_idlerThreadSyncHandle,
+                      [](uv_async_t* handle) {
+                          {
+                              const std::function<size_t()>* pFunctor =
+                                  (const std::function<size_t()>*)handle->data;
+                              size_t ret = (*pFunctor)();
+                              handle->data = (void*)ret;
+                              pthread_mutex_unlock(&g_threadSyncFlowControler);
+                          }
+                      });
+    }
+}
+
+void MessageLoop::run()
+{
+    size_t theCountBefore = g_uvRunCount;
+    g_uvRunCount++;
+    while (true) {
+        uv_run(uv_default_loop(), UV_RUN_ONCE);
+        if (UNLIKELY(theCountBefore >= g_uvRunCount)) {
+            break;
+        }
+    }
+}
+
+void MessageLoop::stop()
+{
+    if (g_uvRunCount) {
+        g_uvRunCount--;
+    }
+    uv_stop(uv_default_loop());
+}
+
+size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
+{
+    if (isMainThread()) {
+        return functor();
+    }
+    pthread_mutex_lock(&g_threadSyncExecuteGuard);
+    g_idlerThreadSyncHandle.data = (void*)&functor;
+
+    pthread_mutex_lock(&g_threadSyncFlowControler);
+    uv_async_send(&g_idlerThreadSyncHandle);
+    pthread_mutex_lock(&g_threadSyncFlowControler);
+    pthread_mutex_unlock(&g_threadSyncFlowControler);
+    size_t ret = (size_t)g_idlerThreadSyncHandle.data;
+
+    pthread_mutex_unlock(&g_threadSyncExecuteGuard);
+
+    return ret;
 }
 }
 #endif
