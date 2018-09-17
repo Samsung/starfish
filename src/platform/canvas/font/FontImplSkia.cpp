@@ -178,7 +178,7 @@ FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
 {
     sk_sp<SkFontMgr> fm(SkFontMgr::RefDefault());
     sk_sp<SkData> skData = SkData::MakeWithCopy(data, dataLen);
-    sk_sp<SkTypeface> skTypeface(fm->createFromData(skData.get()));
+    sk_sp<SkTypeface> skTypeface(fm->makeFromData(skData));
 
     if (skTypeface == nullptr) {
         return nullptr;
