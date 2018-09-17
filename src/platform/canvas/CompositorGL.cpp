@@ -61,10 +61,6 @@ using Point = std::array<Coord, 2>;
 #include <GLES3/gl3.h>
 #endif
 
-#ifndef GL_TEXTURE_EXTERNAL_OES
-#define GL_TEXTURE_EXTERNAL_OES 0x8D65
-#endif
-
 #if defined(STARFISH_TIZEN)
 #include <tbm_surface.h>
 #elif defined(STARFISH_ANDROID)
@@ -382,6 +378,14 @@ static void logEglError(const char* name) noexcept
 #define glWaitSync g_evasGLAPI->glWaitSync
 #endif
 
+#ifndef GL_TEXTURE_EXTERNAL_OES
+#define GL_TEXTURE_EXTERNAL_OES 0x8D65
+#endif
+
+#ifndef GL_BGRA_EXT
+#define GL_BGRA_EXT 0x80E1
+#endif
+
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 Evas_GL_API* g_evasGLAPI;
 #endif
@@ -517,7 +521,18 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         "varying vec2 vTexPos;\n"
         "void main(void)\n"
         "{\n"
-        "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
+        "  vec4 texData = texture2D(uTexture, vTexPos);\n"
+#if defined(PORT_PIXEL_ORDER_BGRA)
+        "  gl_FragColor.r = texData[2];\n"
+        "  gl_FragColor.g = texData[1];\n"
+        "  gl_FragColor.b = texData[0];\n"
+        "  gl_FragColor.a = texData[3];\n"
+#else
+        "  gl_FragColor.r = texData[0];\n"
+        "  gl_FragColor.g = texData[1];\n"
+        "  gl_FragColor.b = texData[2];\n"
+        "  gl_FragColor.a = texData[3];\n"
+#endif
         "}";
 
     compositorContext->m_texVertexShader =
@@ -552,7 +567,18 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         "uniform vec4 uAlpha;\n"
         "void main(void)\n"
         "{\n"
-        "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
+        "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
+#if defined(PORT_PIXEL_ORDER_BGRA)
+        "  gl_FragColor.r = texData[2];\n"
+        "  gl_FragColor.g = texData[1];\n"
+        "  gl_FragColor.b = texData[0];\n"
+        "  gl_FragColor.a = texData[3];\n"
+#else
+        "  gl_FragColor.r = texData[0];\n"
+        "  gl_FragColor.g = texData[1];\n"
+        "  gl_FragColor.b = texData[2];\n"
+        "  gl_FragColor.a = texData[3];\n"
+#endif
         "}";
 
     compositorContext->m_texWithAlphaFragmentShader =
@@ -585,7 +611,18 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
             "varying vec2 vTexPos;\n"
             "void main(void)\n"
             "{\n"
-            "  gl_FragColor = texture2D(uTexture, vTexPos);\n"
+            "  vec4 texData = texture2D(uTexture, vTexPos);\n"
+#if defined(PORT_PIXEL_ORDER_BGRA)
+            "  gl_FragColor.r = texData[2];\n"
+            "  gl_FragColor.g = texData[1];\n"
+            "  gl_FragColor.b = texData[0];\n"
+            "  gl_FragColor.a = texData[3];\n"
+#else
+            "  gl_FragColor.r = texData[0];\n"
+            "  gl_FragColor.g = texData[1];\n"
+            "  gl_FragColor.b = texData[2];\n"
+            "  gl_FragColor.a = texData[3];\n"
+#endif
             "}";
 
         compositorContext->m_texFragmentShaderEGLImageExternal =
@@ -619,7 +656,18 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
             "uniform vec4 uAlpha;\n"
             "void main(void)\n"
             "{\n"
-            "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
+            "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
+#if defined(PORT_PIXEL_ORDER_BGRA)
+            "  gl_FragColor.r = texData[2];\n"
+            "  gl_FragColor.g = texData[1];\n"
+            "  gl_FragColor.b = texData[0];\n"
+            "  gl_FragColor.a = texData[3];\n"
+#else
+            "  gl_FragColor.r = texData[0];\n"
+            "  gl_FragColor.g = texData[1];\n"
+            "  gl_FragColor.b = texData[2];\n"
+            "  gl_FragColor.a = texData[3];\n"
+#endif
             "}";
 
         compositorContext->m_texWithAlphaFragmentShaderEGLImageExternal =
