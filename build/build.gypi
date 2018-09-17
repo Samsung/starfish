@@ -244,16 +244,6 @@
                         '-lgif',
                     ],
                 }],
-                ['backend=="glfw_cairo_gl"', {
-                    'cflags_extra': [
-                    ],
-                    'include_dirs_extra': [
-                    ],
-                    'libraries_extra': [
-                        '-ljpeg',
-                        '-lgif',
-                    ],
-                }],
                 ['backend=="efl_skia"', {
                     'cflags_extra': [
                     ],
@@ -386,6 +376,12 @@
                 'cflags_extra': [
                     '<@(cflags_extra)',
                 ],
+                'deps_debug_extra': [
+                    './build.dep.gyp:libtuv.x64.debug',
+                ],
+                'deps_release_extra': [
+                    './build.dep.gyp:libtuv.x64.release',
+                ],
                 'libraries_extra': [
                     '<@(libraries_extra)',
                     '-lGL',
@@ -393,8 +389,9 @@
                     '-lglfw',
                 ],
                 'deps_extra': [
-                    './build.dep.gyp:efl_cairo.x64',
+                    './build.dep.gyp:glfw_cairo.x64',
                     './build.dep.gyp:skia_matrix',
+
                 ],
             }],
             ['platform=="linux" and backend=="dali"', {

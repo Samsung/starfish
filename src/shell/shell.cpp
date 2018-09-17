@@ -38,6 +38,10 @@ extern int g_testCompatibleMode;
 extern int g_startUpFlag;
 #endif
 
+#if defined(PORT_WEBVIEW_BRIDGE_GLFW)
+#include <signal.h>
+#endif
+
 #if defined(STARFISH_ENABLE_TEST) && defined(STARFISH_X86_64)
 #include <stdio.h>
 #include <signal.h>
@@ -160,6 +164,13 @@ smaps_sizes getSmapsStats()
     return sizes;
 }
 #endif
+
+static volatile sig_atomic_t g_doneFlag = 0;
+
+static void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
+{
+    g_doneFlag = 1;
+}
 
 int main(int argc, char* argv[])
 {
@@ -474,9 +485,24 @@ int main(int argc, char* argv[])
     elm_run();
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL)
     ecore_main_loop_begin();
+#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+    struct sigaction act;
+    memset(&act, '\0', sizeof(act));
+    act.sa_sigaction = setDoneFlag;
+    act.sa_flags = SA_SIGINFO;
+
+    if (sigaction(SIGINT, &act, NULL) < 0) {
+        perror("sigaction");
+        return 1;
+    }
+
+    while (!g_doneFlag) {
+        usleep(100);
+    }
 #endif
 
-#ifndef PORT_WEBVIEW_BRIDGE_EFL
+#if !defined(PORT_WEBVIEW_BRIDGE_EFL) // evas object delete callback will call
+                                      // destroy function
     webView->Destroy();
 #endif
 
@@ -488,12 +514,14 @@ int main(int argc, char* argv[])
 
     LWE::LWE::Finalize();
 
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
     GC_gcollect();
     GC_gcollect();
     GC_gcollect();
     GC_gcollect();
     GC_gcollect_and_unmap();
     GC_gcollect_and_unmap();
+#endif
 
 #if defined(STARFISH_ENABLE_TEST)
     auto stat = getSmapsStats();
