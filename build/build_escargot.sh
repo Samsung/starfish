@@ -41,7 +41,7 @@ function build_escargot_for_tizen_aarch64() {
 
 function build_escargot_for_tizen_i686() {
     ROOT=`pwd`
-    export ESCARGOT_ARCH=i586
+    export ESCARGOT_ARCH=i686
 
     cd third_party/escargot/
     mkdir -p include
