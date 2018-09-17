@@ -148,7 +148,7 @@ add_library( png-lib SHARED IMPORTED )
 set_target_properties( png-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libpng.so )
 
 add_library( skia-lib SHARED IMPORTED )
-set_target_properties( skia-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libskia.so )
+set_target_properties( skia-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libskia_shared.so )
 
 add_library( jpeg-lib SHARED IMPORTED )
 set_target_properties( jpeg-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libjpeg.so )
