@@ -185,7 +185,6 @@ public:
     virtual void onGlobalPointingEvent(float x, float y,
                                        GlobalPointingEventKind kind) override;
     virtual bool handleDefaultEvent(Event* event) override;
-    void deleteScriptBindingInstance();
     void dispose();
 
     // IDL methods
@@ -431,7 +430,6 @@ public:
 #undef OVERRIDE
 
 private:
-    void initFlags();
     Window(BrowsingContext* browsingContext, ResourceURL* url,
            uint32_t initialWidth, uint32_t initialHeight);
     Window();

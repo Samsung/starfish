@@ -90,7 +90,6 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     */
     m_scriptBindingInstance = new ScriptBindingInstance(
         browsingContext->webView()->scriptEngineInstance(), this);
-    initFlags();
 
     // TODO: use location to open a new document
     m_document = new HTMLDocument(this, m_scriptBindingInstance, url,
@@ -107,21 +106,28 @@ StarFish* Window::starFish()
     return browsingContext()->webView()->starFish();
 }
 
-void Window::deleteScriptBindingInstance()
-{
-}
-
-void Window::initFlags()
-{
-}
-
 void Window::dispose()
 {
+    GCVector<Element*> iframeCollection;
+    Traverse::collectDescendants(
+        iframeCollection, document(),
+        [&](Element* element) { return element->isHTMLIFrameElement(); },
+        false);
+
+    for (size_t i = 0; i < iframeCollection.size(); i++) {
+        iframeCollection[i]->asHTMLIFrameElement()->unloadSrc();
+    }
+
     clearEventListeners();
 
     ResourceURL* url = m_document->documentURI();
     m_location->dispose();
     m_navigator->dispose();
+    m_document->dispose();
+
+    if (m_scriptBindingInstance) {
+        m_scriptBindingInstance->destroy();
+    }
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
