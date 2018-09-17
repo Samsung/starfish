@@ -481,6 +481,15 @@ public class LweWebViewImpl implements LweWebView{
                     case KeyEvent.KEYCODE_DEL:
                         keyValue = 8; // ascii - BS
                         break;
+                    case KeyEvent.KEYCODE_POWER:
+                    case KeyEvent.KEYCODE_BACK:
+                    case KeyEvent.KEYCODE_SEARCH:
+                    case KeyEvent.KEYCODE_CAMERA:
+                    case KeyEvent.KEYCODE_VOLUME_UP:
+                    case KeyEvent.KEYCODE_VOLUME_DOWN:
+                    case KeyEvent.KEYCODE_VOLUME_MUTE:
+                    case KeyEvent.KEYCODE_VOICE_ASSIST:
+                        return false;
                 }
                 final char key = keyValue;
                 final int eventAction = event.getAction();

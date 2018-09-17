@@ -33,6 +33,7 @@ class BrowsingContext;
 class HTMLIFrameElement : public HTMLElement {
     friend class BrowsingContext;
     friend class ResourceLoader;
+    friend class Window;
 
 public:
     HTMLIFrameElement(Document* document, const QualifiedName& qname);

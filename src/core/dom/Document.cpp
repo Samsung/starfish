@@ -650,6 +650,10 @@ void Document::notifyDomContentLoaded()
 
 void Document::dispose()
 {
+    if (!m_onLoadFired) {
+        m_resourceLoader->decreasePendingResourceCountWhileDocumentOpening();
+    }
+
     HTMLElement* body = this->body();
     if (body) {
         String* eventType =
@@ -662,6 +666,10 @@ void Document::dispose()
 
     while (m_activeResourceRequests.size()) {
         m_activeResourceRequests.back()->abort();
+    }
+
+    if (m_animationExecutor->isAlive()) {
+        m_animationExecutor->stopIfNeeds(true);
     }
 }
 

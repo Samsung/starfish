@@ -274,6 +274,7 @@ WebView::WebView(StarFish* starFish, const char* locale, const char* timezoneID,
 
 void WebView::destroy()
 {
+    STARFISH_LOG_INFO("WebView::destroy\n");
 #if defined(STARFISH_ENABLE_INSPECTOR)
     delete m_inspector;
     m_inspector = nullptr;
@@ -281,7 +282,6 @@ void WebView::destroy()
 
     pause();
 
-    STARFISH_LOG_INFO("WebView::destroy\n");
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispose();
     }
@@ -315,6 +315,8 @@ void WebView::destroy()
         th->joinIfNeeds();
     }
     m_messageLoop->destroy();
+
+    m_timer->clear(nullptr);
     m_timer->destroy();
 
     m_publicLayerUserDataMap.clear();
@@ -383,7 +385,10 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     }
     platformWindow()->hideSoftwareKeyboardIfPossible();
     m_topLevelBrowsingContext = BrowsingContext::create(this);
-    m_topLevelBrowsingContext->webView()->createScriptEngineInstance();
+
+    removeScriptEngineInstance();
+    createScriptEngineInstance();
+
     m_topLevelBrowsingContext->open(url, type, referrerURL);
     callPublicWebViewHandler(std::string("OnPageStarted"), url->urlString());
 }

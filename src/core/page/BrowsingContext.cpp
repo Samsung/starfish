@@ -604,18 +604,6 @@ void BrowsingContext::onIdle()
 
 void BrowsingContext::dispose()
 {
-    if (m_window) {
-        GCVector<Element*> iframeCollection;
-        Traverse::collectDescendants(
-            iframeCollection, document(),
-            [&](Element* element) { return element->isHTMLIFrameElement(); },
-            false);
-
-        for (size_t i = 0; i < iframeCollection.size(); i++) {
-            iframeCollection[i]->asHTMLIFrameElement()->unloadSrc();
-        }
-    }
-
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     for (size_t i = 0; i < m_existingMediaElements.size(); i++) {
         m_existingMediaElements[i]->dispose();
@@ -636,38 +624,13 @@ void BrowsingContext::dispose()
 
     m_globalPointingEventListener.clear();
 
-    if (isTopLevelBrowsingContext()) {
-        webView()->timer()->clear(nullptr);
-    } else {
-        webView()->timer()->clear(this);
-    }
+    webView()->timer()->clear(this);
 
     if (m_window) {
-        if (!document()->onLoadFired()) {
-            document()
-                ->resourceLoader()
-                .decreasePendingResourceCountWhileDocumentOpening();
-        }
-        document()->window()->dispose();
-        document()->dispose();
-
-        if (scriptBindingInstance()) {
-            {
-                scriptBindingInstance()->destroy();
-            }
-            document()->window()->deleteScriptBindingInstance();
-        }
-
-        if (document()->animationExecutor()->isAlive()) {
-            document()->animationExecutor()->stopIfNeeds(true);
-        }
+        m_window->dispose();
     }
 
     if (isTopLevelBrowsingContext()) {
-        if (webView()->scriptEngineInstance()) {
-            webView()->removeScriptEngineInstance();
-        }
-
         webView()->platformWindow()->clearResources();
         webView()->messageLoop()->clearPendingIdlers(this);
 
