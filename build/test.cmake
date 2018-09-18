@@ -16,7 +16,7 @@ ADD_CUSTOM_TARGET (tidy-update
 # BACKEND
 #######################################################
 
-IF (${BACKEND} STREQUAL "efl_cairo")
+IF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "glfw_cairo_gl")
     SET (TEST_BACKEND cairo)
 ELSE()
     SET (TEST_BACKEND ${BACKEND})
@@ -100,20 +100,127 @@ ADD_CUSTOM_TARGET (web_platform_test_xhr
     COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_xhr.res common -p${NPROCS}
 )
 
-ADD_CUSTOM_TARGET (web_platform_test_css_cairo
-    COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_css.res common -p${NPROCS}
-)
 
-IF (${BACKEND} STREQUAL "efl_cairo")
-    ADD_CUSTOM_TARGET (web_platform_test_all
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_dom.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_dom_events.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_html.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_page_visibility.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_progress_events.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_xhr.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_css.res common -p${NPROCS}
+
+IF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "glfw_cairo_gl")
+    ADD_CUSTOM_TARGET (wpt_css_css21
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css21_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_manual.res cairo --font-dep -p${NPROCS}
     )
+    
+    ADD_CUSTOM_TARGET (wpt_css_backgrounds
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_manual.res cairo --font-dep -p${NPROCS}
+    )
+    
+    ADD_CUSTOM_TARGET (wpt_css_color
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-4_dev_pixel.res cairo -p${NPROCS}
+    )
+    
+    ADD_CUSTOM_TARGET (wpt_css_flexbox
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-flexbox-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-flexbox-1_dev_pixel.res cairo -p${NPROCS}
+    )
+    
+    ADD_CUSTOM_TARGET (wpt_cssom_view
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_cssom-view-1_dev_basic.res cairo -p${NPROCS}
+    )
+    
+    ADD_CUSTOM_TARGET (wpt_css_transforms
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-transforms-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_manual.res cairo --font-dep -p${NPROCS}
+    )
+    
+    ADD_CUSTOM_TARGET (wpt_mediaqueries
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_mediaqueries-3_dev_pixel.res cairo -p${NPROCS}
+    )
+    
+    ADD_CUSTOM_TARGET (wpt_selectors
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-3_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-3_dev_pixel.res cairo -p${NPROCS}
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-4_dev_pixel.res cairo -p${NPROCS}
+    )
+    
+    ADD_CUSTOM_TARGET (wpt_css_all
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css21_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-4_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-flexbox-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-flexbox-1_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_cssom-view-1_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-transforms-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_mediaqueries-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-3_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-3_dev_pixel.res cairo -p${NPROCS}
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-4_dev_pixel.res cairo -p${NPROCS}
+    )
+
+    ADD_CUSTOM_TARGET (wpt_others
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/html_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg_with_remote tool/reftest/cairo/wpt/html_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_parsing_basic.res basic -p${NPROCS}
+        COMMAND python #./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_xpath_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/page_visibility_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/xhr_basic.res basic -p${NPROCS}
+    )
+
+    ADD_CUSTOM_TARGET (wpt_pwa
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_basic.res basic -p${NPROCS}
+    )
+
+    ADD_CUSTOM_TARGET (wpt_all
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css21_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-4_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-flexbox-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-flexbox-1_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_cssom-view-1_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-transforms-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_mediaqueries-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-3_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-3_dev_pixel.res cairo -p${NPROCS}
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-4_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/html_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg_with_remote tool/reftest/cairo/wpt/html_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_parsing_basic.res basic -p${NPROCS}
+        COMMAND python #./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_xpath_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/page_visibility_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/xhr_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_basic.res basic -p${NPROCS}
+    )
+
 ELSE()
     ADD_CUSTOM_TARGET (web_platform_test_all
         COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_dom.res common -p${NPROCS}
@@ -227,23 +334,7 @@ ADD_CUSTOM_TARGET (csswg_test_rtl
     COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_rtl.res ${TEST_BACKEND} -p${NPROCS}
 )
 
-ADD_CUSTOM_TARGET (csswg_test_flex_cairo
-    COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_flex.res cairo -p${NPROCS}
-)
-
-IF (${BACKEND} STREQUAL "efl_cairo")
-    ADD_CUSTOM_TARGET (csswg_test_all
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css1.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css21.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css21_tables.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_color.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_transforms.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_backgrounds.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_selectors.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_mediaqueries3.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_manual.res ${TEST_BACKEND} --font-dep -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_flex.res cairo -p${NPROCS}
-    )
+IF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "glfw_cairo_gl")
 ELSE()
     ADD_CUSTOM_TARGET (csswg_test_all
         COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css1.res ${TEST_BACKEND} -p${NPROCS}
@@ -263,19 +354,12 @@ ADD_CUSTOM_TARGET (internal_test
     COMMAND python ./tool/drivers/run_test.py basic tool/reftest/${TEST_BACKEND}/internal_manual.res common --font-dep -p${NPROCS}
 )
 
-IF (${BACKEND} STREQUAL "efl_cairo")
+IF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "glfw_cairo_gl")
     ADD_CUSTOM_TARGET (reftest_all
         COMMAND python ./tool/drivers/run_test.py dom_conformance tool/reftest/${TEST_BACKEND}/dom_conformance_test.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py dom_conformance tool/reftest/${TEST_BACKEND}/webkit_dom_conformance_test.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py dom_conformance tool/reftest/${TEST_BACKEND}/blink_dom_conformance_test.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py dom_conformance tool/reftest/${TEST_BACKEND}/gecko_dom_conformance_test.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_dom.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_dom_events.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_html.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_page_visibility.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_progress_events.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_xhr.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_css.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_basic tool/reftest/${TEST_BACKEND}/blink_fast_dom.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_basic tool/reftest/${TEST_BACKEND}/blink_fast_html.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_pixel tool/reftest/${TEST_BACKEND}/blink_fast_css.res ${TEST_BACKEND} -p${NPROCS}
@@ -290,16 +374,36 @@ IF (${BACKEND} STREQUAL "efl_cairo")
         COMMAND python ./tool/drivers/run_test.py vendor_pixel tool/reftest/${TEST_BACKEND}/webkit_fast_css_manual.res ${TEST_BACKEND} --font-dep -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_pixel tool/reftest/${TEST_BACKEND}/webkit_fast_etc.res ${TEST_BACKEND} -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_pixel tool/reftest/${TEST_BACKEND}/webkit_fast_etc_manual.res ${TEST_BACKEND} --font-dep -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css1.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css21.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css21_tables.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_color.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_transforms.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_backgrounds.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_selectors.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_mediaqueries3.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_manual.res ${TEST_BACKEND} --font-dep -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_flex.res cairo -p${NPROCS}
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css21_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-4_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-flexbox-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-flexbox-1_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_cssom-view-1_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-transforms-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_mediaqueries-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-3_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-3_dev_pixel.res cairo -p${NPROCS}
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-4_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/html_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg_with_remote tool/reftest/cairo/wpt/html_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_parsing_basic.res basic -p${NPROCS}
+        COMMAND python #./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_xpath_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/page_visibility_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/xhr_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_basic.res basic -p${NPROCS}
     )
 ELSE()
     ADD_CUSTOM_TARGET (reftest_all
@@ -312,7 +416,6 @@ ELSE()
         COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_html.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_page_visibility.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_progress_events.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_xhr.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_basic tool/reftest/${TEST_BACKEND}/blink_fast_dom.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_basic tool/reftest/${TEST_BACKEND}/blink_fast_html.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_pixel tool/reftest/${TEST_BACKEND}/blink_fast_css.res ${TEST_BACKEND} -p${NPROCS}
@@ -339,19 +442,12 @@ ELSE()
     )
 ENDIF()
 
-IF (${BACKEND} STREQUAL "efl_cairo")
+IF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "glfw_cairo_gl")
     ADD_CUSTOM_TARGET (test_all
         COMMAND python ./tool/drivers/run_test.py dom_conformance tool/reftest/${TEST_BACKEND}/dom_conformance_test.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py dom_conformance tool/reftest/${TEST_BACKEND}/webkit_dom_conformance_test.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py dom_conformance tool/reftest/${TEST_BACKEND}/blink_dom_conformance_test.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py dom_conformance tool/reftest/${TEST_BACKEND}/gecko_dom_conformance_test.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_dom.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_dom_events.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_html.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_page_visibility.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_progress_events.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/${TEST_BACKEND}/wpt_xhr.res common -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt_css.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_basic tool/reftest/${TEST_BACKEND}/blink_fast_dom.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_basic tool/reftest/${TEST_BACKEND}/blink_fast_html.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_pixel tool/reftest/${TEST_BACKEND}/blink_fast_css.res ${TEST_BACKEND} -p${NPROCS}
@@ -366,19 +462,39 @@ IF (${BACKEND} STREQUAL "efl_cairo")
         COMMAND python ./tool/drivers/run_test.py vendor_pixel tool/reftest/${TEST_BACKEND}/webkit_fast_css_manual.res ${TEST_BACKEND} --font-dep -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_pixel tool/reftest/${TEST_BACKEND}/webkit_fast_etc.res ${TEST_BACKEND} -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py vendor_pixel tool/reftest/${TEST_BACKEND}/webkit_fast_etc_manual.res ${TEST_BACKEND} --font-dep -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css1.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css21.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css21_tables.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_color.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_transforms.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_backgrounds.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_css3_selectors.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_mediaqueries3.res ${TEST_BACKEND} -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/${TEST_BACKEND}/tclist/csswg_manual.res ${TEST_BACKEND} --font-dep -p${NPROCS}
-        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/tclist/csswg_flex.res cairo -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py basic tool/reftest/${TEST_BACKEND}/internal.res common -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py basic tool/reftest/${TEST_BACKEND}/internal_manual.res common --font-dep -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py bidi tool/reftest/${TEST_BACKEND}/bidi.res ${TEST_BACKEND} --font-dep -p${NPROCS}
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css21_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css21_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-backgrounds-3_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-3_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-3_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-color-4_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-color-4_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-flexbox-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-flexbox-1_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_cssom-view-1_dev_basic.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_css-transforms-1_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_css-transforms-1_dev_manual.res cairo --font-dep -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_mediaqueries-3_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-3_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-3_dev_pixel.res cairo -p${NPROCS}
+        # COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/css_selectors-4_dev_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg tool/reftest/cairo/wpt/css_selectors-4_dev_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/html_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py csswg_with_remote tool/reftest/cairo/wpt/html_pixel.res cairo -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_parsing_basic.res basic -p${NPROCS}
+        COMMAND python #./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/dom_xpath_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/page_visibility_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/xhr_basic.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_basic.res basic -p${NPROCS}
     )
 ELSE()
     ADD_CUSTOM_TARGET (test_all
