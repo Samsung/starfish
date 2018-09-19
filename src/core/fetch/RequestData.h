@@ -21,7 +21,6 @@
 #define __StarFishRequestData__
 
 #include "binding/ScriptWrappable.h"
-#include "core/fetch/GetSet.h"
 #include "platform/loader/ResourceURL.h"
 
 namespace StarFish {
@@ -79,7 +78,6 @@ public:
     static RequestCache requestCacheFromString(String* inputString);
     static RequestRedirect requestRedirectFromString(String* inputString);
 };
-
-} // end of namespace StarFish
+}
 
 #endif

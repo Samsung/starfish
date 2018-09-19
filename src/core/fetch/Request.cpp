@@ -19,25 +19,46 @@
 
 #include "StarFishConfig.h"
 #include "binding/RequestOrUSVStringUnion.h"
+#include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/fetch/Request.h"
 #include "core/page/Window.h"
 #include "core/dom/Document.h"
+#include "core/dom/DOMException.h"
+
+#include <EscargotPublic.h>
+using namespace Escargot;
 
 namespace StarFish {
 
-#define CSTR(stringPtr) ((stringPtr)->toUTF8NonGCString().c_str())
+extern BlobOrBufferSourceOrUSVString
+toBlobOrBufferSourceOrUSVStringFromValueRef(ExecutionStateRef* state,
+                                            ValueRef* from);
+extern ValueRef* toValueRefFromBlobOrBufferSourceOrUSVString(
+    ExecutionStateRef* state, BlobOrBufferSourceOrUSVString& from);
+extern bool isBlobOrBufferSourceOrUSVString(ExecutionStateRef* state,
+                                            ValueRef* from);
+
+static BodyInit toBodyInitFromValueRef(ContextRef* ctx, ValueRef* from)
+{
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    BlobOrBufferSourceOrUSVString body =
+        toBlobOrBufferSourceOrUSVStringFromValueRef(state, from);
+    return body;
+}
 
 Request::Request(Window* window, RequestInfo& input)
     : ScriptWrappable(this)
-    , Body(window->scriptBindingInstance())
+    , Body(window)
+    , m_headers(Headers(window->document()))
 {
     initialize(&input);
 }
 
 Request::Request(Window* window, RequestInfo& input, RequestInit& init)
     : ScriptWrappable(this)
-    , Body(window->scriptBindingInstance())
+    , Body(window)
+    , m_headers(Headers(window->document()))
 {
     initialize(&input, &init);
 }
@@ -95,6 +116,9 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         m_data.m_integrity = data->m_integrity;
         m_data.m_keepalive = data->m_keepalive;
 
+        m_headers.copyHeaders(&request->m_headers);
+        // TODO: clone body
+
     } else {
         if (input->isUSVStringValue()) {
             String* tmp = input->getUSVStringValue();
@@ -105,10 +129,8 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
     }
 
     if (init) {
-        Document* document = m_scriptBindingInstance->ownerDocument();
-
         m_data.m_method = init->method()->toASCIIUpper();
-        m_data.m_referrer = computeReferrer(init->referrer(), document);
+        m_data.m_referrer = computeReferrer(init->referrer(), document());
         m_data.m_referrerPolicy =
             ReferrerURL::policyFromString(init->referrerPolicy());
         m_data.m_mode = RequestData::requestModeFromString(init->mode());
@@ -119,19 +141,37 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
             RequestData::requestRedirectFromString(init->redirect());
         m_data.m_integrity = init->integrity();
         m_data.m_keepalive = init->keepalive();
+
+        // Set header
+        m_headers.fill(init->headers());
+
+        // Set body
+        // NOTE: it's not supported to generate bindings for a composite type
+        // in a dictionary (e.g, BodyInit of RequestInit).So it's given as
+        // ScriptValue type.
+        ScriptValue body = init->body();
+        if (!body->isUndefined() && !body->isNull()) {
+            if (m_data.m_method->equals("GET") ||
+                m_data.m_method->equals("HEAD")) {
+                throw new DOMException(document(),
+                                       DOMException::Code::SCRIPT_TYPE_ERR);
+            }
+
+            this->setBody(toBodyInitFromValueRef(
+                this->scriptBindingInstance()->scriptContext(), body));
+            if (this->contentType() != nullptr) {
+                // NOTE: check the action in case that the type already exists
+                // if (m_headers.noCheckValidHas("content-type"))
+                m_headers.noCheckValidSet("content-type",
+                                          CSTR(this->contentType()));
+            }
+        }
     }
 }
 
-Request::Request(ScriptBindingInstance* instance, RequestData* data)
-    : ScriptWrappable(this)
-    , Body(instance)
+Headers* Request::headers()
 {
-    // TODO
-}
-
-ScriptBindingInstance* Request::scriptBindingInstance()
-{
-    return m_scriptBindingInstance;
+    return &m_headers;
 }
 
 String* Request::method()
@@ -278,10 +318,4 @@ bool Request::isHistoryNavigation()
 {
     return false;
 }
-
-// TODO:
-// Request* Request::clone()
-// {
-//     return new Request(this->m_scriptBindingInstance, &this->m_data);
-// }
 }

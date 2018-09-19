@@ -36,7 +36,10 @@ public:
                       void* domObjectPointer) override;
 
     virtual bool isRequest() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override
+    {
+        return WindowHoldable::scriptBindingInstance();
+    }
 
     Request(Window* window, RequestInfo& input);
     Request(Window* window, RequestInfo& input, RequestInit& init);
@@ -53,6 +56,8 @@ public:
     String* redirect();
     String* integrity();
 
+    Headers* headers();
+
     bool keepalive();
     bool isReloadNavigation();
     bool isHistoryNavigation();
@@ -65,6 +70,7 @@ private:
 
 protected:
     RequestData m_data;
+    Headers m_headers;
 };
 }
 

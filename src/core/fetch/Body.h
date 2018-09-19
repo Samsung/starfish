@@ -21,14 +21,16 @@
 #define __StarFishFetchBody__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/WindowHoldable.h"
 #include "core/fetch/GetSet.h"
 #include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
 
 namespace StarFish {
 
 typedef BlobOrBufferSourceOrUSVString BodyInit;
+class DOMException;
 
-class Body : public gc {
+class Body : public WindowHoldable {
 public:
     Promise* arrayBuffer();
     Promise* blob();
@@ -40,20 +42,26 @@ public:
         return m_bodyUsed;
     };
 
-    Nullable<BodyInit> body() const
+    Nullable<BodyInit> body() const;
+    void setBody(const BodyInit& body);
+
+    String* contentType() const
     {
-        return m_body;
+        return m_contentType;
     }
 
-protected:
-    Body(ScriptBindingInstance* instance)
-        : m_scriptBindingInstance(instance)
-    {
-    }
-
+private:
     bool m_bodyUsed;
     Nullable<BodyInit> m_body;
-    ScriptBindingInstance* m_scriptBindingInstance;
+    String* m_contentType;
+
+protected:
+    Body(Window* window)
+        : WindowHoldable(window)
+        , m_bodyUsed(false)
+        , m_contentType(nullptr)
+    {
+    }
 };
 }
 
