@@ -1513,6 +1513,10 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
                 }
             } else if (e->keyValue() >= KeyValue::ArrowDownKey &&
                        e->keyValue() <= KeyValue::ArrowRightKey) {
+#if defined(STARFISH_ANDROID)
+                focusNavigationWithArrow(e);
+                e->defaultPrevented();
+#else
                 double sx = window()->scrollX(false);
                 double sy = window()->scrollY(false);
                 OverflowValue ox = document()->appliedOverflowX();
@@ -1533,6 +1537,7 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
                 }
 
                 window()->scrollToWithoutLayout(sx, sy);
+#endif
             }
         }
     }
@@ -1550,6 +1555,114 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
         document()->window()->dispatchEventByUA(target, event);
     }
 }
+
+#if defined(STARFISH_ANDROID)
+void BrowsingContext::focusNavigationWithArrow(KeyboardEvent* e)
+{
+    if (!(e->keyValue() >= KeyValue::ArrowDownKey &&
+          e->keyValue() <= KeyValue::ArrowRightKey)) {
+        return;
+    }
+
+    LayoutUnit x = 0, y = 0;
+    switch (e->keyValue()) {
+    case KeyValue::ArrowUpKey:
+        y = -1;
+        break;
+    case KeyValue::ArrowDownKey:
+        y = 1;
+        break;
+    case KeyValue::ArrowRightKey:
+        x = 1;
+        break;
+    case KeyValue::ArrowLeftKey:
+        x = -1;
+        break;
+    default:
+        return;
+    }
+
+    const auto& focusRing = document()->focusRing();
+
+    Node* node = focusedNode();
+
+    if (!node) {
+        focusNavigation();
+        return;
+    }
+
+    if (!node->frame()) {
+        focusNavigation();
+        return;
+    }
+
+    if (!node->frame()->isFrameBox()) {
+        focusNavigation();
+        return;
+    }
+
+    FrameBox* target = node->frame()->asFrameBox();
+    LayoutLocation targetLoc =
+        target->absolutePoint(document()->frame()->asFrameDocument());
+    Element* next = nullptr;
+    LayoutUnit maxdist = SIZE_MAX;
+
+    for (size_t i = 0; i < focusRing.size(); i++) {
+        if (focusRing[i] == node) {
+            continue;
+        }
+
+        if (!focusRing[i]) {
+            continue;
+        }
+
+        if (!focusRing[i]->frame()) {
+            continue;
+        }
+
+        if (!focusRing[i]->frame()->isFrameBox()) {
+            continue;
+        }
+
+        FrameBox* box = focusRing[i]->frame()->asFrameBox();
+        LayoutLocation boxLoc =
+            box->absolutePoint(document()->frame()->asFrameDocument());
+        LayoutUnit pX = targetLoc.x() + target->width() / 2;
+        LayoutUnit pY = targetLoc.y() + target->height() / 2;
+
+        LayoutUnit cX = std::max(
+            std::min(pX.toDouble(), (boxLoc.x() + box->width()).toDouble()),
+            boxLoc.x().toDouble());
+        LayoutUnit cY = std::max(
+            std::min(pY.toDouble(), (boxLoc.y() + box->height()).toDouble()),
+            boxLoc.y().toDouble());
+
+        LayoutUnit diffX = cX - pX;
+        LayoutUnit diffY = cY - pY;
+        LayoutUnit dist =
+            sqrt((diffX * diffX).toDouble() + (diffY * diffY).toDouble());
+
+        if (!dist) {
+            dist = 1;
+        }
+
+        diffX = diffX / dist;
+        diffY = diffY / dist;
+
+        LayoutUnit dot = acos((x * diffX).toDouble() + (y * diffY).toDouble());
+        LayoutUnit frustum = 3.14 * 45 / 180;
+        if (maxdist > dist && (dot <= frustum && dot >= 0)) {
+            maxdist = dist;
+            next = focusRing[i];
+        }
+    }
+
+    if (next) {
+        next->scrollIntoViewIfNeeded();
+        setFocusedNode(next, false);
+    }
+}
+#endif
 
 void BrowsingContext::focusNavigation(bool forward)
 {

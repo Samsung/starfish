@@ -474,7 +474,23 @@ public class LweWebViewImpl implements LweWebView{
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
                 char keyValue = (char)event.getUnicodeChar();
+
                 switch (keyCode) {
+                    case KeyEvent.KEYCODE_DPAD_RIGHT:
+                        keyValue = 22;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_LEFT:
+                        keyValue = 21;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_UP:
+                        keyValue = 20;
+                        break;
+                    case KeyEvent.KEYCODE_DPAD_DOWN:
+                        keyValue = 19;
+                        break;
+                    case KeyEvent.KEYCODE_TAB:
+                        keyValue = 18;
+                        break;
                     case KeyEvent.KEYCODE_ENTER:
                         keyValue = 13; // ascii - CR
                         break;
