@@ -95,6 +95,16 @@ void hideIME(void* view);
 LWE::KeyValue virtualKeyCodeToKeyValue(char ch, bool capsLockOrShiftPressed)
 {
     switch (ch) {
+    case 22:
+        return LWE::KeyValue::ArrowRightKey;
+    case 21:
+        return LWE::KeyValue::ArrowLeftKey;
+    case 20:
+        return LWE::KeyValue::ArrowUpKey;
+    case 19:
+        return LWE::KeyValue::ArrowDownKey;
+    case 18:
+        return LWE::KeyValue::TabKey;
     case 13:
         return LWE::KeyValue::EnterKey;
     case 8:
@@ -102,6 +112,7 @@ LWE::KeyValue virtualKeyCodeToKeyValue(char ch, bool capsLockOrShiftPressed)
     default:
         break;
     }
+
     if (StarFish::String::isASCIIPrintableKey(ch)) {
         if (isalpha(ch)) {
             if (!capsLockOrShiftPressed) {

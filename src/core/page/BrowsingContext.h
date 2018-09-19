@@ -45,6 +45,7 @@ class PlatformKeyEventData;
 class Canvas;
 class EventTarget;
 class HistoryManager;
+class KeyboardEvent;
 
 enum class TouchEventKind;
 enum class KeyEventKind;
@@ -264,6 +265,9 @@ private:
 
     void didFocusEvent();
     void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
+#if defined(STARFISH_ANDROID)
+    void focusNavigationWithArrow(KeyboardEvent*);
+#endif
     void focusNavigation(bool forward = true);
 
     BrowsingContext(WebView* webView, HTMLIFrameElement* source = nullptr);
