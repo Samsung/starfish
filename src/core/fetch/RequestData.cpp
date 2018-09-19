@@ -32,6 +32,7 @@ RequestData::RequestData()
     , m_redirect(RequestRedirect::Follow)
     , m_integrity(String::emptyString)
     , m_keepalive(false)
+    , m_url(nullptr)
 {
 }
 

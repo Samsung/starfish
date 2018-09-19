@@ -31,7 +31,8 @@ typedef BlobOrBufferSourceOrUSVString BodyInit;
 
 struct RequestInit : public gc {
     RequestInit()
-        : m_referrer(String::emptyString)
+        : m_method(String::emptyString)
+        , m_referrer(String::emptyString)
         , m_referrerPolicy(String::emptyString)
         , m_mode(String::emptyString)
         , m_credentials(String::emptyString)
