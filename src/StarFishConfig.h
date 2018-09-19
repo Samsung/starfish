@@ -350,6 +350,7 @@ const char* getWindowsTempDir();
 #endif
 
 #define STARFISH_LOG_INFO(...) fprintf(stdout, __VA_ARGS__);
+#define CSTR(stringPtr) ((stringPtr)->toUTF8NonGCString().c_str())
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_INFO
 #include <dlog.h>

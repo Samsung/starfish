@@ -21,13 +21,13 @@
 #define __StarFishRequestInit__
 
 #include "binding/ScriptWrappable.h"
+#include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
 #include "core/fetch/GetSet.h"
+#include "core/fetch/Headers.h"
 
 namespace StarFish {
 
-// TODO: Body
-// class BlobOrBufferSourceOrUSVString;
-// typedef BlobOrBufferSourceOrUSVString BodyInit;
+typedef BlobOrBufferSourceOrUSVString BodyInit;
 
 struct RequestInit : public gc {
     RequestInit()
@@ -52,6 +52,8 @@ struct RequestInit : public gc {
     String* m_integrity;
     bool m_keepalive;
     // Nullable<BodyInit> m_body;
+    ScriptValue m_body;
+    HeadersInit m_headers;
 
     GETTER_SETTER(String*, method, Method);
     GETTER_SETTER(String*, referrer, Referrer);
@@ -63,6 +65,8 @@ struct RequestInit : public gc {
     GETTER_SETTER(String*, integrity, Integrity);
     GETTER_SETTER(bool, keepalive, Keepalive);
     // GETTER_SETTER(Nullable<BodyInit>, body, Body);
+    GETTER_SETTER(ScriptValue, body, Body);
+    GETTER_SETTER(HeadersInit, headers, Headers);
 };
 }
 #endif

@@ -1,13 +1,15 @@
 // https://fetch.spec.whatwg.org/#requestinit
 
 // typedef (Blob or BufferSource or FormData or URLSearchParams or ReadableStream or USVString) BodyInit;
-
 // typedef (Blob or BufferSource or USVString) BodyInit;
+// typedef any BodyInit;
 
 dictionary RequestInit {
    ByteString method;
-    // HeadersInit headers;
-    // BodyInit? body; // TODO: check if binding working for dictionary?
+    HeadersInit headers;
+    
+    // BodyInit? body;
+    any body;
     USVString referrer;
     ReferrerPolicy referrerPolicy;
     RequestMode mode;

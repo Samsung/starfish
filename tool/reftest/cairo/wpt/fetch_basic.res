@@ -39,7 +39,7 @@
 #http://web-platform.test:8000/fetch/api/request/request-cache-default.html
 #http://web-platform.test:8000/fetch/api/request/request-cache-reload.html
 http://web-platform.test:8000/fetch/api/request/request-init-001.sub.html
-#http://web-platform.test:8000/fetch/api/request/request-init-003.sub.html
+http://web-platform.test:8000/fetch/api/request/request-init-003.sub.html
 #http://web-platform.test:8000/fetch/api/request/request-cache-default-conditional.html
 #http://web-platform.test:8000/fetch/api/request/request-keepalive-quota.html
 #http://web-platform.test:8000/fetch/api/request/request-structure.html
