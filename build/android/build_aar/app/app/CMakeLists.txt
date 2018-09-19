@@ -13,9 +13,23 @@ cmake_minimum_required(VERSION 3.4.1)
 set (CMAKE_CXX_STANDARD 11)
 
 set (STARFISH_ROOT_PATH ${CMAKE_SOURCE_DIR}/../../../../../ )
-set (PREBUILT_LIB_PATH ${CMAKE_SOURCE_DIR}/src/main/jniLibs/armeabi-v7a)
+set (PREBUILT_LIB_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/lib)
 set (ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/android )
+set (PACKAGED_LIB_PATH ${CMAKE_SOURCE_DIR}/src/main/jniLibs/armeabi-v7a)
 set(OPENGL_LIB GLESv3)
+
+# Copy prebuilt library to packged lib path.
+file(GLOB REMAIN_SHARED_LIBS
+  "${PACKAGED_LIB_PATH}/*.*"
+)
+file(REMOVE ${REMAIN_SHARED_LIBS})
+
+file(GLOB PREBUILT_SHARED_LIBS
+  "${PREBUILT_LIB_PATH}/*.so"
+)
+file(COPY ${PREBUILT_SHARED_LIBS}
+     DESTINATION ${PACKAGED_LIB_PATH})
+
 
 add_definitions(-DESCARGOT -DHAVE_CONFIG_H -DPLATFORM_ANDROID -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA -DUSE_GET_STACKBASE_FOR_MAIN -DSTARFISH_ENABLE_DOMPARSER)
 add_definitions(-DSTARFISH_ANDROID -DESCARGOT_ENABLE_TYPEDARRAY -DESCARGOT_ENABLE_PROMISE -DANDROID=1 -DESCARGOT_32=1 -DNDEBUG -DSTARFISH_IGNORE_SSL_VERIFYPEER -DSTARFISH_ENABLE_HTTPCACHE )
@@ -162,11 +176,11 @@ set_target_properties( curl-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH
 add_library( crypto-lib SHARED IMPORTED )
 set_target_properties( crypto-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libcrypto.so )
 
-add_library( icui18n-lib SHARED IMPORTED )
-set_target_properties( icui18n-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicui18n.so )
+#add_library( icui18n-lib SHARED IMPORTED )
+#set_target_properties( icui18n-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicui18n.so )
 
-add_library( icuuc-lib SHARED IMPORTED )
-set_target_properties( icuuc-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicuuc.so )
+#add_library( icuuc-lib SHARED IMPORTED )
+#set_target_properties( icuuc-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicuuc.so )
 
 target_link_libraries( # Specifies the target library.
                        lightweightwebengine
@@ -177,12 +191,12 @@ target_link_libraries( # Specifies the target library.
                        jpeg-lib
                        crypto-lib
                        curl-lib
-                       icui18n-lib
-                       icuuc-lib
+#                       icui18n-lib
+#                       icuuc-lib
                        ${PREBUILT_LIB_PATH}/libgif.a
-#                       ${PREBUILT_LIB_PATH}/libicui18n.a
-#                       ${PREBUILT_LIB_PATH}/libicuuc.a
-#                       ${PREBUILT_LIB_PATH}/libicudata.a
+                       ${PREBUILT_LIB_PATH}/libicui18n.a
+                       ${PREBUILT_LIB_PATH}/libicuuc.a
+                       ${PREBUILT_LIB_PATH}/icudtl_dat.o
                        ${z-lib}
                        ${jnig-lib}
                        ${log-lib}
