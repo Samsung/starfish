@@ -51,11 +51,12 @@ public:
 
     void fill(HeadersInit headersInit);
     Nullable<String*> get(String* name);
+    Nullable<std::string> noCheckValidGet(const std::string& name);
     void append(String* name, String* value);
     void set(String* name, String* value);
-    void noCheckValidSet(const char* name, const char* value);
+    void noCheckValidSet(const std::string& name, const std::string& value);
     bool has(String* name);
-    bool noCheckValidHas(const char* name);
+    bool noCheckValidHas(const std::string& name);
     void deleteHeader(String* name);
 
     void setGuard(Guard guard)
@@ -68,6 +69,8 @@ public:
     }
 
     void copyHeaders(Headers* src);
+    String* extractMIMEType();
+
     IterationSource<Nullable<String*>, Nullable<String*>>* startIteration(
         ExecutionStateRef* state);
 

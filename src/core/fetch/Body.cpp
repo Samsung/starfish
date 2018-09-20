@@ -98,4 +98,22 @@ void Body::setBody(const BodyInit& body)
         m_contentType = String::createASCIIString(kTextPlainContentType);
     }
 }
+
+void Body::copyBody(Body* body)
+{
+    if (body->contentType()) {
+        m_contentType = String::createASCIIString(CSTR(body->contentType()));
+    }
+
+    auto srcBody = body->body();
+    if (srcBody.hasValue()) {
+        BodyInit srcBodyValue = srcBody.getValue();
+        if (srcBodyValue.isUSVStringValue()) {
+            m_body =
+                BodyInit::createUSVString(srcBodyValue.getUSVStringValue());
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
+    }
+}
 };

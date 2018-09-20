@@ -1,0 +1,35 @@
+// https://fetch.spec.whatwg.org/#response-class
+
+[
+  Constructor(optional BodyInit? body = null,
+  optional ResponseInit init),
+  Exposed=(Window,Worker),
+  ConstructorCallWith=Document,
+  RaisesException=Constructor
+]
+interface Response {
+  [NewObject, CallWith=Document] static Response error();
+  [NewObject, CallWith=Document, RaisesException] static Response redirect(DOMString url, optional unsigned short status = 302);
+
+  readonly attribute ResponseType type;
+
+  readonly attribute DOMString url;
+  readonly attribute boolean redirected;
+  readonly attribute unsigned short status;
+  readonly attribute boolean ok;
+  readonly attribute ByteString statusText;
+  readonly attribute Headers headers;
+  // [SameObject] readonly attribute Headers headers;
+  // readonly attribute Promise<Headers> trailer;
+
+  [NewObject] Response clone();
+};
+Response implements Body;
+
+dictionary ResponseInit {
+  unsigned short status = 200;
+  ByteString statusText = "OK";
+  HeadersInit headers;
+};
+
+enum ResponseType { "basic", "cors", "default", "error", "opaque", "opaqueredirect" };
