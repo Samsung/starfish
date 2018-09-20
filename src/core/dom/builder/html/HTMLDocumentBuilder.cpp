@@ -162,7 +162,8 @@ public:
             if (!m->contains("charset", false) && er.m_skip == 0) {
                 size_t bufferLen = m_buffer.size();
                 std::string charSetInMeta;
-                for (size_t i = 0; i < bufferLen; i++) {
+                for (size_t i = 0; i < bufferLen && charSetInMeta.length() == 0;
+                     i++) {
                     if (m_buffer[i] == '<') {
                         char tagName[12];
                         size_t tagNameLength = 0;
@@ -217,14 +218,14 @@ public:
                                                 "charset=", 8);
                                             if (result) {
                                                 charSetInMeta = result;
+                                                break;
                                             }
                                         }
                                     } else {
                                         i = j;
-                                    }
-                                    if (charSetInMeta.length()) {
                                         break;
                                     }
+
                                 } else {
                                     if (tagNameLength >= 4) {
                                         i = j;
