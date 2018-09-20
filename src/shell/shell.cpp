@@ -165,12 +165,14 @@ smaps_sizes getSmapsStats()
 }
 #endif
 
+#if defined(PORT_WEBVIEW_BRIDGE_GLFW)
 static volatile sig_atomic_t g_doneFlag = 0;
 
 static void setDoneFlag(int sig, siginfo_t* siginfo, void* context)
 {
     g_doneFlag = 1;
 }
+#endif
 
 int main(int argc, char* argv[])
 {
@@ -485,7 +487,7 @@ int main(int argc, char* argv[])
     elm_run();
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL)
     ecore_main_loop_begin();
-#elif defined(PORT_EVENTLOOP_BACKEND_LIBUV)
+#elif defined(PORT_WEBVIEW_BRIDGE_GLFW)
     struct sigaction act;
     memset(&act, '\0', sizeof(act));
     act.sa_sigaction = setDoneFlag;

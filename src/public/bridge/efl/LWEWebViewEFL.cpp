@@ -275,13 +275,6 @@ public:
             m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_2_X);
 #endif
 
-        if (m_glGlapi->evasglCreateSync) {
-            m_glSync = m_glGlapi->evasglCreateSync(m_glEvasgl,
-                                                   EVAS_GL_SYNC_FENCE, nullptr);
-        } else {
-            m_glSync = nullptr;
-        }
-
         Evas_Native_Surface ns;
         evas_gl_native_surface_get(m_glEvasgl, m_glSfc, &ns);
         evas_object_image_native_surface_set(m_graphicsAdapter, &ns);
@@ -845,9 +838,6 @@ public:
 
         evas_object_hide(m_graphicsAdapter);
 #if defined(PORT_WINDOW_BACKEND_GL)
-        if (m_glSync) {
-            m_glGlapi->evasglDestroySync(m_glEvasgl, m_glSync);
-        }
         evas_object_image_native_surface_set(m_graphicsAdapter, NULL);
         evas_gl_context_destroy(m_glEvasgl, m_glCtx);
         evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
@@ -995,7 +985,6 @@ protected:
     Evas_GL_Config* m_glCfg;
     Evas_GL* m_glEvasgl;
     Evas_GL_API* m_glGlapi;
-    EvasGLSync m_glSync;
 #endif
 
     Ecore_IMF_Context* m_imfContext;

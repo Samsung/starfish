@@ -1067,6 +1067,46 @@ void AnimationExecutor::cancelAnimation(Element* target)
         m_animationList.end());
 }
 
+void AnimationExecutor::cancelDisappearedAnimation(Element* target,
+                                                   ComputedStyle* newStyle)
+{
+    StyleTransitionData* data = newStyle->transition();
+    for (size_t i = 0; i < data->size(); i++) {
+        if (data->property(i) == CSSStyleValuePair::KeyKind::All) {
+            return;
+        }
+    }
+
+    m_animationList.erase(
+        std::remove_if(
+            m_animationList.begin(), m_animationList.end(),
+            [&target, &data](AnimationTask* current) {
+                if (current->targetElement() == target) {
+                    bool findNow = false;
+                    for (size_t i = 0; i < data->size(); i++) {
+                        if (data->property(i) == current->propertyType()) {
+                            findNow = true;
+                            break;
+                        }
+                    }
+
+                    if (!findNow) {
+                        target->setNeedsStyleRecalc(
+                            Node::StyleChangeReason::JustNeedsRecalcSelf);
+                        if (current->m_attached) {
+                            current->detachedFromElement();
+                        }
+                        if (current->m_isStartEventFired) {
+                            current->fireCancelEvent();
+                        }
+                        return true;
+                    }
+                }
+                return false;
+            }),
+        m_animationList.end());
+}
+
 // [NOTICE]
 // * I believe it's best choice at this moment.
 // * We do not have a sophisticated solution that surpasses this
@@ -1111,6 +1151,7 @@ void AnimationExecutor::stop()
     if (!m_isAlive) {
         return;
     }
+
     m_isAlive = false;
     m_animationList.clear();
     m_pendingAnimationInfoList.clear();

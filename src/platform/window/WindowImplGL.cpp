@@ -177,12 +177,14 @@ public:
     {
         // release m_glPaintingSurface && m_compostiorContext for reducing
         // memory usage
+        glMakeCurrent();
+
         if (m_glPaintingSurface) {
             m_glPaintingSurface->detachNativeBuffer();
             m_glPaintingSurface = nullptr;
         }
 
-        Compositor::destroyCompositorContext(m_compostiorContext);
+        Compositor::destroyCompositorContext(this, m_compostiorContext);
         m_compostiorContext = nullptr;
 
         PlatformWindow::pause();

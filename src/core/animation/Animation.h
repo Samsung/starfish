@@ -410,6 +410,7 @@ public:
     void registerAnimation(AnimationTask* newTask);
     void cancelPreviousAnimationIfNeeded(AnimationTask* newTask);
     void cancelAnimation(Element* target);
+    void cancelDisappearedAnimation(Element* target, ComputedStyle* newStyle);
     void startIfNeeds();
     void stop();
     void stopIfNeeds(bool force = false);

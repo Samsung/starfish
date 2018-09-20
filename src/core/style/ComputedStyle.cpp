@@ -1121,6 +1121,11 @@ void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
 
     AnimationExecutor* executor = element->document()->animationExecutor();
     StyleTransitionData* data = newStyle->transition();
+
+    // cancel disappeared animations first
+    executor->cancelDisappearedAnimation(element, newStyle);
+
+    // apply
     for (size_t i = 0; i < data->size(); i++) {
         if (!data->duration(i).toTimeValue()) {
             continue;

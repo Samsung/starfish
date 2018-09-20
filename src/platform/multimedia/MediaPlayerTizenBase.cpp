@@ -38,6 +38,7 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
+#include <Evas.h>
 //#include <media/player.h>
 
 namespace StarFish {
@@ -94,6 +95,12 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
                                  const LayoutRect& videoRect,
                                  const LayoutRect& absVideoRect)
 {
+    Evas_Object* e =
+        (Evas_Object*)m_canvasSurface->textureInfo().fragments[0].textureID;
+    evas_object_move(e, (int)absVideoRect.x(), (int)absVideoRect.y());
+    evas_object_resize(e, (int)absVideoRect.width(),
+                       (int)absVideoRect.height());
+    evas_object_show(e);
 }
 
 void MediaPlayerTizen::updateAudioStreamInfo(MediaStream* audio,
