@@ -193,13 +193,21 @@ void Headers::setHeader(ScriptValue keyValue, ScriptValue nameValue,
 Nullable<String*> Headers::get(String* name)
 {
     checkValidHeader(name);
+    Nullable<std::string> value =
+        noCheckValidGet(name->toLower()->toUTF8NonGCString());
+    if (value.hasValue()) {
+        return String::fromUTF8(value.getValue().data());
+    }
+    return nullptr;
+}
 
-    auto it = m_headerMap.findHeader(name->toLower()->toUTF8NonGCString());
+Nullable<std::string> Headers::noCheckValidGet(const std::string& name)
+{
+    auto it = m_headerMap.findHeader(name);
     if (it == m_headerMap.headerMap().end()) {
         return nullptr;
     }
-
-    return String::fromUTF8(it->second.data());
+    return it->second;
 }
 
 void Headers::append(String* name, String* value)
@@ -217,9 +225,8 @@ void Headers::set(String* name, String* value)
                     value->trim()->toUTF8NonGCString().data());
 }
 
-void Headers::noCheckValidSet(const char* name, const char* value)
+void Headers::noCheckValidSet(const std::string& name, const std::string& value)
 {
-    STARFISH_LOG_INFO("%s - %s\n", name, value);
     m_headerMap.headerMap()[name] = value;
 }
 
@@ -229,7 +236,7 @@ bool Headers::has(String* name)
     return noCheckValidHas(name->toLower()->toUTF8NonGCString().data());
 }
 
-bool Headers::noCheckValidHas(const char* name)
+bool Headers::noCheckValidHas(const std::string& name)
 {
     auto it = m_headerMap.findHeader(name);
     return !(it == m_headerMap.headerMap().end());
@@ -265,6 +272,15 @@ void Headers::copyHeaders(Headers* src)
 {
     initHeadersFromHeaders(src);
     m_guard = src->guard();
+}
+
+String* Headers::extractMIMEType()
+{
+    auto mimeType = noCheckValidGet("content-type");
+    if (!mimeType.hasValue()) {
+        return String::emptyString;
+    }
+    return String::fromUTF8(mimeType.getValue().data())->toLower();
 }
 
 IterationSource<Nullable<String*>, Nullable<String*>>* Headers::startIteration(

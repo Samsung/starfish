@@ -85,13 +85,13 @@ http://web-platform.test:8000/fetch/api/headers/headers-casing.html
 #http://web-platform.test:8000/fetch/api/response/response-consume-empty.html
 #http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-1.html
 #http://web-platform.test:8000/fetch/api/response/response-cancel-stream.html
-#http://web-platform.test:8000/fetch/api/response/response-init-001.html
+http://web-platform.test:8000/fetch/api/response/response-init-001.html
 #http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-3.html
-#http://web-platform.test:8000/fetch/api/response/response-static-redirect.html
-#http://web-platform.test:8000/fetch/api/response/response-static-error.html
+http://web-platform.test:8000/fetch/api/response/response-static-redirect.html
+http://web-platform.test:8000/fetch/api/response/response-static-error.html
 #http://web-platform.test:8000/fetch/api/response/response-stream-disturbed-6.html
 #http://web-platform.test:8000/fetch/api/response/response-clone.html
-#http://web-platform.test:8000/fetch/api/response/response-error.html
+http://web-platform.test:8000/fetch/api/response/response-error.html
 #http://web-platform.test:8000/fetch/content-length/content-length.html
 #http://web-platform.test:8000/fetch/security/dangling-markup-mitigation-data-url.tentative.sub.html
 #http://web-platform.test:8000/fetch/security/support/embedded-credential-window.sub.html

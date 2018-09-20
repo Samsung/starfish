@@ -50,11 +50,9 @@ public:
         return m_contentType;
     }
 
-private:
-    bool m_bodyUsed;
-    Nullable<BodyInit> m_body;
-    String* m_contentType;
+    void copyBody(Body* body);
 
+private:
 protected:
     Body(Window* window)
         : WindowHoldable(window)
@@ -62,6 +60,10 @@ protected:
         , m_contentType(nullptr)
     {
     }
+
+    Nullable<BodyInit> m_body;
+    bool m_bodyUsed;
+    String* m_contentType;
 };
 }
 
