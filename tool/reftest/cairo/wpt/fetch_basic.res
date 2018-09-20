@@ -25,6 +25,7 @@
 #http://web-platform.test:8000/fetch/api/request/multi-globals/incumbent/incumbent.html
 http://web-platform.test:8000/fetch/api/request/request-clone.sub.html
 #http://web-platform.test:8000/fetch/api/request/request-type-attribute-historical.html
+http://web-platform.test:8000/fetch/api/request/request-type-attribute-historical.babel.html
 #http://web-platform.test:8000/fetch/api/request/request-disturbed.html
 #http://web-platform.test:8000/fetch/api/request/request-reset-attributes.https.html
 #http://web-platform.test:8000/fetch/api/request/request-headers.html
