@@ -116,7 +116,10 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         m_data.m_integrity = data->m_integrity;
         m_data.m_keepalive = data->m_keepalive;
 
-        m_headers.copyHeaders(&request->m_headers);
+        if (!init || init->headers()->isUndefinedOrNull()) {
+            m_headers.copyHeaders(&request->m_headers);
+        }
+
         copyBody(request);
 
     } else {
@@ -150,7 +153,7 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         // in a dictionary (e.g, BodyInit of RequestInit).So it's given as
         // ScriptValue type.
         ScriptValue body = init->body();
-        if (!body->isUndefined() && !body->isNull()) {
+        if (!body->isUndefinedOrNull()) {
             if (m_data.m_method->equals("GET") ||
                 m_data.m_method->equals("HEAD")) {
                 throw new DOMException(document(),
@@ -160,10 +163,10 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
             this->setBody(toBodyInitFromValueRef(
                 this->scriptBindingInstance()->scriptContext(), body));
             if (this->contentType() != nullptr) {
-                // NOTE: check the action in case that the type already exists
-                // if (m_headers.noCheckValidHas("content-type"))
-                m_headers.noCheckValidSet("content-type",
-                                          CSTR(this->contentType()));
+                if (!m_headers.noCheckValidHas("content-type")) {
+                    m_headers.noCheckValidSet("content-type",
+                                              CSTR(this->contentType()));
+                }
             }
         }
     }

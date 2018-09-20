@@ -40,6 +40,8 @@ struct RequestInit : public gc {
         , m_redirect(String::emptyString)
         , m_integrity(String::emptyString)
         , m_keepalive(false)
+        , m_headers(scriptUndefined())
+        , m_body(scriptUndefined())
     {
     }
 
@@ -52,9 +54,8 @@ struct RequestInit : public gc {
     String* m_redirect;
     String* m_integrity;
     bool m_keepalive;
-    // Nullable<BodyInit> m_body;
-    ScriptValue m_body;
     HeadersInit m_headers;
+    ScriptValue m_body;
 
     GETTER_SETTER(String*, method, Method);
     GETTER_SETTER(String*, referrer, Referrer);
@@ -65,7 +66,6 @@ struct RequestInit : public gc {
     GETTER_SETTER(String*, redirect, Redirect);
     GETTER_SETTER(String*, integrity, Integrity);
     GETTER_SETTER(bool, keepalive, Keepalive);
-    // GETTER_SETTER(Nullable<BodyInit>, body, Body);
     GETTER_SETTER(ScriptValue, body, Body);
     GETTER_SETTER(HeadersInit, headers, Headers);
 };
