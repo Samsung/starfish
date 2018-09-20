@@ -29,7 +29,8 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
     return nullptr;
 }
 
-void Compositor::destroyCompositorContext(CompositorContext* ctx)
+void Compositor::destroyCompositorContext(PlatformWindow* wnd,
+                                          CompositorContext* ctx)
 {
 }
 #endif

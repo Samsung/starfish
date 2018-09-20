@@ -291,7 +291,7 @@ void PlatformWindow::clearResources()
     }
     webView()->clearStackingContext();
 
-    Compositor::destroyCompositorContext(m_compostiorContext);
+    Compositor::destroyCompositorContext(this, m_compostiorContext);
     m_compostiorContext = nullptr;
 }
 

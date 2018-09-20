@@ -39,7 +39,8 @@ public:
     static Compositor* create2D(WebView* starfish, CompositorContext* ctx,
                                 CanvasSurface* surface);
     static CompositorContext* initCompositorContext(PlatformWindow* wnd);
-    static void destroyCompositorContext(CompositorContext* ctx);
+    static void destroyCompositorContext(PlatformWindow* wnd,
+                                         CompositorContext* ctx);
 
     virtual ~Compositor()
     {
