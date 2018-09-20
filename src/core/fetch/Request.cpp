@@ -117,7 +117,7 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         m_data.m_keepalive = data->m_keepalive;
 
         m_headers.copyHeaders(&request->m_headers);
-        // TODO: clone body
+        copyBody(request);
 
     } else {
         if (input->isUSVStringValue()) {
@@ -167,6 +167,12 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
             }
         }
     }
+}
+
+Request* Request::clone()
+{
+    RequestInfo requestInfo = RequestOrUSVString::createRequest(this);
+    return new Request(this->window(), requestInfo);
 }
 
 Headers* Request::headers()

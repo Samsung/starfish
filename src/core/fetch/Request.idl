@@ -45,7 +45,7 @@ enum ReferrerPolicy {
   readonly attribute boolean isHistoryNavigation;
 
   // [Unimplemented] readonly attribute AbortSignal signal;
-  // [RaisesException, NewObject] Request clone();
+  [RaisesException, NewObject] Request clone();
 };
 // Request includes Body;
 Request implements Body;
