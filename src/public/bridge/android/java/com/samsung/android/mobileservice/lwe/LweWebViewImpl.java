@@ -555,7 +555,8 @@ public class LweWebViewImpl implements LweWebView{
                                         dispatchMouseUp(mWebViewInternalHandle, viewX, viewY);
                                     } else if (motionEvent.getAction() ==
                                             MotionEvent.ACTION_CANCEL) {
-                                        dispatchMouseUp(mWebViewInternalHandle, viewX, viewY);
+                                        dispatchMouseMove(mWebViewInternalHandle, viewX, viewY,
+                                                true, false);
                                     } else if (motionEvent.getAction() == MotionEvent.ACTION_MOVE) {
                                         dispatchMouseMove(mWebViewInternalHandle, viewX, viewY,
                                                 true, false);
