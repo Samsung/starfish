@@ -34,12 +34,7 @@
 struct WindowGlue {
     JNIEnv* m_env;
     jclass m_clazz;
-    jmethodID m_startTimer;
-    jmethodID m_startIdler;
-    jmethodID m_cancelTimer;
-    jmethodID m_cancelIdler;
-    jmethodID m_runAllRemainingIdler;
-    jmethodID m_flushRendering;
+
     jmethodID m_onLoadResource;
     jmethodID m_onReceivedError;
     jmethodID m_onPageParsed;
@@ -56,19 +51,11 @@ struct WindowGlue {
 
     WindowGlue()
     {
-        m_startTimer = m_startIdler = m_flushRendering = 0;
     }
 } g_WindowGlue;
 JavaVM* g_jvm;
 
 std::map<LWE::WebContainer*, std::pair<jobject, void*>> g_webViews;
-
-typedef bool (*TimerCallback)(int uid, void* data);
-int startTimer(int ms, TimerCallback pointer, void* data);
-void cancelTimer(int uid);
-void runAllRemainingIdler();
-void flushRenderingCB(void* view,
-                      const LWE::WebContainer::RenderResult& result);
 
 void callOnLoadResourceHandler(LWE::WebView* view, const char* url);
 void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
@@ -152,14 +139,6 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_init(JNIEnv* env,
         env->FindClass("com/samsung/android/mobileservice/lwe/LweWebViewImpl");
     g_WindowGlue.m_clazz = (jclass)env->NewGlobalRef(clazz);
     g_WindowGlue.m_env = env;
-    g_WindowGlue.m_startTimer = GetJMethod(env, clazz, "startTimer", "(III)I");
-    g_WindowGlue.m_startIdler = GetJMethod(env, clazz, "startIdler", "(III)I");
-    g_WindowGlue.m_cancelTimer = GetJMethod(env, clazz, "cancelTimer", "(I)V");
-    g_WindowGlue.m_cancelIdler = GetJMethod(env, clazz, "cancelIdler", "(I)V");
-    g_WindowGlue.m_runAllRemainingIdler =
-        GetJMethod(env, clazz, "runAllRemainingIdler", "()V");
-    g_WindowGlue.m_flushRendering =
-        env->GetMethodID(clazz, "flushRendering", "(IIII)V");
     g_WindowGlue.m_onLoadResource =
         env->GetMethodID(clazz, "onLoadResource", "(Ljava/lang/String;)V");
     g_WindowGlue.m_onReceivedError =
@@ -193,16 +172,6 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_init(JNIEnv* env,
     LOGI(
         "Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_init call "
         "end");
-}
-
-extern "C" JNIEXPORT jboolean JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_serviceQueueTimer(
-    JNIEnv* env, jobject thiz, jint uid, jint fn, jint data)
-{
-    //    STARFISH_RELEASE_ASSERT(StarFish::isMainThread());
-    TimerCallback tc = (TimerCallback)fn;
-    bool ret = (*tc)(uid, (void*)data);
-    return ret;
 }
 
 void callOnLoadResourceHandler(LWE::WebContainer* view, const char* url)
@@ -476,155 +445,6 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_onDropdownMenuItemSele
                               (void*)p);
 }
 
-int startTimer(int ms, TimerCallback pointer, void* data)
-{
-    JNIEnv* env = g_WindowGlue.m_env;
-
-    // double check it's all ok
-    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-    if (getEnvStat == JNI_EDETACHED) {
-        // std::cout << "GetEnv: not attached" << std::endl;
-        // LOGE("GetEnv: not attached");
-        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-            // std::cout << "Failed to attach" << std::endl;
-            LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (getEnvStat == JNI_OK) {
-    } else if (getEnvStat == JNI_EVERSION) {
-        LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    if (!env || !g_WindowGlue.m_startTimer) {
-        LOGE("signalQueueTimer error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    int ret = env->CallStaticIntMethod(g_WindowGlue.m_clazz,
-                                       g_WindowGlue.m_startTimer, ms,
-                                       (long)pointer, (long)data);
-
-    return ret;
-}
-
-int startIdler(int ms, TimerCallback pointer, void* data)
-{
-    JNIEnv* env = g_WindowGlue.m_env;
-
-    // double check it's all ok
-    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-    if (getEnvStat == JNI_EDETACHED) {
-        // std::cout << "GetEnv: not attached" << std::endl;
-        // LOGE("GetEnv: not attached");
-        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-            // std::cout << "Failed to attach" << std::endl;
-            LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (getEnvStat == JNI_OK) {
-    } else if (getEnvStat == JNI_EVERSION) {
-        LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    if (!env || !g_WindowGlue.m_startIdler) {
-        LOGE("signalQueueTimer error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    int ret = env->CallStaticIntMethod(g_WindowGlue.m_clazz,
-                                       g_WindowGlue.m_startIdler, ms,
-                                       (long)pointer, (long)data);
-
-    return ret;
-}
-
-void cancelTimer(int uid)
-{
-    JNIEnv* env = g_WindowGlue.m_env;
-
-    // double check it's all ok
-    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-    if (getEnvStat == JNI_EDETACHED) {
-        // std::cout << "GetEnv: not attached" << std::endl;
-        // LOGE("GetEnv: not attached");
-        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-            // std::cout << "Failed to attach" << std::endl;
-            LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (getEnvStat == JNI_OK) {
-    } else if (getEnvStat == JNI_EVERSION) {
-        LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    // LOGE("cancelTimer");
-    if (!env || !g_WindowGlue.m_cancelTimer) {
-        LOGE("cancel error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    env->CallStaticVoidMethod(g_WindowGlue.m_clazz, g_WindowGlue.m_cancelTimer,
-                              uid);
-}
-
-void cancelIdler(int uid)
-{
-    JNIEnv* env = g_WindowGlue.m_env;
-
-    // double check it's all ok
-    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-    if (getEnvStat == JNI_EDETACHED) {
-        // std::cout << "GetEnv: not attached" << std::endl;
-        // LOGE("GetEnv: not attached");
-        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-            // std::cout << "Failed to attach" << std::endl;
-            LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (getEnvStat == JNI_OK) {
-    } else if (getEnvStat == JNI_EVERSION) {
-        LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    // LOGE("cancelTimer");
-    if (!env || !g_WindowGlue.m_cancelIdler) {
-        LOGE("cancel error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    env->CallStaticVoidMethod(g_WindowGlue.m_clazz, g_WindowGlue.m_cancelIdler,
-                              uid);
-}
-
-void runAllRemainingIdler()
-{
-    JNIEnv* env = g_WindowGlue.m_env;
-    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-    if (getEnvStat == JNI_EDETACHED) {
-        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-            LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (getEnvStat == JNI_OK) {
-    } else if (getEnvStat == JNI_EVERSION) {
-        LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    // LOGE("runAllRemainingIdler");
-    if (!env || !g_WindowGlue.m_runAllRemainingIdler) {
-        LOGE("runAllRemainingTimer error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    env->CallStaticVoidMethod(g_WindowGlue.m_clazz,
-                              g_WindowGlue.m_runAllRemainingIdler);
-}
-
 void showIME(void* view)
 {
     JNIEnv* env = g_WindowGlue.m_env;
@@ -717,40 +537,6 @@ void glSwapBuffers(void* view)
     }
     env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
                         g_WindowGlue.m_glSwapBuffers);
-}
-
-void flushRenderingCB(void* view, const LWE::WebContainer::RenderResult& result)
-{
-    JNIEnv* env = g_WindowGlue.m_env;
-
-    // double check it's all ok
-    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-    if (getEnvStat == JNI_EDETACHED) {
-        // std::cout << "GetEnv: not attached" << std::endl;
-        // LOGE("GetEnv: not attached");
-        if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-            // std::cout << "Failed to attach" << std::endl;
-            LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else if (getEnvStat == JNI_OK) {
-    } else if (getEnvStat == JNI_EVERSION) {
-        LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    if (!env || !g_WindowGlue.m_flushRendering) {
-        LOGE("reuqest render error");
-        return;
-    }
-    jint updatedX = result.updatedX;
-    jint updatedY = result.updatedY;
-    jint updatedWidth = result.updatedWidth;
-    jint updatedHeight = result.updatedHeight;
-
-    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
-                        g_WindowGlue.m_flushRendering, updatedX, updatedY,
-                        updatedWidth, updatedHeight);
 }
 
 extern "C" JNIEXPORT jlong JNICALL
@@ -861,12 +647,11 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_destroy(JNIEnv* env,
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_updateBuffer(
-    JNIEnv* env, jobject thiz, jlong sf, jobject bitmap, jint w, jint h,
-    jint stride)
+Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_resizeTo(
+    JNIEnv* env, jobject thiz, jlong sf, jint w, jint h)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)sf;
-    webContainer->UpdateBuffer(nullptr, w, h, stride);
+    webContainer->ResizeTo(w, h);
 }
 
 extern "C" JNIEXPORT void JNICALL

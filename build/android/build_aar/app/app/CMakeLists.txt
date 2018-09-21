@@ -57,6 +57,8 @@ include_directories(${STARFISH_ROOT_PATH}/third_party/cppzmq)
 include_directories(${STARFISH_ROOT_PATH}/third_party/earcut.hpp/include/mapbox)
 include_directories(${STARFISH_ROOT_PATH}/third_party/third_party/clipper/cpp)
 
+include_directories(${STARFISH_ROOT_PATH}/third_party/libtuv/include)
+
 include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include)
 include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/effects)
 include_directories(${ANDROID_PLATFORM_ROOT_PATH}/external/skia/include/config)
@@ -182,6 +184,9 @@ set_target_properties( crypto-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PA
 #add_library( icuuc-lib SHARED IMPORTED )
 #set_target_properties( icuuc-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicuuc.so )
 
+add_library( tuv-lib SHARED IMPORTED )
+set_target_properties( tuv-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libtuv.so )
+
 target_link_libraries( # Specifies the target library.
                        lightweightwebengine
                        png-lib
@@ -193,6 +198,7 @@ target_link_libraries( # Specifies the target library.
                        curl-lib
 #                       icui18n-lib
 #                       icuuc-lib
+                       tuv-lib
                        ${PREBUILT_LIB_PATH}/libgif.a
                        ${PREBUILT_LIB_PATH}/libicui18n.a
                        ${PREBUILT_LIB_PATH}/libicuuc.a
