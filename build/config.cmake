@@ -189,11 +189,13 @@ ELSEIF (${BACKEND} STREQUAL "efl_cairo" AND ${ARCH} STREQUAL "tizen")
 ELSEIF (${BACKEND} STREQUAL "efl_cairo" AND ${ARCH} STREQUAL "tizen" AND ${CUSTOM} STREQUAL "speaker")
     pkg_check_modules (STARFISH_BACKEND REQUIRED dlog ecore)
 ELSEIF (${BACKEND} STREQUAL "dali" AND ${ARCH} STREQUAL "x64")
-    pkg_check_moudles (STARFISH_BACKEDN REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore)
 ELSEIF (${BACKEND} STREQUAL "dali" AND ${ARCH} STREQUAL "tizen")
-    pkg_check_moudles (STARFISH_BACKEDN REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED dlog libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore)
 ELSEIF (${BACKEND} STREQUAL "efl_skia" AND ${ARCH} STREQUAL "x64")
-    pkg_check_moudles (STARFISH_BACKEDN REQUIRED libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas)
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-x ecore-imf ecore-imf-evas)
+ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl" AND ${ARCH} STREQUAL "x64")
+    pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu)
 ENDIF()
 
 IF (${ARCH} STREQUAL "tizen")
@@ -233,7 +235,10 @@ ELSEIF (${BACKEND} STREQUAL "efl_skia")
         SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} turbojpeg gif skia)
     ENDIF()
 ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl")
-    SET (STARFISH_LIBRARIES_BACKEND jpeg gif GL GLESv2 glfw)
+    SET (STARFISH_LIBRARIES_BACKEND GL GLESv2 glfw)
+    IF (${ARCH} STREQUAL "x64")
+        SET (STARFISH_LIBRARIES_BACKEND ${STARFISH_LIBRARIES_BACKEND} turbojpeg gif jpeg)
+    ENDIF()
 ENDIF()
 
 IF (${ARCH} STREQUAL "tizen")
@@ -270,14 +275,14 @@ SET (STARFISH_INCLUDE_DIRS_DEFAULT
 )
 
 IF (${BACKEND} STREQUAL "dali")
-    SET (STARFISH_DALI_ADDTIONAL_INCLUDE_DIRS /usr/include/dali ${THIRD_PARTY_ROOT}/libtuv/include ${THIRD_PARTY_ROOT}/libtuv/src)
+    SET (STARFISH_DALI_ADDITIONAL_INCLUDE_DIRS /usr/include/dali ${THIRD_PARTY_ROOT}/libtuv/include ${THIRD_PARTY_ROOT}/libtuv/src)
     IF (${ARCH} STREQUAL "x64")
-        SET (STARFISH_DALI_ADDTIONAL_LIBRARIES -Llib tuv dali-core dali-adaptor dali-toolkit)
+        SET (STARFISH_DALI_ADDITIONAL_LIBRARIES -Llib tuv dali-core dali-adaptor dali-toolkit)
     ELSEIF (${ARCH} STREQUAL "tizen")
-        SET (STARFISH_DALI_ADDTIONAL_LIBRARIES -Llib/tizen tuv dali-core dali-adaptor dali-toolkit)
+        SET (STARFISH_DALI_ADDITIONAL_LIBRARIES -Llib/tizen tuv dali-core dali-adaptor dali-toolkit)
     ENDIF()
 ELSEIF (${BACKEND} STREQUAL "efl_skia" AND ${ARCH} STREQUAL "x64")
-    SET (STARFISH_SKIA_ADDTIONAL_INCLUDE_DIRS
+    SET (STARFISH_SKIA_ADDITIONAL_INCLUDE_DIRS
         ${THIRD_PARTY_ROOT}/android/skia/include
         ${THIRD_PARTY_ROOT}/android/skia/include/effects
         ${THIRD_PARTY_ROOT}/android/skia/include/config
@@ -286,10 +291,15 @@ ELSEIF (${BACKEND} STREQUAL "efl_skia" AND ${ARCH} STREQUAL "x64")
         ${THIRD_PARTY_ROOT}/android/skia/include/gpu
         ${THIRD_PARTY_ROOT}/android/skia/include/ports
     )
+ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl" AND ${ARCH} STREQUAL "x64")
+    SET (STARFISH_GLFW_ADDITIONAL_INCLUDE_DIRS
+        ${THIRD_PARTY_ROOT}/libtuv/include
+        ${THIRD_PARTY_ROOT}/libtuv/src
+    )
 ENDIF()
 
 IF (${ARCH} STREQUAL "tizen" OR ${TOUCH_UI} STREQUAL "1")
-    SET (STARFISH_TIZEN_ADDTIONAL_INCLUDE_DIRS /usr/include/location)
+    SET (STARFISH_TIZEN_ADDITIONAL_INCLUDE_DIRS /usr/include/location)
 ENDIF()
 
 IF (${ARCH} STREQUAL "tizen")
@@ -301,8 +311,9 @@ IF (${ARCH} STREQUAL "tizen")
     )
 ENDIF()
 
-SET (STARFISH_INCLUDE_ADDTIONAL_DIRS
-    ${STARFISH_DALI_ADDTIONAL_INCLUDE_DIRS}
-    ${STARFISH_SKIA_ADDTIONAL_INCLUDE_DIRS}
-    ${STARFISH_TIZEN_ADDTIONAL_INCLUDE_DIRS}
+SET (STARFISH_INCLUDE_ADDITIONAL_DIRS
+    ${STARFISH_DALI_ADDITIONAL_INCLUDE_DIRS}
+    ${STARFISH_SKIA_ADDITIONAL_INCLUDE_DIRS}
+    ${STARFISH_GLFW_ADDITIONAL_INCLUDE_DIRS}
+    ${STARFISH_TIZEN_ADDITIONAL_INCLUDE_DIRS}
 )
