@@ -4,25 +4,16 @@ CMAKE_MINIMUM_REQUIRED (VERSION 2.8)
 # THIRD PARTY
 #######################################################
 
-# STARFISH THIRDPARTY
-#EXECUTE_PROCESS (
-#    WORKING_DIRECTORY ${STARFISH_ROOT}
-#    COMMAND git submodule init
-#    COMMAND git submodule update binding_generator tool/gyp third_party
-#)
-
 # ESCARGOT THIRDPARTY
 EXECUTE_PROCESS (
     WORKING_DIRECTORY ${ESCARGOT_ROOT}
-    COMMAND git submodule init
-    COMMAND git submodule update third_party
+    COMMAND git submodule update --init third_party
 )
 
 # JS BINDING
 EXECUTE_PROCESS (
     COMMAND python ${STARFISH_ROOT}/binding_generator/scripts/starfish_code_generator.py ${STARFISH_ROOT}/src/ ${STARFISH_ROOT}/src/binding
 )
-
 
 SET (THIRD_PARTY_CXXFLAGS_COMMON -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fno-omit-frame-pointer -fstack-protector -fPIC)
 
@@ -103,65 +94,46 @@ TARGET_COMPILE_OPTIONS (zmq PUBLIC ${ZMQ_CFLAGS})
 ADD_DEPENDENCIES (zmq ZMQ_CONF)
 
 # LIBTUV
-SET (TUV_DEFINITIONS_COMMON
-    -DBUILDTESTER=no
-    -DBUILD_HOST_HELPER=no
-    -DCREATE_SHARED_LIB=yes
-    -DTARGET_BOARD=None
-)
+INCLUDE (ExternalProject)
+SET (LIBTUV_DIR ${THIRD_PARTY_ROOT}/libtuv)
 
-IF (${MODE} STREQUAL "debug")
-    SET (TUV_DEFINITIONS_MODE -DCMAKE_BUILD_TYPE=release)
+IF (${ARCH} STREQUAL "x64")
+    SET (LIBTUV_TARGET_PLATFORM x86_64-linux)
 ELSE()
-    SET (TUV_DEFINITIONS_MODE -DCMAKE_BUILD_TYPE=debug)
+    SET (LIBTUV_TARGET_PLATFORM noarch-tizen)
 ENDIF()
 
-IF (${ARCH} STREQUAL "tizen")
-    SET (TUV_DEFINITIONS_ARCH -DTARGET_PLATFORM=noarch-tizen)
-ELSE()
-    SET (TUV_DEFINITIONS_ARCH -DTARGET_PLATFORM=x86_64-linux)
-ENDIF()
+SET (LIBTUV_TOOLCHAIN ${LIBTUV_DIR}/cmake/config/config_${LIBTUV_TARGET_PLATFORM}.cmake)
 
-SET (TUV_DEFINITIONS
-    ${TUV_DEFINITIONS_COMMON}
-    ${TUV_DEFINITIONS_MODE}
-    ${TUV_DEFINITIONS_ARCH}
+message (${LIBTUV_DIR})
+EXTERNALPROJECT_ADD (libtuv
+    PREFIX ${LIBTUV_DIR}
+    SOURCE_DIR ${LIBTUV_DIR}
+    BUILD_IN_SOURCE 0
+    BINARY_DIR ${LIBTUV_DIR}
+    INSTALL_COMMAND
+        ${CMAKE_COMMAND} -E copy_directory
+        ${LIBTUV_DIR}/build/${LIBTUV_TARGET_PLATFORM}/${MODE}/lib/
+        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+    CMAKE_ARGS
+        -B${LIBTUV_DIR}/cmake
+        -H./
+        -DCMAKE_TOOLCHAIN_FILE=${LIBTUV_TOOLCHAIN}
+        -DCMAKE_BUILD_TYPE=${MODE}
+        -DTARGET_PLATFORM=${LIBTUV_TARGET_PLATFORM}
+        -DLIBTUV_CUSTOM_LIB_OUT=${LIBTUV_DIR}/build/${LIBTUV_TARGET_PLATFORM}/${MODE}/lib
+        -DBUILDTESTER=no
+        -DBUILD_HOST_HELPER=no
+        -DCREATE_SHARED_LIB=yes
+        -DTARGET_BOARD=None
 )
 
-SET (TUV_CFLAGS_COMMON -fno-builtin)
-IF (${MODE} STREQUAL "debug")
-    SET (TUV_CFLAGS_MODE -O0 -g -DDEBUG)
-ELSE()
-    SET (TUV_CFLAGS_MODE -O2 -DNDEBUG)
-ENDIF()
-
-SET (TUV_CFLAGS
-    ${TUV_CFLAGS_COMMON}
-    ${TUV_CFLAGS_MODE}
-)
-
-SET (TUV_SRC
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/async.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/core.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/fs.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/getaddrinfo.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/loop.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/loop-watcher.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/poll.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/process.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/stream.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/tcp.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/thread.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/timer.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/udp.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/linux-core.c
-    ${THIRD_PARTY_ROOT}/libtuv/src/unix/linux-syscalls.c
-)
-
-ADD_LIBRARY (tuv SHARED ${TUV_SRC})
-TARGET_INCLUDE_DIRECTORIES (tuv PUBLIC ${THIRD_PARTY_ROOT}/libtuv/include ${THIRD_PARTY_ROOT}/libtuv/src)
-TARGET_COMPILE_DEFINITIONS (tuv PUBLIC ${TUV_DEFINITIONS})
-TARGET_COMPILE_OPTIONS (tuv PUBLIC ${TUV_CFLAGS})
+ADD_LIBRARY (tuv SHARED IMPORTED)
+ADD_DEPENDENCIES (tuv libtuv)
+SET_PROPERTY (TARGET tuv PROPERTY
+    IMPORTED_LOCATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtuv.so)
+SET_PROPERTY (DIRECTORY APPEND PROPERTY
+    ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtuv.so)
 
 # LIBSKIA
 IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
@@ -287,59 +259,25 @@ ADD_DEPENDENCIES (gc GC_CONF)
 
 
 # ESCARGOT
-SET (ESCARGOT_CXXFLAGS_COMMON "-DESCARGOT -std=c++0x -g3 -fno-math-errno -fdata-sections -ffunction-sections -frounding-math -fsignaling-nans -fno-omit-frame-pointer -fvisibility=hidden -Wno-unused-but-set-variable -Wno-unused-but-set-parameter -Wno-unused-parameter -Wno-type-limits -Wno-unused-result -Wno-unused-variable -Wno-invalid-offsetof -Wno-deprecated-declarations -DESCARGOT_ENABLE_TYPEDARRAY -DESCARGOT_ENABLE_PROMISE -fPIC")
-SET (ESCARGOT_LDFLAGS_COMMON "-fvisibility=hidden -Wl,--gc-sections")
-
-IF (${HOST} STREQUAL "linux")
-    SET (ESCARGOT_CXXFLAGS_HOST "-fno-rtti -DENABLE_ICU -DENABLE_INTL")
-    SET (ESCARGOT_LDFLAGS_HOST "-lpthread -lrt")
-ENDIF()
-
-IF (${ARCH} STREQUAL "x64")
-    SET (ESCARGOT_CXXFLAGS_ARCH "-DESCARGOT_64=1")
-ELSEIF (${ARCH} STREQUAL "x86")
-    SET (ESCARGOT_CXXFLAGS_ARCH "-DESCARGOT_32=1")
-    IF (NOT ${HOST} STREQUAL "tizen_obs")
-        SET (ESCARGOT_CXXFLAGS_ARCH "${ESCARGOT_CXXFLAGS_ARCH} -m32 -mfpmath=sse -msse -msse2")
-        SET (ESCARGOT_LDFLAGS_ARCH "-m32")
-    ENDIF()
-ELSEIF (${ARCH} STREQUAL "arm")
-    SET (ESCARGOT_CXXFLAGS_ARCH "-DESCARGOT_32=1")
-    IF (NOT ${HOST} STREQUAL "tizen_obs")
-        SET (ESCARGOT_CXXFLAGS_ARCH "${ESCARGOT_CXXFLAGS_ARCH} -march=armv7-a -mthumb")
-    ENDIF()
-ENDIF()
-
-IF (${MODE} STREQUAL "debug")
-    SET (ESCARGOT_CXXFLAGS_MODE "-O0 -D_GLIBCXX_DEBUG -Wall -Wextra -Werror -DGC_DEBUG")
-ELSE()
-    SET (ESCARGOT_CXXFLAGS_MODE "-O2 -DNDEBUG -fno-stack-protector")
-ENDIF()
-
-SET (ESCARGOT_CXXFLAGS "${ESCARGOT_CXXFLAGS_COMMON} ${ESCARGOT_CXXFLAGS_HOST} ${ESCARGOT_CXXFLAGS_ARCH} ${ESCARGOT_CXXFLAGS_MODE}")
-SET (ESCARGOT_LDFLAGS  "${ESCARGOT_LDFLAGS_COMMON} ${ESCARGOT_LDFLAGS_HOST} ${ESCARGOT_LDFLAGS_ARCH} ${ESCARGOT_LDFLAGS_MODE}")
-
-FILE (GLOB SRC_API_LIST ${ESCARGOT_ROOT}/src/api/*.cpp)
-FILE (GLOB SRC_HEAP_LIST ${ESCARGOT_ROOT}/src/heap/*.cpp)
-FILE (GLOB SRC_INTERPRETER_LIST ${ESCARGOT_ROOT}/src/interpreter/*.cpp)
-FILE (GLOB SRC_PARSER_LIST ${ESCARGOT_ROOT}/src/parser/*.cpp)
-FILE (GLOB SRC_PARSER_AST_LIST ${ESCARGOT_ROOT}/src/parser/ast/*.cpp)
-FILE (GLOB SRC_PARSER_ESPRIMA_LIST ${ESCARGOT_ROOT}/src/parser/esprima_cpp/*.cpp)
-FILE (GLOB SRC_RUNTIME_LIST ${ESCARGOT_ROOT}/src/runtime/*.cpp)
-FILE (GLOB SRC_UTIL_LIST ${ESCARGOT_ROOT}/src/util/*.cpp)
-
-FILE (GLOB YARR_LIST ${ESCARGOT_THIRD_PARTY_ROOT}/yarr/*.cpp)
-FILE (GLOB DOUBLE_CONVERSION_LIST ${ESCARGOT_THIRD_PARTY_ROOT}/double_conversion/*.cc)
-FILE (GLOB GCUTIL_LIST ${GCUTIL_ROOT}/*.cpp)
-
-SET (ESCARGOT_SRC ${SRC_API_LIST} ${SRC_HEAP_LIST} ${SRC_INTERPRETER_LIST} 
-     ${SRC_PARSER_LIST} ${SRC_PARSER_AST_LIST} ${SRC_PARSER_ESPRIMA_LIST} 
-     ${SRC_RUNTIME_LIST} ${SRC_UTIL_LIST} ${YARR_LIST} 
-     ${DOUBLE_CONVERSION_LIST} ${GCUTIL_LIST})
-
-ADD_LIBRARY (escargot STATIC ${ESCARGOT_SRC})
-TARGET_INCLUDE_DIRECTORIES (escargot PUBLIC ${ESCARGOT_ROOT}/src/ ${GCUTIL_ROOT}/bdwgc/include/ ${GCUTIL_ROOT}/ ${ESCARGOT_THIRD_PARTY_ROOT}/checked_arithmetic/ ${ESCARGOT_THIRD_PARTY_ROOT}/double_conversion/ ${ESCARGOT_THIRD_PARTY_ROOT}/rapidjson/include/ ${ESCARGOT_THIRD_PARTY_ROOT}/yarr/)
-SET_TARGET_PROPERTIES (escargot PROPERTIES 
-                       COMPILE_FLAGS "${ESCARGOT_CXXFLAGS}" 
-                       LINK_FLAGS "${ESCARGOT_LDFLAGS}"
+EXTERNALPROJECT_ADD (libescargot
+    PREFIX ${ESCARGOT_ROOT}
+    SOURCE_DIR ${ESCARGOT_ROOT}
+    BUILD_IN_SOURCE 0
+    BINARY_DIR ${ESCARGOT_ROOT}
+    INSTALL_COMMAND
+        ${CMAKE_COMMAND} -E copy_directory
+        ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/lib/libescargot.a
+        ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+    CMAKE_ARGS
+        -DHOST=${HOST}
+        -DARCH=${ARCH}
+        -DMODE=${MODE}
+        -DOUTPUT=static_lib
 )
+
+ADD_LIBRARY (escargot STATIC IMPORTED)
+ADD_DEPENDENCIES (escargot libescargot)
+SET_PROPERTY (TARGET escargot PROPERTY
+    IMPORTED_LOCATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libescargot.a)
+SET_PROPERTY (DIRECTORY APPEND PROPERTY
+    ADDITIONAL_MAKE_CLEAN_FILES ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libescargot.a)
