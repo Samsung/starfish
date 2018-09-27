@@ -6571,27 +6571,61 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         ComputedStyle* oldStyle = element->style();
         element->setStyle(style);
 
+        bool inRendering = element->webView()->inRendering();
+
+        if (!inRendering) {
+            element->document()
+                ->animationExecutor()
+                ->clearPendingAnimationRelatedWithElement(element);
+        }
+
         if (style->display() == NoneDisplayValue) {
             // The element will disapear soon
             element->document()->animationExecutor()->cancelAnimation(element);
         } else if (style->transitionLayerSize() > 0) {
+            if (inRendering) {
+                // check if there is pending animation related with this element
+                auto pending = element->document()
+                                   ->animationExecutor()
+                                   ->fetchPendingAnimationIfExists(element);
+                if (pending.first) {
+                    oldStyle = pending.first;
+                    oldFrame = pending.second;
+                    damage = (ComputedStyleDamage)(
+                        damage | compareStyle(oldStyle, style, damagedKeys));
+                }
+            }
+
             if (oldStyle &&
                 damage != ComputedStyleDamage::ComputedStyleDamageNone &&
                 needsToApplyTransition(style, damagedKeys)) {
-                if (!element->webView()->inRendering()) {
-                    element->document()
-                        ->animationExecutor()
-                        ->addPendingAnimation(element, oldStyle, style,
-                                              oldFrame);
+                if (!inRendering) {
+                    if (!oldFrame) {
+                        if (element->hasRareMembers()) {
+                            oldFrame =
+                                element->rareMembers()->m_previousComputedFrame;
+                        }
+                    }
+                    if (oldFrame) {
+                        element->document()
+                            ->animationExecutor()
+                            ->addPendingAnimation(element, oldStyle, style,
+                                                  oldFrame);
+                    }
                 } else if (oldFrame) {
                     applyTransition(element, oldStyle, oldFrame, style,
                                     damagedKeys);
                 }
             }
-        } else if (element->webView()->inRendering()) {
+
+        } else if (inRendering) {
             // Transition property has gone
             STARFISH_ASSERT(style->transitionLayerSize() == 0);
             element->document()->animationExecutor()->cancelAnimation(element);
+        }
+
+        if (element->hasRareMembers()) {
+            element->rareMembers()->m_previousComputedFrame = nullptr;
         }
 
         element->clearNeedsStyleRecalc();

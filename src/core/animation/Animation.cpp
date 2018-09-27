@@ -131,7 +131,7 @@ void AnimationTask::attachedToElement()
     m_attached = true;
 }
 
-void AnimationTask::detachedFromElement()
+void AnimationTask::detachedFromElement(bool shouldAffectStyle)
 {
     STARFISH_ASSERT(m_attached);
 }
@@ -149,7 +149,7 @@ void AnimationTask::fireStartEvent()
                                          ->staticStrings()
                                          ->m_transitionstart.localName(),
         init);
-    m_targetElement->dispatchEventByUA(event);
+    m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
 void AnimationTask::fireEndEvent()
@@ -164,7 +164,7 @@ void AnimationTask::fireEndEvent()
                                          ->staticStrings()
                                          ->m_transitionend.localName(),
         init);
-    m_targetElement->dispatchEventByUA(event);
+    m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
 void AnimationTask::fireCancelEvent()
@@ -179,7 +179,7 @@ void AnimationTask::fireCancelEvent()
                                          ->staticStrings()
                                          ->m_transitioncancel.localName(),
         init);
-    m_targetElement->dispatchEventByUA(event);
+    m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
 // This function calculte progress value to get intermediate value of animation.
@@ -202,9 +202,10 @@ String* AnimationTask::dumpString() const
 {
     char temp[100];
     snprintf(temp, sizeof(temp),
-             "Transition %s on %s (%s -> %s, %dms, delay:%dms)",
+             "Transition %s on %s[%p] %s (%s -> %s, %dms, delay:%dms)",
              CSSPropertyHelper::toString(propertyType()),
              targetElement()->name().localName()->toUTF8NonGCString().data(),
+             targetElement(), targetElement()->frame()->name(),
              m_fromValue.toString()->toUTF8NonGCString().data(),
              m_toValue.toString()->toUTF8NonGCString().data(),
              (int)m_durationMs, (int)m_delayMs);
@@ -548,10 +549,10 @@ void LengthAnimationTask::execute(float progress)
     }
 }
 
-void LengthAnimationTask::detachedFromElement()
+void LengthAnimationTask::detachedFromElement(bool shouldAffectStyle)
 {
-    AnimationTask::detachedFromElement();
-    if (canExecute()) {
+    AnimationTask::detachedFromElement(shouldAffectStyle);
+    if (canExecute() && shouldAffectStyle) {
         execute(computeProgress(1.0));
         return;
     }
@@ -616,10 +617,10 @@ void LengthSizeAnimationTask::execute(float progress)
     current->setNeedsLayout();
 }
 
-void LengthSizeAnimationTask::detachedFromElement()
+void LengthSizeAnimationTask::detachedFromElement(bool shouldAffectStyle)
 {
-    AnimationTask::detachedFromElement();
-    if (canExecute()) {
+    AnimationTask::detachedFromElement(shouldAffectStyle);
+    if (canExecute() && shouldAffectStyle) {
         execute(computeProgress(1.0));
         return;
     }
@@ -646,6 +647,38 @@ void OpacityAnimationTask::attachedToElement()
         return;
     }
 
+    if (frame->isFrameInline()) {
+        Frame* cbSofar = frame->parent();
+        style->setOpacity(m_fromValue.getFloat());
+        while (cbSofar) {
+            if (cbSofar->isFrameBlockBox() && !cbSofar->isAnonymous()) {
+                break;
+            }
+            cbSofar = cbSofar->parent();
+        }
+        if (cbSofar) {
+            FrameBox* cb = cbSofar->asFrameBox();
+            cb->iterateChildFrameBox([&](FrameBox* box) {
+                if (box->isInlineNonReplacedBox() &&
+                    box->asInlineNonReplacedBox()->origin() == frame) {
+                    bool before = box->isEstablishesStackingContext();
+                    bool canOwnBefore =
+                        box->isFrameBox() &&
+                        box->asFrameBox()->canOwnsStackingContext();
+                    box->computeStyleFlags();
+                    bool after = box->isEstablishesStackingContext();
+                    bool canOwnAfter =
+                        box->isFrameBox() &&
+                        box->asFrameBox()->canOwnsStackingContext();
+
+                    opacityUpdated(before != after ||
+                                   canOwnBefore != canOwnAfter);
+                }
+            });
+        }
+        return;
+    }
+
     bool before = frame->isEstablishesStackingContext();
     bool canOwnBefore =
         frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
@@ -654,15 +687,18 @@ void OpacityAnimationTask::attachedToElement()
     bool after = frame->isEstablishesStackingContext();
     bool canOwnAfter =
         frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-    opacityUpdated(before && canOwnBefore, after && canOwnAfter);
+    if (before != after || canOwnBefore != canOwnAfter) {
+        targetElement()->webView()->setNeedsEstablishesStackingContext();
+    }
+    opacityUpdated(before != after || canOwnBefore != canOwnAfter);
 }
 
-void OpacityAnimationTask::opacityUpdated(bool before, bool after)
+void OpacityAnimationTask::opacityUpdated(bool updateStackingContext)
 {
     Element* current = targetElement();
     Frame* frame = current->frame();
 
-    if (before != after) {
+    if (updateStackingContext) {
         targetElement()->webView()->setNeedsEstablishesStackingContext();
     } else {
         targetElement()->webView()->setNeedsComputeStackingContextProperties();
@@ -676,28 +712,71 @@ void OpacityAnimationTask::opacityUpdated(bool before, bool after)
     }
 }
 
-void OpacityAnimationTask::detachedFromElement()
+void OpacityAnimationTask::detachedFromElement(bool shouldAffectStyle)
 {
-    AnimationTask::detachedFromElement();
+    AnimationTask::detachedFromElement(shouldAffectStyle);
 
     Element* current = targetElement();
     current->clearRunningOpacityAnimation();
 
     Frame* frame = current->frame();
+    ComputedStyle* style = current->style();
     if (!frame) {
+        return;
+    }
+
+    if (frame->isFrameInline()) {
+        Frame* cbSofar = frame->parent();
+        style->setOpacity(m_toValue.getFloat());
+        while (cbSofar) {
+            if (cbSofar->isFrameBlockBox() && !cbSofar->isAnonymous()) {
+                break;
+            }
+            cbSofar = cbSofar->parent();
+        }
+        if (cbSofar) {
+            FrameBox* cb = cbSofar->asFrameBox();
+            cb->iterateChildFrameBox([&](FrameBox* box) {
+                if (box->isInlineNonReplacedBox() &&
+                    box->asInlineNonReplacedBox()->origin() == frame) {
+                    bool before = box->isEstablishesStackingContext();
+                    bool canOwnBefore =
+                        box->isFrameBox() &&
+                        box->asFrameBox()->canOwnsStackingContext();
+                    if (shouldAffectStyle) {
+                        box->computeStyleFlags();
+                    }
+                    bool after = box->isEstablishesStackingContext();
+                    bool canOwnAfter =
+                        box->isFrameBox() &&
+                        box->asFrameBox()->canOwnsStackingContext();
+
+                    if (shouldAffectStyle) {
+                        opacityUpdated(before != after ||
+                                       canOwnBefore != canOwnAfter);
+                    }
+                }
+            });
+        }
         return;
     }
 
     bool before = frame->isEstablishesStackingContext();
     bool canOwnBefore =
         frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-    ComputedStyle* style = current->style();
-    style->setOpacity(m_toValue.getFloat());
-    frame->computeStyleFlags();
+    if (shouldAffectStyle) {
+        style->setOpacity(m_toValue.getFloat());
+        frame->computeStyleFlags();
+    }
     bool after = frame->isEstablishesStackingContext();
     bool canOwnAfter =
         frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-    opacityUpdated(before && canOwnBefore, after && canOwnAfter);
+
+    if (shouldAffectStyle) {
+        opacityUpdated(before != after || canOwnBefore != canOwnAfter);
+    } else {
+        targetElement()->setNeedsPainting();
+    }
 }
 
 void OpacityAnimationTask::execute(float progress)
@@ -707,17 +786,40 @@ void OpacityAnimationTask::execute(float progress)
 
     Element* current = targetElement();
     Frame* frame = current->frame();
+    float newOpacity = from * (1 - progress) + to * progress;
+
+    if (frame->isFrameInline()) {
+        Frame* cbSofar = frame->parent();
+        while (cbSofar) {
+            if (cbSofar->isFrameBlockBox() && !cbSofar->isAnonymous()) {
+                break;
+            }
+            cbSofar = cbSofar->parent();
+        }
+        if (cbSofar) {
+            FrameBox* cb = cbSofar->asFrameBox();
+            cb->iterateChildFrameBox([&](FrameBox* box) {
+                if (box->isInlineNonReplacedBox() &&
+                    box->asInlineNonReplacedBox()->origin() == frame) {
+                    box->style()->markUsedInAnimator();
+                    box->style()->setOpacity(newOpacity);
+                    targetElement()->setNeedsComposite();
+                }
+            });
+        }
+        return;
+    }
+
     bool before = frame->isEstablishesStackingContext();
     bool canOwnBefore =
         frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
     ComputedStyle* style = current->style();
-    float newOpacity = from * (1 - progress) + to * progress;
     style->setOpacity(newOpacity);
     frame->computeStyleFlags();
     bool after = frame->isEstablishesStackingContext();
     bool canOwnAfter =
         frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-    opacityUpdated(before && canOwnBefore, after && canOwnAfter);
+    opacityUpdated(before != after || canOwnBefore != canOwnAfter);
 }
 
 inline double rad2deg(double rad)
@@ -932,35 +1034,42 @@ void TransformAnimationTask::attachedToElement()
             this);
 }
 
-void TransformAnimationTask::detachedFromElement()
+void TransformAnimationTask::detachedFromElement(bool shouldAffectStyle)
 {
-    AnimationTask::detachedFromElement();
+    AnimationTask::detachedFromElement(shouldAffectStyle);
 
     Element* current = targetElement();
-    ComputedStyle* style = current->style();
 
-    if (style && style->hasTransforms() && current->frame()) {
-        FrameBox* box = current->frame()->asFrameBox();
-        auto transforms = style->rareComputedStyleData()->transforms();
-        if (transforms->at(transforms->size() - 1).type() ==
-            StyleTransformData::InternalMatrix) {
-            // cleanup
-            transforms->removeAt(transforms->size() - 1);
-            if (transforms->size() == 0) {
-                current->webView()->setNeedsEstablishesStackingContext();
-                style->clearTransform();
-                box->computeStyleFlags();
-                current->setNeedsPainting();
-            } else {
-                current->webView()->setNeedsComputeStackingContextProperties();
-                STARFISH_RELEASE_ASSERT(
-                    transforms->at(transforms->size() - 1).type() !=
-                    StyleTransformData::InternalMatrix);
+    if (shouldAffectStyle) {
+        ComputedStyle* style = current->style();
+
+        if (style && style->hasTransforms() && current->frame()) {
+            FrameBox* box = current->frame()->asFrameBox();
+            auto transforms = style->rareComputedStyleData()->transforms();
+            if (transforms->at(transforms->size() - 1).type() ==
+                StyleTransformData::InternalMatrix) {
+                // cleanup
+                transforms->removeAt(transforms->size() - 1);
+                if (transforms->size() == 0) {
+                    current->webView()->setNeedsEstablishesStackingContext();
+                    style->clearTransform();
+                    box->computeStyleFlags();
+                    current->setNeedsPainting();
+                } else {
+                    current->webView()
+                        ->setNeedsComputeStackingContextProperties();
+                    STARFISH_RELEASE_ASSERT(
+                        transforms->at(transforms->size() - 1).type() !=
+                        StyleTransformData::InternalMatrix);
+                }
             }
         }
-    }
 
-    current->setNeedsStyleRecalc();
+        current->setNeedsStyleRecalc();
+    } else {
+        current->webView()->setNeedsEstablishesStackingContext();
+        current->setNeedsPainting();
+    }
     current->clearRunningTransformAnimation();
 }
 
@@ -1026,45 +1135,53 @@ void AnimationExecutor::registerAnimation(AnimationTask* newTask)
 // * This function is called when we need new animation.
 void AnimationExecutor::cancelPreviousAnimationIfNeeded(AnimationTask* newTask)
 {
+    GCVector<AnimationTask*> deletedTasks;
+
     // fire end event
     m_animationList.erase(
         std::remove_if(m_animationList.begin(), m_animationList.end(),
-                       [&newTask](AnimationTask* current) {
+                       [&newTask, &deletedTasks](AnimationTask* current) {
                            if (shouldCancelPrevious(current, newTask)) {
                                if (current->m_attached) {
-                                   current->detachedFromElement();
+                                   current->detachedFromElement(false);
                                }
                                if (current->m_isStartEventFired) {
-                                   current->fireCancelEvent();
+                                   deletedTasks.push_back(current);
                                }
                                return true;
                            }
                            return false;
                        }),
         m_animationList.end());
+
+    for (size_t i = 0; i < deletedTasks.size(); i++) {
+        deletedTasks[i]->fireCancelEvent();
+    }
 }
 
 // This function clear All animation which is related target node.
 void AnimationExecutor::cancelAnimation(Element* target)
 {
+    GCVector<AnimationTask*> deletedTasks;
     m_animationList.erase(
-        std::remove_if(
-            m_animationList.begin(), m_animationList.end(),
-            [&target](AnimationTask* current) {
-                if (current->targetElement() == target) {
-                    target->setNeedsStyleRecalc(
-                        Node::StyleChangeReason::JustNeedsRecalcSelf);
-                    if (current->m_attached) {
-                        current->detachedFromElement();
-                    }
-                    if (current->m_isStartEventFired) {
-                        current->fireCancelEvent();
-                    }
-                    return true;
-                }
-                return false;
-            }),
+        std::remove_if(m_animationList.begin(), m_animationList.end(),
+                       [&target, &deletedTasks](AnimationTask* current) {
+                           if (current->targetElement() == target) {
+                               if (current->m_attached) {
+                                   current->detachedFromElement(false);
+                               }
+                               if (current->m_isStartEventFired) {
+                                   deletedTasks.push_back(current);
+                               }
+                               return true;
+                           }
+                           return false;
+                       }),
         m_animationList.end());
+
+    for (size_t i = 0; i < deletedTasks.size(); i++) {
+        deletedTasks[i]->fireCancelEvent();
+    }
 }
 
 void AnimationExecutor::cancelDisappearedAnimation(Element* target,
@@ -1077,34 +1194,37 @@ void AnimationExecutor::cancelDisappearedAnimation(Element* target,
         }
     }
 
+    GCVector<AnimationTask*> deletedTasks;
     m_animationList.erase(
-        std::remove_if(
-            m_animationList.begin(), m_animationList.end(),
-            [&target, &data](AnimationTask* current) {
-                if (current->targetElement() == target) {
-                    bool findNow = false;
-                    for (size_t i = 0; i < data->size(); i++) {
-                        if (data->property(i) == current->propertyType()) {
-                            findNow = true;
-                            break;
-                        }
-                    }
+        std::remove_if(m_animationList.begin(), m_animationList.end(),
+                       [&target, &data, &deletedTasks](AnimationTask* current) {
+                           if (current->targetElement() == target) {
+                               bool findNow = false;
+                               for (size_t i = 0; i < data->size(); i++) {
+                                   if (data->property(i) ==
+                                       current->propertyType()) {
+                                       findNow = true;
+                                       break;
+                                   }
+                               }
 
-                    if (!findNow) {
-                        target->setNeedsStyleRecalc(
-                            Node::StyleChangeReason::JustNeedsRecalcSelf);
-                        if (current->m_attached) {
-                            current->detachedFromElement();
-                        }
-                        if (current->m_isStartEventFired) {
-                            current->fireCancelEvent();
-                        }
-                        return true;
-                    }
-                }
-                return false;
-            }),
+                               if (!findNow) {
+                                   if (current->m_attached) {
+                                       current->detachedFromElement(false);
+                                   }
+                                   if (current->m_isStartEventFired) {
+                                       deletedTasks.push_back(current);
+                                   }
+                                   return true;
+                               }
+                           }
+                           return false;
+                       }),
         m_animationList.end());
+
+    for (size_t i = 0; i < deletedTasks.size(); i++) {
+        deletedTasks[i]->fireCancelEvent();
+    }
 }
 
 // [NOTICE]
@@ -1192,8 +1312,8 @@ void AnimationExecutor::step()
         if (task->m_startTimeMs == 0) {
 #ifndef NDEBUG
             STARFISH_LOG_INFO(
-                "[START][%lums][%p, node %p] %s (id:%s, className:%s)\n",
-                currentTickCount, task, task->targetElement(),
+                "[START][%dms][%p, node %p] %s (id:%s, className:%s)\n",
+                (int)currentTickCount, task, task->targetElement(),
                 task->dumpString()->toUTF8NonGCString().data(),
                 task->targetElement()->id()->toUTF8NonGCString().data(),
                 task->targetElement()->className()->toUTF8NonGCString().data());
@@ -1213,8 +1333,8 @@ void AnimationExecutor::step()
 //      Need to handle in detachedFromElement()
 #ifndef NDEBUG
                 STARFISH_LOG_INFO(
-                    "[ END ][%lums][%p] %s (id:%s, className:%s)\n",
-                    currentTickCount, task,
+                    "[ END ][%dms][%p] %s (id:%s, className:%s)\n",
+                    (int)currentTickCount, task,
                     task->dumpString()->toUTF8NonGCString().data(),
                     task->targetElement()->id()->toUTF8NonGCString().data(),
                     task->targetElement()
@@ -1222,7 +1342,7 @@ void AnimationExecutor::step()
                         ->toUTF8NonGCString()
                         .data());
 #endif
-                task->detachedFromElement();
+                task->detachedFromElement(true);
                 task->fireEndEvent();
                 m_animationList.erase(i);
                 i--;
@@ -1232,6 +1352,17 @@ void AnimationExecutor::step()
         }
     }
     stopIfNeeds();
+}
+
+void AnimationExecutor::clearPendingAnimationRelatedWithElement(
+    Element* element)
+{
+    for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
+        if (m_pendingAnimationInfoList[i]->element == element) {
+            m_pendingAnimationInfoList.erase(i);
+            return;
+        }
+    }
 }
 
 void AnimationExecutor::runPendingAnimation()
@@ -1263,10 +1394,8 @@ void AnimationExecutor::runPendingAnimation()
 
         if (currentElementStyle && currentElementStyle->transition()) {
             compareStyle(info->oldStyle, currentElementStyle, damagedKeys);
-            if (!info->oldFrame) {
-                info->oldFrame = info->element->frame();
-            }
-            if (info->oldFrame) {
+
+            if (needsToApplyTransition(currentElementStyle, damagedKeys)) {
                 applyTransition(info->element, info->oldStyle, info->oldFrame,
                                 currentElementStyle, damagedKeys);
             }
@@ -1285,9 +1414,6 @@ void AnimationExecutor::addPendingAnimation(Element* element,
 
     for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
         if (m_pendingAnimationInfoList[i]->element == element) {
-            m_pendingAnimationInfoList[i]->oldStyle = oldStyle;
-            m_pendingAnimationInfoList[i]->newStyle = newStyle;
-            m_pendingAnimationInfoList[i]->oldFrame = oldFrame;
             return;
         }
     }
@@ -1299,9 +1425,22 @@ void AnimationExecutor::addPendingAnimation(Element* element,
     PendingAnimiationInfo* info = new PendingAnimiationInfo();
     info->element = element;
     info->oldStyle = oldStyle;
-    info->newStyle = newStyle;
     info->oldFrame = oldFrame;
     m_pendingAnimationInfoList.push_back(info);
+}
+
+std::pair<ComputedStyle*, Frame*>
+AnimationExecutor::fetchPendingAnimationIfExists(Element* element)
+{
+    for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
+        if (m_pendingAnimationInfoList[i]->element == element) {
+            auto ret = std::make_pair(m_pendingAnimationInfoList[i]->oldStyle,
+                                      m_pendingAnimationInfoList[i]->oldFrame);
+            m_pendingAnimationInfoList.erase(i);
+            return ret;
+        }
+    }
+    return std::make_pair(nullptr, nullptr);
 }
 
 void AnimationExecutor::attachAll()

@@ -730,6 +730,14 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
     INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering::layoutIfNeeds");
     bool didLayout = false;
 
+    if (inRendering()) {
+        for (size_t i = 0; i < m_browsingContextsHasPendingAnimation.size();
+             i++) {
+            m_browsingContextsHasPendingAnimation[i]
+                ->registerNeedsLayoutInWebView();
+        }
+    }
+
     while (true) {
         didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeds();
         for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {
@@ -737,17 +745,6 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
                 didLayout | m_browsingContextsNeedsLayout[i]->layoutIfNeeds();
         }
         m_browsingContextsNeedsLayout.clear();
-
-        if (inRendering()) {
-            for (size_t i = 0; i < m_browsingContextsHasPendingAnimation.size();
-                 i++) {
-                m_browsingContextsHasPendingAnimation[i]
-                    ->document()
-                    ->animationExecutor()
-                    ->runPendingAnimation();
-            }
-            m_browsingContextsHasPendingAnimation.clear();
-        }
 
         bool needsReLayout = false;
         for (size_t i = 0; i < m_didLayoutCallbacks.size(); i++) {

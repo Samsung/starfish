@@ -58,6 +58,7 @@ public:
         , m_activeHtmlCollectionListsForTagNameNS(nullptr)
         , m_activeHtmlCollectionListsForClassName(nullptr)
         , m_activeNodeListVectorForName(nullptr)
+        , m_previousComputedFrame(nullptr)
     {
     }
 
@@ -106,6 +107,8 @@ public:
     ActiveStringPairHTMLCollectionList* m_activeHtmlCollectionListsForTagNameNS;
     ActiveHTMLCollectionList* m_activeHtmlCollectionListsForClassName;
     ActiveNodeListVector* m_activeNodeListVectorForName;
+
+    Frame* m_previousComputedFrame;
 };
 
 struct GetRootNodeOptions {

@@ -177,9 +177,7 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
         } else if (ch >= 'A' && ch <= 'Z') {
             return (KeyValue)(KeyValue::AKey + ch - 'A');
         }
-    }
-#ifdef STARFISH_TIZEN_TV
-    else if (strcmp("XF86AudioRaiseVolume", ecoreKeyString) == 0) {
+    } else if (strcmp("XF86AudioRaiseVolume", ecoreKeyString) == 0) {
         return KeyValue::TVVolumeUpKey;
     } else if (strcmp("XF86AudioLowerVolume", ecoreKeyString) == 0) {
         return KeyValue::TVVolumeDownKey;
@@ -220,7 +218,7 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
     } else if (strcmp("XF86Exit", ecoreKeyString) == 0) {
         return KeyValue::TVExitKey;
     }
-#endif
+
     STARFISH_LOG_ERROR("WebViewEFL - unimplemented key %s\n", ecoreKeyString);
     return KeyValue::UnidentifiedKey;
 }

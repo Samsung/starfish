@@ -470,6 +470,22 @@ void BrowsingContext::buildFrameTreeIfNeeds()
 bool BrowsingContext::layoutIfNeeds()
 {
     resolveStyleIfNeeds();
+
+    if (webView()->inRendering()) {
+        for (size_t i = 0;
+             i < webView()->m_browsingContextsHasPendingAnimation.size(); i++) {
+            if (webView()->m_browsingContextsHasPendingAnimation[i] == this) {
+                webView()
+                    ->m_browsingContextsHasPendingAnimation[i]
+                    ->document()
+                    ->animationExecutor()
+                    ->runPendingAnimation();
+                webView()->m_browsingContextsHasPendingAnimation.erase(i);
+                break;
+            }
+        }
+    }
+
     buildFrameTreeIfNeeds();
 
     bool ret = false;
