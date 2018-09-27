@@ -1187,7 +1187,11 @@ void Frame::computeStyleFlags()
     m_flags.m_isEstablishesStackingContext |=
         (position != PositionValue::StaticPositionValue);
     m_flags.m_isEstablishesStackingContext |= (style->opacity() != 1);
+    m_flags.m_isEstablishesStackingContext |=
+        (node && node->isRunningOpacityAnimation());
     m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
+    m_flags.m_isEstablishesStackingContext |=
+        (node && node->isRunningTransformAnimation());
     m_flags.m_isEstablishesStackingContext |= (style->hasAvailableFilter());
 
     // TODO add condition

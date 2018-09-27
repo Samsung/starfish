@@ -100,6 +100,7 @@ ComputedStyleCSSStyleDeclaration::requiredStage(
                keyKind == CSSStyleValuePair::KeyKind::MinHeight) {
         result = ComputedStyleCSSStyleDeclaration::Stage::frameTreeBuild;
     }
+
     return result;
 }
 

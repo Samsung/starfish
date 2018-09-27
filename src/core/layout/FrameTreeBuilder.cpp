@@ -149,6 +149,20 @@ void FrameTreeBuilder::clearTree(Node* current)
 {
     if (!current->frame())
         return;
+
+    Frame* f = current->frame();
+    if (current->style()->transition() &&
+        current->style()->transition()->size()) {
+        if (f->parent()) {
+            f->parent()->removeChild(f);
+            while (f->firstChild()) {
+                f->removeChild(f->firstChild());
+            }
+        }
+
+        current->ensureRareMembers()->m_previousComputedFrame = f;
+    }
+
     current->setFrame(nullptr);
     Node* n = current->firstChild();
     while (n) {

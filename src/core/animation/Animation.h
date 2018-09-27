@@ -222,7 +222,7 @@ public:
     {
     }
     virtual void attachedToElement();
-    virtual void detachedFromElement();
+    virtual void detachedFromElement(bool shouldAffectStyle);
     CSSStyleValuePair::KeyKind propertyType() const
     {
         return m_property;
@@ -296,7 +296,7 @@ public:
     }
     void execute(float progress) override;
     void attachedToElement() override;
-    void detachedFromElement() override;
+    void detachedFromElement(bool shouldAffectStyle) override;
     void computeToValue();
 
 protected:
@@ -321,7 +321,7 @@ public:
     }
     void execute(float progress) override;
     void attachedToElement() override;
-    void detachedFromElement() override;
+    void detachedFromElement(bool shouldAffectStyle) override;
 
 protected:
     LengthSize interpolateLength(float progress) const;
@@ -335,10 +335,10 @@ public:
                          void* data = nullptr);
     void execute(float progress) override;
     void attachedToElement() override;
-    void detachedFromElement() override;
+    void detachedFromElement(bool shouldAffectStyle) override;
 
 private:
-    void opacityUpdated(bool before, bool after);
+    void opacityUpdated(bool updateStackingContext);
 };
 
 struct MatrixDecomposed2D {
@@ -374,7 +374,7 @@ public:
                            AnimationTimingFunction* timingFunction);
     void execute(float progress) override;
     void attachedToElement() override;
-    void detachedFromElement() override;
+    void detachedFromElement(bool shouldAffectStyle) override;
     void computeToValue();
 
 private:
@@ -386,7 +386,6 @@ class AnimationExecutor : public gc {
     struct PendingAnimiationInfo : public gc {
         Element* element;
         ComputedStyle* oldStyle;
-        ComputedStyle* newStyle;
         Frame* oldFrame;
     };
 
@@ -417,8 +416,11 @@ public:
     void step();
 
     void runPendingAnimation();
+    void clearPendingAnimationRelatedWithElement(Element* element);
     void addPendingAnimation(Element* element, ComputedStyle* oldStyle,
                              ComputedStyle* newStyle, Frame* oldFrame);
+    std::pair<ComputedStyle*, Frame*> fetchPendingAnimationIfExists(
+        Element* element);
     void attachAll();
 
 private:
