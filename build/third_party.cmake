@@ -126,6 +126,7 @@ EXTERNALPROJECT_ADD (libtuv
         -DBUILD_HOST_HELPER=no
         -DCREATE_SHARED_LIB=yes
         -DTARGET_BOARD=None
+    BUILD_BYPRODUCTS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtuv.so
 )
 
 ADD_LIBRARY (tuv SHARED IMPORTED)
@@ -266,13 +267,14 @@ EXTERNALPROJECT_ADD (libescargot
     BINARY_DIR ${ESCARGOT_ROOT}
     INSTALL_COMMAND
         ${CMAKE_COMMAND} -E copy_directory
-        ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/lib/libescargot.a
+        ${ESCARGOT_ROOT}/out/${HOST}/${ARCH}/interpreter/${MODE}/lib/
         ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
     CMAKE_ARGS
         -DHOST=${HOST}
         -DARCH=${ARCH}
         -DMODE=${MODE}
         -DOUTPUT=static_lib
+    BUILD_BYPRODUCTS ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libescargot.a
 )
 
 ADD_LIBRARY (escargot STATIC IMPORTED)
