@@ -32,6 +32,7 @@ P /.git
 - third_party/android
 - third_party/windows
 + third_party/libtuv/test
+- third_party/libtuv/build
 - test
 - test_new
 - out
