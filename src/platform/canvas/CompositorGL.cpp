@@ -79,7 +79,6 @@ PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
 #include <EGL/eglext.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
-#include <GLES3/gl3.h>
 
 static void logEglError(const char* name) noexcept
 {
@@ -727,9 +726,21 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
             g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = true;
         }
 
-        g_isSupportExtensionEGLImageExternal =
-            strstr((const char*)glGetString(GL_EXTENSIONS),
-                   "GL_OES_EGL_image_external") != nullptr;
+        const char* ex = (const char*)glGetString(GL_EXTENSIONS);
+
+        if (ex) {
+            STARFISH_LOG_INFO("GL_EXTENSIONS -> %s\n", ex);
+            g_isSupportExtensionEGLImageExternal =
+                strstr(ex, "GL_OES_EGL_image_external") != nullptr;
+        }
+
+#if !defined(STARFISH_TIZEN) && !defined(STARFISH_ANDROID)
+        g_isSupportExtensionEGLImageExternal = false;
+#endif
+
+        if (g_isSupportExtensionEGLImageExternal) {
+            STARFISH_LOG_INFO("use EGLImageExternal!\n");
+        }
 
 #if defined(STARFISH_TIZEN) && \
     !defined(PORT_WEBVIEW_BRIDGE_EFL) // STARFISH_TIZEN without
@@ -743,9 +754,6 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
                 eglGetProcAddress("glEGLImageTargetTexture2DOES"));
 #endif
 
-#if !defined(STARFISH_TIZEN) && !defined(STARFISH_ANDROID)
-        g_isSupportExtensionEGLImageExternal = false;
-#endif
         g_needsCheckCompatibility = false;
         checkError();
     }

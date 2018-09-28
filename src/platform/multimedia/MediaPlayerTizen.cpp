@@ -38,11 +38,14 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
-#ifndef PORT_WEBVIEW_BRIDGE_EFL
-#error "You must need PORT_WEBVIEW_BRIDGE_EFL to use this"
+#if !defined(PORT_WEBVIEW_BRIDGE_EFL) && !defined(PORT_WEBVIEW_BRIDGE_WAYLAND)
+#error \
+    "You must need PORT_WEBVIEW_BRIDGE_EFL or PORT_WEBVIEW_BRIDGE_WAYLAND to use this"
 #endif
 
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Evas.h>
+#endif
 
 namespace StarFish {
 
@@ -370,7 +373,6 @@ void MediaStream::setLastBufferBytes(size_t value)
     m_lastBufferBytes = value;
 }
 
-// Fake Canvas surface for support display video with evas image object
 MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     : MediaPlayer(element)
     , m_inPrepare(false)
@@ -397,11 +399,14 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
         NULL, NULL, NULL);
 }
 
+// Fake Canvas surface for support display video with evas image object
 class CanvasSurfaceVideo : public CanvasSurface {
 public:
     CanvasSurfaceVideo(PlatformWindow* wnd)
     {
         m_buffer = (uint8_t*)malloc(4);
+
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
         Evas_Object* wndObject =
             (Evas_Object*)wnd->webView()->publicLayerUserDataMap()
                 ["__internalLWEWebViewEFLNativeWindowEvasObject"];
@@ -409,19 +414,24 @@ public:
         m_imageObject =
             evas_object_image_filled_add(evas_object_evas_get(wndObject));
         evas_object_data_set(m_imageObject, "video", "1");
+#endif
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            CanvasSurfaceVideo* s =
                                                (CanvasSurfaceVideo*)obj;
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
                                            evas_object_del(s->m_imageObject);
                                            free(s->m_buffer);
+#endif
                                        },
                                        NULL, NULL, NULL);
     }
 
     virtual void detachNativeBuffer()
     {
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
         evas_object_hide(m_imageObject);
+#endif
     }
 
     bool attachNativeBuffer(size_t w, size_t h)
@@ -438,7 +448,10 @@ public:
         CanvasSurfaceTextureInfo info;
         CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment fragment;
 
+        fragment.textureID = 0;
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
         fragment.textureID = (size_t)m_imageObject;
+#endif
         fragment.srcX = 0;
         fragment.srcY = 0;
         fragment.srcWidth = 1;
@@ -501,7 +514,9 @@ public:
 
 protected:
     uint8_t* m_buffer;
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
     Evas_Object* m_imageObject;
+#endif
 };
 
 CanvasSurface* MediaPlayerTizen::createGraphicsBuffer(size_t visibleWidth,

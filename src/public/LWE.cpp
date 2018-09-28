@@ -36,6 +36,7 @@ void* LWEMainThread(void*)
 {
     StarFish::MessageLoop::init();
     pthread_mutex_unlock(&g_mainThreadInitLocker);
+    STARFISH_LOG_INFO("Worker thread started!");
     StarFish::MessageLoop::run();
     return nullptr;
 }
