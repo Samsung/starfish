@@ -83,9 +83,11 @@ void MediaPlayerTizen::disposePlayer()
 void MediaPlayerTizen::setNativePlayerDisplayMode()
 {
     player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_CROPPED_FULL);
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
     player_set_display(
         m_nativePlayer, PLAYER_DISPLAY_TYPE_EVAS,
         (void*)m_canvasSurface->textureInfo().fragments[0].textureID);
+#endif
 }
 
 void MediaPlayerTizen::setPlayerDisplayVideoAtPausedState(int& ret)
@@ -95,12 +97,14 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
                                  const LayoutRect& videoRect,
                                  const LayoutRect& absVideoRect)
 {
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
     Evas_Object* e =
         (Evas_Object*)m_canvasSurface->textureInfo().fragments[0].textureID;
     evas_object_move(e, (int)absVideoRect.x(), (int)absVideoRect.y());
     evas_object_resize(e, (int)absVideoRect.width(),
                        (int)absVideoRect.height());
     evas_object_show(e);
+#endif
 }
 
 void MediaPlayerTizen::updateAudioStreamInfo(MediaStream* audio,

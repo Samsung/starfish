@@ -254,6 +254,16 @@
                         '-lgif',
                     ],
                 }],
+                ['backend=="wayland_cairo_gl"', {
+                    'cflags_extra': [
+                    ],
+                    'include_dirs_extra': [
+                    ],
+                    'libraries_extra': [
+                        '-ljpeg',
+                        '-lgif',
+                    ],
+                }],
                 ['backend=="dali"', {
                     'cflags_extra': [
                     ],
@@ -367,6 +377,30 @@
                 ],
                 'deps_release_extra': [
                     './build.dep.gyp:libskia.x64.release',
+                ],
+            }],
+            ['platform=="tizen" and backend=="wayland_cairo_gl"', {
+                'defines_extra': [
+                    'STARFISH_WAYLAND_CAIRO_GL',
+                ],
+                'cflags_extra': [
+                    '<@(cflags_extra)',
+                    '-Wno-format-nonliteral',
+                ],
+                'libraries_extra': [
+                    '<@(libraries_extra)',
+                    '-lpthread',
+                    '-Wl,-soname,liblightweight-web-engine.so.1',
+                ],
+                'deps_extra': [
+                    './build.dep.gyp:wayland_cairo_gl.tizen',
+                    './build.dep.gyp:skia_matrix',
+                ],
+                'deps_debug_extra': [
+                    './build.dep.gyp:libtuv.tizen.debug',
+                ],
+                'deps_release_extra': [
+                    './build.dep.gyp:libtuv.tizen.release',
                 ],
             }],
             ['platform=="linux" and backend=="glfw_cairo_gl"', {

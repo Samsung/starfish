@@ -24,8 +24,18 @@
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Elementary.h>
+#elif defined(PORT_WEBVIEW_BRIDGE_WAYLAND)
+#include <Ecore.h>
+
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL)
 #include <Ecore.h>
+#endif
+
+#if defined(PORT_WEBVIEW_BRIDGE_WAYLAND)
+#define EFL_BETA_API_SUPPORT
+#include <Ecore_Wl2.h>
+#undef EFL_BETA_API_SUPPORT
+#include <wayland-client.h>
 #endif
 
 #include <pthread.h>
@@ -366,6 +376,33 @@ int main(int argc, char* argv[])
 #endif
 #endif
 
+#elif defined(PORT_WEBVIEW_BRIDGE_WAYLAND)
+
+    Ecore_Wl2_Display* _ecore_wl2_display = NULL;
+    if (!ecore_wl2_init())
+        return -1;
+    if (!_ecore_wl2_display)
+        _ecore_wl2_display = ecore_wl2_display_connect(NULL);
+
+    struct wl_display* display = ecore_wl2_display_get(_ecore_wl2_display);
+
+    wl_display_dispatch(display);
+    wl_display_roundtrip(display);
+
+    auto wndObj =
+        ecore_wl2_window_new(_ecore_wl2_display, NULL, 0, 0, width, height);
+    ecore_wl2_window_type_set(wndObj, ECORE_WL2_WINDOW_TYPE_TOPLEVEL);
+    auto wlSurface = ecore_wl2_window_surface_get(wndObj);
+    ecore_wl2_window_alpha_set(wndObj, EINA_FALSE);
+    ecore_wl2_window_show(wndObj);
+
+    size_t count = 0;
+    while (count < 3) {
+        if (wl_display_dispatch_pending(display) > 0) {
+            wl_display_dispatch(display);
+        }
+        count++;
+    }
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
@@ -388,7 +425,7 @@ int main(int argc, char* argv[])
     LWE::LWE::Initialize("/tmp/StarFish_localStorage.txt",
                          "/tmp/StarFish_Cookies.txt", cacheDir.data());
 
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if defined(PORT_WEBVIEW_BRIDGE_EFL) || defined(PORT_WEBVIEW_BRIDGE_WAYLAND)
     LWE::WebView* webView =
         LWE::WebView::Create(wndObj, x, y, width, height, scaleFactor, "serif",
                              "ko-KR", "Asia/Seoul");
@@ -485,7 +522,17 @@ int main(int argc, char* argv[])
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     elm_run();
-#elif defined(PORT_EVENTLOOP_BACKEND_EFL)
+#elif defined(PORT_EVENTLOOP_BACKEND_EFL) || \
+    defined(PORT_WEBVIEW_BRIDGE_WAYLAND)
+
+    count = 0;
+    while (count < 10) {
+        if (wl_display_dispatch_pending(display) > 0) {
+            wl_display_dispatch(display);
+        }
+        count++;
+    }
+
     ecore_main_loop_begin();
 #elif defined(PORT_WEBVIEW_BRIDGE_GLFW)
     struct sigaction act;
@@ -510,7 +557,8 @@ int main(int argc, char* argv[])
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     elm_shutdown();
-#elif defined(PORT_EVENTLOOP_BACKEND_EFL)
+#elif defined(PORT_EVENTLOOP_BACKEND_EFL) || \
+    defined(PORT_WEBVIEW_BRIDGE_WAYLAND)
     ecore_shutdown();
 #endif
 
