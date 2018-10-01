@@ -56,7 +56,7 @@ void FrameReplacedCanvas::paintContent(PaintingContext& ctx)
     Canvas* canvas = ctx.m_canvas;
     canvas->save();
 
-    Canvas* imageCanvas = Canvas::create(node()->starFish(), m_canvasImage);
+    Canvas* imageCanvas = Canvas::create(node()->webView(), m_canvasImage);
 
     // Run the command buffer.
     Node* n = this->node();
