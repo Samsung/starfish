@@ -254,7 +254,7 @@
                         '-lgif',
                     ],
                 }],
-                ['backend=="wayland_cairo_gl"', {
+                ['backend=="ecore_wayland2_cairo_gl"', {
                     'cflags_extra': [
                     ],
                     'include_dirs_extra': [
@@ -379,9 +379,9 @@
                     './build.dep.gyp:libskia.x64.release',
                 ],
             }],
-            ['platform=="tizen" and backend=="wayland_cairo_gl"', {
+            ['platform=="tizen" and backend=="ecore_wayland2_cairo_gl"', {
                 'defines_extra': [
-                    'STARFISH_WAYLAND_CAIRO_GL',
+                    'STARFISH_ECORE_WAYLAND2_CAIRO_GL',
                 ],
                 'cflags_extra': [
                     '<@(cflags_extra)',
@@ -393,7 +393,7 @@
                     '-Wl,-soname,liblightweight-web-engine.so.1',
                 ],
                 'deps_extra': [
-                    './build.dep.gyp:wayland_cairo_gl.tizen',
+                    './build.dep.gyp:ecore_wayland2_cairo_gl.tizen',
                     './build.dep.gyp:skia_matrix',
                 ],
                 'deps_debug_extra': [

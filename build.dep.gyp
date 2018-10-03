@@ -567,7 +567,7 @@
             },
         },
         {
-            'target_name': 'wayland_cairo_gl.tizen',
+            'target_name': 'ecore_wayland2_cairo_gl.tizen',
             'type': 'none',
             'all_dependent_settings': {
                 'include_dirs': [
