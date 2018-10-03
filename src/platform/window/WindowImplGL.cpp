@@ -168,6 +168,7 @@ public:
     {
         m_glMakeCurrentCallback(this);
     }
+
     virtual void glSwapBuffers() override
     {
         m_glSwapBufferCallback(this);

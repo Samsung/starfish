@@ -61,9 +61,9 @@ using Point = std::array<Coord, 2>;
 #include <GLES2/gl2ext.h>
 #include <EGL/eglext.h>
 #include <tbm_surface.h>
-PFNEGLCREATEIMAGEKHRPROC g_eglCreateImageKHRProc;
-PFNEGLDESTROYIMAGEKHRPROC g_eglDestroyImageKHRProc;
-PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
+static PFNEGLCREATEIMAGEKHRPROC g_eglCreateImageKHRProc;
+static PFNEGLDESTROYIMAGEKHRPROC g_eglDestroyImageKHRProc;
+static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
 #define EGL_NATIVE_SURFACE_TIZEN 0x32A1
 #elif defined(STARFISH_WINDOWS)
 #include <GL/glew.h>
@@ -732,6 +732,8 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
             STARFISH_LOG_INFO("GL_EXTENSIONS -> %s\n", ex);
             g_isSupportExtensionEGLImageExternal =
                 strstr(ex, "GL_OES_EGL_image_external") != nullptr;
+        } else {
+            STARFISH_LOG_INFO("GL_EXTENSIONS -> returns null...\n");
         }
 
 #if !defined(STARFISH_TIZEN) && !defined(STARFISH_ANDROID)

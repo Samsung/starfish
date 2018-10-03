@@ -38,9 +38,10 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
-#if !defined(PORT_WEBVIEW_BRIDGE_EFL) && !defined(PORT_WEBVIEW_BRIDGE_WAYLAND)
+#if !defined(PORT_WEBVIEW_BRIDGE_EFL) && \
+    !defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
 #error \
-    "You must need PORT_WEBVIEW_BRIDGE_EFL or PORT_WEBVIEW_BRIDGE_WAYLAND to use this"
+    "You must need PORT_WEBVIEW_BRIDGE_EFL or PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2 to use this"
 #endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
