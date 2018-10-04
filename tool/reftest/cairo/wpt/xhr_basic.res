@@ -40,7 +40,6 @@ http://web-platform.test:8000/xhr/abort-event-listeners.htm
 http://web-platform.test:8000/xhr/response-data-arraybuffer.htm
 #http://web-platform.test:8000/xhr/send-non-same-origin.htm
 #http://web-platform.test:8000/xhr/setrequestheader-bogus-name.htm
-#http://web-platform.test:8000/xhr/send-data-formdata.htm
 #http://web-platform.test:8000/xhr/send-redirect.htm
 #http://web-platform.test:8000/xhr/send-redirect-bogus.htm
 #http://web-platform.test:8000/xhr/send-receive-utf16.htm
@@ -59,11 +58,9 @@ http://web-platform.test:8000/xhr/response-data-arraybuffer.htm
 #http://web-platform.test:8000/xhr/access-control-preflight-headers-sync.htm
 #http://web-platform.test:8000/xhr/send-network-error-sync-events.sub.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-sync-block-defer-scripts.html
-#http://web-platform.test:8000/xhr/formdata-foreach.html
 #http://web-platform.test:8000/xhr/open-url-javascript-window-2.htm
 #http://web-platform.test:8000/xhr/open-url-multi-window-2.htm
 #http://web-platform.test:8000/xhr/access-control-preflight-request-header-sorted.htm
-#http://web-platform.test:8000/xhr/formdata-get.htm
 #http://web-platform.test:8000/xhr/overridemimetype-open-state-force-utf-8.htm
 #http://web-platform.test:8000/xhr/response-json.htm
 #http://web-platform.test:8000/xhr/send-response-event-order.htm
@@ -73,7 +70,6 @@ http://web-platform.test:8000/xhr/xmlhttprequest-sync-block-defer-scripts.html
 #http://web-platform.test:8000/xhr/open-url-about-blank-window.htm
 #http://web-platform.test:8000/xhr/overridemimetype-done-state.htm
 #http://web-platform.test:8000/xhr/open-url-redirected-worker-origin.htm
-#http://web-platform.test:8000/xhr/formdata-set.htm
 #http://web-platform.test:8000/xhr/loadstart-and-state.html
 #http://web-platform.test:8000/xhr/access-control-basic-allow-star.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-simple.html
@@ -120,7 +116,6 @@ http://web-platform.test:8000/xhr/xmlhttprequest-timeout-synconmain.html
 #http://web-platform.test:8000/xhr/send-authentication-prompt-2-manual.htm
 #http://web-platform.test:8000/xhr/send-data-blob.htm
 #http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-501.htm
-#http://web-platform.test:8000/xhr/formdata-blob.htm
 #http://web-platform.test:8000/xhr/setrequestheader-header-forbidden.htm
 #http://web-platform.test:8000/xhr/abort-after-timeout.htm
 #http://web-platform.test:8000/xhr/event-readystatechange-loaded.htm
@@ -137,7 +132,6 @@ http://web-platform.test:8000/xhr/response-data-gzip.htm
 #http://web-platform.test:8000/xhr/setrequestheader-header-allowed.htm
 #http://web-platform.test:8000/xhr/access-control-preflight-request-headers-origin.htm
 #http://web-platform.test:8000/xhr/access-control-basic-get-fail-non-simple.htm
-#http://web-platform.test:8000/xhr/formdata-has.htm
 #http://web-platform.test:8000/xhr/abort-event-abort.htm
 #http://web-platform.test:8000/xhr/send-entity-body-document-bogus.htm
 #http://web-platform.test:8000/xhr/access-control-preflight-sync-not-supported.htm
@@ -183,7 +177,6 @@ http://web-platform.test:8000/xhr/send-entity-body-basic.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-sync-block-scripts.html
 #http://web-platform.test:8000/xhr/send-sync-blocks-async.htm
 #http://web-platform.test:8000/xhr/send-authentication-cors-setrequestheader-no-cred.htm
-#http://web-platform.test:8000/xhr/formdata.htm
 #http://web-platform.test:8000/xhr/open-method-case-sensitive.htm
 http://web-platform.test:8000/xhr/getresponseheader-unsent-opened-state.htm
 #http://web-platform.test:8000/xhr/access-control-preflight-credential-sync.htm
@@ -192,7 +185,6 @@ http://web-platform.test:8000/xhr/send-redirect-infinite-sync.htm
 #http://web-platform.test:8000/xhr/send-entity-body-document.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-twice.html
 #http://web-platform.test:8000/xhr/responsexml-non-document-types.htm
-#http://web-platform.test:8000/xhr/FormData-append.html
 #http://web-platform.test:8000/xhr/status-error.htm
 #http://web-platform.test:8000/xhr/responsexml-get-twice.htm
 #http://web-platform.test:8000/xhr/open-url-base-inserted-after-open.htm
@@ -277,4 +269,13 @@ http://web-platform.test:8000/xhr/getallresponseheaders-cookies.htm
 #http://web-platform.test:8000/xhr/overridemimetype-invalid-mime-type.htm
 #http://web-platform.test:8000/xhr/send-entity-body-get-head-async.htm
 #http://web-platform.test:8000/xhr/open-url-multi-window.htm
-#http://web-platform.test:8000/xhr/formdata-delete.htm
+#formdata
+http://web-platform.test:8000/xhr/formdata-get.htm
+http://web-platform.test:8000/xhr/formdata-has.htm
+http://web-platform.test:8000/xhr/formdata-delete.htm
+#http://web-platform.test:8000/xhr/formdata-foreach.html
+#http://web-platform.test:8000/xhr/send-data-formdata.htm
+#http://web-platform.test:8000/xhr/formdata-set.htm
+#http://web-platform.test:8000/xhr/FormData-append.html
+#http://web-platform.test:8000/xhr/formdata-blob.htm
+#http://web-platform.test:8000/xhr/formdata.htm
