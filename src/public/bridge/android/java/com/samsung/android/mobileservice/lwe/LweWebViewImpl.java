@@ -177,6 +177,17 @@ public class LweWebViewImpl implements LweWebView {
         return new ImeInputConnection(view);
     }
 
+    @Override
+    public void onVisibilityChanged(View changedView, int visibility) {
+        if (mLWEView == changedView && mWebViewInternalHandle != 0) {
+            if (visibility == 0) {
+                resume(mWebViewInternalHandle);
+            } else {
+                pause(mWebViewInternalHandle);
+            }
+        }
+    }
+
     public class ImeInputConnection extends BaseInputConnection {
         public ImeInputConnection(View view) {
             super(view, true);
@@ -277,7 +288,6 @@ public class LweWebViewImpl implements LweWebView {
                 create(mWindowWidth, mWindowHeight, sDpr,
                         mUserAgentString, sLocale, sTimezone,
                         sLocalStoragePath, sCookiePath, sCachePath);
-
 
         mLWEView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
