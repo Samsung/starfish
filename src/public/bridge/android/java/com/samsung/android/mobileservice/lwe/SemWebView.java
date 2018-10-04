@@ -49,13 +49,15 @@ public class SemWebView extends TextureView {
      */
     @Override
     public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        if(delegate!=null)
+        if (delegate != null)
             return delegate.getInputConnectionInstance(this);
         return null;
     }
 
     @Override
     protected void onVisibilityChanged(View changedView, int visibility) {
+        super.onVisibilityChanged(changedView, visibility);
+        delegate.onVisibilityChanged(changedView, visibility);
     }
 
     @Override
@@ -82,7 +84,7 @@ public class SemWebView extends TextureView {
         */
         {
             // local mode for test  should be removed next time.
-            if(delegate==null)
+            if (delegate == null)
                 return new LweWebViewImpl();
         }
         return delegate;
@@ -123,7 +125,7 @@ public class SemWebView extends TextureView {
         super(context, attrs, defStyle);
 
         delegate = getWebViewInstance();
-        if(delegate!=null)
+        if (delegate != null)
             delegate.initWebView(this);
     }
 
@@ -134,7 +136,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void loadUrl(final String url) {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.loadUrl(url);
     }
 
@@ -145,7 +147,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public String getUrl() {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.getUrl();
         return null;
     }
@@ -157,7 +159,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void loadData(String data) {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.loadData(data);
     }
 
@@ -167,7 +169,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void reload() {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.reload();
     }
 
@@ -177,7 +179,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void stopLoading() {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.stopLoading();
     }
 
@@ -187,7 +189,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void goBack() {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.goBack();
     }
 
@@ -197,7 +199,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void goForward() {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.goForward();
     }
 
@@ -209,7 +211,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public boolean canGoBack() {
-        if(delegate!=null)
+        if (delegate != null)
             return delegate.canGoBack();
         return false;
     }
@@ -222,7 +224,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public boolean canGoForward() {
-        if(delegate!=null)
+        if (delegate != null)
             return delegate.canGoForward();
         return false;
     }
@@ -236,8 +238,8 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void addJavascriptInterface(final Object object, final String name) {
-        if(delegate!=null)
-            delegate.addJavascriptInterface(object,name);
+        if (delegate != null)
+            delegate.addJavascriptInterface(object, name);
     }
 
     /**
@@ -247,7 +249,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void removeJavascriptInterface(final String name) {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.removeJavascriptInterface(name);
     }
 
@@ -257,7 +259,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void clearCache() {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.clearCache();
     }
 
@@ -272,8 +274,8 @@ public class SemWebView extends TextureView {
      */
     public void evaluateJavascript(final String script,
                                    final ValueCallback<String> resultCallback) {
-        if(delegate!=null)
-            delegate.evaluateJavascript(script,resultCallback);
+        if (delegate != null)
+            delegate.evaluateJavascript(script, resultCallback);
     }
 
     /**
@@ -282,7 +284,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void clearHistory() {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.clearHistory();
     }
 
@@ -293,7 +295,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public SemWebSettings getSettings() {
-        if(delegate!=null)
+        if (delegate != null)
             return new SemWebSettings(delegate.getDefaultUA(), delegate.getUA(), delegate.getCacheModeValue(), delegate.getDefaultFontSize());
         return null;
     }
@@ -305,7 +307,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void setSettings(SemWebSettings settings) {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.setSettings(settings);
     }
 
@@ -317,7 +319,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void setWebViewClient(SemWebViewClient client) {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.setWebViewClient(client);
     }
 
@@ -341,7 +343,7 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public void setDownloadListener(SemDownloadListener listener) {
-        if(delegate!=null)
+        if (delegate != null)
             delegate.setDownloadListener(listener);
     }
 }

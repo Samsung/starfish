@@ -31,6 +31,7 @@ public interface LweWebView {
     int getCacheModeValue();
     int getDefaultFontSize();
     InputConnection getInputConnectionInstance(View view);
+    void onVisibilityChanged(View changedView, int visibility);
 
     void loadUrl(final String url);
     String getUrl();

@@ -79,6 +79,7 @@ static PFNGLEGLIMAGETARGETTEXTURE2DOESPROC g_glEGLImageTargetTexture2DOESProc;
 #include <EGL/eglext.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
+#include <GLES3/gl3.h>
 
 static void logEglError(const char* name) noexcept
 {
