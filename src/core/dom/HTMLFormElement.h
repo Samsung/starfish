@@ -208,9 +208,10 @@ public:
         return false;
     }
 
+    GCVector<FormDataSetItem*>* createFormDataSet(HTMLElement* submitter);
+
 private:
     void submit(HTMLElement* submitter);
-    GCVector<FormDataSetItem*>* createFormDataSet(HTMLElement* submitter);
     void submitData(ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
                     ResourceRequest::EncodeType encodeType,
                     ResourceRequest::MethodType methodType);

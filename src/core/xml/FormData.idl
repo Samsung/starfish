@@ -1,0 +1,20 @@
+// https://xhr.spec.whatwg.org/#interface-formdata
+
+// typedef (File or USVString) FormDataEntryValue;
+typedef USVString FormDataEntryValue;
+
+[Constructor(optional HTMLFormElement form),
+ ConstructorCallWith=Window,
+ Exposed=(Window,Worker)]
+interface FormData {
+  void append(USVString name, USVString value);
+  void set(USVString name, USVString value);
+  boolean has(USVString name);
+  [Rename=remove]void delete(USVString name);
+  FormDataEntryValue? get(USVString name);
+  sequence<FormDataEntryValue> getAll(USVString name);
+
+// iterable<USVString, FormDataEntryValue>;
+// void append(USVString name, Blob blobValue, optional USVString filename);
+// void set(USVString name, Blob blobValue, optional USVString filename);
+};
