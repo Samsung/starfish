@@ -105,6 +105,9 @@ ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
     String* type = String::emptyString;
     if (secondArg->isUndefinedOrNull()) {
         type = toBrowserString(state, secondArg)->toASCIILower();
+    } else if (secondArg->isObject()) {
+        ValueRef* arg0 = secondArg->asObject()->get(state, ValueRef::create(StringRef::fromASCII("type")));
+        type = toBrowserString(state, arg0);
     }
 
     Document* document = fetchDocument(state->context());
