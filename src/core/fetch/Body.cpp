@@ -24,6 +24,7 @@
 #include "core/page/WebView.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/DOMException.h"
+#include "core/util/URL.h"
 
 namespace StarFish {
 
@@ -69,11 +70,45 @@ Promise* Body::text()
         promise->reject(createScriptValue(error));
     } else {
         if (m_body.hasValue()) {
-            m_bodyUsed = true;
+            setBodyUsed(true);
+            m_promise = promise;
+
             BodyInit body = m_body.getValue();
             if (body.isUSVStringValue()) {
-                // Check if a string from bindings is encoded in UTF8
                 promise->fulfill(createScriptValue(body.getUSVStringValue()));
+
+            } else if (body.isArrayBufferViewOrArrayBufferValue()) {
+                auto byteBuffer = body.getArrayBufferViewOrArrayBufferValue();
+                String* text;
+                if (byteBuffer.isArrayBufferValue()) {
+                    auto arrayBuffer = byteBuffer.getArrayBufferValue();
+                    auto buffer = arrayBufferRawData(arrayBuffer);
+                    auto size = arrayBufferSize(arrayBuffer);
+                    text = String::fromUTF8((const char*)buffer, size);
+                } else {
+                    // ArrayBufferView case
+                    auto arrayBufferView = byteBuffer.getArrayBufferViewValue();
+                    auto buffer = arrayBufferViewRawData(arrayBufferView);
+                    auto size = arrayBufferViewSize(arrayBufferView);
+                    text = String::fromUTF8((const char*)buffer, size);
+                }
+                promise->fulfill(createScriptValue(text));
+
+            } else if (body.isBlobValue()) {
+                String* url = URL::createObjectURL(body.getBlobValue());
+                ResourceURL* resUrl =
+                    new ResourceURL(url, document()->baseURL()->baseURI());
+                if (!m_resourceRequest) {
+                    m_resourceRequest = new ResourceRequest(document());
+                }
+                m_resourceRequest->addResourceRequestClient(this);
+                m_resourceRequest->open(ResourceRequest::GET_METHOD, resUrl,
+                                        true, document()->documentURI(),
+                                        String::emptyString,
+                                        String::emptyString);
+                m_resourceRequest->send();
+            } else {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
         } else {
             promise->fulfill(createScriptValue(String::emptyString));
@@ -81,6 +116,37 @@ Promise* Body::text()
     }
 
     return promise;
+}
+
+// NOTE: consider creating `ResourceRequestClient` class for Body
+void Body::onProgressEvent(ResourceRequest* request, bool isExplicitAction)
+{
+    ResourceRequest::ProgressState progState = request->progressState();
+
+    if (progState == ResourceRequest::IN_ERROR) {
+        auto error = scriptTypeError(scriptBindingInstance(),
+                                     String::fromUTF8("Body is locked"));
+
+        m_promise->reject(createScriptValue(error));
+    }
+}
+
+void Body::onReadyStateChange(ResourceRequest* request, bool fromExplicit)
+{
+    if (fromExplicit) {
+        if (request->readyState() == ResourceRequest::ReadyState::DONE) {
+            BodyInit body = m_body.getValue();
+
+            if (body.isBlobValue()) {
+                String* text =
+                    String::fromUTF8(m_resourceRequest->response().data(),
+                                     m_resourceRequest->response().size());
+                m_promise->fulfill(createScriptValue(text));
+                m_resourceRequest->response().clear();
+                m_resourceRequest->response().shrink_to_fit();
+            }
+        }
+    }
 }
 
 Nullable<BodyInit> Body::body() const
@@ -96,6 +162,8 @@ void Body::setBody(const BodyInit& body)
     // extract Body : https://fetch.spec.whatwg.org/#body-mixin
     if (body.isUSVStringValue()) {
         m_contentType = String::createASCIIString(kTextPlainContentType);
+    } else if (body.isBlobValue()) {
+        m_contentType = body.getBlobValue()->type();
     }
 }
 

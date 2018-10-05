@@ -24,13 +24,14 @@
 #include "binding/WindowHoldable.h"
 #include "core/fetch/GetSet.h"
 #include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 
 namespace StarFish {
 
 typedef BlobOrBufferSourceOrUSVString BodyInit;
 class DOMException;
 
-class Body : public WindowHoldable {
+class Body : public ResourceRequestClient, public WindowHoldable {
 public:
     Promise* arrayBuffer();
     Promise* blob();
@@ -52,18 +53,31 @@ public:
 
     void copyBody(Body* body);
 
+    void onProgressEvent(ResourceRequest* request, bool isExplicitAction);
+    void onReadyStateChange(ResourceRequest* request, bool fromExplicit);
+
 private:
+    bool m_bodyUsed;
+
 protected:
     Body(Window* window)
         : WindowHoldable(window)
         , m_bodyUsed(false)
         , m_contentType(nullptr)
+        , m_resourceRequest(nullptr)
+        , m_promise(nullptr)
     {
     }
 
+    void setBodyUsed(bool isUsed)
+    {
+        m_bodyUsed = isUsed;
+    };
+
     Nullable<BodyInit> m_body;
-    bool m_bodyUsed;
     String* m_contentType;
+    ResourceRequest* m_resourceRequest;
+    Promise* m_promise;
 };
 }
 
