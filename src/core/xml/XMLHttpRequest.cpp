@@ -235,7 +235,7 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
     String* uValue =
         userName.hasValue() ? userName.getValue() : String::emptyString;
     String* pValue =
-        password.hasValue() ? userName.getValue() : String::emptyString;
+        password.hasValue() ? password.getValue() : String::emptyString;
     open(ResourceRequest::toMethodType(method), url, async, uValue, pValue);
 }
 
