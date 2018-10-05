@@ -117,7 +117,10 @@ public:
         ResourceClient::didLoadFinished();
         m_successToLoad = true;
         m_isLoaded = true;
-        m_responseMIMEType = m_resource->resourceRequest()->responseMimeType();
+
+        auto mimeType = MimeType::parseFromString(
+            m_resource->resourceRequest()->responseMimeType());
+        m_responseMIMEType = mimeType.stringWithoutParameter();
 
         auto& deferredScriptElements =
             m_element->document()->m_deferredScriptElements;
@@ -191,8 +194,11 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
-        auto s =
-            m_resource->responseMimeType()->toASCIILower()->toUTF8NonGCString();
+        auto mimeType =
+            MimeType::parseFromString(m_resource->responseMimeType());
+        auto s = mimeType.stringWithoutParameter()
+                     ->toASCIILower()
+                     ->toUTF8NonGCString();
         if (isJavaScriptType(s.data(), s.length())) {
             String* text = m_resource->asTextResource()->text();
             m_element->document()->appendCurrentScript(m_element);

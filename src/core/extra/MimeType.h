@@ -59,6 +59,8 @@ public:
     }
 
     String* string();
+    String* stringWithoutParameter();
+
     void clear();
 
 protected:

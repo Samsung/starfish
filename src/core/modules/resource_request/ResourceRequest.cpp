@@ -159,13 +159,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         // FIXME remove duplicate code
         auto it = m_responseHeaderMap.find(HTTPHeaderMap::kContentType);
         if (it != m_responseHeaderMap.end()) {
-            size_t pos = it->second.find(";");
-            if (pos == std::string::npos) {
-                m_responseMimeType = String::fromUTF8(it->second.data());
-            } else {
-                m_responseMimeType =
-                    String::fromUTF8(it->second.substr(0, pos).data());
-            }
+            m_responseMimeType = String::fromUTF8(it->second.data());
         }
 
         it = m_responseHeaderMap.find(HTTPHeaderMap::kContentLanguage);

@@ -49,15 +49,19 @@ void MimeType::clear()
 
 String* MimeType::string()
 {
+    String* result = stringWithoutParameter();
+    if (result != String::emptyString && hasParameter()) {
+        result->concat(String::createASCIIString(";"))->concat(parameter());
+    }
+    return result;
+}
+
+String* MimeType::stringWithoutParameter()
+{
     if (isValid()) {
         String* result =
             m_type->concat(String::createASCIIString("/"))->concat(m_subtype);
-        if (hasParameter()) {
-            return result->concat(String::createASCIIString(";"))
-                ->concat(parameter());
-        } else {
-            return result;
-        }
+        return result;
     }
     return String::emptyString;
 }
