@@ -26,7 +26,7 @@
 
 #include <media/player.h>
 
-#if defined(STARFISH_TIZEN_5_0)
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
 #ifndef EFL_BETA_API_SUPPORT
 #define EFL_BETA_API_SUPPORT
 #endif
@@ -43,6 +43,16 @@
 #endif
 
 #define STARFISH_RUN_MSE_THREAD
+
+#if defined(PORT_COMPOSITOR_BACKEND_GL)
+#if !defined(STARFISH_TIZEN_TV)
+#define STARFISH_MM_OUTPUT_WITH_GL
+#endif
+#else
+#if !defined(PORT_WEBVIEW_BRIDGE_EFL)
+#error "Without GL, you need `PORT_WEBVIEW_BRIDGE_EFL`"
+#endif
+#endif
 
 namespace StarFish {
 
@@ -201,8 +211,9 @@ public:
     }
 
     virtual double duration();
-    virtual void drawVideo(Compositor* canvas, const LayoutRect& videoRect,
-                           const LayoutRect& absVideoRect);
+    virtual void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
+                              const LayoutRect& absVideoRect);
+    virtual void willDrawVideo(Compositor* canvas, const LayoutRect& videoRect);
     virtual void prepareMediaSource();
 
     void updateStreamInfo(MediaStream* stream, size_t pastInitIndex,
@@ -221,6 +232,10 @@ public:
     LayoutRect m_lastAbsoluteROIArea;
     MediaPlayerTizenMediaSourceClient* m_mseClient;
     Mutex* m_fillBufferMutex;
+
+    Mutex* m_decodedVideoFrameMutex;
+    media_packet_h m_lastDecodedVideoPacket;
+
     ResourceURL* m_currentURL;
     CanvasSurface* m_canvasSurface;
 
@@ -254,6 +269,7 @@ protected:
     void disposePlayer();
     void initCanvasSurface();
     void setNativePlayerDisplayMode();
+    void setNativePlayerDisplayModeWithGL();
     void setPlayerDisplayVideoAtPausedState(int& ret);
     void punchHole(Compositor* canvas, const LayoutRect& videoRect,
                    const LayoutRect& absVideoRect);

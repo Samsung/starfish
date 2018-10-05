@@ -44,7 +44,7 @@
     "You must need PORT_WEBVIEW_BRIDGE_EFL or PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2 to use this"
 #endif
 
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if !defined(STARFISH_MM_OUTPUT_WITH_GL)
 #include <Evas.h>
 #endif
 
@@ -382,6 +382,8 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_seekingTimer(SIZE_MAX)
     , m_mseClient(nullptr)
     , m_fillBufferMutex(new Mutex())
+    , m_decodedVideoFrameMutex(new Mutex())
+    , m_lastDecodedVideoPacket(nullptr)
     , m_canvasSurface(nullptr)
     , m_playerDeadFlag(nullptr)
     , m_audioStream(nullptr)
@@ -399,126 +401,6 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
         },
         NULL, NULL, NULL);
 }
-
-// Fake Canvas surface for support display video with evas image object
-class CanvasSurfaceVideo : public CanvasSurface {
-public:
-    CanvasSurfaceVideo(PlatformWindow* wnd)
-    {
-        m_buffer = (uint8_t*)malloc(4);
-
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-        Evas_Object* wndObject =
-            (Evas_Object*)wnd->webView()->publicLayerUserDataMap()
-                ["__internalLWEWebViewEFLNativeWindowEvasObject"];
-        STARFISH_RELEASE_ASSERT(wndObject);
-        m_imageObject =
-            evas_object_image_filled_add(evas_object_evas_get(wndObject));
-        evas_object_data_set(m_imageObject, "video", "1");
-#endif
-        GC_REGISTER_FINALIZER_NO_ORDER(this,
-                                       [](void* obj, void* cd) {
-                                           CanvasSurfaceVideo* s =
-                                               (CanvasSurfaceVideo*)obj;
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-                                           evas_object_del(s->m_imageObject);
-                                           free(s->m_buffer);
-#endif
-                                       },
-                                       NULL, NULL, NULL);
-    }
-
-    virtual void detachNativeBuffer()
-    {
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-        evas_object_hide(m_imageObject);
-#endif
-    }
-
-    bool attachNativeBuffer(size_t w, size_t h)
-    {
-        return false;
-    }
-
-    virtual void resize(size_t w, size_t h)
-    {
-    }
-
-    virtual CanvasSurfaceTextureInfo textureInfo()
-    {
-        CanvasSurfaceTextureInfo info;
-        CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment fragment;
-
-        fragment.textureID = 0;
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-        fragment.textureID = (size_t)m_imageObject;
-#endif
-        fragment.srcX = 0;
-        fragment.srcY = 0;
-        fragment.srcWidth = 1;
-        fragment.srcHeight = 1;
-
-        info.fragments.push_back(fragment);
-        return info;
-    }
-
-    virtual uint8_t* mapBuffer()
-    {
-        return m_buffer;
-    }
-
-    virtual size_t width()
-    {
-        return 1;
-    }
-
-    virtual size_t height()
-    {
-        return 1;
-    }
-
-    virtual size_t bufferWidth()
-    {
-        return 1;
-    }
-
-    virtual size_t bufferHeight()
-    {
-        return 1;
-    }
-
-    virtual size_t imageWidth()
-    {
-        return 1;
-    }
-
-    virtual size_t imageHeight()
-    {
-        return 1;
-    }
-
-    virtual size_t pixelRatio()
-    {
-        return 1;
-    }
-
-    virtual size_t bufferStride()
-    {
-        return 4;
-    }
-
-    virtual void clear()
-    {
-        size_t end = sizeof(uint32_t);
-        memset(m_buffer, 0x00, end);
-    }
-
-protected:
-    uint8_t* m_buffer;
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-    Evas_Object* m_imageObject;
-#endif
-};
 
 CanvasSurface* MediaPlayerTizen::createGraphicsBuffer(size_t visibleWidth,
                                                       size_t visibleHeight)
@@ -877,7 +759,10 @@ void MediaPlayerTizen::pause()
 void MediaPlayerTizen::initDisplay()
 {
     m_canvasSurface =
-        new CanvasSurfaceVideo(m_container->webView()->platformWindow());
+        CanvasSurface::create(m_container->webView()->platformWindow(), 1, 1);
+    m_canvasSurface->mapBuffer();
+    m_canvasSurface->clear();
+    m_canvasSurface->unMapBufferAndNotifyUpdateRegion(0, 0, 1, 1);
 }
 
 void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)
@@ -891,6 +776,37 @@ void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)
         player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_NONE, nullptr);
     }
 #endif
+}
+
+void MediaPlayerTizen::setNativePlayerDisplayModeWithGL()
+{
+    player_set_media_packet_video_frame_decoded_cb(
+        m_nativePlayer,
+        [](media_packet_h packet, void* data) {
+            MediaPlayerTizen* player = (MediaPlayerTizen*)data;
+            {
+                Locker<Mutex> l(*player->m_decodedVideoFrameMutex);
+                media_packet_h oldPacket = player->m_lastDecodedVideoPacket;
+                player->m_lastDecodedVideoPacket = packet;
+                if (oldPacket) {
+                    media_packet_destroy(oldPacket);
+                }
+            }
+            player->window()
+                ->webView()
+                ->messageLoop()
+                ->addIdlerWithNoGCRootingInOtherThread(
+                    player->window()->browsingContext(),
+                    [](size_t, void* data) {
+                        BrowsingContext* b = (BrowsingContext*)data;
+                        b->setNeedsComposite();
+                    },
+                    player->window()->browsingContext());
+        },
+        this);
+    player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_FULL_SCREEN);
+    player_set_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_NONE, NULL);
+    player_set_display_visible(m_nativePlayer, true);
 }
 
 void MediaPlayerTizen::openPreparingMode()
@@ -1014,16 +930,31 @@ void MediaPlayerTizen::handlePrepared()
         m_hasVideo = true;
         int width = 1;
         int height = 1;
-        player_get_video_size(m_nativePlayer, &width, &height);
+        int ret = player_get_video_size(m_nativePlayer, &width, &height);
         STARFISH_ASSERT(width > 0);
         STARFISH_ASSERT(height > 0);
+
+        if ((width == 0 || height == 0) && m_lastDecodedVideoPacket) {
+            STARFISH_LOG_INFO(
+                "player_get_video_size function tell us video has 0x0 size && "
+                "m_lastDecodedVideoPacket is not null\n");
+            STARFISH_LOG_INFO(
+                "assume video size from m_lastDecodedVideoPacket\n");
+            {
+                Locker<Mutex> l(*m_decodedVideoFrameMutex);
+                tbm_surface_h tbm;
+                if (m_lastDecodedVideoPacket &&
+                    media_packet_get_tbm_surface(m_lastDecodedVideoPacket,
+                                                 &tbm) ==
+                        MEDIA_PACKET_ERROR_NONE) {
+                    width = tbm_surface_get_width(tbm);
+                    height = tbm_surface_get_height(tbm);
+                }
+            }
+        }
+
         m_videoWidth = (unsigned long)width;
         m_videoHeight = (unsigned long)height;
-
-        if (m_canvasSurface) {
-            // there is no surface on TV/headless
-            m_canvasSurface->attachNativeBuffer(m_videoWidth, m_videoHeight);
-        }
     }
 
     PLAYER_LOGI("MediaPlayerTizen::prepare ok %s %s %d %d\n", videoCodec,
@@ -1077,6 +1008,10 @@ void MediaPlayerTizen::dispose()
         player_unset_buffering_cb(m_nativePlayer);
         player_destroy(m_nativePlayer);
         m_nativePlayer = nullptr;
+    }
+    if (m_lastDecodedVideoPacket) {
+        media_packet_destroy(m_lastDecodedVideoPacket);
+        m_lastDecodedVideoPacket = nullptr;
     }
     if (m_activeMediaSource) {
         m_activeMediaSource->removeClient(m_mseClient);
@@ -1142,14 +1077,32 @@ void MediaPlayerTizen::setMuted(bool muted)
     }
 }
 
-void MediaPlayerTizen::drawVideo(Compositor* canvas,
-                                 const LayoutRect& videoRect,
-                                 const LayoutRect& absVideoRect)
+void MediaPlayerTizen::willDrawVideo(Compositor* canvas,
+                                     const LayoutRect& videoRect)
+{
+    canvas->setColor(Unit::Color(0, 0, 0, 255));
+    canvas->drawRect(videoRect);
+#if defined(STARFISH_MM_OUTPUT_WITH_GL)
+    {
+        Locker<Mutex> l(*m_decodedVideoFrameMutex);
+        tbm_surface_h tbm;
+        if (m_lastDecodedVideoPacket &&
+            media_packet_get_tbm_surface(m_lastDecodedVideoPacket, &tbm) ==
+                MEDIA_PACKET_ERROR_NONE) {
+            m_canvasSurface->attachPlatformExternalBuffer(tbm);
+        }
+    }
+#endif
+}
+
+void MediaPlayerTizen::didDrawVideo(Compositor* canvas,
+                                    const LayoutRect& videoRect,
+                                    const LayoutRect& absVideoRect)
 {
     if (!alive()) {
         return;
     }
-#if !defined(STARFISH_TIZEN_HEADLESS)
+#if !defined(STARFISH_TIZEN_HEADLESS) && !defined(STARFISH_MM_OUTPUT_WITH_GL)
     player_state_e state = PLAYER_STATE_NONE;
     player_get_state(m_nativePlayer, &state);
     if (state < PLAYER_STATE_READY) {
@@ -1158,11 +1111,6 @@ void MediaPlayerTizen::drawVideo(Compositor* canvas,
     if (isMSE() && playbackState() == MediaPlayer::PLAYBACK_STATE_END) {
         return;
     }
-    canvas->setColor(Unit::Color(0, 0, 0, 255));
-    canvas->drawRect(videoRect);
-    canvas->drawSurface(m_canvasSurface,
-                        Unit::Rect(videoRect.x(), videoRect.y(),
-                                   videoRect.width(), videoRect.height()));
     punchHole(canvas, videoRect, absVideoRect);
 #endif
 }

@@ -91,7 +91,11 @@ void WebView::ClearHistory()
 
 void WebView::Destroy()
 {
+    WebView::WillDestroy();
+
     FetchWebContainer()->Destroy();
+
+    delete this;
 }
 
 void WebView::SetSettings(const Settings& settings)

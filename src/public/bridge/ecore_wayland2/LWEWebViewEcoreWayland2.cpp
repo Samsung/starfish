@@ -245,6 +245,8 @@ public:
                                     8,
                                     EGL_BLUE_SIZE,
                                     8,
+                                    EGL_ALPHA_SIZE,
+                                    8,
                                     EGL_DEPTH_SIZE,
                                     0,
                                     EGL_STENCIL_SIZE,
@@ -513,11 +515,14 @@ public:
             },
             this));
 
+        webContainer->SetUserData("__internalLWEWebViewEFLEcoreWaylandHandle",
+                                  mEcoreWindow);
+
         m_impl = webContainer;
     }
-    virtual void Destroy() override
+    virtual void WillDestroy() override
     {
-        WebView::Destroy();
+        WebView::WillDestroy();
 
         g_eglDestroySyncKHRProc(mDisplay, mFence);
         eglDestroySurface(mDisplay, mSurface);

@@ -166,8 +166,9 @@ public:
     }
     virtual void prepareMediaSource();
 
-    virtual void drawVideo(Compositor* canvas, const LayoutRect& videoRect,
-                           const LayoutRect& absVideoRect);
+    virtual void willDrawVideo(Compositor* canvas, const LayoutRect& videoRect);
+    virtual void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
+                              const LayoutRect& absVideoRect);
 
     void handleEnded();
     void handleSeeked();

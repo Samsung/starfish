@@ -46,6 +46,11 @@ Requires(postun): /sbin/ldconfig
 %define rpm all
 %endif
 
+%if 0%{?tizen_version_major:1}
+%else
+%define tizen_version_major 4
+%endif
+
 # The following syntax's been outdated.
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
 # %define profile tv
@@ -191,13 +196,7 @@ an standalone executable binary for wearable.
 %build
 echo "Building for: " %{rpm}
 
-%if "%{tizen_version_major}" == "4"
-CXXFLAGS+=' -DSTARFISH_TIZEN_4_0 '
-%endif
-%if "%{tizen_version_major}" == "5"
-CXXFLAGS+=' -DSTARFISH_TIZEN_5_0 '
-%endif
-
+CXXFLAGS+=' -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} '
 
 ##############################################
 ## Build rules for each profile

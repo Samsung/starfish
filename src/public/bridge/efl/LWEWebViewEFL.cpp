@@ -265,7 +265,7 @@ public:
 
         // Create a surface and context
         m_glSfc = evas_gl_surface_create(m_glEvasgl, m_glCfg, width, height);
-#if defined(STARFISH_TIZEN_5_0)
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
         m_glCtx = evas_gl_context_version_create(
             m_glEvasgl, NULL, Evas_GL_Context_Version::EVAS_GL_GLES_3_X);
 #else
@@ -824,11 +824,23 @@ public:
 
         webContainer->SetUserData(
             "__internalLWEWebViewEFLNativeWindowEvasObject", win);
+
+#if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
+        webContainer->SetUserData(
+            "__internalLWEWebViewEFLEcoreWaylandHandle",
+            ecore_evas_wayland2_window_get(
+                ecore_evas_ecore_evas_get(evas_object_evas_get(win))));
+#elif defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION == 4
+        webContainer->SetUserData(
+            "__internalLWEWebViewEFLEcoreWaylandHandle",
+            ecore_evas_wayland_window_get(
+                ecore_evas_ecore_evas_get(evas_object_evas_get(win))));
+#endif
     }
 
-    virtual void Destroy() override
+    virtual void WillDestroy() override
     {
-        WebView::Destroy();
+        WebView::WillDestroy();
 
         if (m_imfContext) {
             ecore_imf_context_del(m_imfContext);

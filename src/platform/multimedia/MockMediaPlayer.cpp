@@ -315,11 +315,17 @@ void MockMediaPlayer::prepare(ResourceURL* url)
         this);
 }
 
-void MockMediaPlayer::drawVideo(Compositor* canvas, const LayoutRect& videoRect,
-                                const LayoutRect& absVideoRect)
+void MockMediaPlayer::willDrawVideo(Compositor* canvas,
+                                    const LayoutRect& videoRect)
 {
     canvas->setColor(Unit::Color(0, 0, 0, 255));
     canvas->drawRect(videoRect);
+}
+
+void MockMediaPlayer::didDrawVideo(Compositor* canvas,
+                                   const LayoutRect& videoRect,
+                                   const LayoutRect& absVideoRect)
+{
 }
 
 void MockMediaPlayer::seek(double time)

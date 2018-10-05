@@ -42,7 +42,7 @@
         'defines_unified_common': [
         ],
         'defines_unified_mobile': [
-            #'STARFISH_ENABLE_MULTIMEDIA',
+            'STARFISH_ENABLE_MULTIMEDIA',
         ],
         'defines_unified_tv': [
             #'STARFISH_ENABLE_MULTIMEDIA',
