@@ -175,17 +175,11 @@ set_target_properties( hb-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/
 add_library( curl-lib SHARED IMPORTED )
 set_target_properties( curl-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libcurl.so )
 
-add_library( crypto-lib SHARED IMPORTED )
-set_target_properties( crypto-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libcrypto.so )
-
 #add_library( icui18n-lib SHARED IMPORTED )
 #set_target_properties( icui18n-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicui18n.so )
 
 #add_library( icuuc-lib SHARED IMPORTED )
 #set_target_properties( icuuc-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicuuc.so )
-
-add_library( tuv-lib SHARED IMPORTED )
-set_target_properties( tuv-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libtuv.so )
 
 target_link_libraries( # Specifies the target library.
                        lightweightwebengine
@@ -194,12 +188,11 @@ target_link_libraries( # Specifies the target library.
                        hb-lib
                        ft2-lib
                        jpeg-lib
-                       crypto-lib
                        curl-lib
 #                       icui18n-lib
 #                       icuuc-lib
-                       tuv-lib
                        ${PREBUILT_LIB_PATH}/libgif.a
+                       ${PREBUILT_LIB_PATH}/libtuv.a
                        ${PREBUILT_LIB_PATH}/libicui18n.a
                        ${PREBUILT_LIB_PATH}/libicuuc.a
                        ${PREBUILT_LIB_PATH}/icudtl_dat.o

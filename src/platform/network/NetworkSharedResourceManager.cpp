@@ -25,7 +25,7 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 
-#if !defined(OS_WINDOWS)
+#if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
 #include <openssl/crypto.h>
 #endif
 
@@ -34,7 +34,7 @@
 #define CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S 0.25
 
 namespace StarFish {
-#if !defined(OS_WINDOWS)
+#if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
 static pthread_mutex_t* sslLockarray;
 
 static void sslLockCallback(int mode, int type, const char* file, int line)
@@ -267,7 +267,7 @@ NetworkSharedResourceManager::NetworkSharedResourceManager()
     , m_cookieStoreFilePath("")
 {
     initMutexes();
-#if !defined(OS_WINDOWS)
+#if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
     initSSLLocks();
 #endif
 
@@ -290,7 +290,7 @@ NetworkSharedResourceManager::~NetworkSharedResourceManager()
     curl_share_cleanup(m_curlShareHandle);
     curl_global_cleanup();
 
-#if !defined(OS_WINDOWS)
+#if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
     removeSSLLocks();
 #endif
 }

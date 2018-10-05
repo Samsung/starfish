@@ -12,8 +12,9 @@ android {
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++11 -fexceptions"
-                // arguments "-DANDROID_TOOLCHAIN=gcc"
+                cppFlags "-fexceptions"
+//                arguments "-DANDROID_STL=c++_static"
+//                arguments "-DANDROID_STL=c++_shared"
             }
         }
     }
