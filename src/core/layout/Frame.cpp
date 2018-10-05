@@ -1001,6 +1001,7 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_paddingWidthDamaged = false;
     m_flags.m_contentHeightDamaged = false;
     m_flags.m_paddingHeightDamaged = false;
+    m_flags.m_isEstablishesBlockFormattingContext = false;
 
     computeStyleFlags();
 

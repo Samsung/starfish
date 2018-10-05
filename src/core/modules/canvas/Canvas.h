@@ -111,9 +111,9 @@ public:
     }
 #endif
 
-    virtual bool isCanvasSurfaceGL()
+    virtual void attachPlatformExternalBuffer(void* buffer)
     {
-        return false;
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 };
 

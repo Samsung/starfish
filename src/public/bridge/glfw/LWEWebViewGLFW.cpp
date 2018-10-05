@@ -117,10 +117,10 @@ public:
         m_pollTimer = webContainer->AddTimeout(poller, this, 10);
     }
 
-    virtual void Destroy() override
+    virtual void WillDestroy() override
     {
+        WebView::WillDestroy();
         FetchWebContainer()->ClearTimeout(m_pollTimer);
-        WebView::Destroy();
         glfwDestroyWindow(m_glWindow);
     }
 

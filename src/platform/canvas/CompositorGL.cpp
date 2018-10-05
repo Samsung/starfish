@@ -481,14 +481,20 @@ public:
     GLuint m_texVertexShaderEGLImageExternal;
     GLuint m_texFragmentShaderEGLImageExternal;
 
+    GLuint m_texShaderProgramEGLImageExternalColorInverted;
+    GLuint m_texVertexShaderEGLImageExternalColorInverted;
+    GLuint m_texFragmentShaderEGLImageExternalColorInverted;
+
     CompositorContext()
     {
         m_rectVertexShader = m_rectFragmentShader = m_rectShaderProgram =
             m_texShaderProgram = 0;
-        m_texVertexShader = m_texFragmentShader =
-            m_texVertexShaderEGLImageExternal = 0;
-        m_texShaderProgramEGLImageExternal =
+        m_texVertexShader = m_texFragmentShader = 0;
+        m_texVertexShaderEGLImageExternal = m_texShaderProgramEGLImageExternal =
             m_texFragmentShaderEGLImageExternal = 0;
+        m_texVertexShaderEGLImageExternalColorInverted =
+            m_texShaderProgramEGLImageExternalColorInverted =
+                m_texFragmentShaderEGLImageExternalColorInverted = 0;
     }
 
     GLuint rectProgram()
@@ -595,6 +601,71 @@ public:
         }
 
         return m_texShaderProgramEGLImageExternal;
+    }
+
+    GLuint texShaderProgramEGLImageExternalColorInverted()
+    {
+        if (!m_texShaderProgramEGLImageExternalColorInverted) {
+            GLchar texVertexSource[] =
+                "uniform mat4 uScreen;\n"
+                "attribute vec2 aPosition;\n"
+                "attribute vec2 aTexPos;\n"
+                "varying vec2 vTexPos;\n"
+                "void main() {\n"
+                "  vTexPos = aTexPos;\n"
+                "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
+                "}";
+
+            GLchar texFragmentSourceEGLImageExternal[] =
+                "#extension GL_OES_EGL_image_external : require\n"
+                "#ifdef GL_ES\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform samplerExternalOES uTexture;\n"
+                "varying vec2 vTexPos;\n"
+                "uniform vec4 uAlpha;\n"
+                "void main(void)\n"
+                "{\n"
+                "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
+#if defined(PORT_PIXEL_ORDER_BGRA)
+                "  gl_FragColor.r = texData[0];\n"
+                "  gl_FragColor.g = texData[1];\n"
+                "  gl_FragColor.b = texData[2];\n"
+                "  gl_FragColor.a = texData[3];\n"
+#else
+                "  gl_FragColor.r = texData[2];\n"
+                "  gl_FragColor.g = texData[1];\n"
+                "  gl_FragColor.b = texData[0];\n"
+                "  gl_FragColor.a = texData[3];\n"
+#endif
+                "}";
+
+            m_texVertexShaderEGLImageExternalColorInverted =
+                loadShader(GL_VERTEX_SHADER, texVertexSource);
+            checkError();
+
+            m_texFragmentShaderEGLImageExternalColorInverted = loadShader(
+                GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
+            checkError();
+
+            m_texShaderProgramEGLImageExternalColorInverted = glCreateProgram();
+            checkError();
+
+            glAttachShader(m_texShaderProgramEGLImageExternalColorInverted,
+                           m_texVertexShaderEGLImageExternalColorInverted);
+            checkError();
+            glAttachShader(m_texShaderProgramEGLImageExternalColorInverted,
+                           m_texFragmentShaderEGLImageExternalColorInverted);
+            checkError();
+
+            glLinkProgram(m_texShaderProgramEGLImageExternalColorInverted);
+            checkError();
+
+            glUseProgram(m_texShaderProgramEGLImageExternalColorInverted);
+            checkError();
+        }
+
+        return m_texShaderProgramEGLImageExternalColorInverted;
     }
 
     GLuint texShaderProgram()
@@ -776,6 +847,8 @@ public:
         m_imageHeight = m_bufferHeight = m_height = -1;
         m_buffer = nullptr;
         m_isEGLImageExternal = false;
+        m_isEGLBufferOwner = false;
+        m_isEGLImageNeedsFlipRGB = false;
 
 #if defined(STARFISH_TIZEN)
         m_tbmSurface = nullptr;
@@ -796,11 +869,6 @@ public:
                                        NULL, NULL, NULL);
     }
 
-    virtual bool isCanvasSurfaceGL()
-    {
-        return true;
-    }
-
 #if defined(STARFISH_ENABLE_TEST) && defined(PORT_CANVAS_BACKEND_CAIRO)
     virtual void dump(const char* path)
     {
@@ -813,28 +881,42 @@ public:
     }
 #endif
 
-    virtual void detachNativeBuffer()
+    virtual void detachNativeBuffer() override
     {
         if (m_textureFragments.size()) {
+            if (m_isEGLImageExternal && !m_isEGLBufferOwner) {
+            } else {
+                g_totalCanvasSurfaceGLSize -=
+                    m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
+                STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
+                                  g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
+            }
+
             m_window->glMakeCurrent();
             if (m_isEGLImageExternal) {
 #if defined(STARFISH_TIZEN) && !defined(PORT_WEBVIEW_BRIDGE_EFL)
                 EGLDisplay display = eglGetCurrentDisplay();
                 g_eglDestroyImageKHRProc(display, m_eglImage);
                 m_eglImage = nullptr;
-                tbm_surface_destroy(m_tbmSurface);
+                if (m_isEGLBufferOwner) {
+                    tbm_surface_destroy(m_tbmSurface);
+                }
                 m_tbmSurface = nullptr;
 #elif defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
                 g_evasGLAPI->evasglDestroyImage(m_eglImage);
                 m_eglImage = nullptr;
-                tbm_surface_destroy(m_tbmSurface);
+                if (m_isEGLBufferOwner) {
+                    tbm_surface_destroy(m_tbmSurface);
+                }
                 m_tbmSurface = nullptr;
 #elif defined(STARFISH_ANDROID)
                 EGLDisplay display = eglGetCurrentDisplay();
                 eglDestroyImageKHR(display, m_eglImage);
 
                 m_eglImage = nullptr;
-                AHardwareBuffer_release(m_aHardwareBuffer);
+                if (m_isEGLBufferOwner) {
+                    AHardwareBuffer_release(m_aHardwareBuffer);
+                }
                 m_aHardwareBuffer = nullptr;
 #endif
             }
@@ -852,8 +934,6 @@ public:
             m_textureFragments.clear();
             m_textureFragmentsFlags.clear();
             m_dirtyAreaTextureFragments.clear();
-            g_totalCanvasSurfaceGLSize -=
-                m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
 
             m_buffer = nullptr;
             m_width = 0;
@@ -861,14 +941,12 @@ public:
             m_imageWidth = m_bufferWidth = m_width = 0;
             m_imageHeight = m_bufferHeight = m_height = 0;
 
-            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
-                              g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
-
-            m_isEGLImageExternal = false;
+            m_isEGLImageNeedsFlipRGB = m_isEGLBufferOwner =
+                m_isEGLImageExternal = false;
         }
     }
 
-    bool attachNativeBuffer(size_t w, size_t h)
+    bool attachNativeBuffer(size_t w, size_t h) override
     {
         if (m_width != w || m_height != h) {
             detachNativeBuffer();
@@ -891,18 +969,16 @@ public:
             if (g_isSupportExtensionEGLImageExternal &&
                 m_bufferWidth <= g_maxTextureSize &&
                 m_bufferHeight <= g_maxTextureSize) {
-                m_isEGLImageExternal = true;
+                m_isEGLBufferOwner = m_isEGLImageExternal = true;
+                m_isEGLImageNeedsFlipRGB = false;
 #if defined(STARFISH_TIZEN)
                 m_tbmSurface = tbm_surface_create(m_bufferWidth, m_bufferHeight,
                                                   TBM_FORMAT_ABGR8888);
                 tbm_surface_info_s surfaceInfo;
-                tbm_surface_map(m_tbmSurface, TBM_SURF_OPTION_WRITE,
-                                &surfaceInfo);
-
+                tbm_surface_get_info(m_tbmSurface, &surfaceInfo);
                 STARFISH_RELEASE_ASSERT(surfaceInfo.num_planes == 1);
                 m_bufferStride = surfaceInfo.planes[0].stride;
                 m_buffer = nullptr;
-                tbm_surface_unmap(m_tbmSurface);
 #elif defined(STARFISH_ANDROID)
                 AHardwareBuffer_Desc desc{
                     m_bufferWidth, m_bufferHeight, 1,
@@ -923,6 +999,7 @@ public:
 #endif
             } else {
                 m_isEGLImageExternal = false;
+                m_isEGLBufferOwner = false;
                 m_bufferStride = m_bufferWidth * 4;
                 m_buffer = (unsigned char*)malloc(
                     m_bufferWidth * m_bufferHeight * sizeof(uint32_t));
@@ -939,7 +1016,7 @@ public:
         return false;
     }
 
-    virtual void resize(size_t w, size_t h)
+    virtual void resize(size_t w, size_t h) override
     {
         STARFISH_RELEASE_ASSERT(w <= m_bufferWidth);
         STARFISH_RELEASE_ASSERT(h <= m_bufferHeight);
@@ -1008,6 +1085,10 @@ public:
                 }
             }
 #endif
+            if (nullptr == m_eglImage) {
+                STARFISH_LOG_INFO("result of eglCreateImageKHR is fail\n");
+            }
+
             {
                 GLuint textureID;
                 glGenTextures(1, &textureID);
@@ -1125,7 +1206,7 @@ public:
         }
     }
 
-    virtual uint8_t* mapBuffer()
+    virtual uint8_t* mapBuffer() override
     {
         if (m_isEGLImageExternal) {
             if (m_buffer) {
@@ -1149,47 +1230,47 @@ public:
         return m_buffer;
     }
 
-    virtual size_t width()
+    virtual size_t width() override
     {
         return m_width;
     }
 
-    virtual size_t height()
+    virtual size_t height() override
     {
         return m_height;
     }
 
-    virtual size_t bufferWidth()
+    virtual size_t bufferWidth() override
     {
         return m_bufferWidth;
     }
 
-    virtual size_t bufferHeight()
+    virtual size_t bufferHeight() override
     {
         return m_bufferHeight;
     }
 
-    virtual size_t imageWidth()
+    virtual size_t imageWidth() override
     {
         return m_imageWidth;
     }
 
-    virtual size_t imageHeight()
+    virtual size_t imageHeight() override
     {
         return m_imageHeight;
     }
 
-    virtual size_t pixelRatio()
+    virtual size_t pixelRatio() override
     {
         return 1;
     }
 
-    virtual size_t bufferStride()
+    virtual size_t bufferStride() override
     {
         return m_bufferStride;
     }
 
-    virtual void clear()
+    virtual void clear() override
     {
         size_t end = m_bufferStride * m_bufferHeight;
         memset(m_buffer, 0x00, end);
@@ -1270,7 +1351,7 @@ public:
         }
     }
 
-    virtual CanvasSurfaceTextureInfo textureInfo()
+    virtual CanvasSurfaceTextureInfo textureInfo() override
     {
         CanvasSurfaceTextureInfo info;
         info.fragments = std::vector<
@@ -1278,6 +1359,61 @@ public:
             m_textureFragments.data(),
             m_textureFragments.data() + m_textureFragments.size());
         return info;
+    }
+
+    virtual void attachPlatformExternalBuffer(void* buffer) override
+    {
+        detachNativeBuffer();
+
+        m_isEGLBufferOwner = false;
+        m_isEGLImageExternal = true;
+        m_isEGLImageNeedsFlipRGB = false;
+
+        size_t w = 0, h = 0;
+#if defined(STARFISH_TIZEN)
+        m_tbmSurface = (tbm_surface_h)buffer;
+        m_buffer = nullptr;
+        tbm_surface_info_s surfaceInfo;
+        tbm_surface_get_info(m_tbmSurface, &surfaceInfo);
+        w = surfaceInfo.width;
+        h = surfaceInfo.height;
+        m_bufferStride = surfaceInfo.planes[0].stride;
+        switch (surfaceInfo.format) {
+        case TBM_FORMAT_ABGR8888:
+        case TBM_FORMAT_BGR565:
+        case TBM_FORMAT_BGR888:
+            m_isEGLImageNeedsFlipRGB = false;
+        default:
+            m_isEGLImageNeedsFlipRGB = true;
+            break;
+        }
+#elif defined(STARFISH_ANDROID)
+        m_aHardwareBuffer = (AHardwareBuffer*)buffer;
+        AHardwareBuffer_Desc outDesc;
+        AHardwareBuffer_describe(m_aHardwareBuffer, &outDesc);
+        m_bufferStride = outDesc.stride * 4;
+        w = outDesc.width;
+        h = outDesc.height;
+        m_buffer = nullptr;
+#endif
+
+        m_width = w;
+        m_height = h;
+
+        float windowDevicePixelRatio =
+            m_window->webView()->screenInfo().devicePixelRatio;
+
+        m_imageWidth =
+            std::max((size_t)1, (size_t)(m_width * windowDevicePixelRatio));
+        m_imageHeight =
+            std::max((size_t)1, (size_t)(m_height * windowDevicePixelRatio));
+
+        m_bufferWidth =
+            std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
+        m_bufferHeight =
+            std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
+
+        ensureGenerateTexture();
     }
 
 protected:
@@ -1300,6 +1436,8 @@ protected:
     GCAtomicVector<Unit::Rect> m_dirtyAreaTextureFragments;
 
     bool m_isEGLImageExternal;
+    bool m_isEGLBufferOwner;
+    bool m_isEGLImageNeedsFlipRGB;
 #if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
     tbm_surface_h m_tbmSurface;
     EvasGLImage m_eglImage;
@@ -1783,10 +1921,6 @@ public:
 
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst)
     {
-        if (!cs->isCanvasSurfaceGL()) {
-            return;
-        }
-
         auto textureInfo = cs->textureInfo();
         if (textureInfo.fragments.size() == 0) {
             return;
@@ -1932,8 +2066,15 @@ public:
                                  dest[3][0], dest[3][1], // V4
                                  1.f,        1.f };
                 float a = m_state.back().opacity;
-                glUseProgram(
-                    m_compositorContext->texShaderProgramEGLImageExternal());
+
+                if (csGL->m_isEGLImageNeedsFlipRGB) {
+                    glUseProgram(
+                        m_compositorContext
+                            ->texShaderProgramEGLImageExternalColorInverted());
+                } else {
+                    glUseProgram(m_compositorContext
+                                     ->texShaderProgramEGLImageExternal());
+                }
 
                 float uScreen[] = {
                     2.f / m_webView->platformWindow()->width(),

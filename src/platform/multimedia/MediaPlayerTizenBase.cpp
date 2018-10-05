@@ -38,9 +38,6 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
-#include <Evas.h>
-//#include <media/player.h>
-
 namespace StarFish {
 
 #define STARFISH_VIDEO_MAX_WIDTH 1920
@@ -82,11 +79,26 @@ void MediaPlayerTizen::disposePlayer()
 
 void MediaPlayerTizen::setNativePlayerDisplayMode()
 {
-    player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_CROPPED_FULL);
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-    player_set_display(
-        m_nativePlayer, PLAYER_DISPLAY_TYPE_EVAS,
-        (void*)m_canvasSurface->textureInfo().fragments[0].textureID);
+#if defined(STARFISH_MM_OUTPUT_WITH_GL)
+    setNativePlayerDisplayModeWithGL();
+#else
+    player_set_display_mode(m_nativePlayer, PLAYER_DISPLAY_MODE_DST_ROI);
+    // NOTE: Do not edit `player_set_display_roi_area` parameter
+    m_lastAbsoluteROIArea = LayoutRect(0, 0, 1, 1);
+    player_set_display_roi_area(m_nativePlayer, 0, 0, 1, 1);
+
+    void* ecoreWaylandHandle =
+        m_container->webView()->publicLayerUserDataMap()
+            ["__internalLWEWebViewEFLEcoreWaylandHandle"];
+
+    // ecore_wl_window_alpha_set(ecoreWaylandHandle, false);
+
+    auto width = m_container->webView()->platformWindow()->width();
+    auto height = m_container->webView()->platformWindow()->height();
+
+    player_set_ecore_wl_display(m_nativePlayer, PLAYER_DISPLAY_TYPE_OVERLAY,
+                                ecoreWaylandHandle, 0, 0, width, height);
+    player_set_display_visible(m_nativePlayer, true);
 #endif
 }
 
@@ -97,13 +109,16 @@ void MediaPlayerTizen::punchHole(Compositor* canvas,
                                  const LayoutRect& videoRect,
                                  const LayoutRect& absVideoRect)
 {
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-    Evas_Object* e =
-        (Evas_Object*)m_canvasSurface->textureInfo().fragments[0].textureID;
-    evas_object_move(e, (int)absVideoRect.x(), (int)absVideoRect.y());
-    evas_object_resize(e, (int)absVideoRect.width(),
-                       (int)absVideoRect.height());
-    evas_object_show(e);
+#if !defined(STARFISH_MM_OUTPUT_WITH_GL)
+    canvas->punchHole(Unit::Rect(videoRect.x(), videoRect.y(),
+                                 videoRect.width(), videoRect.height()));
+    if (m_lastAbsoluteROIArea != absVideoRect) {
+        // TODO consider LWE::WebView x, y
+        player_set_display_roi_area(
+            m_nativePlayer, absVideoRect.x().toInt(), absVideoRect.y().toInt(),
+            absVideoRect.width().toInt(), absVideoRect.height().toInt());
+        m_lastAbsoluteROIArea = absVideoRect;
+    }
 #endif
 }
 

@@ -1211,6 +1211,11 @@ private:
     Canvas* m_canvasToApplyFilter;
 };
 
+#define JOBS_FOR_EXIT_PAITING()                                        \
+    m_owner->node()->webView()->prevDrawnStackingContextInfo().insert( \
+        std::make_pair(m_owner->node(), info));                        \
+    ctx.layerClipRect = oldLayerClipRect;
+
 void StackingContext::paintStackingContext(Canvas* canvas,
                                            PaintingStackingContextContext& ctx)
 {
@@ -1274,6 +1279,11 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         }
 
         info.graphicsBuffer = m_rareData->m_buffer;
+
+        if (m_owner->hasOwnGraphicsBufferMethod()) {
+            JOBS_FOR_EXIT_PAITING()
+            return;
+        }
 
         oldCanvas = canvas;
         canvas =
@@ -1393,6 +1403,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                 if (hasGraphicsBuffer) {
                     delete canvas;
                 }
+                JOBS_FOR_EXIT_PAITING()
                 return;
             }
             LayoutLocation to = transformOrigin();
@@ -1622,10 +1633,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         delete canvas;
     }
 
-    m_owner->node()->webView()->prevDrawnStackingContextInfo().insert(
-        std::make_pair(m_owner->node(), info));
-
-    ctx.layerClipRect = oldLayerClipRect;
+    JOBS_FOR_EXIT_PAITING()
 }
 
 void StackingContext::compositeStackingContext(Compositor* compositor)

@@ -51,6 +51,7 @@ public:
     }
 
     virtual IntrinsicSize intrinsicSize() override;
+    virtual void willCompsiteStackingContext(Compositor* c) override;
     virtual void didCompsiteStackingContext(Compositor* c) override;
     virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
                                       size_t visibleWidth,

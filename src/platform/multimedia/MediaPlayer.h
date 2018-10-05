@@ -98,8 +98,10 @@ public:
     PlaybackState playbackState();
     void setPlaybackState(PlaybackState state);
 
-    virtual void drawVideo(Compositor* canvas, const LayoutRect& videoRect,
-                           const LayoutRect& absVideoRect) = 0;
+    virtual void didDrawVideo(Compositor* canvas, const LayoutRect& videoRect,
+                              const LayoutRect& absVideoRect) = 0;
+    virtual void willDrawVideo(Compositor* canvas,
+                               const LayoutRect& videoRect) = 0;
 
     virtual CanvasSurface* createGraphicsBuffer(size_t visibleWidth,
                                                 size_t visibleHeight);

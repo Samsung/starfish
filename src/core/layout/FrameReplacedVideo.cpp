@@ -53,7 +53,18 @@ void FrameReplacedVideo::didCompsiteStackingContext(Compositor* c)
     LayoutRect absVideoRect(videoRect);
     c->applyMatrixTo(absVideoRect);
     if (v->activeMediaPlayer()) {
-        v->activeMediaPlayer()->drawVideo(c, videoRect, absVideoRect);
+        v->activeMediaPlayer()->didDrawVideo(c, videoRect, absVideoRect);
+    }
+}
+
+void FrameReplacedVideo::willCompsiteStackingContext(Compositor* c)
+{
+    auto v = node()->asHTMLVideoElement();
+    if (v->activeMediaPlayer()) {
+        LayoutRect videoRect(borderLeft() + paddingLeft(),
+                             borderTop() + paddingTop(), contentWidth(),
+                             contentHeight());
+        v->activeMediaPlayer()->willDrawVideo(c, videoRect);
     }
 }
 
