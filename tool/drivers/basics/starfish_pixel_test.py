@@ -8,9 +8,9 @@ from shutil import copyfile
 from subprocess import Popen, PIPE
 
 try:
-  FNULL
+    FNULL
 except NameError:
-  FNULL = open(os.devnull, "w")
+    FNULL = open(os.devnull, "w")
 
 __opts = None
 ERRSTR = " diff: 100.0% failed"
@@ -26,6 +26,7 @@ DEFAULT_FONT_OPT = AHEM_OPT
 DEFAULT_BACKEND = "efl"
 REMOTE_EXP_DIR = "remote-test"
 OUT_DIR = "out"
+
 
 class __PixelTestOpts():
     def __init__(self):
@@ -44,7 +45,7 @@ class __PixelTestOpts():
         if utils.is_int(v):
             self.height = HEIGHT_OPT_PREFIX + str(v)
 
-    def set_ahem_font(self, v):      
+    def set_ahem_font(self, v):
         if utils.is_bool(v):
             self.font_opt = AHEM_OPT if v else NON_AHEM_OPT
 
@@ -59,6 +60,7 @@ class __PixelTestOpts():
     def set_backend(self, v):
         if utils.is_string(v):
             self.backend = v
+
 
 def pixel_diff(tc_file, tc_result_png, tc_expected_png, handler):
     diff_command = ["tool/imgdiff/imgdiff", tc_result_png, tc_expected_png]
@@ -79,16 +81,19 @@ def pixel_diff(tc_file, tc_result_png, tc_expected_png, handler):
         copyfile(tc_result_png, image_1)
         copyfile(tc_expected_png, image_2)
         gen_cmd = ["test/tools/image_diff/image_diff", "--diff",
-                            image_1, image_2, image_3]
+                   image_1, image_2, image_3]
         subprocess.call(gen_cmd, stdout=FNULL, stderr=subprocess.STDOUT)
         print utils.PColors.red("Check images: " + base_path + "*.png")
     os.remove(tc_result_png)
     return success
 
+
 def case_runner(tc):
     tc_idx, tc_file = tc
     tc_expected_png = __opts.expected_namer(tc_file, __opts.backend)
-    tc_result_png = str(tc_idx) + "__starfish_result.png"
+    tc_file_name = os.path.basename(os.path.normpath(tc_file))
+    tc_file_name, _ = os.path.splitext(tc_file_name)
+    tc_result_png = str(tc_idx) + "_" + tc_file_name + "__starfish_result.png"
 
     # Assure TC exist
     if not (tc_file.startswith("http") or os.path.isfile(tc_file)):
@@ -104,12 +109,11 @@ def case_runner(tc):
     starfish_command = ["./StarFish", tc_file, HIDE_WINDOW_OPT,
                         __opts.font_opt, __opts.width, __opts.height,
                         SCREENSHOT_OPT_PREFIX + tc_result_png]
-    starfish_output=""
-    starfish_err=""
+    starfish_output = ""
+    starfish_err = ""
     try:
         p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         starfish_output, starfish_err = p.communicate("")
-        # subprocess.call(starfish_command, stdout=FNULL, stderr=subprocess.STDOUT)
         if not os.path.isfile(tc_result_png):
             print "ERROR : Starfish error - " + tc_file
             print "Starfish output=>"
@@ -119,7 +123,8 @@ def case_runner(tc):
             return __opts.tc_handler(tc_file, ERRSTR)
 
         # Diff
-        return pixel_diff(tc_file, tc_result_png, tc_expected_png, __opts.tc_handler)
+        return pixel_diff(tc_file, tc_result_png, tc_expected_png,
+                          __opts.tc_handler)
 
     except subprocess.CalledProcessError:
         return __opts.tc_handler(tc_file, ERRSTR)
@@ -130,7 +135,8 @@ def case_runner(tc):
 
 
 def run_parallel(list_file, backend, nproc=None, width=None, height=None,
-                 ahem_font=None, expected_namer=None, tc_handler=None, result_handler=None):
+                 ahem_font=None, expected_namer=None, tc_handler=None,
+                 result_handler=None):
     import parallel
     global __opts
     if __opts is None:
@@ -158,6 +164,7 @@ def default_tc_handler(tc_file, diff_result):
     print result
     return is_passed
 
+
 def default_http_expected_namer(tc_file, backend):
     # Remote test
     # Ex) http://52.79.162.207/some/directory/tc_some_name.html
@@ -169,6 +176,7 @@ def default_http_expected_namer(tc_file, backend):
     elif backend == "cairo":
         backend = "test/cairo/"
     return backend + REMOTE_EXP_DIR + path
+
 
 def default_expected_namer(tc_file, backend):
     if tc_file.startswith("http"):
