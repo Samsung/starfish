@@ -3433,26 +3433,19 @@ LayoutRect computeBoxExtent(LayoutRect rt, const SkMatrix& m)
     } else {
         SkPoint pt[4];
 
-        float hw = rt.width() / 2;
-        float hh = rt.height() / 2;
+        pt[0].fX = rt.x();
+        pt[0].fY = rt.y();
 
-        pt[0].fX = rt.x() - hw;
-        pt[0].fY = rt.y() - hh;
+        pt[1].fX = rt.maxX();
+        pt[1].fY = rt.y();
 
-        pt[1].fX = rt.maxX() - hw;
-        pt[1].fY = rt.y() - hh;
+        pt[2].fX = rt.x();
+        pt[2].fY = rt.maxY();
 
-        pt[2].fX = rt.x() - hw;
-        pt[2].fY = rt.maxY() - hh;
+        pt[3].fX = rt.maxX();
+        pt[3].fY = rt.maxY();
 
-        pt[3].fX = rt.maxX() - hw;
-        pt[3].fY = rt.maxY() - hh;
-        SkMatrix t = m;
-        t.mapPoints(pt, 4);
-
-        for (size_t i = 0; i < 4; i++) {
-            pt[i].set(pt[i].x() + hw, pt[i].y() + hh);
-        }
+        m.mapPoints(pt, 4);
 
         LayoutUnit minX = pt[0].x();
         LayoutUnit minY = pt[0].y();
@@ -3493,26 +3486,14 @@ SkMatrix FrameBox::computeScreenMatrix()
     SkMatrix m = SkMatrix::I();
     if (seenFixedPositionedLayer) {
         FrameBox* top = *frameList.rbegin();
-        m.postTranslate(top->asFrameBlockBox()->scrollLeft(),
-                        top->asFrameBlockBox()->scrollTop());
+        m.preTranslate(top->asFrameBlockBox()->scrollLeft(),
+                       top->asFrameBlockBox()->scrollTop());
 
         auto iter = frameList.rbegin();
         FrameBox* lastParentBox = nullptr;
         bool canScroll = false;
         while (iter != frameList.rend()) {
             FrameBox* fBox = *iter;
-            StackingContext* sc = fBox->stackingContext();
-            if (sc) {
-                SkMatrix m2 = sc->transformMatrix();
-                if (!m2.isIdentity()) {
-                    LayoutLocation to =
-                        fBox->stackingContext()->transformOrigin();
-                    m.postTranslate((float)to.x(), (float)to.y());
-                    m.preConcat(m2);
-                    m.postTranslate(-(float)to.x(), -(float)to.y());
-                }
-            }
-
             LayoutLocation pos;
             if (canScroll) {
                 pos = fBox->absolutePointIncludingScroll(lastParentBox);
@@ -3522,7 +3503,19 @@ SkMatrix FrameBox::computeScreenMatrix()
                     canScroll = true;
                 }
             }
-            m.postTranslate((float)pos.x(), (float)pos.y());
+            m.preTranslate((float)pos.x(), (float)pos.y());
+            StackingContext* sc = fBox->stackingContext();
+            if (sc) {
+                SkMatrix m2 = sc->transformMatrix();
+                if (!m2.isIdentity()) {
+                    LayoutLocation to =
+                        fBox->stackingContext()->transformOrigin();
+                    m.preTranslate((float)to.x(), (float)to.y());
+                    m.preConcat(m2);
+                    m.preTranslate(-(float)to.x(), -(float)to.y());
+                }
+            }
+
             lastParentBox = fBox;
             iter++;
         }
@@ -3531,18 +3524,6 @@ SkMatrix FrameBox::computeScreenMatrix()
         FrameBox* lastParentBox = nullptr;
         while (iter != frameList.rend()) {
             FrameBox* fBox = *iter;
-            StackingContext* sc = fBox->stackingContext();
-            if (sc) {
-                SkMatrix m2 = sc->transformMatrix();
-                if (!m2.isIdentity()) {
-                    LayoutLocation to =
-                        fBox->stackingContext()->transformOrigin();
-                    m.postTranslate((float)to.x(), (float)to.y());
-                    m.preConcat(m2);
-                    m.postTranslate(-(float)to.x(), -(float)to.y());
-                }
-            }
-
             LayoutLocation pos;
             if (fBox == this) {
                 pos = fBox->absolutePoint(lastParentBox);
@@ -3557,7 +3538,20 @@ SkMatrix FrameBox::computeScreenMatrix()
                     pos.setY(pos.y() - fBox->asFrameBlockBox()->scrollTop());
                 }
             }
-            m.postTranslate((float)pos.x(), (float)pos.y());
+            m.preTranslate((float)pos.x(), (float)pos.y());
+
+            StackingContext* sc = fBox->stackingContext();
+            if (sc) {
+                SkMatrix m2 = sc->transformMatrix();
+                if (!m2.isIdentity()) {
+                    LayoutLocation to =
+                        fBox->stackingContext()->transformOrigin();
+                    m.preTranslate((float)to.x(), (float)to.y());
+                    m.preConcat(m2);
+                    m.preTranslate(-(float)to.x(), -(float)to.y());
+                }
+            }
+
             lastParentBox = fBox;
             iter++;
         }

@@ -926,19 +926,19 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
 
         auto to = fragmentBox->stackingContext()->transformOrigin();
 
-        ctx.tranformMatrix.postTranslate((float)fragmentBox->x(),
-                                         (float)fragmentBox->y());
-        ctx.tranformMatrix.postTranslate((float)to.x(), (float)to.y());
+        ctx.tranformMatrix.preTranslate((float)fragmentBox->x(),
+                                        (float)fragmentBox->y());
+        ctx.tranformMatrix.preTranslate((float)to.x(), (float)to.y());
         ctx.tranformMatrix.preConcat(m);
-        ctx.tranformMatrix.postTranslate((float)-to.x(), (float)-to.y());
+        ctx.tranformMatrix.preTranslate((float)-to.x(), (float)-to.y());
 
         if (!ctx.tranformMatrix.rectStaysRect()) {
             shouldStopComputingBecauseMatrixInvalidFromHere = true;
             return;
         }
     } else {
-        ctx.tranformMatrix.postTranslate((float)fragmentBox->x(),
-                                         (float)fragmentBox->y());
+        ctx.tranformMatrix.preTranslate((float)fragmentBox->x(),
+                                        (float)fragmentBox->y());
     }
 
     if (fragmentBox->shouldApplyOverflow()) {

@@ -109,50 +109,8 @@ protected:
 
         if (needsRepainting) {
             LayoutRect r = frame->frameVisibleRect();
-            if (currentMatrix.rectStaysRect()) {
-                SkRect skRect =
-                    SkRect::MakeXYWH((float)r.x(), (float)r.y(),
-                                     (float)r.width(), (float)r.height());
-
-                currentMatrix.mapRect(&skRect);
-                skRect.sort();
-                LayoutRect tmp = LayoutRect(skRect.x(), skRect.y(),
-                                            skRect.width(), skRect.height());
-                m_repaintRegion.unite(tmp);
-            } else {
-                SkPoint pt[4];
-
-                pt[0].fX = r.x();
-                pt[0].fX = r.y();
-
-                pt[1].fX = r.maxX();
-                pt[1].fX = r.y();
-
-                pt[2].fX = r.x();
-                pt[2].fX = r.maxY();
-
-                pt[3].fX = r.maxX();
-                pt[3].fX = r.maxY();
-
-                currentMatrix.mapPoints(pt, 4);
-
-                LayoutUnit minX = pt[0].x();
-                LayoutUnit minY = pt[0].y();
-                LayoutUnit maxX = pt[0].x();
-                LayoutUnit maxY = pt[0].y();
-
-                for (size_t i = 1; i < 4; i++) {
-                    minX = std::min((float)pt[i].x(), (float)minX);
-                    minY = std::min((float)pt[i].y(), (float)minY);
-
-                    maxX = std::max((float)pt[i].x(), (float)maxX);
-                    maxY = std::max((float)pt[i].y(), (float)maxY);
-                }
-
-                LayoutRect tmp(minX, minY, (maxX - minX).abs(),
-                               (maxY - minY).abs());
-                m_repaintRegion.unite(tmp);
-            }
+            r = computeBoxExtent(r, currentMatrix);
+            m_repaintRegion.unite(r);
         }
 
         if (frame->isFrameReplaced() &&
@@ -168,8 +126,8 @@ protected:
                                              ->document()
                                              ->frame();
                     SkMatrix s = currentMatrix;
-                    s.postTranslate(frame->borderLeft() + frame->paddingLeft(),
-                                    frame->borderTop() + frame->paddingTop());
+                    s.preTranslate(frame->borderLeft() + frame->paddingLeft(),
+                                   frame->borderTop() + frame->paddingTop());
                     trackRepaintRegion(documentFrame->asFrameBox(), s);
                 }
             }
@@ -180,19 +138,13 @@ protected:
             auto box = iter->next();
             SkMatrix childMatrix = currentMatrix;
 
-            if (box->stackingContext()) {
-                SkMatrix m2 = box->stackingContext()->transformMatrix();
-                if (!m2.isIdentity()) {
-                    LayoutLocation to =
-                        box->stackingContext()->transformOrigin();
-                    childMatrix.postTranslate((float)to.x(), (float)to.y());
-                    childMatrix.preConcat(m2);
-                    childMatrix.postTranslate(-(float)to.x(), -(float)to.y());
-                }
+            if (box->stackingContext() &&
+                !box->stackingContext()->transformMatrix().isIdentity()) {
+                childMatrix = box->computeScreenMatrix();
+            } else {
+                auto pos = box->absolutePointIncludingScroll(frame);
+                childMatrix.preTranslate((float)pos.x(), (float)pos.y());
             }
-
-            auto pos = box->absolutePointIncludingScroll(frame);
-            childMatrix.postTranslate((float)pos.x(), (float)pos.y());
             trackRepaintRegion(box, childMatrix);
         }
 
