@@ -1029,45 +1029,6 @@ uint32_t Element::scrollHeight()
     return frame()->asFrameBlockBox()->scrollHeight();
 }
 
-static void applyMatrixToPoint(DOMPoint* p, const SkMatrix& mat)
-{
-    // TODO transform-3d
-    float x, y;
-    x = p->x();
-    y = p->y();
-    SkPoint skP = SkPoint::Make(SkFloatToScalar(x), SkFloatToScalar(y));
-    mat.mapPoints(&skP, 1);
-    p->setX(SkScalarToFloat(skP.x()));
-    p->setY(SkScalarToFloat(skP.y()));
-}
-
-static void applyTransform(DOMQuad* q, FrameBox* box)
-{
-    SkMatrix mat;
-    mat.reset();
-    Frame* f = box;
-    std::vector<SkMatrix> m;
-    while (f) {
-        StackingContext* sc = f->asFrameBox()->stackingContext();
-        if (sc) {
-            m.push_back(sc->transformMatrix());
-        }
-        f = f->layoutParent();
-    }
-
-    auto iter = m.rbegin();
-
-    while (iter != m.rend()) {
-        mat.preConcat(*iter);
-        iter++;
-    }
-
-    applyMatrixToPoint(q->p1(), mat);
-    applyMatrixToPoint(q->p2(), mat);
-    applyMatrixToPoint(q->p3(), mat);
-    applyMatrixToPoint(q->p4(), mat);
-}
-
 void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
@@ -1083,11 +1044,11 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
     // SVG model is not supported
 
     if (frameObject->isFrameBox()) {
-        LayoutRect rect =
-            frameObject->asFrameBox()->absoluteRectIncludingScroll(
-                document()->frame()->asFrameBox());
-        rect.setX(rect.x() - (LayoutUnit)window()->scrollX());
-        rect.setY(rect.y() - (LayoutUnit)window()->scrollY());
+        SkMatrix m = frameObject->asFrameBox()->computeScreenMatrix();
+        LayoutRect rect;
+        rect.setWidth(frameObject->asFrameBox()->width());
+        rect.setHeight(frameObject->asFrameBox()->height());
+        rect = computeBoxExtent(rect, m);
 
         DOMQuad* q = new DOMQuad(
             document(), DOMPointInit(rect.location().x(), rect.location().y()),
@@ -1098,7 +1059,6 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
             DOMPointInit(rect.location().x(),
                          rect.location().y() + rect.size().height()));
 
-        applyTransform(q, frameObject->asFrameBox());
         quads.push_back(q);
     } else if (frameObject->isFrameInline()) {
         Frame* nearestFrameBox = frameObject->parent();
@@ -1112,10 +1072,12 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
                 if (childBox->isInlineNonReplacedBox()) {
                     if (childBox->asInlineNonReplacedBox()->origin()->node() ==
                         this) {
-                        LayoutRect rect = childBox->absoluteRectIncludingScroll(
-                            document()->frame()->asFrameBox());
-                        rect.setX(rect.x() - (LayoutUnit)window()->scrollX());
-                        rect.setY(rect.y() - (LayoutUnit)window()->scrollY());
+                        SkMatrix m =
+                            childBox->asFrameBox()->computeScreenMatrix();
+                        LayoutRect rect;
+                        rect.setWidth(childBox->asFrameBox()->width());
+                        rect.setHeight(childBox->asFrameBox()->height());
+                        rect = computeBoxExtent(rect, m);
 
                         DOMQuad* q = new DOMQuad(
                             document(), DOMPointInit(rect.location().x(),
@@ -1129,8 +1091,6 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
                             DOMPointInit(rect.location().x(),
                                          rect.location().y() +
                                              rect.size().height()));
-
-                        applyTransform(q, childBox->asFrameBox());
                         quads.push_back(q);
                     }
                 }

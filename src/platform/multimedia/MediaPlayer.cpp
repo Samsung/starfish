@@ -70,7 +70,11 @@ Window* MediaPlayer::window()
 CanvasSurface* MediaPlayer::createGraphicsBuffer(size_t visibleWidth,
                                                  size_t visibleHeight)
 {
-    return CanvasSurface::create(window()->webView()->platformWindow(), 1, 1);
+    auto s = CanvasSurface::create(window()->webView()->platformWindow(), 1, 1);
+    s->mapBuffer();
+    s->clear();
+    s->unMapBufferAndNotifyUpdateRegion(0, 0, 1, 1);
+    return s;
 }
 
 SourceBuffer* MediaPlayer::activeSourceBuffer(StreamType type)
