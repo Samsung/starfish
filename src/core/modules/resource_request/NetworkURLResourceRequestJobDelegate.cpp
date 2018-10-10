@@ -186,8 +186,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         if (cache) {
             if (!nwd->cachedEntry) {
                 cache->put(nwd);
-            } // TODO : If the entry is before it expires but is no longer fresh
-            else if (nwd->cachedEntry) {
+            } else if (nwd->cachedEntry) { // TODO : If the entry is before it
+                                           // expires but is no longer fresh
                 cache->update(nwd, nwd->cachedEntry);
             }
         }
@@ -545,6 +545,9 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                                                void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    if (nwd->isAborted) {
+        return 0;
+    }
     ResourceRequest* request = nwd->request;
 
     Locker<Mutex> locker(*request->m_mutex);
