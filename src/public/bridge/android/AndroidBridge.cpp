@@ -55,7 +55,7 @@ struct WindowGlue {
 } g_WindowGlue;
 JavaVM* g_jvm;
 
-std::map<LWE::WebContainer*, std::pair<jobject, void*>> g_webViews;
+std::map<LWE::WebContainer*, jobject> g_webViews;
 
 void callOnLoadResourceHandler(LWE::WebView* view, const char* url);
 void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
@@ -194,8 +194,8 @@ void callOnLoadResourceHandler(LWE::WebContainer* view, const char* url)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
     jstring jstr = env->NewStringUTF(url);
-    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onLoadResource,
-                        jstr);
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onLoadResource, jstr);
+    env->DeleteLocalRef(jstr);
 }
 
 void callOnReceivedError(LWE::WebContainer* view, int errorCode, bool canGoBack,
@@ -221,8 +221,8 @@ void callOnReceivedError(LWE::WebContainer* view, int errorCode, bool canGoBack,
     jint jint1 = errorCode;
     jboolean jboolean1 = canGoBack;
     jboolean jboolean2 = canGoForward;
-    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onReceivedError,
-                        jint1, jboolean1, jboolean2);
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onReceivedError, jint1,
+                        jboolean1, jboolean2);
 }
 
 void callOnPageParsed(LWE::WebContainer* view, const char* url, bool canGoBack,
@@ -248,8 +248,9 @@ void callOnPageParsed(LWE::WebContainer* view, const char* url, bool canGoBack,
     jstring jstr = env->NewStringUTF(url);
     jboolean jboolean1 = canGoBack;
     jboolean jboolean2 = canGoForward;
-    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onPageParsed,
-                        jstr, jboolean1, jboolean2);
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onPageParsed, jstr,
+                        jboolean1, jboolean2);
+    env->DeleteLocalRef(jstr);
 }
 
 void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
@@ -276,8 +277,9 @@ void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
     jboolean jboolean1 = canGoBack;
     jboolean jboolean2 = canGoForward;
 
-    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onPageStarted,
-                        jstr, jboolean1, jboolean2);
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onPageStarted, jstr,
+                        jboolean1, jboolean2);
+    env->DeleteLocalRef(jstr);
 }
 
 bool callShouldOverrideUrlLoading(LWE::WebContainer* view, const char* url)
@@ -302,7 +304,9 @@ bool callShouldOverrideUrlLoading(LWE::WebContainer* view, const char* url)
 
     jstring jstr = env->NewStringUTF(url);
     bool ret = env->CallBooleanMethod(
-        g_webViews[view].first, g_WindowGlue.m_shouldOverrideUrlLoading, jstr);
+        g_webViews[view], g_WindowGlue.m_shouldOverrideUrlLoading, jstr);
+    env->DeleteLocalRef(jstr);
+
     return ret;
 }
 
@@ -327,7 +331,7 @@ void callOnProgressChanged(LWE::WebContainer* view, int progress)
     }
 
     jint newProgress = progress;
-    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onProgressed,
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onProgressed,
                         newProgress);
 }
 
@@ -359,9 +363,13 @@ void callOnDownloadStart(LWE::WebContainer* view, const char* url,
     jstring jcontentDisposition = env->NewStringUTF(contentDisposition);
     jstring jmimetype = env->NewStringUTF(mimetype);
     jlong jcontentLength = contentLength;
-    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_onDownloadStart,
-                        jurl, juserAgent, jcontentDisposition, jmimetype,
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onDownloadStart, jurl,
+                        juserAgent, jcontentDisposition, jmimetype,
                         jcontentLength);
+    env->DeleteLocalRef(jurl);
+    env->DeleteLocalRef(juserAgent);
+    env->DeleteLocalRef(jcontentDisposition);
+    env->DeleteLocalRef(jmimetype);
 }
 
 void callShowDropdownMenu(LWE::WebContainer* view,
@@ -388,16 +396,20 @@ void callShowDropdownMenu(LWE::WebContainer* view,
     }
 
     jsize len = list->size();
-    jobjectArray jlist = env->NewObjectArray(
-        len, env->FindClass("java/lang/String"), env->NewStringUTF(""));
+    jstring emptyStr = env->NewStringUTF("");
+    jobjectArray jlist =
+        env->NewObjectArray(len, env->FindClass("java/lang/String"), emptyStr);
     for (size_t i = 0; i < len; i++) {
         jstring str = env->NewStringUTF((*list)[i].c_str());
         env->SetObjectArrayElement(jlist, i, str);
+        env->DeleteLocalRef(str);
     }
+    env->DeleteLocalRef(emptyStr);
     jint jcheckedPosition = checkedPosition;
 
-    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_showDropdownMenu,
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_showDropdownMenu,
                         jlist, jcheckedPosition);
+    env->DeleteLocalRef(jlist);
 }
 
 void callShowAlert(LWE::WebContainer* view, const std::string& title,
@@ -424,8 +436,10 @@ void callShowAlert(LWE::WebContainer* view, const std::string& title,
 
     jstring jtitle = env->NewStringUTF(title.c_str());
     jstring jmessage = env->NewStringUTF(message.c_str());
-    env->CallVoidMethod(g_webViews[view].first, g_WindowGlue.m_showAlert,
-                        jtitle, jmessage);
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_showAlert, jtitle,
+                        jmessage);
+    env->DeleteLocalRef(jtitle);
+    env->DeleteLocalRef(jmessage);
 }
 
 extern "C" JNIEXPORT void JNICALL
@@ -465,7 +479,7 @@ void showIME(void* view)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
+    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
                         g_WindowGlue.m_showIME);
 }
 
@@ -489,7 +503,7 @@ void hideIME(void* view)
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
 
-    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
+    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
                         g_WindowGlue.m_hideIME);
 }
 
@@ -512,7 +526,7 @@ void glMakeCurrent(void* view)
         LOGE("glMakeCurrent error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
+    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
                         g_WindowGlue.m_glMakeCurrent);
 }
 
@@ -535,7 +549,7 @@ void glSwapBuffers(void* view)
         LOGE("glMakeCurrent error");
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
-    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view].first,
+    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
                         g_WindowGlue.m_glSwapBuffers);
 }
 
@@ -629,8 +643,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_create(
         [](LWE::WebContainer* wv) -> void { hideIME(wv); });
 
     jobject java_webview = env->NewGlobalRef(thiz);
-    g_webViews.insert(
-        std::make_pair(webContainer, std::make_pair(java_webview, nullptr)));
+    g_webViews.insert(std::make_pair(webContainer, java_webview));
 
     return (jlong)webContainer;
 }
@@ -642,7 +655,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_destroy(JNIEnv* env,
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->Destroy();
-    env->DeleteGlobalRef(g_webViews[webContainer].first);
+    env->DeleteGlobalRef(g_webViews[webContainer]);
     g_webViews.erase(webContainer);
 }
 
@@ -836,8 +849,10 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_addJavascriptInterface
         if (!env) {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
+        jstring paramStr = env->NewStringUTF(param.c_str());
         jstring result = (jstring)env->CallObjectMethod(
-            callback_obj, callback_methodID, env->NewStringUTF(param.c_str()));
+            callback_obj, callback_methodID, paramStr);
+        env->DeleteLocalRef(paramStr);
 
         const char* nativeString3 = env->GetStringUTFChars(result, 0);
         std::string resultStr = std::string(nativeString3);
