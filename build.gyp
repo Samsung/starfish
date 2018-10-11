@@ -130,6 +130,9 @@
             'defines': [
                 '<@(defines_x64)',
             ],
+            'sources!' : [
+                '<@(sources_tv_extra)',
+            ],
         },
         {
             'target_name': 'starfish.x64.release',
@@ -145,6 +148,9 @@
             ],
             'defines': [
                 '<@(defines_x64)',
+            ],
+            'sources!' : [
+                '<@(sources_tv_extra)',
             ],
 
         },
@@ -165,6 +171,9 @@
                 '<@(defines_tizen)',
                 '<@(defines_unified_common)',
             ],
+            'sources!' : [
+                '<@(sources_tv_extra)',
+            ],
         },
         {
             'target_name': 'lwe.tizen.unified_mobile.release',
@@ -183,6 +192,9 @@
             'defines': [
                 '<@(defines_tizen)',
                 '<@(defines_unified_mobile)',
+            ],
+            'sources!' : [
+                '<@(sources_tv_extra)',
             ],
         },
         {
@@ -205,12 +217,15 @@
                 '<@(defines_tizen)',
                 '<@(defines_unified_tv)',
             ],
+            'sources!' : [
+                '<@(sources_tv_extra)',
+            ],
         },
         {
             # This rule should only be called by lwe_vd
             'target_name': 'lwe.tizen.prod_tv.release',
-            'type': 'static_library',
-            'product_name': 'lightweight-web-engine.prod_tv',
+            'type': '<(component)',
+            'product_name': 'lightweight-web-engine.prod.tv',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
@@ -230,12 +245,16 @@
                 'src/platform/tts/TTSBase.cpp',
                 'src/platform/multimedia/MediaPlayerTizenBase.cpp',
             ],
+            'sources' : [
+                '<@(sources_tv_extra)',
+            ],
+
         },
         {
             # This rule should only be called by lwe_vd
             'target_name': 'lwe.tizen.prod_tv_dali.release',
-            'type': 'static_library',
-            'product_name': 'lightweight-web-engine.prod_tv_dali',
+            'type': '<(component)',
+            'product_name': 'lightweight-web-engine.prod.dali.tv',
             'dependencies': [
                 './build.dep.gyp:escargot.tizen.release',
                 './build.dep.gyp:gc.tizen.release',
@@ -254,6 +273,9 @@
             'sources!' : [
                 'src/platform/tts/TTSBase.cpp',
                 'src/platform/multimedia/MediaPlayerTizenBase.cpp',
+            ],
+            'sources' : [
+                '<@(sources_tv_extra)',
             ],
         },
         {
@@ -289,6 +311,9 @@
             'defines': [
                 '<@(defines_tizen)',
                 '<@(defines_prod_wearable)',
+            ],
+            'sources!' : [
+                '<@(sources_tv_extra)',
             ],
         },
     ],

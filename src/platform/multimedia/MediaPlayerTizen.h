@@ -18,6 +18,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+#if !defined(STARFISH_DALI)
 #if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 #ifndef __StarFishMediaPlayerTizen__
 #define __StarFishMediaPlayerTizen__
@@ -281,6 +282,7 @@ protected:
 };
 }
 
+#endif
 #endif
 #endif
 #endif

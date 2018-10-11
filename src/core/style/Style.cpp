@@ -11543,9 +11543,9 @@ bool CSSStyleValuePair::updateValueSrc(const CSSTokenVector& tokens)
     // 1 -> expect format or comma
     // 2 -> expect comma
 
-    FontFaceSrcData::LoadFrom loadFrom;
-    FontFaceSrcData::Format format;
-    String* srcStr;
+    FontFaceSrcData::LoadFrom loadFrom = FontFaceSrcData::LoadFrom::Local;
+    FontFaceSrcData::Format format = FontFaceSrcData::Format::Unknown;
+    String* srcStr = String::emptyString;
 
     for (size_t i = 0; i < tokens.size(); i++) {
         const auto& token = tokens[i];
