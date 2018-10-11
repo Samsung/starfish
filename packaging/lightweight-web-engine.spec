@@ -51,6 +51,13 @@ Requires(postun): /sbin/ldconfig
 %define tizen_version_major 4
 %endif
 
+%if %{?tizen_profile_name:1}%{!?tizen_profile_name:0}
+%if "%{tizen_profile_name}" == "tv"
+%define rpm prod_tv
+%endif
+%endif
+
+
 # The following syntax's been outdated.
 # %if "%{?TIZEN_PRODUCT_TV}" == "1"
 # %define profile tv
@@ -91,11 +98,12 @@ BuildRequires: pkgconfig(dali-adaptor)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
-# We do not have these packages in public Tizen
-# %if "%{rpm}" == "tv"
-# %BuildRequires: pkgconfig(vconf)
-# %BuildRequires: pkgconfig(vconf-internal-keys-tv)
-# %endif
+
+%if "%{rpm}" == "prod_tv"
+BuildRequires: pkgconfig(vconf)
+BuildRequires: pkgconfig(vconf-internal-keys-tv)
+%endif
+
 BuildRequires: pkgconfig(bundle)
 
 # Supporting multiprofiles
@@ -112,7 +120,7 @@ This package provides a Tizen specific implementation of Lightweight Web Engine.
 ##############################################
 # Packages for profiles
 ##############################################
-%if "%{rpm}" == "tv" || "%{rpm}" == "all"
+%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
 %package profile_tv
 Summary:     Lightweight Web Engine for tv
 Provides:    %{name}-compat = %{version}-%{release}
@@ -150,7 +158,7 @@ Requires:    %{name} = %{version}
 Development files for Lightweight Web Engine. This package provides
 headers and package configs.
 
-%if "%{rpm}" == "tv"
+%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv"
 %package shell-profile_tv
 Summary:     Development files for Lightweight Web Engine for tv
 Requires:    %{name}-profile_tv
@@ -198,11 +206,12 @@ echo "Building for: " %{rpm}
 
 CXXFLAGS+=' -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} '
 
+
 ##############################################
 ## Build rules for each profile
 ##############################################
 
-%if "%{rpm}" == "tv" || "%{rpm}" == "mobile" || "%{rpm}" == "all"
+%if "%{rpm}" == "tv" || "%{rpm}" == "mobile" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
 %ifarch armv7l
 ./build_third_party.sh arm
 %endif
@@ -229,6 +238,19 @@ GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-paral
 ninja -C out_tizen/tv/release lwe.tizen.unified_tv.release
 GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=tv %{?gyp_addition_command}
 ninja -C out_tizen/tv/release lwe.tizen.unified_tv.release
+%endif
+
+
+%if "%{rpm}" == "prod_tv"
+# For Dali
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dprofile=tv %{?gyp_addition_command}
+ninja -C out_tizen/tv/release lwe.tizen.prod_tv_dali.release
+
+# For Cairo
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dprofile=tv %{?gyp_addition_command}
+ninja -C out_tizen/tv/release lwe.tizen.prod_tv.release
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=tv %{?gyp_addition_command}
+ninja -C out_tizen/tv/release lwe.tizen.prod_tv.release
 %endif
 
 
@@ -286,15 +308,16 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}/lwe
 mkdir -p %{buildroot}%{_bindir}
 
-%if "%{rpm}" == "tv" || "%{rpm}" == "all"
+%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
 cp -fr out_tizen/tv/release/lib/*.so %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 cp -fr out_tizen/tv/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/tv
 %endif
-%if "%{rpm}" == "tv"
-cp -fr out_tizen/tv/release/lightweight-web-engine.tv %{buildroot}%{_bindir}
+%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv"
+cp -fr out_tizen/tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
 %endif
+
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
@@ -354,19 +377,31 @@ exit 0
 
 
 #############################################
-%if "%{rpm}" == "tv" || "%{rpm}" == "all"
+%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
 %post profile_tv
 pushd %{_libdir}/lwe
 for FILE in `ls tv/*.so | grep -v 'tv.so'`; do
     ln -sf "$FILE" .
 done
+%if "%{rpm}" == "tv"
 ln -sf tv/liblightweight-web-engine.tv.so liblightweight-web-engine.so.1
 ln -sf tv/liblightweight-web-engine-dali-plugin.tv.so liblightweight-web-engine-dali-plugin.so.1
+%endif
+%if "%{rpm}" == "prod_tv"
+ln -sf tv/liblightweight-web-engine.prod.tv.so liblightweight-web-engine.so.1
+ln -sf tv/liblightweight-web-engine.prod.dali.tv.so liblightweight-web-engine-dali-plugin.so.1
+%endif
 popd
 %endif
 %if "%{rpm}" == "tv"
 pushd %{_bindir}
 ln -sf lightweight-web-engine.tv %{bin}
+popd
+exit 0
+%endif
+%if "%{rpm}" == "prod_tv"
+pushd %{_bindir}
+ln -sf lightweight-web-engine.prod.tv %{bin}
 popd
 exit 0
 %endif
@@ -415,7 +450,7 @@ exit 0
 %files
 %manifest %{name}.manifest
 
-%if "%{rpm}" == "tv" || "%{rpm}" == "all"
+%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
 %files profile_tv
 %manifest %{name}.manifest
 %{_libdir}/*.so
@@ -454,6 +489,12 @@ exit 0
 %files shell-profile_tv
 %manifest %{name}.manifest
 %{_bindir}/lightweight-web-engine.tv
+%endif
+
+%if "%{rpm}" == "prod_tv"
+%files shell-profile_tv
+%manifest %{name}.manifest
+%{_bindir}/*
 %endif
 
 %if "%{rpm}" == "mobile"

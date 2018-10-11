@@ -1048,7 +1048,7 @@ public:
         m_application.MainLoop();
     }
 
-    virtual void Destroy() override
+    void Destroy()
     {
         m_controller->destroy();
     }

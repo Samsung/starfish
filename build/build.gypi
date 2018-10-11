@@ -146,6 +146,10 @@
            '<(escargot_root)/third_party/rapidjson/include',
         ],
         'main_file' : 'src/shell/shell.cpp',
+        'sources_tv_extra': [
+	   'src/platform/tts/TTSTV.cpp',
+	   'src/platform/multimedia/MediaPlayerTV.cpp',
+	],
         'test_runner_file' : 'src/shell/testRunner.cpp',
         'variables': {
             'variables': {

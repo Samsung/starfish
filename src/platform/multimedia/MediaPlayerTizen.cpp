@@ -18,6 +18,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
+#if !defined(STARFISH_DALI)
 #if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 
 #include "StarFishConfig.h"
@@ -1175,9 +1176,8 @@ void MediaPlayerTizen::prepareMediaSource()
         printNativePlayerError(ret);
         m_foundError = true;
         handlePrepared();
-    }
 #ifdef STARFISH_RUN_MSE_THREAD
-    else {
+    } else {
         m_playerDeadFlag = (bool*)malloc(sizeof(bool));
         if (m_playerDeadFlag == NULL) {
             RETURN_WHEN_PLAYER_ERROR("ERROR: prepareMediaSource\n");
@@ -1187,8 +1187,9 @@ void MediaPlayerTizen::prepareMediaSource()
         Thread* t = new Thread(m_container->webView());
         t->run(m_container->webView()->messageLoop(), threadFillingBuffer,
                this);
-    }
 #endif
+    }
+
     PLAYER_LOGI("MediaPlayerTizen::prepareMediaSource end\n");
 }
 
@@ -1718,5 +1719,6 @@ MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 }
 }
 
+#endif
 #endif
 #endif /* STARFISH_ENABLE_MULTIMEDIA */
