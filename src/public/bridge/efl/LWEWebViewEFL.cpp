@@ -839,9 +839,9 @@ public:
 #endif
     }
 
-    virtual void WillDestroy() override
+    virtual void Destroy() override
     {
-        WebView::WillDestroy();
+        WebView::Destroy();
 
         if (m_imfContext) {
             ecore_imf_context_del(m_imfContext);
