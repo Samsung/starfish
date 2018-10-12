@@ -309,7 +309,7 @@ public:
     Node* cloneNode(bool deep = false);
     void validatePreinsert(Node* node, Node* child);
 
-    unsigned short compareDocumentPosition(const Node* other);
+    unsigned short compareDocumentPosition(Node* other);
 
     bool contains(const Node* other) const
     {
@@ -319,9 +319,9 @@ public:
         if (this == other) {
             return true;
         }
-        for (Node* child = firstChild(); child != nullptr;
-             child = child->nextSibling()) {
-            if (child->contains(other)) {
+        for (Node* parent = other->parentNode(); parent != nullptr;
+             parent = parent->parentNode()) {
+            if (parent == this) {
                 return true;
             }
         }

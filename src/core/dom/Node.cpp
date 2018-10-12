@@ -927,46 +927,76 @@ unsigned short isPreceding(const Node* node, const Node* isPrec,
     return 0;
 }
 
-unsigned short Node::compareDocumentPosition(const Node* other)
+unsigned short Node::compareDocumentPosition(Node* other)
 {
     // spec does not say what to do when other is nullptr
     if (!other) {
         return DOCUMENT_POSITION_DISCONNECTED;
     }
+
     if (this == other) {
         return 0;
     }
 
-    Node* root = nullptr;
-    if (isDocument()) {
-        root = this;
-    } else if (other->isDocument()) {
-        root = ownerDocument();
-    } else {
-        root = ownerDocument();
-        if (ownerDocument() != other->ownerDocument()) {
-            return DOCUMENT_POSITION_DISCONNECTED +
-                   DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC +
-                   DOCUMENT_POSITION_PRECEDING;
+    Attr* attr1 = nodeType() == ATTRIBUTE_NODE ? asAttr() : nullptr;
+    Attr* attr2 =
+        other->nodeType() == ATTRIBUTE_NODE ? other->asAttr() : nullptr;
+
+    Node* node1 = attr1 ? attr1->ownerElement() : this;
+    Node* node2 = attr2 ? attr2->ownerElement() : other;
+    const Node* root = isDocument() ? this : getRootNode();
+
+    if (!node1 || !node2) {
+        return DOCUMENT_POSITION_DISCONNECTED +
+               DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC +
+               (this > other ? DOCUMENT_POSITION_PRECEDING
+                             : DOCUMENT_POSITION_FOLLOWING);
+    }
+
+    if (attr1 && attr2 && node1 == node2 && node1) {
+        auto& v = attr1->ownerElement()->attributesVector();
+        for (size_t i = 0; i < v.size(); i++) {
+            const QualifiedName& attrName = v[i].name();
+            if (attr1 && attrName == attr1->qname()) {
+                return DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC +
+                       DOCUMENT_POSITION_FOLLOWING;
+            }
+
+            if (attr2 && attrName == attr2->qname()) {
+                return DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC +
+                       DOCUMENT_POSITION_PRECEDING;
+            }
         }
     }
 
-    for (Node* p = parentNode(); p != nullptr; p = p->parentNode()) {
-        if (p == other) {
-            return DOCUMENT_POSITION_CONTAINS + DOCUMENT_POSITION_PRECEDING;
+    // spec does not say what to do for node's connection
+    // follow other browsers
+    if (node1->isConnected() != node2->isConnected() ||
+        node1->getRootNode() != node2->getRootNode()) {
+        unsigned short result = isPreceding(root, other, this);
+        if (result == 0) {
+            result = DOCUMENT_POSITION_FOLLOWING;
         }
+
+        return DOCUMENT_POSITION_DISCONNECTED +
+               DOCUMENT_POSITION_IMPLEMENTATION_SPECIFIC + result;
     }
 
-    for (Node* p = other->parentNode(); p != nullptr; p = p->parentNode()) {
-        if (p == this) {
-            return DOCUMENT_POSITION_CONTAINED_BY + DOCUMENT_POSITION_FOLLOWING;
-        }
+    if ((attr1 == nullptr && node1->contains(node2)) ||
+        (attr2 && node1 == node2)) {
+        return DOCUMENT_POSITION_CONTAINED_BY + DOCUMENT_POSITION_FOLLOWING;
     }
 
-    unsigned short result = isPreceding(root, other, this);
+    if ((attr2 == nullptr && node2->contains(node1)) ||
+        (attr1 && node1 == node2)) {
+        return DOCUMENT_POSITION_CONTAINS + DOCUMENT_POSITION_PRECEDING;
+    }
+
+    unsigned short result = isPreceding(root, node2, node1);
     if (result == 0) {
         result = DOCUMENT_POSITION_FOLLOWING;
     }
+
     return result;
 }
 
@@ -1407,12 +1437,12 @@ static void didInsertNode(Node* self, Node* child)
         parent->didNodeInserted(self, child);
         parent = parent->parentNode();
     }
-
-    if (self->isInDocumentScope() &&
-        self->document()->doesParticipateInRendering()) {
+    if (self->isInDocumentScope()) {
         notifyNodeInsertedToDocumentTree(self, child);
-        self->setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
-        setChildrenNeedsStyleRecalc(child);
+        if (self->document()->doesParticipateInRendering()) {
+            self->setNeedsStyleRecalc(Node::StyleChangeReason::DOMTreeChange);
+            setChildrenNeedsStyleRecalc(child);
+        }
     }
 }
 
