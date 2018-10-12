@@ -254,7 +254,10 @@ public:
         m_name = name;
     }
 
-    void notifyHasPendingAnimation();
+    uint64_t styleResolveStartTick()
+    {
+        return m_styleResolveStartTick;
+    }
 
 private:
     // Don't call function directly
@@ -317,6 +320,8 @@ private:
     GCVector<HTMLMediaElement*> m_existingMediaElements;
 #endif
     String* m_name;
+
+    uint64_t m_styleResolveStartTick;
 };
 }
 

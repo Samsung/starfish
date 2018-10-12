@@ -373,4 +373,90 @@ bool AnimationUtil::marginLeftToAnimatedValue(ComputedStyle* oldStyle,
     return lengthToAnimatedValue(oldStyle->margin().left(),
                                  newStyle->margin().left(), element, from, to);
 }
+
+bool AnimationUtil::borderLeftToAnimatedValue(ComputedStyle* oldStyle,
+                                              ComputedStyle* newStyle,
+                                              Element* element,
+                                              AnimatedValue& from,
+                                              AnimatedValue& to)
+{
+    return lengthToAnimatedValue(oldStyle->border().left().width(),
+                                 newStyle->border().left().width(), element,
+                                 from, to);
+}
+
+bool AnimationUtil::borderTopToAnimatedValue(ComputedStyle* oldStyle,
+                                             ComputedStyle* newStyle,
+                                             Element* element,
+                                             AnimatedValue& from,
+                                             AnimatedValue& to)
+{
+    return lengthToAnimatedValue(oldStyle->border().top().width(),
+                                 newStyle->border().top().width(), element,
+                                 from, to);
+}
+
+bool AnimationUtil::borderRightToAnimatedValue(ComputedStyle* oldStyle,
+                                               ComputedStyle* newStyle,
+                                               Element* element,
+                                               AnimatedValue& from,
+                                               AnimatedValue& to)
+{
+    return lengthToAnimatedValue(oldStyle->border().right().width(),
+                                 newStyle->border().right().width(), element,
+                                 from, to);
+}
+
+bool AnimationUtil::borderBottomToAnimatedValue(ComputedStyle* oldStyle,
+                                                ComputedStyle* newStyle,
+                                                Element* element,
+                                                AnimatedValue& from,
+                                                AnimatedValue& to)
+{
+    return lengthToAnimatedValue(oldStyle->border().bottom().width(),
+                                 newStyle->border().bottom().width(), element,
+                                 from, to);
+}
+
+bool AnimationUtil::paddingTopToAnimatedValue(ComputedStyle* oldStyle,
+                                              ComputedStyle* newStyle,
+                                              Element* element,
+                                              AnimatedValue& from,
+                                              AnimatedValue& to)
+{
+    return lengthToAnimatedValue(oldStyle->padding().top(),
+                                 newStyle->padding().top(), element, from, to);
+}
+
+bool AnimationUtil::paddingRightToAnimatedValue(ComputedStyle* oldStyle,
+                                                ComputedStyle* newStyle,
+                                                Element* element,
+                                                AnimatedValue& from,
+                                                AnimatedValue& to)
+{
+    return lengthToAnimatedValue(oldStyle->padding().right(),
+                                 newStyle->padding().right(), element, from,
+                                 to);
+}
+
+bool AnimationUtil::paddingBottomToAnimatedValue(ComputedStyle* oldStyle,
+                                                 ComputedStyle* newStyle,
+                                                 Element* element,
+                                                 AnimatedValue& from,
+                                                 AnimatedValue& to)
+{
+    return lengthToAnimatedValue(oldStyle->padding().bottom(),
+                                 newStyle->padding().bottom(), element, from,
+                                 to);
+}
+
+bool AnimationUtil::paddingLeftToAnimatedValue(ComputedStyle* oldStyle,
+                                               ComputedStyle* newStyle,
+                                               Element* element,
+                                               AnimatedValue& from,
+                                               AnimatedValue& to)
+{
+    return lengthToAnimatedValue(oldStyle->padding().left(),
+                                 newStyle->padding().left(), element, from, to);
+}
 }

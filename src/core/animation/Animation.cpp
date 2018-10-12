@@ -20,6 +20,7 @@
 #include "StarFishConfig.h"
 #include "StarFish.h"
 #include "core/animation/Animation.h"
+#include "core/animation/AnimationUtil.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/dom/TransitionEvent.h"
@@ -36,18 +37,6 @@
 
 namespace StarFish {
 
-#define STARFISH_ASSERT_INPUT_LENGTH_FIXED()                         \
-    STARFISH_ASSERT(m_fromValue.isLength() && m_toValue.isLength()); \
-    STARFISH_ASSERT(m_fromValue.getLength().isFixed() &&             \
-                    m_toValue.getLength().isFixed());
-
-#define STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT()              \
-    STARFISH_ASSERT(m_fromValue.isLength() && m_toValue.isLength()); \
-    STARFISH_ASSERT((m_fromValue.getLength().isFixed() &&            \
-                     m_toValue.getLength().isFixed()) ||             \
-                    (m_fromValue.getLength().isPercent() &&          \
-                     m_toValue.getLength().isPercent()));
-
 template <typename T>
 static float interpolate(const T from, const T to, float progress)
 {
@@ -57,90 +46,45 @@ static float interpolate(const T from, const T to, float progress)
     return from - (from - to) * progress;
 }
 
-static bool shouldCancelPrevious(const AnimationTask* oldTask,
-                                 const AnimationTask* newTask)
+void AnimationExecutor::checkActiveAnimationExecutorInWebView()
 {
-    CSSStyleValuePair::KeyKind type = oldTask->propertyType();
-    bool matchBasic = type == newTask->propertyType() &&
-                      oldTask->targetElement() == newTask->targetElement();
-    if (type == CSSStyleValuePair::BackgroundPositionX ||
-        type == CSSStyleValuePair::BackgroundPositionY ||
-        type == CSSStyleValuePair::BackgroundSize) {
-        return matchBasic && oldTask->extraData() == newTask->extraData();
+    auto& v = window()->webView()->m_activeAnimationExecutor;
+
+    if (m_activeAnimations.size()) {
+        for (size_t i = 0; i < v.size(); i++) {
+            if (v[i] == this) {
+                return;
+            }
+        }
+        v.push_back(this);
+    } else {
+        for (size_t i = 0; i < v.size(); i++) {
+            if (v[i] == this) {
+                v.erase(i);
+                return;
+            }
+        }
     }
-    return matchBasic;
 }
 
-#ifndef NDEBUG
-String* AnimatedValue::toString() const
+void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 {
-    if (isColor()) {
-        return getColor().toString();
+    if (m_startTimeMs == 0) {
+        m_startTimeMs = currentTickCount + m_delayMs;
     }
-    if (isLayoutUnit()) {
-        return String::fromInt(getLayoutUnit().toInt());
-    }
-    if (isLength()) {
-        return getLength().dumpString();
-    }
-    if (isLengthSize()) {
-        LengthSize* size = getLengthSize();
-        return String::fromUTF8("(")
-            ->concat(size->width().dumpString())
-            ->concat(", ")
-            ->concat(size->height().dumpString())
-            ->concat(")");
-    }
-    if (isFloat()) {
-        return String::fromFloat(getFloat());
-    }
-    if (isInt()) {
-        return String::fromInt(getInt());
-    }
-    if (isMatrix()) {
-        return String::fromUTF8("matrix");
-    }
-    return String::emptyString;
-}
-#endif
 
-AnimationTask::AnimationTask(Element* target,
-                             CSSStyleValuePair::KeyKind targetProperty,
-                             AnimatedValue from, AnimatedValue to,
-                             float durationInms, float delayInms,
-                             AnimationTimingFunction* timingFunction,
-                             void* data)
-{
-    m_isStartEventFired = false;
-    m_attached = false;
-    m_targetElement = target;
-    m_durationMs = durationInms;
-    m_delayMs = delayInms;
-    m_startTimeMs = 0;
-    m_fromValue = from;
-    m_toValue = to;
-    m_property = targetProperty;
-    m_timingFunction = timingFunction;
-    m_targetPropertyString = CSSPropertyHelper::toGCString(targetProperty);
-    m_extraData = data;
+    float f = 0;
+    if (m_startTimeMs <= currentTickCount) {
+        f = fraction(currentTickCount);
+    }
+
+    execute(computeProgress(f), style);
 }
 
-void AnimationTask::attachedToElement()
+void ActiveAnimationTask::fireStartEvent()
 {
-    m_targetElement->style()->markUsedInAnimator();
-    m_attached = true;
-}
-
-void AnimationTask::detachedFromElement(bool shouldAffectStyle)
-{
-    STARFISH_ASSERT(m_attached);
-}
-
-void AnimationTask::fireStartEvent()
-{
-    m_isStartEventFired = true;
     TransitionEventInit init;
-    init.setPropertyName(m_targetPropertyString);
+    init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
     init.setBubbles(true);
     init.setCancelable(false);
     // TODO add more information to init
@@ -152,10 +96,10 @@ void AnimationTask::fireStartEvent()
     m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
-void AnimationTask::fireEndEvent()
+void ActiveAnimationTask::fireEndEvent()
 {
     TransitionEventInit init;
-    init.setPropertyName(m_targetPropertyString);
+    init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
     init.setBubbles(true);
     init.setCancelable(true);
     // TODO add more information to init
@@ -167,10 +111,10 @@ void AnimationTask::fireEndEvent()
     m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
-void AnimationTask::fireCancelEvent()
+void ActiveAnimationTask::fireCancelEvent()
 {
     TransitionEventInit init;
-    init.setPropertyName(m_targetPropertyString);
+    init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
     init.setBubbles(true);
     init.setCancelable(false);
     // TODO add more information to init
@@ -182,644 +126,30 @@ void AnimationTask::fireCancelEvent()
     m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
-// This function calculte progress value to get intermediate value of animation.
-float AnimationTask::computeProgress(float fraction)
-{
-    STARFISH_ASSERT(fraction >= 0.0f);
-    STARFISH_ASSERT(fraction <= 1.0f);
-    return m_timingFunction->getValue(fraction);
-}
-
-bool AnimationTask::canExecute()
-{
-    return targetElement()->frame() != nullptr &&
-           targetElement()
-               ->isInDocumentScopeAndDocumentParticipateInRendering();
-}
-
-#ifndef NDEBUG
-String* AnimationTask::dumpString() const
-{
-    char temp[100];
-    snprintf(temp, sizeof(temp),
-             "Transition %s on %s[%p] %s (%s -> %s, %dms, delay:%dms)",
-             CSSPropertyHelper::toString(propertyType()),
-             targetElement()->name().localName()->toUTF8NonGCString().data(),
-             targetElement(), targetElement()->frame()->name(),
-             m_fromValue.toString()->toUTF8NonGCString().data(),
-             m_toValue.toString()->toUTF8NonGCString().data(),
-             (int)m_durationMs, (int)m_delayMs);
-    return String::fromUTF8(temp);
-}
-#endif
-
-static void checkNeedsUpdateInheritStyleValues(
-    CSSStyleValuePair::KeyKind keyKind, Element* parentElement,
-    Unit::Color nextColor)
-{
-    ComputedStyle* parentStyle = parentElement->style();
-    Unit::Color parentClr;
-    if (keyKind == CSSStyleValuePair::KeyKind::Color) {
-        parentClr = parentStyle->color();
-    } else if (keyKind == CSSStyleValuePair::KeyKind::CaretColor) {
-        parentClr = parentStyle->caretColor();
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    Node* n = parentElement->firstChild();
-    while (n) {
-        bool isMatch = false;
-        ComputedStyle* childStyle = n->style();
-        if (childStyle->color() == parentClr &&
-            keyKind == CSSStyleValuePair::KeyKind::Color) {
-            isMatch = true;
-        } else if (childStyle->caretColor() == parentClr &&
-                   keyKind == CSSStyleValuePair::KeyKind::CaretColor) {
-            isMatch = true;
-        }
-
-        if (isMatch) {
-            if (n->isElement()) {
-                n->setNeedsStyleRecalc(
-                    Node::StyleChangeReason::JustNeedsRecalcSelf);
-            } else {
-                if (keyKind == CSSStyleValuePair::KeyKind::Color) {
-                    childStyle->setColor(nextColor);
-                } else if (keyKind == CSSStyleValuePair::KeyKind::CaretColor) {
-                    childStyle->setCaretColor(nextColor);
-                }
-            }
-        }
-
-        n = n->nextSibling();
-    }
-}
-
-void ColorAnimationTask::attachedToElement()
-{
-    AnimationTask::attachedToElement();
-
-#define INIT_COLOR_PROPERTY_STYLE(NAME)                              \
-    if (m_property == CSSStyleValuePair::KeyKind::NAME) {            \
-        targetElement()->style()->set##NAME(m_fromValue.getColor()); \
-        return;                                                      \
-    }
-    INIT_COLOR_PROPERTY_STYLE(BackgroundColor)
-    INIT_COLOR_PROPERTY_STYLE(BorderBottomColor)
-    INIT_COLOR_PROPERTY_STYLE(BorderLeftColor)
-    INIT_COLOR_PROPERTY_STYLE(BorderRightColor)
-    INIT_COLOR_PROPERTY_STYLE(BorderTopColor)
-    INIT_COLOR_PROPERTY_STYLE(Color)
-    INIT_COLOR_PROPERTY_STYLE(CaretColor)
-    INIT_COLOR_PROPERTY_STYLE(OutlineColor)
-    INIT_COLOR_PROPERTY_STYLE(TextDecorationColor)
-#undef INIT_COLOR_PROPERTY_STYLE
-}
-
-// This function change computed style of target node.
-// * After this function, NeedsPainting flag will be set.
-void ColorAnimationTask::execute(float progress)
-{
-    Unit::Color from = m_fromValue.getColor();
-    Unit::Color to = m_toValue.getColor();
-
-    Element* current = targetElement();
-    ComputedStyle* style = current->style();
-
-    // It is arbitrary logic which I made for testing
-    unsigned char r = from.r() * (1 - progress) + to.r() * progress;
-    unsigned char g = from.g() * (1 - progress) + to.g() * progress;
-    unsigned char b = from.b() * (1 - progress) + to.b() * progress;
-    unsigned char a = from.a();
-
-    if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
-        style->setBackgroundColor(Unit::Color(r, g, b, a));
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottomColor) {
-        style->setBorderBottomColor(Unit::Color(r, g, b, a));
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeftColor) {
-        style->setBorderLeftColor(Unit::Color(r, g, b, a));
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRightColor) {
-        style->setBorderRightColor(Unit::Color(r, g, b, a));
-    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTopColor) {
-        style->setBorderTopColor(Unit::Color(r, g, b, a));
-    } else if (m_property == CSSStyleValuePair::KeyKind::Color) {
-        checkNeedsUpdateInheritStyleValues(CSSStyleValuePair::KeyKind::Color,
-                                           current, Unit::Color(r, g, b, a));
-        style->setColor(Unit::Color(r, g, b, a));
-    } else if (m_property == CSSStyleValuePair::KeyKind::CaretColor) {
-        checkNeedsUpdateInheritStyleValues(
-            CSSStyleValuePair::KeyKind::CaretColor, current,
-            Unit::Color(r, g, b, a));
-        style->setCaretColor(Unit::Color(r, g, b, a));
-    } else if (m_property == CSSStyleValuePair::KeyKind::OutlineColor) {
-        style->setOutlineColor(Unit::Color(r, g, b, a));
-    } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
-        style->setTextDecorationColor(Unit::Color(r, g, b, a));
-    } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
-    current->setNeedsPainting();
-}
-
-void LengthAnimationTask::computeToValue()
-{
-    if (m_property == CSSStyleValuePair::KeyKind::Width) {
-        LayoutUnit currentWidth =
-            targetElement()->frame()->asFrameBox()->width();
-        if (targetElement()->style()->boxSizing() ==
-            BoxSizingValue::ContentBoxBoxSizingValue) {
-            currentWidth =
-                targetElement()->frame()->asFrameBox()->contentWidth();
-        }
-
-        m_toFixedValue = currentWidth;
-        targetElement()->style()->setWidth(
-            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-    } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
-        LayoutUnit currentHeight =
-            targetElement()->frame()->asFrameBox()->height();
-        if (targetElement()->style()->boxSizing() ==
-            BoxSizingValue::ContentBoxBoxSizingValue) {
-            currentHeight =
-                targetElement()->frame()->asFrameBox()->contentHeight();
-        }
-
-        m_toFixedValue = currentHeight;
-        targetElement()->style()->setHeight(
-            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-    } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
-        FrameBox* cb = containingBlock(targetElement()->frame());
-        m_toFixedValue =
-            targetElement()->frame()->style()->minWidth().specifiedValue(
-                cb->contentWidth(), targetElement()->frame());
-        targetElement()->style()->setMinWidth(
-            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-    } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
-        FrameBox* cb = containingBlock(targetElement()->frame());
-        m_toFixedValue =
-            targetElement()->frame()->style()->minHeight().specifiedValue(
-                cb->contentHeight(), targetElement()->frame());
-        targetElement()->style()->setMinHeight(
-            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-    } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
-        FrameBox* cb = containingBlock(targetElement()->frame());
-        m_toFixedValue =
-            targetElement()->frame()->style()->maxWidth().specifiedValue(
-                cb->contentWidth(), targetElement()->frame());
-        targetElement()->style()->setMaxWidth(
-            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-    } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
-        FrameBox* cb = containingBlock(targetElement()->frame());
-        m_toFixedValue =
-            targetElement()->frame()->style()->maxHeight().specifiedValue(
-                cb->contentHeight(), targetElement()->frame());
-        targetElement()->style()->setMaxHeight(
-            Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-    targetElement()->setNeedsLayout();
-}
-
-void LengthAnimationTask::attachedToElement()
-{
-    AnimationTask::attachedToElement();
-
-    if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
-        targetElement()->style()->setBackgroundPositionX(
-            m_fromValue.getLength(), (size_t)m_extraData);
-        return;
-    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
-        targetElement()->style()->setBackgroundPositionY(
-            m_fromValue.getLength(), (size_t)m_extraData);
-        return;
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
-        targetElement()->style()->setMarginBottom(m_fromValue.getLength());
-        return;
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
-        targetElement()->style()->setMarginLeft(m_fromValue.getLength());
-        return;
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
-        targetElement()->style()->setMarginRight(m_fromValue.getLength());
-        return;
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
-        targetElement()->style()->setMarginTop(m_fromValue.getLength());
-        return;
-    }
-#define GEN_SIDE(Side)                                                \
-    else if (m_property == CSSStyleValuePair::KeyKind::Side)          \
-    {                                                                 \
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();                         \
-        targetElement()->style()->set##Side(m_fromValue.getLength()); \
-        return;                                                       \
-    }
-    GEN_SIDE(Left)
-    GEN_SIDE(Right)
-    GEN_SIDE(Top)
-    GEN_SIDE(Bottom)
-#undef GEN_SIDE
-
-    if (m_toValue.getLength().isDefinite(false)) {
-        m_toFixedValue =
-            m_toValue.getLength().specifiedValue(0, targetElement()->frame());
-
-        if (m_property == CSSStyleValuePair::KeyKind::Width) {
-            targetElement()->style()->setWidth(
-                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-        } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
-            targetElement()->style()->setHeight(
-                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-        } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
-            targetElement()->style()->setMinWidth(
-                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-        } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
-            targetElement()->style()->setMinHeight(
-                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-        } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
-            targetElement()->style()->setMaxWidth(
-                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-        } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
-            targetElement()->style()->setMaxHeight(
-                Length(Length::Fixed, (float)m_fromValue.getLayoutUnit()));
-        } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
-        }
-    } else {
-        targetElement()
-            ->document()
-            ->browsingContext()
-            ->webView()
-            ->addDidLayoutCallback(
-                [](void* data) -> bool {
-                    LengthAnimationTask* task = (LengthAnimationTask*)data;
-                    task->computeToValue();
-                    return true;
-                },
-                this);
-    }
-}
-
-Length LengthAnimationTask::interpolateLayoutUnit(float progress) const
-{
-    return Length(Length::Fixed, interpolate(m_fromValue.getLayoutUnit(),
-                                             m_toFixedValue, progress));
-}
-
-Length LengthAnimationTask::interpolateLength(float progress) const
-{
-    const Length& from = m_fromValue.getLength();
-    const Length& to = m_toValue.getLength();
-    STARFISH_ASSERT(from.type() == to.type());
-    STARFISH_ASSERT(from.type() != Length::Auto);
-    return Length(from.type(),
-                  interpolate(from.numberData(), to.numberData(), progress));
-}
-
-void LengthAnimationTask::execute(float progress)
-{
-    Element* current = targetElement();
-    ComputedStyle* style = current->style();
-    if (m_property == CSSStyleValuePair::KeyKind::Width) {
-        style->setWidth(interpolateLayoutUnit(progress));
-        current->setNeedsLayout();
-    } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
-        style->setHeight(interpolateLayoutUnit(progress));
-        current->setNeedsLayout();
-    } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
-        style->setMinWidth(interpolateLayoutUnit(progress));
-        current->setNeedsLayout();
-    } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
-        style->setMinHeight(interpolateLayoutUnit(progress));
-        current->setNeedsLayout();
-    } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
-        style->setMaxWidth(interpolateLayoutUnit(progress));
-        current->setNeedsLayout();
-    } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
-        style->setMaxHeight(interpolateLayoutUnit(progress));
-        current->setNeedsLayout();
-    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
-        style->setBackgroundPositionX(interpolateLength(progress),
-                                      (size_t)m_extraData);
-        current->setNeedsPainting();
-    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT();
-        style->setBackgroundPositionY(interpolateLength(progress),
-                                      (size_t)m_extraData);
-        current->setNeedsPainting();
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
-        style->setMarginBottom(interpolateLength(progress));
-        current->setNeedsLayout();
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
-        style->setMarginLeft(interpolateLength(progress));
-        current->setNeedsLayout();
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
-        style->setMarginRight(interpolateLength(progress));
-        current->setNeedsLayout();
-    } else if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();
-        style->setMarginTop(interpolateLength(progress));
-        current->setNeedsLayout();
-    }
-#define GEN_SIDE(Side)                                       \
-    else if (m_property == CSSStyleValuePair::KeyKind::Side) \
-    {                                                        \
-        STARFISH_ASSERT_INPUT_LENGTH_FIXED();                \
-        style->set##Side(interpolateLength(progress));       \
-        current->setNeedsLayout();                           \
-    }
-    GEN_SIDE(Left)
-    GEN_SIDE(Right)
-    GEN_SIDE(Top)
-    GEN_SIDE(Bottom)
-#undef GEN_SIDE
-    else
-    {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-}
-
-void LengthAnimationTask::detachedFromElement(bool shouldAffectStyle)
-{
-    AnimationTask::detachedFromElement(shouldAffectStyle);
-    if (canExecute() && shouldAffectStyle) {
-        execute(computeProgress(1.0));
-        return;
-    }
-}
-
-void LengthSizeAnimationTask::attachedToElement()
-{
-    STARFISH_ASSERT(m_fromValue.isLengthSize() && m_toValue.isLengthSize());
-    STARFISH_ASSERT(m_fromValue.getLengthSize()->width().type() ==
-                    m_toValue.getLengthSize()->width().type());
-    STARFISH_ASSERT(m_fromValue.getLengthSize()->height().type() ==
-                    m_toValue.getLengthSize()->height().type());
-
-    AnimationTask::attachedToElement();
-    if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
-        targetElement()->style()->setBackgroundSize(
-            *m_fromValue.getLengthSize(), (size_t)m_extraData);
-        return;
-    }
-}
-
-LengthSize LengthSizeAnimationTask::interpolateLength(float progress) const
-{
-#define INTERPOLATE_LENGTHSIZE(WH)                                 \
-    Length(from->WH().type(), interpolate(from->WH().numberData(), \
-                                          to->WH().numberData(), progress))
-
-    LengthSize* from = m_fromValue.getLengthSize();
-    LengthSize* to = m_toValue.getLengthSize();
-    STARFISH_ASSERT(from->width().type() == to->width().type());
-    STARFISH_ASSERT(from->height().type() == to->height().type());
-    STARFISH_ASSERT(from->width().type() != Length::Auto ||
-                    from->height().type() != Length::Auto);
-    // NOTE
-    // (O) FROM(!auto, !auto) -> TO(!auto, !auto)
-    // (O) FROM(auto, !auto) -> TO(auto, !auto)
-    // (O) FROM(!auto, auto) -> TO(!auto, auto)
-    // (X) FROM(auto, auto) -> TO(auto, auto)
-    // (X) FROM(auto, !auto) -> TO(!auto, auto)
-    // (X) FROM(!auto, auto) -> TO(auto, !auto)
-    if (from->width().type() == Length::Auto) {
-        return LengthSize(Length(), INTERPOLATE_LENGTHSIZE(height));
-    } else if (from->height().type() == Length::Auto) {
-        return LengthSize(INTERPOLATE_LENGTHSIZE(width), Length());
-    }
-    return LengthSize(INTERPOLATE_LENGTHSIZE(width),
-                      INTERPOLATE_LENGTHSIZE(height));
-#undef INTERPOLATE_LENGTHSIZE
-}
-
-void LengthSizeAnimationTask::execute(float progress)
-{
-    Element* current = targetElement();
-    ComputedStyle* style = current->style();
-    if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
-        style->setBackgroundSize(interpolateLength(progress),
-                                 (size_t)m_extraData);
-    } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    }
-
-    current->setNeedsLayout();
-}
-
-void LengthSizeAnimationTask::detachedFromElement(bool shouldAffectStyle)
-{
-    AnimationTask::detachedFromElement(shouldAffectStyle);
-    if (canExecute() && shouldAffectStyle) {
-        execute(computeProgress(1.0));
-        return;
-    }
-}
-
-OpacityAnimationTask::OpacityAnimationTask(
-    Element* target, AnimatedValue fromValue, AnimatedValue toValue,
-    float duration, float delay, AnimationTimingFunction* timingFunction,
-    void* data)
-    : AnimationTask(target, CSSStyleValuePair::KeyKind::Opacity, fromValue,
-                    toValue, duration, delay, timingFunction, data)
-{
-}
-
-void OpacityAnimationTask::attachedToElement()
-{
-    AnimationTask::attachedToElement();
-    targetElement()->markRunningOpacityAnimation();
-
-    Element* current = targetElement();
-    ComputedStyle* style = current->style();
-    Frame* frame = current->frame();
-    if (!frame) {
-        return;
-    }
-
-    if (frame->isFrameInline()) {
-        Frame* cbSofar = frame->parent();
-        style->setOpacity(m_fromValue.getFloat());
-        while (cbSofar) {
-            if (cbSofar->isFrameBlockBox() && !cbSofar->isAnonymous()) {
-                break;
-            }
-            cbSofar = cbSofar->parent();
-        }
-        if (cbSofar) {
-            FrameBox* cb = cbSofar->asFrameBox();
-            cb->iterateChildFrameBox([&](FrameBox* box) {
-                if (box->isInlineNonReplacedBox() &&
-                    box->asInlineNonReplacedBox()->origin() == frame) {
-                    bool before = box->isEstablishesStackingContext();
-                    bool canOwnBefore =
-                        box->isFrameBox() &&
-                        box->asFrameBox()->canOwnsStackingContext();
-                    box->computeStyleFlags();
-                    bool after = box->isEstablishesStackingContext();
-                    bool canOwnAfter =
-                        box->isFrameBox() &&
-                        box->asFrameBox()->canOwnsStackingContext();
-
-                    opacityUpdated(before != after ||
-                                   canOwnBefore != canOwnAfter);
-                }
-            });
-        }
-        return;
-    }
-
-    bool before = frame->isEstablishesStackingContext();
-    bool canOwnBefore =
-        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-    style->setOpacity(m_fromValue.getFloat());
-    frame->computeStyleFlags();
-    bool after = frame->isEstablishesStackingContext();
-    bool canOwnAfter =
-        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-    if (before != after || canOwnBefore != canOwnAfter) {
-        targetElement()->webView()->setNeedsEstablishesStackingContext();
-    }
-    opacityUpdated(before != after || canOwnBefore != canOwnAfter);
-}
-
-void OpacityAnimationTask::opacityUpdated(bool updateStackingContext)
-{
-    Element* current = targetElement();
-    Frame* frame = current->frame();
-
-    if (updateStackingContext) {
-        targetElement()->webView()->setNeedsEstablishesStackingContext();
-    } else {
-        targetElement()->webView()->setNeedsComputeStackingContextProperties();
-    }
-
-    if (frame->isFrameBox() && frame->asFrameBox()->stackingContext() &&
-        frame->asFrameBox()->stackingContext()->needsGraphicsBuffer()) {
-        targetElement()->setNeedsComposite();
-    } else {
-        targetElement()->setNeedsPainting();
-    }
-}
-
-void OpacityAnimationTask::detachedFromElement(bool shouldAffectStyle)
-{
-    AnimationTask::detachedFromElement(shouldAffectStyle);
-
-    Element* current = targetElement();
-    current->clearRunningOpacityAnimation();
-
-    Frame* frame = current->frame();
-    ComputedStyle* style = current->style();
-    if (!frame) {
-        return;
-    }
-
-    if (frame->isFrameInline()) {
-        Frame* cbSofar = frame->parent();
-        style->setOpacity(m_toValue.getFloat());
-        while (cbSofar) {
-            if (cbSofar->isFrameBlockBox() && !cbSofar->isAnonymous()) {
-                break;
-            }
-            cbSofar = cbSofar->parent();
-        }
-        if (cbSofar) {
-            FrameBox* cb = cbSofar->asFrameBox();
-            cb->iterateChildFrameBox([&](FrameBox* box) {
-                if (box->isInlineNonReplacedBox() &&
-                    box->asInlineNonReplacedBox()->origin() == frame) {
-                    bool before = box->isEstablishesStackingContext();
-                    bool canOwnBefore =
-                        box->isFrameBox() &&
-                        box->asFrameBox()->canOwnsStackingContext();
-                    if (shouldAffectStyle) {
-                        box->computeStyleFlags();
-                    }
-                    bool after = box->isEstablishesStackingContext();
-                    bool canOwnAfter =
-                        box->isFrameBox() &&
-                        box->asFrameBox()->canOwnsStackingContext();
-
-                    if (shouldAffectStyle) {
-                        opacityUpdated(before != after ||
-                                       canOwnBefore != canOwnAfter);
-                    }
-                }
-            });
-        }
-        return;
-    }
-
-    bool before = frame->isEstablishesStackingContext();
-    bool canOwnBefore =
-        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-    if (shouldAffectStyle) {
-        style->setOpacity(m_toValue.getFloat());
-        frame->computeStyleFlags();
-    }
-    bool after = frame->isEstablishesStackingContext();
-    bool canOwnAfter =
-        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-
-    if (shouldAffectStyle) {
-        opacityUpdated(before != after || canOwnBefore != canOwnAfter);
-    } else {
-        targetElement()->setNeedsPainting();
-    }
-}
-
-void OpacityAnimationTask::execute(float progress)
+void ActiveOpacityAnimationTask::execute(float progress, ComputedStyle* style)
 {
     float from = m_fromValue.getFloat();
     float to = m_toValue.getFloat();
-
-    Element* current = targetElement();
-    Frame* frame = current->frame();
     float newOpacity = from * (1 - progress) + to * progress;
-
-    if (frame->isFrameInline()) {
-        Frame* cbSofar = frame->parent();
-        while (cbSofar) {
-            if (cbSofar->isFrameBlockBox() && !cbSofar->isAnonymous()) {
-                break;
-            }
-            cbSofar = cbSofar->parent();
-        }
-        if (cbSofar) {
-            FrameBox* cb = cbSofar->asFrameBox();
-            cb->iterateChildFrameBox([&](FrameBox* box) {
-                if (box->isInlineNonReplacedBox() &&
-                    box->asInlineNonReplacedBox()->origin() == frame) {
-                    box->style()->markUsedInAnimator();
-                    box->style()->setOpacity(newOpacity);
-                    targetElement()->setNeedsComposite();
-                }
-            });
-        }
-        return;
-    }
-
-    bool before = frame->isEstablishesStackingContext();
-    bool canOwnBefore =
-        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-    ComputedStyle* style = current->style();
     style->setOpacity(newOpacity);
-    frame->computeStyleFlags();
-    bool after = frame->isEstablishesStackingContext();
-    bool canOwnAfter =
-        frame->isFrameBox() && frame->asFrameBox()->canOwnsStackingContext();
-    opacityUpdated(before != after || canOwnBefore != canOwnAfter);
+}
+
+bool ActiveOpacityAnimationTask::taskCanContinue(ComputedStyle* newStyle)
+{
+    if (newStyle->opacity() != m_toValue.getFloat()) {
+        return false;
+    }
+    return true;
+}
+
+void ActiveOpacityAnimationTask::attachToElement(ComputedStyle* style)
+{
+    m_targetElement->markRunningOpacityAnimation();
+}
+
+void ActiveOpacityAnimationTask::detachFromElement(ComputedStyle* style)
+{
+    m_targetElement->clearRunningOpacityAnimation();
 }
 
 inline double rad2deg(double rad)
@@ -833,7 +163,8 @@ inline double deg2rad(float degree)
 }
 
 /// https://drafts.csswg.org/css-transforms/#decomposing-a-2d-matrix
-static MatrixDecomposed2D decomposing2DMatrix(const SkMatrix& matrix)
+static ActiveTransformAnimationTask::MatrixDecomposed2D decomposing2DMatrix(
+    const SkMatrix& matrix)
 {
     // 0(row0x) 1(row1x) 2
     // 3(row0y) 4(row1y) 5
@@ -888,7 +219,7 @@ static MatrixDecomposed2D decomposing2DMatrix(const SkMatrix& matrix)
         row1y = -sn * m12 + cs * m22;
     }
 
-    MatrixDecomposed2D ret;
+    ActiveTransformAnimationTask::MatrixDecomposed2D ret;
     ret.matrixM11 = row0x;
     ret.matrixM12 = row0y;
     ret.matrixM21 = row1x;
@@ -903,8 +234,9 @@ static MatrixDecomposed2D decomposing2DMatrix(const SkMatrix& matrix)
     return ret;
 }
 
-static void matrixInterpolationPreprocessing(MatrixDecomposed2D& a,
-                                             MatrixDecomposed2D& b)
+static void matrixInterpolationPreprocessing(
+    ActiveTransformAnimationTask::MatrixDecomposed2D& a,
+    ActiveTransformAnimationTask::MatrixDecomposed2D& b)
 {
     // If x-axis of one is flipped, and y-axis of the other,
     // convert to an unflipped rotation.
@@ -933,7 +265,8 @@ static void matrixInterpolationPreprocessing(MatrixDecomposed2D& a,
 }
 
 // https://drafts.csswg.org/css-transforms/#recomposing-to-a-2d-matrix
-static SkMatrix recomposing2DMatrix(const MatrixDecomposed2D& decomposed)
+static SkMatrix recomposing2DMatrix(
+    const ActiveTransformAnimationTask::MatrixDecomposed2D& decomposed)
 {
     SkMatrix matrix = SkMatrix::I();
 
@@ -976,127 +309,35 @@ static SkMatrix recomposing2DMatrix(const MatrixDecomposed2D& decomposed)
     return newMatrix;
 }
 
-TransformAnimationTask::TransformAnimationTask(
-    Element* target, AnimatedValue fromValue, float duration, float delay,
-    AnimationTimingFunction* timingFunction)
-    : AnimationTask(target, CSSStyleValuePair::KeyKind::Transform, fromValue,
-                    AnimatedValue(), duration, delay, timingFunction)
-    , m_decomposedFrom(decomposing2DMatrix(fromValue.getMatrix()))
+ActiveTransformAnimationTask::ActiveTransformAnimationTask(
+    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
+    uint64_t delayInms, AnimationTimingFunction* timingFunction,
+    StyleTransformDataGroup* orgTransformValue)
+    : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
+                          delayInms, timingFunction)
+    , m_originalTransformValue(nullptr)
+    , m_decomposedFrom(decomposing2DMatrix(m_fromValue.getMatrix()))
+    , m_decomposedTo(decomposing2DMatrix(m_toValue.getMatrix()))
 {
-    target->style()->rareComputedStyleData()->ensureTransforms();
-}
-
-void TransformAnimationTask::computeToValue()
-{
-    FrameBox* box = targetElement()->frame()->asFrameBox();
-    SkMatrix matrix = box->style()->transformsToMatrix(
-        box->width(), box->height(), box, true);
-    m_toValue = AnimatedValue(matrix);
-    m_decomposedTo = decomposing2DMatrix(m_toValue.getMatrix());
-
-    matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
-
-    Element* current = targetElement();
-    ComputedStyle* style = current->style();
-
-    bool needsToRecomputeStackingContext = false;
-    if (!style->hasTransforms() || style->transforms(box)->size() == 0) {
-        // NOTE
-        // having transform is reason of creating StackingContext
-        needsToRecomputeStackingContext = true;
-    }
-
-    style->rareComputedStyleData()->ensureTransforms()->append(
-        StyleTransformData(StyleTransformData::InternalMatrix));
-
-    if (needsToRecomputeStackingContext) {
-        box->computeStyleFlags();
-        current->webView()->setNeedsEstablishesStackingContext();
-    }
-
-    execute(0);
-}
-
-void TransformAnimationTask::attachedToElement()
-{
-    AnimationTask::attachedToElement();
-    targetElement()->markRunningTransformAnimation();
-    targetElement()
-        ->document()
-        ->browsingContext()
-        ->webView()
-        ->addDidLayoutCallback(
-            [](void* data) {
-                TransformAnimationTask* task = (TransformAnimationTask*)data;
-                task->computeToValue();
-                return false;
-            },
-            this);
-}
-
-void TransformAnimationTask::detachedFromElement(bool shouldAffectStyle)
-{
-    AnimationTask::detachedFromElement(shouldAffectStyle);
-
-    Element* current = targetElement();
-
-    if (shouldAffectStyle) {
-        ComputedStyle* style = current->style();
-
-        if (style && style->hasTransforms() && current->frame()) {
-            FrameBox* box = current->frame()->asFrameBox();
-            auto transforms = style->rareComputedStyleData()->transforms();
-            if (transforms->at(transforms->size() - 1).type() ==
-                StyleTransformData::InternalMatrix) {
-                // cleanup
-                transforms->removeAt(transforms->size() - 1);
-                if (transforms->size() == 0) {
-                    current->webView()->setNeedsEstablishesStackingContext();
-                    style->clearTransform();
-                    box->computeStyleFlags();
-                    current->setNeedsPainting();
-                } else {
-                    current->webView()
-                        ->setNeedsComputeStackingContextProperties();
-                    STARFISH_RELEASE_ASSERT(
-                        transforms->at(transforms->size() - 1).type() !=
-                        StyleTransformData::InternalMatrix);
-                }
-            }
+    if (orgTransformValue) {
+        StyleTransformDataGroup* newOrgData = new StyleTransformDataGroup();
+        for (size_t i = 0; i < orgTransformValue->size(); i++) {
+            newOrgData->append(orgTransformValue->at(i));
         }
-
-        current->setNeedsStyleRecalc();
-    } else {
-        current->webView()->setNeedsEstablishesStackingContext();
-        current->setNeedsPainting();
+        m_originalTransformValue = newOrgData;
     }
-    current->clearRunningTransformAnimation();
+    matrixInterpolationPreprocessing(m_decomposedFrom, m_decomposedTo);
 }
 
-void TransformAnimationTask::execute(float progress)
+void ActiveTransformAnimationTask::execute(float progress, ComputedStyle* style)
 {
     SkMatrix from = m_fromValue.getMatrix();
     SkMatrix to = m_toValue.getMatrix();
-
     Element* current = targetElement();
-    ComputedStyle* style = current->style();
-    if (!style->rareComputedStyleData() ||
-        style->rareComputedStyleData()->transforms() == nullptr ||
-        style->rareComputedStyleData()->transforms()->size() == 0 ||
-        style->rareComputedStyleData()
-                ->transforms()
-                ->at(style->rareComputedStyleData()->transforms()->size() - 1)
-                .type() != StyleTransformData::InternalMatrix) {
-        computeToValue();
-    }
     auto transforms = style->rareComputedStyleData()->transforms();
-    STARFISH_RELEASE_ASSERT(transforms->at(transforms->size() - 1).type() ==
-                            StyleTransformData::InternalMatrix);
-
-    StyleTransformData& data = transforms->at(transforms->size() - 1);
 
     MatrixDecomposed2D now;
-
     now.angle = m_decomposedFrom.angle * (1 - progress) +
                 m_decomposedTo.angle * progress;
     now.matrixM11 = m_decomposedFrom.matrixM11 * (1 - progress) +
@@ -1116,343 +357,1286 @@ void TransformAnimationTask::execute(float progress)
     now.translateY = m_decomposedFrom.translateY * (1 - progress) +
                      m_decomposedTo.translateY * progress;
 
-    data.setInternalMatrix(recomposing2DMatrix(now));
-    current->webView()->setNeedsComputeStackingContextProperties();
+    auto transform = new StyleTransformDataGroup();
+    SkMatrix newMatrix = recomposing2DMatrix(now);
+
+    StyleTransformData m(StyleTransformData::OperationType::Matrix);
+    m.setMatrix(newMatrix[0], newMatrix[3], newMatrix[1], newMatrix[4],
+                newMatrix[2], newMatrix[5]);
+
+    transform->append(m);
+    style->setTransform(transform);
 }
 
-// [NOTICE]
-// registerAnimation will be replaced 'createAnimation'
-// Creation of AnimationTask will happen in Animation Executor.
-void AnimationExecutor::registerAnimation(AnimationTask* newTask)
+bool ActiveTransformAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
-    startIfNeeds();
-    cancelPreviousAnimationIfNeeded(newTask);
-    m_animationList.push_back(newTask);
+    if (newStyle->transforms() == nullptr) {
+        if (m_originalTransformValue == nullptr) {
+            return true;
+        }
+        return false;
+    }
+    if (m_originalTransformValue == nullptr) {
+        if (newStyle->transforms() == nullptr) {
+            return true;
+        }
+        return false;
+    }
+    if (*newStyle->transforms() != *m_originalTransformValue) {
+        return false;
+    }
+    return true;
 }
 
-// This function cancel previous animation
-// which is related taget node and its property.
-// * This function is called when we need new animation.
-void AnimationExecutor::cancelPreviousAnimationIfNeeded(AnimationTask* newTask)
+void ActiveTransformAnimationTask::attachToElement(ComputedStyle* style)
 {
-    GCVector<AnimationTask*> deletedTasks;
+    m_targetElement->markRunningTransformAnimation();
+}
 
-    // fire end event
-    m_animationList.erase(
-        std::remove_if(m_animationList.begin(), m_animationList.end(),
-                       [&newTask, &deletedTasks](AnimationTask* current) {
-                           if (shouldCancelPrevious(current, newTask)) {
-                               if (current->m_attached) {
-                                   current->detachedFromElement(false);
-                               }
-                               if (current->m_isStartEventFired) {
-                                   deletedTasks.push_back(current);
-                               }
-                               return true;
-                           }
-                           return false;
-                       }),
-        m_animationList.end());
+void ActiveTransformAnimationTask::detachFromElement(ComputedStyle* style)
+{
+    m_targetElement->clearRunningTransformAnimation();
+}
 
-    for (size_t i = 0; i < deletedTasks.size(); i++) {
-        deletedTasks[i]->fireCancelEvent();
+void ActiveColorAnimationTask::execute(float progress, ComputedStyle* style)
+{
+    Unit::Color from = m_fromValue.getColor();
+    Unit::Color to = m_toValue.getColor();
+
+    unsigned char r = from.r() * (1 - progress) + to.r() * progress;
+    unsigned char g = from.g() * (1 - progress) + to.g() * progress;
+    unsigned char b = from.b() * (1 - progress) + to.b() * progress;
+    unsigned char a = from.a() * (1 - progress) + to.a() * progress;
+
+    if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
+        style->setBackgroundColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottomColor) {
+        style->setBorderBottomColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeftColor) {
+        style->setBorderLeftColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRightColor) {
+        style->setBorderRightColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTopColor) {
+        style->setBorderTopColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::Color) {
+        style->setColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::CaretColor) {
+        style->setCaretColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::OutlineColor) {
+        style->setOutlineColor(Unit::Color(r, g, b, a));
+    } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
+        style->setTextDecorationColor(Unit::Color(r, g, b, a));
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 }
 
-// This function clear All animation which is related target node.
-void AnimationExecutor::cancelAnimation(Element* target)
+bool ActiveColorAnimationTask::taskCanContinue(ComputedStyle* newStyle)
 {
-    GCVector<AnimationTask*> deletedTasks;
-    m_animationList.erase(
-        std::remove_if(m_animationList.begin(), m_animationList.end(),
-                       [&target, &deletedTasks](AnimationTask* current) {
-                           if (current->targetElement() == target) {
-                               if (current->m_attached) {
-                                   current->detachedFromElement(false);
-                               }
-                               if (current->m_isStartEventFired) {
-                                   deletedTasks.push_back(current);
-                               }
-                               return true;
-                           }
-                           return false;
-                       }),
-        m_animationList.end());
+    if (m_property == CSSStyleValuePair::KeyKind::BackgroundColor) {
+        if (newStyle->backgroundColor() == m_toValue.getColor()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottomColor) {
+        if (newStyle->border().bottom().color() == m_toValue.getColor()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeftColor) {
+        if (newStyle->border().left().color() == m_toValue.getColor()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRightColor) {
+        if (newStyle->border().right().color() == m_toValue.getColor()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTopColor) {
+        if (newStyle->border().top().color() == m_toValue.getColor()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::Color) {
+        if (newStyle->color() == m_toValue.getColor()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::CaretColor) {
+        if (newStyle->caretColor() == m_toValue.getColor()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::OutlineColor) {
+        if (newStyle->outlineColor() == m_toValue.getColor()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::TextDecorationColor) {
+        if (newStyle->textDecorationColor() == m_toValue.getColor()) {
+            return true;
+        }
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    return false;
+}
 
-    for (size_t i = 0; i < deletedTasks.size(); i++) {
-        deletedTasks[i]->fireCancelEvent();
+ActiveLengthAnimationTask::ActiveLengthAnimationTask(
+    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
+    uint64_t delayInms, AnimationTimingFunction* timingFunction,
+    Length originalToValue, size_t indexForBgLayer)
+    : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
+                          delayInms, timingFunction)
+    , m_originalToValue(originalToValue)
+    , m_indexForBgLayer(indexForBgLayer)
+{
+}
+
+void ActiveLengthAnimationTask::execute(float progress, ComputedStyle* style)
+{
+    Length newLength;
+    if (m_toValue.getLength().isPercent()) {
+        float fromPercent = m_fromValue.getLength().percent();
+        float toPercent = m_toValue.getLength().percent();
+        newLength = Length(Length::Percent,
+                           interpolate(fromPercent, toPercent, progress));
+    } else {
+        float fromFixed = m_fromValue.getLength().fixed();
+        float toFixed = m_toValue.getLength().fixed();
+        newLength =
+            Length(Length::Fixed, interpolate(fromFixed, toFixed, progress));
+    }
+
+    if (m_property == CSSStyleValuePair::KeyKind::Width) {
+        style->setWidth(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
+        style->setHeight(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
+        style->setMarginTop(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
+        style->setMarginRight(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
+        style->setMarginBottom(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
+        style->setMarginLeft(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
+        style->setMinWidth(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
+        style->setMinHeight(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
+        style->setMaxWidth(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
+        style->setMaxHeight(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingTop) {
+        style->setPaddingTop(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingRight) {
+        style->setPaddingRight(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingBottom) {
+        style->setPaddingBottom(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingLeft) {
+        style->setPaddingLeft(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTop) {
+        style->setBorderTopWidth(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRight) {
+        style->setBorderRightWidth(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottom) {
+        style->setBorderBottomWidth(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeft) {
+        style->setBorderLeftWidth(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::Left) {
+        style->setLeft(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::Top) {
+        style->setTop(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::Right) {
+        style->setRight(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::Bottom) {
+        style->setBottom(newLength);
+    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
+        style->setBackgroundPositionX(newLength, m_indexForBgLayer);
+    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
+        style->setBackgroundPositionY(newLength, m_indexForBgLayer);
     }
 }
 
-void AnimationExecutor::cancelDisappearedAnimation(Element* target,
-                                                   ComputedStyle* newStyle)
+bool ActiveLengthAnimationTask::isKindOfTransitionProperty(
+    CSSStyleValuePair::KeyKind k)
 {
+    if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
+        if (k == CSSStyleValuePair::KeyKind::MarginTop ||
+            k == CSSStyleValuePair::KeyKind::Margin) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
+        if (k == CSSStyleValuePair::KeyKind::MarginRight ||
+            k == CSSStyleValuePair::KeyKind::Margin) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
+        if (k == CSSStyleValuePair::KeyKind::MarginBottom ||
+            k == CSSStyleValuePair::KeyKind::Margin) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
+        if (k == CSSStyleValuePair::KeyKind::MarginLeft ||
+            k == CSSStyleValuePair::KeyKind::Margin) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTop) {
+        if (k == CSSStyleValuePair::KeyKind::BorderTop ||
+            k == CSSStyleValuePair::KeyKind::Border) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRight) {
+        if (k == CSSStyleValuePair::KeyKind::BorderRight ||
+            k == CSSStyleValuePair::KeyKind::Border) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottom) {
+        if (k == CSSStyleValuePair::KeyKind::BorderBottom ||
+            k == CSSStyleValuePair::KeyKind::Border) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeft) {
+        if (k == CSSStyleValuePair::KeyKind::BorderLeft ||
+            k == CSSStyleValuePair::KeyKind::Border) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingTop) {
+        if (k == CSSStyleValuePair::KeyKind::PaddingTop ||
+            k == CSSStyleValuePair::KeyKind::Padding) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingRight) {
+        if (k == CSSStyleValuePair::KeyKind::PaddingRight ||
+            k == CSSStyleValuePair::KeyKind::Padding) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingBottom) {
+        if (k == CSSStyleValuePair::KeyKind::PaddingBottom ||
+            k == CSSStyleValuePair::KeyKind::Padding) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingLeft) {
+        if (k == CSSStyleValuePair::KeyKind::PaddingLeft ||
+            k == CSSStyleValuePair::KeyKind::Padding) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
+        if (k == CSSStyleValuePair::KeyKind::BackgroundPositionX ||
+            k == CSSStyleValuePair::KeyKind::BackgroundPosition ||
+            k == CSSStyleValuePair::KeyKind::Background) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
+        if (k == CSSStyleValuePair::KeyKind::BackgroundPositionY ||
+            k == CSSStyleValuePair::KeyKind::BackgroundPosition ||
+            k == CSSStyleValuePair::KeyKind::Background) {
+            return true;
+        }
+    } else {
+        return m_property == k;
+    }
+    return false;
+}
+
+bool ActiveLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
+{
+    if (m_property == CSSStyleValuePair::KeyKind::Width) {
+        if (m_originalToValue == newStyle->width()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::Height) {
+        if (m_originalToValue == newStyle->height()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginTop) {
+        if (m_originalToValue == newStyle->margin().top()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginRight) {
+        if (m_originalToValue == newStyle->margin().right()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginBottom) {
+        if (m_originalToValue == newStyle->margin().bottom()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MarginLeft) {
+        if (m_originalToValue == newStyle->margin().left()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MinWidth) {
+        if (m_originalToValue == newStyle->minWidth()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MinHeight) {
+        if (m_originalToValue == newStyle->minHeight()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MaxWidth) {
+        if (m_originalToValue == newStyle->maxWidth()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::MaxHeight) {
+        if (m_originalToValue == newStyle->maxHeight()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderTop) {
+        if (m_originalToValue == newStyle->border().top().width()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderRight) {
+        if (m_originalToValue == newStyle->border().right().width()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderBottom) {
+        if (m_originalToValue == newStyle->border().bottom().width()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BorderLeft) {
+        if (m_originalToValue == newStyle->border().left().width()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingTop) {
+        if (m_originalToValue == newStyle->padding().top()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingRight) {
+        if (m_originalToValue == newStyle->padding().right()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingBottom) {
+        if (m_originalToValue == newStyle->padding().bottom()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::PaddingLeft) {
+        if (m_originalToValue == newStyle->padding().left()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::Left) {
+        if (m_originalToValue == newStyle->left()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::Top) {
+        if (m_originalToValue == newStyle->top()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::Right) {
+        if (m_originalToValue == newStyle->right()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::Bottom) {
+        if (m_originalToValue == newStyle->bottom()) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionX) {
+        if (m_indexForBgLayer < newStyle->backgroundLayerSize() &&
+            m_originalToValue ==
+                newStyle->backgroundPositionX(m_indexForBgLayer)) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
+        if (m_indexForBgLayer < newStyle->backgroundLayerSize() &&
+            m_originalToValue ==
+                newStyle->backgroundPositionY(m_indexForBgLayer)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+ActiveLengthSizeAnimationTask::ActiveLengthSizeAnimationTask(
+    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
+    uint64_t delayInms, AnimationTimingFunction* timingFunction,
+    LengthSize originalToValue, size_t indexForBgLayer)
+    : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
+                          delayInms, timingFunction)
+    , m_originalToValue(originalToValue)
+    , m_indexForBgLayer(indexForBgLayer)
+{
+}
+
+static LengthSize interpolateLengthSize(float progress, AnimatedValue fromValue,
+                                        AnimatedValue toValue)
+{
+#define INTERPOLATE_LENGTHSIZE(WH)                                 \
+    Length(from->WH().type(), interpolate(from->WH().numberData(), \
+                                          to->WH().numberData(), progress))
+
+    LengthSize* from = fromValue.getLengthSize();
+    LengthSize* to = toValue.getLengthSize();
+    STARFISH_ASSERT(from->width().type() == to->width().type());
+    STARFISH_ASSERT(from->height().type() == to->height().type());
+    STARFISH_ASSERT(from->width().type() != Length::Auto ||
+                    from->height().type() != Length::Auto);
+    // NOTE
+    // (O) FROM(!auto, !auto) -> TO(!auto, !auto)
+    // (O) FROM(auto, !auto) -> TO(auto, !auto)
+    // (O) FROM(!auto, auto) -> TO(!auto, auto)
+    // (X) FROM(auto, auto) -> TO(auto, auto)
+    // (X) FROM(auto, !auto) -> TO(!auto, auto)
+    // (X) FROM(!auto, auto) -> TO(auto, !auto)
+    if (from->width().type() == Length::Auto) {
+        return LengthSize(Length(), INTERPOLATE_LENGTHSIZE(height));
+    } else if (from->height().type() == Length::Auto) {
+        return LengthSize(INTERPOLATE_LENGTHSIZE(width), Length());
+    }
+    return LengthSize(INTERPOLATE_LENGTHSIZE(width),
+                      INTERPOLATE_LENGTHSIZE(height));
+#undef INTERPOLATE_LENGTHSIZE
+}
+
+void ActiveLengthSizeAnimationTask::execute(float progress,
+                                            ComputedStyle* style)
+{
+    if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
+        style->setBackgroundSize(
+            interpolateLengthSize(progress, m_fromValue, m_toValue),
+            m_indexForBgLayer);
+    } else {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+}
+
+bool ActiveLengthSizeAnimationTask::isKindOfTransitionProperty(
+    CSSStyleValuePair::KeyKind k)
+{
+    if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
+        if (k == CSSStyleValuePair::KeyKind::BackgroundSize ||
+            k == CSSStyleValuePair::KeyKind::Background) {
+            return true;
+        }
+    } else {
+        return m_property == k;
+    }
+    return false;
+}
+
+bool ActiveLengthSizeAnimationTask::taskCanContinue(ComputedStyle* newStyle)
+{
+    if (m_property == CSSStyleValuePair::KeyKind::BackgroundSize) {
+        if (m_indexForBgLayer < newStyle->backgroundLayerSize() &&
+            newStyle->backgroundSizeIsLength(m_indexForBgLayer) &&
+            m_originalToValue ==
+                newStyle->backgroundSizeLengthValue(m_indexForBgLayer)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
+                                     CSSStyleValuePair::KeyKind a)
+{
+    return kind == a;
+}
+
+static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
+                                     CSSStyleValuePair::KeyKind a,
+                                     CSSStyleValuePair::KeyKind b)
+{
+    return kind == a || kind == b;
+}
+
+static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
+                                     CSSStyleValuePair::KeyKind a,
+                                     CSSStyleValuePair::KeyKind b,
+                                     CSSStyleValuePair::KeyKind c)
+{
+    return kind == a || kind == b || kind == c;
+}
+
+#define STARFISH_ASSERT_INPUT_LENGTH_FIXED()                         \
+    STARFISH_ASSERT(m_fromValue.isLength() && m_toValue.isLength()); \
+    STARFISH_ASSERT(m_fromValue.getLength().isFixed() &&             \
+                    m_toValue.getLength().isFixed());
+
+#define STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT()              \
+    STARFISH_ASSERT(m_fromValue.isLength() && m_toValue.isLength()); \
+    STARFISH_ASSERT((m_fromValue.getLength().isFixed() &&            \
+                     m_toValue.getLength().isFixed()) ||             \
+                    (m_fromValue.getLength().isPercent() &&          \
+                     m_toValue.getLength().isPercent()));
+
+#define _DAMAGED_KEYS(PropName, ...) (damagedKeys[PropName])
+#define NEED_TRANSITION(...)       \
+    (_DAMAGED_KEYS(__VA_ARGS__) && \
+     (isPropertyAll || _checkCSSProperty(property, __VA_ARGS__)))
+
+bool applyTransitionIfNeeds(Element* element, ComputedStyle* oldStyle,
+                            Frame* oldFrame, ComputedStyle* newStyle,
+                            const bool* damagedKeys)
+{
+    bool gotTransition = false;
     StyleTransitionData* data = newStyle->transition();
+    AnimationExecutor* executor = element->document()->animationExecutor();
+
     for (size_t i = 0; i < data->size(); i++) {
-        if (data->property(i) == CSSStyleValuePair::KeyKind::All) {
-            return;
-        }
-    }
-
-    GCVector<AnimationTask*> deletedTasks;
-    m_animationList.erase(
-        std::remove_if(m_animationList.begin(), m_animationList.end(),
-                       [&target, &data, &deletedTasks](AnimationTask* current) {
-                           if (current->targetElement() == target) {
-                               bool findNow = false;
-                               for (size_t i = 0; i < data->size(); i++) {
-                                   if (data->property(i) ==
-                                       current->propertyType()) {
-                                       findNow = true;
-                                       break;
-                                   }
-                               }
-
-                               if (!findNow) {
-                                   if (current->m_attached) {
-                                       current->detachedFromElement(false);
-                                   }
-                                   if (current->m_isStartEventFired) {
-                                       deletedTasks.push_back(current);
-                                   }
-                                   return true;
-                               }
-                           }
-                           return false;
-                       }),
-        m_animationList.end());
-
-    for (size_t i = 0; i < deletedTasks.size(); i++) {
-        deletedTasks[i]->fireCancelEvent();
-    }
-}
-
-// [NOTICE]
-// * I believe it's best choice at this moment.
-// * We do not have a sophisticated solution that surpasses this
-void AnimationExecutor::startIfNeeds()
-{
-    if (m_isAlive) {
-        return;
-    }
-    m_isAlive = true;
-
-    auto& v = window()->webView()->m_activeAnimationExecutor;
-    v.push_back(this);
-    if (v.size() == 1) {
-        STARFISH_ASSERT(
-            window()->webView()->m_activeAnimatorForAnimationExecutor ==
-            SIZE_MAX);
-        window()->webView()->m_activeAnimatorForAnimationExecutor =
-            window()->webView()->timer()->addAnimator(
-                window(),
-                [](void* data) -> bool {
-                    WebView* wv = (WebView*)data;
-                    auto& v = wv->m_activeAnimationExecutor;
-                    bool didWork = false;
-                    for (size_t i = 0; i < v.size(); i++) {
-                        if (v[i]->isAlive()) {
-                            v[i]->step();
-                            didWork = true;
-                        }
-                    }
-
-                    if (didWork) {
-                        wv->setNeedsRendering();
-                    }
-                    return didWork;
-                },
-                window()->webView());
-    }
-}
-
-void AnimationExecutor::stop()
-{
-    if (!m_isAlive) {
-        return;
-    }
-
-    m_isAlive = false;
-    m_animationList.clear();
-    m_pendingAnimationInfoList.clear();
-    auto& v = window()->webView()->m_activeAnimationExecutor;
-    auto iter = std::find(v.begin(), v.end(), this);
-    window()->webView()->m_activeAnimationExecutor.erase(iter);
-    if (window()->webView()->m_activeAnimationExecutor.size() == 0) {
-        STARFISH_ASSERT(
-            window()->webView()->m_activeAnimatorForAnimationExecutor !=
-            SIZE_MAX);
-        window()->webView()->timer()->removeGenericAnimator(
-            window()->webView()->m_activeAnimatorForAnimationExecutor);
-        window()->webView()->m_activeAnimatorForAnimationExecutor = SIZE_MAX;
-    }
-}
-
-void AnimationExecutor::stopIfNeeds(bool force)
-{
-    if (m_animationList.size() == 0 || force) {
-        stop();
-    }
-}
-
-// [NOTICE]
-// * Basically, Do execute every task at one tick.
-// * In reality, there will not be many works to be done(means number of
-// parallel animations)
-// * And Calculating and Changing computed style is pretty light work.
-// * If we spent a lot of time during other stuff, MessageLoop will adjust
-// next execution.
-void AnimationExecutor::step()
-{
-    STARFISH_ASSERT(m_isAlive);
-    uint64_t currentTickCount = tickCount();
-
-    for (size_t i = 0; i < m_animationList.size(); i++) {
-        AnimationTask* task = m_animationList[i];
-        if (task->m_startTimeMs == 0) {
-#ifndef NDEBUG
-            STARFISH_LOG_INFO(
-                "[START][%dms][%p, node %p] %s (id:%s, className:%s)\n",
-                (int)currentTickCount, task, task->targetElement(),
-                task->dumpString()->toUTF8NonGCString().data(),
-                task->targetElement()->id()->toUTF8NonGCString().data(),
-                task->targetElement()->className()->toUTF8NonGCString().data());
-#endif
-            task->m_startTimeMs = currentTickCount + task->m_delayMs;
-        }
-
-        if (task->m_startTimeMs <= currentTickCount) {
-            if (!task->m_isStartEventFired) {
-                task->fireStartEvent();
-            }
-            float f = task->fraction(currentTickCount);
-            STARFISH_ASSERT(f >= 0.0f);
-            STARFISH_ASSERT(f <= 1.0f);
-            if (f == 1.0f || !task->canExecute()) {
-// NOTE Does not execute for fraction 1.0
-//      Need to handle in detachedFromElement()
-#ifndef NDEBUG
-                STARFISH_LOG_INFO(
-                    "[ END ][%dms][%p] %s (id:%s, className:%s)\n",
-                    (int)currentTickCount, task,
-                    task->dumpString()->toUTF8NonGCString().data(),
-                    task->targetElement()->id()->toUTF8NonGCString().data(),
-                    task->targetElement()
-                        ->className()
-                        ->toUTF8NonGCString()
-                        .data());
-#endif
-                task->detachedFromElement(true);
-                task->fireEndEvent();
-                m_animationList.erase(i);
-                i--;
-            } else {
-                task->execute(task->computeProgress(f));
-            }
-        }
-    }
-    stopIfNeeds();
-}
-
-void AnimationExecutor::clearPendingAnimationRelatedWithElement(
-    Element* element)
-{
-    for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
-        if (m_pendingAnimationInfoList[i]->element == element) {
-            m_pendingAnimationInfoList.erase(i);
-            return;
-        }
-    }
-}
-
-void AnimationExecutor::runPendingAnimation()
-{
-    for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
-        PendingAnimiationInfo* info = m_pendingAnimationInfoList[i];
-
-        bool elementHasAnimation = false;
-        for (size_t j = 0; j < m_animationList.size(); j++) {
-            if (m_animationList[j]->targetElement() == info->element) {
-                elementHasAnimation = true;
-                break;
-            }
-        }
-
-        if (elementHasAnimation) {
+        if (!data->duration(i).toTimeValue()) {
             continue;
         }
 
-        ComputedStyle* currentElementStyle = info->element->style();
-        if (!info->element
-                 ->isInDocumentScopeAndDocumentParticipateInRendering()) {
-            currentElementStyle = nullptr;
-        }
+        CSSStyleValuePair::KeyKind property = data->property(i);
+        bool isPropertyAll = property == CSSStyleValuePair::All;
 
-        bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
-            false,
-        };
+        auto duration = data->duration(i).toTimeValue();
+        auto delay = data->delay(i).toTimeValue();
+        auto timingFunction = data->timingFunction(i);
 
-        if (currentElementStyle && currentElementStyle->transition()) {
-            compareStyle(info->oldStyle, currentElementStyle, damagedKeys);
-
-            if (needsToApplyTransition(currentElementStyle, damagedKeys)) {
-                applyTransition(info->element, info->oldStyle, info->oldFrame,
-                                currentElementStyle, damagedKeys);
+        if (NEED_TRANSITION(CSSStyleValuePair::Opacity)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::Opacity);
+            if (!found) {
+                auto task = new ActiveOpacityAnimationTask(
+                    element, CSSStyleValuePair::Opacity,
+                    AnimatedValue(oldStyle->opacity()),
+                    AnimatedValue(newStyle->opacity()), duration, delay,
+                    timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
             }
         }
-    }
-    m_pendingAnimationInfoList.clear();
-}
 
-void AnimationExecutor::addPendingAnimation(Element* element,
-                                            ComputedStyle* oldStyle,
-                                            ComputedStyle* newStyle,
-                                            Frame* oldFrame)
-{
-    oldStyle->markUsedInAnimator();
-    newStyle->markUsedInAnimator();
+        if (NEED_TRANSITION(CSSStyleValuePair::Transform)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::Transform);
+            if (!found && oldFrame->isTransformable()) {
+                FrameBox* box = oldFrame->asFrameBox();
+                SkMatrix matrixFrom = oldStyle->transformsToMatrix(
+                    box->width(), box->height(), box, true);
 
-    for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
-        if (m_pendingAnimationInfoList[i]->element == element) {
-            return;
+                box = oldFrame->asFrameBox();
+                SkMatrix matrixTo = newStyle->transformsToMatrix(
+                    box->width(), box->height(), box, true);
+
+                auto task = new ActiveTransformAnimationTask(
+                    element, CSSStyleValuePair::Transform,
+                    AnimatedValue(matrixFrom), AnimatedValue(matrixTo),
+                    duration, delay, timingFunction, newStyle->transforms());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
         }
-    }
 
-    if (m_pendingAnimationInfoList.size() == 0) {
-        window()->browsingContext()->notifyHasPendingAnimation();
-    }
-
-    PendingAnimiationInfo* info = new PendingAnimiationInfo();
-    info->element = element;
-    info->oldStyle = oldStyle;
-    info->oldFrame = oldFrame;
-    m_pendingAnimationInfoList.push_back(info);
-}
-
-std::pair<ComputedStyle*, Frame*>
-AnimationExecutor::fetchPendingAnimationIfExists(Element* element)
-{
-    for (size_t i = 0; i < m_pendingAnimationInfoList.size(); i++) {
-        if (m_pendingAnimationInfoList[i]->element == element) {
-            auto ret = std::make_pair(m_pendingAnimationInfoList[i]->oldStyle,
-                                      m_pendingAnimationInfoList[i]->oldFrame);
-            m_pendingAnimationInfoList.erase(i);
-            return ret;
+        // color series
+        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundColor,
+                            CSSStyleValuePair::Background)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BackgroundColor);
+            if (!found) {
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::BackgroundColor,
+                    AnimatedValue(oldStyle->backgroundColor()),
+                    AnimatedValue(newStyle->backgroundColor()), duration, delay,
+                    timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
         }
-    }
-    return std::make_pair(nullptr, nullptr);
-}
 
-void AnimationExecutor::attachAll()
-{
-    size_t size = m_animationList.size();
-    for (size_t i = 0; i < size; i++) {
-        AnimationTask* task = m_animationList[i];
-        if (!task->m_attached) {
-            task->attachedToElement();
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderBottomColor,
+                            CSSStyleValuePair::BorderColor,
+                            CSSStyleValuePair::BorderBottom)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BorderBottomColor);
+            if (!found) {
+                Unit::Color oldColor = oldStyle->border().bottom().color();
+                Unit::Color newColor = newStyle->border().bottom().color();
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::BorderBottomColor,
+                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
+                    delay, timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
         }
-    }
-}
-}
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderLeftColor,
+                            CSSStyleValuePair::BorderColor,
+                            CSSStyleValuePair::BorderLeft)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BorderLeftColor);
+            if (!found) {
+                Unit::Color oldColor = oldStyle->border().left().color();
+                Unit::Color newColor = newStyle->border().left().color();
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::BorderLeftColor,
+                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
+                    delay, timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderRightColor,
+                            CSSStyleValuePair::BorderColor,
+                            CSSStyleValuePair::BorderRight)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BorderRightColor);
+            if (!found) {
+                Unit::Color oldColor = oldStyle->border().right().color();
+                Unit::Color newColor = newStyle->border().right().color();
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::BorderRightColor,
+                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
+                    delay, timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderTopColor,
+                            CSSStyleValuePair::BorderColor,
+                            CSSStyleValuePair::BorderTop)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BorderTopColor);
+            if (!found) {
+                Unit::Color oldColor = oldStyle->border().top().color();
+                Unit::Color newColor = newStyle->border().top().color();
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::BorderTopColor,
+                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
+                    delay, timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::Color)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::Color);
+            if (!found) {
+                Unit::Color oldColor = oldStyle->color();
+                Unit::Color newColor = newStyle->color();
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::Color, AnimatedValue(oldColor),
+                    AnimatedValue(newColor), duration, delay, timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::CaretColor)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::CaretColor);
+            if (!found) {
+                Unit::Color oldColor = oldStyle->caretColor();
+                Unit::Color newColor = newStyle->caretColor();
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::CaretColor,
+                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
+                    delay, timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::OutlineColor)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::OutlineColor);
+            if (!found) {
+                Unit::Color oldColor = oldStyle->outlineColor();
+                Unit::Color newColor = newStyle->outlineColor();
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::OutlineColor,
+                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
+                    delay, timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::TextDecorationColor,
+                            CSSStyleValuePair::TextDecoration)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::TextDecorationColor);
+            if (!found) {
+                Unit::Color oldColor = oldStyle->textDecorationColor();
+                Unit::Color newColor = newStyle->textDecorationColor();
+                auto task = new ActiveColorAnimationTask(
+                    element, CSSStyleValuePair::TextDecorationColor,
+                    AnimatedValue(oldColor), AnimatedValue(newColor), duration,
+                    delay, timingFunction);
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+        // <- color series
 
-#undef STARFISH_ASSERT_INPUT_LENGTH_FIXED_OR_PERCENT
+        // length series
+        if (NEED_TRANSITION(CSSStyleValuePair::Width) && oldFrame &&
+            oldFrame->isFrameBox()) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::Width);
+            if (!found) {
+                auto oldWidth = oldStyle->width();
+                auto newWidth = newStyle->width();
+
+                if ((oldWidth.isPercent() || oldWidth.isFixed()) &&
+                    (newWidth.isPercent() || newWidth.isFixed())) {
+                    auto fromValue = oldStyle->width();
+                    auto toValue = newStyle->width();
+
+                    if (toValue.isPercent() && !fromValue.isPercent()) {
+                        FrameBox* cb = containingBlock(oldFrame);
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            fromValue = Length(Length::Percent,
+                                               oldFrame->asFrameBox()->width() /
+                                                   cb->contentWidth());
+                        } else {
+                            fromValue =
+                                Length(Length::Percent,
+                                       oldFrame->asFrameBox()->contentWidth() /
+                                           cb->contentWidth());
+                        }
+                    } else if (toValue.isFixed() && !fromValue.isFixed()) {
+                        float value;
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            value = oldFrame->asFrameBox()->width();
+                        } else {
+                            value = oldFrame->asFrameBox()->contentWidth();
+                        }
+                        fromValue = Length(Length::Fixed, value);
+                    }
+
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::Width,
+                        AnimatedValue(fromValue), AnimatedValue(toValue),
+                        duration, delay, timingFunction, newWidth);
+                    executor->registerAnimation(task, newStyle);
+                    gotTransition = true;
+                }
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::Height) && oldFrame &&
+            oldFrame->isFrameBox()) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::Height);
+            if (!found) {
+                auto oldHeight = oldStyle->height();
+                auto newHeight = newStyle->height();
+
+                if ((oldHeight.isPercent() || oldHeight.isFixed()) &&
+                    (newHeight.isPercent() || newHeight.isFixed())) {
+                    auto fromValue = oldStyle->height();
+                    auto toValue = newStyle->height();
+
+                    if (toValue.isPercent() && !fromValue.isPercent()) {
+                        FrameBox* cb = containingBlock(oldFrame);
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            fromValue =
+                                Length(Length::Percent,
+                                       oldFrame->asFrameBox()->height() /
+                                           cb->contentHeight());
+                        } else {
+                            fromValue =
+                                Length(Length::Percent,
+                                       oldFrame->asFrameBox()->contentHeight() /
+                                           cb->contentHeight());
+                        }
+                    } else if (toValue.isFixed() && !fromValue.isFixed()) {
+                        float value;
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            value = oldFrame->asFrameBox()->height();
+                        } else {
+                            value = oldFrame->asFrameBox()->contentHeight();
+                        }
+                        fromValue = Length(Length::Fixed, value);
+                    }
+
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::Height,
+                        AnimatedValue(fromValue), AnimatedValue(toValue),
+                        duration, delay, timingFunction, newHeight);
+                    executor->registerAnimation(task, newStyle);
+                    gotTransition = true;
+                }
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::MinWidth) && oldFrame &&
+            oldFrame->isFrameBox()) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::MinWidth);
+            if (!found) {
+                auto oldWidth = oldStyle->minWidth();
+                auto newWidth = newStyle->minWidth();
+
+                if ((oldWidth.isPercent() || oldWidth.isFixed()) &&
+                    (newWidth.isPercent() || newWidth.isFixed())) {
+                    auto fromValue = oldStyle->minWidth();
+                    auto toValue = newStyle->minWidth();
+
+                    if (toValue.isPercent() && !fromValue.isPercent()) {
+                        FrameBox* cb = containingBlock(oldFrame);
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            fromValue = Length(Length::Percent,
+                                               oldFrame->asFrameBox()->width() /
+                                                   cb->contentWidth());
+                        } else {
+                            fromValue =
+                                Length(Length::Percent,
+                                       oldFrame->asFrameBox()->contentWidth() /
+                                           cb->contentWidth());
+                        }
+                    } else if (toValue.isFixed() && !fromValue.isFixed()) {
+                        float value;
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            value = oldFrame->asFrameBox()->width();
+                        } else {
+                            value = oldFrame->asFrameBox()->contentWidth();
+                        }
+                        fromValue = Length(Length::Fixed, value);
+                    }
+
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::MinWidth,
+                        AnimatedValue(fromValue), AnimatedValue(toValue),
+                        duration, delay, timingFunction, newWidth);
+                    executor->registerAnimation(task, newStyle);
+                    gotTransition = true;
+                }
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::MinHeight) && oldFrame &&
+            oldFrame->isFrameBox()) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::MinHeight);
+            if (!found) {
+                auto oldHeight = oldStyle->minHeight();
+                auto newHeight = newStyle->minHeight();
+
+                if ((oldHeight.isPercent() || oldHeight.isFixed()) &&
+                    (newHeight.isPercent() || newHeight.isFixed())) {
+                    auto fromValue = oldStyle->minHeight();
+                    auto toValue = newStyle->minHeight();
+
+                    if (toValue.isPercent() && !fromValue.isPercent()) {
+                        FrameBox* cb = containingBlock(oldFrame);
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            fromValue =
+                                Length(Length::Percent,
+                                       oldFrame->asFrameBox()->height() /
+                                           cb->contentHeight());
+                        } else {
+                            fromValue =
+                                Length(Length::Percent,
+                                       oldFrame->asFrameBox()->contentHeight() /
+                                           cb->contentHeight());
+                        }
+                    } else if (toValue.isFixed() && !fromValue.isFixed()) {
+                        float value;
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            value = oldFrame->asFrameBox()->height();
+                        } else {
+                            value = oldFrame->asFrameBox()->contentHeight();
+                        }
+                        fromValue = Length(Length::Fixed, value);
+                    }
+
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::MinHeight,
+                        AnimatedValue(fromValue), AnimatedValue(toValue),
+                        duration, delay, timingFunction, newHeight);
+                    executor->registerAnimation(task, newStyle);
+                    gotTransition = true;
+                }
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::MaxWidth) && oldFrame &&
+            oldFrame->isFrameBox()) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::MaxWidth);
+            if (!found) {
+                auto oldWidth = oldStyle->maxWidth();
+                auto newWidth = newStyle->maxWidth();
+
+                if ((oldWidth.isPercent() || oldWidth.isFixed()) &&
+                    (newWidth.isPercent() || newWidth.isFixed())) {
+                    auto fromValue = oldStyle->maxWidth();
+                    auto toValue = newStyle->maxWidth();
+
+                    if (toValue.isPercent() && !fromValue.isPercent()) {
+                        FrameBox* cb = containingBlock(oldFrame);
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            fromValue = Length(Length::Percent,
+                                               oldFrame->asFrameBox()->width() /
+                                                   cb->contentWidth());
+                        } else {
+                            fromValue =
+                                Length(Length::Percent,
+                                       oldFrame->asFrameBox()->contentWidth() /
+                                           cb->contentWidth());
+                        }
+                    } else if (toValue.isFixed() && !fromValue.isFixed()) {
+                        float value;
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            value = oldFrame->asFrameBox()->width();
+                        } else {
+                            value = oldFrame->asFrameBox()->contentWidth();
+                        }
+                        fromValue = Length(Length::Fixed, value);
+                    }
+
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::MaxWidth,
+                        AnimatedValue(fromValue), AnimatedValue(toValue),
+                        duration, delay, timingFunction, newWidth);
+                    executor->registerAnimation(task, newStyle);
+                    gotTransition = true;
+                }
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::MaxHeight) && oldFrame &&
+            oldFrame->isFrameBox()) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::MaxHeight);
+            if (!found) {
+                auto oldHeight = oldStyle->maxHeight();
+                auto newHeight = newStyle->maxHeight();
+
+                if ((oldHeight.isPercent() || oldHeight.isFixed()) &&
+                    (newHeight.isPercent() || newHeight.isFixed())) {
+                    auto fromValue = oldStyle->maxHeight();
+                    auto toValue = newStyle->maxHeight();
+
+                    if (toValue.isPercent() && !fromValue.isPercent()) {
+                        FrameBox* cb = containingBlock(oldFrame);
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            fromValue =
+                                Length(Length::Percent,
+                                       oldFrame->asFrameBox()->height() /
+                                           cb->contentHeight());
+                        } else {
+                            fromValue =
+                                Length(Length::Percent,
+                                       oldFrame->asFrameBox()->contentHeight() /
+                                           cb->contentHeight());
+                        }
+                    } else if (toValue.isFixed() && !fromValue.isFixed()) {
+                        float value;
+                        if (oldStyle->boxSizing() ==
+                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                            value = oldFrame->asFrameBox()->height();
+                        } else {
+                            value = oldFrame->asFrameBox()->contentHeight();
+                        }
+                        fromValue = Length(Length::Fixed, value);
+                    }
+
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::MaxHeight,
+                        AnimatedValue(fromValue), AnimatedValue(toValue),
+                        duration, delay, timingFunction, newHeight);
+                    executor->registerAnimation(task, newStyle);
+                    gotTransition = true;
+                }
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::MarginTop,
+                            CSSStyleValuePair::Margin)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::MarginTop);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::marginTopToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::MarginTop, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->margin().top());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::MarginRight,
+                            CSSStyleValuePair::Margin)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::MarginRight);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::marginRightToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::MarginRight, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->margin().right());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::MarginBottom,
+                            CSSStyleValuePair::Margin)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::MarginBottom);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::marginBottomToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::MarginBottom, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->margin().bottom());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::MarginLeft,
+                            CSSStyleValuePair::Margin)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::MarginLeft);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::marginLeftToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::MarginLeft, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->margin().left());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderTop,
+                            CSSStyleValuePair::Border)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BorderTop);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::borderTopToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::BorderTop, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->border().top().width());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderRight,
+                            CSSStyleValuePair::Border)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BorderRight);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::borderRightToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::BorderRight, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->border().right().width());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderBottom,
+                            CSSStyleValuePair::Border)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BorderBottom);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::borderBottomToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::BorderBottom, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->border().bottom().width());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::BorderLeft,
+                            CSSStyleValuePair::Border)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::BorderLeft);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::borderLeftToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::BorderLeft, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->border().left().width());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::PaddingTop,
+                            CSSStyleValuePair::Padding)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::PaddingTop);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::paddingTopToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::PaddingTop, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->padding().top());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::PaddingRight,
+                            CSSStyleValuePair::Padding)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::PaddingRight);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::paddingRightToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::PaddingRight, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->padding().right());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::PaddingBottom,
+                            CSSStyleValuePair::Padding)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::PaddingBottom);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::paddingBottomToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::PaddingBottom,
+                    AnimatedValue(v1), AnimatedValue(v2), duration, delay,
+                    timingFunction, newStyle->padding().bottom());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::PaddingLeft,
+                            CSSStyleValuePair::Padding)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::PaddingLeft);
+            AnimatedValue v1, v2;
+            if (!found && AnimationUtil::paddingLeftToAnimatedValue(
+                              oldStyle, newStyle, element, v1, v2)) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::PaddingLeft, AnimatedValue(v1),
+                    AnimatedValue(v2), duration, delay, timingFunction,
+                    newStyle->padding().left());
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
+#define GEN_SIDE(Side, side)                                                   \
+    if (NEED_TRANSITION(CSSStyleValuePair::Side)) {                            \
+        bool found =                                                           \
+            executor->hasActiveAnimiation(element, CSSStyleValuePair::Side);   \
+        AnimatedValue v1, v2;                                                  \
+        if (!found && AnimationUtil::lengthToAnimatedValue(oldStyle->side(),   \
+                                                           newStyle->side(),   \
+                                                           element, v1, v2)) { \
+            auto task = new ActiveLengthAnimationTask(                         \
+                element, CSSStyleValuePair::Side, AnimatedValue(v1),           \
+                AnimatedValue(v2), duration, delay, timingFunction,            \
+                newStyle->side());                                             \
+            executor->registerAnimation(task, newStyle);                       \
+            gotTransition = true;                                              \
+        }                                                                      \
+    }
+        GEN_SIDE(Left, left)
+        GEN_SIDE(Right, right)
+        GEN_SIDE(Top, top)
+        GEN_SIDE(Bottom, bottom)
+#undef GEN_SIDE
+
+        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionX,
+                            CSSStyleValuePair::BackgroundPosition,
+                            CSSStyleValuePair::Background)) {
+            if (!oldStyle->hasBlockLikeDisplay() ||
+                !newStyle->hasBlockLikeDisplay()) {
+                // TODO Inline Element
+                continue;
+            }
+            FrameBox* oldPaintingBox = oldFrame->asFrameBox();
+            size_t layerSize = newStyle->backgroundLayerSize();
+            for (size_t i = 0; i < layerSize; i++) {
+                bool found = executor->hasActiveAnimiation(
+                    element, CSSStyleValuePair::BackgroundPositionX);
+                AnimatedValue pos1, pos2;
+                if (!found && AnimationUtil::backgroundPosXToAnimatedValue(
+                                  oldStyle, newStyle, oldPaintingBox, element,
+                                  pos1, pos2, i)) {
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::BackgroundPositionX,
+                        AnimatedValue(pos1), AnimatedValue(pos2), duration,
+                        delay, timingFunction, newStyle->backgroundPositionX(i),
+                        i);
+                    executor->registerAnimation(task, newStyle);
+                    gotTransition = true;
+                }
+            }
+        }
+        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundPositionY,
+                            CSSStyleValuePair::BackgroundPosition,
+                            CSSStyleValuePair::Background)) {
+            if (!oldStyle->hasBlockLikeDisplay() ||
+                !newStyle->hasBlockLikeDisplay()) {
+                // TODO Inline Element
+                continue;
+            }
+            FrameBox* oldPaintingBox = oldFrame->asFrameBox();
+            size_t layerSize = newStyle->backgroundLayerSize();
+            for (size_t i = 0; i < layerSize; i++) {
+                bool found = executor->hasActiveAnimiation(
+                    element, CSSStyleValuePair::BackgroundPositionY);
+                AnimatedValue pos1, pos2;
+                if (!found && AnimationUtil::backgroundPosYToAnimatedValue(
+                                  oldStyle, newStyle, oldPaintingBox, element,
+                                  pos1, pos2, i)) {
+                    auto task = new ActiveLengthAnimationTask(
+                        element, CSSStyleValuePair::BackgroundPositionY,
+                        AnimatedValue(pos1), AnimatedValue(pos2), duration,
+                        delay, timingFunction, newStyle->backgroundPositionY(i),
+                        i);
+                    executor->registerAnimation(task, newStyle);
+                    gotTransition = true;
+                }
+            }
+        }
+
+        // NOTE background-size should come after background-position
+        if (NEED_TRANSITION(CSSStyleValuePair::BackgroundSize,
+                            CSSStyleValuePair::Background)) {
+            if (!oldStyle->hasBlockLikeDisplay() ||
+                !newStyle->hasBlockLikeDisplay()) {
+                // TODO Inline Element
+                continue;
+            }
+            FrameBox* oldPaintingBox = oldFrame->asFrameBox();
+            size_t layerSize = newStyle->backgroundLayerSize();
+            for (size_t i = 0; i < layerSize; i++) {
+                AnimatedValue size1, size2;
+                bool found = executor->hasActiveAnimiation(
+                    element, CSSStyleValuePair::BackgroundSize);
+                if (!found && AnimationUtil::backgroundSizeToAnimatedValue(
+                                  oldStyle, newStyle, oldPaintingBox, element,
+                                  size1, size2, i)) {
+                    auto task = new ActiveLengthSizeAnimationTask(
+                        element, CSSStyleValuePair::BackgroundSize,
+                        AnimatedValue(size1), AnimatedValue(size2), duration,
+                        delay, timingFunction,
+                        newStyle->backgroundSizeLengthValue(i), i);
+                    executor->registerAnimation(task, newStyle);
+                    gotTransition = true;
+                }
+            }
+        }
+        // <- length series
+    }
+
+    return gotTransition;
+}
+}

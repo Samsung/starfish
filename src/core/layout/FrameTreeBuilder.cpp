@@ -151,18 +151,6 @@ void FrameTreeBuilder::clearTree(Node* current)
         return;
 
     Frame* f = current->frame();
-    if (current->style()->transition() &&
-        current->style()->transition()->size()) {
-        if (f->parent()) {
-            f->parent()->removeChild(f);
-            while (f->firstChild()) {
-                f->removeChild(f->firstChild());
-            }
-        }
-
-        current->ensureRareMembers()->m_previousComputedFrame = f;
-    }
-
     current->setFrame(nullptr);
     Node* n = current->firstChild();
     while (n) {
@@ -181,7 +169,6 @@ void FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f)
     Node* node = f->node()->firstChild();
     while (node) {
         node->markNeedsFrameTreeBuild();
-        clearTree(node);
         node = node->nextSibling();
     }
 

@@ -82,7 +82,13 @@ void MessageLoop::destroy()
         m_navigateInvokeIdler = nullptr;
     }
 
-    if (m_idlers.size() != 0 || m_idlersFromOtherThread.size() != 0) {
+    while (true) {
+        {
+            Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
+            if (m_idlers.size() == 0 && m_idlersFromOtherThread.size() == 0) {
+                break;
+            }
+        }
         ecore_main_loop_begin();
     }
 }
@@ -131,9 +137,13 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
 
             id->m_fn((size_t)id, id->m_data);
 
-            if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
-                id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                ecore_main_loop_quit();
+            {
+                Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
+                if (id->m_ml->m_inClosingState &&
+                    id->m_ml->m_idlers.size() == 0 &&
+                    id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                    ecore_main_loop_quit();
+                }
             }
 
             GC_FREE(id);
@@ -169,10 +179,15 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
             ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
                                                        id->m_data1);
 
-            if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
-                id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                ecore_main_loop_quit();
+            {
+                Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
+                if (id->m_ml->m_inClosingState &&
+                    id->m_ml->m_idlers.size() == 0 &&
+                    id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                    ecore_main_loop_quit();
+                }
             }
+
             GC_FREE(id);
             return ECORE_CALLBACK_CANCEL;
         },
@@ -207,9 +222,13 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
             ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                 (size_t)id, id->m_data, id->m_data1, id->m_data2);
 
-            if (id->m_ml->m_inClosingState && id->m_ml->m_idlers.size() == 0 &&
-                id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                ecore_main_loop_quit();
+            {
+                Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
+                if (id->m_ml->m_inClosingState &&
+                    id->m_ml->m_idlers.size() == 0 &&
+                    id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                    ecore_main_loop_quit();
+                }
             }
             GC_FREE(id);
             return ECORE_CALLBACK_CANCEL;
@@ -255,10 +274,14 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                         id->m_fn((size_t)id, id->m_data);
                     }
 
-                    if (id->m_ml->m_inClosingState &&
-                        id->m_ml->m_idlers.size() == 0 &&
-                        id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                        ecore_main_loop_quit();
+                    {
+                        Locker<Mutex> l(
+                            *id->m_ml->m_idlersFromOtherThreadMutex);
+                        if (id->m_ml->m_inClosingState &&
+                            id->m_ml->m_idlers.size() == 0 &&
+                            id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                            ecore_main_loop_quit();
+                        }
                     }
 
                     delete id;
@@ -309,11 +332,16 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                             (size_t)id, id->m_data, id->m_data1);
                     }
 
-                    if (id->m_ml->m_inClosingState &&
-                        id->m_ml->m_idlers.size() == 0 &&
-                        id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                        ecore_main_loop_quit();
+                    {
+                        Locker<Mutex> l(
+                            *id->m_ml->m_idlersFromOtherThreadMutex);
+                        if (id->m_ml->m_inClosingState &&
+                            id->m_ml->m_idlers.size() == 0 &&
+                            id->m_ml->m_idlersFromOtherThread.size() == 0) {
+                            ecore_main_loop_quit();
+                        }
                     }
+
                     delete id;
                     return ECORE_CALLBACK_CANCEL;
                 },

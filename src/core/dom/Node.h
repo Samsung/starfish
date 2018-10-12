@@ -58,7 +58,6 @@ public:
         , m_activeHtmlCollectionListsForTagNameNS(nullptr)
         , m_activeHtmlCollectionListsForClassName(nullptr)
         , m_activeNodeListVectorForName(nullptr)
-        , m_previousComputedFrame(nullptr)
     {
     }
 
@@ -107,8 +106,6 @@ public:
     ActiveStringPairHTMLCollectionList* m_activeHtmlCollectionListsForTagNameNS;
     ActiveHTMLCollectionList* m_activeHtmlCollectionListsForClassName;
     ActiveNodeListVector* m_activeNodeListVectorForName;
-
-    Frame* m_previousComputedFrame;
 };
 
 struct GetRootNodeOptions {
@@ -132,6 +129,7 @@ protected:
         : EventTarget(document)
         , m_inParsing(false)
         , m_needsStyleRecalc(true)
+        , m_needsStyleRecalcOnlyForAnimation(false)
         , m_childNeedsStyleRecalc(true)
         , m_needsFrameTreeBuild(true)
         , m_childNeedsFrameTreeBuild(true)
@@ -469,6 +467,17 @@ public:
         m_needsStyleRecalc = false;
     }
 
+    void setNeedsStyleRecalcForAnimation();
+    bool needsStyleRecalcForAnimation()
+    {
+        return m_needsStyleRecalcOnlyForAnimation;
+    }
+
+    void clearNeedsStyleRecalcForAnimation()
+    {
+        m_needsStyleRecalcOnlyForAnimation = false;
+    }
+
     void setChildNeedsStyleRecalc()
     {
         m_childNeedsStyleRecalc = true;
@@ -785,6 +794,7 @@ protected:
     Node* getDoctypeChild();
     bool m_inParsing : 1;
     bool m_needsStyleRecalc : 1;
+    bool m_needsStyleRecalcOnlyForAnimation : 1;
     bool m_childNeedsStyleRecalc : 1;
     bool m_needsFrameTreeBuild : 1;
     bool m_childNeedsFrameTreeBuild : 1;

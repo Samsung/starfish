@@ -1033,7 +1033,11 @@ void WebContainer::RegisterSetNeedsRenderingCallback(
         ->platformWindow()
         ->registerSetNeedsRenderingCallback(
             [this, cb](StarFish::PlatformWindow* wnd) {
-                std::function<void()> fn = [wnd]() { wnd->rendering(); };
+                std::function<void()> fn = [wnd]() {
+                    auto p = wnd;
+                    p->rendering();
+                    p->didRendering();
+                };
                 cb(this, fn);
             });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER

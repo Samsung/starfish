@@ -791,15 +791,16 @@ public:
             const std::function<void()>& doRenderingFunction) {
             evas_object_image_pixels_dirty_set(m_graphicsAdapter, EINA_TRUE);
             m_lastDoRenderingFunction = doRenderingFunction;
-            evas_object_image_pixels_get_callback_set(
-                m_graphicsAdapter,
-                [](void* data, Evas_Object* o) {
-                    WebViewEFL* s = (WebViewEFL*)data;
-                    s->m_lastDoRenderingFunction();
-                    s->m_lastDoRenderingFunction = nullptr;
-                },
-                this);
         });
+
+        evas_object_image_pixels_get_callback_set(
+            m_graphicsAdapter,
+            [](void* data, Evas_Object* o) {
+                WebViewEFL* s = (WebViewEFL*)data;
+                s->m_lastDoRenderingFunction();
+                s->m_lastDoRenderingFunction = nullptr;
+            },
+            this);
 #else
         auto buf = evas_object_image_data_get(m_graphicsAdapter, EINA_TRUE);
         evas_object_image_data_set(m_graphicsAdapter, buf);

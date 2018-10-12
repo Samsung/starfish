@@ -1659,16 +1659,6 @@ void notifyNodeRemoveFromDocumentTree(Node* node)
     }
 }
 
-static FrameBlockBox* nearstAnonymousBlockBox(Frame* f)
-{
-    Frame* p = f->parent();
-    while (!p->isAnonymous()) {
-        p = p->parent();
-    }
-
-    return p->asFrameBlockBox();
-}
-
 Node* Node::removeChild(Node* child)
 {
     STARFISH_ASSERT(child);
@@ -2092,11 +2082,27 @@ void Node::setNeedsFrameTreeBuildWithoutSelf()
     }
 }
 
+void Node::setNeedsStyleRecalcForAnimation()
+{
+    if (!m_needsStyleRecalc) {
+        m_needsStyleRecalc = true;
+        m_needsStyleRecalcOnlyForAnimation = true;
+    }
+
+    if (parentNode()) {
+        parentNode()->setChildNeedsStyleRecalc();
+    }
+
+    window()->browsingContext()->setNeedsStyleRecalc();
+}
+
 void Node::setNeedsStyleRecalc(StyleChangeReason reason)
 {
     if (!document()->doesParticipateInRendering()) {
         return;
     }
+
+    m_needsStyleRecalcOnlyForAnimation = false;
 
     if (reason <= StyleChangeReason::AttributeChange) {
         if (!m_needsStyleRecalc) {
@@ -2219,7 +2225,7 @@ void Node::setNeedsComposite()
 void Node::didComputedStyleChanged(ComputedStyle* oldStyle,
                                    ComputedStyle* newStyle)
 {
-    if (frame()) {
+    if (newStyle && frame()) {
         frame()->computeStyleFlags();
     }
     if (newStyle) {
@@ -2258,10 +2264,31 @@ void Node::didNodeRemoved(Node* parent, Node* oldChild)
     }
 }
 
+static void clearStyle(Element* element)
+{
+    Node* child = element->firstChild();
+    while (child) {
+        if (child->isElement()) {
+            child->clearNeedsStyleRecalc();
+            if (child->style()) {
+                child->setStyle(nullptr);
+                clearStyle(child->asElement());
+            }
+        } else {
+            child->setStyle(nullptr);
+        }
+        child = child->nextSibling();
+    }
+}
+
 void Node::didNodeRemovedFromDocumentTree()
 {
     setState(NodeStateNormal, false);
-    setFrame(nullptr);
+    setStyle(nullptr);
+    if (isElement()) {
+        clearStyle(asElement());
+    }
+    FrameTreeBuilder::clearTree(this);
 }
 
 RareNodeMembers* Node::ensureRareMembers()

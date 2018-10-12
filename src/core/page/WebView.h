@@ -263,13 +263,6 @@ public:
 
     void onIdle();
 
-    typedef bool (*DidLayoutCallback)(void*); // return true cause relayout
-    void addDidLayoutCallback(DidLayoutCallback cb, void* data);
-
-    typedef void (*DidRenderingCallback)(void*);
-    void addDidRenderingCallback(BrowsingContext* ctx, DidRenderingCallback cb,
-                                 void* data);
-
     bool hasActiveAnimationExecutor()
     {
         return m_activeAnimationExecutor.size();
@@ -471,6 +464,7 @@ private:
 
     RenderResult rendering(
         bool force = false); // returns did painting | did compositing
+    void didRendering();
     void setNeedsRendering();
     void setNeedsPainting()
     {
@@ -523,12 +517,8 @@ private:
     LayoutRect m_paintingDirtyRect;
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;
-    GCVector<std::pair<DidLayoutCallback, void*>> m_didLayoutCallbacks;
-    GCVector<BrowsingContext*> m_browsingContextsHasPendingAnimation;
     GCVector<AnimationExecutor*> m_activeAnimationExecutor;
     size_t m_activeAnimatorForAnimationExecutor;
-    GCVector<std::tuple<BrowsingContext*, DidRenderingCallback, void*>>
-        m_didRenderingCallbacks;
 
     // message loop contexts
     MessageLoop* m_messageLoop;

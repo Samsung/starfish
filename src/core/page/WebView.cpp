@@ -404,9 +404,13 @@ String* WebView::userAgent()
 
 String* WebView::evaluateJavaScript(String* s)
 {
-    return toBrowserString(
-        mainBrowsingContext()->scriptBindingInstance(),
-        evaluateString(mainBrowsingContext()->scriptBindingInstance(), s));
+    if (mainBrowsingContext()) {
+        return toBrowserString(
+            mainBrowsingContext()->scriptBindingInstance(),
+            evaluateString(mainBrowsingContext()->scriptBindingInstance(), s));
+    } else {
+        return String::emptyString;
+    }
 }
 
 bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
@@ -730,14 +734,6 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
     INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering::layoutIfNeeds");
     bool didLayout = false;
 
-    if (inRendering()) {
-        for (size_t i = 0; i < m_browsingContextsHasPendingAnimation.size();
-             i++) {
-            m_browsingContextsHasPendingAnimation[i]
-                ->registerNeedsLayoutInWebView();
-        }
-    }
-
     while (true) {
         didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeds();
         for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {
@@ -745,23 +741,6 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
                 didLayout | m_browsingContextsNeedsLayout[i]->layoutIfNeeds();
         }
         m_browsingContextsNeedsLayout.clear();
-
-        bool needsReLayout = false;
-        for (size_t i = 0; i < m_didLayoutCallbacks.size(); i++) {
-            if (m_didLayoutCallbacks[i].first(m_didLayoutCallbacks[i].second)) {
-                for (size_t j = 0; j <= i; j++) {
-                    m_didLayoutCallbacks.erase(m_didLayoutCallbacks.begin());
-                }
-                needsReLayout = true;
-                break;
-            }
-        }
-
-        if (needsReLayout) {
-            continue;
-        }
-
-        m_didLayoutCallbacks.clear();
 
         if (didLayout) {
             m_needsEstablishesStackingContext = true;
@@ -952,17 +931,6 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
     }
 
     clearStack<102400>();
-}
-
-void WebView::addDidLayoutCallback(DidLayoutCallback cb, void* data)
-{
-    m_didLayoutCallbacks.push_back(std::make_pair(cb, data));
-}
-
-void WebView::addDidRenderingCallback(BrowsingContext* ctx,
-                                      DidRenderingCallback cb, void* data)
-{
-    m_didRenderingCallbacks.push_back(std::make_tuple(ctx, cb, data));
 }
 
 void WebView::setNeedsRendering()
@@ -1271,18 +1239,6 @@ RenderResult WebView::rendering(bool force)
     m_needsRendering = false;
     m_inRendering = false;
 
-    {
-        auto& v = m_didRenderingCallbacks;
-        auto iter = v.begin();
-        while (iter != v.end()) {
-            if (std::get<1>(*iter)) {
-                std::get<1> (*iter)(std::get<2>(*iter));
-            }
-            iter++;
-        }
-        v.clear();
-    }
-
 #if defined(STARFISH_ENABLE_TEST)
     {
         if (g_fireOnloadEvent &&
@@ -1338,6 +1294,19 @@ RenderResult WebView::rendering(bool force)
 #endif
 
     return renderResult;
+}
+
+void WebView::didRendering()
+{
+    if (m_activeAnimationExecutor.size()) {
+        for (size_t i = 0; i < m_activeAnimationExecutor.size(); i++) {
+            m_activeAnimationExecutor[i]
+                ->window()
+                ->browsingContext()
+                ->registerNeedsLayoutInWebView();
+        }
+        setNeedsRendering();
+    }
 }
 
 void WebView::setNeedsFullRepainting()

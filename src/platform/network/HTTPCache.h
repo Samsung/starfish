@@ -37,23 +37,11 @@ public:
     static const int LOAD_NO_CACHE = 2;
     static const int LOAD_CACHE_ONLY = 3;
 
-    static HTTPCache* g_httpCache;
     static Nullable<HTTPCache*> getInstance(String* cacheDirPath)
     {
-        if (g_httpCache == nullptr) {
-            g_httpCache = new (NoGC) HTTPCache(cacheDirPath);
-        }
-        return (g_httpCache->good()) ? Nullable<HTTPCache*>(g_httpCache)
-                                     : Nullable<HTTPCache*>();
-    }
-
-    static void destory()
-    {
-        if (g_httpCache != nullptr) {
-            g_httpCache->flush();
-            GC_FREE(g_httpCache);
-            g_httpCache = nullptr;
-        }
+        auto httpCache = new HTTPCache(cacheDirPath);
+        return (httpCache->good()) ? Nullable<HTTPCache*>(httpCache)
+                                   : Nullable<HTTPCache*>();
     }
 
     HTTPCache(String* cacheDirPath);

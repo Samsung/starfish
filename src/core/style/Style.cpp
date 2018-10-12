@@ -6467,6 +6467,13 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         ComputedStyle* style =
             resolver->resolveStyle(ctx, element, parentStyle);
 
+        // TODO use needsStyleRecalcOnlyForAnimation
+        // bool needsStyleRecalcOnlyForAnimation =
+        // element->needsStyleRecalcForAnimation();
+        // bool canCareOnlyAnimation = needsStyleRecalcOnlyForAnimation &&
+        // !inheritedStyleChanged;
+        element->clearNeedsStyleRecalcForAnimation();
+
         if (style->display() == DisplayValue::NoneDisplayValue &&
             (!element->style() ||
              element->style()->display() == DisplayValue::NoneDisplayValue)) {
@@ -6518,11 +6525,124 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
 #endif
         }
 
+        ComputedStyle* oldStyle = element->style();
+        Frame* oldFrame = element->frame();
+
+        bool needsToCheckActiveAnimationExecutorInWebView = false;
+        bool needsToRecomputeStylePropertyDamage = false;
+        bool elementHasAnimation = false;
+        AnimationExecutor* executor = element->document()->animationExecutor();
+        auto tick =
+            element->document()->browsingContext()->styleResolveStartTick();
+        // check transition have to remove
+        {
+            auto& activeAnimations = executor->activeAnimations();
+            for (size_t i = 0; i < activeAnimations.size(); i++) {
+                if (activeAnimations[i]->targetElement() == element) {
+                    bool shouldRemove = false;
+                    bool isCancel = true;
+                    // time is up
+                    if (activeAnimations[i]->fraction(tick) >= 1) {
+                        shouldRemove = true;
+                        isCancel = false;
+                    }
+
+                    // element invisible
+                    if (!shouldRemove &&
+                        style->display() == DisplayValue::NoneDisplayValue) {
+                        shouldRemove = true;
+                    }
+
+                    // transition targetToValue changed
+                    if (!shouldRemove &&
+                        !activeAnimations[i]->taskCanContinue(style)) {
+                        shouldRemove = true;
+                    }
+
+                    // transition property gone || other properties changed
+                    if (!shouldRemove) {
+                        StyleTransitionData* data = style->transition();
+                        if (!data) {
+                            shouldRemove = true;
+                        } else {
+                            bool found = false;
+                            for (size_t j = 0; j < data->size(); j++) {
+                                if (data->property(j) ==
+                                    CSSStyleValuePair::KeyKind::All) {
+                                    found = true;
+                                    break;
+                                }
+                                if (activeAnimations[i]
+                                        ->isKindOfTransitionProperty(
+                                            data->property(j))) {
+                                    found = true;
+                                    break;
+                                }
+                            }
+                            if (!found) {
+                                shouldRemove = true;
+                            }
+                        }
+                    }
+
+                    if (shouldRemove) {
+                        if (!isCancel) {
+                            damagedKeys[activeAnimations[i]->property()] =
+                                false;
+                            activeAnimations[i]->fireEndEvent();
+                        } else {
+                            activeAnimations[i]->fireCancelEvent();
+                        }
+                        activeAnimations[i]->detachFromElement(style);
+                        activeAnimations.erase(i);
+                        i--;
+                        needsToRecomputeStylePropertyDamage = true;
+                        needsToCheckActiveAnimationExecutorInWebView = true;
+                    } else {
+                        elementHasAnimation = true;
+                    }
+                }
+            }
+        }
+
+        // check new transition
+        if (oldStyle && oldStyle->display() != DisplayValue::NoneDisplayValue &&
+            style->display() != DisplayValue::NoneDisplayValue &&
+            style->transitionLayerSize() &&
+            damage != ComputedStyleDamage::ComputedStyleDamageNone) {
+            if (applyTransitionIfNeeds(element, oldStyle, oldFrame, style,
+                                       damagedKeys)) {
+                elementHasAnimation = true;
+                needsToCheckActiveAnimationExecutorInWebView = true;
+            }
+        }
+
+        // apply transition
+        if (elementHasAnimation) {
+            auto& activeAnimations = executor->activeAnimations();
+            for (size_t i = 0; i < activeAnimations.size(); i++) {
+                if (activeAnimations[i]->targetElement() == element) {
+                    activeAnimations[i]->step(tick, style);
+                }
+            }
+
+            needsToRecomputeStylePropertyDamage = true;
+        }
+
+        if (needsToRecomputeStylePropertyDamage) {
+            memset(damagedKeys, 0, sizeof(damagedKeys));
+            damage = (ComputedStyleDamage)(
+                damage | compareStyle(oldStyle, style, damagedKeys));
+        }
+
+        if (needsToCheckActiveAnimationExecutorInWebView) {
+            executor->checkActiveAnimationExecutorInWebView();
+        }
+
         if (damage & ComputedStyleDamage::ComputedStyleDamageInherited) {
             inheritedStyleChanged = inheritedStyleChanged | true;
         }
 
-        Frame* oldFrame = element->frame();
         if (damage & ComputedStyleDamage::ComputedStyleDamageRebuildFrame) {
             if (style->display() != DisplayValue::NoneDisplayValue &&
                 element->frame() == nullptr && element->parentElement()) {
@@ -6568,70 +6688,29 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             element->setNeedsComposite();
         }
 
-        ComputedStyle* oldStyle = element->style();
         element->setStyle(style);
-
-        bool inRendering = element->webView()->inRendering();
-
-        if (!inRendering) {
-            element->document()
-                ->animationExecutor()
-                ->clearPendingAnimationRelatedWithElement(element);
-        }
-
-        if (style->display() == NoneDisplayValue) {
-            // The element will disapear soon
-            element->document()->animationExecutor()->cancelAnimation(element);
-        } else if (style->transitionLayerSize() > 0) {
-            if (inRendering) {
-                // check if there is pending animation related with this element
-                auto pending = element->document()
-                                   ->animationExecutor()
-                                   ->fetchPendingAnimationIfExists(element);
-                if (pending.first) {
-                    oldStyle = pending.first;
-                    oldFrame = pending.second;
-                    damage = (ComputedStyleDamage)(
-                        damage | compareStyle(oldStyle, style, damagedKeys));
-                }
-            }
-
-            if (oldStyle &&
-                damage != ComputedStyleDamage::ComputedStyleDamageNone &&
-                needsToApplyTransition(style, damagedKeys)) {
-                if (!inRendering) {
-                    if (!oldFrame) {
-                        if (element->hasRareMembers()) {
-                            oldFrame =
-                                element->rareMembers()->m_previousComputedFrame;
-                        }
-                    }
-                    if (oldFrame) {
-                        element->document()
-                            ->animationExecutor()
-                            ->addPendingAnimation(element, oldStyle, style,
-                                                  oldFrame);
-                    }
-                } else if (oldFrame) {
-                    applyTransition(element, oldStyle, oldFrame, style,
-                                    damagedKeys);
-                }
-            }
-
-        } else if (inRendering) {
-            // Transition property has gone
-            STARFISH_ASSERT(style->transitionLayerSize() == 0);
-            element->document()->animationExecutor()->cancelAnimation(element);
-        }
-
-        if (element->hasRareMembers()) {
-            element->rareMembers()->m_previousComputedFrame = nullptr;
-        }
-
         element->clearNeedsStyleRecalc();
     }
 
     return damage;
+}
+
+static void clearStyle(StyleResolveContext& ctx, Element* element)
+{
+    Node* child = element->firstChild();
+    while (child) {
+        if (child->isElement()) {
+            child->clearNeedsStyleRecalc();
+            if (child->style()) {
+                ctx.pushIntoComputedStylePool(child->style());
+                child->setStyle(nullptr);
+                clearStyle(ctx, child->asElement());
+            }
+        } else {
+            child->setStyle(nullptr);
+        }
+        child = child->nextSibling();
+    }
 }
 
 void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
@@ -6670,6 +6749,7 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
 
             if (child->style()->display() == NoneDisplayValue) {
                 child->clearChildNeedsStyleRecalc();
+                clearStyle(ctx, child->asElement());
             }
 
             if (oldStyle && oldStyle != child->style()) {

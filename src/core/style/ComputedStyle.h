@@ -3584,10 +3584,6 @@ protected:
 
 ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
                                  ComputedStyle* newStyle, bool* damagedKeys);
-
-bool needsToApplyTransition(ComputedStyle* newStyle, const bool* damagedKeys);
-void applyTransition(Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
-                     ComputedStyle* newStyle, const bool* damagedKeys);
 }
 
 #endif
