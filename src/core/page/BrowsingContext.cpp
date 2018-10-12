@@ -99,6 +99,7 @@ BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source)
     , m_focusedNode(nullptr)
     , m_activeElement(nullptr)
     , m_name(String::emptyString)
+    , m_styleResolveStartTick(0)
 {
     initFlags();
 }
@@ -445,10 +446,37 @@ void BrowsingContext::resolveStyleIfNeeds()
         // resolve style
         INSTALL_PROFILE_TIMER(starFish(), "resolve style");
 
+        m_styleResolveStartTick = tickCount();
         document()->styleResolver().resolveDOMStyle(
             document(), m_needsStyleRecalcForWholeDocument);
         m_needsStyleRecalc = false;
         m_needsStyleRecalcForWholeDocument = false;
+
+        if (document()->animationExecutor()->activeAnimations().size()) {
+            auto& l = document()->animationExecutor()->activeAnimations();
+
+            bool canceled = false;
+            for (size_t i = 0; i < l.size(); i++) {
+                if (l[i]->targetElement()->isInDocumentScope() &&
+                    l[i]->targetElement()->style() &&
+                    l[i]->targetElement()->style()->display() !=
+                        DisplayValue::NoneDisplayValue) {
+                    l[i]->targetElement()->setNeedsStyleRecalcForAnimation();
+                } else {
+                    canceled = true;
+                    l[i]->fireCancelEvent();
+                    l[i]->detachFromElement(nullptr);
+                    l.erase(i);
+                    i--;
+                }
+            }
+
+            if (canceled) {
+                document()
+                    ->animationExecutor()
+                    ->checkActiveAnimationExecutorInWebView();
+            }
+        }
     }
 }
 
@@ -470,22 +498,6 @@ void BrowsingContext::buildFrameTreeIfNeeds()
 bool BrowsingContext::layoutIfNeeds()
 {
     resolveStyleIfNeeds();
-
-    if (webView()->inRendering()) {
-        for (size_t i = 0;
-             i < webView()->m_browsingContextsHasPendingAnimation.size(); i++) {
-            if (webView()->m_browsingContextsHasPendingAnimation[i] == this) {
-                webView()
-                    ->m_browsingContextsHasPendingAnimation[i]
-                    ->document()
-                    ->animationExecutor()
-                    ->runPendingAnimation();
-                webView()->m_browsingContextsHasPendingAnimation.erase(i);
-                break;
-            }
-        }
-    }
-
     buildFrameTreeIfNeeds();
 
     bool ret = false;
@@ -504,6 +516,8 @@ bool BrowsingContext::layoutIfNeeds()
         webView()->setNeedsComputeStackingContextProperties();
         ret = true;
     }
+
+    document()->resourceLoader().cachePruning();
 
     return ret;
 }
@@ -667,18 +681,6 @@ void BrowsingContext::dispose()
 
     m_rootMap.clear();
     unRegisterNeedsLayoutInWebView();
-    auto& v = m_webView->m_browsingContextsHasPendingAnimation;
-    auto iter = std::find(v.begin(), v.end(), this);
-    if (iter != v.end()) {
-        v.erase(iter);
-    }
-
-    auto& v2 = m_webView->m_didRenderingCallbacks;
-    for (size_t i = 0; i < v2.size(); i++) {
-        if (std::get<0>(v2[i]) == this) {
-            v2[i] = std::make_tuple(nullptr, nullptr, nullptr);
-        }
-    }
 }
 
 void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
@@ -1793,8 +1795,6 @@ void BrowsingContext::pause()
 {
     document()->setVisibilityState(VisibilityState::VisibilityStateHidden);
 
-    document()->resourceLoader().cachePruning();
-
     iterateChildContext([](BrowsingContext* ctx) { ctx->pause(); });
 }
 
@@ -1827,14 +1827,6 @@ void BrowsingContext::registerNeedsLayoutInWebView()
     }
 
     auto& v = m_webView->m_browsingContextsNeedsLayout;
-    if (v.end() == std::find(v.begin(), v.end(), this)) {
-        v.push_back(this);
-    }
-}
-
-void BrowsingContext::notifyHasPendingAnimation()
-{
-    auto& v = m_webView->m_browsingContextsHasPendingAnimation;
     if (v.end() == std::find(v.begin(), v.end(), this)) {
         v.push_back(this);
     }

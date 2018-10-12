@@ -28,6 +28,7 @@ namespace StarFish {
 
 class Node;
 class PlatformWindow;
+class StyleTransformDataGroup;
 
 class AnimatedValue : public gc {
     enum ValueType ENSURE_ENUM_UNSIGNED {
@@ -202,28 +203,29 @@ protected:
     ValueType m_type;
 };
 
-class AnimationTask : public gc {
-    friend class AnimationExecutor;
-
+class ActiveAnimationTask : public gc {
 public:
-    AnimationTask(Element* target, CSSStyleValuePair::KeyKind targetProperty,
-                  AnimatedValue from, AnimatedValue to, float durationInms,
-                  float delayInms, AnimationTimingFunction* timingFunction,
-                  void* data = nullptr);
-    virtual ~AnimationTask()
+    ActiveAnimationTask(Element* target,
+                        CSSStyleValuePair::KeyKind targetProperty,
+                        const AnimatedValue& from, const AnimatedValue& to,
+                        uint64_t durationInms, uint64_t delayInms,
+                        AnimationTimingFunction* timingFunction)
+        : m_property(targetProperty)
+        , m_targetElement(target)
+        , m_fromValue(from)
+        , m_toValue(to)
+        , m_startTimeMs(0)
+        , m_durationMs(durationInms)
+        , m_delayMs(delayInms)
+        , m_timingFunction(timingFunction)
     {
     }
-    float computeProgress(float fraction);
-    bool canExecute();
-    void fireStartEvent();
-    void fireEndEvent();
-    void fireCancelEvent();
-    virtual void execute(float progress)
+
+    virtual ~ActiveAnimationTask()
     {
     }
-    virtual void attachedToElement();
-    virtual void detachedFromElement(bool shouldAffectStyle);
-    CSSStyleValuePair::KeyKind propertyType() const
+
+    CSSStyleValuePair::KeyKind property() const
     {
         return m_property;
     }
@@ -233,172 +235,197 @@ public:
         return m_targetElement;
     }
 
-    void* extraData() const
+    AnimatedValue fromValue() const
     {
-        return m_extraData;
+        return m_fromValue;
     }
 
-#ifndef NDEBUG
-    String* dumpString() const;
-#endif
+    AnimatedValue toValue() const
+    {
+        return m_toValue;
+    }
+
+    void step(uint64_t tickCount, ComputedStyle* style);
+    virtual void execute(float progress, ComputedStyle* style)
+    {
+    }
+    virtual bool taskCanContinue(ComputedStyle* newStyle)
+    {
+        return false;
+    }
+
+    virtual void attachToElement(ComputedStyle* style)
+    {
+    }
+
+    virtual void detachFromElement(ComputedStyle* style)
+    {
+    }
+
+    virtual bool isKindOfTransitionProperty(CSSStyleValuePair::KeyKind k)
+    {
+        return k == m_property;
+    }
 
     float fraction(uint64_t tickCount) const
     {
+        if (tickCount < m_startTimeMs) {
+            return 0;
+        }
         uint64_t timeDiff = tickCount - m_startTimeMs;
         float result = timeDiff / ((float)m_durationMs);
         return std::min(result, 1.0f);
     }
 
+    void fireStartEvent();
+    void fireEndEvent();
+    void fireCancelEvent();
+
 protected:
+    float computeProgress(float fraction)
+    {
+        STARFISH_ASSERT(fraction >= 0.0f);
+        STARFISH_ASSERT(fraction <= 1.0f);
+        return m_timingFunction->getValue(fraction);
+    }
+
+    CSSStyleValuePair::KeyKind m_property;
+    Element* m_targetElement;
+
     AnimatedValue m_fromValue;
     AnimatedValue m_toValue;
-    CSSStyleValuePair::KeyKind m_property;
-    void* m_extraData;
 
-private:
-    bool m_isStartEventFired;
-    bool m_attached;
-    size_t m_startTimeMs;
-    size_t m_durationMs;
-    size_t m_delayMs;
-    String* m_targetPropertyString;
-    Element* m_targetElement;
+    uint64_t m_startTimeMs;
+    uint64_t m_durationMs;
+    uint64_t m_delayMs;
     AnimationTimingFunction* m_timingFunction;
 };
 
-class ColorAnimationTask : public AnimationTask {
+class ActiveOpacityAnimationTask : public ActiveAnimationTask {
 public:
-    ColorAnimationTask(Element* target,
-                       CSSStyleValuePair::KeyKind targetProperty,
-                       AnimatedValue fromValue, AnimatedValue toValue,
-                       float duration, float delay,
-                       AnimationTimingFunction* timingFunction,
-                       void* data = nullptr)
-        : AnimationTask(target, targetProperty, fromValue, toValue, duration,
-                        delay, timingFunction, data)
+    ActiveOpacityAnimationTask(Element* target,
+                               CSSStyleValuePair::KeyKind targetProperty,
+                               const AnimatedValue& from,
+                               const AnimatedValue& to, uint64_t durationInms,
+                               uint64_t delayInms,
+                               AnimationTimingFunction* timingFunction)
+        : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
+                              delayInms, timingFunction)
     {
     }
-    void attachedToElement() override;
-    void execute(float progress) override;
+    void execute(float progress, ComputedStyle* style) override;
+    virtual bool taskCanContinue(ComputedStyle* newStyle) override;
+    virtual void attachToElement(ComputedStyle* style) override;
+    virtual void detachFromElement(ComputedStyle* style) override;
 };
 
-class LengthAnimationTask : public AnimationTask {
+class ActiveTransformAnimationTask : public ActiveAnimationTask {
 public:
-    LengthAnimationTask(Element* target,
-                        CSSStyleValuePair::KeyKind targetProperty,
-                        AnimatedValue fromValue, AnimatedValue toValue,
-                        float duration, float delay,
-                        AnimationTimingFunction* timingFunction,
-                        void* data = nullptr)
-        : AnimationTask(target, targetProperty, fromValue, toValue, duration,
-                        delay, timingFunction, data)
-    {
-    }
-    void execute(float progress) override;
-    void attachedToElement() override;
-    void detachedFromElement(bool shouldAffectStyle) override;
-    void computeToValue();
+    struct MatrixDecomposed2D {
+        float translateX;
+        float translateY;
+        float scaleX;
+        float scaleY;
+        float angle;
+        float matrixM11;
+        float matrixM12;
+        float matrixM21;
+        float matrixM22;
+
+        MatrixDecomposed2D()
+            : translateX(0)
+            , translateY(0)
+            , scaleX(0)
+            , scaleY(0)
+            , angle(0)
+            , matrixM11(0)
+            , matrixM12(0)
+            , matrixM21(0)
+            , matrixM22(0)
+
+        {
+        }
+    };
+
+    ActiveTransformAnimationTask(Element* target,
+                                 CSSStyleValuePair::KeyKind targetProperty,
+                                 const AnimatedValue& from,
+                                 const AnimatedValue& to, uint64_t durationInms,
+                                 uint64_t delayInms,
+                                 AnimationTimingFunction* timingFunction,
+                                 StyleTransformDataGroup* orgTransformValue);
+    void execute(float progress, ComputedStyle* style) override;
+    virtual bool taskCanContinue(ComputedStyle* newStyle) override;
+    virtual void attachToElement(ComputedStyle* style) override;
+    virtual void detachFromElement(ComputedStyle* style) override;
 
 protected:
-    Length interpolateLayoutUnit(float progress) const;
-    Length interpolateLength(float progress) const;
-
-protected:
-    LayoutUnit m_toFixedValue;
-};
-
-class LengthSizeAnimationTask : public AnimationTask {
-public:
-    LengthSizeAnimationTask(Element* target,
-                            CSSStyleValuePair::KeyKind targetProperty,
-                            AnimatedValue fromValue, AnimatedValue toValue,
-                            float duration, float delay,
-                            AnimationTimingFunction* timingFunction,
-                            void* data = nullptr)
-        : AnimationTask(target, targetProperty, fromValue, toValue, duration,
-                        delay, timingFunction, data)
-    {
-    }
-    void execute(float progress) override;
-    void attachedToElement() override;
-    void detachedFromElement(bool shouldAffectStyle) override;
-
-protected:
-    LengthSize interpolateLength(float progress) const;
-};
-
-class OpacityAnimationTask : public AnimationTask {
-public:
-    OpacityAnimationTask(Element* target, AnimatedValue fromValue,
-                         AnimatedValue toValue, float duration, float delay,
-                         AnimationTimingFunction* timingFunction,
-                         void* data = nullptr);
-    void execute(float progress) override;
-    void attachedToElement() override;
-    void detachedFromElement(bool shouldAffectStyle) override;
-
-private:
-    void opacityUpdated(bool updateStackingContext);
-};
-
-struct MatrixDecomposed2D {
-    float translateX;
-    float translateY;
-    float scaleX;
-    float scaleY;
-    float angle;
-    float matrixM11;
-    float matrixM12;
-    float matrixM21;
-    float matrixM22;
-
-    MatrixDecomposed2D()
-        : translateX(0)
-        , translateY(0)
-        , scaleX(0)
-        , scaleY(0)
-        , angle(0)
-        , matrixM11(0)
-        , matrixM12(0)
-        , matrixM21(0)
-        , matrixM22(0)
-
-    {
-    }
-};
-
-class TransformAnimationTask : public AnimationTask {
-public:
-    TransformAnimationTask(Element* target, AnimatedValue fromValue,
-                           float duration, float delay,
-                           AnimationTimingFunction* timingFunction);
-    void execute(float progress) override;
-    void attachedToElement() override;
-    void detachedFromElement(bool shouldAffectStyle) override;
-    void computeToValue();
-
-private:
+    StyleTransformDataGroup* m_originalTransformValue;
     MatrixDecomposed2D m_decomposedFrom;
     MatrixDecomposed2D m_decomposedTo;
 };
 
-class AnimationExecutor : public gc {
-    struct PendingAnimiationInfo : public gc {
-        Element* element;
-        ComputedStyle* oldStyle;
-        Frame* oldFrame;
-    };
+class ActiveColorAnimationTask : public ActiveAnimationTask {
+public:
+    ActiveColorAnimationTask(Element* target,
+                             CSSStyleValuePair::KeyKind targetProperty,
+                             const AnimatedValue& from, const AnimatedValue& to,
+                             uint64_t durationInms, uint64_t delayInms,
+                             AnimationTimingFunction* timingFunction)
+        : ActiveAnimationTask(target, targetProperty, from, to, durationInms,
+                              delayInms, timingFunction)
+    {
+    }
+    void execute(float progress, ComputedStyle* style) override;
+    virtual bool taskCanContinue(ComputedStyle* newStyle) override;
+};
 
+class ActiveLengthAnimationTask : public ActiveAnimationTask {
+public:
+    ActiveLengthAnimationTask(Element* target,
+                              CSSStyleValuePair::KeyKind targetProperty,
+                              const AnimatedValue& from,
+                              const AnimatedValue& to, uint64_t durationInms,
+                              uint64_t delayInms,
+                              AnimationTimingFunction* timingFunction,
+                              Length originalToValue,
+                              size_t indexForBgLayer = 0);
+    void execute(float progress, ComputedStyle* style) override;
+    virtual bool taskCanContinue(ComputedStyle* newStyle) override;
+    virtual bool isKindOfTransitionProperty(
+        CSSStyleValuePair::KeyKind k) override;
+
+protected:
+    Length m_originalToValue;
+    size_t m_indexForBgLayer;
+};
+
+class ActiveLengthSizeAnimationTask : public ActiveAnimationTask {
+public:
+    ActiveLengthSizeAnimationTask(Element* target,
+                                  CSSStyleValuePair::KeyKind targetProperty,
+                                  const AnimatedValue& from,
+                                  const AnimatedValue& to,
+                                  uint64_t durationInms, uint64_t delayInms,
+                                  AnimationTimingFunction* timingFunction,
+                                  LengthSize originalToValue,
+                                  size_t indexForBgLayer = 0);
+    void execute(float progress, ComputedStyle* style) override;
+    virtual bool taskCanContinue(ComputedStyle* newStyle) override;
+    virtual bool isKindOfTransitionProperty(
+        CSSStyleValuePair::KeyKind k) override;
+
+protected:
+    LengthSize m_originalToValue;
+    size_t m_indexForBgLayer;
+};
+
+class AnimationExecutor : public gc {
 public:
     AnimationExecutor(Window* window)
-        : m_isAlive(false)
+        : m_window(window)
     {
         m_window = window;
-    }
-
-    bool isAlive()
-    {
-        return m_isAlive;
     }
 
     Window* window()
@@ -406,28 +433,41 @@ public:
         return m_window;
     }
 
-    void registerAnimation(AnimationTask* newTask);
-    void cancelPreviousAnimationIfNeeded(AnimationTask* newTask);
-    void cancelAnimation(Element* target);
-    void cancelDisappearedAnimation(Element* target, ComputedStyle* newStyle);
-    void startIfNeeds();
-    void stop();
-    void stopIfNeeds(bool force = false);
-    void step();
+    GCVector<ActiveAnimationTask*>& activeAnimations()
+    {
+        return m_activeAnimations;
+    }
 
-    void runPendingAnimation();
-    void clearPendingAnimationRelatedWithElement(Element* element);
-    void addPendingAnimation(Element* element, ComputedStyle* oldStyle,
-                             ComputedStyle* newStyle, Frame* oldFrame);
-    std::pair<ComputedStyle*, Frame*> fetchPendingAnimationIfExists(
-        Element* element);
-    void attachAll();
+    bool hasActiveAnimiation(Element* element, CSSStyleValuePair::KeyKind p)
+    {
+        bool found = false;
+        for (size_t i = 0; i < m_activeAnimations.size(); i++) {
+            if (m_activeAnimations[i]->targetElement() == element &&
+                m_activeAnimations[i]->property() == p) {
+                found = true;
+                break;
+            }
+        }
+        return found;
+    }
+
+    void registerAnimation(ActiveAnimationTask* a, ComputedStyle* style)
+    {
+        m_activeAnimations.push_back(a);
+        a->attachToElement(style);
+        a->fireStartEvent();
+    }
+
+    void checkActiveAnimationExecutorInWebView();
 
 private:
-    bool m_isAlive;
     Window* m_window;
-    GCVector<AnimationTask*> m_animationList;
-    GCVector<PendingAnimiationInfo*> m_pendingAnimationInfoList;
+    GCVector<ActiveAnimationTask*> m_activeAnimations;
 };
+
+bool applyTransitionIfNeeds(
+    Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
+    ComputedStyle* newStyle,
+    const bool* damagedKeys); // returns true if animation registered
 }
 #endif

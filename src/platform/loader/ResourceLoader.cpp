@@ -492,7 +492,6 @@ bool ResourceLoader::requestResourcePreprocess(
         }
     }
 
-    cachePruning();
     return false;
 }
 

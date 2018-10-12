@@ -324,6 +324,7 @@ void PlatformWindow::setNeedsRendering()
             wnd->m_renderingAnimator = SIZE_MAX;
             if (wnd->width() != 0 && wnd->height() != 0) {
                 wnd->rendering();
+                wnd->didRendering();
             } else {
                 STARFISH_LOG_WARN("PlatformWindow size error\n");
             }
@@ -338,6 +339,22 @@ RenderResult PlatformWindow::rendering()
         m_renderingFinishedCallback(renderResult);
     }
     return renderResult;
+}
+
+void PlatformWindow::didRendering()
+{
+    if (m_setNeedsRenderingCallback) {
+        webView()->timer()->addAnimator(
+            webView()->mainBrowsingContext()->window(),
+            [](void* data) -> bool {
+                WebView* wv = (WebView*)data;
+                wv->didRendering();
+                return false;
+            },
+            webView());
+    } else {
+        webView()->didRendering();
+    }
 }
 
 void PlatformWindow::registerCallbackHandler(
@@ -438,6 +455,7 @@ void PlatformWindow::screenShot(std::string filePath, void (*callback)(void*),
     webView()->setNeedsPainting();
     setenv("SCREEN_SHOT", filePath.data(), 1);
     rendering();
+    didRendering();
     setenv("SCREEN_SHOT", "", 1);
     g_fireOnloadEvent = oldOnLoad;
     g_forceRendering = false;

@@ -341,19 +341,29 @@ int32_t Window::innerHeight()
     return m_height;
 }
 
+static void checkVwVh(Node* nd)
+{
+    if (nd->isElement()) {
+        if (nd->style() && nd->style()->seenViewPortUnitInStyle()) {
+            nd->setNeedsStyleRecalc();
+        }
+    }
+
+    Node* child = nd->firstChild();
+    while (child) {
+        if (child->isElement()) {
+            checkVwVh(child);
+        }
+        child = child->nextSibling();
+    }
+}
+
 void Window::resize(uint32_t w, uint32_t h)
 {
     if (document()->styleResolver().mediaQueryAffectedByViewportChange()) {
         browsingContext()->setNeedsStyleSheetsRecalc();
     } else {
-        if (document()->frame()) {
-            document()->frame()->asFrameBox()->iterateChildFrameBox([](
-                FrameBox* box) {
-                if (box->style() && box->style()->seenViewPortUnitInStyle()) {
-                    box->nearstNotAnonymousNode()->setNeedsStyleRecalc();
-                }
-            });
-        }
+        checkVwVh(document());
     }
 
     if (m_width != w || m_height != h) {

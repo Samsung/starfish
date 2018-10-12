@@ -126,10 +126,12 @@ void StarFish::destroy()
 {
     STARFISH_LOG_INFO("StarFish::destroy");
     NetworkSharedResourceManager::destroy();
-#ifdef STARFISH_ENABLE_HTTPCACHE
-    HTTPCache::destory();
-#endif
 
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    if (m_httpCache) {
+        m_httpCache->flush();
+    }
+#endif
     delete m_lineBreakIteratorPool;
     m_lineBreakIteratorPool = nullptr;
 

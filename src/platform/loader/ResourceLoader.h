@@ -70,7 +70,8 @@ public:
         m_isDocumentInOpenState = false;
     }
 
-    void cachePruning();
+    void cachePruning(); // this function uses iterateChildFrameBox. only call
+                         // after rendering!
     void notifyImageResourceActiveState(ImageResource* res);
 
     bool isDocumentInOpenState()

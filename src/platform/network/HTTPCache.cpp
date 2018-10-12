@@ -46,7 +46,6 @@
 namespace StarFish {
 
 const size_t HTTPCache::kBlockSize = BLKGETSIZE;
-HTTPCache* HTTPCache::g_httpCache = nullptr;
 
 HTTPCache::HTTPCache(String* cacheDirPath)
     : m_cacheEntryTable()
