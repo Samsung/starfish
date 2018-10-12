@@ -520,9 +520,9 @@ public:
 
         m_impl = webContainer;
     }
-    virtual void WillDestroy() override
+    virtual void Destroy() override
     {
-        WebView::WillDestroy();
+        WebView::Destroy();
 
         g_eglDestroySyncKHRProc(mDisplay, mFence);
         eglDestroySurface(mDisplay, mSurface);

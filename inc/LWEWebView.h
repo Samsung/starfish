@@ -249,7 +249,7 @@ public:
                            const char* defaultFontName, const char* locale,
                            const char* timezoneID);
 
-    void Destroy();
+    virtual void Destroy();
 
     Settings GetSettings();
     virtual void LoadURL(const std::string& url);
@@ -309,9 +309,6 @@ protected:
     }
 
     virtual WebContainer* FetchWebContainer() = 0;
-    virtual void WillDestroy()
-    {
-    }
 
     void* m_impl;
 };

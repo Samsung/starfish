@@ -353,7 +353,15 @@ void PlatformWindow::didRendering()
             },
             webView());
     } else {
-        webView()->didRendering();
+        webView()->timer()->addAnimator(
+            webView()->mainBrowsingContext()->window(),
+            [](void* data) -> bool {
+                WebView* wv = (WebView*)data;
+                wv->setNeedsRendering();
+                wv->rendering();
+                return false;
+            },
+            webView());
     }
 }
 
