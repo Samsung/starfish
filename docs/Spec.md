@@ -352,6 +352,7 @@ section are supported.
 |  | method | Attr removeAttributeNode(Attr attr) | Removes the specified attribute from the current element. |
 |  | method | boolean hasAttributes() | Returns true if element has any attribute. |
 |  | method | sequence&lt;DOMString&gt; getAttributeNames() | Returns sequence of Attributes's QualifiedName. |
+|  | method | Element? closest(DOMString selectors) | Returns the closest ancestor of the current element (or the current element itself) which matches the selectors given in parameter. If there isn't such an ancestor, it returns null. |
 |  | method | boolean matches(DOMString selectors) | Returns true if matching selectors against element’s root yields element, and false otherwise. |
 |  | method | HTMLCollection getElementsByTagName(DOMString qualifiedName) | Returns the list of elements with local name localName for the context object. |
 |  | method | HTMLCollection getElementsByTagNameNS(DOMString namespace, DOMString localName) | Returns a HTMLCollection of all descendant elements whose namespace is namespace and local name is localName. |

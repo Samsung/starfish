@@ -416,6 +416,24 @@ GCVector<String*> Element::getAttributeNames() const
     return ret;
 }
 
+Element* Element::closest(String* selectors)
+{
+    GCVector<CSSSelectorList*> selectorListContainer;
+    parseSelector(selectorListContainer, selectors);
+    SelectorQuery selectorQuery(selectorListContainer);
+    Node* node = this;
+    while (node) {
+        if (node->isElement()) {
+            Element* element = node->asElement();
+            if (selectorQuery.matches(*element)) {
+                return element;
+            }
+        }
+        node = node->parentNode();
+    }
+    return nullptr;
+}
+
 bool Element::matches(String* selectors)
 {
     GCVector<CSSSelectorList*> selectorListContainer;
