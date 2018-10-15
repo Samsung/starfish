@@ -797,8 +797,11 @@ public:
             m_graphicsAdapter,
             [](void* data, Evas_Object* o) {
                 WebViewEFL* s = (WebViewEFL*)data;
-                s->m_lastDoRenderingFunction();
-                s->m_lastDoRenderingFunction = nullptr;
+
+                if (s->m_lastDoRenderingFunction) {
+                    s->m_lastDoRenderingFunction();
+                    s->m_lastDoRenderingFunction = nullptr;
+                }
             },
             this);
 #else
