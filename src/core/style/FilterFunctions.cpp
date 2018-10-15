@@ -131,10 +131,15 @@ void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
 
     size_t num = parallelJobExecutor->numberOfThread();
 
-    if (num > 1) {
-        const size_t blockHeight = height / num;
-        const size_t jobsWithExtra = height % num;
-        int currentY = 0;
+    const size_t blockHeight = height / num;
+    const size_t jobsWithExtra = height % num;
+
+    // parallel job executor needs `blockHeight > extraHeight`
+    // if blockHeight < extraHeight
+    // size_t startY = !i ? 0 : currentY - extraHeight;
+    // startY got wrong value at i == 1
+    if (num > 1 && blockHeight > extraHeight) {
+        size_t currentY = 0;
 
         for (size_t i = 0; i < num; ++i) {
             auto& params = parallelJobExecutor->parameters(i);
