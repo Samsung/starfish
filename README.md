@@ -29,7 +29,7 @@ sudo apt-get install asciidoc xmlto
 ### Download StarFish and compile third party libraries
 
 ```sh
-git clone git@github.sec.samsung.net:RS7-webtf/starfish.git
+git clone git@github.sec.samsung.net:lws/starfish.git
 cd starfish
 git submodule init
 git submodule update
@@ -91,7 +91,7 @@ out
 
 Get ``gbs-conf``
 ```sh
-git clone https://github.sec.samsung.net/RS7-TizenPM/gbs-conf
+git clone https://github.sec.samsung.net/TizenPM/gbs-conf.git
 vi gbs-conf/gbs.conf
 # fill out 'user' and 'passwd'
 ```
@@ -211,7 +211,7 @@ All instructions in this section are outdated. They are listed here only for his
 ### Makefile-based Build System
 
 ``` sh
-git clone git@github.sec.samsung.net:RS7-webtf/starfish.git
+git clone git@github.sec.samsung.net:lws/starfish.git
 cd starfish
 git submodule init
 git submodule update
