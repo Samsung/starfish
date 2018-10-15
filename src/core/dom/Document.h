@@ -542,6 +542,11 @@ public:
     MediaQueryListMatcher* mediaQueryListMatcher();
     void evalMediaQueryLists();
 
+    uint64_t documentCreatedTick()
+    {
+        return m_documentCreatedTick;
+    }
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -725,6 +730,7 @@ protected:
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif
+    uint64_t m_documentCreatedTick;
 };
 }
 

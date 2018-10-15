@@ -215,6 +215,7 @@ WebView::WebView(StarFish* starFish, const char* locale, const char* timezoneID,
     , m_needsComputeStackingContextProperties(false)
     , m_needsPainting(false)
     , m_needsComposite(false)
+    , m_needsContinuousRendering(false)
     , m_didCompositeBefore(false)
     , m_isActive(false)
     , m_rootStackingContext(nullptr)
@@ -935,8 +936,10 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
 
 void WebView::setNeedsRendering()
 {
+    if (m_inRendering) {
+        return;
+    }
     auto wnd = platformWindow();
-
     m_needsRendering = true;
     wnd->setNeedsRendering();
 }
@@ -973,10 +976,24 @@ RenderResult WebView::rendering(bool force)
         return renderResult;
     }
 
-    uint64_t currentTick = tickCount();
-    m_lastRenderingTime = currentTick;
+    uint64_t currentTick = longTickCount();
+    m_lastRenderingTick = currentTick;
     m_inRendering = true;
     INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering");
+
+    {
+        INSTALL_PROFILE_TIMER(
+            starFish(),
+            "WebView::rendering::call request animation frame handlers");
+        auto rafHandlers = std::move(timer()->m_requestAnimationFrameHandler);
+        auto iter = rafHandlers.begin();
+
+        while (iter != rafHandlers.end()) {
+            Timer::RequestAnimationFrameData* data = iter->second;
+            data->m_handler(data->m_window, data->m_data);
+            iter++;
+        }
+    }
 
     layoutIfNeeds();
 
@@ -1293,11 +1310,10 @@ RenderResult WebView::rendering(bool force)
     }
 #endif
 
-    return renderResult;
-}
+    m_needsContinuousRendering = false;
 
-void WebView::didRendering()
-{
+    bool needsContinuousRendering = false;
+
     if (m_activeAnimationExecutor.size()) {
         for (size_t i = 0; i < m_activeAnimationExecutor.size(); i++) {
             m_activeAnimationExecutor[i]
@@ -1305,8 +1321,19 @@ void WebView::didRendering()
                 ->browsingContext()
                 ->registerNeedsLayoutInWebView();
         }
-        setNeedsRendering();
+        needsContinuousRendering = true;
     }
+
+    if (timer()->m_requestAnimationFrameHandler.size()) {
+        needsContinuousRendering = true;
+    }
+
+    if (needsContinuousRendering) {
+        m_needsContinuousRendering = true;
+        m_needsRendering = true;
+    }
+
+    return renderResult;
 }
 
 void WebView::setNeedsFullRepainting()
@@ -1342,7 +1369,7 @@ void WebView::clearStackingContext()
 
 void WebView::initRenderingFlags()
 {
-    m_lastRenderingTime = 0;
+    m_lastRenderingTick = 0;
     m_inRendering = false;
     m_needsRendering = false;
     m_needsPainting = false;

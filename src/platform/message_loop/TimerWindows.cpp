@@ -40,7 +40,7 @@ Timer::Timer(WebView* wv)
 {
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;
-    m_AnimationCounter = 0;
+    m_animationCounter = 0;
 }
 
 struct AnimationTickData {
@@ -113,43 +113,11 @@ void Timer::removeTimer(size_t reqID)
     }
 }
 
-size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
-                          void* data)
-{
-    STARFISH_ASSERT(isMainThread());
-    int32_t id = ++m_requestAnimationFrameCounter;
-    TimeoutData* td = new (NoGC) TimeoutData;
-    td->m_timer = this;
-    td->m_id = id;
-    td->m_window = window;
-    td->m_data = data;
-    td->m_handler = handler;
-    td->m_timerID =
-        SetTimer(NULL, (size_t)td, USER_TIMER_MINIMUM + 1,
-                 [](HWND, UINT, UINT_PTR timerId, DWORD) {
-                     TimeoutData* td =
-                         (TimeoutData*)g_windowsTimerData[timerId];
-                     Timer* timer = td->m_timer;
-                     int32_t id = td->m_id;
-                     td->m_handler(td->m_window, td->m_data);
-                     auto iter = timer->m_requestAnimationFrameHandler.find(id);
-                     if (iter != timer->m_requestAnimationFrameHandler.end()) {
-                         timer->m_requestAnimationFrameHandler.erase(iter);
-                         GC_FREE(td);
-                         KillTimer(NULL, timerId);
-                         g_windowsTimerData.erase((size_t)timerId);
-                     }
-                 });
-    g_windowsTimerData[(size_t)td->m_timerID] = (size_t)td;
-    m_requestAnimationFrameHandler.insert(std::make_pair(id, td));
-    return id;
-}
-
 size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
                           void* data)
 {
     STARFISH_ASSERT(isMainThread());
-    int32_t id = ++m_AnimationCounter;
+    int32_t id = ++m_animationCounter;
     AnimationTickData* ad = new (NoGC) AnimationTickData;
     ad->m_timer = this;
     ad->m_data = data;
@@ -176,20 +144,6 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
     g_windowsTimerData[(size_t)ad->m_timerID] = (size_t)ad;
     m_animationHandler.insert(std::make_pair(id, ad));
     return id;
-}
-
-void Timer::removeWindowAnimator(size_t reqID)
-{
-    STARFISH_ASSERT(isMainThread());
-
-    auto handlerData = m_requestAnimationFrameHandler.find(reqID);
-
-    if (handlerData != m_requestAnimationFrameHandler.end()) {
-        TimeoutData* td = (TimeoutData*)handlerData->second;
-        m_requestAnimationFrameHandler.erase(handlerData);
-        KillTimer(NULL, (size_t)td->m_timerID);
-        GC_FREE(td);
-    }
 }
 
 void Timer::removeGenericAnimator(size_t reqID)
@@ -222,12 +176,11 @@ void Timer::clear(BrowsingContext* ctx)
 
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
-        TimeoutData* td = (TimeoutData*)aniIter->second;
+        RequestAnimationFrameData* td =
+            (RequestAnimationFrameData*)aniIter->second;
         if ((td->m_window && td->m_window->browsingContext() == ctx) ||
             ctx == nullptr) {
             aniIter = m_requestAnimationFrameHandler.erase(aniIter);
-            KillTimer(NULL, (size_t)td->m_timerID);
-            GC_FREE(td);
         } else {
             aniIter++;
         }
@@ -260,9 +213,8 @@ void Timer::destroy()
 
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
-        TimeoutData* td = (TimeoutData*)aniIter->second;
-        KillTimer(NULL, (size_t)td->m_timerID);
-        GC_FREE(td);
+        RequestAnimationFrameData* td =
+            (RequestAnimationFrameData*)aniIter->second;
         aniIter++;
     }
     m_requestAnimationFrameHandler.clear();

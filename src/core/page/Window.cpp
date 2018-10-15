@@ -799,12 +799,12 @@ void Window::screenShot(std::string filePath, void (*callback)(void*),
 uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler,
                                        void* data)
 {
-    return webView()->timer()->addAnimator(this, handler, data);
+    return webView()->timer()->requestAnimationFrame(this, handler, data);
 }
 
 void Window::cancelAnimationFrame(int32_t reqID)
 {
-    webView()->timer()->removeWindowAnimator(reqID);
+    webView()->timer()->cancelAnimationFrame(reqID);
 }
 
 String* Window::name()

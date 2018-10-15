@@ -41,10 +41,10 @@ Timer::Timer(WebView* wv)
 {
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;
-    m_AnimationCounter = 0;
+    m_animationCounter = 0;
 }
 
-struct AnimationTickData {
+struct AnimationTickData : public gc {
     Timer* m_timer;
     int32_t m_id;
     Ecore_Animator* m_timerID;
@@ -53,7 +53,7 @@ struct AnimationTickData {
     Window* m_window;
 };
 
-struct TimeoutData {
+struct TimeoutData : public gc {
     Timer* m_timer;
     int32_t m_id;
     Ecore_Timer* m_timerID;
@@ -70,7 +70,7 @@ size_t Timer::addTimer(unsigned delay, Window* window,
 
     TimeoutData* td = new (NoGC) TimeoutData;
     td->m_timer = this;
-    int32_t id = ++m_timeoutCounter;
+    auto id = ++m_timeoutCounter;
     td->m_id = id;
     td->m_window = window;
     td->m_data = data;
@@ -122,43 +122,13 @@ void Timer::removeTimer(size_t reqID)
     }
 }
 
-size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
-                          void* data)
-{
-    STARFISH_ASSERT(isMainThread());
-    TimeoutData* td = new (NoGC) TimeoutData;
-    td->m_timer = this;
-    int32_t id = ++m_requestAnimationFrameCounter;
-    td->m_id = id;
-    td->m_window = window;
-    td->m_data = data;
-    td->m_handler = handler;
-    td->m_timerID = (Ecore_Timer*)ecore_animator_add(
-        [](void* data) -> Eina_Bool {
-            TimeoutData* td = (TimeoutData*)data;
-            auto a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
-            td->m_handler(td->m_window, td->m_data);
-            a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
-            if (td->m_timer->m_requestAnimationFrameHandler.end() != a) {
-                td->m_timer->m_requestAnimationFrameHandler.erase(a);
-            }
-            GC_FREE(td);
-            return ECORE_CALLBACK_DONE;
-        },
-        td);
-
-    m_requestAnimationFrameHandler.insert(std::make_pair(id, td));
-
-    return id;
-}
-
 size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
                           void* data)
 {
     STARFISH_ASSERT(isMainThread());
     AnimationTickData* ad = new (NoGC) AnimationTickData;
     ad->m_timer = this;
-    int32_t id = ++m_AnimationCounter;
+    auto id = ++m_animationCounter;
     ad->m_id = id;
     ad->m_data = data;
     ad->m_handler = handler;
@@ -182,33 +152,11 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
     return id;
 }
 
-void Timer::removeWindowAnimator(size_t reqID)
-{
-    STARFISH_ASSERT(isMainThread());
-
-    auto handlerData = m_requestAnimationFrameHandler.find(reqID);
-
-    if (handlerData != m_requestAnimationFrameHandler.end()) {
-        TimeoutData* td = (TimeoutData*)handlerData->second;
-        ecore_animator_freeze((Ecore_Animator*)td->m_timerID);
-        ecore_animator_del((Ecore_Animator*)td->m_timerID);
-        m_webView->messageLoop()->addIdler(td->m_window->browsingContext(),
-                                           [](size_t, void* data) {
-                                               TimeoutData* td =
-                                                   (TimeoutData*)data;
-                                               GC_FREE(td);
-                                           },
-                                           td);
-        m_requestAnimationFrameHandler.erase(handlerData);
-    }
-}
-
 void Timer::removeGenericAnimator(size_t reqID)
 {
     STARFISH_ASSERT(isMainThread());
 
     auto handlerData = m_animationHandler.find(reqID);
-
     if (handlerData != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)handlerData->second;
         ecore_animator_freeze(ad->m_timerID);
@@ -236,12 +184,10 @@ void Timer::clear(BrowsingContext* ctx)
 
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
-        TimeoutData* td = (TimeoutData*)aniIter->second;
+        RequestAnimationFrameData* td =
+            (RequestAnimationFrameData*)aniIter->second;
         if ((td->m_window && td->m_window->browsingContext() == ctx) ||
             ctx == nullptr) {
-            ecore_animator_freeze((Ecore_Animator*)td->m_timerID);
-            ecore_animator_del((Ecore_Animator*)td->m_timerID);
-            GC_FREE(td);
             aniIter = m_requestAnimationFrameHandler.erase(aniIter);
         } else {
             aniIter++;
@@ -278,10 +224,8 @@ void Timer::destroy()
 
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
-        TimeoutData* td = (TimeoutData*)aniIter->second;
-        ecore_animator_freeze((Ecore_Animator*)td->m_timerID);
-        ecore_animator_del((Ecore_Animator*)td->m_timerID);
-        GC_FREE(td);
+        RequestAnimationFrameData* td =
+            (RequestAnimationFrameData*)aniIter->second;
         aniIter++;
     }
     m_requestAnimationFrameHandler.clear();

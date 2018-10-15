@@ -419,6 +419,11 @@ ScriptValue createScriptValue(String* value)
     return ValueRef::create(createScriptString(value));
 }
 
+ScriptValue createScriptValue(double value)
+{
+    return ValueRef::create(value);
+}
+
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error)
