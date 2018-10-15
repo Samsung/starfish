@@ -1,84 +1,84 @@
 [submodule "third_party/deviceapi"]
 	path = third_party/deviceapi
-	url = git@github.sec.samsung.net:RS7-webtf/tizen_device_api_loader.git
+	url = git@github.sec.samsung.net:lws/tizen_device_api_loader.git
 [submodule "binding_generator"]
 	path = binding_generator
-	url = git@github.sec.samsung.net:RS7-webtf/binding_generator.git
+	url = git@github.sec.samsung.net:lws/binding_generator.git
 [submodule "third_party/escargot"]
 	path = third_party/escargot
-	url = git@github.sec.samsung.net:RS7-webtf/escargot.git
+	url = git@github.sec.samsung.net:lws/escargot.git
 [submodule "third_party/zeromq"]
 	path = third_party/zeromq
-	url = git@github.sec.samsung.net:RS8-webtf-sub/zeromq.git
+	url = git@github.sec.samsung.net:lws-submodules/zeromq.git
 [submodule "third_party/MP4Parse"]
 	path = third_party/MP4Parse
-	url = git@github.sec.samsung.net:RS8-webtf-sub/MP4Parse.git
+	url = git@github.sec.samsung.net:lws-submodules/MP4Parse.git
 [submodule "third_party/clipper"]
 	path = third_party/clipper
-	url = git@github.sec.samsung.net:RS8-webtf-sub/clipper.git
+	url = git@github.sec.samsung.net:lws-submodules/clipper.git
 [submodule "third_party/cppzmq"]
 	path = third_party/cppzmq
-	url = git@github.sec.samsung.net:RS8-webtf-sub/cppzmq.git
+	url = git@github.sec.samsung.net:lws-submodules/cppzmq.git
 [submodule "third_party/rapidxml"]
 	path = third_party/rapidxml
-	url = git@github.sec.samsung.net:RS8-webtf-sub/rapidxml.git
+	url = git@github.sec.samsung.net:lws-submodules/rapidxml.git
 [submodule "third_party/skia_matrix"]
 	path = third_party/skia_matrix
-	url = git@github.sec.samsung.net:RS8-webtf-sub/skia_matrix.git
+	url = git@github.sec.samsung.net:lws-submodules/skia_matrix.git
 [submodule "third_party/webm"]
 	path = third_party/webm
-	url = git@github.sec.samsung.net:RS8-webtf-sub/webm.git
+	url = git@github.sec.samsung.net:lws-submodules/webm.git
 [submodule "tool/gyp"]
 	path = tool/gyp
-	url = git@github.sec.samsung.net:RS8-webtf-misc/gyp.git
+	url = git@github.sec.samsung.net:lws-misc/gyp.git
 [submodule "third_party/libtuv"]
 	path = third_party/libtuv
 	url = https://github.com/Samsung/libtuv.git
 [submodule "third_party/android/prebuilt_armv-7a_8.1.0"]
 	path = third_party/android/prebuilt_armv-7a_8.1.0
-	url = git@github.sec.samsung.net:RS8-webtf-sub/prebuilt_armv-7a_8.1.0.git
+	url = git@github.sec.samsung.net:lws-submodules/prebuilt_armv-7a_8.1.0.git
 [submodule "third_party/windows/cairo"]
 	path = third_party/windows/cairo
-	url = git@github.sec.samsung.net:RS8-webtf-sub/cairo.git
+	url = git@github.sec.samsung.net:lws-submodules/cairo.git
 [submodule "third_party/windows/curl"]
 	path = third_party/windows/curl
-	url = git@github.sec.samsung.net:RS8-webtf-sub/curl.git
+	url = git@github.sec.samsung.net:lws-submodules/curl.git
 [submodule "third_party/windows/fontconfig"]
 	path = third_party/windows/fontconfig
-	url = git@github.sec.samsung.net:RS8-webtf-sub/fontconfig.git
+	url = git@github.sec.samsung.net:lws-submodules/fontconfig.git
 [submodule "third_party/windows/freetype2"]
 	path = third_party/windows/freetype2
-	url = git@github.sec.samsung.net:RS8-webtf-sub/freetype2.git
+	url = git@github.sec.samsung.net:lws-submodules/freetype2.git
 [submodule "third_party/windows/giflib"]
 	path = third_party/windows/giflib
-	url = git@github.sec.samsung.net:RS8-webtf-sub/giflib.git
+	url = git@github.sec.samsung.net:lws-submodules/giflib.git
 [submodule "third_party/windows/harfbuzz"]
 	path = third_party/windows/harfbuzz
-	url = git@github.sec.samsung.net:RS8-webtf-sub/harfbuzz.git
+	url = git@github.sec.samsung.net:lws-submodules/harfbuzz.git
 [submodule "third_party/windows/libiconv"]
 	path = third_party/windows/libiconv
-	url = git@github.sec.samsung.net:RS8-webtf-sub/libiconv.git
+	url = git@github.sec.samsung.net:lws-submodules/libiconv.git
 [submodule "third_party/windows/libpng"]
 	path = third_party/windows/libpng
-	url = git@github.sec.samsung.net:RS8-webtf-sub/libpng.git
+	url = git@github.sec.samsung.net:lws-submodules/libpng.git
 [submodule "third_party/windows/libxml2"]
 	path = third_party/windows/libxml2
-	url = git@github.sec.samsung.net:RS8-webtf-sub/libxml2.git
+	url = git@github.sec.samsung.net:lws-submodules/libxml2.git
 [submodule "third_party/windows/pixman"]
 	path = third_party/windows/pixman
-	url = git@github.sec.samsung.net:RS8-webtf-sub/pixman.git
+	url = git@github.sec.samsung.net:lws-submodules/pixman.git
 [submodule "third_party/windows/windows_pthread"]
 	path = third_party/windows/windows_pthread
-	url = git@github.sec.samsung.net:RS8-webtf-sub/windows_pthread.git
+	url = git@github.sec.samsung.net:lws-submodules/windows_pthread.git
 [submodule "third_party/windows/zlib"]
 	path = third_party/windows/zlib
-	url = git@github.sec.samsung.net:RS8-webtf-sub/zlib.git
+	url = git@github.sec.samsung.net:lws-submodules/zlib.git
 [submodule "third_party/android/skia"]
 	path = third_party/android/skia
-	url = git@github.sec.samsung.net:RS8-webtf-sub/skia.git
+	url = git@github.sec.samsung.net:lws-submodules/skia.git
 [submodule "third_party/earcut.hpp"]
 	path = third_party/earcut.hpp
-	url = git@github.sec.samsung.net:RS8-webtf-sub/earcut.hpp.git
+	url = git@github.sec.samsung.net:lws-submodules/earcut.hpp.git
 [submodule "test"]
 	path = test
-	url = git@github.sec.samsung.net:RS8-webtf-test/web_tc_new.git
+	url = git@github.sec.samsung.net:lws-test/web_tc_new.git
