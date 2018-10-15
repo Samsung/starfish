@@ -125,6 +125,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 #ifdef STARFISH_TIZEN
     , m_tizenWidgetTransparentBackground(0)
 #endif
+    , m_documentCreatedTick(longTickCount())
 {
     // TODO https://html.spec.whatwg.org/multipage/origin.html#concept-origin
     // For Document objects

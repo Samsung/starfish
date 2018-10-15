@@ -29,35 +29,44 @@ typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
 class Timer : public gc {
     friend class Window;
+    friend class WebView;
 
 public:
     Timer(WebView* wv);
+
     size_t addTimer(unsigned delay, Window* window,
                     WindowSetTimeoutHandler handler, void* data,
                     bool repetitive);
     void removeTimer(size_t reqID);
 
-    size_t addAnimator(Window* window, WindowSetTimeoutHandler handler,
-                       void* data);
     size_t addAnimator(Window* window, GenericAnimationHandler handler,
                        void* data);
-    void removeWindowAnimator(size_t reqID);
     void removeGenericAnimator(size_t reqID);
 
-    void clear(BrowsingContext* ctx); // give nullptr to clear every tiemr
+    uint32_t requestAnimationFrame(Window* window,
+                                   WindowSetTimeoutHandler handler, void* data);
+    void cancelAnimationFrame(size_t reqID);
 
+    void clear(BrowsingContext* ctx); // give nullptr to clear every timer
     void destroy();
 
+protected:
+    struct RequestAnimationFrameData : public gc {
+        Timer* m_timer;
+        uint32_t m_id;
+        void* m_data;
+        WindowSetTimeoutHandler m_handler;
+        Window* m_window;
+    };
+
     WebView* m_webView;
-
-    int32_t m_timeoutCounter;
-    GCUnorderedMap<int32_t, void*> m_timeoutHandler;
-
-    int32_t m_requestAnimationFrameCounter;
-    GCUnorderedMap<int32_t, void*> m_requestAnimationFrameHandler;
-
-    int32_t m_AnimationCounter;
-    GCUnorderedMap<int32_t, void*> m_animationHandler;
+    uint32_t m_timeoutCounter;
+    GCUnorderedMap<uint32_t, void*> m_timeoutHandler;
+    uint32_t m_requestAnimationFrameCounter;
+    GCVector<std::pair<uint32_t, RequestAnimationFrameData*>>
+        m_requestAnimationFrameHandler;
+    size_t m_animationCounter;
+    GCUnorderedMap<uint32_t, void*> m_animationHandler;
 };
 }
 

@@ -154,6 +154,24 @@ ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
     return ValueRef::create(result);
 }
 
+static void requestAnimationFrameHandler(Window* wnd, void* data)
+{
+    TimeOutData* td = (TimeOutData*)data;
+    FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
+
+    double DOMHighResTimeStamp = (wnd->webView()->lastRenderingTick() -
+                                  wnd->document()->documentCreatedTick()) /
+                                 1000.0;
+    GCVector<ScriptValue> newArgVector;
+    newArgVector.reserve(1 + td->argVector.size());
+    newArgVector.push_back(createScriptValue(DOMHighResTimeStamp));
+    newArgVector.insert(newArgVector.end(), td->argVector.begin(),
+                        td->argVector.end());
+    callScriptFunction(wnd->scriptBindingInstance(), ValueRef::create(fn),
+                       newArgVector.data(), newArgVector.size(),
+                       scriptUndefined());
+}
+
 ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
                                               ValueRef* thisValue, size_t argc,
                                               ValueRef** argv,
@@ -189,7 +207,8 @@ ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
                                             name, 1, bodyStr, error);
     }
 
-    return ValueRef::create(window->requestAnimationFrame(timeoutHandler, td));
+    return ValueRef::create(
+        window->requestAnimationFrame(requestAnimationFrameHandler, td));
 }
 
 #ifdef STARFISH_ENABLE_TEST

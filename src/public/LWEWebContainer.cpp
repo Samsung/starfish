@@ -1036,7 +1036,6 @@ void WebContainer::RegisterSetNeedsRenderingCallback(
                 std::function<void()> fn = [wnd]() {
                     auto p = wnd;
                     p->rendering();
-                    p->didRendering();
                 };
                 cb(this, fn);
             });

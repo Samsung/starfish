@@ -286,7 +286,7 @@ void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
 void PlatformWindow::clearResources()
 {
     if (m_renderingAnimator != SIZE_MAX) {
-        webView()->messageLoop()->removeIdler(m_renderingAnimator);
+        webView()->timer()->removeGenericAnimator(m_renderingAnimator);
         m_renderingAnimator = SIZE_MAX;
     }
     webView()->clearStackingContext();
@@ -309,25 +309,32 @@ void PlatformWindow::setNeedsRendering()
         if (webView()->hasActiveAnimationExecutor()) {
             return;
         }
-        webView()->messageLoop()->removeIdler(m_renderingAnimator);
+        webView()->timer()->removeGenericAnimator(m_renderingAnimator);
         wnd->m_renderingAnimator = SIZE_MAX;
     }
 
-    wnd->m_renderingAnimator = webView()->messageLoop()->addIdler(
+    wnd->m_renderingAnimator = webView()->timer()->addAnimator(
         nullptr,
-        [](size_t handle, void* data) {
+        [](void* data) {
             PlatformWindow* wnd = (PlatformWindow*)data;
             if (!wnd->starFish()) {
                 wnd->m_renderingAnimator = SIZE_MAX;
-                return;
+                return false;
             }
-            wnd->m_renderingAnimator = SIZE_MAX;
+
             if (wnd->width() != 0 && wnd->height() != 0) {
                 wnd->rendering();
-                wnd->didRendering();
             } else {
                 STARFISH_LOG_WARN("PlatformWindow size error\n");
             }
+
+            if (wnd->webView()->needsContinuousRendering()) {
+                STARFISH_ASSERT(!wnd->m_setNeedsRenderingCallback);
+                return true;
+            }
+
+            wnd->m_renderingAnimator = SIZE_MAX;
+            return false;
         },
         wnd);
 }
@@ -338,31 +345,21 @@ RenderResult PlatformWindow::rendering()
     if (renderResult.didPaintingOrCompositing && m_renderingFinishedCallback) {
         m_renderingFinishedCallback(renderResult);
     }
-    return renderResult;
-}
 
-void PlatformWindow::didRendering()
-{
     if (m_setNeedsRenderingCallback) {
-        webView()->timer()->addAnimator(
-            webView()->mainBrowsingContext()->window(),
-            [](void* data) -> bool {
-                WebView* wv = (WebView*)data;
-                wv->didRendering();
-                return false;
-            },
-            webView());
-    } else {
-        webView()->timer()->addAnimator(
-            webView()->mainBrowsingContext()->window(),
-            [](void* data) -> bool {
-                WebView* wv = (WebView*)data;
-                wv->setNeedsRendering();
-                wv->rendering();
-                return false;
-            },
-            webView());
+        if (webView()->needsContinuousRendering()) {
+            webView()->timer()->addAnimator(
+                webView()->mainBrowsingContext()->window(),
+                [](void* data) -> bool {
+                    WebView* wv = (WebView*)data;
+                    wv->setNeedsRendering();
+                    return false;
+                },
+                webView());
+        }
     }
+
+    return renderResult;
 }
 
 void PlatformWindow::registerCallbackHandler(
@@ -463,7 +460,6 @@ void PlatformWindow::screenShot(std::string filePath, void (*callback)(void*),
     webView()->setNeedsPainting();
     setenv("SCREEN_SHOT", filePath.data(), 1);
     rendering();
-    didRendering();
     setenv("SCREEN_SHOT", "", 1);
     g_fireOnloadEvent = oldOnLoad;
     g_forceRendering = false;

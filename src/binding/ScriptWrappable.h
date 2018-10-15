@@ -94,6 +94,7 @@ ScriptValue createScriptValue(ScriptUint8ClampedArray array);
 
 ScriptValue createScriptValue(uint32_t value);
 ScriptValue createScriptValue(String* value);
+ScriptValue createScriptValue(double value);
 
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,

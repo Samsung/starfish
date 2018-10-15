@@ -176,7 +176,6 @@ public:
                                   Node* node = nullptr);
 
     virtual RenderResult rendering();
-    void didRendering();
     virtual void pause();
     virtual void resume();
     virtual void destroy();

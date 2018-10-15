@@ -114,7 +114,7 @@ class WebView : public StarFishHoldable, public gc {
     friend class BrowsingContext;
     friend class StackingContext;
     friend class PlatformWindow;
-    friend class WindowImplEFL;
+    friend class Timer;
     friend class AnimationExecutor;
     friend class ResourceLoader;
     friend class FileURLResourceRequestJobDelegate; // Custom file IO
@@ -271,6 +271,11 @@ public:
     bool needsRendering()
     {
         return m_needsRendering;
+    }
+
+    bool needsContinuousRendering()
+    {
+        return m_needsContinuousRendering;
     }
 
     void addPaintingDirtyArea(const LayoutRect& rt)
@@ -454,6 +459,11 @@ public:
         return m_initialFontFamilyDatas;
     }
 
+    uint64_t lastRenderingTick()
+    {
+        return m_lastRenderingTick;
+    }
+
 private:
     WebView(StarFish* starFish, const char* locale, const char* timezoneID,
             uint32_t w, uint32_t h, uint32_t defaultFontSize,
@@ -464,7 +474,6 @@ private:
 
     RenderResult rendering(
         bool force = false); // returns did painting | did compositing
-    void didRendering();
     void setNeedsRendering();
     void setNeedsPainting()
     {
@@ -502,7 +511,7 @@ private:
 
     PrevDrawnStackingContextInfoMap m_prevDrawnStackingContextInfo;
 
-    uint64_t m_lastRenderingTime;
+    uint64_t m_lastRenderingTick;
     uint64_t m_navigateStartingTime;
     uint32_t m_currentActiveAnimatorCount;
     bool m_inRendering;
@@ -511,6 +520,7 @@ private:
     bool m_needsComputeStackingContextProperties;
     bool m_needsPainting;
     bool m_needsComposite;
+    bool m_needsContinuousRendering;
     bool m_didCompositeBefore; // last state of enabling composite
     bool m_isActive; // false means that is paused, then rendering callbacks
                      // will be skipped.
