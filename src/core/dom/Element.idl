@@ -41,7 +41,7 @@ interface Element : Node {
   [Unimplemented] ShadowRoot attachShadow(ShadowRootInit init);
   [Unimplemented] readonly attribute ShadowRoot? shadowRoot;
 
-  [Unimplemented] Element? closest(DOMString selectors);
+  [RaisesException] Element? closest(DOMString selectors);
   [RaisesException] boolean matches(DOMString selectors);
 
   HTMLCollection getElementsByTagName(DOMString qualifiedName);

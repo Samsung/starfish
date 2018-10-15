@@ -160,6 +160,7 @@ public:
     void removeAttributeNS(Nullable<String*> ns, String* localName);
     Attr* removeAttributeNode(Attr* attr);
 
+    Element* closest(String* selectors);
     bool matches(String* selectors);
 
     // DO NOT MODIFY ATTRIBUTE
