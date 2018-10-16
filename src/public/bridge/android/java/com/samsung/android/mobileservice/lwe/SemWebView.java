@@ -295,8 +295,10 @@ public class SemWebView extends TextureView {
      * @since Lightweight Web Engine 1.0
      */
     public SemWebSettings getSettings() {
-        if (delegate != null)
-            return new SemWebSettings(delegate.getDefaultUA(), delegate.getUA(), delegate.getCacheModeValue(), delegate.getDefaultFontSize());
+        if (delegate != null) {
+            return delegate.getSettings();
+        }
+
         return null;
     }
 

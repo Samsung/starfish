@@ -44,6 +44,7 @@ public class SemWebSettings {
      */
     public static final int LOAD_CACHE_ONLY = 3;
 
+    private LweWebViewImpl mWebView = null;
 
     private int mCacheMode = LOAD_DEFAULT;
     private int mDefaultFontSize = 16;
@@ -61,11 +62,21 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     SemWebSettings(String dua, String ua, int cacheMode, int defaultFontSize) {
-
         mDefaultUserAgent = dua;
         mUserAgentString = ua;
         setCacheMode(cacheMode);
         setDefaultFontSize(defaultFontSize);
+    }
+
+    /**
+     * Creates a SemWebSettings object
+     *
+     * @hide Internal use only
+     * @param webView LweWebViewImpl
+     * @since Lightweight Web Engine 1.0
+     */
+    SemWebSettings(LweWebViewImpl webView) {
+        mWebView = webView;
     }
 
     /**
@@ -108,7 +119,10 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public void setUserAgentString(String ua) {
-        mUserAgentString = ua;
+        if (mWebView.getWebViewInternalHandle() != 0) {
+            mUserAgentString = ua;
+            mWebView.setUserAgentString(mWebView.getWebViewInternalHandle(), mUserAgentString);
+        }
     }
 
     /**
@@ -119,7 +133,10 @@ public class SemWebSettings {
      */
     public void setCacheMode(int mode) {
         if (mode == LOAD_DEFAULT || mode == LOAD_NO_CACHE) {
-            mCacheMode = mode;
+            if (mWebView.getWebViewInternalHandle() != 0) {
+                mCacheMode = mode;
+                mWebView.setCacheMode(mWebView.getWebViewInternalHandle(), mCacheMode);
+            }
         }
     }
 
@@ -139,8 +156,11 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public void setDefaultFontSize(int size) {
-        if (1<= size && size <= 72) {
-            mDefaultFontSize = size;
+        if (1 <= size && size <= 72) {
+            if (mWebView.getWebViewInternalHandle() != 0) {
+                mDefaultFontSize = size;
+                mWebView.setDefaultFontSize(mWebView.getWebViewInternalHandle(), mDefaultFontSize);
+            }
         }
     }
 
