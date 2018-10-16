@@ -53,6 +53,23 @@ static void buildDocumentFromXML(
         AtomicString localName = AtomicString::emptyAtomicString();
         AtomicString namespaceURI = AtomicString::emptyAtomicString();
         std::string localNameStd = node->name();
+
+        rapidxml::xml_attribute<char>* attr = node->first_attribute();
+        while (attr) {
+            std::string attrName = attr->name();
+            if (attrName == "xmlns") {
+                namespaceMap[std::string("")] =
+                    AtomicString::createAttrAtomicString(sf, attr->value());
+                namespaceURI =
+                    AtomicString::createAtomicString(sf, attr->value());
+            } else if (attrName.find("xmlns:") == 0) {
+                namespaceMap[attrName.substr(6)] =
+                    AtomicString::createAttrAtomicString(sf, attr->value());
+            }
+
+            attr = attr->next_attribute();
+        }
+
         auto colonPos = localNameStd.find(':');
         if (std::string::npos != colonPos) {
             localName = AtomicString::createAtomicString(sf, node->name() +
@@ -82,7 +99,7 @@ static void buildDocumentFromXML(
                                        QualifiedName(namespaceURI, localName));
         }
 
-        rapidxml::xml_attribute<char>* attr = node->first_attribute();
+        attr = node->first_attribute();
         while (attr) {
             if (namespaceURI == sf->staticStrings()->m_xhtmlNamespaceURI) {
                 newNode->asElement()->setAttribute(
@@ -96,15 +113,6 @@ static void buildDocumentFromXML(
                         AtomicString::emptyAtomicString(),
                         AtomicString::createAtomicString(sf, attr->name())),
                     String::fromUTF8(attr->value()));
-            }
-
-            std::string attrName = attr->name();
-            if (attrName == "xmlns") {
-                namespaceMap[std::string("")] =
-                    AtomicString::createAttrAtomicString(sf, attr->value());
-            } else if (attrName.find("xmlns:") == 0) {
-                namespaceMap[attrName.substr(6)] =
-                    AtomicString::createAttrAtomicString(sf, attr->value());
             }
 
             attr = attr->next_attribute();
