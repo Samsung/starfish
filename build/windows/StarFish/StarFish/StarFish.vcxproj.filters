@@ -345,9 +345,6 @@
     <ClCompile Include="..\..\..\..\src\binding\DOMRectReadOnlyBinding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\..\..\src\binding\DOMSettableTokenListBinding.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\..\..\src\binding\DOMStringListBinding.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

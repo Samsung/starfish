@@ -313,8 +313,6 @@ section are supported.
 |    |  attribute  |  right  |  Return max(x coordinate, x coordinate + width dimension) of the object  |
 |    |  attribute  |  bottom  |  Return max(y coordinate, y coordinate + height dimension) of the object  |
 |    |  attribute  |  left  |  Return min(x coordinate, x coordinate + width dimension) of the object  |
-| [DOMSettableTokenList](https://dev.w3.org/html5/spec-LC/common-dom-interfaces.html#domsettabletokenlist-0) | interface | DOMSettableTokenList | The DOMSettableTokenList interface is the same as the DOMTokenList interface, except that it allows the underlying string to be directly changed. |
-|  | attribute | value | The value attribute must return the underlying string on getting, and must replace the underlying string with the new value on setting. |
 |  [DOMTokenList](https://dom.spec.whatwg.org/#interface-domtokenlist)  |  attribute  |  length  |  Returns the number of tokens. |
 |    | method | DOMString? item(unsigned long index) (or tokenlist[index])  |  Returns the token with the index index number. |
 |    | method | boolean contains(DOMString token)  |  Returns true if token is present, and false otherwise. |

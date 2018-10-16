@@ -121,7 +121,6 @@
     <ClCompile Include="..\..\..\..\src\binding\DOMRectBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\DOMRectListBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\DOMRectReadOnlyBinding.cpp" />
-    <ClCompile Include="..\..\..\..\src\binding\DOMSettableTokenListBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\DOMStringListBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\DOMStringMapBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\DOMStringOrCanvasGradientOrCanvasPatternBinding.cpp" />
