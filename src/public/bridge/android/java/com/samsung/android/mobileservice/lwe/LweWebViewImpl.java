@@ -75,6 +75,7 @@ public class LweWebViewImpl implements LweWebView {
     private SemWebViewClient mWebViewClient = null;
     private SemWebLweClient mWebLweClient = null;
     private SemDownloadListener mDownloadListener = null;
+    private SemWebSettings mWebSettings = new SemWebSettings(this);
 
     private int mCacheMode = SemWebSettings.LOAD_DEFAULT;
     private int mDefaultFontSize;
@@ -171,6 +172,10 @@ public class LweWebViewImpl implements LweWebView {
         mEglDisplay = null;
         mEglContext = null;
         mEglSurface = null;
+    }
+
+    public long getWebViewInternalHandle() {
+        return mWebViewInternalHandle;
     }
 
     public InputConnection getInputConnectionInstance(View view){
@@ -646,19 +651,22 @@ public class LweWebViewImpl implements LweWebView {
         }
     }
 
+    public SemWebSettings getSettings() {
+        if (mWebSettings == null) {
+            mWebSettings = new SemWebSettings(this);
+        }
+
+        return mWebSettings;
+    }
+
     public void setSettings(SemWebSettings settings) {
         if (settings == null) {
             return;
         }
 
-        final String UA = mUserAgentString = settings.getUserAgentString();
-        final int cacheMode = mCacheMode = settings.getCacheMode();
-        final int defaultFontSize = mDefaultFontSize = settings.getDefaultFontSize();
-        if (mWebViewInternalHandle != 0) {
-            setUserAgentString(mWebViewInternalHandle, UA);
-            setCacheMode(mWebViewInternalHandle, cacheMode);
-            setDefaultFontSize(mWebViewInternalHandle, defaultFontSize);
-        }
+        mWebSettings.setUserAgentString(settings.getUserAgentString());
+        mWebSettings.setCacheMode(settings.getCacheMode());
+        mWebSettings.setDefaultFontSize(settings.getDefaultFontSize());
     }
 
     private void glMakeCurrent() {
@@ -707,9 +715,12 @@ public class LweWebViewImpl implements LweWebView {
     native private void removeJavascriptInterface(long starFish, String objectName);
     native private String evaluateJavaScript(long starFish, String data);
     native private String getDefaultUserAgent();
-    native private void setUserAgentString(long starFish, String userAgent);
-    native private void setCacheMode(long starFish, int mode);
-    native private void setDefaultFontSize(long starFish, int size);
+
+    // Accessed by SemWebSettings
+    native public void setUserAgentString(long starFish, String userAgent);
+    native public void setCacheMode(long starFish, int mode);
+    native public void setDefaultFontSize(long starFish, int size);
+
     static native private void init();
     static native private void resizeTo(long starFish, int w, int h);
     static native private void dispatchMouseDown(long starFish, float x, float y);

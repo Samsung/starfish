@@ -49,6 +49,7 @@ public interface LweWebView {
                             final ValueCallback<String> resultCallback);
     void clearHistory();
 
+    SemWebSettings getSettings();
     void setSettings(SemWebSettings settings);
     void setWebViewClient(SemWebViewClient client);
     void setDownloadListener(SemDownloadListener listener);
