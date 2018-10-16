@@ -273,7 +273,7 @@ NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
 void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     STARFISH_ASSERT(isMainThread());
-    STARFISH_ASSERT(m_orgProxy->m_url->isNetworkURL());
+    STARFISH_ASSERT(m_orgProxy->m_url->isHTTPFamilyURL());
 
     NetworkURLWorkerData* nwd = new (NoGC) NetworkURLWorkerData(m_orgProxy);
 
@@ -399,23 +399,20 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
 
     headers.setHeader(HTTPHeaderMap::kUpgradeInsecureRequests, "1");
 
-    if (!m_orgProxy->m_document->documentURI()->isNetworkURL()) {
-        headers.setHeader(HTTPHeaderMap::kOrigin, "null");
-    } else {
-        auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
-        if (it2 == headers.headerMap().end() && m_orgProxy->referrer()) {
-            ResourceURL* rUrl = m_orgProxy->referrer();
-            String* rString;
-            if (rUrl->isReferrerURL()) {
-                rString =
-                    rUrl->asReferrerURL()->referrerString(m_orgProxy->url());
-            } else {
-                rString = rUrl->urlString();
-            }
-            if (!rString->isEmpty()) {
-                auto urlUTF8Data = rString->toUTF8NonGCString();
-                headers.setHeader(HTTPHeaderMap::kReferer, urlUTF8Data);
-            }
+    // TODO : Origin must be included when sending Cross-origin request
+
+    auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
+    if (it2 == headers.headerMap().end() && m_orgProxy->referrer()) {
+        ResourceURL* rUrl = m_orgProxy->referrer();
+        String* rString;
+        if (rUrl->isReferrerURL()) {
+            rString = rUrl->asReferrerURL()->referrerString(m_orgProxy->url());
+        } else {
+            rString = rUrl->urlString();
+        }
+        if (!rString->isEmpty()) {
+            auto urlUTF8Data = rString->toUTF8NonGCString();
+            headers.setHeader(HTTPHeaderMap::kReferer, urlUTF8Data);
         }
     }
 }

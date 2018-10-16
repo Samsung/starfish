@@ -206,23 +206,23 @@ String* Request::referrer()
 String* Request::referrerPolicy()
 {
     switch (m_data.m_referrerPolicy) {
-    case ReferrerURL::NoReferrer:
+    case ReferrerPolicy::NoReferrer:
         return String::createASCIIString("no-referrer");
-    case ReferrerURL::NoReferrerWhenDowngrade:
+    case ReferrerPolicy::NoReferrerWhenDowngrade:
         return String::createASCIIString("no-referrer-when-downgrade");
-    case ReferrerURL::Origin:
+    case ReferrerPolicy::Origin:
         return String::createASCIIString("origin");
-    case ReferrerURL::OriginWhenCrossOrigin:
+    case ReferrerPolicy::OriginWhenCrossOrigin:
         return String::createASCIIString("origin-when-cross-origin");
-    case ReferrerURL::SameOrigin:
+    case ReferrerPolicy::SameOrigin:
         return String::createASCIIString("same-origin");
-    case ReferrerURL::StrictOrigin:
+    case ReferrerPolicy::StrictOrigin:
         return String::createASCIIString("strict-origin");
-    case ReferrerURL::StrictOriginWhenCrossOrigin:
+    case ReferrerPolicy::StrictOriginWhenCrossOrigin:
         return String::createASCIIString("strict-origin-when-cross-origin");
-    case ReferrerURL::UnsafeUrl:
+    case ReferrerPolicy::UnsafeUrl:
         return String::createASCIIString("unsafe-url");
-    case ReferrerURL::Empty:
+    case ReferrerPolicy::Empty:
         return String::createASCIIString("");
     default:
         break;

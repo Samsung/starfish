@@ -138,6 +138,8 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
             ret = HTTPHeaderMap::kAcceptEncoding;
         } else if (lower.compare("accept-language") == 0) {
             ret = HTTPHeaderMap::kAcceptLanguage;
+        } else if (lower.compare("referrer-policy") == 0) {
+            ret = HTTPHeaderMap::kReferrerPolicy;
         }
         break;
     case 16:

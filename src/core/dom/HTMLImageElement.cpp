@@ -175,7 +175,8 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_src) {
+    if (name == starFish()->staticStrings()->m_src &&
+        !inHTMLConstructionSite()) {
         if (value->length() && document()->doesParticipateInRendering()) {
             loadImage(value);
         } else {
@@ -203,6 +204,17 @@ void HTMLImageElement::didNodeAdopted()
     }
 }
 
+void HTMLImageElement::didNodeInsertedToDocumentTree()
+{
+    HTMLElement::didNodeInsertedToDocumentTree();
+    auto value = src();
+    if (value->length() && document()->doesParticipateInRendering()) {
+        loadImage(value);
+    } else {
+        unloadImage();
+    }
+}
+
 void HTMLImageElement::unloadImage()
 {
     if (m_imageResource) {
@@ -225,8 +237,9 @@ void HTMLImageElement::loadImage(String* src)
         new ImageDownloadClient(this, m_imageResource));
     m_imageResource->addResourceClient(
         new ElementResourceClient(this, m_imageResource));
-    ResourceURL* rUrl =
-        new ReferrerURL(document()->documentURI(), referrerPolicy());
+
+    GET_EFFECTIVE_REFERRERPOLICY();
+    ResourceURL* rUrl = new ReferrerURL(document()->documentURI(), policy);
     if (rUrl->isFileURL()) {
         m_imageResource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
                                  rUrl, true);

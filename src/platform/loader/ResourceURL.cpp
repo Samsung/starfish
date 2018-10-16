@@ -1033,30 +1033,42 @@ void* DocumentURL::operator new(size_t size)
 
 ReferrerURL::ReferrerURL(String* referrer)
     : ResourceURL(referrer)
-    , m_policy(NoReferrer)
+    , m_policy(ReferrerPolicy::NoReferrer)
 {
 }
 
 ReferrerURL::ReferrerURL(String* referrer, String* policy)
     : ReferrerURL(referrer)
 {
-    if (url()) {
+    if (isHTTPFamilyURL()) {
         m_policy = ReferrerURL::policyFromString(policy);
     }
 }
 
+ReferrerURL::ReferrerURL(String* referrer, ReferrerPolicy policy)
+    : ResourceURL(referrer)
+    , m_policy(policy)
+{
+}
+
 ReferrerURL::ReferrerURL(ResourceURL* referrer)
     : ResourceURL(*referrer)
-    , m_policy(NoReferrer)
+    , m_policy(ReferrerPolicy::NoReferrer)
 {
 }
 
 ReferrerURL::ReferrerURL(ResourceURL* referrer, String* policy)
     : ReferrerURL(referrer)
 {
-    if (url()) {
+    if (isHTTPFamilyURL()) {
         m_policy = ReferrerURL::policyFromString(policy);
     }
+}
+
+ReferrerURL::ReferrerURL(ResourceURL* referrer, ReferrerPolicy policy)
+    : ResourceURL(*referrer)
+    , m_policy(policy)
+{
 }
 
 void* ReferrerURL::operator new(size_t size)
@@ -1075,30 +1087,30 @@ void* ReferrerURL::operator new(size_t size)
 
 String* ReferrerURL::referrerString(ResourceURL* url)
 {
-    STARFISH_ASSERT(url->url());
+    STARFISH_ASSERT(url->isHTTPFamilyURL());
     switch (m_policy) {
-    case NoReferrer:
+    case ReferrerPolicy::NoReferrer:
         return String::emptyString;
-    case Empty:
-    case NoReferrerWhenDowngrade:
+    case ReferrerPolicy::Empty:
+    case ReferrerPolicy::NoReferrerWhenDowngrade:
         if (protocolKind() == HTTPS_PROTOCOL &&
             url->protocolKind() == HTTP_PROTOCOL) {
             return String::emptyString;
         }
         return urlString();
-    case Origin:
+    case ReferrerPolicy::Origin:
         return origin();
-    case OriginWhenCrossOrigin:
+    case ReferrerPolicy::OriginWhenCrossOrigin:
         if (origin()->equalsIgnoreCase(url->origin())) {
             return urlString();
         }
         return origin();
-    case SameOrigin:
+    case ReferrerPolicy::SameOrigin:
         if (origin()->equalsIgnoreCase(url->origin())) {
             return urlString();
         }
         return String::emptyString;
-    case StrictOrigin:
+    case ReferrerPolicy::StrictOrigin:
         if (protocolKind() == HTTPS_PROTOCOL) {
             if (url->protocolKind() == HTTPS_PROTOCOL) {
                 return origin();
@@ -1107,7 +1119,7 @@ String* ReferrerURL::referrerString(ResourceURL* url)
             }
         }
         return origin();
-    case StrictOriginWhenCrossOrigin:
+    case ReferrerPolicy::StrictOriginWhenCrossOrigin:
         if (origin()->equalsIgnoreCase(url->origin())) {
             return urlString();
         } else if (protocolKind() == HTTPS_PROTOCOL &&
@@ -1115,7 +1127,7 @@ String* ReferrerURL::referrerString(ResourceURL* url)
             return String::emptyString;
         }
         return origin();
-    case UnsafeUrl:
+    case ReferrerPolicy::UnsafeUrl:
         return urlString();
     default:
         STARFISH_ASSERT_NOT_REACHED();
@@ -1124,7 +1136,7 @@ String* ReferrerURL::referrerString(ResourceURL* url)
     return nullptr;
 }
 
-ReferrerURL::ReferrerPolicy ReferrerURL::policy()
+ReferrerPolicy ReferrerURL::policy()
 {
     return m_policy;
 }
@@ -1144,27 +1156,27 @@ bool ReferrerURL::isValidPolicy(String* policy)
     return false;
 }
 
-ReferrerURL::ReferrerPolicy ReferrerURL::policyFromString(String* policy)
+ReferrerPolicy ReferrerURL::policyFromString(String* policy)
 {
     if (policy->equalsIgnoreCase("no-referrer")) {
-        return NoReferrer;
+        return ReferrerPolicy::NoReferrer;
     } else if (policy->isEmpty()) {
-        return Empty;
+        return ReferrerPolicy::Empty;
     } else if (policy->equalsIgnoreCase("no-referrer-when-downgrade")) {
-        return NoReferrerWhenDowngrade;
+        return ReferrerPolicy::NoReferrerWhenDowngrade;
     } else if (policy->equalsIgnoreCase("origin")) {
-        return Origin;
+        return ReferrerPolicy::Origin;
     } else if (policy->equalsIgnoreCase("origin-when-cross-origin")) {
-        return OriginWhenCrossOrigin;
+        return ReferrerPolicy::OriginWhenCrossOrigin;
     } else if (policy->equalsIgnoreCase("same-origin")) {
-        return SameOrigin;
+        return ReferrerPolicy::SameOrigin;
     } else if (policy->equalsIgnoreCase("strict-origin")) {
-        return StrictOrigin;
+        return ReferrerPolicy::StrictOrigin;
     } else if (policy->equalsIgnoreCase("strict-origin-when-cross-origin")) {
-        return StrictOriginWhenCrossOrigin;
+        return ReferrerPolicy::StrictOriginWhenCrossOrigin;
     } else if (policy->equalsIgnoreCase("unsafe-url")) {
-        return UnsafeUrl;
+        return ReferrerPolicy::UnsafeUrl;
     }
-    return NoReferrerWhenDowngrade;
+    return ReferrerPolicy::NoReferrerWhenDowngrade;
 }
 }

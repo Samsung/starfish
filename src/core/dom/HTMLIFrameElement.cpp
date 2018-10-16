@@ -117,9 +117,11 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
     if (name == starFish()->staticStrings()->m_src) {
-        unloadSrc();
-        if (value->length() && document()->doesParticipateInRendering()) {
-            loadSrc();
+        if (!inHTMLConstructionSite()) {
+            unloadSrc();
+            if (value->length() && document()->doesParticipateInRendering()) {
+                loadSrc();
+            }
         }
     } else if (name == starFish()->staticStrings()->m_width ||
                name == starFish()->staticStrings()->m_height) {
@@ -213,10 +215,12 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
             m_historyManager = HistoryManager::create(this);
         }
 
+        GET_EFFECTIVE_REFERRERPOLICY();
         ResourceURL* rUrl = referrerURL;
         if (!rUrl->isReferrerURL()) {
-            rUrl = new ReferrerURL(rUrl, referrerPolicy());
+            rUrl = new ReferrerURL(rUrl, policy);
         }
+
         if (m_browsingContext) {
             m_browsingContext->dispose();
         }

@@ -51,7 +51,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
             if (url->asDocumentURL()->formSubmitData()) {
                 FormSubmitData* formSubmitData =
                     url->asDocumentURL()->formSubmitData();
-                if (url->isNetworkURL()) {
+                if (url->isHTTPFamilyURL()) {
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString(HTTPHeaderMap::kAccept),
                         String::createASCIIString(

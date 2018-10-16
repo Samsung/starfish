@@ -25,7 +25,7 @@ namespace StarFish {
 RequestData::RequestData()
     : m_method(String::createASCIIString("GET"))
     , m_referrer(String::createASCIIString("about:client"))
-    , m_referrerPolicy(ReferrerURL::Empty)
+    , m_referrerPolicy(ReferrerPolicy::Empty)
     , m_mode(RequestMode::CORS)
     , m_credentials(RequestCredentials::SameOrigin)
     , m_cache(RequestCache::Default)

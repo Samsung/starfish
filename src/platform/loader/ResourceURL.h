@@ -98,11 +98,6 @@ public:
         return m_isValid;
     }
 
-    bool url()
-    {
-        return m_protocol == HTTP_PROTOCOL || m_protocol == HTTPS_PROTOCOL;
-    }
-
     bool isFileURL() const
     {
         return m_protocol == FILE_PROTOCOL;
@@ -133,7 +128,7 @@ public:
         return m_protocol == UNKNOWN;
     }
 
-    bool isNetworkURL() const
+    bool isHTTPFamilyURL() const
     {
         return m_protocol == HTTP_PROTOCOL || m_protocol == HTTPS_PROTOCOL;
     }
@@ -259,24 +254,26 @@ private:
     FormSubmitData* m_formSubmitData;
 };
 
+enum class ReferrerPolicy {
+    NoReferrer,
+    NoReferrerWhenDowngrade,
+    Origin,
+    OriginWhenCrossOrigin,
+    SameOrigin,
+    StrictOrigin,
+    StrictOriginWhenCrossOrigin,
+    UnsafeUrl,
+    Empty, // default
+};
+
 class ReferrerURL : public ResourceURL {
 public:
-    enum ReferrerPolicy {
-        NoReferrer,
-        NoReferrerWhenDowngrade,
-        Origin,
-        OriginWhenCrossOrigin,
-        SameOrigin,
-        StrictOrigin,
-        StrictOriginWhenCrossOrigin,
-        UnsafeUrl,
-        Empty, // default
-    };
-
-    ReferrerURL(String* url);
-    ReferrerURL(String* url, String* policy);
-    ReferrerURL(ResourceURL* url);
-    ReferrerURL(ResourceURL* url, String* policy);
+    ReferrerURL(String* referrer);
+    ReferrerURL(String* referrer, String* policy);
+    ReferrerURL(String* referrer, ReferrerPolicy policy);
+    ReferrerURL(ResourceURL* referrer);
+    ReferrerURL(ResourceURL* referrer, String* policy);
+    ReferrerURL(ResourceURL* referrer, ReferrerPolicy policy);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -294,6 +291,16 @@ public:
 private:
     ReferrerPolicy m_policy;
 };
+
+#define GET_EFFECTIVE_REFERRERPOLICY()                               \
+    ReferrerPolicy policy;                                           \
+    auto nullable =                                                  \
+        getAttribute(starFish()->staticStrings()->m_referrerpolicy); \
+    if (nullable.hasValue()) {                                       \
+        policy = ReferrerURL::policyFromString(nullable.getValue()); \
+    } else {                                                         \
+        policy = document()->referrerPolicy();                       \
+    }
 }
 
 #endif

@@ -102,8 +102,9 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
         auto href = starFish()->staticStrings()->m_href;
         Nullable<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {
+            GET_EFFECTIVE_REFERRERPOLICY();
             ResourceURL* rUrl =
-                new ReferrerURL(document()->documentURI(), referrerPolicy());
+                new ReferrerURL(document()->documentURI(), policy);
             String* hrefStr = hrefAttr.getValue()->trim();
             if (hrefStr->length()) {
                 if (hrefStr->startsWith("#")) {

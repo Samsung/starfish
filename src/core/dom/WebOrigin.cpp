@@ -35,8 +35,7 @@ WebOrigin::WebOrigin(ResourceURL* url, bool isOpaque)
 
 WebOrigin* WebOrigin::createDocumentOrigin(ResourceURL* url)
 {
-    if (url && (url->m_protocol == ResourceURL::HTTP_PROTOCOL ||
-                url->m_protocol == ResourceURL::HTTPS_PROTOCOL)) {
+    if (url && (url->isHTTPFamilyURL() || url->isFileURL())) {
         return new WebOrigin(url, false);
     }
     return new WebOrigin();

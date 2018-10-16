@@ -60,6 +60,7 @@ const char HTTPHeaderMap::kOrigin[] = "Origin";
 const char HTTPHeaderMap::kProxyAuthorization[] = "Proxy-Authorization";
 const char HTTPHeaderMap::kRange[] = "Range";
 const char HTTPHeaderMap::kReferer[] = "Referer";
+const char HTTPHeaderMap::kReferrerPolicy[] = "Referrer-Policy";
 const char HTTPHeaderMap::kTE[] = "TE";
 const char HTTPHeaderMap::kUserAgent[] = "User-Agent";
 const char HTTPHeaderMap::kLocation[] = "Location";
