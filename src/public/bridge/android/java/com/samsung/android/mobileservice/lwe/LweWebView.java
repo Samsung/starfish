@@ -26,16 +26,16 @@ import android.webkit.ValueCallback;
 
 public interface LweWebView {
     void initWebView(View appView);
-    String getDefaultUA();
-    String getUA();
-    int getCacheModeValue();
+    String getDefaultUserAgent(Context context);
+    String getUserAgentString();
+    int getCacheMode();
     int getDefaultFontSize();
     InputConnection getInputConnectionInstance(View view);
     void onVisibilityChanged(View changedView, int visibility);
 
     void loadUrl(final String url);
     String getUrl();
-    void loadData(String data);
+    void loadData(String data, String mimeType, String encoding);
     void reload();
     void stopLoading();
     void goBack();
@@ -44,13 +44,12 @@ public interface LweWebView {
     boolean canGoForward();
     void addJavascriptInterface(final Object object, final String name);
     void removeJavascriptInterface(final String name);
-    void clearCache();
+    void clearCache(boolean includeDiskFiles);
     void evaluateJavascript(final String script,
                             final ValueCallback<String> resultCallback);
     void clearHistory();
 
     SemWebSettings getSettings();
-    void setSettings(SemWebSettings settings);
     void setWebViewClient(SemWebViewClient client);
     void setDownloadListener(SemDownloadListener listener);
     void setWebLweClient(SemWebLweClient client);
