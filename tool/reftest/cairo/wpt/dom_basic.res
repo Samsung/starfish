@@ -141,7 +141,7 @@ http://web-platform.test:8000/dom/nodes/DOMImplementation-createDocumentType.htm
 http://web-platform.test:8000/dom/nodes/CharacterData-deleteData.html
 http://web-platform.test:8000/dom/nodes/Document-createAttribute.html
 http://web-platform.test:8000/dom/nodes/CharacterData-appendChild.html
-#http://web-platform.test:8000/dom/nodes/Element-tagName.html
+http://web-platform.test:8000/dom/nodes/Element-tagName.html
 http://web-platform.test:8000/dom/nodes/Node-compareDocumentPosition.html
 http://web-platform.test:8000/dom/nodes/prepend-on-Document.html
 #http://web-platform.test:8000/dom/nodes/Document-constructor.html
