@@ -19,6 +19,8 @@
 
 package com.samsung.android.mobileservice.lwe;
 
+import android.content.Context;
+
 /**
  * This class manages settings state for a SemWebView.
  */
@@ -44,29 +46,8 @@ public class SemWebSettings {
      */
     public static final int LOAD_CACHE_ONLY = 3;
 
+    private static final int DEFAULT_FONT_SIZE = 16;
     private LweWebViewImpl mWebView = null;
-
-    private int mCacheMode = LOAD_DEFAULT;
-    private int mDefaultFontSize = 16;
-    private String mDefaultUserAgent = null;
-    private String mUserAgentString = null;
-
-    /**
-     * Creates a SemWebSettings object
-     *
-     * @hide Internal use only
-     * @param dua Default user agent
-     * @param ua User agent
-     * @param cacheMode Cache mode
-     * @param defaultFontSize default font size
-     * @since Lightweight Web Engine 1.0
-     */
-    SemWebSettings(String dua, String ua, int cacheMode, int defaultFontSize) {
-        mDefaultUserAgent = dua;
-        mUserAgentString = ua;
-        setCacheMode(cacheMode);
-        setDefaultFontSize(defaultFontSize);
-    }
 
     /**
      * Creates a SemWebSettings object
@@ -83,11 +64,15 @@ public class SemWebSettings {
      * Returns the default User-Agent used by a WebView. An instance of WebView could use a
      * different User-Agent if a call is made to setUserAgentString(String).
      *
-     * @return A Context object used to access application assets
+     * @param context: A Context object used to access application assets
+     * @return The WebView's default user-agent string
      * @since Lightweight Web Engine 1.0
      */
-    public String getDefaultUserAgent() {
-        return mDefaultUserAgent;
+    public String getDefaultUserAgent(Context context) {
+        if (mWebView.getWebViewInternalHandle() != 0) {
+            mWebView.getDefaultUserAgent(context);
+        }
+        return "";
     }
 
     /**
@@ -97,7 +82,10 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public String getUserAgentString() {
-        return mUserAgentString;
+        if (mWebView.getWebViewInternalHandle() != 0) {
+            mWebView.getUserAgentString();
+        }
+        return "";
     }
 
     /**
@@ -108,7 +96,10 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public int getCacheMode() {
-        return mCacheMode;
+        if (mWebView.getWebViewInternalHandle() != 0) {
+            mWebView.getCacheMode();
+        }
+        return LOAD_DEFAULT;
     }
 
     /**
@@ -120,8 +111,7 @@ public class SemWebSettings {
      */
     public void setUserAgentString(String ua) {
         if (mWebView.getWebViewInternalHandle() != 0) {
-            mUserAgentString = ua;
-            mWebView.setUserAgentString(mWebView.getWebViewInternalHandle(), mUserAgentString);
+            mWebView.setUserAgentString(mWebView.getWebViewInternalHandle(), ua);
         }
     }
 
@@ -134,8 +124,7 @@ public class SemWebSettings {
     public void setCacheMode(int mode) {
         if (mode == LOAD_DEFAULT || mode == LOAD_NO_CACHE) {
             if (mWebView.getWebViewInternalHandle() != 0) {
-                mCacheMode = mode;
-                mWebView.setCacheMode(mWebView.getWebViewInternalHandle(), mCacheMode);
+                mWebView.setCacheMode(mWebView.getWebViewInternalHandle(), mode);
             }
         }
     }
@@ -143,11 +132,14 @@ public class SemWebSettings {
     /**
      * Gets the WebView's default font size.
      *
-     * @return Gets the WebView's default font size.
+     * @return A non-negative integer between 1 and 72.
      * @since Lightweight Web Engine 1.0
      */
     public int getDefaultFontSize() {
-        return mDefaultFontSize;
+        if (mWebView.getWebViewInternalHandle() != 0) {
+            return mWebView.getDefaultFontSize();
+        }
+        return DEFAULT_FONT_SIZE;
     }
 
     /**
@@ -158,16 +150,8 @@ public class SemWebSettings {
     public void setDefaultFontSize(int size) {
         if (1 <= size && size <= 72) {
             if (mWebView.getWebViewInternalHandle() != 0) {
-                mDefaultFontSize = size;
-                mWebView.setDefaultFontSize(mWebView.getWebViewInternalHandle(), mDefaultFontSize);
+                mWebView.setDefaultFontSize(mWebView.getWebViewInternalHandle(), size);
             }
         }
     }
-
-    /*
-    void setAllowUniveralAceessFromFilesURLs(boolean allowUniveralAceessFromFilesURLs){
-    }
-    void setJavaScriptEnable(boolean javaScriptEnable){
-    }
-    */
 }

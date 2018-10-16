@@ -22,10 +22,4 @@ public class SemWebLweClient {
      */
     public void onProgressChanged(SemWebView view, int newProgress) {
     }
-
-    /*
-    public boolean onShowFileChooser(SemWebView webView, ValueCallback<Uri[]> uris) {
-        return false;
-    }
-    */
 }

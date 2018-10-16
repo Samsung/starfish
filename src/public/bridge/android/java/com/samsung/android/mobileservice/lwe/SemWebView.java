@@ -135,9 +135,10 @@ public class SemWebView extends TextureView {
      * @param url The URL of the resource to load
      * @since Lightweight Web Engine 1.0
      */
-    public void loadUrl(final String url) {
-        if (delegate != null)
+    public void loadUrl(String url) {
+        if (delegate != null) {
             delegate.loadUrl(url);
+        }
     }
 
     /**
@@ -156,11 +157,23 @@ public class SemWebView extends TextureView {
      * Loads the given data into this WebView using a 'data' scheme URL.
      *
      * @param data A String of data in the given encoding
+     * @param mimeType The MIME type of the data, e.g., 'text/html'.
+     *                 This value may be null.
+     * @param encoding The encoding of the data
+     *                 This value may be null.
      * @since Lightweight Web Engine 1.0
      */
-    public void loadData(String data) {
-        if (delegate != null)
-            delegate.loadData(data);
+    public void loadData(String data, String mimeType, String encoding) {
+        if (delegate != null) {
+            if (mimeType == null) {
+                mimeType = "text/html";
+            }
+            if (encoding == null) {
+                encoding = "UTF-8";
+            }
+
+            delegate.loadData(data, mimeType, encoding);
+        }
     }
 
     /**
@@ -237,7 +250,7 @@ public class SemWebView extends TextureView {
      * @param name The name used to expose the object in JavaScript
      * @since Lightweight Web Engine 1.0
      */
-    public void addJavascriptInterface(final Object object, final String name) {
+    public void addJavascriptInterface(Object object, String name) {
         if (delegate != null)
             delegate.addJavascriptInterface(object, name);
     }
@@ -248,7 +261,7 @@ public class SemWebView extends TextureView {
      * @param name The name used to expose the object in JavaScript. This value must never be null.
      * @since Lightweight Web Engine 1.0
      */
-    public void removeJavascriptInterface(final String name) {
+    public void removeJavascriptInterface(String name) {
         if (delegate != null)
             delegate.removeJavascriptInterface(name);
     }
@@ -256,11 +269,13 @@ public class SemWebView extends TextureView {
     /**
      * Clears the resource cache.
      *
+     * @param includeDiskFiles if {@code false}, only the RAM cache is cleared.
      * @since Lightweight Web Engine 1.0
      */
-    public void clearCache() {
-        if (delegate != null)
-            delegate.clearCache();
+    public void clearCache(boolean includeDiskFiles) {
+        if (delegate != null) {
+            delegate.clearCache(includeDiskFiles);
+        }
     }
 
     /**
@@ -272,8 +287,7 @@ public class SemWebView extends TextureView {
      *                       the result is required.
      * @since Lightweight Web Engine 1.0
      */
-    public void evaluateJavascript(final String script,
-                                   final ValueCallback<String> resultCallback) {
+    public void evaluateJavascript(String script, ValueCallback<String> resultCallback) {
         if (delegate != null)
             delegate.evaluateJavascript(script, resultCallback);
     }
@@ -300,17 +314,6 @@ public class SemWebView extends TextureView {
         }
 
         return null;
-    }
-
-    /**
-     * Set a settings
-     *
-     * @param settings A Settings object that is used to control this WebView's settings
-     * @since Lightweight Web Engine 1.0
-     */
-    public void setSettings(SemWebSettings settings) {
-        if (delegate != null)
-            delegate.setSettings(settings);
     }
 
     /**

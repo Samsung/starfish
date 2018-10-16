@@ -26,7 +26,7 @@ package com.samsung.android.mobileservice.lwe;
 public class SemWebResourceError {
 
     private int mErrorCode = 0;
-    private String mErrorDescription = null;
+    private CharSequence mErrorDescription = "";
 
     /**
      * Creates a SemWebResourceError object.
@@ -36,7 +36,7 @@ public class SemWebResourceError {
      * @param description Description of the error message
      * @since Lightweight Web Engine 1.0
      */
-    SemWebResourceError(int code, String description) {
+    SemWebResourceError(int code, CharSequence description) {
         mErrorCode = code;
         mErrorDescription = description;
     }
@@ -48,7 +48,7 @@ public class SemWebResourceError {
      * @return The description of the error
      * @since Lightweight Web Engine 1.0
      */
-    public String getDescription() {
+    public CharSequence getDescription() {
         return mErrorDescription;
     }
 

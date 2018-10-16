@@ -22,7 +22,6 @@ package com.samsung.android.mobileservice.lwe;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -245,15 +244,15 @@ public class LweWebViewImpl implements LweWebView {
 
     }
 
-    public String getDefaultUA(){
+    public String getDefaultUserAgent(Context context) {
         return mDefaultUserAgent;
     }
 
-    public String getUA(){
+    public String getUserAgentString() {
         return mUserAgentString;
     }
 
-    public int getCacheModeValue(){
+    public int getCacheMode() {
         return mCacheMode;
     }
 
@@ -471,7 +470,8 @@ public class LweWebViewImpl implements LweWebView {
         mCanGoForward = canGoForward;
         if (mWebViewClient != null) {
             //TODO
-            mWebViewClient.onReceivedError(mLWEView, new SemWebResourceError(errorCode, "NotSupported"));
+            mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(""),
+                new SemWebResourceError(errorCode, "NotSupported"));
         }
     }
 
@@ -489,13 +489,14 @@ public class LweWebViewImpl implements LweWebView {
         mCanGoBack = canGoBack;
         mCanGoForward = canGoForward;
         if (mWebViewClient != null) {
-            mWebViewClient.onPageStarted(mLWEView, url);
+            mWebViewClient.onPageStarted(mLWEView, url, null);
         }
     }
 
     private boolean shouldOverrideUrlLoading(String request) {
         if (mWebViewClient != null) {
-            return mWebViewClient.shouldOverrideUrlLoading(mLWEView, request);
+            return mWebViewClient.shouldOverrideUrlLoading(mLWEView,
+                                                           new WebResourceRequestImpl(request));
         }
         return false;
     }
@@ -556,7 +557,7 @@ public class LweWebViewImpl implements LweWebView {
         return mCurrentURL;
     }
 
-    public void loadData(String data) {
+    public void loadData(String data, String mimeType, String encoding) {
         if (data == null) {
             return;
         }
@@ -626,7 +627,7 @@ public class LweWebViewImpl implements LweWebView {
         }
     }
 
-    public void clearCache() {
+    public void clearCache(boolean includeDiskFiles) {
         if (mWebViewInternalHandle != 0) {
             clearCache(mWebViewInternalHandle);
         }
@@ -657,16 +658,6 @@ public class LweWebViewImpl implements LweWebView {
         }
 
         return mWebSettings;
-    }
-
-    public void setSettings(SemWebSettings settings) {
-        if (settings == null) {
-            return;
-        }
-
-        mWebSettings.setUserAgentString(settings.getUserAgentString());
-        mWebSettings.setCacheMode(settings.getCacheMode());
-        mWebSettings.setDefaultFontSize(settings.getDefaultFontSize());
     }
 
     private void glMakeCurrent() {
