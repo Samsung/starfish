@@ -69,6 +69,10 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
         !m_content->isEmpty()) {
         document()->setContentLanguage(m_content);
     }
+
+    if (m_name->equalsIgnoreCase("referrer")) {
+        m_document->setReferrerPolicy(ReferrerURL::policyFromString(m_content));
+    }
 }
 
 void HTMLMetaElement::didNodeInsertedToDocumentTree()

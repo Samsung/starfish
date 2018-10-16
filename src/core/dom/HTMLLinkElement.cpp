@@ -224,8 +224,13 @@ void HTMLLinkElement::loadStyleSheet()
         getAttributeOrEmpty(starFish()->staticStrings()->m_href);
     ResourceURL* url =
         new ResourceURL(urlString, document()->baseURL()->baseURI());
-    ResourceURL* rUrl =
-        new ReferrerURL(document()->documentURI(), referrerPolicy());
+
+    GET_EFFECTIVE_REFERRERPOLICY();
+    if (rel()->equalsIgnoreCase("noreferrer")) {
+        policy = ReferrerPolicy::NoReferrer;
+    }
+
+    ResourceURL* rUrl = new ReferrerURL(document()->documentURI(), policy);
 
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();

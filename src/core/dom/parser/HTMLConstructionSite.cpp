@@ -941,6 +941,7 @@ Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token,
     } else {
         element = new NamedElement(&ownerDocumentForCurrentNode(), tagName);
     }
+    element->setInHTMLConstructionSite(true);
     setAttributes(element, token);
     return element;
 }
@@ -972,6 +973,7 @@ Element* HTMLConstructionSite::createHTMLElement(AtomicHTMLToken* token)
         AtomicString::createAttrAtomicString(starFish(), token->name()));
     Element* element =
         HTMLDocument::createHTMLElement(&ownerDocumentForCurrentNode(), qname);
+    element->setInHTMLConstructionSite(true);
     setAttributes(element, token);
     STARFISH_ASSERT(element->isHTMLElement());
     return element;

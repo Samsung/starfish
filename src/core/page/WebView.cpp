@@ -326,6 +326,7 @@ void WebView::destroy()
     delete m_platformFontSelector;
 
     m_platformWindow->destroy();
+    removeScriptEngineInstance();
 
     m_starFish->m_webViewInstanceCount--;
 

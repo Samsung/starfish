@@ -64,6 +64,7 @@ public:
     static const char kProxyAuthorization[];
     static const char kRange[];
     static const char kReferer[];
+    static const char kReferrerPolicy[];
     static const char kTE[];
     static const char kUserAgent[];
     static const char kLocation[];

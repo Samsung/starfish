@@ -43,7 +43,7 @@ ResourceRequestJobInterface* ResourceRequestJobDelegateFactory::createJob(
         return new BlobURLResourceRequestJobDelegate(proxy);
     } else if (proxy->url()->isAboutURL()) {
         return new AboutURLResourceRequestJobDelegate(proxy);
-    } else if (proxy->url()->isNetworkURL()) {
+    } else if (proxy->url()->isHTTPFamilyURL()) {
         return new NetworkURLResourceRequestJobDelegate(proxy);
     } else if (proxy->url()->isJavascriptURL()) {
         return new JavaScriptURLResourceRequestJobDelegate(proxy);

@@ -389,6 +389,12 @@ public:
     Location* location();
     String* referrer();
 
+    ReferrerPolicy referrerPolicy();
+    void setReferrerPolicy(ReferrerPolicy policy)
+    {
+        m_referrerPolicy = policy;
+    }
+
     String* cookie();
     void setCookie(String* cookie);
 
@@ -727,6 +733,7 @@ protected:
     GCVector<std::pair<HTMLScriptElement*, DeferredScriptDownloadClient*>>
         m_deferredScriptElements;
     BloomFilter<12> m_nameIdFilter;
+    ReferrerPolicy m_referrerPolicy;
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif

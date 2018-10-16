@@ -128,6 +128,7 @@ protected:
     Node(Document* document)
         : EventTarget(document)
         , m_inParsing(false)
+        , m_inHTMLConstructionSite(false)
         , m_needsStyleRecalc(true)
         , m_needsStyleRecalcOnlyForAnimation(false)
         , m_childNeedsStyleRecalc(true)
@@ -610,6 +611,7 @@ public:
     // These two callbacks are fired only document participate in rendering
     virtual void didNodeInsertedToDocumentTree()
     {
+        m_inHTMLConstructionSite = false;
     }
     virtual void didNodeRemovedFromDocumentTree();
 
@@ -769,6 +771,16 @@ public:
         return false;
     }
 
+    bool inHTMLConstructionSite()
+    {
+        return m_inHTMLConstructionSite;
+    }
+
+    void setInHTMLConstructionSite(bool value)
+    {
+        m_inHTMLConstructionSite = value;
+    }
+
 private:
     void validateReplace(Node* node, Node* child);
 
@@ -793,6 +805,7 @@ protected:
 
     Node* getDoctypeChild();
     bool m_inParsing : 1;
+    bool m_inHTMLConstructionSite : 1;
     bool m_needsStyleRecalc : 1;
     bool m_needsStyleRecalcOnlyForAnimation : 1;
     bool m_childNeedsStyleRecalc : 1;

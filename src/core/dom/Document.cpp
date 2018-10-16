@@ -122,6 +122,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_pendingDocumentParsingIdlerHandle(SIZE_MAX)
     , m_contentLanguage(String::emptyString)
     , m_mediaQueryListMatcher(nullptr)
+    , m_referrerPolicy(ReferrerPolicy::Empty)
 #ifdef STARFISH_TIZEN
     , m_tizenWidgetTransparentBackground(0)
 #endif
@@ -235,12 +236,39 @@ String* Document::referrer()
     return m_referrer->urlString();
 }
 
+ReferrerPolicy Document::referrerPolicy()
+{
+    // https://www.w3.org/TR/referrer-policy/#referrer-policy-delivery
+    if (webOrigin()->isOpaque()) {
+        return ReferrerPolicy::NoReferrer;
+    }
+
+    if (browsingContext()->isTopLevelBrowsingContext()) {
+        return m_referrerPolicy;
+    }
+
+    if (m_referrerPolicy != ReferrerPolicy::Empty) {
+        return m_referrerPolicy;
+    } else {
+        return browsingContext()
+            ->parentBrowsingContext()
+            ->document()
+            ->referrerPolicy();
+    }
+}
+
 String* Document::cookie()
 {
     // TODO : Throw a "SecurityError" DOMException on getting and setting.
-    // * if the Document's origin is an opaque origin
     // * If the contents are sandboxed into a unique origin (e.g. in an iframe
     //   with the sandbox attribute)
+
+    if (webOrigin()->isOpaque()) {
+        throw new DOMException(
+            this, DOMException::Code::SECURITY_ERR,
+            "Access is denied for this document, origin is opaque");
+    }
+
     String* ret =
         NetworkSharedResourceManager::getInstance()->cookeis(documentURI());
     return ret;
@@ -248,6 +276,11 @@ String* Document::cookie()
 
 void Document::setCookie(String* cookie)
 {
+    if (webOrigin()->isOpaque()) {
+        throw new DOMException(
+            this, DOMException::Code::SECURITY_ERR,
+            "Access is denied for this document, origin is opaque");
+    }
     NetworkSharedResourceManager::getInstance()->setCookies(this, documentURI(),
                                                             cookie);
 }

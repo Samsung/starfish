@@ -21,14 +21,14 @@
 #define __StarFishRequestData__
 
 #include "binding/ScriptWrappable.h"
-#include "platform/loader/ResourceURL.h"
 
 namespace StarFish {
 
 // NOTE: consider extracting enums from ResourceRequest
-typedef ReferrerURL::ReferrerPolicy ReferrerPolicy;
 
 class Request;
+enum class ReferrerPolicy;
+
 class RequestData : public gc {
     // TODO: encapsulate class members
 public:

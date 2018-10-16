@@ -166,6 +166,16 @@ public:
             m = mimetype.parameter();
         }
 
+        String* r = String::emptyString;
+        auto& headers = m_resource->resourceRequest()->responseHeaderMap();
+        auto it = headers.find(HTTPHeaderMap::kReferrerPolicy);
+
+        if (it != headers.end()) {
+            m_builder.document()->m_referrerPolicy =
+                ReferrerURL::policyFromString(
+                    String::fromUTF8(it->second.data()));
+        }
+
         if (!mimetype.stringWithoutParameter()->startsWith("image/", false)) {
             EncodingResult er = detectAndRemoveBOM(m_buffer);
             if (m == String::emptyString) {

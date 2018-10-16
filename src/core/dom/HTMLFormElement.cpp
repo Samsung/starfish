@@ -736,7 +736,7 @@ void HTMLFormElement::submit(HTMLElement* submitter)
         }
     }
 
-    if (url->isNetworkURL() || url->isFileURL()) {
+    if (url->isHTTPFamilyURL() || url->isFileURL()) {
         submitData(url, formDataSet, formEnctype, formMethod);
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

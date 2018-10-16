@@ -94,6 +94,8 @@ public:
                                      bool attributeRemoved) override;
     virtual void didNodeAdopted() override;
 
+    virtual void didNodeInsertedToDocumentTree() override;
+
 private:
     void unloadImage();
     void loadImage(String* src);
