@@ -76,19 +76,14 @@ void LWE::Finalize()
         g_starFishInstance->destroy();
         g_starFishInstance = nullptr;
 
+        clearStack<ELABORATE_CLEAR_STACK_SIZE>();
+
         // do implicit calling GC funciton takes a lots time
         // we should remove this if possible
-        GC_gcollect();
-        GC_gcollect_and_unmap();
+        StarFish::StarFish::doFullGCWithoutSeeingStack();
+        StarFish::StarFish::doFullGCWithoutSeeingStack();
+        StarFish::StarFish::doFullGCWithoutSeeingStack();
 
-#if defined(PORT_WEBVIEW_BRIDGE_GLFW)
-        GC_gcollect();
-        GC_gcollect();
-        GC_gcollect();
-        GC_gcollect();
-        GC_gcollect_and_unmap();
-        GC_gcollect_and_unmap();
-#endif
         return 0;
     });
 }
@@ -112,10 +107,13 @@ void LWE::Finalize()
     g_starFishInstance->destroy();
     g_starFishInstance = nullptr;
 
+    clearStack<ELABORATE_CLEAR_STACK_SIZE>();
+
     // do implicit calling GC funciton takes a lots time
     // we should remove this if possible
-    GC_gcollect();
-    GC_gcollect_and_unmap();
+    StarFish::StarFish::doFullGCWithoutSeeingStack();
+    StarFish::StarFish::doFullGCWithoutSeeingStack();
+    StarFish::StarFish::doFullGCWithoutSeeingStack();
 }
 #endif
 

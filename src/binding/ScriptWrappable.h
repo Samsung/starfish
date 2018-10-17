@@ -30,9 +30,6 @@ class Serializable;
 class StaticStrings;
 class Transferable;
 
-// TODO : This value should be reduced.
-#define CLEAR_STACK_SIZE 102400
-
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
 

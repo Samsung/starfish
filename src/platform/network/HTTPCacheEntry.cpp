@@ -216,11 +216,8 @@ bool HTTPCacheEntry::isFresh() const
 
 String* HTTPCacheEntry::toString() const
 {
-    HTTPCacheEntry* copied;
-    {
-        Locker<Mutex> locker(*m_mutex);
-        copied = new HTTPCacheEntry(*this);
-    }
+    Locker<Mutex> locker(*m_mutex);
+    HTTPCacheEntry* copied = (HTTPCacheEntry*)this;
     // The toString order starts with entrykey and then follows the order of
     // each member. therefore, it is as follows :
     //  entryKey(UINT) urlString(STRING) no-cache(0|1) mustRevalidate(0|1)

@@ -130,6 +130,7 @@ void StarFish::destroy()
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (m_httpCache) {
         m_httpCache->flush();
+        m_httpCache = nullptr;
     }
 #endif
     delete m_lineBreakIteratorPool;
@@ -184,4 +185,37 @@ size_t StarFish::countPointersInRootSet(void* ptr)
     }
 }
 #endif
+
+void StarFish::doFullGCWithoutSeeingStack()
+{
+    GC_register_mark_stack_func([]() {
+        // do nothing for skip stack
+        // assume there is no gc-object on stack
+    });
+    GC_gcollect();
+    GC_gcollect();
+    GC_gcollect_and_unmap();
+    GC_register_mark_stack_func(nullptr);
+}
+
+void StarFish::printEveryReachableGCObjects()
+{
+    STARFISH_LOG_ERROR("print reachable pointers -->\n");
+    GC_gcollect();
+    GC_disable();
+    GC_enumerate_reachable_objects_inner(
+        [](void* obj, size_t bytes, void* cd) {
+            size_t size;
+            int kind = GC_get_kind_and_size(obj, &size);
+            STARFISH_ASSERT(size == bytes);
+            void* ptr = GC_USR_PTR_FROM_BASE(obj);
+            STARFISH_LOG_ERROR("@@@ kind %d pointer %p\n", (int)kind, ptr);
+#ifndef NDEBUG
+            GC_print_backtrace(ptr);
+#endif
+        },
+        nullptr);
+    GC_enable();
+    STARFISH_LOG_ERROR("<-- end of print reachable pointers\n");
+}
 }
