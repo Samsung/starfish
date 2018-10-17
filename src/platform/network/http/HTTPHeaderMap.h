@@ -33,6 +33,7 @@ public:
     static const char kContentLanguage[];
     static const char kContentLength[];
     static const char kContentType[];
+    static const char kContentDispoition[];
     static const char kDate[];
     static const char kETag[];
     static const char kPragma[];

@@ -159,6 +159,8 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
             ret = HTTPHeaderMap::kIfUnmodifiedSince;
         } else if (lower.compare("proxy-authorization") == 0) {
             ret = HTTPHeaderMap::kProxyAuthorization;
+        } else if (lower.compare("content-disposition") == 0) {
+            ret = HTTPHeaderMap::kContentDispoition;
         }
         break;
     case 25:

@@ -38,6 +38,16 @@ struct BlobURLStore {
     uint32_t m_b;
 #endif
 };
+enum StarFishPubicWebViewHandlerKind {
+    OnPageStarted,
+    OnPageLoaded,
+    OnPageParsed,
+    OnLoadResource,
+    OnReceivedError,
+    OnProgressChanged,
+    OnDownloadStart,
+    ShouldOverrideUrlLoading,
+};
 }
 
 namespace std {
@@ -55,6 +65,22 @@ struct equal_to<StarFish::BlobURLStore> {
                     StarFish::BlobURLStore const& b) const
     {
         return a.m_blob == b.m_blob;
+    }
+};
+template <>
+struct hash<StarFish::StarFishPubicWebViewHandlerKind> {
+    size_t operator()(StarFish::StarFishPubicWebViewHandlerKind const& x) const
+    {
+        return std::hash<uint32_t>()((uint32_t)x);
+    }
+};
+
+template <>
+struct equal_to<StarFish::StarFishPubicWebViewHandlerKind> {
+    bool operator()(StarFish::StarFishPubicWebViewHandlerKind const& a,
+                    StarFish::StarFishPubicWebViewHandlerKind const& b) const
+    {
+        return a == b;
     }
 };
 }
@@ -396,16 +422,13 @@ public:
     }
 
     String* evaluateJavaScript(String* s);
-
     void registerPublicWebViewHandler(
-        const std::string& handlerName,
-        std::function<void(String*, int)> handler);
-    void registerPublicWebViewHandler(const std::string& handlerName,
-                                      std::function<void(void*)> handler);
-    bool containsPublicWebViewHandler(const std::string& handlerName);
-    void callPublicWebViewHandler(const std::string& handlerName, String* url,
-                                  int param = 0);
-    void callPublicWebViewHandler(const std::string& handlerName, void* data);
+        StarFishPubicWebViewHandlerKind handlerKind,
+        std::function<void(void*)> handler);
+    bool containsPublicWebViewHandler(
+        StarFishPubicWebViewHandlerKind handlerKind);
+    void callPublicWebViewHandler(StarFishPubicWebViewHandlerKind handlerKind,
+                                  void* data);
 
     void registerCustomFileResourceRequestCallbacks(
         std::function<const char*(const char* path)> resolveFilePathCallback,
@@ -561,11 +584,9 @@ private:
     std::string m_proxyURL;
     unsigned int m_startUpFlag;
     StarFishDeviceKind m_deviceKind;
-
-    std::unordered_map<std::string, std::function<void(String*, int)>>
+    std::unordered_map<StarFishPubicWebViewHandlerKind,
+                       std::function<void(void*)>>
         m_publicWebViewHandlers;
-    std::unordered_map<std::string, std::function<void(void*)>>
-        m_publicWebViewHandlersGeneral;
 
     // function sets for implementing custom file IO for resource request
     std::function<const char*(const char* path)> m_resolveFilePathCallback;

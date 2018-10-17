@@ -464,7 +464,7 @@ void HTMLSelectElement::showDropdownMenu()
 {
     // register the callback to be called when an item is selected
     webView()->platformWindow()->registerCallbackHandler(
-        std::string("onDropdownMenuItemSelected"), [this](void* param) -> void {
+        WindowHandlerOnDropdownMenuItemSelected, [this](void* param) -> void {
             struct Param {
                 int position;
             };
@@ -501,7 +501,7 @@ void HTMLSelectElement::showDropdownMenu()
         }
     }
 
-    webView()->platformWindow()->callHandler(std::string("showDropdownMenu"),
+    webView()->platformWindow()->callHandler(WindowHandlerShowDropdownMenu,
                                              (void*)p);
 }
 

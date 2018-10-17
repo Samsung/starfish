@@ -677,8 +677,12 @@ void Document::notifyDomContentLoaded()
     if (browsingContext()->isTopLevelBrowsingContext()) {
         m_resourceLoader->setLoadProgressState(
             ResourceLoader::LoadProgressState::DomContentLoaded);
-        webView()->callPublicWebViewHandler(std::string("OnPageParsed"),
-                                            this->urlString());
+        struct Param : public gc {
+            String* url;
+        };
+        Param* p = new Param;
+        p->url = this->urlString();
+        webView()->callPublicWebViewHandler(OnPageParsed, p);
     }
 }
 
