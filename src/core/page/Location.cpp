@@ -181,19 +181,14 @@ void Location::assign(ResourceURL* url, bool force)
 
 class HeaderResourceClient : public ResourceClient {
 public:
-    HeaderResourceClient(
-        std::function<void(bool,
-                           const std::unordered_map<std::string, std::string>&)>
-            cb,
-        Resource* res)
+    HeaderResourceClient(Location* location, ResourceURL* url,
+                         ResourceURL* referrerURL, bool force, Resource* res)
         : ResourceClient(res)
-        , m_cb(cb)
+        , m_location(location)
+        , m_url(url)
+        , m_referrerURL(referrerURL)
+        , m_force(force)
     {
-    }
-
-    virtual void didLoadFailed() override
-    {
-        ResourceClient::didLoadFailed();
     }
 
     // https://html.spec.whatwg.org/multipage/browsing-the-web.html#process-a-navigate-response
@@ -204,7 +199,7 @@ public:
         if (itr != headers.end()) {
             String* mimetype = String::createASCIIString(itr->second.c_str());
             if (mimetype->contains("application", false)) {
-                m_cb(false, headers);
+                checkHeader(false, headers);
                 return;
             }
         }
@@ -214,109 +209,105 @@ public:
             String* contentDisposition =
                 String::createASCIIString(itr->second.c_str());
             if (contentDisposition->contains("attachment")) {
-                m_cb(false, headers);
+                checkHeader(false, headers);
                 return;
             }
         }
 
-        m_cb(true, headers);
-    }
-
-    virtual void didLoadFinished() override
-    {
-        ResourceClient::didLoadFinished();
+        checkHeader(true, headers);
     }
 
 private:
-    std::function<void(bool,
-                       const std::unordered_map<std::string, std::string>&)>
-        m_cb;
+    void checkHeader(
+        bool isBrowsableContent,
+        const std::unordered_map<std::string, std::string>& headers)
+    {
+        bool canNavigate = isBrowsableContent &&
+                           (m_url->protocolKind() != ResourceURL::UNKNOWN);
+
+        if (m_location->webView()->containsPublicWebViewHandler(
+                ShouldOverrideUrlLoading)) {
+            struct Param : public gc {
+                ResourceURL* url;
+                ResourceURL* referrerUrl;
+                bool canNavigate;
+                bool force;
+            };
+            Param* p = new Param();
+            p->url = m_url;
+            p->referrerUrl = m_referrerURL;
+            p->canNavigate = canNavigate;
+            p->force = m_force;
+            m_location->webView()->callPublicWebViewHandler(
+                ShouldOverrideUrlLoading, (void*)p);
+        } else {
+            if (canNavigate) {
+                if (m_force ||
+                    !m_location->url()->urlString()->equals(
+                        m_url->urlString())) {
+                    navigateImpl(m_location->document()->browsingContext(),
+                                 m_url, m_referrerURL,
+                                 HistoryManagerAction::Add);
+                }
+            }
+        }
+
+        if (!isBrowsableContent &&
+            m_location->webView()->containsPublicWebViewHandler(
+                OnDownloadStart)) {
+            struct Param {
+                std::string url;
+                std::string userAgent;
+                std::string contentDisposition;
+                std::string mimetype;
+                long contentLength;
+            };
+
+            Param* p = new Param();
+            p->url = m_url->urlString()->toUTF8NonGCString();
+            p->userAgent = m_location->document()
+                               ->webView()
+                               ->userAgent()
+                               ->toUTF8NonGCString();
+
+            auto it = headers.find(HTTPHeaderMap::kContentDispoition);
+            if (it != headers.end()) {
+                p->contentDisposition = it->second;
+            } else {
+                p->contentDisposition = "";
+            }
+
+            it = headers.find(HTTPHeaderMap::kContentType);
+            if (it != headers.end()) {
+                p->mimetype = it->second;
+            } else {
+                p->mimetype = "";
+            }
+
+            it = headers.find(HTTPHeaderMap::kContentLength);
+            if (it != headers.end()) {
+                p->contentLength = atol(it->second.c_str());
+            } else {
+                p->contentLength = -1;
+            }
+            m_location->document()->webView()->callPublicWebViewHandler(
+                OnDownloadStart, (void*)p);
+        }
+    }
+
+private:
+    Location* m_location;
+    ResourceURL* m_url;
+    ResourceURL* m_referrerURL;
+    bool m_force;
 };
 
 void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
 {
     // check whether the resource can be displayed
-    std::function<void(bool,
-                       const std::unordered_map<std::string, std::string>&)>
-        cb = [this, url, referrerURL, force](
-            bool isBrowsableContent,
-            const std::unordered_map<std::string, std::string>& headers) {
-            bool canNavigate = isBrowsableContent &&
-                               (url->protocolKind() != ResourceURL::UNKNOWN);
-
-            if (webView()->containsPublicWebViewHandler(
-                    "shouldOverrideUrlLoading")) {
-                struct Param : public gc {
-                    ResourceURL* url;
-                    ResourceURL* referrerUrl;
-                    bool canNavigate;
-                    bool force;
-
-                    static void* operator new(size_t s)
-                    {
-                        return GC_MALLOC_UNCOLLECTABLE(s);
-                    }
-                };
-                Param* p = new Param();
-                p->url = url;
-                p->referrerUrl = referrerURL;
-                p->canNavigate = canNavigate;
-                p->force = force;
-                webView()->callPublicWebViewHandler(
-                    std::string("shouldOverrideUrlLoading"), (void*)p);
-            } else {
-                if (canNavigate) {
-                    if (force ||
-                        !this->url()->urlString()->equals(url->urlString())) {
-                        navigateImpl(document()->browsingContext(), url,
-                                     referrerURL, HistoryManagerAction::Add);
-                    }
-                }
-            }
-
-            if (!isBrowsableContent &&
-                webView()->containsPublicWebViewHandler("onDownloadStart")) {
-                struct Param {
-                    std::string url;
-                    std::string userAgent;
-                    std::string contentDisposition;
-                    std::string mimetype;
-                    long contentLength;
-                };
-
-                Param* p = new Param();
-                p->url = url->urlString()->toUTF8NonGCString();
-                p->userAgent =
-                    document()->webView()->userAgent()->toUTF8NonGCString();
-
-                auto it = headers.find("Content-Disposition");
-                if (it != headers.end()) {
-                    p->contentDisposition = it->second;
-                } else {
-                    p->contentDisposition = "";
-                }
-
-                it = headers.find("Content-type");
-                if (it != headers.end()) {
-                    p->mimetype = it->second;
-                } else {
-                    p->mimetype = "";
-                }
-
-                it = headers.find("Content-Length");
-                if (it != headers.end()) {
-                    p->contentLength = atol(it->second.c_str());
-                } else {
-                    p->contentLength = -1;
-                }
-
-                document()->webView()->callPublicWebViewHandler(
-                    std::string("onDownloadStart"), (void*)p);
-            }
-        };
-
     HeaderResource* resource = document()->resourceLoader().fetchHeader(url);
-    resource->addResourceClient(new HeaderResourceClient(cb, resource));
+    resource->addResourceClient(
+        new HeaderResourceClient(this, url, referrerURL, force, resource));
     resource->request(Resource::ResourceRequestSyncLevel::NeverSync,
                       referrerURL, true, ResourceRequest::HEAD_METHOD);
 }

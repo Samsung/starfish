@@ -24,16 +24,51 @@
 #include "core/event/EventModifierData.h"
 
 namespace StarFish {
+enum WindowHandlerKind {
+    WindowHandlerShowDropdownMenu,
+    WindowHandlerShowAlert,
+    WindowHandlerOnDropdownMenuItemSelected,
+};
+}
+namespace std {
+template <>
+struct hash<StarFish::WindowHandlerKind> {
+    size_t operator()(StarFish::WindowHandlerKind const& x) const
+    {
+        return std::hash<uint32_t>()((uint32_t)x);
+    }
+};
+
+template <>
+struct equal_to<StarFish::WindowHandlerKind> {
+    bool operator()(StarFish::WindowHandlerKind const& a,
+                    StarFish::WindowHandlerKind const& b) const
+    {
+        return a == b;
+    }
+};
+}
+
+namespace StarFish {
 
 class AnimationExecutor;
+
 class Canvas;
+
 class Compositor;
+
 class CompositorContext;
+
 class Node;
+
 class WebView;
+
 class NativeImageData;
+
 class MouseData;
+
 class TouchData;
+
 class PlatformKeyEventData;
 
 enum class TouchEventKind {
@@ -58,6 +93,9 @@ enum class CompositionEventKind {
     CompositionEventUpdate,
     CompositionEventEnd,
 };
+}
+
+namespace StarFish {
 
 class PlatformWindow : public gc {
 public:
@@ -156,9 +194,9 @@ public:
         m_setNeedsRenderingCallback = cb;
     }
 
-    void registerCallbackHandler(const std::string& handlerName,
+    void registerCallbackHandler(WindowHandlerKind handlerKind,
                                  const std::function<void(void*)>& handler);
-    void callHandler(const std::string& handlerName, void* param);
+    void callHandler(WindowHandlerKind handlerKind, void* param);
 
     virtual bool canRendering()
     {
@@ -225,7 +263,7 @@ protected:
     std::function<void(PlatformWindow* wnd)> m_glMakeCurrentCallback;
     std::function<void(PlatformWindow* wnd)> m_glSwapBufferCallback;
 
-    std::unordered_map<std::string, std::function<void(void*)>>
+    std::unordered_map<WindowHandlerKind, std::function<void(void*)>>
         m_handlersToCallbacks;
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR

@@ -363,43 +363,42 @@ RenderResult PlatformWindow::rendering()
 }
 
 void PlatformWindow::registerCallbackHandler(
-    const std::string& handlerName, const std::function<void(void*)>& handler)
+    WindowHandlerKind handlerKind, const std::function<void(void*)>& handler)
 {
-    auto it = m_handlersToCallbacks.find(handlerName);
+    auto it = m_handlersToCallbacks.find(handlerKind);
     if (it == m_handlersToCallbacks.end()) {
-        m_handlersToCallbacks.insert(std::make_pair(handlerName, handler));
+        m_handlersToCallbacks.insert(std::make_pair(handlerKind, handler));
     } else {
         it->second = handler;
     }
 }
 
-void PlatformWindow::callHandler(const std::string& handlerName, void* param)
+void PlatformWindow::callHandler(WindowHandlerKind handlerKind, void* param)
 {
-    auto it = m_handlersToCallbacks.find(handlerName);
+    auto it = m_handlersToCallbacks.find(handlerKind);
     if (it == m_handlersToCallbacks.end()) {
         return;
     }
 
-    struct Env {
+    struct Env : public gc {
         PlatformWindow* window;
-        std::string handlerName;
+        WindowHandlerKind handlerKind;
         void* param;
     };
 
     Env* env = new Env();
     env->window = this;
-    env->handlerName = handlerName;
+    env->handlerKind = handlerKind;
     env->param = param;
 
     webView()->messageLoop()->addIdler(
         nullptr,
         [](size_t, void* env) {
             Env* e = (Env*)env;
-            auto it = e->window->m_handlersToCallbacks.find(e->handlerName);
+            auto it = e->window->m_handlersToCallbacks.find(e->handlerKind);
             if (it != e->window->m_handlersToCallbacks.end()) {
                 (it->second)(e->param);
             }
-            delete e;
         },
         env);
 }

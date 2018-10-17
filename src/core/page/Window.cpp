@@ -597,8 +597,7 @@ void Window::alert(String* message)
     p->title =
         document()->location()->url()->origin()->toUTF8NonGCString().data();
     p->message = message->toUTF8NonGCString().data();
-    webView()->platformWindow()->callHandler(std::string("showAlert"),
-                                             (void*)p);
+    webView()->platformWindow()->callHandler(WindowHandlerShowAlert, (void*)p);
 }
 
 void Window::processUrlFragment(String* name)
@@ -742,12 +741,11 @@ Window* Window::defaultIndexedGetter(uint32_t idx)
         if (item->isHTMLIFrameElement()) {
             STARFISH_ASSERT(item->asHTMLIFrameElement()->contentWindow());
             return item->asHTMLIFrameElement()->contentWindow();
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
         }
         // TODO Handle HTMLFrameElement
         // else if (item->isHTMLFrameElement()) {}
-        else {
-            STARFISH_ASSERT_NOT_REACHED();
-        }
     }
     return nullptr;
 }

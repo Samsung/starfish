@@ -640,10 +640,13 @@ void WebContainer::RegisterOnReceivedErrorHandler(
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            std::string("OnReceivedError"),
-            [this, cb](StarFish::String* url, int errorCode) -> void {
+            StarFish::OnReceivedError, [this, cb](void* param) -> void {
+                struct Param {
+                    int errorCode;
+                };
+                Param* p = (Param*)param;
                 // make error description
-                cb(this, ResourceError(errorCode, std::string()));
+                cb(this, ResourceError(p->errorCode, std::string()));
             });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
@@ -654,9 +657,12 @@ void WebContainer::RegisterOnPageParsedHandler(
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            std::string("OnPageParsed"),
-            [this, cb](StarFish::String* url, int errorCode) -> void {
-                cb(this, url->toUTF8NonGCString());
+            StarFish::OnPageParsed, [this, cb](void* param) -> void {
+                struct Param {
+                    StarFish::String* url;
+                };
+                Param* p = (Param*)param;
+                cb(this, p->url->toUTF8NonGCString());
             });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
@@ -667,9 +673,12 @@ void WebContainer::RegisterOnPageLoadedHandler(
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            std::string("OnPageLoaded"),
-            [this, cb](StarFish::String* url, int errorCode) -> void {
-                cb(this, url->toUTF8NonGCString());
+            StarFish::OnPageLoaded, [this, cb](void* param) -> void {
+                struct Param {
+                    StarFish::String* url;
+                };
+                Param* p = (Param*)param;
+                cb(this, p->url->toUTF8NonGCString());
             });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
@@ -680,9 +689,12 @@ void WebContainer::RegisterOnPageStartedHandler(
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            std::string("OnPageStarted"),
-            [this, cb](StarFish::String* url, int errorCode) -> void {
-                cb(this, url->toUTF8NonGCString());
+            StarFish::OnPageStarted, [this, cb](void* param) -> void {
+                struct Param {
+                    StarFish::String* url;
+                };
+                Param* p = (Param*)param;
+                cb(this, p->url->toUTF8NonGCString());
             });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
@@ -693,9 +705,12 @@ void WebContainer::RegisterOnLoadResourceHandler(
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            std::string("OnLoadResource"),
-            [this, cb](StarFish::String* url, int errorCode) -> void {
-                cb(this, url->toUTF8NonGCString());
+            StarFish::OnLoadResource, [this, cb](void* param) -> void {
+                struct Param {
+                    StarFish::String* url;
+                };
+                Param* p = (Param*)param;
+                cb(this, p->url->toUTF8NonGCString());
             });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
@@ -706,24 +721,17 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            std::string("shouldOverrideUrlLoading"),
+            StarFish::ShouldOverrideUrlLoading,
             [this, cb](void* param) -> void {
-                struct Param : public gc {
+                struct Param {
                     StarFish::ResourceURL* url;
                     StarFish::ResourceURL* referrerUrl;
                     bool canNavigate;
                     bool force;
-
-                    static void* operator new(size_t s)
-                    {
-                        return GC_MALLOC_UNCOLLECTABLE(s);
-                    }
                 };
-
                 Param* p = (Param*)param;
                 bool ret =
                     cb(this, p->url->urlString()->toUTF8NonGCString().data());
-
                 if ((ret == false) && p->canNavigate) {
                     // continue loading
                     TO_WEBVIEW(m_impl)
@@ -732,7 +740,6 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
                             TO_WEBVIEW(m_impl), p->url, p->referrerUrl,
                             StarFish::HistoryManagerAction::Add, true);
                 }
-                delete p;
             });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
@@ -745,7 +752,7 @@ void WebContainer::RegisterOnDownloadStartHandler(
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            std::string("onDownloadStart"), [this, cb](void* param) -> void {
+            StarFish::OnDownloadStart, [this, cb](void* param) -> void {
                 struct Param {
                     std::string url;
                     std::string userAgent;
@@ -771,7 +778,7 @@ void WebContainer::RegisterShowDropdownMenuHandler(
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->registerCallbackHandler(std::string("showDropdownMenu"),
+        ->registerCallbackHandler(StarFish::WindowHandlerShowDropdownMenu,
                                   [this, cb](void* param) -> void {
                                       struct Param {
                                           std::vector<std::string>* list;
@@ -793,7 +800,7 @@ void WebContainer::RegisterShowAlertHandler(
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->registerCallbackHandler(std::string("showAlert"),
+        ->registerCallbackHandler(StarFish::WindowHandlerShowAlert,
                                   [this, cb](void* param) -> void {
                                       struct Param {
                                           std::string title;
@@ -826,7 +833,12 @@ void WebContainer::RegisterCustomFileResourceRequestHandlers(
 void WebContainer::CallHandler(const std::string& handler, void* param)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-    TO_WEBVIEW(m_impl)->platformWindow()->callHandler(handler, param);
+    if (handler.compare("onDropdownMenuItemSelected") == 0) {
+        TO_WEBVIEW(m_impl)
+            ->platformWindow()
+            ->callHandler(StarFish::WindowHandlerOnDropdownMenuItemSelected,
+                          param);
+    }
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -853,11 +865,14 @@ void WebContainer::RegisterOnProgressChangedHandler(
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
-        ->registerPublicWebViewHandler(
-            std::string("OnProgressChanged"),
-            [this, cb](StarFish::String* url, int newProgress) -> void {
-                cb(this, newProgress);
-            });
+        ->registerPublicWebViewHandler(StarFish::OnProgressChanged,
+                                       [this, cb](void* param) -> void {
+                                           struct Param {
+                                               int newProgress;
+                                           };
+                                           Param* p = (Param*)param;
+                                           cb(this, p->newProgress);
+                                       });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 

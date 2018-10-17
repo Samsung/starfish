@@ -144,9 +144,13 @@ public:
         clearAlive();
         // TODO
         int errorCode = 1;
+        struct Param : public gc {
+            int errorCode;
+        };
+        Param* p = new Param;
+        p->errorCode = errorCode;
         resource()->loader()->document()->webView()->callPublicWebViewHandler(
-            std::string("OnReceivedError"), resource()->url()->urlString(),
-            errorCode);
+            OnReceivedError, p);
     }
 
     virtual void didLoadFinished()
@@ -154,8 +158,13 @@ public:
         ResourceClient::didLoadFinished();
         clearAlive();
         resource()->loader()->updateLoadProgress();
+        struct Param : public gc {
+            String* url;
+        };
+        Param* p = new Param;
+        p->url = resource()->url()->urlString();
         resource()->loader()->document()->webView()->callPublicWebViewHandler(
-            std::string("OnLoadResource"), resource()->url()->urlString());
+            OnLoadResource, p);
     }
 
     virtual void didLoadCanceled()
@@ -569,8 +578,13 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                                 ->sourceElement()
                                 ->childBrowsingContextLoaded();
                         } else {
+                            struct Param : public gc {
+                                String* url;
+                            };
+                            Param* p = new Param;
+                            p->url = doc->urlString();
                             doc->webView()->callPublicWebViewHandler(
-                                std::string("OnPageLoaded"), doc->urlString());
+                                OnPageLoaded, p);
                         }
 #ifdef STARFISH_ENABLE_TEST
                         if (doc->browsingContext()
@@ -615,8 +629,12 @@ void ResourceLoader::startLoadProgressTracking()
 {
     resetLoadProgress();
     m_loadProgress = 10;
-    webView()->callPublicWebViewHandler(std::string("OnProgressChanged"),
-                                        nullptr, m_loadProgress);
+    struct Param : public gc {
+        int newProgress;
+    };
+    Param* p = new Param;
+    p->newProgress = m_loadProgress;
+    webView()->callPublicWebViewHandler(OnProgressChanged, p);
 }
 
 void ResourceLoader::setLoadProgressState(LoadProgressState state)
@@ -653,8 +671,12 @@ void ResourceLoader::updateLoadProgress()
         }
         loadProgress = m_loadProgress;
     }
-    webView()->callPublicWebViewHandler(std::string("OnProgressChanged"),
-                                        nullptr, loadProgress);
+    struct Param : public gc {
+        int newProgress;
+    };
+    Param* p = new Param;
+    p->newProgress = m_loadProgress;
+    webView()->callPublicWebViewHandler(OnProgressChanged, p);
 }
 
 void ResourceLoader::markDocumentOpenState()

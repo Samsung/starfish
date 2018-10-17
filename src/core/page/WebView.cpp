@@ -329,7 +329,6 @@ void WebView::destroy()
     removeScriptEngineInstance();
 
     m_starFish->m_webViewInstanceCount--;
-
     this->WebView::~WebView();
 }
 
@@ -392,7 +391,12 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     createScriptEngineInstance();
 
     m_topLevelBrowsingContext->open(url, type, referrerURL);
-    callPublicWebViewHandler(std::string("OnPageStarted"), url->urlString());
+    struct Param : public gc {
+        String* url;
+    };
+    Param* p = new Param;
+    p->url = url->urlString();
+    callPublicWebViewHandler(OnPageStarted, p);
 }
 
 String* WebView::userAgent()
@@ -1509,98 +1513,54 @@ void WebView::setupInspector(uint32_t portNumber)
 #endif
 
 void WebView::registerPublicWebViewHandler(
-    const std::string& handlerName, std::function<void(String*, int)> handler)
+    StarFishPubicWebViewHandlerKind handlerKind,
+    std::function<void(void*)> handler)
 {
-    auto it = m_publicWebViewHandlers.find(handlerName);
+    auto it = m_publicWebViewHandlers.find(handlerKind);
     if (it == m_publicWebViewHandlers.end()) {
-        m_publicWebViewHandlers.insert(std::make_pair(handlerName, handler));
+        m_publicWebViewHandlers.insert(std::make_pair(handlerKind, handler));
     } else {
         it->second = handler;
     }
 }
 
-void WebView::registerPublicWebViewHandler(const std::string& handlerName,
-                                           std::function<void(void*)> handler)
+bool WebView::containsPublicWebViewHandler(
+    StarFishPubicWebViewHandlerKind handlerKind)
 {
-    auto it = m_publicWebViewHandlersGeneral.find(handlerName);
-    if (it == m_publicWebViewHandlersGeneral.end()) {
-        m_publicWebViewHandlersGeneral.insert(
-            std::make_pair(handlerName, handler));
-    } else {
-        it->second = handler;
-    }
-}
-
-bool WebView::containsPublicWebViewHandler(const std::string& handlerName)
-{
-    auto it = m_publicWebViewHandlersGeneral.find(handlerName);
-    if (it != m_publicWebViewHandlersGeneral.end()) {
+    auto it = m_publicWebViewHandlers.find(handlerKind);
+    if (it != m_publicWebViewHandlers.end()) {
         return true;
     }
 
     return false;
 }
 
-void WebView::callPublicWebViewHandler(const std::string& handlerName,
-                                       String* url, int param)
+void WebView::callPublicWebViewHandler(
+    StarFishPubicWebViewHandlerKind handlerKind, void* param)
 {
-    auto it = m_publicWebViewHandlers.find(handlerName);
+    auto it = m_publicWebViewHandlers.find(handlerKind);
     if (it == m_publicWebViewHandlers.end()) {
         return;
     }
 
-    struct dummy : public gc {
-        std::string handlerName;
+    struct Env : public gc {
         WebView* webView;
-        String* url;
-        int int_param;
-    };
-    dummy* d = new dummy;
-    d->handlerName = handlerName;
-    d->webView = this;
-    d->url = url;
-    d->int_param = param;
-    messageLoop()->addIdler(
-        nullptr,
-        [](size_t, void* data) {
-            dummy* d = (dummy*)data;
-            auto it = d->webView->m_publicWebViewHandlers.find(d->handlerName);
-            if (it != d->webView->m_publicWebViewHandlers.end()) {
-                (it->second)(d->url, d->int_param);
-            }
-            delete d;
-        },
-        d);
-}
-
-void WebView::callPublicWebViewHandler(const std::string& handlerName,
-                                       void* param)
-{
-    auto it = m_publicWebViewHandlersGeneral.find(handlerName);
-    if (it == m_publicWebViewHandlersGeneral.end()) {
-        return;
-    }
-
-    struct Env {
-        WebView* webView;
-        std::string handlerName;
+        StarFishPubicWebViewHandlerKind handlerKind;
         void* param;
     };
     Env* env = new Env();
     env->webView = this;
-    env->handlerName = handlerName;
+    env->handlerKind = handlerKind;
     env->param = param;
 
     messageLoop()->addIdler(
         nullptr,
         [](size_t, void* env) {
             Env* e = (Env*)env;
-            auto it =
-                e->webView->m_publicWebViewHandlersGeneral.find(e->handlerName);
-            if (it != e->webView->m_publicWebViewHandlersGeneral.end()) {
+            auto it = e->webView->m_publicWebViewHandlers.find(e->handlerKind);
+            if (it != e->webView->m_publicWebViewHandlers.end()) {
                 (it->second)(e->param);
             }
-            delete e;
         },
         env);
 }
