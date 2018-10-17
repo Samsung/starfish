@@ -23,7 +23,7 @@
 
 #include "LWEWebView.h"
 
-#define THREAD_STACK_SIZE 2 * 1048 * 1024
+#define THREAD_STACK_SIZE 2 * 1024 * 1024
 
 namespace LWE {
 

@@ -400,6 +400,7 @@ public class LweWebViewImpl implements LweWebView {
         mLWEView.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, final MotionEvent motionEvent) {
+                view.performClick();
                 int[] location = new int[2];
                 view.getLocationOnScreen(location);
                 float screenX = motionEvent.getRawX();
