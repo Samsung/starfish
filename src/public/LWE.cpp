@@ -23,6 +23,8 @@
 
 #include "LWEWebView.h"
 
+#define THREAD_STACK_SIZE 2 * 1048 * 1024
+
 namespace LWE {
 
 StarFish::StarFish* g_starFishInstance;
@@ -50,7 +52,10 @@ void LWE::Initialize(const char* localStorageDataFilePath,
         pthread_mutex_init(&g_mainThreadInitLocker, NULL);
         pthread_mutex_lock(&g_mainThreadInitLocker);
         pthread_t tid;
-        pthread_create(&tid, NULL, LWEMainThread, NULL);
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE);
+        pthread_create(&tid, &attr, LWEMainThread, NULL);
         pthread_mutex_lock(&g_mainThreadInitLocker);
         pthread_mutex_unlock(&g_mainThreadInitLocker);
         pthread_mutex_destroy(&g_mainThreadInitLocker);

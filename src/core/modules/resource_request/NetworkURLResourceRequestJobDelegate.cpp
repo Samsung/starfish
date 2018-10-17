@@ -542,12 +542,11 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                                                void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    ResourceRequest* request = nwd->request;
+    Locker<Mutex> locker(*request->m_mutex);
     if (nwd->isAborted) {
         return 0;
     }
-    ResourceRequest* request = nwd->request;
-
-    Locker<Mutex> locker(*request->m_mutex);
 
     size_t realSize = size * nmemb;
     const char* memPtr = (const char*)ptr;
