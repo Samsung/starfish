@@ -339,11 +339,13 @@ int main(int argc, char* argv[])
     std::string cacheDir(getenv("HOME"));
     cacheDir += "/Starfish-cache";
 
+#ifdef STARFISH_DALI
     char buf[128];
     snprintf(buf, sizeof buf, "%d", width);
     setenv("DALI_WINDOW_WIDTH", buf, 1);
     snprintf(buf, sizeof buf, "%d", height);
     setenv("DALI_WINDOW_HEIGHT", buf, 1);
+#endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     Evas_Object* wndObj = nullptr;
@@ -441,12 +443,14 @@ int main(int argc, char* argv[])
 #endif
 
 #ifndef STARFISH_DALI
-    auto settings = webView->GetSettings();
-    if (customUserAgentString.length()) {
-        settings.SetUserAgentString(customUserAgentString);
-    }
+    {
+        auto settings = webView->GetSettings();
+        if (customUserAgentString.length()) {
+            settings.SetUserAgentString(customUserAgentString);
+        }
 
-    webView->SetSettings(settings);
+        webView->SetSettings(settings);
+    }
 #endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
@@ -558,16 +562,8 @@ int main(int argc, char* argv[])
     ecore_shutdown();
 #endif
 
+    webView = nullptr;
     LWE::LWE::Finalize();
-
-#if defined(PORT_WEBVIEW_BRIDGE_EFL)
-    GC_gcollect();
-    GC_gcollect();
-    GC_gcollect();
-    GC_gcollect();
-    GC_gcollect_and_unmap();
-    GC_gcollect_and_unmap();
-#endif
 
 #if defined(STARFISH_ENABLE_TEST)
     auto stat = getSmapsStats();

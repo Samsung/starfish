@@ -462,6 +462,10 @@ bool HTTPCache::flush()
     }
 
     unlock();
+
+    m_cacheEntryTable.clear();
+    m_cacheLRUList.clear();
+
     return (out->flush() == 0);
 }
 

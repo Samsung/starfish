@@ -517,7 +517,7 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
         }
     }
 
-    clearStack<CLEAR_STACK_SIZE>();
+    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 
     return result;
 }
@@ -562,7 +562,7 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
         }
     }
 
-    clearStack<CLEAR_STACK_SIZE>();
+    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 
     return result;
 }
@@ -640,7 +640,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
         return scriptRef.m_script->execute(state);
     });
 
-    clearStack<CLEAR_STACK_SIZE>();
+    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 
     sb->destroy();
     if (!sbresult.error->isEmpty()) {

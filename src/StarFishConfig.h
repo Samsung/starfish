@@ -297,6 +297,9 @@ typedef unsigned int uint;
 
 #include <curl/curl.h>
 
+#define DEFAULT_CLEAR_STACK_SIZE 102400
+#define ELABORATE_CLEAR_STACK_SIZE DEFAULT_CLEAR_STACK_SIZE * 4
+
 #if defined(COMPILER_GCC)
 template <const int siz>
 inline void __attribute__((optimize("O0"))) clearStack()

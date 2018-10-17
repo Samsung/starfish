@@ -307,6 +307,8 @@ void WebView::destroy()
         m_rootStackingContext = nullptr;
     }
 
+    removeScriptEngineInstance();
+
     m_threadPool->destroy();
     STARFISH_ASSERT(isMainThread());
     // NOTE: Iterate copied list.
@@ -330,6 +332,8 @@ void WebView::destroy()
 
     m_starFish->m_webViewInstanceCount--;
     this->WebView::~WebView();
+
+    clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 }
 
 void WebView::initStorage()
@@ -379,7 +383,9 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
 {
     clearBlobURLStore();
     initRenderingFlags();
-    clearStack<102400>();
+
+    clearStack<ELABORATE_CLEAR_STACK_SIZE>();
+
     m_navigateStartingTime = timestamp();
     if (m_topLevelBrowsingContext) {
         m_topLevelBrowsingContext->dispose();
@@ -935,7 +941,7 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
         }
     }
 
-    clearStack<102400>();
+    clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 }
 
 void WebView::setNeedsRendering()
@@ -1194,7 +1200,7 @@ RenderResult WebView::rendering(bool force)
 #endif
 
         delete canvas;
-        clearStack<102400>();
+        clearStack<DEFAULT_CLEAR_STACK_SIZE>();
     }
 
     if (m_needsComposite) {

@@ -100,6 +100,9 @@ public:
         return it->second;
     }
 
+    static void doFullGCWithoutSeeingStack();
+    static void printEveryReachableGCObjects();
+
 protected:
     StaticStrings* m_staticStrings;
     LineBreakIteratorPool* m_lineBreakIteratorPool;
