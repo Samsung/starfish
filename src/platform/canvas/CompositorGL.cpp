@@ -1383,6 +1383,7 @@ public:
         case TBM_FORMAT_BGR565:
         case TBM_FORMAT_BGR888:
             m_isEGLImageNeedsFlipRGB = false;
+            break;
         default:
             m_isEGLImageNeedsFlipRGB = true;
             break;

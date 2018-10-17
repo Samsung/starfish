@@ -735,7 +735,7 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
     INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering::layoutIfNeeds");
     bool didLayout = false;
 
-    while (true) {
+    {
         didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeds();
         for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {
             didLayout =
@@ -746,7 +746,6 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
         if (didLayout) {
             m_needsEstablishesStackingContext = true;
         }
-        break;
     }
 
     if (shouldCareStackingContextNow) {
