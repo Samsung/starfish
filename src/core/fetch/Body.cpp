@@ -25,6 +25,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/dom/DOMException.h"
 #include "core/util/URL.h"
+#include "core/fileapi/Blob.h"
 
 namespace StarFish {
 
@@ -33,17 +34,110 @@ static const char kTextPlainContentType[] = "text/plain;charset=UTF-8";
 
 Promise* Body::arrayBuffer()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    Promise* promise = new Promise(scriptBindingInstance());
+
+    if (m_bodyUsed) {
+        auto error = scriptTypeError(scriptBindingInstance(),
+                                     String::fromUTF8("Body is locked"));
+
+        promise->reject(createScriptValue(error));
+    } else {
+        if (m_body.hasValue()) {
+            setBodyUsed(true);
+            m_promise = promise;
+
+            BodyInit body = m_body.getValue();
+
+            if (body.isUSVStringValue()) {
+                auto value = body.getUSVStringValue();
+                auto str = value->toUTF8NonGCString();
+                void* buffer = calloc(1, str.length());
+                memcpy(buffer, str.data(), str.length());
+                auto ab = createArrayBuffer(scriptBindingInstance(), buffer,
+                                            value->length());
+
+                promise->fulfill(ab);
+            } else {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+        } else {
+            promise->fulfill(createScriptValue(String::emptyString));
+        }
+    }
+
+    return promise;
 }
 
 Promise* Body::blob()
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    return nullptr;
+    Promise* promise = new Promise(scriptBindingInstance());
+
+    if (m_bodyUsed) {
+        auto error = scriptTypeError(scriptBindingInstance(),
+                                     String::fromUTF8("Body is locked"));
+
+        promise->reject(createScriptValue(error));
+    } else {
+        if (m_body.hasValue()) {
+            setBodyUsed(true);
+            m_promise = promise;
+
+            BodyInit body = m_body.getValue();
+
+            if (body.isUSVStringValue()) {
+                auto value = body.getUSVStringValue();
+                auto str = value->toUTF8NonGCString();
+                void* buffer = calloc(1, str.length());
+                memcpy(buffer, str.data(), str.length());
+
+                auto blob = new Blob(scriptBindingInstance()->ownerDocument(),
+                                     value->length(), contentType(), buffer,
+                                     false, false);
+
+                promise->fulfill(blob->scriptValue());
+            } else {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+        } else {
+            promise->fulfill(createScriptValue(String::emptyString));
+        }
+    }
+
+    return promise;
 }
 
 Promise* Body::json()
+{
+    Promise* promise = new Promise(scriptBindingInstance());
+
+    if (m_bodyUsed) {
+        auto error = scriptTypeError(scriptBindingInstance(),
+                                     String::fromUTF8("Body is locked"));
+
+        promise->reject(createScriptValue(error));
+    } else {
+        if (m_body.hasValue()) {
+            setBodyUsed(true);
+            m_promise = promise;
+
+            BodyInit body = m_body.getValue();
+
+            if (body.isUSVStringValue()) {
+                ScriptValue jsonObject = parseJSON(scriptBindingInstance(),
+                                                   body.getUSVStringValue());
+                promise->fulfill(jsonObject);
+            } else {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+            }
+        } else {
+            promise->fulfill(createScriptValue(String::emptyString));
+        }
+    }
+
+    return promise;
+}
+
+Promise* Body::formData()
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return nullptr;

@@ -124,8 +124,8 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
 
     } else {
         if (input->isUSVStringValue()) {
-            String* tmp = input->getUSVStringValue();
-            m_data.m_url = tmp;
+            ResourceURL url(input->getUSVStringValue());
+            m_data.m_url = url.urlString();
         } else {
             return; // ignore or read the result of toString
         }
