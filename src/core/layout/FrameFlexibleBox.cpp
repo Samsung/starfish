@@ -273,16 +273,9 @@ void FlexFormattingContext::applyFlexFactor()
         for (size_t j = 0; j < flexItems.size(); j++) {
             FrameBox* flexItem = flexItems[j];
 
-            if (usingGrowFactor) {
-                if (!isMainSizeFlexible(flexItem, usingGrowFactor)) {
-                    isFrozens[j] = true;
-                }
-            } else {
-                if (!isMainSizeFlexible(flexItem, usingGrowFactor)) {
-                    isFrozens[j] = true;
-                }
+            if (!isMainSizeFlexible(flexItem, usingGrowFactor)) {
+                isFrozens[j] = true;
             }
-
             isAllFrozen &= isFrozens[j];
         }
 

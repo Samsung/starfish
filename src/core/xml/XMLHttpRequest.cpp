@@ -155,7 +155,7 @@ public:
                     m_xhr->m_responseXML = parser->parseFromString(
                         String::fromUTF8(static_cast<const char*>(buffer)),
                         request->responseMimeType());
-
+                    free(buffer);
                     m_xhr->m_resourceRequest->response().clear();
                     m_xhr->m_resourceRequest->response().shrink_to_fit();
                 } else {

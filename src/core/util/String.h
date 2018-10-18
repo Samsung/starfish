@@ -1112,7 +1112,15 @@ public:
 #endif
 
 class StringBuilder {
-    struct StringBuilderPiece {
+    class StringBuilderPiece {
+    public:
+        StringBuilderPiece()
+            : m_type(StringPiece)
+            , m_start(0)
+            , m_end(0)
+        {
+        }
+
         enum Type {
             StringPiece,
             ConstChar,

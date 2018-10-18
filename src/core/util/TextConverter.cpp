@@ -24,6 +24,7 @@ namespace StarFish {
 
 TextConverter::TextConverter(String* charsetName)
     : m_converter(nullptr)
+    , m_encoding(nullptr)
 {
     UErrorCode err = U_ZERO_ERROR;
     auto utf8Data = charsetName->toUTF8NonGCString();
@@ -40,6 +41,7 @@ TextConverter::TextConverter(String* charsetName)
 TextConverter::TextConverter(String* mimetype, String* preferredEncoding,
                              const char* bytes, size_t len)
     : m_converter(nullptr)
+    , m_encoding(nullptr)
 {
     UErrorCode err = U_ZERO_ERROR;
     size_t charset = mimetype->find("charset=");

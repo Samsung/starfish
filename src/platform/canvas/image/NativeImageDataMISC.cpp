@@ -57,6 +57,10 @@ public:
 
     NativeImageDataMISC(String* localImageSrc)
     {
+        m_image = nullptr;
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
+        m_imageSurface = nullptr;
+#endif
         auto utf8Data = localImageSrc->toUTF8NonGCString();
         FILE* fp = fopen(utf8Data.data(), "rb");
         decodeImage(fp, localImageSrc, nullptr, 0);
@@ -87,6 +91,9 @@ public:
     NativeImageDataMISC(size_t w, size_t h)
     {
         m_image = (unsigned char*)malloc(w * h * 4);
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
+        m_imageSurface = nullptr;
+#endif
         m_width = w;
         m_height = h;
         m_stride = w * 4;

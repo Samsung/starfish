@@ -732,6 +732,7 @@ class ComputedStyle : public gc {
         m_gotInheritedColor = false;
         m_usedInAnimator = false;
         m_someNonInheritMemberExplicitlyInherited = false;
+        m_originalDisplay = DisplayValue::InlineDisplayValue;
 
         initNonInheritedStyles();
     }

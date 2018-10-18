@@ -69,6 +69,14 @@ public:
     GeolocationTizen(Document* document)
         : Geolocation(document)
     {
+        m_cachedLocation.altitude = 0;
+        m_cachedLocation.latitude = 0;
+        m_cachedLocation.longitude = 0;
+        m_cachedLocation.climb = 0;
+        m_cachedLocation.direction = 0;
+        m_cachedLocation.speed = 0;
+        m_cachedLocation.horizontalAccuracy = 0;
+        m_cachedLocation.verticalAccuracy = 0;
         m_cachedLocation.timestamp = 0;
     }
     virtual void getCurrentPosition(GeoPositionCallback cb, void* cbData,
