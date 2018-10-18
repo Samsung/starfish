@@ -35,6 +35,7 @@ class Body : public ResourceRequestClient, public WindowHoldable {
 public:
     Promise* arrayBuffer();
     Promise* blob();
+    Promise* formData();
     Promise* json();
     Promise* text();
 
