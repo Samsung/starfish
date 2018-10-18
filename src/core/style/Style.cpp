@@ -1653,6 +1653,7 @@ String* CSSStyleValuePair::toString() const
         case NoCloseQuoteValue:
             return String::fromUTF8("no-close-quote");
         }
+        break;
     case CSSStyleValuePair::ValueKind::BoxDecorationBreakValueKind:
         switch (boxDecorationBreakValue()) {
         case CloneBoxDecorationBreakValue:
@@ -1660,6 +1661,7 @@ String* CSSStyleValuePair::toString() const
         case SliceBoxDecorationBreakValue:
             return String::fromUTF8("slice");
         }
+        break;
     case CSSStyleValuePair::ValueKind::PathFunctionValueKind: {
         StringBuilder builder;
         builder.appendString("path(\"");
