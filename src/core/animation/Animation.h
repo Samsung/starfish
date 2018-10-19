@@ -203,23 +203,19 @@ protected:
     ValueType m_type;
 };
 
+bool applyTransitionIfNeeds(
+    Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
+    ComputedStyle* newStyle, const bool* damagedKeys,
+    const std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>&
+        canceledAnimationProgress); // returns true if animation registered
+
 class ActiveAnimationTask : public gc {
 public:
     ActiveAnimationTask(Element* target,
                         CSSStyleValuePair::KeyKind targetProperty,
                         const AnimatedValue& from, const AnimatedValue& to,
                         uint64_t durationInms, uint64_t delayInms,
-                        AnimationTimingFunction* timingFunction)
-        : m_property(targetProperty)
-        , m_targetElement(target)
-        , m_fromValue(from)
-        , m_toValue(to)
-        , m_startTimeMs(0)
-        , m_durationMs(durationInms)
-        , m_delayMs(delayInms)
-        , m_timingFunction(timingFunction)
-    {
-    }
+                        AnimationTimingFunction* timingFunction);
 
     virtual ~ActiveAnimationTask()
     {
@@ -280,6 +276,16 @@ public:
     void fireStartEvent();
     void fireEndEvent();
     void fireCancelEvent();
+
+    void updateDuration(uint64_t d)
+    {
+        m_durationMs = d;
+    }
+
+    uint64_t duration()
+    {
+        return m_durationMs;
+    }
 
 protected:
     float computeProgress(float fraction)
@@ -464,10 +470,5 @@ private:
     Window* m_window;
     GCVector<ActiveAnimationTask*> m_activeAnimations;
 };
-
-bool applyTransitionIfNeeds(
-    Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
-    ComputedStyle* newStyle,
-    const bool* damagedKeys); // returns true if animation registered
 }
 #endif

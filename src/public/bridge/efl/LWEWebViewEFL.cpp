@@ -844,7 +844,7 @@ public:
 
     virtual void Destroy() override
     {
-        WebView::Destroy();
+        FetchWebContainer()->Destroy();
 
         if (m_imfContext) {
             ecore_imf_context_del(m_imfContext);
@@ -902,6 +902,9 @@ public:
             evas_object_del(m_mainBox);
             m_mainBox = nullptr;
         }
+
+        // FIXME memory of <this> pointer is leaking now
+        this->~WebView();
     }
 
     virtual void* Unwrap() override

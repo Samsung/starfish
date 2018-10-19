@@ -1592,9 +1592,11 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newOpacity != oldOpacity) {
         damagedKeys[CSSStyleValuePair::KeyKind::Opacity] = true;
-        damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         if (newOpacity < 1 && oldOpacity < 1) {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::
+                    ComputedStyleDamageComputeStackingContextProperties |
+                damage);
         } else {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::
@@ -1603,11 +1605,13 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
-    // FIXME changing z-index not always cause tree-rebuild
     if (newStyle->zIndex() != oldStyle->zIndex()) {
         damagedKeys[CSSStyleValuePair::KeyKind::ZIndex] = true;
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageRebuildFrame | damage);
+            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamageEstablishesStackingContext |
+            damage);
     }
 
     if (newStyle->backgroundColor() != oldStyle->backgroundColor()) {

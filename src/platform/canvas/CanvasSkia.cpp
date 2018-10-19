@@ -155,7 +155,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::clear");
+        INSTALL_PROFILE_TIMER("CanvasSkia::clear");
         m_canvas->save();
         if (clr.a() == 0) {
             m_canvas->clear(SK_ColorTRANSPARENT);
@@ -303,7 +303,7 @@ public:
 
     virtual void beginOpacityLayer(float c)
     {
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::beginOpacityLayer");
+        INSTALL_PROFILE_TIMER("CanvasSkia::beginOpacityLayer");
         save();
         lastState().m_opacity = c;
         m_canvas->saveLayerAlpha(nullptr,
@@ -312,7 +312,7 @@ public:
 
     virtual void endOpacityLayer()
     {
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::endOpacityLayer");
+        INSTALL_PROFILE_TIMER("CanvasSkia::endOpacityLayer");
         m_canvas->restore();
         restore();
     }
@@ -574,7 +574,7 @@ public:
         if (!lastState().m_visible || size == 0 || sv.length() == 0) {
             return;
         }
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::drawText");
+        INSTALL_PROFILE_TIMER("CanvasSkia::drawText");
 
         LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
@@ -730,7 +730,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasSkia::drawRepeatImage");
+        INSTALL_PROFILE_TIMER("CanvasSkia::drawRepeatImage");
         auto pixels = data->data();
         auto dataW = data->width();
         auto dataH = data->height();

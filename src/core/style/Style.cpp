@@ -6505,26 +6505,6 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                 damage = (ComputedStyleDamage)(
                     damage | ComputedStyleDamage::ComputedStyleDamageInherited);
             }
-
-// #define STARFISH_ENABLE_PRINT_STYLE_DAMAGE
-#if defined(STARFISH_ENABLE_PRINT_STYLE_DAMAGE)
-            if (damage) {
-                for (size_t i = 0; i < CSSStyleValuePair::KeyKindSize; i++) {
-                    if (damagedKeys[i]) {
-                        switch (i) {
-#define ADD_CSS_KEYKIND(Name, name, cssname)                              \
-    case CSSStyleValuePair::KeyKind::Name:                                \
-        STARFISH_LOG_INFO("element %p, %s damaged\n", element, #Name ""); \
-        break;
-                            FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
-#undef ADD_CSS_KEYKIND
-                        default:
-                            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                        }
-                    }
-                }
-            }
-#endif
         }
 
         ComputedStyle* oldStyle = element->style();
@@ -6536,6 +6516,8 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         AnimationExecutor* executor = element->document()->animationExecutor();
         auto tick =
             element->document()->browsingContext()->styleResolveStartTick();
+        std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>
+            canceledAnimationProgress;
         // check transition have to remove
         {
             auto& activeAnimations = executor->activeAnimations();
@@ -6593,6 +6575,11 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                                 false;
                             activeAnimations[i]->fireEndEvent();
                         } else {
+                            auto key = activeAnimations[i]->property();
+                            float progress =
+                                activeAnimations[i]->fraction(tick);
+                            canceledAnimationProgress.push_back(
+                                std::make_pair(key, progress));
                             activeAnimations[i]->fireCancelEvent();
                         }
                         activeAnimations[i]->detachFromElement(style);
@@ -6613,7 +6600,8 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             style->transitionLayerSize() &&
             damage != ComputedStyleDamage::ComputedStyleDamageNone) {
             if (applyTransitionIfNeeds(element, oldStyle, oldFrame, style,
-                                       damagedKeys)) {
+                                       damagedKeys,
+                                       canceledAnimationProgress)) {
                 elementHasAnimation = true;
                 needsToCheckActiveAnimationExecutorInWebView = true;
             }
@@ -6632,9 +6620,45 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         }
 
         if (needsToRecomputeStylePropertyDamage) {
+            ComputedStyleDamage damage =
+                ComputedStyleDamage::ComputedStyleDamageNone;
             memset(damagedKeys, 0, sizeof(damagedKeys));
+
+            if (!element->frame()) {
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamage::ComputedStyleDamageRebuildFrame);
+            }
+
             damage = (ComputedStyleDamage)(
                 damage | compareStyle(oldStyle, style, damagedKeys));
+
+            if (damage != ComputedStyleDamage::ComputedStyleDamageNone &&
+                element->style()->someNonInheritMemberExplicitlyInherited()) {
+                damage = (ComputedStyleDamage)(
+                    damage | ComputedStyleDamage::ComputedStyleDamageInherited);
+            }
+        }
+
+        {
+// #define STARFISH_ENABLE_PRINT_STYLE_DAMAGE
+#if defined(STARFISH_ENABLE_PRINT_STYLE_DAMAGE)
+            if (damage && element->style()) {
+                for (size_t i = 0; i < CSSStyleValuePair::KeyKindSize; i++) {
+                    if (damagedKeys[i]) {
+                        switch (i) {
+#define ADD_CSS_KEYKIND(Name, name, cssname)                              \
+    case CSSStyleValuePair::KeyKind::Name:                                \
+        STARFISH_LOG_INFO("element %p, %s damaged\n", element, #Name ""); \
+        break;
+                            FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
+#undef ADD_CSS_KEYKIND
+                        default:
+                            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+                        }
+                    }
+                }
+            }
+#endif
         }
 
         if (needsToCheckActiveAnimationExecutorInWebView) {

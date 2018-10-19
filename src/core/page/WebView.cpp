@@ -743,16 +743,18 @@ void WebView::clearBlobURLStore()
 
 void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
 {
-    INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering::layoutIfNeeds");
+    INSTALL_PROFILE_TIMER("WebView::rendering::layoutIfNeeds");
     bool didLayout = false;
 
     {
         didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeds();
-        for (size_t i = 0; i < m_browsingContextsNeedsLayout.size(); i++) {
-            didLayout =
-                didLayout | m_browsingContextsNeedsLayout[i]->layoutIfNeeds();
-        }
+        auto browsingContextsNeedsLayout =
+            std::move(m_browsingContextsNeedsLayout);
         m_browsingContextsNeedsLayout.clear();
+        for (size_t i = 0; i < browsingContextsNeedsLayout.size(); i++) {
+            didLayout =
+                didLayout | browsingContextsNeedsLayout[i]->layoutIfNeeds();
+        }
 
         if (didLayout) {
             m_needsEstablishesStackingContext = true;
@@ -761,7 +763,7 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
 
     if (shouldCareStackingContextNow) {
         if (!m_rootStackingContext || m_needsEstablishesStackingContext) {
-            INSTALL_PROFILE_TIMER(starFish(), "establishesStackingContext");
+            INSTALL_PROFILE_TIMER("establishesStackingContext");
             clearStackingContext();
 #ifdef STARFISH_ENABLE_TEST
             if (startUpFlag() & StarFishStartUpFlag::enableComputedStyleDump) {
@@ -794,8 +796,7 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
 
         if (m_needsComputeStackingContextProperties) {
             {
-                INSTALL_PROFILE_TIMER(starFish(),
-                                      "computeStackingContextProperties");
+                INSTALL_PROFILE_TIMER("computeStackingContextProperties");
                 if (m_topLevelBrowsingContext->document()
                         ->frame()
                         ->firstChild() &&
@@ -989,26 +990,27 @@ RenderResult WebView::rendering(bool force)
     uint64_t currentTick = longTickCount();
     m_lastRenderingTick = currentTick;
     m_inRendering = true;
-    INSTALL_PROFILE_TIMER(starFish(), "WebView::rendering");
+    INSTALL_PROFILE_TIMER("WebView::rendering");
 
     {
-        INSTALL_PROFILE_TIMER(
-            starFish(),
-            "WebView::rendering::call request animation frame handlers");
         auto rafHandlers = std::move(timer()->m_requestAnimationFrameHandler);
-        auto iter = rafHandlers.begin();
+        if (rafHandlers.size()) {
+            INSTALL_PROFILE_TIMER(
+                "WebView::rendering::call request animation frame handlers");
 
-        while (iter != rafHandlers.end()) {
-            Timer::RequestAnimationFrameData* data = iter->second;
-            data->m_handler(data->m_window, data->m_data);
-            iter++;
+            auto iter = rafHandlers.begin();
+            while (iter != rafHandlers.end()) {
+                Timer::RequestAnimationFrameData* data = iter->second;
+                data->m_handler(data->m_window, data->m_data);
+                iter++;
+            }
         }
     }
 
     layoutIfNeeds();
 
     if (m_needsPainting) {
-        INSTALL_PROFILE_TIMER(starFish(), "painting");
+        INSTALL_PROFILE_TIMER("painting");
 
         renderResult.didPaintingOrCompositing = true;
         renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
@@ -1204,7 +1206,7 @@ RenderResult WebView::rendering(bool force)
     }
 
     if (m_needsComposite) {
-        INSTALL_PROFILE_TIMER(starFish(), "composite");
+        INSTALL_PROFILE_TIMER("composite");
         renderResult.didPaintingOrCompositing = true;
         renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
                                              platformWindow()->height());
@@ -1326,10 +1328,10 @@ RenderResult WebView::rendering(bool force)
 
     if (m_activeAnimationExecutor.size()) {
         for (size_t i = 0; i < m_activeAnimationExecutor.size(); i++) {
-            m_activeAnimationExecutor[i]
-                ->window()
-                ->browsingContext()
-                ->registerNeedsLayoutInWebView();
+            auto& a = m_activeAnimationExecutor[i]->activeAnimations();
+            for (size_t j = 0; j < a.size(); j++) {
+                a[j]->targetElement()->setNeedsStyleRecalcForAnimation();
+            }
         }
         needsContinuousRendering = true;
     }

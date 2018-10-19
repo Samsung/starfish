@@ -176,7 +176,6 @@ protected:
     void computeStackingContextProperties(ComputeStackingContextContext& ctx);
     void applyStackingContextProperties(ComputeStackingContextContext& ctx);
 
-    bool m_catchedMatrixChangedWhileComputeStackingContextProperties : 1;
     bool m_needsGraphicsBuffer : 1;
     bool m_hasGraphicsBufferButPaintingSkipped : 1;
     bool m_hasNon2DRectTransform : 1;

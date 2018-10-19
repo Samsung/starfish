@@ -68,6 +68,7 @@ public:
     static void run();
     static void stop();
     static size_t runOnMainThreadSync(const std::function<size_t()>& functor);
+    void runOnMainThreadAsync(const std::function<void()>& functor);
 
 protected:
     bool m_inClosingState;

@@ -115,6 +115,8 @@ public:
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+
+    static size_t g_totalAllocatedCanvasSurfaceSize;
 };
 
 struct DrawImageInfo {

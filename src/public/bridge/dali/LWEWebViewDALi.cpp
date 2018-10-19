@@ -1048,9 +1048,12 @@ public:
         m_application.MainLoop();
     }
 
-    void Destroy()
+    void Destroy() override
     {
-        m_controller->destroy();
+        FetchWebContainer()->Destroy();
+
+        // FIXME memory of <this> pointer is leaking now
+        this->~WebView();
     }
 
 protected:

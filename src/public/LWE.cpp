@@ -23,7 +23,8 @@
 
 #include "LWEWebView.h"
 
-#define THREAD_STACK_SIZE 2 * 1024 * 1024
+#define THREAD_MINIMUM_STACK_SIZE \
+    4 * 1024 * 1024 // we need at least 4MB for stack
 
 namespace LWE {
 
@@ -51,11 +52,13 @@ void LWE::Initialize(const char* localStorageDataFilePath,
     if (!g_isLWEThreadStarted) {
         pthread_mutex_init(&g_mainThreadInitLocker, NULL);
         pthread_mutex_lock(&g_mainThreadInitLocker);
-        pthread_t tid;
+
         pthread_attr_t attr;
         pthread_attr_init(&attr);
-        pthread_attr_setstacksize(&attr, THREAD_STACK_SIZE);
+        pthread_attr_setstacksize(&attr, THREAD_MINIMUM_STACK_SIZE);
+        pthread_t tid;
         pthread_create(&tid, &attr, LWEMainThread, NULL);
+
         pthread_mutex_lock(&g_mainThreadInitLocker);
         pthread_mutex_unlock(&g_mainThreadInitLocker);
         pthread_mutex_destroy(&g_mainThreadInitLocker);

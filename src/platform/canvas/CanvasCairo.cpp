@@ -178,7 +178,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::clear");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::clear");
         cairo_save(m_canvas);
         if (clr.a() == 0) {
             cairo_set_operator(m_canvas, CAIRO_OPERATOR_CLEAR);
@@ -248,7 +248,7 @@ public:
 
     virtual void beginOpacityLayer(float c)
     {
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::beginOpacityLayer");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::beginOpacityLayer");
         save();
         lastState().m_opacity = c;
         cairo_push_group(m_canvas);
@@ -256,7 +256,7 @@ public:
 
     virtual void endOpacityLayer()
     {
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::endOpacityLayer");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::endOpacityLayer");
         cairo_pop_group_to_source(m_canvas);
         cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
         restore();
@@ -377,7 +377,7 @@ public:
     void drawCairoRect(float xx, float yy, float ww, float hh,
                        bool isHole = false)
     {
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawCairoRect");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawCairoRect");
         cairo_save(m_canvas);
         if (isHole) {
             cairo_set_source_rgba(m_canvas, 0, 0, 0, 0);
@@ -436,7 +436,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawText");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawText");
 
         LayoutSize sz(stringWidth, lastState().m_font->metrics().m_fontHeight);
         LayoutRect rt(x, y, sz.width(), sz.height());
@@ -485,7 +485,7 @@ public:
                         double surfaceWidth, double surfaceHeight,
                         ImageRenderingValue imageRenderingMode)
     {
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawImageCairo");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawImageCairo");
 
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
         xx = dst.x();
@@ -633,7 +633,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawRepeatImage");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawRepeatImage");
 
         cairo_save(m_canvas);
         double xx = dst.x(), yy = dst.y(), ww = dst.width(), hh = dst.height();
@@ -695,7 +695,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawRepeatImage");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawRepeatImage");
 
         cairo_save(m_canvas);
         float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
@@ -769,7 +769,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawLinearGradient");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawLinearGradient");
         cairo_save(m_canvas);
 
         cairo_pattern_t* pt;
@@ -799,7 +799,7 @@ public:
             return;
         }
 
-        INSTALL_PROFILE_TIMER(m_webView, "CanvasImplCairo::drawRadialGradient");
+        INSTALL_PROFILE_TIMER("CanvasImplCairo::drawRadialGradient");
 
         cairo_save(m_canvas);
         cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());

@@ -17,8 +17,6 @@
  *  USA
  */
 
-// TODO Need update code
-
 #include "StarFishConfig.h"
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
@@ -469,6 +467,26 @@ size_t MessageLoop::runOnMainThreadSync(const std::function<size_t()>& functor)
     pthread_mutex_unlock(&g_threadSyncExecuteGuard);
 
     return ret;
+}
+
+void MessageLoop::runOnMainThreadAsync(const std::function<void()>& functor)
+{
+    struct Param {
+        std::function<void()> functor;
+    };
+
+    Param* p = new Param();
+    p->functor = functor;
+
+    addIdlerWithNoGCRootingInOtherThread(nullptr,
+                                         [](size_t, void* data) {
+                                             Param* p = (Param*)data;
+                                             p->functor();
+                                             delete p;
+                                         },
+                                         p);
+
+    return;
 }
 }
 #endif

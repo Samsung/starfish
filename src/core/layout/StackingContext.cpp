@@ -128,8 +128,7 @@ void* StackingContextRareData::operator new(size_t size)
 }
 
 StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
-    : m_catchedMatrixChangedWhileComputeStackingContextProperties(false)
-    , m_needsGraphicsBuffer(false)
+    : m_needsGraphicsBuffer(false)
     , m_hasGraphicsBufferButPaintingSkipped(false)
     , m_hasNon2DRectTransform(false)
     , m_isVisibleRectComputedForNonGraphicsLayer(false)
@@ -758,11 +757,7 @@ void StackingContext::computeStackingContextProperties()
 void StackingContext::computeStackingContextProperties(
     ComputeStackingContextContext& compositingState)
 {
-    auto oldMatrix = transformMatrix();
     computeTransformMatrix();
-    if (oldMatrix != transformMatrix()) {
-        m_catchedMatrixChangedWhileComputeStackingContextProperties = true;
-    }
 
     NeedsGraphicsLayerReason reason =
         NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNone;
@@ -931,7 +926,17 @@ void StackingContext::applyStackingContextProperties(
 
     bool inAnimation =
         m_owner->node()->window()->webView()->hasActiveAnimationExecutor();
-    bool compositedBefore = needsGraphicsBuffer();
+    auto& prevDrawnMap =
+        m_owner->node()->webView()->prevDrawnStackingContextInfo();
+    bool compositedBefore = false;
+    auto prevDrawnMapIter = prevDrawnMap.find(m_owner->node());
+    if (prevDrawnMap.end() != prevDrawnMapIter) {
+        compositedBefore = prevDrawnMapIter->second.needsGraphicsBuffer;
+        if (compositedBefore) {
+            ensureRareData()->m_buffer =
+                prevDrawnMapIter->second.graphicsBuffer;
+        }
+    }
     bool willBeComposited = ctx.compositeFlagInfo[this];
     bool willBeCompositedDueToSelf = ctx.compositeFlagInfoBecauseSelf[this];
 
@@ -1027,36 +1032,44 @@ void StackingContext::applyStackingContextProperties(
         m_hasGraphicsBufferButPaintingSkipped = false;
     }
 
-    if (compositedBefore != willBeComposited) {
-        if (compositedBefore) {
-            StackingContext* p = m_parent;
-            while (p) {
-                if (p->needsGraphicsBuffer()) {
-                    break;
+    if (!m_hasGraphicsBufferButPaintingSkipped) {
+        if (compositedBefore != willBeComposited) {
+            if (compositedBefore) {
+                StackingContext* p = m_parent;
+                while (p) {
+                    if (p->needsGraphicsBuffer()) {
+                        break;
+                    }
+                    p = p->parent();
                 }
-                p = p->parent();
+                if (!p) {
+                    p = this;
+                }
+                p->m_owner->node()->setNeedsPainting();
+            } else {
+                m_owner->node()->setNeedsPainting();
             }
-            if (!p) {
-                p = this;
+        } else if (compositedBefore && compositedBefore == willBeComposited) {
+            m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
+        } else if (!compositedBefore && !willBeComposited) {
+            if (prevDrawnMapIter != prevDrawnMap.end()) {
+                if (prevDrawnMapIter->second.opacity !=
+                    m_owner->style()->opacity()) {
+                    m_owner->node()->setNeedsPainting();
+                }
             }
-            p->m_owner->node()->setNeedsPainting();
-        } else {
-            m_owner->node()->setNeedsPainting();
-        }
-    } else if (compositedBefore && compositedBefore == willBeComposited) {
-        m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
-    } else if (!compositedBefore && !willBeComposited) {
-        if (m_catchedMatrixChangedWhileComputeStackingContextProperties) {
-            m_owner->node()->setNeedsPainting();
         }
     }
 
-    m_catchedMatrixChangedWhileComputeStackingContextProperties = false;
     if (willBeComposited) {
         m_needsGraphicsBuffer = true;
         m_rareData->m_screenMatrix = m_owner->computeScreenMatrix();
     } else {
         m_needsGraphicsBuffer = false;
+    }
+
+    if (isRootContext() && willBeComposited) {
+        m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
     }
 }
 
@@ -1221,6 +1234,8 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 {
     PrevDrawnStackingContextInfo info;
     info.screenExtent = m_screenExtent;
+    info.opacity = m_owner->style()->opacity();
+    info.needsGraphicsBuffer = needsGraphicsBuffer();
 
     Canvas* oldCanvas = nullptr;
     LayoutRect visibleRect = StackingContext::visibleRect();
