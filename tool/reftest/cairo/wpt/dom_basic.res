@@ -91,7 +91,7 @@ http://web-platform.test:8000/dom/traversal/NodeFilter-constants.html
 #http://web-platform.test:8000/dom/traversal/NodeIterator.html
 http://web-platform.test:8000/dom/traversal/TreeWalker-currentNode.html
 http://web-platform.test:8000/dom/traversal/TreeWalker-basic.html
-#http://web-platform.test:8000/dom/traversal/TreeWalker.html
+http://web-platform.test:8000/dom/traversal/TreeWalker.html
 http://web-platform.test:8000/dom/traversal/TreeWalker-acceptNode-filter.html
 http://web-platform.test:8000/dom/traversal/TreeWalker-previousSiblingLastChildSkip.html
 http://web-platform.test:8000/dom/collections/domstringmap-supported-property-names.html

@@ -82,8 +82,6 @@ Node* TreeWalker::firstChild()
             }
         case NodeFilter::FILTERREJECT:
             break;
-        default:
-            return nullptr;
         }
         do {
             if (node->nextSibling()) {
@@ -357,19 +355,12 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
             if (scriptValueAsBoolean(ret)) {
                 return NodeFilter::FILTERACCEPT;
             } else {
-                return NodeFilter::FILTERREJECT;
+                return 0;
             }
         } else if (isNumberScriptValue(ret)) {
-            unsigned number = scriptValueAsNumber(ret);
-            if (number == NodeFilter::FILTERACCEPT ||
-                number == NodeFilter::FILTERREJECT ||
-                number == NodeFilter::FILTERSKIP) {
-                return number;
-            } else {
-                return NodeFilter::FILTERREJECT;
-            }
+            return scriptValueAsNumber(ret);
         } else if (!ret || isNullOrUndefinedScriptValue(ret)) {
-            return NodeFilter::FILTERREJECT;
+            return 0;
         }
     } else if (isObjectScriptValue(m_filter)) {
         ScriptValue* argv;
@@ -384,17 +375,10 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
             if (scriptValueAsBoolean(ret)) {
                 return NodeFilter::FILTERACCEPT;
             } else {
-                return NodeFilter::FILTERREJECT;
+                return 0;
             }
         } else if (isNumberScriptValue(ret)) {
-            unsigned number = scriptValueAsNumber(ret);
-            if (number == NodeFilter::FILTERACCEPT ||
-                number == NodeFilter::FILTERREJECT ||
-                number == NodeFilter::FILTERSKIP) {
-                return number;
-            } else {
-                return NodeFilter::FILTERREJECT;
-            }
+            return scriptValueAsNumber(ret);
         } else {
             throw new DOMException(node->document(),
                                    DOMException::Code::SCRIPT_TYPE_ERR);
@@ -402,6 +386,6 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
         }
     }
 
-    return NodeFilter::FILTERREJECT;
+    return 0;
 }
 }
