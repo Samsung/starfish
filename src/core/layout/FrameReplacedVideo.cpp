@@ -80,6 +80,7 @@ void FrameReplacedVideo::createGraphicsBuffer(CanvasSurface** surfaceHolder,
         } else {
             *surfaceHolder = CanvasSurface::create(
                 node()->webView()->platformWindow(), 1, 1);
+            (*surfaceHolder)->clear();
         }
     }
 }
