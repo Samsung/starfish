@@ -301,24 +301,24 @@ Node* TreeWalker::nextSibling()
 
 class AutoResetActiveFlag {
 public:
-    AutoResetActiveFlag(bool& active_flag)
-        : m_active_flag(active_flag)
+    AutoResetActiveFlag(bool& activeFlag)
+        : m_activeFlag(activeFlag)
     {
-        m_active_flag = true;
+        m_activeFlag = true;
     }
 
     ~AutoResetActiveFlag()
     {
-        m_active_flag = false;
+        m_activeFlag = false;
     }
 
 private:
-    bool& m_active_flag;
+    bool& m_activeFlag;
 };
 
 unsigned TreeWalker::acceptNode(Node* node, bool& error)
 {
-    if (m_active_flag) {
+    if (m_activeFlag) {
         throw new DOMException(node->document(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
@@ -347,7 +347,7 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
         argv = (ScriptValue*)alloca(sizeof(ScriptValue) * 1);
         argv[0] = node->scriptValue();
         ScriptValue thisValue = node->window()->scriptValue();
-        AutoResetActiveFlag autoResetActiveFlag(m_active_flag);
+        AutoResetActiveFlag autoResetActiveFlag(m_activeFlag);
         ScriptValue ret = callScriptFunctionWithError(
             scriptBindingInstance(), m_filter, argv, 1, thisValue, error);
 
@@ -366,7 +366,7 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
         ScriptValue* argv;
         argv = (ScriptValue*)alloca(sizeof(ScriptValue) * 1);
         argv[0] = node->scriptValue();
-        AutoResetActiveFlag autoResetActiveFlag(m_active_flag);
+        AutoResetActiveFlag autoResetActiveFlag(m_activeFlag);
         ScriptValue thisValue = node->window()->scriptValue();
         ScriptValue ret = callHandleNodeFilterFunction(
             scriptBindingInstance(), m_filter, argv, 1, thisValue, error);

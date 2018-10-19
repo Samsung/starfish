@@ -36,7 +36,7 @@ public:
         , m_current(root)
         , m_whatToShow(whatToShow)
         , m_filter(filter)
-        , m_active_flag(false)
+        , m_activeFlag(false)
     {
     }
 
@@ -96,7 +96,7 @@ private:
     Node* m_current;
     unsigned m_whatToShow;
     ScriptValue m_filter;
-    bool m_active_flag;
+    bool m_activeFlag;
 };
 }
 
