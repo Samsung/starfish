@@ -120,8 +120,13 @@ public:
     virtual void Destroy() override
     {
         FetchWebContainer()->ClearTimeout(m_pollTimer);
-        WebView::Destroy();
+
+        FetchWebContainer()->Destroy();
+
         glfwDestroyWindow(m_glWindow);
+
+        // FIXME memory of <this> pointer is leaking now
+        this->~WebView();
     }
 
     bool m_isMouseLbuttonDown;

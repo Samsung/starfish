@@ -73,6 +73,15 @@
 #define END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 #endif
 
+#ifdef PORT_NEEDS_THREADED_PUBLIC_API
+#define START_ASYNC_THREADED_PUBLIC_API_WRAPPER TO_WEBVIEW(m_impl)->messageLoop()->runOnMainThreadAsync([=]() -> void {
+#define END_ASYNC_THREADED_PUBLIC_API_WRAPPER \
+    });
+#else
+#define START_ASYNC_THREADED_PUBLIC_API_WRAPPER
+#define END_ASYNC_THREADED_PUBLIC_API_WRAPPER
+#endif
+
 namespace LWE {
 
 extern StarFish::StarFish* g_starFishInstance;
@@ -406,9 +415,9 @@ size_t WebContainer::AddTimeout(void (*callback)(void*), void* data,
 
 void WebContainer::ClearTimeout(size_t handle)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->timer()->removeTimer(handle);
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 Settings WebContainer::GetSettings()
@@ -433,12 +442,12 @@ Settings WebContainer::GetSettings()
 
 void WebContainer::LoadURL(const std::string& url)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 
     TO_WEBVIEW(m_impl)
         ->loadHTMLDocument(StarFish::String::fromUTF8(url.data()));
 
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 std::string WebContainer::GetURL()
@@ -452,7 +461,7 @@ std::string WebContainer::GetURL()
 
 void WebContainer::LoadData(const std::string& data)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     if (data.size() > 0) {
         auto dataURI = StarFish::StringUtils::toBase64HTMLDataURI(data);
         TO_WEBVIEW(m_impl)
@@ -461,42 +470,45 @@ void WebContainer::LoadData(const std::string& data)
         TO_WEBVIEW(m_impl)
             ->loadHTMLDocument(StarFish::String::fromUTF8("about:blank"));
     }
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::Reload()
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_LOCATION(m_impl)->reload();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::StopLoading()
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     STARFISH_ASSERT(m_impl);
     TO_RESOURCE_LOADER(m_impl).clear();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::GoBack()
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_HISTORY(m_impl)->back();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::GoForward()
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_HISTORY(m_impl)->forward();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 bool WebContainer::CanGoBack()
 {
-    STARFISH_ASSERT(m_impl);
-    return TO_HISTORY(m_impl)->canGoBack();
+    bool ret;
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    ret = TO_HISTORY(m_impl)->canGoBack();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    return ret;
 }
 
 bool WebContainer::CanGoForward()
@@ -512,7 +524,7 @@ void WebContainer::AddJavaScriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName,
     std::function<std::string(const std::string&)> cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 
     StarFish::String* objectName =
         StarFish::String::fromUTF8(exposedObjectName.c_str());
@@ -525,7 +537,7 @@ void WebContainer::AddJavaScriptInterface(
                                               cb),
         nativeCallbackFunction);
 
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 std::string WebContainer::EvaluateJavaScript(const std::string& script)
@@ -543,9 +555,9 @@ std::string WebContainer::EvaluateJavaScript(const std::string& script)
 
 void WebContainer::ClearHistory()
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->historyManager()->clear();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::Destroy()
@@ -574,22 +586,22 @@ void WebContainer::Pause()
 
 void WebContainer::Focus()
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     // TODO
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::Blur()
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->webView()->blur();
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::SetSettings(const Settings& settings)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->setCustomUserAgentString(
             StarFish::String::fromUTF8(settings.GetUserAgentString().c_str()));
@@ -603,13 +615,13 @@ void WebContainer::SetSettings(const Settings& settings)
             "effect.. ");
     }
 #endif
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RemoveJavascriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     StarFish::String* objectName =
         StarFish::String::fromUTF8(exposedObjectName.c_str());
     if (!jsFunctionName.empty()) {
@@ -621,23 +633,23 @@ void WebContainer::RemoveJavascriptInterface(
         StarFish::unregisterJavaScriptNativeInterface(
             TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName);
     }
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 void WebContainer::ClearCache()
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (TO_STARFISH(m_impl)->httpCache() != nullptr) {
         TO_STARFISH(m_impl)->httpCache()->clear();
     }
 #endif
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterOnReceivedErrorHandler(
     const std::function<void(WebContainer*, ResourceError)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
             StarFish::OnReceivedError, [this, cb](void* param) -> void {
@@ -648,13 +660,13 @@ void WebContainer::RegisterOnReceivedErrorHandler(
                 // make error description
                 cb(this, ResourceError(p->errorCode, std::string()));
             });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterOnPageParsedHandler(
     std::function<void(WebContainer*, const std::string&)> cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
             StarFish::OnPageParsed, [this, cb](void* param) -> void {
@@ -664,13 +676,13 @@ void WebContainer::RegisterOnPageParsedHandler(
                 Param* p = (Param*)param;
                 cb(this, p->url->toUTF8NonGCString());
             });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterOnPageLoadedHandler(
     std::function<void(WebContainer*, const std::string&)> cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
             StarFish::OnPageLoaded, [this, cb](void* param) -> void {
@@ -680,13 +692,13 @@ void WebContainer::RegisterOnPageLoadedHandler(
                 Param* p = (Param*)param;
                 cb(this, p->url->toUTF8NonGCString());
             });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterOnPageStartedHandler(
     const std::function<void(WebContainer*, const std::string&)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
             StarFish::OnPageStarted, [this, cb](void* param) -> void {
@@ -696,13 +708,13 @@ void WebContainer::RegisterOnPageStartedHandler(
                 Param* p = (Param*)param;
                 cb(this, p->url->toUTF8NonGCString());
             });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterOnLoadResourceHandler(
     const std::function<void(WebContainer*, const std::string&)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
             StarFish::OnLoadResource, [this, cb](void* param) -> void {
@@ -712,13 +724,13 @@ void WebContainer::RegisterOnLoadResourceHandler(
                 Param* p = (Param*)param;
                 cb(this, p->url->toUTF8NonGCString());
             });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
     const std::function<bool(WebContainer*, const std::string&)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
             StarFish::ShouldOverrideUrlLoading,
@@ -741,7 +753,7 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
                             StarFish::HistoryManagerAction::Add, true);
                 }
             });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterOnDownloadStartHandler(
@@ -749,7 +761,7 @@ void WebContainer::RegisterOnDownloadStartHandler(
                              const std::string&, const std::string&,
                              const std::string&, long)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
             StarFish::OnDownloadStart, [this, cb](void* param) -> void {
@@ -768,14 +780,14 @@ void WebContainer::RegisterOnDownloadStartHandler(
                    p->mimetype, p->contentLength);
                 delete p;
             });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterShowDropdownMenuHandler(
     const std::function<void(WebContainer*, const std::vector<std::string>*,
                              int)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->registerCallbackHandler(StarFish::WindowHandlerShowDropdownMenu,
@@ -790,14 +802,14 @@ void WebContainer::RegisterShowDropdownMenuHandler(
                                       delete p->list;
                                       delete p;
                                   });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterShowAlertHandler(
     const std::function<void(WebContainer*, const std::string&,
                              const std::string&)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->registerCallbackHandler(StarFish::WindowHandlerShowAlert,
@@ -811,7 +823,7 @@ void WebContainer::RegisterShowAlertHandler(
                                       cb(this, p->title, p->message);
                                       delete p;
                                   });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterCustomFileResourceRequestHandlers(
@@ -822,24 +834,24 @@ void WebContainer::RegisterCustomFileResourceRequestHandlers(
     std::function<long int(void* handle)> fileLengthCallback,
     std::function<void(void* handle)> fileCloseCallback)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerCustomFileResourceRequestCallbacks(
             resolveFilePathCallback, fileOpenCallback, fileReadCallback,
             fileLengthCallback, fileCloseCallback);
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::CallHandler(const std::string& handler, void* param)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     if (handler.compare("onDropdownMenuItemSelected") == 0) {
         TO_WEBVIEW(m_impl)
             ->platformWindow()
             ->callHandler(StarFish::WindowHandlerOnDropdownMenuItemSelected,
                           param);
     }
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 size_t WebContainer::Width()
@@ -863,7 +875,7 @@ size_t WebContainer::Height()
 void WebContainer::RegisterOnProgressChangedHandler(
     const std::function<void(WebContainer*, int)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(StarFish::OnProgressChanged,
                                        [this, cb](void* param) -> void {
@@ -873,177 +885,177 @@ void WebContainer::RegisterOnProgressChangedHandler(
                                            Param* p = (Param*)param;
                                            cb(this, p->newProgress);
                                        });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::SetUserAgentString(const std::string& userAgent)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->setCustomUserAgentString(
             StarFish::String::fromUTF8(userAgent.c_str()));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::SetCacheMode(int mode)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (TO_STARFISH(m_impl)->httpCache() != nullptr) {
         TO_STARFISH(m_impl)->httpCache()->setCacheMode(mode);
     }
 #endif
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::SetDefaultFontSize(uint32_t size)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     STARFISH_RELEASE_ASSERT(1 <= size && size <= 72);
     TO_WEBVIEW(m_impl)->setDefaultFontSize(size);
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
                                           MouseButtonsValue buttons, double x,
                                           double y)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchMouseEvent(::StarFish::MouseEventKind::MouseEventMove,
                              ::StarFish::MouseData(button, buttons, x, y, 0));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchMouseDownEvent(MouseButtonValue button,
                                           MouseButtonsValue buttons, double x,
                                           double y)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchMouseEvent(::StarFish::MouseEventKind::MouseEventDown,
                              ::StarFish::MouseData(button, buttons, x, y, 0));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchMouseUpEvent(MouseButtonValue button,
                                         MouseButtonsValue buttons, double x,
                                         double y)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchMouseEvent(::StarFish::MouseEventKind::MouseEventUp,
                              ::StarFish::MouseData(button, buttons, x, y, 0));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchMouseWheelEvent(double x, double y, int delta)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchMouseWheelEvent(x, y, delta, true);
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchKeyDownEvent(KeyValue keyCode)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchKeyEvent(::StarFish::KeyEventKind::KeyEventDown,
                            ::StarFish::PlatformKeyEventData(keyCode));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchKeyPressEvent(KeyValue keyCode)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchKeyEvent(::StarFish::KeyEventKind::KeyEventPress,
                            ::StarFish::PlatformKeyEventData(keyCode));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchKeyUpEvent(KeyValue keyCode)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchKeyEvent(::StarFish::KeyEventKind::KeyEventUp,
                            ::StarFish::PlatformKeyEventData(keyCode));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchCompositionStartEvent(
     const std::string& soFarCompositiedString)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchCompositionEvent(
             ::StarFish::CompositionEventKind::CompositionEventStart,
             ::StarFish::String::fromUTF8(soFarCompositiedString.data(),
                                          soFarCompositiedString.length()));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchCompositionUpdateEvent(
     const std::string& soFarCompositiedString)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchCompositionEvent(
             ::StarFish::CompositionEventKind::CompositionEventUpdate,
             ::StarFish::String::fromUTF8(soFarCompositiedString.data(),
                                          soFarCompositiedString.length()));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::DispatchCompositionEndEvent(
     const std::string& soFarCompositiedString)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchCompositionEvent(
             ::StarFish::CompositionEventKind::CompositionEventEnd,
             ::StarFish::String::fromUTF8(soFarCompositiedString.data(),
                                          soFarCompositiedString.length()));
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 void WebContainer::RegisterOnShowSoftwareKeyboardIfPossibleHandler(
     const std::function<void(WebContainer*)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->registerShowSoftwareKeyboardIfPossibleCallback(
             [this, cb]() { cb(this); });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterOnHideSoftwareKeyboardIfPossibleHandler(
     const std::function<void(WebContainer*)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->registerHideSoftwareKeyboardIfPossibleCallback(
             [this, cb]() { cb(this); });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::RegisterSetNeedsRenderingCallback(
     const std::function<void(
         WebContainer*, const std::function<void()>& doRenderingFunction)>& cb)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->registerSetNeedsRenderingCallback(
@@ -1054,14 +1066,14 @@ void WebContainer::RegisterSetNeedsRenderingCallback(
                 };
                 cb(this, fn);
             });
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void WebContainer::SetUserData(const std::string& key, void* data)
 {
-    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->publicLayerUserDataMap()[key] = data;
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
 void* WebContainer::GetUserData(const std::string& key)

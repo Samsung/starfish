@@ -33,15 +33,19 @@ struct RenderResult {
 struct PrevDrawnStackingContextInfo {
     PrevDrawnStackingContextInfo()
     {
-        hasThisLayerThisTime = isEqualsWithPrevDrawing = false;
+        needsGraphicsBuffer = hasThisLayerThisTime = isEqualsWithPrevDrawing =
+            false;
         graphicsBuffer = nullptr;
+        opacity = 1;
     }
 
     // flags for RepaintRegionTracker
     bool isEqualsWithPrevDrawing;
     bool hasThisLayerThisTime;
+    bool needsGraphicsBuffer;
 
     LayoutRect screenExtent;
+    float opacity;
     CanvasSurface* graphicsBuffer;
 };
 

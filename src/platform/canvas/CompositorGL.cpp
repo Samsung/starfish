@@ -423,7 +423,6 @@ Evas_GL_API* g_evasGLAPI;
 
 namespace StarFish {
 
-static size_t g_totalCanvasSurfaceGLSize;
 static size_t g_textureTileSize = 512;
 static bool g_needsCheckCompatibility = true;
 static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
@@ -794,6 +793,12 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
             major = 2;
         }
 
+        if (isOpenGLES3) {
+            STARFISH_LOG_INFO("GL_MAJOR_VERSION %d\n", (int)major);
+        } else {
+            STARFISH_LOG_INFO("GL_MAJOR_VERSION 2\n");
+        }
+
         if (major >= 3) {
             g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = true;
         }
@@ -886,10 +891,8 @@ public:
         if (m_textureFragments.size()) {
             if (m_isEGLImageExternal && !m_isEGLBufferOwner) {
             } else {
-                g_totalCanvasSurfaceGLSize -=
+                g_totalAllocatedCanvasSurfaceSize -=
                     m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
-                STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
-                                  g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
             }
 
             m_window->glMakeCurrent();
@@ -1005,10 +1008,8 @@ public:
                     m_bufferWidth * m_bufferHeight * sizeof(uint32_t));
             }
 
-            g_totalCanvasSurfaceGLSize +=
+            g_totalAllocatedCanvasSurfaceSize +=
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
-            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
-                              g_totalCanvasSurfaceGLSize / 1024.f / 1024.f);
 
             ensureGenerateTexture();
             return true;
@@ -2199,8 +2200,7 @@ public:
                             GLuint tid = (GLuint)fragment.textureID;
 
                             if (csGL->m_textureFragmentsFlags[i].m_isDirty) {
-                                INSTALL_PROFILE_TIMER(m_webView,
-                                                      "update texture tile..");
+                                INSTALL_PROFILE_TIMER("update texture tile..");
 
                                 size_t xx =
                                     csGL->m_dirtyAreaTextureFragments[i].x();

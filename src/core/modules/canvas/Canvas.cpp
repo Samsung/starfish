@@ -25,8 +25,9 @@
 
 namespace StarFish {
 
+size_t CanvasSurface::g_totalAllocatedCanvasSurfaceSize = 0;
+
 #if !defined(PORT_COMPOSITOR_BACKEND_GL)
-static size_t g_totalCanvasSurfaceSimpleSize;
 class CanvasSurfaceSimple : public CanvasSurface {
 public:
     CanvasSurfaceSimple(PlatformWindow* wnd, size_t w, size_t h)
@@ -52,7 +53,7 @@ public:
     virtual void detachNativeBuffer()
     {
         if (m_buffer) {
-            g_totalCanvasSurfaceSimpleSize -=
+            g_totalAllocatedCanvasSurfaceSize -=
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
             free(m_buffer);
             m_buffer = nullptr;
@@ -60,8 +61,6 @@ public:
             m_height = 0;
             m_imageWidth = m_bufferWidth = m_width = 0;
             m_imageHeight = m_bufferHeight = m_height = 0;
-            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
-                              g_totalCanvasSurfaceSimpleSize / 1024.f / 1024.f);
         }
     }
 
@@ -98,10 +97,8 @@ public:
 
             m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
                                               sizeof(uint32_t));
-            g_totalCanvasSurfaceSimpleSize +=
+            g_totalAllocatedCanvasSurfaceSize +=
                 m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
-            STARFISH_LOG_INFO("total CanvasSurface size %fMB\n",
-                              g_totalCanvasSurfaceSimpleSize / 1024.f / 1024.f);
             return true;
         }
         return false;

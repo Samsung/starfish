@@ -45,6 +45,7 @@ Timer::Timer(WebView* sf)
 
 struct AnimationTickData {
     Timer* m_timer;
+    uint64_t m_lastExecutionTick;
     size_t m_id;
     uv_timer_t* m_timerID;
     void* m_data;
@@ -133,6 +134,8 @@ void Timer::removeTimer(size_t reqID)
     }
 }
 
+#define MINUMUM_ANIMATOR_WAIT_TIME 3000 // us
+
 size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
                           void* data)
 {
@@ -143,6 +146,7 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
     ad->m_data = data;
     ad->m_window = window;
     ad->m_handler = handler;
+    ad->m_lastExecutionTick = 0;
     ad->m_timerID = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     ad->m_timerID->data = ad;
     ad->m_timerID->type = UV_UNKNOWN_HANDLE;
@@ -150,10 +154,18 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
     uv_timer_start(ad->m_timerID,
                    [](uv_timer_t* handle) -> void {
                        AnimationTickData* ad = (AnimationTickData*)handle->data;
+                       auto currentTick = longTickCount();
+                       if (currentTick - ad->m_lastExecutionTick <
+                           MINUMUM_ANIMATOR_WAIT_TIME) {
+                           return;
+                       }
+
+                       ad->m_lastExecutionTick = currentTick;
                        auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
                        if (ad->m_handler(ad->m_data)) {
                            return;
                        }
+
                        a = ad->m_timer->m_animationHandler.find(ad->m_id);
                        if (ad->m_timer->m_animationHandler.end() != a) {
                            ad->m_timer->m_animationHandler.erase(a);
@@ -161,9 +173,8 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
                            uv_timer_stop(handle);
                            uv_close((uv_handle_t*)handle, on_close_handle);
                        }
-
                    },
-                   0, 10);
+                   0, 1);
     m_animationHandler.insert(std::make_pair(id, ad));
     return id;
 }

@@ -235,7 +235,7 @@ void BrowsingContext::resolveStyleIfNeeds()
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleSheetsRecalc) {
             m_needsStyleRecalcForWholeDocument = true;
-            INSTALL_PROFILE_TIMER(starFish(), "parse sheet & collect rules");
+            INSTALL_PROFILE_TIMER("parse sheet & collect rules");
 
             m_needsStyleSheetsRecalc = false;
             document()->styleResolver().removeAllRules();
@@ -444,7 +444,7 @@ void BrowsingContext::resolveStyleIfNeeds()
         }
 
         // resolve style
-        INSTALL_PROFILE_TIMER(starFish(), "resolve style");
+        INSTALL_PROFILE_TIMER("resolve style");
 
         m_styleResolveStartTick = tickCount();
         document()->styleResolver().resolveDOMStyle(
@@ -457,12 +457,10 @@ void BrowsingContext::resolveStyleIfNeeds()
 
             bool canceled = false;
             for (size_t i = 0; i < l.size(); i++) {
-                if (l[i]->targetElement()->isInDocumentScope() &&
-                    l[i]->targetElement()->style() &&
-                    l[i]->targetElement()->style()->display() !=
+                if (!l[i]->targetElement()->isInDocumentScope() ||
+                    !l[i]->targetElement()->style() ||
+                    l[i]->targetElement()->style()->display() ==
                         DisplayValue::NoneDisplayValue) {
-                    l[i]->targetElement()->setNeedsStyleRecalcForAnimation();
-                } else {
                     canceled = true;
                     l[i]->fireCancelEvent();
                     l[i]->detachFromElement(nullptr);
@@ -476,6 +474,10 @@ void BrowsingContext::resolveStyleIfNeeds()
                     ->animationExecutor()
                     ->checkActiveAnimationExecutorInWebView();
             }
+
+            if (!webView()->inRendering()) {
+                webView()->setNeedsRendering();
+            }
         }
     }
 }
@@ -486,7 +488,7 @@ void BrowsingContext::buildFrameTreeIfNeeds()
     if (m_needsFrameTreeBuild) {
         if (document()->frame()) {
             // create frame tree
-            INSTALL_PROFILE_TIMER(starFish(), "create frame tree");
+            INSTALL_PROFILE_TIMER("create frame tree");
 
             FrameTreeBuilder::buildFrameTree(document());
             m_needsLayout = true;
@@ -497,13 +499,12 @@ void BrowsingContext::buildFrameTreeIfNeeds()
 
 bool BrowsingContext::layoutIfNeeds()
 {
-    resolveStyleIfNeeds();
     buildFrameTreeIfNeeds();
 
     bool ret = false;
     if (m_needsLayout) {
         // lay out frame tree
-        INSTALL_PROFILE_TIMER(starFish(), "lay out frame tree");
+        INSTALL_PROFILE_TIMER("lay out frame tree");
 
         LayoutContext ctx(starFish(), document()
                                           ->frame()

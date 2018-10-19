@@ -206,12 +206,12 @@ static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
     return KeyValue::UnidentifiedKey;
 }
 
-class WebViewWayland : public WebView {
+class WebViewEcoreWayland2 : public WebView {
 public:
-    WebViewWayland(void* winArg, unsigned x, unsigned y, unsigned width,
-                   unsigned height, float devicePixelRatio,
-                   const char* defaultFontName, const char* locale,
-                   const char* timezoneID)
+    WebViewEcoreWayland2(void* winArg, unsigned x, unsigned y, unsigned width,
+                         unsigned height, float devicePixelRatio,
+                         const char* defaultFontName, const char* locale,
+                         const char* timezoneID)
         : WebView(nullptr)
         , m_isMouseLbuttonDown(false)
         , m_isBufferSwapped(false)
@@ -255,9 +255,6 @@ public:
                                     EGL_OPENGL_ES2_BIT,
                                     EGL_NONE };
 
-        static const EGLint context_attribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2,
-                                                  EGL_NONE };
-
         mDisplay = eglGetDisplay((EGLNativeDisplayType)display);
         if (mDisplay == EGL_NO_DISPLAY) {
             STARFISH_LOG_INFO("Can't create egl display\n");
@@ -300,8 +297,18 @@ public:
             break;
         }
 
-        mContext = eglCreateContext(mDisplay, eglConf, EGL_NO_CONTEXT,
-                                    context_attribs);
+        // test version 3 first
+        EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL_NONE };
+        mContext =
+            eglCreateContext(mDisplay, eglConf, EGL_NO_CONTEXT, contextAttribs);
+        if (!mContext) {
+            EGLint contextAttribs[] = { EGL_CONTEXT_CLIENT_VERSION, 2,
+                                        EGL_NONE };
+            STARFISH_LOG_INFO(
+                "failed to create opengl es 3+ context. use 2 instead\n");
+            mContext = eglCreateContext(mDisplay, eglConf, EGL_NO_CONTEXT,
+                                        contextAttribs);
+        }
 
         mEglWindow = wl_egl_window_create(wlSurface, width, height);
         if (mEglWindow == EGL_NO_SURFACE) {
@@ -349,6 +356,8 @@ public:
             width, height,
             [this](WebContainer* wc) {
                 if (m_isBufferSwapped) {
+                    // StarFish::ProfilerTimer p("WebViewEcoreWayland2 -
+                    // eglClientWaitSyncKHRProc");
                     EGLint result = g_eglClientWaitSyncKHRProc(
                         mDisplay, mFence, EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
                         EGL_FOREVER_KHR);
@@ -366,10 +375,19 @@ public:
                 }
             },
             [this](WebContainer* wc) {
-                if (!eglSwapBuffers(mDisplay, mSurface)) {
-                    auto eglError = eglGetError();
-                    STARFISH_LOG_INFO("Made current failed error -> %d\n",
-                                      (int)eglError);
+                {
+                    // StarFish::ProfilerTimer p("WebViewEcoreWayland2 -
+                    // glFlush");
+                    glFlush();
+                }
+                {
+                    // StarFish::ProfilerTimer p("WebViewEcoreWayland2 -
+                    // eglSwapBuffers");
+                    if (!eglSwapBuffers(mDisplay, mSurface)) {
+                        auto eglError = eglGetError();
+                        STARFISH_LOG_INFO("Made current failed error -> %d\n",
+                                          (int)eglError);
+                    }
                 }
                 m_isBufferSwapped = true;
                 eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
@@ -382,7 +400,7 @@ public:
             [](void* data, int type, void* event) -> Eina_Bool {
                 Ecore_Event_Mouse_Button* mouseEvent =
                     (Ecore_Event_Mouse_Button*)(event);
-                WebViewWayland* webView = (WebViewWayland*)data;
+                WebViewEcoreWayland2* webView = (WebViewEcoreWayland2*)data;
                 if (mouseEvent->window ==
                     static_cast<unsigned int>(
                         ecore_wl2_window_id_get(webView->mEcoreWindow))) {
@@ -409,7 +427,7 @@ public:
             [](void* data, int type, void* event) -> Eina_Bool {
                 Ecore_Event_Mouse_Button* mouseEvent =
                     (Ecore_Event_Mouse_Button*)(event);
-                WebViewWayland* webView = (WebViewWayland*)data;
+                WebViewEcoreWayland2* webView = (WebViewEcoreWayland2*)data;
                 if (mouseEvent->window ==
                     static_cast<unsigned int>(
                         ecore_wl2_window_id_get(webView->mEcoreWindow))) {
@@ -433,7 +451,7 @@ public:
             [](void* data, int type, void* event) -> Eina_Bool {
                 Ecore_Event_Mouse_Move* mouseEvent =
                     (Ecore_Event_Mouse_Move*)(event);
-                WebViewWayland* webView = (WebViewWayland*)data;
+                WebViewEcoreWayland2* webView = (WebViewEcoreWayland2*)data;
                 if (mouseEvent->window ==
                     static_cast<unsigned int>(
                         ecore_wl2_window_id_get(webView->mEcoreWindow))) {
@@ -456,7 +474,7 @@ public:
             ECORE_EVENT_KEY_DOWN,
             [](void* data, int type, void* event) -> Eina_Bool {
                 Ecore_Event_Key* keyEvent = (Ecore_Event_Key*)(event);
-                WebViewWayland* webView = (WebViewWayland*)data;
+                WebViewEcoreWayland2* webView = (WebViewEcoreWayland2*)data;
                 if (keyEvent->window ==
                     static_cast<unsigned int>(
                         ecore_wl2_window_id_get(webView->mEcoreWindow))) {
@@ -489,7 +507,7 @@ public:
             ECORE_EVENT_KEY_UP,
             [](void* data, int type, void* event) -> Eina_Bool {
                 Ecore_Event_Key* keyEvent = (Ecore_Event_Key*)(event);
-                WebViewWayland* webView = (WebViewWayland*)data;
+                WebViewEcoreWayland2* webView = (WebViewEcoreWayland2*)data;
                 if (keyEvent->window ==
                     static_cast<unsigned int>(
                         ecore_wl2_window_id_get(webView->mEcoreWindow))) {
@@ -522,7 +540,7 @@ public:
     }
     virtual void Destroy() override
     {
-        WebView::Destroy();
+        FetchWebContainer()->Destroy();
 
         g_eglDestroySyncKHRProc(mDisplay, mFence);
         eglDestroySurface(mDisplay, mSurface);
@@ -533,6 +551,9 @@ public:
             ecore_event_handler_del(mEcoreEventHandlers[i]);
         }
         mEcoreEventHandlers.clear();
+
+        // FIXME memory of <this> pointer is leaking now
+        this->~WebView();
     }
 
     bool m_isMouseLbuttonDown;
@@ -558,8 +579,8 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                          const char* defaultFontName, const char* locale,
                          const char* timezoneID)
 {
-    return new WebViewWayland(win, x, y, width, height, devicePixelRatio,
-                              defaultFontName, locale, timezoneID);
+    return new WebViewEcoreWayland2(win, x, y, width, height, devicePixelRatio,
+                                    defaultFontName, locale, timezoneID);
 }
 }
 

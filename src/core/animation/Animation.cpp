@@ -67,6 +67,21 @@ void AnimationExecutor::checkActiveAnimationExecutorInWebView()
     }
 }
 
+ActiveAnimationTask::ActiveAnimationTask(
+    Element* target, CSSStyleValuePair::KeyKind targetProperty,
+    const AnimatedValue& from, const AnimatedValue& to, uint64_t durationInms,
+    uint64_t delayInms, AnimationTimingFunction* timingFunction)
+    : m_property(targetProperty)
+    , m_targetElement(target)
+    , m_fromValue(from)
+    , m_toValue(to)
+    , m_startTimeMs(0)
+    , m_durationMs(durationInms)
+    , m_delayMs(delayInms)
+    , m_timingFunction(timingFunction)
+{
+}
+
 void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 {
     if (m_startTimeMs == 0) {
@@ -83,6 +98,8 @@ void ActiveAnimationTask::step(uint64_t currentTickCount, ComputedStyle* style)
 
 void ActiveAnimationTask::fireStartEvent()
 {
+    // STARFISH_LOG_INFO("element %p property %s transitionStart\n",
+    // m_targetElement, CSSPropertyHelper::toString(m_property));
     TransitionEventInit init;
     init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
     init.setBubbles(true);
@@ -98,6 +115,8 @@ void ActiveAnimationTask::fireStartEvent()
 
 void ActiveAnimationTask::fireEndEvent()
 {
+    // STARFISH_LOG_INFO("element %p property %s transitionEnd\n",
+    // m_targetElement, CSSPropertyHelper::toString(m_property));
     TransitionEventInit init;
     init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
     init.setBubbles(true);
@@ -113,6 +132,8 @@ void ActiveAnimationTask::fireEndEvent()
 
 void ActiveAnimationTask::fireCancelEvent()
 {
+    // STARFISH_LOG_INFO("element %p property %s transitionCancel\n",
+    // m_targetElement, CSSPropertyHelper::toString(m_property));
     TransitionEventInit init;
     init.setPropertyName(CSSPropertyHelper::toGCString(m_property));
     init.setBubbles(true);
@@ -859,11 +880,13 @@ static inline bool _checkCSSProperty(CSSStyleValuePair::KeyKind kind,
     (_DAMAGED_KEYS(__VA_ARGS__) && \
      (isPropertyAll || _checkCSSProperty(property, __VA_ARGS__)))
 
-bool applyTransitionIfNeeds(Element* element, ComputedStyle* oldStyle,
-                            Frame* oldFrame, ComputedStyle* newStyle,
-                            const bool* damagedKeys)
+bool applyTransitionIfNeeds(
+    Element* element, ComputedStyle* oldStyle, Frame* oldFrame,
+    ComputedStyle* newStyle, const bool* damagedKeys,
+    const std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>&
+        canceledAnimationProgress)
 {
-    bool gotTransition = false;
+    bool ret = false;
     StyleTransitionData* data = newStyle->transition();
     AnimationExecutor* executor = element->document()->animationExecutor();
 
@@ -872,6 +895,7 @@ bool applyTransitionIfNeeds(Element* element, ComputedStyle* oldStyle,
             continue;
         }
 
+        bool gotTransition = false;
         CSSStyleValuePair::KeyKind property = data->property(i);
         bool isPropertyAll = property == CSSStyleValuePair::All;
 
@@ -1635,8 +1659,23 @@ bool applyTransitionIfNeeds(Element* element, ComputedStyle* oldStyle,
             }
         }
         // <- length series
+
+        if (gotTransition) {
+            ActiveAnimationTask* newTask = executor->activeAnimations().back();
+            auto keyNow = executor->activeAnimations().back()->property();
+
+            for (size_t i = 0; i < canceledAnimationProgress.size(); i++) {
+                if (canceledAnimationProgress[i].first == keyNow) {
+                    newTask->updateDuration(
+                        newTask->duration() *
+                        (1 - canceledAnimationProgress[i].second));
+                    break;
+                }
+            }
+            ret = true;
+        }
     }
 
-    return gotTransition;
+    return ret;
 }
 }

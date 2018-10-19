@@ -66,7 +66,6 @@ public:
     {
         return m_httpCache;
     }
-
 #endif
 
     size_t webViewInstanceCount()
@@ -79,26 +78,6 @@ public:
 #ifndef NDEBUG
     size_t countPointersInRootSet(void* ptr);
 #endif
-
-    void updateProfileRecord(String* tag, float time)
-    {
-        auto it = m_profilingRecods.find(tag);
-        if (it == m_profilingRecods.end()) {
-            m_profilingRecods.insert(std::make_pair(tag, time));
-        } else {
-            it->second = time;
-        }
-    }
-
-    float profileRecode(String* tag) const
-    {
-        auto it = m_profilingRecods.find(tag);
-        if (it == m_profilingRecods.end()) {
-            return 0;
-        }
-
-        return it->second;
-    }
 
     static void doFullGCWithoutSeeingStack();
     static void printEveryReachableGCObjects();
@@ -113,7 +92,6 @@ protected:
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCache* m_httpCache;
 #endif
-    GCUnorderedMap<String*, float> m_profilingRecods;
     size_t m_webViewInstanceCount;
 
 private:
