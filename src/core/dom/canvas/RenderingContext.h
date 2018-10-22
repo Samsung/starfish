@@ -23,7 +23,8 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "binding/ScriptWrappable.h"
-
+#include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/Canvas.h"
 namespace StarFish {
 
 class HTMLCanvasElement;
@@ -33,6 +34,7 @@ public:
     RenderingContext(HTMLCanvasElement* canvasElement)
         : ScriptWrappable(this)
         , m_canvasElement(canvasElement)
+        , m_surface(nullptr)
     {
     }
 
@@ -41,10 +43,23 @@ public:
         return m_canvasElement;
     }
 
+    CanvasSurface* surface()
+    {
+        return m_surface;
+    }
+
     virtual ScriptBindingInstance* scriptBindingInstance();
+    virtual void initialize() = 0;
 
 protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(RenderingContext, m_canvasElement));
+        GC_set_bit(desc, GC_WORD_OFFSET(RenderingContext, m_surface));
+    }
+
     HTMLCanvasElement* m_canvasElement;
+    CanvasSurface* m_surface;
 };
 }
 

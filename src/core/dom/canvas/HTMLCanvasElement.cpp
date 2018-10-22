@@ -41,6 +41,9 @@ void HTMLCanvasElement::setWidth(uint32_t value)
     if (value >= 0) {
         setAttribute(starFish()->staticStrings()->m_width,
                      String::fromInt(value));
+        if (m_renderingContext) {
+            m_renderingContext->initialize();
+        }
     }
 }
 
@@ -59,6 +62,9 @@ void HTMLCanvasElement::setHeight(uint32_t value)
     if (value >= 0) {
         setAttribute(starFish()->staticStrings()->m_height,
                      String::fromInt(value));
+        if (m_renderingContext) {
+            m_renderingContext->initialize();
+        }
     }
 }
 

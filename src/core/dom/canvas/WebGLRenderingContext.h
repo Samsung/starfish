@@ -35,6 +35,9 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isWebGLRenderingContext() const override;
+    virtual void initialize() override
+    {
+    }
 };
 }
 

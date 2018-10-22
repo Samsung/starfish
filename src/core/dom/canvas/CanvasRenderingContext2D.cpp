@@ -28,10 +28,10 @@
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/style/Style.h"
-#include "core/paint/PaintCommandBuffer.h"
 #include "core/dom/Document.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
+#include "core/layout/FrameReplacedCanvas.h"
 #include "core/layout/StackingContext.h"
 
 namespace StarFish {
@@ -41,68 +41,56 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
     : RenderingContext(canvasElement)
     , m_lineWidth(1)
 {
-    setDefaultCommands();
+    initialize();
 }
 
-void CanvasRenderingContext2D::setDefaultCommands()
+void CanvasRenderingContext2D::initialize()
 {
     HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        // Set the defualt line width.
-        PaintCommand command1(PaintCommand::Command::SETLINEWIDTH_2D);
-        command1.insertArgumentNumber(m_lineWidth);
-        canvas->commandBuffer().insertCommand(command1);
 
-        PaintCommand command2(PaintCommand::Command::SETCOLOR_2D);
-        command2.insertArgumentNumber(0);
-        command2.insertArgumentNumber(0);
-        command2.insertArgumentNumber(0);
-        command2.insertArgumentNumber(255);
-        canvas->commandBuffer().insertCommand(command2);
-
-        PaintCommand command3(PaintCommand::Command::SETFILLCOLOR_2D);
-        command3.insertArgumentNumber(0);
-        command3.insertArgumentNumber(0);
-        command3.insertArgumentNumber(0);
-        command3.insertArgumentNumber(255);
-        canvas->commandBuffer().insertCommand(command3);
-
-        PaintCommand command4(PaintCommand::Command::SETSTROKECOLOR_2D);
-        command4.insertArgumentNumber(0);
-        command4.insertArgumentNumber(0);
-        command4.insertArgumentNumber(0);
-        command4.insertArgumentNumber(255);
-        canvas->commandBuffer().insertCommand(command4);
+    if (m_surface) {
+        m_surface->detachNativeBuffer();
     }
+
+    if (!canvas) {
+        return;
+    }
+
+    // Create CanvasSurface.
+    m_surface = CanvasSurface::create(canvas->webView()->platformWindow(),
+                                      canvas->width(), canvas->height());
+
+    if (m_surfaceCanvas) {
+        delete m_surfaceCanvas;
+    }
+
+    // Set defualt values such as color, fill color and stroke color.
+    m_surfaceCanvas = Canvas::create(canvas->webView(), m_surface);
+    // Set the defualt color as black.
+    m_surfaceCanvas->setColor(Unit::Color(0, 0, 0, 255));
+    // Set the fill color as black.
+    m_fillColor = Unit::Color(0, 0, 0, 255);
+    // Set the stroke color as black.
+    m_strokeColor = Unit::Color(0, 0, 0, 255);
+    // Set the line width as 1.0f.
+    m_lineWidth = 1.0f;
+    m_surfaceCanvas->setStrokeWidth(m_lineWidth);
 }
 
 void CanvasRenderingContext2D::setLineWidth(double width)
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        PaintCommand command(PaintCommand::Command::SETLINEWIDTH_2D);
-        command.insertArgumentNumber(width);
-        canvas->commandBuffer().insertCommand(command);
-    }
     m_lineWidth = width;
+    m_surfaceCanvas->setStrokeWidth(m_lineWidth);
 }
 
 void CanvasRenderingContext2D::save()
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        PaintCommand command(PaintCommand::Command::SAVE_2D);
-        canvas->commandBuffer().insertCommand(command);
-    }
+    m_surfaceCanvas->save();
 }
 
 void CanvasRenderingContext2D::restore()
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        PaintCommand command(PaintCommand::Command::RESTORE_2D);
-        canvas->commandBuffer().insertCommand(command);
-    }
+    m_surfaceCanvas->restore();
 }
 
 void CanvasRenderingContext2D::scale(double x, double y)
@@ -149,23 +137,13 @@ DOMStringOrCanvasGradientOrCanvasPattern CanvasRenderingContext2D::fillStyle()
 void CanvasRenderingContext2D::setFillStyle(
     DOMStringOrCanvasGradientOrCanvasPattern value)
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    if (!canvas) {
-        return;
-    }
-
     if (value.isDOMStringValue()) {
         String* v = value.getDOMStringValue();
         auto s1 = v->toUTF8NonGCString();
         NamedColor::NamedColorValue ret;
         if (NamedColor::parseNamedColor(s1.data(), s1.length(), ret)) {
             Unit::Color c = NamedColor::namedColorToColor(ret);
-            PaintCommand command(PaintCommand::Command::SETFILLCOLOR_2D);
-            command.insertArgumentNumber(c.r());
-            command.insertArgumentNumber(c.g());
-            command.insertArgumentNumber(c.b());
-            command.insertArgumentNumber(c.a());
-            canvas->commandBuffer().insertCommand(command);
+            m_fillColor = Unit::Color(c.r(), c.g(), c.b(), c.a());
         }
     }
 }
@@ -179,23 +157,13 @@ DOMStringOrCanvasGradientOrCanvasPattern CanvasRenderingContext2D::strokeStyle()
 void CanvasRenderingContext2D::setStrokeStyle(
     DOMStringOrCanvasGradientOrCanvasPattern value)
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    if (!canvas) {
-        return;
-    }
-
     if (value.isDOMStringValue()) {
         String* v = value.getDOMStringValue();
         auto s1 = v->toUTF8NonGCString();
         NamedColor::NamedColorValue ret;
         if (NamedColor::parseNamedColor(s1.data(), s1.length(), ret)) {
             Unit::Color c = NamedColor::namedColorToColor(ret);
-            PaintCommand command(PaintCommand::Command::SETSTROKECOLOR_2D);
-            command.insertArgumentNumber(c.r());
-            command.insertArgumentNumber(c.g());
-            command.insertArgumentNumber(c.b());
-            command.insertArgumentNumber(c.a());
-            canvas->commandBuffer().insertCommand(command);
+            m_strokeColor = Unit::Color(c.r(), c.g(), c.b(), c.a());
         }
     }
 }
@@ -220,15 +188,9 @@ void CanvasRenderingContext2D::setFilter(String* value)
 void CanvasRenderingContext2D::fillRect(double x, double y, double w, double h)
 {
     HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        canvas->setNeedsPainting();
-        PaintCommand command(PaintCommand::Command::FILLRECT_2D);
-        command.insertArgumentNumber(x);
-        command.insertArgumentNumber(y);
-        command.insertArgumentNumber(w);
-        command.insertArgumentNumber(h);
-        canvas->commandBuffer().insertCommand(command);
-    }
+    canvas->setNeedsPainting();
+    m_surfaceCanvas->setColor(m_fillColor);
+    m_surfaceCanvas->drawRect(LayoutRect(x, y, w, h));
 }
 
 void CanvasRenderingContext2D::beginPath()
@@ -246,11 +208,9 @@ void CanvasRenderingContext2D::fill(Path2D* path, String* fillRule)
 void CanvasRenderingContext2D::stroke()
 {
     HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        canvas->setNeedsPainting();
-        PaintCommand command(PaintCommand::Command::STROKE_2D);
-        canvas->commandBuffer().insertCommand(command);
-    }
+    canvas->setNeedsPainting();
+    m_surfaceCanvas->setColor(m_strokeColor);
+    m_surfaceCanvas->stroke();
 }
 
 void CanvasRenderingContext2D::drawImage(ScriptValue image, double dx,
@@ -283,39 +243,26 @@ void CanvasRenderingContext2D::closePath()
 void CanvasRenderingContext2D::moveTo(double x, double y)
 {
     HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        canvas->setNeedsPainting();
-        PaintCommand command(PaintCommand::Command::MOVETO_2D);
-        command.insertArgumentNumber(x);
-        command.insertArgumentNumber(y);
-        canvas->commandBuffer().insertCommand(command);
-    }
+    canvas->setNeedsPainting();
+    m_surfaceCanvas->moveTo(x, y);
 }
 
 void CanvasRenderingContext2D::lineTo(double x, double y)
 {
     HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        canvas->setNeedsPainting();
-        PaintCommand command(PaintCommand::Command::LINETO_2D);
-        command.insertArgumentNumber(x);
-        command.insertArgumentNumber(y);
-        canvas->commandBuffer().insertCommand(command);
-    }
+    canvas->setNeedsPainting();
+    m_surfaceCanvas->lineTo(x, y);
 }
 
 void CanvasRenderingContext2D::rect(double x, double y, double w, double h)
 {
     HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        canvas->setNeedsPainting();
-        PaintCommand command(PaintCommand::Command::RECT_2D);
-        command.insertArgumentNumber(x);
-        command.insertArgumentNumber(y);
-        command.insertArgumentNumber(w);
-        command.insertArgumentNumber(h);
-        canvas->commandBuffer().insertCommand(command);
-    }
+    canvas->setNeedsPainting();
+    m_surfaceCanvas->moveTo(x - m_lineWidth / 2, y);
+    m_surfaceCanvas->lineTo(x + w, y);
+    m_surfaceCanvas->lineTo(x + w, y + h);
+    m_surfaceCanvas->lineTo(x, y + h);
+    m_surfaceCanvas->lineTo(x, y);
 }
 
 void CanvasRenderingContext2D::arc(double x, double y, double radius,
@@ -335,31 +282,18 @@ void CanvasRenderingContext2D::bezierCurveTo(double x1, double y1, double x2,
                                              double y2, double x3, double y3)
 {
     HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        canvas->setNeedsPainting();
-        PaintCommand command(PaintCommand::BEZIERCURVETO_2D);
-        command.insertArgumentNumber(x1);
-        command.insertArgumentNumber(y1);
-        command.insertArgumentNumber(x2);
-        command.insertArgumentNumber(y2);
-        command.insertArgumentNumber(x3);
-        command.insertArgumentNumber(y3);
-        canvas->commandBuffer().insertCommand(command);
-    }
+    canvas->setNeedsPainting();
+    m_surfaceCanvas->curveTo(x1, y1, x2, y2, x3, y3);
 }
 
 void CanvasRenderingContext2D::clearRect(double x, double y, double w, double h)
 {
     HTMLCanvasElement* canvas = m_canvasElement;
-    if (canvas) {
-        canvas->setNeedsPainting();
-        PaintCommand command(PaintCommand::CLEARRECT_2D);
-        command.insertArgumentNumber(x);
-        command.insertArgumentNumber(y);
-        command.insertArgumentNumber(w);
-        command.insertArgumentNumber(h);
-        canvas->commandBuffer().insertCommand(command);
-    }
+    canvas->setNeedsPainting();
+    m_surfaceCanvas->setColor(Unit::Color(255, 255, 255, 255));
+    m_surfaceCanvas->drawRect(LayoutRect(x, y, w, h));
+    m_surfaceCanvas->fill();
+    m_surfaceCanvas->setColor(Unit::Color(0, 0, 0, 255));
 }
 
 void CanvasGradient::addColorStop(double offset, String* color)

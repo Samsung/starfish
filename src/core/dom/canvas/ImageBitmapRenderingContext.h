@@ -35,6 +35,9 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isImageBitmapRenderingContext() const override;
+    virtual void initialize() override
+    {
+    }
 };
 }
 
