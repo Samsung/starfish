@@ -133,6 +133,26 @@ public:
     bool good();
     void setToBad();
 
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(HTTPCacheEntry));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(HTTPCacheEntry)] = { 0 };
+            fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(HTTPCacheEntry));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(HTTPCacheEntry, m_url));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTTPCacheEntry, m_mutex));
+    }
+
     static const char* kSeparator;
 
 private:
