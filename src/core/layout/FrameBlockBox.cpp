@@ -149,11 +149,20 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                         containgBlockContentWidth - mbpWidth(), LayoutUnit(0));
                 }
             } else {
-                PreferredWidthContext p(ctx, nullptr, this, this,
-                                        containgBlockContentWidth - mbpWidth());
+                if (isFlexItem() &&
+                    cb->style()->flexWrap() ==
+                        FlexWrapValue::NoWrapFlexWrapValue &&
+                    cb->style()->alignItems() == CenterAlignItemValue) {
+                    contentWidth = std::max(
+                        containgBlockContentWidth - mbpWidth(), LayoutUnit(0));
+                } else {
+                    PreferredWidthContext p(ctx, nullptr, this, this,
+                                            containgBlockContentWidth -
+                                                mbpWidth());
 
-                p.computePreferredWidth();
-                contentWidth = p.preferredWidth();
+                    p.computePreferredWidth();
+                    contentWidth = p.preferredWidth();
+                }
             }
         } else {
             contentWidth =
