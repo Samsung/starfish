@@ -31,11 +31,14 @@
 
 namespace StarFish {
 
+// TODO : replace ResourceURL* to ReferrerURL*
 void Resource::request(ResourceRequestSyncLevel syncLevel,
                        ResourceURL* referrerURL, bool allowCache,
-                       ResourceRequest::MethodType method)
+                       MethodType method)
 {
     STARFISH_ASSERT(m_state == BeforeSend);
+    STARFISH_ASSERT(referrerURL);
+
     m_isRequested = true;
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
@@ -78,12 +81,10 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
                         String::createASCIIString(HTTPHeaderMap::kCacheControl),
                         nocache);
 
-                    if (formSubmitData->m_method ==
-                        ResourceRequest::GET_METHOD) {
+                    if (formSubmitData->m_method == MethodType::GET) {
                         url = m_resourceRequest->mutateActionURL(
                             url, formSubmitData);
-                    } else if (formSubmitData->m_method ==
-                               ResourceRequest::POST_METHOD) {
+                    } else if (formSubmitData->m_method == MethodType::POST) {
                         entityBody = m_resourceRequest->encodeFormDataSet(
                             formSubmitData->m_formDataSet,
                             formSubmitData->m_enctype);
@@ -97,10 +98,23 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
         m_resourceRequest->addResourceRequestClient(
             new ResourceNetworkRequestClient(this));
 
+        RequestData* reqData = new RequestData();
+
+        reqData->m_method = method;
+        reqData->m_url = url;
+        if (referrerURL->isReferrerURL()) {
+            reqData->m_referrer = referrerURL->asReferrerURL();
+        } else {
+            STARFISH_LOG_INFO("referrerURL is not referrerURL Object\n");
+            reqData->m_referrer = new ReferrerURL(referrerURL);
+        }
+        if (m_isNavigationResoure) {
+            reqData->m_mode = RequestMode::Navigate;
+        }
+
         m_resourceRequest->open(
-            method, url,
-            !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync),
-            referrerURL);
+            reqData,
+            !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync));
 
         m_resourceRequest->send(entityBody, allowCache);
     }

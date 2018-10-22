@@ -86,6 +86,7 @@ public:
         ScriptBindingInstance* instance, const HeaderMap& headers);
     static HTTPContentInfo getHTTPContentInfoFromHeaders(
         const HeaderMap& headers);
+    static bool isUnsafeHeader(String* header);
 };
 }
 

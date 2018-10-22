@@ -21,14 +21,15 @@
 #define __StarFishEventSource__
 
 #include "core/dom/EventTarget.h"
-#include "core/modules/resource_request/ResourceRequest.h"
 #include "core/page/EventSourceParser.h"
+#include "platform/network/http/HTTPUtil.h"
 
 namespace StarFish {
 
 class ResourceURL;
 class EventSourceParser;
 class ResourceRequest;
+enum class MethodType;
 
 struct EventSourceInit {
 public:
@@ -84,10 +85,7 @@ public:
         return m_url->urlString();
     }
 
-    bool withCredentials() const
-    {
-        return m_withCredentials;
-    }
+    bool withCredentials() const;
 
     ReadyState readyState() const
     {
@@ -95,7 +93,7 @@ public:
     }
 
     void connectFired();
-    void start(ResourceRequest::MethodType method);
+    void start(MethodType method);
     void initResponseData();
 
     void didHeaderReceived(const HeaderMap& headrs);
@@ -130,12 +128,13 @@ private:
     void connect();
     ReadyState m_readyState;
     ResourceURL* m_url;
-    bool m_withCredentials;
     int32_t m_delay;
     int32_t m_reconnectDelay;
     ResourceRequest* m_resourceRequest;
     EventSourceParser* m_parser;
     bool m_stopReconnect;
+    bool m_withCredentials;
+
     uint32_t m_time;
 };
 }

@@ -30,10 +30,11 @@ public:
                                                const std::string& baseURL,
                                                const std::string& method,
                                                const HTTPHeaderMap& headers,
-                                               const std::string& entityBody)
+                                               const std::string& entityBody,
+                                               bool includeCredentials)
     {
-        return std::unique_ptr<HTTPRequest>(
-            new HTTPRequest(url, baseURL, method, headers, entityBody));
+        return std::unique_ptr<HTTPRequest>(new HTTPRequest(
+            url, baseURL, method, headers, entityBody, includeCredentials));
     }
 
     ~HTTPRequest();
@@ -73,16 +74,23 @@ public:
         return m_requestTime;
     }
 
+    bool includeCredentials() const
+    {
+        return m_includeCredentials;
+    }
+
 private:
     HTTPRequest(const std::string& url, const std::string& baseURL,
                 const std::string& method, const HTTPHeaderMap& headers,
-                const std::string& entityBody);
+                const std::string& entityBody, bool includeCredentials);
     // Use std::string because it does not inherit gc
     std::string m_url;
     std::string m_baseURL;
     std::string m_method;
     HTTPHeaderMap m_headers;
     std::string m_entityBody;
+    bool m_includeCredentials;
+
     time_t m_requestTime;
 };
 }

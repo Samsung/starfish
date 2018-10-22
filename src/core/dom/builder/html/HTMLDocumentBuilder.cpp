@@ -388,6 +388,7 @@ void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
 #endif
 
     m_resource = m_document->resourceLoader().fetch(url);
+    m_resource->setNavigationResoure(true);
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));
 #ifndef STARFISH_TIZEN_WEARABLE_WIDGET
     if (url->urlString()->isEmpty() ||

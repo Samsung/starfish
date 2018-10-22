@@ -45,6 +45,7 @@
 #include "core/page/Window.h"
 #include "core/page/History.h"
 #include "browser/history/HistoryManager.h"
+#include "core/modules/resource_request/ResourceRequest.h"
 
 namespace StarFish {
 
@@ -81,8 +82,7 @@ String* FormDataSetItem::toString()
 }
 
 FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
-                               ResourceRequest::EncodeType enctype,
-                               ResourceRequest::MethodType method)
+                               EncodeType enctype, MethodType method)
     : m_formDataSet(formDataSet)
     , m_enctype(enctype)
     , m_method(method)
@@ -694,27 +694,26 @@ void HTMLFormElement::submit(HTMLElement* submitter)
         url = document()->documentURI();
     }
 
-    ResourceRequest::EncodeType formEnctype =
-        ResourceRequest::MISSING_OR_INVALID_ENCODETYPE;
-    ResourceRequest::MethodType formMethod = ResourceRequest::UNKNOWN_METHOD;
+    EncodeType formEnctype = EncodeType::MissingOrInvalidEncodeType;
+    MethodType formMethod = MethodType::UNKNOWN;
     String* formTarget = String::emptyString;
 
     if (inputNode) {
         formEnctype = ResourceRequest::toEncodeType(inputNode->formEnctype());
-        formMethod = ResourceRequest::toMethodType(inputNode->formMethod());
+        formMethod = RequestData::methodTypeFromString(inputNode->formMethod());
         formTarget = inputNode->formTarget();
     }
 
-    if (formEnctype == ResourceRequest::MISSING_OR_INVALID_ENCODETYPE) {
+    if (formEnctype == EncodeType::MissingOrInvalidEncodeType) {
         formEnctype = ResourceRequest::toEncodeType(enctype());
-        if (formEnctype == ResourceRequest::MISSING_OR_INVALID_ENCODETYPE) {
-            formEnctype = ResourceRequest::APPLICATION_X_WWW_FORM_URLENCODED;
+        if (formEnctype == EncodeType::MissingOrInvalidEncodeType) {
+            formEnctype = EncodeType::ApplicationXWWWFormURLEncoded;
         }
     }
-    if (formMethod == ResourceRequest::UNKNOWN_METHOD) {
-        formMethod = ResourceRequest::toMethodType(method());
-        if (formMethod == ResourceRequest::UNKNOWN_METHOD) {
-            formMethod = ResourceRequest::GET_METHOD;
+    if (formMethod == MethodType::UNKNOWN) {
+        formMethod = RequestData::methodTypeFromString(method());
+        if (formMethod == MethodType::UNKNOWN) {
+            formMethod = MethodType::GET;
         }
     }
     if (formTarget->equals(String::emptyString)) {
@@ -745,12 +744,11 @@ void HTMLFormElement::submit(HTMLElement* submitter)
 
 void HTMLFormElement::submitData(ResourceURL* url,
                                  GCVector<FormDataSetItem*>* formDataSet,
-                                 ResourceRequest::EncodeType enctype,
-                                 ResourceRequest::MethodType method)
+                                 EncodeType enctype, MethodType method)
 {
-    if (method == ResourceRequest::MethodType::GET_METHOD) {
+    if (method == MethodType::GET) {
         mutateActionUrl(url, formDataSet, enctype, method);
-    } else if (method == ResourceRequest::MethodType::POST_METHOD) {
+    } else if (method == MethodType::POST) {
         submitAsEntityBody(url, formDataSet, enctype, method);
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -759,8 +757,7 @@ void HTMLFormElement::submitData(ResourceURL* url,
 
 void HTMLFormElement::mutateActionUrl(ResourceURL* url,
                                       GCVector<FormDataSetItem*>* formDataSet,
-                                      ResourceRequest::EncodeType enctype,
-                                      ResourceRequest::MethodType method)
+                                      EncodeType enctype, MethodType method)
 {
     if (m_plannedNavigationTaskId != (size_t)-1) {
         webView()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
@@ -786,10 +783,9 @@ void HTMLFormElement::mutateActionUrl(ResourceURL* url,
 
 void HTMLFormElement::submitAsEntityBody(
     ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
-    ResourceRequest::EncodeType enctype, ResourceRequest::MethodType method)
+    EncodeType enctype, MethodType method)
 {
-    if (enctype ==
-        ResourceRequest::EncodeType::APPLICATION_X_WWW_FORM_URLENCODED) {
+    if (enctype == EncodeType::ApplicationXWWWFormURLEncoded) {
         if (m_plannedNavigationTaskId != (size_t)-1) {
             webView()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
         }
@@ -810,9 +806,9 @@ void HTMLFormElement::submitAsEntityBody(
 
         m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
             document()->browsingContext(), fn, this, urlToOpen);
-    } else if (enctype == ResourceRequest::EncodeType::MULTIPART_FORM_DATA) {
+    } else if (enctype == EncodeType::MultiPartFormData) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    } else if (enctype == ResourceRequest::EncodeType::TEXT_PLAIN) {
+    } else if (enctype == EncodeType::TextPlain) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     } else {
         // Do nothing for an invalid enctype

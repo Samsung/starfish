@@ -43,7 +43,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [RaisesException] void open(ByteString method, DOMString url, boolean async, optional DOMString? username = null, optional DOMString? password = null);
   [RaisesException] void setRequestHeader(ByteString name, ByteString value);
   [RaisesException=Setter] attribute unsigned long timeout;
-  [Unimplemented] attribute boolean withCredentials;
+  [RaisesException=Setter] attribute boolean withCredentials;
   [Unimplemented, SameObject] readonly attribute XMLHttpRequestUpload upload;
   // NOTE Partial support
   //      Handle only DOMString

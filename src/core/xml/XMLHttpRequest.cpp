@@ -48,11 +48,11 @@ public:
     void onProgressEvent(ResourceRequest* request, bool isExplicitAction)
     {
         String* eventName = String::emptyString;
-        ResourceRequest::ProgressState progState = request->progressState();
-        if (progState == ResourceRequest::PROGRESS) {
+        ProgressState progState = request->progressState();
+        if (progState == ProgressState::Progress) {
             eventName =
                 request->starFish()->staticStrings()->m_progress.localName();
-        } else if (progState == ResourceRequest::IN_ERROR) {
+        } else if (progState == ProgressState::InError) {
             eventName =
                 request->starFish()->staticStrings()->m_error.localName();
             if (!m_xhr->m_resourceRequest->url()->isFileURL() &&
@@ -62,22 +62,22 @@ public:
                     m_xhr->scriptBindingInstance()->ownerDocument(),
                     DOMException::NETWORK_ERR, "NetworkError");
             }
-        } else if (progState == ResourceRequest::ABORT) {
+        } else if (progState == ProgressState::Abort) {
             if (isExplicitAction) {
                 return;
             }
             eventName =
                 request->starFish()->staticStrings()->m_abort.localName();
-        } else if (progState == ResourceRequest::TIMEOUT) {
+        } else if (progState == ProgressState::TimeOut) {
             eventName =
                 request->starFish()->staticStrings()->m_timeout.localName();
-        } else if (progState == ResourceRequest::LOAD) {
+        } else if (progState == ProgressState::Load) {
             eventName =
                 request->starFish()->staticStrings()->m_load.localName();
-        } else if (progState == ResourceRequest::LOADEND) {
+        } else if (progState == ProgressState::LoadEnd) {
             eventName =
                 request->starFish()->staticStrings()->m_loadend.localName();
-        } else if (progState == ResourceRequest::LOADSTART) {
+        } else if (progState == ProgressState::LoadStart) {
             eventName =
                 request->starFish()->staticStrings()->m_loadstart.localName();
         } else {
@@ -95,7 +95,7 @@ public:
     void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
     {
         if (fromExplicit) {
-            if (request->readyState() == ResourceRequest::ReadyState::DONE) {
+            if (request->readyState() == ReadyState::Done) {
                 if (m_xhr->m_responseType ==
                         XMLHttpRequest::ResponseType::Unspecified ||
                     m_xhr->m_responseType ==
@@ -179,6 +179,7 @@ public:
 XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
     : XMLHttpRequestEventTarget(document)
     , m_resourceRequest(new ResourceRequest(document))
+    , m_withCredentials(false)
 {
     /*
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
@@ -212,7 +213,7 @@ void XMLHttpRequest::send(Nullable<String*> body)
 
 void XMLHttpRequest::send(String* body)
 {
-    if (m_resourceRequest->readyState() != ResourceRequest::OPENED) {
+    if (m_resourceRequest->readyState() != ReadyState::Opened) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
@@ -224,8 +225,8 @@ DEFINE_EVENT_LISTENER(XMLHttpRequest, readystatechange);
 
 void XMLHttpRequest::open(String* method, String* url)
 {
-    open(ResourceRequest::toMethodType(method), url, true, String::emptyString,
-         String::emptyString);
+    open(RequestData::methodTypeFromString(method), url, true,
+         String::emptyString, String::emptyString);
 }
 
 void XMLHttpRequest::open(String* method, String* url, bool async,
@@ -236,13 +237,13 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
         userName.hasValue() ? userName.getValue() : String::emptyString;
     String* pValue =
         password.hasValue() ? password.getValue() : String::emptyString;
-    open(ResourceRequest::toMethodType(method), url, async, uValue, pValue);
+    open(RequestData::methodTypeFromString(method), url, async, uValue, pValue);
 }
 
-void XMLHttpRequest::open(ResourceRequest::MethodType method, String* url,
-                          bool async, String* userName, String* password)
+void XMLHttpRequest::open(MethodType method, String* url, bool async,
+                          String* userName, String* password)
 {
-    if (method == ResourceRequest::UNKNOWN_METHOD) {
+    if (method == MethodType::UNKNOWN) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     }
@@ -251,10 +252,25 @@ void XMLHttpRequest::open(ResourceRequest::MethodType method, String* url,
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
-    ResourceURL* resUrl =
-        new ResourceURL(url, document()->baseURL()->baseURI());
-    m_resourceRequest->open(method, resUrl, async, document()->documentURI(),
-                            userName, password);
+
+    RequestData* reqData = new RequestData();
+    reqData->m_method = method;
+    reqData->m_url = new ResourceURL(url, document()->baseURL()->baseURI());
+    reqData->m_referrer = new ReferrerURL(document()->documentURI(),
+                                          document()->referrerPolicy());
+    if (userName->length()) {
+        reqData->m_url->setUsername(userName);
+    }
+    if (password->length()) {
+        reqData->m_url->setPassword(password);
+    }
+    if (m_withCredentials) {
+        reqData->m_credentials = RequestCredentials::Include;
+    } else {
+        reqData->m_credentials = RequestCredentials::SameOrigin;
+    }
+    m_resourceRequest->open(reqData, async);
+
     initResponseData();
 }
 
@@ -267,8 +283,8 @@ void XMLHttpRequest::abort()
 void XMLHttpRequest::setResponseType(ResponseType type)
 {
     // If the state is LOADING or DONE, throw an "InvalidStateError" exception.
-    if (m_resourceRequest->readyState() == ResourceRequest::LOADING ||
-        m_resourceRequest->readyState() == ResourceRequest::DONE) {
+    if (m_resourceRequest->readyState() == ReadyState::Loading ||
+        m_resourceRequest->readyState() == ReadyState::Done) {
         throw new DOMException(
             scriptBindingInstance()->ownerDocument(),
             DOMException::INVALID_STATE_ERR,
@@ -340,13 +356,13 @@ String* XMLHttpRequest::responseType() const
 
 uint8_t XMLHttpRequest::readyState() const
 {
-    return m_resourceRequest->readyState();
+    return static_cast<uint8_t>(m_resourceRequest->readyState());
 }
 
 uint16_t XMLHttpRequest::status() const
 {
-    if (m_resourceRequest->readyState() == ResourceRequest::UNSENT ||
-        m_resourceRequest->readyState() == ResourceRequest::OPENED) {
+    if (m_resourceRequest->readyState() == ReadyState::Unset ||
+        m_resourceRequest->readyState() == ReadyState::Opened) {
         return 0;
     }
     return m_resourceRequest->status();
@@ -354,8 +370,8 @@ uint16_t XMLHttpRequest::status() const
 
 String* XMLHttpRequest::statusText() const
 {
-    if (m_resourceRequest->readyState() == ResourceRequest::UNSENT ||
-        m_resourceRequest->readyState() == ResourceRequest::OPENED) {
+    if (m_resourceRequest->readyState() == ReadyState::Unset ||
+        m_resourceRequest->readyState() == ReadyState::Opened) {
         return String::emptyString;
     }
     return httpStatusCodeToText(m_resourceRequest->status());
@@ -445,25 +461,47 @@ void XMLHttpRequest::setTimeout(uint32_t timeout)
     m_resourceRequest->setTimeout(timeout);
 }
 
-void XMLHttpRequest::setRequestHeader(String* h, String* c)
+bool XMLHttpRequest::withCredentials() const
 {
-    h = h->trim();
-    c = c->trim();
-    if (m_resourceRequest->readyState() != ResourceRequest::OPENED) {
+    return m_withCredentials;
+}
+
+void XMLHttpRequest::setWithCredentials(bool value)
+{
+    if (m_resourceRequest->readyState() != ReadyState::Opened) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
-    if (h->length() == 0) {
+    m_withCredentials = value;
+}
+
+void XMLHttpRequest::setRequestHeader(String* header, String* value)
+{
+    header = header->trim();
+    value = value->trim();
+    if (m_resourceRequest->readyState() != ReadyState::Opened) {
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::INVALID_STATE_ERR,
+                               "InvalidStateError");
+    }
+    if (header->length() == 0) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::SYNTAX_ERR, "InvalidStateError");
     }
-    m_resourceRequest->setRequestHeader(h, c);
+
+    if (HTTPUtil::isUnsafeHeader(header)) {
+        STARFISH_LOG_WARN("Refused to set unsafe header \"%s\"",
+                          header->toUTF8NonGCString().data());
+        return;
+    }
+
+    m_resourceRequest->setRequestHeader(header, value);
 }
 
 String* XMLHttpRequest::getAllResponseHeaders()
 {
-    if (readyState() < ResourceRequest::HEADERS_RECEIVED ||
+    if (readyState() < static_cast<uint8_t>(ReadyState::HeadersReceived) ||
         m_resourceRequest->isError()) {
         return String::emptyString;
     }
@@ -492,7 +530,7 @@ String* XMLHttpRequest::getAllResponseHeaders()
 
 Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
 {
-    if (readyState() < ResourceRequest::HEADERS_RECEIVED ||
+    if (readyState() < static_cast<uint8_t>(ReadyState::HeadersReceived) ||
         m_resourceRequest->isError()) {
         return nullptr;
     }

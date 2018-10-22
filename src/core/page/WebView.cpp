@@ -375,7 +375,8 @@ void WebView::loadHTMLDocument(String* filePath) // navigate function helper
 {
     String* resolvedPath = resolvePath(filePath);
     ResourceURL* url = new ResourceURL(resolvedPath);
-    navigate(url, HistoryManagerAction::Add, nullptr);
+    ReferrerURL* rUrl = new ReferrerURL(String::emptyString);
+    navigate(url, HistoryManagerAction::Add, rUrl);
 }
 
 void WebView::navigate(ResourceURL* url, HistoryManagerAction type,

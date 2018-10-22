@@ -84,7 +84,7 @@ public:
     void open(String* method, String* url);
     void open(String* method, String* url, bool async,
               Nullable<String*> userName, Nullable<String*> password);
-    void open(ResourceRequest::MethodType method, String* url, bool async,
+    void open(MethodType method, String* url, bool async,
               String* userName = String::emptyString,
               String* password = String::emptyString);
     void send(Nullable<String*> body);
@@ -93,7 +93,11 @@ public:
 
     uint32_t timeout() const;
     void setTimeout(uint32_t timeout);
-    void setRequestHeader(String* h, String* c);
+
+    bool withCredentials() const;
+    void setWithCredentials(bool value);
+
+    void setRequestHeader(String* header, String* value);
 
     String* getAllResponseHeaders();
     Nullable<String*> getResponseHeader(String* name);
@@ -108,7 +112,7 @@ protected:
     void initResponseData();
     ResourceRequest* m_resourceRequest;
     ResponseType m_responseType;
-
+    bool m_withCredentials;
     // for responseType = "text"
     String* m_responseText;
 

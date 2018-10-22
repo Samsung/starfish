@@ -57,6 +57,7 @@ void HTTPTransaction::start()
             m_httpRequest->baseURL());
 
     m_curl = cd.curl;
+    bool includeCredentials = m_httpRequest->includeCredentials();
 
     STARFISH_ASSERT(m_curl);
     STARFISH_ASSERT(curlsh);
@@ -78,17 +79,20 @@ void HTTPTransaction::start()
 
     struct curl_slist* list = m_httpRequest->headers().generateCurlList();
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
-    curl_easy_setopt(m_curl, CURLOPT_SHARE, curlsh);
-    curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
 
-    if (NetworkSharedResourceManager::getInstance()
-            ->cookieStoreFilePath()
-            .compare("") != 0) {
-        curl_easy_setopt(m_curl, CURLOPT_COOKIEJAR,
-                         NetworkSharedResourceManager::getInstance()
-                             ->cookieStoreFilePath()
-                             .data());
+    if (includeCredentials) {
+        curl_easy_setopt(m_curl, CURLOPT_SHARE, curlsh);
+        if (NetworkSharedResourceManager::getInstance()
+                ->cookieStoreFilePath()
+                .compare("") != 0) {
+            curl_easy_setopt(m_curl, CURLOPT_COOKIEJAR,
+                             NetworkSharedResourceManager::getInstance()
+                                 ->cookieStoreFilePath()
+                                 .data());
+        }
     }
+
+    curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
     curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
 
