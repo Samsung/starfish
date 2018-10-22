@@ -32,8 +32,19 @@ AtomicString AtomicString::createAtomicString(StarFish* sf, String* str)
 {
     auto iter = sf->m_atomicStringMap.find(str);
     if (sf->m_atomicStringMap.end() == iter) {
-        sf->m_atomicStringMap.insert(str);
-        return AtomicString(str);
+        String* ns = str;
+        if (str->isStringView()) {
+            auto data = str->bufferAccessData();
+            if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+                ns = new StringDataASCII((char*)data.buffer, data.length);
+            } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+                ns = new StringDataBMP((char16_t*)data.buffer, data.length);
+            } else {
+                ns = new StringDataUTF32((char32_t*)data.buffer, data.length);
+            }
+        }
+        sf->m_atomicStringMap.insert(ns);
+        return AtomicString(ns);
     } else {
         return AtomicString(iter.operator*());
     }
@@ -104,7 +115,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
 {
     auto data = str->bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-        char* buf = (char*)alloca(data.length + 1);
+        char* buf = ALLOCA(data.length + 1, char);
         buf[data.length] = 0;
         for (size_t i = 0; i < data.length; i++) {
             buf[i] = tolower(data.asciiData()[i]);
@@ -120,7 +131,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
             return AtomicString(iter.operator*());
         }
     } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
-        char16_t* buf = (char16_t*)alloca((data.length + 1) * sizeof(char16_t));
+        char16_t* buf = ALLOCA((data.length + 1) * sizeof(char16_t), char16_t);
         buf[data.length] = 0;
         for (size_t i = 0; i < data.length; i++) {
             buf[i] = tolower(data.utf16Data()[i]);
@@ -137,7 +148,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
             return AtomicString(iter.operator*());
         }
     } else {
-        char32_t* buf = (char32_t*)alloca((data.length + 1) * sizeof(char32_t));
+        char32_t* buf = ALLOCA((data.length + 1) * sizeof(char32_t), char32_t);
         buf[data.length] = 0;
         for (size_t i = 0; i < data.length; i++) {
             buf[i] = tolower(data.utf32Data()[i]);
@@ -159,7 +170,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, String* str)
 AtomicString AtomicString::createAttrAtomicString(StarFish* sf, char32_t str)
 {
     if (str < 128) {
-        char* buf = (char*)alloca(2);
+        char* buf = ALLOCA(2, char);
         buf[0] = (char)str;
         buf[1] = 0;
         StringDataOnStackASCII str(buf, 1);
@@ -173,7 +184,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, char32_t str)
             return AtomicString(iter.operator*());
         }
     } else {
-        char32_t* buf = (char32_t*)alloca(sizeof(char32_t) * 2);
+        char32_t* buf = ALLOCA(sizeof(char32_t) * 2, char32_t);
         buf[0] = str;
         buf[1] = 0;
         StringDataOnStackUTF32 str(buf, 1);
@@ -197,7 +208,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str)
 AtomicString AtomicString::createAttrAtomicString(StarFish* sf, const char* str,
                                                   size_t length)
 {
-    char* buf = (char*)alloca(length + 1);
+    char* buf = ALLOCA(length + 1, char);
     buf[length] = 0;
     for (size_t i = 0; i < length; i++) {
         buf[i] = tolower(str[i]);
@@ -218,7 +229,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf,
                                                   const char16_t* str,
                                                   size_t length)
 {
-    char16_t* buf = (char16_t*)alloca((length + 1) * sizeof(char16_t));
+    char16_t* buf = ALLOCA((length + 1) * sizeof(char16_t), char16_t);
     buf[length] = 0;
     for (size_t i = 0; i < length; i++) {
         buf[i] = tolower(str[i]);
@@ -239,7 +250,7 @@ AtomicString AtomicString::createAttrAtomicString(StarFish* sf,
                                                   const char32_t* str,
                                                   size_t length)
 {
-    char32_t* buf = (char32_t*)alloca((length + 1) * sizeof(char32_t));
+    char32_t* buf = ALLOCA((length + 1) * sizeof(char32_t), char32_t);
     buf[length] = 0;
     for (size_t i = 0; i < length; i++) {
         buf[i] = tolower(str[i]);
