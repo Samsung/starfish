@@ -21,7 +21,6 @@
 #define __StarFishHTMLFormElement__
 
 #include "core/dom/HTMLElement.h"
-#include "core/modules/resource_request/ResourceRequest.h"
 
 namespace StarFish {
 
@@ -30,6 +29,8 @@ class HTMLFieldSetElement;
 class HTMLSelectElement;
 class HTMLFormControlsCollection;
 class ResourceURL;
+enum class EncodeType;
+enum class MethodType;
 
 class FormDataSetItem : public gc {
 public:
@@ -47,9 +48,8 @@ public:
 
 class FormSubmitData : public gc {
 public:
-    FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
-                   ResourceRequest::EncodeType enctype,
-                   ResourceRequest::MethodType method);
+    FormSubmitData(GCVector<FormDataSetItem*>* formDataSet, EncodeType enctype,
+                   MethodType method);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -57,8 +57,8 @@ public:
     String* toString();
 
     GCVector<FormDataSetItem*>* m_formDataSet;
-    ResourceRequest::EncodeType m_enctype;
-    ResourceRequest::MethodType m_method;
+    EncodeType m_enctype;
+    MethodType m_method;
 };
 
 class HTMLFormControl : public HTMLElement {
@@ -213,17 +213,14 @@ public:
 private:
     void submit(HTMLElement* submitter);
     void submitData(ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
-                    ResourceRequest::EncodeType encodeType,
-                    ResourceRequest::MethodType methodType);
+                    EncodeType encodeType, MethodType methodType);
 
     void mutateActionUrl(ResourceURL* url,
                          GCVector<FormDataSetItem*>* formDataSet,
-                         ResourceRequest::EncodeType enctype,
-                         ResourceRequest::MethodType method);
+                         EncodeType enctype, MethodType method);
     void submitAsEntityBody(ResourceURL* url,
                             GCVector<FormDataSetItem*>* formDataSet,
-                            ResourceRequest::EncodeType enctype,
-                            ResourceRequest::MethodType method);
+                            EncodeType enctype, MethodType method);
 
     void clearPlannedNavigationTask();
     bool isFormAssociatedElement(Node* node);

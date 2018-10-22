@@ -1587,7 +1587,8 @@ NativeImageData* Document::brokenImage()
             "CUTAKqAMABlQAAUOHH5wAAAAASUVORK5CYII=");
         ImageResource* res = resourceLoader().fetchImage(
             new ResourceURL(brokenImg, String::emptyString));
-        res->request(Resource::ResourceRequestSyncLevel::AlwaysSync, nullptr);
+        res->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
+                     new ReferrerURL(String::emptyString));
         m_brokenImage = res->imageData();
         m_didLoadBrokenImage = true;
         return m_brokenImage;

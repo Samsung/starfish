@@ -190,16 +190,19 @@ Promise* Body::text()
 
             } else if (body.isBlobValue()) {
                 String* url = URL::createObjectURL(body.getBlobValue());
-                ResourceURL* resUrl =
-                    new ResourceURL(url, document()->baseURL()->baseURI());
                 if (!m_resourceRequest) {
                     m_resourceRequest = new ResourceRequest(document());
                 }
                 m_resourceRequest->addResourceRequestClient(this);
-                m_resourceRequest->open(ResourceRequest::GET_METHOD, resUrl,
-                                        true, document()->documentURI(),
-                                        String::emptyString,
-                                        String::emptyString);
+
+                RequestData* reqData = new RequestData();
+                reqData->m_method = MethodType::GET;
+                reqData->m_url =
+                    new ResourceURL(url, document()->baseURL()->baseURI());
+                reqData->m_referrer = new ReferrerURL(
+                    document()->documentURI(), document()->referrerPolicy());
+
+                m_resourceRequest->open(reqData, true);
                 m_resourceRequest->send();
             } else {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -215,9 +218,9 @@ Promise* Body::text()
 // NOTE: consider creating `ResourceRequestClient` class for Body
 void Body::onProgressEvent(ResourceRequest* request, bool isExplicitAction)
 {
-    ResourceRequest::ProgressState progState = request->progressState();
+    ProgressState progState = request->progressState();
 
-    if (progState == ResourceRequest::IN_ERROR) {
+    if (progState == ProgressState::InError) {
         auto error = scriptTypeError(scriptBindingInstance(),
                                      String::fromUTF8("Body is locked"));
 
@@ -228,7 +231,7 @@ void Body::onProgressEvent(ResourceRequest* request, bool isExplicitAction)
 void Body::onReadyStateChange(ResourceRequest* request, bool fromExplicit)
 {
     if (fromExplicit) {
-        if (request->readyState() == ResourceRequest::ReadyState::DONE) {
+        if (request->readyState() == ReadyState::Done) {
             BodyInit body = m_body.getValue();
 
             if (body.isBlobValue()) {

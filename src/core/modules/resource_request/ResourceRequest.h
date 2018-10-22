@@ -28,6 +28,7 @@
 #include "core/modules/threading/Locker.h"
 #include "core/modules/resource_request/ResourceRequestJob.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
+#include "core/fetch/RequestData.h"
 
 namespace StarFish {
 
@@ -36,6 +37,34 @@ class ResourceRequest;
 class FormDataSetItem;
 
 typedef std::vector<char> EntityBody;
+
+enum class ResponseType { Text, ArrayBuffer, Blob, Document, Json, Default };
+
+enum class ReadyState : uint8_t {
+    Unset,
+    Opened,
+    HeadersReceived,
+    Loading,
+    Done,
+};
+
+enum class ProgressState {
+    None,
+    LoadStart,
+    Progress,
+    Load,
+    InError,
+    Abort,
+    TimeOut,
+    LoadEnd,
+};
+
+enum class EncodeType {
+    ApplicationXWWWFormURLEncoded,
+    MultiPartFormData,
+    TextPlain,
+    MissingOrInvalidEncodeType,
+};
 
 class ResourceRequestClient : public gc {
 public:
@@ -71,58 +100,9 @@ public:
     virtual ~ResourceRequest()
     {
     }
-    enum MethodType {
-        UNKNOWN_METHOD,
-        GET_METHOD,
-        HEAD_METHOD,
-        POST_METHOD,
-        PUT_METHOD,
-        DELETE_METHOD,
-        CONNECT_METHOD,
-        OPTION_METHOD,
-        TRACE_METHOD,
-        PATCH_METHOD
-    };
-
-    enum ResponseType {
-        TEXT_RESPONSE,
-        ARRAY_BUFFER_RESPONSE,
-        BLOB_RESPONSE,
-        DOCUMENT_RESPONSE,
-        JSON_RESPONSE,
-        DEFAULT_RESPONSE
-    };
-
-    enum ReadyState {
-        UNSENT,
-        OPENED,
-        HEADERS_RECEIVED,
-        LOADING,
-        DONE,
-    };
-
-    enum ProgressState {
-        NONE,
-        LOADSTART,
-        PROGRESS,
-        LOAD,
-        IN_ERROR,
-        ABORT,
-        TIMEOUT,
-        LOADEND,
-    };
-
-    enum EncodeType {
-        APPLICATION_X_WWW_FORM_URLENCODED,
-        MULTIPART_FORM_DATA,
-        TEXT_PLAIN,
-        MISSING_OR_INVALID_ENCODETYPE,
-    };
 
     ResourceRequest(Document* document);
-    void open(ResourceRequest::MethodType method, ResourceURL* url, bool async,
-              ResourceURL* referrer, String* userName = String::emptyString,
-              String* password = String::emptyString);
+    void open(RequestData* reqData, bool async);
     void abort(bool isExplicitAction = true);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);
@@ -206,12 +186,34 @@ public:
 
     ResourceURL* url()
     {
-        return m_url;
+        if (!m_requestData) {
+            return new ResourceURL(String::emptyString);
+        }
+        return m_requestData->m_url;
     }
 
-    ResourceURL* referrer()
+    ReferrerURL* referrer()
     {
-        return m_referrer;
+        if (!m_requestData) {
+            return new ReferrerURL(String::emptyString);
+        }
+        return m_requestData->m_referrer;
+    }
+
+    MethodType method()
+    {
+        if (!m_requestData) {
+            return MethodType::UNKNOWN;
+        }
+        return m_requestData->m_method;
+    }
+
+    RequestMode requestMode()
+    {
+        if (!m_requestData) {
+            return RequestMode::CORS;
+        }
+        return m_requestData->m_mode;
     }
 
     bool isError()
@@ -221,13 +223,19 @@ public:
 
     void setRequestHeader(String* h, String* c);
 
-    static ResourceRequest::MethodType toMethodType(String* input);
-    static String* methodType(ResourceRequest::MethodType method);
-    static ResourceRequest::EncodeType toEncodeType(String* input);
-    static String* encodeType(ResourceRequest::EncodeType input);
+    RequestCredentials requestCredentials()
+    {
+        if (!m_requestData) {
+            return RequestCredentials::Omit;
+        }
+        return m_requestData->m_credentials;
+    }
+
+    static EncodeType toEncodeType(String* input);
+    static String* encodeType(EncodeType input);
 
     String* encodeFormDataSet(GCVector<FormDataSetItem*>* formDataSet,
-                              ResourceRequest::EncodeType formEnctype);
+                              EncodeType formEnctype);
     ResourceURL* mutateActionURL(ResourceURL* url,
                                  FormSubmitData* formSubmitData);
 
@@ -260,11 +268,14 @@ protected:
     bool m_didSend;
     bool m_gotError;
     bool m_containsBase64Content;
-    ResourceURL* m_url;
-    ResourceURL* m_referrer;
+    RequestData* m_requestData;
+    // ResourceURL* m_url;
+    // ResourceURL* m_referrer;
     ReadyState m_readyState;
     ProgressState m_progressState;
-    MethodType m_method;
+    // MethodType m_method;
+    // RequestCredentials m_credentialsMode;
+
     ResponseType m_responseType;
     uint16_t m_status;
     uint32_t m_timeout;

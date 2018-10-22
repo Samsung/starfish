@@ -60,10 +60,10 @@ FileURLResourceRequestJobDelegate::FileURLResourceRequestJobDelegate(
 
 void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
-    STARFISH_ASSERT(m_orgProxy->m_url->isFileURL());
+    STARFISH_ASSERT(m_orgProxy->url()->isFileURL());
     // this area doesn't require lock.
     // reading file does not require thread
-    String* path = m_orgProxy->m_url->getUrlPathString();
+    String* path = m_orgProxy->url()->getUrlPathString();
     path = decodeURL(path);
 #if defined(OS_WINDOWS)
     String* filePath = path->substring(8, path->length() - 8);
@@ -97,15 +97,15 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
 
         auto handle = res->webView()->m_fileOpenCallback(u8Path.data());
         if (!handle) {
-            auto s = res->m_url->urlString()->toUTF8NonGCString();
+            auto s = res->url()->urlString()->toUTF8NonGCString();
             STARFISH_LOG_INFO("failed to open %s\n", s.data());
             res->m_status = 0;
-            res->handleError(ResourceRequest::IN_ERROR);
+            res->handleError(ProgressState::InError);
         }
 
         res->m_status = 200;
-        res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
-        res->changeReadyState(ResourceRequest::LOADING, true);
+        res->changeReadyState(ReadyState::HeadersReceived, true);
+        res->changeReadyState(ReadyState::Loading, true);
         size_t responseLength = res->webView()->m_fileLengthCallback(handle);
         res->m_response.resize(responseLength);
         res->webView()->m_fileReadCallback((uint8_t*)res->m_response.data(),
@@ -117,18 +117,18 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* res,
     auto fio = File::open(u8Path, File::Read);
     if (fio) {
         res->m_status = 200;
-        res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
-        res->changeReadyState(ResourceRequest::LOADING, true);
+        res->changeReadyState(ReadyState::HeadersReceived, true);
+        res->changeReadyState(ReadyState::Loading, true);
         size_t responseLength = fio->size();
         res->m_response.resize(responseLength);
         fio->read(res->m_response.data(), sizeof(const char), responseLength);
         fio.reset();
         res->handleResponseEOF();
     } else {
-        auto s = res->m_url->urlString()->toUTF8NonGCString();
+        auto s = res->url()->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO("failed to open %s\n", s.data());
         res->m_status = 0;
-        res->handleError(ResourceRequest::IN_ERROR);
+        res->handleError(ProgressState::InError);
     }
 }
 
@@ -140,11 +140,11 @@ DataURLResourceRequestJobDelegate::DataURLResourceRequestJobDelegate(
 
 void DataURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
-    STARFISH_ASSERT(m_orgProxy->m_url->isDataURL());
+    STARFISH_ASSERT(m_orgProxy->url()->isDataURL());
     // this area doesn't require lock.
     // reading url does not require thread
     if (m_orgProxy->m_isSync) {
-        worker(m_orgProxy, m_orgProxy->m_url->urlString());
+        worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
@@ -154,7 +154,7 @@ void DataURLResourceRequestJobDelegate::send(String* body, bool allowCache)
                 DataURLResourceRequestJobDelegate::worker(
                     (ResourceRequest*)data, (String*)data1);
             },
-            m_orgProxy, m_orgProxy->m_url->urlString());
+            m_orgProxy, m_orgProxy->url()->urlString());
         m_orgProxy->pushIdlerHandle(handle);
     }
 }
@@ -182,9 +182,9 @@ void DataURLResourceRequestJobDelegate::worker(ResourceRequest* res,
     }
 
     res->m_responseMimeType = mimeType;
-    res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
+    res->changeReadyState(ReadyState::HeadersReceived, true);
 
-    res->changeReadyState(ResourceRequest::LOADING, true);
+    res->changeReadyState(ReadyState::Loading, true);
 
     // TODO filter url string correctly according RFC 3986
     String* decodedURL = decodeURL(url, idx + 1);
@@ -206,10 +206,10 @@ AboutURLResourceRequestJobDelegate::AboutURLResourceRequestJobDelegate(
 
 void AboutURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
-    STARFISH_ASSERT(m_orgProxy->m_url->isAboutURL());
+    STARFISH_ASSERT(m_orgProxy->url()->isAboutURL());
     // this area doesn't require lock.
     if (m_orgProxy->m_isSync) {
-        worker(m_orgProxy, m_orgProxy->m_url->urlString());
+        worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
@@ -219,7 +219,7 @@ void AboutURLResourceRequestJobDelegate::send(String* body, bool allowCache)
                 AboutURLResourceRequestJobDelegate::worker(
                     (ResourceRequest*)data, (String*)data1);
             },
-            m_orgProxy, m_orgProxy->m_url->urlString());
+            m_orgProxy, m_orgProxy->url()->urlString());
         m_orgProxy->pushIdlerHandle(handle);
     }
 }
@@ -233,8 +233,8 @@ void AboutURLResourceRequestJobDelegate::worker(ResourceRequest* res,
         res->m_status = 404;
     }
 
-    res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
-    res->changeReadyState(ResourceRequest::LOADING, true);
+    res->changeReadyState(ReadyState::HeadersReceived, true);
+    res->changeReadyState(ReadyState::Loading, true);
     res->handleResponseEOF();
 }
 
@@ -247,10 +247,10 @@ JavaScriptURLResourceRequestJobDelegate::
 void JavaScriptURLResourceRequestJobDelegate::send(String* body,
                                                    bool allowCache)
 {
-    STARFISH_ASSERT(m_orgProxy->m_url->isJavascriptURL());
+    STARFISH_ASSERT(m_orgProxy->url()->isJavascriptURL());
     // this area doesn't require lock.
     if (m_orgProxy->m_isSync) {
-        worker(m_orgProxy, m_orgProxy->m_url->urlString());
+        worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
@@ -260,7 +260,7 @@ void JavaScriptURLResourceRequestJobDelegate::send(String* body,
                 AboutURLResourceRequestJobDelegate::worker(
                     (ResourceRequest*)data, (String*)data1);
             },
-            m_orgProxy, m_orgProxy->m_url->urlString());
+            m_orgProxy, m_orgProxy->url()->urlString());
         m_orgProxy->pushIdlerHandle(handle);
     }
 }
@@ -269,8 +269,8 @@ void JavaScriptURLResourceRequestJobDelegate::worker(ResourceRequest* res,
                                                      String* url)
 {
     res->m_status = 200;
-    res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
-    res->changeReadyState(ResourceRequest::LOADING, true);
+    res->changeReadyState(ReadyState::HeadersReceived, true);
+    res->changeReadyState(ReadyState::Loading, true);
     res->handleResponseEOF();
 }
 
@@ -284,7 +284,7 @@ void UnknownURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     // this area doesn't require lock.
     if (m_orgProxy->m_isSync) {
-        worker(m_orgProxy, m_orgProxy->m_url->urlString());
+        worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
@@ -294,7 +294,7 @@ void UnknownURLResourceRequestJobDelegate::send(String* body, bool allowCache)
                 UnknownURLResourceRequestJobDelegate::worker(
                     (ResourceRequest*)data, (String*)data1);
             },
-            m_orgProxy, m_orgProxy->m_url->urlString());
+            m_orgProxy, m_orgProxy->url()->urlString());
         m_orgProxy->pushIdlerHandle(handle);
     }
 }
@@ -303,8 +303,8 @@ void UnknownURLResourceRequestJobDelegate::worker(ResourceRequest* res,
                                                   String* url)
 {
     res->m_status = 404;
-    res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
-    res->changeReadyState(ResourceRequest::LOADING, true);
+    res->changeReadyState(ReadyState::HeadersReceived, true);
+    res->changeReadyState(ReadyState::Loading, true);
     res->handleResponseEOF();
 }
 
@@ -316,11 +316,11 @@ BlobURLResourceRequestJobDelegate::BlobURLResourceRequestJobDelegate(
 
 void BlobURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
-    STARFISH_ASSERT(m_orgProxy->m_url->isBlobURL());
+    STARFISH_ASSERT(m_orgProxy->url()->isBlobURL());
     // this area doesn't require lock.
     // reading url does not require thread
     if (m_orgProxy->m_isSync) {
-        worker(m_orgProxy, m_orgProxy->m_url->urlString());
+        worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
             m_orgProxy->document()->browsingContext(),
@@ -330,7 +330,7 @@ void BlobURLResourceRequestJobDelegate::send(String* body, bool allowCache)
                 BlobURLResourceRequestJobDelegate::worker(
                     (ResourceRequest*)data, (String*)data1);
             },
-            m_orgProxy, m_orgProxy->m_url->urlString());
+            m_orgProxy, m_orgProxy->url()->urlString());
         m_orgProxy->pushIdlerHandle(handle);
     }
 }
@@ -342,19 +342,19 @@ void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* res,
 
     BlobURLStore store;
     if (!WebView::stringToBlobURLString(url, store)) {
-        res->handleError(ResourceRequest::IN_ERROR);
+        res->handleError(ProgressState::InError);
         return;
     }
 
     if (!res->document()->webView()->isValidBlobURL(store)) {
-        res->handleError(ResourceRequest::IN_ERROR);
+        res->handleError(ProgressState::InError);
         return;
     }
 
     res->m_responseMimeType = ((Blob*)store.m_blob)->type();
-    res->changeReadyState(ResourceRequest::HEADERS_RECEIVED, true);
+    res->changeReadyState(ReadyState::HeadersReceived, true);
 
-    res->changeReadyState(ResourceRequest::LOADING, true);
+    res->changeReadyState(ReadyState::Loading, true);
     char* buf = (char*)((Blob*)store.m_blob)->data();
     res->m_response.assign(buf, &buf[((Blob*)store.m_blob)->size()]);
 

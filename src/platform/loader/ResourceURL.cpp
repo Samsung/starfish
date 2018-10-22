@@ -1136,6 +1136,33 @@ String* ReferrerURL::referrerString(ResourceURL* url)
     return nullptr;
 }
 
+String* ReferrerURL::referrerPolicyString()
+{
+    switch (m_policy) {
+    case ReferrerPolicy::NoReferrer:
+        return String::createASCIIString("no-referrer");
+    case ReferrerPolicy::NoReferrerWhenDowngrade:
+        return String::createASCIIString("no-referrer-when-downgrade");
+    case ReferrerPolicy::Origin:
+        return String::createASCIIString("origin");
+    case ReferrerPolicy::OriginWhenCrossOrigin:
+        return String::createASCIIString("origin-when-cross-origin");
+    case ReferrerPolicy::SameOrigin:
+        return String::createASCIIString("same-origin");
+    case ReferrerPolicy::StrictOrigin:
+        return String::createASCIIString("strict-origin");
+    case ReferrerPolicy::StrictOriginWhenCrossOrigin:
+        return String::createASCIIString("strict-origin-when-cross-origin");
+    case ReferrerPolicy::UnsafeUrl:
+        return String::createASCIIString("unsafe-url");
+    case ReferrerPolicy::Empty:
+        return String::createASCIIString("");
+    default:
+        break;
+    }
+    return String::createASCIIString("");
+}
+
 ReferrerPolicy ReferrerURL::policy()
 {
     return m_policy;

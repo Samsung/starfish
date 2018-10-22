@@ -284,6 +284,7 @@ public:
     }
 
     String* referrerString(ResourceURL* url);
+    String* referrerPolicyString();
     ReferrerPolicy policy();
     static bool isValidPolicy(String* policy);
     static ReferrerPolicy policyFromString(String* policy);

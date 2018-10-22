@@ -25,51 +25,61 @@ struct curl_slist;
 
 namespace StarFish {
 
+#define FOR_EACH_HTTPHEADERS(F)                                       \
+    F(kCacheControl, "Cache-Control")                                 \
+    F(kConnection, "Connection")                                      \
+    F(kContentTransferEncoding, "Content-Transfer-Encoding")          \
+    F(kContentLanguage, "Content-Language")                           \
+    F(kContentLength, "Content-Length")                               \
+    F(kContentType, "Content-type")                                   \
+    F(kContentDispoition, "Content-Disposition")                      \
+    F(kDNT, "DNT")                                                    \
+    F(kDate, "Date")                                                  \
+    F(kETag, "ETag")                                                  \
+    F(kPragma, "Pragma")                                              \
+    F(kTrailer, "Trailer")                                            \
+    F(kTransferEncoding, "Transfer-Encoding")                         \
+    F(kUpgrade, "Upgrade")                                            \
+    F(kVia, "Via")                                                    \
+    F(kWarning, "Warning")                                            \
+    F(kAccept, "Accept")                                              \
+    F(kAcceptCharset, "Accept-Charset")                               \
+    F(kAcceptEncoding, "Accept-Encoding")                             \
+    F(kAcceptLanguage, "Accept-Language")                             \
+    F(kAuthorization, "Authorization")                                \
+    F(kAge, "Age")                                                    \
+    F(kCookie, "Cookie")                                              \
+    F(kCookie2, "Cookie2")                                            \
+    F(kSetCookie, "Set-Cookie")                                       \
+    F(kSetCookie2, "Set-Cookie2")                                     \
+    F(kExpect, "Expect")                                              \
+    F(kFrom, "From")                                                  \
+    F(kHost, "Host")                                                  \
+    F(kIfMatch, "If-Match")                                           \
+    F(kIfModifiedSince, "If-Modified-Since")                          \
+    F(kIfNoneMatch, "If-None-Match")                                  \
+    F(kIfRange, "If-Range")                                           \
+    F(kIfUnmodifiedSince, "If-Unmodified-Since")                      \
+    F(kLastModified, "Last-Modified")                                 \
+    F(kMaxForwards, "Max-Forwards")                                   \
+    F(kOrigin, "Origin")                                              \
+    F(kProxyAuthorization, "Proxy-Authorization")                     \
+    F(kRange, "Range")                                                \
+    F(kReferer, "Referer")                                            \
+    F(kReferrerPolicy, "Referrer-Policy")                             \
+    F(kTE, "TE")                                                      \
+    F(kUserAgent, "User-Agent")                                       \
+    F(kLocation, "Location")                                          \
+    F(kKeepAlive, "Keep-Alive")                                       \
+    F(kUpgradeInsecureRequests, "Upgrade-Insecure-Requests")          \
+    F(kAccessControlRequestHeaders, "Access-Control-Request-Headers") \
+    F(kAccessControlRequestMethod, "Access-Control-Request-Method")
+
 class HTTPHeaderMap {
 public:
-    static const char kCacheControl[];
-    static const char kConnection[];
-    static const char kContentTransferEncoding[];
-    static const char kContentLanguage[];
-    static const char kContentLength[];
-    static const char kContentType[];
-    static const char kContentDispoition[];
-    static const char kDate[];
-    static const char kETag[];
-    static const char kPragma[];
-    static const char kTrailer[];
-    static const char kTransferEncoding[];
-    static const char kUpgrade[];
-    static const char kVia[];
-    static const char kWarning[];
-    static const char kAccept[];
-    static const char kAcceptCharset[];
-    static const char kAcceptEncoding[];
-    static const char kAcceptLanguage[];
-    static const char kAuthorization[];
-    static const char kAge[];
-    static const char kCookie[];
-    static const char kSetCookie[];
-    static const char kSetCookie2[];
-    static const char kExpect[];
-    static const char kFrom[];
-    static const char kHost[];
-    static const char kIfMatch[];
-    static const char kIfModifiedSince[];
-    static const char kIfNoneMatch[];
-    static const char kIfRange[];
-    static const char kIfUnmodifiedSince[];
-    static const char kLastModified[];
-    static const char kMaxForwards[];
-    static const char kOrigin[];
-    static const char kProxyAuthorization[];
-    static const char kRange[];
-    static const char kReferer[];
-    static const char kReferrerPolicy[];
-    static const char kTE[];
-    static const char kUserAgent[];
-    static const char kLocation[];
-    static const char kUpgradeInsecureRequests[];
+#define DECLARE_HEADERS(name, ...) static const char name[];
+    FOR_EACH_HTTPHEADERS(DECLARE_HEADERS);
+#undef DECLARE_HEADERS
 
     HTTPHeaderMap();
     ~HTTPHeaderMap();

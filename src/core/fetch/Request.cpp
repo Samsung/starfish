@@ -65,8 +65,9 @@ Request::Request(Window* window, RequestInfo& input, RequestInit& init)
 
 static String* computeReferrer(String* referrer, Document* document)
 {
-    // TODO: remove checking 'undefined'
-    if (referrer->isEmpty() || referrer->equals("undefined")) {
+    // TODO: remove checking 'undefined' and 'about:blank'
+    if (referrer->equals("about:blank") || referrer->isEmpty() ||
+        referrer->equals("undefined")) {
         return String::createASCIIString("");
     }
 
@@ -108,7 +109,6 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
 
         m_data.m_method = data->m_method;
         m_data.m_referrer = data->m_referrer;
-        m_data.m_referrerPolicy = data->m_referrerPolicy;
         m_data.m_mode = data->m_mode;
         m_data.m_credentials = data->m_credentials;
         m_data.m_cache = data->m_cache;
@@ -124,18 +124,24 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
 
     } else {
         if (input->isUSVStringValue()) {
-            ResourceURL url(input->getUSVStringValue());
-            m_data.m_url = url.urlString();
+            m_data.m_url = new ResourceURL(input->getUSVStringValue());
         } else {
             return; // ignore or read the result of toString
         }
     }
 
     if (init) {
-        m_data.m_method = init->method()->toASCIIUpper();
-        m_data.m_referrer = computeReferrer(init->referrer(), document());
-        m_data.m_referrerPolicy =
-            ReferrerURL::policyFromString(init->referrerPolicy());
+        m_data.m_method = RequestData::methodTypeFromString(init->method());
+
+        if (init->referrer()->isEmpty()) {
+            m_data.m_referrer = new ReferrerURL(
+                new ResourceURL(init->referrer()), init->m_referrerPolicy);
+        } else {
+            m_data.m_referrer = new ReferrerURL(
+                new ResourceURL(init->referrer(), document()->baseURI()),
+                init->m_referrerPolicy);
+        }
+
         m_data.m_mode = RequestData::requestModeFromString(init->mode());
         m_data.m_credentials =
             RequestData::requestCredentialsFromString(init->credentials());
@@ -154,8 +160,8 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         // ScriptValue type.
         ScriptValue body = init->body();
         if (!body->isUndefinedOrNull()) {
-            if (m_data.m_method->equals("GET") ||
-                m_data.m_method->equals("HEAD")) {
+            if (m_data.m_method == MethodType::GET ||
+                m_data.m_method == MethodType::HEAD) {
                 throw new DOMException(document(),
                                        DOMException::Code::SCRIPT_TYPE_ERR);
             }
@@ -185,12 +191,12 @@ Headers* Request::headers()
 
 String* Request::method()
 {
-    return m_data.m_method;
+    return RequestData::methodTypeString(m_data.m_method);
 }
 
 String* Request::url()
 {
-    return m_data.m_url;
+    return m_data.m_url->urlString();
 }
 
 String* Request::destination()
@@ -200,48 +206,24 @@ String* Request::destination()
 
 String* Request::referrer()
 {
-    return m_data.m_referrer;
+    return computeReferrer(m_data.m_referrer->urlString(), document());
 }
 
 String* Request::referrerPolicy()
 {
-    switch (m_data.m_referrerPolicy) {
-    case ReferrerPolicy::NoReferrer:
-        return String::createASCIIString("no-referrer");
-    case ReferrerPolicy::NoReferrerWhenDowngrade:
-        return String::createASCIIString("no-referrer-when-downgrade");
-    case ReferrerPolicy::Origin:
-        return String::createASCIIString("origin");
-    case ReferrerPolicy::OriginWhenCrossOrigin:
-        return String::createASCIIString("origin-when-cross-origin");
-    case ReferrerPolicy::SameOrigin:
-        return String::createASCIIString("same-origin");
-    case ReferrerPolicy::StrictOrigin:
-        return String::createASCIIString("strict-origin");
-    case ReferrerPolicy::StrictOriginWhenCrossOrigin:
-        return String::createASCIIString("strict-origin-when-cross-origin");
-    case ReferrerPolicy::UnsafeUrl:
-        return String::createASCIIString("unsafe-url");
-    case ReferrerPolicy::Empty:
-        return String::createASCIIString("");
-    default:
-        break;
-    }
-
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return String::createASCIIString("");
+    return m_data.m_referrer->referrerPolicyString();
 }
 
 String* Request::mode()
 {
     switch (m_data.m_mode) {
-    case RequestData::RequestMode::Navigate:
+    case RequestMode::Navigate:
         return String::createASCIIString("navigate");
-    case RequestData::RequestMode::SameOrigin:
+    case RequestMode::SameOrigin:
         return String::createASCIIString("same-origin");
-    case RequestData::RequestMode::NoCORS:
+    case RequestMode::NoCORS:
         return String::createASCIIString("no-cors");
-    case RequestData::RequestMode::CORS:
+    case RequestMode::CORS:
         return String::createASCIIString("cors");
     default:
         break;
@@ -254,11 +236,11 @@ String* Request::mode()
 String* Request::credentials()
 {
     switch (m_data.m_credentials) {
-    case RequestData::RequestCredentials::Omit:
+    case RequestCredentials::Omit:
         return String::createASCIIString("omit");
-    case RequestData::RequestCredentials::SameOrigin:
+    case RequestCredentials::SameOrigin:
         return String::createASCIIString("same-origin");
-    case RequestData::RequestCredentials::Include:
+    case RequestCredentials::Include:
         return String::createASCIIString("include");
     default:
         break;
@@ -271,17 +253,17 @@ String* Request::credentials()
 String* Request::cache()
 {
     switch (m_data.m_cache) {
-    case RequestData::RequestCache::Default:
+    case RequestCache::Default:
         return String::createASCIIString("default");
-    case RequestData::RequestCache::NoStore:
+    case RequestCache::NoStore:
         return String::createASCIIString("no-store");
-    case RequestData::RequestCache::Reload:
+    case RequestCache::Reload:
         return String::createASCIIString("reload");
-    case RequestData::RequestCache::NoCache:
+    case RequestCache::NoCache:
         return String::createASCIIString("no-cache");
-    case RequestData::RequestCache::ForceCache:
+    case RequestCache::ForceCache:
         return String::createASCIIString("force-cache");
-    case RequestData::RequestCache::OnlyIfCached:
+    case RequestCache::OnlyIfCached:
         return String::createASCIIString("only-if-cached");
     default:
         break;
@@ -294,11 +276,11 @@ String* Request::cache()
 String* Request::redirect()
 {
     switch (m_data.m_redirect) {
-    case RequestData::RequestRedirect::Follow:
+    case RequestRedirect::Follow:
         return String::createASCIIString("follow");
-    case RequestData::RequestRedirect::Error:
+    case RequestRedirect::Error:
         return String::createASCIIString("error");
-    case RequestData::RequestRedirect::Manual:
+    case RequestRedirect::Manual:
         return String::createASCIIString("manual");
     default:
         break;

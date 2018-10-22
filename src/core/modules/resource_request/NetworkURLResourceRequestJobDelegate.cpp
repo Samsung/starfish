@@ -38,6 +38,7 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/page/WebView.h"
+#include "core/dom/WebOrigin.h"
 
 #ifndef STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS
 #define STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS 5000
@@ -194,15 +195,15 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 #endif
         nwd->request->handleResponseEOF();
     } else if (nwd->httpTransaction->res() == CURLE_OPERATION_TIMEDOUT) {
-        auto s = nwd->request->m_url->urlString()->toUTF8NonGCString();
+        auto s = nwd->request->url()->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO(
             "got timeout %s[%d]\n", s.data(),
             (int)nwd->httpTransaction->httpResponse().responseCode());
-        nwd->request->handleError(ResourceRequest::TIMEOUT);
+        nwd->request->handleError(ProgressState::TimeOut);
     } else {
-        auto s = nwd->request->m_url->urlString()->toUTF8NonGCString();
+        auto s = nwd->request->url()->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO("failed to open %s\n", s.data());
-        nwd->request->handleError(ResourceRequest::IN_ERROR);
+        nwd->request->handleError(ProgressState::InError);
     }
 
     if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
@@ -273,7 +274,7 @@ NetworkURLResourceRequestJobDelegate::NetworkURLResourceRequestJobDelegate(
 void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 {
     STARFISH_ASSERT(isMainThread());
-    STARFISH_ASSERT(m_orgProxy->m_url->isHTTPFamilyURL());
+    STARFISH_ASSERT(m_orgProxy->url()->isHTTPFamilyURL());
 
     NetworkURLWorkerData* nwd = new (NoGC) NetworkURLWorkerData(m_orgProxy);
 
@@ -281,8 +282,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     HTTPHeaderMap headers;
 
     std::string method;
-    switch (m_orgProxy->m_method) {
-    case ResourceRequest::GET_METHOD: {
+    switch (m_orgProxy->method()) {
+    case MethodType::GET: {
         method = "GET";
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
         uint64_t start = longTickCount();
@@ -290,7 +291,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 #ifdef STARFISH_ENABLE_HTTPCACHE
         if (allowCache && m_orgProxy->starFish()->httpCache()) {
             auto it =
-                m_orgProxy->starFish()->httpCache()->get(m_orgProxy->m_url);
+                m_orgProxy->starFish()->httpCache()->get(m_orgProxy->url());
 
             if (it != m_orgProxy->starFish()->httpCache()->end()) {
                 nwd->cachedEntry = it->second;
@@ -305,15 +306,15 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 #endif
         break;
     }
-    case ResourceRequest::POST_METHOD: {
+    case MethodType::POST: {
         method = "POST";
         break;
     }
-    case ResourceRequest::HEAD_METHOD: {
+    case MethodType::HEAD: {
         method = "HEAD";
         break;
     }
-    case ResourceRequest::UNKNOWN_METHOD: {
+    case MethodType::UNKNOWN: {
         STARFISH_ASSERT_NOT_REACHED();
         break;
     }
@@ -325,11 +326,32 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     fillHeadersWithClientHeaders(headers);
     fillHeadersWithGeneralHeaders(headers);
 
-    auto urlUTF8Data = m_orgProxy->m_url->urlString()->toUTF8NonGCString();
-    auto hostUTF8Data = m_orgProxy->m_url->host()->toUTF8NonGCString();
+    auto urlUTF8Data = m_orgProxy->url()->urlString()->toUTF8NonGCString();
+    auto hostUTF8Data = m_orgProxy->url()->host()->toUTF8NonGCString();
     auto bodyUTF8Data = body->toUTF8NonGCString();
-    nwd->httpTransaction->setHTTPRequest(HTTPRequest::create(
-        urlUTF8Data, hostUTF8Data, method, headers, bodyUTF8Data));
+    bool includeCredentials = false;
+    switch (m_orgProxy->requestCredentials()) {
+    case RequestCredentials::SameOrigin:
+        if (m_orgProxy->document()->webOrigin()->isSameOrigin(
+                WebOrigin::createDocumentOrigin(m_orgProxy->url()))) {
+            includeCredentials = true;
+        }
+        break;
+    case RequestCredentials::Include:
+        includeCredentials = true;
+        break;
+    default:
+        includeCredentials = false;
+        break;
+    }
+
+    if (m_orgProxy->requestMode() == RequestMode::Navigate) {
+        includeCredentials = true;
+    }
+
+    nwd->httpTransaction->setHTTPRequest(
+        HTTPRequest::create(urlUTF8Data, hostUTF8Data, method, headers,
+                            bodyUTF8Data, includeCredentials));
     nwd->httpTransaction->setTimeout(
         static_cast<unsigned long>(m_orgProxy->m_timeout));
     nwd->httpTransaction->setProxyURL(m_orgProxy->webView()->proxyURL());
@@ -561,8 +583,8 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
 
     if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
         if (request->isSync()) {
-            request->changeReadyState(ResourceRequest::LOADING, true);
-            request->changeProgress(ResourceRequest::PROGRESS, true);
+            request->changeReadyState(ReadyState::Loading, true);
+            request->changeProgress(ProgressState::Progress, true);
         } else {
             request->m_pendingOnProgressEventIdlerHandle =
                 request->webView()
@@ -580,9 +602,9 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                 request->m_pendingOnProgressEventIdlerHandle =
                                     SIZE_MAX;
                             }
-                            request->changeReadyState(ResourceRequest::LOADING,
+                            request->changeReadyState(ReadyState::Loading,
                                                       true);
-                            request->changeProgress(ResourceRequest::PROGRESS,
+                            request->changeProgress(ProgressState::Progress,
                                                     true);
                         },
                         request);

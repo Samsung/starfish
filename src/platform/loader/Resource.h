@@ -59,6 +59,7 @@ public:
         , m_isReferencedByAnoterResource(false)
         , m_isCanceledButContinueLoadingDueToCache(false)
         , m_isRequested(false)
+        , m_isNavigationResoure(false)
         , m_state(BeforeSend)
         , m_url(url)
         , m_loader(loader)
@@ -129,6 +130,16 @@ public:
             std::find(m_resourceClients.begin(), m_resourceClients.end(), rc));
     }
 
+    bool isNavigationResoure()
+    {
+        return m_isNavigationResoure;
+    }
+
+    void setNavigationResoure(bool value)
+    {
+        m_isNavigationResoure = value;
+    }
+
     ResourceRequest* resourceRequest()
     {
         return m_resourceRequest;
@@ -149,10 +160,9 @@ public:
         SyncIfAlreadyLoaded,
         AlwaysSync
     };
-    virtual void request(
-        ResourceRequestSyncLevel syncLevel, ResourceURL* referrerURL,
-        bool allowCache = false,
-        ResourceRequest::MethodType method = ResourceRequest::GET_METHOD);
+    virtual void request(ResourceRequestSyncLevel syncLevel,
+                         ResourceURL* referrerURL, bool allowCache = false,
+                         MethodType method = MethodType::GET);
     virtual void cancel();
     virtual void didHeaderReceived(
         const std::unordered_map<std::string, std::string>& headrs);
@@ -235,6 +245,8 @@ protected:
     bool m_isReferencedByAnoterResource : 1;
     bool m_isCanceledButContinueLoadingDueToCache : 1;
     bool m_isRequested : 1;
+    bool m_isNavigationResoure : 1;
+
     State m_state;
     ResourceURL* m_url;
     ResourceLoader* m_loader;
@@ -254,7 +266,7 @@ public:
     virtual void onReadyStateChange(ResourceRequest* request,
                                     bool isExplicitAction) override
     {
-        if (request->readyState() == ResourceRequest::HEADERS_RECEIVED) {
+        if (request->readyState() == ReadyState::HeadersReceived) {
             m_resource->didHeaderReceived(request->responseHeaderMap());
         }
     }
@@ -262,13 +274,13 @@ public:
     virtual void onProgressEvent(ResourceRequest* request,
                                  bool isExplicitAction) override
     {
-        if (request->progressState() == ResourceRequest::LOAD) {
+        if (request->progressState() == ProgressState::Load) {
             m_resource->didDataReceived(request->response().data(),
                                         request->response().size());
             m_resource->didLoadFinished();
-        } else if (request->progressState() == ResourceRequest::IN_ERROR) {
+        } else if (request->progressState() == ProgressState::InError) {
             m_resource->didLoadFailed();
-        } else if (request->progressState() == ResourceRequest::TIMEOUT) {
+        } else if (request->progressState() == ProgressState::TimeOut) {
             m_resource->didLoadFailed();
         }
     }

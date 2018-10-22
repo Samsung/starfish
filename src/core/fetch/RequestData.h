@@ -20,59 +20,71 @@
 #ifndef __StarFishRequestData__
 #define __StarFishRequestData__
 
-#include "binding/ScriptWrappable.h"
-
 namespace StarFish {
 
 // NOTE: consider extracting enums from ResourceRequest
 
 class Request;
-enum class ReferrerPolicy;
+class ResourceURL;
+
+enum class MethodType {
+    UNKNOWN,
+    GET,
+    HEAD,
+    POST,
+    PUT,
+    DELETE,
+    CONNECT,
+    OPTIONS,
+    TRACE,
+    PATCH
+};
+
+enum class RequestMode {
+    Navigate,
+    SameOrigin,
+    NoCORS,
+    CORS,
+};
+
+enum class RequestCredentials {
+    Omit,
+    SameOrigin,
+    Include,
+};
+
+enum class RequestCache {
+    Default,
+    NoStore,
+    Reload,
+    NoCache,
+    ForceCache,
+    OnlyIfCached,
+};
+
+enum class RequestRedirect {
+    Follow,
+    Error,
+    Manual,
+};
 
 class RequestData : public gc {
     // TODO: encapsulate class members
 public:
-    enum class RequestMode {
-        Navigate,
-        SameOrigin,
-        NoCORS,
-        CORS,
-    };
-
-    enum class RequestCredentials {
-        Omit,
-        SameOrigin,
-        Include,
-    };
-
-    enum class RequestCache {
-        Default,
-        NoStore,
-        Reload,
-        NoCache,
-        ForceCache,
-        OnlyIfCached,
-    };
-
-    enum class RequestRedirect {
-        Follow,
-        Error,
-        Manual,
-    };
-
     RequestData();
 
-    String* m_method;
-    String* m_referrer;
-    ReferrerPolicy m_referrerPolicy;
+    MethodType m_method;
+    ReferrerURL* m_referrer;
     RequestMode m_mode;
     RequestCredentials m_credentials;
     RequestCache m_cache;
     RequestRedirect m_redirect;
     String* m_integrity;
     bool m_keepalive;
+    ResourceURL* m_url;
 
-    String* m_url;
+    static MethodType methodTypeFromString(String* inputString);
+    static String* methodTypeString(MethodType method);
     static RequestMode requestModeFromString(String* inputString);
     static RequestCredentials requestCredentialsFromString(String* inputString);
     static RequestCache requestCacheFromString(String* inputString);

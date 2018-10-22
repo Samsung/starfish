@@ -22,51 +22,9 @@
 #include <curl/curl.h>
 namespace StarFish {
 
-const char HTTPHeaderMap::kCacheControl[] = "Cache-Control";
-const char HTTPHeaderMap::kConnection[] = "Connection";
-const char HTTPHeaderMap::kContentTransferEncoding[] =
-    "Content-Transfer-Encoding";
-const char HTTPHeaderMap::kContentLanguage[] = "Content-Language";
-const char HTTPHeaderMap::kContentLength[] = "Content-Length";
-const char HTTPHeaderMap::kContentType[] = "Content-type";
-const char HTTPHeaderMap::kContentDispoition[] = "Content-Disposition";
-const char HTTPHeaderMap::kDate[] = "Date";
-const char HTTPHeaderMap::kETag[] = "ETag";
-const char HTTPHeaderMap::kPragma[] = "Pragma";
-const char HTTPHeaderMap::kTrailer[] = "Trailer";
-const char HTTPHeaderMap::kTransferEncoding[] = "Transfer-Encoding";
-const char HTTPHeaderMap::kUpgrade[] = "Upgrade";
-const char HTTPHeaderMap::kVia[] = "Via";
-const char HTTPHeaderMap::kWarning[] = "Warning";
-const char HTTPHeaderMap::kAccept[] = "Accept";
-const char HTTPHeaderMap::kAcceptCharset[] = "Accept-Charset";
-const char HTTPHeaderMap::kAcceptEncoding[] = "Accept-Encoding";
-const char HTTPHeaderMap::kAcceptLanguage[] = "Accept-Language";
-const char HTTPHeaderMap::kAuthorization[] = "Authorization";
-const char HTTPHeaderMap::kAge[] = "Age";
-const char HTTPHeaderMap::kCookie[] = "Cookie";
-const char HTTPHeaderMap::kSetCookie[] = "Set-Cookie";
-const char HTTPHeaderMap::kSetCookie2[] = "Set-Cookie2";
-const char HTTPHeaderMap::kExpect[] = "Expect";
-const char HTTPHeaderMap::kFrom[] = "From";
-const char HTTPHeaderMap::kHost[] = "Host";
-const char HTTPHeaderMap::kIfMatch[] = "If-Match";
-const char HTTPHeaderMap::kIfModifiedSince[] = "If-Modified-Since";
-const char HTTPHeaderMap::kIfNoneMatch[] = "If-None-Match";
-const char HTTPHeaderMap::kIfRange[] = "If-Range";
-const char HTTPHeaderMap::kIfUnmodifiedSince[] = "If-Unmodified-Since";
-const char HTTPHeaderMap::kLastModified[] = "Last-Modified";
-const char HTTPHeaderMap::kMaxForwards[] = "Max-Forwards";
-const char HTTPHeaderMap::kOrigin[] = "Origin";
-const char HTTPHeaderMap::kProxyAuthorization[] = "Proxy-Authorization";
-const char HTTPHeaderMap::kRange[] = "Range";
-const char HTTPHeaderMap::kReferer[] = "Referer";
-const char HTTPHeaderMap::kReferrerPolicy[] = "Referrer-Policy";
-const char HTTPHeaderMap::kTE[] = "TE";
-const char HTTPHeaderMap::kUserAgent[] = "User-Agent";
-const char HTTPHeaderMap::kLocation[] = "Location";
-const char HTTPHeaderMap::kUpgradeInsecureRequests[] =
-    "Upgrade-Insecure-Requests";
+#define DEFINE_HEADERS(name, value) const char HTTPHeaderMap::name[] = value;
+FOR_EACH_HTTPHEADERS(DEFINE_HEADERS);
+#undef DEFINE_HEADERS
 
 HTTPHeaderMap::HTTPHeaderMap()
 {

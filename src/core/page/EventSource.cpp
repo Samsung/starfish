@@ -55,7 +55,7 @@ public:
     virtual void onProgressEvent(ResourceRequest* request,
                                  bool isExplicitAction) override
     {
-        if (request->progressState() == ResourceRequest::PROGRESS) {
+        if (request->progressState() == ProgressState::Progress) {
             auto& response = request->response();
 
             if (m_isResponseValid) {
@@ -75,7 +75,7 @@ public:
     void onReadyStateChange(ResourceRequest* request,
                             bool fromExplicit) override
     {
-        if (request->readyState() == ResourceRequest::HEADERS_RECEIVED) {
+        if (request->readyState() == ReadyState::HeadersReceived) {
             uint16_t statusCode = request->status();
             bool isMimeTypeValid = request->responseMimeType()->contains(
                 "text/event-stream", false);
@@ -159,8 +159,8 @@ public:
                                      EventInit(false, false));
                 m_eventSource->dispatchEventByUA(m_eventSource, e);
             }
-        } else if (request->readyState() == ResourceRequest::LOADING) {
-        } else if (request->readyState() == ResourceRequest::DONE) {
+        } else if (request->readyState() == ReadyState::Loading) {
+        } else if (request->readyState() == ReadyState::Done) {
             if (m_eventSource->readyState() != EventSource::CLOSED) {
                 m_eventSource->failed();
 
@@ -171,8 +171,8 @@ public:
                 m_eventSource->dispatchEventByUA(m_eventSource, e);
             }
 
-        } else if (request->readyState() == ResourceRequest::UNSENT ||
-                   request->readyState() == ResourceRequest::OPENED) {
+        } else if (request->readyState() == ReadyState::Unset ||
+                   request->readyState() == ReadyState::Opened) {
         }
     }
 
@@ -191,12 +191,12 @@ EventSource::EventSource(::StarFish::Document* document, String* url,
                          const EventSourceInit& init)
     : EventTarget(document)
     , m_readyState(CONNECTING)
-    , m_withCredentials(init.withCredentials())
     , m_delay(10)
     , m_reconnectDelay(defaultReconnectDelay)
     , m_resourceRequest(new ResourceRequest(document))
     , m_parser(nullptr)
     , m_stopReconnect(false)
+    , m_withCredentials(init.withCredentials())
     , m_time(std::numeric_limits<uint32_t>::max())
 {
     if (url->isEmpty()) {
@@ -263,11 +263,11 @@ void EventSource::connect()
     }
 
     if (m_readyState == CONNECTING) {
-        start(ResourceRequest::MethodType::GET_METHOD);
+        start(MethodType::GET);
     }
 }
 
-void EventSource::start(ResourceRequest::MethodType method)
+void EventSource::start(MethodType method)
 {
     if (m_resourceRequest->timeout() != 0) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
@@ -280,8 +280,20 @@ void EventSource::start(ResourceRequest::MethodType method)
     } else {
         m_delay = defaultReconnectDelay;
     }
-    m_resourceRequest->open(method, m_url, true, document()->documentURI(),
-                            String::emptyString, String::emptyString);
+
+    RequestData* reqData = new RequestData();
+    reqData->m_method = method;
+    reqData->m_url = m_url;
+    reqData->m_referrer = new ReferrerURL(document()->documentURI(),
+                                          document()->referrerPolicy());
+
+    if (m_withCredentials) {
+        reqData->m_credentials = RequestCredentials::Include;
+    } else {
+        reqData->m_credentials = RequestCredentials::SameOrigin;
+    }
+
+    m_resourceRequest->open(reqData, true);
     m_resourceRequest->send();
 }
 
@@ -305,6 +317,11 @@ void EventSource::onMessageEvent(String* eventType, String* data,
 void EventSource::onReconnectionTimeSet(unsigned long long reconnectionTime)
 {
     m_delay = m_reconnectDelay = reconnectionTime;
+}
+
+bool EventSource::withCredentials() const
+{
+    return m_withCredentials;
 }
 
 void EventSource::connectFired()

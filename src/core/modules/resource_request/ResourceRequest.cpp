@@ -37,9 +37,9 @@ public:
     virtual void onProgressEvent(ResourceRequest* request,
                                  bool isExplicitAction) override
     {
-        if (request->progressState() == ResourceRequest::LOADSTART) {
+        if (request->progressState() == ProgressState::LoadStart) {
             request->document()->m_activeResourceRequests.push_back(request);
-        } else if (request->progressState() == ResourceRequest::LOADEND) {
+        } else if (request->progressState() == ProgressState::LoadEnd) {
             auto& v = request->document()->m_activeResourceRequests;
             auto iter = std::find(v.begin(), v.end(), request);
             if (iter != v.end()) {
@@ -51,12 +51,10 @@ public:
 
 ResourceRequest::ResourceRequest(Document* document)
     : DocumentHoldable(document)
-    , m_url(nullptr)
-    , m_referrer(nullptr)
-    , m_readyState(UNSENT)
-    , m_progressState(NONE)
-    , m_method(UNKNOWN_METHOD)
-    , m_responseType(DEFAULT_RESPONSE)
+    , m_requestData(nullptr)
+    , m_readyState(ReadyState::Unset)
+    , m_progressState(ProgressState::None)
+    , m_responseType(ResponseType::Default)
     , m_status(0)
     , m_timeout(0)
     , m_activeNetworkURLWorkerData(nullptr)
@@ -126,36 +124,39 @@ void ResourceRequest::clearIdlers()
 
 void ResourceRequest::handleResponseEOF()
 {
-    changeProgress(PROGRESS, true);
-    changeReadyState(DONE, true);
-    changeProgress(LOAD, true);
-    changeProgress(LOADEND, true);
+    changeProgress(ProgressState::Progress, true);
+    changeReadyState(ReadyState::Done, true);
+    changeProgress(ProgressState::Load, true);
+    changeProgress(ProgressState::LoadEnd, true);
 }
 
 void ResourceRequest::handleError(ProgressState error)
 {
     m_gotError = true;
-    changeReadyState(DONE, true);
-    changeProgress(PROGRESS, true);
+    changeReadyState(ReadyState::Done, true);
+    changeProgress(ProgressState::Progress, true);
     changeProgress(error, true);
-    changeProgress(LOADEND, true);
+    changeProgress(ProgressState::LoadEnd, true);
 }
 
 void ResourceRequest::changeReadyState(ReadyState readyState,
                                        bool isExplicitAction)
 {
     STARFISH_ASSERT(isMainThread());
-    if (!m_gotError && readyState == LOADING && m_readyState == OPENED) {
-        changeReadyState(HEADERS_RECEIVED, true);
+    if (!m_gotError && readyState == ReadyState::Loading &&
+        m_readyState == ReadyState::Opened) {
+        changeReadyState(ReadyState::HeadersReceived, true);
     }
 
-    if (!m_gotError && readyState == DONE && m_readyState == HEADERS_RECEIVED) {
-        changeReadyState(LOADING, true);
-    } else if (!m_gotError && readyState == DONE && m_readyState == OPENED) {
-        changeReadyState(HEADERS_RECEIVED, true);
-        changeReadyState(LOADING, true);
+    if (!m_gotError && readyState == ReadyState::Done &&
+        m_readyState == ReadyState::HeadersReceived) {
+        changeReadyState(ReadyState::Loading, true);
+    } else if (!m_gotError && readyState == ReadyState::Done &&
+               m_readyState == ReadyState::Opened) {
+        changeReadyState(ReadyState::HeadersReceived, true);
+        changeReadyState(ReadyState::Loading, true);
     }
-    if (readyState == HEADERS_RECEIVED) {
+    if (readyState == ReadyState::HeadersReceived) {
         // FIXME remove duplicate code
         auto it = m_responseHeaderMap.find(HTTPHeaderMap::kContentType);
         if (it != m_responseHeaderMap.end()) {
@@ -182,7 +183,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
             }
         }
 
-    } else if (readyState == DONE) {
+    } else if (readyState == ReadyState::Done) {
         if (m_containsBase64Content) {
             m_response = parseBase64String(m_response, 0, m_response.size());
         }
@@ -195,7 +196,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         }
     }
 
-    if (m_readyState == ReadyState::DONE) {
+    if (m_readyState == ReadyState::Done) {
         webView()->messageLoop()->addIdler(
             document()->browsingContext(),
             [](size_t, void* data, void* data2) {
@@ -213,43 +214,32 @@ void ResourceRequest::changeProgress(ProgressState progress,
                                      bool isExplicitAction)
 {
     STARFISH_ASSERT(isMainThread());
-    if (m_progressState != progress || (progress == ProgressState::PROGRESS)) {
+    if (m_progressState != progress || (progress == ProgressState::Progress)) {
         m_progressState = progress;
         for (size_t i = 0; i < m_clients.size(); i++) {
             m_clients[i]->onProgressEvent(this, isExplicitAction);
         }
     }
 
-    if (m_progressState == ProgressState::LOADEND) {
+    if (m_progressState == ProgressState::LoadEnd) {
         EntityBody().swap(m_response);
         HeaderMap().swap(m_responseHeaderMap);
     }
 }
 
-void ResourceRequest::open(MethodType method, ResourceURL* url, bool async,
-                           ResourceURL* referrer, String* userName,
-                           String* password)
+void ResourceRequest::open(RequestData* reqData, bool async)
 {
     bool shouldAbort = false;
-    m_referrer = referrer;
-
+    m_requestData = reqData;
     {
         STARFISH_ASSERT(!(!async && m_timeout != 0));
-        shouldAbort = m_progressState >= LOADSTART;
+        shouldAbort = m_progressState >= ProgressState::LoadStart;
     }
     if (shouldAbort) {
         abort(true);
     }
     {
         initVariables();
-        m_method = method;
-        m_url = url;
-        if (userName->length()) {
-            m_url->setUsername(userName);
-        }
-        if (password->length()) {
-            m_url->setPassword(password);
-        }
         m_isSync = !async;
     }
 
@@ -257,29 +247,29 @@ void ResourceRequest::open(MethodType method, ResourceURL* url, bool async,
 
     m_networkRequestJobDelegate =
         ResourceRequestJobDelegateFactory::createJob(this);
-    changeReadyState(OPENED, true);
+    changeReadyState(ReadyState::Opened, true);
 }
 
 void ResourceRequest::abort(bool isExplicitAction)
 {
     clearIdlers();
 
-    if (m_readyState >= UNSENT) {
+    if (m_readyState >= ReadyState::Unset) {
         m_gotError = true;
         auto theStatusWas = m_progressState;
-        if (m_readyState == OPENED && m_didSend) {
-            changeProgress(ABORT, false);
+        if (m_readyState == ReadyState::Opened && m_didSend) {
+            changeProgress(ProgressState::Abort, false);
         } else {
-            changeProgress(ABORT, isExplicitAction);
+            changeProgress(ProgressState::Abort, isExplicitAction);
         }
 
-        if (theStatusWas == LOADEND && isExplicitAction) {
-            changeReadyState(DONE, false);
+        if (theStatusWas == ProgressState::LoadEnd && isExplicitAction) {
+            changeReadyState(ReadyState::Done, false);
         } else {
-            changeReadyState(DONE, m_didSend);
+            changeReadyState(ReadyState::Done, m_didSend);
         }
-        changeProgress(LOADEND, true);
-        changeReadyState(UNSENT, false);
+        changeProgress(ProgressState::LoadEnd, true);
+        changeReadyState(ReadyState::Unset, false);
     }
 }
 
@@ -291,7 +281,7 @@ void ResourceRequest::send(String* body, bool allowCache)
     STARFISH_ASSERT(m_networkRequestJobDelegate);
     m_networkRequestJobDelegate->send(body, allowCache);
 
-    changeProgress(LOADSTART, true);
+    changeProgress(ProgressState::LoadStart, true);
 }
 
 void ResourceRequest::setRequestHeader(String* h, String* c)
@@ -299,50 +289,27 @@ void ResourceRequest::setRequestHeader(String* h, String* c)
     m_requestHeaders.push_back(std::make_pair(h, c));
 }
 
-ResourceRequest::MethodType ResourceRequest::toMethodType(String* input)
-{
-    String* lowerMethod = input->toASCIILower();
-    if (lowerMethod->equals("post")) {
-        return POST_METHOD;
-    } else if (lowerMethod->equals("get")) {
-        return GET_METHOD;
-    }
-    return UNKNOWN_METHOD;
-}
-
-String* ResourceRequest::methodType(ResourceRequest::MethodType method)
-{
-    switch (method) {
-    case POST_METHOD:
-        return String::createASCIIString("post");
-    case GET_METHOD:
-        return String::createASCIIString("get");
-    default:
-        return String::emptyString;
-    }
-}
-
-ResourceRequest::EncodeType ResourceRequest::toEncodeType(String* input)
+EncodeType ResourceRequest::toEncodeType(String* input)
 {
     String* lowerMethod = input->toASCIILower();
     if (lowerMethod->equals("application/x-www-form-urlencoded")) {
-        return APPLICATION_X_WWW_FORM_URLENCODED;
+        return EncodeType::ApplicationXWWWFormURLEncoded;
     } else if (lowerMethod->equals("multipart/form-data")) {
-        return MULTIPART_FORM_DATA;
+        return EncodeType::MultiPartFormData;
     } else if (lowerMethod->equals("text/plain")) {
-        return TEXT_PLAIN;
+        return EncodeType::TextPlain;
     }
-    return MISSING_OR_INVALID_ENCODETYPE;
+    return EncodeType::MissingOrInvalidEncodeType;
 }
 
-String* ResourceRequest::encodeType(ResourceRequest::EncodeType input)
+String* ResourceRequest::encodeType(EncodeType input)
 {
     switch (input) {
-    case APPLICATION_X_WWW_FORM_URLENCODED:
+    case EncodeType::ApplicationXWWWFormURLEncoded:
         return String::createASCIIString("application/x-www-form-urlencoded");
-    case MULTIPART_FORM_DATA:
+    case EncodeType::MultiPartFormData:
         return String::createASCIIString("multipart/form-data");
-    case TEXT_PLAIN:
+    case EncodeType::TextPlain:
         return String::createASCIIString("text/plain");
     default:
         return String::emptyString;
@@ -352,11 +319,10 @@ String* ResourceRequest::encodeType(ResourceRequest::EncodeType input)
 // https://www.w3.org/TR/html5/forms.html#application/
 // x-www-form-urlencoded-encoding-algorithm
 String* ResourceRequest::encodeFormDataSet(
-    GCVector<FormDataSetItem*>* formDataSet,
-    ResourceRequest::EncodeType formEnctype)
+    GCVector<FormDataSetItem*>* formDataSet, EncodeType formEnctype)
 {
     String* result = String::createASCIIString("");
-    if (formEnctype == APPLICATION_X_WWW_FORM_URLENCODED) {
+    if (formEnctype == EncodeType::ApplicationXWWWFormURLEncoded) {
         for (size_t i = 0; i < formDataSet->size(); i++) {
             FormDataSetItem* item = (*formDataSet)[i];
             String* name =
@@ -383,9 +349,9 @@ String* ResourceRequest::encodeFormDataSet(
             result = result->concat(String::createASCIIString("="));
             result = result->concat(value);
         }
-    } else if (formEnctype == MULTIPART_FORM_DATA) {
+    } else if (formEnctype == EncodeType::MultiPartFormData) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    } else if (formEnctype == TEXT_PLAIN) {
+    } else if (formEnctype == EncodeType::TextPlain) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 

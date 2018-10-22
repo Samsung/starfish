@@ -23,9 +23,9 @@
 namespace StarFish {
 
 RequestData::RequestData()
-    : m_method(String::createASCIIString("GET"))
-    , m_referrer(String::createASCIIString("about:client"))
-    , m_referrerPolicy(ReferrerPolicy::Empty)
+    : m_method(MethodType::GET)
+    , m_referrer(new ReferrerURL(String::createASCIIString("about:client"),
+                                 ReferrerPolicy::Empty))
     , m_mode(RequestMode::CORS)
     , m_credentials(RequestCredentials::SameOrigin)
     , m_cache(RequestCache::Default)
@@ -36,7 +36,58 @@ RequestData::RequestData()
 {
 }
 
-RequestData::RequestMode RequestData::requestModeFromString(String* inputString)
+MethodType RequestData::methodTypeFromString(String* input)
+{
+    String* upper = input->toASCIIUpper();
+    if (upper->equals("GET")) {
+        return MethodType::GET;
+    } else if (upper->equals("HEAD")) {
+        return MethodType::HEAD;
+    } else if (upper->equals("POST")) {
+        return MethodType::POST;
+    } else if (upper->equals("PUT")) {
+        return MethodType::PUT;
+    } else if (upper->equals("DELETE")) {
+        return MethodType::DELETE;
+    } else if (upper->equals("CONNECT")) {
+        return MethodType::CONNECT;
+    } else if (upper->equals("OPTIONS")) {
+        return MethodType::OPTIONS;
+    } else if (upper->equals("TRACE")) {
+        return MethodType::TRACE;
+    } else if (upper->equals("PATCH")) {
+        return MethodType::PATCH;
+    }
+    return MethodType::UNKNOWN;
+}
+
+String* RequestData::methodTypeString(MethodType method)
+{
+    switch (method) {
+    case MethodType::GET:
+        return String::createASCIIString("GET");
+    case MethodType::HEAD:
+        return String::createASCIIString("HEAD");
+    case MethodType::POST:
+        return String::createASCIIString("POST");
+    case MethodType::PUT:
+        return String::createASCIIString("PUT");
+    case MethodType::DELETE:
+        return String::createASCIIString("DELETE");
+    case MethodType::CONNECT:
+        return String::createASCIIString("CONNECT");
+    case MethodType::OPTIONS:
+        return String::createASCIIString("OPTIONS");
+    case MethodType::TRACE:
+        return String::createASCIIString("TRACE");
+    case MethodType::PATCH:
+        return String::createASCIIString("PATCH");
+    default:
+        return String::emptyString;
+    }
+}
+
+RequestMode RequestData::requestModeFromString(String* inputString)
 {
     if (inputString->equalsIgnoreCase("navigate")) {
         return RequestMode::Navigate;
@@ -50,7 +101,7 @@ RequestData::RequestMode RequestData::requestModeFromString(String* inputString)
     return RequestMode::NoCORS;
 }
 
-RequestData::RequestCredentials RequestData::requestCredentialsFromString(
+RequestCredentials RequestData::requestCredentialsFromString(
     String* inputString)
 {
     if (inputString->equalsIgnoreCase("omit")) {
@@ -63,8 +114,7 @@ RequestData::RequestCredentials RequestData::requestCredentialsFromString(
     return RequestCredentials::Omit;
 }
 
-RequestData::RequestCache RequestData::requestCacheFromString(
-    String* inputString)
+RequestCache RequestData::requestCacheFromString(String* inputString)
 {
     if (inputString->equalsIgnoreCase("default")) {
         return RequestCache::Default;
@@ -82,8 +132,7 @@ RequestData::RequestCache RequestData::requestCacheFromString(
     return RequestCache::Default;
 }
 
-RequestData::RequestRedirect RequestData::requestRedirectFromString(
-    String* inputString)
+RequestRedirect RequestData::requestRedirectFromString(String* inputString)
 {
     if (inputString->equalsIgnoreCase("follow")) {
         return RequestRedirect::Follow;
