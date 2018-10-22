@@ -22,9 +22,13 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "core/dom/canvas/RenderingContext.h"
 #include "binding/DocumentHoldable.h"
+#include "core/dom/canvas/RenderingContext.h"
+#include "core/modules/canvas/Canvas.h"
 #include "core/page/Serializer.h"
+#include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
+#include "core/page/WebView.h"
 
 namespace StarFish {
 
@@ -45,7 +49,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isCanvasRenderingContext2D() const override;
 
-    void setDefaultCommands();
+    virtual void initialize() override;
 
     // CanvasState
     void save();
@@ -133,7 +137,33 @@ public:
 
     void setLineWidth(double width);
 
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(CanvasRenderingContext2D)] = { 0 };
+            CanvasRenderingContext2D::fillGCDescriptor(desc);
+            descr =
+                GC_make_descriptor(desc, GC_WORD_LEN(CanvasRenderingContext2D));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        RenderingContext::fillGCDescriptor(desc);
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(CanvasRenderingContext2D, m_surfaceCanvas));
+    }
+
 private:
+    Canvas* m_surfaceCanvas;
+    Unit::Color m_fillColor;
+    Unit::Color m_strokeColor;
     double m_lineWidth;
 };
 

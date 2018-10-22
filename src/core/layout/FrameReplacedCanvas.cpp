@@ -25,51 +25,64 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/page/WebView.h"
 
 namespace StarFish {
+
+FrameReplacedCanvas::FrameReplacedCanvas(Node* node)
+    : FrameReplaced(node, nullptr)
+    , m_emptySurface(nullptr)
+{
+    computeStyleFlags();
+    // This case is just that a empty element is defined.
+    m_emptySurface =
+        CanvasSurface::create(node->webView()->platformWindow(), 1, 1);
+    m_emptySurface->clear();
+}
 
 IntrinsicSize FrameReplacedCanvas::intrinsicSize()
 {
     IntrinsicSize result;
+    result.m_isContentExists = true;
+    result.m_hasAspectRatio = true;
+    auto canvas = node()->asHTMLCanvasElement();
+    double canvasWidth = canvas->width();
+    double canvasHeight = canvas->height();
+    result.m_intrinsicContentSize = LayoutSize(canvasWidth, canvasHeight);
     return result;
 }
 
-void FrameReplacedCanvas::paintContent(PaintingContext& ctx)
+void FrameReplacedCanvas::didCompsiteStackingContext(Compositor* c)
 {
-    FrameReplaced::paintContent(ctx);
+    m_emptySurface->detachNativeBuffer();
+}
 
-    Unit::Rect frameRect =
-        Unit::Rect(borderLeft() + paddingLeft(), borderTop() + paddingTop(),
-                   width() - borderWidth() - paddingWidth(),
-                   height() - borderHeight() - paddingHeight());
-    if (!m_canvasImage) {
-        m_canvasImage =
-            NativeImageData::create(frameRect.width(), frameRect.height());
+void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
+{
+    HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
+    CanvasSurface* surface = canvasElement->surface();
+    IntrinsicSize size = intrinsicSize();
+    auto contentSize = size.m_intrinsicContentSize;
+    size_t width = contentSize.width().toDouble();
+    size_t height = contentSize.height().toDouble();
+    if (surface) {
+        surface->unMapBufferAndNotifyUpdateRegion(0, 0, width, height);
+    } else {
+        m_emptySurface->unMapBufferAndNotifyUpdateRegion(0, 0, 1, 1);
     }
+}
 
-    if (m_canvasImage->width() != frameRect.width() &&
-        m_canvasImage->height() != frameRect.height()) {
-        m_canvasImage =
-            NativeImageData::create(frameRect.width(), frameRect.height());
+void FrameReplacedCanvas::createGraphicsBuffer(CanvasSurface** surfaceHolder,
+                                               size_t visibleWidth,
+                                               size_t visibleHeight)
+{
+    HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
+    CanvasSurface* surface = canvasElement->surface();
+    if (surface) {
+        *surfaceHolder = surface;
+    } else {
+        *surfaceHolder = m_emptySurface;
     }
-
-    Canvas* canvas = ctx.m_canvas;
-    canvas->save();
-
-    Canvas* imageCanvas = Canvas::create(node()->webView(), m_canvasImage);
-
-    // Run the command buffer.
-    Node* n = this->node();
-    if (n && n->isHTMLCanvasElement()) {
-        HTMLCanvasElement* e = n->asHTMLCanvasElement();
-        e->commandBuffer().paintCommands(imageCanvas);
-    }
-
-    canvas->drawImage(m_canvasImage, frameRect);
-
-    delete imageCanvas;
-
-    canvas->restore();
 }
 }
 #endif

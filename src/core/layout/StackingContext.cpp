@@ -1296,6 +1296,11 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         info.graphicsBuffer = m_rareData->m_buffer;
 
         if (m_owner->hasOwnGraphicsBufferMethod()) {
+            auto iter =
+                ctx.prevDrawnStackingContextInfoMap.find(m_owner->node());
+            if (iter != ctx.prevDrawnStackingContextInfoMap.end()) {
+                iter->second.graphicsBuffer = nullptr;
+            }
             JOBS_FOR_EXIT_PAITING()
             return;
         }

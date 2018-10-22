@@ -30,10 +30,13 @@ namespace StarFish {
 
 class FrameReplacedCanvas final : public FrameReplaced {
 public:
-    FrameReplacedCanvas(Node* node)
-        : FrameReplaced(node, nullptr)
-        , m_canvasImage(nullptr)
+    FrameReplacedCanvas(Node* node);
+
+    virtual void computeStyleFlags() override
     {
+        FrameReplaced::computeStyleFlags();
+        m_flags.m_isEstablishesStackingContext = true;
+        m_flags.m_needsGraphicsBuffer = true;
     }
 
     virtual const char* name() override
@@ -46,9 +49,18 @@ public:
         return true;
     }
 
-    void paintContent(PaintingContext& ctx);
-
     virtual IntrinsicSize intrinsicSize() override;
+    virtual void willCompsiteStackingContext(Compositor* c) override;
+    virtual void didCompsiteStackingContext(Compositor* c) override;
+
+    virtual void createGraphicsBuffer(CanvasSurface** surfaceHolder,
+                                      size_t visibleWidth,
+                                      size_t visibleHeight) override;
+
+    virtual bool hasOwnGraphicsBufferMethod() override
+    {
+        return true;
+    }
 
     void* operator new(size_t size)
     {
@@ -68,11 +80,11 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         FrameReplaced::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(FrameReplacedCanvas, m_canvasImage));
+        GC_set_bit(desc, GC_WORD_OFFSET(FrameReplacedCanvas, m_emptySurface));
     }
 
 private:
-    NativeImageData* m_canvasImage;
+    CanvasSurface* m_emptySurface;
 };
 }
 #endif
