@@ -48,7 +48,7 @@ namespace StarFish {
 const size_t HTTPCache::kBlockSize = BLKGETSIZE;
 
 HTTPCache::HTTPCache(String* cacheDirPath)
-    : m_cacheEntryTable()
+    : m_cacheEntryTable(new (GC) HTTPCacheEntryMultiMap())
     , m_cacheDirPath(cacheDirPath)
     , m_indexFilePath(nullptr)
     , m_cacheSizeLimit(DEFAULT_HTTP_CACHE_SIZE)
@@ -119,7 +119,7 @@ void HTTPCache::clear()
 
 void HTTPCache::clearCacheDir()
 {
-    HTTPCacheEntryMultiMap().swap(m_cacheEntryTable);
+    HTTPCacheEntryMultiMap().swap(*m_cacheEntryTable);
     HTTPCacheLRUList().swap(m_cacheLRUList);
     m_currentTotalSizeOfBlocks = 0;
 
@@ -233,7 +233,7 @@ bool HTTPCache::initFromIndexFileIfPossible()
             return false;
         }
 
-        m_cacheEntryTable.insert(
+        m_cacheEntryTable->insert(
             std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
 
         m_cacheLRUList.push_back(urlString);
@@ -252,15 +252,15 @@ HTTPCacheEntryMultiMap::iterator HTTPCache::get(ResourceURL* url)
     STARFISH_ASSERT(isMainThread());
 
     if (m_cacheMode == LOAD_NO_CACHE) {
-        return m_cacheEntryTable.end();
+        return m_cacheEntryTable->end();
     }
 
     String* item = url->urlString();
 
     auto entryItr = findEntryInCacheEntryTable(item);
-    if (entryItr == m_cacheEntryTable.end() || !entryItr->second->canUse() ||
+    if (entryItr == m_cacheEntryTable->end() || !entryItr->second->canUse() ||
         !entryItr->second->isConsistent()) {
-        return m_cacheEntryTable.end();
+        return m_cacheEntryTable->end();
     }
 
     auto it = findItemInLRUList(item);
@@ -275,13 +275,13 @@ HTTPCacheEntryMultiMap::iterator HTTPCache::get(ResourceURL* url)
 HTTPCacheEntryMultiMap::iterator HTTPCache::findEntryInCacheEntryTable(
     String* key)
 {
-    auto range = m_cacheEntryTable.equal_range(key->hashValue());
+    auto range = m_cacheEntryTable->equal_range(key->hashValue());
     for (auto it = range.first; it != range.second; ++it) {
         if (it->second->url()->urlString()->equals(key)) {
             return it;
         }
     }
-    return m_cacheEntryTable.end();
+    return m_cacheEntryTable->end();
 }
 
 void HTTPCache::put(NetworkURLWorkerData* nwd)
@@ -333,7 +333,7 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
         return;
     }
 
-    m_cacheEntryTable.insert(
+    m_cacheEntryTable->insert(
         std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
     m_cacheLRUList.push_back(newEntry->url()->urlString());
     m_currentTotalSizeOfBlocks += sizeOfBlocks;
@@ -463,7 +463,7 @@ bool HTTPCache::flush()
 
     unlock();
 
-    m_cacheEntryTable.clear();
+    m_cacheEntryTable->clear();
     m_cacheLRUList.clear();
 
     return (out->flush() == 0);
@@ -498,7 +498,7 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
                 m_currentTotalSizeOfBlocks -= sizeOfBlock;
                 removedSize += sizeOfBlock;
             }
-            m_cacheEntryTable.erase(tableIter);
+            m_cacheEntryTable->erase(tableIter);
             iter = m_cacheLRUList.erase(iter);
         }
         STARFISH_LOG_INFO(
@@ -529,7 +529,7 @@ bool HTTPCache::isConsistent()
 
     dir->close();
 
-    for (auto& it : m_cacheEntryTable) {
+    for (auto& it : *m_cacheEntryTable) {
         if (!it.second->isConsistent()) {
             STARFISH_LOG_ERROR("[HTTPCache] Entry status is inconsistent\n");
             return false;
@@ -543,7 +543,8 @@ void HTTPCache::expire()
 {
     STARFISH_ASSERT(isMainThread());
 
-    for (auto it = m_cacheEntryTable.begin(); it != m_cacheEntryTable.end();) {
+    for (auto it = m_cacheEntryTable->begin();
+         it != m_cacheEntryTable->end();) {
         if (it->second->shouldExpire() || !it->second->good()) {
             FileUtil::removeFile(it->second->entryFileInfo().entryFilePath);
 
@@ -552,7 +553,7 @@ void HTTPCache::expire()
             m_currentTotalSizeOfBlocks -= size;
 
             removeItemInLRUList(it->second->url()->urlString());
-            it = m_cacheEntryTable.erase(it);
+            it = m_cacheEntryTable->erase(it);
         } else {
             it++;
         }
@@ -561,7 +562,7 @@ void HTTPCache::expire()
 
 void HTTPCache::init()
 {
-    HTTPCacheEntryMultiMap().swap(m_cacheEntryTable);
+    HTTPCacheEntryMultiMap().swap(*m_cacheEntryTable);
     HTTPCacheLRUList().swap(m_cacheLRUList);
     m_currentTotalSizeOfBlocks = 0;
 }
@@ -614,8 +615,8 @@ void HTTPCache::removeItemInLRUList(String* item)
 void HTTPCache::removeItemIncacheEntryTable(String* url)
 {
     auto it = findEntryInCacheEntryTable(url);
-    if (it != m_cacheEntryTable.end()) {
-        m_cacheEntryTable.erase(it);
+    if (it != m_cacheEntryTable->end()) {
+        m_cacheEntryTable->erase(it);
     }
 }
 

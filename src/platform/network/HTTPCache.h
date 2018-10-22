@@ -50,7 +50,7 @@ public:
     HTTPCacheEntryMultiMap::iterator get(ResourceURL* url);
     HTTPCacheEntryMultiMap::iterator end()
     {
-        return m_cacheEntryTable.end();
+        return m_cacheEntryTable->end();
     }
 
     void put(NetworkURLWorkerData* data);
@@ -80,6 +80,28 @@ public:
         return m_good;
     }
 
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(HTTPCache));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(HTTPCache)] = { 0 };
+            fillGCDescriptor(desc);
+            descr = GC_make_descriptor(desc, GC_WORD_LEN(HTTPCache));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(HTTPCache, m_cacheEntryTable));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTTPCache, m_cacheLRUList));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTTPCache, m_cacheDirPath));
+        GC_set_bit(desc, GC_WORD_OFFSET(HTTPCache, m_indexFilePath));
+    }
+
     static const size_t kBlockSize;
 
 private:
@@ -98,7 +120,7 @@ private:
 
     size_t calcBlocksSize(size_t length);
     size_t calcBlocksSizeOfIndexFile();
-    HTTPCacheEntryMultiMap m_cacheEntryTable;
+    HTTPCacheEntryMultiMap* m_cacheEntryTable;
     HTTPCacheLRUList m_cacheLRUList;
     String* m_cacheDirPath;
     String* m_indexFilePath;
