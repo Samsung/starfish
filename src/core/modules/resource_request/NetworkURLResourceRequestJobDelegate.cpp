@@ -306,12 +306,36 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 #endif
         break;
     }
+    case MethodType::HEAD: {
+        method = "HEAD";
+        break;
+    }
     case MethodType::POST: {
         method = "POST";
         break;
     }
-    case MethodType::HEAD: {
-        method = "HEAD";
+    case MethodType::PUT: {
+        method = "PUT";
+        break;
+    }
+    case MethodType::DELETE: {
+        method = "DELETE";
+        break;
+    }
+    case MethodType::CONNECT: {
+        method = "CONNECT";
+        break;
+    }
+    case MethodType::OPTIONS: {
+        method = "OPTIONS";
+        break;
+    }
+    case MethodType::TRACE: {
+        method = "TRACE";
+        break;
+    }
+    case MethodType::PATCH: {
+        method = "PATCH";
         break;
     }
     case MethodType::UNKNOWN: {

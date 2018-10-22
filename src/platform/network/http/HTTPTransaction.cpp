@@ -144,8 +144,13 @@ void HTTPTransaction::start()
             STARFISH_LOG_INFO("%s\n", m_httpRequest->entityBody().data());
         }
 #endif
-    } else if (!(m_httpRequest->method().compare("GET") == 0)) {
-        // Do not need to set bodyentity for get
+    } else if (m_httpRequest->method().compare("GET") == 0) {
+        curl_easy_setopt(m_curl, CURLOPT_HTTPGET, 1L);
+    } else if (m_httpRequest->method().compare("HEAD") == 0) {
+        curl_easy_setopt(m_curl, CURLOPT_NOBODY, 1L);
+    } else {
+        curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST,
+                         m_httpRequest->method().c_str());
     }
 
     m_httpRequest->setRequestTime(timestamp() / 1000);
