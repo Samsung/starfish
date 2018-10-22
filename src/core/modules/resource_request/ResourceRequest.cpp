@@ -223,7 +223,6 @@ void ResourceRequest::changeProgress(ProgressState progress,
 
     if (m_progressState == ProgressState::LoadEnd) {
         EntityBody().swap(m_response);
-        HeaderMap().swap(m_responseHeaderMap);
     }
 }
 
@@ -291,12 +290,12 @@ void ResourceRequest::setRequestHeader(String* h, String* c)
 
 EncodeType ResourceRequest::toEncodeType(String* input)
 {
-    String* lowerMethod = input->toASCIILower();
-    if (lowerMethod->equals("application/x-www-form-urlencoded")) {
+    String* lowerType = input->toASCIILower();
+    if (lowerType->equals("application/x-www-form-urlencoded")) {
         return EncodeType::ApplicationXWWWFormURLEncoded;
-    } else if (lowerMethod->equals("multipart/form-data")) {
+    } else if (lowerType->equals("multipart/form-data")) {
         return EncodeType::MultiPartFormData;
-    } else if (lowerMethod->equals("text/plain")) {
+    } else if (lowerType->equals("text/plain")) {
         return EncodeType::TextPlain;
     }
     return EncodeType::MissingOrInvalidEncodeType;

@@ -18,7 +18,7 @@ http://web-platform.test:8000/xhr/open-referer.htm
 #http://web-platform.test:8000/xhr/abort-after-send.htm
 #http://web-platform.test:8000/xhr/getallresponseheaders.htm
 #http://web-platform.test:8000/xhr/access-control-basic-preflight-denied.htm
-#http://web-platform.test:8000/xhr/response-method.htm
+http://web-platform.test:8000/xhr/response-method.htm
 http://web-platform.test:8000/xhr/send-sync-no-response-event-loadend.htm
 #http://web-platform.test:8000/xhr/access-control-basic-allow-preflight-cache-timeout.htm
 #http://web-platform.test:8000/xhr/send-entity-body-empty.htm
@@ -259,7 +259,7 @@ http://web-platform.test:8000/xhr/timeout-sync.htm
 #http://web-platform.test:8000/xhr/send-redirect-to-non-cors.htm
 #http://web-platform.test:8000/xhr/open-open-send.htm
 #http://web-platform.test:8000/xhr/overridemimetype-loading-state.htm
-#http://web-platform.test:8000/xhr/open-method-case-insensitive.htm
+http://web-platform.test:8000/xhr/open-method-case-insensitive.htm
 http://web-platform.test:8000/xhr/progressevent-constructor.html
 #http://web-platform.test:8000/xhr/send-authentication-basic-setrequestheader.htm
 http://web-platform.test:8000/xhr/historical.html
