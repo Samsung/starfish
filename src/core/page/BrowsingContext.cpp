@@ -511,10 +511,13 @@ bool BrowsingContext::layoutIfNeeds()
                                           ->asFrameBox()
                                           ->asFrameBlockBox()
                                           ->asFrameDocument());
+
         document()->frame()->layout(ctx,
                                     Frame::LayoutWantToResolve::ResolveAll);
-        m_needsLayout = false;
+
+        setNeedsPainting();
         webView()->setNeedsComputeStackingContextProperties();
+        m_needsLayout = false;
         ret = true;
     }
 

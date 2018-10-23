@@ -57,16 +57,18 @@ void TTS::init()
 void TTS::speech(String* text)
 {
     STARFISH_ASSERT(isMainThread());
-    if (text && text != String::emptyString) {
-        m_webView->messageLoop()->addIdler(
-            nullptr,
-            [](size_t, void* data) {
-                String* text = (String*)data;
-                STARFISH_LOG_INFO("TTS speech TV: %s\n",
-                                  text->toUTF8NonGCString().data());
-                elm_access_say((char*)text->toUTF8NonGCString().data());
+    if (!text->equals(String::emptyString)) {
+        auto u8String = text->toUTF8NonGCString();
+        char* buf = (char*)malloc(u8String.length() + 1);
+        memcpy(buf, u8String.data(), u8String.length());
+        buf[u8String.length()] = 0;
+        ecore_main_loop_thread_safe_call_async(
+            [](void* data) -> void {
+                elm_access_say((char*)data);
+                STARFISH_LOG_INFO("TTS speech TV: %s\n", (char*)data);
+                free(data);
             },
-            text);
+            buf);
     }
 }
 }

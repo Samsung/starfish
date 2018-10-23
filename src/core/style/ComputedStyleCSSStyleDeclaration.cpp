@@ -185,8 +185,6 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         l.setKeyKind(CSSStyleValuePair::KeyKind::Left);
         r.setKeyKind(CSSStyleValuePair::KeyKind::Right);
         if (frame && frame->isFrameBox() && frame->isPositioned()) {
-            LayoutContext ctx(m_node->starfish(),
-                              m_node->document()->frame()->asFrameDocument());
             FrameBox* cb = containingBlock(frame);
             FrameBox* self = frame->asFrameBox();
             LayoutUnit parentContentWidth = cb->contentWidth();
@@ -198,8 +196,10 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                 if (cb->isAncestorOf(parent)) {
                     l2 = parent->absolutePoint(cb);
                 } else {
-                    l1 = cb->absolutePoint(ctx.frameDocument());
-                    l2 = parent->absolutePoint(ctx.frameDocument());
+                    l1 = cb->absolutePoint(
+                        m_node->document()->frame()->asFrameDocument());
+                    l2 = parent->absolutePoint(
+                        m_node->document()->frame()->asFrameDocument());
                 }
 
                 if (keyKind == CSSStyleValuePair::KeyKind::Top ||
@@ -283,10 +283,8 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair w;
         w.setKeyKind(CSSStyleValuePair::KeyKind::Width);
         if (frame && style->width().isDefinite(true)) {
-            LayoutContext ctx(m_node->starfish(),
-                              m_node->document()->frame()->asFrameDocument());
             w.setLengthValue(CSSLength(style->width().specifiedValue(
-                ctx.parentContentWidth(frame), m_node)));
+                LayoutContext::parentContentWidth(frame), m_node)));
         } else {
             if (frame && frame->isFrameBox()) {
                 w.setLengthValue(
@@ -301,13 +299,13 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair h;
         h.setKeyKind(CSSStyleValuePair::KeyKind::Height);
         if (frame && frame->isFrameBox()) {
-            LayoutContext ctx(m_node->starfish(),
-                              m_node->document()->frame()->asFrameDocument());
-            bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame);
+            bool parentHasFixedHeight =
+                LayoutContext::parentHasFixedHeight(frame);
             if (style->height().isDefinite(parentHasFixedHeight)) {
                 LayoutUnit parentContentHeight;
                 if (parentHasFixedHeight) {
-                    parentContentHeight = ctx.parentFixedHeight(frame);
+                    parentContentHeight =
+                        LayoutContext::parentFixedHeight(frame);
                 }
                 h.setLengthValue(CSSLength(style->height().specifiedValue(
                     parentContentHeight, m_node)));

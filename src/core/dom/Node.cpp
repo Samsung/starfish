@@ -2239,7 +2239,7 @@ void Node::setNeedsPainting()
 
     Frame* frame = this->frame();
     if (frame) {
-        frame->setNeedsPainting(true);
+        frame->markNeedsPainting();
     }
 }
 

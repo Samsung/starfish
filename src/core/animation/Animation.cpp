@@ -571,6 +571,9 @@ void ActiveLengthAnimationTask::execute(float progress, ComputedStyle* style)
         style->setBackgroundPositionX(newLength, m_indexForBgLayer);
     } else if (m_property == CSSStyleValuePair::KeyKind::BackgroundPositionY) {
         style->setBackgroundPositionY(newLength, m_indexForBgLayer);
+    } else if (m_property == CSSStyleValuePair::KeyKind::FontSize) {
+        style->setFontSize(newLength);
+        style->loadFont(m_targetElement);
     }
 }
 
@@ -647,6 +650,11 @@ bool ActiveLengthAnimationTask::isKindOfTransitionProperty(
         if (k == CSSStyleValuePair::KeyKind::BackgroundPositionY ||
             k == CSSStyleValuePair::KeyKind::BackgroundPosition ||
             k == CSSStyleValuePair::KeyKind::Background) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::FontSize) {
+        if (k == CSSStyleValuePair::KeyKind::FontSize ||
+            k == CSSStyleValuePair::KeyKind::Font) {
             return true;
         }
     } else {
@@ -755,6 +763,10 @@ bool ActiveLengthAnimationTask::taskCanContinue(ComputedStyle* newStyle)
         if (m_indexForBgLayer < newStyle->backgroundLayerSize() &&
             m_originalToValue ==
                 newStyle->backgroundPositionY(m_indexForBgLayer)) {
+            return true;
+        }
+    } else if (m_property == CSSStyleValuePair::KeyKind::FontSize) {
+        if (m_originalToValue.fixed() == newStyle->fixedFontSize()) {
             return true;
         }
     }
@@ -1658,6 +1670,25 @@ bool applyTransitionIfNeeds(
                 }
             }
         }
+
+        if (NEED_TRANSITION(CSSStyleValuePair::FontSize,
+                            CSSStyleValuePair::Font)) {
+            bool found = executor->hasActiveAnimiation(
+                element, CSSStyleValuePair::FontSize);
+            if (!found) {
+                auto task = new ActiveLengthAnimationTask(
+                    element, CSSStyleValuePair::FontSize,
+                    AnimatedValue(
+                        Length(Length::Fixed, oldStyle->fixedFontSize())),
+                    AnimatedValue(
+                        Length(Length::Fixed, newStyle->fixedFontSize())),
+                    duration, delay, timingFunction,
+                    Length(Length::Fixed, newStyle->fixedFontSize()));
+                executor->registerAnimation(task, newStyle);
+                gotTransition = true;
+            }
+        }
+
         // <- length series
 
         if (gotTransition) {
