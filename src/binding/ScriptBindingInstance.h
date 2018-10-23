@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishScriptBindingInstance__
-#define __StarFishScriptBindingInstance__
+#ifndef __StarfishScriptBindingInstance__
+#define __StarfishScriptBindingInstance__
 
 namespace Escargot {
 class VMInstanceRef;
@@ -50,9 +50,9 @@ class ExtensionManagerInstance;
 }
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
-class StarFish;
+class Starfish;
 class Window;
 class Document;
 class ScriptEngineInstance;

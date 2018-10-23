@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
@@ -32,7 +32,7 @@
 
 #include <uv.h>
 
-namespace StarFish {
+namespace Starfish {
 
 void on_close_handle(uv_handle_t* handle);
 
@@ -54,8 +54,8 @@ struct IdlerData {
     bool m_isMainThreadData;
 };
 
-MessageLoop::MessageLoop(WebView* sf)
-    : WebViewHoldable(sf)
+MessageLoop::MessageLoop(WebView* webView)
+    : WebViewHoldable(webView)
     , m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
     , m_navigateInvokeIdler(nullptr)
@@ -358,7 +358,7 @@ void MessageLoop::destroy()
         }
 
         if (m_idlers.empty() && e) {
-            STARFISH_LOG_INFO("[StarFish] message loop [m_idlers:%zu]\n",
+            STARFISH_LOG_INFO("[Starfish] message loop [m_idlers:%zu]\n",
                               m_idlers.size());
             break;
         }

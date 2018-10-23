@@ -39,8 +39,8 @@
  * THE SOFTWARE.
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "Profiling.h"
 
 #if defined(STARFISH_ANDROID)
@@ -99,7 +99,7 @@ int gettimeofday(struct timeval *tv, struct timezone *tz)
 
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 uint64_t tickCount()
 {
@@ -136,4 +136,4 @@ ProfilerTimer::~ProfilerTimer()
     float time = (float)((end - m_start) / 1000.f);
     STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, time);
 }
-} // namespace StarFish
+} // namespace Starfish

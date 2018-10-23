@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLSelectElement__
-#define __StarFishHTMLSelectElement__
+#ifndef __StarfishHTMLSelectElement__
+#define __StarfishHTMLSelectElement__
 
 #include "core/dom/HTMLFormElement.h"
 #include "binding/HTMLElementOrlongUnion.h"
 #include "binding/HTMLOptionElementOrHTMLOptGroupElementUnion.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLOptionElement;
 class HTMLCollection;

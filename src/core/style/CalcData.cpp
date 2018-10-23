@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/Style.h"
 #include "core/style/CalcData.h"
 
-namespace StarFish {
+namespace Starfish {
 LayoutUnit CalcValue::specifiedValue(const LayoutUnit& parentContentLength,
                                      Node* n) const
 {

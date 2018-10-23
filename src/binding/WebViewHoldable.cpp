@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "binding/WebViewHoldable.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
-StarFish* WebViewHoldable::starFish() const
+Starfish* WebViewHoldable::starfish() const
 {
-    return webView()->starFish();
+    return webView()->starfish();
 }
 }

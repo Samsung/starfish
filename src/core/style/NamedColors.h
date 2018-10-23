@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishNamedColors__
-#define __StarFishNamedColors__
+#ifndef __StarfishNamedColors__
+#define __StarfishNamedColors__
 
-namespace StarFish {
+namespace Starfish {
 
 class NamedColor {
 public:

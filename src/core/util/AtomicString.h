@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishAtomicString__
-#define __StarFishAtomicString__
+#ifndef __StarfishAtomicString__
+#define __StarfishAtomicString__
 
-namespace StarFish {
+namespace Starfish {
 
-class StarFish;
+class Starfish;
 class String;
 
 typedef std::unordered_set<String*, std::hash<String*>, std::equal_to<String*>,
@@ -30,7 +30,7 @@ typedef std::unordered_set<String*, std::hash<String*>, std::equal_to<String*>,
     AtomicStringMap;
 
 class AtomicString {
-    friend class StarFish;
+    friend class Starfish;
     template <unsigned int>
     friend class GatherableString;
     friend class QualifiedName;
@@ -43,28 +43,30 @@ class AtomicString {
 public:
     AtomicString();
 
-    static AtomicString createAtomicString(StarFish* sf, String* str);
-    static AtomicString createAtomicString(StarFish* sf, StringView str);
-    static AtomicString createAtomicString(StarFish* sf, const char* str);
-    static AtomicString createAtomicString(StarFish* sf, const char* str,
+    static AtomicString createAtomicString(Starfish* starfish, String* str);
+    static AtomicString createAtomicString(Starfish* starfish, StringView str);
+    static AtomicString createAtomicString(Starfish* starfish, const char* str);
+    static AtomicString createAtomicString(Starfish* starfish, const char* str,
                                            size_t length);
     // only support bmp chars
-    static AtomicString createAtomicString(StarFish* sf, const char16_t* str,
-                                           size_t length);
-    static AtomicString createAtomicString(StarFish* sf, const char32_t* str,
-                                           size_t length);
-    static AtomicString createAttrAtomicString(StarFish* sf, String* str);
-    static AtomicString createAttrAtomicString(StarFish* sf, const char* str);
-    static AtomicString createAttrAtomicString(StarFish* sf, const char* str,
-                                               size_t length);
+    static AtomicString createAtomicString(Starfish* starfish,
+                                           const char16_t* str, size_t length);
+    static AtomicString createAtomicString(Starfish* starfish,
+                                           const char32_t* str, size_t length);
+    static AtomicString createAttrAtomicString(Starfish* starfish, String* str);
+    static AtomicString createAttrAtomicString(Starfish* starfish,
+                                               const char* str);
+    static AtomicString createAttrAtomicString(Starfish* starfish,
+                                               const char* str, size_t length);
     // only support bmp chars
-    static AtomicString createAttrAtomicString(StarFish* sf,
+    static AtomicString createAttrAtomicString(Starfish* starfish,
                                                const char16_t* str,
                                                size_t length);
-    static AtomicString createAttrAtomicString(StarFish* sf,
+    static AtomicString createAttrAtomicString(Starfish* starfish,
                                                const char32_t* str,
                                                size_t length);
-    static AtomicString createAttrAtomicString(StarFish* sf, char32_t str);
+    static AtomicString createAttrAtomicString(Starfish* starfish,
+                                               char32_t str);
     static AtomicString emptyAtomicString()
     {
         return AtomicString(String::emptyString);
@@ -102,17 +104,17 @@ inline bool operator!=(const AtomicString& a, const AtomicString& b)
 
 namespace std {
 template <>
-struct hash<StarFish::AtomicString> {
-    std::size_t operator()(const StarFish::AtomicString& s) const
+struct hash<Starfish::AtomicString> {
+    std::size_t operator()(const Starfish::AtomicString& s) const
     {
         return s.string()->hashValue();
     }
 };
 
 template <>
-struct equal_to<StarFish::AtomicString> {
-    bool operator()(const StarFish::AtomicString& s1,
-                    const StarFish::AtomicString& s2) const
+struct equal_to<Starfish::AtomicString> {
+    bool operator()(const Starfish::AtomicString& s1,
+                    const Starfish::AtomicString& s2) const
     {
         return s1 == s2;
     }

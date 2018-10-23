@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishMediaQueryResult__
-#define __StarFishMediaQueryResult__
+#ifndef __StarfishMediaQueryResult__
+#define __StarfishMediaQueryResult__
 
-namespace StarFish {
+namespace Starfish {
 
 class MediaQueryResult : public gc {
 public:
@@ -45,6 +45,6 @@ private:
     bool m_result;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishMediaQueryResult__ */
+#endif /* __StarfishMediaQueryResult__ */

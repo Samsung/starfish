@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishSVGAnimatedLength__
-#define __StarFishSVGAnimatedLength__
+#ifndef __StarfishSVGAnimatedLength__
+#define __StarfishSVGAnimatedLength__
 
 #include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/svg/SVGLength.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class SVGAnimatedLength : public ScriptWrappable, public DocumentHoldable {
 public:

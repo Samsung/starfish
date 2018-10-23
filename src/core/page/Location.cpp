@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/page/Location.h"
 #include "core/util/URL.h"
@@ -31,7 +31,7 @@
 #include "platform/loader/ResourceURL.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 ResourceURL* Location::url()
 {

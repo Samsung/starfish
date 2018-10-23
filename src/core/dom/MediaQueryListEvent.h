@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishMediaQueryListEvent__
-#define __StarFishMediaQueryListEvent__
+#ifndef __StarfishMediaQueryListEvent__
+#define __StarfishMediaQueryListEvent__
 
 #include "Event.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // https://drafts.csswg.org/cssom-view/#mediaquerylistevent
 struct MediaQueryListEventInit : EventInit {

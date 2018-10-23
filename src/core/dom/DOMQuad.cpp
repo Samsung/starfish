@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/DOMRect.h"
 #include "core/dom/DOMRectReadOnly.h"
 #include "core/dom/DOMPoint.h"
 #include "core/dom/DOMQuad.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static inline double min4(double a, double b, double c, double d)
 {

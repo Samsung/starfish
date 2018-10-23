@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTTPHeaderMap.h"
 #include "HTTPRequest.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTTPRequest::HTTPRequest(const std::string& url, const std::string& baseURL,
                          const std::string& method,

@@ -19,7 +19,7 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameReplacedCanvas.h"
 #include "core/modules/canvas/Canvas.h"
@@ -27,7 +27,7 @@
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FrameReplacedCanvas::FrameReplacedCanvas(Node* node)
     : FrameReplaced(node, nullptr)

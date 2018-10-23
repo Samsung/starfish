@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishTextConverter__
-#define __StarFishTextConverter__
+#ifndef __StarfishTextConverter__
+#define __StarfishTextConverter__
 
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TextConverter : public gc {
 public:

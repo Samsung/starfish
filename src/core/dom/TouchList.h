@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishTouchlist__
-#define __StarFishTouchlist__
+#ifndef __StarfishTouchlist__
+#define __StarfishTouchlist__
 
 #include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Touch;
 class TouchList : public ScriptWrappable,

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/Node.h"
@@ -34,7 +34,7 @@
 #include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameBlockBoxRareData::operator new(size_t size)
 {

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishDOMImplementation__
-#define __StarFishDOMImplementation__
+#ifndef __StarfishDOMImplementation__
+#define __StarfishDOMImplementation__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DocumentType;
 class XMLDocument;

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLMetaElement__
-#define __StarFishHTMLMetaElement__
+#ifndef __StarfishHTMLMetaElement__
+#define __StarfishHTMLMetaElement__
 
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLMetaElement : public HTMLElement {
 public:

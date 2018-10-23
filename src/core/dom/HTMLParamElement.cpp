@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLParamElement.h"
 
-namespace StarFish {
+namespace Starfish {
 void* HTMLParamElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLParamElement));

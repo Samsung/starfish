@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishLengthData__
-#define __StarFishLengthData__
+#ifndef __StarfishLengthData__
+#define __StarfishLengthData__
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 
@@ -147,6 +147,6 @@ private:
     Length m_left;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishLengthData__ */
+#endif /* __StarfishLengthData__ */

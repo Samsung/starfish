@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishTextResource__
-#define __StarFishTextResource__
+#ifndef __StarfishTextResource__
+#define __StarfishTextResource__
 
 #include "platform/loader/Resource.h"
 #include "core/util/TextConverter.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TextResource : public Resource {
     friend class ResourceLoader;

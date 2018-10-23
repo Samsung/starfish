@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishLineBreakerPool__
-#define __StarFishLineBreakerPool__
+#ifndef __StarfishLineBreakerPool__
+#define __StarfishLineBreakerPool__
 
 #include <unordered_map>
 #include <vector>
 
-namespace StarFish {
+namespace Starfish {
 
 enum LineBreakIteratorMode {
     LineBreakIteratorModeUAX14,

@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/Style.h"
 #include "core/style/CSSProperty.h"
 
-namespace StarFish {
+namespace Starfish {
 bool CSSPropertyHelper::isAnimatable(CSSStyleValuePair::KeyKind property)
 {
     switch (property) {

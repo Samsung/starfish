@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishURL__
-#define __StarFishURL__
+#ifndef __StarfishURL__
+#define __StarfishURL__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Blob;
 class MediaSource;

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentType.h"
 #include "core/dom/DOMImplementation.h"
@@ -29,7 +29,7 @@
 #include "core/dom/XMLDocument.h"
 #include "core/dom/Text.h"
 
-namespace StarFish {
+namespace Starfish {
 
 DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
                                                     String* publicId,
@@ -109,11 +109,11 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
     doc->appendChild(docType);
 
     HTMLHtmlElement* html = new HTMLHtmlElement(
-        doc, doc->starFish()->staticStrings()->m_htmlTagName);
+        doc, doc->starfish()->staticStrings()->m_htmlTagName);
     doc->appendChild(html);
 
     HTMLHeadElement* head = new HTMLHeadElement(
-        doc, doc->starFish()->staticStrings()->m_headTagName);
+        doc, doc->starfish()->staticStrings()->m_headTagName);
     html->appendChild(head);
 
     if (title.hasValue()) {
@@ -124,7 +124,7 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
     }
 
     html->appendChild(new HTMLBodyElement(
-        doc, doc->starFish()->staticStrings()->m_bodyTagName));
+        doc, doc->starfish()->staticStrings()->m_bodyTagName));
 
     // doc’s origin is context object’s associated document’s origin.
     doc->setWebOrigin(m_document->webOrigin());

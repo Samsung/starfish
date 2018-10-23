@@ -17,16 +17,16 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/dom/HTMLMetaElement.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_enablePixelTest;
@@ -54,13 +54,13 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_name) {
+    if (name == starfish()->staticStrings()->m_name) {
         m_name = value;
         checkPlatformFlags();
-    } else if (name == starFish()->staticStrings()->m_content) {
+    } else if (name == starfish()->staticStrings()->m_content) {
         m_content = value;
         checkPlatformFlags();
-    } else if (name == starFish()->staticStrings()->m_httpEquiv) {
+    } else if (name == starfish()->staticStrings()->m_httpEquiv) {
         m_httpEquiv = value;
     }
 

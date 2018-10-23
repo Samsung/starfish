@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameSVGCircleBox__
-#define __StarFishFrameSVGCircleBox__
+#ifndef __StarfishFrameSVGCircleBox__
+#define __StarfishFrameSVGCircleBox__
 
 #include "core/layout/svg/FrameSVGBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameSVGCircleBox final : public FrameSVGBox {
 public:

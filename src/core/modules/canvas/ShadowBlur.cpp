@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "ShadowBlur.h"
 
 #define BOUND_CHECK(idx, maxIdx) !((idx) < 0 || (int)(idx) >= (int)(maxIdx))
@@ -27,7 +27,7 @@
 #define WRITE_ONE(dst, idx, v) (((uint8_t*)dst)[idx] = v)
 #define IDEAL_VALUE 3
 
-namespace StarFish {
+namespace Starfish {
 
 const float ShadowBlur::RADIUS_LIMIT = 250.0f;
 

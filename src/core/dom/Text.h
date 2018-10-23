@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishText__
-#define __StarFishText__
+#ifndef __StarfishText__
+#define __StarfishText__
 
 #include "core/dom/CharacterData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Text : public CharacterData {
 public:

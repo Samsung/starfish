@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDOMException__
-#define __StarFishDOMException__
+#ifndef __StarfishDOMException__
+#define __StarfishDOMException__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DOMException : public ScriptWrappable {
 public:

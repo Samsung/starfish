@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "platform/network/http/HTTPHeaderMap.h"
@@ -25,7 +25,7 @@
 #include "core/fetch/Response.h"
 #include "platform/loader/ResourceURL.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Response::Response(Document* document, uint32_t status, std::string type,
                    std::string statusText)

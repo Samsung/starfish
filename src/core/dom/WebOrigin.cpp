@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/WebOrigin.h"
 #include "platform/loader/ResourceURL.h"
 
-namespace StarFish {
+namespace Starfish {
 WebOrigin::WebOrigin()
     : WebOrigin(nullptr, true)
 {

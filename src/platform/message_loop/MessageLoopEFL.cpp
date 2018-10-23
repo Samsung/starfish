@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #if defined(PORT_EVENTLOOP_BACKEND_EFL)
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
@@ -40,7 +40,7 @@
                               // this define after platform issue solved.
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 MessageLoop::MessageLoop(WebView* wv)
     : WebViewHoldable(wv)

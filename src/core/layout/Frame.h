@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishFrame__
-#define __StarFishFrame__
+#ifndef __StarfishFrame__
+#define __StarfishFrame__
 
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Canvas;
 class ComputedStyle;
@@ -225,12 +225,12 @@ struct PreferredWidthKey {
     {
     }
 };
-}; // namespace StarFish
+}; // namespace Starfish
 
 namespace std {
 template <>
-struct hash<StarFish::PreferredWidthKey> {
-    size_t operator()(StarFish::PreferredWidthKey const& x) const
+struct hash<Starfish::PreferredWidthKey> {
+    size_t operator()(Starfish::PreferredWidthKey const& x) const
     {
         std::size_t seed = 0;
         hash_combine(seed, x.m_availableWidth.toInt());
@@ -240,9 +240,9 @@ struct hash<StarFish::PreferredWidthKey> {
 };
 
 template <>
-struct equal_to<StarFish::PreferredWidthKey> {
-    bool operator()(StarFish::PreferredWidthKey const& a,
-                    StarFish::PreferredWidthKey const& b) const
+struct equal_to<Starfish::PreferredWidthKey> {
+    bool operator()(Starfish::PreferredWidthKey const& a,
+                    Starfish::PreferredWidthKey const& b) const
     {
         return a.m_availableWidth == b.m_availableWidth &&
                a.m_frame == b.m_frame;
@@ -250,7 +250,7 @@ struct equal_to<StarFish::PreferredWidthKey> {
 };
 } // namespace std
 
-namespace StarFish {
+namespace Starfish {
 
 struct PreferredWidthValue {
     LayoutUnit m_preferredWidth;
@@ -270,8 +270,8 @@ struct PreferredWidthValue {
 
 class LayoutContext {
 public:
-    LayoutContext(StarFish* starFish, FrameDocument* frameDocument)
-        : m_starFish(starFish)
+    LayoutContext(Starfish* starfish, FrameDocument* frameDocument)
+        : m_starfish(starfish)
         , m_frameDocument(frameDocument)
         , m_viewportWidthDamaged(false)
         , m_viewportHeightDamaged(false)
@@ -288,9 +288,9 @@ public:
         STARFISH_ASSERT(m_relativePositionedBoxes.size() == 0);
     }
 
-    StarFish* starFish()
+    Starfish* starfish()
     {
-        return m_starFish;
+        return m_starfish;
     }
 
     FrameDocument* frameDocument()
@@ -634,7 +634,7 @@ private:
         std::unordered_map<FrameBox*, LayoutUnit>* m_contentHeights;
     };
 
-    StarFish* m_starFish;
+    Starfish* m_starfish;
     FrameDocument* m_frameDocument;
 
     // NOTE. we don't need gc_allocator here. because, FrameTree already has
@@ -2138,6 +2138,6 @@ protected:
         ComputedStyle* m_styleWhenNodeIsAnonymous;
     };
 };
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

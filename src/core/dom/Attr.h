@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishAttr__
-#define __StarFishAttr__
+#ifndef __StarfishAttr__
+#define __StarfishAttr__
 
 #include "core/dom/Node.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Element;
 class Attr : public Node {

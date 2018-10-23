@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishOutlineData__
-#define __StarFishOutlineData__
+#ifndef __StarfishOutlineData__
+#define __StarfishOutlineData__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 
@@ -78,6 +78,6 @@ private:
     Length m_offset;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishOutlineData__ */
+#endif /* __StarfishOutlineData__ */

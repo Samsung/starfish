@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "UnitHelper.h"
 
-namespace StarFish {
+namespace Starfish {
 
 float convertFromCmToPx(float value)
 {

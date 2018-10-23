@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/animation/AnimationTimingFunction.h"
 #include "core/animation/CubicBezier.h"
 #include "core/animation/Steps.h"
 
-namespace StarFish {
+namespace Starfish {
 bool AnimationTimingFunction::operator==(const AnimationTimingFunction& b) const
 {
     if (isCubicBezier() && b.isCubicBezier()) {

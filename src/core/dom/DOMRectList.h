@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDOMRectList__
-#define __StarFishDOMRectList__
+#ifndef __StarfishDOMRectList__
+#define __StarfishDOMRectList__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DOMRect;
 

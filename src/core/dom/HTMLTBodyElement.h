@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLTBodyElement__
-#define __StarFishHTMLTBodyElement__
+#ifndef __StarfishHTMLTBodyElement__
+#define __StarfishHTMLTBodyElement__
 
 #include "core/dom/HTMLTableSectionElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLTBodyElement : public HTMLTableSectionElement {
 public:

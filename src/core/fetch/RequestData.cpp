@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/fetch/RequestData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 RequestData::RequestData()
     : m_method(MethodType::GET)

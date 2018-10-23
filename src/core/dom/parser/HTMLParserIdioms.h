@@ -43,12 +43,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLParserIdioms__
-#define __StarFishHTMLParserIdioms__
+#ifndef __StarfishHTMLParserIdioms__
+#define __StarfishHTMLParserIdioms__
 
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // This class represents decimal base floating point number.
 //

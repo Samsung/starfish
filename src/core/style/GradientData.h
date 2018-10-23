@@ -17,7 +17,7 @@
  *  USA
  */
 
-namespace StarFish {
+namespace Starfish {
 
 class Font;
 class LinearGradientData;
@@ -396,4 +396,4 @@ private:
     Length m_secondRadius;
     RadialGradientSizeKeyword m_gradientSizeKeyword;
 };
-} // namespace StarFish
+} // namespace Starfish

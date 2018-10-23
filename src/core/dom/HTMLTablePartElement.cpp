@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLTablePartElement.h"
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 void HTMLTablePartElement::didAttributeChanged(QualifiedName name, String* old,
                                                String* value,
                                                bool attributeCreated,
@@ -31,8 +31,8 @@ void HTMLTablePartElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_align ||
-        name == starFish()->staticStrings()->m_valign) {
+    if (name == starfish()->staticStrings()->m_align ||
+        name == starfish()->staticStrings()->m_valign) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     }
 }
@@ -42,7 +42,7 @@ void HTMLTablePartElement::styleForPresentationAttribute(
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
 
-    String* valign = getAttributeOrEmpty(starFish()->staticStrings()->m_valign);
+    String* valign = getAttributeOrEmpty(starfish()->staticStrings()->m_valign);
     if (isValidValign(valign)) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::VerticalAlign);
@@ -51,7 +51,7 @@ void HTMLTablePartElement::styleForPresentationAttribute(
         cssValues.push_back(pair);
     }
 
-    String* align = getAttributeOrEmpty(starFish()->staticStrings()->m_align);
+    String* align = getAttributeOrEmpty(starfish()->staticStrings()->m_align);
     if (isValidAlign(align)) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
@@ -87,7 +87,7 @@ TextAlignValue HTMLTablePartElement::alignValue(String* align)
                align->equalsIgnoreCase("center")) {
         return TextAlignValue::CenterTextAlignValue;
     } else if (align->equalsIgnoreCase("-starfish-center")) {
-        return TextAlignValue::StarFishCenterTextAlignValue;
+        return TextAlignValue::StarfishCenterTextAlignValue;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }

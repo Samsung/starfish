@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLButtonElement__
-#define __StarFishHTMLButtonElement__
+#ifndef __StarfishHTMLButtonElement__
+#define __StarfishHTMLButtonElement__
 
 #include "core/dom/HTMLFormElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLButtonElement : public HTMLFormControl {
 public:

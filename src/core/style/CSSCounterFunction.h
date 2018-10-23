@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishCSSCounterFunction__
-#define __StarFishCSSCounterFunction__
+#ifndef __StarfishCSSCounterFunction__
+#define __StarfishCSSCounterFunction__
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSCounterFunction : public gc {
 public:

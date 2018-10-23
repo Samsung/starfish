@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/CSS.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSParser.h"
 #include "core/style/StyleRule.h"
 
-namespace StarFish {
+namespace Starfish {
 bool CSS::supports(Document* document, String* property, String* value)
 {
     StringBuilder builder;

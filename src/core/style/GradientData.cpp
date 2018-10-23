@@ -43,14 +43,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/Style.h"
 #include "core/style/CalcData.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSGradientValue.h"
 #include "core/layout/FrameBox.h"
 #include "core/style/GradientData.h"
-namespace StarFish {
+namespace Starfish {
 
 static bool requiresStopsNormalization(GCVector<ColorStop*>& colorStops)
 {

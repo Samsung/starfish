@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #if defined(PORT_EVENTLOOP_BACKEND_ANDROID)
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
@@ -35,7 +35,7 @@ typedef bool (*TimerCallback)(int uid, void* data);
 int startTimer(int ms, TimerCallback pointer, void* data);
 void cancelTimer(int uid);
 
-namespace StarFish {
+namespace Starfish {
 
 Timer::Timer(WebView* wv)
     : m_webView(wv)

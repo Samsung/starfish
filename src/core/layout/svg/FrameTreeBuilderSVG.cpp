@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/svg/SVGElement.h"
@@ -33,7 +33,7 @@
 #include "core/layout/svg/FrameSVGTextBox.h"
 #include "core/layout/FrameBlockBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
 {

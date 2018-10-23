@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDOMRect__
-#define __StarFishDOMRect__
+#ifndef __StarfishDOMRect__
+#define __StarfishDOMRect__
 
 #include "core/dom/DOMRectReadOnly.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct DOMRectInit {
     DOMRectInit(double inX = 0, double inY = 0, double inWidth = 0,

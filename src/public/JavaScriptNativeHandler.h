@@ -22,7 +22,7 @@
 
 #include "binding/WebViewHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ScriptWrappable;
 class WebViewHoldable;

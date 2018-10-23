@@ -16,12 +16,12 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/CharacterData.h"
 
 #include <EscargotPublic.h>
 
-namespace StarFish {
+namespace Starfish {
 
 using namespace Escargot;
 

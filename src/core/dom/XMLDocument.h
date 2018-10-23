@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishXMLDocument__
-#define __StarFishXMLDocument__
+#ifndef __StarfishXMLDocument__
+#define __StarfishXMLDocument__
 
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class URL;
 

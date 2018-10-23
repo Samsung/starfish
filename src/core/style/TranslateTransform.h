@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishTranslateTransform__
-#define __StarFishTranslateTransform__
+#ifndef __StarfishTranslateTransform__
+#define __StarfishTranslateTransform__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TranslateTransform : public gc {
 public:

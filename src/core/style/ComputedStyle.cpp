@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/animation/Animation.h"
 #include "core/animation/AnimationUtil.h"
 #include "core/animation/CubicBezier.h"
@@ -39,7 +39,7 @@
 #include "core/style/ComputedStyle.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #define _DAMAGED_KEYS(PropName, ...) (damagedKeys[PropName])
 
@@ -345,12 +345,12 @@ void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
 #ifdef STARFISH_ENABLE_TEST
     WebView* wv = consumer->webView();
     if (g_enablePixelTest) {
-        String* str = String::fromUTF8("StarFishAhem");
+        String* str = String::fromUTF8("StarfishAhem");
         m_font = fs->loadFont(&str, 1, fixedFontSize, style, fontWeight,
                               fixedLetterSpacing);
     } else {
         bool regressionEnable =
-            wv->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+            wv->startUpFlag() & StarfishStartUpFlag::enableRegressionTest;
 
         if (regressionEnable) {
             String** familyNameArray =
@@ -435,7 +435,7 @@ void ComputedStyle::loadBackgroundImage(
                 WebView* wv = consumer->webView();
                 bool enableRegressionTest =
                     wv->startUpFlag() &
-                    StarFishStartUpFlag::enableRegressionTest;
+                    StarfishStartUpFlag::enableRegressionTest;
                 res->request(
                     (g_enablePixelTest || enableRegressionTest)
                         ? Resource::ResourceRequestSyncLevel::AlwaysSync
@@ -490,7 +490,7 @@ void ComputedStyle::loadBorderImage(
 #ifdef STARFISH_ENABLE_TEST
             WebView* wv = consumer->webView();
             bool enableRegressionTest =
-                wv->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+                wv->startUpFlag() & StarfishStartUpFlag::enableRegressionTest;
             res->request(
                 (g_enablePixelTest || enableRegressionTest)
                     ? Resource::ResourceRequestSyncLevel::AlwaysSync
@@ -537,7 +537,7 @@ void ComputedStyle::loadListStyleImage(
 #ifdef STARFISH_ENABLE_TEST
             WebView* wv = consumer->webView();
             bool enableRegressionTest =
-                wv->startUpFlag() & StarFishStartUpFlag::enableRegressionTest;
+                wv->startUpFlag() & StarfishStartUpFlag::enableRegressionTest;
             res->request(
                 (g_enablePixelTest || enableRegressionTest)
                     ? Resource::ResourceRequestSyncLevel::AlwaysSync
@@ -681,7 +681,7 @@ void ComputedStyle::arrangeStyleValues(ComputedStyle* parentStyle,
     // of the parent block, but the content of the table is not affected by
     // <center>. To do so, Blink seems resets the text-align.
     if (m_inheritedStyles.m_textAlign ==
-        TextAlignValue::StarFishCenterTextAlignValue) {
+        TextAlignValue::StarfishCenterTextAlignValue) {
         switch (display()) {
         case DisplayValue::TableRowGroupDisplayValue:
         case DisplayValue::TableHeaderGroupDisplayValue:

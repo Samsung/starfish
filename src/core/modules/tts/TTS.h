@@ -18,12 +18,12 @@
  */
 
 #ifdef STARFISH_ENABLE_TTS
-#ifndef __StarFishTTS__
-#define __StarFishTTS__
+#ifndef __StarfishTTS__
+#define __StarfishTTS__
 
-#include "binding/StarFishHoldable.h"
+#include "binding/StarfishHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 class TTS : public gc, public WebViewHoldable {
 public:
     TTS(WebView* webView)

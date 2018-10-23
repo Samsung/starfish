@@ -18,8 +18,8 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#ifndef __StarFishMediaPlayer__
-#define __StarFishMediaPlayer__
+#ifndef __StarfishMediaPlayer__
+#define __StarfishMediaPlayer__
 
 #define STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS 300
 #define STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS 150
@@ -43,7 +43,7 @@
 #define PLAYER_LOGE(...)
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 class Canvas;
 class CanvasSurface;

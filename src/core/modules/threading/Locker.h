@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishLocker__
-#define __StarFishLocker__
+#ifndef __StarfishLocker__
+#define __StarfishLocker__
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename T>
 class Locker {

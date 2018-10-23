@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/loader/ResourceLoader.h"
@@ -33,13 +33,13 @@
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/BrowsingContext.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class MockHTMLIFrameElement : public HTMLIFrameElement {
 public:
     MockHTMLIFrameElement(Document* document, ImageResource* resource)
         : HTMLIFrameElement(
-              document, document->starFish()->staticStrings()->m_iframeTagName)
+              document, document->starfish()->staticStrings()->m_iframeTagName)
         , m_resource(resource)
     {
     }

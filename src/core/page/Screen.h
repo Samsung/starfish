@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishScreen__
-#define __StarFishScreen__
+#ifndef __StarfishScreen__
+#define __StarfishScreen__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Screen : public ScriptWrappable, public DocumentHoldable {
 public:

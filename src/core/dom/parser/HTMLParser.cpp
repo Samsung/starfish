@@ -41,7 +41,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTMLParser.h"
 #include "AtomicHTMLToken.h"
 
@@ -49,7 +49,7 @@
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLScriptElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void HTMLParser::startParse()
 {
@@ -95,7 +95,7 @@ void HTMLParser::parseStep(bool shouldEndParseWhenThereIsNoToken)
             break;
         }
         HTMLToken& rawToken = token();
-        AtomicHTMLToken at(m_starFish, rawToken);
+        AtomicHTMLToken at(m_starfish, rawToken);
 
         // We clear the rawToken in case constructTreeFromAtomicToken
         // synchronously re-enters the parser. We don't clear the token

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLQuoteElement.h"
 
-namespace StarFish {
+namespace Starfish {
 HTMLQuoteElement::HTMLQuoteElement(Document* document,
                                    const QualifiedName& qname)
     : HTMLElement(document, qname)
@@ -45,14 +45,14 @@ void* HTMLQuoteElement::operator new(size_t size)
 
 void HTMLQuoteElement::setCite(String* cite)
 {
-    setAttribute(starFish()->staticStrings()->m_cite, cite);
+    setAttribute(starfish()->staticStrings()->m_cite, cite);
 }
 
 String* HTMLQuoteElement::cite()
 {
-    if (hasAttribute(starFish()->staticStrings()->m_cite) != SIZE_MAX) {
+    if (hasAttribute(starfish()->staticStrings()->m_cite) != SIZE_MAX) {
         return (new ResourceURL(
-                    getAttributeOrEmpty(starFish()->staticStrings()->m_cite),
+                    getAttributeOrEmpty(starfish()->staticStrings()->m_cite),
                     document()->baseURI()))
             ->urlString();
     } else {

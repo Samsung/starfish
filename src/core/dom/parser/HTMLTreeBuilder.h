@@ -42,14 +42,14 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLTreeBuilder__
-#define __StarFishHTMLTreeBuilder__
+#ifndef __StarfishHTMLTreeBuilder__
+#define __StarfishHTMLTreeBuilder__
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/parser/HTMLConstructionSite.h"
 #include "core/dom/parser/HTMLElementStack.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class AtomicHTMLToken;
 class Document;

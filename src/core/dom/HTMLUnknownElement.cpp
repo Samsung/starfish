@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLUnknownElement.h"
 
-namespace StarFish {
+namespace Starfish {
 HTMLUnknownElement::HTMLUnknownElement(Document* document,
                                        const QualifiedName& qname)
     : HTMLElement(document, qname)

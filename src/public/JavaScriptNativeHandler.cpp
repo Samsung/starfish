@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "binding/ScriptWrappable.h"
 #include "JavaScriptNativeHandler.h"
 
-namespace StarFish {
+namespace Starfish {
 
 JavaScriptNativeHandler::JavaScriptNativeHandler(
     WebView* wv, String* functionName, NativeFunctionPtr nativeCallback)

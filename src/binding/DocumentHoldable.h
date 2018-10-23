@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishDocumentHodable__
-#define __StarFishDocumentHodable__
+#ifndef __StarfishDocumentHodable__
+#define __StarfishDocumentHodable__
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
-class StarFish;
+class Starfish;
 class Window;
 class ScriptBindingInstance;
 class WebView;
@@ -41,7 +41,7 @@ public:
     }
 
     Window* window() const;
-    StarFish* starFish() const;
+    Starfish* starfish() const;
     ScriptBindingInstance* scriptBindingInstance() const;
     WebView* webView() const;
 

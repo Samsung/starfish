@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameReplaced__
-#define __StarFishFrameReplaced__
+#ifndef __StarfishFrameReplaced__
+#define __StarfishFrameReplaced__
 
 #include "core/layout/FrameBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameReplacedImage;
 #ifdef STARFISH_ENABLE_MULTIMEDIA

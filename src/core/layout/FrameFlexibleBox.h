@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameFlexibleBox__
-#define __StarFishFrameFlexibleBox__
+#ifndef __StarfishFrameFlexibleBox__
+#define __StarfishFrameFlexibleBox__
 
 #include "core/layout/FrameBlockBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 class FrameBox;

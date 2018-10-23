@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFocusEvent__
-#define __StarFishFocusEvent__
+#ifndef __StarfishFocusEvent__
+#define __StarfishFocusEvent__
 
 #include "core/dom/UIEvent.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct FocusEventInit : UIEventInit {
     STARFISH_MAKE_STACK_ALLOCATED()

@@ -21,12 +21,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __StarFishCSSRule__
-#define __StarFishCSSRule__
+#ifndef __StarfishCSSRule__
+#define __StarfishCSSRule__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSStyleSheet;
 class CSSRuleList;

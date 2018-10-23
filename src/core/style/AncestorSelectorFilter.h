@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishAncestorSelectorFilter__
-#define __StarFishAncestorSelectorFilter__
+#ifndef __StarfishAncestorSelectorFilter__
+#define __StarfishAncestorSelectorFilter__
 
 #include "core/util/BloomFilter.h"
 #include "core/style/Style.h"
 #include "core/style/StyleRule.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class StyleRule;
 

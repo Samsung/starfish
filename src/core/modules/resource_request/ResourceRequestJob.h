@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishResourceRequestJobInterface__
-#define __StarFishResourceRequestJobInterface__
+#ifndef __StarfishResourceRequestJobInterface__
+#define __StarfishResourceRequestJobInterface__
 
-namespace StarFish {
+namespace Starfish {
 
 class ResourceRequest;
 

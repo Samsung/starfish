@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishCompositionEvent__
-#define __StarFishCompositionEvent__
+#ifndef __StarfishCompositionEvent__
+#define __StarfishCompositionEvent__
 
 #include "core/dom/UIEvent.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Window;
 

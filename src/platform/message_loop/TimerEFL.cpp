@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #if defined(PORT_EVENTLOOP_BACKEND_EFL)
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
@@ -34,7 +34,7 @@
 
 #include <Ecore.h>
 
-namespace StarFish {
+namespace Starfish {
 
 Timer::Timer(WebView* wv)
     : m_webView(wv)

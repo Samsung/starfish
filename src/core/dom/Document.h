@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishDocument__
-#define __StarFishDocument__
+#ifndef __StarfishDocument__
+#define __StarfishDocument__
 
 #include "core/dom/Node.h"
 #include "platform/loader/ResourceLoader.h"
@@ -28,7 +28,7 @@
 #include "core/dom/parser/PreloadScanner.h"
 #include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Attr;
 class CDATASection;
@@ -186,7 +186,7 @@ public:
         auto b = body();                                                \
         if (b != nullptr) {                                             \
             auto nullable =                                             \
-                b->getAttribute(starFish()->staticStrings()->m_##ATTR); \
+                b->getAttribute(starfish()->staticStrings()->m_##ATTR); \
             if (nullable.hasValue()) {                                  \
                 return nullable.getValue();                             \
             }                                                           \
@@ -199,7 +199,7 @@ public:
     {                                                                      \
         auto b = body();                                                   \
         if (b != nullptr) {                                                \
-            b->setAttribute(starFish()->staticStrings()->m_##ATTR, value); \
+            b->setAttribute(starfish()->staticStrings()->m_##ATTR, value); \
         }                                                                  \
     }
 

@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLMediaElement.h"
 #include "platform/multimedia/MediaPlayer.h"
@@ -30,7 +30,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     : m_alive(true)

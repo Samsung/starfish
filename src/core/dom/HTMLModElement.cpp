@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLModElement.h"
 
-namespace StarFish {
+namespace Starfish {
 HTMLModElement::HTMLModElement(Document* document, const QualifiedName& qname)
     : HTMLElement(document, qname)
 {
@@ -44,14 +44,14 @@ void* HTMLModElement::operator new(size_t size)
 
 void HTMLModElement::setCite(String* cite)
 {
-    setAttribute(starFish()->staticStrings()->m_cite, cite);
+    setAttribute(starfish()->staticStrings()->m_cite, cite);
 }
 
 String* HTMLModElement::cite()
 {
-    if (hasAttribute(starFish()->staticStrings()->m_cite) != SIZE_MAX) {
+    if (hasAttribute(starfish()->staticStrings()->m_cite) != SIZE_MAX) {
         return (new ResourceURL(
-                    getAttributeOrEmpty(starFish()->staticStrings()->m_cite),
+                    getAttributeOrEmpty(starfish()->staticStrings()->m_cite),
                     document()->baseURI()))
             ->urlString();
     } else {
@@ -61,11 +61,11 @@ String* HTMLModElement::cite()
 
 void HTMLModElement::setDateTime(String* dateTime)
 {
-    setAttribute(starFish()->staticStrings()->m_datetime, dateTime);
+    setAttribute(starfish()->staticStrings()->m_datetime, dateTime);
 }
 
 String* HTMLModElement::dateTime()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_datetime);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_datetime);
 }
 }

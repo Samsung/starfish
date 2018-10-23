@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishVirtualCursor__
-#define __StarFishVirtualCursor__
+#ifndef __StarfishVirtualCursor__
+#define __StarfishVirtualCursor__
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
 
-namespace StarFish {
+namespace Starfish {
 
 extern unsigned char g_virtualCursorPNGData[];
 extern unsigned int g_virtualCursorPNGDataSize;

@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishStorageNamespaceImpl__
-#define __StarFishStorageNamespaceImpl__
+#ifndef __StarfishStorageNamespaceImpl__
+#define __StarfishStorageNamespaceImpl__
 
 #include "core/page/SecurityOriginData.h"
 #include "core/storage/StorageNamespace.h"
 #include "core/storage/StorageType.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class StorageImpl;
 class StorageManager;

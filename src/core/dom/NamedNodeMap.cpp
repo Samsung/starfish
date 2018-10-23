@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Attr.h"
 #include "core/dom/Attribute.h"
 #include "core/dom/Document.h"
@@ -27,7 +27,7 @@
 #include "core/page/Window.h"
 #include "core/util/AttributeName.h"
 
-namespace StarFish {
+namespace Starfish {
 
 ScriptBindingInstance* NamedNodeMap::scriptBindingInstance()
 {

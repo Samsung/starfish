@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLDivElement.h"
@@ -30,14 +30,14 @@
 #include "core/dom/parser/HTMLParser.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void TextTrackCue::dispatchEnterEvent()
 {
     String* eventType = String::emptyString;
     if (m_textTrack && m_textTrack->hasTrackElement()) {
         eventType = m_textTrack->trackElement()
-                        ->starFish()
+                        ->starfish()
                         ->staticStrings()
                         ->m_enter.localName();
     } else {
@@ -52,7 +52,7 @@ void TextTrackCue::dispatchExitEvent()
     String* eventType = String::emptyString;
     if (m_textTrack && m_textTrack->hasTrackElement()) {
         eventType = m_textTrack->trackElement()
-                        ->starFish()
+                        ->starfish()
                         ->staticStrings()
                         ->m_exit.localName();
     } else {
@@ -75,8 +75,8 @@ DocumentFragment* TextTrackCue::getCueAsHTML()
         m_payloadAsHTML = document()->createDocumentFragment();
         // FIXME : HTMLParser require context element -> make dummy element here
         HTMLDivElement* dummyDiv = new HTMLDivElement(
-            document(), starFish()->staticStrings()->m_divTagName);
-        HTMLParser parser(starFish(), m_payloadAsHTML, dummyDiv, m_payload);
+            document(), starfish()->staticStrings()->m_divTagName);
+        HTMLParser parser(starfish(), m_payloadAsHTML, dummyDiv, m_payload);
         parser.startParse();
         parser.parseStep();
         STARFISH_ASSERT(m_payloadAsHTML);

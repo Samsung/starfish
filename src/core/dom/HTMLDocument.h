@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLDocument__
-#define __StarFishHTMLDocument__
+#ifndef __StarfishHTMLDocument__
+#define __StarfishHTMLDocument__
 
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Window;
 

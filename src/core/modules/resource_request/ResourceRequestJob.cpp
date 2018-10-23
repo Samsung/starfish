@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
 #include "core/fileapi/Blob.h"
@@ -30,7 +30,7 @@
 #include "core/util/URL.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 ResourceRequestJobInterface* ResourceRequestJobDelegateFactory::createJob(
     ResourceRequest* proxy)
@@ -412,4 +412,4 @@ String* decodeURL(String* src, size_t idx)
         return String::createASCIIStringFromUTF32Source(ret);
     }
 }
-} // namespace StarFish
+} // namespace Starfish

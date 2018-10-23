@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "platform/loader/TextResource.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void TextResource::didDataReceived(const char* buffer, size_t length)
 {

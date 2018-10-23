@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Touch.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 ScriptBindingInstance* Touch::scriptBindingInstance()
 {
     return document()->scriptBindingInstance();

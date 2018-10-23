@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/CharacterData.h"
 #include "core/dom/DOMException.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* CharacterData::operator new(size_t size)
 {

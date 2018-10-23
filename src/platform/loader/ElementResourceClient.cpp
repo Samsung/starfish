@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
@@ -26,7 +26,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void ElementResourceClient::didLoadFinished()
 {
@@ -34,7 +34,7 @@ void ElementResourceClient::didLoadFinished()
     auto fn = [](size_t handle, void* data) {
         Element* element = (Element*)data;
         String* eventType =
-            element->starFish()->staticStrings()->m_load.localName();
+            element->starfish()->staticStrings()->m_load.localName();
         Event* e =
             new Event(element->document(), eventType, EventInit(false, false));
         element->EventTarget::dispatchEventByUA(element, e, true);
@@ -53,7 +53,7 @@ void ElementResourceClient::didLoadFailed()
     auto fn = [](size_t handle, void* data) {
         Element* element = (Element*)data;
         String* eventType =
-            element->starFish()->staticStrings()->m_error.localName();
+            element->starfish()->staticStrings()->m_error.localName();
         Event* e =
             new Event(element->document(), eventType, EventInit(false, false));
         element->EventTarget::dispatchEventByUA(element, e, true);

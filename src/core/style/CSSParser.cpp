@@ -65,8 +65,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/page/Window.h"
@@ -76,7 +76,7 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/StyleRule.h"
 
-namespace StarFish {
+namespace Starfish {
 
 const char* kCHARSET_RULE_MISSING_SEMICOLON =
     "Missing semicolon at the end of @charset rule";
@@ -932,8 +932,8 @@ CSSSelector* CSSParser::getPseudoSelector()
         buf[i] = token->value()->charAt(i);
     }
 
-    selector->updatePseudoType(starFish(),
-                               token->value()->toAttrAtomicString(starFish()),
+    selector->updatePseudoType(starfish(),
+                               token->value()->toAttrAtomicString(starfish()),
                                token->isFunction());
 
     if (token->isIdent()) {
@@ -1130,8 +1130,10 @@ bool CSSParser::getANPlusB(std::pair<int, int>& result)
                 },
                 &result.second);
         }
-    } else
+    } else {
         result.second = b->numericValue();
+    }
+
     if (sign == MinusSign) {
         result.second = -result.second;
     }
@@ -1213,22 +1215,25 @@ String* CSSParser::getStringWithoutQuotationMarks(const CSSTokenString& value)
     if (value.hasASCIIContent()) {
         return (String*)value.peekASCIIBuffer(
             [](const char* buf, size_t len, void* data) -> size_t {
-                Sender* sf = (Sender*)data;
-                return (size_t) new StringDataASCII(buf + sf->start, sf->len);
+                Sender* sender = (Sender*)data;
+                return (size_t) new StringDataASCII(buf + sender->start,
+                                                    sender->len);
             },
             &s);
     } else if (value.hasBMPContent()) {
         return (String*)value.peekBMPBuffer(
             [](const char16_t* buf, size_t len, void* data) -> size_t {
-                Sender* sf = (Sender*)data;
-                return (size_t) new StringDataBMP(buf + sf->start, sf->len);
+                Sender* sender = (Sender*)data;
+                return (size_t) new StringDataBMP(buf + sender->start,
+                                                  sender->len);
             },
             &s);
     } else {
         return (String*)value.peekUTF32Buffer(
             [](const char32_t* buf, size_t len, void* data) -> size_t {
-                Sender* sf = (Sender*)data;
-                return (size_t) new StringDataUTF32(buf + sf->start, sf->len);
+                Sender* sender = (Sender*)data;
+                return (size_t) new StringDataUTF32(buf + sender->start,
+                                                    sender->len);
             },
             &s);
     }
@@ -1249,7 +1254,7 @@ CSSSelector* CSSParser::getAttributeSelector()
 
     QualifiedName attrQualifiedName =
         QualifiedName(AtomicString::emptyAtomicString(),
-                      attributeName.toAttrAtomicString(starFish()));
+                      attributeName.toAttrAtomicString(starfish()));
 
     if (currentToken()->isSymbol(']')) {
         getToken(false, false);
@@ -1290,7 +1295,7 @@ CSSSelector* CSSParser::getClassSelector()
 
     CSSSelector* selector = new (PointerFreeGC)
         CSSSelector(CSSSelector::Type::Class, CSSSelector::SubSelector,
-                    token->value()->toAtomicString(starFish()));
+                    token->value()->toAtomicString(starfish()));
     getToken(false, true);
 
     return selector;
@@ -1305,7 +1310,7 @@ CSSSelector* CSSParser::getIdSelector()
 
     CSSSelector* selector = new (PointerFreeGC)
         CSSSelector(CSSSelector::Type::Id, CSSSelector::SubSelector,
-                    token->value()->toAtomicString(starFish()));
+                    token->value()->toAtomicString(starfish()));
     getToken(false, true);
 
     return selector;
@@ -1413,7 +1418,7 @@ void CSSParser::parseCompoundSelector(CSSSelectorList* selectorList)
         CSSSelector* selector = new CSSSelector(
             isStar ? CSSSelector::Type::Universal : CSSSelector::Type::Tag,
             CSSSelector::RelationType::SubSelector,
-            elementName.toAttrAtomicString(starFish()));
+            elementName.toAttrAtomicString(starfish()));
         if (selectorList->size() == 0) {
             selector->updateRelation(CSSSelector::None);
         }
@@ -3342,4 +3347,4 @@ String* MediaQueryExpValue::cssText() const
 
     return output.finalize();
 }
-} // namespace StarFish
+} // namespace Starfish

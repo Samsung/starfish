@@ -20,10 +20,10 @@
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/xml/FormData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FormData::FormData(Window* window, HTMLFormElement* form /*= nullptr*/)
     : ScriptWrappable(this)

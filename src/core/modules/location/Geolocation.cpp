@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/modules/location/Geolocation.h"
 #include "core/modules/location/PositionError.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -26,7 +26,7 @@
 #include "core/dom/Document.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #if !defined(STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED)
 Geolocation* Geolocation::create(Document* document)
@@ -50,9 +50,10 @@ bool Geolocation::getCurrentPositionPreprocessing(
         m_document->webView()->messageLoop()->addIdler(
             m_document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
-                Document* sf = (Document*)data;
+                Document* document = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(sf, new PositionError(sf, PositionError::Error::TIMEOUT),
+                cb(document,
+                   new PositionError(document, PositionError::Error::TIMEOUT),
                    data3);
             },
             m_document, (void*)errorCb, errorCbData);
@@ -72,10 +73,11 @@ void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
         m_document->webView()->messageLoop()->addIdler(
             m_document->browsingContext(),
             [](size_t, void* data, void* data2, void* data3) {
-                Document* sf = (Document*)data;
+                Document* document = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(sf, new PositionError(
-                           sf, PositionError::Error::POSITION_UNAVAILABLE),
+                cb(document,
+                   new PositionError(
+                       document, PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
             },
             m_document, (void*)errorCb, errorCbData);

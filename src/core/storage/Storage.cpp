@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "Storage.h"
 
 #include "browser/storage/StorageImpl.h"
 #include "core/page/SecurityOriginData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Storage::Storage(Window* window, StorageImpl* storageImpl)
     : ScriptWrappable(this)

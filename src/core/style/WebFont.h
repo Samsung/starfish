@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishWebFont__
-#define __StarFishWebFont__
+#ifndef __StarfishWebFont__
+#define __StarfishWebFont__
 
 #include "core/style/Style.h"
 #include "platform/loader/FontResource.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class WebFont : public gc {
 public:
@@ -109,6 +109,6 @@ private:
     };
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishWebFont__ */
+#endif /* __StarfishWebFont__ */

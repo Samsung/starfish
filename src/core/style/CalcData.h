@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishCalcData__
-#define __StarFishCalcData__
+#ifndef __StarfishCalcData__
+#define __StarfishCalcData__
 
 #include "core/style/CSSAngle.h"
 #include "core/style/CSSLength.h"
 #include "core/style/CSSTime.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CalcValueType {
 public:

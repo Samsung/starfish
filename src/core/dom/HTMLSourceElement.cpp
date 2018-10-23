@@ -19,30 +19,30 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLSourceElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 String* HTMLSourceElement::src()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_src);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_src);
 }
 
 String* HTMLSourceElement::type()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_type);
 }
 
 void HTMLSourceElement::setSrc(String* src)
 {
-    setAttribute(starFish()->staticStrings()->m_src, src);
+    setAttribute(starfish()->staticStrings()->m_src, src);
 }
 
 void HTMLSourceElement::setType(String* type)
 {
-    setAttribute(starFish()->staticStrings()->m_type, type);
+    setAttribute(starfish()->staticStrings()->m_type, type);
 }
 }
 

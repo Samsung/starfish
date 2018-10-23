@@ -17,20 +17,20 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #if defined(PORT_CANVAS_BACKEND_MOCK)
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/style/UnitHelper.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CanvasMock : public Canvas {
 public:
-    CanvasMock(StarFish* starfish, CanvasSurface* data)
+    CanvasMock(Starfish* starfish, CanvasSurface* data)
     {
         m_starfish = starfish;
     }
@@ -192,21 +192,21 @@ public:
     }
 
 protected:
-    StarFish* m_starfish;
+    Starfish* m_starfish;
 };
 
-Canvas* Canvas::create(StarFish* starfish, CanvasSurface* data)
+Canvas* Canvas::create(Starfish* starfish, CanvasSurface* data)
 {
     return new CanvasMock(starfish, data);
 }
 
-Canvas* Canvas::create(StarFish* starfish, uint8_t* data, size_t w, size_t h,
+Canvas* Canvas::create(Starfish* starfish, uint8_t* data, size_t w, size_t h,
                        size_t stride)
 {
     return new CanvasMock(starfish, nullptr);
 }
 
-Canvas* Canvas::create(StarFish* starfish, NativeImageData* data)
+Canvas* Canvas::create(Starfish* starfish, NativeImageData* data)
 {
     return new CanvasMock(starfish, nullptr);
 }

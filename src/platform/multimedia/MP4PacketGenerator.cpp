@@ -18,7 +18,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "platform/multimedia/Demuxer.h"
 #include "platform/multimedia/DemuxerSource.h"
 #include "platform/multimedia/PacketGenerator.h"
@@ -33,7 +33,7 @@
 #define MP4PACKET_GENERATOR_LOG(pg, ...)
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 static const uint8_t NALUTypeUnknown = 0;
 static const uint8_t NALUTypeNonIDRSlice = 1; // VCL

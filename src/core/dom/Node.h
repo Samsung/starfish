@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishNode__
-#define __StarFishNode__
+#ifndef __StarfishNode__
+#define __StarfishNode__
 
 #include "core/dom/EventTarget.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSSelector;
 class CharacterData;
@@ -568,7 +568,7 @@ public:
         printf("[%s] ", s.data());
     }
 #endif
-    void loadFontAndChangeFontPercentToFixedIfNeeded(StarFish* sf,
+    void loadFontAndChangeFontPercentToFixedIfNeeded(Starfish* starfish,
                                                      float fixedParentFontSize,
                                                      Length parentFontSize,
                                                      Length rootFontSize,

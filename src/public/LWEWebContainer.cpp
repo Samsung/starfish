@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "LWEWebView.h"
 #include "platform/window/PlatformWindow.h"
@@ -43,28 +43,28 @@
 
 #include <EscargotPublic.h>
 
-#define TO_STARFISH(ptr) (((StarFish::WebView*)ptr)->starFish())
-#define TO_WEBVIEW(ptr) (((StarFish::WebView*)ptr))
+#define TO_STARFISH(ptr) (((Starfish::WebView*)ptr)->starfish())
+#define TO_WEBVIEW(ptr) (((Starfish::WebView*)ptr))
 #define TO_HISTORY(ptr) \
-    ((StarFish::WebView*)ptr)->mainBrowsingContext()->window()->history()
+    ((Starfish::WebView*)ptr)->mainBrowsingContext()->window()->history()
 
 #define TO_LOCATION(ptr) \
-    ((StarFish::WebView*)ptr)->mainBrowsingContext()->window()->location()
+    ((Starfish::WebView*)ptr)->mainBrowsingContext()->window()->location()
 
 #define TO_RESOURCE_LOADER(ptr) \
-    ((StarFish::WebView*)ptr)   \
+    ((Starfish::WebView*)ptr)   \
         ->mainBrowsingContext() \
         ->document()            \
         ->resourceLoader()
 
 #define TO_SCRIPT_BINDING_INSTANCE(ptr) \
-    ((StarFish::WebView*)ptr)           \
+    ((Starfish::WebView*)ptr)           \
         ->mainBrowsingContext()         \
         ->window()                      \
         ->scriptBindingInstance()
 
 #ifdef PORT_NEEDS_THREADED_PUBLIC_API
-#define START_SIMPLE_THREADED_PUBLIC_API_WRAPPER StarFish::MessageLoop::runOnMainThreadSync([&]() -> size_t {
+#define START_SIMPLE_THREADED_PUBLIC_API_WRAPPER Starfish::MessageLoop::runOnMainThreadSync([&]() -> size_t {
 #define END_SIMPLE_THREADED_PUBLIC_API_WRAPPER \
     return 0;                                  \
     });
@@ -84,13 +84,13 @@
 
 namespace LWE {
 
-extern StarFish::StarFish* g_starFishInstance;
+extern Starfish::Starfish* g_starfishInstance;
 
 Settings::Settings(const std::string& default_ua, const std::string& ua)
     : m_defaultUserAgent(default_ua)
     , m_userAgent(ua)
 #if defined(STARFISH_ENABLE_HTTPCACHE)
-    , m_cacheMode(StarFish::HTTPCache::LOAD_DEFAULT)
+    , m_cacheMode(Starfish::HTTPCache::LOAD_DEFAULT)
 #else
     , m_cacheMode(0)
 #endif
@@ -149,34 +149,34 @@ std::string ResourceError::GetDescription()
     return m_description;
 }
 
-static StarFish::ScriptValue nativeCallbackFunction(
-    StarFish::ScriptExecutionState state, StarFish::ScriptValue thisValue,
-    size_t argc, StarFish::ScriptValue* argv, bool isNewExpression)
+static Starfish::ScriptValue nativeCallbackFunction(
+    Starfish::ScriptExecutionState state, Starfish::ScriptValue thisValue,
+    size_t argc, Starfish::ScriptValue* argv, bool isNewExpression)
 {
-    auto callee = StarFish::toCalleeObject(state);
+    auto callee = Starfish::toCalleeObject(state);
     if (callee) {
         void* data = callee->extraData();
         if (data) {
-            StarFish::ScriptWrappable* w = (StarFish::ScriptWrappable*)data;
+            Starfish::ScriptWrappable* w = (Starfish::ScriptWrappable*)data;
             if (w->isJavaScriptNativeHandler()) {
-                StarFish::JavaScriptNativeHandler* jsNhandler =
-                    (StarFish::JavaScriptNativeHandler*)w;
-                StarFish::String* result = StarFish::String::emptyString;
-                StarFish::String* param = StarFish::String::emptyString;
+                Starfish::JavaScriptNativeHandler* jsNhandler =
+                    (Starfish::JavaScriptNativeHandler*)w;
+                Starfish::String* result = Starfish::String::emptyString;
+                Starfish::String* param = Starfish::String::emptyString;
                 if (argc > 0) {
-                    StarFish::ScriptValue arg0 = argv[0];
-                    param = StarFish::toBrowserString(state, arg0);
+                    Starfish::ScriptValue arg0 = argv[0];
+                    param = Starfish::toBrowserString(state, arg0);
                 }
                 result = jsNhandler->callNativeHandler(param);
-                return StarFish::createScriptValue(
-                    StarFish::createScriptString(result));
+                return Starfish::createScriptValue(
+                    Starfish::createScriptString(result));
             }
         }
     }
-    return StarFish::scriptUndefined();
+    return Starfish::scriptUndefined();
 }
 
-static StarFish::WebView* createWebViewInstance(unsigned width, unsigned height,
+static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
                                                 float devicePixelRatio,
                                                 const char* defaultFontName,
                                                 const char* locale,
@@ -191,19 +191,19 @@ static StarFish::WebView* createWebViewInstance(unsigned width, unsigned height,
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
 
-    StarFish::ScreenInfo info;
+    Starfish::ScreenInfo info;
     info.rect.setWidth(width);
     info.rect.setHeight(height);
     info.availableRect.setWidth(width);
     info.availableRect.setHeight(height);
     info.devicePixelRatio = devicePixelRatio;
 
-    ::StarFish::WebView* webView = ::StarFish::WebView::create(
-        g_starFishInstance, locale, timezoneID, width, height,
+    ::Starfish::WebView* webView = ::Starfish::WebView::create(
+        g_starfishInstance, locale, timezoneID, width, height,
         LWE_DEFAULT_FONT_SIZE,
-        StarFish::String::createASCIIString(defaultFontName), info,
-        StarFish::String::fromUTF8(customUserAgentString.data()),
-        StarFish::String::fromUTF8(builtinPolyfillPathString.data()));
+        Starfish::String::createASCIIString(defaultFontName), info,
+        Starfish::String::fromUTF8(customUserAgentString.data()),
+        Starfish::String::fromUTF8(builtinPolyfillPathString.data()));
     return webView;
 }
 
@@ -220,7 +220,7 @@ WebContainer* WebContainer::Create(void* buffer, unsigned width,
 #endif
 
 #if defined(PORT_NEEDS_THREADED_PUBLIC_API)
-    return (WebContainer*)StarFish::MessageLoop::runOnMainThreadSync(
+    return (WebContainer*)Starfish::MessageLoop::runOnMainThreadSync(
         [&]() -> size_t {
             auto webView =
                 createWebViewInstance(width, height, scaleFactor,
@@ -276,7 +276,7 @@ void WebContainer::RegisterOnRenderedHandler(
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->registerRenderingFinishedCallback([this, cb](
-            const StarFish::RenderResult& renderResult) {
+            const Starfish::RenderResult& renderResult) {
             WebContainer::RenderResult result;
             result.updatedX = (int)renderResult.updateRect.x();
             result.updatedY = (int)renderResult.updateRect.y();
@@ -306,7 +306,7 @@ WebContainer* WebContainer::CreateGL(
 #endif
 
 #if defined(PORT_NEEDS_THREADED_PUBLIC_API)
-    return (WebContainer*)StarFish::MessageLoop::runOnMainThreadSync(
+    return (WebContainer*)Starfish::MessageLoop::runOnMainThreadSync(
         [=]() -> size_t {
             auto webView =
                 createWebViewInstance(width, height, devicePixelRatio,
@@ -318,13 +318,13 @@ WebContainer* WebContainer::CreateGL(
 
             webView->platformWindow()->registerGLMakeCurrentCallback(
                 [onGLMakeCurrent,
-                 newWebContainer](StarFish::PlatformWindow* wnd) {
+                 newWebContainer](Starfish::PlatformWindow* wnd) {
                     onGLMakeCurrent(newWebContainer);
                 });
 
             webView->platformWindow()->registerGLSwapBuffersCallback(
                 [onGLSwapBuffers,
-                 newWebContainer](StarFish::PlatformWindow* wnd) {
+                 newWebContainer](Starfish::PlatformWindow* wnd) {
                     onGLSwapBuffers(newWebContainer);
                 });
 
@@ -338,12 +338,12 @@ WebContainer* WebContainer::CreateGL(
         new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(webView);
 
     webView->platformWindow()->registerGLMakeCurrentCallback(
-        [onGLMakeCurrent, newWebContainer](StarFish::PlatformWindow* wnd) {
+        [onGLMakeCurrent, newWebContainer](Starfish::PlatformWindow* wnd) {
             onGLMakeCurrent(newWebContainer);
         });
 
     webView->platformWindow()->registerGLSwapBuffersCallback(
-        [onGLSwapBuffers, newWebContainer](StarFish::PlatformWindow* wnd) {
+        [onGLSwapBuffers, newWebContainer](Starfish::PlatformWindow* wnd) {
             onGLSwapBuffers(newWebContainer);
         });
 
@@ -404,7 +404,7 @@ size_t WebContainer::AddTimeout(void (*callback)(void*), void* data,
     d->data = data;
     ret = TO_WEBVIEW(m_impl)->timer()->addTimer(
         timeoutInMS, nullptr,
-        [](::StarFish::Window* window, void* data) {
+        [](::Starfish::Window* window, void* data) {
             Data* d = (Data*)data;
             d->callback(d->data);
         },
@@ -431,7 +431,7 @@ Settings WebContainer::GetSettings()
     if (TO_STARFISH(m_impl)->httpCache()) {
         result.SetCacheMode(TO_STARFISH(m_impl)->httpCache()->cacheMode());
     } else {
-        result.SetCacheMode(::StarFish::HTTPCache::LOAD_NO_CACHE);
+        result.SetCacheMode(::Starfish::HTTPCache::LOAD_NO_CACHE);
     }
 #endif
     result.SetProxyURL(TO_WEBVIEW(m_impl)->proxyURL());
@@ -445,7 +445,7 @@ void WebContainer::LoadURL(const std::string& url)
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 
     TO_WEBVIEW(m_impl)
-        ->loadHTMLDocument(StarFish::String::fromUTF8(url.data()));
+        ->loadHTMLDocument(Starfish::String::fromUTF8(url.data()));
 
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
@@ -463,12 +463,12 @@ void WebContainer::LoadData(const std::string& data)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     if (data.size() > 0) {
-        auto dataURI = StarFish::StringUtils::toBase64HTMLDataURI(data);
+        auto dataURI = Starfish::StringUtils::toBase64HTMLDataURI(data);
         TO_WEBVIEW(m_impl)
-            ->loadHTMLDocument(StarFish::String::fromUTF8(dataURI.data()));
+            ->loadHTMLDocument(Starfish::String::fromUTF8(dataURI.data()));
     } else {
         TO_WEBVIEW(m_impl)
-            ->loadHTMLDocument(StarFish::String::fromUTF8("about:blank"));
+            ->loadHTMLDocument(Starfish::String::fromUTF8("about:blank"));
     }
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
@@ -526,14 +526,14 @@ void WebContainer::AddJavaScriptInterface(
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
 
-    StarFish::String* objectName =
-        StarFish::String::fromUTF8(exposedObjectName.c_str());
-    StarFish::String* functionName =
-        StarFish::String::fromUTF8(jsFunctionName.c_str());
+    Starfish::String* objectName =
+        Starfish::String::fromUTF8(exposedObjectName.c_str());
+    Starfish::String* functionName =
+        Starfish::String::fromUTF8(jsFunctionName.c_str());
 
-    StarFish::registerJavaScriptNativeInterface(
+    Starfish::registerJavaScriptNativeInterface(
         TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName, functionName,
-        new StarFish::JavaScriptNativeHandler(TO_WEBVIEW(m_impl), functionName,
+        new Starfish::JavaScriptNativeHandler(TO_WEBVIEW(m_impl), functionName,
                                               cb),
         nativeCallbackFunction);
 
@@ -546,7 +546,7 @@ std::string WebContainer::EvaluateJavaScript(const std::string& script)
 
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     ret = TO_WEBVIEW(m_impl)
-              ->evaluateJavaScript(StarFish::String::fromUTF8(script.c_str()))
+              ->evaluateJavaScript(Starfish::String::fromUTF8(script.c_str()))
               ->toUTF8NonGCString();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 
@@ -604,7 +604,7 @@ void WebContainer::SetSettings(const Settings& settings)
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->setCustomUserAgentString(
-            StarFish::String::fromUTF8(settings.GetUserAgentString().c_str()));
+            Starfish::String::fromUTF8(settings.GetUserAgentString().c_str()));
     TO_WEBVIEW(m_impl)->setProxyURL(settings.GetProxyURL());
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (TO_STARFISH(m_impl)->httpCache()) {
@@ -622,15 +622,15 @@ void WebContainer::RemoveJavascriptInterface(
     const std::string& exposedObjectName, const std::string& jsFunctionName)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
-    StarFish::String* objectName =
-        StarFish::String::fromUTF8(exposedObjectName.c_str());
+    Starfish::String* objectName =
+        Starfish::String::fromUTF8(exposedObjectName.c_str());
     if (!jsFunctionName.empty()) {
-        StarFish::String* functionName =
-            StarFish::String::fromUTF8(jsFunctionName.c_str());
-        StarFish::unregisterJavaScriptNativeInterface(
+        Starfish::String* functionName =
+            Starfish::String::fromUTF8(jsFunctionName.c_str());
+        Starfish::unregisterJavaScriptNativeInterface(
             TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName, functionName);
     } else {
-        StarFish::unregisterJavaScriptNativeInterface(
+        Starfish::unregisterJavaScriptNativeInterface(
             TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName);
     }
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -652,7 +652,7 @@ void WebContainer::RegisterOnReceivedErrorHandler(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            StarFish::OnReceivedError, [this, cb](void* param) -> void {
+            Starfish::OnReceivedError, [this, cb](void* param) -> void {
                 struct Param {
                     int errorCode;
                 };
@@ -669,9 +669,9 @@ void WebContainer::RegisterOnPageParsedHandler(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            StarFish::OnPageParsed, [this, cb](void* param) -> void {
+            Starfish::OnPageParsed, [this, cb](void* param) -> void {
                 struct Param {
-                    StarFish::String* url;
+                    Starfish::String* url;
                 };
                 Param* p = (Param*)param;
                 cb(this, p->url->toUTF8NonGCString());
@@ -685,9 +685,9 @@ void WebContainer::RegisterOnPageLoadedHandler(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            StarFish::OnPageLoaded, [this, cb](void* param) -> void {
+            Starfish::OnPageLoaded, [this, cb](void* param) -> void {
                 struct Param {
-                    StarFish::String* url;
+                    Starfish::String* url;
                 };
                 Param* p = (Param*)param;
                 cb(this, p->url->toUTF8NonGCString());
@@ -701,9 +701,9 @@ void WebContainer::RegisterOnPageStartedHandler(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            StarFish::OnPageStarted, [this, cb](void* param) -> void {
+            Starfish::OnPageStarted, [this, cb](void* param) -> void {
                 struct Param {
-                    StarFish::String* url;
+                    Starfish::String* url;
                 };
                 Param* p = (Param*)param;
                 cb(this, p->url->toUTF8NonGCString());
@@ -717,9 +717,9 @@ void WebContainer::RegisterOnLoadResourceHandler(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            StarFish::OnLoadResource, [this, cb](void* param) -> void {
+            Starfish::OnLoadResource, [this, cb](void* param) -> void {
                 struct Param {
-                    StarFish::String* url;
+                    Starfish::String* url;
                 };
                 Param* p = (Param*)param;
                 cb(this, p->url->toUTF8NonGCString());
@@ -733,11 +733,11 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            StarFish::ShouldOverrideUrlLoading,
+            Starfish::ShouldOverrideUrlLoading,
             [this, cb](void* param) -> void {
                 struct Param {
-                    StarFish::ResourceURL* url;
-                    StarFish::ResourceURL* referrerUrl;
+                    Starfish::ResourceURL* url;
+                    Starfish::ResourceURL* referrerUrl;
                     bool canNavigate;
                     bool force;
                 };
@@ -750,7 +750,7 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
                         ->messageLoop()
                         ->invokeNavigate(
                             TO_WEBVIEW(m_impl), p->url, p->referrerUrl,
-                            StarFish::HistoryManagerAction::Add, true);
+                            Starfish::HistoryManagerAction::Add, true);
                 }
             });
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -764,7 +764,7 @@ void WebContainer::RegisterOnDownloadStartHandler(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->registerPublicWebViewHandler(
-            StarFish::OnDownloadStart, [this, cb](void* param) -> void {
+            Starfish::OnDownloadStart, [this, cb](void* param) -> void {
                 struct Param {
                     std::string url;
                     std::string userAgent;
@@ -790,7 +790,7 @@ void WebContainer::RegisterShowDropdownMenuHandler(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->registerCallbackHandler(StarFish::WindowHandlerShowDropdownMenu,
+        ->registerCallbackHandler(Starfish::WindowHandlerShowDropdownMenu,
                                   [this, cb](void* param) -> void {
                                       struct Param {
                                           std::vector<std::string>* list;
@@ -812,7 +812,7 @@ void WebContainer::RegisterShowAlertHandler(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->registerCallbackHandler(StarFish::WindowHandlerShowAlert,
+        ->registerCallbackHandler(Starfish::WindowHandlerShowAlert,
                                   [this, cb](void* param) -> void {
                                       struct Param {
                                           std::string title;
@@ -848,7 +848,7 @@ void WebContainer::CallHandler(const std::string& handler, void* param)
     if (handler.compare("onDropdownMenuItemSelected") == 0) {
         TO_WEBVIEW(m_impl)
             ->platformWindow()
-            ->callHandler(StarFish::WindowHandlerOnDropdownMenuItemSelected,
+            ->callHandler(Starfish::WindowHandlerOnDropdownMenuItemSelected,
                           param);
     }
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -877,7 +877,7 @@ void WebContainer::RegisterOnProgressChangedHandler(
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
-        ->registerPublicWebViewHandler(StarFish::OnProgressChanged,
+        ->registerPublicWebViewHandler(Starfish::OnProgressChanged,
                                        [this, cb](void* param) -> void {
                                            struct Param {
                                                int newProgress;
@@ -893,7 +893,7 @@ void WebContainer::SetUserAgentString(const std::string& userAgent)
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->setCustomUserAgentString(
-            StarFish::String::fromUTF8(userAgent.c_str()));
+            Starfish::String::fromUTF8(userAgent.c_str()));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -923,8 +923,8 @@ void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->dispatchMouseEvent(::StarFish::MouseEventKind::MouseEventMove,
-                             ::StarFish::MouseData(button, buttons, x, y, 0));
+        ->dispatchMouseEvent(::Starfish::MouseEventKind::MouseEventMove,
+                             ::Starfish::MouseData(button, buttons, x, y, 0));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -935,8 +935,8 @@ void WebContainer::DispatchMouseDownEvent(MouseButtonValue button,
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->dispatchMouseEvent(::StarFish::MouseEventKind::MouseEventDown,
-                             ::StarFish::MouseData(button, buttons, x, y, 0));
+        ->dispatchMouseEvent(::Starfish::MouseEventKind::MouseEventDown,
+                             ::Starfish::MouseData(button, buttons, x, y, 0));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -947,8 +947,8 @@ void WebContainer::DispatchMouseUpEvent(MouseButtonValue button,
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->dispatchMouseEvent(::StarFish::MouseEventKind::MouseEventUp,
-                             ::StarFish::MouseData(button, buttons, x, y, 0));
+        ->dispatchMouseEvent(::Starfish::MouseEventKind::MouseEventUp,
+                             ::Starfish::MouseData(button, buttons, x, y, 0));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -966,8 +966,8 @@ void WebContainer::DispatchKeyDownEvent(KeyValue keyCode)
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->dispatchKeyEvent(::StarFish::KeyEventKind::KeyEventDown,
-                           ::StarFish::PlatformKeyEventData(keyCode));
+        ->dispatchKeyEvent(::Starfish::KeyEventKind::KeyEventDown,
+                           ::Starfish::PlatformKeyEventData(keyCode));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -976,8 +976,8 @@ void WebContainer::DispatchKeyPressEvent(KeyValue keyCode)
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->dispatchKeyEvent(::StarFish::KeyEventKind::KeyEventPress,
-                           ::StarFish::PlatformKeyEventData(keyCode));
+        ->dispatchKeyEvent(::Starfish::KeyEventKind::KeyEventPress,
+                           ::Starfish::PlatformKeyEventData(keyCode));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -986,8 +986,8 @@ void WebContainer::DispatchKeyUpEvent(KeyValue keyCode)
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->dispatchKeyEvent(::StarFish::KeyEventKind::KeyEventUp,
-                           ::StarFish::PlatformKeyEventData(keyCode));
+        ->dispatchKeyEvent(::Starfish::KeyEventKind::KeyEventUp,
+                           ::Starfish::PlatformKeyEventData(keyCode));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -998,8 +998,8 @@ void WebContainer::DispatchCompositionStartEvent(
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchCompositionEvent(
-            ::StarFish::CompositionEventKind::CompositionEventStart,
-            ::StarFish::String::fromUTF8(soFarCompositiedString.data(),
+            ::Starfish::CompositionEventKind::CompositionEventStart,
+            ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
                                          soFarCompositiedString.length()));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
@@ -1011,8 +1011,8 @@ void WebContainer::DispatchCompositionUpdateEvent(
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchCompositionEvent(
-            ::StarFish::CompositionEventKind::CompositionEventUpdate,
-            ::StarFish::String::fromUTF8(soFarCompositiedString.data(),
+            ::Starfish::CompositionEventKind::CompositionEventUpdate,
+            ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
                                          soFarCompositiedString.length()));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
@@ -1024,8 +1024,8 @@ void WebContainer::DispatchCompositionEndEvent(
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->dispatchCompositionEvent(
-            ::StarFish::CompositionEventKind::CompositionEventEnd,
-            ::StarFish::String::fromUTF8(soFarCompositiedString.data(),
+            ::Starfish::CompositionEventKind::CompositionEventEnd,
+            ::Starfish::String::fromUTF8(soFarCompositiedString.data(),
                                          soFarCompositiedString.length()));
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
@@ -1059,7 +1059,7 @@ void WebContainer::RegisterSetNeedsRenderingCallback(
     TO_WEBVIEW(m_impl)
         ->platformWindow()
         ->registerSetNeedsRenderingCallback(
-            [this, cb](StarFish::PlatformWindow* wnd) {
+            [this, cb](Starfish::PlatformWindow* wnd) {
                 std::function<void()> fn = [wnd]() {
                     auto p = wnd;
                     p->rendering();

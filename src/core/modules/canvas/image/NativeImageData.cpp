@@ -20,7 +20,7 @@
 #ifndef ESCARGOT
 #define ESCARGOT // for GCutil
 #endif
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "NativeImageData.h"
 #include "core/modules/threading/Thread.h"
 
@@ -42,7 +42,7 @@ int getValidValueNativeImageData(void* ptr, GC_mark_custom_result* arr)
     return 0;
 }
 
-namespace StarFish {
+namespace Starfish {
 
 int NativeImageData::nativeImageDataGCKind()
 {
@@ -66,4 +66,4 @@ std::vector<NativeImageData*>& NativeImageData::everyNativeImageInstances()
     static std::vector<NativeImageData*> v;
     return v;
 }
-} // namespace StarFish
+} // namespace Starfish

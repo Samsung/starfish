@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishWebStorageNamespaceProvider__
-#define __StarFishWebStorageNamespaceProvider__
+#ifndef __StarfishWebStorageNamespaceProvider__
+#define __StarfishWebStorageNamespaceProvider__
 
 #include "core/storage/StorageNamespaceProvider.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class StorageNamespaceImpl;
 

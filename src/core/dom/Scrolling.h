@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishScrolling__
-#define __StarFishScrolling__
+#ifndef __StarfishScrolling__
+#define __StarfishScrolling__
 
 #include "core/dom/EventTarget.h"
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Event;
 class FrameBlockBox;

@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/ImageValue.h"
 #include "core/style/GradientData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 String* ImageValue::urlValue() const
 {

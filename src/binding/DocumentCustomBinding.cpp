@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/page/Window.h"
 
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-namespace StarFish {
+namespace Starfish {
 
 ValueRef* defaultViewDocumentGetterFunction(ExecutionStateRef* state,
                                             ValueRef* thisValue, size_t argc,

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishMessagePort__
-#define __StarFishMessagePort__
+#ifndef __StarfishMessagePort__
+#define __StarfishMessagePort__
 
 #include "core/dom/EventTarget.h"
 #include "core/page/Serializer.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class EventListener;
 class MessagePort;

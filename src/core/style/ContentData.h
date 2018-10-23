@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishContentData__
-#define __StarFishContentData__
+#ifndef __StarfishContentData__
+#define __StarfishContentData__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TextContentData : public gc {
 public:
@@ -343,6 +343,6 @@ inline bool operator!=(const ContentDataGroup& a, const ContentDataGroup& b)
     return !operator==(a, b);
 }
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishContentData__ */
+#endif /* __StarfishContentData__ */

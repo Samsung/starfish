@@ -17,7 +17,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
@@ -37,7 +37,7 @@
 #include "core/layout/StackingContext.h"
 #include "core/style/CalcData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FrameBlockBox* blockContainer(Frame* currentFrame)
 {

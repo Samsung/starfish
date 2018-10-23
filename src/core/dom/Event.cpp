@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Event.h"
 #include "core/dom/Document.h"
 #include "core/modules/profiling/Profiling.h"
 
-namespace StarFish {
+namespace Starfish {
 
 EventInit::EventInit()
     : EventInit(false)

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/style/CSSKeywordValue.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* CSSKeywordValue::operator new(size_t size)
 {

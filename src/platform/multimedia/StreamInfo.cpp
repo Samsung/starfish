@@ -19,10 +19,10 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "platform/multimedia/StreamInfo.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MediaCodec suggestAudioCodecFromString(String* name)
 {

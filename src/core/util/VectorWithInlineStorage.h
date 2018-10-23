@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishVectorWithInlineStorage__
-#define __StarFishVectorWithInlineStorage__
+#ifndef __StarfishVectorWithInlineStorage__
+#define __StarfishVectorWithInlineStorage__
 
-namespace StarFish {
+namespace Starfish {
 
 // Vector for special purpose
 // It has InlineStorage, so push_back operation is fast with InlineStorage

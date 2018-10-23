@@ -18,12 +18,12 @@
  */
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#ifndef __StarFishTextTrack__
-#define __StarFishTextTrack__
+#ifndef __StarfishTextTrack__
+#define __StarfishTextTrack__
 
 #include "core/dom/EventTarget.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLTrackElement;
 class TextTrackCue;

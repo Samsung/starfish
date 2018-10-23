@@ -17,18 +17,18 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "HTMLBaseElement.h"
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 String* HTMLBaseElement::href() const
 {
     Nullable<String*> hrefAttr =
-        getAttribute(starFish()->staticStrings()->m_href);
+        getAttribute(starfish()->staticStrings()->m_href);
 
     if (!hrefAttr.hasValue()) {
         return document()->urlString();
@@ -41,17 +41,17 @@ String* HTMLBaseElement::href() const
 
 void HTMLBaseElement::setHref(String* href)
 {
-    setAttribute(starFish()->staticStrings()->m_href, href);
+    setAttribute(starfish()->staticStrings()->m_href, href);
 }
 
 String* HTMLBaseElement::target() const
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_target);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_target);
 }
 
 void HTMLBaseElement::setTarget(String* target)
 {
-    setAttribute(starFish()->staticStrings()->m_target, target);
+    setAttribute(starfish()->staticStrings()->m_target, target);
 }
 
 void HTMLBaseElement::didAttributeChanged(QualifiedName name, String* old,
@@ -61,8 +61,8 @@ void HTMLBaseElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_href ||
-        name == starFish()->staticStrings()->m_target) {
+    if (name == starfish()->staticStrings()->m_href ||
+        name == starfish()->staticStrings()->m_target) {
         document()->processBaseElement();
     }
 }

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishEventTarget__
-#define __StarFishEventTarget__
+#ifndef __StarfishEventTarget__
+#define __StarfishEventTarget__
 
 #include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Event;
 class Node;
@@ -234,7 +234,7 @@ private:
 
 #define GENERATE_ATTR(EVENT)                \
     Window* window = EventTarget::window(); \
-    QualifiedName attr = window->starFish()->staticStrings()->m_##EVENT;
+    QualifiedName attr = window->starfish()->staticStrings()->m_##EVENT;
 
 #define DEFINE_GLOBAL_EVENT_LISTENER(EVENT_TARGET, EVENT)       \
     EventListener* EVENT_TARGET::on##EVENT()                    \

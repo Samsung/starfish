@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "FrameSelectBox.h"
 
@@ -27,7 +27,7 @@
 #include "core/dom/HTMLOptionElement.h"
 #include "core/layout/FrameBlockBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameSelectBox::operator new(size_t size)
 {

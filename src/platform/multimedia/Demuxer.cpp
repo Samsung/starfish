@@ -19,10 +19,10 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Demuxer.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Demuxer* Demuxer::createDemuxer(String* mimeTypeOfContainer)
 {

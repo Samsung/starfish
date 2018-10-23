@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishStyleTransformOrigin__
-#define __StarFishStyleTransformOrigin__
+#ifndef __StarfishStyleTransformOrigin__
+#define __StarfishStyleTransformOrigin__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TransformOriginData : public gc {
 public:

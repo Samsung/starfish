@@ -18,11 +18,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Style.h"
 #include "CSSTime.h"
 
-namespace StarFish {
+namespace Starfish {
 CSSTime::CSSTime(String* str, float f)
     : m_kind(S)
 {

@@ -24,8 +24,8 @@
 #include <fstream>
 #endif
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
@@ -44,7 +44,7 @@
 #include "platform/network/NetworkSharedResourceManager.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #ifdef STARFISH_ENABLE_TEST
 bool g_enablePixelTest = false;
@@ -53,7 +53,7 @@ bool g_DumpAsText_Async = false;
 int g_referenceTestState = 0;
 #endif
 
-static bool g_starFishGlobalInit = false;
+static bool g_starfishGlobalInit = false;
 typedef void (*GCCollectionEventListenter)(GC_EventType);
 static std::list<GCCollectionEventListenter> g_gcCollectionEventListenterList;
 void addGCCollectionListener(void (*fn)(GC_EventType))
@@ -61,7 +61,7 @@ void addGCCollectionListener(void (*fn)(GC_EventType))
     g_gcCollectionEventListenterList.push_back(fn);
 }
 
-StarFish::StarFish(const char* localStorageFilePath,
+Starfish::Starfish(const char* localStorageFilePath,
                    const char* cookieStoreFilePath,
                    const char* httpCacheDirectorypath)
     : m_localStorageFilePath(String::fromUTF8(localStorageFilePath))
@@ -71,16 +71,16 @@ StarFish::StarFish(const char* localStorageFilePath,
     , m_webViewInstanceCount(0)
 {
     registerMainThread();
-    if (!g_starFishGlobalInit) {
-        g_starFishGlobalInit = true;
+    if (!g_starfishGlobalInit) {
+        g_starfishGlobalInit = true;
 
         GC_set_abort_func([](const char* msg) {
-            STARFISH_LOG_ERROR("StarFish: GC aborted\n");
+            STARFISH_LOG_ERROR("Starfish: GC aborted\n");
             STARFISH_LOG_ERROR("%s\n", msg);
         });
 
         GC_set_warn_proc([](char* msg, GC_word arg) {
-            STARFISH_LOG_ERROR("StarFish: GC warning\n");
+            STARFISH_LOG_ERROR("Starfish: GC warning\n");
             STARFISH_LOG_ERROR("%s\n", msg);
         });
 
@@ -122,9 +122,9 @@ StarFish::StarFish(const char* localStorageFilePath,
 #endif
 }
 
-void StarFish::destroy()
+void Starfish::destroy()
 {
-    STARFISH_LOG_INFO("StarFish::destroy");
+    STARFISH_LOG_INFO("Starfish::destroy");
     NetworkSharedResourceManager::destroy();
 
 #ifdef STARFISH_ENABLE_HTTPCACHE
@@ -136,11 +136,11 @@ void StarFish::destroy()
     delete m_lineBreakIteratorPool;
     m_lineBreakIteratorPool = nullptr;
 
-    this->StarFish::~StarFish();
+    this->Starfish::~Starfish();
     GC_FREE(this);
 }
 
-void StarFish::initNetworkSharedResourceManager(const char* cookieStoreFilePath)
+void Starfish::initNetworkSharedResourceManager(const char* cookieStoreFilePath)
 {
     // NetworkSharedResourceManager is singleton, So do not hold the instance.
     if (cookieStoreFilePath) {
@@ -152,7 +152,7 @@ void StarFish::initNetworkSharedResourceManager(const char* cookieStoreFilePath)
     NetworkSharedResourceManager::getInstance()->initCookieSession();
 }
 
-void StarFish::addPointerInRootSet(void* ptr)
+void Starfish::addPointerInRootSet(void* ptr)
 {
     auto iter = m_rootMap.find(ptr);
     if (iter == m_rootMap.end()) {
@@ -162,7 +162,7 @@ void StarFish::addPointerInRootSet(void* ptr)
     }
 }
 
-void StarFish::removePointerFromRootSet(void* ptr)
+void Starfish::removePointerFromRootSet(void* ptr)
 {
     auto iter = m_rootMap.find(ptr);
     if (iter != m_rootMap.end()) {
@@ -175,7 +175,7 @@ void StarFish::removePointerFromRootSet(void* ptr)
 }
 
 #ifndef NDEBUG
-size_t StarFish::countPointersInRootSet(void* ptr)
+size_t Starfish::countPointersInRootSet(void* ptr)
 {
     auto iter = m_rootMap.find(ptr);
     if (iter != m_rootMap.end()) {
@@ -186,7 +186,7 @@ size_t StarFish::countPointersInRootSet(void* ptr)
 }
 #endif
 
-void StarFish::doFullGCWithoutSeeingStack()
+void Starfish::doFullGCWithoutSeeingStack()
 {
     GC_register_mark_stack_func([]() {
         // do nothing for skip stack
@@ -198,7 +198,7 @@ void StarFish::doFullGCWithoutSeeingStack()
     GC_register_mark_stack_func(nullptr);
 }
 
-void StarFish::printEveryReachableGCObjects()
+void Starfish::printEveryReachableGCObjects()
 {
     STARFISH_LOG_ERROR("print reachable pointers -->\n");
     GC_gcollect();

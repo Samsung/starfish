@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/layout/FrameGridBox.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSParser.h"
 
-namespace StarFish {
+namespace Starfish {
 
 GridFormattingContext::GridFormattingContext(LayoutContext& ctx,
                                              FrameGridBox* container,

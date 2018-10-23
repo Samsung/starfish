@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLAnchorElement__
-#define __StarFishHTMLAnchorElement__
+#ifndef __StarfishHTMLAnchorElement__
+#define __StarfishHTMLAnchorElement__
 
 #include "core/dom/HTMLHyperlinkContainer.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLAnchorElement : public HTMLHyperlinkContainer {
 public:

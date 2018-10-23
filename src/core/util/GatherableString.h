@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishGatherableString__
-#define __StarFishGatherableString__
+#ifndef __StarfishGatherableString__
+#define __StarfishGatherableString__
 
 // for AtomicString
-#include "StarFish.h"
+#include "Starfish.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // Special string for parsers
 template <unsigned int InlineStorageSize>
@@ -173,8 +173,8 @@ public:
                                        void* data),
                           void* data) const;
 
-    AtomicString toAtomicString(StarFish* sf) const;
-    AtomicString toAttrAtomicString(StarFish* sf) const;
+    AtomicString toAtomicString(Starfish* starfish) const;
+    AtomicString toAttrAtomicString(Starfish* starfish) const;
 
 protected:
     bool m_hasASCIIContent;
@@ -355,66 +355,69 @@ size_t GatherableString<InlineStorageSize>::peekUTF8Buffer(
 
 template <unsigned int InlineStorageSize>
 AtomicString GatherableString<InlineStorageSize>::toAtomicString(
-    StarFish* sf) const
+    Starfish* starfish) const
 {
     if (hasASCIIContent()) {
         return AtomicString((String*)peekASCIIBuffer(
             [](const char* buf, size_t len, void* data) -> size_t {
-                StarFish* sf = (StarFish*)data;
-                return (size_t)AtomicString::createAtomicString(sf, buf, len)
+                Starfish* starfish = (Starfish*)data;
+                return (size_t)AtomicString::createAtomicString(starfish, buf,
+                                                                len)
                     .string();
             },
-            sf));
+            starfish));
     } else if (hasBMPContent()) {
         return AtomicString((String*)peekBMPBuffer(
             [](const char16_t* buf, size_t len, void* data) -> size_t {
-                StarFish* sf = (StarFish*)data;
-                return (size_t)AtomicString::createAtomicString(sf, buf, len)
+                Starfish* starfish = (Starfish*)data;
+                return (size_t)AtomicString::createAtomicString(starfish, buf,
+                                                                len)
                     .string();
             },
-            sf));
+            starfish));
     } else {
         return AtomicString((String*)peekUTF32Buffer(
             [](const char32_t* buf, size_t len, void* data) -> size_t {
-                StarFish* sf = (StarFish*)data;
-                return (size_t)AtomicString::createAtomicString(sf, buf, len)
+                Starfish* starfish = (Starfish*)data;
+                return (size_t)AtomicString::createAtomicString(starfish, buf,
+                                                                len)
                     .string();
             },
-            sf));
+            starfish));
     }
 }
 
 template <unsigned int InlineStorageSize>
 AtomicString GatherableString<InlineStorageSize>::toAttrAtomicString(
-    StarFish* sf) const
+    Starfish* starfish) const
 {
     if (hasASCIIContent()) {
         return AtomicString((String*)peekASCIIBuffer(
             [](const char* buf, size_t len, void* data) -> size_t {
-                StarFish* sf = (StarFish*)data;
-                return (size_t)AtomicString::createAttrAtomicString(sf, buf,
-                                                                    len)
+                Starfish* starfish = (Starfish*)data;
+                return (size_t)AtomicString::createAttrAtomicString(starfish,
+                                                                    buf, len)
                     .string();
             },
-            sf));
+            starfish));
     } else if (hasBMPContent()) {
         return AtomicString((String*)peekBMPBuffer(
             [](const char16_t* buf, size_t len, void* data) -> size_t {
-                StarFish* sf = (StarFish*)data;
-                return (size_t)AtomicString::createAttrAtomicString(sf, buf,
-                                                                    len)
+                Starfish* starfish = (Starfish*)data;
+                return (size_t)AtomicString::createAttrAtomicString(starfish,
+                                                                    buf, len)
                     .string();
             },
-            sf));
+            starfish));
     } else {
         return AtomicString((String*)peekUTF32Buffer(
             [](const char32_t* buf, size_t len, void* data) -> size_t {
-                StarFish* sf = (StarFish*)data;
-                return (size_t)AtomicString::createAttrAtomicString(sf, buf,
-                                                                    len)
+                Starfish* starfish = (Starfish*)data;
+                return (size_t)AtomicString::createAttrAtomicString(starfish,
+                                                                    buf, len)
                     .string();
             },
-            sf));
+            starfish));
     }
 }
 }

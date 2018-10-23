@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDOMPoint__
-#define __StarFishDOMPoint__
+#ifndef __StarfishDOMPoint__
+#define __StarfishDOMPoint__
 
 #include "core/dom/DOMPointReadOnly.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct DOMPointInit {
 public:

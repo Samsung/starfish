@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameTableColBox__
-#define __StarFishFrameTableColBox__
+#ifndef __StarfishFrameTableColBox__
+#define __StarfishFrameTableColBox__
 
 #include "core/layout/FrameTableCellBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // The FrameTableColBox is for <col> and <colgroup>
 // In the specification, <col> and <colgroup> are very similar

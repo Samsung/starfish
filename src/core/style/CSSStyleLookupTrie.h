@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishCSSStyleLookupTrie__
-#define __StarFishCSSStyleLookupTrie__
+#ifndef __StarfishCSSStyleLookupTrie__
+#define __StarfishCSSStyleLookupTrie__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // z-index, font-size...
 CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length);
@@ -33,6 +33,6 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
 
 UnitType lookupUnitType(const char* data, unsigned length);
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishCSSStyleLookupTrie__ */
+#endif /* __StarfishCSSStyleLookupTrie__ */

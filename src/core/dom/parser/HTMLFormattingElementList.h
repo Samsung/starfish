@@ -41,12 +41,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLFormattingElementList__
-#define __StarFishHTMLFormattingElementList__
+#ifndef __StarfishHTMLFormattingElementList__
+#define __StarfishHTMLFormattingElementList__
 
 #include "core/dom/parser/HTMLStackItem.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Element;
 

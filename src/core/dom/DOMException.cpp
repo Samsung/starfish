@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 
-namespace StarFish {
+namespace Starfish {
 
 const char* DOMException::s_names[] = {
     "DOMException",

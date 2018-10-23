@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTTPHeaderMap.h"
 #include <curl/curl.h>
-namespace StarFish {
+namespace Starfish {
 
 #define DEFINE_HEADERS(name, value) const char HTTPHeaderMap::name[] = value;
 FOR_EACH_HTTPHEADERS(DEFINE_HEADERS);

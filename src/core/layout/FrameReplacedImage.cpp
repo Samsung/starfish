@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/layout/FrameReplacedImage.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 
-namespace StarFish {
+namespace Starfish {
 void FrameReplacedImage::paintReplaced(Canvas* canvas)
 {
     FrameReplaced::paintReplaced(canvas);

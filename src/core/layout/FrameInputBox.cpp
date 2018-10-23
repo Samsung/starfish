@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "FrameInputBox.h"
 
@@ -35,7 +35,7 @@
 #include "core/layout/FrameTreeBuilder.h"
 #include "core/modules/canvas/Canvas.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static ComputedStyle* createStyle(Node* from)
 {

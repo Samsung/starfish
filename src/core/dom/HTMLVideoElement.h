@@ -18,12 +18,12 @@
  */
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && \
-    !defined(__StarFishHTMLVideoElement__)
-#define __StarFishHTMLVideoElement__
+    !defined(__StarfishHTMLVideoElement__)
+#define __StarfishHTMLVideoElement__
 
 #include "core/dom/HTMLMediaElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLVideoElement : public HTMLMediaElement {
 public:

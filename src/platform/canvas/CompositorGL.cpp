@@ -19,8 +19,8 @@
 
 // #define STARFISH_ENABLE_PROFILE_TIMER
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
 
@@ -421,7 +421,7 @@ static void logEglError(const char* name) noexcept
 Evas_GL_API* g_evasGLAPI;
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 static size_t g_textureTileSize = 512;
 static bool g_needsCheckCompatibility = true;
@@ -2413,6 +2413,6 @@ void screenShotImpl(PlatformWindow* wnd, const char* path,
 #endif
 #endif
 
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

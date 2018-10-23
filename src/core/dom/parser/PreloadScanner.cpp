@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "PreloadScanner.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 PreloadScanner::PreloadScanner(Document* document, String* source)
     : m_document(document)

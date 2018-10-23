@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishSVGPolylineElement__
-#define __StarFishSVGPolylineElement__
+#ifndef __StarfishSVGPolylineElement__
+#define __StarfishSVGPolylineElement__
 
 #include "core/dom/svg/SVGElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class SVGPolylineElement : public SVGElement {
 public:

@@ -17,11 +17,11 @@
  *  USA
  */
 
-#ifndef __StarFishThread__
-#define __StarFishThread__
+#ifndef __StarfishThread__
+#define __StarfishThread__
 
 #include "binding/WebViewHoldable.h"
-namespace StarFish {
+namespace Starfish {
 
 class MessageLoop;
 class Mutex;
@@ -77,6 +77,6 @@ protected:
     Mutex* m_mutex;
     ThreadData* m_currentUnjoined;
 };
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

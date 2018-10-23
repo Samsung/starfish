@@ -18,12 +18,12 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#ifndef __StarFishFrameReplacedVideo__
-#define __StarFishFrameReplacedVideo__
+#ifndef __StarfishFrameReplacedVideo__
+#define __StarfishFrameReplacedVideo__
 
 #include "core/layout/FrameReplaced.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameReplacedVideo final : public FrameReplaced {
 public:

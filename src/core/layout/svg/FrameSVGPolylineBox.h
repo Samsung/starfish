@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameSVGPolylineBox__
-#define __StarFishFrameSVGPolylineBox__
+#ifndef __StarfishFrameSVGPolylineBox__
+#define __StarfishFrameSVGPolylineBox__
 
 #include "core/layout/svg/FrameSVGBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameSVGPolylineBox final : public FrameSVGBox {
 public:

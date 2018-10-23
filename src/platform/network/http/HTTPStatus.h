@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishHTTPStatus__
-#define __StarFishHTTPStatus__
+#ifndef __StarfishHTTPStatus__
+#define __StarfishHTTPStatus__
 
-namespace StarFish {
+namespace Starfish {
 // We only define state codes that currently we need or that we expect to need
 // to implement soon. If you need it, please refer to the link below and add it.
 // * https://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml

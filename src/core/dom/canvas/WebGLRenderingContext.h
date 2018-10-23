@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishWebGLRenderingContext__
-#define __StarFishWebGLRenderingContext__
+#ifndef __StarfishWebGLRenderingContext__
+#define __StarfishWebGLRenderingContext__
 
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "core/dom/canvas/RenderingContext.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class WebGLRenderingContext : public RenderingContext {
 public:

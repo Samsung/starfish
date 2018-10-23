@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "Thread.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebView.h"
@@ -31,7 +31,7 @@
 #include <Windows.h>
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 size_t numberOfCores()
 {
@@ -200,4 +200,4 @@ void Thread::cleanupHandler(void* data)
     ThreadData* td = (ThreadData*)data;
     td->m_thread->joinIfNeeds();
 }
-} // namespace StarFish
+} // namespace Starfish

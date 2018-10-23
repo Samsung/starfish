@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishWebStorageNamespace__
-#define __StarFishWebStorageNamespace__
+#ifndef __StarfishWebStorageNamespace__
+#define __StarfishWebStorageNamespace__
 
 #include "binding/WindowHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class SecurityOriginData;
 class Storage;

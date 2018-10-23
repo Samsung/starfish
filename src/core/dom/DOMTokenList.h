@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDOMTokenList__
-#define __StarFishDOMTokenList__
+#ifndef __StarfishDOMTokenList__
+#define __StarfishDOMTokenList__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Node;
 class Element;

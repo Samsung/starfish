@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDocumentFragment__
-#define __StarFishDocumentFragment__
+#ifndef __StarfishDocumentFragment__
+#define __StarfishDocumentFragment__
 
 #include "core/dom/Node.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DocumentFragment : public Node {
 public:

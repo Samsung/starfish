@@ -17,12 +17,12 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishPacketGenerator__)
-#define __StarFishPacketGenerator__
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarfishPacketGenerator__)
+#define __StarfishPacketGenerator__
 
 #include "platform/multimedia/StreamInfo.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct MediaPacket;
 class PacketGenerator : public gc {

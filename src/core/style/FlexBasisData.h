@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFlexBasisData__
-#define __StarFishFlexBasisData__
+#ifndef __StarfishFlexBasisData__
+#define __StarfishFlexBasisData__
 
 #include "core/style/Length.h"
 
-namespace StarFish {
+namespace Starfish {
 class FlexBasisData {
     enum Type { Content, Width };
 

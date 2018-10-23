@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/dom/HTMLElement.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Event.h"
 #include "core/dom/Text.h"
 #include "core/dom/Document.h"
@@ -33,7 +33,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static bool isEditinghost(Node* node)
 {
@@ -105,7 +105,7 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
 {
     Element::didAttributeChanged(name, old, value, attributeCreated,
                                  attributeRemoved);
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
     if (name == ss->m_onclick) {
         setAttributeEventListener(ss->m_click, value, this);
     } else if (name == ss->m_onchange) {
@@ -177,7 +177,7 @@ void HTMLElement::styleForPresentationAttribute(
 {
     if (m_hasDirAttribute) {
         CSSStyleValuePair pair;
-        String* str = getAttributeOrEmpty(starFish()->staticStrings()->m_dir);
+        String* str = getAttributeOrEmpty(starfish()->staticStrings()->m_dir);
         str = str->toASCIILower();
         if (str->equals("ltr")) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Direction);
@@ -320,7 +320,7 @@ void HTMLElement::setInnerText(String* text)
 
     GCVector<StringView> v;
     StringUtils::tokenize(text, "\r\n", 2, v);
-    const QualifiedName& brQname = starFish()->staticStrings()->m_brTagName;
+    const QualifiedName& brQname = starfish()->staticStrings()->m_brTagName;
     for (size_t i = 0; i < v.size(); i++) {
         appendChild(new Text(document(), new StringView(v[i])));
         if (i + 1 < v.size()) {
@@ -332,7 +332,7 @@ void HTMLElement::setInnerText(String* text)
 String* HTMLElement::dir()
 {
     String* dir =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_dir)->toASCIILower();
+        getAttributeOrEmpty(starfish()->staticStrings()->m_dir)->toASCIILower();
     if (dir->equals("ltr") || dir->equals("rtl") || dir->equals("auto")) {
         return dir;
     }
@@ -341,39 +341,39 @@ String* HTMLElement::dir()
 
 void HTMLElement::setDir(String* dir)
 {
-    setAttribute(starFish()->staticStrings()->m_dir, dir);
+    setAttribute(starfish()->staticStrings()->m_dir, dir);
 }
 
 String* HTMLElement::title()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_title);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_title);
 }
 
 void HTMLElement::setTitle(String* title)
 {
-    setAttribute(starFish()->staticStrings()->m_title, title);
+    setAttribute(starfish()->staticStrings()->m_title, title);
 }
 
 String* HTMLElement::lang()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_lang);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_lang);
 }
 
 void HTMLElement::setLang(String* lang)
 {
-    setAttribute(starFish()->staticStrings()->m_lang, lang);
+    setAttribute(starfish()->staticStrings()->m_lang, lang);
 }
 
 void HTMLElement::click()
 {
-    String* eventType = starFish()->staticStrings()->m_click.localName();
+    String* eventType = starfish()->staticStrings()->m_click.localName();
     dispatchEvent(new Event(document(), eventType, EventInit(true, true)));
 }
 
 String* HTMLElement::contentEditable()
 {
     String* value =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_contentEditable);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_contentEditable);
 
     if (value->equalsIgnoreCase("true")) {
         return String::createASCIIString("true");
@@ -386,13 +386,13 @@ String* HTMLElement::contentEditable()
 void HTMLElement::setContentEditable(const String* value)
 {
     if (value->equalsIgnoreCase("true")) {
-        setAttribute(starFish()->staticStrings()->m_contentEditable,
+        setAttribute(starfish()->staticStrings()->m_contentEditable,
                      String::createASCIIString("true"));
     } else if (value->equalsIgnoreCase("false")) {
-        setAttribute(starFish()->staticStrings()->m_contentEditable,
+        setAttribute(starfish()->staticStrings()->m_contentEditable,
                      String::createASCIIString("false"));
     } else if (value->equalsIgnoreCase("inherit")) {
-        removeAttribute(starFish()->staticStrings()->m_contentEditable);
+        removeAttribute(starfish()->staticStrings()->m_contentEditable);
     } else {
         throw new DOMException(document(), DOMException::SYNTAX_ERR);
     }

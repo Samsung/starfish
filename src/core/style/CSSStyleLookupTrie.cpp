@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "CSSStyleLookupTrie.h"
 
-namespace StarFish {
+namespace Starfish {
 
 CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
 {

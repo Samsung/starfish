@@ -16,7 +16,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Scrolling.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
@@ -29,7 +29,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 
-namespace StarFish {
+namespace Starfish {
 
 bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                                    FrameBlockBox* frame, OverflowValue ox,

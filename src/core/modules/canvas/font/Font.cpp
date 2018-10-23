@@ -17,9 +17,9 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Font.h"
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/WebFont.h"
 #include "core/dom/Document.h"
@@ -30,7 +30,7 @@
 #include "platform/canvas/font/FontImplSkia.h"
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 static UTF8StringDataNonGCStd mergeStyleWeightWithString(
     const UTF8StringDataNonGCStd& name, char style, char weight)
@@ -78,8 +78,8 @@ static UTF8StringDataNonGCStd mergeFamilyNames(String* familyNameArray[],
         }
     }
 
-    result += "@s:" + ::StarFish::to_string(int(size + 0.5f));
-    result += "@ls:" + ::StarFish::to_string(letterSpacing);
+    result += "@s:" + ::Starfish::to_string(int(size + 0.5f));
+    result += "@ls:" + ::Starfish::to_string(letterSpacing);
     result += "@s:";
     result += (style + 'a');
     result += "@w:";

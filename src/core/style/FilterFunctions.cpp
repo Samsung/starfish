@@ -18,7 +18,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/CSSTokenValue.h"
 #include "core/style/CSSParser.h"
 #include "core/style/Style.h"
@@ -26,7 +26,7 @@
 #include "core/modules/threading/ParallelJobExecutor.h"
 #include "core/modules/canvas/ShadowBlur.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FilterFunction* FilterFunction::create(const CSSFilterFunction& from)
 {
@@ -251,4 +251,4 @@ bool FilterFunctions::getStandardDeviationOfBlurFilter(Length& out)
     return false;
 }
 
-} // namespace StarFish
+} // namespace Starfish

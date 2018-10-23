@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishResourceClient__
-#define __StarFishResourceClient__
+#ifndef __StarfishResourceClient__
+#define __StarfishResourceClient__
 
-namespace StarFish {
+namespace Starfish {
 
 class Resource;
 

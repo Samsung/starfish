@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishAnimationUtil__
-#define __StarFishAnimationUtil__
+#ifndef __StarfishAnimationUtil__
+#define __StarfishAnimationUtil__
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 class FrameBox;

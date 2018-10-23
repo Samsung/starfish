@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/animation/AnimationTimingFunction.h"
 #include "core/animation/CubicBezier.h"
 #include "core/style/Style.h"
 #include "core/style/StyleTransitionData.h"
 
-namespace StarFish {
+namespace Starfish {
 StyleTransitionLayer::StyleTransitionLayer()
     : m_property(CSSStyleValuePair::KeyKind::All)
     , m_timingFunction(nullptr)

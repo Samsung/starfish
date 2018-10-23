@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishCSSVariableSyntaxTreeBuilder__
-#define __StarFishCSSVariableSyntaxTreeBuilder__
+#ifndef __StarfishCSSVariableSyntaxTreeBuilder__
+#define __StarfishCSSVariableSyntaxTreeBuilder__
 
-#include "StarFish.h"
+#include "Starfish.h"
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSVariableSyntaxTreeBuilder : public gc {
     class Block : public gc {
@@ -130,4 +130,4 @@ private:
 };
 }
 
-#endif /* __StarFishCSSVariableSyntaxTreeBuilder__ */
+#endif /* __StarfishCSSVariableSyntaxTreeBuilder__ */

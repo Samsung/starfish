@@ -18,7 +18,7 @@
  */
 
 #if defined(STARFISH_ENABLE_HTTPCACHE)
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "platform/file/File.h"
 #include "HTTPCacheEntry.h"
 #include "platform/network/http/HTTPHeaderMap.h"
@@ -28,7 +28,7 @@
 #include "platform/loader/ResourceURL.h"
 #include "core/modules/threading/Thread.h"
 
-namespace StarFish {
+namespace Starfish {
 
 const char* HTTPCacheEntry::kSeparator = "\037"; // unit separator
 

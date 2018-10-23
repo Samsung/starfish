@@ -42,10 +42,10 @@
  *  USA
  */
 
-#ifndef __StarFishUnit__
-#define __StarFishUnit__
+#ifndef __StarfishUnit__
+#define __StarfishUnit__
 
-namespace StarFish {
+namespace Starfish {
 
 class String;
 
@@ -217,8 +217,8 @@ namespace Unit {
             LayoutUnit ry = m_location.y();
             ret.m_location.setX(rx.floor());
             ret.m_location.setY(ry.floor());
-            ret.setWidth(::StarFish::snapSizeToPixel(m_size.width(), rx));
-            ret.setHeight(::StarFish::snapSizeToPixel(m_size.height(), ry));
+            ret.setWidth(::Starfish::snapSizeToPixel(m_size.width(), rx));
+            ret.setHeight(::Starfish::snapSizeToPixel(m_size.height(), ry));
             return ret;
         }
 
@@ -489,6 +489,6 @@ namespace Unit {
         bool m_isHsl;
     };
 } // namespace Unit
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

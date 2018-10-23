@@ -684,49 +684,49 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     // Following methods are internal use only
-    native private void loadUrl(long starFish, String url);
-    native private void loadData(long starFish, String data);
+    native private void loadUrl(long starfish, String url);
+    native private void loadData(long starfish, String data);
     native private long create(int initialNaturalWidth, int initialNaturalHeight,
                                float devicePixelRatio, String userAgentString, String locale,
                                String timezoneID, String localstoragePath, String cookiePath,
                                String cachePath);
-    native private void destroy(long starFish);
-    native private void goBack(long starFish);
-    native private void goForward(long starFish);
-    native private void reload(long starFish);
-    native private void stopLoading(long starFish);
-    native private void clearHistory(long starFish);
-    native private void clearCache(long starFish);
-    native private void pause(long starFish);
-    native private void resume(long starFish);
-    native private void focus(long starFish);
-    native private void blur(long starFish);
+    native private void destroy(long starfish);
+    native private void goBack(long starfish);
+    native private void goForward(long starfish);
+    native private void reload(long starfish);
+    native private void stopLoading(long starfish);
+    native private void clearHistory(long starfish);
+    native private void clearCache(long starfish);
+    native private void pause(long starfish);
+    native private void resume(long starfish);
+    native private void focus(long starfish);
+    native private void blur(long starfish);
 
-    native private void addJavascriptInterface(long starFish, String objectName,
+    native private void addJavascriptInterface(long starfish, String objectName,
                                                String functionName, Object instance);
-    native private void removeJavascriptInterface(long starFish, String objectName);
-    native private String evaluateJavaScript(long starFish, String data);
+    native private void removeJavascriptInterface(long starfish, String objectName);
+    native private String evaluateJavaScript(long starfish, String data);
     native private String getDefaultUserAgent();
 
     // Accessed by SemWebSettings
-    native public void setUserAgentString(long starFish, String userAgent);
-    native public void setCacheMode(long starFish, int mode);
-    native public void setDefaultFontSize(long starFish, int size);
+    native public void setUserAgentString(long starfish, String userAgent);
+    native public void setCacheMode(long starfish, int mode);
+    native public void setDefaultFontSize(long starfish, int size);
 
     static native private void init();
-    static native private void resizeTo(long starFish, int w, int h);
-    static native private void dispatchMouseDown(long starFish, float x, float y);
-    static native private void dispatchMouseMove(long starFish, float x, float y,
+    static native private void resizeTo(long starfish, int w, int h);
+    static native private void dispatchMouseDown(long starfish, float x, float y);
+    static native private void dispatchMouseMove(long starfish, float x, float y,
                                                  boolean isLButtonPressed,
                                                  boolean isRButtonPressed);
-    static native private void dispatchMouseUp(long starFish, float x, float y);
-    static native private void dispatchKeyDown(long starFish, int keyValue, int modifier);
-    static native private void dispatchKeyUp(long starFish, int keyValue, int modifier);
-    static native private void dispatchKeyPress(long starFish, int keyValue, int modifier);
-    static native private void dispatchCompositionStart(long starFish, String Value);
-    static native private void dispatchCompositionUpdate(long starFish, String Value);
-    static native private void dispatchCompositionEnd(long starFish, String Value);
-    native private void onDropdownMenuItemSelected(long starFish, int position);
+    static native private void dispatchMouseUp(long starfish, float x, float y);
+    static native private void dispatchKeyDown(long starfish, int keyValue, int modifier);
+    static native private void dispatchKeyUp(long starfish, int keyValue, int modifier);
+    static native private void dispatchKeyPress(long starfish, int keyValue, int modifier);
+    static native private void dispatchCompositionStart(long starfish, String Value);
+    static native private void dispatchCompositionUpdate(long starfish, String Value);
+    static native private void dispatchCompositionEnd(long starfish, String Value);
+    native private void onDropdownMenuItemSelected(long starfish, int position);
 
 
 }

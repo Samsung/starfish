@@ -17,9 +17,9 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/CSSRuleList.h"
 
-namespace StarFish {
+namespace Starfish {
 
-} /* namespace StarFish */
+} /* namespace Starfish */

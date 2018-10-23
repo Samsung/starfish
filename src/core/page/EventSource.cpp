@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/MessageEvent.h"
@@ -29,7 +29,7 @@
 #include "core/page/Window.h"
 #include "platform/network/http/HTTPStatus.h"
 
-namespace StarFish {
+namespace Starfish {
 
 DEFINE_EVENT_LISTENER(EventSource, loadstart);
 DEFINE_EVENT_LISTENER(EventSource, progress);
@@ -120,7 +120,7 @@ public:
                     m_eventSource->m_resourceRequest->response().size());
 
                 String* eventName =
-                    request->starFish()->staticStrings()->m_open.localName();
+                    request->starfish()->staticStrings()->m_open.localName();
                 Event* e = new Event(m_eventSource->document(), eventName);
                 e->setBubbles(false);
                 e->setCancelable(false);
@@ -154,7 +154,7 @@ public:
                 m_eventSource->cancel();
 
                 String* eventName =
-                    request->starFish()->staticStrings()->m_error.localName();
+                    request->starfish()->staticStrings()->m_error.localName();
                 Event* e = new Event(m_eventSource->document(), eventName,
                                      EventInit(false, false));
                 m_eventSource->dispatchEventByUA(m_eventSource, e);
@@ -165,7 +165,7 @@ public:
                 m_eventSource->failed();
 
                 String* eventName =
-                    request->starFish()->staticStrings()->m_error.localName();
+                    request->starfish()->staticStrings()->m_error.localName();
                 Event* e = new Event(m_eventSource->document(), eventName,
                                      EventInit(false, false));
                 m_eventSource->dispatchEventByUA(m_eventSource, e);
@@ -182,12 +182,12 @@ private:
     TextConverter* m_textConverter;
 };
 
-EventSource::EventSource(::StarFish::Document* document, String* url)
+EventSource::EventSource(::Starfish::Document* document, String* url)
     : EventSource(document, url, EventSourceInit())
 {
 }
 
-EventSource::EventSource(::StarFish::Document* document, String* url,
+EventSource::EventSource(::Starfish::Document* document, String* url,
                          const EventSourceInit& init)
     : EventTarget(document)
     , m_readyState(CONNECTING)

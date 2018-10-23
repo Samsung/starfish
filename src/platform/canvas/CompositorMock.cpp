@@ -17,17 +17,17 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/Canvas.h"
 
 #if defined(PORT_COMPOSITOR_BACKEND_MOCK)
 
-namespace StarFish {
+namespace Starfish {
 
 class CompositorMock : public Compositor {
 public:
-    CompositorMock(StarFish* starfish, CanvasSurface* data)
+    CompositorMock(Starfish* starfish, CanvasSurface* data)
     {
     }
 
@@ -119,13 +119,13 @@ public:
     }
 };
 
-Compositor* Compositor::create2D(StarFish* starfish, CompositorContext* ctx,
+Compositor* Compositor::create2D(Starfish* starfish, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
     return new CompositorMock(starfish, surface);
 }
 
-Compositor* Compositor::create3D(StarFish* starfish, CompositorContext* ctx)
+Compositor* Compositor::create3D(Starfish* starfish, CompositorContext* ctx)
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }

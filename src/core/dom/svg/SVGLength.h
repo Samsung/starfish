@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishSVGLength__
-#define __StarFishSVGLength__
+#ifndef __StarfishSVGLength__
+#define __StarfishSVGLength__
 
 #include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class SVGElement;
 

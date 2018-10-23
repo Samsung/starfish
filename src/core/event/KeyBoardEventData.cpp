@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "KeyBoardEventData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 String* keyValueToKey(KeyValue v)
 {
@@ -230,4 +230,4 @@ uint32_t keyValueToCharCode(KeyValue v)
         return 0;
     }
 }
-} // namespace StarFish
+} // namespace Starfish

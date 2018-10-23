@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGPolylineElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void SVGPolylineElement::didAttributeChanged(QualifiedName name, String* old,
                                              String* value,
@@ -31,7 +31,7 @@ void SVGPolylineElement::didAttributeChanged(QualifiedName name, String* old,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_points == name) {
         setNeedsPainting();

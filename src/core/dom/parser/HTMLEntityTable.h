@@ -41,12 +41,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLEntityTable__
-#define __StarFishHTMLEntityTable__
+#ifndef __StarfishHTMLEntityTable__
+#define __StarfishHTMLEntityTable__
 
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct HTMLEntityTableEntry {
     char lastCharacter() const

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishCompositor__
-#define __StarFishCompositor__
+#ifndef __StarfishCompositor__
+#define __StarfishCompositor__
 
-namespace StarFish {
+namespace Starfish {
 
 class NativeImageData;
 class PlatformWindow;

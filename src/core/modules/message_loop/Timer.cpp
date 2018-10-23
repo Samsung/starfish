@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "Timer.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 uint32_t Timer::requestAnimationFrame(Window* window,
                                       WindowSetTimeoutHandler handler,

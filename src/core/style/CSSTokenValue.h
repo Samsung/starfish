@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishCSSTokenValue__
-#define __StarFishCSSTokenValue__
+#ifndef __StarfishCSSTokenValue__
+#define __StarfishCSSTokenValue__
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSTokenValue : public std::string {
 public:

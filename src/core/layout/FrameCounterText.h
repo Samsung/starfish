@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameCounterText__
-#define __StarFishFrameCounterText__
+#ifndef __StarfishFrameCounterText__
+#define __StarfishFrameCounterText__
 
 #include "core/layout/FrameText.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CounterContentData;
 class CounterStyle;

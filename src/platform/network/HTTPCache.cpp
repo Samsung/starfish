@@ -18,7 +18,7 @@
  */
 
 #if defined(STARFISH_ENABLE_HTTPCACHE)
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTTPCache.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
@@ -43,7 +43,7 @@
 #define MAX_ENTRY_FILE_SIZE (DEFAULT_HTTP_CACHE_SIZE * 0.04)
 #define NUM_OF_COL 18
 
-namespace StarFish {
+namespace Starfish {
 
 const size_t HTTPCache::kBlockSize = BLKGETSIZE;
 

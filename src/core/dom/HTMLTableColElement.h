@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLTableColElement__
-#define __StarFishHTMLTableColElement__
+#ifndef __StarfishHTMLTableColElement__
+#define __StarfishHTMLTableColElement__
 
 #include "core/dom/HTMLTablePartElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLTableColElement : public HTMLTablePartElement {
 public:

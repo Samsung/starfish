@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishResourceLoader__
-#define __StarFishResourceLoader__
+#ifndef __StarfishResourceLoader__
+#define __StarfishResourceLoader__
 
 #include "binding/DocumentHoldable.h"
 #include "platform/loader/Resource.h"
@@ -28,7 +28,7 @@
 #include "platform/loader/HeaderResource.h"
 #include "core/modules/profiling/Profiling.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ResourceCacheData : public gc {
 public:

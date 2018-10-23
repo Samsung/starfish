@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/HTMLTableSectionElement.h"
 
@@ -26,7 +26,7 @@
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLTableRowElement.h"
 
-namespace StarFish {
+namespace Starfish {
 HTMLTableSectionElement::HTMLTableSectionElement(Document* document,
                                                  const QualifiedName& qname)
     : HTMLTablePartElement(document, qname)
@@ -86,7 +86,7 @@ HTMLElement* HTMLTableSectionElement::insertRow(long index)
     }
 
     HTMLTableRowElement* row = new HTMLTableRowElement(
-        document(), starFish()->staticStrings()->m_trTagName);
+        document(), starfish()->staticStrings()->m_trTagName);
     if (index == -1 || static_cast<size_t>(index) == rows->length()) {
         appendChild(row);
     } else {
@@ -113,7 +113,7 @@ void HTMLTableSectionElement::deleteRow(long index)
 
 String* HTMLTableSectionElement::ch()
 {
-    Nullable<String*> ret = getAttribute(starFish()->staticStrings()->m_char);
+    Nullable<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
     if (ret.hasValue()) {
         return ret.getValue();
     }
@@ -125,6 +125,6 @@ String* HTMLTableSectionElement::ch()
 
 void HTMLTableSectionElement::setCh(String* ch)
 {
-    setAttribute(starFish()->staticStrings()->m_char, ch);
+    setAttribute(starfish()->staticStrings()->m_char, ch);
 }
 }

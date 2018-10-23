@@ -16,13 +16,13 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#if defined(STARFISH_ENABLE_DOMPARSER) && !defined(__StarFishDOMParser__)
-#define __StarFishDOMParser__
+#if defined(STARFISH_ENABLE_DOMPARSER) && !defined(__StarfishDOMParser__)
+#define __StarfishDOMParser__
 
 #include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 

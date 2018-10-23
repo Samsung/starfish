@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLFormElement.h"
 #include "platform/loader/Resource.h"
@@ -29,7 +29,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // TODO : replace ResourceURL* to ReferrerURL*
 void Resource::request(ResourceRequestSyncLevel syncLevel,

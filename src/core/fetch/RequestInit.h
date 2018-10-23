@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishRequestInit__
-#define __StarFishRequestInit__
+#ifndef __StarfishRequestInit__
+#define __StarfishRequestInit__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
 #include "core/fetch/GetSet.h"
 #include "core/fetch/Headers.h"
 
-namespace StarFish {
+namespace Starfish {
 
 typedef BlobOrBufferSourceOrUSVString BodyInit;
 

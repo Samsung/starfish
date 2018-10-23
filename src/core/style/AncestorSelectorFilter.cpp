@@ -29,13 +29,13 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Element.h"
 #include "AncestorSelectorFilter.h"
 #include "core/style/Style.h"
 #include "core/style/StyleRule.h"
 
-namespace StarFish {
+namespace Starfish {
 
 enum { TagNameSalt = 13, IdSalt = 17, ClassNameSalt = 19 };
 

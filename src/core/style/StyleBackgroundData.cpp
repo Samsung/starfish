@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "platform/loader/ImageResource.h"
 #include "core/style/StyleBackgroundData.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/style/GradientData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 NativeImageData* BackgroundLayer::imageData() const
 {

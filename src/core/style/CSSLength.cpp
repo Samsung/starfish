@@ -18,11 +18,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Style.h"
 #include "CSSLength.h"
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename T>
 static CSSLength::Kind computeLengthUnit(T str)
@@ -201,4 +201,4 @@ String* CSSLength::toString() const
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-} // namespace StarFish
+} // namespace Starfish

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLOptGroupElement__
-#define __StarFishHTMLOptGroupElement__
+#ifndef __StarfishHTMLOptGroupElement__
+#define __StarfishHTMLOptGroupElement__
 
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLFormElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLOptGroupElement : public HTMLFormControl {
 public:

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishRenderResult__
-#define __StarFishRenderResult__
+#ifndef __StarfishRenderResult__
+#define __StarfishRenderResult__
 
-namespace StarFish {
+namespace Starfish {
 
 class CanvasSurface;
 

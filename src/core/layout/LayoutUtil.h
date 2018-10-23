@@ -46,15 +46,15 @@
  *  USA
  */
 
-#ifndef __StarFishLayoutUtil__
-#define __StarFishLayoutUtil__
+#ifndef __StarfishLayoutUtil__
+#define __StarfishLayoutUtil__
 
 #include <limits.h>
 #include <limits>
 #include <math.h>
 #include <stdlib.h>
 
-namespace StarFish {
+namespace Starfish {
 
 inline int32_t saturatedAddition(int32_t a, int32_t b)
 {
@@ -1290,8 +1290,8 @@ public:
         LayoutUnit ry = m_location.y();
         ret.m_location.setX(rx.floor());
         ret.m_location.setY(ry.floor());
-        ret.setWidth(::StarFish::snapSizeToPixel(m_size.width(), rx));
-        ret.setHeight(::StarFish::snapSizeToPixel(m_size.height(), ry));
+        ret.setWidth(::Starfish::snapSizeToPixel(m_size.width(), rx));
+        ret.setHeight(::Starfish::snapSizeToPixel(m_size.height(), ry));
         return ret;
     }
 

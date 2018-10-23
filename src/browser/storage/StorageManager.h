@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishStorageManager__
-#define __StarFishStorageManager__
+#ifndef __StarfishStorageManager__
+#define __StarfishStorageManager__
 
-namespace StarFish {
+namespace Starfish {
 
 class SecurityOriginData;
 

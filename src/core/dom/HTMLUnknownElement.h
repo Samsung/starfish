@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLUnknownElement__
-#define __StarFishHTMLUnknownElement__
+#ifndef __StarfishHTMLUnknownElement__
+#define __StarfishHTMLUnknownElement__
 
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLUnknownElement : public HTMLElement {
 public:

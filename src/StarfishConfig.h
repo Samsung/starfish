@@ -41,8 +41,8 @@
  *  USA
  */
 
-#ifndef __StarFishConfig__
-#define __StarFishConfig__
+#ifndef __StarfishConfig__
+#define __StarfishConfig__
 
 #if defined(STARFISH_EFL_CAIRO)
 #define PORT_WINDOW_BACKEND_GL
@@ -355,7 +355,7 @@ inline void clearStack()
 #endif
 
 #if defined(OS_WINDOWS)
-namespace StarFish {
+namespace Starfish {
 void forwardPrintingLogInfo(const char* fmt, ...);
 void forwardPrintingLogError(const char* fmt, ...);
 void forwardPrintingLogWarn(const char* fmt, ...);
@@ -379,7 +379,7 @@ const char* getWindowsTempDir();
 #endif
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_INFO
-#define STARFISH_LOG_INFO(...) ::StarFish::forwardPrintingLogInfo(__VA_ARGS__);
+#define STARFISH_LOG_INFO(...) ::Starfish::forwardPrintingLogInfo(__VA_ARGS__);
 #endif
 
 #define STARFISH_LOG_ERROR(...) fprintf(stderr, __VA_ARGS__);
@@ -398,7 +398,7 @@ const char* getWindowsTempDir();
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_ERROR
 #define STARFISH_LOG_ERROR(...) \
-    ::StarFish::forwardPrintingLogError(__VA_ARGS__);
+    ::Starfish::forwardPrintingLogError(__VA_ARGS__);
 #endif
 
 #define STARFISH_LOG_WARN(...) fprintf(stderr, __VA_ARGS__);
@@ -416,7 +416,7 @@ const char* getWindowsTempDir();
 #endif
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_WARN
-#define STARFISH_LOG_WARN(...) ::StarFish::forwardPrintingLogWarn(__VA_ARGS__);
+#define STARFISH_LOG_WARN(...) ::Starfish::forwardPrintingLogWarn(__VA_ARGS__);
 #endif
 
 #define STARFISH_CRASH STARFISH_RELEASE_ASSERT_NOT_REACHED
@@ -581,7 +581,7 @@ inline bool operator!=(const T& a, const Nullable<T>& b)
 // typedef of GC-aware vector
 template <typename T,
           typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
-using GCVectorT = StarFish::Vector<T, Allocator>;
+using GCVectorT = Starfish::Vector<T, Allocator>;
 
 template <typename T,
           typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
@@ -591,7 +591,7 @@ class GCVector : public GCVectorT<T, Allocator>, public gc {
 // typedef of GC-aware vector with atomic contents
 template <typename T, typename Allocator =
                           GCUtil::gc_malloc_atomic_ignore_off_page_allocator<T>>
-using GCAtomicVectorT = StarFish::Vector<T, Allocator>;
+using GCAtomicVectorT = Starfish::Vector<T, Allocator>;
 
 template <typename T, typename Allocator =
                           GCUtil::gc_malloc_atomic_ignore_off_page_allocator<T>>

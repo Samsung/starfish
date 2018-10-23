@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/dom/Document.h"
 #include "core/dom/HTMLIFrameElement.h"
@@ -28,7 +28,7 @@
 #include "core/page/Serializer.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HistoryManager::HistoryManager(WebView* webView)
     : m_owner(HistoryManagerOwner::OwnerIsWebView)

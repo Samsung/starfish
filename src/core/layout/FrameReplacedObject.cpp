@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLObjectElement.h"
 #include "core/layout/FrameReplacedObject.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 
-namespace StarFish {
+namespace Starfish {
 
 IntrinsicSize FrameReplacedObject::intrinsicSize()
 {

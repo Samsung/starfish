@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_TTS
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLCollection.h"
@@ -33,7 +33,7 @@
 #include "core/modules/tts/TextAlternativeHelper.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 TextAlternativeHelper::TextAlternativeHelper(WebView* webView)
     : WebViewHoldable(webView)
@@ -165,7 +165,7 @@ void TextAlternativeHelper::appendTextAlternativeIfNeeds(Node* node)
     // then that second, or subsequent, reference is not followed. This is done
     // to avoid infinite loops.
 
-    // StarFish doesn't support the "role" attribute, so ignore it
+    // Starfish doesn't support the "role" attribute, so ignore it
     Node* child = node->firstChild();
     while (child) {
         appendTextAlternativeIfNeeds(child);
@@ -202,7 +202,7 @@ bool TextAlternativeHelper::isAriaHidden(Node* node)
     }
 
     String* value = node->asElement()->getAttributeOrEmpty(
-        webView()->starFish()->staticStrings()->m_ariaHidden);
+        webView()->starfish()->staticStrings()->m_ariaHidden);
     if (value->equalsIgnoreCase("true")) {
         return true;
     }
@@ -225,11 +225,11 @@ bool TextAlternativeHelper::appendFromAriaByTypeIfNeeds(Node* node,
     switch (type) {
     case AriaByType::AriaLabelledBy:
         value = node->asElement()->getAttributeOrEmpty(
-            webView()->starFish()->staticStrings()->m_ariaLabelledby);
+            webView()->starfish()->staticStrings()->m_ariaLabelledby);
         break;
     case AriaByType::ArialDescribedBy:
         value = node->asElement()->getAttributeOrEmpty(
-            webView()->starFish()->staticStrings()->m_ariaDescribedby);
+            webView()->starfish()->staticStrings()->m_ariaDescribedby);
         break;
     default:
         STARFISH_ASSERT_NOT_REACHED();
@@ -265,16 +265,16 @@ bool TextAlternativeHelper::appendFromAriaByTypeIfNeeds(Node* node,
 bool TextAlternativeHelper::appendFromAriaLabelIfNeeds(Node* node)
 {
     String* value = node->asElement()->getAttributeOrEmpty(
-        webView()->starFish()->staticStrings()->m_ariaLabel);
+        webView()->starfish()->staticStrings()->m_ariaLabel);
     return appendTextAlterNative(value);
 }
 
 bool TextAlternativeHelper::appendFromAltAttributeIfNeeds(Node* node)
 {
-    // StarFish doesn't support the "role" attribute,
+    // Starfish doesn't support the "role" attribute,
     // so just get from the alt attribute
     String* value = node->asElement()->getAttributeOrEmpty(
-        webView()->starFish()->staticStrings()->m_alt);
+        webView()->starfish()->staticStrings()->m_alt);
     return appendTextAlterNative(value);
 }
 
@@ -290,7 +290,7 @@ bool TextAlternativeHelper::appendFromEmbeddedControlIfNeeds(Node* node)
         if (node->asHTMLInputElement()->isEditableType() ||
             node->asHTMLInputElement()->type()->equals("button")) {
             value = node->asElement()->getAttributeOrEmpty(
-                webView()->starFish()->staticStrings()->m_value);
+                webView()->starfish()->staticStrings()->m_value);
         }
     } else if (node->isHTMLTextEditable()) {
         // TODO input | textarea -> HTMLTextEditable
@@ -301,7 +301,7 @@ bool TextAlternativeHelper::appendFromEmbeddedControlIfNeeds(Node* node)
                                     ->firstSelectedOptionElement();
         if (oe) {
             value = oe->getAttributeOrEmpty(
-                webView()->starFish()->staticStrings()->m_value);
+                webView()->starfish()->staticStrings()->m_value);
         }
     }
 
@@ -332,7 +332,7 @@ bool TextAlternativeHelper::isEmbeddedControl(Node* node)
 
     // If the embedded control is a menu, use the text alternative of the
     //  chosen menu item.
-    // -> StarFish doesn't support
+    // -> Starfish doesn't support
 
     // If the embedded control is a select or combobox, use the chosen
     // option.
@@ -342,7 +342,7 @@ bool TextAlternativeHelper::isEmbeddedControl(Node* node)
     // If the embedded control is a range (e.g. a spinbutton or slider), use
     //  the value of the aria-valuetext attribute if available, or
     //  otherwise the value of the aria-valuenow attribute.
-    //  -> StarFish doesn't support
+    //  -> Starfish doesn't support
 
     // else
     return false;

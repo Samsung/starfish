@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #if defined(PORT_WINDOW_BACKEND_GL)
 
-#include "StarFish.h"
+#include "Starfish.h"
 
 #include "core/animation/Animation.h"
 #include "core/dom/MouseEvent.h"
@@ -39,7 +39,7 @@
 #include "platform/window/PlatformWindow.h"
 #include "platform/event/PlatformKeyEventData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #if defined(STARFISH_ENABLE_TEST)
 std::function<void()> g_screenShotCallback;
@@ -58,8 +58,8 @@ void screenShotInRendering(WebView* wv, const char* path,
 
 class WindowImplGL : public PlatformWindow {
 public:
-    WindowImplGL(StarFish* sf, uint32_t width, uint32_t height)
-        : PlatformWindow(sf)
+    WindowImplGL(Starfish* starfish, uint32_t width, uint32_t height)
+        : PlatformWindow(starfish)
         , m_width(width)
         , m_height(height)
         , m_glPaintingSurface(nullptr)
@@ -129,7 +129,7 @@ public:
             }
 #if defined(STARFISH_ENABLE_TEST)
             if ((webView()->startUpFlag() &
-                 StarFishStartUpFlag::enableDebugRepaintRegion)) {
+                 StarfishStartUpFlag::enableDebugRepaintRegion)) {
                 STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
                                   (float)ret.computedRepaintRect.x(),
                                   (float)ret.computedRepaintRect.y(),
@@ -225,11 +225,11 @@ Compositor* WindowImplGL::prepareCompositor()
     return Compositor::create3D(webView(), m_compostiorContext);
 }
 
-PlatformWindow* PlatformWindow::create(StarFish* sf, uint32_t width,
+PlatformWindow* PlatformWindow::create(Starfish* starfish, uint32_t width,
                                        uint32_t height)
 {
-    return new WindowImplGL(sf, width, height);
+    return new WindowImplGL(starfish, width, height);
 }
 
-} // namespace StarFish
+} // namespace Starfish
 #endif

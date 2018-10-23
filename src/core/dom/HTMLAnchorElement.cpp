@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/dom/HTMLAnchorElement.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
@@ -33,7 +33,7 @@
 
 #include "browser/history/HistoryManager.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* HTMLAnchorElement::operator new(size_t size)
 {
@@ -57,7 +57,7 @@ void HTMLAnchorElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
                                      attributeRemoved);
 
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
     if (name == ss->m_tabindex) {
         m_tabIndexWasSetExplicitly = true;
         if (m_tabIndex == -1)
@@ -75,20 +75,20 @@ void HTMLAnchorElement::didAttributeChanged(QualifiedName name, String* old,
 DOMTokenList* HTMLAnchorElement::relList()
 {
     if (!m_relList) {
-        m_relList = new DOMTokenList(this, starFish()->staticStrings()->m_rel);
+        m_relList = new DOMTokenList(this, starfish()->staticStrings()->m_rel);
     }
     return m_relList;
 }
 
 String* HTMLAnchorElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLAnchorElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
+        setAttribute(starfish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
 
@@ -99,7 +99,7 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
     }
     // TODO : Apply noreferrer
     if (event->type()->equals("click")) {
-        auto href = starFish()->staticStrings()->m_href;
+        auto href = starfish()->staticStrings()->m_href;
         Nullable<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {
             GET_EFFECTIVE_REFERRERPOLICY();
@@ -141,7 +141,7 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
 
 bool HTMLAnchorElement::supportsFocus()
 {
-    auto href = starFish()->staticStrings()->m_href;
+    auto href = starfish()->staticStrings()->m_href;
     return const_cast<HTMLAnchorElement*>(this)->hasAttribute(href) != SIZE_MAX
                ? true
                : false;

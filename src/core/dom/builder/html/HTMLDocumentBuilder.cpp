@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
@@ -33,7 +33,7 @@
 #include "platform/loader/ResourceURL.h"
 #include "core/extra/MimeType.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #if defined(STARFISH_ENABLE_NETWORK_PROFILING) || \
     defined(STARFISH_ENABLE_SCRIPT_PROFILING)
@@ -193,7 +193,7 @@ public:
                                 if (!gotChar) {
                                     if (!String::isSpaceOrNewline(
                                             m_buffer[j])) {
-                                        if (!::StarFish::isalpha(m_buffer[j])) {
+                                        if (!::Starfish::isalpha(m_buffer[j])) {
                                             break;
                                         }
                                         gotChar = true;
@@ -201,7 +201,7 @@ public:
                                             tolower(m_buffer[j]);
                                     }
                                 } else {
-                                    if (!::StarFish::isalpha(m_buffer[j])) {
+                                    if (!::Starfish::isalpha(m_buffer[j])) {
                                         tagName[tagNameLength] = 0;
                                         if (memcmp("meta", tagName, 4) == 0) {
                                             i = j;
@@ -359,7 +359,7 @@ public:
         document->m_preloadScanner = new PreloadScanner(document, m_htmlSource);
 
         m_builder.m_parser = m_parser =
-            new HTMLParser(document->starFish(), document, m_htmlSource);
+            new HTMLParser(document->starfish(), document, m_htmlSource);
         m_parser->startParse();
         m_parser->parseStep();
     }
@@ -408,14 +408,14 @@ void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
 void HTMLDocumentBuilder::build(String* str)
 {
     m_document->resourceLoader().markDocumentOpenState();
-    HTMLParser parser(starFish(), m_document, str);
+    HTMLParser parser(starfish(), m_document, str);
     parser.startParse();
     parser.parseStep();
 }
 
 void HTMLDocumentBuilder::openFunctionExplicitCalled()
 {
-    m_parser = new HTMLParser(starFish(), m_document, String::emptyString);
+    m_parser = new HTMLParser(starfish(), m_document, String::emptyString);
     m_parser->startParse();
 }
 

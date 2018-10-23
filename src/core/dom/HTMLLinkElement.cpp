@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/dom/HTMLLinkElement.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMTokenList.h"
 #include "platform/loader/ElementResourceClient.h"
@@ -32,7 +32,7 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
 
-namespace StarFish {
+namespace Starfish {
 
 bool isCSSType(const char* type);
 
@@ -56,7 +56,7 @@ void* HTMLLinkElement::operator new(size_t size)
 
 String* HTMLLinkElement::href()
 {
-    String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_href);
+    String* url = getAttributeOrEmpty(starfish()->staticStrings()->m_href);
 
     return ResourceURL::mergeDocumentURIWithURIString(
         document()->baseURL()->baseURI(), url);
@@ -64,56 +64,56 @@ String* HTMLLinkElement::href()
 
 void HTMLLinkElement::setHref(String* href)
 {
-    setAttribute(starFish()->staticStrings()->m_href, href);
+    setAttribute(starfish()->staticStrings()->m_href, href);
 }
 
 String* HTMLLinkElement::rel()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_rel);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_rel);
 }
 
 void HTMLLinkElement::setRel(String* rel)
 {
-    setAttribute(starFish()->staticStrings()->m_rel, rel);
+    setAttribute(starfish()->staticStrings()->m_rel, rel);
 }
 
 DOMTokenList* HTMLLinkElement::relList()
 {
     if (!m_relList) {
-        m_relList = new DOMTokenList(this, starFish()->staticStrings()->m_rel);
+        m_relList = new DOMTokenList(this, starfish()->staticStrings()->m_rel);
     }
     return m_relList;
 }
 
 String* HTMLLinkElement::media()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_media);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_media);
 }
 
 void HTMLLinkElement::setMedia(String* media)
 {
-    setAttribute(starFish()->staticStrings()->m_media, media);
+    setAttribute(starfish()->staticStrings()->m_media, media);
 }
 
 String* HTMLLinkElement::type()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_type);
 }
 
 void HTMLLinkElement::setType(String* type)
 {
-    setAttribute(starFish()->staticStrings()->m_type, type);
+    setAttribute(starfish()->staticStrings()->m_type, type);
 }
 
 String* HTMLLinkElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLLinkElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
+        setAttribute(starfish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
 
@@ -124,7 +124,7 @@ StyleSheet* HTMLLinkElement::sheet()
 
 ResourceURL* HTMLLinkElement::url()
 {
-    Nullable<String*> url = getAttribute(starFish()->staticStrings()->m_href);
+    Nullable<String*> url = getAttribute(starfish()->staticStrings()->m_href);
 
     if (!url.hasValue()) {
         return nullptr;
@@ -151,9 +151,9 @@ void HTMLLinkElement::checkLoadStyleSheet()
         return;
     }
 
-    Nullable<String*> type = getAttribute(starFish()->staticStrings()->m_type);
-    Nullable<String*> href = getAttribute(starFish()->staticStrings()->m_href);
-    Nullable<String*> rel = getAttribute(starFish()->staticStrings()->m_rel);
+    Nullable<String*> type = getAttribute(starfish()->staticStrings()->m_type);
+    Nullable<String*> href = getAttribute(starfish()->staticStrings()->m_href);
+    Nullable<String*> rel = getAttribute(starfish()->staticStrings()->m_rel);
 
     if (((type.hasValue() &&
           isCSSType(
@@ -221,7 +221,7 @@ void HTMLLinkElement::loadStyleSheet()
 {
     unloadStyleSheetIfExists();
     String* urlString =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_href);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_href);
     ResourceURL* url =
         new ResourceURL(urlString, document()->baseURL()->baseURI());
 
@@ -287,15 +287,15 @@ void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_href) {
+    if (name == starfish()->staticStrings()->m_href) {
         if (!old->equals(value)) {
             checkLoadStyleSheet();
         }
-    } else if (name == starFish()->staticStrings()->m_type) {
+    } else if (name == starfish()->staticStrings()->m_type) {
         checkLoadStyleSheet();
-    } else if (name == starFish()->staticStrings()->m_rel) {
+    } else if (name == starfish()->staticStrings()->m_rel) {
         checkLoadStyleSheet();
-    } else if (name == starFish()->staticStrings()->m_media) {
+    } else if (name == starfish()->staticStrings()->m_media) {
         if (!old->equals(value)) {
             checkLoadStyleSheet();
         }

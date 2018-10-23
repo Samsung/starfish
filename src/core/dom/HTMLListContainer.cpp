@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLListContainer.h"
 
-namespace StarFish {
+namespace Starfish {
 int32_t HTMLListContainer::startNumber()
 {
     return 1;

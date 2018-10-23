@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishUnitHelper__
-#define __StarFishUnitHelper__
+#ifndef __StarfishUnitHelper__
+#define __StarfishUnitHelper__
 
-namespace StarFish {
+namespace Starfish {
 
 // https://www.w3.org/TR/CSS2/syndata.html#value-def-length
 const float unitPxPerCm = 96 / 2.54;

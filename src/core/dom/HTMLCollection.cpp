@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTMLCollection::HTMLCollection(Node* root,
                                NodeListImpl::FilterFunctionType filterType,
@@ -60,7 +60,7 @@ Element* HTMLCollection::namedItem(String* key)
                 return elem;
             }
             Nullable<String*> attrStr =
-                elem->getAttribute(elem->starFish()->staticStrings()->m_name);
+                elem->getAttribute(elem->starfish()->staticStrings()->m_name);
             if (attrStr.hasValue() && attrStr.getValue()->equals(key)) {
                 return elem;
             }

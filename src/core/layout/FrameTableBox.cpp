@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLTableElement.h"
 #include "core/dom/HTMLTableCellElement.h"
@@ -30,7 +30,7 @@
 #include "core/layout/FrameTableSectionBox.h"
 #include "core/style/CSSParser.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FrameTableBox::FrameTableBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)

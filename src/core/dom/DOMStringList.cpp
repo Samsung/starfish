@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/DOMStringList.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 DOMStringList::DOMStringList(Document* document)
     : ScriptWrappable(this)

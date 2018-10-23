@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishProfiling__
-#define __StarFishProfiling__
+#ifndef __StarfishProfiling__
+#define __StarfishProfiling__
 
-namespace StarFish {
+namespace Starfish {
 
 uint64_t tickCount();     // increase 1000 by 1 second
 uint64_t longTickCount(); // increase 1000000 by 1 second

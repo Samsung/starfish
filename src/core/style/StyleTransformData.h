@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishStyleTransformData__
-#define __StarFishStyleTransformData__
+#ifndef __StarfishStyleTransformData__
+#define __StarfishStyleTransformData__
 
 #include "core/style/Style.h"
 #include "core/style/MatrixTransform.h"
@@ -27,7 +27,7 @@
 #include "core/style/SkewTransform.h"
 #include "core/style/TranslateTransform.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class NativeImageData;
 class ComputedStyle;

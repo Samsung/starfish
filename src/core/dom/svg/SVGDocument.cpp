@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/dom/svg/SVGRectElement.h"
@@ -31,12 +31,12 @@
 #include "core/dom/svg/SVGTextElement.h"
 #include "core/dom/svg/SVGStyleElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Element* SVGDocument::createSVGElement(Document* document,
                                        const QualifiedName& qname)
 {
-    StaticStrings* str = document->starFish()->staticStrings();
+    StaticStrings* str = document->starfish()->staticStrings();
     AtomicString localName = qname.localNameAtomic();
     if (str->m_svgsvgTagName == localName) {
         return new SVGSVGElement(document, qname);

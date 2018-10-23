@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishRectData__
-#define __StarFishRectData__
+#ifndef __StarfishRectData__
+#define __StarfishRectData__
 
-namespace StarFish {
+namespace Starfish {
 
 class RectData : public gc {
 public:
@@ -98,6 +98,6 @@ private:
     Length m_left;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishRectData__ */
+#endif /* __StarfishRectData__ */

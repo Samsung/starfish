@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -29,7 +29,7 @@
 #include "core/style/MediaQuerySet.h"
 #include "core/style/AncestorSelectorFilter.h"
 
-namespace StarFish {
+namespace Starfish {
 
 CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet) const
 {

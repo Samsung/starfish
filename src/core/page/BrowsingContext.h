@@ -17,20 +17,20 @@
  *  USA
  */
 
-#ifndef __StarFishBrowsingContext__
-#define __StarFishBrowsingContext__
+#ifndef __StarfishBrowsingContext__
+#define __StarfishBrowsingContext__
 
-#include "binding/StarFishHoldable.h"
+#include "binding/StarfishHoldable.h"
 #include "binding/WebViewHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class Node;
 class WebView;
 class ResourceURL;
 class ScriptBindingInstance;
-class StarFish;
+class Starfish;
 class StackingContext;
 class CanvasSurface;
 class PlatformWindow;

@@ -19,8 +19,8 @@
 
 #if defined(STARFISH_TIZEN) && defined(STARFISH_ENABLE_TTS)
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/tts/TTS.h"
 #include "core/page/WebView.h"
@@ -29,7 +29,7 @@
 #include <vconf/vconf.h>
 #include <vconf-internal-keys-tv/vconf-internal-keys-menu-system.h>
 
-namespace StarFish {
+namespace Starfish {
 
 static void onAccessibilityChanged(keynode_t* keynodeName, void* data)
 {

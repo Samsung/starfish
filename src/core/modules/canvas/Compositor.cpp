@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Compositor.h"
 #include "Canvas.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #if !defined(PORT_COMPOSITOR_BACKEND_GL)
 CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "TextConverter.h"
 
-namespace StarFish {
+namespace Starfish {
 
 TextConverter::TextConverter(String* charsetName)
     : m_converter(nullptr)

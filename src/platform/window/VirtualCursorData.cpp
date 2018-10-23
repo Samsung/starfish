@@ -17,9 +17,9 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
 

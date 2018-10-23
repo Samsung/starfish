@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishFontResource__
-#define __StarFishFontResource__
+#ifndef __StarfishFontResource__
+#define __StarfishFontResource__
 
 #include "platform/loader/Resource.h"
 #include "core/modules/canvas/font/Font.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FontResource : public Resource {
     friend class ResourceLoader;

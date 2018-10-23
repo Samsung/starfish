@@ -17,10 +17,10 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishDemuxerSource__)
-#define __StarFishDemuxerSource__
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarfishDemuxerSource__)
+#define __StarfishDemuxerSource__
 
-namespace StarFish {
+namespace Starfish {
 class DemuxerSource : public gc {
 public:
     enum SeekWhence {

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishImageResource__
-#define __StarFishImageResource__
+#ifndef __StarfishImageResource__
+#define __StarfishImageResource__
 
 #include "platform/loader/Resource.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class NativeImageData;
 class MockHTMLIFrameElement;

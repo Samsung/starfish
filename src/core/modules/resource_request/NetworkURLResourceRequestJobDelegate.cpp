@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "platform/network/HTTPCache.h"
@@ -44,7 +44,7 @@
 #define STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS 5000
 #endif
 
-namespace StarFish {
+namespace Starfish {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
 int64_t NetworkURLWorkerData::reqCnt = 0;
 int64_t NetworkURLWorkerData::hitCnt = 0;
@@ -183,7 +183,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
                     ->trim();
         }
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        HTTPCache* cache = nwd->request->starFish()->httpCache();
+        HTTPCache* cache = nwd->request->starfish()->httpCache();
         if (cache) {
             if (!nwd->cachedEntry) {
                 cache->put(nwd);
@@ -289,11 +289,11 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         uint64_t start = longTickCount();
 #endif
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        if (allowCache && m_orgProxy->starFish()->httpCache()) {
+        if (allowCache && m_orgProxy->starfish()->httpCache()) {
             auto it =
-                m_orgProxy->starFish()->httpCache()->get(m_orgProxy->url());
+                m_orgProxy->starfish()->httpCache()->get(m_orgProxy->url());
 
-            if (it != m_orgProxy->starFish()->httpCache()->end()) {
+            if (it != m_orgProxy->starfish()->httpCache()->end()) {
                 nwd->cachedEntry = it->second;
                 nwd->cachedEntry->increaseUsingCount();
                 fillHeadersWithCachedEntry(headers, nwd->cachedEntry);

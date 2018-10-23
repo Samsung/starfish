@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "FrameButtonBox.h"
 
@@ -25,7 +25,7 @@
 #include "core/dom/HTMLInputElement.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameButtonBox::operator new(size_t size)
 {

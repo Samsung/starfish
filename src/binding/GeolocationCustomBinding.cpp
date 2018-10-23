@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/modules/location/Geolocation.h"
 #include "core/modules/location/Geoposition.h"
 #include "core/modules/location/PositionError.h"
@@ -25,7 +25,7 @@
 
 #include <EscargotPublic.h>
 
-namespace StarFish {
+namespace Starfish {
 
 using namespace Escargot;
 

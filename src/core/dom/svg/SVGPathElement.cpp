@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGPathElement.h"
 #include "core/style/CSSStyleDeclaration.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void SVGPathElement::didAttributeChanged(QualifiedName name, String* old,
                                          String* value, bool attributeCreated,
@@ -31,7 +31,7 @@ void SVGPathElement::didAttributeChanged(QualifiedName name, String* old,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_d == name) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
@@ -44,7 +44,7 @@ void SVGPathElement::styleForPresentationAttribute(
 {
     SVGElement::styleForPresentationAttribute(cssValues);
 
-    String* d = getAttributeOrEmpty(starFish()->staticStrings()->m_d);
+    String* d = getAttributeOrEmpty(starfish()->staticStrings()->m_d);
     CSSStyleDeclaration decl(this);
     auto buf = d->toUTF8NonGCString();
     decl.setD(buf.data(), buf.length(), false);

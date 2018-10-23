@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/MediaQueryListEvent.h"
@@ -26,7 +26,7 @@
 #include "core/style/MediaQueryList.h"
 #include "core/style/MediaQueryListMatcher.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MediaQueryList* MediaQueryListMatcher::matchMedia(String* query)
 {
@@ -53,7 +53,7 @@ void MediaQueryListMatcher::mediaFeaturesChanged()
                                         list.first->matches());
             auto mediaQueryListEvent = new MediaQueryListEvent(
                 document(),
-                document()->starFish()->staticStrings()->m_change.localName(),
+                document()->starfish()->staticStrings()->m_change.localName(),
                 mediaQueryListEventInit);
             document()->dispatchEventByUA(list.first, mediaQueryListEvent,
                                           true);
@@ -69,4 +69,4 @@ void MediaQueryListMatcher::addMediaQueryList(MediaQueryList* list)
     m_mediaQueryLists.push_back(std::make_pair(list, list->matches()));
 }
 
-} /* namespace StarFish */
+} /* namespace Starfish */

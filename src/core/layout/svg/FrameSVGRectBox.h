@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameSVGRectBox__
-#define __StarFishFrameSVGRectBox__
+#ifndef __StarfishFrameSVGRectBox__
+#define __StarfishFrameSVGRectBox__
 
 #include "core/layout/svg/FrameSVGBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void paintPathArcCommand(Canvas* canvas, double x1, double y1, double rx,
                          double ry, double xAxisRotation, bool isLargeArc,

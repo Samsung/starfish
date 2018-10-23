@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/page/Window.h"
 
@@ -60,7 +60,7 @@
 #include <net/if.h>
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 Window* Window::create(BrowsingContext* browsingContext, ResourceURL* url,
                        uint32_t initialWidth, uint32_t initialHeight)
@@ -101,9 +101,9 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     m_scriptBindingInstance->initBinding(m_document);
 }
 
-StarFish* Window::starFish()
+Starfish* Window::starfish()
 {
-    return browsingContext()->webView()->starFish();
+    return browsingContext()->webView()->starfish();
 }
 
 void Window::dispose()
@@ -284,7 +284,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                 MessageEvent* e;
                 String* eventType;
                 if (fail == false) {
-                    eventType = window->starFish()
+                    eventType = window->starfish()
                                     ->staticStrings()
                                     ->m_message.localName();
                     e = new MessageEvent(window->document(), eventType);
@@ -305,7 +305,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                     e->setPorts(newPorts);
 
                 } else {
-                    eventType = window->starFish()
+                    eventType = window->starfish()
                                     ->staticStrings()
                                     ->m_messageerror.localName();
                     e = new MessageEvent(window->document(), eventType);
@@ -369,7 +369,7 @@ void Window::resize(uint32_t w, uint32_t h)
     if (m_width != w || m_height != h) {
         m_width = w;
         m_height = h;
-        String* eventType = starFish()->staticStrings()->m_resize.localName();
+        String* eventType = starfish()->staticStrings()->m_resize.localName();
         UIEvent* e = new UIEvent(document(), eventType);
         e->setView(this);
         if (browsingContext()->isTopLevelBrowsingContext()) {
@@ -642,7 +642,7 @@ void Window::releaseCSSTarget()
 void Window::dispatchErrorEvent(ErrorEventInit& errorInfo)
 {
     Event* errorEvent = new ErrorEvent(
-        document(), starFish()->staticStrings()->m_error.localName(),
+        document(), starfish()->staticStrings()->m_error.localName(),
         errorInfo);
     dispatchEventByUA(errorEvent);
 }
@@ -780,7 +780,7 @@ NodeList* Window::ensureFrames()
 {
     if (!m_frames) {
         m_frames = new NodeList(document(), gatherFrames,
-                                starFish()->staticStrings(), true);
+                                starfish()->staticStrings(), true);
     }
     return m_frames;
 }

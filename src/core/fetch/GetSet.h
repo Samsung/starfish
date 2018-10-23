@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishGetterSetterUtil__
-#define __StarFishGetterSetterUtil__
+#ifndef __StarfishGetterSetterUtil__
+#define __StarfishGetterSetterUtil__
 
-namespace StarFish {
+namespace Starfish {
 
 // TODO: Move these to a proper place
 

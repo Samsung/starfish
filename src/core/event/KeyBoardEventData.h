@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishKeyBoardEventData__
-#define __StarFishKeyBoardEventData__
+#ifndef __StarfishKeyBoardEventData__
+#define __StarfishKeyBoardEventData__
 
 #include "PlatformIntegrationData.h"
 using namespace LWE;
 
-namespace StarFish {
+namespace Starfish {
 
 String* keyValueToKey(KeyValue v);
 String* keyValueToCode(KeyValue v);
@@ -137,5 +137,5 @@ private:
     uint32_t m_charCode;
     uint32_t m_virtualKeyCode;
 };
-} // namespace StarFish
+} // namespace Starfish
 #endif

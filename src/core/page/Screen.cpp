@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
 #include "platform/public/ScreenInfo.h"
 
-namespace StarFish {
+namespace Starfish {
 
 int32_t Screen::availWidth() const
 {

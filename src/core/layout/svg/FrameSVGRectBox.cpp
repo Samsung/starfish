@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "FrameSVGRectBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameSVGRectBox::operator new(size_t size)
 {

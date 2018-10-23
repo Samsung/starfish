@@ -18,13 +18,13 @@
  */
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#ifndef __StarFishTextTrackCueList__
-#define __StarFishTextTrackCueList__
+#ifndef __StarfishTextTrackCueList__
+#define __StarfishTextTrackCueList__
 
 #include "TextTrackCue.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TextTrackCueList : public ScriptWrappable,
                          public DocumentHoldable,

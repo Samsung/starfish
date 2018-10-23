@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishNodeList__
-#define __StarFishNodeList__
+#ifndef __StarfishNodeList__
+#define __StarfishNodeList__
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/NodeListImpl.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Node;
 

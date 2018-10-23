@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishTouch__
-#define __StarFishTouch__
+#ifndef __StarfishTouch__
+#define __StarfishTouch__
 
 #include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class EventTarget;
 

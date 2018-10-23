@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishAttributeName__
-#define __StarFishAttributeName__
+#ifndef __StarfishAttributeName__
+#define __StarfishAttributeName__
 
-namespace StarFish {
+namespace Starfish {
 
 class AttributeName {
     STARFISH_MAKE_STACK_ALLOCATED()

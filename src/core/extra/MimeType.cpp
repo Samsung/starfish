@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "MimeType.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MimeType::MimeType()
     : m_type(String::emptyString)

@@ -18,13 +18,13 @@
  */
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#ifndef __StarFishTextTrackCue__
-#define __StarFishTextTrackCue__
+#ifndef __StarfishTextTrackCue__
+#define __StarfishTextTrackCue__
 
 #include "core/dom/EventTarget.h"
 #include "core/extra/TimeRange.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class DocumentFragment;

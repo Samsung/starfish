@@ -17,31 +17,31 @@
  *  USA
  */
 
-#ifndef __StarFishStarFishHodable__
-#define __StarFishStarFishHodable__
+#ifndef __StarfishStarfishHodable__
+#define __StarfishStarfishHodable__
 
-namespace StarFish {
+namespace Starfish {
 
-class StarFish;
+class Starfish;
 
-class StarFishHoldable {
+class StarfishHoldable {
 public:
-    StarFish* starFish() const
+    Starfish* starfish() const
     {
-        return m_starFish;
+        return m_starfish;
     }
 
 protected:
-    StarFishHoldable(StarFish* starFish)
-        : m_starFish(starFish)
+    StarfishHoldable(Starfish* starfish)
+        : m_starfish(starfish)
     {
     }
 
-    StarFish* m_starFish;
+    Starfish* m_starfish;
 
 private:
-    StarFishHoldable()
-        : StarFishHoldable(nullptr)
+    StarfishHoldable()
+        : StarfishHoldable(nullptr)
     {
     }
 };

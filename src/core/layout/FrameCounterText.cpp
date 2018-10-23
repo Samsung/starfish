@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/layout/FrameCounterText.h"
 #include "core/style/ContentData.h"
 #include "core/style/CounterStyle.h"
 #include "core/style/ContentData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FrameCounterText::FrameCounterText(Node* node, CounterType type)
     : FrameText(node, nullptr)
@@ -104,4 +104,4 @@ void FrameCounterText::updateCounterText(std::vector<int32_t>& indice)
         setText(counterStyle()->generateLabel(indice.back()));
     }
 }
-} /* namespace StarFish */
+} /* namespace Starfish */

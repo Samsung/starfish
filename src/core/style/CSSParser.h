@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishCSSParser__
-#define __StarFishCSSParser__
+#ifndef __StarfishCSSParser__
+#define __StarfishCSSParser__
 
 #include "binding/DocumentHoldable.h"
 #include "core/style/Style.h"
@@ -27,7 +27,7 @@
 #include "core/util/RefPtr.h"
 #include "core/util/GatherableString.h"
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename CharType>
 inline bool isDigit(CharType c)

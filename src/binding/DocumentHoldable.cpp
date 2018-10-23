@@ -17,23 +17,23 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "binding/DocumentHoldable.h"
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Window* DocumentHoldable::window() const
 {
     return m_document->Document::window();
 }
 
-StarFish* DocumentHoldable::starFish() const
+Starfish* DocumentHoldable::starfish() const
 {
-    return window()->starFish();
+    return window()->starfish();
 }
 
 ScriptBindingInstance* DocumentHoldable::scriptBindingInstance() const

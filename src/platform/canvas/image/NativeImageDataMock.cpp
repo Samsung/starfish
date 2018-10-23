@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #if defined(PORT_IMAGEDECODER_BACKEND_MOCK)
 
 #include "core/modules/canvas/image/NativeImageData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class NativeImageDataMock : public NativeImageData {
 public:

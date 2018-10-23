@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishTestRunner__
-#define __StarFishTestRunner__
+#ifndef __StarfishTestRunner__
+#define __StarfishTestRunner__
 
 #ifdef STARFISH_ENABLE_TEST
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 class testRunner : public ScriptWrappable {
 protected:
     testRunner()

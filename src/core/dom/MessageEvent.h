@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishMessageEvent__
-#define __StarFishMessageEvent__
+#ifndef __StarfishMessageEvent__
+#define __StarfishMessageEvent__
 
 #include "Event.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class MessagePort;
 

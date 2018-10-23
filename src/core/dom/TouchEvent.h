@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishTouchEvent__
-#define __StarFishTouchEvent__
+#ifndef __StarfishTouchEvent__
+#define __StarfishTouchEvent__
 
 #include "core/dom/UIEvent.h"
 #include "core/dom/Touch.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // TODO TouchEventInit
 // https://w3c.github.io/touch-events/#idl-def-toucheventinit

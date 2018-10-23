@@ -18,11 +18,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Style.h"
 #include "CSSAngle.h"
 
-namespace StarFish {
+namespace Starfish {
 
 CSSAngle::CSSAngle(String* str, float f)
     : m_kind(DEG)
@@ -88,4 +88,4 @@ String* CSSAngle::toString() const
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
     return String::emptyString;
 }
-} // namespace StarFish
+} // namespace Starfish

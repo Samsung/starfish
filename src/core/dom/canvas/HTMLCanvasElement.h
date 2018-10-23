@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLCanvasElement__
-#define __StarFishHTMLCanvasElement__
+#ifndef __StarfishHTMLCanvasElement__
+#define __StarfishHTMLCanvasElement__
 
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "core/dom/HTMLElement.h"
 #include "core/dom/canvas/RenderingContext.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #define STARFISH_CANVAS_DEFAULT_WIDTH 300
 #define STARFISH_CANVAS_DEFAULT_HEIGHT 150

@@ -18,12 +18,12 @@
  *  USA
  */
 
-#ifndef __StarFishCSSLength__
-#define __StarFishCSSLength__
+#ifndef __StarfishCSSLength__
+#define __StarfishCSSLength__
 
 #include "core/style/Length.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class String;
 
@@ -76,6 +76,6 @@ inline CSSLength operator*(const float a, const CSSLength& b)
     return CSSLength(a * b.value());
 }
 
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

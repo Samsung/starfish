@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLHtmlElement.h"
@@ -27,7 +27,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameDocument::operator new(size_t size)
 {

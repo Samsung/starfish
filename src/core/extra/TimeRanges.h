@@ -16,14 +16,14 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishTimeRanges__)
-#define __StarFishTimeRanges__
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarfishTimeRanges__)
+#define __StarfishTimeRanges__
 
 #include "binding/ScriptWrappable.h"
 #include "core/extra/TimeRange.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TimeRanges : public ScriptWrappable,
                    public GCAtomicVector<TimeRange>,

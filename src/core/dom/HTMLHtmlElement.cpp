@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/style/ComputedStyle.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void HTMLHtmlElement::didComputedStyleChanged(ComputedStyle* oldStyle,
                                               ComputedStyle* newStyle)

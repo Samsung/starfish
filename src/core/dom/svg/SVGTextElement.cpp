@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGTextElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void SVGTextElement::didAttributeChanged(QualifiedName name, String* old,
                                          String* value, bool attributeCreated,
@@ -30,7 +30,7 @@ void SVGTextElement::didAttributeChanged(QualifiedName name, String* old,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
 
     if (ss->m_fontDashSize == name) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
@@ -46,7 +46,7 @@ void SVGTextElement::styleForPresentationAttribute(
 {
     SVGElement::styleForPresentationAttribute(cssValues);
 
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
     {
         auto attr = getAttribute(ss->m_fontDashFamily);
         if (attr.hasValue()) {

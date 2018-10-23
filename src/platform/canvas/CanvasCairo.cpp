@@ -19,8 +19,8 @@
 
 // #define STARFISH_ENABLE_PROFILE_TIMER
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 
@@ -56,7 +56,7 @@
 
 #define CAIRO_FORMAT CAIRO_FORMAT_ARGB32
 
-namespace StarFish {
+namespace Starfish {
 
 extern bool g_enablePixelTest;
 

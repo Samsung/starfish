@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/layout/FrameQuoteText.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FrameQuoteText::FrameQuoteText(Node* node, QuoteValue val)
     : FrameText(node, nullptr)
@@ -28,4 +28,4 @@ FrameQuoteText::FrameQuoteText(Node* node, QuoteValue val)
 {
     m_node = (Node*)new FrameTextRareData(m_node);
 }
-} /* namespace StarFish */
+} /* namespace Starfish */

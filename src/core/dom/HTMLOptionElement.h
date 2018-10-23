@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLOptionElement__
-#define __StarFishHTMLOptionElement__
+#ifndef __StarfishHTMLOptionElement__
+#define __StarfishHTMLOptionElement__
 
 #include "core/dom/Document.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLFormElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameOptionBox;
 class FrameSelectBox;

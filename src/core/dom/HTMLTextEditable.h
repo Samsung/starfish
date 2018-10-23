@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLTextEditable__
-#define __StarFishHTMLTextEditable__
+#ifndef __StarfishHTMLTextEditable__
+#define __StarfishHTMLTextEditable__
 
 #include "core/dom/HTMLFormElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLTextEditable : public HTMLFormControl {
     const int CARET_THICKNESS = 2;

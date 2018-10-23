@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishNetworkSharedResourceManager__
-#define __StarFishNetworkSharedResourceManager__
+#ifndef __StarfishNetworkSharedResourceManager__
+#define __StarfishNetworkSharedResourceManager__
 
 #include <curl/curl.h>
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class HTTPTransaction;

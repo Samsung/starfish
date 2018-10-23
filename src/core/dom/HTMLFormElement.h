@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLFormElement__
-#define __StarFishHTMLFormElement__
+#ifndef __StarfishHTMLFormElement__
+#define __StarfishHTMLFormElement__
 
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DocumentBuilder;
 class HTMLFieldSetElement;

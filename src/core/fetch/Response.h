@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishResponse__
-#define __StarFishResponse__
+#ifndef __StarfishResponse__
+#define __StarfishResponse__
 
 #include "core/fetch/Body.h"
 #include "core/fetch/Headers.h"
 #include "core/fetch/GetSet.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 

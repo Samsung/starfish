@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLTextAreaElement__
-#define __StarFishHTMLTextAreaElement__
+#ifndef __StarfishHTMLTextAreaElement__
+#define __StarfishHTMLTextAreaElement__
 
 #include "core/dom/HTMLTextEditable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLTextAreaElement : public HTMLTextEditable {
 public:

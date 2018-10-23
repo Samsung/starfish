@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameBlockBoxInlineLayout__
-#define __StarFishFrameBlockBoxInlineLayout__
+#ifndef __StarfishFrameBlockBoxInlineLayout__
+#define __StarfishFrameBlockBoxInlineLayout__
 
 #include "FrameText.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct TextToken {
     FrameText* m_frameText;

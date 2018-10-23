@@ -18,21 +18,21 @@
  */
 
 #if defined(STARFISH_ENABLE_TTS)
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/tts/TTS.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void TTS::init()
 {
 #ifdef STARFISH_ENABLE_TEST
     m_isTTSEnabled = true;
     if (m_isTTSEnabled) {
-        String* text = String::createASCIIString("Hi, I am StarFish");
+        String* text = String::createASCIIString("Hi, I am Starfish");
         speech(text);
     }
 #endif

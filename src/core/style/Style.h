@@ -20,8 +20,8 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __StarFishStyle__
-#define __StarFishStyle__
+#ifndef __StarfishStyle__
+#define __StarfishStyle__
 
 #include "StaticStrings.h"
 #include "core/style/CSSTokenValue.h"
@@ -39,7 +39,7 @@
 #include "core/util/VectorWithInlineStorage.h"
 #include "core/util/BloomFilter.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class AncestorSelectorFilter;
 class AnimationTimingFunction;
@@ -210,7 +210,7 @@ enum TextAlignValue ENSURE_ENUM_UNSIGNED {
     LeftTextAlignValue,
     RightTextAlignValue,
     CenterTextAlignValue,
-    StarFishCenterTextAlignValue,
+    StarfishCenterTextAlignValue,
 };
 
 // transform-origin, background-position
@@ -1223,26 +1223,26 @@ public:
         return m_value.m_length;
     }
 
-    ::StarFish::Length lengthValue() const
+    ::Starfish::Length lengthValue() const
     {
         if (m_valueKind == Length) {
             return m_value.m_length.toLength();
         } else {
             STARFISH_ASSERT(m_valueKind == CalcValueKind);
-            return ::StarFish::Length(calcValue());
+            return ::Starfish::Length(calcValue());
         }
     }
 
-    ::StarFish::Length toLengthValue() const
+    ::Starfish::Length toLengthValue() const
     {
         if (m_valueKind == Length) {
             return m_value.m_length.toLength();
         } else if (m_valueKind == Percentage) {
-            return ::StarFish::Length(::StarFish::Length::Percent,
+            return ::Starfish::Length(::Starfish::Length::Percent,
                                       percentageValue());
         } else {
             STARFISH_ASSERT(m_valueKind == CalcValueKind);
-            return ::StarFish::Length(calcValue());
+            return ::Starfish::Length(calcValue());
         }
     }
 
@@ -2880,9 +2880,10 @@ public:
 
     bool matchNth(int count);
 
-    PseudoType parsePseudoType(StarFish* sf, AtomicString pseudoName,
+    PseudoType parsePseudoType(Starfish* starfish, AtomicString pseudoName,
                                bool hasArguments);
-    void updatePseudoType(StarFish* sf, AtomicString name, bool hasArguments);
+    void updatePseudoType(Starfish* starfish, AtomicString name,
+                          bool hasArguments);
 
 protected:
     CSSSelectorList m_pseudoSelectorList;
@@ -3116,6 +3117,6 @@ protected:
     RuleSet* m_ruleSet;
     GCAtomicVector<AtomicString> m_ruleSetAttrFilter;
 };
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

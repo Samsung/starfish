@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishBorderImageLength__
-#define __StarFishBorderImageLength__
+#ifndef __StarfishBorderImageLength__
+#define __StarfishBorderImageLength__
 
 #include "core/style/Length.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 

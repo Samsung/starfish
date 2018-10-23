@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
@@ -29,7 +29,7 @@
 #include "core/page/Window.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
-namespace StarFish {
+namespace Starfish {
 
 ScriptValue EventListener::scriptValue() const
 {
@@ -398,7 +398,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             document()->browsingContext()->setKeydownEventDefaultPrevented(
                 true);
         } else if (event->type() ==
-                   starFish()
+                   starfish()
                        ->staticStrings()
                        ->m_compositionstart.localName()) {
             document()

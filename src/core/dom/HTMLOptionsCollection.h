@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLOptionsCollection__
-#define __StarFishHTMLOptionsCollection__
+#ifndef __StarfishHTMLOptionsCollection__
+#define __StarfishHTMLOptionsCollection__
 
 #include "core/dom/HTMLCollection.h"
 #include "binding/ScriptWrappable.h"
@@ -27,7 +27,7 @@
 #include "core/dom/NodeList.h"
 #include "core/dom/NodeListImpl.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Node;
 class Element;

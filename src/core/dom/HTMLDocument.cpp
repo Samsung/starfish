@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLAnchorElement.h"
 #include "core/dom/HTMLAreaElement.h"
@@ -82,7 +82,7 @@
 #include "core/dom/HTMLVideoElement.h"
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 void* HTMLDocument::operator new(size_t size)
 {
@@ -102,7 +102,7 @@ Element* HTMLDocument::createHTMLElement(Document* document,
                                          const QualifiedName& qname)
 {
     AtomicString name = qname.localNameAtomic();
-    StaticStrings* str = document->starFish()->staticStrings();
+    StaticStrings* str = document->starfish()->staticStrings();
     if (name == str->m_htmlTagName.localNameAtomic()) {
         return new HTMLHtmlElement(document, qname);
     } else if (name == str->m_headTagName.localNameAtomic()) {
@@ -280,7 +280,7 @@ static void createHtmlCaseInsensitiveAttributesSet(
 {
     // This is the list of attributes in HTML 4.01 with values marked as "[CI]"
     // or case-insensitive
-    StaticStrings* str = document->starFish()->staticStrings();
+    StaticStrings* str = document->starfish()->staticStrings();
 
     const QualifiedName* caseInsesitiveAttributes[] = {
         /* &accept_charsetAttr, &acceptAttr, &alignAttr, &alinkAttr, &axisAttr,
@@ -313,7 +313,7 @@ bool HTMLDocument::isCaseSensitiveAttribute(Document* document,
                                             const QualifiedName& attributeName)
 {
     GCUnorderedMap<String*, size_t>& caseInsensitiveAttrSet =
-        document->starFish()->m_caseInsensitiveAttrSet;
+        document->starfish()->m_caseInsensitiveAttrSet;
 
     if (caseInsensitiveAttrSet.size() == 0)
         createHtmlCaseInsensitiveAttributesSet(document,

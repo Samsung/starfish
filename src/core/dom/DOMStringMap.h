@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDOMStringMap__
-#define __StarFishDOMStringMap__
+#ifndef __StarfishDOMStringMap__
+#define __StarfishDOMStringMap__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Element;
 

@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/layout/FrameReplacedImage.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* HTMLImageElement::operator new(size_t size)
 {
@@ -97,14 +97,14 @@ protected:
 
 void HTMLImageElement::setSrc(String* src)
 {
-    setAttribute(starFish()->staticStrings()->m_src, src);
+    setAttribute(starfish()->staticStrings()->m_src, src);
 }
 
 String* HTMLImageElement::src()
 {
-    if (hasAttribute(starFish()->staticStrings()->m_src) != SIZE_MAX) {
+    if (hasAttribute(starfish()->staticStrings()->m_src) != SIZE_MAX) {
         return (new ResourceURL(
-                    getAttributeOrEmpty(starFish()->staticStrings()->m_src),
+                    getAttributeOrEmpty(starfish()->staticStrings()->m_src),
                     document()->baseURI()))
             ->urlString();
     } else {
@@ -116,9 +116,9 @@ unsigned long HTMLImageElement::width()
 {
     unsigned long result = 0;
     String* widthStr =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_width);
     String* heightStr =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_height);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_height);
 
     if (widthStr->equals(String::emptyString)) {
         if (m_imageData) {
@@ -137,16 +137,16 @@ unsigned long HTMLImageElement::width()
 
 void HTMLImageElement::setWidth(unsigned long width)
 {
-    setAttribute(starFish()->staticStrings()->m_width, String::fromInt(width));
+    setAttribute(starfish()->staticStrings()->m_width, String::fromInt(width));
 }
 
 unsigned long HTMLImageElement::height()
 {
     unsigned long result = 0;
     String* widthStr =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_width);
     String* heightStr =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_height);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_height);
 
     if (heightStr->equals(String::emptyString)) {
         if (m_imageData) {
@@ -165,7 +165,7 @@ unsigned long HTMLImageElement::height()
 
 void HTMLImageElement::setHeight(unsigned long height)
 {
-    setAttribute(starFish()->staticStrings()->m_height,
+    setAttribute(starfish()->staticStrings()->m_height,
                  String::fromInt(height));
 }
 
@@ -175,15 +175,15 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_src &&
+    if (name == starfish()->staticStrings()->m_src &&
         !inHTMLConstructionSite()) {
         if (value->length() && document()->doesParticipateInRendering()) {
             loadImage(value);
         } else {
             unloadImage();
         }
-    } else if (name == starFish()->staticStrings()->m_width ||
-               name == starFish()->staticStrings()->m_height) {
+    } else if (name == starfish()->staticStrings()->m_width ||
+               name == starfish()->staticStrings()->m_height) {
         if (frame()) {
             setNeedsLayout();
         }
@@ -195,7 +195,7 @@ void HTMLImageElement::didNodeAdopted()
     HTMLElement::didNodeAdopted();
     if (document()->doesParticipateInRendering()) {
         Nullable<String*> srcStr =
-            getAttribute(starFish()->staticStrings()->m_src);
+            getAttribute(starfish()->staticStrings()->m_src);
         if (srcStr.hasValue() && srcStr.getValue()->length() > 0) {
             loadImage(srcStr.getValue());
         }
@@ -252,23 +252,23 @@ void HTMLImageElement::loadImage(String* src)
 
 String* HTMLImageElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLImageElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
+        setAttribute(starfish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
 
 String* HTMLImageElement::nameAttr()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_name);
 }
 
 void HTMLImageElement::setNameAttr(String* name)
 {
-    setAttribute(starFish()->staticStrings()->m_name, name);
+    setAttribute(starfish()->staticStrings()->m_name, name);
 }
 }

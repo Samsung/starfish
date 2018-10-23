@@ -19,17 +19,17 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "binding/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
 
-namespace StarFish {
+namespace Starfish {
 
 uint32_t HTMLCanvasElement::width()
 {
     Nullable<String*> width =
-        getAttribute(starFish()->staticStrings()->m_width);
+        getAttribute(starfish()->staticStrings()->m_width);
     if (!width.hasValue()) {
         return STARFISH_CANVAS_DEFAULT_WIDTH;
     }
@@ -39,7 +39,7 @@ uint32_t HTMLCanvasElement::width()
 void HTMLCanvasElement::setWidth(uint32_t value)
 {
     if (value >= 0) {
-        setAttribute(starFish()->staticStrings()->m_width,
+        setAttribute(starfish()->staticStrings()->m_width,
                      String::fromInt(value));
         if (m_renderingContext) {
             m_renderingContext->initialize();
@@ -50,7 +50,7 @@ void HTMLCanvasElement::setWidth(uint32_t value)
 uint32_t HTMLCanvasElement::height()
 {
     Nullable<String*> height =
-        getAttribute(starFish()->staticStrings()->m_height);
+        getAttribute(starfish()->staticStrings()->m_height);
     if (!height.hasValue()) {
         return STARFISH_CANVAS_DEFAULT_HEIGHT;
     }
@@ -60,7 +60,7 @@ uint32_t HTMLCanvasElement::height()
 void HTMLCanvasElement::setHeight(uint32_t value)
 {
     if (value >= 0) {
-        setAttribute(starFish()->staticStrings()->m_height,
+        setAttribute(starfish()->staticStrings()->m_height,
                      String::fromInt(value));
         if (m_renderingContext) {
             m_renderingContext->initialize();

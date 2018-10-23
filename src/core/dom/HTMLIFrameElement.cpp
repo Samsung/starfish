@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "browser/history/HistoryManager.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Event.h"
 #include "core/page/BrowsingContext.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* HTMLIFrameElement::operator new(size_t size)
 {
@@ -53,12 +53,12 @@ HTMLIFrameElement::HTMLIFrameElement(Document* document,
 
 void HTMLIFrameElement::setSrc(String* src)
 {
-    setAttribute(starFish()->staticStrings()->m_src, src);
+    setAttribute(starfish()->staticStrings()->m_src, src);
 }
 
 String* HTMLIFrameElement::src()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_src);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_src);
 }
 
 uint32_t HTMLIFrameElement::frameWidth()
@@ -81,32 +81,32 @@ uint32_t HTMLIFrameElement::frameHeight()
 
 String* HTMLIFrameElement::width()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_width);
 }
 
 void HTMLIFrameElement::setWidth(String* width)
 {
-    setAttribute(starFish()->staticStrings()->m_width, width);
+    setAttribute(starfish()->staticStrings()->m_width, width);
 }
 
 String* HTMLIFrameElement::height()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_height);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_height);
 }
 
 void HTMLIFrameElement::setHeight(String* height)
 {
-    setAttribute(starFish()->staticStrings()->m_height, height);
+    setAttribute(starfish()->staticStrings()->m_height, height);
 }
 
 String* HTMLIFrameElement::scrolling()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_scrolling);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_scrolling);
 }
 
 void HTMLIFrameElement::setScrolling(String* scrolling)
 {
-    setAttribute(starFish()->staticStrings()->m_scrolling, scrolling);
+    setAttribute(starfish()->staticStrings()->m_scrolling, scrolling);
 }
 
 void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
@@ -116,25 +116,25 @@ void HTMLIFrameElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_src) {
+    if (name == starfish()->staticStrings()->m_src) {
         if (!inHTMLConstructionSite()) {
             unloadSrc();
             if (value->length() && document()->doesParticipateInRendering()) {
                 loadSrc();
             }
         }
-    } else if (name == starFish()->staticStrings()->m_width ||
-               name == starFish()->staticStrings()->m_height) {
+    } else if (name == starfish()->staticStrings()->m_width ||
+               name == starfish()->staticStrings()->m_height) {
         if (frame()) {
             setNeedsLayout();
         }
-    } else if (name == starFish()->staticStrings()->m_tabindex) {
+    } else if (name == starfish()->staticStrings()->m_tabindex) {
         m_tabIndexWasSetExplicitly = true;
         if (m_tabIndex == -1)
             m_tabIndex = 0;
-    } else if (name == starFish()->staticStrings()->m_frameborder) {
+    } else if (name == starfish()->staticStrings()->m_frameborder) {
         setNeedsStyleRecalc(StyleChangeReason::JustNeedsRecalcSelf);
-    } else if (name == starFish()->staticStrings()->m_name) {
+    } else if (name == starfish()->staticStrings()->m_name) {
         if (m_browsingContext) {
             m_browsingContext->setName(value);
         }
@@ -195,13 +195,13 @@ Window* HTMLIFrameElement::contentWindow() const
 
 String* HTMLIFrameElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLIFrameElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
+        setAttribute(starfish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
 
@@ -232,7 +232,7 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
 
 void HTMLIFrameElement::childBrowsingContextLoaded()
 {
-    String* eventType = starFish()->staticStrings()->m_load.localName();
+    String* eventType = starfish()->staticStrings()->m_load.localName();
     Event* e = new Event(document(), eventType, EventInit(false, false));
     dispatchEventByUA(this, e, true);
 }
@@ -241,7 +241,7 @@ void HTMLIFrameElement::styleForPresentationAttribute(
     CSSStyleValuePairVectorHolder& cssValues)
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
-    size_t idx = hasAttribute(starFish()->staticStrings()->m_frameborder);
+    size_t idx = hasAttribute(starfish()->staticStrings()->m_frameborder);
     if (idx != SIZE_MAX) {
         String* val = getAssuredAttribute(idx);
         if (val->equals("0") || val->equalsIgnoreCase("none")) {
@@ -264,11 +264,11 @@ void HTMLIFrameElement::styleForPresentationAttribute(
 
 String* HTMLIFrameElement::nameAttr()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_name);
 }
 
 void HTMLIFrameElement::setNameAttr(String* name)
 {
-    setAttribute(starFish()->staticStrings()->m_name, name);
+    setAttribute(starfish()->staticStrings()->m_name, name);
 }
 }

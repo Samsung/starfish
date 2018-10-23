@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #if defined(PORT_COMPOSITOR_BACKEND_SKIA)
 
@@ -35,7 +35,7 @@
 
 #include "core/modules/profiling/Profiling.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CompositorSkia : public Compositor {
     void initFromBuffer(void* buffer, int width, int height, int stride)
@@ -56,7 +56,7 @@ class CompositorSkia : public Compositor {
     }
 
 public:
-    CompositorSkia(StarFish* starfish, CanvasSurface* data)
+    CompositorSkia(Starfish* starfish, CanvasSurface* data)
     {
         m_starfish = starfish;
         m_canvas = nullptr;
@@ -280,7 +280,7 @@ public:
     }
 
 protected:
-    StarFish* m_starfish;
+    Starfish* m_starfish;
     std::vector<float> m_opacityVector;
     size_t m_stateSize;
     sk_sp<SkSurface> m_surface;
@@ -292,17 +292,17 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Compositor* Compositor::create2D(StarFish* starfish, CompositorContext* ctx,
+Compositor* Compositor::create2D(Starfish* starfish, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
     return new CompositorSkia(starfish, surface);
 }
 
-Compositor* Compositor::create3D(StarFish* starfish, CompositorContext* ctx)
+Compositor* Compositor::create3D(Starfish* starfish, CompositorContext* ctx)
 {
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

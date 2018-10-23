@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
@@ -52,7 +52,7 @@
 #define MEDIA_ELEMENT_LOG(element, ...)
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 HTMLMediaElement::HTMLMediaElement(Document* document,
                                    const QualifiedName& qname)
@@ -129,7 +129,7 @@ DOMTokenList* HTMLMediaElement::controlsList()
 {
     if (!m_controlsList) {
         m_controlsList =
-            new DOMTokenList(this, starFish()->staticStrings()->m_controlsList);
+            new DOMTokenList(this, starfish()->staticStrings()->m_controlsList);
     }
     return m_controlsList;
 }
@@ -156,7 +156,7 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_src) {
+    if (name == starfish()->staticStrings()->m_src) {
         if (!document()->inParsing() &&
             (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
             MEDIA_ELEMENT_LOG(
@@ -167,7 +167,7 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
                 preload()->toUTF8NonGCString().data());
             load();
         }
-    } else if (name == starFish()->staticStrings()->m_loop) {
+    } else if (name == starfish()->staticStrings()->m_loop) {
         MediaPlayer* player = activeMediaPlayer();
         if (player) {
             player->setLoop(!attributeRemoved);
@@ -468,12 +468,12 @@ void HTMLMediaElement::removeTextTrack(TextTrack* track)
 
 void HTMLMediaElement::setSrc(String* src)
 {
-    setAttribute(starFish()->staticStrings()->m_src, src);
+    setAttribute(starfish()->staticStrings()->m_src, src);
 }
 
 String* HTMLMediaElement::src()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_src);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_src);
 }
 
 TextTrack* HTMLMediaElement::addTextTrack(String* kind, String* label,
@@ -526,26 +526,26 @@ void HTMLMediaElement::didNodeRemoved(Node* parent, Node* oldChild)
 
 HTMLMediaElement::PreloadState HTMLMediaElement::preloadValue()
 {
-    QualifiedName preload = starFish()->staticStrings()->m_preload;
+    QualifiedName preload = starfish()->staticStrings()->m_preload;
     size_t siz = hasAttribute(preload);
     if (siz != SIZE_MAX) {
         String* value = getAttributeOrEmpty(preload);
         if (value->length() == 0 ||
             (value->length() == 4 &&
              value->equalsIgnoreCase(
-                 AtomicString::createAtomicString(starFish(), "auto")
+                 AtomicString::createAtomicString(starfish(), "auto")
                      .string()))) {
             // The empty string is also a valid keyword, and maps to the
             // Automatic state
             return HTMLMediaElement::PRELOAD_AUTOMATIC;
         } else if (value->length() == 8 &&
                    value->equalsIgnoreCase(
-                       AtomicString::createAtomicString(starFish(), "metadata")
+                       AtomicString::createAtomicString(starfish(), "metadata")
                            .string())) {
             return HTMLMediaElement::PRELOAD_METADATA;
         } else if (value->length() == 4 &&
                    value->equalsIgnoreCase(
-                       AtomicString::createAtomicString(starFish(), "none")
+                       AtomicString::createAtomicString(starfish(), "none")
                            .string())) {
             return HTMLMediaElement::PRELOAD_NONE;
         }
@@ -556,7 +556,7 @@ HTMLMediaElement::PreloadState HTMLMediaElement::preloadValue()
 
 String* HTMLMediaElement::preload()
 {
-    return HTMLMediaElement::preloadToString(starFish(), preloadValue());
+    return HTMLMediaElement::preloadToString(starfish(), preloadValue());
 }
 
 TimeRanges* HTMLMediaElement::buffered()
@@ -700,7 +700,7 @@ bool HTMLMediaElement::ended()
 
 bool HTMLMediaElement::autoplay()
 {
-    size_t siz = hasAttribute(starFish()->staticStrings()->m_autoplay);
+    size_t siz = hasAttribute(starfish()->staticStrings()->m_autoplay);
     if (siz == SIZE_MAX) {
         return false;
     }
@@ -709,7 +709,7 @@ bool HTMLMediaElement::autoplay()
 
 bool HTMLMediaElement::loop()
 {
-    size_t siz = hasAttribute(starFish()->staticStrings()->m_loop);
+    size_t siz = hasAttribute(starfish()->staticStrings()->m_loop);
     if (siz == SIZE_MAX) {
         return false;
     }
@@ -718,7 +718,7 @@ bool HTMLMediaElement::loop()
 
 bool HTMLMediaElement::controls()
 {
-    size_t siz = hasAttribute(starFish()->staticStrings()->m_controls);
+    size_t siz = hasAttribute(starfish()->staticStrings()->m_controls);
     if (siz == SIZE_MAX) {
         return false;
     }
@@ -742,7 +742,7 @@ String* HTMLMediaElement::currentSrc()
 
 void HTMLMediaElement::setPreload(String* preload)
 {
-    setAttribute(starFish()->staticStrings()->m_preload, preload);
+    setAttribute(starfish()->staticStrings()->m_preload, preload);
 }
 
 double HTMLMediaElement::defaultPlaybackStartPosition()
@@ -830,7 +830,7 @@ void HTMLMediaElement::setPlaybackRate(double playbackRate)
 
 void HTMLMediaElement::setAutoplay(bool autoplay)
 {
-    QualifiedName name = starFish()->staticStrings()->m_autoplay;
+    QualifiedName name = starfish()->staticStrings()->m_autoplay;
     if (autoplay) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
@@ -843,7 +843,7 @@ void HTMLMediaElement::setAutoplay(bool autoplay)
 
 void HTMLMediaElement::setLoop(bool loop)
 {
-    QualifiedName name = starFish()->staticStrings()->m_loop;
+    QualifiedName name = starfish()->staticStrings()->m_loop;
     if (loop) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
@@ -856,7 +856,7 @@ void HTMLMediaElement::setLoop(bool loop)
 
 void HTMLMediaElement::setControls(bool controls)
 {
-    QualifiedName name = starFish()->staticStrings()->m_controls;
+    QualifiedName name = starfish()->staticStrings()->m_controls;
     if (controls) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {
@@ -1083,13 +1083,13 @@ void HTMLMediaElement::addEventToOperationQueue(EventTarget* t, Event* e)
 #define ADD_DISPATCH_EVENT_DEF(name, Name)                                     \
     void HTMLMediaElement::dispatch##Name##EventNow()                          \
     {                                                                          \
-        String* eventType = starFish()->staticStrings()->m_##name.localName(); \
+        String* eventType = starfish()->staticStrings()->m_##name.localName(); \
         Event* e = new Event(document(), eventType, EventInit(false, false));  \
         dispatchEventByUA(e);                                                  \
     }                                                                          \
     void HTMLMediaElement::dispatch##Name##Event()                             \
     {                                                                          \
-        String* eventType = starFish()->staticStrings()->m_##name.localName(); \
+        String* eventType = starfish()->staticStrings()->m_##name.localName(); \
         Event* e = new Event(document(), eventType, EventInit(false, false));  \
         addEventToOperationQueue(this, e);                                     \
     }
@@ -1240,7 +1240,7 @@ void ResourceSelectionContext::failedWithElements(Element* candidate)
     // Failed with elements:
     // Queue a task to fire an event named error at the candidate element.
     String* eventType =
-        m_mediaElement->starFish()->staticStrings()->m_error.localName();
+        m_mediaElement->starfish()->staticStrings()->m_error.localName();
     Event* e =
         new Event(candidate->document(), eventType, EventInit(false, false));
     m_mediaElement->addEventToOperationQueue(candidate, e);
@@ -1269,7 +1269,7 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
     // but does have a source element child, then let mode be children and let
     // candidate be the first such source element child in tree order.
     if (context->m_mode == ResourceSelectionContext::MODE_NONE) {
-        if (self->hasAttribute(self->starFish()->staticStrings()->m_src) !=
+        if (self->hasAttribute(self->starfish()->staticStrings()->m_src) !=
             SIZE_MAX) {
             context->m_mode = ResourceSelectionContext::MODE_ATTRIBUTE;
         } else if (self->hasSourceElementChild()) {

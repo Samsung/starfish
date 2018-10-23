@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/MessagePort.h"
 #include "core/dom/MessageChannel.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MessageChannel::MessageChannel(Document* document)
     : ScriptWrappable(this)

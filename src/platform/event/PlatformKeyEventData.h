@@ -20,7 +20,7 @@
 #include "core/event/EventModifierData.h"
 #include "core/event/KeyBoardEventData.h"
 
-namespace StarFish {
+namespace Starfish {
 class PlatformKeyEventData {
     friend struct KeyboardEventInit;
     STARFISH_MAKE_STACK_ALLOCATED()
@@ -159,4 +159,4 @@ private:
     EventModifierData m_eventModifierData;
     KeyboardEventData m_keyboardEventData;
 };
-} // namespace StarFish
+} // namespace Starfish

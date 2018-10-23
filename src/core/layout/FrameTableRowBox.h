@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameTableRowBox__
-#define __StarFishFrameTableRowBox__
+#ifndef __StarfishFrameTableRowBox__
+#define __StarfishFrameTableRowBox__
 
 #include "core/layout/FrameTableObjectBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameTableCellBox;
 class ColSizeStruct;

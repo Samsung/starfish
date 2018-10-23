@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/style/CSSUnitValue.h"
 
@@ -25,7 +25,7 @@
 #include "binding/DocumentHoldable.h"
 #include "core/dom/DOMException.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* CSSUnitValue::operator new(size_t size)
 {

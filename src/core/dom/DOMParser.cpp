@@ -17,8 +17,8 @@
  *  USA
  */
 #ifdef STARFISH_ENABLE_DOMPARSER
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/CDATASection.h"
 #include "core/dom/Comment.h"
 #include "core/dom/Document.h"
@@ -36,7 +36,7 @@
 
 #include <../third_party/rapidxml/rapidxml.hpp>
 
-namespace StarFish {
+namespace Starfish {
 
 ScriptBindingInstance* DOMParser::scriptBindingInstance()
 {
@@ -44,7 +44,7 @@ ScriptBindingInstance* DOMParser::scriptBindingInstance()
 }
 
 static void buildDocumentFromXML(
-    rapidxml::xml_node<char>* node, StarFish* sf, Node* parent,
+    rapidxml::xml_node<char>* node, Starfish* starfish, Node* parent,
     std::map<std::string, AtomicString> namespaceMap)
 {
     Node* newNode;
@@ -59,12 +59,14 @@ static void buildDocumentFromXML(
             std::string attrName = attr->name();
             if (attrName == "xmlns") {
                 namespaceMap[std::string("")] =
-                    AtomicString::createAttrAtomicString(sf, attr->value());
+                    AtomicString::createAttrAtomicString(starfish,
+                                                         attr->value());
                 namespaceURI =
-                    AtomicString::createAtomicString(sf, attr->value());
+                    AtomicString::createAtomicString(starfish, attr->value());
             } else if (attrName.find("xmlns:") == 0) {
                 namespaceMap[attrName.substr(6)] =
-                    AtomicString::createAttrAtomicString(sf, attr->value());
+                    AtomicString::createAttrAtomicString(starfish,
+                                                         attr->value());
             }
 
             attr = attr->next_attribute();
@@ -72,8 +74,8 @@ static void buildDocumentFromXML(
 
         auto colonPos = localNameStd.find(':');
         if (std::string::npos != colonPos) {
-            localName = AtomicString::createAtomicString(sf, node->name() +
-                                                                 colonPos + 1);
+            localName = AtomicString::createAtomicString(
+                starfish, node->name() + colonPos + 1);
 
             std::string ns = localNameStd.substr(0, colonPos);
             auto iter = namespaceMap.find(ns);
@@ -81,17 +83,19 @@ static void buildDocumentFromXML(
                 namespaceURI = iter->second;
             }
         } else {
-            localName = AtomicString::createAtomicString(sf, node->name());
+            localName =
+                AtomicString::createAtomicString(starfish, node->name());
         }
         size_t colon = localName.string()->find(":");
         if (colon != SIZE_MAX) {
             localName.string()->substring(0, colon);
         }
 
-        if (namespaceURI == sf->staticStrings()->m_xhtmlNamespaceURI) {
+        if (namespaceURI == starfish->staticStrings()->m_xhtmlNamespaceURI) {
             newNode = HTMLDocument::createHTMLElement(
                 parent->document(), QualifiedName(namespaceURI, localName));
-        } else if (namespaceURI == sf->staticStrings()->m_svgNamespaceURI) {
+        } else if (namespaceURI ==
+                   starfish->staticStrings()->m_svgNamespaceURI) {
             newNode =
                 SVGDocument::createSVGElement(parent->document(), localName);
         } else {
@@ -101,17 +105,18 @@ static void buildDocumentFromXML(
 
         attr = node->first_attribute();
         while (attr) {
-            if (namespaceURI == sf->staticStrings()->m_xhtmlNamespaceURI) {
+            if (namespaceURI ==
+                starfish->staticStrings()->m_xhtmlNamespaceURI) {
                 newNode->asElement()->setAttribute(
-                    QualifiedName(
-                        AtomicString::emptyAtomicString(),
-                        AtomicString::createAttrAtomicString(sf, attr->name())),
+                    QualifiedName(AtomicString::emptyAtomicString(),
+                                  AtomicString::createAttrAtomicString(
+                                      starfish, attr->name())),
                     String::fromUTF8(attr->value()));
             } else {
                 newNode->asElement()->setAttribute(
-                    QualifiedName(
-                        AtomicString::emptyAtomicString(),
-                        AtomicString::createAtomicString(sf, attr->name())),
+                    QualifiedName(AtomicString::emptyAtomicString(),
+                                  AtomicString::createAtomicString(
+                                      starfish, attr->name())),
                     String::fromUTF8(attr->value()));
             }
 
@@ -138,7 +143,7 @@ static void buildDocumentFromXML(
 
     rapidxml::xml_node<char>* n = node->first_node();
     while (n) {
-        buildDocumentFromXML(n, sf, newNode, namespaceMap);
+        buildDocumentFromXML(n, starfish, newNode, namespaceMap);
         n = n->next_sibling();
     }
 }
@@ -170,7 +175,7 @@ Document* DOMParser::parseFromString(String* str, String* type)
 
             rapidxml::xml_node<char>* n = doc.first_node();
             while (n) {
-                buildDocumentFromXML(n, document->starFish(), document,
+                buildDocumentFromXML(n, document->starfish(), document,
                                      std::map<std::string, AtomicString>());
                 n = n->next_sibling();
             }

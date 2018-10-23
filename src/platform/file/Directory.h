@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishDirectory__
-#define __StarFishDirectory__
+#ifndef __StarfishDirectory__
+#define __StarfishDirectory__
 
-namespace StarFish {
+namespace Starfish {
 
 class Directory : public gc_cleanup {
 public:
@@ -47,5 +47,5 @@ protected:
     String* m_path;
     bool m_isOpen;
 };
-} // namespace StarFish
+} // namespace Starfish
 #endif

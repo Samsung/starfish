@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGRectElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void SVGRectElement::didAttributeChanged(QualifiedName name, String* old,
                                          String* value, bool attributeCreated,
@@ -31,7 +31,7 @@ void SVGRectElement::didAttributeChanged(QualifiedName name, String* old,
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
 
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_rx == name) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
         setNeedsPainting();

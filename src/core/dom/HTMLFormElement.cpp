@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/HTMLFormElement.h"
 
@@ -47,7 +47,7 @@
 #include "browser/history/HistoryManager.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
     : m_name(name)
@@ -123,7 +123,7 @@ HTMLFormElement::HTMLFormElement(Document* document, const QualifiedName& qname)
     , m_plannedNavigationTaskId((size_t)-1)
     , m_isLockedForReset(false)
 {
-    setAttribute(starFish()->staticStrings()->m_name, String::emptyString);
+    setAttribute(starfish()->staticStrings()->m_name, String::emptyString);
 }
 
 HTMLFormControl::HTMLFormControl(Document* document, const QualifiedName& qname,
@@ -141,22 +141,22 @@ HTMLFormControl::HTMLFormControl(Document* document, const QualifiedName& qname,
 
 String* HTMLFormControl::domName()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_name);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_name);
 }
 
 void HTMLFormControl::setDomName(String* name)
 {
-    setAttribute(starFish()->staticStrings()->m_name, name);
+    setAttribute(starfish()->staticStrings()->m_name, name);
 }
 
 String* HTMLFormControl::type()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_type);
 }
 
 void HTMLFormControl::setType(String* type)
 {
-    setAttribute(starFish()->staticStrings()->m_type, type);
+    setAttribute(starfish()->staticStrings()->m_type, type);
 }
 
 String* HTMLFormControl::value()
@@ -172,82 +172,82 @@ void HTMLFormControl::setValue(String* value)
 
 String* HTMLFormControl::formEnctype()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_formEnctype);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_formEnctype);
 }
 
 void HTMLFormControl::setFormEnctype(String* enctype)
 {
-    setAttribute(starFish()->staticStrings()->m_formEnctype, enctype);
+    setAttribute(starfish()->staticStrings()->m_formEnctype, enctype);
 }
 
 String* HTMLFormControl::formMethod()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_formMethod);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_formMethod);
 }
 
 void HTMLFormControl::setFormMethod(String* method)
 {
-    setAttribute(starFish()->staticStrings()->m_formMethod, method);
+    setAttribute(starfish()->staticStrings()->m_formMethod, method);
 }
 
 String* HTMLFormControl::formTarget()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_formTarget);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_formTarget);
 }
 
 void HTMLFormControl::setFormTarget(String* target)
 {
-    setAttribute(starFish()->staticStrings()->m_formTarget, target);
+    setAttribute(starfish()->staticStrings()->m_formTarget, target);
 }
 
 String* HTMLFormControl::formAction()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_formAction);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_formAction);
 }
 
 void HTMLFormControl::setFormAction(String* formAction)
 {
-    setAttribute(starFish()->staticStrings()->m_formAction, formAction);
+    setAttribute(starfish()->staticStrings()->m_formAction, formAction);
 }
 
 bool HTMLFormControl::required()
 {
     Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_required);
+        getAttribute(starfish()->staticStrings()->m_required);
     return val.hasValue();
 }
 
 void HTMLFormControl::setRequired(bool required)
 {
     if (required) {
-        setAttribute(starFish()->staticStrings()->m_required,
+        setAttribute(starfish()->staticStrings()->m_required,
                      String::emptyString);
     } else {
-        removeAttribute(starFish()->staticStrings()->m_required);
+        removeAttribute(starfish()->staticStrings()->m_required);
     }
 }
 
 bool HTMLFormControl::multiple()
 {
     Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_multiple);
+        getAttribute(starfish()->staticStrings()->m_multiple);
     return val.hasValue();
 }
 
 void HTMLFormControl::setMultiple(bool multiple)
 {
     if (multiple) {
-        setAttribute(starFish()->staticStrings()->m_multiple,
+        setAttribute(starfish()->staticStrings()->m_multiple,
                      String::emptyString);
     } else {
-        removeAttribute(starFish()->staticStrings()->m_multiple);
+        removeAttribute(starfish()->staticStrings()->m_multiple);
     }
 }
 
 bool HTMLFormControl::disabled()
 {
     Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_disabled);
+        getAttribute(starfish()->staticStrings()->m_disabled);
     if (val.hasValue()) {
         return val.getValue();
     }
@@ -258,10 +258,10 @@ bool HTMLFormControl::disabled()
 void HTMLFormControl::setDisabled(bool disabled)
 {
     if (disabled) {
-        setAttribute(starFish()->staticStrings()->m_disabled,
+        setAttribute(starfish()->staticStrings()->m_disabled,
                      String::emptyString);
     } else {
-        removeAttribute(starFish()->staticStrings()->m_disabled);
+        removeAttribute(starfish()->staticStrings()->m_disabled);
     }
 }
 
@@ -317,7 +317,7 @@ void HTMLFormControl::fireSubmitEvent()
     auto fn = [](size_t handle, void* data) {
         Node* node = (Node*)data;
         String* eventType =
-            node->starFish()->staticStrings()->m_submit.localName();
+            node->starfish()->staticStrings()->m_submit.localName();
         Event* e =
             new Event(node->document(), eventType, EventInit(true, true));
         node->EventTarget::dispatchEventByUA(node, e);
@@ -332,10 +332,10 @@ void HTMLFormControl::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, val, attributeCreated,
                                      attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_disabled) {
+    if (name == starfish()->staticStrings()->m_disabled) {
         document()->invalidFocusRingCacheIfNeeded();
     } else if (m_supportTabIndex &&
-               name == starFish()->staticStrings()->m_tabindex) {
+               name == starfish()->staticStrings()->m_tabindex) {
         m_tabIndexWasSetExplicitly = true;
         if (m_tabIndex == -1)
             m_tabIndex = 0;
@@ -349,16 +349,16 @@ bool HTMLFormControl::isAutofocusable()
 
 bool HTMLFormControl::autofocus()
 {
-    return hasAttribute(starFish()->staticStrings()->m_autofocus) != SIZE_MAX;
+    return hasAttribute(starfish()->staticStrings()->m_autofocus) != SIZE_MAX;
 }
 
 void HTMLFormControl::setAutofocus(bool autofocus)
 {
     if (autofocus) {
-        setAttribute(starFish()->staticStrings()->m_autofocus,
+        setAttribute(starfish()->staticStrings()->m_autofocus,
                      String::emptyString);
     } else {
-        removeAttribute(starFish()->staticStrings()->m_autofocus);
+        removeAttribute(starfish()->staticStrings()->m_autofocus);
     }
 }
 
@@ -391,7 +391,7 @@ bool HTMLFormControl::isPlaceholderVisible()
 bool HTMLFormControl::isLabelable() const
 {
     if (isHTMLInputElement()) {
-        String* type = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+        String* type = getAttributeOrEmpty(starfish()->staticStrings()->m_type);
         if (!type->equals("hidden")) {
             return true;
         }
@@ -439,7 +439,7 @@ int32_t HTMLFormControl::maxLength()
 {
     int32_t result = 0;
     Nullable<String*> maxLengthStr =
-        getAttribute(starFish()->staticStrings()->m_maxlength);
+        getAttribute(starfish()->staticStrings()->m_maxlength);
 
     if (!maxLengthStr.hasValue()) {
         result = -1;
@@ -469,7 +469,7 @@ void HTMLFormControl::setMaxLength(int32_t maxlength)
                         "HTMLFormControl", reason);
         throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
     } else {
-        setAttribute(starFish()->staticStrings()->m_maxlength,
+        setAttribute(starfish()->staticStrings()->m_maxlength,
                      String::fromInt(maxlength));
     }
 }
@@ -478,7 +478,7 @@ int32_t HTMLFormControl::minLength()
 {
     int32_t result = 0;
     Nullable<String*> minLengthStr =
-        getAttribute(starFish()->staticStrings()->m_minlength);
+        getAttribute(starfish()->staticStrings()->m_minlength);
 
     if (!minLengthStr.hasValue()) {
         result = -1;
@@ -508,7 +508,7 @@ void HTMLFormControl::setMinLength(int32_t minlength)
                         "HTMLFormControl", reason);
         throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
     } else {
-        setAttribute(starFish()->staticStrings()->m_minlength,
+        setAttribute(starfish()->staticStrings()->m_minlength,
                      String::fromInt(minlength));
     }
 }
@@ -545,17 +545,17 @@ void* HTMLFormElement::operator new(size_t size)
 
 String* HTMLFormElement::enctype()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_enctype);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_enctype);
 }
 
 void HTMLFormElement::setEnctype(String* enctype)
 {
-    setAttribute(starFish()->staticStrings()->m_enctype, enctype);
+    setAttribute(starfish()->staticStrings()->m_enctype, enctype);
 }
 
 String* HTMLFormElement::encoding()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_enctype);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_enctype);
 }
 
 void HTMLFormElement::setEncoding(String* encoding)
@@ -565,27 +565,27 @@ void HTMLFormElement::setEncoding(String* encoding)
 
 String* HTMLFormElement::method()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_method);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_method);
 }
 
 void HTMLFormElement::setMethod(String* method)
 {
-    setAttribute(starFish()->staticStrings()->m_method, method);
+    setAttribute(starfish()->staticStrings()->m_method, method);
 }
 
 String* HTMLFormElement::target()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_target);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_target);
 }
 
 void HTMLFormElement::setTarget(String* target)
 {
-    setAttribute(starFish()->staticStrings()->m_target, target);
+    setAttribute(starfish()->staticStrings()->m_target, target);
 }
 
 String* HTMLFormElement::action()
 {
-    String* action = getAttributeOrEmpty(starFish()->staticStrings()->m_action);
+    String* action = getAttributeOrEmpty(starfish()->staticStrings()->m_action);
     if (action->equals(String::emptyString)) {
         action = document()->documentURI()->urlString();
     }
@@ -594,7 +594,7 @@ String* HTMLFormElement::action()
 
 void HTMLFormElement::setAction(String* action)
 {
-    setAttribute(starFish()->staticStrings()->m_action, action);
+    setAttribute(starfish()->staticStrings()->m_action, action);
 }
 
 // https://html.spec.whatwg.org/multipage/webappapis.html#user-interaction-task-source
@@ -627,7 +627,7 @@ bool HTMLFormElement::handleDefaultEvent(Event* event)
         return true;
     }
 
-    if (event->type() == starFish()->staticStrings()->m_submit.localName()) {
+    if (event->type() == starfish()->staticStrings()->m_submit.localName()) {
         STARFISH_ASSERT(event->target()->isHTMLElement());
         submit(event->target()->asHTMLElement());
         return true;
@@ -648,7 +648,7 @@ void HTMLFormElement::reset()
     }
     m_isLockedForReset = true;
 
-    String* eventType = starFish()->staticStrings()->m_reset.localName();
+    String* eventType = starfish()->staticStrings()->m_reset.localName();
     Event* e = new Event(document(), eventType, EventInit(true, true));
 
     if (dispatchEventByUA(this, e, true)) {

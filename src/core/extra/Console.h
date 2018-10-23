@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishConsole__
-#define __StarFishConsole__
+#ifndef __StarfishConsole__
+#define __StarfishConsole__
 
-namespace StarFish {
+namespace Starfish {
 
-class StarFish;
+class Starfish;
 
 #define CONSOLE_APIS(F) \
     F(log)              \

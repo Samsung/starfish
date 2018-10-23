@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/page/Window.h"
 #include "core/dom/Document.h"
@@ -33,10 +33,10 @@
 
 #include <uv.h>
 
-namespace StarFish {
+namespace Starfish {
 
-Timer::Timer(WebView* sf)
-    : m_webView(sf)
+Timer::Timer(WebView* webView)
+    : m_webView(webView)
 {
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;

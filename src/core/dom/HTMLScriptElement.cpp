@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/Text.h"
@@ -31,7 +31,7 @@
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/loader/ElementResourceClient.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
 extern uint64_t g_profilingBaseTime;
@@ -252,7 +252,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
         }
 
         Nullable<String*> srcStr =
-            getAttribute(starFish()->staticStrings()->m_src);
+            getAttribute(starfish()->staticStrings()->m_src);
         if (!srcStr.hasValue()) {
             if (!firstChild()) {
                 return false;
@@ -317,7 +317,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             }
 
             String* charset =
-                getAttributeOrEmpty(starFish()->staticStrings()->m_charset)
+                getAttributeOrEmpty(starfish()->staticStrings()->m_charset)
                     ->trim();
             TextResource* res =
                 document()->resourceLoader().fetchText(rurl, charset);
@@ -351,7 +351,7 @@ void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_src) {
+    if (name == starfish()->staticStrings()->m_src) {
         executeScript();
     }
 }
@@ -376,7 +376,7 @@ void HTMLScriptElement::didNodeInserted(Node* parent, Node* newChild)
 
 String* HTMLScriptElement::src()
 {
-    String* url = getAttributeOrEmpty(starFish()->staticStrings()->m_src);
+    String* url = getAttributeOrEmpty(starfish()->staticStrings()->m_src);
     if (url->equals(String::emptyString)) {
         return String::emptyString;
     }
@@ -387,27 +387,27 @@ String* HTMLScriptElement::src()
 
 void HTMLScriptElement::setSrc(String* src)
 {
-    setAttribute(starFish()->staticStrings()->m_src, src);
+    setAttribute(starfish()->staticStrings()->m_src, src);
 }
 
 String* HTMLScriptElement::type()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_type);
 }
 
 void HTMLScriptElement::setType(String* type)
 {
-    setAttribute(starFish()->staticStrings()->m_type, type);
+    setAttribute(starfish()->staticStrings()->m_type, type);
 }
 
 String* HTMLScriptElement::charset()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_charset);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_charset);
 }
 
 void HTMLScriptElement::setCharset(String* charset)
 {
-    setAttribute(starFish()->staticStrings()->m_charset, charset);
+    setAttribute(starfish()->staticStrings()->m_charset, charset);
 }
 
 String* HTMLScriptElement::text()
@@ -434,29 +434,29 @@ void HTMLScriptElement::setText(String* s)
 
 bool HTMLScriptElement::async()
 {
-    return hasAttribute(starFish()->staticStrings()->m_async) != SIZE_MAX;
+    return hasAttribute(starfish()->staticStrings()->m_async) != SIZE_MAX;
 }
 
 void HTMLScriptElement::setAsync(bool b)
 {
     if (b) {
-        setAttribute(starFish()->staticStrings()->m_async, String::emptyString);
+        setAttribute(starfish()->staticStrings()->m_async, String::emptyString);
     } else {
-        removeAttribute(starFish()->staticStrings()->m_async);
+        removeAttribute(starfish()->staticStrings()->m_async);
     }
 }
 
 bool HTMLScriptElement::defer()
 {
-    return hasAttribute(starFish()->staticStrings()->m_defer) != SIZE_MAX;
+    return hasAttribute(starfish()->staticStrings()->m_defer) != SIZE_MAX;
 }
 
 void HTMLScriptElement::setDefer(bool b)
 {
     if (b) {
-        setAttribute(starFish()->staticStrings()->m_defer, String::emptyString);
+        setAttribute(starfish()->staticStrings()->m_defer, String::emptyString);
     } else {
-        removeAttribute(starFish()->staticStrings()->m_defer);
+        removeAttribute(starfish()->staticStrings()->m_defer);
     }
 }
 
@@ -476,7 +476,7 @@ bool HTMLScriptElement::isValidScriptType()
 
     /* TODO 'module' is not supported yet.
     String* typeStr =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_type);
     if (type->equalsIgnoreCase("module")) {
         return true;
     }
@@ -487,7 +487,7 @@ bool HTMLScriptElement::isValidScriptType()
 bool HTMLScriptElement::isValidClassicScriptType()
 {
     Nullable<String*> typeStr =
-        getAttribute(starFish()->staticStrings()->m_type);
+        getAttribute(starfish()->staticStrings()->m_type);
     if (typeStr.hasValue()) {
         auto utf8Data = typeStr.getValue()->toASCIILower()->toUTF8NonGCString();
 
@@ -505,8 +505,8 @@ bool HTMLScriptElement::isValidClassicScriptType()
 
 bool HTMLScriptElement::isEventForSupported()
 {
-    String* event = getAttributeOrEmpty(starFish()->staticStrings()->m_event);
-    String* htmlFor = getAttributeOrEmpty(starFish()->staticStrings()->m_for);
+    String* event = getAttributeOrEmpty(starfish()->staticStrings()->m_event);
+    String* htmlFor = getAttributeOrEmpty(starfish()->staticStrings()->m_for);
 
     if (!isValidClassicScriptType() || event->isEmpty() || htmlFor->isEmpty()) {
         return true;
@@ -528,6 +528,6 @@ bool HTMLScriptElement::isEventForSupported()
 bool HTMLScriptElement::blockForNoModule()
 {
     return isValidClassicScriptType() &&
-           hasAttribute(starFish()->staticStrings()->m_nomodule) != SIZE_MAX;
+           hasAttribute(starfish()->staticStrings()->m_nomodule) != SIZE_MAX;
 }
 }

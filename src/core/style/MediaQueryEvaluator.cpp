@@ -45,7 +45,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/layout/LayoutUtil.h"
 #include "core/style/CSSParser.h"
 #include "core/style/MediaQueryEvaluator.h"
@@ -53,7 +53,7 @@
 #include "core/style/MediaValues.h"
 #include "core/style/UnitHelper.h"
 
-namespace StarFish {
+namespace Starfish {
 
 enum MediaFeaturePrefix { NoPrefix, MinPrefix, MaxPrefix };
 
@@ -588,4 +588,4 @@ bool MediaQueryEvaluator::eval(MediaQueryExp* exp) const
     }
 }
 
-} /* namespace StarFish */
+} /* namespace Starfish */

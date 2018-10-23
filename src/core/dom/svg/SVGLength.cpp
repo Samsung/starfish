@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "SVGLength.h"
 #include "SVGElement.h"
 #include "core/style/ComputedStyle.h"
@@ -28,7 +28,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 
-namespace StarFish {
+namespace Starfish {
 
 SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute)
     : ScriptWrappable(this)

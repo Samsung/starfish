@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishErrorEvent__
-#define __StarFishErrorEvent__
+#ifndef __StarfishErrorEvent__
+#define __StarfishErrorEvent__
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Event.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ErrorData {
     friend ErrorEvent;

@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameTableRowBox.h"
 #include "core/layout/FrameTableSectionBox.h"
 #include "core/modules/canvas/Canvas.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FrameTableRowBox::FrameTableRowBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)

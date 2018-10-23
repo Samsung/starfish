@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLTrackElement.h"
 #include "core/dom/TextTrack.h"
@@ -28,7 +28,7 @@
 #include "platform/loader/ElementResourceClient.h"
 #include "webvttparser.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class VttResourceReader : public libwebvtt::Reader {
 public:
@@ -147,17 +147,17 @@ void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_kind) {
+    if (name == starfish()->staticStrings()->m_kind) {
         m_track->setKind(value);
-    } else if (name == starFish()->staticStrings()->m_src) {
+    } else if (name == starfish()->staticStrings()->m_src) {
         // TODO : FIX HERE
         m_track->clear();
         if (!value->equals(String::emptyString)) {
             load(value);
         }
-    } else if (name == starFish()->staticStrings()->m_srclang) {
+    } else if (name == starfish()->staticStrings()->m_srclang) {
         m_track->setLanguage(value);
-    } else if (name == starFish()->staticStrings()->m_label) {
+    } else if (name == starfish()->staticStrings()->m_label) {
         m_track->setLabel(value);
     }
 }
@@ -277,7 +277,7 @@ String* HTMLTrackElement::kind()
 
 String* HTMLTrackElement::src()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_src);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_src);
 }
 
 String* HTMLTrackElement::srclang()
@@ -292,7 +292,7 @@ String* HTMLTrackElement::label()
 
 bool HTMLTrackElement::defaultAttr()
 {
-    size_t siz = hasAttribute(starFish()->staticStrings()->m_default);
+    size_t siz = hasAttribute(starfish()->staticStrings()->m_default);
     if (siz == SIZE_MAX) {
         return false;
     }
@@ -301,27 +301,27 @@ bool HTMLTrackElement::defaultAttr()
 
 void HTMLTrackElement::setKind(String* kind)
 {
-    setAttribute(starFish()->staticStrings()->m_kind, kind);
+    setAttribute(starfish()->staticStrings()->m_kind, kind);
 }
 
 void HTMLTrackElement::setSrc(String* src)
 {
-    setAttribute(starFish()->staticStrings()->m_src, src);
+    setAttribute(starfish()->staticStrings()->m_src, src);
 }
 
 void HTMLTrackElement::setSrclang(String* srclang)
 {
-    setAttribute(starFish()->staticStrings()->m_srclang, srclang);
+    setAttribute(starfish()->staticStrings()->m_srclang, srclang);
 }
 
 void HTMLTrackElement::setLabel(String* label)
 {
-    setAttribute(starFish()->staticStrings()->m_label, label);
+    setAttribute(starfish()->staticStrings()->m_label, label);
 }
 
 void HTMLTrackElement::setDefaultAttr(bool value)
 {
-    QualifiedName name = starFish()->staticStrings()->m_default;
+    QualifiedName name = starfish()->staticStrings()->m_default;
     if (value) {
         size_t siz = hasAttribute(name);
         if (siz == SIZE_MAX) {

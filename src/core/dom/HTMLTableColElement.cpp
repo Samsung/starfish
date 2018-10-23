@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLTableColElement.h"
 #include "core/dom/HTMLTableCellElement.h"
 
-namespace StarFish {
+namespace Starfish {
 void HTMLTableColElement::didAttributeChanged(QualifiedName name, String* old,
                                               String* value,
                                               bool attributeCreated,
@@ -30,7 +30,7 @@ void HTMLTableColElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLTablePartElement::didAttributeChanged(
         name, old, value, attributeCreated, attributeRemoved);
-    if (name == starFish()->staticStrings()->m_width) {
+    if (name == starfish()->staticStrings()->m_width) {
         setNeedsStyleRecalc();
     }
 }
@@ -40,7 +40,7 @@ void HTMLTableColElement::styleForPresentationAttribute(
 {
     HTMLTablePartElement::styleForPresentationAttribute(cssValues);
 
-    String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+    String* w = getAttributeOrEmpty(starfish()->staticStrings()->m_width);
     if (!w->equals(String::emptyString)) {
         // Use px as the default unit
         // There is another type (relative_length), but it is not implemented in
@@ -62,12 +62,12 @@ void HTMLTableColElement::styleForPresentationAttribute(
 
 void HTMLTableColElement::setSpan(uint32_t span)
 {
-    setAttribute(starFish()->staticStrings()->m_span, String::fromInt(span));
+    setAttribute(starfish()->staticStrings()->m_span, String::fromInt(span));
 }
 
 uint32_t HTMLTableColElement::span()
 {
-    Nullable<String*> span = getAttribute(starFish()->staticStrings()->m_span);
+    Nullable<String*> span = getAttribute(starfish()->staticStrings()->m_span);
     if (span.hasValue()) {
         int spanVal = String::parseInt(span.getValue());
         if (spanVal < 1) {
@@ -84,7 +84,7 @@ uint32_t HTMLTableColElement::span()
 
 String* HTMLTableColElement::ch()
 {
-    Nullable<String*> ret = getAttribute(starFish()->staticStrings()->m_char);
+    Nullable<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
     if (ret.hasValue()) {
         return ret.getValue();
     }
@@ -96,6 +96,6 @@ String* HTMLTableColElement::ch()
 
 void HTMLTableColElement::setCh(String* ch)
 {
-    setAttribute(starFish()->staticStrings()->m_char, ch);
+    setAttribute(starfish()->staticStrings()->m_char, ch);
 }
 }

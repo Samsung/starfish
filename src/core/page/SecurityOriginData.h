@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishSecurityOriginData__
-#define __StarFishSecurityOriginData__
+#ifndef __StarfishSecurityOriginData__
+#define __StarfishSecurityOriginData__
 
-namespace StarFish {
+namespace Starfish {
 
 class SecurityOriginData : public gc {
 public:

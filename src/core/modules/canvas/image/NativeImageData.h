@@ -20,7 +20,7 @@
 #ifndef __NativeImageData__
 #define __NativeImageData__
 
-namespace StarFish {
+namespace Starfish {
 
 class CanvasShadowData;
 
@@ -109,6 +109,6 @@ protected:
     bool m_isSeenByGC : 1;
     PreserveAspectRatioValue m_preserveAspectRatioValue : 4;
 };
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

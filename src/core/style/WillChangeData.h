@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishListWillChangeData__
-#define __StarFishListWillChangeData__
+#ifndef __StarfishListWillChangeData__
+#define __StarfishListWillChangeData__
 
-namespace StarFish {
+namespace Starfish {
 
 class WillChangeData : public GCAtomicVector<AtomicString> {
 public:

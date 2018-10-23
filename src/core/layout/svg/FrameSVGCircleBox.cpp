@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "FrameSVGCircleBox.h"
 #include "core/dom/Node.h"
 #include "core/dom/Element.h"
@@ -26,7 +26,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameSVGCircleBox::operator new(size_t size)
 {

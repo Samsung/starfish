@@ -41,13 +41,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Element.h"
 #include "core/dom/parser/AtomicHTMLToken.h"
 #include "core/dom/parser/HTMLStackItem.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTMLStackItem::HTMLStackItem(Node* node, ItemType type)
     : m_node(node)
@@ -60,7 +60,7 @@ HTMLStackItem::HTMLStackItem(Node* node, ItemType type)
         break;
     case ItemForContextElement:
         m_tokenLocalName = AtomicString::createAttrAtomicString(
-            m_node->starFish(), m_node->nodeName());
+            m_node->starfish(), m_node->nodeName());
         if (m_node->asElement()->name().namespaceURI().hasValue()) {
             m_namespaceURI =
                 m_node->asElement()->name().namespaceURI().getValue();
@@ -212,6 +212,6 @@ bool HTMLStackItem::isSpecialNode() const
 
 const StaticStrings& HTMLStackItem::staticStrings() const
 {
-    return *m_node->starFish()->staticStrings();
+    return *m_node->starfish()->staticStrings();
 }
 }

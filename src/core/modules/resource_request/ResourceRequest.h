@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishResourceRequest__
-#define __StarFishResourceRequest__
+#ifndef __StarfishResourceRequest__
+#define __StarfishResourceRequest__
 
 #include "binding/DocumentHoldable.h"
 #include "platform/network/http/HTTPUtil.h"
@@ -30,7 +30,7 @@
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/fetch/RequestData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class ResourceRequest;

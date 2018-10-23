@@ -16,13 +16,13 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#ifndef __StarFishWindow__
-#define __StarFishWindow__
+#ifndef __StarfishWindow__
+#define __StarfishWindow__
 
 #include "core/dom/EventTarget.h"
 #include "core/dom/Scrolling.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class BrowsingContext;
 class Document;
@@ -196,7 +196,7 @@ public:
         return DocumentHoldable::document();
     }
 
-    StarFish* starFish();
+    Starfish* starfish();
 
     // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
     Window* parent();

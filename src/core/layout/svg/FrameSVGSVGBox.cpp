@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "FrameSVGSVGBox.h"
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/svg/SVGSVGElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameSVGSVGBox::operator new(size_t size)
 {

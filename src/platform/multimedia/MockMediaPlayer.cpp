@@ -20,8 +20,8 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #if defined(STARFISH_USE_MOCK_MEDIAPLAYER) || !defined(STARFISH_TIZEN)
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "core/page/BrowsingContext.h"
@@ -50,7 +50,7 @@
 #define MOCKPLAYER_LOG(mk, ...)
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 MediaPlayer* MediaPlayer::create(HTMLMediaElement* element)
 {

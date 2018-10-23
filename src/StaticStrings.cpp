@@ -17,471 +17,576 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "StaticStrings.h"
 
-namespace StarFish {
+namespace Starfish {
 
-StaticStrings::StaticStrings(StarFish* sf)
-    : m_starFish(sf)
+StaticStrings::StaticStrings(Starfish* starfish)
+    : m_starfish(starfish)
     // https://infra.spec.whatwg.org/#namespaces
-    , m_xhtmlNamespaceURI(
-          AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xhtml"))
-    , m_xlinkNamespaceURI(
-          AtomicString::createAtomicString(sf, "http://www.w3.org/1999/xlink"))
+    , m_xhtmlNamespaceURI(AtomicString::createAtomicString(
+          starfish, "http://www.w3.org/1999/xhtml"))
+    , m_xlinkNamespaceURI(AtomicString::createAtomicString(
+          starfish, "http://www.w3.org/1999/xlink"))
     , m_xmlNamespaceURI(AtomicString::createAtomicString(
-          sf, "http://www.w3.org/XML/1998/namespace"))
-    , m_xmlnsNamespaceURI(
-          AtomicString::createAtomicString(sf, "http://www.w3.org/2000/xmlns/"))
-    , m_svgNamespaceURI(
-          AtomicString::createAtomicString(sf, "http://www.w3.org/2000/svg"))
+          starfish, "http://www.w3.org/XML/1998/namespace"))
+    , m_xmlnsNamespaceURI(AtomicString::createAtomicString(
+          starfish, "http://www.w3.org/2000/xmlns/"))
+    , m_svgNamespaceURI(AtomicString::createAtomicString(
+          starfish, "http://www.w3.org/2000/svg"))
     , m_mathmlNamespaceURI(AtomicString::createAtomicString(
-          sf, "http://www.w3.org/1998/Math/MathML"))
-    , m_xlink(AtomicString::createAtomicString(sf, "xlink"))
-    , m_xml(AtomicString::createAtomicString(sf, "xml"))
-    , m_xmlns(AtomicString::createAtomicString(sf, "xmlns"))
-    , m_documentLocalName(AtomicString::createAtomicString(sf, "#document"))
+          starfish, "http://www.w3.org/1998/Math/MathML"))
+    , m_xlink(AtomicString::createAtomicString(starfish, "xlink"))
+    , m_xml(AtomicString::createAtomicString(starfish, "xml"))
+    , m_xmlns(AtomicString::createAtomicString(starfish, "xmlns"))
+    , m_documentLocalName(
+          AtomicString::createAtomicString(starfish, "#document"))
     , m_documentFragmentLocalName(
-          AtomicString::createAtomicString(sf, "#document-fragment"))
-    , m_textLocalName(AtomicString::createAtomicString(sf, "#text"))
+          AtomicString::createAtomicString(starfish, "#document-fragment"))
+    , m_textLocalName(AtomicString::createAtomicString(starfish, "#text"))
     , m_cdataSectionLocalName(
-          AtomicString::createAtomicString(sf, "#cdata-section"))
-    , m_commentLocalName(AtomicString::createAtomicString(sf, "#comment"))
-    , m_true(AtomicString::createAtomicString(sf, "true"))
-    , m_false(AtomicString::createAtomicString(sf, "false"))
+          AtomicString::createAtomicString(starfish, "#cdata-section"))
+    , m_commentLocalName(AtomicString::createAtomicString(starfish, "#comment"))
+    , m_true(AtomicString::createAtomicString(starfish, "true"))
+    , m_false(AtomicString::createAtomicString(starfish, "false"))
 {
-#define DEFINE_HTML_LOCAL_NAMES(name)  \
-    m_##name##TagName = QualifiedName( \
-        m_xhtmlNamespaceURI, AtomicString::createAtomicString(sf, #name));
+#define DEFINE_HTML_LOCAL_NAMES(name)      \
+    m_##name##TagName =                    \
+        QualifiedName(m_xhtmlNamespaceURI, \
+                      AtomicString::createAtomicString(starfish, #name));
     STARFISH_ENUM_HTML_TAG_NAMES(DEFINE_HTML_LOCAL_NAMES)
 #undef DEFINE_HTML_LOCAL_NAMES
 
 #define DEFINE_SVG_LOCAL_NAMES(name)      \
     m_svg##name##TagName = QualifiedName( \
-        m_svgNamespaceURI, AtomicString::createAtomicString(sf, #name));
+        m_svgNamespaceURI, AtomicString::createAtomicString(starfish, #name));
     STARFISH_ENUM_SVG_TAG_NAMES(DEFINE_SVG_LOCAL_NAMES)
 #undef DEFINE_SVG_LOCAL_NAMES
 
-#define DEFINE_MATHML_LOCAL_NAMES(name)      \
-    m_mathml##name##TagName = QualifiedName( \
-        m_mathmlNamespaceURI, AtomicString::createAtomicString(sf, #name));
+#define DEFINE_MATHML_LOCAL_NAMES(name)     \
+    m_mathml##name##TagName =               \
+        QualifiedName(m_mathmlNamespaceURI, \
+                      AtomicString::createAtomicString(starfish, #name));
     STARFISH_ENUM_MATHML_TAG_NAMES(DEFINE_MATHML_LOCAL_NAMES)
 #undef DEFINE_MATHML_LOCAL_NAMES
 
 #define DEFINE_PSEUDO_SELECTOR_LOCAL_NAMES(name, nameLower, selectorName) \
     m_##nameLower##Selector =                                             \
-        AtomicString::createAtomicString(sf, selectorName);
+        AtomicString::createAtomicString(starfish, selectorName);
     STARFISH_ENUM_PSEUDO_SELECTORS(DEFINE_PSEUDO_SELECTOR_LOCAL_NAMES)
 #undef DEFINE_PSEUDO_SELECTOR_LOCAL_NAMES
 
-    m_id = QualifiedName(AtomicString::createAtomicString(sf, "id"));
-    m_name = QualifiedName(AtomicString::createAtomicString(sf, "name"));
-    m_class = QualifiedName(AtomicString::createAtomicString(sf, "class"));
+    m_id = QualifiedName(AtomicString::createAtomicString(starfish, "id"));
+    m_name = QualifiedName(AtomicString::createAtomicString(starfish, "name"));
+    m_class =
+        QualifiedName(AtomicString::createAtomicString(starfish, "class"));
     m_localName =
-        QualifiedName(AtomicString::createAtomicString(sf, "localName"));
-    m_style = QualifiedName(AtomicString::createAtomicString(sf, "style"));
-    m_src = QualifiedName(AtomicString::createAtomicString(sf, "src"));
-    m_width = QualifiedName(AtomicString::createAtomicString(sf, "width"));
-    m_height = QualifiedName(AtomicString::createAtomicString(sf, "height"));
-    m_rel = QualifiedName(AtomicString::createAtomicString(sf, "rel"));
-    m_rev = QualifiedName(AtomicString::createAtomicString(sf, "rev"));
-    m_href = QualifiedName(AtomicString::createAtomicString(sf, "href"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "localName"));
+    m_style =
+        QualifiedName(AtomicString::createAtomicString(starfish, "style"));
+    m_src = QualifiedName(AtomicString::createAtomicString(starfish, "src"));
+    m_width =
+        QualifiedName(AtomicString::createAtomicString(starfish, "width"));
+    m_height =
+        QualifiedName(AtomicString::createAtomicString(starfish, "height"));
+    m_rel = QualifiedName(AtomicString::createAtomicString(starfish, "rel"));
+    m_rev = QualifiedName(AtomicString::createAtomicString(starfish, "rev"));
+    m_href = QualifiedName(AtomicString::createAtomicString(starfish, "href"));
     m_hreflang =
-        QualifiedName(AtomicString::createAtomicString(sf, "hreflang"));
-    m_type = QualifiedName(AtomicString::createAtomicString(sf, "type"));
-    m_dir = QualifiedName(AtomicString::createAtomicString(sf, "dir"));
-    m_title = QualifiedName(AtomicString::createAtomicString(sf, "title"));
-    m_align = QualifiedName(AtomicString::createAtomicString(sf, "align"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "hreflang"));
+    m_type = QualifiedName(AtomicString::createAtomicString(starfish, "type"));
+    m_dir = QualifiedName(AtomicString::createAtomicString(starfish, "dir"));
+    m_title =
+        QualifiedName(AtomicString::createAtomicString(starfish, "title"));
+    m_align =
+        QualifiedName(AtomicString::createAtomicString(starfish, "align"));
     m_disabled =
-        QualifiedName(AtomicString::createAtomicString(sf, "disabled"));
-    m_color = QualifiedName(AtomicString::createAtomicString(sf, "color"));
-    m_face = QualifiedName(AtomicString::createAtomicString(sf, "face"));
-    m_size = QualifiedName(AtomicString::createAtomicString(sf, "size"));
-    m_charset = QualifiedName(AtomicString::createAtomicString(sf, "charset"));
-    m_content = QualifiedName(AtomicString::createAtomicString(sf, "content"));
-    m_for = QualifiedName(AtomicString::createAtomicString(sf, "for"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "disabled"));
+    m_color =
+        QualifiedName(AtomicString::createAtomicString(starfish, "color"));
+    m_face = QualifiedName(AtomicString::createAtomicString(starfish, "face"));
+    m_size = QualifiedName(AtomicString::createAtomicString(starfish, "size"));
+    m_charset =
+        QualifiedName(AtomicString::createAtomicString(starfish, "charset"));
+    m_content =
+        QualifiedName(AtomicString::createAtomicString(starfish, "content"));
+    m_for = QualifiedName(AtomicString::createAtomicString(starfish, "for"));
     m_httpEquiv =
-        QualifiedName(AtomicString::createAtomicString(sf, "http-equiv"));
-    m_contentLanguage =
-        QualifiedName(AtomicString::createAtomicString(sf, "content-language"));
-    m_contentEditable =
-        QualifiedName(AtomicString::createAtomicString(sf, "contentEditable"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "http-equiv"));
+    m_contentLanguage = QualifiedName(
+        AtomicString::createAtomicString(starfish, "content-language"));
+    m_contentEditable = QualifiedName(
+        AtomicString::createAtomicString(starfish, "contentEditable"));
     m_designMode =
-        QualifiedName(AtomicString::createAtomicString(sf, "designMode"));
-    m_lang = QualifiedName(AtomicString::createAtomicString(sf, "lang"));
-    m_cols = QualifiedName(AtomicString::createAtomicString(sf, "cols"));
-    m_colspan = QualifiedName(AtomicString::createAtomicString(sf, "colspan"));
-    m_coords = QualifiedName(AtomicString::createAtomicString(sf, "coords"));
-    m_cellspacing =
-        QualifiedName(AtomicString::createAtomicString(sf, "cellspacing"));
-    m_cellpadding =
-        QualifiedName(AtomicString::createAtomicString(sf, "cellpadding"));
-    m_char = QualifiedName(AtomicString::createAtomicString(sf, "char"));
-    m_rows = QualifiedName(AtomicString::createAtomicString(sf, "rows"));
-    m_rowspan = QualifiedName(AtomicString::createAtomicString(sf, "rowspan"));
-    m_bgcolor = QualifiedName(AtomicString::createAtomicString(sf, "bgcolor"));
-    m_shape = QualifiedName(AtomicString::createAtomicString(sf, "shape"));
-    m_span = QualifiedName(AtomicString::createAtomicString(sf, "span"));
-    m_scope = QualifiedName(AtomicString::createAtomicString(sf, "scope"));
-    m_media = QualifiedName(AtomicString::createAtomicString(sf, "media"));
-    m_value = QualifiedName(AtomicString::createAtomicString(sf, "value"));
-    m_defaultValue =
-        QualifiedName(AtomicString::createAtomicString(sf, "defaultValue"));
-    m_max = QualifiedName(AtomicString::createAtomicString(sf, "max"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "designMode"));
+    m_lang = QualifiedName(AtomicString::createAtomicString(starfish, "lang"));
+    m_cols = QualifiedName(AtomicString::createAtomicString(starfish, "cols"));
+    m_colspan =
+        QualifiedName(AtomicString::createAtomicString(starfish, "colspan"));
+    m_coords =
+        QualifiedName(AtomicString::createAtomicString(starfish, "coords"));
+    m_cellspacing = QualifiedName(
+        AtomicString::createAtomicString(starfish, "cellspacing"));
+    m_cellpadding = QualifiedName(
+        AtomicString::createAtomicString(starfish, "cellpadding"));
+    m_char = QualifiedName(AtomicString::createAtomicString(starfish, "char"));
+    m_rows = QualifiedName(AtomicString::createAtomicString(starfish, "rows"));
+    m_rowspan =
+        QualifiedName(AtomicString::createAtomicString(starfish, "rowspan"));
+    m_bgcolor =
+        QualifiedName(AtomicString::createAtomicString(starfish, "bgcolor"));
+    m_shape =
+        QualifiedName(AtomicString::createAtomicString(starfish, "shape"));
+    m_span = QualifiedName(AtomicString::createAtomicString(starfish, "span"));
+    m_scope =
+        QualifiedName(AtomicString::createAtomicString(starfish, "scope"));
+    m_media =
+        QualifiedName(AtomicString::createAtomicString(starfish, "media"));
+    m_value =
+        QualifiedName(AtomicString::createAtomicString(starfish, "value"));
+    m_defaultValue = QualifiedName(
+        AtomicString::createAtomicString(starfish, "defaultValue"));
+    m_max = QualifiedName(AtomicString::createAtomicString(starfish, "max"));
     m_maxlength =
-        QualifiedName(AtomicString::createAtomicString(sf, "maxlength"));
-    m_min = QualifiedName(AtomicString::createAtomicString(sf, "min"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "maxlength"));
+    m_min = QualifiedName(AtomicString::createAtomicString(starfish, "min"));
     m_minlength =
-        QualifiedName(AtomicString::createAtomicString(sf, "minlength"));
-    m_step = QualifiedName(AtomicString::createAtomicString(sf, "step"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "minlength"));
+    m_step = QualifiedName(AtomicString::createAtomicString(starfish, "step"));
     m_tabindex =
-        QualifiedName(AtomicString::createAtomicString(sf, "tabindex"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "tabindex"));
     m_formAction =
-        QualifiedName(AtomicString::createAtomicString(sf, "formAction"));
-    m_action = QualifiedName(AtomicString::createAtomicString(sf, "action"));
-    m_enctype = QualifiedName(AtomicString::createAtomicString(sf, "enctype"));
-    m_method = QualifiedName(AtomicString::createAtomicString(sf, "method"));
-    m_target = QualifiedName(AtomicString::createAtomicString(sf, "target"));
-    m_formEnctype =
-        QualifiedName(AtomicString::createAtomicString(sf, "formyEnctype"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "formAction"));
+    m_action =
+        QualifiedName(AtomicString::createAtomicString(starfish, "action"));
+    m_enctype =
+        QualifiedName(AtomicString::createAtomicString(starfish, "enctype"));
+    m_method =
+        QualifiedName(AtomicString::createAtomicString(starfish, "method"));
+    m_target =
+        QualifiedName(AtomicString::createAtomicString(starfish, "target"));
+    m_formEnctype = QualifiedName(
+        AtomicString::createAtomicString(starfish, "formyEnctype"));
     m_formMethod =
-        QualifiedName(AtomicString::createAtomicString(sf, "formMethod"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "formMethod"));
     m_formTarget =
-        QualifiedName(AtomicString::createAtomicString(sf, "formTarget"));
-    m_checked = QualifiedName(AtomicString::createAtomicString(sf, "checked"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "formTarget"));
+    m_checked =
+        QualifiedName(AtomicString::createAtomicString(starfish, "checked"));
     m_checkbox =
-        QualifiedName(AtomicString::createAtomicString(sf, "checkbox"));
-    m_radio = QualifiedName(AtomicString::createAtomicString(sf, "radio"));
-    m_text = QualifiedName(AtomicString::createAtomicString(sf, "text"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "checkbox"));
+    m_radio =
+        QualifiedName(AtomicString::createAtomicString(starfish, "radio"));
+    m_text = QualifiedName(AtomicString::createAtomicString(starfish, "text"));
     m_textlength =
-        QualifiedName(AtomicString::createAtomicString(sf, "textlength"));
-    m_placeholder =
-        QualifiedName(AtomicString::createAtomicString(sf, "placeholder"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "textlength"));
+    m_placeholder = QualifiedName(
+        AtomicString::createAtomicString(starfish, "placeholder"));
     m_selected =
-        QualifiedName(AtomicString::createAtomicString(sf, "selected"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "selected"));
     m_multiple =
-        QualifiedName(AtomicString::createAtomicString(sf, "multiple"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "multiple"));
     m_required =
-        QualifiedName(AtomicString::createAtomicString(sf, "required"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "required"));
     m_reversed =
-        QualifiedName(AtomicString::createAtomicString(sf, "reversed"));
-    m_alt = QualifiedName(AtomicString::createAtomicString(sf, "alt"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "reversed"));
+    m_alt = QualifiedName(AtomicString::createAtomicString(starfish, "alt"));
     m_scrolling =
-        QualifiedName(AtomicString::createAtomicString(sf, "scrolling"));
-    m_frameborder =
-        QualifiedName(AtomicString::createAtomicString(sf, "frameborder"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "scrolling"));
+    m_frameborder = QualifiedName(
+        AtomicString::createAtomicString(starfish, "frameborder"));
     m_autofocus =
-        QualifiedName(AtomicString::createAtomicString(sf, "autofocus"));
-    m_async = QualifiedName(AtomicString::createAtomicString(sf, "async"));
-    m_defer = QualifiedName(AtomicString::createAtomicString(sf, "defer"));
-    m_compact = QualifiedName(AtomicString::createAtomicString(sf, "compact"));
-    m_cite = QualifiedName(AtomicString::createAtomicString(sf, "cite"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "autofocus"));
+    m_async =
+        QualifiedName(AtomicString::createAtomicString(starfish, "async"));
+    m_defer =
+        QualifiedName(AtomicString::createAtomicString(starfish, "defer"));
+    m_compact =
+        QualifiedName(AtomicString::createAtomicString(starfish, "compact"));
+    m_cite = QualifiedName(AtomicString::createAtomicString(starfish, "cite"));
     m_datetime =
-        QualifiedName(AtomicString::createAtomicString(sf, "datetime"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "datetime"));
     m_valuetype =
-        QualifiedName(AtomicString::createAtomicString(sf, "valuetype"));
-    m_nohref = QualifiedName(AtomicString::createAtomicString(sf, "nohref"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "valuetype"));
+    m_nohref =
+        QualifiedName(AtomicString::createAtomicString(starfish, "nohref"));
     m_download =
-        QualifiedName(AtomicString::createAtomicString(sf, "download"));
-    m_ping = QualifiedName(AtomicString::createAtomicString(sf, "ping"));
-    m_usemap = QualifiedName(AtomicString::createAtomicString(sf, "useMap"));
-    m_charoff = QualifiedName(AtomicString::createAtomicString(sf, "charoff"));
-    m_valign = QualifiedName(AtomicString::createAtomicString(sf, "valign"));
-    m_link = QualifiedName(AtomicString::createAtomicString(sf, "link"));
-    m_vlink = QualifiedName(AtomicString::createAtomicString(sf, "vlink"));
-    m_alink = QualifiedName(AtomicString::createAtomicString(sf, "alink"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "download"));
+    m_ping = QualifiedName(AtomicString::createAtomicString(starfish, "ping"));
+    m_usemap =
+        QualifiedName(AtomicString::createAtomicString(starfish, "useMap"));
+    m_charoff =
+        QualifiedName(AtomicString::createAtomicString(starfish, "charoff"));
+    m_valign =
+        QualifiedName(AtomicString::createAtomicString(starfish, "valign"));
+    m_link = QualifiedName(AtomicString::createAtomicString(starfish, "link"));
+    m_vlink =
+        QualifiedName(AtomicString::createAtomicString(starfish, "vlink"));
+    m_alink =
+        QualifiedName(AtomicString::createAtomicString(starfish, "alink"));
     m_background =
-        QualifiedName(AtomicString::createAtomicString(sf, "background"));
-    m_headers = QualifiedName(AtomicString::createAtomicString(sf, "headers"));
-    m_abbr = QualifiedName(AtomicString::createAtomicString(sf, "abbr"));
-    m_nowrap = QualifiedName(AtomicString::createAtomicString(sf, "nowrap"));
-    m_axis = QualifiedName(AtomicString::createAtomicString(sf, "axis"));
-    m_tbodies = QualifiedName(AtomicString::createAtomicString(sf, "bodies"));
-    m_border = QualifiedName(AtomicString::createAtomicString(sf, "border"));
-    m_bordercolor =
-        QualifiedName(AtomicString::createAtomicString(sf, "bordercolor"));
-    m_frame = QualifiedName(AtomicString::createAtomicString(sf, "frame"));
-    m_rules = QualifiedName(AtomicString::createAtomicString(sf, "rules"));
-    m_summary = QualifiedName(AtomicString::createAtomicString(sf, "summary"));
-    m_referrerpolicy =
-        QualifiedName(AtomicString::createAtomicString(sf, "referrerpolicy"));
-    m_event = QualifiedName(AtomicString::createAtomicString(sf, "event"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "background"));
+    m_headers =
+        QualifiedName(AtomicString::createAtomicString(starfish, "headers"));
+    m_abbr = QualifiedName(AtomicString::createAtomicString(starfish, "abbr"));
+    m_nowrap =
+        QualifiedName(AtomicString::createAtomicString(starfish, "nowrap"));
+    m_axis = QualifiedName(AtomicString::createAtomicString(starfish, "axis"));
+    m_tbodies =
+        QualifiedName(AtomicString::createAtomicString(starfish, "bodies"));
+    m_border =
+        QualifiedName(AtomicString::createAtomicString(starfish, "border"));
+    m_bordercolor = QualifiedName(
+        AtomicString::createAtomicString(starfish, "bordercolor"));
+    m_frame =
+        QualifiedName(AtomicString::createAtomicString(starfish, "frame"));
+    m_rules =
+        QualifiedName(AtomicString::createAtomicString(starfish, "rules"));
+    m_summary =
+        QualifiedName(AtomicString::createAtomicString(starfish, "summary"));
+    m_referrerpolicy = QualifiedName(
+        AtomicString::createAtomicString(starfish, "referrerpolicy"));
+    m_event =
+        QualifiedName(AtomicString::createAtomicString(starfish, "event"));
     m_nomodule =
-        QualifiedName(AtomicString::createAtomicString(sf, "nomodule"));
-    m_noshade = QualifiedName(AtomicString::createAtomicString(sf, "noshade"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "nomodule"));
+    m_noshade =
+        QualifiedName(AtomicString::createAtomicString(starfish, "noshade"));
 
     m_longdesc =
-        QualifiedName(AtomicString::createAtomicString(sf, "longdesc"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "longdesc"));
 
-    m_hspace = QualifiedName(AtomicString::createAtomicString(sf, "hspace"));
+    m_hspace =
+        QualifiedName(AtomicString::createAtomicString(starfish, "hspace"));
 
-    m_vspace = QualifiedName(AtomicString::createAtomicString(sf, "vspace"));
+    m_vspace =
+        QualifiedName(AtomicString::createAtomicString(starfish, "vspace"));
 
-    m_version = QualifiedName(AtomicString::createAtomicString(sf, "version"));
+    m_version =
+        QualifiedName(AtomicString::createAtomicString(starfish, "version"));
 
-    m_clear = QualifiedName(AtomicString::createAtomicString(sf, "clear"));
+    m_clear =
+        QualifiedName(AtomicString::createAtomicString(starfish, "clear"));
 
-    m_archive = QualifiedName(AtomicString::createAtomicString(sf, "archive"));
+    m_archive =
+        QualifiedName(AtomicString::createAtomicString(starfish, "archive"));
 
-    m_code = QualifiedName(AtomicString::createAtomicString(sf, "code"));
+    m_code = QualifiedName(AtomicString::createAtomicString(starfish, "code"));
 
     m_codebase =
-        QualifiedName(AtomicString::createAtomicString(sf, "codebase"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "codebase"));
 
     m_codetype =
-        QualifiedName(AtomicString::createAtomicString(sf, "codetype"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "codetype"));
 
-    m_standby = QualifiedName(AtomicString::createAtomicString(sf, "standby"));
+    m_standby =
+        QualifiedName(AtomicString::createAtomicString(starfish, "standby"));
 
-    m_declare = QualifiedName(AtomicString::createAtomicString(sf, "declare"));
+    m_declare =
+        QualifiedName(AtomicString::createAtomicString(starfish, "declare"));
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    m_default = QualifiedName(AtomicString::createAtomicString(sf, "default"));
-    m_loop = QualifiedName(AtomicString::createAtomicString(sf, "loop"));
+    m_default =
+        QualifiedName(AtomicString::createAtomicString(starfish, "default"));
+    m_loop = QualifiedName(AtomicString::createAtomicString(starfish, "loop"));
     m_autoplay =
-        QualifiedName(AtomicString::createAtomicString(sf, "autoplay"));
-    m_preload = QualifiedName(AtomicString::createAtomicString(sf, "preload"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "autoplay"));
+    m_preload =
+        QualifiedName(AtomicString::createAtomicString(starfish, "preload"));
     m_controls =
-        QualifiedName(AtomicString::createAtomicString(sf, "controls"));
-    m_controlsList =
-        QualifiedName(AtomicString::createAtomicString(sf, "controlsList"));
-    m_kind = QualifiedName(AtomicString::createAtomicString(sf, "kind"));
-    m_label = QualifiedName(AtomicString::createAtomicString(sf, "label"));
-    m_srclang = QualifiedName(AtomicString::createAtomicString(sf, "srclang"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "controls"));
+    m_controlsList = QualifiedName(
+        AtomicString::createAtomicString(starfish, "controlsList"));
+    m_kind = QualifiedName(AtomicString::createAtomicString(starfish, "kind"));
+    m_label =
+        QualifiedName(AtomicString::createAtomicString(starfish, "label"));
+    m_srclang =
+        QualifiedName(AtomicString::createAtomicString(starfish, "srclang"));
 #endif
-    m_fill = QualifiedName(AtomicString::createAtomicString(sf, "fill"));
+    m_fill = QualifiedName(AtomicString::createAtomicString(starfish, "fill"));
     m_fillRule =
-        QualifiedName(AtomicString::createAtomicString(sf, "fill-rule"));
-    m_fillOpacity =
-        QualifiedName(AtomicString::createAtomicString(sf, "fill-opacity"));
-    m_stroke = QualifiedName(AtomicString::createAtomicString(sf, "stroke"));
-    m_strokeWidth =
-        QualifiedName(AtomicString::createAtomicString(sf, "stroke-width"));
-    m_x = QualifiedName(AtomicString::createAtomicString(sf, "x"));
-    m_y = QualifiedName(AtomicString::createAtomicString(sf, "y"));
-    m_r = QualifiedName(AtomicString::createAtomicString(sf, "r"));
-    m_rx = QualifiedName(AtomicString::createAtomicString(sf, "rx"));
-    m_ry = QualifiedName(AtomicString::createAtomicString(sf, "ry"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "fill-rule"));
+    m_fillOpacity = QualifiedName(
+        AtomicString::createAtomicString(starfish, "fill-opacity"));
+    m_stroke =
+        QualifiedName(AtomicString::createAtomicString(starfish, "stroke"));
+    m_strokeWidth = QualifiedName(
+        AtomicString::createAtomicString(starfish, "stroke-width"));
+    m_x = QualifiedName(AtomicString::createAtomicString(starfish, "x"));
+    m_y = QualifiedName(AtomicString::createAtomicString(starfish, "y"));
+    m_r = QualifiedName(AtomicString::createAtomicString(starfish, "r"));
+    m_rx = QualifiedName(AtomicString::createAtomicString(starfish, "rx"));
+    m_ry = QualifiedName(AtomicString::createAtomicString(starfish, "ry"));
     m_transform =
-        QualifiedName(AtomicString::createAtomicString(sf, "transform"));
-    m_viewBox = QualifiedName(AtomicString::createAtomicString(sf, "viewBox"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "transform"));
+    m_viewBox =
+        QualifiedName(AtomicString::createAtomicString(starfish, "viewBox"));
     m_preserveAspectRatio = QualifiedName(
         AtomicString::emptyAtomicString(),
-        AtomicString::createAtomicString(sf, "preserveAspectRatio"));
-    m_d = QualifiedName(AtomicString::createAtomicString(sf, "d"));
-    m_points = QualifiedName(AtomicString::createAtomicString(sf, "points"));
-    m_cx = QualifiedName(AtomicString::createAtomicString(sf, "cx"));
-    m_cy = QualifiedName(AtomicString::createAtomicString(sf, "cy"));
-    m_fontDashFamily =
-        QualifiedName(AtomicString::createAtomicString(sf, "font-family"));
+        AtomicString::createAtomicString(starfish, "preserveAspectRatio"));
+    m_d = QualifiedName(AtomicString::createAtomicString(starfish, "d"));
+    m_points =
+        QualifiedName(AtomicString::createAtomicString(starfish, "points"));
+    m_cx = QualifiedName(AtomicString::createAtomicString(starfish, "cx"));
+    m_cy = QualifiedName(AtomicString::createAtomicString(starfish, "cy"));
+    m_fontDashFamily = QualifiedName(
+        AtomicString::createAtomicString(starfish, "font-family"));
     m_fontDashSize =
-        QualifiedName(AtomicString::createAtomicString(sf, "font-size"));
-    m_start = QualifiedName(AtomicString::createAtomicString(sf, "start"));
-    m_dirname = QualifiedName(AtomicString::createAtomicString(sf, "dirname"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "font-size"));
+    m_start =
+        QualifiedName(AtomicString::createAtomicString(starfish, "start"));
+    m_dirname =
+        QualifiedName(AtomicString::createAtomicString(starfish, "dirname"));
     m_readonly =
-        QualifiedName(AtomicString::createAtomicString(sf, "readonly"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "readonly"));
 
-    m_xmlBase = QualifiedName(AtomicString::createAtomicString(sf, "xml"),
-                              AtomicString::emptyAtomicString(),
-                              AtomicString::createAtomicString(sf, "base"));
-    m_ariaHidden =
-        QualifiedName(AtomicString::createAtomicString(sf, "aria-hidden"));
+    m_xmlBase =
+        QualifiedName(AtomicString::createAtomicString(starfish, "xml"),
+                      AtomicString::emptyAtomicString(),
+                      AtomicString::createAtomicString(starfish, "base"));
+    m_ariaHidden = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-hidden"));
     m_ariaLabel =
-        QualifiedName(AtomicString::createAtomicString(sf, "aria-label"));
-    m_ariaLabelledby =
-        QualifiedName(AtomicString::createAtomicString(sf, "aria-labelledby"));
-    m_ariaDescribedby =
-        QualifiedName(AtomicString::createAtomicString(sf, "aria-describedby"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "aria-label"));
+    m_ariaLabelledby = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-labelledby"));
+    m_ariaDescribedby = QualifiedName(
+        AtomicString::createAtomicString(starfish, "aria-describedby"));
 
-    m_click = QualifiedName(AtomicString::createAtomicString(sf, "click"));
-    m_onclick = QualifiedName(AtomicString::createAtomicString(sf, "onclick"));
-    m_change = QualifiedName(AtomicString::createAtomicString(sf, "change"));
+    m_click =
+        QualifiedName(AtomicString::createAtomicString(starfish, "click"));
+    m_onclick =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onclick"));
+    m_change =
+        QualifiedName(AtomicString::createAtomicString(starfish, "change"));
     m_onchange =
-        QualifiedName(AtomicString::createAtomicString(sf, "onchange"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onchange"));
     m_mousedown =
-        QualifiedName(AtomicString::createAtomicString(sf, "mousedown"));
-    m_onmousedown =
-        QualifiedName(AtomicString::createAtomicString(sf, "onmousedown"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "mousedown"));
+    m_onmousedown = QualifiedName(
+        AtomicString::createAtomicString(starfish, "onmousedown"));
     m_mousemove =
-        QualifiedName(AtomicString::createAtomicString(sf, "mousemove"));
-    m_onmousemove =
-        QualifiedName(AtomicString::createAtomicString(sf, "onmousemove"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "mousemove"));
+    m_onmousemove = QualifiedName(
+        AtomicString::createAtomicString(starfish, "onmousemove"));
     m_mouseout =
-        QualifiedName(AtomicString::createAtomicString(sf, "mouseout"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "mouseout"));
     m_onmouseout =
-        QualifiedName(AtomicString::createAtomicString(sf, "onmouseout"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onmouseout"));
     m_mouseover =
-        QualifiedName(AtomicString::createAtomicString(sf, "mouseover"));
-    m_onmouseover =
-        QualifiedName(AtomicString::createAtomicString(sf, "onmouseover"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "mouseover"));
+    m_onmouseover = QualifiedName(
+        AtomicString::createAtomicString(starfish, "onmouseover"));
     m_mouseenter =
-        QualifiedName(AtomicString::createAtomicString(sf, "mouseenter"));
-    m_onmouseenter =
-        QualifiedName(AtomicString::createAtomicString(sf, "onmouseenter"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "mouseenter"));
+    m_onmouseenter = QualifiedName(
+        AtomicString::createAtomicString(starfish, "onmouseenter"));
     m_mouseleave =
-        QualifiedName(AtomicString::createAtomicString(sf, "mouseleave"));
-    m_onmouseleave =
-        QualifiedName(AtomicString::createAtomicString(sf, "onmouseleave"));
-    m_mouseup = QualifiedName(AtomicString::createAtomicString(sf, "mouseup"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "mouseleave"));
+    m_onmouseleave = QualifiedName(
+        AtomicString::createAtomicString(starfish, "onmouseleave"));
+    m_mouseup =
+        QualifiedName(AtomicString::createAtomicString(starfish, "mouseup"));
     m_onmouseup =
-        QualifiedName(AtomicString::createAtomicString(sf, "onmouseup"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onmouseup"));
     m_touchstart =
-        QualifiedName(AtomicString::createAtomicString(sf, "touchstart"));
-    m_ontouchstart =
-        QualifiedName(AtomicString::createAtomicString(sf, "ontouchstart"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "touchstart"));
+    m_ontouchstart = QualifiedName(
+        AtomicString::createAtomicString(starfish, "ontouchstart"));
     m_touchmove =
-        QualifiedName(AtomicString::createAtomicString(sf, "touchmove"));
-    m_ontouchmove =
-        QualifiedName(AtomicString::createAtomicString(sf, "ontouchmove"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "touchmove"));
+    m_ontouchmove = QualifiedName(
+        AtomicString::createAtomicString(starfish, "ontouchmove"));
     m_touchend =
-        QualifiedName(AtomicString::createAtomicString(sf, "touchend"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "touchend"));
     m_ontouchend =
-        QualifiedName(AtomicString::createAtomicString(sf, "ontouchend"));
-    m_load = QualifiedName(AtomicString::createAtomicString(sf, "load"));
-    m_onload = QualifiedName(AtomicString::createAtomicString(sf, "onload"));
-    m_submit = QualifiedName(AtomicString::createAtomicString(sf, "submit"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "ontouchend"));
+    m_load = QualifiedName(AtomicString::createAtomicString(starfish, "load"));
+    m_onload =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onload"));
+    m_submit =
+        QualifiedName(AtomicString::createAtomicString(starfish, "submit"));
     m_onsubmit =
-        QualifiedName(AtomicString::createAtomicString(sf, "onsubmit"));
-    m_input = QualifiedName(AtomicString::createAtomicString(sf, "input"));
-    m_oninput = QualifiedName(AtomicString::createAtomicString(sf, "oninput"));
-    m_invalid = QualifiedName(AtomicString::createAtomicString(sf, "invalid"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onsubmit"));
+    m_input =
+        QualifiedName(AtomicString::createAtomicString(starfish, "input"));
+    m_oninput =
+        QualifiedName(AtomicString::createAtomicString(starfish, "oninput"));
+    m_invalid =
+        QualifiedName(AtomicString::createAtomicString(starfish, "invalid"));
     m_oninvalid =
-        QualifiedName(AtomicString::createAtomicString(sf, "oninvalid"));
-    m_error = QualifiedName(AtomicString::createAtomicString(sf, "error"));
-    m_onerror = QualifiedName(AtomicString::createAtomicString(sf, "onerror"));
-    m_unload = QualifiedName(AtomicString::createAtomicString(sf, "unload"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "oninvalid"));
+    m_error =
+        QualifiedName(AtomicString::createAtomicString(starfish, "error"));
+    m_onerror =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onerror"));
+    m_unload =
+        QualifiedName(AtomicString::createAtomicString(starfish, "unload"));
     m_onunload =
-        QualifiedName(AtomicString::createAtomicString(sf, "onunload"));
-    m_visibilitychange =
-        QualifiedName(AtomicString::createAtomicString(sf, "visibilitychange"));
-    m_DOMContentLoaded =
-        QualifiedName(AtomicString::createAtomicString(sf, "DOMContentLoaded"));
-    m_readystatechange =
-        QualifiedName(AtomicString::createAtomicString(sf, "readystatechange"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onunload"));
+    m_visibilitychange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "visibilitychange"));
+    m_DOMContentLoaded = QualifiedName(
+        AtomicString::createAtomicString(starfish, "DOMContentLoaded"));
+    m_readystatechange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "readystatechange"));
     m_progress =
-        QualifiedName(AtomicString::createAtomicString(sf, "progress"));
-    m_abort = QualifiedName(AtomicString::createAtomicString(sf, "abort"));
-    m_timeout = QualifiedName(AtomicString::createAtomicString(sf, "timeout"));
-    m_loadend = QualifiedName(AtomicString::createAtomicString(sf, "loadend"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "progress"));
+    m_abort =
+        QualifiedName(AtomicString::createAtomicString(starfish, "abort"));
+    m_timeout =
+        QualifiedName(AtomicString::createAtomicString(starfish, "timeout"));
+    m_loadend =
+        QualifiedName(AtomicString::createAtomicString(starfish, "loadend"));
     m_loadstart =
-        QualifiedName(AtomicString::createAtomicString(sf, "loadstart"));
-    m_enter = QualifiedName(AtomicString::createAtomicString(sf, "enter"));
-    m_exit = QualifiedName(AtomicString::createAtomicString(sf, "exit"));
-    m_blur = QualifiedName(AtomicString::createAtomicString(sf, "blur"));
-    m_onblur = QualifiedName(AtomicString::createAtomicString(sf, "onblur"));
-    m_focus = QualifiedName(AtomicString::createAtomicString(sf, "focus"));
-    m_onfocus = QualifiedName(AtomicString::createAtomicString(sf, "onfocus"));
-    m_focusin = QualifiedName(AtomicString::createAtomicString(sf, "focusin"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "loadstart"));
+    m_enter =
+        QualifiedName(AtomicString::createAtomicString(starfish, "enter"));
+    m_exit = QualifiedName(AtomicString::createAtomicString(starfish, "exit"));
+    m_blur = QualifiedName(AtomicString::createAtomicString(starfish, "blur"));
+    m_onblur =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onblur"));
+    m_focus =
+        QualifiedName(AtomicString::createAtomicString(starfish, "focus"));
+    m_onfocus =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onfocus"));
+    m_focusin =
+        QualifiedName(AtomicString::createAtomicString(starfish, "focusin"));
     m_onfocusin =
-        QualifiedName(AtomicString::createAtomicString(sf, "onfocusin"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onfocusin"));
     m_focusout =
-        QualifiedName(AtomicString::createAtomicString(sf, "focusout"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "focusout"));
     m_onfocusout =
-        QualifiedName(AtomicString::createAtomicString(sf, "onfocusout"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onfocusout"));
 
-    m_reset = QualifiedName(AtomicString::createAtomicString(sf, "reset"));
+    m_reset =
+        QualifiedName(AtomicString::createAtomicString(starfish, "reset"));
 
-    m_resize = QualifiedName(AtomicString::createAtomicString(sf, "resize"));
+    m_resize =
+        QualifiedName(AtomicString::createAtomicString(starfish, "resize"));
     m_onresize =
-        QualifiedName(AtomicString::createAtomicString(sf, "onresize"));
-    m_message = QualifiedName(AtomicString::createAtomicString(sf, "message"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onresize"));
+    m_message =
+        QualifiedName(AtomicString::createAtomicString(starfish, "message"));
     m_onmessage =
-        QualifiedName(AtomicString::createAtomicString(sf, "onmessage"));
-    m_messageerror =
-        QualifiedName(AtomicString::createAtomicString(sf, "messageerror"));
-    m_onmessageerror =
-        QualifiedName(AtomicString::createAtomicString(sf, "onmessageerror"));
-    m_transitionstart =
-        QualifiedName(AtomicString::createAtomicString(sf, "transitionstart"));
-    m_transitionend =
-        QualifiedName(AtomicString::createAtomicString(sf, "transitionend"));
-    m_transitioncancel =
-        QualifiedName(AtomicString::createAtomicString(sf, "transitioncancel"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onmessage"));
+    m_messageerror = QualifiedName(
+        AtomicString::createAtomicString(starfish, "messageerror"));
+    m_onmessageerror = QualifiedName(
+        AtomicString::createAtomicString(starfish, "onmessageerror"));
+    m_transitionstart = QualifiedName(
+        AtomicString::createAtomicString(starfish, "transitionstart"));
+    m_transitionend = QualifiedName(
+        AtomicString::createAtomicString(starfish, "transitionend"));
+    m_transitioncancel = QualifiedName(
+        AtomicString::createAtomicString(starfish, "transitioncancel"));
 
-    m_open = QualifiedName(AtomicString::createAtomicString(sf, "open"));
+    m_open = QualifiedName(AtomicString::createAtomicString(starfish, "open"));
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_cuechange =
-        QualifiedName(AtomicString::createAtomicString(sf, "cuechange"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "cuechange"));
     m_sourceopen =
-        QualifiedName(AtomicString::createAtomicString(sf, "sourceopen"));
-    m_sourceended =
-        QualifiedName(AtomicString::createAtomicString(sf, "sourceended"));
-    m_sourceclose =
-        QualifiedName(AtomicString::createAtomicString(sf, "sourceclose"));
-    m_addsourcebuffer =
-        QualifiedName(AtomicString::createAtomicString(sf, "addsourcebuffer"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "sourceopen"));
+    m_sourceended = QualifiedName(
+        AtomicString::createAtomicString(starfish, "sourceended"));
+    m_sourceclose = QualifiedName(
+        AtomicString::createAtomicString(starfish, "sourceclose"));
+    m_addsourcebuffer = QualifiedName(
+        AtomicString::createAtomicString(starfish, "addsourcebuffer"));
     m_removesourcebuffer = QualifiedName(
         AtomicString::emptyAtomicString(),
-        AtomicString::createAtomicString(sf, "removesourcebuffer"));
-    m_updatestart =
-        QualifiedName(AtomicString::createAtomicString(sf, "updatestart"));
-    m_update = QualifiedName(AtomicString::createAtomicString(sf, "update"));
+        AtomicString::createAtomicString(starfish, "removesourcebuffer"));
+    m_updatestart = QualifiedName(
+        AtomicString::createAtomicString(starfish, "updatestart"));
+    m_update =
+        QualifiedName(AtomicString::createAtomicString(starfish, "update"));
     m_updateend =
-        QualifiedName(AtomicString::createAtomicString(sf, "updateend"));
-    m_suspend = QualifiedName(AtomicString::createAtomicString(sf, "suspend"));
-    m_emptied = QualifiedName(AtomicString::createAtomicString(sf, "emptied"));
-    m_stalled = QualifiedName(AtomicString::createAtomicString(sf, "stalled"));
-    m_loadedmetadata =
-        QualifiedName(AtomicString::createAtomicString(sf, "loadedmetadata"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "updateend"));
+    m_suspend =
+        QualifiedName(AtomicString::createAtomicString(starfish, "suspend"));
+    m_emptied =
+        QualifiedName(AtomicString::createAtomicString(starfish, "emptied"));
+    m_stalled =
+        QualifiedName(AtomicString::createAtomicString(starfish, "stalled"));
+    m_loadedmetadata = QualifiedName(
+        AtomicString::createAtomicString(starfish, "loadedmetadata"));
     m_loadeddata =
-        QualifiedName(AtomicString::createAtomicString(sf, "loadeddata"));
-    m_canplay = QualifiedName(AtomicString::createAtomicString(sf, "canplay"));
-    m_canplaythrough =
-        QualifiedName(AtomicString::createAtomicString(sf, "canplaythrough"));
-    m_playing = QualifiedName(AtomicString::createAtomicString(sf, "playing"));
-    m_waiting = QualifiedName(AtomicString::createAtomicString(sf, "waiting"));
-    m_seeking = QualifiedName(AtomicString::createAtomicString(sf, "seeking"));
-    m_seeked = QualifiedName(AtomicString::createAtomicString(sf, "seeked"));
-    m_ended = QualifiedName(AtomicString::createAtomicString(sf, "ended"));
-    m_closed = QualifiedName(AtomicString::createAtomicString(sf, "closed"));
-    m_durationchange =
-        QualifiedName(AtomicString::createAtomicString(sf, "durationchange"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "loadeddata"));
+    m_canplay =
+        QualifiedName(AtomicString::createAtomicString(starfish, "canplay"));
+    m_canplaythrough = QualifiedName(
+        AtomicString::createAtomicString(starfish, "canplaythrough"));
+    m_playing =
+        QualifiedName(AtomicString::createAtomicString(starfish, "playing"));
+    m_waiting =
+        QualifiedName(AtomicString::createAtomicString(starfish, "waiting"));
+    m_seeking =
+        QualifiedName(AtomicString::createAtomicString(starfish, "seeking"));
+    m_seeked =
+        QualifiedName(AtomicString::createAtomicString(starfish, "seeked"));
+    m_ended =
+        QualifiedName(AtomicString::createAtomicString(starfish, "ended"));
+    m_closed =
+        QualifiedName(AtomicString::createAtomicString(starfish, "closed"));
+    m_durationchange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "durationchange"));
     m_timeupdate =
-        QualifiedName(AtomicString::createAtomicString(sf, "timeupdate"));
-    m_play = QualifiedName(AtomicString::createAtomicString(sf, "play"));
-    m_pause = QualifiedName(AtomicString::createAtomicString(sf, "pause"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "timeupdate"));
+    m_play = QualifiedName(AtomicString::createAtomicString(starfish, "play"));
+    m_pause =
+        QualifiedName(AtomicString::createAtomicString(starfish, "pause"));
     m_ratechange =
-        QualifiedName(AtomicString::createAtomicString(sf, "ratechange"));
-    m_volumechange =
-        QualifiedName(AtomicString::createAtomicString(sf, "volumechange"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "ratechange"));
+    m_volumechange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "volumechange"));
 #endif
-    m_keydown = QualifiedName(AtomicString::createAtomicString(sf, "keydown"));
+    m_keydown =
+        QualifiedName(AtomicString::createAtomicString(starfish, "keydown"));
     m_keypress =
-        QualifiedName(AtomicString::createAtomicString(sf, "keypress"));
-    m_keyup = QualifiedName(AtomicString::createAtomicString(sf, "keyup"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "keypress"));
+    m_keyup =
+        QualifiedName(AtomicString::createAtomicString(starfish, "keyup"));
     m_onkeydown =
-        QualifiedName(AtomicString::createAtomicString(sf, "onkeydown"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onkeydown"));
     m_onkeypress =
-        QualifiedName(AtomicString::createAtomicString(sf, "onkeypress"));
-    m_compositionstart =
-        QualifiedName(AtomicString::createAtomicString(sf, "compositionstart"));
+        QualifiedName(AtomicString::createAtomicString(starfish, "onkeypress"));
+    m_compositionstart = QualifiedName(
+        AtomicString::createAtomicString(starfish, "compositionstart"));
     m_compositionupdate = QualifiedName(
         AtomicString::emptyAtomicString(),
-        AtomicString::createAtomicString(sf, "compositionupdate"));
-    m_compositionend =
-        QualifiedName(AtomicString::createAtomicString(sf, "compositionend"));
+        AtomicString::createAtomicString(starfish, "compositionupdate"));
+    m_compositionend = QualifiedName(
+        AtomicString::createAtomicString(starfish, "compositionend"));
 
-    m_xlinkType = QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                                AtomicString::createAtomicString(sf, "type"));
-    m_xlinkHref = QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                                AtomicString::createAtomicString(sf, "href"));
-    m_xlinkRole = QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                                AtomicString::createAtomicString(sf, "role"));
+    m_xlinkType =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(starfish, "type"));
+    m_xlinkHref =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(starfish, "href"));
+    m_xlinkRole =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(starfish, "role"));
     m_xlinkArcrole =
         QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                      AtomicString::createAtomicString(sf, "arcrole"));
-    m_xlinkTitle = QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                                 AtomicString::createAtomicString(sf, "title"));
-    m_xlinkShow = QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                                AtomicString::createAtomicString(sf, "show"));
+                      AtomicString::createAtomicString(starfish, "arcrole"));
+    m_xlinkTitle =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(starfish, "title"));
+    m_xlinkShow =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(starfish, "show"));
     m_xlinkActuate =
         QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                      AtomicString::createAtomicString(sf, "actuate"));
-    m_xlinkLabel = QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                                 AtomicString::createAtomicString(sf, "label"));
-    m_xlinkFrom = QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                                AtomicString::createAtomicString(sf, "from"));
+                      AtomicString::createAtomicString(starfish, "actuate"));
+    m_xlinkLabel =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(starfish, "label"));
+    m_xlinkFrom =
+        QualifiedName(m_xlink, m_xlinkNamespaceURI,
+                      AtomicString::createAtomicString(starfish, "from"));
     m_xlinkTo = QualifiedName(m_xlink, m_xlinkNamespaceURI,
-                              AtomicString::createAtomicString(sf, "to"));
+                              AtomicString::createAtomicString(starfish, "to"));
 }
 }

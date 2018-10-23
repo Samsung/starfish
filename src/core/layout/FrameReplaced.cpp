@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLImageElement.h"
@@ -28,7 +28,7 @@
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameReplaced::operator new(size_t size)
 {
@@ -50,9 +50,9 @@ IntrinsicSizeUsedInLayout FrameReplaced::computeIntrinsicSizeForLayout()
     IntrinsicSizeUsedInLayout result;
     result.m_hasAspectRatio = siz.m_hasAspectRatio;
     String* widthString = node()->asElement()->getAttributeOrEmpty(
-        node()->starFish()->staticStrings()->m_width);
+        node()->starfish()->staticStrings()->m_width);
     String* heightString = node()->asElement()->getAttributeOrEmpty(
-        node()->starFish()->staticStrings()->m_height);
+        node()->starfish()->staticStrings()->m_height);
     if (siz.m_isContentExists) {
         result.m_intrinsicContentSize =
             LayoutSize(siz.m_intrinsicContentSize.width(),
@@ -667,4 +667,4 @@ Frame* FrameReplaced::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 
     return FrameBox::hitTest(x, y, stage);
 }
-} // namespace StarFish
+} // namespace Starfish

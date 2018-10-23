@@ -16,7 +16,7 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTTPUtil.h"
 #include "HTTPHeaderMap.h"
 #include "binding/ScriptWrappable.h"
@@ -24,7 +24,7 @@
 #include <time.h>
 #include <algorithm>
 
-namespace StarFish {
+namespace Starfish {
 
 std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
 {

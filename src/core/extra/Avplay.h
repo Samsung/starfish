@@ -18,16 +18,16 @@
  */
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-#ifndef __StarFishAvplay__
-#define __StarFishAvplay__
+#ifndef __StarfishAvplay__
+#define __StarfishAvplay__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/WebViewHoldable.h"
 #include <media/player.h>
 
-namespace StarFish {
+namespace Starfish {
 
-class StarFish;
+class Starfish;
 
 #define AVPLAY_APIS(F)      \
     F(open)                 \

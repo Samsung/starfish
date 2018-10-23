@@ -36,12 +36,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __StarFishMediaList__
-#define __StarFishMediaList__
+#ifndef __StarfishMediaList__
+#define __StarfishMediaList__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class MediaQuerySet;
 class MediaList : public ScriptWrappable {

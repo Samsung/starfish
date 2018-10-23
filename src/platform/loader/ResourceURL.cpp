@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLFormElement.h"
 
 #define MAX_PORT_DIGITS 5
 #define MAX_PORT_NUMBER 65535
 
-namespace StarFish {
+namespace Starfish {
 
 static bool toHexAndAppend(StringBuilder& builder, char32_t ch)
 {

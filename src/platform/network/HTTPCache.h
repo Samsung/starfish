@@ -17,12 +17,12 @@
  *  USA
  */
 #if defined(STARFISH_ENABLE_HTTPCACHE)
-#ifndef __StarFishCache_
-#define __StarFishCache_
+#ifndef __StarfishCache_
+#define __StarfishCache_
 
 #include "HTTPCacheEntry.h"
 
-namespace StarFish {
+namespace Starfish {
 typedef GCVector<String*> HTTPCacheLRUList;
 struct NetworkURLWorkerData;
 class File;

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishRange__
-#define __StarFishRange__
+#ifndef __StarfishRange__
+#define __StarfishRange__
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Node;
 

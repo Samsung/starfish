@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishHeaders__
-#define __StarFishHeaders__
+#ifndef __StarfishHeaders__
+#define __StarfishHeaders__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 #include "binding/IterationSource.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 

@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLTableElement.h"
 
 #include "core/dom/DOMException.h"
@@ -31,7 +31,7 @@
 #include "core/dom/HTMLTableSectionElement.h"
 #include "core/style/CSSParser.h"
 
-namespace StarFish {
+namespace Starfish {
 #define PUSH_PAIR_BORDER_WIDTH(POS, ...)                                     \
     {                                                                        \
         if (!border->contains("px")) {                                       \
@@ -166,21 +166,21 @@ void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_align ||
-        name == starFish()->staticStrings()->m_frame ||
-        name == starFish()->staticStrings()->m_width ||
-        name == starFish()->staticStrings()->m_bgcolor) {
+    if (name == starfish()->staticStrings()->m_align ||
+        name == starfish()->staticStrings()->m_frame ||
+        name == starfish()->staticStrings()->m_width ||
+        name == starfish()->staticStrings()->m_bgcolor) {
         setNeedsStyleRecalc();
-    } else if (name == starFish()->staticStrings()->m_border) {
+    } else if (name == starfish()->staticStrings()->m_border) {
         m_hasBorder = value && !value->isEmpty();
         setNeedsStyleRecalc();
-    } else if (name == starFish()->staticStrings()->m_bordercolor) {
+    } else if (name == starfish()->staticStrings()->m_bordercolor) {
         m_hasBorderColor = value && !value->isEmpty();
         setNeedsStyleRecalc();
-    } else if (name == starFish()->staticStrings()->m_rules) {
+    } else if (name == starfish()->staticStrings()->m_rules) {
         m_rules = getRulesFromRulesAttributeValue(value);
         setNeedsStyleRecalc();
-    } else if (name == starFish()->staticStrings()->m_cellpadding) {
+    } else if (name == starfish()->staticStrings()->m_cellpadding) {
         if (attributeCreated) {
             m_hasCellPaddingAttribute = true;
         }
@@ -188,7 +188,7 @@ void HTMLTableElement::didAttributeChanged(QualifiedName name, String* old,
             m_hasCellPaddingAttribute = false;
         }
         setNeedsStyleRecalc();
-    } else if (name == starFish()->staticStrings()->m_cellspacing) {
+    } else if (name == starfish()->staticStrings()->m_cellspacing) {
         if (attributeCreated) {
             m_hasCellSpacingAttribute = true;
         }
@@ -231,7 +231,7 @@ void HTMLTableElement::styleForPresentationAttribute(
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
 
-    String* align = getAttributeOrEmpty(starFish()->staticStrings()->m_align);
+    String* align = getAttributeOrEmpty(starfish()->staticStrings()->m_align);
     if (isValidAlign(align)) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::TextAlign);
@@ -242,17 +242,17 @@ void HTMLTableElement::styleForPresentationAttribute(
 
     if (m_hasBorder) {
         String* border =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_border);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_border);
         GEN_FOURSIDE(PUSH_PAIR_BORDER_WIDTH);
     }
 
     if (m_hasBorderColor) {
         String* bordercolor =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_bordercolor);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_bordercolor);
         GEN_FOURSIDE(PUSH_PAIR_BORDER_COLOR);
     }
 
-    String* frame = getAttributeOrEmpty(starFish()->staticStrings()->m_frame);
+    String* frame = getAttributeOrEmpty(starfish()->staticStrings()->m_frame);
     bool hasFrame = !frame->isEmpty();
     if (hasFrame) {
         bool border_top, border_right, border_bottom, border_left;
@@ -288,7 +288,7 @@ void HTMLTableElement::styleForPresentationAttribute(
         }
     }
 
-    String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+    String* w = getAttributeOrEmpty(starfish()->staticStrings()->m_width);
     if (!w->isEmpty()) {
         // Use px as the default unit
         if (!w->contains("px") && !w->contains("%")) {
@@ -306,7 +306,7 @@ void HTMLTableElement::styleForPresentationAttribute(
     }
 
     String* bgColor =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_bgcolor);
     if (!bgColor->isEmpty()) {
         CSSStyleValuePair pair;
         CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
@@ -318,7 +318,7 @@ void HTMLTableElement::styleForPresentationAttribute(
 
     if (m_hasCellSpacingAttribute) {
         String* value =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_cellspacing);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_cellspacing);
         if (value && !value->equals(String::emptyString)) {
             // Use px only
             if (!value->contains("px")) {
@@ -368,7 +368,7 @@ HTMLTableCaptionElement* HTMLTableElement::createCaption()
     HTMLTableCaptionElement* caption = this->caption();
     if (!caption) {
         caption = new HTMLTableCaptionElement(
-            document(), starFish()->staticStrings()->m_captionTagName);
+            document(), starfish()->staticStrings()->m_captionTagName);
         insertBefore(caption, firstChild());
     }
     return caption;
@@ -426,7 +426,7 @@ HTMLTableSectionElement* HTMLTableElement::createTHead()
     HTMLTableSectionElement* tHead = this->tHead();
     if (!tHead) {
         tHead = new HTMLTHeadElement(
-            document(), starFish()->staticStrings()->m_theadTagName);
+            document(), starfish()->staticStrings()->m_theadTagName);
         Node* child = firstChild();
         while (child) {
             if (!child->isHTMLTableCaptionElement() &&
@@ -493,7 +493,7 @@ HTMLTableSectionElement* HTMLTableElement::createTFoot()
     HTMLTableSectionElement* tFoot = this->tFoot();
     if (!tFoot) {
         tFoot = new HTMLTFootElement(
-            document(), starFish()->staticStrings()->m_tfootTagName);
+            document(), starfish()->staticStrings()->m_tfootTagName);
         Node* child = firstChild();
         while (child) {
             if (!child->isHTMLTableCaptionElement() &&
@@ -534,7 +534,7 @@ HTMLCollection* HTMLTableElement::tBodies()
         new HTMLCollection(this, NodeListImpl::TBodiesFilter, nullptr, true);
 
     rareData->putActiveHtmlCollectionListWithQuery(
-        activeLists, starFish()->staticStrings()->m_tbodies.localName(),
+        activeLists, starfish()->staticStrings()->m_tbodies.localName(),
         m_tBodies);
     return m_tBodies;
 }
@@ -542,7 +542,7 @@ HTMLCollection* HTMLTableElement::tBodies()
 HTMLTableSectionElement* HTMLTableElement::createTBody()
 {
     HTMLTableSectionElement* tBody = new HTMLTBodyElement(
-        document(), starFish()->staticStrings()->m_tbodyTagName);
+        document(), starfish()->staticStrings()->m_tbodyTagName);
 
     Node* child = lastChild();
     Node* lastTBody = nullptr;
@@ -585,7 +585,7 @@ HTMLCollection* HTMLTableElement::rows()
         new HTMLCollection(this, NodeListImpl::TableRowsFilter, data, true);
 
     rareData->putActiveHtmlCollectionListWithQuery(
-        activeLists, starFish()->staticStrings()->m_rows.localName(), m_rows);
+        activeLists, starfish()->staticStrings()->m_rows.localName(), m_rows);
     return m_rows;
 }
 
@@ -599,12 +599,12 @@ HTMLTableRowElement* HTMLTableElement::insertRow(int32_t index)
     }
 
     HTMLTableRowElement* row = new HTMLTableRowElement(
-        document(), starFish()->staticStrings()->m_trTagName);
+        document(), starfish()->staticStrings()->m_trTagName);
     HTMLCollection* tBodies = this->tBodies();
     size_t tBodiesLength = tBodies->length();
     if (rowsLength == 0 && tBodiesLength == 0) {
         HTMLTBodyElement* tBody = new HTMLTBodyElement(
-            document(), starFish()->staticStrings()->m_tbodyTagName);
+            document(), starfish()->staticStrings()->m_tbodyTagName);
         tBody->appendChild(row);
         appendChild(tBody);
     } else if (rowsLength == 0) {
@@ -667,7 +667,7 @@ TextAlignValue HTMLTableElement::alignValue(String* align)
                align->equalsIgnoreCase("center")) {
         return TextAlignValue::CenterTextAlignValue;
     } else if (align->equalsIgnoreCase("-starfish-center")) {
-        return TextAlignValue::StarFishCenterTextAlignValue;
+        return TextAlignValue::StarfishCenterTextAlignValue;
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -686,7 +686,7 @@ HTMLTableElement::CellBorders HTMLTableElement::cellBorders()
 String* HTMLTableElement::cellpadding()
 {
     String* value =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_cellpadding);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_cellpadding);
     if (value && !value->isEmpty()) {
         // Use px only
         if (!value->contains("px")) {

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishGridLength__
-#define __StarFishGridLength__
+#ifndef __StarfishGridLength__
+#define __StarfishGridLength__
 
 #include "core/layout/LayoutUtil.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class GridLength : public gc {
 public:

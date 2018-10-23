@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameTableCellBox__
-#define __StarFishFrameTableCellBox__
+#ifndef __StarfishFrameTableCellBox__
+#define __StarfishFrameTableCellBox__
 
 #include "core/layout/FrameTableObjectBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 class Node;

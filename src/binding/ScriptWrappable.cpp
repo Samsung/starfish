@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
@@ -34,7 +34,7 @@
 
 using namespace Escargot;
 
-namespace StarFish {
+namespace Starfish {
 
 ScriptValue scriptNull()
 {
@@ -248,7 +248,7 @@ WebView* fetchWebView(ContextRef* ctx)
 
 StaticStrings* fetchStaticStrings(ContextRef* ctx)
 {
-    return fetchWebView(ctx)->starFish()->staticStrings();
+    return fetchWebView(ctx)->starfish()->staticStrings();
 }
 
 String* toBrowserString(ExecutionStateRef* state, ValueRef* v)

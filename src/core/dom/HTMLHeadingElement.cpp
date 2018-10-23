@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLHeadingElement.h"
 
-namespace StarFish {
+namespace Starfish {
 HTMLHeadingElement::HTMLHeadingElement(Document* document,
                                        const QualifiedName& qname)
     : HTMLElement(document, qname)
@@ -44,12 +44,12 @@ void* HTMLHeadingElement::operator new(size_t size)
 
 String* HTMLHeadingElement::align()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_align);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_align);
 }
 
 void HTMLHeadingElement::setAlign(String* align)
 {
-    setAttribute(starFish()->staticStrings()->m_align, align);
+    setAttribute(starfish()->staticStrings()->m_align, align);
 }
 
 void HTMLHeadingElement::didAttributeChanged(QualifiedName name, String* old,
@@ -60,7 +60,7 @@ void HTMLHeadingElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_align) {
+    if (name == starfish()->staticStrings()->m_align) {
         setNeedsStyleRecalc();
     }
 }

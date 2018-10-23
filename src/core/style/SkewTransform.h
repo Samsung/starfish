@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishSkewTransform__
-#define __StarFishSkewTransform__
+#ifndef __StarfishSkewTransform__
+#define __StarfishSkewTransform__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class SkewTransform : public gc {
 public:

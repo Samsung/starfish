@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLQuoteElement__
-#define __StarFishHTMLQuoteElement__
+#ifndef __StarfishHTMLQuoteElement__
+#define __StarfishHTMLQuoteElement__
 
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLQuoteElement : public HTMLElement {
 public:

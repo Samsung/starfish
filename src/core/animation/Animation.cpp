@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/animation/Animation.h"
 #include "core/animation/AnimationUtil.h"
 #include "core/dom/Document.h"
@@ -35,7 +35,7 @@
 #include "core/modules/message_loop/Timer.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename T>
 static float interpolate(const T from, const T to, float progress)
@@ -106,7 +106,7 @@ void ActiveAnimationTask::fireStartEvent()
     init.setCancelable(false);
     // TODO add more information to init
     TransitionEvent* event = new TransitionEvent(
-        m_targetElement->document(), m_targetElement->starFish()
+        m_targetElement->document(), m_targetElement->starfish()
                                          ->staticStrings()
                                          ->m_transitionstart.localName(),
         init);
@@ -123,7 +123,7 @@ void ActiveAnimationTask::fireEndEvent()
     init.setCancelable(true);
     // TODO add more information to init
     TransitionEvent* event = new TransitionEvent(
-        m_targetElement->document(), m_targetElement->starFish()
+        m_targetElement->document(), m_targetElement->starfish()
                                          ->staticStrings()
                                          ->m_transitionend.localName(),
         init);
@@ -140,7 +140,7 @@ void ActiveAnimationTask::fireCancelEvent()
     init.setCancelable(false);
     // TODO add more information to init
     TransitionEvent* event = new TransitionEvent(
-        m_targetElement->document(), m_targetElement->starFish()
+        m_targetElement->document(), m_targetElement->starfish()
                                          ->staticStrings()
                                          ->m_transitioncancel.localName(),
         init);

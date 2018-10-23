@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/modules/threading/Thread.h"
 #include "core/style/CounterStyle.h"
 
-namespace StarFish {
+namespace Starfish {
 
 bool CounterStyle::exceedBound(int32_t pos) const
 {
@@ -783,4 +783,4 @@ bool CounterStyle::equals(const CounterStyle* b) const
     }
     return !b->m_fallback;
 }
-} /* namespace StarFish */
+} /* namespace Starfish */

@@ -20,8 +20,8 @@
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/util/URL.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLVideoElement.h"
@@ -38,7 +38,7 @@
 #include "platform/multimedia/MediaPlayerTizen.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #define STARFISH_VIDEO_MAX_WIDTH 1920
 #define STARFISH_VIDEO_MAX_HEIGHT 1080

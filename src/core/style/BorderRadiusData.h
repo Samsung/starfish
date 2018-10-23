@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishBorderRadiusData__
-#define __StarFishBorderRadiusData__
+#ifndef __StarfishBorderRadiusData__
+#define __StarfishBorderRadiusData__
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameBox;
 
@@ -145,6 +145,6 @@ public:
     }
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishBorderRadiusData__ */
+#endif /* __StarfishBorderRadiusData__ */

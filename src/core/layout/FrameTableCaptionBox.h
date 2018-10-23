@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameTableCaptionBox__
-#define __StarFishFrameTableCaptionBox__
+#ifndef __StarfishFrameTableCaptionBox__
+#define __StarfishFrameTableCaptionBox__
 
 #include "core/layout/FrameTableObjectBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameTableCaptionBox final : public FrameTableObjectBox {
 public:

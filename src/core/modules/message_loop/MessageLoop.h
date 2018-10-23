@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishMessageLoop__
-#define __StarFishMessageLoop__
+#ifndef __StarfishMessageLoop__
+#define __StarfishMessageLoop__
 
 #include "core/modules/threading/Mutex.h"
 #ifdef STARFISH_MESSAGELOOP_DEBUG
@@ -26,7 +26,7 @@
 #endif
 #include "binding/WebViewHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class BrowsingContext;
 enum class HistoryManagerAction;
@@ -134,6 +134,6 @@ public:
     }
 #endif
 };
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

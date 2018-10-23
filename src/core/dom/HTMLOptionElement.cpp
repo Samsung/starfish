@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/Event.h"
 #include "core/dom/HTMLCollection.h"
@@ -26,11 +26,11 @@
 #include "core/dom/HTMLOptGroupElement.h"
 #include "core/dom/HTMLSelectElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTMLOptionElement::HTMLOptionElement(Document* document)
     : HTMLOptionElement(document,
-                        document->starFish()->staticStrings()->m_optionTagName,
+                        document->starfish()->staticStrings()->m_optionTagName,
                         String::emptyString, String::emptyString, false, false)
 {
 }
@@ -38,7 +38,7 @@ HTMLOptionElement::HTMLOptionElement(Document* document)
 HTMLOptionElement::HTMLOptionElement(Document* document, String* text,
                                      String* value, bool defaultSelected)
     : HTMLOptionElement(document,
-                        document->starFish()->staticStrings()->m_optionTagName,
+                        document->starfish()->staticStrings()->m_optionTagName,
                         text, value, defaultSelected, false)
 {
 }
@@ -47,7 +47,7 @@ HTMLOptionElement::HTMLOptionElement(Document* document, String* text,
                                      String* value, bool defaultSelected,
                                      bool selected)
     : HTMLOptionElement(document,
-                        document->starFish()->staticStrings()->m_optionTagName,
+                        document->starfish()->staticStrings()->m_optionTagName,
                         text, value, defaultSelected, selected)
 {
 }
@@ -69,7 +69,7 @@ HTMLOptionElement::HTMLOptionElement(Document* document,
     }
 
     if (defaultSelected) {
-        setAttribute(starFish()->staticStrings()->m_selected,
+        setAttribute(starfish()->staticStrings()->m_selected,
                      String::emptyString);
     }
     if (selected) {
@@ -139,7 +139,7 @@ void HTMLOptionElement::setSelectedness(bool selectedness)
 // https://html.spec.whatwg.org/multipage/form-elements.html#dom-option-value
 String* HTMLOptionElement::value()
 {
-    String* val = getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+    String* val = getAttributeOrEmpty(starfish()->staticStrings()->m_value);
     if (val->equals(String::emptyString)) {
         return text();
     }
@@ -148,7 +148,7 @@ String* HTMLOptionElement::value()
 
 void HTMLOptionElement::setValue(String* value)
 {
-    setAttribute(starFish()->staticStrings()->m_value, value);
+    setAttribute(starfish()->staticStrings()->m_value, value);
 }
 
 bool HTMLOptionElement::isDisabled()
@@ -216,7 +216,7 @@ int HTMLOptionElement::index()
 bool HTMLOptionElement::defaultSelected()
 {
     Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_selected);
+        getAttribute(starfish()->staticStrings()->m_selected);
     return val.hasValue();
 }
 
@@ -266,7 +266,7 @@ void HTMLOptionElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLFormControl::didAttributeChanged(name, old, val, attributeCreated,
                                          attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_selected) {
+    if (name == starfish()->staticStrings()->m_selected) {
         if (!m_dirtiness) {
             // Adding `selected` attribute affects selectness only when its
             // dirtiness flag is false.

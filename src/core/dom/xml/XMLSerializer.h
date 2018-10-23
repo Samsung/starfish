@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishXMLSerializer__
-#define __StarFishXMLSerializer__
+#ifndef __StarfishXMLSerializer__
+#define __StarfishXMLSerializer__
 
-namespace StarFish {
+namespace Starfish {
 
 class Element;
 

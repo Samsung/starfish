@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Document.h"
@@ -30,7 +30,7 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/layout/StackingContext.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #ifdef STARFISH_ENABLE_TEST
 void FrameReplacedIFrame::dump(int depth)

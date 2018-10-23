@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishCSSFilterFunction__
-#define __StarFishCSSFilterFunction__
+#ifndef __StarfishCSSFilterFunction__
+#define __StarfishCSSFilterFunction__
 
-namespace StarFish {
+namespace Starfish {
 enum class FilterFunctionType : unsigned int {
     // NOTE Sequence is matter in CSSFilterFunction.cpp and FilterFunctions.cpp
     BlurFilterFunctionType = 0,

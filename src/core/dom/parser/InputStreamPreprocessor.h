@@ -43,12 +43,12 @@
  *  USA
  */
 
-#ifndef __StarFishInputStreamPreprocessor__
-#define __StarFishInputStreamPreprocessor__
+#ifndef __StarfishInputStreamPreprocessor__
+#define __StarfishInputStreamPreprocessor__
 
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 const char32_t kEndOfFileMarker = 0;
 

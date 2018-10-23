@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishCanvasRenderingContext2D__
-#define __StarFishCanvasRenderingContext2D__
+#ifndef __StarfishCanvasRenderingContext2D__
+#define __StarfishCanvasRenderingContext2D__
 
 #ifdef STARFISH_ENABLE_CANVAS
 
@@ -30,7 +30,7 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CanvasGradient;
 class DOMStringOrCanvasGradientOrCanvasPattern;

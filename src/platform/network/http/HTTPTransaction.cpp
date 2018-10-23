@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTTPHeaderMap.h"
 #include "HTTPRequest.h"
 #include "HTTPResponse.h"
@@ -27,7 +27,7 @@
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/profiling/Profiling.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTTPTransaction::HTTPTransaction()
     : m_httpRequest()

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_INSPECTOR) && !defined(__StarFishInspector__)
-#define __StarFishInspector__
+#if defined(STARFISH_ENABLE_INSPECTOR) && !defined(__StarfishInspector__)
+#define __StarfishInspector__
 
 #include <zmq.hpp>
 #include "core/modules/threading/Thread.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Inspector : public gc {
 public:

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #if defined(PORT_IMAGEDECODER_BACKEND_MISC)
 
@@ -45,7 +45,7 @@ extern "C" {
 #endif
 #include <gif_lib.h>
 
-namespace StarFish {
+namespace Starfish {
 
 class NativeImageDataMISC : public NativeImageData {
 public:
@@ -1022,6 +1022,6 @@ NativeImageData* NativeImageData::create(size_t width, size_t height)
 {
     return new NativeImageDataMISC(width, height);
 }
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

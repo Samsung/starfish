@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
@@ -44,7 +44,7 @@
 #include "TizenDeviceAPILoaderForEscargot.h"
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 using namespace Escargot;
 
@@ -505,7 +505,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
     state->destroy();
 #ifdef STARFISH_ENABLE_TEST
     if (ownerWindow()->webView()->testCompatibleMode() ==
-        StarFishTestCompatibleMode::Normal) {
+        StarfishTestCompatibleMode::Normal) {
         evaluateString(this, String::fromUTF8("delete this.testRunner"));
     }
 #endif

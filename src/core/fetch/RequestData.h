@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishRequestData__
-#define __StarFishRequestData__
+#ifndef __StarfishRequestData__
+#define __StarfishRequestData__
 
-namespace StarFish {
+namespace Starfish {
 
 // NOTE: consider extracting enums from ResourceRequest
 

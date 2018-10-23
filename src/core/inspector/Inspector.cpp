@@ -19,8 +19,8 @@
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "Inspector.h"
 #include "core/page/WebView.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -28,7 +28,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 
-namespace StarFish {
+namespace Starfish {
 struct Request {
     Inspector* inspector;
     rapidjson::Document document;
@@ -289,5 +289,5 @@ void Inspector::stop()
     }
     m_ioThread->joinIfNeeds();
 }
-} // namespace StarFish
+} // namespace Starfish
 #endif

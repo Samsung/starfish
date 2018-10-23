@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishResourceURL__
-#define __StarFishResourceURL__
+#ifndef __StarfishResourceURL__
+#define __StarfishResourceURL__
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class WebOrigin;
@@ -296,7 +296,7 @@ private:
 #define GET_EFFECTIVE_REFERRERPOLICY()                               \
     ReferrerPolicy policy;                                           \
     auto nullable =                                                  \
-        getAttribute(starFish()->staticStrings()->m_referrerpolicy); \
+        getAttribute(starfish()->staticStrings()->m_referrerpolicy); \
     if (nullable.hasValue()) {                                       \
         policy = ReferrerURL::policyFromString(nullable.getValue()); \
     } else {                                                         \

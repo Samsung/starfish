@@ -41,14 +41,14 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLStackItem__
-#define __StarFishHTMLStackItem__
+#ifndef __StarfishHTMLStackItem__
+#define __StarfishHTMLStackItem__
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Node.h"
 #include "core/dom/Attribute.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class AtomicHTMLToken;
 class Element;
@@ -119,7 +119,7 @@ public:
         //
         // FIXME: Does this also apply to ShadowRoot?
         return namespaceURI() ==
-                   m_node->starFish()->staticStrings()->m_xhtmlNamespaceURI ||
+                   m_node->starfish()->staticStrings()->m_xhtmlNamespaceURI ||
                isDocumentFragmentNode();
         return true;
     }

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishSVGImageElement__
-#define __StarFishSVGImageElement__
+#ifndef __StarfishSVGImageElement__
+#define __StarfishSVGImageElement__
 
 #include "core/dom/svg/SVGElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class SVGSVGElement;
 class ImageResource;

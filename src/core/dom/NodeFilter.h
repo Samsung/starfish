@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishNodeFilter__
-#define __StarFishNodeFilter__
+#ifndef __StarfishNodeFilter__
+#define __StarfishNodeFilter__
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class NodeFilter final : public ScriptWrappable {
 public:

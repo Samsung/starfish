@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameTableObjectBox__
-#define __StarFishFrameTableObjectBox__
+#ifndef __StarfishFrameTableObjectBox__
+#define __StarfishFrameTableObjectBox__
 
 #include "core/layout/FrameBlockBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // FrameTableObjectBox is an abstract class where
 // common table-related methods are implemented

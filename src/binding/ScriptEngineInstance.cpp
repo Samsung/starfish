@@ -17,19 +17,19 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "binding/ScriptEngineInstance.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-namespace StarFish {
+namespace Starfish {
 
 ScriptEngineInstance::ScriptEngineInstance(WebView* wv)
     : WebViewHoldable(wv)

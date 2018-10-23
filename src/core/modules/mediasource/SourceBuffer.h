@@ -18,14 +18,14 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#ifndef __StarFishSourceBuffer__
-#define __StarFishSourceBuffer__
+#ifndef __StarfishSourceBuffer__
+#define __StarfishSourceBuffer__
 
 #include "core/dom/EventTarget.h"
 #include "platform/multimedia/Demuxer.h"
 #include "binding/ArrayBufferViewOrArrayBufferUnion.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class AudioTrackList;
 class SourceBuffer;

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHistoryManager__
-#define __StarFishHistoryManager__
+#ifndef __StarfishHistoryManager__
+#define __StarfishHistoryManager__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class SerializedTypedData;
 class ResourceURL;

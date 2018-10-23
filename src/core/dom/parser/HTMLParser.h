@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLParser__
-#define __StarFishHTMLParser__
+#ifndef __StarfishHTMLParser__
+#define __StarfishHTMLParser__
 
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/parser/HTMLToken.h"
@@ -26,13 +26,13 @@
 #include "core/dom/parser/HTMLInputStream.h"
 #include "core/dom/parser/HTMLTreeBuilder.h"
 
-namespace StarFish {
+namespace Starfish {
 class HTMLParser : public gc {
 public:
-    HTMLParser(StarFish* sf, Document* document, String* sourceString)
+    HTMLParser(Starfish* starfish, Document* document, String* sourceString)
         : m_treeBuilder(this, document, false)
     {
-        m_starFish = sf;
+        m_starfish = starfish;
         m_document = document;
         m_documentFragment = nullptr;
         m_source = sourceString;
@@ -40,11 +40,11 @@ public:
         m_token = new HTMLToken();
     }
 
-    HTMLParser(StarFish* sf, DocumentFragment* df, Element* contextElement,
-               String* sourceString)
+    HTMLParser(Starfish* starfish, DocumentFragment* df,
+               Element* contextElement, String* sourceString)
         : m_treeBuilder(this, df, contextElement)
     {
-        m_starFish = sf;
+        m_starfish = starfish;
         m_documentFragment = df;
         m_document = df->document();
         m_source = sourceString;
@@ -84,7 +84,7 @@ private:
         return *m_token;
     }
 
-    StarFish* m_starFish;
+    Starfish* m_starfish;
     Document* m_document;
     DocumentFragment* m_documentFragment;
     HTMLToken* m_token;

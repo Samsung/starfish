@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/HTMLTextEditable.h"
 #include "core/dom/CompositionEvent.h"
@@ -29,7 +29,7 @@
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // TODO HTMLInputElement will inherit this class
 
@@ -52,7 +52,7 @@ HTMLTextEditable::HTMLTextEditable(Document* document,
 
 bool HTMLTextEditable::readonly() const
 {
-    return getAttribute(starFish()->staticStrings()->m_readonly).hasValue();
+    return getAttribute(starfish()->staticStrings()->m_readonly).hasValue();
 }
 
 void HTMLTextEditable::didStateChanged(int oldState, int newState)
@@ -95,7 +95,7 @@ LayoutUnit HTMLTextEditable::caretThickness() const
 
 String* HTMLTextEditable::placeholder()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_placeholder);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_placeholder);
 }
 
 bool HTMLTextEditable::handleDefaultEvent(Event* event)

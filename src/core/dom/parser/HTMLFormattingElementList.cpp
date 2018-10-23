@@ -41,14 +41,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTMLFormattingElementList.h"
 
 #ifndef NDEBUG
 #include <stdio.h>
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 // Biblically, Noah's Ark only had room for two of each animal, but in the
 // Book of Hixie (aka

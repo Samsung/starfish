@@ -44,11 +44,11 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "String.h"
 #include <sstream>
 
-namespace StarFish {
+namespace Starfish {
 
 String* const String::emptyString = String::createASCIIStringWithNoGC("");
 String* const String::spaceString = String::createASCIIStringWithNoGC(" ");
@@ -911,7 +911,7 @@ String* String::toUpper()
     auto data = bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::StarFish::islower(data.asciiData()[i])) {
+            if (::Starfish::islower(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), toupper);
                 return new StringDataASCII(std::move(str));
@@ -944,7 +944,7 @@ String* String::toASCIIUpper()
     auto data = bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::StarFish::islower(data.asciiData()[i])) {
+            if (::Starfish::islower(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), toupper);
                 return new StringDataASCII(std::move(str));
@@ -953,7 +953,7 @@ String* String::toASCIIUpper()
         return this;
     } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::StarFish::islower(data.utf16Data()[i])) {
+            if (::Starfish::islower(data.utf16Data()[i])) {
                 BMPString str(data.utf16Data(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), toupper);
                 return new StringDataBMP(std::move(str));
@@ -962,7 +962,7 @@ String* String::toASCIIUpper()
         return this;
     } else {
         for (size_t i = 0; i < data.length; i++) {
-            if (::StarFish::islower(data.utf32Data()[i])) {
+            if (::Starfish::islower(data.utf32Data()[i])) {
                 UTF32String str(data.utf32Data(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), toupper);
                 return new StringDataUTF32(std::move(str));
@@ -977,7 +977,7 @@ String* String::toLower()
     auto data = bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::StarFish::isupper(data.asciiData()[i])) {
+            if (::Starfish::isupper(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), tolower);
                 return new StringDataASCII(std::move(str));
@@ -1010,7 +1010,7 @@ String* String::toASCIILower()
     auto data = bufferAccessData();
     if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::StarFish::isupper(data.asciiData()[i])) {
+            if (::Starfish::isupper(data.asciiData()[i])) {
                 ASCIIString str(data.asciiData(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), tolower);
                 return new StringDataASCII(std::move(str));
@@ -1019,7 +1019,7 @@ String* String::toASCIILower()
         return this;
     } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
         for (size_t i = 0; i < data.length; i++) {
-            if (::StarFish::isupper(data.utf16Data()[i])) {
+            if (::Starfish::isupper(data.utf16Data()[i])) {
                 BMPString str(data.utf16Data(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), tolower);
                 return new StringDataBMP(std::move(str));
@@ -1028,7 +1028,7 @@ String* String::toASCIILower()
         return this;
     } else {
         for (size_t i = 0; i < data.length; i++) {
-            if (::StarFish::isupper(data.utf32Data()[i])) {
+            if (::Starfish::isupper(data.utf32Data()[i])) {
                 UTF32String str(data.utf32Data(), data.length);
                 std::transform(str.begin(), str.end(), str.begin(), tolower);
                 return new StringDataUTF32(std::move(str));

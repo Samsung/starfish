@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameReplacedIFrame__
-#define __StarFishFrameReplacedIFrame__
+#ifndef __StarfishFrameReplacedIFrame__
+#define __StarfishFrameReplacedIFrame__
 
 #include "core/layout/FrameReplaced.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameReplacedIFrame final : public FrameReplaced {
 public:

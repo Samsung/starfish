@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishPositionError__
-#define __StarFishPositionError__
+#ifndef __StarfishPositionError__
+#define __StarfishPositionError__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class PositionError : public ScriptWrappable, public DocumentHoldable {
 public:

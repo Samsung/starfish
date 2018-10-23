@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Mutex.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Mutex::Mutex()
 {

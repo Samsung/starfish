@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "ShadowData.h"
 #include "core/modules/canvas/CanvasShadowData.h"
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void ShadowData::setLengths(ValueList* lengths)
 {

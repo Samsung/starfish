@@ -18,13 +18,13 @@
  */
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && \
-    !defined(__StarFishHTMLTrackElement__)
-#define __StarFishHTMLTrackElement__
+    !defined(__StarfishHTMLTrackElement__)
+#define __StarfishHTMLTrackElement__
 
 #include "core/dom/HTMLElement.h"
 #include "platform/loader/Resource.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TextTrack;
 

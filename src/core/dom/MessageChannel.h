@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishMessageChannel__
-#define __StarFishMessageChannel__
+#ifndef __StarfishMessageChannel__
+#define __StarfishMessageChannel__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class MessagePort;
 

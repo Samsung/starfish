@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishBlob__
-#define __StarFishBlob__
+#ifndef __StarfishBlob__
+#define __StarfishBlob__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 #include "core/page/Serializer.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 

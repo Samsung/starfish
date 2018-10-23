@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishWebOrigin__
-#define __StarFishWebOrigin__
+#ifndef __StarfishWebOrigin__
+#define __StarfishWebOrigin__
 
-namespace StarFish {
+namespace Starfish {
 
 class ResourceURL;
 

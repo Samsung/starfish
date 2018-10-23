@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishListStyleData__
-#define __StarFishListStyleData__
+#ifndef __StarfishListStyleData__
+#define __StarfishListStyleData__
 
 #include "core/style/Style.h"
 #include "core/style/CounterStyle.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 class ImageResource;

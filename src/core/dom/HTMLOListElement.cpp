@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLOListElement.h"
 
-namespace StarFish {
+namespace Starfish {
 void HTMLOListElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* value, bool attributeCreated,
                                            bool attributeRemoved)
@@ -31,11 +31,11 @@ void HTMLOListElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_reversed) {
+    if (name == starfish()->staticStrings()->m_reversed) {
         document()->notifyCountingOutdated();
-    } else if (name == starFish()->staticStrings()->m_start) {
+    } else if (name == starfish()->staticStrings()->m_start) {
         document()->notifyCountingOutdated();
-    } else if (name == starFish()->staticStrings()->m_type) {
+    } else if (name == starfish()->staticStrings()->m_type) {
         document()->notifyCountingOutdated();
     }
 }
@@ -51,23 +51,23 @@ void HTMLOListElement::styleForPresentationAttribute(
         pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
         if (typeString->equals("a")) {
             AtomicString strValue =
-                AtomicString::createAtomicString(starFish(), "lower-alpha");
+                AtomicString::createAtomicString(starfish(), "lower-alpha");
             pair.setAtomicStringValue(strValue);
         } else if (typeString->equals("A")) {
             AtomicString strValue =
-                AtomicString::createAtomicString(starFish(), "upper-alpha");
+                AtomicString::createAtomicString(starfish(), "upper-alpha");
             pair.setAtomicStringValue(strValue);
         } else if (typeString->equals("i")) {
             AtomicString strValue =
-                AtomicString::createAtomicString(starFish(), "lower-roman");
+                AtomicString::createAtomicString(starfish(), "lower-roman");
             pair.setAtomicStringValue(strValue);
         } else if (typeString->equals("I")) {
             AtomicString strValue =
-                AtomicString::createAtomicString(starFish(), "upper-roman");
+                AtomicString::createAtomicString(starfish(), "upper-roman");
             pair.setAtomicStringValue(strValue);
         } else {
             AtomicString strValue =
-                AtomicString::createAtomicString(starFish(), "decimal");
+                AtomicString::createAtomicString(starfish(), "decimal");
             pair.setAtomicStringValue(strValue);
         }
         cssValues.push_back(pair);
@@ -76,7 +76,7 @@ void HTMLOListElement::styleForPresentationAttribute(
 
 int32_t HTMLOListElement::startNumber()
 {
-    Nullable<String*> v = getAttribute(starFish()->staticStrings()->m_start);
+    Nullable<String*> v = getAttribute(starfish()->staticStrings()->m_start);
     if (v.hasValue()) {
         return String::parseInt(v.getValue());
     }
@@ -88,7 +88,7 @@ int32_t HTMLOListElement::startNumber()
 
 int32_t HTMLOListElement::start()
 {
-    Nullable<String*> v = getAttribute(starFish()->staticStrings()->m_start);
+    Nullable<String*> v = getAttribute(starfish()->staticStrings()->m_start);
     if (v.hasValue()) {
         return String::parseInt(v.getValue());
     }
@@ -97,32 +97,32 @@ int32_t HTMLOListElement::start()
 
 void HTMLOListElement::setStart(int32_t v)
 {
-    setAttribute(starFish()->staticStrings()->m_start, String::fromInt(v));
+    setAttribute(starfish()->staticStrings()->m_start, String::fromInt(v));
 }
 
 bool HTMLOListElement::reversed()
 {
-    return hasAttribute(starFish()->staticStrings()->m_reversed) != SIZE_MAX;
+    return hasAttribute(starfish()->staticStrings()->m_reversed) != SIZE_MAX;
 }
 
 void HTMLOListElement::setReversed(bool b)
 {
     if (b) {
-        setAttribute(starFish()->staticStrings()->m_reversed,
+        setAttribute(starfish()->staticStrings()->m_reversed,
                      String::emptyString);
     } else {
-        removeAttribute(starFish()->staticStrings()->m_reversed);
+        removeAttribute(starfish()->staticStrings()->m_reversed);
     }
 }
 
 String* HTMLOListElement::type()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_type);
 }
 
 void HTMLOListElement::setType(String* type)
 {
-    setAttribute(starFish()->staticStrings()->m_type, type);
+    setAttribute(starfish()->staticStrings()->m_type, type);
 }
 
 unsigned HTMLOListElement::itemCount()

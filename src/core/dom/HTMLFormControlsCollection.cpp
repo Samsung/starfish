@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLFormControlsCollection.h"
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 HTMLFormControlsCollection::HTMLFormControlsCollection(
     Node* root, NodeListImpl::FilterFunctionType filterType)
     : HTMLCollection(root, filterType, nullptr, false)
@@ -41,7 +41,7 @@ Element* HTMLFormControlsCollection::namedItem(String* name)
                 return elem;
             }
             Nullable<String*> attrStr =
-                elem->getAttribute(elem->starFish()->staticStrings()->m_name);
+                elem->getAttribute(elem->starfish()->staticStrings()->m_name);
             if (attrStr.hasValue() && attrStr.getValue()->equals(name)) {
                 return elem;
             }

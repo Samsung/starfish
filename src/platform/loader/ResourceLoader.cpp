@@ -18,11 +18,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "platform/loader/ResourceLoader.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLImageElement.h"
@@ -45,7 +45,7 @@ extern bool g_fireOnloadEvent;
 #define STARFISH_RESOURCE_CACHE_SIZE 1024 * 1024 * 4
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 ResourceLoader::ResourceLoader(Document* document)
     : DocumentHoldable(document)
@@ -566,7 +566,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                                 "event\n");
                         }
 
-                        String* eventType = doc->starFish()
+                        String* eventType = doc->starfish()
                                                 ->staticStrings()
                                                 ->m_load.localName();
                         Event* e =
@@ -689,4 +689,4 @@ void ResourceLoader::markDocumentOpenState()
     increasePendingResourceCountWhileDocumentOpening();
 }
 
-} // namespace StarFish
+} // namespace Starfish

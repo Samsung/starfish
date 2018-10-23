@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include <EscargotPublic.h>
 using namespace Escargot;
 #include "core/dom/DOMException.h"
 #include "core/dom/Document.h"
 #include "core/page/Serializer.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* TransferedTypedData::operator new(size_t size)
 {

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishRotateTransform__
-#define __StarFishRotateTransform__
+#ifndef __StarfishRotateTransform__
+#define __StarfishRotateTransform__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class RotateTransform : public gc {
 public:
