@@ -314,7 +314,7 @@ public:
             numberEnd++;                                                       \
         }                                                                      \
         size_t l = (size_t)numberEnd - (size_t)numberStart;                    \
-        char* buf = (char*)alloca(sizeof(char) * l + 1);                       \
+        char* buf = ALLOCA(sizeof(char) * l + 1, char);                        \
         memcpy(buf, numberStart, l);                                           \
         buf[l] = 0;                                                            \
         double result;                                                         \

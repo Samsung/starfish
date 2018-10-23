@@ -67,7 +67,7 @@ ScriptValue EventListener::call(Event* event)
         size_t argc = 0;
         if (event->isErrorEvent() && isAttribute()) {
             argc = ERROR_ARG_SIZE;
-            argv = (ScriptValue*)alloca(sizeof(ScriptValue) * argc);
+            argv = ALLOCA(sizeof(ScriptValue) * argc, ScriptValue);
             ErrorEvent* errorEvent = event->asErrorEvent();
             argv[ERROR_ARG_MESSAGE] = createScriptValue(errorEvent->message());
             argv[ERROR_ARG_SRC] = createScriptValue(errorEvent->filename());
@@ -76,7 +76,7 @@ ScriptValue EventListener::call(Event* event)
             argv[ERROR_ARG_ERROR] = errorEvent->error();
         } else {
             argc = DEFAULT_ARG_SIZE;
-            argv = (ScriptValue*)alloca(sizeof(ScriptValue) * argc);
+            argv = ALLOCA(sizeof(ScriptValue) * argc, ScriptValue);
             argv[DEFAULT_ARG_EVENT] = event->scriptValue();
         }
 

@@ -269,7 +269,7 @@ unsigned NodeIterator::acceptNode(Node* node, bool& error)
 
     if (isCallableScriptValue(m_filter)) {
         ScriptValue* argv;
-        argv = (ScriptValue*)alloca(sizeof(ScriptValue) * 1);
+        argv = ALLOCA(sizeof(ScriptValue) * 1, ScriptValue);
         argv[0] = node->scriptValue();
         ScriptValue thisValue = node->window()->scriptValue();
         ScriptValue ret = callScriptFunctionWithError(
@@ -295,7 +295,7 @@ unsigned NodeIterator::acceptNode(Node* node, bool& error)
         }
     } else if (isObjectScriptValue(m_filter)) {
         ScriptValue* argv;
-        argv = (ScriptValue*)alloca(sizeof(ScriptValue) * 1);
+        argv = ALLOCA(sizeof(ScriptValue) * 1, ScriptValue);
         argv[0] = node->scriptValue();
         ScriptValue thisValue = node->window()->scriptValue();
         ScriptValue ret = callHandleNodeFilterFunction(

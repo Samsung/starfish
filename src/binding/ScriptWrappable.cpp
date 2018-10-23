@@ -434,7 +434,7 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
 
     SandBoxRef* sb = SandBoxRef::create(ctx);
     auto result = sb->run([&](ExecutionStateRef* state) -> ValueRef* {
-        ValueRef** argv = (ValueRef**)alloca(sizeof(ValueRef*) * (1 + argc));
+        ValueRef** argv = ALLOCA(sizeof(ValueRef*) * (1 + argc), ValueRef*);
         for (size_t i = 0; i < argc; i++) {
             argv[i] = ValueRef::create(createScriptString(argNames[i]));
         }
