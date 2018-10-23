@@ -493,15 +493,7 @@ const char* getWindowsTempDir();
     (typenameWithoutPointer*)(LIKELY(bytes < 4096) ? alloca(bytes) \
                                                    : GC_MALLOC(bytes))
 
-#define APP_NAME "Netscape"
-#define APP_CODE_NAME "Mozilla"
-#define PRODUCT_NAME "Gecko"
-#define STARFISH_NAME "StarFish"
-#define VERSION "0.1.0"
-#define USER_AGENT(STARFISH_NAME, VERSION) \
-    "Mozilla/5.0 (like Gecko/54.0 Firefox/54.0) " STARFISH_NAME "/" VERSION
-#define USER_AGENT_MAXIMUM_DATE_VALUE 8.64e15
-#define VENDOR_NAME "Samsung Electronics Co., Ltd."
+#include "StarfishInfo.h"
 
 template <typename T>
 struct Nullable {

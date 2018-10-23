@@ -47,6 +47,8 @@ today=`date +%y%m%d`
 cd ../$repo
 mkdir -p .git
 
+sed -i "s/\(VERSION \".*\"\)/\1 \"$today\_$hash\"/g" src/StarfishInfo.h
+
 git add -A
 echo "======================================="
 echo git commit -m "LWE_Release_$today""_$hash"
