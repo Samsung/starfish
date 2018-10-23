@@ -64,6 +64,11 @@ public:
 
     Request* clone();
 
+    RequestData* requestData()
+    {
+        return &m_data;
+    }
+
 private:
     Request(ScriptBindingInstance* instance, RequestData* data);
     void initialize(RequestInfo* input, RequestInit* init = nullptr);

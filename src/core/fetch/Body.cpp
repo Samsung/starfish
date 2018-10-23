@@ -26,27 +26,63 @@
 #include "core/dom/DOMException.h"
 #include "core/util/URL.h"
 #include "core/fileapi/Blob.h"
+#include "core/page/Window.h"
+#include "core/fetch/stream/ReadableStream.h"
+#include "core/fetch/stream/ReadableStreamDefaultReader.h"
 
 namespace Starfish {
 
 // TODO: find where the mine type should be placed
 static const char kTextPlainContentType[] = "text/plain;charset=UTF-8";
 
+Body::Body(Window* window)
+    : WindowHoldable(window)
+    , m_bodyInit(nullptr)
+    , m_contentType(String::emptyString)
+    , m_resourceRequest(nullptr)
+    , m_readableStream(nullptr)
+    , m_promise(nullptr)
+{
+}
+
+Body::Body(Window* window, Nullable<BodyInit>& body)
+    : Body(window)
+{
+    if (body.hasValue()) {
+        auto bodyValue = body.getValue();
+        if (bodyValue.isReadableStreamValue()) {
+            m_readableStream = bodyValue.getReadableStreamValue();
+        }
+    }
+}
+
+void Body::createReadableStream()
+{
+    if (m_readableStream == nullptr) {
+        m_readableStream = new ReadableStream(window()->document());
+    }
+}
+
+bool Body::bodyUsed()
+{
+    return m_readableStream ? m_readableStream->disturbed() : false;
+}
+
 Promise* Body::arrayBuffer()
 {
     Promise* promise = new Promise(scriptBindingInstance());
+    createReadableStream();
 
-    if (m_bodyUsed) {
+    if (m_readableStream->isDisturbedOrLocked()) {
         auto error = scriptTypeError(scriptBindingInstance(),
                                      String::fromUTF8("Body is locked"));
 
         promise->reject(createScriptValue(error));
     } else {
-        if (m_body.hasValue()) {
-            setBodyUsed(true);
+        if (m_bodyInit.hasValue()) {
             m_promise = promise;
 
-            BodyInit body = m_body.getValue();
+            BodyInit body = m_bodyInit.getValue();
 
             if (body.isUSVStringValue()) {
                 auto value = body.getUSVStringValue();
@@ -61,28 +97,30 @@ Promise* Body::arrayBuffer()
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
         } else {
-            promise->fulfill(createScriptValue(String::emptyString));
+            m_readableStream->resolveData(promise, scriptBindingInstance(),
+                                          ResponseType::ArrayBuffer);
         }
     }
 
+    m_readableStream->close();
     return promise;
 }
 
 Promise* Body::blob()
 {
     Promise* promise = new Promise(scriptBindingInstance());
+    createReadableStream();
 
-    if (m_bodyUsed) {
+    if (m_readableStream->isDisturbedOrLocked()) {
         auto error = scriptTypeError(scriptBindingInstance(),
                                      String::fromUTF8("Body is locked"));
 
         promise->reject(createScriptValue(error));
     } else {
-        if (m_body.hasValue()) {
-            setBodyUsed(true);
+        if (m_bodyInit.hasValue()) {
             m_promise = promise;
 
-            BodyInit body = m_body.getValue();
+            BodyInit body = m_bodyInit.getValue();
 
             if (body.isUSVStringValue()) {
                 auto value = body.getUSVStringValue();
@@ -99,28 +137,30 @@ Promise* Body::blob()
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
         } else {
-            promise->fulfill(createScriptValue(String::emptyString));
+            m_readableStream->resolveData(promise, scriptBindingInstance(),
+                                          ResponseType::Blob);
         }
     }
 
+    m_readableStream->close();
     return promise;
 }
 
 Promise* Body::json()
 {
     Promise* promise = new Promise(scriptBindingInstance());
+    createReadableStream();
 
-    if (m_bodyUsed) {
+    if (m_readableStream->isDisturbedOrLocked()) {
         auto error = scriptTypeError(scriptBindingInstance(),
                                      String::fromUTF8("Body is locked"));
 
         promise->reject(createScriptValue(error));
     } else {
-        if (m_body.hasValue()) {
-            setBodyUsed(true);
+        if (m_bodyInit.hasValue()) {
             m_promise = promise;
 
-            BodyInit body = m_body.getValue();
+            BodyInit body = m_bodyInit.getValue();
 
             if (body.isUSVStringValue()) {
                 ScriptValue jsonObject = parseJSON(scriptBindingInstance(),
@@ -130,10 +170,12 @@ Promise* Body::json()
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
         } else {
-            promise->fulfill(createScriptValue(String::emptyString));
+            m_readableStream->resolveData(promise, scriptBindingInstance(),
+                                          ResponseType::Json);
         }
     }
 
+    m_readableStream->close();
     return promise;
 }
 
@@ -156,18 +198,18 @@ struct BodyPromiseHandle : public gc {
 Promise* Body::text()
 {
     Promise* promise = new Promise(scriptBindingInstance());
+    createReadableStream();
 
-    if (m_bodyUsed) {
+    if (m_readableStream->isDisturbedOrLocked()) {
         auto error = scriptTypeError(scriptBindingInstance(),
                                      String::fromUTF8("Body is locked"));
 
         promise->reject(createScriptValue(error));
     } else {
-        if (m_body.hasValue()) {
-            setBodyUsed(true);
+        if (m_bodyInit.hasValue()) {
             m_promise = promise;
 
-            BodyInit body = m_body.getValue();
+            BodyInit body = m_bodyInit.getValue();
             if (body.isUSVStringValue()) {
                 promise->fulfill(createScriptValue(body.getUSVStringValue()));
 
@@ -208,10 +250,12 @@ Promise* Body::text()
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             }
         } else {
-            promise->fulfill(createScriptValue(String::emptyString));
+            m_readableStream->resolveData(promise, scriptBindingInstance(),
+                                          ResponseType::Text);
         }
     }
 
+    m_readableStream->close();
     return promise;
 }
 
@@ -232,7 +276,7 @@ void Body::onReadyStateChange(ResourceRequest* request, bool fromExplicit)
 {
     if (fromExplicit) {
         if (request->readyState() == ReadyState::Done) {
-            BodyInit body = m_body.getValue();
+            BodyInit body = m_bodyInit.getValue();
 
             if (body.isBlobValue()) {
                 String* text =
@@ -246,22 +290,40 @@ void Body::onReadyStateChange(ResourceRequest* request, bool fromExplicit)
     }
 }
 
-Nullable<BodyInit> Body::body() const
+Nullable<BodyInit> Body::bodyInit() const
 {
     // TODO: in case that m_bodyUsed is True
-    return m_body;
+    return m_bodyInit;
 }
 
-void Body::setBody(const BodyInit& body)
+void Body::setBodyInit(const Nullable<BodyInit>& bodyInitValue)
 {
-    m_body = body;
+    m_bodyInit = bodyInitValue;
 
     // extract Body : https://fetch.spec.whatwg.org/#body-mixin
-    if (body.isUSVStringValue()) {
-        m_contentType = String::createASCIIString(kTextPlainContentType);
-    } else if (body.isBlobValue()) {
-        m_contentType = body.getBlobValue()->type();
+    createReadableStream();
+    m_readableStream->releaseLock();
+
+    if (bodyInitValue.hasValue()) {
+        auto bodyInit = bodyInitValue.getValue();
+        if (bodyInit.isUSVStringValue()) {
+            m_contentType = String::createASCIIString(kTextPlainContentType);
+        } else if (bodyInit.isBlobValue()) {
+            m_contentType = bodyInit.getBlobValue()->type();
+        }
     }
+}
+
+void Body::pushResponseData(ResourceRequest* request)
+{
+    createReadableStream();
+    auto response = request->response();
+    auto responseType = request->responseType();
+
+    auto streamBuffer = m_readableStream->streamBuffer();
+    streamBuffer->setType(request->responseType());
+    streamBuffer->setMimeType(request->responseMimeType());
+    streamBuffer->push(response.data(), response.size());
 }
 
 void Body::copyBody(Body* body)
@@ -270,11 +332,11 @@ void Body::copyBody(Body* body)
         m_contentType = String::createASCIIString(CSTR(body->contentType()));
     }
 
-    auto srcBody = body->body();
+    auto srcBody = body->bodyInit();
     if (srcBody.hasValue()) {
         BodyInit srcBodyValue = srcBody.getValue();
         if (srcBodyValue.isUSVStringValue()) {
-            m_body =
+            m_bodyInit =
                 BodyInit::createUSVString(srcBodyValue.getUSVStringValue());
         } else {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

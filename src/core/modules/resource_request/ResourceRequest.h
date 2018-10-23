@@ -159,6 +159,11 @@ public:
         return m_response;
     }
 
+    ResponseType responseType()
+    {
+        return m_responseType;
+    }
+
     String* responseMimeType()
     {
         return m_responseMimeType;

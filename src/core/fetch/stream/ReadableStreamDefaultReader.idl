@@ -1,0 +1,10 @@
+[
+  Constructor(ReadableStream stream),
+  Exposed=(Window,Worker),
+  ConstructorCallWith=Document
+] interface ReadableStreamDefaultReader {
+  Promise<any> read();
+  Promise<any> cancel();
+  void releaseLock();
+  readonly attribute Promise<boolean> closed;
+};

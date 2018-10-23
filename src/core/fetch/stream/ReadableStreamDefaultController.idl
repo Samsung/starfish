@@ -1,0 +1,12 @@
+[
+  Constructor(),
+  Exposed=(Window,Worker),
+  ConstructorCallWith=Document,
+  NoInterfaceObject,
+  RaisesException=Constructor
+] interface ReadableStreamDefaultController {
+  void enqueue(any chunk);
+  void close();
+  [RaisesException] void error();
+  [Unimplemented] readonly attribute double desiredSize;
+};

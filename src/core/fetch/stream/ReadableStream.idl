@@ -1,0 +1,12 @@
+[
+  Constructor(optional object underlyingSource, optional any options),
+  Exposed=(Window,Worker),
+  ConstructorCallWith=Document
+] interface ReadableStream {
+  Promise<any> cancel();
+  [RaisesException] ReadableStreamDefaultReader getReader();
+  [Unimplemented] Promise<any> pipeTo(any streams, optional any options);
+  [Unimplemented] object pipeThrough(any dest, any options);
+  [Unimplemented] object tee();
+  readonly attribute boolean locked;
+};
