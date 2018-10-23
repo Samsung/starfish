@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "FrameSVGPolylineBox.h"
 #include "core/dom/Node.h"
 #include "core/dom/Element.h"
@@ -26,7 +26,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameSVGPolylineBox::operator new(size_t size)
 {
@@ -45,7 +45,7 @@ void FrameSVGPolylineBox::paintSVG(PaintingContext& ctx)
 {
     auto points =
         parsePointsFromString(node()->asElement()->getAttributeOrEmpty(
-            node()->starFish()->staticStrings()->m_points));
+            node()->starfish()->staticStrings()->m_points));
 
     if (points.size()) {
         ctx.m_canvas->moveTo(points[0].first, points[0].second);

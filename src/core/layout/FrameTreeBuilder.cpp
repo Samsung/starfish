@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/Node.h"
 #include "core/dom/Element.h"
@@ -65,7 +65,7 @@
 #include "core/layout/FrameLineBreak.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FrameTreeBuilderContext::FrameTreeBuilderContext(
     FrameBlockBox* currentBlockContainer)

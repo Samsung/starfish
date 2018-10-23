@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/Event.h"
 #include "core/dom/HTMLInputElement.h"
@@ -37,7 +37,7 @@
 #include "core/layout/FrameInputBox.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // TODO: We should discuss the maxlength limitation
 // because the spec doesn't describe the actual number.
@@ -109,7 +109,7 @@ bool HTMLInputElement::shouldCreateFrameText()
 
 String* HTMLInputElement::type()
 {
-    String* typeAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    String* typeAttr = getAttributeOrEmpty(starfish()->staticStrings()->m_type);
     typeAttr = typeAttr->toASCIILower();
 
     if (typeAttr->equals("hidden") || typeAttr->equals("text") ||
@@ -126,17 +126,17 @@ String* HTMLInputElement::type()
         return typeAttr;
     }
 
-    return starFish()->staticStrings()->m_text.localName();
+    return starfish()->staticStrings()->m_text.localName();
 }
 
 String* HTMLInputElement::defaultValue()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_value);
 }
 
 void HTMLInputElement::setDefaultValue(String* defaultValue)
 {
-    setAttribute(starFish()->staticStrings()->m_value, defaultValue);
+    setAttribute(starfish()->staticStrings()->m_value, defaultValue);
 }
 
 // IDL attribute
@@ -269,12 +269,12 @@ String* HTMLInputElement::checkboxTickSymbol()
 
 String* HTMLInputElement::placeholder()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_placeholder);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_placeholder);
 }
 
 void HTMLInputElement::setPlaceholder(String* value)
 {
-    setAttribute(starFish()->staticStrings()->m_placeholder, value);
+    setAttribute(starfish()->staticStrings()->m_placeholder, value);
 }
 
 void HTMLInputElement::toggleChecked()
@@ -289,7 +289,7 @@ void HTMLInputElement::toggleChecked()
 bool HTMLInputElement::defaultChecked()
 {
     Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_checked);
+        getAttribute(starfish()->staticStrings()->m_checked);
 
     return val.hasValue();
 }
@@ -297,10 +297,10 @@ bool HTMLInputElement::defaultChecked()
 void HTMLInputElement::setDefaultChecked(bool checked)
 {
     if (checked) {
-        setAttribute(starFish()->staticStrings()->m_checked,
+        setAttribute(starfish()->staticStrings()->m_checked,
                      String::emptyString);
     } else {
-        removeAttribute(starFish()->staticStrings()->m_checked);
+        removeAttribute(starfish()->staticStrings()->m_checked);
     }
 }
 
@@ -342,7 +342,7 @@ void HTMLInputElement::resetRadioButtons()
 // https://html.spec.whatwg.org/multipage/input.html#radio-button-group
 GCVector<HTMLInputElement*>* HTMLInputElement::radioButtonGroup()
 {
-    String* name = getAttributeOrEmpty(starFish()->staticStrings()->m_name);
+    String* name = getAttributeOrEmpty(starfish()->staticStrings()->m_name);
     if (name->equals(String::emptyString)) {
         return nullptr;
     }
@@ -373,7 +373,7 @@ GCVector<HTMLInputElement*>* HTMLInputElement::radioButtonGroup()
 
 uint32_t HTMLInputElement::size()
 {
-    String* size = getAttributeOrEmpty(starFish()->staticStrings()->m_size);
+    String* size = getAttributeOrEmpty(starfish()->staticStrings()->m_size);
     if (!size->equals(String::emptyString)) {
         return String::parseInt64(size);
     }
@@ -391,10 +391,10 @@ void HTMLInputElement::setSize(String* sizeStr)
         throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR,
                                msg);
     } else if (size < 0) {
-        setAttribute(starFish()->staticStrings()->m_size,
+        setAttribute(starfish()->staticStrings()->m_size,
                      String::fromInt(DEFAULT_SIZE));
     } else {
-        setAttribute(starFish()->staticStrings()->m_size, sizeStr);
+        setAttribute(starfish()->staticStrings()->m_size, sizeStr);
     }
 }
 
@@ -446,8 +446,8 @@ void HTMLInputElement::activationBehavior()
     }
 
     if (type()->equals("checkbox") || type()->equals("radio")) {
-        fireEvent(starFish()->staticStrings()->m_input, true, false);
-        fireEvent(starFish()->staticStrings()->m_change, true, false);
+        fireEvent(starfish()->staticStrings()->m_input, true, false);
+        fireEvent(starfish()->staticStrings()->m_change, true, false);
     } else if (type()->equals("file")) {
     } else if (type()->equals("submit")) {
     } else if (type()->equals("image")) {
@@ -543,10 +543,10 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLFormControl::didAttributeChanged(name, old, val, attributeCreated,
                                          attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_type) {
+    if (name == starfish()->staticStrings()->m_type) {
         setDefaultBookkeepingValues();
         setNeedsFrameTreeBuild();
-    } else if (name == starFish()->staticStrings()->m_value) {
+    } else if (name == starfish()->staticStrings()->m_value) {
         // https://html.spec.whatwg.org/multipage/input.html#attr-input-value
         if (!m_dirtiness) {
             if (attributeRemoved) {
@@ -558,7 +558,7 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
         }
 
         setNeedsFrameTreeBuild();
-    } else if (name == starFish()->staticStrings()->m_checked) {
+    } else if (name == starfish()->staticStrings()->m_checked) {
         if (!m_dirtyCheckness) {
             if (attributeCreated) {
                 m_checkness = true;
@@ -566,7 +566,7 @@ void HTMLInputElement::didAttributeChanged(QualifiedName name, String* old,
                 m_checkness = false;
             }
         }
-    } else if (name == starFish()->staticStrings()->m_name) {
+    } else if (name == starfish()->staticStrings()->m_name) {
         if (type()->equals("radio") && checked()) {
             resetRadioButtons();
         }
@@ -699,22 +699,22 @@ void HTMLInputElement::styleForPresentationAttribute(
 
 String* HTMLInputElement::max()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_max);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_max);
 }
 
 void HTMLInputElement::setMax(String* max)
 {
-    setAttribute(starFish()->staticStrings()->m_max, max);
+    setAttribute(starfish()->staticStrings()->m_max, max);
 }
 
 String* HTMLInputElement::min()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_min);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_min);
 }
 
 void HTMLInputElement::setMin(String* min)
 {
-    setAttribute(starFish()->staticStrings()->m_min, min);
+    setAttribute(starfish()->staticStrings()->m_min, min);
 }
 
 double HTMLInputElement::minimum()
@@ -739,12 +739,12 @@ double HTMLInputElement::maximum()
 
 String* HTMLInputElement::step()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_step);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_step);
 }
 
 void HTMLInputElement::setStep(String* step)
 {
-    setAttribute(starFish()->staticStrings()->m_step, step);
+    setAttribute(starfish()->staticStrings()->m_step, step);
 }
 
 bool HTMLInputElement::allowedValueStep(double* ret)

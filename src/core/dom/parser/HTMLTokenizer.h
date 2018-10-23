@@ -42,13 +42,13 @@
  *  USA
  */
 
-#ifndef _StarFishHTMLTokenizer_
-#define _StarFishHTMLTokenizer_
+#ifndef _StarfishHTMLTokenizer_
+#define _StarfishHTMLTokenizer_
 
 #include "core/dom/parser/HTMLToken.h"
 #include "core/dom/parser/InputStreamPreprocessor.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLTokenizer {
 public:

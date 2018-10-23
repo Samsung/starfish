@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDOMPointReadOnly__
-#define __StarFishDOMPointReadOnly__
+#ifndef __StarfishDOMPointReadOnly__
+#define __StarfishDOMPointReadOnly__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DOMPointReadOnly : public ScriptWrappable {
 public:

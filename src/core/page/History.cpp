@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/page/History.h"
 
@@ -28,7 +28,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 History::History(Document* doc)
     : ScriptWrappable(this)

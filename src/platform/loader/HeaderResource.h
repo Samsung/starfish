@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHeaderResource__
-#define __StarFishHeaderResource__
+#ifndef __StarfishHeaderResource__
+#define __StarfishHeaderResource__
 
 #include "platform/loader/Resource.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HeaderResource : public Resource {
 public:

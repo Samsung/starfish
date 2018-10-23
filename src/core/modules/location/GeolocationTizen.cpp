@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/modules/location/Geolocation.h"
 #if defined(STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED)
 #include "core/modules/location/Geoposition.h"
@@ -28,12 +28,12 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
-#include "StarFish.h"
+#include "Starfish.h"
 
 #include <locations.h>
 #include <Ecore.h>
 
-namespace StarFish {
+namespace Starfish {
 
 class GeolocationTizen;
 

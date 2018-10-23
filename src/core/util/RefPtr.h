@@ -21,12 +21,12 @@
 
 // TODO add RefPtr orginal License comment
 
-#ifndef __StarFishRefPtr__
-#define __StarFishRefPtr__
+#ifndef __StarfishRefPtr__
+#define __StarfishRefPtr__
 
 #include "core/util/RefCounted.h"
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename T>
 class PassRef;

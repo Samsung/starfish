@@ -20,10 +20,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/util/LineBreakerIteratorPool.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static const char* uax14Prologue =
     "!!chain;"

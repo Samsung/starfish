@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishHTTPRequest__
-#define __StarFishHTTPRequest__
+#ifndef __StarfishHTTPRequest__
+#define __StarfishHTTPRequest__
 
-namespace StarFish {
+namespace Starfish {
 
 class HTTPHeaderMap;
 

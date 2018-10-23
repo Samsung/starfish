@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishThreadPool__
-#define __StarFishThreadPool__
+#ifndef __StarfishThreadPool__
+#define __StarfishThreadPool__
 
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Semaphore.h"
 #include "core/modules/threading/Thread.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class BrowsingContext;
 

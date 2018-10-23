@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameTreeBuilder__
-#define __StarFishFrameTreeBuilder__
+#ifndef __StarfishFrameTreeBuilder__
+#define __StarfishFrameTreeBuilder__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 class ContentData;

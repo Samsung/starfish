@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/PseudoElement.h"
 #include "core/layout/FrameText.h"
@@ -26,7 +26,7 @@
 
 #define NonBreakingSpace 0x00A0
 
-namespace StarFish {
+namespace Starfish {
 
 static inline bool isSpaceForFirstLetter(char32_t c)
 {
@@ -36,22 +36,23 @@ static inline bool isSpaceForFirstLetter(char32_t c)
 QualifiedName PseudoElement::pseudoElementTagName(
     Document* document, StyleResolver::PseudoElementType pseudoId)
 {
-    StarFish* sf = document->starFish();
+    Starfish* starfish = document->starfish();
     switch (pseudoId) {
     case StyleResolver::PseudoElementType::PseudoElementAfter:
         return QualifiedName(AtomicString(), AtomicString::createAtomicString(
-                                                 sf, "pseudo:after"));
+                                                 starfish, "pseudo:after"));
     case StyleResolver::PseudoElementType::PseudoElementBefore:
         return QualifiedName(AtomicString(), AtomicString::createAtomicString(
-                                                 sf, "pseudo:before"));
+                                                 starfish, "pseudo:before"));
     case StyleResolver::PseudoElementType::PseudoElementFirstLetter:
-        return QualifiedName(AtomicString(), AtomicString::createAtomicString(
-                                                 sf, "pseudo:first-letter"));
+        return QualifiedName(
+            AtomicString(),
+            AtomicString::createAtomicString(starfish, "pseudo:first-letter"));
     default:
         break;
     }
     return QualifiedName(AtomicString(),
-                         AtomicString::createAtomicString(sf, "pseudo"));
+                         AtomicString::createAtomicString(starfish, "pseudo"));
 }
 
 size_t FirstLetterPseudoElement::firstLetterLength(String* text)

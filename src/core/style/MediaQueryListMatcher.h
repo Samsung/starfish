@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishMediaQueryListMatcher__
-#define __StarFishMediaQueryListMatcher__
+#ifndef __StarfishMediaQueryListMatcher__
+#define __StarfishMediaQueryListMatcher__
 
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class MediaQueryEvaluator;
@@ -43,6 +43,6 @@ private:
     GCVector<std::pair<MediaQueryList*, bool>> m_mediaQueryLists;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishMediaQueryListMatcher__ */
+#endif /* __StarfishMediaQueryListMatcher__ */

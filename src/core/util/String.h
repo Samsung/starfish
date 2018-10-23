@@ -44,12 +44,12 @@
  * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __StarFishString__
-#define __StarFishString__
+#ifndef __StarfishString__
+#define __StarfishString__
 
 #include "core/util/BasicString.h"
 
-namespace StarFish {
+namespace Starfish {
 
 typedef BasicString<char,
                     GCUtil::gc_malloc_atomic_ignore_off_page_allocator<char>>
@@ -88,65 +88,65 @@ bool isdigit(char32_t ch);
 bool isalpha(char32_t ch);
 size_t utf32ToUtf16(char32_t i, char16_t* u);
 
-} // namespace StarFish
+} // namespace Starfish
 
 namespace std {
 template <>
-struct hash<StarFish::ASCIIString> {
-    size_t operator()(StarFish::ASCIIString const& x) const
+struct hash<Starfish::ASCIIString> {
+    size_t operator()(Starfish::ASCIIString const& x) const
     {
-        return std::hash<StarFish::ASCIIStringDataNonGCStd>{}(
-            StarFish::ASCIIStringDataNonGCStd(x.data()));
+        return std::hash<Starfish::ASCIIStringDataNonGCStd>{}(
+            Starfish::ASCIIStringDataNonGCStd(x.data()));
     }
 };
 
 template <>
-struct equal_to<StarFish::ASCIIString> {
-    bool operator()(StarFish::ASCIIString const& a,
-                    StarFish::ASCIIString const& b) const
-    {
-        return a.compare(b) == 0;
-    }
-};
-
-template <>
-struct hash<StarFish::UTF16String> {
-    size_t operator()(StarFish::UTF16String const& x) const
-    {
-        return std::hash<StarFish::UTF16StringDataNonGCStd>{}(
-            StarFish::UTF16StringDataNonGCStd(x.data()));
-    }
-};
-
-template <>
-struct equal_to<StarFish::UTF16String> {
-    bool operator()(StarFish::UTF16String const& a,
-                    StarFish::UTF16String const& b) const
+struct equal_to<Starfish::ASCIIString> {
+    bool operator()(Starfish::ASCIIString const& a,
+                    Starfish::ASCIIString const& b) const
     {
         return a.compare(b) == 0;
     }
 };
 
 template <>
-struct hash<StarFish::UTF32String> {
-    size_t operator()(StarFish::UTF32String const& x) const
+struct hash<Starfish::UTF16String> {
+    size_t operator()(Starfish::UTF16String const& x) const
     {
-        return std::hash<StarFish::UTF32StringDataNonGCStd>{}(
-            StarFish::UTF32StringDataNonGCStd(x.data()));
+        return std::hash<Starfish::UTF16StringDataNonGCStd>{}(
+            Starfish::UTF16StringDataNonGCStd(x.data()));
     }
 };
 
 template <>
-struct equal_to<StarFish::UTF32String> {
-    bool operator()(StarFish::UTF32String const& a,
-                    StarFish::UTF32String const& b) const
+struct equal_to<Starfish::UTF16String> {
+    bool operator()(Starfish::UTF16String const& a,
+                    Starfish::UTF16String const& b) const
+    {
+        return a.compare(b) == 0;
+    }
+};
+
+template <>
+struct hash<Starfish::UTF32String> {
+    size_t operator()(Starfish::UTF32String const& x) const
+    {
+        return std::hash<Starfish::UTF32StringDataNonGCStd>{}(
+            Starfish::UTF32StringDataNonGCStd(x.data()));
+    }
+};
+
+template <>
+struct equal_to<Starfish::UTF32String> {
+    bool operator()(Starfish::UTF32String const& a,
+                    Starfish::UTF32String const& b) const
     {
         return a.compare(b) == 0;
     }
 };
 } // namespace std
 
-namespace StarFish {
+namespace Starfish {
 
 class StringDataASCII;
 class String;
@@ -1750,21 +1750,21 @@ struct TextRun {
     }
 #endif
 };
-} // namespace StarFish
+} // namespace Starfish
 
 namespace std {
 template <>
-struct hash<StarFish::String*> {
-    std::size_t operator()(const StarFish::String* s) const
+struct hash<Starfish::String*> {
+    std::size_t operator()(const Starfish::String* s) const
     {
         return s->hashValue();
     }
 };
 
 template <>
-struct equal_to<StarFish::String*> {
-    bool operator()(const StarFish::String* s1,
-                    const StarFish::String* s2) const
+struct equal_to<Starfish::String*> {
+    bool operator()(const Starfish::String* s1,
+                    const Starfish::String* s2) const
     {
         return s1->equals(s2);
     }

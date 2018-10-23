@@ -18,12 +18,12 @@
  */
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#ifndef __StarFishVTTCue__
-#define __StarFishVTTCue__
+#ifndef __StarfishVTTCue__
+#define __StarfishVTTCue__
 
 #include "core/dom/TextTrackCue.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // VTTCue
 // : Only support "text"

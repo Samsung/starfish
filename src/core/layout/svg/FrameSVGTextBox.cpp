@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "FrameSVGTextBox.h"
 #include "core/dom/Document.h"
 #include "core/layout/FrameBlockBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameSVGTextBox::operator new(size_t size)
 {
@@ -40,7 +40,7 @@ void* FrameSVGTextBox::operator new(size_t size)
 
 void FrameSVGTextBox::layoutSVG()
 {
-    LayoutContext ctx(node()->starFish(),
+    LayoutContext ctx(node()->starfish(),
                       node()->document()->frame()->asFrameDocument());
     firstChild()->layout(ctx, Frame::LayoutWantToResolve::ResolveAll);
     firstChild()->establishesStackingContextIfNeedsAndComputingPaintingFlags();

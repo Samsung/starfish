@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishFrameBlockBox__
-#define __StarFishFrameBlockBox__
+#ifndef __StarfishFrameBlockBox__
+#define __StarfishFrameBlockBox__
 
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameReplaced.h"
@@ -27,7 +27,7 @@
 #include "core/layout/FrameText.h"
 #include "core/util/RefPtr.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameBlockBox;
 class LineFormattingContext;

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/modules/profiling/Profiling.h"
 #include "binding/ScriptWrappable.h"
@@ -33,7 +33,7 @@
 #define CURLHANDLE_CACHE_PRUNE_MINIMUM_INTERVAL_S 0.5
 #define CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S 0.25
 
-namespace StarFish {
+namespace Starfish {
 #if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
 static pthread_mutex_t* sslLockarray;
 
@@ -464,4 +464,4 @@ void NetworkSharedResourceManager::setCookies(Document* document,
                      cookie->bufferAccessData().asciiData());
     curl_easy_cleanup(curl);
 }
-} // namespace StarFish
+} // namespace Starfish

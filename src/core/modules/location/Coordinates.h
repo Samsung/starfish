@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishCoordinates__
-#define __StarFishCoordinates__
+#ifndef __StarfishCoordinates__
+#define __StarfishCoordinates__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Coordinates : public ScriptWrappable, public DocumentHoldable {
 public:

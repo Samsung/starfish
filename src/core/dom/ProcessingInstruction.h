@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishProcessingInstruction__
-#define __StarFishProcessingInstruction__
+#ifndef __StarfishProcessingInstruction__
+#define __StarfishProcessingInstruction__
 
 #include "core/dom/CharacterData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ProcessingInstruction : public CharacterData {
 public:

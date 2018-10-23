@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishHTTPUtil__
-#define __StarFishHTTPUtil__
+#ifndef __StarfishHTTPUtil__
+#define __StarfishHTTPUtil__
 
 #include <string>
 #include <unordered_map>
 
-namespace StarFish {
+namespace Starfish {
 
 class ScriptBindingInstance;
 

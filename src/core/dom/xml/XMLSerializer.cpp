@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "XMLSerializer.h"
 
 #include "core/dom/Element.h"
@@ -28,7 +28,7 @@
 #include <../third_party/rapidxml/rapidxml.hpp>
 #include <../third_party/rapidxml/rapidxml_print.hpp>
 
-namespace StarFish {
+namespace Starfish {
 
 static bool isSelfClosingTag(char* str)
 {

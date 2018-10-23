@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/HTMLAreaElement.h"
 
 #include "core/dom/Document.h"
 #include "core/dom/DOMTokenList.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* HTMLAreaElement::operator new(size_t size)
 {
@@ -45,20 +45,20 @@ void* HTMLAreaElement::operator new(size_t size)
 DOMTokenList* HTMLAreaElement::relList()
 {
     if (!m_relList) {
-        m_relList = new DOMTokenList(this, starFish()->staticStrings()->m_rel);
+        m_relList = new DOMTokenList(this, starfish()->staticStrings()->m_rel);
     }
     return m_relList;
 }
 
 String* HTMLAreaElement::referrerPolicy()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_referrerpolicy);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_referrerpolicy);
 }
 
 void HTMLAreaElement::setReferrerPolicy(String* policy)
 {
     if (ReferrerURL::isValidPolicy(policy)) {
-        setAttribute(starFish()->staticStrings()->m_referrerpolicy, policy);
+        setAttribute(starfish()->staticStrings()->m_referrerpolicy, policy);
     }
 }
 }

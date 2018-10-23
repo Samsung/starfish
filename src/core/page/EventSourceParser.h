@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishEventSourceParser__
-#define __StarFishEventSourceParser__
+#ifndef __StarfishEventSourceParser__
+#define __StarfishEventSourceParser__
 
-namespace StarFish {
+namespace Starfish {
 
 class EventSourceParser : public gc {
 public:

@@ -19,12 +19,12 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "platform/multimedia/MediaPlayer.h"
 
-namespace StarFish {
+namespace Starfish {
 
 uint32_t HTMLVideoElement::videoWidth()
 {
@@ -45,8 +45,8 @@ void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLMediaElement::didAttributeChanged(name, old, value, attributeCreated,
                                           attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_width ||
-        name == starFish()->staticStrings()->m_height) {
+    if (name == starfish()->staticStrings()->m_width ||
+        name == starfish()->staticStrings()->m_height) {
         if (frame()) {
             setNeedsLayout();
         }
@@ -56,25 +56,25 @@ void HTMLVideoElement::didAttributeChanged(QualifiedName name, String* old,
 uint32_t HTMLVideoElement::width()
 {
     String* widthStr =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_width);
     return String::parseInt(widthStr);
 }
 
 void HTMLVideoElement::setWidth(uint32_t width)
 {
-    setAttribute(starFish()->staticStrings()->m_width, String::fromInt(width));
+    setAttribute(starfish()->staticStrings()->m_width, String::fromInt(width));
 }
 
 uint32_t HTMLVideoElement::height()
 {
     String* heightStr =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_height);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_height);
     return String::parseInt(heightStr);
 }
 
 void HTMLVideoElement::setHeight(uint32_t height)
 {
-    setAttribute(starFish()->staticStrings()->m_height,
+    setAttribute(starfish()->staticStrings()->m_height,
                  String::fromInt(height));
 }
 

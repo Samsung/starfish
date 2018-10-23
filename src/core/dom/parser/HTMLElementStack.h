@@ -42,10 +42,10 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLElementStack__
-#define __StarFishHTMLElementStack__
+#ifndef __StarfishHTMLElementStack__
+#define __StarfishHTMLElementStack__
 
-namespace StarFish {
+namespace Starfish {
 
 class DocumentFragment;
 class Element;

@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #if defined(PORT_CANVAS_BACKEND_MOCK)
-#include "StarFish.h"
+#include "Starfish.h"
 
 #include "core/style/UnitHelper.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FontFaceImplMock : public FontFace {
 public:
@@ -81,8 +81,8 @@ public:
 
 class PlatformFontSelectorImplMock : public PlatformFontSelector {
 public:
-    PlatformFontSelectorImplMock(StarFish* sf)
-        : PlatformFontSelector(sf)
+    PlatformFontSelectorImplMock(Starfish* starfish)
+        : PlatformFontSelector(starfish)
     {
         m_face = new FontFaceImplMock();
     }
@@ -110,12 +110,12 @@ class PlatformFontCacheImplMock : public PlatformFontCache {
 public:
 };
 
-PlatformFontSelector* PlatformFontSelector::create(StarFish* sf)
+PlatformFontSelector* PlatformFontSelector::create(Starfish* starfish)
 {
-    return new PlatformFontSelectorImplMock(sf);
+    return new PlatformFontSelectorImplMock(starfish);
 }
 
-PlatformFontCache* PlatformFontCache::create(StarFish* sf)
+PlatformFontCache* PlatformFontCache::create(Starfish* starfish)
 {
     return new PlatformFontCacheImplMock();
 }

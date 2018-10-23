@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLTableCellElement.h"
 
 #include "core/dom/HTMLCollection.h"
@@ -26,7 +26,7 @@
 #include "core/dom/HTMLTableRowElement.h"
 #include "core/style/CSSParser.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void HTMLTableCellElement::didAttributeChanged(QualifiedName name, String* old,
                                                String* value,
@@ -35,10 +35,10 @@ void HTMLTableCellElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLTablePartElement::didAttributeChanged(
         name, old, value, attributeCreated, attributeRemoved);
-    if (name == starFish()->staticStrings()->m_nowrap ||
-        name == starFish()->staticStrings()->m_height ||
-        name == starFish()->staticStrings()->m_width ||
-        name == starFish()->staticStrings()->m_bgcolor) {
+    if (name == starfish()->staticStrings()->m_nowrap ||
+        name == starfish()->staticStrings()->m_height ||
+        name == starfish()->staticStrings()->m_width ||
+        name == starfish()->staticStrings()->m_bgcolor) {
         setNeedsStyleRecalc();
     }
 }
@@ -73,7 +73,7 @@ void HTMLTableCellElement::styleForPresentationAttribute(
         }
     }
 
-    String* nowrap = getAttributeOrEmpty(starFish()->staticStrings()->m_nowrap);
+    String* nowrap = getAttributeOrEmpty(starfish()->staticStrings()->m_nowrap);
     if (!nowrap->isEmpty()) {
         CSSStyleValuePair pair;
         pair.setKeyKind(CSSStyleValuePair::KeyKind::WhiteSpace);
@@ -81,7 +81,7 @@ void HTMLTableCellElement::styleForPresentationAttribute(
         pair.setValue(WhiteSpaceValue::NoWrapWhiteSpaceValue);
     }
 
-    String* h = getAttributeOrEmpty(starFish()->staticStrings()->m_height);
+    String* h = getAttributeOrEmpty(starfish()->staticStrings()->m_height);
     if (!h->isEmpty()) {
         // Use px as the default unit
         if (!h->contains("px") && !h->contains("%")) {
@@ -98,7 +98,7 @@ void HTMLTableCellElement::styleForPresentationAttribute(
         }
     }
 
-    String* w = getAttributeOrEmpty(starFish()->staticStrings()->m_width);
+    String* w = getAttributeOrEmpty(starfish()->staticStrings()->m_width);
     if (!w->equals(String::emptyString)) {
         // Use px as the default unit
         if (!w->contains("px") && !w->contains("%")) {
@@ -116,7 +116,7 @@ void HTMLTableCellElement::styleForPresentationAttribute(
     }
 
     String* bgColor =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_bgcolor);
     if (!bgColor->isEmpty()) {
         CSSStyleValuePair pair;
         CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
@@ -178,7 +178,7 @@ HTMLTableElement* HTMLTableCellElement::tableElement()
 uint32_t HTMLTableCellElement::colSpan()
 {
     Nullable<String*> colSpan =
-        getAttribute(starFish()->staticStrings()->m_colspan);
+        getAttribute(starfish()->staticStrings()->m_colspan);
     if (colSpan.hasValue()) {
         int colSpanVal = String::parseInt(colSpan.getValue());
         if (colSpanVal < 1) {
@@ -195,14 +195,14 @@ uint32_t HTMLTableCellElement::colSpan()
 
 void HTMLTableCellElement::setColSpan(uint32_t colSpan)
 {
-    setAttribute(starFish()->staticStrings()->m_colspan,
+    setAttribute(starfish()->staticStrings()->m_colspan,
                  String::fromInt(colSpan));
 }
 
 uint32_t HTMLTableCellElement::rowSpan()
 {
     Nullable<String*> rowSpan =
-        getAttribute(starFish()->staticStrings()->m_rowspan);
+        getAttribute(starfish()->staticStrings()->m_rowspan);
     if (rowSpan.hasValue()) {
         int rowSpanVal = String::parseInt(rowSpan.getValue());
         if (rowSpanVal < 1) {
@@ -219,7 +219,7 @@ uint32_t HTMLTableCellElement::rowSpan()
 
 void HTMLTableCellElement::setRowSpan(uint32_t rowSpan)
 {
-    setAttribute(starFish()->staticStrings()->m_rowspan,
+    setAttribute(starfish()->staticStrings()->m_rowspan,
                  String::fromInt(rowSpan));
 }
 
@@ -241,7 +241,7 @@ int32_t HTMLTableCellElement::cellIndex()
 
 String* HTMLTableCellElement::scope()
 {
-    String* scope = getAttributeOrEmpty(starFish()->staticStrings()->m_scope);
+    String* scope = getAttributeOrEmpty(starfish()->staticStrings()->m_scope);
     if (scope->isEmpty() || scope->equalsIgnoreCase("col") ||
         scope->equalsIgnoreCase("colgroup") || scope->equalsIgnoreCase("row") ||
         scope->equalsIgnoreCase("rowgroup")) {
@@ -253,12 +253,12 @@ String* HTMLTableCellElement::scope()
 
 void HTMLTableCellElement::setScope(String* scope)
 {
-    setAttribute(starFish()->staticStrings()->m_scope, scope);
+    setAttribute(starfish()->staticStrings()->m_scope, scope);
 }
 
 String* HTMLTableCellElement::ch()
 {
-    Nullable<String*> ret = getAttribute(starFish()->staticStrings()->m_char);
+    Nullable<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
     if (ret.hasValue()) {
         return ret.getValue();
     }
@@ -270,6 +270,6 @@ String* HTMLTableCellElement::ch()
 
 void HTMLTableCellElement::setCh(String* ch)
 {
-    setAttribute(starFish()->staticStrings()->m_char, ch);
+    setAttribute(starfish()->staticStrings()->m_char, ch);
 }
 }

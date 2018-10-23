@@ -16,10 +16,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishTimeRange__)
-#define __StarFishTimeRange__
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarfishTimeRange__)
+#define __StarfishTimeRange__
 
-namespace StarFish {
+namespace Starfish {
 
 class TimeRange {
 public:

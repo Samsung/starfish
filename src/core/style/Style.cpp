@@ -25,11 +25,11 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/style/Style.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/animation/CubicBezier.h"
 #include "core/animation/Steps.h"
 #include "core/dom/Document.h"
@@ -75,7 +75,7 @@
 #include "core/style/CSSVariableSyntaxTreeBuilder.h"
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 #define TOKEN_IS_STRING(str) \
     (strlen(str) == strlen(token) && (memcmp(token, str, strlen(str))) == 0)
@@ -585,13 +585,13 @@ bool CSSPseudoSelector::matchNth(int count)
 }
 
 CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(
-    StarFish* sf, AtomicString pseudoName, bool hasArguments)
+    Starfish* starfish, AtomicString pseudoName, bool hasArguments)
 {
     if (pseudoName.isEmptyAtomicString() ||
         !pseudoName.string()->containsOnlyASCIIChars()) {
         return CSSSelector::PseudoNone;
     }
-    StaticStrings* sstrs = sf->staticStrings();
+    StaticStrings* sstrs = starfish->staticStrings();
     if (false) {
     }
 #define SET_PSEUDO_TYPE(name, nameLower, ...)              \
@@ -607,11 +607,11 @@ CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(
     }
 }
 
-void CSSPseudoSelector::updatePseudoType(StarFish* sf, AtomicString name,
+void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
                                          bool hasArguments)
 {
     m_selectorText = name;
-    m_pseudotype = parsePseudoType(sf, name, hasArguments);
+    m_pseudotype = parsePseudoType(starfish, name, hasArguments);
 
     switch (pseudoType()) {
     case PseudoAfter:
@@ -943,7 +943,7 @@ String* CSSStyleValuePair::toString() const
             return String::fromUTF8("right");
         case TextAlignValue::CenterTextAlignValue:
             return String::fromUTF8("center");
-        case TextAlignValue::StarFishCenterTextAlignValue:
+        case TextAlignValue::StarfishCenterTextAlignValue:
             return String::fromUTF8("-starfish-center");
         default:
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -6374,7 +6374,7 @@ bool StyleResolver::checkPseudoClass(Element* element,
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |
                                                      StyleDamageFromAttribute);
         if (element->isHTMLAnchorElement()) {
-            if (element->getAttribute(starFish()->staticStrings()->m_href)
+            if (element->getAttribute(starfish()->staticStrings()->m_href)
                     .hasValue()) {
                 return true;
             }
@@ -8096,7 +8096,7 @@ static bool parseCounter(Document* document, const CSSTokenValue& s,
         return false;
     }
     AtomicString aname =
-        AtomicString::createAtomicString(document->starFish(), name);
+        AtomicString::createAtomicString(document->starfish(), name);
     parser.consumeWhitespaces();
     if (parser.consumeIfNext(')') && parser.isEnd()) {
         pair->setCounterFunctionValue(new CSSCounterFunction(aname));
@@ -8114,7 +8114,7 @@ static bool parseCounter(Document* document, const CSSTokenValue& s,
         return false;
     }
     AtomicString astyle =
-        AtomicString::createAtomicString(document->starFish(), style);
+        AtomicString::createAtomicString(document->starfish(), style);
     parser.consumeWhitespaces();
     if (!parser.consumeIfNext(')') || !parser.isEnd()) {
         return false;
@@ -8146,7 +8146,7 @@ static bool parseCounters(Document* document, const CSSTokenValue& s,
         return false;
     }
     AtomicString aname =
-        AtomicString::createAtomicString(document->starFish(), name);
+        AtomicString::createAtomicString(document->starfish(), name);
     parser.consumeWhitespaces();
     // Argument: separator
     if (!parser.consumeIfNext(',')) {
@@ -8175,7 +8175,7 @@ static bool parseCounters(Document* document, const CSSTokenValue& s,
         return false;
     }
     AtomicString astyle =
-        AtomicString::createAtomicString(document->starFish(), style);
+        AtomicString::createAtomicString(document->starfish(), style);
     parser.consumeWhitespaces();
     if (!parser.consumeIfNext(')') || !parser.isEnd()) {
         return false;
@@ -10841,7 +10841,7 @@ bool CSSStyleValuePair::updateValueTextAlign(Document* document,
         m_value.m_textAlign = TextAlignValue::RightTextAlignValue;
     } else if (STRING_VALUE_IS_STRING("-starfish-center")) {
         m_valueKind = CSSStyleValuePair::ValueKind::TextAlignValueKind;
-        m_value.m_textAlign = TextAlignValue::StarFishCenterTextAlignValue;
+        m_value.m_textAlign = TextAlignValue::StarfishCenterTextAlignValue;
     } else {
         return false;
     }
@@ -11773,7 +11773,7 @@ bool CSSStyleValuePair::updateValueUnitListStyleType(Document* document,
             return false;
         }
         AtomicString aCustomIdent =
-            AtomicString::createAtomicString(document->starFish(), customIdent);
+            AtomicString::createAtomicString(document->starfish(), customIdent);
         setAtomicStringValue(aCustomIdent);
     }
     return true;
@@ -11872,7 +11872,7 @@ static bool parseCounterPairList(Document* document,
     for (size_t i = 0; i < size; i++) {
         list->emplace_back(CSSStyleValuePair::AtomicStringValueKind,
                            AtomicString::createAtomicString(
-                               document->starFish(), tempIdent[i]));
+                               document->starfish(), tempIdent[i]));
         if (i < intSize) {
             list->emplace_back(CSSStyleValuePair::Int32, tempInt[i]);
         } else {
@@ -12056,7 +12056,7 @@ bool CSSStyleValuePair::updateValueWillChange(Document* document,
         }
         list->emplace_back(
             AtomicStringValueKind,
-            AtomicString::createAtomicString(document->starFish(), item));
+            AtomicString::createAtomicString(document->starfish(), item));
     }
     setValueList(list);
     return true;

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishPreloadScanner__
-#define __StarFishPreloadScanner__
+#ifndef __StarfishPreloadScanner__
+#define __StarfishPreloadScanner__
 
-namespace StarFish {
+namespace Starfish {
 
 class TextResource;
 

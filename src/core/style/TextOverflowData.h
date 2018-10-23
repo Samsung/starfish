@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishTextOverflowData__
-#define __StarFishTextOverflowData__
+#ifndef __StarfishTextOverflowData__
+#define __StarfishTextOverflowData__
 
 #include "core/util/String.h"
 #include "core/style/Length.h"
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 enum TextOverflowValue {
     TextOverflowClipValue = 1, // Default value

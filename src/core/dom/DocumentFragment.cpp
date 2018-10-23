@@ -17,18 +17,18 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 String* DocumentFragment::nodeName()
 {
-    return starFish()->staticStrings()->m_documentFragmentLocalName.string();
+    return starfish()->staticStrings()->m_documentFragmentLocalName.string();
 }
 
 Node* DocumentFragment::clone()

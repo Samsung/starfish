@@ -43,12 +43,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTMLEntityParser.h"
 #include "HTMLEntitySearch.h"
 #include "HTMLEntityTable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static const char32_t windowsLatin1ExtensionArray[32] = {
     0x20AC, 0x0081, 0x201A, 0x0192, 0x201E, 0x2026, 0x2020, 0x2021, // 80-87

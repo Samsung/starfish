@@ -17,11 +17,11 @@
  *  USA
  */
 
-#ifndef __StarFishCSSGradientValue__
-#define __StarFishCSSGradientValue__
+#ifndef __StarfishCSSGradientValue__
+#define __StarfishCSSGradientValue__
 
 #include "core/style/Style.h"
-namespace StarFish {
+namespace Starfish {
 
 class CSSLinearGradientValue;
 class GradientData;
@@ -302,6 +302,6 @@ private:
     CSSStyleValuePair m_positionX;
     CSSStyleValuePair m_positionY;
 };
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

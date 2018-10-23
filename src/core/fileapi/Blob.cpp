@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/fileapi/Blob.h"
 #include "core/page/Serializer.h"
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Blob::Blob(Document* document, Blob::BlobData blobData)
     : Blob(document, blobData.m_size, blobData.m_type, blobData.m_data,

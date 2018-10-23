@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/NodeListImpl.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 NodeList::NodeList(Node* root, NodeListImpl::FilterFunctionType filterType,
                    void* data, bool canCache)

@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishSVGSVGElement__
-#define __StarFishSVGSVGElement__
+#ifndef __StarfishSVGSVGElement__
+#define __StarfishSVGSVGElement__
 
 #include "core/dom/svg/SVGElement.h"
 #include "core/modules/canvas/image/NativeImageData.h"
@@ -26,7 +26,7 @@
 #define STARFISH_DEFAULT_SVG_WIDTH 300
 #define STARFISH_DEFAULT_SVG_HEIGHT 150
 
-namespace StarFish {
+namespace Starfish {
 
 class SVGSVGElement : public SVGElement {
 public:

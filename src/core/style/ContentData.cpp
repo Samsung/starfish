@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/ContentData.h"
 #include "core/style/CounterStyle.h"
 
-namespace StarFish {
+namespace Starfish {
 
 bool CounterContentData::equals(const CounterContentData* b) const
 {
@@ -39,4 +39,4 @@ bool CounterContentData::equals(const CounterContentData* b) const
     STARFISH_ASSERT(b->counterStyle());
     return counterStyle()->equals(b->counterStyle());
 }
-} /* namespace StarFish */
+} /* namespace Starfish */

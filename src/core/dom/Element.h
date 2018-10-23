@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishElement__
-#define __StarFishElement__
+#ifndef __StarfishElement__
+#define __StarfishElement__
 
 #include "core/dom/Node.h"
 #include "core/dom/Attribute.h"
@@ -26,7 +26,7 @@
 #include "core/style/Style.h"
 #include "core/util/AttributeName.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Attr;
 class CSSStyleDeclaration;

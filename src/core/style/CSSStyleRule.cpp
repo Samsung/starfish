@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/style/CSSRule.h"
 
@@ -36,7 +36,7 @@
 #include "core/style/MediaQuerySet.h"
 #include "core/style/MediaList.h"
 
-namespace StarFish {
+namespace Starfish {
 
 CSSRule::CSSRule(CSSStyleSheet* parent)
     : ScriptWrappable(this)

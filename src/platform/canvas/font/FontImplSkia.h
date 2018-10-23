@@ -34,7 +34,7 @@
 
 class SkPaint;
 
-namespace StarFish {
+namespace Starfish {
 class FontSelectorImplSkia : public FontSelector {
 public:
     FontSelectorImplSkia(Document* document,
@@ -137,7 +137,7 @@ public:
 
 class PlatformFontSelectorImplSkia : public PlatformFontSelector {
 public:
-    PlatformFontSelectorImplSkia(WebView* sf);
+    PlatformFontSelectorImplSkia(WebView* webView);
 
     ~PlatformFontSelectorImplSkia()
     {

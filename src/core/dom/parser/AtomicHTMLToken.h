@@ -41,15 +41,15 @@
  *  USA
  */
 
-#ifndef __StarFishAtomicHTMLToken__
-#define __StarFishAtomicHTMLToken__
+#ifndef __StarfishAtomicHTMLToken__
+#define __StarfishAtomicHTMLToken__
 
 #include "core/dom/parser/HTMLElementLookupTrie.h"
 #include "core/dom/Attribute.h"
 // #include "core/html/parser/CompactHTMLToken.h"
 #include "core/dom/parser/HTMLToken.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class AtomicHTMLToken : public gc {
 public:
@@ -59,9 +59,9 @@ public:
         return m_doctypeData->m_forceQuirks;
     }
 
-    StarFish* starFish()
+    Starfish* starfish()
     {
-        return m_starFish;
+        return m_starfish;
     }
 
     HTMLToken::Type type() const
@@ -132,8 +132,8 @@ public:
         return m_doctypeData->m_systemIdentifier;
     }
 
-    explicit AtomicHTMLToken(StarFish* sf, HTMLToken& token)
-        : m_starFish(sf)
+    explicit AtomicHTMLToken(Starfish* starfish, HTMLToken& token)
+        : m_starfish(starfish)
         , m_type(token.type())
         , m_name(AtomicString::emptyAtomicString())
         , m_selfClosing(false)
@@ -145,7 +145,7 @@ public:
             STARFISH_ASSERT_NOT_REACHED();
             break;
         case HTMLToken::DOCTYPE:
-            m_name = token.name().toAttrAtomicString(m_starFish);
+            m_name = token.name().toAttrAtomicString(m_starfish);
             m_doctypeData = token.releaseDoctypeData();
             break;
         case HTMLToken::EndOfFile:
@@ -160,7 +160,7 @@ public:
                     StaticStrings* staticStrings;
                     QualifiedName* tagName;
                 } sender;
-                sender.staticStrings = sf->staticStrings();
+                sender.staticStrings = starfish->staticStrings();
                 sender.tagName = &tagName;
                 token.name().peekASCIIBuffer(
                     [](const char* buf, size_t len, void* data) -> size_t {
@@ -174,7 +174,7 @@ public:
             if (LIKELY(tagName.localName()->length())) {
                 m_name = tagName.localNameAtomic();
             } else {
-                m_name = token.name().toAttrAtomicString(m_starFish);
+                m_name = token.name().toAttrAtomicString(m_starfish);
             }
             initializeAttributes(token.attributes());
             break;
@@ -232,8 +232,8 @@ public:
             break;
         }
     }*/
-    explicit AtomicHTMLToken(StarFish* sf, HTMLToken::Type type)
-        : m_starFish(sf)
+    explicit AtomicHTMLToken(Starfish* starfish, HTMLToken::Type type)
+        : m_starfish(starfish)
         , m_type(type)
         , m_name(AtomicString::emptyAtomicString())
         , m_selfClosing(false)
@@ -243,9 +243,9 @@ public:
     }
 
     AtomicHTMLToken(
-        StarFish* sf, HTMLToken::Type type, AtomicString name,
+        Starfish* starfish, HTMLToken::Type type, AtomicString name,
         const GCVector<Attribute>& attributes = GCVector<Attribute>())
-        : m_starFish(sf)
+        : m_starfish(starfish)
         , m_type(type)
         , m_name(name)
         , m_selfClosing(false)
@@ -257,7 +257,7 @@ public:
     }
 
 private:
-    StarFish* m_starFish;
+    Starfish* m_starfish;
     HTMLToken::Type m_type;
 
     void initializeAttributes(const GCVector<HTMLToken::Attribute>& attributes);

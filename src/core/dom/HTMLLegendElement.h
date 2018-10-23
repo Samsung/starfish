@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLLegendElement__
-#define __StarFishHTMLLegendElement__
+#ifndef __StarfishHTMLLegendElement__
+#define __StarfishHTMLLegendElement__
 
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLFormElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLLegendElement : public HTMLFormControl {
 public:

@@ -22,7 +22,7 @@
 
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FontFace;
 class Font;
@@ -213,7 +213,7 @@ public:
     virtual ~PlatformFontSelector()
     {
     }
-    static PlatformFontSelector* create(WebView* sf);
+    static PlatformFontSelector* create(WebView* webView);
     virtual UTF8StringDataNonGCStd findFont(
         const UTF8StringDataNonGCStd& familyName, bool isGenericName,
         char style = 0, char weight = 4)
@@ -252,7 +252,7 @@ protected:
 };
 
 class FontSelector : public DocumentHoldable, public gc {
-    friend class StarFish;
+    friend class Starfish;
     friend class Font;
 
 public:

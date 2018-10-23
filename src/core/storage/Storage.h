@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishStorage__
-#define __StarFishStorage__
+#ifndef __StarfishStorage__
+#define __StarfishStorage__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/WindowHoldable.h"
 #include "core/storage/StorageType.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class SecurityOriginData;
 class StorageManager;

@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/CDATASection.h"
 
-namespace StarFish {
+namespace Starfish {
 
 String* CDATASection::nodeName()
 {
-    return starFish()->staticStrings()->m_cdataSectionLocalName;
+    return starfish()->staticStrings()->m_cdataSectionLocalName;
 }
 
 String* CDATASection::localName()

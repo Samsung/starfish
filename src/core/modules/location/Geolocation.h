@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishGeolocation__
-#define __StarFishGeolocation__
+#ifndef __StarfishGeolocation__
+#define __StarfishGeolocation__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class Geoposition;

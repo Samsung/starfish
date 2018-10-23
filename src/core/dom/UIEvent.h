@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishUIEvent__
-#define __StarFishUIEvent__
+#ifndef __StarfishUIEvent__
+#define __StarfishUIEvent__
 
 #include "Event.h"
 #include "core/event/EventModifierData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // https://w3c.github.io/uievents/#dictdef-uieventinit
 class Window;

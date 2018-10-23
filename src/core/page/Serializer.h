@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishSerializer__
-#define __StarFishSerializer__
+#ifndef __StarfishSerializer__
+#define __StarfishSerializer__
 
 #include "binding/ScriptWrappable.h"
 
 // https://html.spec.whatwg.org/multipage/structured-data.html#safe-passing-of-structured-data
 
-namespace StarFish {
+namespace Starfish {
 
 using namespace Escargot;
 

@@ -17,9 +17,9 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLDivElement.h"
 
-namespace StarFish {
+namespace Starfish {
 }

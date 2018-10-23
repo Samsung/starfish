@@ -18,12 +18,12 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#ifndef __StarFishSourceBufferList__
-#define __StarFishSourceBufferList__
+#ifndef __StarfishSourceBufferList__
+#define __StarfishSourceBufferList__
 
 #include "core/dom/EventTarget.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class MediaSource;
 class SourceBuffer;

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "LWEWebView.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_DALI)

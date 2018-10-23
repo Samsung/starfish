@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishStackingContext__
-#define __StarFishStackingContext__
+#ifndef __StarfishStackingContext__
+#define __StarfishStackingContext__
 
 #include "core/page/RenderResult.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Canvas;
 class CanvasSurface;

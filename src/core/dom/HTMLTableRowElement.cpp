@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLTableRowElement.h"
 
 #include "core/dom/DOMException.h"
@@ -27,7 +27,7 @@
 #include "core/dom/HTMLTableElement.h"
 #include "core/dom/HTMLTableSectionElement.h"
 
-namespace StarFish {
+namespace Starfish {
 void* HTMLTableRowElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLTableRowElement));
@@ -50,7 +50,7 @@ void HTMLTableRowElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLTablePartElement::didAttributeChanged(
         name, old, value, attributeCreated, attributeRemoved);
-    if (name == starFish()->staticStrings()->m_bgcolor) {
+    if (name == starfish()->staticStrings()->m_bgcolor) {
         setNeedsStyleRecalc();
     }
 }
@@ -61,7 +61,7 @@ void HTMLTableRowElement::styleForPresentationAttribute(
     HTMLTablePartElement::styleForPresentationAttribute(cssValues);
 
     String* bgColor =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_bgcolor);
     if (!bgColor->equals(String::emptyString)) {
         CSSStyleValuePair pair;
         CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
@@ -74,7 +74,7 @@ void HTMLTableRowElement::styleForPresentationAttribute(
 
 String* HTMLTableRowElement::ch()
 {
-    Nullable<String*> ret = getAttribute(starFish()->staticStrings()->m_char);
+    Nullable<String*> ret = getAttribute(starfish()->staticStrings()->m_char);
     if (ret.hasValue()) {
         return ret.getValue();
     }
@@ -86,7 +86,7 @@ String* HTMLTableRowElement::ch()
 
 void HTMLTableRowElement::setCh(String* ch)
 {
-    setAttribute(starFish()->staticStrings()->m_char, ch);
+    setAttribute(starfish()->staticStrings()->m_char, ch);
 }
 
 inline HTMLTableElement* findTable(const HTMLTableRowElement& row)
@@ -173,7 +173,7 @@ HTMLTableCellElement* HTMLTableRowElement::insertCell(int32_t index)
     }
 
     HTMLTDElement* cell =
-        new HTMLTDElement(document(), starFish()->staticStrings()->m_tdTagName);
+        new HTMLTDElement(document(), starfish()->staticStrings()->m_tdTagName);
     if (index == -1 || static_cast<size_t>(index) == cells->length()) {
         appendChild(cell);
     } else {

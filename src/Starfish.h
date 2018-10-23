@@ -17,11 +17,11 @@
  *  USA
  */
 
-#ifndef __StarFish__
-#define __StarFish__
+#ifndef __Starfish__
+#define __Starfish__
 
 #include "StaticStrings.h"
-namespace StarFish {
+namespace Starfish {
 
 class Thread;
 class PlatformWindow;
@@ -34,14 +34,14 @@ class HTTPCache;
 
 void addGCCollectionListener(void (*fn)(GC_EventType));
 
-// ctor of StarFish class is NOT THREAD-SAFE
-class StarFish : public gc {
+// ctor of Starfish class is NOT THREAD-SAFE
+class Starfish : public gc {
     friend class AtomicString;
     friend class StaticStrings;
     friend class WebView;
     friend class HTMLDocument; // m_caseInsensitiveAttrSet
 public:
-    StarFish(const char* localStorageFilePath, const char* cookieStoreFilePath,
+    Starfish(const char* localStorageFilePath, const char* cookieStoreFilePath,
              const char* httpCacheDirectorypath);
 
     void destroy();

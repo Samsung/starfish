@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/CSSVariableSyntaxTreeBuilder.h"
 #include "core/style/CSSStyleDeclaration.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class VariableTokenizer {
 public:

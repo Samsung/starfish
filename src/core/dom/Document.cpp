@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/Attr.h"
 #include "core/dom/Attribute.h"
@@ -76,7 +76,7 @@
 #include "core/animation/Animation.h"
 #include "platform/network/NetworkSharedResourceManager.h"
 
-namespace StarFish {
+namespace Starfish {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
 extern uint64_t g_profilingBaseTime;
 #endif
@@ -169,7 +169,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     // created.
 
     setStyle(m_styleResolver->resolveDocumentStyle(this));
-    StaticStrings* sstrs = m_window->starFish()->staticStrings();
+    StaticStrings* sstrs = m_window->starfish()->staticStrings();
 
     const char* ua =
 #include "core/style/UserAgentStyleSheet.css"
@@ -617,7 +617,7 @@ void Document::notifyDomContentLoaded()
         m_resourceLoader->notifyEndParseDocument();
         m_domContentLoadedFired = true;
         String* eventType = window()
-                                ->starFish()
+                                ->starfish()
                                 ->staticStrings()
                                 ->m_DOMContentLoaded.localName();
         Event* e = new Event(this, eventType, EventInit(true, true));
@@ -695,7 +695,7 @@ void Document::dispose()
     HTMLElement* body = this->body();
     if (body) {
         String* eventType =
-            window()->starFish()->staticStrings()->m_unload.localName();
+            window()->starfish()->staticStrings()->m_unload.localName();
         Event* e = new Event(this, eventType);
         EventTarget::dispatchEventByUA(body, e);
     }
@@ -709,12 +709,12 @@ void Document::dispose()
 
 String* Document::nodeName()
 {
-    return window()->starFish()->staticStrings()->m_documentLocalName.string();
+    return window()->starfish()->staticStrings()->m_documentLocalName.string();
 }
 
 String* Document::localName()
 {
-    return window()->starFish()->staticStrings()->m_documentLocalName.string();
+    return window()->starfish()->staticStrings()->m_documentLocalName.string();
 }
 
 Element* Document::getElementById(String* id)
@@ -740,27 +740,27 @@ NodeList* Document::getElementsByName(String* elementName)
 
 HTMLCollection* Document::images()
 {
-    return getElementsByTagName(starFish()->staticStrings()->m_imgTagName);
+    return getElementsByTagName(starfish()->staticStrings()->m_imgTagName);
 }
 
 HTMLCollection* Document::links()
 {
-    return getElementsByTagName(starFish()->staticStrings()->m_linkTagName);
+    return getElementsByTagName(starfish()->staticStrings()->m_linkTagName);
 }
 
 HTMLCollection* Document::forms()
 {
-    return getElementsByTagName(starFish()->staticStrings()->m_formTagName);
+    return getElementsByTagName(starfish()->staticStrings()->m_formTagName);
 }
 
 HTMLCollection* Document::scripts()
 {
-    return getElementsByTagName(starFish()->staticStrings()->m_scriptTagName);
+    return getElementsByTagName(starfish()->staticStrings()->m_scriptTagName);
 }
 
 HTMLCollection* Document::anchors()
 {
-    return getElementsByTagName(starFish()->staticStrings()->m_aTagName);
+    return getElementsByTagName(starfish()->staticStrings()->m_aTagName);
 }
 
 DocumentFragment* Document::createDocumentFragment()
@@ -778,17 +778,17 @@ Element* Document::createElement(String* localName)
     AtomicString localNameAtomic;
     if (isHTMLDocument()) {
         AtomicString namespaceURI = AtomicString::createAtomicString(
-            window()->starFish(), HTML_NAMESPACE);
+            window()->starfish(), HTML_NAMESPACE);
         localNameAtomic = AtomicString::createAttrAtomicString(
-            window()->starFish(), localName);
+            window()->starfish(), localName);
         return HTMLDocument::createHTMLElement(
             this, QualifiedName(namespaceURI, localNameAtomic));
     } else {
         localNameAtomic =
-            AtomicString::createAtomicString(window()->starFish(), localName);
+            AtomicString::createAtomicString(window()->starfish(), localName);
         if (contentType()->equals("application/xhtml+xml")) {
             AtomicString namespaceURI = AtomicString::createAtomicString(
-                window()->starFish(), HTML_NAMESPACE);
+                window()->starfish(), HTML_NAMESPACE);
             return new NamedElement(
                 this, QualifiedName(namespaceURI, localNameAtomic));
         }
@@ -824,10 +824,10 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
             throw new DOMException(this,
                                    DOMException::Code::INVALID_CHARACTER_ERR);
         }
-        prefix = AtomicString::createAtomicString(starFish(), tokens[0]);
-        localName = AtomicString::createAtomicString(starFish(), tokens[1]);
+        prefix = AtomicString::createAtomicString(starfish(), tokens[0]);
+        localName = AtomicString::createAtomicString(starfish(), tokens[1]);
     } else {
-        localName = AtomicString::createAtomicString(starFish(), qualifiedName);
+        localName = AtomicString::createAtomicString(starfish(), qualifiedName);
     }
 
     // If prefix is non-null and namespace is null, then throw a NamespaceError.
@@ -839,9 +839,9 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     AtomicString nsURI;
     ;
     if (ns.hasValue()) {
-        nsURI = AtomicString::createAtomicString(starFish(), ns.getValue());
+        nsURI = AtomicString::createAtomicString(starfish(), ns.getValue());
     }
-    StaticStrings* strs = starFish()->staticStrings();
+    StaticStrings* strs = starfish()->staticStrings();
     // If prefix is "xml" and namespace is not the XML namespace, then throw a
     // NamespaceError.
     if (prefix.hasValue() && prefix.getValue() == strs->m_xml &&
@@ -1147,7 +1147,7 @@ void Document::setTitle(String* titleString)
             // Let element be the result of creating an element given the
             // document element's node document, title, and the HTML namespace.
             element = new HTMLTitleElement(
-                document(), starFish()->staticStrings()->m_titleTagName);
+                document(), starfish()->staticStrings()->m_titleTagName);
         }
         // Append element to the head element.
         head->appendChild(title);
@@ -1192,7 +1192,7 @@ void Document::setVisibilityState(VisibilityState visibilityState)
     if (m_pageVisibilityState != visibilityState) {
         m_pageVisibilityState = visibilityState;
         String* eventType =
-            starFish()->staticStrings()->m_visibilitychange.localName();
+            starfish()->staticStrings()->m_visibilitychange.localName();
         Event* e = new Event(this, eventType, EventInit(true));
         EventTarget::dispatchEventByUA(this->asNode(), e);
     }
@@ -1204,7 +1204,7 @@ void Document::setReadyState(DocumentReadyState newState)
     m_readyState = newState;
     if (old != newState) {
         String* eventType =
-            starFish()->staticStrings()->m_readystatechange.localName();
+            starfish()->staticStrings()->m_readystatechange.localName();
         Event* e = new Event(this, eventType, EventInit(false, false));
         dispatchEventByUA(e);
     }
@@ -1307,16 +1307,16 @@ void Document::processBaseElement()
     String* target = nullptr;
     while (baseElement && (!href || target->isEmpty())) {
         if (!href &&
-            baseElement->hasAttribute(starFish()->staticStrings()->m_href) !=
+            baseElement->hasAttribute(starfish()->staticStrings()->m_href) !=
                 SIZE_MAX) {
             href = baseElement->getAttributeOrEmpty(
-                starFish()->staticStrings()->m_href);
+                starfish()->staticStrings()->m_href);
         }
         if (!target &&
-            baseElement->hasAttribute(starFish()->staticStrings()->m_target) !=
+            baseElement->hasAttribute(starfish()->staticStrings()->m_target) !=
                 SIZE_MAX) {
             target = baseElement->getAttributeOrEmpty(
-                starFish()->staticStrings()->m_target);
+                starfish()->staticStrings()->m_target);
         }
         baseElement = nextBaseElement(baseElement, this);
     }
@@ -1416,7 +1416,7 @@ HTMLCollection* Document::namedAccess(String* name)
     // just return nullptr;
     QualifiedName* ptr =
         new QualifiedName(AtomicString::emptyAtomicString(),
-                          AtomicString::createAtomicString(starFish(), name));
+                          AtomicString::createAtomicString(starfish(), name));
     auto list = new HTMLCollection(document(), NodeListImpl::NamedAccessFilter,
                                    (void*)ptr, true);
     m_namedAccessActiveHTMLCollectionList.push_back(std::make_pair(name, list));
@@ -1599,10 +1599,10 @@ QualifiedName Document::createAttributeName(String* name)
 {
     if (isXMLDocument()) {
         return QualifiedName(
-            AtomicString::createAtomicString(window()->starFish(), name));
+            AtomicString::createAtomicString(window()->starfish(), name));
     } else {
         return QualifiedName(
-            AtomicString::createAttrAtomicString(window()->starFish(), name));
+            AtomicString::createAttrAtomicString(window()->starfish(), name));
     }
 }
 
@@ -1611,10 +1611,10 @@ QualifiedName Document::createAttributeNameNS(Nullable<String*> ns,
 {
     // Case sensitive
     const AtomicString& localNameAtomic =
-        AtomicString::createAtomicString(starFish(), localName);
+        AtomicString::createAtomicString(starfish(), localName);
     if (ns.hasValue()) {
         const AtomicString& nsAtomic =
-            AtomicString::createAtomicString(starFish(), ns.getValue());
+            AtomicString::createAtomicString(starfish(), ns.getValue());
         return QualifiedName(nsAtomic, localNameAtomic);
     }
     return QualifiedName(localNameAtomic);

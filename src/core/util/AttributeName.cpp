@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/util/AttributeName.h"
 
-namespace StarFish {
+namespace Starfish {
 
 AttributeName::AttributeName(const QualifiedName& name, MatchType type)
     : m_type(type)

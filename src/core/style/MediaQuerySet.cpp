@@ -35,12 +35,12 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "MediaQuerySet.h"
 #include "core/dom/Document.h"
 #include "core/style/CSSParser.h"
 
-namespace StarFish {
+namespace Starfish {
 MediaQuerySet::MediaQuerySet(Document* document)
     : m_document(document)
 {

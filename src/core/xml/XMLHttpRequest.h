@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishXMLHttpRequest__
-#define __StarFishXMLHttpRequest__
+#ifndef __StarfishXMLHttpRequest__
+#define __StarfishXMLHttpRequest__
 
 #include "core/dom/EventTarget.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class XMLHttpRequestEventTarget : public EventTarget {
 public:
@@ -54,7 +54,7 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
     friend class XMLHttpRequestResourceRequestClient;
 
 public:
-    XMLHttpRequest(::StarFish::Document* document);
+    XMLHttpRequest(::Starfish::Document* document);
 
     enum ResponseType { Unspecified, Text, ArrayBuffer, Document, Blob, Json };
 
@@ -75,7 +75,7 @@ public:
 
     ScriptValue response() const;
     String* responseText() const;
-    ::StarFish::Document* responseXML() const;
+    ::Starfish::Document* responseXML() const;
 
     uint8_t readyState() const;
     uint16_t status() const;
@@ -120,13 +120,13 @@ protected:
     ScriptValue m_responseJsonObject;
 
     // for responseType = "blob
-    ::StarFish::Blob* m_responseBlob;
+    ::Starfish::Blob* m_responseBlob;
 
     // for responseType = "arraybuffer"
     ScriptValue m_responseArrayBuffer;
 
     // for responseType = "document"
-    ::StarFish::Document* m_responseXML;
+    ::Starfish::Document* m_responseXML;
 };
 }
 

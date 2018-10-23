@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #ifdef PORT_WINDOW_BACKEND_GB
 
-#include "StarFish.h"
+#include "Starfish.h"
 
 #include "core/animation/Animation.h"
 #include "core/dom/MouseEvent.h"
@@ -37,10 +37,10 @@
 
 #ifdef STARFISH_ENABLE_TEST
 extern bool g_fireOnloadEvent;
-extern StarFish::CanvasSurface* g_surfaceForScreehShot;
+extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 #ifdef STARFISH_ENABLE_TEST
 void screenShotInRendering(WebView*, char const*, std::function<void()>)
@@ -51,8 +51,8 @@ void screenShotInRendering(WebView*, char const*, std::function<void()>)
 
 class WindowImplGB : public PlatformWindow {
 public:
-    WindowImplGB(StarFish* sf, uint32_t width, uint32_t height)
-        : PlatformWindow(sf)
+    WindowImplGB(Starfish* starfish, uint32_t width, uint32_t height)
+        : PlatformWindow(starfish)
         , m_width(width)
         , m_height(height)
         , m_internalBuffer(nullptr)
@@ -105,10 +105,10 @@ public:
     size_t m_stride;
 };
 
-PlatformWindow* PlatformWindow::create(StarFish* sf, uint32_t width,
+PlatformWindow* PlatformWindow::create(Starfish* starfish, uint32_t width,
                                        uint32_t height)
 {
-    return new WindowImplGB(sf, width, height);
+    return new WindowImplGB(starfish, width, height);
 }
 
 Canvas* WindowImplGB::preparePainting()
@@ -150,5 +150,5 @@ Compositor* WindowImplGB::prepareCompositor()
     return Compositor::create2D(webView(), m_compostiorContext, target);
 }
 
-} // namespace StarFish
+} // namespace Starfish
 #endif

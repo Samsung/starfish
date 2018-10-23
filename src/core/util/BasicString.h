@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishBasicString__
-#define __StarFishBasicString__
+#ifndef __StarfishBasicString__
+#define __StarfishBasicString__
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename T>
 struct AllocInfo {

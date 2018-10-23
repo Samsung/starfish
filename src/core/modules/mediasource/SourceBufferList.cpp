@@ -18,8 +18,8 @@
  */
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLMediaElement.h"
@@ -27,7 +27,7 @@
 #include "core/modules/mediasource/SourceBuffer.h"
 #include "core/modules/mediasource/SourceBufferList.h"
 
-namespace StarFish {
+namespace Starfish {
 
 SourceBufferList::SourceBufferList(Document* document, MediaSource* sb)
     : EventTarget(document)
@@ -39,7 +39,7 @@ void SourceBufferList::add(SourceBuffer* buffer, MediaSource* ms)
 {
     m_list.push_back(buffer);
     buffer->attachedToParent(ms);
-    scheduleEvent(starFish()->staticStrings()->m_addsourcebuffer.localName());
+    scheduleEvent(starfish()->staticStrings()->m_addsourcebuffer.localName());
 }
 
 void SourceBufferList::remove(unsigned long index)
@@ -48,7 +48,7 @@ void SourceBufferList::remove(unsigned long index)
     m_list.erase(m_list.begin() + index);
     buf->detachFromParent();
     scheduleEvent(
-        starFish()->staticStrings()->m_removesourcebuffer.localName());
+        starfish()->staticStrings()->m_removesourcebuffer.localName());
 }
 
 void SourceBufferList::remove(SourceBuffer* buffer)
@@ -70,7 +70,7 @@ void SourceBufferList::clear()
     m_list.clear();
     m_list.shrink_to_fit();
     scheduleEvent(
-        starFish()->staticStrings()->m_removesourcebuffer.localName());
+        starfish()->staticStrings()->m_removesourcebuffer.localName());
 }
 
 void SourceBufferList::scheduleEvent(String* eventName)

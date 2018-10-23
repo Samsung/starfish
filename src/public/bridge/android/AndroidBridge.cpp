@@ -18,15 +18,15 @@
  */
 
 #if defined(STARFISH_ANDROID)
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "LWEWebView.h"
 
 #include <jni.h>
 #include <android/log.h>
 
-#define LOG_TAG "StarFish"
+#define LOG_TAG "Starfish"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN, LOG_TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
@@ -100,7 +100,7 @@ LWE::KeyValue virtualKeyCodeToKeyValue(char ch, bool capsLockOrShiftPressed)
         break;
     }
 
-    if (StarFish::String::isASCIIPrintableKey(ch)) {
+    if (Starfish::String::isASCIIPrintableKey(ch)) {
         if (isalpha(ch)) {
             if (!capsLockOrShiftPressed) {
                 ch = tolower(ch);
@@ -661,9 +661,9 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_destroy(JNIEnv* env,
 
 extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_resizeTo(
-    JNIEnv* env, jobject thiz, jlong sf, jint w, jint h)
+    JNIEnv* env, jobject thiz, jlong container, jint w, jint h)
 {
-    LWE::WebContainer* webContainer = (LWE::WebContainer*)sf;
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)container;
     webContainer->ResizeTo(w, h);
 }
 

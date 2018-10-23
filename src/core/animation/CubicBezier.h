@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishCubicBezier__
-#define __StarFishCubicBezier__
+#ifndef __StarfishCubicBezier__
+#define __StarfishCubicBezier__
 
 #include "core/animation/AnimationTimingFunction.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CubicBezier : public AnimationTimingFunction {
 public:

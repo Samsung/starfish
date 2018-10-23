@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Unit.h"
 
-namespace StarFish {
+namespace Starfish {
 namespace Unit {
     String* Color::toString() const
     {

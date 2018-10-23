@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "File.h"
 
 #include <sys/types.h>
@@ -96,7 +96,7 @@ static size_t getline(char** lineptr, size_t* n, FILE* stream)
 }
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 bool FileUtil::removeFile(const std::string& filePath)
 {
@@ -237,4 +237,4 @@ std::unique_ptr<File> File::open(const std::string& filePath, FileMode mode)
     return nullptr;
 }
 
-} // namespace StarFish
+} // namespace Starfish

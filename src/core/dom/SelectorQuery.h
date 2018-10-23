@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishSelectorQuery__
-#define __StarFishSelectorQuery__
+#ifndef __StarfishSelectorQuery__
+#define __StarfishSelectorQuery__
 
-namespace StarFish {
+namespace Starfish {
 
 class Element;
 class Node;

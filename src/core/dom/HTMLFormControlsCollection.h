@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLFormControlsCollection__
-#define __StarFishHTMLFormControlsCollection__
+#ifndef __StarfishHTMLFormControlsCollection__
+#define __StarfishHTMLFormControlsCollection__
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/HTMLCollection.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Node;
 

@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishFetchBody__
-#define __StarFishFetchBody__
+#ifndef __StarfishFetchBody__
+#define __StarfishFetchBody__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/WindowHoldable.h"
@@ -26,7 +26,7 @@
 #include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 
-namespace StarFish {
+namespace Starfish {
 
 typedef BlobOrBufferSourceOrUSVString BodyInit;
 class DOMException;

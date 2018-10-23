@@ -17,19 +17,19 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Comment.h"
 
-namespace StarFish {
+namespace Starfish {
 
 String* Comment::nodeName()
 {
-    return starFish()->staticStrings()->m_commentLocalName.string();
+    return starfish()->staticStrings()->m_commentLocalName.string();
 }
 
 String* Comment::localName()
 {
-    return starFish()->staticStrings()->m_commentLocalName.string();
+    return starfish()->staticStrings()->m_commentLocalName.string();
 }
 }

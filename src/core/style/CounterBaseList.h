@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishListCounterBaseList__
-#define __StarFishListCounterBaseList__
+#ifndef __StarfishListCounterBaseList__
+#define __StarfishListCounterBaseList__
 
-namespace StarFish {
+namespace Starfish {
 
 typedef GCAtomicVector<std::pair<AtomicString, int32_t>> CounterBaseList;
 

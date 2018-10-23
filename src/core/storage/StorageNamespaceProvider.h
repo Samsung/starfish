@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishStorageNamespaceProvider__
-#define __StarFishStorageNamespaceProvider__
+#ifndef __StarfishStorageNamespaceProvider__
+#define __StarfishStorageNamespaceProvider__
 
 #include "binding/WindowHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class StorageNamespace;
 

@@ -20,7 +20,7 @@
 #ifdef STARFISH_ENABLE_TTS
 #include "binding/WebViewHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 class Node;
 
 class TextAlternativeHelper : public gc, public WebViewHoldable {

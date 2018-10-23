@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "binding/DOMStringOrCanvasGradientOrCanvasPatternUnion.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
@@ -34,7 +34,7 @@
 #include "core/layout/FrameReplacedCanvas.h"
 #include "core/layout/StackingContext.h"
 
-namespace StarFish {
+namespace Starfish {
 
 CanvasRenderingContext2D::CanvasRenderingContext2D(
     HTMLCanvasElement* canvasElement)

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "WebStorageNamespaceProvider.h"
 
 #include "StorageNamespaceImpl.h"
 
-namespace StarFish {
+namespace Starfish {
 
 WebStorageNamespaceProvider::WebStorageNamespaceProvider(
     String* localStoragePath)

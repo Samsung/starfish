@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishBasicStringImpl__
-#define __StarFishBasicStringImpl__
+#ifndef __StarfishBasicStringImpl__
+#define __StarfishBasicStringImpl__
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename T, typename Allocator>
 void BasicString<T, Allocator>::pushBack(T val)

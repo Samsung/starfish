@@ -41,13 +41,13 @@
  *  USA
  */
 
-#ifndef _StarFishHTMLToken_
-#define _StarFishHTMLToken_
+#ifndef _StarfishHTMLToken_
+#define _StarfishHTMLToken_
 
 #include "core/util/String.h"
 #include "core/util/GatherableString.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DoctypeData : public gc {
 public:

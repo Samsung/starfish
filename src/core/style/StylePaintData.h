@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishStylePaintData__
-#define __StarFishStylePaintData__
+#ifndef __StarfishStylePaintData__
+#define __StarfishStylePaintData__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class StylePaintData : public gc {
 public:

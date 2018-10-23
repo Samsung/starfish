@@ -17,9 +17,9 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Navigator.h"
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/modules/location/Geolocation.h"
 #include "core/page/WebView.h"
@@ -29,7 +29,7 @@
 #include <sys/utsname.h>
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 Navigator::Navigator(Document* document)
     : ScriptWrappable(this)
@@ -92,4 +92,4 @@ String* Navigator::language()
 {
     return String::fromUTF8(webView()->locale().getName());
 }
-} // namespace StarFish
+} // namespace Starfish

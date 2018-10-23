@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/fetch/Body.h"
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
@@ -27,7 +27,7 @@
 #include "core/util/URL.h"
 #include "core/fileapi/Blob.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // TODO: find where the mine type should be placed
 static const char kTextPlainContentType[] = "text/plain;charset=UTF-8";

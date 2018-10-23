@@ -19,10 +19,10 @@
 
 // https://www.w3.org/TR/3-images/#image-type
 
-#ifndef __StarFishImage__
-#define __StarFishImage__
+#ifndef __StarfishImage__
+#define __StarfishImage__
 
-namespace StarFish {
+namespace Starfish {
 
 class String;
 class GradientData;

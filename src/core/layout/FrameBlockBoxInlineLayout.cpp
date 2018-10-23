@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/CharacterData.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLTableElement.h"
@@ -35,7 +35,7 @@
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 LayoutUnit Frame::lineHeight()
 {
@@ -2981,7 +2981,7 @@ template <typename T>
 size_t utf16ToUtf32(const T* UTF16, const T* bufferEnd, char32_t& uc);
 
 template <typename Context>
-static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
+static void tokenizeText(Starfish* starfish, FrameText* f, Context& ctx)
 {
     // TODO : Consider direction
     String* txt = f->text();
@@ -2989,7 +2989,7 @@ static void tokenizeText(StarFish* sf, FrameText* f, Context& ctx)
     bool collapseSpace = !f->shouldPreserveWhiteSpaces();
     bool collapseNewline = f->shouldIgnoreNewlineChar();
 
-    auto breaker = sf->lineBreakIteratorPool()->get(
+    auto breaker = starfish->lineBreakIteratorPool()->get(
         icu::Locale::getUS(), LineBreakIteratorModeUAX14, false);
     std::vector<int32_t> locs;
 
@@ -3162,7 +3162,7 @@ void FrameText::transformText(String* text)
 
 String* FrameText::makeCapitalized(String* txt, char32_t prev)
 {
-    auto breaker = node()->starFish()->lineBreakIteratorPool()->get(
+    auto breaker = node()->starfish()->lineBreakIteratorPool()->get(
         icu::Locale::getUS(), LineBreakIteratorModeUAX14, false);
     std::vector<int32_t> locs;
 
@@ -3258,7 +3258,7 @@ void FrameText::layoutInline(LineFormattingContext& ctx)
 {
     // split the text into tokens using the ICU divider, and for each
     // token, execute the following function
-    tokenizeText(ctx.m_layoutContext.starFish(), this, ctx);
+    tokenizeText(ctx.m_layoutContext.starfish(), this, ctx);
 }
 
 void FrameReplaced::layoutInline(LineFormattingContext& ctx)
@@ -4329,7 +4329,7 @@ bool FrameText::isSelfCollapsingBlock(LayoutContext& ctx)
 
 void FrameText::computePreferredWidth(PreferredWidthContext& ctx)
 {
-    tokenizeText(ctx.layoutContext().starFish(), this, ctx);
+    tokenizeText(ctx.layoutContext().starfish(), this, ctx);
 }
 
 void FrameInline::computePreferredWidth(PreferredWidthContext& ctx)
@@ -5186,4 +5186,4 @@ void InlineNonReplacedBox::dump(int depth)
     }
 }
 #endif
-} // namespace StarFish
+} // namespace Starfish

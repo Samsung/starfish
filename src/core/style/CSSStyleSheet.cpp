@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLLinkElement.h"
@@ -32,7 +32,7 @@
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/StyleRule.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class StyleSheetCSSRuleList : public CSSRuleList {
 public:
@@ -298,7 +298,7 @@ String* CSSStyleSheet::title() const
 {
     if (m_origin->isElement()) {
         auto title = m_origin->asElement()->getAttribute(
-            m_origin->starFish()->staticStrings()->m_title);
+            m_origin->starfish()->staticStrings()->m_title);
         if (title.hasValue()) {
             return title.getValue();
         }
@@ -530,4 +530,4 @@ void CSSStyleSheet::setDisabled(bool disabled)
         ->browsingContext()
         ->setNeedsStyleSheetsRecalc();
 }
-} /* namespace StarFish */
+} /* namespace Starfish */

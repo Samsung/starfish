@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameInline__
-#define __StarFishFrameInline__
+#ifndef __StarfishFrameInline__
+#define __StarfishFrameInline__
 
 #include "core/layout/Frame.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameInline final : public Frame {
 public:

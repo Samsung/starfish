@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLUListElement.h"
 
-namespace StarFish {
+namespace Starfish {
 void HTMLUListElement::didAttributeChanged(QualifiedName name, String* old,
                                            String* value, bool attributeCreated,
                                            bool attributeRemoved)
@@ -30,7 +30,7 @@ void HTMLUListElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_type) {
+    if (name == starfish()->staticStrings()->m_type) {
         document()->notifyCountingOutdated();
     }
 }
@@ -46,11 +46,11 @@ void HTMLUListElement::styleForPresentationAttribute(
         pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
         if (typeString->equals("square") || typeString->equals("circle")) {
             AtomicString strValue =
-                AtomicString::createAtomicString(starFish(), typeString);
+                AtomicString::createAtomicString(starfish(), typeString);
             pair.setAtomicStringValue(strValue);
         } else {
             AtomicString strValue =
-                AtomicString::createAtomicString(starFish(), "disc");
+                AtomicString::createAtomicString(starfish(), "disc");
             pair.setAtomicStringValue(strValue);
         }
         cssValues.push_back(pair);
@@ -59,11 +59,11 @@ void HTMLUListElement::styleForPresentationAttribute(
 
 String* HTMLUListElement::type()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_type);
 }
 
 void HTMLUListElement::setType(String* type)
 {
-    setAttribute(starFish()->staticStrings()->m_type, type);
+    setAttribute(starfish()->staticStrings()->m_type, type);
 }
 }

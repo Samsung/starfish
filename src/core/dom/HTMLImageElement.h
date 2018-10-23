@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLImageElement__
-#define __StarFishHTMLImageElement__
+#ifndef __StarfishHTMLImageElement__
+#define __StarfishHTMLImageElement__
 
 #include "core/dom/Document.h"
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class NativeImageData;
 class ImageResource;
@@ -34,7 +34,7 @@ class HTMLImageElement : public HTMLElement {
 public:
     HTMLImageElement(Document* document)
         : HTMLImageElement(document,
-                           document->starFish()->staticStrings()->m_imgTagName)
+                           document->starfish()->staticStrings()->m_imgTagName)
     {
     }
 

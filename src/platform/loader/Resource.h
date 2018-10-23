@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishResource__
-#define __StarFishResource__
+#ifndef __StarfishResource__
+#define __StarfishResource__
 
 #include "core/util/URL.h"
 #include "platform/loader/ResourceClient.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TextResource;
 class ImageResource;

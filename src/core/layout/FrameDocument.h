@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameDocument__
-#define __StarFishFrameDocument__
+#ifndef __StarfishFrameDocument__
+#define __StarfishFrameDocument__
 
 #include "core/layout/FrameBlockBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameDocument final : public FrameBlockBox {
     friend class FrameBlockBox;

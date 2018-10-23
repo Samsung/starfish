@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLTableCaptionElement.h"
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 void HTMLTableCaptionElement::didAttributeChanged(QualifiedName name,
                                                   String* old, String* value,
                                                   bool attributeCreated,
@@ -30,7 +30,7 @@ void HTMLTableCaptionElement::didAttributeChanged(QualifiedName name,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_align) {
+    if (name == starfish()->staticStrings()->m_align) {
         setNeedsStyleRecalc();
     }
 }
@@ -40,7 +40,7 @@ void HTMLTableCaptionElement::styleForPresentationAttribute(
 {
     HTMLElement::styleForPresentationAttribute(cssValues);
 
-    String* align = getAttributeOrEmpty(starFish()->staticStrings()->m_align);
+    String* align = getAttributeOrEmpty(starfish()->staticStrings()->m_align);
     if (!align->equals(String::emptyString)) {
         if (align->equalsIgnoreCase("top")) {
             CSSStyleValuePair pair;

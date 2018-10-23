@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishMessages__
-#define __StarFishMessages__
+#ifndef __StarfishMessages__
+#define __StarfishMessages__
 
-namespace StarFish {
+namespace Starfish {
 // Reasons
 #define CALLED_CONSTRUCTOR_WITHOUT_NEW "Constructor '%s' requires 'new'"
 #define FAILED_TO_CONSTRUCT "Failed to construct '%s': %s"

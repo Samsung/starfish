@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
@@ -36,7 +36,7 @@
 
 #include "core/style/CSSStyleDeclaration.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void ComputedStyleCSSStyleDeclaration::layoutIfNeeds()
 {
@@ -185,7 +185,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         l.setKeyKind(CSSStyleValuePair::KeyKind::Left);
         r.setKeyKind(CSSStyleValuePair::KeyKind::Right);
         if (frame && frame->isFrameBox() && frame->isPositioned()) {
-            LayoutContext ctx(m_node->starFish(),
+            LayoutContext ctx(m_node->starfish(),
                               m_node->document()->frame()->asFrameDocument());
             FrameBox* cb = containingBlock(frame);
             FrameBox* self = frame->asFrameBox();
@@ -283,7 +283,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair w;
         w.setKeyKind(CSSStyleValuePair::KeyKind::Width);
         if (frame && style->width().isDefinite(true)) {
-            LayoutContext ctx(m_node->starFish(),
+            LayoutContext ctx(m_node->starfish(),
                               m_node->document()->frame()->asFrameDocument());
             w.setLengthValue(CSSLength(style->width().specifiedValue(
                 ctx.parentContentWidth(frame), m_node)));
@@ -301,7 +301,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         CSSStyleValuePair h;
         h.setKeyKind(CSSStyleValuePair::KeyKind::Height);
         if (frame && frame->isFrameBox()) {
-            LayoutContext ctx(m_node->starFish(),
+            LayoutContext ctx(m_node->starfish(),
                               m_node->document()->frame()->asFrameDocument());
             bool parentHasFixedHeight = ctx.parentHasFixedHeight(frame);
             if (style->height().isDefinite(parentHasFixedHeight)) {
@@ -1175,7 +1175,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
                     CSSCounterFunction* f = new CSSCounterFunction(data->id());
                     f->setSeparator(data->separator());
                     f->setStyle(AtomicString::createAtomicString(
-                        m_node->starFish(), data->counterStyle()->name()));
+                        m_node->starfish(), data->counterStyle()->name()));
                     t.setCounterFunctionValue(f);
                     values->pushBack(t);
                 } else if (c.type() == ContentData::Quote) {

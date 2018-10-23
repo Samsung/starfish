@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishMatrixTransform__
-#define __StarFishMatrixTransform__
+#ifndef __StarfishMatrixTransform__
+#define __StarfishMatrixTransform__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class MatrixTransform : public gc {
 public:

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishFrameText__
-#define __StarFishFrameText__
+#ifndef __StarfishFrameText__
+#define __StarfishFrameText__
 
 #include "core/layout/Frame.h"
 #include "core/dom/CharacterData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameTextRareData : public gc {
 public:

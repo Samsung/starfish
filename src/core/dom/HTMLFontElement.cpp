@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLFontElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* HTMLFontElement::operator new(size_t size)
 {
@@ -44,7 +44,7 @@ void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_color) {
+    if (name == starfish()->staticStrings()->m_color) {
         if (attributeCreated) {
             m_hasColorAttribute = true;
         }
@@ -52,10 +52,10 @@ void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
             m_hasColorAttribute = false;
         }
         if (!old->equals(value)) {
-            setAttribute(starFish()->staticStrings()->m_color, value);
+            setAttribute(starfish()->staticStrings()->m_color, value);
         }
         setNeedsStyleRecalc();
-    } else if (name == starFish()->staticStrings()->m_size) {
+    } else if (name == starfish()->staticStrings()->m_size) {
         if (attributeCreated) {
             m_hasSizeAttribute = true;
         }
@@ -63,7 +63,7 @@ void HTMLFontElement::didAttributeChanged(QualifiedName name, String* old,
             m_hasSizeAttribute = false;
         }
         if (!old->equals(value)) {
-            setAttribute(starFish()->staticStrings()->m_size, value);
+            setAttribute(starfish()->staticStrings()->m_size, value);
         }
         setNeedsStyleRecalc();
     }
@@ -148,7 +148,7 @@ void HTMLFontElement::styleForPresentationAttribute(
     if (m_hasColorAttribute) {
         CSSStyleValuePair pair;
         String* color =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_color);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_color);
         auto utf8Str = color->toNullableUTF8String();
         // TODO: Some obsolete legacy attributes parse colors in a more
         // complicated manner, using the rules for parsing a legacy color value.
@@ -160,7 +160,7 @@ void HTMLFontElement::styleForPresentationAttribute(
     }
 
     if (m_hasSizeAttribute) {
-        String* size = getAttributeOrEmpty(starFish()->staticStrings()->m_size);
+        String* size = getAttributeOrEmpty(starfish()->staticStrings()->m_size);
         int fontSize = 0;
         if (!parseLegacyFontSize(size, fontSize)) {
             return;
@@ -204,21 +204,21 @@ void HTMLFontElement::styleForPresentationAttribute(
 
 String* HTMLFontElement::color()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_color);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_color);
 }
 
 void HTMLFontElement::setColor(String* color)
 {
-    setAttribute(starFish()->staticStrings()->m_color, color);
+    setAttribute(starfish()->staticStrings()->m_color, color);
 }
 
 String* HTMLFontElement::size()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_size);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_size);
 }
 
 void HTMLFontElement::setSize(String* size)
 {
-    setAttribute(starFish()->staticStrings()->m_size, size);
+    setAttribute(starfish()->staticStrings()->m_size, size);
 }
 }

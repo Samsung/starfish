@@ -44,10 +44,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef __StarFishMediaQuery__
-#define __StarFishMediaQuery__
+#ifndef __StarfishMediaQuery__
+#define __StarfishMediaQuery__
 
-namespace StarFish {
+namespace Starfish {
 
 class MediaQueryExp;
 class MediaQuery : public gc {

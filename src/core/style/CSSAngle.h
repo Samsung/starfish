@@ -18,10 +18,10 @@
  *  USA
  */
 
-#ifndef __StarFishCSSAngle__
-#define __StarFishCSSAngle__
+#ifndef __StarfishCSSAngle__
+#define __StarfishCSSAngle__
 
-namespace StarFish {
+namespace Starfish {
 
 class String;
 // https://www.w3.org/TR/css3-values/#angles

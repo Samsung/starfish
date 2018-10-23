@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Document.h"
 #include "core/dom/MessageEvent.h"
@@ -28,7 +28,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MessagePort::MessagePort(Document* document)
     : EventTarget(document)
@@ -143,7 +143,7 @@ void MessagePort::postMessage(ScriptValue message,
                     self->document(), *serializedRecord, deserializedRecord);
             } catch (DOMException* exc) {
                 MessageEvent* e = new MessageEvent(
-                    self->document(), self->starFish()
+                    self->document(), self->starfish()
                                           ->staticStrings()
                                           ->m_messageerror.localName());
                 self->entangledPort()->dispatchMessageEvent(e);
@@ -161,7 +161,7 @@ void MessagePort::postMessage(ScriptValue message,
             }
             MessageEvent* e = new MessageEvent(
                 self->document(),
-                self->starFish()->staticStrings()->m_message.localName());
+                self->starfish()->staticStrings()->m_message.localName());
             e->setData(deserializedRecord.m_deserialized);
             e->setPorts(newPorts);
             self->entangledPort()->dispatchMessageEvent(e);
@@ -182,13 +182,13 @@ void MessagePort::close()
 
 EventListener* MessagePort::onmessage()
 {
-    QualifiedName attr = window()->starFish()->staticStrings()->m_message;
+    QualifiedName attr = window()->starfish()->staticStrings()->m_message;
     return attributeEventListener(attr);
 }
 
 void MessagePort::setOnmessage(EventListener* listener)
 {
-    QualifiedName attr = window()->starFish()->staticStrings()->m_message;
+    QualifiedName attr = window()->starfish()->staticStrings()->m_message;
     if (listener) {
         setAttributeEventListener(attr, listener);
     } else {
@@ -202,13 +202,13 @@ void MessagePort::setOnmessage(EventListener* listener)
 
 EventListener* MessagePort::onmessageerror()
 {
-    QualifiedName attr = window()->starFish()->staticStrings()->m_messageerror;
+    QualifiedName attr = window()->starfish()->staticStrings()->m_messageerror;
     return attributeEventListener(attr);
 }
 
 void MessagePort::setOnmessageerror(EventListener* listener)
 {
-    QualifiedName attr = window()->starFish()->staticStrings()->m_messageerror;
+    QualifiedName attr = window()->starfish()->staticStrings()->m_messageerror;
     if (listener) {
         setAttributeEventListener(attr, listener);
     } else {
@@ -238,12 +238,11 @@ void PortMessageQueue::enableBy(MessagePort* target)
             registerTaskToMessageLoop(target, m_innerQueue[i]);
         }
         clearAllTasks();
-    }
 #ifndef NDEBUG
-    else {
+    } else {
         STARFISH_ASSERT(m_innerQueue.size() == 0);
-    }
 #endif
+    }
 }
 
 void PortMessageQueue::registerTaskToMessageLoop(MessagePort* target,

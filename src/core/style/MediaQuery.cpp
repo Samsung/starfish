@@ -44,12 +44,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "MediaQuery.h"
 #include "CSSParser.h"
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MediaQuery* MediaQuery::createNotAll()
 {

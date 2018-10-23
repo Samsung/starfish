@@ -40,12 +40,12 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#ifndef __StarFishBloomFilter__
-#define __StarFishBloomFilter__
+#ifndef __StarfishBloomFilter__
+#define __StarfishBloomFilter__
 
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // Counting bloom filter with k=2 and 8 bit counters. Uses 2^keyBits bytes of
 // memory.

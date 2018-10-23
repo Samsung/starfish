@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/layout/StackingContext.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLBodyElement.h"
@@ -40,7 +40,7 @@
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/canvas/ShadowBlur.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct StackingContext::ComputeStackingContextContext {
     std::unordered_map<StackingContext*, LayoutRect> extentPerLayer;
@@ -1690,7 +1690,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             owner()->willCompsiteStackingContext(compositor);
 #ifdef STARFISH_ENABLE_TEST
             if (owner()->node()->webView()->startUpFlag() &
-                StarFishStartUpFlag::enableDebugGraphicsLayer) {
+                StarfishStartUpFlag::enableDebugGraphicsLayer) {
                 // debug compositing method
                 switch (m_needsGraphicsBufferReason) {
                 case NeedsGraphicsLayerReasonNone:

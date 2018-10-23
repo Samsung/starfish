@@ -17,12 +17,12 @@
  *  USA
  */
 #if defined(STARFISH_ENABLE_HTTPCACHE)
-#ifndef __StarFishHTTPCacheEntry_
-#define __StarFishHTTPCacheEntry_
+#ifndef __StarfishHTTPCacheEntry_
+#define __StarfishHTTPCacheEntry_
 
 #include "platform/network/http/HTTPUtil.h"
 
-namespace StarFish {
+namespace Starfish {
 class ResourceURL;
 class Mutex;
 

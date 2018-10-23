@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishEventSource__
-#define __StarFishEventSource__
+#ifndef __StarfishEventSource__
+#define __StarfishEventSource__
 
 #include "core/dom/EventTarget.h"
 #include "core/page/EventSourceParser.h"
 #include "platform/network/http/HTTPUtil.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ResourceURL;
 class EventSourceParser;
@@ -63,8 +63,8 @@ class EventSource : public EventTarget, public EventSourceParser::Client {
     friend class EventSourceResourceRequestClient;
 
 public:
-    EventSource(::StarFish::Document* document, String* url);
-    EventSource(::StarFish::Document* document, String* url,
+    EventSource(::Starfish::Document* document, String* url);
+    EventSource(::Starfish::Document* document, String* url,
                 const EventSourceInit& init);
 
     static const unsigned long long defaultReconnectDelay;

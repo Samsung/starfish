@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "LWEWebView.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_GLFW)
 
@@ -70,7 +70,7 @@ public:
         }
 #endif
 
-        m_glWindow = glfwCreateWindow(width, height, "StarFish", NULL, NULL);
+        m_glWindow = glfwCreateWindow(width, height, "Starfish", NULL, NULL);
 
         if (m_glWindow == nullptr) {
             STARFISH_LOG_ERROR(
@@ -78,7 +78,7 @@ public:
                 "instead\n");
             glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
             m_glWindow =
-                glfwCreateWindow(width, height, "StarFish", NULL, NULL);
+                glfwCreateWindow(width, height, "Starfish", NULL, NULL);
             if (m_glWindow == nullptr) {
                 STARFISH_LOG_ERROR(
                     "failed to create OpenGL 3.0 context. please check your "

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/BorderImage.h"
 #include "platform/loader/ImageResource.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 
-namespace StarFish {
+namespace Starfish {
 NativeImageData* BorderImageData::imageData()
 {
     if (!isNull() && data()->m_imageResource) {

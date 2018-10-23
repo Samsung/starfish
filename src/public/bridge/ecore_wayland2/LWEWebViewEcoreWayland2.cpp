@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "LWEWebView.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
 
@@ -356,7 +356,7 @@ public:
             width, height,
             [this](WebContainer* wc) {
                 if (m_isBufferSwapped) {
-                    // StarFish::ProfilerTimer p("WebViewEcoreWayland2 -
+                    // Starfish::ProfilerTimer p("WebViewEcoreWayland2 -
                     // eglClientWaitSyncKHRProc");
                     EGLint result = g_eglClientWaitSyncKHRProc(
                         mDisplay, mFence, EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
@@ -376,12 +376,12 @@ public:
             },
             [this](WebContainer* wc) {
                 {
-                    // StarFish::ProfilerTimer p("WebViewEcoreWayland2 -
+                    // Starfish::ProfilerTimer p("WebViewEcoreWayland2 -
                     // glFlush");
                     glFlush();
                 }
                 {
-                    // StarFish::ProfilerTimer p("WebViewEcoreWayland2 -
+                    // Starfish::ProfilerTimer p("WebViewEcoreWayland2 -
                     // eglSwapBuffers");
                     if (!eglSwapBuffers(mDisplay, mSurface)) {
                         auto eglError = eglGetError();

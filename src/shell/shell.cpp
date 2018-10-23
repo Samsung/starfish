@@ -16,10 +16,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "LWEWebView.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/page/WebView.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
@@ -84,7 +84,7 @@ void bt_sighandler(int sig, struct sigcontext ctx)
         printf("[bt] #%d %s\n", i, messages[i]);
 
         char syscom[256];
-        sprintf(syscom, "addr2line %p -e StarFish",
+        sprintf(syscom, "addr2line %p -e Starfish",
                 trace[i]); // last parameter is the name of this app
         system(syscom);
     }
@@ -242,8 +242,8 @@ int main(int argc, char* argv[])
 #endif
 
 #ifdef STARFISH_ENABLE_TEST
-    StarFish::StarFishTestCompatibleMode testCompatibleMode =
-        StarFish::StarFishTestCompatibleMode::Normal;
+    Starfish::StarfishTestCompatibleMode testCompatibleMode =
+        Starfish::StarfishTestCompatibleMode::Normal;
 #endif
 
     int flag = 0;
@@ -269,25 +269,25 @@ int main(int argc, char* argv[])
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
-            flag |= StarFish::enableComputedStyleDump;
+            flag |= Starfish::enableComputedStyleDump;
         } else if (strcmp(argv[i], "--dump-frame-tree") == 0) {
-            flag |= StarFish::enableFrameTreeDump;
+            flag |= Starfish::enableFrameTreeDump;
         } else if (strcmp(argv[i], "--dump-stacking-context") == 0) {
-            flag |= StarFish::enableStackingContextDump;
+            flag |= Starfish::enableStackingContextDump;
         } else if (strcmp(argv[i], "--dump-hittest") == 0) {
-            flag |= StarFish::enableHitTestDump;
+            flag |= Starfish::enableHitTestDump;
         } else if (strcmp(argv[i], "--debug-graphics-layer") == 0) {
-            flag |= StarFish::enableDebugGraphicsLayer;
+            flag |= Starfish::enableDebugGraphicsLayer;
         } else if (strcmp(argv[i], "--debug-repaint-region") == 0) {
-            flag |= StarFish::enableDebugRepaintRegion;
+            flag |= Starfish::enableDebugRepaintRegion;
         } else if (strcmp(argv[i], "--pixel-test") == 0) {
 #ifdef STARFISH_ENABLE_TEST
-            StarFish::g_enablePixelTest = true;
+            Starfish::g_enablePixelTest = true;
             setenv("PIXEL_TEST", "1", 1);
 #endif
         } else if (strcmp(argv[i], "--ref-test") == 0) {
 #ifdef STARFISH_ENABLE_TEST
-            StarFish::g_referenceTestState = 1;
+            Starfish::g_referenceTestState = 1;
             setenv("HIDE_WINDOW", "1", 1);
 #endif
         } else if (strstr(argv[i], "--width=") == argv[i]) {
@@ -295,7 +295,7 @@ int main(int argc, char* argv[])
         } else if (strstr(argv[i], "--height=") == argv[i]) {
             height = std::atoi(argv[i] + strlen("--height="));
         } else if (strcmp(argv[i], "--regression-test") == 0) {
-            flag |= StarFish::enableRegressionTest;
+            flag |= Starfish::enableRegressionTest;
         } else if (strstr(argv[i], "--screen-shot=") == argv[i]) {
             screenShot = argv[i] + strlen("--screen-shot=");
             setenv("SCREEN_SHOT_FILE", screenShot.c_str(), 1);
@@ -308,7 +308,7 @@ int main(int argc, char* argv[])
         } else if (strcmp(argv[i], "--hide-window") == 0) {
             // regression test, pixel test only
             setenv("HIDE_WINDOW", "1", 1);
-            flag |= StarFish::enableRegressionTest;
+            flag |= Starfish::enableRegressionTest;
         } else if (strcmp(argv[i], "--network-log-verbose") == 0) {
             setenv("NETWORK_LOG_VERBOSE", "1", 1);
         } else if (strstr(argv[i], "--posX=") == argv[i]) {
@@ -324,7 +324,7 @@ int main(int argc, char* argv[])
         } else if (strstr(argv[i], "--enable-chromium-test") == argv[i]) {
 #ifdef STARFISH_ENABLE_TEST
             testCompatibleMode =
-                StarFish::StarFishTestCompatibleMode::ChromiumLayout;
+                Starfish::StarfishTestCompatibleMode::ChromiumLayout;
 #endif
         }
     }
@@ -349,7 +349,7 @@ int main(int argc, char* argv[])
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     Evas_Object* wndObj = nullptr;
-    wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
+    wndObj = elm_win_add(NULL, "Starfish", ELM_WIN_BASIC);
     elm_win_title_set(wndObj, STARFISH_NAME);
     elm_win_autodel_set(wndObj, EINA_TRUE);
     evas_object_resize(wndObj, width, height);
@@ -424,8 +424,8 @@ int main(int argc, char* argv[])
 #endif
 #endif
 
-    LWE::LWE::Initialize("/tmp/StarFish_localStorage.txt",
-                         "/tmp/StarFish_Cookies.txt", cacheDir.data());
+    LWE::LWE::Initialize("/tmp/Starfish_localStorage.txt",
+                         "/tmp/Starfish_Cookies.txt", cacheDir.data());
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     LWE::WebView* webView =
@@ -503,19 +503,19 @@ int main(int argc, char* argv[])
             while (1) {
                 fgets(buf, 1024, stdin);
                 struct Pass {
-                    LWE::WebView* sf;
+                    LWE::WebView* webView;
                     char* buf;
                 };
                 char* b = new char[1024];
                 Pass* pass = new Pass;
                 pass->buf = b;
-                pass->sf = (LWE::WebView*)data;
+                pass->webView = (LWE::WebView*)data;
                 memcpy(b, buf, sizeof buf);
                 ecore_thread_main_loop_begin();
                 ecore_animator_add(
                     [](void* data) -> Eina_Bool {
                         Pass* p = (Pass*)data;
-                        puts(p->sf->EvaluateJavaScript(p->buf).data());
+                        puts(p->webView->EvaluateJavaScript(p->buf).data());
                         delete[] p->buf;
                         delete p;
 

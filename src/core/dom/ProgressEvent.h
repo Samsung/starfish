@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishProgressEvent__
-#define __StarFishProgressEvent__
+#ifndef __StarfishProgressEvent__
+#define __StarfishProgressEvent__
 
 #include "Event.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct ProgressEventInit : public EventInit {
     STARFISH_MAKE_STACK_ALLOCATED()

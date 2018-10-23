@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "StorageImpl.h"
 
 #include "StorageManager.h"
 #include "core/page/SecurityOriginData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 StorageImpl::~StorageImpl()
 {

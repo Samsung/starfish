@@ -19,8 +19,8 @@
  */
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/extra/Avplay.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -35,14 +35,14 @@
 #error "You must need PORT_WEBVIEW_BRIDGE_EFL to use this"
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 using namespace Escargot;
 
 static BrowsingContext* browsingContext(void* user_data)
 {
     Avplay* self = (Avplay*)user_data;
-    return self->starFish()->platformWindow()->webView()->mainBrowsingContext();
+    return self->starfish()->platformWindow()->webView()->mainBrowsingContext();
 }
 
 static void _videoPlayerPrepareCB(void* user_data)
@@ -147,8 +147,8 @@ void printNativePlayerError(int errorCode)
     }
 }
 
-Avplay::Avplay(StarFish* starFish)
-    : StarFishHoldable(starFish)
+Avplay::Avplay(Starfish* starfish)
+    : StarfishHoldable(starfish)
     , m_offsetLeft(0)
     , m_offsetTop(0)
     , m_offsetWidth(0)
@@ -203,7 +203,7 @@ void Avplay::open(String* url)
     }
 
     Evas_Object* wndObject =
-        (Evas_Object*)starFish()->publicLayerUserDataMap()
+        (Evas_Object*)starfish()->publicLayerUserDataMap()
             ["__internalLWEWebViewEFLNativeWindowEvasObject"];
     STARFISH_RELEASE_ASSERT(wndObject);
 

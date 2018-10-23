@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishSVGDocument__
-#define __StarFishSVGDocument__
+#ifndef __StarfishSVGDocument__
+#define __StarfishSVGDocument__
 
 #include "core/dom/XMLDocument.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class SVGDocument : public XMLDocument {
 public:

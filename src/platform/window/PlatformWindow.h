@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishPlatformWindow__
-#define __StarFishPlatformWindow__
+#ifndef __StarfishPlatformWindow__
+#define __StarfishPlatformWindow__
 
 #include "core/page/RenderResult.h"
 #include "core/event/EventModifierData.h"
 
-namespace StarFish {
+namespace Starfish {
 enum WindowHandlerKind {
     WindowHandlerShowDropdownMenu,
     WindowHandlerShowAlert,
@@ -32,24 +32,24 @@ enum WindowHandlerKind {
 }
 namespace std {
 template <>
-struct hash<StarFish::WindowHandlerKind> {
-    size_t operator()(StarFish::WindowHandlerKind const& x) const
+struct hash<Starfish::WindowHandlerKind> {
+    size_t operator()(Starfish::WindowHandlerKind const& x) const
     {
         return std::hash<uint32_t>()((uint32_t)x);
     }
 };
 
 template <>
-struct equal_to<StarFish::WindowHandlerKind> {
-    bool operator()(StarFish::WindowHandlerKind const& a,
-                    StarFish::WindowHandlerKind const& b) const
+struct equal_to<Starfish::WindowHandlerKind> {
+    bool operator()(Starfish::WindowHandlerKind const& a,
+                    Starfish::WindowHandlerKind const& b) const
     {
         return a == b;
     }
 };
 }
 
-namespace StarFish {
+namespace Starfish {
 
 class AnimationExecutor;
 
@@ -95,12 +95,12 @@ enum class CompositionEventKind {
 };
 }
 
-namespace StarFish {
+namespace Starfish {
 
 class PlatformWindow : public gc {
 public:
     virtual ~PlatformWindow(){};
-    static PlatformWindow* create(StarFish* starFish, uint32_t width,
+    static PlatformWindow* create(Starfish* starfish, uint32_t width,
                                   uint32_t height);
 
     virtual uint32_t width() = 0;
@@ -227,9 +227,9 @@ public:
         return m_webView;
     }
 
-    StarFish* starFish()
+    Starfish* starfish()
     {
-        return m_starFish;
+        return m_starfish;
     }
 
     void setWebView(WebView* webView);
@@ -245,9 +245,9 @@ public:
     }
 
 protected:
-    PlatformWindow(StarFish* starFish);
+    PlatformWindow(Starfish* starfish);
 
-    StarFish* m_starFish;
+    Starfish* m_starfish;
     WebView* m_webView;
     size_t m_renderingAnimator;
     CompositorContext* m_compostiorContext;
@@ -275,6 +275,6 @@ protected:
     CanvasSurface* m_virtualCursorCanvasSurface;
 #endif
 };
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

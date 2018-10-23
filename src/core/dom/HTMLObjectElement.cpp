@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLObjectElement.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* HTMLObjectElement::operator new(size_t size)
 {
@@ -47,7 +47,7 @@ void HTMLObjectElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starFish()->staticStrings()->m_type) {
+    if (name == starfish()->staticStrings()->m_type) {
         if (m_content) {
             m_content->unload();
         }

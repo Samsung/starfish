@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
 
@@ -37,7 +37,7 @@
 
 #define CAIRO_FORMAT CAIRO_FORMAT_ARGB32
 
-namespace StarFish {
+namespace Starfish {
 
 class CompositorImplCairo : public Compositor {
     void initFromBuffer(void* buffer, int width, int height, int stride)
@@ -468,6 +468,6 @@ Compositor* Compositor::create3D(WebView* wv, CompositorContext* ctx)
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
 }
 
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

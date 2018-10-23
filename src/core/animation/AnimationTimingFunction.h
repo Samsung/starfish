@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishAnimationTimingFunction__
-#define __StarFishAnimationTimingFunction__
+#ifndef __StarfishAnimationTimingFunction__
+#define __StarfishAnimationTimingFunction__
 
-namespace StarFish {
+namespace Starfish {
 
 class CubicBezier;
 class Steps;

@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameTableCaptionBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 FrameTableCaptionBox::FrameTableCaptionBox(Node* node, ComputedStyle* style)
     : FrameTableObjectBox(node, style)

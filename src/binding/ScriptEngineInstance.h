@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishScriptEngineInstance__
-#define __StarFishScriptEngineInstance__
+#ifndef __StarfishScriptEngineInstance__
+#define __StarfishScriptEngineInstance__
 
 #include "binding/WebViewHoldable.h"
 
@@ -26,7 +26,7 @@ namespace Escargot {
 class VMInstanceRef;
 }
 
-namespace StarFish {
+namespace Starfish {
 
 typedef Escargot::VMInstanceRef* ScriptEngine;
 

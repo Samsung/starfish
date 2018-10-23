@@ -18,12 +18,12 @@
  *  USA
  */
 
-#ifndef __StarFishSteps__
-#define __StarFishSteps__
+#ifndef __StarfishSteps__
+#define __StarfishSteps__
 
 #include "core/animation/AnimationTimingFunction.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Steps : public AnimationTimingFunction {
 public:

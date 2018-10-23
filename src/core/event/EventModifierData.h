@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishEventModifierData__
-#define __StarFishEventModifierData__
+#ifndef __StarfishEventModifierData__
+#define __StarfishEventModifierData__
 
-namespace StarFish {
+namespace Starfish {
 
 class EventModifierData {
     STARFISH_MAKE_STACK_ALLOCATED()
@@ -92,5 +92,5 @@ private:
     // bool m_modifierSymbolLock;
 };
 
-} // namespace StarFish
+} // namespace Starfish
 #endif

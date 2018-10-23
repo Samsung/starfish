@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/dom/HTMLStyleElement.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/dom/Text.h"
@@ -33,7 +33,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* HTMLStyleElement::operator new(size_t size)
 {
@@ -148,7 +148,7 @@ void HTMLStyleElement::generateStyleSheet()
     document()->styleResolver().addSheet(sheet);
 
     CSSParser parser(document());
-    parser.makeToken(getAttributeOrEmpty(starFish()->staticStrings()->m_media));
+    parser.makeToken(getAttributeOrEmpty(starfish()->staticStrings()->m_media));
     MediaQuerySet* mediaQuerySet = parser.parseMediaQuery();
     sheet->setMediaQuerySet(mediaQuerySet);
     const MediaQueryEvaluator& evaluator =
@@ -175,7 +175,7 @@ void HTMLStyleElement::dispatchLoadEvent()
             HTMLStyleElement* element = (HTMLStyleElement*)data;
             if (!element->hasLoaded()) {
                 String* eventType =
-                    element->starFish()->staticStrings()->m_load.localName();
+                    element->starfish()->staticStrings()->m_load.localName();
                 Event* e = new Event(element->document(), eventType,
                                      EventInit(false, false));
                 element->dispatchEventByUA(e);

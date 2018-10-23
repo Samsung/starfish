@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/modules/canvas/TextDecorationData.h"
 #include "core/style/ComputedStyle.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void TextDecorationData::merge(ComputedStyle* style)
 {

@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/TransitionEvent.h"
 
-namespace StarFish {
+namespace Starfish {
 }

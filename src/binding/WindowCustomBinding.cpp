@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
@@ -35,7 +35,7 @@
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-namespace StarFish {
+namespace Starfish {
 
 #ifdef STARFISH_ENABLE_TEST
 void customExit(int returnCode)
@@ -220,9 +220,9 @@ static ValueRef* debugPauseFunction(ExecutionStateRef* state,
 
     window->webView()->messageLoop()->addIdler(window->browsingContext(),
                                                [](size_t, void* data, void*) {
-                                                   PlatformWindow* sf =
+                                                   PlatformWindow* window =
                                                        (PlatformWindow*)data;
-                                                   sf->pause();
+                                                   window->pause();
                                                },
                                                window->webView(), nullptr);
     return scriptUndefined();
@@ -236,9 +236,9 @@ static ValueRef* debugResumeFunction(ExecutionStateRef* state,
 
     window->webView()->messageLoop()->addIdler(window->browsingContext(),
                                                [](size_t, void* data, void*) {
-                                                   PlatformWindow* sf =
+                                                   PlatformWindow* window =
                                                        (PlatformWindow*)data;
-                                                   sf->resume();
+                                                   window->resume();
                                                },
                                                window->webView(), nullptr);
     return scriptUndefined();

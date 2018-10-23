@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishSemaphore__
-#define __StarFishSemaphore__
+#ifndef __StarfishSemaphore__
+#define __StarfishSemaphore__
 
-namespace StarFish {
+namespace Starfish {
 
 class Semaphore : public gc {
 public:

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #if defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/page/Window.h"
 #include "core/dom/Document.h"
@@ -33,7 +33,7 @@
 
 #include <Windows.h>
 
-namespace StarFish {
+namespace Starfish {
 
 Timer::Timer(WebView* wv)
     : m_webView(wv)
@@ -229,5 +229,5 @@ void Timer::destroy()
     m_animationHandler.clear();
 }
 
-} // namespace StarFish
+} // namespace Starfish
 #endif

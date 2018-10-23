@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishRenderingContext__
-#define __StarFishRenderingContext__
+#ifndef __StarfishRenderingContext__
+#define __StarfishRenderingContext__
 
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "binding/ScriptWrappable.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/Canvas.h"
-namespace StarFish {
+namespace Starfish {
 
 class HTMLCanvasElement;
 

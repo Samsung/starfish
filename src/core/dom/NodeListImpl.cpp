@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLElement.h"
 #include "core/dom/Node.h"
@@ -27,7 +27,7 @@
 #include "core/dom/HTMLOptionElement.h"
 #include "core/dom/HTMLLabelElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 bool isChildNode(Node* node, void* data, GCVector<Node*>* collection)
 {
@@ -174,7 +174,7 @@ bool isSameNamedAccess(Node* node, void* data, GCVector<Node*>* collection)
         // select, textarea, img
         Element* element = node->asElement();
         QualifiedName name = element->name();
-        StaticStrings* ss = node->starFish()->staticStrings();
+        StaticStrings* ss = node->starfish()->staticStrings();
         bool shouldConsiderNameAttribute = false;
         if (name == ss->m_aTagName) {
             shouldConsiderNameAttribute = true;
@@ -277,7 +277,7 @@ bool isSameTableElement(Node* node, void* data, GCVector<Node*>* collection)
             node->parentNode()->parentNode()->isEqualNode(tableData->root)) {
             HTMLElement* htmlElement = node->parentNode()->asHTMLElement();
             QualifiedName name = htmlElement->name();
-            StaticStrings* ss = node->starFish()->staticStrings();
+            StaticStrings* ss = node->starfish()->staticStrings();
             if (name == ss->m_theadTagName) {
                 tableData->tag[0].push_back(node);
             } else if (name == ss->m_tbodyTagName) {

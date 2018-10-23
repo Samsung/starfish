@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/Document.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/HTMLLabelElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTMLFormElement* HTMLLabelElement::form()
 {
@@ -39,7 +39,7 @@ HTMLFormElement* HTMLLabelElement::form()
 
 HTMLElement* HTMLLabelElement::control()
 {
-    String* id = getAttributeOrEmpty(starFish()->staticStrings()->m_for);
+    String* id = getAttributeOrEmpty(starfish()->staticStrings()->m_for);
     if (id->equals(String::emptyString)) {
         return (HTMLElement*)Traverse::findDescendant(this, [&](Node* child) {
             if (child->isLabelable()) {

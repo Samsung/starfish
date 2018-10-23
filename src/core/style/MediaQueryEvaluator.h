@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishMediaQueryEvaluator__
-#define __StarFishMediaQueryEvaluator__
+#ifndef __StarfishMediaQueryEvaluator__
+#define __StarfishMediaQueryEvaluator__
 
-namespace StarFish {
+namespace Starfish {
 
 class MediaQuery;
 class MediaQueryExp;
@@ -58,6 +58,6 @@ private:
     MediaValues* m_mediaValues;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishMediaQueryEvaluator__ */
+#endif /* __StarfishMediaQueryEvaluator__ */

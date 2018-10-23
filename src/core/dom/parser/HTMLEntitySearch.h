@@ -41,12 +41,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLEntitySearch__
-#define __StarFishHTMLEntitySearch__
+#ifndef __StarfishHTMLEntitySearch__
+#define __StarfishHTMLEntitySearch__
 
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct HTMLEntityTableEntry;
 

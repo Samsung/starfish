@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #if defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
@@ -32,7 +32,7 @@
 
 #include <Windows.h>
 
-namespace StarFish {
+namespace Starfish {
 
 #define IDLE_MESSAGE (WM_USER + 20)
 #define IDLE_MESSAGE_FROM_OTHER_THREAD (WM_USER + 21)
@@ -319,5 +319,5 @@ void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
     data->action = action;
     PostMessage(NULL, IDLE_MESSAGE_INVOKE_NAVIGATE, (size_t)data, 0);
 }
-} // namespace StarFish
+} // namespace Starfish
 #endif

@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Event.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLTrackElement.h"
@@ -29,7 +29,7 @@
 #include "core/dom/TextTrackCueList.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 TextTrack::TextTrack(Document* document, Kind kind, String* label,
                      String* language)
@@ -52,7 +52,7 @@ void TextTrack::dispatchCueChangeEvent()
 {
     String* eventType = String::emptyString;
     if (m_trackElement) {
-        eventType = m_trackElement->starFish()
+        eventType = m_trackElement->starfish()
                         ->staticStrings()
                         ->m_cuechange.localName();
     } else {

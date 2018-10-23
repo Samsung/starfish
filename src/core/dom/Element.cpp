@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Attr.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentFragment.h"
@@ -56,7 +56,7 @@
 #include "core/dom/Event.h"
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 static bool isInHTMLNamespaceAndHTMLDocument(Element* e)
 {
@@ -72,11 +72,11 @@ static AttributeName properAttributeName(Element* e, String* name)
 {
     if (isInHTMLNamespaceAndHTMLDocument(e)) {
         return AttributeName(QualifiedName(AtomicString::createAttrAtomicString(
-                                 e->starFish(), name)),
+                                 e->starfish(), name)),
                              AttributeName::MatchName);
     }
     return AttributeName(
-        QualifiedName(AtomicString::createAtomicString(e->starFish(), name)),
+        QualifiedName(AtomicString::createAtomicString(e->starfish(), name)),
         AttributeName::MatchName);
 }
 
@@ -89,11 +89,11 @@ static AttributeName properAttributeNameNS(Element* e, Nullable<String*> ns,
 
     return AttributeName((ns.hasValue()
                               ? QualifiedName(AtomicString::createAtomicString(
-                                                  e->starFish(), ns.getValue()),
+                                                  e->starfish(), ns.getValue()),
                                               AtomicString::createAtomicString(
-                                                  e->starFish(), name))
+                                                  e->starfish(), name))
                               : QualifiedName(AtomicString::createAtomicString(
-                                    e->starFish(), name))),
+                                    e->starfish(), name))),
                          AttributeName::MatchNS);
 }
 
@@ -455,12 +455,12 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
     }
 #endif
 
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
     if (name == ss->m_id) {
         if (attributeRemoved) {
             m_id = AtomicString::emptyAtomicString();
         } else {
-            m_id = AtomicString::createAtomicString(starFish(), value);
+            m_id = AtomicString::createAtomicString(starfish(), value);
         }
         if (attributeCreated) {
             if (value->length()) {
@@ -485,7 +485,7 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
         m_classNames.clear();
         for (size_t i = 0; i < tokens.size(); i++) {
             m_classNames.push_back(
-                AtomicString::createAtomicString(starFish(), tokens[i]));
+                AtomicString::createAtomicString(starfish(), tokens[i]));
         }
 
         // propagate invalidate nodeList cache(getElementsByClassName) damage to
@@ -1158,7 +1158,7 @@ static DocumentFragment* fragmentParsingAlgorithm(Document* document,
                                                   Element* contextElement)
 {
     DocumentFragment* df = document->createDocumentFragment();
-    HTMLParser parser(document->starFish(), df, contextElement, src);
+    HTMLParser parser(document->starfish(), df, contextElement, src);
     parser.startParse();
     parser.parseStep();
     parser.endParse();
@@ -1202,7 +1202,7 @@ void Element::setOuterHTML(String* text)
         // The HTML namespace as its namespace, and
         // The context object's node document as its node document.
         parent = new HTMLBodyElement(
-            document(), starFish()->staticStrings()->m_bodyTagName);
+            document(), starfish()->staticStrings()->m_bodyTagName);
     }
     // Let fragment be the result of invoking the fragment parsing algorithm
     // with the new value as markup, and parent as the context element.
@@ -1251,7 +1251,7 @@ void Element::insertAdjacentHTML(String* position, String* text)
         // The HTML namespace as its namespace, and
         // The context object's node document as its node document.
         context = new HTMLBodyElement(
-            document(), starFish()->staticStrings()->m_bodyTagName);
+            document(), starfish()->staticStrings()->m_bodyTagName);
     }
 
     DocumentFragment* df = fragmentParsingAlgorithm(document(), text, context);
@@ -1426,17 +1426,17 @@ Attr* Element::ensureAttr(QualifiedName name)
 
 void Element::setId(String* id)
 {
-    setAttribute(starFish()->staticStrings()->m_id, id);
+    setAttribute(starfish()->staticStrings()->m_id, id);
 }
 
 String* Element::className()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_class);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_class);
 }
 
 void Element::setClassName(String* className)
 {
-    setAttribute(starFish()->staticStrings()->m_class, className);
+    setAttribute(starfish()->staticStrings()->m_class, className);
 }
 
 bool Element::hasClassName(String* className)
@@ -1473,12 +1473,12 @@ bool Element::hasClassName(AtomicString className)
 
 void Element::setStyleAttr(String* style)
 {
-    setAttribute(starFish()->staticStrings()->m_style, style);
+    setAttribute(starfish()->staticStrings()->m_style, style);
 }
 
 void Element::registerInlineStyleCallback()
 {
-    attributeData(starFish()->staticStrings()->m_style)
+    attributeData(starfish()->staticStrings()->m_style)
         .registerGetterCallback(
             this, [](Element* element, const Attribute* const attr) -> String* {
                 if (element->m_didInlineStyleModifiedAfterAttributeSet) {
@@ -1494,8 +1494,8 @@ void Element::notifyInlineStyleChanged()
 {
     setNeedsStyleRecalc(StyleChangeReason::InlineStyleChange);
     m_didInlineStyleModifiedAfterAttributeSet = true;
-    if (hasAttribute(starFish()->staticStrings()->m_style) == SIZE_MAX) {
-        m_attributes.push_back(Attribute(starFish()->staticStrings()->m_style,
+    if (hasAttribute(starfish()->staticStrings()->m_style) == SIZE_MAX) {
+        m_attributes.push_back(Attribute(starfish()->staticStrings()->m_style,
                                          String::emptyString));
         registerInlineStyleCallback();
     }
@@ -1533,7 +1533,7 @@ String* Element::getDir()
     do {
         if (n->isElement()) {
             value = n->asElement()->getAttributeOrEmpty(
-                n->starFish()->staticStrings()->m_dir);
+                n->starfish()->staticStrings()->m_dir);
         }
         n = n->parentNode();
     } while (n && value->equals(String::emptyString));
@@ -1549,7 +1549,7 @@ String* Element::getLaunguage()
     do {
         if (n->isElement()) {
             value = n->asElement()->getAttributeOrEmpty(
-                n->starFish()->staticStrings()->m_lang);
+                n->starfish()->staticStrings()->m_lang);
         } else if (n->isDocument()) {
             value = document()->contentLanguage();
         }

@@ -17,9 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/fileapi/Blob.h"
 #include "core/modules/mediasource/MediaSource.h"
@@ -30,7 +29,7 @@
 #include "core/page/Window.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 URL::URL(Window* window, String* url)
     : ScriptWrappable(this)

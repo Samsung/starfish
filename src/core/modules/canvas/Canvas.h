@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishCanvas__
-#define __StarFishCanvas__
+#ifndef __StarfishCanvas__
+#define __StarfishCanvas__
 
 #define STARFISH_CANVAS_LENGTH_MAX 65535
 
@@ -26,7 +26,7 @@
 #include "core/modules/canvas/CanvasShadowData.h"
 #include "core/layout/Frame.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Frame;
 class NativeImageData;

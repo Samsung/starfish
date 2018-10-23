@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/layout/FrameInline.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameInline::operator new(size_t size)
 {

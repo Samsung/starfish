@@ -17,19 +17,19 @@
  *  USA
  */
 
-#ifndef __StarFishHistory__
-#define __StarFishHistory__
+#ifndef __StarfishHistory__
+#define __StarfishHistory__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HistoryManager;
 class HTMLFormElement;
 class HTMLResourceClient;
 class NetworkURLResourceRequestJobDelegate;
-class StarFish;
+class Starfish;
 class URL;
 
 class History : public ScriptWrappable, public DocumentHoldable {

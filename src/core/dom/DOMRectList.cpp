@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/DOMRect.h"
 #include "core/dom/DOMRectList.h"
 #include "core/dom/DOMQuad.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 DOMRectList::DOMRectList(Document* document)
     : ScriptWrappable(this)

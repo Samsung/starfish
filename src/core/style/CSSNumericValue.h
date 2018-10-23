@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishCSSNumericValue__
-#define __StarFishCSSNumericValue__
+#ifndef __StarfishCSSNumericValue__
+#define __StarfishCSSNumericValue__
 
 #include "binding/ScriptWrappable.h"
 
 #include "core/style/CSSStyleValue.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 

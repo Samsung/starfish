@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishShadowData__
-#define __StarFishShadowData__
+#ifndef __StarfishShadowData__
+#define __StarfishShadowData__
 
-namespace StarFish {
+namespace Starfish {
 class CanvasShadowData;
 class CanvasShadowDataList;
 class ValueList;

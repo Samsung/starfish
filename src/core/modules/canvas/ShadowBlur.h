@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishShadowBlur__
-#define __StarFishShadowBlur__
+#ifndef __StarfishShadowBlur__
+#define __StarfishShadowBlur__
 
 #include "core/style/Unit.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ShadowBlur {
 public:

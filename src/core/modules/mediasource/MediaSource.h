@@ -17,8 +17,8 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishMediaSource__)
-#define __StarFishMediaSource__
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarfishMediaSource__)
+#define __StarfishMediaSource__
 
 #include "core/dom/EventTarget.h"
 
@@ -26,11 +26,11 @@
 #define STARFISH_MAX_MEDIASOURCE_BUFFERSPACE 16 * 1024 * 1024
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 class SourceBuffer;
 class SourceBufferList;
-class StarFish;
+class Starfish;
 class MediaSourceClient;
 
 class MediaSource : public EventTarget {

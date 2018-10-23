@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishMediaValues__
-#define __StarFishMediaValues__
+#ifndef __StarfishMediaValues__
+#define __StarfishMediaValues__
 
-namespace StarFish {
+namespace Starfish {
 
 class Frame;
 class MediaValues : public gc {
@@ -48,6 +48,6 @@ private:
     Frame* m_frame;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishMediaValues__ */
+#endif /* __StarfishMediaValues__ */

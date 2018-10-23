@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDocumentType__
-#define __StarFishDocumentType__
+#ifndef __StarfishDocumentType__
+#define __StarfishDocumentType__
 
 #include "core/dom/Node.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DocumentType : public Node {
 public:

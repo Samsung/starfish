@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishStyleTransitionData__
-#define __StarFishStyleTransitionData__
+#ifndef __StarfishStyleTransitionData__
+#define __StarfishStyleTransitionData__
 
-namespace StarFish {
+namespace Starfish {
 
 class AnimationTimingFunction;
 class StyleTransitionData;

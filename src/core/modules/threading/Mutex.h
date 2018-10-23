@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishMutex__
-#define __StarFishMutex__
+#ifndef __StarfishMutex__
+#define __StarfishMutex__
 
-namespace StarFish {
+namespace Starfish {
 
 class Mutex : public gc {
 public:

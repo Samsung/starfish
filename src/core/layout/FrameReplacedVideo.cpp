@@ -18,8 +18,8 @@
  */
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "core/layout/FrameReplacedVideo.h"
@@ -29,7 +29,7 @@
 #include "core/page/WebView.h"
 #include "platform/multimedia/MediaPlayer.h"
 
-namespace StarFish {
+namespace Starfish {
 
 IntrinsicSize FrameReplacedVideo::intrinsicSize()
 {

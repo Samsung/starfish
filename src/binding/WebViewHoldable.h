@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishWebViewHoldable__
-#define __StarFishWebViewHoldable__
+#ifndef __StarfishWebViewHoldable__
+#define __StarfishWebViewHoldable__
 
-namespace StarFish {
+namespace Starfish {
 
 class WebView;
 
@@ -31,7 +31,7 @@ public:
         return m_webView;
     }
 
-    StarFish* starFish() const;
+    Starfish* starfish() const;
 
 protected:
     WebViewHoldable(WebView* webView)

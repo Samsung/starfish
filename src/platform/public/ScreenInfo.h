@@ -46,11 +46,11 @@
  *  USA
  */
 
-#ifndef __StarFishScreenInfo__
-#define __StarFishScreenInfo__
+#ifndef __StarfishScreenInfo__
+#define __StarfishScreenInfo__
 
 #include "platform/public/ScreenOrientationType.h"
-namespace StarFish {
+namespace Starfish {
 
 struct ScreenInfo {
     // Device scale factor. Specifies the ratio between physical and logical

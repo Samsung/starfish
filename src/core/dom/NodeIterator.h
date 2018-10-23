@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishNodeIterator__
-#define __StarFishNodeIterator__
+#ifndef __StarfishNodeIterator__
+#define __StarfishNodeIterator__
 
 #include "core/dom/Document.h"
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class NodeIterator final : public ScriptWrappable {
 private:

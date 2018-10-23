@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishScriptWrappable__
-#define __StarFishScriptWrappable__
+#ifndef __StarfishScriptWrappable__
+#define __StarfishScriptWrappable__
 
 #include "binding/ScriptBindingInstance.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class Element;

@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLElement.h"
@@ -39,7 +39,7 @@
 #include "core/style/CSSGradientValue.h"
 #include "core/style/GradientData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static void updateBorderRadiusByFactor(BorderRadiusFixedData& v, float factor)
 {
@@ -397,7 +397,7 @@ void FrameBox::computeHorizontalMargin(LayoutUnit parentContentWidth,
 
     if (remainingWidth > 0 && !isAbsolutePositioned() &&
         style()->orignalTextAlign() ==
-            TextAlignValue::StarFishCenterTextAlignValue) {
+            TextAlignValue::StarfishCenterTextAlignValue) {
         LayoutUnit dX;
         dX += FrameBox::marginLeft();
         dX -= FrameBox::marginRight();

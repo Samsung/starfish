@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/DOMPoint.h"
 
-namespace StarFish {
+namespace Starfish {
 DOMPointInit::DOMPointInit(double inX, double inY, double inZ, double inW)
     : m_x(inX)
     , m_y(inY)

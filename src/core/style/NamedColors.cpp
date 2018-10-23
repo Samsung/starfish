@@ -17,11 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "NamedColors.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #define MATCH(name)                               \
     if (memcmp(str, #name, sizeof(#name)) == 0) { \

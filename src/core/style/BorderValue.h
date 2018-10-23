@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishBorderValue__
-#define __StarFishBorderValue__
+#ifndef __StarfishBorderValue__
+#define __StarfishBorderValue__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 
@@ -113,6 +113,6 @@ protected:
     Unit::Color m_color;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishBorderValue__ */
+#endif /* __StarfishBorderValue__ */

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishMediaQueryList__
-#define __StarFishMediaQueryList__
+#ifndef __StarfishMediaQueryList__
+#define __StarfishMediaQueryList__
 
 #include "core/dom/EventTarget.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class MediaQueryEvaluator;
@@ -56,6 +56,6 @@ private:
     bool m_matches;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishMediaQueryList__ */
+#endif /* __StarfishMediaQueryList__ */

@@ -18,10 +18,10 @@
  *  USA
  */
 
-#ifndef __StarFishCSSTime__
-#define __StarFishCSSTime__
+#ifndef __StarfishCSSTime__
+#define __StarfishCSSTime__
 
-namespace StarFish {
+namespace Starfish {
 
 class String;
 
@@ -127,6 +127,6 @@ inline CSSTime& operator/=(CSSTime& a, float b)
     a = a / b;
     return a;
 }
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

@@ -19,14 +19,14 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#ifndef __StarFishFrameReplacedCanvas__
-#define __StarFishFrameReplacedCanvas__
+#ifndef __StarfishFrameReplacedCanvas__
+#define __StarfishFrameReplacedCanvas__
 
 #include "core/layout/FrameReplaced.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameReplacedCanvas final : public FrameReplaced {
 public:

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishAttribute__
-#define __StarFishAttribute__
+#ifndef __StarfishAttribute__
+#define __StarfishAttribute__
 
-namespace StarFish {
+namespace Starfish {
 
 class Attribute;
 class Element;

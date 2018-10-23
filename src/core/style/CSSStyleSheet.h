@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishCSSStyleSheet__
-#define __StarFishCSSStyleSheet__
+#ifndef __StarfishCSSStyleSheet__
+#define __StarfishCSSStyleSheet__
 
 #include "core/style/StyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSImportRule;
 class CSSRule;
@@ -210,6 +210,6 @@ protected:
     bool m_disabled : 1;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishCSSStyleSheet__ */
+#endif /* __StarfishCSSStyleSheet__ */

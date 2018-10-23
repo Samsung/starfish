@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishElementResourceClient__
-#define __StarFishElementResourceClient__
+#ifndef __StarfishElementResourceClient__
+#define __StarfishElementResourceClient__
 
 #include "platform/loader/ResourceClient.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Element;
 class ElementResourceClient : public ResourceClient {

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishStreamInfo__)
-#define __StarFishStreamInfo__
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarfishStreamInfo__)
+#define __StarfishStreamInfo__
 
-namespace StarFish {
+namespace Starfish {
 
 class PacketGenerator;
 

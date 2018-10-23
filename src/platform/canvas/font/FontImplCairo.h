@@ -38,7 +38,7 @@
 #include "core/page/WebView.h"
 #include "core/modules/canvas/font/Font.h"
 
-namespace StarFish {
+namespace Starfish {
 
 extern FT_Library g_freeTypeInstance;
 #define CHECK_ERROR                            \

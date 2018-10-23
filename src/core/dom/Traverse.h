@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishTraverse__
-#define __StarFishTraverse__
+#ifndef __StarfishTraverse__
+#define __StarfishTraverse__
 
-namespace StarFish {
+namespace Starfish {
 class Traverse {
     Traverse()
     {

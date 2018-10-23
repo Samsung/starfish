@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishVector__
-#define __StarFishVector__
+#ifndef __StarfishVector__
+#define __StarfishVector__
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename T>
 struct VectorAllocInfo {

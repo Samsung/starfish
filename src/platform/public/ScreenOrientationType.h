@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishScreenOrientationType__
-#define __StarFishScreenOrientationType__
+#ifndef __StarfishScreenOrientationType__
+#define __StarfishScreenOrientationType__
 
-namespace StarFish {
+namespace Starfish {
 enum ScreenOrientationType {
     ScreenOrientationUndefined = 0,
     ScreenOrientationPortraitPrimary,

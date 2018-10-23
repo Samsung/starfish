@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishCSSStyleDeclaration__
-#define __StarFishCSSStyleDeclaration__
+#ifndef __StarfishCSSStyleDeclaration__
+#define __StarfishCSSStyleDeclaration__
 
 #include "binding/ScriptWrappable.h"
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSRule;
 

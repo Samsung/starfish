@@ -18,25 +18,25 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#ifndef __StarFishHTMLAudioElement__
-#define __StarFishHTMLAudioElement__
+#ifndef __StarfishHTMLAudioElement__
+#define __StarfishHTMLAudioElement__
 
 #include "core/dom/Document.h"
 #include "core/dom/HTMLMediaElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLAudioElement : public HTMLMediaElement {
 public:
     HTMLAudioElement(Document* document)
         : HTMLAudioElement(
-              document, document->starFish()->staticStrings()->m_audioTagName)
+              document, document->starfish()->staticStrings()->m_audioTagName)
     {
     }
 
     HTMLAudioElement(Document* document, String* src)
         : HTMLAudioElement(
-              document, document->starFish()->staticStrings()->m_audioTagName,
+              document, document->starfish()->staticStrings()->m_audioTagName,
               src)
     {
     }

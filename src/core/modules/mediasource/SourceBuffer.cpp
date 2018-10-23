@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Event.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
@@ -55,7 +55,7 @@
 #define SOURCEBUFFER_LOG(sb, ...)
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
 class DemuxerSourceForSourceBuffer : public DemuxerSource {
 public:
@@ -460,7 +460,7 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
     if (!m_parentMediaSource) {
         return;
     }
-    StaticStrings* ss = m_parentMediaSource->starFish()->staticStrings();
+    StaticStrings* ss = m_parentMediaSource->starfish()->staticStrings();
     // NOTE Use static strings for event name
     std::vector<String*> events;
     if (m_updating && state == SourceBuffer::Success) {
@@ -1235,7 +1235,7 @@ void SourceBuffer::setMode(AppendMode mode)
     // TODO If the append state equals PARSING_MEDIA_SEGMENT, then throw an
     // InvalidStateError and abort these steps.
     // if (m_state == ParsingMediaSegment)
-    //     throw new DOMException(m_starFish->window()->scriptBindingInstance(),
+    //     throw new DOMException(m_starfish->window()->scriptBindingInstance(),
     //     DOMException::INVALID_STATE_ERR, "SourceBuffer is currently parsing a
     //     media segment");
 
@@ -1292,7 +1292,7 @@ void SourceBuffer::setTimestampOffset(double timeoffset)
     // TODO If the append state equals PARSING_MEDIA_SEGMENT, then throw an
     // InvalidStateError and abort these steps.
     // if (m_state == ParsingMediaSegment)
-    //     throw new DOMException(m_starFish->window()->scriptBindingInstance(),
+    //     throw new DOMException(m_starfish->window()->scriptBindingInstance(),
     //     DOMException::INVALID_STATE_ERR, "SourceBuffer is currently parsing a
     //     media segment");
 

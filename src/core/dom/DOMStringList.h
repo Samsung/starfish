@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDOMStringList__
-#define __StarFishDOMStringList__
+#ifndef __StarfishDOMStringList__
+#define __StarfishDOMStringList__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class DOMStringList : public ScriptWrappable, public GCVector<String*> {

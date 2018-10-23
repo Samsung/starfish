@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLDocumentBuilderElement__
-#define __StarFishHTMLDocumentBuilderElement__
+#ifndef __StarfishHTMLDocumentBuilderElement__
+#define __StarfishHTMLDocumentBuilderElement__
 
 #include "core/dom/builder/DocumentBuilder.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Window;
 class Resource;

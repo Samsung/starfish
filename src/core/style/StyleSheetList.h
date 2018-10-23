@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishStyleSheetList__
-#define __StarFishStyleSheetList__
+#ifndef __StarfishStyleSheetList__
+#define __StarfishStyleSheetList__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class StyleSheet;

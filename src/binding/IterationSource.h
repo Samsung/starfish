@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishIterationSource__
-#define __StarFishIterationSource__
+#ifndef __StarfishIterationSource__
+#define __StarfishIterationSource__
 
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename KeyType, typename ValueType>
 class IterationSource : public gc {

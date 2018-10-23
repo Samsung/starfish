@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/HTMLButtonElement.h"
 
@@ -26,7 +26,7 @@
 #include "core/dom/Event.h"
 #include "core/page/BrowsingContext.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTMLButtonElement::HTMLButtonElement(Document* document,
                                      const QualifiedName& qname)
@@ -50,7 +50,7 @@ void* HTMLButtonElement::operator new(size_t size)
 
 String* HTMLButtonElement::type()
 {
-    String* typeAttr = getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    String* typeAttr = getAttributeOrEmpty(starfish()->staticStrings()->m_type);
     typeAttr = typeAttr->toASCIILower();
 
     if (typeAttr->equals("submit")) {
@@ -61,7 +61,7 @@ String* HTMLButtonElement::type()
         return typeAttr;
     }
 
-    return starFish()->staticStrings()->m_submit.localName();
+    return starfish()->staticStrings()->m_submit.localName();
 }
 
 bool HTMLButtonElement::handleDefaultEvent(Event* event)

@@ -18,12 +18,12 @@
  */
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA)
-#ifndef __StarFishTextTrackList__
-#define __StarFishTextTrackList__
+#ifndef __StarfishTextTrackList__
+#define __StarfishTextTrackList__
 
 #include "TextTrack.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TextTrackList : public EventTarget, public GCVector<TextTrack*> {
 public:

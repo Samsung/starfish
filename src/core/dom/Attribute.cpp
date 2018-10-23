@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Attribute.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Attribute* findAttributeInVector(GCVector<Attribute>& attr,
                                  const QualifiedName& attributeName)

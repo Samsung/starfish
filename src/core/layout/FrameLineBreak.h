@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameLineBreak__
-#define __StarFishFrameLineBreak__
+#ifndef __StarfishFrameLineBreak__
+#define __StarfishFrameLineBreak__
 
 #include "core/layout/Frame.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameLineBreak : public Frame {
 public:

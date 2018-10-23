@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/animation/Animation.h"
 #include "core/dom/Document.h"
 #include "core/layout/Frame.h"
@@ -28,7 +28,7 @@
 
 #include "core/animation/AnimationUtil.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static void baseSizeForBackground(FrameBox* box, ComputedStyle* style,
                                   uint32_t layer, float& baseW, float& baseH)

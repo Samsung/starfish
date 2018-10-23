@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/NodeIterator.h"
 #include "core/dom/NodeFilter.h"
 #include "core/page/Window.h"
 #include "core/dom/Traverse.h"
 
-namespace StarFish {
+namespace Starfish {
 
 NodeIterator::NodePointer::NodePointer(Node* n, bool b)
     : m_node(n)

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishStorageType__
-#define __StarFishStorageType__
+#ifndef __StarfishStorageType__
+#define __StarfishStorageType__
 
-namespace StarFish {
+namespace Starfish {
 
 enum StorageType {
     Session,

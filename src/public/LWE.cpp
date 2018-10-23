@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
 #include "LWEWebView.h"
@@ -28,7 +28,7 @@
 
 namespace LWE {
 
-StarFish::StarFish* g_starFishInstance;
+Starfish::Starfish* g_starfishInstance;
 
 #if defined(PORT_NEEDS_THREADED_PUBLIC_API)
 
@@ -37,10 +37,10 @@ static pthread_mutex_t g_mainThreadInitLocker;
 
 void* LWEMainThread(void*)
 {
-    StarFish::MessageLoop::init();
+    Starfish::MessageLoop::init();
     pthread_mutex_unlock(&g_mainThreadInitLocker);
     STARFISH_LOG_INFO("Worker thread started!");
-    StarFish::MessageLoop::run();
+    Starfish::MessageLoop::run();
     return nullptr;
 }
 
@@ -65,8 +65,8 @@ void LWE::Initialize(const char* localStorageDataFilePath,
         g_isLWEThreadStarted = true;
     }
 
-    StarFish::MessageLoop::runOnMainThreadSync([&]() -> size_t {
-        g_starFishInstance = new (NoGC) StarFish::StarFish(
+    Starfish::MessageLoop::runOnMainThreadSync([&]() -> size_t {
+        g_starfishInstance = new (NoGC) Starfish::Starfish(
             localStorageDataFilePath, cookieStoreDataFilePath,
             httpCacheDataDirectorypath);
         return 0;
@@ -77,20 +77,20 @@ void LWE::Finalize()
 {
     STARFISH_RELEASE_ASSERT(IsInitialized());
 
-    StarFish::MessageLoop::runOnMainThreadSync([]() -> size_t {
-        STARFISH_RELEASE_ASSERT(g_starFishInstance->webViewInstanceCount() ==
+    Starfish::MessageLoop::runOnMainThreadSync([]() -> size_t {
+        STARFISH_RELEASE_ASSERT(g_starfishInstance->webViewInstanceCount() ==
                                 0);
 
-        g_starFishInstance->destroy();
-        g_starFishInstance = nullptr;
+        g_starfishInstance->destroy();
+        g_starfishInstance = nullptr;
 
         clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 
         // do implicit calling GC funciton takes a lots time
         // we should remove this if possible
-        StarFish::StarFish::doFullGCWithoutSeeingStack();
-        StarFish::StarFish::doFullGCWithoutSeeingStack();
-        StarFish::StarFish::doFullGCWithoutSeeingStack();
+        Starfish::Starfish::doFullGCWithoutSeeingStack();
+        Starfish::Starfish::doFullGCWithoutSeeingStack();
+        Starfish::Starfish::doFullGCWithoutSeeingStack();
 
         return 0;
     });
@@ -102,31 +102,31 @@ void LWE::Initialize(const char* localStorageDataFilePath,
                      const char* httpCacheDataDirectorypath)
 {
     STARFISH_RELEASE_ASSERT(!IsInitialized());
-    g_starFishInstance = new (NoGC)
-        StarFish::StarFish(localStorageDataFilePath, cookieStoreDataFilePath,
+    g_starfishInstance = new (NoGC)
+        Starfish::Starfish(localStorageDataFilePath, cookieStoreDataFilePath,
                            httpCacheDataDirectorypath);
 }
 
 void LWE::Finalize()
 {
     STARFISH_RELEASE_ASSERT(IsInitialized());
-    STARFISH_RELEASE_ASSERT(g_starFishInstance->webViewInstanceCount() == 0);
+    STARFISH_RELEASE_ASSERT(g_starfishInstance->webViewInstanceCount() == 0);
 
-    g_starFishInstance->destroy();
-    g_starFishInstance = nullptr;
+    g_starfishInstance->destroy();
+    g_starfishInstance = nullptr;
 
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 
     // do implicit calling GC funciton takes a lots time
     // we should remove this if possible
-    StarFish::StarFish::doFullGCWithoutSeeingStack();
-    StarFish::StarFish::doFullGCWithoutSeeingStack();
-    StarFish::StarFish::doFullGCWithoutSeeingStack();
+    Starfish::Starfish::doFullGCWithoutSeeingStack();
+    Starfish::Starfish::doFullGCWithoutSeeingStack();
+    Starfish::Starfish::doFullGCWithoutSeeingStack();
 }
 #endif
 
 bool LWE::IsInitialized()
 {
-    return g_starFishInstance;
+    return g_starfishInstance;
 }
 }

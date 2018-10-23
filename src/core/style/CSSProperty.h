@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishCSSProperty__
-#define __StarFishCSSProperty__
+#ifndef __StarfishCSSProperty__
+#define __StarfishCSSProperty__
 
-namespace StarFish {
+namespace Starfish {
 class CSSPropertyHelper {
 public:
     static bool isAnimatable(CSSStyleValuePair::KeyKind property);

@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishFormData__
-#define __StarFishFormData__
+#ifndef __StarfishFormData__
+#define __StarfishFormData__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/WindowHoldable.h"
 #include "binding/IterationSource.h"
 #include "core/dom/HTMLFormElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 typedef String FormDataEntryValue;
 

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishCustomEvent__
-#define __StarFishCustomEvent__
+#ifndef __StarfishCustomEvent__
+#define __StarfishCustomEvent__
 
 #include "core/dom/Event.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct CustomEventInit : EventInit {
 public:

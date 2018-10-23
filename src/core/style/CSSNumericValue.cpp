@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/style/CSSNumericValue.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 int32_t CSSNumericType::length()
 {

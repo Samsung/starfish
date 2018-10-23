@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishNavigator__
-#define __StarFishNavigator__
+#ifndef __StarfishNavigator__
+#define __StarfishNavigator__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
-class StarFish;
+class Starfish;
 class Geolocation;
 
 class Navigator : public ScriptWrappable, public DocumentHoldable {

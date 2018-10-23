@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "binding/RequestOrUSVStringUnion.h"
 #include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
 #include "platform/loader/ResourceURL.h"
@@ -29,7 +29,7 @@
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-namespace StarFish {
+namespace Starfish {
 
 extern BlobOrBufferSourceOrUSVString
 toBlobOrBufferSourceOrUSVStringFromValueRef(ExecutionStateRef* state,

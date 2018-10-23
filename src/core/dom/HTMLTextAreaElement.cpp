@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLTextAreaElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 const float DEFAULT_ROWS_MARGIN = 0.5;
 const uint32_t DEFAULT_ROWS = 2;
@@ -92,9 +92,9 @@ void HTMLTextAreaElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLTextEditable::didAttributeChanged(name, old, val, attributeCreated,
                                           attributeRemoved);
-    if (name == starFish()->staticStrings()->m_dir) {
+    if (name == starfish()->staticStrings()->m_dir) {
         Event* e = new Event(document(),
-                             starFish()->staticStrings()->m_input.localName());
+                             starfish()->staticStrings()->m_input.localName());
         e->setBubbles(true);
         dispatchEventIdleTimeByUA(e);
         return;
@@ -148,7 +148,7 @@ void HTMLTextAreaElement::reset()
 
 String* HTMLTextAreaElement::type()
 {
-    return starFish()->staticStrings()->m_textareaTagName.localName();
+    return starfish()->staticStrings()->m_textareaTagName.localName();
 }
 
 // For historical reasons, the element's value is normalized
@@ -205,7 +205,7 @@ int HTMLTextAreaElement::textLength()
 uint32_t HTMLTextAreaElement::cols()
 {
     Nullable<String*> attrValue =
-        getAttribute(starFish()->staticStrings()->m_cols);
+        getAttribute(starfish()->staticStrings()->m_cols);
     if (attrValue.hasValue()) {
         int32_t parsed = String::parseInt(attrValue.getValue());
         if (parsed >= 0) {
@@ -217,14 +217,14 @@ uint32_t HTMLTextAreaElement::cols()
 
 void HTMLTextAreaElement::setCols(uint32_t value)
 {
-    setAttribute(starFish()->staticStrings()->m_cols, String::fromInt(value));
+    setAttribute(starfish()->staticStrings()->m_cols, String::fromInt(value));
     setNeedsFrameTreeBuildWithoutSelf();
 }
 
 uint32_t HTMLTextAreaElement::rows()
 {
     Nullable<String*> attrValue =
-        getAttribute(starFish()->staticStrings()->m_rows);
+        getAttribute(starfish()->staticStrings()->m_rows);
     if (attrValue.hasValue()) {
         int32_t parsed = String::parseInt(attrValue.getValue());
         if (parsed >= 0) {
@@ -236,7 +236,7 @@ uint32_t HTMLTextAreaElement::rows()
 
 void HTMLTextAreaElement::setRows(uint32_t value)
 {
-    setAttribute(starFish()->staticStrings()->m_rows, String::fromInt(value));
+    setAttribute(starfish()->staticStrings()->m_rows, String::fromInt(value));
     setNeedsFrameTreeBuildWithoutSelf();
 }
 }

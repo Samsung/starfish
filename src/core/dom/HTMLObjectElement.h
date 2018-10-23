@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLObjectElement__
-#define __StarFishHTMLObjectElement__
+#ifndef __StarfishHTMLObjectElement__
+#define __StarfishHTMLObjectElement__
 
 #include "core/dom/HTMLElement.h"
 
 #define STARFISH_OBJECT_ELEMENT_DEFAULT_WIDTH 300
 #define STARFISH_OBJECT_ELEMENT_DEFAULT_HEIGHT 150
 
-namespace StarFish {
+namespace Starfish {
 
 class Canvas;
 class Compositor;

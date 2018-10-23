@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/style/StyleSheet.h"
 #include "core/style/StyleSheetList.h"
 
-namespace StarFish {
+namespace Starfish {
 
 ScriptBindingInstance* StyleSheetList::scriptBindingInstance()
 {

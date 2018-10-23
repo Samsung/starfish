@@ -18,14 +18,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSTokenValue.h"
 #include "core/style/Style.h"
 #include "core/style/CSSFilterFunction.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static const int kFilterSize = 10;
 static const char* kFilters[kFilterSize] = {
@@ -179,4 +179,4 @@ CSSFilterFunction* CSSFilterFunction::parse(const CSSTokenValue& from)
     }
     return nullptr;
 }
-} // namespace StarFish
+} // namespace Starfish

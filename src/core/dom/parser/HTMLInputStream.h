@@ -41,13 +41,13 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLInputStream__
-#define __StarFishHTMLInputStream__
+#ifndef __StarfishHTMLInputStream__
+#define __StarfishHTMLInputStream__
 
 #include "core/dom/parser/InputStreamPreprocessor.h"
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // The InputStream is made up of a sequence of SegmentedStrings:
 //

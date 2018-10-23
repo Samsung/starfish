@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishStaticStrings__
-#define __StarFishStaticStrings__
+#ifndef __StarfishStaticStrings__
+#define __StarfishStaticStrings__
 
-namespace StarFish {
+namespace Starfish {
 
 #define STARFISH_ENUM_HTML_TAG_NAMES(F) \
     F(a)                                \
@@ -242,8 +242,8 @@ class StaticStrings : public gc {
     friend class AtomicString;
 
 public:
-    StaticStrings(StarFish* sf);
-    StarFish* m_starFish;
+    StaticStrings(Starfish* starfish);
+    Starfish* m_starfish;
     AtomicString m_xhtmlNamespaceURI;
     AtomicString m_xlinkNamespaceURI;
     AtomicString m_xmlNamespaceURI;

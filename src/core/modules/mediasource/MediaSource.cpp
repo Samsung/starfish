@@ -19,8 +19,8 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
@@ -30,7 +30,7 @@
 #include "core/modules/mediasource/SourceBufferList.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MediaSource::MediaSource(Document* document)
     : EventTarget(document)
@@ -341,11 +341,11 @@ String* MediaSource::readyState()
 {
     switch (m_readyState) {
     case MediaSource::Open:
-        return starFish()->staticStrings()->m_open.localName();
+        return starfish()->staticStrings()->m_open.localName();
     case MediaSource::Ended:
-        return starFish()->staticStrings()->m_ended.localName();
+        return starfish()->staticStrings()->m_ended.localName();
     case MediaSource::Closed:
-        return starFish()->staticStrings()->m_closed.localName();
+        return starfish()->staticStrings()->m_closed.localName();
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
@@ -364,13 +364,13 @@ void MediaSource::setReadyState(MediaSource::ReadyState state)
     String* eventName = String::emptyString;
     switch (m_readyState) {
     case MediaSource::Open:
-        eventName = starFish()->staticStrings()->m_sourceopen.localName();
+        eventName = starfish()->staticStrings()->m_sourceopen.localName();
         break;
     case MediaSource::Ended:
-        eventName = starFish()->staticStrings()->m_sourceended.localName();
+        eventName = starfish()->staticStrings()->m_sourceended.localName();
         break;
     case MediaSource::Closed:
-        eventName = starFish()->staticStrings()->m_sourceclose.localName();
+        eventName = starfish()->staticStrings()->m_sourceclose.localName();
         break;
     default:
         STARFISH_RELEASE_ASSERT_NOT_REACHED();

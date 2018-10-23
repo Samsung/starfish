@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishFontFaceSrcData__
-#define __StarFishFontFaceSrcData__
+#ifndef __StarfishFontFaceSrcData__
+#define __StarfishFontFaceSrcData__
 
 #include "core/util/String.h"
 #include "core/style/Length.h"
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FontFaceSrcData : public gc {
     friend class CSSStyleValuePair;

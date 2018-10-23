@@ -18,7 +18,7 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
 #include "platform/multimedia/Demuxer.h"
@@ -42,13 +42,13 @@
 
 class MP4BinaryStreamAdapter : public MP4::BinaryStream {
 public:
-    MP4BinaryStreamAdapter(StarFish::DemuxerSource* source)
+    MP4BinaryStreamAdapter(Starfish::DemuxerSource* source)
         : m_source(source)
     {
     }
     virtual void ignore(std::streamsize n = 1)
     {
-        m_source->onSeek(n, StarFish::DemuxerSource::SeekWhenceCurrent);
+        m_source->onSeek(n, Starfish::DemuxerSource::SeekWhenceCurrent);
     }
     virtual void read(char* s, std::streamsize n)
     {
@@ -62,13 +62,13 @@ public:
     virtual bool eof() const
     {
         return m_source->onSeek(0,
-                                StarFish::DemuxerSource::SeekWhenceLookSize) !=
-               m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceCurrent);
+                                Starfish::DemuxerSource::SeekWhenceLookSize) !=
+               m_source->onSeek(0, Starfish::DemuxerSource::SeekWhenceCurrent);
     }
 
     virtual size_t pos()
     {
-        return m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceCurrent);
+        return m_source->onSeek(0, Starfish::DemuxerSource::SeekWhenceCurrent);
     }
 
 private:
@@ -80,10 +80,10 @@ private:
     {
         read(s, n);
     }
-    StarFish::DemuxerSource* m_source;
+    Starfish::DemuxerSource* m_source;
 };
 
-namespace StarFish {
+namespace Starfish {
 
 static uint32_t readBigEndianUnsignedInteger(DemuxerSource* source, int& error)
 {

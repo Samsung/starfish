@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishRequest__
-#define __StarFishRequest__
+#ifndef __StarfishRequest__
+#define __StarfishRequest__
 
 #include "binding/ScriptWrappable.h"
 #include "core/fetch/RequestInit.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/RequestData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class RequestOrUSVString;
 typedef RequestOrUSVString RequestInfo;

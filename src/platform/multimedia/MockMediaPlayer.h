@@ -19,12 +19,12 @@
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 #if defined(STARFISH_USE_MOCK_MEDIAPLAYER) || !defined(STARFISH_TIZEN)
-#ifndef __StarFishMockMediaPlayer__
-#define __StarFishMockMediaPlayer__
+#ifndef __StarfishMockMediaPlayer__
+#define __StarfishMockMediaPlayer__
 
 #include "platform/multimedia/MediaPlayer.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Canvas;
 class HTMLMediaElement;

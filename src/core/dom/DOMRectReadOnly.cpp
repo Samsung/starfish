@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/DOMRectReadOnly.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 DOMRectReadOnly::DOMRectReadOnly(Document* document, double x, double y,
                                  double width, double height)

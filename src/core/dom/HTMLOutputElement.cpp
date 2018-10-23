@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLOutputElement.h"
 #include "core/dom/DOMTokenList.h"
 
-namespace StarFish {
+namespace Starfish {
 HTMLOutputElement::HTMLOutputElement(Document* document,
                                      const QualifiedName& qname)
     : HTMLFormControl(document, qname)
@@ -52,7 +52,7 @@ DOMTokenList* HTMLOutputElement::htmlFor()
 {
     if (!m_htmlForList) {
         m_htmlForList =
-            new DOMTokenList(this, starFish()->staticStrings()->m_for);
+            new DOMTokenList(this, starfish()->staticStrings()->m_for);
     }
     return m_htmlForList;
 }

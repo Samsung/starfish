@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/style/ComputedStyle.h"
 
-namespace StarFish {
+namespace Starfish {
 
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, blur);
 DEFINE_GLOBAL_EVENT_LISTENER(HTMLBodyElement, error);
@@ -57,7 +57,7 @@ void HTMLBodyElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
     if (name == ss->m_onblur) {
         window()->setAttributeEventListener(ss->m_blur, value, this);
     } else if (name == ss->m_onerror) {
@@ -101,7 +101,7 @@ void HTMLBodyElement::styleForPresentationAttribute(
         CSSStyleValuePair containerPair;
         CSSStyleValuePair pair;
         String* value =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_background);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_background);
         if (value->length()) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundImage);
             pair.setValueKind(CSSStyleValuePair::ValueKind::UrlValueKind);
@@ -121,7 +121,7 @@ void HTMLBodyElement::styleForPresentationAttribute(
     {
         CSSStyleValuePair pair;
         String* value =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_bgcolor);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_bgcolor);
         if (value->length()) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
             CSSTokenVector v;
@@ -136,7 +136,7 @@ void HTMLBodyElement::styleForPresentationAttribute(
     {
         CSSStyleValuePair pair;
         String* value =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_text);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_text);
         if (value->length()) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Color);
             CSSTokenVector v;

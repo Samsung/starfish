@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLHtmlElement.h"
@@ -27,7 +27,7 @@
 #include "core/style/CalcData.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 void Length::changeToFixedIfNeeded(Length curFontSize, Length rootFontSize,
                                    Font* font, LayoutUnit viewportWidth,
                                    LayoutUnit viewportHeight, ComputedStyle* cs)

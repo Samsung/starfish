@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishScaleTransform__
-#define __StarFishScaleTransform__
+#ifndef __StarfishScaleTransform__
+#define __StarfishScaleTransform__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ScaleTransform : public gc {
 public:

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
@@ -37,7 +37,7 @@
 #include "core/style/GradientData.h"
 #include "core/style/StyleRule.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #define TOKEN_IS_STRING(str) \
     (strlen(str) == strlen(token) && (memcmp(token, str, strlen(str))) == 0)

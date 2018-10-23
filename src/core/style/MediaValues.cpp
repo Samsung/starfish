@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/layout/Frame.h"
 #include "core/page/Screen.h"
@@ -28,7 +28,7 @@
 #include "core/style/MediaValues.h"
 #include "core/style/UnitHelper.h"
 
-namespace StarFish {
+namespace Starfish {
 
 // TODO: We are considering continuous media only.
 // If we support paged media in the future, we should also consider this.
@@ -151,4 +151,4 @@ bool MediaValues::hasScriptEngineInstance() const
     return m_frame->document()->webView()->scriptEngineInstance();
 }
 
-} /* namespace StarFish */
+} /* namespace Starfish */

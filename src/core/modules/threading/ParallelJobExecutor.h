@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFish.h"
-#include "binding/StarFishHoldable.h"
+#include "Starfish.h"
+#include "binding/StarfishHoldable.h"
 #include "core/modules/threading/Thread.h"
 #include "core/page/WebView.h"
 
-#ifndef __StarFishParallelJobExecutor__
-#define __StarFishParallelJobExecutor__
+#ifndef __StarfishParallelJobExecutor__
+#define __StarfishParallelJobExecutor__
 
-namespace StarFish {
+namespace Starfish {
 class Thread;
 
 template <typename ParameterType>

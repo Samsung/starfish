@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTTPHeaderMap.h"
 #include "HTTPResponse.h"
 #include "HTTPStatus.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTTPResponse::HTTPResponse()
     : m_responseCode(0)

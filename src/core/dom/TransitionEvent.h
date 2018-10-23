@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishTransitionEvent__
-#define __StarFishTransitionEvent__
+#ifndef __StarfishTransitionEvent__
+#define __StarfishTransitionEvent__
 
 #include "core/dom/Event.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Window;
 

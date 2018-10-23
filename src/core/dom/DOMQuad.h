@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishDOMQuad__
-#define __StarFishDOMQuad__
+#ifndef __StarfishDOMQuad__
+#define __StarfishDOMQuad__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct DOMRectInit;
 struct DOMPointInit;

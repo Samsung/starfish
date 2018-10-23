@@ -20,11 +20,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "EventSourceParser.h"
 #include "core/page/EventSource.h"
 
-namespace StarFish {
+namespace Starfish {
 
 EventSourceParser::EventSourceParser(String* lastEventId, Client* client)
     : m_eventType(String::emptyString)

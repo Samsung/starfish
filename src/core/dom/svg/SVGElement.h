@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishSVGElement__
-#define __StarFishSVGElement__
+#ifndef __StarfishSVGElement__
+#define __StarfishSVGElement__
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Element.h"
 #include "core/util/AttributeName.h"
 #include "core/dom/svg/SVGAnimatedLength.h"
@@ -34,7 +34,7 @@
     SVGAnimatedLength* attrName()                                           \
     {                                                                       \
         SVGLength* baseVal =                                                \
-            new SVGLength(this, starFish()->staticStrings()->m_##attrName); \
+            new SVGLength(this, starfish()->staticStrings()->m_##attrName); \
         return new SVGAnimatedLength(document(), baseVal, nullptr);         \
     }
 
@@ -42,7 +42,7 @@
     {                                                                   \
         CSSStyleValuePair pair;                                         \
         String* name =                                                  \
-            getAttributeOrEmpty(starFish()->staticStrings()->m_##name); \
+            getAttributeOrEmpty(starfish()->staticStrings()->m_##name); \
         if (name->length()) {                                           \
             pair.setKeyKind(CSSStyleValuePair::KeyKind::name2);         \
             pair.setValueKind(CSSStyleValuePair::ValueKind::Length);    \
@@ -56,7 +56,7 @@
         }                                                               \
     }
 
-namespace StarFish {
+namespace Starfish {
 
 class SVGSVGElement;
 

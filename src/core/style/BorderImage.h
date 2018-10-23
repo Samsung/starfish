@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishBorderImage__
-#define __StarFishBorderImage__
+#ifndef __StarfishBorderImage__
+#define __StarfishBorderImage__
 
 #include "core/style/BorderImageLength.h"
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 #define DEFAULT_VALUE_IMAGE_WIDTH() (BorderImageLengthBox(1.0))
 #define DEFAULT_VALUE_IMAGE_OUTSET() \
@@ -224,6 +224,6 @@ private:
     BorderImageImpl* m_data;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
 #endif /* __StarBorderImage__ */

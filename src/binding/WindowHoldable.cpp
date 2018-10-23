@@ -17,22 +17,22 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "binding/WindowHoldable.h"
 #include "core/dom/Document.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Document* WindowHoldable::document()
 {
     return m_window->document();
 }
 
-StarFish* WindowHoldable::starFish()
+Starfish* WindowHoldable::starfish()
 {
-    return window()->starFish();
+    return window()->starfish();
 }
 
 ScriptBindingInstance* WindowHoldable::scriptBindingInstance()

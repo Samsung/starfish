@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishFile__
-#define __StarFishFile__
+#ifndef __StarfishFile__
+#define __StarfishFile__
 
-namespace StarFish {
+namespace Starfish {
 
 class FileUtil {
 public:

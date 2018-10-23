@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishComputedStyle__
-#define __StarFishComputedStyle__
+#ifndef __StarfishComputedStyle__
+#define __StarfishComputedStyle__
 
 #include "core/style/BorderRadiusData.h"
 #include "core/style/BorderData.h"
@@ -40,7 +40,7 @@
 #include "core/style/WillChangeData.h"
 #include "core/animation/Animation.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Frame;
 
@@ -1027,7 +1027,7 @@ public:
     TextAlignValue textAlign()
     {
         if (m_inheritedStyles.m_textAlign ==
-            TextAlignValue::StarFishCenterTextAlignValue) {
+            TextAlignValue::StarfishCenterTextAlignValue) {
             return TextAlignValue::CenterTextAlignValue;
         }
         return m_inheritedStyles.m_textAlign;

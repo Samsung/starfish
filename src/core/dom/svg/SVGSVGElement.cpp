@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* SVGSVGElement::operator new(size_t size)
 {
@@ -46,7 +46,7 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name, String* old,
 {
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
-    if (name == starFish()->staticStrings()->m_viewBox) {
+    if (name == starfish()->staticStrings()->m_viewBox) {
         m_hasViewBox = false;
         auto utf8Str = value->toUTF8NonGCString();
         CSSTokenVector tokens;
@@ -65,9 +65,9 @@ void SVGSVGElement::didAttributeChanged(QualifiedName name, String* old,
 
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
         setNeedsLayout();
-    } else if (name == starFish()->staticStrings()->m_width) {
+    } else if (name == starfish()->staticStrings()->m_width) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
-    } else if (name == starFish()->staticStrings()->m_height) {
+    } else if (name == starfish()->staticStrings()->m_height) {
         setNeedsStyleRecalc(StyleChangeReason::AttributeChange);
     }
 }
@@ -77,8 +77,8 @@ void SVGSVGElement::styleForPresentationAttribute(
 {
     SVGElement::styleForPresentationAttribute(cssValues);
 
-    if (hasAttribute(starFish()->staticStrings()->m_width) == SIZE_MAX &&
-        hasAttribute(starFish()->staticStrings()->m_height) == SIZE_MAX) {
+    if (hasAttribute(starfish()->staticStrings()->m_width) == SIZE_MAX &&
+        hasAttribute(starfish()->staticStrings()->m_height) == SIZE_MAX) {
         if (m_hasViewBox) {
             float w, h;
             if (m_viewBox.width() / m_viewBox.height() > 1) {

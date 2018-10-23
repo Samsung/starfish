@@ -41,12 +41,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLElementLookupTrie__
-#define __StarFishHTMLElementLookupTrie__
+#ifndef __StarfishHTMLElementLookupTrie__
+#define __StarfishHTMLElementLookupTrie__
 
-#include "StarFish.h"
+#include "Starfish.h"
 
-namespace StarFish {
+namespace Starfish {
 
 QualifiedName lookupHTMLTag(StaticStrings& s, const char* data,
                             unsigned length);

@@ -42,8 +42,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Comment.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentFragment.h"
@@ -62,7 +62,7 @@
 #include "core/dom/parser/HTMLStackItem.h"
 #include "core/dom/parser/HTMLToken.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static const unsigned maximumHTMLParserDOMTreeDepth = 512;
 
@@ -85,7 +85,7 @@ static inline void setAttributes(Element* element, AtomicHTMLToken* token)
 
 static bool hasImpliedEndTag(const HTMLStackItem* item)
 {
-    StaticStrings* s = item->node()->starFish()->staticStrings();
+    StaticStrings* s = item->node()->starfish()->staticStrings();
     return item->hasTagName(s->m_ddTagName) ||
            item->hasTagName(s->m_dtTagName) ||
            item->hasTagName(s->m_liTagName) ||
@@ -468,12 +468,12 @@ void HTMLConstructionSite::insertHTMLHtmlStartTagBeforeHTML(
     // TODO
     STARFISH_ASSERT(m_document);
     HTMLHtmlElement* element = new HTMLHtmlElement(
-        m_document, m_document->starFish()->staticStrings()->m_htmlTagName);
+        m_document, m_document->starfish()->staticStrings()->m_htmlTagName);
     setAttributes(element, token);
     attachLater(m_attachmentRoot, element);
     m_openElements.pushHTMLHtmlElement(new HTMLStackItem(
         element, token,
-        token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
+        token->starfish()->staticStrings()->m_xhtmlNamespaceURI));
 
     executeQueuedTasks();
     // element->insertedByParser();
@@ -731,7 +731,7 @@ void HTMLConstructionSite::insertHTMLHeadElement(AtomicHTMLToken* token)
     STARFISH_ASSERT(!shouldFosterParent());
     m_head = new HTMLStackItem(
         createHTMLElement(token), token,
-        token->starFish()->staticStrings()->m_xhtmlNamespaceURI);
+        token->starfish()->staticStrings()->m_xhtmlNamespaceURI);
     attachLater(currentNode(), m_head->element());
     m_openElements.pushHTMLHeadElement(m_head);
 }
@@ -742,7 +742,7 @@ void HTMLConstructionSite::insertHTMLBodyElement(AtomicHTMLToken* token)
     Element* body = createHTMLElement(token);
     attachLater(currentNode(), body);
     m_openElements.pushHTMLBodyElement(new HTMLStackItem(
-        body, token, token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
+        body, token, token->starfish()->staticStrings()->m_xhtmlNamespaceURI));
     // if (LocalFrame* frame = m_document->frame()) {
     //    frame->loader().client()->dispatchWillInsertBody();
     // }
@@ -759,7 +759,7 @@ void HTMLConstructionSite::insertHTMLFormElement(AtomicHTMLToken* token,
     attachLater(currentNode(), m_form);
     m_openElements.push(new HTMLStackItem(
         m_form, token,
-        token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
+        token->starfish()->staticStrings()->m_xhtmlNamespaceURI));
 }
 
 void HTMLConstructionSite::insertHTMLElement(AtomicHTMLToken* token)
@@ -768,7 +768,7 @@ void HTMLConstructionSite::insertHTMLElement(AtomicHTMLToken* token)
     attachLater(currentNode(), element);
     m_openElements.push(new HTMLStackItem(
         element, token,
-        token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
+        token->starfish()->staticStrings()->m_xhtmlNamespaceURI));
 }
 
 void HTMLConstructionSite::insertSelfClosingHTMLElement(AtomicHTMLToken* token)
@@ -814,7 +814,7 @@ void HTMLConstructionSite::insertScriptElement(AtomicHTMLToken* token)
     //                   alreadyStarted);
     HTMLScriptElement* element = new HTMLScriptElement(
         &ownerDocumentForCurrentNode(), ownerDocumentForCurrentNode()
-                                            .starFish()
+                                            .starfish()
                                             ->staticStrings()
                                             ->m_scriptTagName);
     element->markParserInserted();
@@ -826,7 +826,7 @@ void HTMLConstructionSite::insertScriptElement(AtomicHTMLToken* token)
     }
     m_openElements.push(new HTMLStackItem(
         element, token,
-        token->starFish()->staticStrings()->m_xhtmlNamespaceURI));
+        token->starfish()->staticStrings()->m_xhtmlNamespaceURI));
 }
 
 void HTMLConstructionSite::insertForeignElement(
@@ -930,12 +930,12 @@ Element* HTMLConstructionSite::createElement(AtomicHTMLToken* token,
 {
     Element* element;
     QualifiedName tagName(namespaceURI, AtomicString::createAttrAtomicString(
-                                            starFish(), token->name()));
+                                            starfish(), token->name()));
 
-    if (namespaceURI == starFish()->staticStrings()->m_xhtmlNamespaceURI) {
+    if (namespaceURI == starfish()->staticStrings()->m_xhtmlNamespaceURI) {
         element = HTMLDocument::createHTMLElement(
             &ownerDocumentForCurrentNode(), tagName);
-    } else if (namespaceURI == starFish()->staticStrings()->m_svgNamespaceURI) {
+    } else if (namespaceURI == starfish()->staticStrings()->m_svgNamespaceURI) {
         element = SVGDocument::createSVGElement(&ownerDocumentForCurrentNode(),
                                                 tagName);
     } else {
@@ -969,8 +969,8 @@ Element* HTMLConstructionSite::createHTMLElement(AtomicHTMLToken* token)
     // Element* element = HTMLElementFactory::createHTMLElement(token->name(),
     //     document, form, true);
     const QualifiedName qname = QualifiedName(
-        AtomicString::createAtomicString(starFish(), HTML_NAMESPACE),
-        AtomicString::createAttrAtomicString(starFish(), token->name()));
+        AtomicString::createAtomicString(starfish(), HTML_NAMESPACE),
+        AtomicString::createAttrAtomicString(starfish(), token->name()));
     Element* element =
         HTMLDocument::createHTMLElement(&ownerDocumentForCurrentNode(), qname);
     element->setInHTMLConstructionSite(true);
@@ -985,10 +985,10 @@ HTMLStackItem* HTMLConstructionSite::createElementFromSavedToken(
     Element* element;
     // NOTE: Moving from item -> token -> item copies the Attribute vector
     // twice!
-    AtomicHTMLToken fakeToken(item->node()->starFish(), HTMLToken::StartTag,
+    AtomicHTMLToken fakeToken(item->node()->starfish(), HTMLToken::StartTag,
                               item->localName(), item->attributes());
     if (item->namespaceURI() ==
-        item->node()->starFish()->staticStrings()->m_xhtmlNamespaceURI) {
+        item->node()->starfish()->staticStrings()->m_xhtmlNamespaceURI) {
         element = createHTMLElement(&fakeToken);
     } else {
         element = createElement(&fakeToken, item->namespaceURI());
@@ -1063,7 +1063,7 @@ void HTMLConstructionSite::findFosterSite(HTMLConstructionSiteTask& task)
     // When a node is to be foster parented, the last template element with no
     // table element is below it in the stack of open elements is the foster
     // parent element (NOT the template's parent!)
-    auto s = m_document->starFish()->staticStrings();
+    auto s = m_document->starfish()->staticStrings();
     HTMLElementStack::ElementRecord* lastTemplateElement =
         m_openElements.topmost(s->m_templateTagName.localNameAtomic());
     if (lastTemplateElement &&

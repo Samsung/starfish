@@ -36,7 +36,7 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/style/MediaList.h"
@@ -45,7 +45,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MediaList::MediaList(MediaQuerySet* mediaQuerySet)
     : ScriptWrappable(this)

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishCounterStyle__
-#define __StarFishCounterStyle__
+#ifndef __StarfishCounterStyle__
+#define __StarfishCounterStyle__
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 

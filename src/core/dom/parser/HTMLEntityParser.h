@@ -42,12 +42,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLEntityParser__
-#define __StarFishHTMLEntityParser__
+#ifndef __StarfishHTMLEntityParser__
+#define __StarfishHTMLEntityParser__
 
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DecodedHTMLEntity {
 private:

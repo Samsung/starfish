@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTTPResponse__
-#define __StarFishHTTPResponse__
+#ifndef __StarfishHTTPResponse__
+#define __StarfishHTTPResponse__
 
 #include <curl/curl.h>
 #include "HTTPUtil.h"
-namespace StarFish {
+namespace Starfish {
 
 class HTTPHeaderMap;
 

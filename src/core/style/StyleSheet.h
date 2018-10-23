@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishStyleSheet__
-#define __StarFishStyleSheet__
+#ifndef __StarfishStyleSheet__
+#define __StarfishStyleSheet__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class MediaList;
 class StyleSheet : public ScriptWrappable {
@@ -50,6 +50,6 @@ public:
     virtual void setDisabled(bool disabled) = 0;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishStyleSheet__ */
+#endif /* __StarfishStyleSheet__ */

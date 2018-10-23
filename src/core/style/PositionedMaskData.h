@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishImageMaskData__
-#define __StarFishImageMaskData__
+#ifndef __StarfishImageMaskData__
+#define __StarfishImageMaskData__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class MaskLayer : public gc {
 public:

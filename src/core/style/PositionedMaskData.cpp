@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/style/PositionedMaskData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* PositionedMaskData::operator new(size_t size)
 {

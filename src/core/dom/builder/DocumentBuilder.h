@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishDocumentBuilder__
-#define __StarFishDocumentBuilder__
+#ifndef __StarfishDocumentBuilder__
+#define __StarfishDocumentBuilder__
 
 #include "binding/DocumentHoldable.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLDocumentBuilder;
 

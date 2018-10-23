@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishPseudoElement__
-#define __StarFishPseudoElement__
+#ifndef __StarfishPseudoElement__
+#define __StarfishPseudoElement__
 
 #include "Element.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class PseudoElement : public Element {
 public:

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishQualifiedName__
-#define __StarFishQualifiedName__
+#ifndef __StarfishQualifiedName__
+#define __StarfishQualifiedName__
 
 #include "core/util/AtomicString.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class QualifiedName : public gc {
     friend class StaticStrings;

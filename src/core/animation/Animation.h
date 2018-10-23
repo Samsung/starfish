@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishAnimation__
-#define __StarFishAnimation__
+#ifndef __StarfishAnimation__
+#define __StarfishAnimation__
 
 #include "core/animation/AnimationTimingFunction.h"
 #include "core/style/Style.h"
 #include "core/style/StyleBackgroundData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Node;
 class PlatformWindow;

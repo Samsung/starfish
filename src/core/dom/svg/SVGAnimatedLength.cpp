@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "SVGAnimatedLength.h"
 
-namespace StarFish {
+namespace Starfish {
 
 SVGAnimatedLength::SVGAnimatedLength(Document* document, SVGLength* baseVal,
                                      SVGLength* animVal)

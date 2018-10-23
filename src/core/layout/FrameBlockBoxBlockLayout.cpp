@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameDocument.h"
 #include "core/layout/FrameInline.h"
 #include "core/layout/FrameText.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static std::pair<LayoutUnit, LayoutUnit> estimateLogicalPosition(
     Frame* f, LayoutContext& ctx, MarginInfo* marginInfo, bool isSelfCollapsing,

@@ -43,19 +43,19 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTMLTokenizer.h"
 #include "MarkupTokenizerInlines.h"
 #include "HTMLEntityParser.h"
 #include "AtomicHTMLToken.h"
 
-namespace StarFish {
+namespace Starfish {
 
 QualifiedName AtomicHTMLToken::nameForAttribute(
     const HTMLToken::Attribute& attribute) const
 {
     return QualifiedName(AtomicString::createAttrAtomicString(
-        m_starFish, StringDataUTF32::createASCIIStringFromUTF32SourceIfPossible(
+        m_starfish, StringDataUTF32::createASCIIStringFromUTF32SourceIfPossible(
                         attribute.name)));
 }
 

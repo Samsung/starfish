@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishNamedNodeMap__
-#define __StarFishNamedNodeMap__
+#ifndef __StarfishNamedNodeMap__
+#define __StarfishNamedNodeMap__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Element;
 class Attr;

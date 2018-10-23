@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/HTMLMapElement.h"
 #include "core/dom/HTMLCollection.h"
 
-namespace StarFish {
+namespace Starfish {
 void* HTMLMapElement::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(HTMLMapElement));

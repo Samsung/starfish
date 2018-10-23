@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishImageBitmapRenderingContext__
-#define __StarFishImageBitmapRenderingContext__
+#ifndef __StarfishImageBitmapRenderingContext__
+#define __StarfishImageBitmapRenderingContext__
 
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "core/dom/canvas/RenderingContext.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ImageBitmapRenderingContext : public RenderingContext {
 public:

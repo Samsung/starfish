@@ -42,15 +42,15 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLConstructionSite__
-#define __StarFishHTMLConstructionSite__
+#ifndef __StarfishHTMLConstructionSite__
+#define __StarfishHTMLConstructionSite__
 
 #include "binding/DocumentHoldable.h"
 #include "core/dom/parser/HTMLElementStack.h"
 #include "core/dom/parser/HTMLFormattingElementList.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct HTMLConstructionSiteTask {
     enum Operation {

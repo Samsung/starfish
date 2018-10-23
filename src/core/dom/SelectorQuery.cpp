@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLElement.h"
@@ -26,7 +26,7 @@
 #include "core/dom/SelectorQuery.h"
 #include "core/dom/Traverse.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static bool contains(const GCVector<AtomicString>& vector, const String* string)
 {

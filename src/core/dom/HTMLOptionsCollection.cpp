@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/HTMLOptionsCollection.h"
 
@@ -28,7 +28,7 @@
 #include "core/dom/HTMLSelectElement.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTMLOptionsCollection::HTMLOptionsCollection(
     Node* root, NodeListImpl::FilterFunctionType filterType, void* data,

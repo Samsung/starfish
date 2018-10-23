@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Messages.h"
 
-namespace StarFish {
+namespace Starfish {
 
 size_t bufferSize(std::initializer_list<const char*> args)
 {

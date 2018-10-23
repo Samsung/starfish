@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishKeyboardEvent__
-#define __StarFishKeyboardEvent__
+#ifndef __StarfishKeyboardEvent__
+#define __StarfishKeyboardEvent__
 
 #include "UIEvent.h"
 #include "core/event/KeyBoardEventData.h"
 
-namespace StarFish {
+namespace Starfish {
 class PlatformKeyEventData;
 
 struct KeyboardEventInit : public EventModifierInit {
@@ -213,6 +213,6 @@ private:
     EventModifierData m_eventModifierData;
     KeyboardEventData m_keyboardEventData;
 };
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

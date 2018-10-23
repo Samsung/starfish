@@ -22,10 +22,10 @@
 
 // TODO add RefPtr orginal License comment
 
-#ifndef __StarFishRefCounted__
-#define __StarFishRefCounted__
+#ifndef __StarfishRefCounted__
+#define __StarfishRefCounted__
 
-namespace StarFish {
+namespace Starfish {
 
 #ifdef NDEBUG
 #define CHECK_REF_COUNTED_LIFECYCLE 0

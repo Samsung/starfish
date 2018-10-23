@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLScriptElement__
-#define __StarFishHTMLScriptElement__
+#ifndef __StarfishHTMLScriptElement__
+#define __StarfishHTMLScriptElement__
 
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLScriptElement : public HTMLElement {
     friend class ScriptDownloadClient;

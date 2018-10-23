@@ -17,12 +17,12 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarFishDemuxer__)
-#define __StarFishDemuxer__
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(__StarfishDemuxer__)
+#define __StarfishDemuxer__
 
 #include "platform/multimedia/StreamInfo.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DemuxerSource;
 class PacketGenerator;

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameQuoteText__
-#define __StarFishFrameQuoteText__
+#ifndef __StarfishFrameQuoteText__
+#define __StarfishFrameQuoteText__
 
 #include "core/layout/FrameText.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameQuoteText final : public FrameText {
 public:

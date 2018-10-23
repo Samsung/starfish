@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/layout/FrameTableObjectBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameTableObjectBox::operator new(size_t size)
 {

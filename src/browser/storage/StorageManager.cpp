@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "StorageManager.h"
 #include "core/page/SecurityOriginData.h"
 #include "platform/file/File.h"
@@ -37,7 +37,7 @@ typedef rapidjson::GenericStringBuffer<rapidjson::UTF8<>> JosnStringBuffer;
 typedef rapidjson::GenericDocument<rapidjson::UTF8<>> JsonDocument;
 typedef rapidjson::GenericValue<rapidjson::UTF8<>> JsonValue;
 
-namespace StarFish {
+namespace Starfish {
 
 StorageManager::StorageManager(String* localStoragePath)
     : m_localStoragePath(localStoragePath)

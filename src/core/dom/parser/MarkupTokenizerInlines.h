@@ -43,12 +43,12 @@
  *  USA
  */
 
-#ifndef __StarFishMarkupTokenizerInlines__
-#define __StarFishMarkupTokenizerInlines__
+#ifndef __StarfishMarkupTokenizerInlines__
+#define __StarfishMarkupTokenizerInlines__
 
 #include "core/util/String.h"
 
-namespace StarFish {
+namespace Starfish {
 
 inline bool isTokenizerWhitespace(char32_t cc)
 {

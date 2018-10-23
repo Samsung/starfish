@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Touch.h"
 #include "core/dom/TouchList.h"
 #include "core/dom/TouchEvent.h"
 
-namespace StarFish {
+namespace Starfish {
 
 TouchEvent::TouchEvent(Document* document)
     : UIEvent(document)

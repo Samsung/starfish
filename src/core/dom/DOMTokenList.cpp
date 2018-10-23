@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMTokenList.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 ScriptBindingInstance* DOMTokenList::scriptBindingInstance()
 {
@@ -381,7 +381,7 @@ void DOMTokenList::validateToken(String* token)
         throw new DOMException(m_element->document(),
                                DOMException::Code::SYNTAX_ERR);
     }
-    auto f = [](char c) { return ::StarFish::isspace(c); };
+    auto f = [](char c) { return ::Starfish::isspace(c); };
     if (std::find_if(stdToken.begin(), stdToken.end(), f) != stdToken.end()) {
         throw new DOMException(m_element->document(),
                                DOMException::Code::INVALID_CHARACTER_ERR);

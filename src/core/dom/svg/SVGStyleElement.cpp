@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGStyleElement.h"
 #include "core/dom/Document.h"
@@ -32,7 +32,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* SVGStyleElement::operator new(size_t size)
 {
@@ -51,22 +51,22 @@ void* SVGStyleElement::operator new(size_t size)
 
 String* SVGStyleElement::type()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_type);
 }
 
 void SVGStyleElement::setType(String* type)
 {
-    setAttribute(starFish()->staticStrings()->m_type, type);
+    setAttribute(starfish()->staticStrings()->m_type, type);
 }
 
 String* SVGStyleElement::media()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_media);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_media);
 }
 
 void SVGStyleElement::setMedia(String* media)
 {
-    setAttribute(starFish()->staticStrings()->m_media, media);
+    setAttribute(starfish()->staticStrings()->m_media, media);
 }
 
 void SVGStyleElement::didCharacterDataModified(String* before, String* after)
@@ -163,7 +163,7 @@ void SVGStyleElement::dispatchLoadEvent()
             SVGStyleElement* element = (SVGStyleElement*)data;
             if (!element->hasLoaded()) {
                 String* eventType =
-                    element->starFish()->staticStrings()->m_load.localName();
+                    element->starfish()->staticStrings()->m_load.localName();
                 Event* e = new Event(element->document(), eventType,
                                      EventInit(false, false));
                 element->dispatchEventByUA(e);

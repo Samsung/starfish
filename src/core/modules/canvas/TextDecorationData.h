@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishTextDecorationData__
-#define __StarFishTextDecorationData__
+#ifndef __StarfishTextDecorationData__
+#define __StarfishTextDecorationData__
 
 #include "core/style/Unit.h"
 
-namespace StarFish {
+namespace Starfish {
 class ComputedStyle;
 
 class TextDecorationData {

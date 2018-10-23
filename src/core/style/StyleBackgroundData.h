@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishStyleBackgroundData__
-#define __StarFishStyleBackgroundData__
+#ifndef __StarfishStyleBackgroundData__
+#define __StarfishStyleBackgroundData__
 
 #include "core/style/Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class NativeImageData;
 class ImageResource;

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/extra/Console.h"
 #include "core/inspector/Inspector.h"
 #include "core/page/WebView.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Console::Console(WebView* webView)
     : m_webView(webView)

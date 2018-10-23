@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -30,7 +30,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ActiveResourceRequestTracker : public ResourceRequestClient {
 public:

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "shell/testRunner.h"
 
 #ifdef STARFISH_ENABLE_TEST
-namespace StarFish {
+namespace Starfish {
 
 void testRunner::dumpAsText()
 {

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishEvent__
-#define __StarFishEvent__
+#ifndef __StarfishEvent__
+#define __StarfishEvent__
 
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct EventInit {
 public:

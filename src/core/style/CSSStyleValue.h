@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishCSSStyleValue__
-#define __StarFishCSSStyleValue__
+#ifndef __StarfishCSSStyleValue__
+#define __StarfishCSSStyleValue__
 
 #include "binding/ScriptWrappable.h"
 #include "binding/DocumentHoldable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 

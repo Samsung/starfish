@@ -43,12 +43,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTMLParserIdioms.h"
 
 #include <limits>
 
-namespace StarFish {
+namespace Starfish {
 
 template <typename CharType>
 static String* stripLeadingAndTrailingHTMLSpaces(String* string,

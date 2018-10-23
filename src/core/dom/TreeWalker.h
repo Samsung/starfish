@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishTreeWalker__
-#define __StarFishTreeWalker__
+#ifndef __StarfishTreeWalker__
+#define __StarfishTreeWalker__
 
 #include "binding/DocumentHoldable.h"
 #include "core/dom/Document.h"
 #include "binding/ScriptWrappable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class TreeWalker final : public ScriptWrappable {
 public:

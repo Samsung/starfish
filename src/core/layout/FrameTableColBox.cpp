@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/HTMLTableColElement.h"
 #include "core/layout/FrameTableColBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameTableColBox::operator new(size_t size)
 {

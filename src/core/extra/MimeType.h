@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishMimeType__
-#define __StarFishMimeType__
+#ifndef __StarfishMimeType__
+#define __StarfishMimeType__
 
-namespace StarFish {
+namespace Starfish {
 
 class String;
 

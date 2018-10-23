@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "QualifiedName.h"
-#include "StarFish.h"
+#include "Starfish.h"
 
-namespace StarFish {
+namespace Starfish {
 
 bool checkNameProductionRuleStart_internal(char32_t c)
 {

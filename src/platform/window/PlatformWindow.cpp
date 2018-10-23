@@ -16,10 +16,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "PlatformWindow.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/animation/Animation.h"
 #include "core/dom/Node.h"
 #include "core/layout/StackingContext.h"
@@ -38,15 +38,15 @@
 #include "core/modules/profiling/Profiling.h"
 
 #ifdef STARFISH_ENABLE_TEST
-StarFish::CanvasSurface* g_surfaceForScreehShot;
+Starfish::CanvasSurface* g_surfaceForScreehShot;
 bool g_fireOnloadEvent = false;
 bool g_forceRendering = false;
 #endif
 
-namespace StarFish {
+namespace Starfish {
 
-PlatformWindow::PlatformWindow(StarFish* starFish)
-    : m_starFish(starFish)
+PlatformWindow::PlatformWindow(Starfish* starfish)
+    : m_starfish(starfish)
     , m_webView(nullptr)
     , m_renderingAnimator(SIZE_MAX)
     , m_compostiorContext(nullptr)
@@ -317,7 +317,7 @@ void PlatformWindow::setNeedsRendering()
         nullptr,
         [](void* data) {
             PlatformWindow* wnd = (PlatformWindow*)data;
-            if (!wnd->starFish()) {
+            if (!wnd->starfish()) {
                 wnd->m_renderingAnimator = SIZE_MAX;
                 return false;
             }

@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "core/dom/HTMLSelectElement.h"
 
@@ -33,7 +33,7 @@
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 HTMLSelectElement::HTMLSelectElement(Document* document,
                                      const QualifiedName& qname)
@@ -97,7 +97,7 @@ void HTMLSelectElement::setValue(String* value)
         }
     }
 
-    fireEvent(starFish()->staticStrings()->m_change, true, false);
+    fireEvent(starfish()->staticStrings()->m_change, true, false);
 
     setNeedsFrameTreeBuild();
 }
@@ -150,7 +150,7 @@ String* HTMLSelectElement::type()
 
 int HTMLSelectElement::size()
 {
-    String* size = getAttributeOrEmpty(starFish()->staticStrings()->m_size);
+    String* size = getAttributeOrEmpty(starfish()->staticStrings()->m_size);
     if (!size->equals(String::emptyString)) {
         return String::parseInt(size);
     }
@@ -161,7 +161,7 @@ int HTMLSelectElement::size()
 void HTMLSelectElement::setSize(int size)
 {
     if (size > 0) {
-        setAttribute(starFish()->staticStrings()->m_size,
+        setAttribute(starfish()->staticStrings()->m_size,
                      String::fromInt(size));
     }
 }
@@ -344,7 +344,7 @@ void HTMLSelectElement::resetFromOption(GCVector<HTMLOptionElement*>& list,
                                         HTMLOptionElement* resetFrom)
 {
     Nullable<String*> val =
-        getAttribute(starFish()->staticStrings()->m_multiple);
+        getAttribute(starfish()->staticStrings()->m_multiple);
     if (!val.hasValue()) {
         // single selection
         int selectedOptions = 0;
@@ -425,8 +425,8 @@ HTMLOptionElement* HTMLSelectElement::firstSelectedOptionElement()
 // https://html.spec.whatwg.org/multipage/form-elements.html#send-select-update-notifications
 void HTMLSelectElement::fireSelectUpdateNotification()
 {
-    queueEvent(starFish()->staticStrings()->m_input, true, false);
-    queueEvent(starFish()->staticStrings()->m_change, true, false);
+    queueEvent(starfish()->staticStrings()->m_input, true, false);
+    queueEvent(starfish()->staticStrings()->m_change, true, false);
 }
 
 // https://html.spec.whatwg.org/multipage/form-elements.html#the-select-element

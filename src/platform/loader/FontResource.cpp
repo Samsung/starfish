@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "platform/loader/FontResource.h"
 #include "platform/loader/ResourceLoader.h"
@@ -27,7 +27,7 @@
 #include "core/page/Window.h"
 #include "core/page/BrowsingContext.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void FontResource::didLoadFinished()
 {

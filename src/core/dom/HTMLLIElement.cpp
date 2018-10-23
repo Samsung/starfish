@@ -17,12 +17,12 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLLIElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void HTMLLIElement::didAttributeChanged(QualifiedName name, String* old,
                                         String* value, bool attributeCreated,
@@ -31,9 +31,9 @@ void HTMLLIElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
 
-    if (name == starFish()->staticStrings()->m_value) {
+    if (name == starfish()->staticStrings()->m_value) {
         document()->notifyCountingOutdated();
-    } else if (name == starFish()->staticStrings()->m_type) {
+    } else if (name == starfish()->staticStrings()->m_type) {
         document()->notifyCountingOutdated();
     }
 }
@@ -61,27 +61,27 @@ void HTMLLIElement::styleForPresentationAttribute(
             if (list->isHTMLOListElement()) {
                 if (typeString->equals("1")) {
                     AtomicString strValue =
-                        AtomicString::createAtomicString(starFish(), "decimal");
+                        AtomicString::createAtomicString(starfish(), "decimal");
                     pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
                     pair.setAtomicStringValue(strValue);
                 } else if (typeString->equals("a")) {
                     AtomicString strValue = AtomicString::createAtomicString(
-                        starFish(), "lower-alpha");
+                        starfish(), "lower-alpha");
                     pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
                     pair.setAtomicStringValue(strValue);
                 } else if (typeString->equals("A")) {
                     AtomicString strValue = AtomicString::createAtomicString(
-                        starFish(), "upper-alpha");
+                        starfish(), "upper-alpha");
                     pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
                     pair.setAtomicStringValue(strValue);
                 } else if (typeString->equals("i")) {
                     AtomicString strValue = AtomicString::createAtomicString(
-                        starFish(), "lower-roman");
+                        starfish(), "lower-roman");
                     pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
                     pair.setAtomicStringValue(strValue);
                 } else if (typeString->equals("I")) {
                     AtomicString strValue = AtomicString::createAtomicString(
-                        starFish(), "upper-roman");
+                        starfish(), "upper-roman");
                     pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
                     pair.setAtomicStringValue(strValue);
                 }
@@ -91,7 +91,7 @@ void HTMLLIElement::styleForPresentationAttribute(
                     typeString->equals("square") ||
                     typeString->equals("circle")) {
                     AtomicString strValue = AtomicString::createAtomicString(
-                        starFish(), typeString);
+                        starfish(), typeString);
                     pair.setKeyKind(CSSStyleValuePair::KeyKind::ListStyleType);
                     pair.setAtomicStringValue(strValue);
                 }
@@ -107,18 +107,18 @@ void HTMLLIElement::styleForPresentationAttribute(
 int32_t HTMLLIElement::value()
 {
     String* valueStr =
-        getAttributeOrEmpty(starFish()->staticStrings()->m_value);
+        getAttributeOrEmpty(starfish()->staticStrings()->m_value);
     return String::parseInt(valueStr);
 }
 
 void HTMLLIElement::setValue(int32_t v)
 {
-    setAttribute(starFish()->staticStrings()->m_value, String::fromInt(v));
+    setAttribute(starfish()->staticStrings()->m_value, String::fromInt(v));
 }
 
 bool HTMLLIElement::hasValue()
 {
-    Nullable<String*> v = getAttribute(starFish()->staticStrings()->m_value);
+    Nullable<String*> v = getAttribute(starfish()->staticStrings()->m_value);
     if (v.hasValue()) {
         return true;
     } else {
@@ -128,11 +128,11 @@ bool HTMLLIElement::hasValue()
 
 String* HTMLLIElement::type()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_type);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_type);
 }
 
 void HTMLLIElement::setType(String* type)
 {
-    setAttribute(starFish()->staticStrings()->m_type, type);
+    setAttribute(starfish()->staticStrings()->m_type, type);
 }
 }

@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLOutputElement__
-#define __StarFishHTMLOutputElement__
+#ifndef __StarfishHTMLOutputElement__
+#define __StarfishHTMLOutputElement__
 
 #include "core/dom/HTMLElement.h"
 #include "core/dom/HTMLFormElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class DOMTokenList;
 
@@ -63,6 +63,6 @@ private:
     ValueModeFlag m_valueModeFlag : 1;
     String* m_defaultValue;
 };
-} // namespace StarFish
+} // namespace Starfish
 
 #endif

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #if defined(PORT_CANVAS_BACKEND_SKIA)
 
-#include "StarFish.h"
+#include "Starfish.h"
 
 #include "SkTypeface.h"
 #include "SkStream.h"
@@ -37,7 +37,7 @@
 
 static const int FONT_SIZE_SCALE = 64;
 
-namespace StarFish {
+namespace Starfish {
 
 static inline hb_font_t* createHarfbuzzFont(sk_sp<SkData> skData,
                                             sk_sp<SkTypeface> skTypeface)

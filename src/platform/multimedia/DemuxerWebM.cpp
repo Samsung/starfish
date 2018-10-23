@@ -28,7 +28,7 @@
 // library, which allows clients to handle a Matroska format file.
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "platform/multimedia/Demuxer.h"
 #include "platform/multimedia/DemuxerSource.h"
 
@@ -36,7 +36,7 @@
 
 class MkvReaderAdapter : public mkvparser::IMkvReader {
 public:
-    MkvReaderAdapter(StarFish::DemuxerSource* source)
+    MkvReaderAdapter(Starfish::DemuxerSource* source)
         : m_source(source)
     {
     }
@@ -45,7 +45,7 @@ public:
         size_t sizeSuccessToRead = 0;
         size_t sizeWantToToRead = len;
         int errorCode = 0;
-        if (m_source->onSeek(pos, StarFish::DemuxerSource::SeekWhenceSet) !=
+        if (m_source->onSeek(pos, Starfish::DemuxerSource::SeekWhenceSet) !=
             pos) {
             return -1;
         }
@@ -60,7 +60,7 @@ public:
     virtual int Length(long long* total, long long* available)
     {
         size_t size =
-            m_source->onSeek(0, StarFish::DemuxerSource::SeekWhenceLookSize);
+            m_source->onSeek(0, Starfish::DemuxerSource::SeekWhenceLookSize);
         if (total) {
             *total = size;
         }
@@ -70,10 +70,10 @@ public:
         return 0;
     }
 
-    StarFish::DemuxerSource* m_source;
+    Starfish::DemuxerSource* m_source;
 };
 
-namespace StarFish {
+namespace Starfish {
 
 class DemuxerWebM : public Demuxer {
 public:

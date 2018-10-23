@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "core/dom/Node.h"
 
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/dom/Attr.h"
 #include "core/dom/CharacterData.h"
 #include "core/dom/Document.h"
@@ -50,7 +50,7 @@
 #include "core/style/CSSStyleDeclaration.h"
 #include "binding/NodeOrDOMStringUnion.h"
 
-namespace StarFish {
+namespace Starfish {
 
 ActiveHTMLCollectionList*
 RareNodeMembers::ensureActiveHtmlCollectionListForTagName()
@@ -124,7 +124,7 @@ NodeList* RareNodeMembers::ensureQueryInActiveNodeListVectorForName(
 
     QualifiedName* ptr = new QualifiedName(
         AtomicString::emptyAtomicString(),
-        AtomicString::createAtomicString(ownerNode->starFish(), query));
+        AtomicString::createAtomicString(ownerNode->starfish(), query));
 
     m_activeNodeListVectorForName->emplace_back(std::make_pair(
         query,
@@ -1209,7 +1209,7 @@ DOMTokenList* Node::classList()
         }
 
         m_rareNodeMembers->m_domTokenList =
-            new DOMTokenList(asElement(), starFish()->staticStrings()->m_class);
+            new DOMTokenList(asElement(), starfish()->staticStrings()->m_class);
         return m_rareNodeMembers->m_domTokenList;
     }
     return nullptr;
@@ -1877,7 +1877,7 @@ HTMLCollection* Node::getElementsByTagName(String* name)
 {
     QualifiedName qname(
         AtomicString::emptyAtomicString(),
-        AtomicString::createAtomicString(window()->starFish(), name));
+        AtomicString::createAtomicString(window()->starfish(), name));
     return getElementsByTagName(qname);
 }
 
@@ -1899,7 +1899,7 @@ HTMLCollection* Node::getElementsByTagName(QualifiedName qualifiedName)
         data->name = new QualifiedName(qualifiedName);
         data->lowerName = new QualifiedName(
             AtomicString::emptyAtomicString(),
-            AtomicString::createAttrAtomicString(window()->starFish(),
+            AtomicString::createAttrAtomicString(window()->starfish(),
                                                  qualifiedName.localName()));
         list = new HTMLCollection(this, NodeListImpl::HTMLTagNameFilter, data,
                                   true);

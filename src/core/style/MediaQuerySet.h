@@ -36,10 +36,10 @@
  * Boston, MA 02110-1301, USA.
  */
 
-#ifndef __StarFishMediaQuerySet__
-#define __StarFishMediaQuerySet__
+#ifndef __StarfishMediaQuerySet__
+#define __StarfishMediaQuerySet__
 
-namespace StarFish {
+namespace Starfish {
 
 class Document;
 class MediaQuery;

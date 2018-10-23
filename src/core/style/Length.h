@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishLength__
-#define __StarFishLength__
+#ifndef __StarfishLength__
+#define __StarfishLength__
 
 #include "core/layout/LayoutUtil.h"
 #include "core/style/Unit.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class String;
 class Font;

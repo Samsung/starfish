@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGImageElement.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* SVGImageElement::operator new(size_t size)
 {
@@ -111,7 +111,7 @@ void SVGImageElement::didAttributeChanged(QualifiedName name, String* old,
     SVGElement::didAttributeChanged(name, old, value, attributeCreated,
                                     attributeRemoved);
 
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
     if (ss->m_href == name) {
         if (attributeRemoved) {
             unloadImage();

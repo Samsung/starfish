@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "LWEWebView.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
@@ -309,33 +309,33 @@ public:
 
         m_mouseDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                      void* event_info) -> void {
-            WebViewEFL* sf = (WebViewEFL*)data;
+            WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Mouse_Down* ev = (Evas_Event_Mouse_Down*)event_info;
             // We care just left button now
             int currentPosX = ev->output.x;
             int currentPosY = ev->output.y;
 
             int x, y;
-            evas_object_geometry_get(sf->m_graphicsAdapter, &x, &y, 0, 0);
+            evas_object_geometry_get(webView->m_graphicsAdapter, &x, &y, 0, 0);
             currentPosX -= x;
             currentPosY -= y;
 
             if (ev->button == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
-                if (ev->timestamp - sf->m_lastClickedTimestamp >
+                if (ev->timestamp - webView->m_lastClickedTimestamp >
                     CLICK_REFRESH_DELAY) {
-                    sf->m_clickedCount = 1;
-                    sf->m_lastClickedTimestamp = ev->timestamp;
+                    webView->m_clickedCount = 1;
+                    webView->m_lastClickedTimestamp = ev->timestamp;
                 } else {
-                    sf->m_clickedCount++;
+                    webView->m_clickedCount++;
                 }
-                sf->FetchWebContainer()->DispatchMouseDownEvent(
+                webView->FetchWebContainer()->DispatchMouseDownEvent(
                     MouseButtonValue::LeftButton,
                     MouseButtonsValue::LeftButtonDown, currentPosX,
                     currentPosY);
-                sf->m_isMouseLbuttonDown = true;
+                webView->m_isMouseLbuttonDown = true;
             }
 
-            sf->HideSoftwareKeyboardIfPossible();
+            webView->HideSoftwareKeyboardIfPossible();
 
             return;
         };
@@ -345,28 +345,28 @@ public:
 
         m_mouseUpEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                    void* event_info) -> void {
-            WebViewEFL* sf = (WebViewEFL*)data;
+            WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Mouse_Up* ev = (Evas_Event_Mouse_Up*)event_info;
             // We care just left button now
             int currentPosX = ev->output.x;
             int currentPosY = ev->output.y;
             int x, y;
-            evas_object_geometry_get(sf->m_graphicsAdapter, &x, &y, 0, 0);
+            evas_object_geometry_get(webView->m_graphicsAdapter, &x, &y, 0, 0);
             currentPosX -= x;
             currentPosY -= y;
 
             if (ev->button == 1 && (currentPosX >= 0 && currentPosY >= 0)) {
-                if (ev->timestamp - sf->m_lastClickedTimestamp >
+                if (ev->timestamp - webView->m_lastClickedTimestamp >
                     CLICK_REFRESH_DELAY) {
-                    sf->m_clickedCount = 1;
-                    sf->m_lastClickedTimestamp = ev->timestamp;
+                    webView->m_clickedCount = 1;
+                    webView->m_lastClickedTimestamp = ev->timestamp;
                 } else {
-                    sf->m_clickedCount++;
+                    webView->m_clickedCount++;
                 }
-                sf->FetchWebContainer()->DispatchMouseUpEvent(
+                webView->FetchWebContainer()->DispatchMouseUpEvent(
                     MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
                     currentPosX, currentPosY);
-                sf->m_isMouseLbuttonDown = false;
+                webView->m_isMouseLbuttonDown = false;
             }
             return;
         };
@@ -395,19 +395,19 @@ public:
 
         m_mouseMoveEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                      void* event_info) -> void {
-            WebViewEFL* sf = (WebViewEFL*)data;
+            WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Mouse_Move* ev = (Evas_Event_Mouse_Move*)event_info;
             // We care just left button now
             int currentPosX = ev->cur.output.x;
             int currentPosY = ev->cur.output.y;
             int x, y;
-            evas_object_geometry_get(sf->m_graphicsAdapter, &x, &y, 0, 0);
+            evas_object_geometry_get(webView->m_graphicsAdapter, &x, &y, 0, 0);
             currentPosX -= x;
             currentPosY -= y;
-            unsigned char buttons = sf->m_isMouseLbuttonDown
+            unsigned char buttons = webView->m_isMouseLbuttonDown
                                         ? MouseButtonsValue::LeftButtonDown
                                         : 0;
-            sf->FetchWebContainer()->DispatchMouseMoveEvent(
+            webView->FetchWebContainer()->DispatchMouseMoveEvent(
                 MouseButtonValue::NoButton, (MouseButtonsValue)buttons,
                 currentPosX, currentPosY);
             return;
@@ -419,12 +419,12 @@ public:
 #if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
         m_keyDownEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                    void* event_info) -> void {
-            WebViewEFL* sf = (WebViewEFL*)data;
+            WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Key_Down* ev = (Evas_Event_Key_Down*)event_info;
             STARFISH_LOG_INFO(
                 "EVAS_CALLBACK_KEY_DOWN for m_nonIMEKeyEventBox [%s]\n",
                 ev->key);
-            if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
+            if (evas_object_focus_get(webView->m_mainBox) == EINA_TRUE) {
                 STARFISH_LOG_INFO(
                     "EVAS_CALLBACK_KEY_DOWN for m_nonIMEKeyEventBox but "
                     "m_mainBox has focus[%s]\n",
@@ -445,9 +445,9 @@ public:
                              (evas_key_modifier_is_set(
                                   ev->modifiers, "Shift_R") == EINA_TRUE));
 
-            sf->FetchWebContainer()->DispatchKeyDownEvent(keyValue);
-            sf->FetchWebContainer()->DispatchKeyPressEvent(keyValue);
-            sf->m_isKeyDown = true;
+            webView->FetchWebContainer()->DispatchKeyDownEvent(keyValue);
+            webView->FetchWebContainer()->DispatchKeyPressEvent(keyValue);
+            webView->m_isKeyDown = true;
         };
         evas_object_event_callback_add(m_nonIMEKeyEventBox,
                                        EVAS_CALLBACK_KEY_DOWN,
@@ -455,9 +455,9 @@ public:
 
         m_keyUpEventHandler = [](void* data, Evas* evas, Evas_Object* obj,
                                  void* event_info) -> void {
-            WebViewEFL* sf = (WebViewEFL*)data;
+            WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Key_Up* ev = (Evas_Event_Key_Up*)event_info;
-            if (evas_object_focus_get(sf->m_mainBox) == EINA_TRUE) {
+            if (evas_object_focus_get(webView->m_mainBox) == EINA_TRUE) {
                 return;
             }
 
@@ -474,8 +474,8 @@ public:
                              (evas_key_modifier_is_set(
                                   ev->modifiers, "Shift_R") == EINA_TRUE));
 
-            sf->FetchWebContainer()->DispatchKeyUpEvent(keyValue);
-            sf->m_isKeyDown = false;
+            webView->FetchWebContainer()->DispatchKeyUpEvent(keyValue);
+            webView->m_isKeyDown = false;
             return;
         };
         evas_object_event_callback_add(m_nonIMEKeyEventBox,

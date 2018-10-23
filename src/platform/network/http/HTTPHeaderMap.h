@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishHTTPHeaderMap__
-#define __StarFishHTTPHeaderMap__
+#ifndef __StarfishHTTPHeaderMap__
+#define __StarfishHTTPHeaderMap__
 
 #include "HTTPUtil.h"
 struct curl_slist;
 
-namespace StarFish {
+namespace Starfish {
 
 #define FOR_EACH_HTTPHEADERS(F)                                       \
     F(kCacheControl, "Cache-Control")                                 \

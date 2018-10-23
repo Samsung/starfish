@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/ListStyleData.h"
 #include "core/style/CounterStyle.h"
 
-namespace StarFish {
+namespace Starfish {
 
 String* ListStyleData::type() const
 {
@@ -49,4 +49,4 @@ void ListStyleData::setType(const CounterStyle* v)
     STARFISH_ASSERT(v);
     m_counterStyle = v;
 }
-} /* namespace StarFish */
+} /* namespace Starfish */

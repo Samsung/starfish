@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Document.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/style/MediaQueryList.h"
@@ -25,7 +25,7 @@
 #include "core/style/MediaQuerySet.h"
 #include "core/page/Window.h"
 
-namespace StarFish {
+namespace Starfish {
 
 MediaQueryList::MediaQueryList(Document* document,
                                MediaQueryListMatcher* matcher,
@@ -60,7 +60,7 @@ void MediaQueryList::addListener(EventListener* listener)
         return;
     }
 
-    String* changeEvent = starFish()->staticStrings()->m_change.localName();
+    String* changeEvent = starfish()->staticStrings()->m_change.localName();
     addEventListener(changeEvent, listener, false);
 }
 
@@ -71,10 +71,10 @@ void MediaQueryList::removeListener(EventListener* listener)
         return;
     }
 
-    String* changeEvent = starFish()->staticStrings()->m_change.localName();
+    String* changeEvent = starfish()->staticStrings()->m_change.localName();
     removeEventListener(changeEvent, listener, false);
 }
 
 DEFINE_EVENT_LISTENER(MediaQueryList, change);
 
-} /* namespace StarFish */
+} /* namespace Starfish */

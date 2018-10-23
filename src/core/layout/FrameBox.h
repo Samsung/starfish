@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameBox__
-#define __StarFishFrameBox__
+#ifndef __StarfishFrameBox__
+#define __StarfishFrameBox__
 
 #include "core/layout/Frame.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Canvas;
 class CanvasSurface;

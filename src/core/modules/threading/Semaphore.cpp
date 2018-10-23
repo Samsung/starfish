@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Semaphore.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Semaphore::Semaphore(size_t cnt)
 {

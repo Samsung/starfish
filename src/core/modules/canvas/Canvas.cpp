@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Canvas.h"
-#include "StarFish.h"
+#include "Starfish.h"
 #include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
-namespace StarFish {
+namespace Starfish {
 
 size_t CanvasSurface::g_totalAllocatedCanvasSurfaceSize = 0;
 

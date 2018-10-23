@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "StorageNamespaceImpl.h"
 
 #include "core/storage/Storage.h"
@@ -25,7 +25,7 @@
 #include "StorageImpl.h"
 #include "StorageManager.h"
 
-namespace StarFish {
+namespace Starfish {
 
 StorageNamespaceImpl::StorageNamespaceImpl(StorageType storageType,
                                            String* localStoragePath)

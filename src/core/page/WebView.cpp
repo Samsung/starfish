@@ -27,12 +27,12 @@
 #endif
 #endif
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #include "WebView.h"
 
 #include "BrowsingContext.h"
-#include "StarFish.h"
+#include "Starfish.h"
 
 #include "core/page/Window.h"
 #include "core/layout/Frame.h"
@@ -79,13 +79,13 @@
 
 extern bool g_fireOnloadEvent;
 extern bool g_forceRendering;
-extern StarFish::CanvasSurface* g_surfaceForScreehShot;
+extern Starfish::CanvasSurface* g_surfaceForScreehShot;
 
 int g_testCompatibleMode;
 int g_startUpFlag;
 #endif
 
-namespace StarFish {
+namespace Starfish {
 #if defined(STARFISH_ENABLE_TEST)
 // should be defined in each window port
 void screenShotInRendering(WebView* wv, const char* path,
@@ -94,7 +94,7 @@ void screenShotInRendering(WebView* wv, const char* path,
 static Nullable<String*> rtExtractReference(Document* document)
 {
     HTMLCollection* result = document->getElementsByTagName(
-        document->starFish()->staticStrings()->m_link);
+        document->starfish()->staticStrings()->m_link);
     for (size_t i = 0; i < result->length(); i++) {
         HTMLLinkElement* current = result->item(i)->asHTMLLinkElement();
         if (current->rel()->equals(String::fromUTF8("match"))) {
@@ -182,24 +182,24 @@ static void rtDoTest(Document* document)
 }
 #endif
 
-WebView* WebView::create(StarFish* starFish, const char* locale,
+WebView* WebView::create(Starfish* starfish, const char* locale,
                          const char* timezoneID, uint32_t w, uint32_t h,
                          uint32_t defaultFontSize, String* defaultFontName,
                          const ScreenInfo& info, String* customUserAgentString,
                          String* builtinPolyfillPathString)
 {
-    return new WebView(starFish, locale, timezoneID, w, h, defaultFontSize,
+    return new WebView(starfish, locale, timezoneID, w, h, defaultFontSize,
                        defaultFontName, info, customUserAgentString,
                        builtinPolyfillPathString);
 }
 
-WebView::WebView(StarFish* starFish, const char* locale, const char* timezoneID,
+WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
                  uint32_t w, uint32_t h, uint32_t defaultFontSize,
                  String* defaultFontName, const ScreenInfo& info,
                  String* customUserAgentString,
                  String* builtinPolyfillPathString)
-    : StarFishHoldable(starFish)
-    , m_platformWindow(PlatformWindow::create(starFish, w, h))
+    : StarfishHoldable(starfish)
+    , m_platformWindow(PlatformWindow::create(starfish, w, h))
     , m_topLevelBrowsingContext(nullptr)
     , m_scriptEngineInstance(nullptr)
     , m_storageNamespaceProvider(nullptr)
@@ -239,7 +239,7 @@ WebView::WebView(StarFish* starFish, const char* locale, const char* timezoneID,
     , m_customUserAgentString(customUserAgentString)
     , m_builtinPolyfillPathString(builtinPolyfillPathString)
 #ifdef STARFISH_ENABLE_TEST
-    , m_testCompatibleMode(StarFishTestCompatibleMode::Normal)
+    , m_testCompatibleMode(StarfishTestCompatibleMode::Normal)
 #endif
 {
     m_platformWindow->setWebView(this);
@@ -270,7 +270,7 @@ WebView::WebView(StarFish* starFish, const char* locale, const char* timezoneID,
     // saidly.. few port layer needs this variable
     m_publicLayerUserDataMap["__internalWebContainerImplementLayerVariable"] =
         this;
-    m_starFish->m_webViewInstanceCount++;
+    m_starfish->m_webViewInstanceCount++;
 }
 
 void WebView::destroy()
@@ -330,7 +330,7 @@ void WebView::destroy()
     m_platformWindow->destroy();
     removeScriptEngineInstance();
 
-    m_starFish->m_webViewInstanceCount--;
+    m_starfish->m_webViewInstanceCount--;
     this->WebView::~WebView();
 
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
@@ -340,7 +340,7 @@ void WebView::initStorage()
 {
     // TODO: The name of disk storage file name should be auto-generated
     m_storageNamespaceProvider =
-        WebStorageNamespaceProvider::create(m_starFish->localStorageFilePath());
+        WebStorageNamespaceProvider::create(m_starfish->localStorageFilePath());
     m_localStorageNamespace =
         m_storageNamespaceProvider->createLocalStorageNamespace();
     m_sessionStorageNamespace =
@@ -767,13 +767,13 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
             INSTALL_PROFILE_TIMER("establishesStackingContext");
             clearStackingContext();
 #ifdef STARFISH_ENABLE_TEST
-            if (startUpFlag() & StarFishStartUpFlag::enableComputedStyleDump) {
+            if (startUpFlag() & StarfishStartUpFlag::enableComputedStyleDump) {
                 // dump style
                 m_topLevelBrowsingContext->document()
                     ->styleResolver()
                     .dumpDOMStyle(m_topLevelBrowsingContext->document());
             }
-            if (startUpFlag() & StarFishStartUpFlag::enableFrameTreeDump) {
+            if (startUpFlag() & StarfishStartUpFlag::enableFrameTreeDump) {
                 FrameTreeBuilder::dumpFrameTree(
                     m_topLevelBrowsingContext->document(), 0);
             }
@@ -809,7 +809,7 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
 
 #ifdef STARFISH_ENABLE_TEST
             if (startUpFlag() &
-                StarFishStartUpFlag::enableStackingContextDump) {
+                StarfishStartUpFlag::enableStackingContextDump) {
                 size_t totalSurfaceBufferSize = 0;
                 if (m_rootStackingContext) {
                     STARFISH_ASSERT(mainBrowsingContext()
@@ -1273,7 +1273,7 @@ RenderResult WebView::rendering(bool force)
     {
         if (g_fireOnloadEvent &&
             testCompatibleMode() ==
-                StarFishTestCompatibleMode::ChromiumLayout) {
+                StarfishTestCompatibleMode::ChromiumLayout) {
             if (g_enableDumpAsText && !g_DumpAsText_Async) {
                 fprintf(stdout, "#READY\n");
 
@@ -1522,7 +1522,7 @@ void WebView::setupInspector(uint32_t portNumber)
 #endif
 
 void WebView::registerPublicWebViewHandler(
-    StarFishPubicWebViewHandlerKind handlerKind,
+    StarfishPubicWebViewHandlerKind handlerKind,
     std::function<void(void*)> handler)
 {
     auto it = m_publicWebViewHandlers.find(handlerKind);
@@ -1534,7 +1534,7 @@ void WebView::registerPublicWebViewHandler(
 }
 
 bool WebView::containsPublicWebViewHandler(
-    StarFishPubicWebViewHandlerKind handlerKind)
+    StarfishPubicWebViewHandlerKind handlerKind)
 {
     auto it = m_publicWebViewHandlers.find(handlerKind);
     if (it != m_publicWebViewHandlers.end()) {
@@ -1545,7 +1545,7 @@ bool WebView::containsPublicWebViewHandler(
 }
 
 void WebView::callPublicWebViewHandler(
-    StarFishPubicWebViewHandlerKind handlerKind, void* param)
+    StarfishPubicWebViewHandlerKind handlerKind, void* param)
 {
     auto it = m_publicWebViewHandlers.find(handlerKind);
     if (it == m_publicWebViewHandlers.end()) {
@@ -1554,7 +1554,7 @@ void WebView::callPublicWebViewHandler(
 
     struct Env : public gc {
         WebView* webView;
-        StarFishPubicWebViewHandlerKind handlerKind;
+        StarfishPubicWebViewHandlerKind handlerKind;
         void* param;
     };
     Env* env = new Env();

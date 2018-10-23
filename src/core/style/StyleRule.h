@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishStyleRule__
-#define __StarFishStyleRule__
+#ifndef __StarfishStyleRule__
+#define __StarfishStyleRule__
 
 #include "core/style/CSSRule.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSSelector;
 class CSSStyleSheet;

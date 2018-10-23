@@ -17,13 +17,13 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/fileapi/Blob.h"
 
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-namespace StarFish {
+namespace Starfish {
 
 ValueRef* blobConstructor(ExecutionStateRef* state, ValueRef* thisValue,
                           size_t argCount, ValueRef** argv,

@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLFontElement__
-#define __StarFishHTMLFontElement__
+#ifndef __StarfishHTMLFontElement__
+#define __StarfishHTMLFontElement__
 
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLFontElement : public HTMLElement {
 public:

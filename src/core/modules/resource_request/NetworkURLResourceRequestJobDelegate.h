@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishNetworkURLResourceRequestJobDelegate__
-#define __StarFishNetworkURLResourceRequestJobDelegate__
+#ifndef __StarfishNetworkURLResourceRequestJobDelegate__
+#define __StarfishNetworkURLResourceRequestJobDelegate__
 
 #include "core/modules/resource_request/ResourceRequestJob.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ResourceRequest;
 class NetworkURLWorkerHelper;

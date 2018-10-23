@@ -17,15 +17,15 @@
  *  USA
  */
 
-#ifndef __StarFishWebView__
-#define __StarFishWebView__
+#ifndef __StarfishWebView__
+#define __StarfishWebView__
 
-#include "binding/StarFishHoldable.h"
+#include "binding/StarfishHoldable.h"
 #include "browser/history/HistoryManager.h"
 #include "core/page/RenderResult.h"
 #include "platform/public/ScreenInfo.h"
 
-namespace StarFish {
+namespace Starfish {
 struct BlobURLStore {
 #ifdef STARFISH_32
     void* m_blob;
@@ -38,7 +38,7 @@ struct BlobURLStore {
     uint32_t m_b;
 #endif
 };
-enum StarFishPubicWebViewHandlerKind {
+enum StarfishPubicWebViewHandlerKind {
     OnPageStarted,
     OnPageLoaded,
     OnPageParsed,
@@ -52,42 +52,42 @@ enum StarFishPubicWebViewHandlerKind {
 
 namespace std {
 template <>
-struct hash<StarFish::BlobURLStore> {
-    size_t operator()(StarFish::BlobURLStore const& x) const
+struct hash<Starfish::BlobURLStore> {
+    size_t operator()(Starfish::BlobURLStore const& x) const
     {
         return (size_t)x.m_blob;
     }
 };
 
 template <>
-struct equal_to<StarFish::BlobURLStore> {
-    bool operator()(StarFish::BlobURLStore const& a,
-                    StarFish::BlobURLStore const& b) const
+struct equal_to<Starfish::BlobURLStore> {
+    bool operator()(Starfish::BlobURLStore const& a,
+                    Starfish::BlobURLStore const& b) const
     {
         return a.m_blob == b.m_blob;
     }
 };
 template <>
-struct hash<StarFish::StarFishPubicWebViewHandlerKind> {
-    size_t operator()(StarFish::StarFishPubicWebViewHandlerKind const& x) const
+struct hash<Starfish::StarfishPubicWebViewHandlerKind> {
+    size_t operator()(Starfish::StarfishPubicWebViewHandlerKind const& x) const
     {
         return std::hash<uint32_t>()((uint32_t)x);
     }
 };
 
 template <>
-struct equal_to<StarFish::StarFishPubicWebViewHandlerKind> {
-    bool operator()(StarFish::StarFishPubicWebViewHandlerKind const& a,
-                    StarFish::StarFishPubicWebViewHandlerKind const& b) const
+struct equal_to<Starfish::StarfishPubicWebViewHandlerKind> {
+    bool operator()(Starfish::StarfishPubicWebViewHandlerKind const& a,
+                    Starfish::StarfishPubicWebViewHandlerKind const& b) const
     {
         return a == b;
     }
 };
 }
 
-namespace StarFish {
+namespace Starfish {
 
-enum StarFishStartUpFlag {
+enum StarfishStartUpFlag {
     enableComputedStyleDump = 1 << 1,
     enableFrameTreeDump = 1 << 2,
     enableStackingContextDump = 1 << 3,
@@ -97,13 +97,13 @@ enum StarFishStartUpFlag {
     enableRegressionTest = 1 << 7,
 };
 
-enum StarFishDeviceKind {
+enum StarfishDeviceKind {
     deviceKindUseMouse = 0,
     deviceKindUseTouchScreen = 1 << 0,
 };
 
 #ifdef STARFISH_ENABLE_TEST
-enum StarFishTestCompatibleMode {
+enum StarfishTestCompatibleMode {
     Normal = 0,
     ChromiumLayout,
 };
@@ -136,7 +136,7 @@ class TTS;
 #endif
 union FontFamilyData;
 
-class WebView : public StarFishHoldable, public gc {
+class WebView : public StarfishHoldable, public gc {
     friend class BrowsingContext;
     friend class StackingContext;
     friend class PlatformWindow;
@@ -146,7 +146,7 @@ class WebView : public StarFishHoldable, public gc {
     friend class FileURLResourceRequestJobDelegate; // Custom file IO
 public:
     static WebView* create(
-        StarFish* starFish, const char* locale, const char* timezoneID,
+        Starfish* starfish, const char* locale, const char* timezoneID,
         uint32_t windowInitalWidth, uint32_t windowInitalHeight,
         uint32_t defaultFontSize, String* defaultFontName,
         const ScreenInfo& info,
@@ -319,12 +319,12 @@ public:
         return m_locale;
     }
 
-    StarFishStartUpFlag startUpFlag()
+    StarfishStartUpFlag startUpFlag()
     {
-        return (StarFishStartUpFlag)m_startUpFlag;
+        return (StarfishStartUpFlag)m_startUpFlag;
     }
 
-    StarFishDeviceKind deviceKind()
+    StarfishDeviceKind deviceKind()
     {
         return m_deviceKind;
     }
@@ -378,14 +378,14 @@ public:
     String* userAgent();
 
 #ifdef STARFISH_ENABLE_TEST
-    void setTestCompatibleMode(StarFishTestCompatibleMode mode)
+    void setTestCompatibleMode(StarfishTestCompatibleMode mode)
     {
         m_testCompatibleMode = mode;
     }
 
-    StarFishTestCompatibleMode testCompatibleMode()
+    StarfishTestCompatibleMode testCompatibleMode()
     {
-        return (StarFishTestCompatibleMode)m_testCompatibleMode;
+        return (StarfishTestCompatibleMode)m_testCompatibleMode;
     }
 #endif
 
@@ -423,11 +423,11 @@ public:
 
     String* evaluateJavaScript(String* s);
     void registerPublicWebViewHandler(
-        StarFishPubicWebViewHandlerKind handlerKind,
+        StarfishPubicWebViewHandlerKind handlerKind,
         std::function<void(void*)> handler);
     bool containsPublicWebViewHandler(
-        StarFishPubicWebViewHandlerKind handlerKind);
-    void callPublicWebViewHandler(StarFishPubicWebViewHandlerKind handlerKind,
+        StarfishPubicWebViewHandlerKind handlerKind);
+    void callPublicWebViewHandler(StarfishPubicWebViewHandlerKind handlerKind,
                                   void* data);
 
     void registerCustomFileResourceRequestCallbacks(
@@ -488,7 +488,7 @@ public:
     }
 
 private:
-    WebView(StarFish* starFish, const char* locale, const char* timezoneID,
+    WebView(Starfish* starfish, const char* locale, const char* timezoneID,
             uint32_t w, uint32_t h, uint32_t defaultFontSize,
             String* defaultFontName, const ScreenInfo& info,
             String* customUserAgentString, String* builtinPolyfillPathString);
@@ -583,8 +583,8 @@ private:
     String* m_builtinPolyfillPathString;
     std::string m_proxyURL;
     unsigned int m_startUpFlag;
-    StarFishDeviceKind m_deviceKind;
-    std::unordered_map<StarFishPubicWebViewHandlerKind,
+    StarfishDeviceKind m_deviceKind;
+    std::unordered_map<StarfishPubicWebViewHandlerKind,
                        std::function<void(void*)>>
         m_publicWebViewHandlers;
 

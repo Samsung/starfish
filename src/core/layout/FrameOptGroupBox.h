@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFrameOptGroupBox__
-#define __StarFishFrameOptGroupBox__
+#ifndef __StarfishFrameOptGroupBox__
+#define __StarfishFrameOptGroupBox__
 
 #include "core/layout/FrameBlockBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameTreeBuilderContext;
 class ComputedStyle;

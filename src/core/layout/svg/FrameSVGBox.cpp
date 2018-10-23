@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "FrameSVGBox.h"
 #include "core/dom/Node.h"
 #include "core/dom/Element.h"
@@ -27,7 +27,7 @@
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CalcData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameSVGBox::operator new(size_t size)
 {

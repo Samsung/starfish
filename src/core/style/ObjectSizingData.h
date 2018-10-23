@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishObjectSizingData__
-#define __StarFishObjectSizingData__
+#ifndef __StarfishObjectSizingData__
+#define __StarfishObjectSizingData__
 
 #include "Style.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ObjectSizingData : public gc {
 public:

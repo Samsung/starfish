@@ -18,13 +18,13 @@
  */
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && \
-    !defined(__StarFishHTMLMediaElement__)
-#define __StarFishHTMLMediaElement__
+    !defined(__StarfishHTMLMediaElement__)
+#define __StarfishHTMLMediaElement__
 
 #include "core/dom/HTMLElement.h"
 #include "core/extra/TimeRange.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class Event;
 class EventTarget;
@@ -299,7 +299,7 @@ public:
     void setPlayStartPos(double start);
     void setPlayEndPos(double end);
 
-    static String* preloadToString(StarFish* starfish, PreloadState state)
+    static String* preloadToString(Starfish* starfish, PreloadState state)
     {
         switch (state) {
         case PRELOAD_NONE:

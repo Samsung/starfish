@@ -17,14 +17,14 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
 
-namespace StarFish {
+namespace Starfish {
 
 SVGElement::SVGElement(Document* document, const QualifiedName& qname)
     : Element(document, qname)
@@ -55,7 +55,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
 {
     Element::didAttributeChanged(name, old, value, attributeCreated,
                                  attributeRemoved);
-    StaticStrings* ss = starFish()->staticStrings();
+    StaticStrings* ss = starfish()->staticStrings();
 
     if (needsGeometryAttributes()) {
         if (ss->m_x == name) {
@@ -101,7 +101,7 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
     }
 
     if (needsPreserveAspectRatioValue()) {
-        if (name == starFish()->staticStrings()->m_preserveAspectRatio) {
+        if (name == starfish()->staticStrings()->m_preserveAspectRatio) {
 #define SET_PARV(name)                                      \
     else if (value->equals(#name))                          \
     {                                                       \
@@ -131,12 +131,12 @@ void SVGElement::didAttributeChanged(QualifiedName name, String* old,
 
 String* SVGElement::xmlbase()
 {
-    return getAttributeOrEmpty(starFish()->staticStrings()->m_xmlBase);
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_xmlBase);
 }
 
 void SVGElement::setXmlbase(String* str)
 {
-    setAttribute(starFish()->staticStrings()->m_xmlBase, str);
+    setAttribute(starfish()->staticStrings()->m_xmlBase, str);
 }
 
 SVGElement* SVGElement::ownerSVGElement()
@@ -174,7 +174,7 @@ void SVGElement::styleForPresentationAttribute(
     }
 
     if (needsFillAttributes()) {
-        String* fill = getAttributeOrEmpty(starFish()->staticStrings()->m_fill);
+        String* fill = getAttributeOrEmpty(starfish()->staticStrings()->m_fill);
         if (fill->length()) {
             pair.setKeyKind(CSSStyleValuePair::Fill);
 
@@ -188,7 +188,7 @@ void SVGElement::styleForPresentationAttribute(
         }
 
         String* fillRule =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_fillRule);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_fillRule);
         if (fillRule->length()) {
             pair.setKeyKind(CSSStyleValuePair::FillRule);
 
@@ -202,7 +202,7 @@ void SVGElement::styleForPresentationAttribute(
         }
 
         String* fillOpacity =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_fillOpacity);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_fillOpacity);
         if (fillOpacity->length()) {
             pair.setKeyKind(CSSStyleValuePair::FillOpacity);
 
@@ -218,7 +218,7 @@ void SVGElement::styleForPresentationAttribute(
 
     if (needsStrokeAttributes()) {
         String* stroke =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_stroke);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_stroke);
         if (stroke->length()) {
             pair.setKeyKind(CSSStyleValuePair::Stroke);
 
@@ -232,7 +232,7 @@ void SVGElement::styleForPresentationAttribute(
         }
 
         String* strokeWidth =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_strokeWidth);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_strokeWidth);
         if (strokeWidth->length()) {
             pair.setKeyKind(CSSStyleValuePair::StrokeWidth);
 
@@ -248,7 +248,7 @@ void SVGElement::styleForPresentationAttribute(
 
     if (needsTransformAttributes()) {
         String* transform =
-            getAttributeOrEmpty(starFish()->staticStrings()->m_transform);
+            getAttributeOrEmpty(starfish()->staticStrings()->m_transform);
         if (transform->length()) {
             pair.setKeyKind(CSSStyleValuePair::Transform);
 

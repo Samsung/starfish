@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/animation/CubicBezier.h"
 #include <cmath>
 
-namespace StarFish {
+namespace Starfish {
 CubicBezier::CubicBezier(float X1, float Y1, float X2, float Y2)
 {
     STARFISH_ASSERT(0 <= X1 && X1 <= 1);

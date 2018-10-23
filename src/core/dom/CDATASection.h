@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishCDATASection__
-#define __StarFishCDATASection__
+#ifndef __StarfishCDATASection__
+#define __StarfishCDATASection__
 
 #include "core/dom/Text.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CDATASection : public Text {
 public:

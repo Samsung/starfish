@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishFrameSVGSVGBox__
-#define __StarFishFrameSVGSVGBox__
+#ifndef __StarfishFrameSVGSVGBox__
+#define __StarfishFrameSVGSVGBox__
 
 #include "core/layout/FrameReplaced.h"
 #include "core/layout/svg/FrameSVGBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FrameSVGSVGBox final : public FrameReplaced {
 public:

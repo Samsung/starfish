@@ -18,12 +18,12 @@
  */
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && \
-    !defined(__StarFishHTMLSourceElement__)
-#define __StarFishHTMLSourceElement__
+    !defined(__StarfishHTMLSourceElement__)
+#define __StarfishHTMLSourceElement__
 
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HTMLSourceElement : public HTMLElement {
 public:

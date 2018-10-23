@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishRepaintRegionTracker__
-#define __StarFishRepaintRegionTracker__
+#ifndef __StarfishRepaintRegionTracker__
+#define __StarfishRepaintRegionTracker__
 
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameReplacedIFrame.h"
@@ -26,7 +26,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/HTMLIFrameElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class RepaintRegionTracker {
 public:

@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/DOMPointReadOnly.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 DOMPointReadOnly::DOMPointReadOnly(Document* document, double x, double y,
                                    double z, double w)

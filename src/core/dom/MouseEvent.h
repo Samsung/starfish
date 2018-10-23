@@ -17,14 +17,14 @@
  *  USA
  */
 
-#ifndef __StarFishMouseEvent__
-#define __StarFishMouseEvent__
+#ifndef __StarfishMouseEvent__
+#define __StarfishMouseEvent__
 
 #include "UIEvent.h"
 #include "PlatformIntegrationData.h"
 using namespace LWE;
 
-namespace StarFish {
+namespace Starfish {
 
 class Window;
 

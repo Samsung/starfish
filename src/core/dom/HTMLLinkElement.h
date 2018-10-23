@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLLinkElement__
-#define __StarFishHTMLLinkElement__
+#ifndef __StarfishHTMLLinkElement__
+#define __StarfishHTMLLinkElement__
 
 #include "core/dom/HTMLElement.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSStyleSheet;
 class TextResource;

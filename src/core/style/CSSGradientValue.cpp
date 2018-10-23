@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/style/CSSGradientValue.h"
 #include "core/style/GradientData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void CSSGradientValue::convertCSSColorStopsToColorStops(
     GCVector<ColorStop*>& out)
@@ -213,4 +213,4 @@ GradientData* CSSRadialGradientValue::convertToGradientData()
     convertCSSColorStopsToColorStops(gradient->colorStopList());
     return gradient;
 }
-} /* namespace StarFish */
+} /* namespace Starfish */

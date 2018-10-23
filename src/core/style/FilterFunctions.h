@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishFilterFunctions__
-#define __StarFishFilterFunctions__
+#ifndef __StarfishFilterFunctions__
+#define __StarfishFilterFunctions__
 
 #include "core/style/CSSFilterFunction.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class FilterFunction : public gc {
 public:

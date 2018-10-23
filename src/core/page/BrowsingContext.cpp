@@ -19,8 +19,8 @@
 
 // #define STARFISH_ENABLE_PROFILE_TIMER
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 
 #include "BrowsingContext.h"
 #include "WebView.h"
@@ -67,7 +67,7 @@
 #include "platform/loader/ResourceLoader.h"
 #include "core/dom/InputEvent.h"
 
-namespace StarFish {
+namespace Starfish {
 
 BrowsingContext* BrowsingContext::create(WebView* webView)
 {
@@ -506,7 +506,7 @@ bool BrowsingContext::layoutIfNeeds()
         // lay out frame tree
         INSTALL_PROFILE_TIMER("lay out frame tree");
 
-        LayoutContext ctx(starFish(), document()
+        LayoutContext ctx(starfish(), document()
                                           ->frame()
                                           ->asFrameBox()
                                           ->asFrameBlockBox()
@@ -726,7 +726,7 @@ Node* BrowsingContext::hitTest(float x, float y)
             frame = frame->parent();
         }
 #ifdef STARFISH_ENABLE_TEST
-        if (webView()->startUpFlag() & StarFishStartUpFlag::enableHitTestDump) {
+        if (webView()->startUpFlag() & StarfishStartUpFlag::enableHitTestDump) {
             printf("hitTest Result-> ");
             frame->node()->dump();
             puts("");
@@ -813,13 +813,13 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
     e->setState(Node::NodeStateFocused, true);
 
     // focus event
-    String* eventType = starFish()->staticStrings()->m_focus.localName();
+    String* eventType = starfish()->staticStrings()->m_focus.localName();
     Event* event = new FocusEvent(document(), eventType,
                                   FocusEventInit(false, false, relatedTarget));
     document()->dispatchEventByUA(e->asNode(), event);
 
     // focusin event
-    eventType = starFish()->staticStrings()->m_focusin.localName();
+    eventType = starfish()->staticStrings()->m_focusin.localName();
     event = new FocusEvent(document(), eventType,
                            FocusEventInit(true, false, relatedTarget));
     document()->dispatchEventByUA(e->asNode(), event);
@@ -852,13 +852,13 @@ void BrowsingContext::releaseFocusedNode(Node* n, bool resetActiveElement)
         Node* relatedTarget = n == m_focusedNode ? nullptr : n;
 
         // blur event
-        String* eventType = starFish()->staticStrings()->m_blur.localName();
+        String* eventType = starfish()->staticStrings()->m_blur.localName();
         Event* event = new FocusEvent(
             document(), eventType, FocusEventInit(false, false, relatedTarget));
         document()->dispatchEventByUA(m_focusedNode, event);
 
         // focusout event
-        eventType = starFish()->staticStrings()->m_focusout.localName();
+        eventType = starfish()->staticStrings()->m_focusout.localName();
         event = new FocusEvent(document(), eventType,
                                FocusEventInit(true, false, relatedTarget));
         document()->dispatchEventByUA(m_focusedNode, event);
@@ -1044,7 +1044,7 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
                 while (enterTarget) {
                     Event* e = createMouseEvent(
                         document(),
-                        starFish()->staticStrings()->m_mouseenter.localName(),
+                        starfish()->staticStrings()->m_mouseenter.localName(),
                         data);
                     e->setCancelable(false);
                     e->setBubbles(false);
@@ -1055,7 +1055,7 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
 
             {
                 String* name =
-                    starFish()->staticStrings()->m_mouseover.localName();
+                    starfish()->staticStrings()->m_mouseover.localName();
                 MouseData data(button, buttons, posX, posY, 0, oldElement);
                 Event* e = createMouseEvent(document(), name, data);
                 document()->window()->dispatchEventByUA(
@@ -1064,7 +1064,7 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
 
             {
                 String* name =
-                    starFish()->staticStrings()->m_mouseout.localName();
+                    starfish()->staticStrings()->m_mouseout.localName();
                 MouseData data(button, buttons, posX, posY, 0, newElement);
                 Event* e = createMouseEvent(document(), name, data);
                 document()->window()->dispatchEventByUA(
@@ -1077,7 +1077,7 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
                 while (leaveTarget) {
                     Event* e = createMouseEvent(
                         document(),
-                        starFish()->staticStrings()->m_mouseleave.localName(),
+                        starfish()->staticStrings()->m_mouseleave.localName(),
                         data);
                     e->setCancelable(false);
                     e->setBubbles(false);
@@ -1186,7 +1186,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     switch (kind) {
     case TouchEventKind::TouchEventStart: {
         // Dispatch touchstart event
-        name = starFish()->staticStrings()->m_touchstart.localName();
+        name = starfish()->staticStrings()->m_touchstart.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
@@ -1195,7 +1195,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
     }
     case TouchEventKind::TouchEventMove: {
         // Dispatch touchmove event
-        name = starFish()->staticStrings()->m_touchmove.localName();
+        name = starfish()->staticStrings()->m_touchmove.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
         Node* t = targetNode->nearestParentElement();
         t = t ? t : document();
@@ -1208,7 +1208,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
             // Dispatch click event
             Node* t = targetNode->nearestParentElement();
             t = t ? t : document();
-            name = starFish()->staticStrings()->m_click.localName();
+            name = starfish()->staticStrings()->m_click.localName();
             MouseData clickData(MouseButtonValue::LeftButton,
                                 MouseButtonsValue::LeftButtonDown, targetX,
                                 targetY, 1);
@@ -1216,7 +1216,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
             document()->window()->dispatchEventByUA(t, click);
         }
         // Dispatch touchend event
-        name = starFish()->staticStrings()->m_touchend.localName();
+        name = starfish()->staticStrings()->m_touchend.localName();
         Event* e = createTouchEvent(document(), name, touches, count);
         returnValue = !document()->window()->dispatchEventByUA(t, e);
         break;
@@ -1323,7 +1323,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     switch (kind) {
     case MouseEventKind::MouseEventDown: {
         // Dispatch mousedown event
-        name = starFish()->staticStrings()->m_mousedown.localName();
+        name = starfish()->staticStrings()->m_mousedown.localName();
         MouseData downData(data);
         downData.setRelatedTarget(nullptr);
         Event* e = createMouseEvent(document(), name, downData);
@@ -1332,7 +1332,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     }
     case MouseEventKind::MouseEventMove: {
         // Dispatch mousemove event
-        name = starFish()->staticStrings()->m_mousemove.localName();
+        name = starfish()->staticStrings()->m_mousemove.localName();
         MouseData mvData(data);
         mvData.setRelatedTarget(nullptr);
         Event* e = createMouseEvent(document(), name, mvData);
@@ -1341,7 +1341,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     }
     case MouseEventKind::MouseEventUp: {
         // Dispatch mouseup event
-        name = starFish()->staticStrings()->m_mouseup.localName();
+        name = starfish()->staticStrings()->m_mouseup.localName();
         MouseData upData(data);
         upData.setRelatedTarget(nullptr);
         Event* mouseup = createMouseEvent(document(), name, upData);
@@ -1349,7 +1349,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 
         if (m_activeNodeTarget == t) {
             // Dispatch click event
-            name = starFish()->staticStrings()->m_click.localName();
+            name = starfish()->staticStrings()->m_click.localName();
             Event* click = createMouseEvent(document(), name, data);
             document()->window()->dispatchEventByUA(t, click);
         }
@@ -1480,7 +1480,7 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
     // Dispatch event
     String* eventType = String::emptyString;
     if (kind == KeyEventKind::KeyEventUp) {
-        eventType = starFish()->staticStrings()->m_keyup.localName();
+        eventType = starfish()->staticStrings()->m_keyup.localName();
         setKeydownEventDefaultPrevented(false);
     } else if (kind == KeyEventKind::KeyEventPress) {
         if (!String::isASCIIPrintableKey(pkdata.keyValue())) {
@@ -1489,10 +1489,10 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
             return;
         }
 
-        eventType = starFish()->staticStrings()->m_keypress.localName();
+        eventType = starfish()->staticStrings()->m_keypress.localName();
     } else {
         // kind == KeyEventKind::KeyEventDown
-        eventType = starFish()->staticStrings()->m_keydown.localName();
+        eventType = starfish()->staticStrings()->m_keydown.localName();
     }
 
     if (kind != KeyEventKind::KeyEventPress) {
@@ -1522,7 +1522,7 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
             } else if (e->keyValue() == KeyValue::EnterKey ||
                        e->keyValue() == KeyValue::SpaceKey) {
                 String* eventType =
-                    starFish()->staticStrings()->m_click.localName();
+                    starfish()->staticStrings()->m_click.localName();
                 Node* t = webView()->focusedNode();
                 if (t) {
                     t = t->nearestParentElement();
@@ -1768,16 +1768,16 @@ void BrowsingContext::dispatchCompositionEvent(CompositionEventKind kind,
     // Dispatch event
     String* eventType = String::emptyString;
     if (kind == CompositionEventKind::CompositionEventStart) {
-        eventType = starFish()->staticStrings()->m_compositionstart.localName();
+        eventType = starfish()->staticStrings()->m_compositionstart.localName();
     } else if (kind == CompositionEventKind::CompositionEventUpdate) {
         if (compositionStartEventDefaultPrevented()) {
             return;
         }
         eventType =
-            starFish()->staticStrings()->m_compositionupdate.localName();
+            starfish()->staticStrings()->m_compositionupdate.localName();
     } else {
         STARFISH_ASSERT(kind == CompositionEventKind::CompositionEventEnd);
-        eventType = starFish()->staticStrings()->m_compositionend.localName();
+        eventType = starfish()->staticStrings()->m_compositionend.localName();
         setCompositionStartEventDefeaultPrevented(false);
     }
     CompositionEvent* e = new CompositionEvent(document(), eventType, data);

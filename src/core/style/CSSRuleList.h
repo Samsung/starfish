@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishCSSRuleList__
-#define __StarFishCSSRuleList__
+#ifndef __StarfishCSSRuleList__
+#define __StarfishCSSRuleList__
 
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Node.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class CSSRule;
 class CSSStyleSheet;

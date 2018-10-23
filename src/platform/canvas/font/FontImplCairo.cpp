@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
-#include "StarFish.h"
+#include "Starfish.h"
 
 #include <cairo.h>
 
@@ -40,16 +40,16 @@
 
 #define MIN_ENABLE_KERNING_SIZE 48
 
-namespace StarFish {
+namespace Starfish {
 
 FT_Library g_freeTypeInstance;
 
-PlatformFontSelector* PlatformFontSelector::create(WebView* sf)
+PlatformFontSelector* PlatformFontSelector::create(WebView* webView)
 {
-    return new PlatformFontSelectorImplCairo(sf);
+    return new PlatformFontSelectorImplCairo(webView);
 }
 
-PlatformFontCache* PlatformFontCache::create(WebView* sf)
+PlatformFontCache* PlatformFontCache::create(WebView* webView)
 {
     return new PlatformFontCacheImplCairo();
 }

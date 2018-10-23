@@ -17,8 +17,8 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMParser.h"
@@ -29,7 +29,7 @@
 #include "core/page/Window.h"
 #include "platform/network/http/HTTPStatus.h"
 
-namespace StarFish {
+namespace Starfish {
 
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadstart);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, progress);
@@ -51,10 +51,10 @@ public:
         ProgressState progState = request->progressState();
         if (progState == ProgressState::Progress) {
             eventName =
-                request->starFish()->staticStrings()->m_progress.localName();
+                request->starfish()->staticStrings()->m_progress.localName();
         } else if (progState == ProgressState::InError) {
             eventName =
-                request->starFish()->staticStrings()->m_error.localName();
+                request->starfish()->staticStrings()->m_error.localName();
             if (!m_xhr->m_resourceRequest->url()->isFileURL() &&
                 !m_xhr->m_resourceRequest->url()->isDataURL() &&
                 request->isSync()) {
@@ -67,19 +67,19 @@ public:
                 return;
             }
             eventName =
-                request->starFish()->staticStrings()->m_abort.localName();
+                request->starfish()->staticStrings()->m_abort.localName();
         } else if (progState == ProgressState::TimeOut) {
             eventName =
-                request->starFish()->staticStrings()->m_timeout.localName();
+                request->starfish()->staticStrings()->m_timeout.localName();
         } else if (progState == ProgressState::Load) {
             eventName =
-                request->starFish()->staticStrings()->m_load.localName();
+                request->starfish()->staticStrings()->m_load.localName();
         } else if (progState == ProgressState::LoadEnd) {
             eventName =
-                request->starFish()->staticStrings()->m_loadend.localName();
+                request->starfish()->staticStrings()->m_loadend.localName();
         } else if (progState == ProgressState::LoadStart) {
             eventName =
-                request->starFish()->staticStrings()->m_loadstart.localName();
+                request->starfish()->staticStrings()->m_loadstart.localName();
         } else {
             STARFISH_RELEASE_ASSERT_NOT_REACHED();
         }
@@ -127,7 +127,7 @@ public:
                         calloc(1, m_xhr->m_resourceRequest->response().size());
                     memcpy(buffer, m_xhr->m_resourceRequest->response().data(),
                            m_xhr->m_resourceRequest->response().size());
-                    m_xhr->m_responseBlob = new ::StarFish::Blob(
+                    m_xhr->m_responseBlob = new ::Starfish::Blob(
                         m_xhr->scriptBindingInstance()->ownerDocument(),
                         m_xhr->m_resourceRequest->response().size(),
                         m_xhr->m_resourceRequest->responseMimeType(), buffer,
@@ -163,7 +163,7 @@ public:
                 }
             }
 
-            String* eventType = request->starFish()
+            String* eventType = request->starfish()
                                     ->staticStrings()
                                     ->m_readystatechange.localName();
             Event* e =
@@ -176,7 +176,7 @@ public:
     XMLHttpRequest* m_xhr;
 };
 
-XMLHttpRequest::XMLHttpRequest(::StarFish::Document* document)
+XMLHttpRequest::XMLHttpRequest(::Starfish::Document* document)
     : XMLHttpRequestEventTarget(document)
     , m_resourceRequest(new ResourceRequest(document))
     , m_withCredentials(false)

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/Node.h"
 #include "core/layout/FrameTableColBox.h"
 #include "core/layout/FrameTableBox.h"
@@ -25,7 +25,7 @@
 #include "core/layout/FrameTableSectionBox.h"
 #include "core/modules/canvas/Canvas.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* CellStruct::operator new(size_t size)
 {

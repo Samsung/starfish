@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Range.h"
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/CharacterData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 Range::Range(Document* document, Node* startContainer, unsigned startOffset,
              Node* endContainer, unsigned endOffset)

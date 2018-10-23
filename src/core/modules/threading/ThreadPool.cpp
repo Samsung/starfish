@@ -17,11 +17,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
-namespace StarFish {
+namespace Starfish {
 
 ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
     : m_isClosed(false)

@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "KeyboardEvent.h"
 #include "platform/event/PlatformKeyEventData.h"
 
-namespace StarFish {
+namespace Starfish {
 
 KeyboardEventInit::KeyboardEventInit(PlatformKeyEventData& kdata)
     : EventModifierInit(kdata.m_eventModifierData)
     , m_keyboardEventData(kdata.m_keyboardEventData)
 {
 }
-} // namespace StarFish
+} // namespace Starfish

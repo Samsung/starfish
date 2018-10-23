@@ -20,14 +20,14 @@
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/DOMException.h"
 #include "platform/network/http/HTTPUtil.h"
 #include "core/fetch/Headers.h"
 #include "core/dom/Document.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class HeadersIterationSource final
     : public IterationSource<Nullable<String*>, Nullable<String*>> {

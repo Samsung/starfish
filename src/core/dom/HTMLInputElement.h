@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTMLInputElement__
-#define __StarFishHTMLInputElement__
+#ifndef __StarfishHTMLInputElement__
+#define __StarfishHTMLInputElement__
 
 #include "core/dom/HTMLTextEditable.h"
 
-namespace StarFish {
+namespace Starfish {
 class Event;
 class HTMLInputElement : public HTMLTextEditable {
     const int DEFAULT_SIZE = 20;

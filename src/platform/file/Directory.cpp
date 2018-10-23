@@ -17,7 +17,7 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "Directory.h"
 #if defined(OS_WINDOWS)
 #include <direct.h>
@@ -163,7 +163,7 @@ void rewinddir(DIR* dir)
 #endif
 #include <sys/stat.h>
 
-namespace StarFish {
+namespace Starfish {
 
 class DirectoryPosix : public Directory {
 public:
@@ -341,4 +341,4 @@ Directory* Directory::createInNonGCArea()
     DirectoryPosix* dir = new (malloc(sizeof(DirectoryPosix))) DirectoryPosix();
     return dir;
 }
-}; // namespace StarFish
+}; // namespace Starfish

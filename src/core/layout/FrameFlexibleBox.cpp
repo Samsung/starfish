@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/layout/FrameFlexibleBox.h"
 
-namespace StarFish {
+namespace Starfish {
 
 void* FrameFlexibleBox::operator new(size_t size)
 {

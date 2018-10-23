@@ -17,10 +17,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "core/dom/UIEvent.h"
 
-namespace StarFish {
+namespace Starfish {
 
 EventModifierInit::EventModifierInit()
     : UIEventInit()

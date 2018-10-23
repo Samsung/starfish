@@ -41,10 +41,10 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTMLElementLookupTrie.h"
 
-namespace StarFish {
+namespace Starfish {
 
 QualifiedName lookupHTMLTag(StaticStrings& s, const char* data, unsigned length)
 {

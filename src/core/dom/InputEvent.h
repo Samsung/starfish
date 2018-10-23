@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishInputEvent__
-#define __StarFishInputEvent__
+#ifndef __StarfishInputEvent__
+#define __StarfishInputEvent__
 
 #include "UIEvent.h"
 
-namespace StarFish {
+namespace Starfish {
 
 struct InputEventInit : UIEventInit {
     STARFISH_MAKE_STACK_ALLOCATED()

@@ -17,15 +17,15 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/TreeWalker.h"
 #include "core/dom/NodeFilter.h"
 #include "core/dom/Traverse.h"
 #include "core/page/Window.h"
 #include "core/dom/DOMException.h"
 
-namespace StarFish {
+namespace Starfish {
 
 ScriptValue TreeWalker::filter()
 {

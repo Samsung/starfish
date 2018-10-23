@@ -17,22 +17,22 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
-#include "StarFish.h"
+#include "StarfishConfig.h"
+#include "Starfish.h"
 #include "core/dom/Text.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/DOMException.h"
 
-namespace StarFish {
+namespace Starfish {
 
 String* Text::nodeName()
 {
-    return starFish()->staticStrings()->m_textLocalName;
+    return starfish()->staticStrings()->m_textLocalName;
 }
 
 String* Text::localName()
 {
-    return starFish()->staticStrings()->m_textLocalName;
+    return starfish()->staticStrings()->m_textLocalName;
 }
 
 Text* Text::splitText(unsigned long offset)

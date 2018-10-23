@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishNodeListImpl__
-#define __StarFishNodeListImpl__
+#ifndef __StarfishNodeListImpl__
+#define __StarfishNodeListImpl__
 
-namespace StarFish {
+namespace Starfish {
 
 class Node;
 class Element;

@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarFishTimerWrapper__
-#define __StarFishTimerWrapper__
+#ifndef __StarfishTimerWrapper__
+#define __StarfishTimerWrapper__
 
-namespace StarFish {
+namespace Starfish {
 
 class BrowsingContext;
 

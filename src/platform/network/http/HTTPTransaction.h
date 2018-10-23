@@ -17,12 +17,12 @@
  *  USA
  */
 
-#ifndef __StarFishHTTPTransaction__
-#define __StarFishHTTPTransaction__
+#ifndef __StarfishHTTPTransaction__
+#define __StarfishHTTPTransaction__
 
 #include <curl/curl.h>
 
-namespace StarFish {
+namespace Starfish {
 
 class HTTPRequest;
 class HTTPResponse;

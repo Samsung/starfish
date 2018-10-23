@@ -17,13 +17,13 @@
  *  USA
  */
 
-#ifndef __StarFishBorderData__
-#define __StarFishBorderData__
+#ifndef __StarfishBorderData__
+#define __StarfishBorderData__
 
 #include "core/style/BorderValue.h"
 #include "core/style/BorderImage.h"
 
-namespace StarFish {
+namespace Starfish {
 
 class ComputedStyle;
 
@@ -132,6 +132,6 @@ private:
     BorderImageData m_image;
 };
 
-} /* namespace StarFish */
+} /* namespace Starfish */
 
-#endif /* __StarFishBorderData__ */
+#endif /* __StarfishBorderData__ */

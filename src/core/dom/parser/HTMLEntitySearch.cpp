@@ -41,11 +41,11 @@
  *  USA
  */
 
-#include "StarFishConfig.h"
+#include "StarfishConfig.h"
 #include "HTMLEntitySearch.h"
 #include "HTMLEntityTable.h"
 
-namespace StarFish {
+namespace Starfish {
 
 static const HTMLEntityTableEntry* halfway(const HTMLEntityTableEntry* left,
                                            const HTMLEntityTableEntry* right)
