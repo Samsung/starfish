@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "binding/RequestOrUSVStringUnion.h"
-#include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
+#include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/fetch/Request.h"
 #include "core/page/Window.h"
@@ -31,19 +31,21 @@ using namespace Escargot;
 
 namespace Starfish {
 
-extern BlobOrBufferSourceOrUSVString
-toBlobOrBufferSourceOrUSVStringFromValueRef(ExecutionStateRef* state,
-                                            ValueRef* from);
-extern ValueRef* toValueRefFromBlobOrBufferSourceOrUSVString(
-    ExecutionStateRef* state, BlobOrBufferSourceOrUSVString& from);
+extern BlobOrBufferSourceOrUSVStringOrReadableStream
+toBlobOrBufferSourceOrUSVStringOrReadableStreamFromValueRef(
+    ExecutionStateRef* state, ValueRef* from);
+extern ValueRef* toValueRefFromBlobOrBufferSourceOrUSVStringOrReadableStream(
+    ExecutionStateRef* state,
+    BlobOrBufferSourceOrUSVStringOrReadableStream& from);
 extern bool isBlobOrBufferSourceOrUSVString(ExecutionStateRef* state,
                                             ValueRef* from);
 
 static BodyInit toBodyInitFromValueRef(ContextRef* ctx, ValueRef* from)
 {
     ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-    BlobOrBufferSourceOrUSVString body =
-        toBlobOrBufferSourceOrUSVStringFromValueRef(state, from);
+    BlobOrBufferSourceOrUSVStringOrReadableStream body =
+        toBlobOrBufferSourceOrUSVStringOrReadableStreamFromValueRef(state,
+                                                                    from);
     return body;
 }
 
@@ -124,7 +126,8 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
 
     } else {
         if (input->isUSVStringValue()) {
-            m_data.m_url = new ResourceURL(input->getUSVStringValue());
+            m_data.m_url = new ResourceURL(input->getUSVStringValue(),
+                                           document()->baseURL()->baseURI());
         } else {
             return; // ignore or read the result of toString
         }
@@ -166,7 +169,7 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
                                        DOMException::Code::SCRIPT_TYPE_ERR);
             }
 
-            this->setBody(toBodyInitFromValueRef(
+            this->setBodyInit(toBodyInitFromValueRef(
                 this->scriptBindingInstance()->scriptContext(), body));
             if (this->contentType() != nullptr) {
                 if (!m_headers.noCheckValidHas("content-type")) {
@@ -174,6 +177,8 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
                                               CSTR(this->contentType()));
                 }
             }
+        } else {
+            this->setBodyInit(nullptr);
         }
     }
 }

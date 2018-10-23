@@ -27,14 +27,14 @@
 
 namespace Starfish {
 
-Response::Response(Document* document, uint32_t status, std::string type,
+Response::Response(Document* document, uint32_t status, FetchResponseType type,
                    std::string statusText)
     : ScriptWrappable(this)
     , Body(document->window())
     , m_instance(document->scriptBindingInstance())
     , m_responseInit()
     , m_headers(Headers(document))
-    , m_type(String::createASCIIString(type.data()))
+    , m_type(type)
     , m_url(String::emptyString)
     , m_redirected(false)
     , m_ok(true)
@@ -45,15 +45,29 @@ Response::Response(Document* document, uint32_t status, std::string type,
     m_headers.setGuard(Headers::Guard::Response);
 }
 
-Response::Response(Document* document, Nullable<BodyInit>& body)
-    : Response(document)
+Response::Response(Document* document, Nullable<BodyInit>& body,
+                   uint32_t status, FetchResponseType type,
+                   std::string statusText)
+    : ScriptWrappable(this)
+    , Body(document->window(), body)
+    , m_instance(document->scriptBindingInstance())
+    , m_responseInit()
+    , m_headers(Headers(document))
+    , m_type(type)
+    , m_url(String::emptyString)
+    , m_redirected(false)
+    , m_ok(true)
+    , m_status(status)
+    , m_statusText(String::createASCIIString(statusText.data()))
+    , m_mimeType(String::emptyString)
 {
+    m_headers.setGuard(Headers::Guard::Response);
     handleBodyInit(body);
 }
 
 Response::Response(Document* document, Nullable<BodyInit>& body,
                    ResponseInit& init)
-    : Response(document)
+    : Response(document, body)
 {
     m_status = init.status();
 
@@ -85,7 +99,7 @@ void Response::handleBodyInit(Nullable<BodyInit>& body)
                                    DOMException::Code::SCRIPT_TYPE_ERR);
         }
 
-        setBody(body.getValue());
+        setBodyInit(body.getValue());
 
         if (m_contentType != nullptr &&
             !m_headers.noCheckValidHas("content-type")) {
@@ -113,9 +127,10 @@ bool Response::isValidRedirectStatus(uint32_t status)
 
 Response* Response::error(Document* document)
 {
-    Response* response = new Response(document, 200, "error", "");
+    Response* response =
+        new Response(document, 200, FetchResponseType::Error, "");
     response->m_ok = false;
-    response->m_body = nullptr;
+    response->m_bodyInit = nullptr;
     response->m_status = 0;
     response->headers()->setGuard(Headers::Guard::Immutable);
 
@@ -130,7 +145,8 @@ Response* Response::redirect(Document* document, String* url)
         throw new DOMException(document, DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
-    Response* response = new Response(document, 302, "default", "");
+    Response* response =
+        new Response(document, 302, FetchResponseType::Default, "");
     response->headers()->setGuard(Headers::Guard::Immutable);
     response->headers()->noCheckValidSet(
         "location", parsedUrl.string()->toUTF8NonGCString());
@@ -152,9 +168,8 @@ Response* Response::redirect(Document* document, String* url,
 
 Response* Response::clone()
 {
-    Response* clonedResponse =
-        new Response(document(), 200, m_type->toUTF8NonGCString().data(),
-                     m_statusText->toUTF8NonGCString().data());
+    Response* clonedResponse = new Response(
+        document(), 200, m_type, m_statusText->toUTF8NonGCString().data());
 
     clonedResponse->copyResponseData(this);
     clonedResponse->m_headers.copyHeaders(&m_headers);
@@ -170,5 +185,26 @@ void Response::copyResponseData(Response* src)
     m_redirected = src->redirected();
     m_status = src->status();
     m_ok = src->ok();
+}
+
+String* Response::type()
+{
+    switch (m_type) {
+    case FetchResponseType::Basic:
+        return String::createASCIIString("basic");
+    case FetchResponseType::Cors:
+        return String::createASCIIString("cors");
+    case FetchResponseType::Default:
+        return String::createASCIIString("default");
+    case FetchResponseType::Error:
+        return String::createASCIIString("error");
+    case FetchResponseType::Opaque:
+        return String::createASCIIString("opaque");
+    case FetchResponseType::Opaqueredirect:
+        return String::createASCIIString("opaqueredirect");
+    default:
+        STARFISH_ASSERT_NOT_REACHED();
+        return String::emptyString;
+    }
 }
 };

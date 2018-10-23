@@ -47,22 +47,26 @@ private:
     HeadersInit m_headers;
 };
 
+enum class FetchResponseType {
+    Basic,
+    Cors,
+    Default,
+    Error,
+    Opaque,
+    Opaqueredirect
+};
+
 class ScriptWrappable;
 
 class Response final : public ScriptWrappable, public Body {
 public:
-    enum class ResponseType {
-        Basic,
-        Cors,
-        Default,
-        Error,
-        Opaque,
-        Opaqueredirect
-    };
-
     Response(Document* document, uint32_t status = 200,
-             std::string type = "default", std::string statusText = "OK");
-    Response(Document* document, Nullable<BodyInit>& body);
+             FetchResponseType type = FetchResponseType::Default,
+             std::string statusText = "OK");
+    Response(Document* document, Nullable<BodyInit>& body,
+             uint32_t status = 200,
+             FetchResponseType type = FetchResponseType::Default,
+             std::string statusText = "OK");
     Response(Document* document, Nullable<BodyInit>& body, ResponseInit& init);
 
     virtual void init(ScriptBindingInstance* instance,
@@ -84,10 +88,15 @@ public:
     static Response* redirect(Document* document, String* url,
                               unsigned short status);
 
-    GETTER_SETTER(String*, type, Type);
     GETTER_SETTER(String*, url, Url);
     GETTER_SETTER(bool, redirected, Redirected);
     GETTER_SETTER(uint32_t, status, Status);
+
+    void setType(FetchResponseType type)
+    {
+        m_type = type;
+    }
+    String* type();
 
     bool ok()
     {
@@ -108,11 +117,13 @@ public:
 
     Response* clone();
 
+    void setBody(String* string);
+
 private:
     ScriptBindingInstance* m_instance;
     ResponseInit m_responseInit;
     Headers m_headers;
-    String* m_type;
+    FetchResponseType m_type;
     String* m_url;
     bool m_redirected;
     bool m_ok;

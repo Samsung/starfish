@@ -21,13 +21,13 @@
 #define __StarfishRequestInit__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
+#include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
 #include "core/fetch/GetSet.h"
 #include "core/fetch/Headers.h"
 
 namespace Starfish {
 
-typedef BlobOrBufferSourceOrUSVString BodyInit;
+typedef BlobOrBufferSourceOrUSVStringOrReadableStream BodyInit;
 
 struct RequestInit : public gc {
     RequestInit()

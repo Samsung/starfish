@@ -23,12 +23,14 @@
 #include "binding/ScriptWrappable.h"
 #include "binding/WindowHoldable.h"
 #include "core/fetch/GetSet.h"
-#include "binding/BlobOrBufferSourceOrUSVStringUnion.h"
+#include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
 #include "core/modules/resource_request/ResourceRequest.h"
+#include "core/fetch/stream/ReadableStream.h"
 
 namespace Starfish {
 
-typedef BlobOrBufferSourceOrUSVString BodyInit;
+typedef BlobOrBufferSourceOrUSVStringOrReadableStream BodyInit;
+
 class DOMException;
 
 class Body : public ResourceRequestClient, public WindowHoldable {
@@ -39,13 +41,11 @@ public:
     Promise* json();
     Promise* text();
 
-    bool bodyUsed() const
-    {
-        return m_bodyUsed;
-    };
+    bool bodyUsed();
 
-    Nullable<BodyInit> body() const;
-    void setBody(const BodyInit& body);
+    Nullable<BodyInit> bodyInit() const;
+    void setBodyInit(const Nullable<BodyInit>& bodyInit);
+    void pushResponseData(ResourceRequest* request);
 
     String* contentType() const
     {
@@ -57,27 +57,21 @@ public:
     void onProgressEvent(ResourceRequest* request, bool isExplicitAction);
     void onReadyStateChange(ResourceRequest* request, bool fromExplicit);
 
-private:
-    bool m_bodyUsed;
-
-protected:
-    Body(Window* window)
-        : WindowHoldable(window)
-        , m_bodyUsed(false)
-        , m_contentType(nullptr)
-        , m_resourceRequest(nullptr)
-        , m_promise(nullptr)
+    void createReadableStream();
+    ReadableStream* body()
     {
+        return m_readableStream;
     }
 
-    void setBodyUsed(bool isUsed)
-    {
-        m_bodyUsed = isUsed;
-    };
+private:
+protected:
+    Body(Window* window);
+    Body(Window* window, Nullable<BodyInit>& bodyInitValue);
 
-    Nullable<BodyInit> m_body;
+    Nullable<BodyInit> m_bodyInit;
     String* m_contentType;
     ResourceRequest* m_resourceRequest;
+    ReadableStream* m_readableStream;
     Promise* m_promise;
 };
 }
