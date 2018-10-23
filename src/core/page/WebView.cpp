@@ -1073,6 +1073,13 @@ RenderResult WebView::rendering(bool force)
             m_paintingDirtyRect = LayoutRect(0, 0, 0, 0);
             LayoutRect repaintRect = tracker.repaintRegion();
 
+#ifdef STARFISH_ENABLE_PROFILE_TIMER
+            STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
+                              (float)repaintRect.x(), (float)repaintRect.y(),
+                              (float)repaintRect.width(),
+                              (float)repaintRect.height());
+#endif
+
             repaintRect.setX(repaintRect.x() - 1);
             repaintRect.setY(repaintRect.y() - 1);
             repaintRect.setWidth(repaintRect.width() + 2);

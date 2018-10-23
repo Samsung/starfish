@@ -23,6 +23,7 @@
 #include "Starfish.h"
 
 #if defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
+#define PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN
 
 #define EFL_BETA_API_SUPPORT
 #include <Ecore_Wl2.h>
@@ -32,6 +33,8 @@
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
+
+#include <Ecore_Evas.h>
 
 typedef EGLSyncKHR(EGLAPIENTRYP PFNEGLCREATESYNCKHRPROC)(
     EGLDisplay dpy, EGLenum type, const EGLint* attrib_list);
@@ -215,6 +218,7 @@ public:
         : WebView(nullptr)
         , m_isMouseLbuttonDown(false)
         , m_isBufferSwapped(false)
+        , m_hasFocus(true)
     {
         Ecore_Wl2_Window* win = (Ecore_Wl2_Window*)winArg;
         mEcoreWindow = win;
@@ -342,6 +346,8 @@ public:
             STARFISH_LOG_INFO("Swapped buffers failed\n");
         }
 
+#if !defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN)
+        STARFISH_LOG_INFO("wl_display_dispatch few times\n");
         size_t dispatchCount = 0;
         while (dispatchCount < 3) {
             if (wl_display_dispatch_pending(display) > 0) {
@@ -349,6 +355,7 @@ public:
             }
             dispatchCount++;
         }
+#endif
 
         eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
                        EGL_NO_CONTEXT);
@@ -476,8 +483,9 @@ public:
                 Ecore_Event_Key* keyEvent = (Ecore_Event_Key*)(event);
                 WebViewEcoreWayland2* webView = (WebViewEcoreWayland2*)data;
                 if (keyEvent->window ==
-                    static_cast<unsigned int>(
-                        ecore_wl2_window_id_get(webView->mEcoreWindow))) {
+                        static_cast<unsigned int>(
+                            ecore_wl2_window_id_get(webView->mEcoreWindow)) &&
+                    webView->m_hasFocus) {
                     std::string keyName = keyEvent->keyname;
 
                     STARFISH_LOG_INFO(
@@ -509,8 +517,9 @@ public:
                 Ecore_Event_Key* keyEvent = (Ecore_Event_Key*)(event);
                 WebViewEcoreWayland2* webView = (WebViewEcoreWayland2*)data;
                 if (keyEvent->window ==
-                    static_cast<unsigned int>(
-                        ecore_wl2_window_id_get(webView->mEcoreWindow))) {
+                        static_cast<unsigned int>(
+                            ecore_wl2_window_id_get(webView->mEcoreWindow)) &&
+                    webView->m_hasFocus) {
                     std::string keyName = keyEvent->keyname;
 
                     STARFISH_LOG_INFO(
@@ -556,8 +565,23 @@ public:
         this->~WebView();
     }
 
+    virtual void Focus() override
+    {
+        WebView::Focus();
+
+        m_hasFocus = true;
+    }
+
+    virtual void Blur() override
+    {
+        WebView::Blur();
+
+        m_hasFocus = false;
+    }
+
     bool m_isMouseLbuttonDown;
     bool m_isBufferSwapped;
+    bool m_hasFocus;
     Ecore_Wl2_Window* mEcoreWindow;
     wl_display* mWlDisplay;
     EGLDisplay mDisplay;
@@ -579,6 +603,13 @@ WebView* WebView::Create(void* win, unsigned x, unsigned y, unsigned width,
                          const char* defaultFontName, const char* locale,
                          const char* timezoneID)
 {
+#if defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN)
+    auto wndObj = ecore_evas_wayland2_window_get(
+        ecore_evas_ecore_evas_get(evas_object_evas_get((const Eo*)win)));
+    return new WebViewEcoreWayland2(wndObj, x, y, width, height,
+                                    devicePixelRatio, defaultFontName, locale,
+                                    timezoneID);
+#endif
     return new WebViewEcoreWayland2(win, x, y, width, height, devicePixelRatio,
                                     defaultFontName, locale, timezoneID);
 }

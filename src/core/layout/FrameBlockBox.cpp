@@ -209,8 +209,8 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         }
     }
 
-    setNeedsPainting(true);
     registerRelativePositionIfNeeds(ctx);
+    markNeedsPainting();
 
     if (isFrameTableBox()) {
         asFrameTableBox()->layoutTable(ctx);

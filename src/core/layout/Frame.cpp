@@ -982,7 +982,6 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_isRightMBPCleared = false;
 
     m_flags.m_needsGraphicsBuffer = false;
-    m_flags.m_isNormalFlow = true;
     m_flags.m_isFrameText = false;
     m_flags.m_heightComputed = false;
     m_flags.m_hasBiggerContentThanFrameWidth = false;
@@ -1148,9 +1147,6 @@ void Frame::computeStyleFlags()
         (position == PositionValue::AbsolutePositionValue ||
          position == PositionValue::FixedPositionValue);
     bool isFloating = (style->floating() != FloatValue::NoneFloatValue);
-
-    m_flags.m_isNormalFlow = !isAbsolutePositioned;
-    m_flags.m_isNormalFlow &= !isFloating;
 
     // TODO add condition
     m_flags.m_isEstablishesBlockFormattingContext |= (shouldApplyOverflow());

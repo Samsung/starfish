@@ -80,7 +80,7 @@ protected:
             frame->isInlineNonReplacedBox()) {
             needsRepainting |=
                 frame->asInlineNonReplacedBox()->origin()->needsPainting();
-            frame->asInlineNonReplacedBox()->origin()->setNeedsPainting(false);
+            frame->asInlineNonReplacedBox()->origin()->clearNeedsPainting();
         }
 
         StackingContext* sc = frame->stackingContext();
@@ -148,7 +148,7 @@ protected:
             trackRepaintRegion(box, childMatrix);
         }
 
-        frame->setNeedsPainting(false);
+        frame->clearNeedsPainting();
     }
 };
 }

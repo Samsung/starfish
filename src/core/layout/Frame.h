@@ -372,9 +372,9 @@ public:
     size_t floatingBoxesSize();
     void reCacheFloatingBoxes(size_t from);
     void reCacheFloatingBoxesByXDiff(size_t from, LayoutUnit xDiff);
-    LayoutUnit parentContentWidth(Frame* currentFrame);
-    bool parentHasFixedHeight(Frame* currentFrame);
-    LayoutUnit parentFixedHeight(Frame* currentFrame);
+    static LayoutUnit parentContentWidth(Frame* currentFrame);
+    static bool parentHasFixedHeight(Frame* currentFrame);
+    static LayoutUnit parentFixedHeight(Frame* currentFrame);
     LayoutUnit specifiedVerticalValue(Frame* f, Length l);
 
     void pushInlineBlockBox(FrameBlockBox* blockBox)
@@ -1340,7 +1340,7 @@ public:
         return false;
     }
 
-    ComputedStyle* style()
+    ComputedStyle* style() const
     {
         if (UNLIKELY(isAnonymous())) {
             return m_styleWhenNodeIsAnonymous;
@@ -1742,13 +1742,23 @@ public:
         m_flags.m_needsPainting = b;
     }
 
+    void markNeedsPainting()
+    {
+        m_flags.m_needsPainting = true;
+    }
+
+    void clearNeedsPainting()
+    {
+        m_flags.m_needsPainting = false;
+    }
+
     bool shouldLayout(LayoutContext& ctx, LayoutWantToResolve resolveWhat,
                       FrameBox* containingBoxs);
 
     void markContentWidthDamaged()
     {
         m_flags.m_contentWidthDamaged = true;
-        setNeedsPainting(true);
+        markNeedsPainting();
     }
 
     void clearContentWidthDamaged()
@@ -1764,7 +1774,7 @@ public:
     void markPaddingWidthDamaged()
     {
         m_flags.m_paddingWidthDamaged = true;
-        setNeedsPainting(true);
+        markNeedsPainting();
     }
 
     void clearPaddingWidthDamaged()
@@ -1780,7 +1790,7 @@ public:
     void markContentHeightDamaged()
     {
         m_flags.m_contentHeightDamaged = true;
-        setNeedsPainting(true);
+        markNeedsPainting();
     }
 
     void clearContentHeightDamaged()
@@ -1796,7 +1806,7 @@ public:
     void markPaddingHeightDamaged()
     {
         m_flags.m_paddingHeightDamaged = true;
-        setNeedsPainting(true);
+        markNeedsPainting();
     }
 
     void clearPaddingHeightDamaged()
@@ -1839,9 +1849,22 @@ public:
 
     bool isSpecifiedZIndex();
 
-    bool isNormalFlow() const
+    bool isNormalFlow()
     {
-        return m_flags.m_isNormalFlow;
+        ComputedStyle* style = Frame::style();
+        if (!style) {
+            return true;
+        }
+
+        PositionValue position = style->position();
+        bool isAbsolutePositioned =
+            (position == PositionValue::AbsolutePositionValue ||
+             position == PositionValue::FixedPositionValue);
+        bool isFloating = (style->floating() != FloatValue::NoneFloatValue);
+
+        bool normalFlow = !isAbsolutePositioned;
+        normalFlow &= !isFloating;
+        return normalFlow;
     }
 
     bool isRootElement() const;
@@ -2088,8 +2111,6 @@ protected:
         // properties may introduce stacking contexts, for example 'opacity'
         // [CSS3COLOR].
         bool m_isEstablishesStackingContext : 1;
-
-        bool m_isNormalFlow : 1;
 
         bool m_isLeftMBPCleared : 1;
         bool m_isRightMBPCleared : 1;

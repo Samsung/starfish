@@ -25,8 +25,11 @@
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Elementary.h>
 #elif defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
+#define PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN
 #include <Ecore.h>
-
+#if defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN)
+#include <Elementary.h>
+#endif
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL)
 #include <Ecore.h>
 #endif
@@ -380,6 +383,19 @@ int main(int argc, char* argv[])
 
 #elif defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
 
+#if defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN)
+    elm_init(0, 0);
+    elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
+    elm_config_accel_preference_set("opengl");
+
+    Evas_Object* wndObj = nullptr;
+    wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
+    elm_win_title_set(wndObj, STARFISH_NAME);
+    elm_win_autodel_set(wndObj, EINA_TRUE);
+    evas_object_resize(wndObj, width, height);
+    evas_object_move(wndObj, x, y);
+    evas_object_show(wndObj);
+#else
     Ecore_Wl2_Display* _ecore_wl2_display = NULL;
     if (!ecore_wl2_init())
         return -1;
@@ -405,6 +421,8 @@ int main(int argc, char* argv[])
         }
         count++;
     }
+#endif
+
 #endif
 
 #ifdef STARFISH_ENABLE_TEST

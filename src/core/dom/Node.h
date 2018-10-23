@@ -547,7 +547,7 @@ public:
         didComputedStyleChanged(old, style);
     }
 
-    ComputedStyle* style()
+    ComputedStyle* style() const
     {
         return m_style;
     }

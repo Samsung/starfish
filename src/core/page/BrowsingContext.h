@@ -126,7 +126,6 @@ public:
             setNeedsRendering();
             registerNeedsLayoutInWebView();
         }
-        setNeedsPainting();
     }
 
     void setNeedsPainting();

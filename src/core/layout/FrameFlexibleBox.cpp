@@ -1138,7 +1138,6 @@ LayoutUnit FrameFlexibleBox::basisSize(
         containingBlockOfFlexItem->contentWidth();
     bool containingBlockOfFlexItemContentWidthDamaged =
         containingBlockOfFlexItem->contentWidthDamaged();
-    bool oldNeedsPainting = containingBlockOfFlexItem->needsPainting();
 
     flexItem->markNeedsLayout();
 
@@ -1186,8 +1185,6 @@ LayoutUnit FrameFlexibleBox::basisSize(
     } else {
         containingBlockOfFlexItem->clearContentWidthDamaged();
     }
-
-    containingBlockOfFlexItem->setNeedsPainting(oldNeedsPainting);
 
     return basisSize;
 }
