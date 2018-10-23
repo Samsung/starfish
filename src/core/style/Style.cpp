@@ -4184,7 +4184,7 @@ void StyleResolver::apply(Element* element,
                 for (unsigned c = 0; c < funcs->size(); c++) {
                     CSSTransformFunction f = (*funcs)[c];
                     int valueSize = f.values()->size();
-                    float* dValues = (float*)alloca(valueSize * sizeof(float));
+                    float* dValues = ALLOCA(valueSize * sizeof(float), float);
                     for (int i = 0; i < valueSize; i++) {
                         const CSSStyleValuePair& item = (*f.values())[i];
                         if (item.valueKind() ==

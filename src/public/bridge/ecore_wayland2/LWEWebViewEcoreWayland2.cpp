@@ -272,7 +272,7 @@ public:
         eglGetConfigs(mDisplay, NULL, 0, &count);
         STARFISH_LOG_INFO("EGL has %d configs\n", count);
 
-        configs = (void**)alloca(count * sizeof(*configs));
+        configs = ALLOCA(count * sizeof(*configs), void*);
 
         eglChooseConfig(mDisplay, config_attribs, configs, count, &n);
 
