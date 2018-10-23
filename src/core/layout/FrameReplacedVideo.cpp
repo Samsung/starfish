@@ -81,6 +81,7 @@ void FrameReplacedVideo::createGraphicsBuffer(CanvasSurface** surfaceHolder,
             *surfaceHolder = CanvasSurface::create(
                 node()->webView()->platformWindow(), 1, 1);
             (*surfaceHolder)->clear();
+            (*surfaceHolder)->unMapBufferAndNotifyUpdateRegion(0, 0, 1, 1);
         }
     }
 }
