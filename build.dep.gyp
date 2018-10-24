@@ -504,6 +504,20 @@
             },
         },
         {
+            'target_name': 'tts',
+            'type': 'none',
+            'all_dependent_settings': {
+                'include_dirs': [
+                    '<!@((pkg-config --silence-errors --cflags-only-I tts | sed s/-I//g) || true)',
+                ],
+
+                'libraries': [
+                    '<!@((pkg-config --silence-errors --libs-only-l tts) || true)',
+                ],
+
+            },
+        },
+        {
             'target_name': 'efl_cairo.x64',
             'type': 'none',
             'all_dependent_settings': {

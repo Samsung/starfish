@@ -235,6 +235,11 @@ enum MouseButtonsValue {
     RightButtonDown = 1 << 1,
     MiddleButtonDown = 1 << 2,
 };
+
+enum TTSMode {
+    Default = 0,
+    Forced = 1,
+};
 }
 
 #endif

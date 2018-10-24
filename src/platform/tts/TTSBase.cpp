@@ -38,7 +38,7 @@ void TTS::init()
 #endif
 }
 
-void TTS::speech(String* text)
+void TTS::speech(String* text, bool forced)
 {
     STARFISH_ASSERT(isMainThread());
     if (text && text != String::emptyString) {
@@ -51,6 +51,30 @@ void TTS::speech(String* text)
             },
             text);
     }
+}
+
+bool TTS::createHandle()
+{
+    return false;
+}
+
+void TTS::destroyHandle()
+{
+}
+
+bool TTS::startPlay(const char* text)
+{
+    return false;
+}
+
+bool TTS::stopPlay()
+{
+    return false;
+}
+
+bool TTS::addText(const char* text)
+{
+    return false;
 }
 }
 #endif

@@ -58,10 +58,13 @@ public:
     std::string GetUserAgentString() const;
     std::string GetProxyURL() const;
     int GetCacheMode() const;
+    TTSMode GetTTSMode() const;
+
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
     void SetProxyURL(const std::string& proxyURL);
     void setDefaultFontSize(int size);
+    void SetTTSMode(TTSMode value);
 
 private:
     std::string m_defaultUserAgent;
@@ -69,6 +72,8 @@ private:
     std::string m_proxyURL;
     int m_cacheMode;
     uint32_t m_defaultFontSize;
+
+    TTSMode m_ttsMode;
 };
 
 class LWE_EXPORT ResourceError {

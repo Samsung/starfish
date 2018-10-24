@@ -95,6 +95,7 @@ BuildRequires: pkgconfig(capi-location-manager)
 BuildRequires: pkgconfig(dali-core)
 BuildRequires: pkgconfig(dali-toolkit)
 BuildRequires: pkgconfig(dali-adaptor)
+BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
