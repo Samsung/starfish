@@ -46,8 +46,7 @@ public class SemWebSettings {
      */
     public static final int LOAD_CACHE_ONLY = 3;
 
-    private static final int DEFAULT_FONT_SIZE = 16;
-    private LweWebViewImpl mWebView = null;
+    private LweWebView mWebView = null;
 
     /**
      * Creates a SemWebSettings object
@@ -56,7 +55,7 @@ public class SemWebSettings {
      * @param webView LweWebViewImpl
      * @since Lightweight Web Engine 1.0
      */
-    SemWebSettings(LweWebViewImpl webView) {
+    SemWebSettings(LweWebView webView) {
         mWebView = webView;
     }
 
@@ -69,10 +68,7 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public String getDefaultUserAgent(Context context) {
-        if (mWebView.getWebViewInternalHandle() != 0) {
-            mWebView.getDefaultUserAgent(context);
-        }
-        return "";
+        return mWebView.getDefaultUserAgent(context);
     }
 
     /**
@@ -82,10 +78,7 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public String getUserAgentString() {
-        if (mWebView.getWebViewInternalHandle() != 0) {
-            mWebView.getUserAgentString();
-        }
-        return "";
+        return mWebView.getUserAgentString();
     }
 
     /**
@@ -96,10 +89,7 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public int getCacheMode() {
-        if (mWebView.getWebViewInternalHandle() != 0) {
-            mWebView.getCacheMode();
-        }
-        return LOAD_DEFAULT;
+        return mWebView.getCacheMode();
     }
 
     /**
@@ -110,9 +100,7 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public void setUserAgentString(String ua) {
-        if (mWebView.getWebViewInternalHandle() != 0) {
-            mWebView.setUserAgentString(mWebView.getWebViewInternalHandle(), ua);
-        }
+        mWebView.setUserAgentString(ua);
     }
 
     /**
@@ -122,11 +110,7 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public void setCacheMode(int mode) {
-        if (mode == LOAD_DEFAULT || mode == LOAD_NO_CACHE) {
-            if (mWebView.getWebViewInternalHandle() != 0) {
-                mWebView.setCacheMode(mWebView.getWebViewInternalHandle(), mode);
-            }
-        }
+        mWebView.setCacheMode(mode);
     }
 
     /**
@@ -136,10 +120,7 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public int getDefaultFontSize() {
-        if (mWebView.getWebViewInternalHandle() != 0) {
-            return mWebView.getDefaultFontSize();
-        }
-        return DEFAULT_FONT_SIZE;
+        return mWebView.getDefaultFontSize();
     }
 
     /**
@@ -148,10 +129,6 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public void setDefaultFontSize(int size) {
-        if (1 <= size && size <= 72) {
-            if (mWebView.getWebViewInternalHandle() != 0) {
-                mWebView.setDefaultFontSize(mWebView.getWebViewInternalHandle(), size);
-            }
-        }
+        mWebView.setDefaultFontSize(size);
     }
 }

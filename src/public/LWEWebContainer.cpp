@@ -911,8 +911,9 @@ void WebContainer::SetCacheMode(int mode)
 void WebContainer::SetDefaultFontSize(uint32_t size)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
-    STARFISH_RELEASE_ASSERT(1 <= size && size <= 72);
-    TO_WEBVIEW(m_impl)->setDefaultFontSize(size);
+    if (LWE_MIN_FONT_SIZE <= size && size <= LWE_MAX_FONT_SIZE) {
+        TO_WEBVIEW(m_impl)->setDefaultFontSize(size);
+    }
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 

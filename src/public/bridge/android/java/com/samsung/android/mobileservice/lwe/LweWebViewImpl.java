@@ -256,6 +256,27 @@ public class LweWebViewImpl implements LweWebView {
         return mCacheMode;
     }
 
+    public void setUserAgentString(String userAgent) {
+        if (mWebViewInternalHandle != 0) {
+            setUserAgentString(mWebViewInternalHandle, userAgent);
+        }
+    }
+
+    public void setCacheMode(int mode) {
+        if (mode == SemWebSettings.LOAD_DEFAULT ||
+            mode == SemWebSettings.LOAD_NO_CACHE) {
+            if (mWebViewInternalHandle != 0) {
+                setCacheMode(mWebViewInternalHandle, mode);
+            }
+        }
+    }
+
+    public void setDefaultFontSize(int size) {
+        if (mWebViewInternalHandle != 0) {
+            setDefaultFontSize(mWebViewInternalHandle, size);
+        }
+    }
+
     public int getDefaultFontSize() { return mDefaultFontSize; }
 
     class StateChangeListener implements View.OnAttachStateChangeListener {
