@@ -48,6 +48,8 @@ public:
 };
 
 #define LWE_DEFAULT_FONT_SIZE 16
+#define LWE_MIN_FONT_SIZE 1
+#define LWE_MAX_FONT_SIZE 72
 
 class LWE_EXPORT Settings {
 public:

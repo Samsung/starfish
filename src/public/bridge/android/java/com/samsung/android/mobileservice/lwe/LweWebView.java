@@ -28,8 +28,12 @@ public interface LweWebView {
     void initWebView(View appView);
     String getDefaultUserAgent(Context context);
     String getUserAgentString();
+    void setUserAgentString(String userAgent);
     int getCacheMode();
+    void setCacheMode(int mode);
     int getDefaultFontSize();
+    void setDefaultFontSize(int size);
+
     InputConnection getInputConnectionInstance(View view);
     void onVisibilityChanged(View changedView, int visibility);
 

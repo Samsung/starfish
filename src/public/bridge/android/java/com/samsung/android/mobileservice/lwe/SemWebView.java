@@ -57,7 +57,9 @@ public class SemWebView extends TextureView {
     @Override
     protected void onVisibilityChanged(View changedView, int visibility) {
         super.onVisibilityChanged(changedView, visibility);
-        delegate.onVisibilityChanged(changedView, visibility);
+        if (delegate != null) {
+            delegate.onVisibilityChanged(changedView, visibility);
+        }
     }
 
     @Override
