@@ -33,6 +33,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/tts/TTS.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/page/WebView.h"
@@ -95,6 +96,7 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
     , m_cacheMode(0)
 #endif
     , m_defaultFontSize(LWE_DEFAULT_FONT_SIZE)
+    , m_ttsMode(TTSMode::Default)
 {
 }
 
@@ -111,6 +113,11 @@ std::string Settings::GetUserAgentString() const
 std::string Settings::GetProxyURL() const
 {
     return m_proxyURL;
+}
+
+TTSMode Settings::GetTTSMode() const
+{
+    return m_ttsMode;
 }
 
 void Settings::SetUserAgentString(const std::string& ua)
@@ -131,6 +138,11 @@ void Settings::SetCacheMode(int mode)
 void Settings::SetProxyURL(const std::string& s)
 {
     m_proxyURL = s;
+}
+
+void Settings::SetTTSMode(TTSMode mode)
+{
+    m_ttsMode = mode;
 }
 
 ResourceError::ResourceError(int code, const std::string& description)
@@ -435,6 +447,7 @@ Settings WebContainer::GetSettings()
     }
 #endif
     result.SetProxyURL(TO_WEBVIEW(m_impl)->proxyURL());
+    result.SetTTSMode(TO_WEBVIEW(m_impl)->tts()->mode());
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 
     return result;
@@ -606,6 +619,7 @@ void WebContainer::SetSettings(const Settings& settings)
         ->setCustomUserAgentString(
             Starfish::String::fromUTF8(settings.GetUserAgentString().c_str()));
     TO_WEBVIEW(m_impl)->setProxyURL(settings.GetProxyURL());
+    TO_WEBVIEW(m_impl)->tts()->setMode(settings.GetTTSMode());
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (TO_STARFISH(m_impl)->httpCache()) {
         TO_STARFISH(m_impl)->httpCache()->setCacheMode(settings.GetCacheMode());

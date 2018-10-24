@@ -21,7 +21,13 @@
 #ifndef __StarfishTTS__
 #define __StarfishTTS__
 
+#include "PlatformIntegrationData.h"
 #include "binding/StarfishHoldable.h"
+
+#if defined(STARFISH_TIZEN) && defined(STARFISH_ENABLE_TTS)
+#include <tts.h>
+#include <tts_internal.h>
+#endif
 
 namespace Starfish {
 class TTS : public gc, public WebViewHoldable {
@@ -29,12 +35,15 @@ public:
     TTS(WebView* webView)
         : WebViewHoldable(webView)
         , m_isTTSEnabled(false)
+        , m_state(-1)
+        , m_mode(LWE::TTSMode::Default)
     {
         init();
     }
 
     ~TTS()
     {
+        destroyHandle();
     }
 
     bool isTTSEnabled()
@@ -46,11 +55,35 @@ public:
         m_isTTSEnabled = value;
     }
 
-    void speech(String* text);
+    void setMode(LWE::TTSMode mode)
+    {
+        m_mode = mode;
+    }
+
+    LWE::TTSMode mode() const
+    {
+        return m_mode;
+    }
+
+    void speech(String* text, bool forced = false);
+    const char* state(int s);
 
 private:
     void init();
+
+    bool createHandle();
+    void destroyHandle();
+
+    bool startPlay(const char* text);
+    bool stopPlay();
+    bool addText(const char* text);
+
+#if defined(STARFISH_TIZEN)
+    tts_h m_handle;
+#endif
     bool m_isTTSEnabled;
+    int m_state;
+    LWE::TTSMode m_mode;
 };
 }
 #endif
