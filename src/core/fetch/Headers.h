@@ -40,11 +40,11 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual ScriptBindingInstance* scriptBindingInstance()
+    virtual ScriptBindingInstance* scriptBindingInstance() override
     {
         return m_instance;
     }
-    virtual bool isHeaders() const;
+    virtual bool isHeaders() const override;
 
     static bool isValidHTTPToken(const String* name);
     static bool isValidHTTPHeaderValue(const String* value);

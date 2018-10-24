@@ -53,13 +53,13 @@ class FontFaceImplSkia : public FontFace {
 public:
     FontFaceImplSkia(sk_sp<SkTypeface> skTypeface);
 
-    virtual FontMetrics metrics(float size);
+    virtual FontMetrics metrics(float size) override;
     virtual void clearCache() override;
     bool loadGlyph(
         int intSize, char32_t ch,
         std::pair<FontFaceImplSkia*, std::pair<unsigned, LayoutUnit>>& result);
 
-    virtual size_t dataSize()
+    virtual size_t dataSize() override
     {
         return m_downLoadFontDataSize;
     }
