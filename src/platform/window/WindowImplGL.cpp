@@ -92,7 +92,7 @@ public:
         }
     }
 
-    virtual void destroy()
+    virtual void destroy() override
     {
         PlatformWindow::destroy();
 

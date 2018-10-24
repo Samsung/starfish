@@ -36,7 +36,7 @@ public:
         return "FrameButtonBox";
     }
 
-    virtual bool isFrameButtonBox()
+    virtual bool isFrameButtonBox() override
     {
         return true;
     }

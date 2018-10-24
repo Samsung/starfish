@@ -134,7 +134,7 @@ public:
                 client->m_element->document()->appendCurrentScript(
                     client->m_element);
                 {
-                    JSProifileRAIILogger logger();
+                    JSProifileRAIILogger logger;
                     evaluateString(
                         client->m_element->window()->scriptBindingInstance(),
                         text, ResourceClient::resource()->url()->urlString());
@@ -203,7 +203,7 @@ public:
             String* text = m_resource->asTextResource()->text();
             m_element->document()->appendCurrentScript(m_element);
             {
-                JSProifileRAIILogger logger();
+                JSProifileRAIILogger logger;
                 evaluateString(m_element->window()->scriptBindingInstance(),
                                text,
                                ResourceClient::resource()->url()->urlString());
@@ -261,7 +261,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             m_isAlreadyStarted = true;
             document()->appendCurrentScript(this);
             {
-                JSProifileRAIILogger logger();
+                JSProifileRAIILogger logger;
                 evaluateString(
                     window()->scriptBindingInstance(), script,
                     String::createASCIIString("HTMLScriptElement innerText"));
