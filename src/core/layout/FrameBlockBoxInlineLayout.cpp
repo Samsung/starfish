@@ -5052,6 +5052,19 @@ void InlineNonReplacedBox::paintInlineContent(Canvas* canvas,
     InlineBoxLayoutParentBox::paintInlineContent(canvas, stage, dx, dy);
 }
 
+void InlineTextBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
+{
+    FrameBox::computeVisibleRect(ctx);
+
+    LayoutRect f = frameRect();
+    float diff = FONT_WIDTH_DIFFERENCE_GLYPH_ADVANCE_AND_ACTUAL_WIDTH_OF_GLYPH(
+        style()->font()->size());
+    f.setWidth(f.width() + diff * 2);
+    f.setX(f.x() - diff);
+
+    ctx.uniteRect(f);
+}
+
 void InlineNonReplacedBox::paintChildrenWith(PaintingContext& ctx)
 {
     if (ctx.m_paintingStage == PaintingNormalFlowInline) {

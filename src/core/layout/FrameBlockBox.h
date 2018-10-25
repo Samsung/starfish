@@ -203,6 +203,18 @@ public:
             new ChildFrameBoxIteratorNull());
     }
 
+    // this value used for layout result chaning
+    size_t textSignatureValue() const
+    {
+        if (hasInlineTextBoxRareData()) {
+            return (size_t)m_rareData;
+        }
+        return m_start | m_end << 16;
+    }
+
+    virtual void computeVisibleRect(
+        Frame::ComputeVisibleRectContext& ctx) override;
+
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -228,7 +240,7 @@ protected:
         }
     }
 
-    bool hasInlineTextBoxRareData()
+    bool hasInlineTextBoxRareData() const
     {
         return m_end < m_start;
     }
@@ -664,6 +676,7 @@ public:
         : InlineBoxLayoutParentBox()
     {
         setLayoutParent(parent);
+        clearNeedsPainting();
     }
 
     virtual bool isLineBox() override

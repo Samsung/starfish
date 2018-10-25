@@ -1053,8 +1053,14 @@ void StackingContext::applyStackingContextProperties(
             m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
         } else if (!compositedBefore && !willBeComposited) {
             if (prevDrawnMapIter != prevDrawnMap.end()) {
-                if (prevDrawnMapIter->second.opacity !=
-                    m_owner->style()->opacity()) {
+                if ((prevDrawnMapIter->second.opacity !=
+                     m_owner->style()->opacity()) ||
+                    (prevDrawnMapIter->second.transformMatrix !=
+                     transformMatrix())) {
+                    m_owner->node()->setNeedsPainting();
+                }
+            } else {
+                if (transformMatrix() != SkMatrix::I()) {
                     m_owner->node()->setNeedsPainting();
                 }
             }
@@ -1236,6 +1242,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     info.screenExtent = m_screenExtent;
     info.opacity = m_owner->style()->opacity();
     info.needsGraphicsBuffer = needsGraphicsBuffer();
+    info.transformMatrix = transformMatrix();
 
     Canvas* oldCanvas = nullptr;
     LayoutRect visibleRect = StackingContext::visibleRect();

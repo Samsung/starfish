@@ -201,9 +201,16 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
     }
 
     registerRelativePositionIfNeeds(ctx);
-    markNeedsPainting();
 
     if (isFrameTableBox()) {
+        // TODO saidly, we cannot compute table painting dirty correctly yet.
+        // because there is so many annoying anonymous boxes.
+        Frame* stackingContextOwner = this;
+        while (!stackingContextOwner->isEstablishesStackingContext()) {
+            stackingContextOwner = stackingContextOwner->parent();
+        }
+        stackingContextOwner->markNeedsPainting();
+
         asFrameTableBox()->layoutTable(ctx);
     } else if (isFrameFlexibleBox()) {
         asFrameFlexibleBox()->layoutFlex(ctx);

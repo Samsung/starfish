@@ -23,6 +23,8 @@
 #include "binding/StarfishHoldable.h"
 #include "binding/WebViewHoldable.h"
 
+#include "core/layout/LayoutRepaintTracker.h"
+
 namespace Starfish {
 
 class Document;
@@ -258,6 +260,13 @@ public:
         return m_styleResolveStartTick;
     }
 
+    LayoutRepaintTracker& layoutRepaintTracker()
+    {
+        return m_layoutRepaintTracker;
+    }
+
+    void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
+
 private:
     // Don't call function directly
     // you can use this function from WebView::navigate or
@@ -266,7 +275,6 @@ private:
               ResourceURL* referrerURL);
 
     void didFocusEvent();
-    void iterateChildContext(const std::function<void(BrowsingContext*)>& fn);
 #if defined(STARFISH_ANDROID)
     void focusNavigationWithArrow(KeyboardEvent*);
 #endif
@@ -321,6 +329,8 @@ private:
     String* m_name;
 
     uint64_t m_styleResolveStartTick;
+
+    LayoutRepaintTracker m_layoutRepaintTracker;
 };
 }
 

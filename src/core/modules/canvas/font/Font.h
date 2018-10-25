@@ -53,6 +53,13 @@ struct FontMetrics {
     float m_xheightRate;
 };
 
+// this is macro for covering difference `advance of glyph` and `actual width of
+// glyph`
+// we can save difference but there is no sufficient memory. I think
+#define FONT_WIDTH_DIFFERENCE_GLYPH_ADVANCE_AND_ACTUAL_WIDTH_OF_GLYPH( \
+    fontSizeInPlxel)                                                   \
+    ((fontSizeInPlxel / 16.f) * 1.5f)
+
 class FontFace : public gc {
     friend class Font;
 

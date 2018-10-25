@@ -1758,7 +1758,6 @@ public:
     void markContentWidthDamaged()
     {
         m_flags.m_contentWidthDamaged = true;
-        markNeedsPainting();
     }
 
     void clearContentWidthDamaged()
@@ -1774,7 +1773,6 @@ public:
     void markPaddingWidthDamaged()
     {
         m_flags.m_paddingWidthDamaged = true;
-        markNeedsPainting();
     }
 
     void clearPaddingWidthDamaged()
@@ -1790,7 +1788,6 @@ public:
     void markContentHeightDamaged()
     {
         m_flags.m_contentHeightDamaged = true;
-        markNeedsPainting();
     }
 
     void clearContentHeightDamaged()
@@ -1806,7 +1803,6 @@ public:
     void markPaddingHeightDamaged()
     {
         m_flags.m_paddingHeightDamaged = true;
-        markNeedsPainting();
     }
 
     void clearPaddingHeightDamaged()

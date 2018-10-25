@@ -1390,6 +1390,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             damagedKeys[CSSStyleValuePair::KeyKind::BorderTopWidth] = true;
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         }
         if (oldBorderTop.style() != newBorderTop.style()) {
             damagedKeys[CSSStyleValuePair::KeyKind::BorderTopStyle] = true;
@@ -1407,6 +1409,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             damagedKeys[CSSStyleValuePair::KeyKind::BorderRightWidth] = true;
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         }
         if (oldBorderRight.style() != newBorderRight.style()) {
             damagedKeys[CSSStyleValuePair::KeyKind::BorderRightStyle] = true;
@@ -1424,6 +1428,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomWidth] = true;
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         }
         if (oldBorderBottom.style() != newBorderBottom.style()) {
             damagedKeys[CSSStyleValuePair::KeyKind::BorderBottomStyle] = true;
@@ -1440,6 +1446,8 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
             damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftWidth] = true;
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         }
         if (oldBorderLeft.style() != newBorderLeft.style()) {
             damagedKeys[CSSStyleValuePair::KeyKind::BorderLeftStyle] = true;
@@ -1608,7 +1616,7 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     if (newStyle->zIndex() != oldStyle->zIndex()) {
         damagedKeys[CSSStyleValuePair::KeyKind::ZIndex] = true;
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamageLayout | damage);
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
         damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageEstablishesStackingContext |
             damage);
