@@ -1273,8 +1273,10 @@ public:
 
     virtual void clear() override
     {
-        size_t end = m_bufferStride * m_bufferHeight;
-        memset(m_buffer, 0x00, end);
+        if (m_buffer) {
+            size_t end = m_bufferStride * m_bufferHeight;
+            memset(m_buffer, 0x00, end);
+        }
     }
 
     virtual void unMapBufferAndNotifyUpdateRegion(size_t dirtyX, size_t dirtyY,
