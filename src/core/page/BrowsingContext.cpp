@@ -515,13 +515,15 @@ bool BrowsingContext::layoutIfNeeds()
         document()->frame()->layout(ctx,
                                     Frame::LayoutWantToResolve::ResolveAll);
 
-        m_layoutRepaintTracker.traceRepaintRegion(document()
-                                                      ->frame()
-                                                      ->asFrameBox()
-                                                      ->asFrameBlockBox()
-                                                      ->asFrameDocument());
-
-        setNeedsPainting();
+        bool gotPaintingDirty =
+            m_layoutRepaintTracker.traceRepaintRegion(document()
+                                                          ->frame()
+                                                          ->asFrameBox()
+                                                          ->asFrameBlockBox()
+                                                          ->asFrameDocument());
+        if (gotPaintingDirty) {
+            setNeedsPainting();
+        }
         webView()->setNeedsComputeStackingContextProperties();
         m_needsLayout = false;
         ret = true;

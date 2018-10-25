@@ -1034,6 +1034,12 @@ RenderResult WebView::rendering(bool force)
             m_needsComposite = false;
         }
 
+        if (!m_didCompositeBefore && m_needsComposite) {
+            STARFISH_LOG_INFO("Start composite mode\n");
+        } else if (m_didCompositeBefore && !m_needsComposite) {
+            STARFISH_LOG_INFO("End composite mode\n");
+        }
+
         bool needsFullPainting = m_didCompositeBefore && !m_needsComposite;
 
         if (mainBrowsingContext()->document()->frame()->firstChild() &&

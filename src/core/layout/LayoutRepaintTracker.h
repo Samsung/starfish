@@ -47,7 +47,7 @@ public:
 
     typedef GCAtomicVector<InlineLayoutResultItem> InlineLayoutResult;
 
-    void traceRepaintRegion(FrameDocument* fd);
+    bool traceRepaintRegion(FrameDocument* fd);
     void dispose()
     {
         m_rootedNodeSet.clear();

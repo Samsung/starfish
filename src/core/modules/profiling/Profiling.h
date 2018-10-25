@@ -40,6 +40,22 @@ protected:
     const char* m_msg;
 };
 
+class LongTaskFinder {
+public:
+    LongTaskFinder(const char* msg, size_t loggingTimeInMS)
+    {
+        m_loggingTime = loggingTimeInMS;
+        m_start = longTickCount();
+        m_msg = msg;
+    }
+    ~LongTaskFinder();
+
+protected:
+    size_t m_loggingTime;
+    uint64_t m_start;
+    const char* m_msg;
+};
+
 #ifdef STARFISH_ENABLE_PROFILING
 #define STARFISH_ENABLE_PROFILE_TIMER
 #endif

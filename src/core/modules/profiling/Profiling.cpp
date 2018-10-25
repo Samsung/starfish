@@ -136,4 +136,14 @@ ProfilerTimer::~ProfilerTimer()
     float time = (float)((end - m_start) / 1000.f);
     STARFISH_LOG_INFO("did %s in %f ms\n", m_msg, time);
 }
+
+LongTaskFinder::~LongTaskFinder()
+{
+    uint64_t end = longTickCount();
+    float time = (float)((end - m_start) / 1000.f);
+    if (time >= m_loggingTime) {
+        STARFISH_LOG_INFO("find long task %s in %f ms\n", m_msg, time);
+    }
+}
+
 } // namespace Starfish
