@@ -60,7 +60,7 @@ public:
         BrowsingContext* ctx); // give nullptr to clear every idlers
 
     void destroy();
-    void invokeNavigate(WebView* wv, ResourceURL* url, ResourceURL* referrerURL,
+    void invokeNavigate(WebView* wv, ResourceURL* url, ReferrerURL* referrerURL,
                         HistoryManagerAction action, bool force = false);
 
     // methods not related with WebView Context

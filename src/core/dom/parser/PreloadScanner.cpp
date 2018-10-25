@@ -137,9 +137,14 @@ PreloadScanner::PreloadScanner(Document* document, String* source)
                             url,
                             String::createASCIIStringFromUTF32SourceIfPossible(
                                 encoding)));
-                    m_preloadedJS.back()->request(
-                        Resource::ResourceRequestSyncLevel::NeverSync,
-                        m_document->documentURI(), true);
+
+                    RequestData* reqData = new RequestData();
+                    reqData->m_url = url;
+                    reqData->m_referrer =
+                        new ReferrerURL(m_document->documentURI());
+                    reqData->m_destination = RequestDestination::Script;
+                    reqData->m_syncLevel = RequestSyncLevel::NeverSync;
+                    m_preloadedJS.back()->request(reqData, true);
                 } else if (isCSS) {
                     auto url = new ResourceURL(
                         String::createASCIIStringFromUTF32SourceIfPossible(src),
@@ -149,9 +154,13 @@ PreloadScanner::PreloadScanner(Document* document, String* source)
                             url,
                             String::createASCIIStringFromUTF32SourceIfPossible(
                                 encoding)));
-                    m_preloadedCSS.back()->request(
-                        Resource::ResourceRequestSyncLevel::NeverSync,
-                        m_document->documentURI(), true);
+                    RequestData* reqData = new RequestData();
+                    reqData->m_url = url;
+                    reqData->m_referrer =
+                        new ReferrerURL(m_document->documentURI());
+                    reqData->m_destination = RequestDestination::Script;
+                    reqData->m_syncLevel = RequestSyncLevel::NeverSync;
+                    m_preloadedCSS.back()->request(reqData, true);
                 }
             }
         }

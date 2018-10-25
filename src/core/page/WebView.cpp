@@ -380,7 +380,7 @@ void WebView::loadHTMLDocument(String* filePath) // navigate function helper
 }
 
 void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
-                       ResourceURL* referrerURL)
+                       ReferrerURL* referrerURL)
 {
     clearBlobURLStore();
     initRenderingFlags();

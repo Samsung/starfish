@@ -68,7 +68,7 @@ static_assert(sizeof(size_t) == sizeof(WPARAM), "");
 struct InvokeNavigateData {
     WebView* wv;
     ResourceURL* url;
-    ResourceURL* referrerURL;
+    ReferrerURL* referrerURL;
     UINT_PTR timerID;
     HistoryManagerAction action;
 };
@@ -306,7 +306,7 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
 }
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ResourceURL* referrerURL,
+                                 ReferrerURL* referrerURL,
                                  HistoryManagerAction action, bool force)
 {
     InvokeNavigateData* data =

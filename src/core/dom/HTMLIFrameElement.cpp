@@ -160,12 +160,15 @@ void HTMLIFrameElement::didNodeRemovedFromDocumentTree()
 void HTMLIFrameElement::loadSrc()
 {
     String* s = src();
+    GET_EFFECTIVE_REFERRERPOLICY();
     if (s->length()) {
         navigate(new ResourceURL(s, document()->baseURL()->baseURI()),
-                 HistoryManagerAction::Intact, document()->documentURI());
+                 HistoryManagerAction::Intact,
+                 new ReferrerURL(document()->documentURI(), policy));
     } else {
         navigate(new ResourceURL(String::createASCIIString("about:blank")),
-                 HistoryManagerAction::Intact, document()->documentURI());
+                 HistoryManagerAction::Intact,
+                 new ReferrerURL(document()->documentURI(), policy));
     }
 }
 
@@ -206,7 +209,7 @@ void HTMLIFrameElement::setReferrerPolicy(String* policy)
 }
 
 void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
-                                 ResourceURL* referrerURL)
+                                 ReferrerURL* referrerURL)
 {
     if (ResourceURL::isValidURL(url->urlString())) {
         unloadSrc();
@@ -215,18 +218,12 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
             m_historyManager = HistoryManager::create(this);
         }
 
-        GET_EFFECTIVE_REFERRERPOLICY();
-        ResourceURL* rUrl = referrerURL;
-        if (!rUrl->isReferrerURL()) {
-            rUrl = new ReferrerURL(rUrl, policy);
-        }
-
         if (m_browsingContext) {
             m_browsingContext->dispose();
         }
         m_browsingContext = BrowsingContext::create(this);
         m_browsingContext->setName(nameAttr());
-        m_browsingContext->open(url, type, rUrl);
+        m_browsingContext->open(url, type, referrerURL);
     }
 }
 

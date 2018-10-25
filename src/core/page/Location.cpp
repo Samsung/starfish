@@ -92,7 +92,7 @@ String* Location::hash()
 
 void Location::setHref(String* newURL)
 {
-    setLocation(newURL, document()->documentURI());
+    setLocation(newURL, new ReferrerURL(document()->documentURI()));
 }
 
 void Location::setHost(String* newHost)
@@ -146,7 +146,7 @@ void Location::setHash(String* search)
     }
 }
 
-void Location::setLocation(String* url, ResourceURL* referrerURL)
+void Location::setLocation(String* url, ReferrerURL* referrerURL)
 {
     assign(url, referrerURL);
 }
@@ -157,14 +157,14 @@ void Location::assign(String* url)
     assign(r, document()->documentURI());
 }
 
-void Location::assign(String* url, ResourceURL* referrerURL)
+void Location::assign(String* url, ReferrerURL* referrerURL)
 {
     ResourceURL* r = new ResourceURL(url, document()->baseURL()->urlString());
     assign(r, referrerURL);
 }
 
 static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
-                         ResourceURL* referrerURL, HistoryManagerAction action)
+                         ReferrerURL* referrerURL, HistoryManagerAction action)
 {
     if (ctx->isTopLevelBrowsingContext()) {
         ctx->webView()->messageLoop()->invokeNavigate(ctx->webView(), url,
@@ -176,13 +176,13 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
 
 void Location::assign(ResourceURL* url, bool force)
 {
-    assign(url, document()->documentURI(), force);
+    assign(url, new ReferrerURL(document()->documentURI()), force);
 }
 
 class HeaderResourceClient : public ResourceClient {
 public:
     HeaderResourceClient(Location* location, ResourceURL* url,
-                         ResourceURL* referrerURL, bool force, Resource* res)
+                         ReferrerURL* referrerURL, bool force, Resource* res)
         : ResourceClient(res)
         , m_location(location)
         , m_url(url)
@@ -229,13 +229,13 @@ private:
                 ShouldOverrideUrlLoading)) {
             struct Param : public gc {
                 ResourceURL* url;
-                ResourceURL* referrerUrl;
+                ReferrerURL* referrerURL;
                 bool canNavigate;
                 bool force;
             };
             Param* p = new Param();
             p->url = m_url;
-            p->referrerUrl = m_referrerURL;
+            p->referrerURL = m_referrerURL;
             p->canNavigate = canNavigate;
             p->force = m_force;
             m_location->webView()->callPublicWebViewHandler(
@@ -298,26 +298,34 @@ private:
 private:
     Location* m_location;
     ResourceURL* m_url;
-    ResourceURL* m_referrerURL;
+    ReferrerURL* m_referrerURL;
     bool m_force;
 };
 
-void Location::assign(ResourceURL* url, ResourceURL* referrerURL, bool force)
+void Location::assign(ResourceURL* url, ReferrerURL* referrerURL, bool force)
 {
     // check whether the resource can be displayed
     HeaderResource* resource = document()->resourceLoader().fetchHeader(url);
     resource->addResourceClient(
         new HeaderResourceClient(this, url, referrerURL, force, resource));
-    resource->setNavigationResoure(true);
-    resource->request(Resource::ResourceRequestSyncLevel::NeverSync,
-                      referrerURL, true, MethodType::HEAD);
+
+    RequestData* reqData = new RequestData();
+    reqData->m_url = url;
+    reqData->m_referrer = referrerURL;
+    reqData->m_destination = RequestDestination::Document;
+    reqData->m_syncLevel = RequestSyncLevel::NeverSync;
+    reqData->m_method = MethodType::HEAD;
+    reqData->m_mode = RequestMode::Navigate;
+
+    resource->request(reqData, true);
 }
 
 void Location::replace(String* url)
 {
     if (ResourceURL::isValidURL(url)) {
         navigateImpl(document()->browsingContext(), new ResourceURL(url),
-                     document()->documentURI(), HistoryManagerAction::Replace);
+                     new ReferrerURL(document()->documentURI()),
+                     HistoryManagerAction::Replace);
     }
 }
 

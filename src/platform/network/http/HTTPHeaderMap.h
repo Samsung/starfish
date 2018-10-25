@@ -71,9 +71,12 @@ namespace Starfish {
     F(kUserAgent, "User-Agent")                                       \
     F(kLocation, "Location")                                          \
     F(kKeepAlive, "Keep-Alive")                                       \
+    F(kXFrameOptions, "X-Frame-Options")                              \
     F(kUpgradeInsecureRequests, "Upgrade-Insecure-Requests")          \
     F(kAccessControlRequestHeaders, "Access-Control-Request-Headers") \
-    F(kAccessControlRequestMethod, "Access-Control-Request-Method")
+    F(kAccessControlRequestMethod, "Access-Control-Request-Method")   \
+    F(kAccessControlAllowOrigin, "Access-Control-Allow-Origin")       \
+    F(kAccessControlAllowCredentials, "Access-Control-Allow-Credentials")
 
 class HTTPHeaderMap {
 public:

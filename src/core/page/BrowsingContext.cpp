@@ -121,7 +121,7 @@ void BrowsingContext::initFlags()
 }
 
 void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
-                           ResourceURL* referrerURL)
+                           ReferrerURL* referrerURL)
 {
     initFlags();
 

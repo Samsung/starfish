@@ -99,11 +99,9 @@ public:
 
 private:
     void cancelAllOfPendingRequests();
-    void cacheHit(Resource* org, Resource* now,
-                  Resource::ResourceRequestSyncLevel syncLevel);
+    void cacheHit(Resource* org, Resource* now, RequestSyncLevel syncLevel);
     // return value means cache hit
-    bool requestResourcePreprocess(
-        Resource* res, Resource::ResourceRequestSyncLevel syncLevel);
+    bool requestResourcePreprocess(Resource* res, RequestSyncLevel syncLevel);
     void fireDocumentOnLoadEventIfNeeded();
     bool m_isDocumentInOpenState;
     uint64_t m_documentOpenTime;

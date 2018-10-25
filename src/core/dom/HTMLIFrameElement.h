@@ -82,7 +82,7 @@ public:
     }
 
     void navigate(ResourceURL* url, HistoryManagerAction type,
-                  ResourceURL* referrerURL);
+                  ReferrerURL* referrerURL);
 
     String* nameAttr();
     void setNameAttr(String* name);

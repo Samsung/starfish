@@ -230,7 +230,7 @@ void HTMLLinkElement::loadStyleSheet()
         policy = ReferrerPolicy::NoReferrer;
     }
 
-    ResourceURL* rUrl = new ReferrerURL(document()->documentURI(), policy);
+    ReferrerURL* rUrl = new ReferrerURL(document()->documentURI(), policy);
 
     if (m_styleSheetTextResource) {
         m_styleSheetTextResource->cancel();
@@ -264,8 +264,14 @@ void HTMLLinkElement::loadStyleSheet()
     m_styleSheetTextResource->addResourceClient(
         new ElementResourceClient(this, m_styleSheetTextResource));
     willStyleSheetLoad();
-    m_styleSheetTextResource->request(
-        Resource::ResourceRequestSyncLevel::NeverSync, rUrl, true);
+
+    RequestData* reqData = new RequestData();
+    reqData->m_url = url;
+    reqData->m_referrer = rUrl;
+    reqData->m_destination = RequestDestination::Style;
+    reqData->m_syncLevel = RequestSyncLevel::NeverSync;
+
+    m_styleSheetTextResource->request(reqData, true);
 }
 
 void HTMLLinkElement::unloadStyleSheetIfExists()

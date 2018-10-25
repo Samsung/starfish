@@ -800,7 +800,8 @@ void HTMLFormElement::submitAsEntityBody(
             DocumentURL* urlToOpen = (DocumentURL*)data2;
             // force open as the url does not change in method="post"
             formElement->document()->window()->location()->assign(
-                urlToOpen, formElement->document()->documentURI(), true);
+                urlToOpen,
+                new ReferrerURL(formElement->document()->documentURI()), true);
             formElement->clearPlannedNavigationTask();
         };
 

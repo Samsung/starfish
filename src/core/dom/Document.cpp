@@ -285,7 +285,7 @@ void Document::setCookie(String* cookie)
                                                             cookie);
 }
 
-void Document::init(ResourceURL* referrerURL)
+void Document::init(ReferrerURL* referrerURL)
 {
     m_resourceLoader->markDocumentOpenState();
 
@@ -1587,8 +1587,14 @@ NativeImageData* Document::brokenImage()
             "CUTAKqAMABlQAAUOHH5wAAAAASUVORK5CYII=");
         ImageResource* res = resourceLoader().fetchImage(
             new ResourceURL(brokenImg, String::emptyString));
-        res->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
-                     new ReferrerURL(String::emptyString));
+        RequestData* reqData = new RequestData();
+        reqData->m_url = res->url();
+        reqData->m_referrer = new ReferrerURL(String::emptyString);
+        reqData->m_syncLevel = RequestSyncLevel::AlwaysSync;
+        reqData->m_destination = RequestDestination::Image;
+
+        res->request(reqData, false);
+
         m_brokenImage = res->imageData();
         m_didLoadBrokenImage = true;
         return m_brokenImage;

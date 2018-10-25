@@ -30,6 +30,7 @@ RequestData::RequestData()
     , m_credentials(RequestCredentials::SameOrigin)
     , m_cache(RequestCache::Default)
     , m_redirect(RequestRedirect::Follow)
+    , m_destination(RequestDestination::Empty)
     , m_integrity(String::emptyString)
     , m_keepalive(false)
     , m_url(nullptr)
@@ -142,5 +143,48 @@ RequestRedirect RequestData::requestRedirectFromString(String* inputString)
         return RequestRedirect::Manual;
     }
     return RequestRedirect::Follow;
+}
+
+RequestDestination RequestData::requestDestinationFromString(
+    String* inputString)
+{
+    if (inputString->equalsIgnoreCase("")) {
+        return RequestDestination::Empty;
+    } else if (inputString->equalsIgnoreCase("audio")) {
+        return RequestDestination::Audio;
+    } else if (inputString->equalsIgnoreCase("audioworklet")) {
+        return RequestDestination::AudioWorkLet;
+    } else if (inputString->equalsIgnoreCase("document")) {
+        return RequestDestination::Document;
+    } else if (inputString->equalsIgnoreCase("embed")) {
+        return RequestDestination::Embed;
+    } else if (inputString->equalsIgnoreCase("font")) {
+        return RequestDestination::Font;
+    } else if (inputString->equalsIgnoreCase("image")) {
+        return RequestDestination::Image;
+    } else if (inputString->equalsIgnoreCase("manifest")) {
+        return RequestDestination::Manifest;
+    } else if (inputString->equalsIgnoreCase("object")) {
+        return RequestDestination::Object;
+    } else if (inputString->equalsIgnoreCase("paintworklet")) {
+        return RequestDestination::PaintWorkLet;
+    } else if (inputString->equalsIgnoreCase("report")) {
+        return RequestDestination::Report;
+    } else if (inputString->equalsIgnoreCase("script")) {
+        return RequestDestination::Script;
+    } else if (inputString->equalsIgnoreCase("sharedworker")) {
+        return RequestDestination::SharedWorker;
+    } else if (inputString->equalsIgnoreCase("style")) {
+        return RequestDestination::Style;
+    } else if (inputString->equalsIgnoreCase("track")) {
+        return RequestDestination::Track;
+    } else if (inputString->equalsIgnoreCase("video")) {
+        return RequestDestination::Video;
+    } else if (inputString->equalsIgnoreCase("worker")) {
+        return RequestDestination::Worker;
+    } else if (inputString->equalsIgnoreCase("xslt")) {
+        return RequestDestination::Xslt;
+    }
+    return RequestDestination::Empty;
 }
 }

@@ -105,7 +105,7 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
         responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
 #endif
     } else {
-        workerAbortHandeler(nwd);
+        abortHandlerWrapper(nwd->httpTransaction->res(), nwd);
     }
     return nullptr;
 }
@@ -141,27 +141,20 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
         nwd->httpTransaction->httpResponse().setResponseCode(200);
         responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
     } else {
-        workerAbortHandeler(nwd);
+        abortHandlerWrapper(nwd->httpTransaction->res(), nwd);
     }
     return nullptr;
 }
 #endif
-void NetworkURLWorkerHelper::workerAbortHandeler(void* data)
+
+void NetworkURLWorkerHelper::abortHandeler(size_t handle, void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
-    nwd->request->webView()
-        ->messageLoop()
-        ->addIdlerWithNoGCRootingInOtherThread(
-            nullptr,
-            [](size_t, void* data) {
-                NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;
-                if (d == d->request->m_activeNetworkURLWorkerData) {
-                    d->request->m_activeNetworkURLWorkerData = nullptr;
-                }
-                d->~NetworkURLWorkerData();
-                GC_FREE(d);
-            },
-            nwd);
+    if (nwd == nwd->request->m_activeNetworkURLWorkerData) {
+        nwd->request->m_activeNetworkURLWorkerData = nullptr;
+    }
+    nwd->~NetworkURLWorkerData();
+    GC_FREE(nwd);
 }
 
 void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
@@ -240,6 +233,12 @@ void SyncNetworkWorkHelper::responseHandlerWrapper(int res,
     responseHandler(res, nwd);
 }
 
+void SyncNetworkWorkHelper::abortHandlerWrapper(int res,
+                                                NetworkURLWorkerData* nwd)
+{
+    abortHandeler(res, nwd);
+}
+
 void AsyncNetworkWorkHelper::responseHandlerWrapper(int res,
                                                     NetworkURLWorkerData* nwd)
 {
@@ -262,6 +261,16 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(int res,
     nwd->request->webView()
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(nullptr, this->responseHandler,
+                                               nwd);
+}
+
+void AsyncNetworkWorkHelper::abortHandlerWrapper(int res,
+                                                 NetworkURLWorkerData* nwd)
+{
+    Locker<Mutex> locker(*nwd->request->m_mutex);
+    nwd->request->webView()
+        ->messageLoop()
+        ->addIdlerWithNoGCRootingInOtherThread(nullptr, this->abortHandeler,
                                                nwd);
 }
 
@@ -356,8 +365,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     bool includeCredentials = false;
     switch (m_orgProxy->requestCredentials()) {
     case RequestCredentials::SameOrigin:
-        if (m_orgProxy->document()->webOrigin()->isSameOrigin(
-                WebOrigin::createDocumentOrigin(m_orgProxy->url()))) {
+        if (m_orgProxy->isSameOriginRequest()) {
             includeCredentials = true;
         }
         break;
@@ -445,7 +453,13 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
 
     headers.setHeader(HTTPHeaderMap::kUpgradeInsecureRequests, "1");
 
-    // TODO : Origin must be included when sending Cross-origin request
+    if (!m_orgProxy->isSameOriginRequest()) {
+        headers.setHeader(HTTPHeaderMap::kOrigin, m_orgProxy->document()
+                                                      ->webOrigin()
+                                                      ->serialize()
+                                                      ->toUTF8NonGCString()
+                                                      .data());
+    }
 
     auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
     if (it2 == headers.headerMap().end() && m_orgProxy->referrer()) {
@@ -655,8 +669,42 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     if (nwd->httpTransaction->httpResponse().isSuccessfulResponseStatus()) {
         if ((rawHeader.compare("\r\n") == 0) ||
             (rawHeader.compare("\n") == 0)) {
+            if (request->requestCredentials() == RequestCredentials::Include &&
+                !request->isSubresourceRequest()) {
+                bool isAllowedResponse = true;
+                const auto& reqHeaders =
+                    nwd->httpTransaction->httpRequest().headers().headerMap();
+                auto it = reqHeaders.find(HTTPHeaderMap::kOrigin);
+                if (it != reqHeaders.end()) {
+                    const auto& resHeaders =
+                        nwd->httpTransaction->httpResponse()
+                            .headers()
+                            .headerMap();
+                    auto it2 = resHeaders.find(
+                        HTTPHeaderMap::kAccessControlAllowOrigin);
+                    if (it2 == resHeaders.end() ||
+                        ((it2 != resHeaders.end()) &&
+                         !StringUtils::equalsIgnoreCase(it->second,
+                                                        it2->second))) {
+                        isAllowedResponse = false;
+                    }
+
+                    it2 = resHeaders.find(
+                        HTTPHeaderMap::kAccessControlAllowCredentials);
+                    if (it2 == resHeaders.end() || ((it2 != resHeaders.end()) &&
+                                                    !(it2->second == "true"))) {
+                        isAllowedResponse = false;
+                    }
+                }
+                if (!isAllowedResponse) {
+                    STARFISH_LOG_WARN("The Response is not allowed\n");
+                    nwd->isAborted = true;
+                }
+            }
+
             request->m_responseHeaderMap = std::move(
                 nwd->httpTransaction->httpResponse().headers().headerMap());
+
         } else {
             nwd->httpTransaction->didReceiveHeader(rawHeader);
         }

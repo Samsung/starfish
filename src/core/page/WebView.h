@@ -181,7 +181,7 @@ public:
 
     void loadHTMLDocument(String* filePath); // navigate function helper
     void navigate(ResourceURL* url, HistoryManagerAction type,
-                  ResourceURL* referrerURL);
+                  ReferrerURL* referrerURL);
 
     ScriptEngineInstance* scriptEngineInstance()
     {

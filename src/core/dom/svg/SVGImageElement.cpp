@@ -99,9 +99,14 @@ void SVGImageElement::loadImage(String* src)
         new SVGImageDownloadClient(this, m_imageResource));
     m_imageResource->addResourceClient(
         new ElementResourceClient(this, m_imageResource));
-    m_imageResource->request(
-        Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
-        document()->documentURI(), true);
+
+    RequestData* reqData = new RequestData();
+    reqData->m_url = m_imageResource->url();
+    reqData->m_referrer = new ReferrerURL(document()->documentURI());
+    reqData->m_destination = RequestDestination::Image;
+    reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
+
+    m_imageResource->request(reqData, true);
 }
 
 void SVGImageElement::didAttributeChanged(QualifiedName name, String* old,

@@ -269,9 +269,15 @@ Font* FontSelector::loadFont(String* familyNameArray[],
             if (!selectedWebFont->fromLocal()) {
                 // download from web
                 if (!selectedWebFont->fontResource()->isRequested()) {
-                    selectedWebFont->fontResource()->request(
-                        Resource::SyncIfAlreadyLoaded,
-                        document()->documentURI(), true);
+                    RequestData* reqData = new RequestData();
+                    reqData->m_url = selectedWebFont->fontResource()->url();
+                    reqData->m_referrer =
+                        new ReferrerURL(document()->documentURI());
+                    reqData->m_destination = RequestDestination::Font;
+                    reqData->m_syncLevel =
+                        RequestSyncLevel::SyncIfAlreadyLoaded;
+
+                    selectedWebFont->fontResource()->request(reqData, true);
                 }
                 if (selectedWebFont->fontResource()->fontFace()) {
                     // fontface loaded!

@@ -26,6 +26,7 @@
 #include "core/fileapi/Blob.h"
 #include "core/xml/XMLHttpRequest.h"
 #include "core/modules/resource_request/ResourceRequest.h"
+#include "core/dom/WebOrigin.h"
 #include "core/page/Window.h"
 #include "platform/network/http/HTTPStatus.h"
 
@@ -258,6 +259,8 @@ void XMLHttpRequest::open(MethodType method, String* url, bool async,
     reqData->m_url = new ResourceURL(url, document()->baseURL()->baseURI());
     reqData->m_referrer = new ReferrerURL(document()->documentURI(),
                                           document()->referrerPolicy());
+    reqData->m_destination = RequestDestination::Empty;
+
     if (userName->length()) {
         reqData->m_url->setUsername(userName);
     }
@@ -468,12 +471,23 @@ bool XMLHttpRequest::withCredentials() const
 
 void XMLHttpRequest::setWithCredentials(bool value)
 {
-    if (m_resourceRequest->readyState() != ReadyState::Opened) {
+    auto state = m_resourceRequest->readyState();
+
+    if (!(state == ReadyState::Unset || state == ReadyState::Opened)) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
     m_withCredentials = value;
+    if (state == ReadyState::Opened) {
+        if (m_withCredentials) {
+            m_resourceRequest->setRequestCredentials(
+                RequestCredentials::Include);
+        } else {
+            m_resourceRequest->setRequestCredentials(
+                RequestCredentials::SameOrigin);
+        }
+    }
 }
 
 void XMLHttpRequest::setRequestHeader(String* header, String* value)

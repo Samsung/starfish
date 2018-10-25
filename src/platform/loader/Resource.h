@@ -59,7 +59,6 @@ public:
         , m_isReferencedByAnoterResource(false)
         , m_isCanceledButContinueLoadingDueToCache(false)
         , m_isRequested(false)
-        , m_isNavigationResoure(false)
         , m_state(BeforeSend)
         , m_url(url)
         , m_loader(loader)
@@ -130,16 +129,6 @@ public:
             std::find(m_resourceClients.begin(), m_resourceClients.end(), rc));
     }
 
-    bool isNavigationResoure()
-    {
-        return m_isNavigationResoure;
-    }
-
-    void setNavigationResoure(bool value)
-    {
-        m_isNavigationResoure = value;
-    }
-
     ResourceRequest* resourceRequest()
     {
         return m_resourceRequest;
@@ -155,14 +144,7 @@ public:
         return m_responseMimeType;
     }
 
-    enum ResourceRequestSyncLevel {
-        NeverSync,
-        SyncIfAlreadyLoaded,
-        AlwaysSync
-    };
-    virtual void request(ResourceRequestSyncLevel syncLevel,
-                         ResourceURL* referrerURL, bool allowCache = false,
-                         MethodType method = MethodType::GET);
+    virtual void request(RequestData* requestData, bool allowCache);
     virtual void cancel();
     virtual void didHeaderReceived(
         const std::unordered_map<std::string, std::string>& headrs);
@@ -245,7 +227,6 @@ protected:
     bool m_isReferencedByAnoterResource : 1;
     bool m_isCanceledButContinueLoadingDueToCache : 1;
     bool m_isRequested : 1;
-    bool m_isNavigationResoure : 1;
 
     State m_state;
     ResourceURL* m_url;

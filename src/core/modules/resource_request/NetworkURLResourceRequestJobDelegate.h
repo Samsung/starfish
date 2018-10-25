@@ -66,26 +66,33 @@ public:
 #ifdef STARFISH_ENABLE_HTTPCACHE
     void* httpCacheWorker(void* data);
 #endif
-    void workerAbortHandeler(void* data);
 
 protected:
-    virtual void responseHandlerWrapper(int res,
-                                        NetworkURLWorkerData* requestData)
+    virtual void responseHandlerWrapper(int res, NetworkURLWorkerData* nwd)
     {
     }
-    static void responseHandler(size_t handle, void* requestData);
+
+    virtual void abortHandlerWrapper(int res, NetworkURLWorkerData* nwd)
+    {
+    }
+
+    static void responseHandler(size_t handle, void* data);
+    static void abortHandeler(size_t handle, void* data);
 };
 
 class AsyncNetworkWorkHelper : public NetworkURLWorkerHelper {
 protected:
     virtual void responseHandlerWrapper(int res,
-                                        NetworkURLWorkerData* requestData);
+                                        NetworkURLWorkerData* nwd) override;
+    virtual void abortHandlerWrapper(int res,
+                                     NetworkURLWorkerData* nwd) override;
 };
 
 class SyncNetworkWorkHelper : public NetworkURLWorkerHelper {
 protected:
-    virtual void responseHandlerWrapper(int res,
-                                        NetworkURLWorkerData* requestData);
+    virtual void responseHandlerWrapper(int res, NetworkURLWorkerData* nwd);
+    virtual void abortHandlerWrapper(int res,
+                                     NetworkURLWorkerData* nwd) override;
 };
 
 class NetworkURLResourceRequestJobDelegate

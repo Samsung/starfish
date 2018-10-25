@@ -29,6 +29,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
+#include "core/dom/WebOrigin.h"
 
 namespace Starfish {
 
@@ -52,6 +53,7 @@ public:
 ResourceRequest::ResourceRequest(Document* document)
     : DocumentHoldable(document)
     , m_requestData(nullptr)
+    , m_requestWebOrigin(nullptr)
     , m_readyState(ReadyState::Unset)
     , m_progressState(ProgressState::None)
     , m_responseType(ResponseType::Default)
@@ -230,6 +232,8 @@ void ResourceRequest::open(RequestData* reqData, bool async)
 {
     bool shouldAbort = false;
     m_requestData = reqData;
+    m_requestWebOrigin = WebOrigin::createDocumentOrigin(m_requestData->m_url);
+
     {
         STARFISH_ASSERT(!(!async && m_timeout != 0));
         shouldAbort = m_progressState >= ProgressState::LoadStart;
@@ -281,6 +285,14 @@ void ResourceRequest::send(String* body, bool allowCache)
     m_networkRequestJobDelegate->send(body, allowCache);
 
     changeProgress(ProgressState::LoadStart, true);
+}
+
+bool ResourceRequest::isSameOriginRequest()
+{
+    if (!m_requestWebOrigin) {
+        return false;
+    }
+    return document()->webOrigin()->isSameOrigin(m_requestWebOrigin);
 }
 
 void ResourceRequest::setRequestHeader(String* h, String* c)
