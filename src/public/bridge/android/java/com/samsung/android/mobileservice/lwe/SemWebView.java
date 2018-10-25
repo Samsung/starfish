@@ -34,11 +34,11 @@ import java.lang.reflect.Constructor;
  */
 public class SemWebView extends TextureView {
 
-    static PathClassLoader pcl = null;
-    static final String packageName = "com.samsung.android.mobileservice.lwe";
-    static final String LweWebViewImplName = "com.samsung.android.mobileservice.lwe.LweWebViewImpl";
+    private static PathClassLoader pcl = null;
+    private static final String packageName = "com.samsung.android.mobileservice.lwe";
+    private static final String LweWebViewImplName = "com.samsung.android.mobileservice.lwe.LweWebViewImpl";
 
-    LweWebView delegate = null;
+    private LweWebView delegate = null;
 
     /**
      * Creates a new InputConnection for an InputMethod to interact with the WebView.
@@ -54,6 +54,13 @@ public class SemWebView extends TextureView {
         return null;
     }
 
+    /**
+     * Called when the visibility of the view or an ancestor of the view has changed.
+     *
+     * @param changedView The view whose visibility changed. May be this or an ancestor view.
+     * @param visibility The new visibility, one of View.VISIBLE, View.INVISIBLE or View.GONE.
+     * @since Lightweight Web Engine 1.0
+     */
     @Override
     protected void onVisibilityChanged(View changedView, int visibility) {
         super.onVisibilityChanged(changedView, visibility);
@@ -62,6 +69,16 @@ public class SemWebView extends TextureView {
         }
     }
 
+    /**
+     * Called when the window containing has change its visibility (between GONE,
+     * INVISIBLE, and VISIBLE). Note that this tells you whether or not your window is
+     * being made visible to the window manager; this does not tell you whether or
+     * not your window is obscured by other windows on the screen, even if it is
+     * itself visible.
+     *
+     * @param visibility The new visibility of the window.
+     * @since Lightweight Web Engine 1.0
+     */
     @Override
     protected void onWindowVisibilityChanged(int visibility) {
         super.onWindowVisibilityChanged(visibility);

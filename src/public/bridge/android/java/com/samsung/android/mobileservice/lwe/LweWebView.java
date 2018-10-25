@@ -24,6 +24,9 @@ import android.view.View;
 import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
 
+/**
+ * @hide
+ */
 public interface LweWebView {
     void initWebView(View appView);
     String getDefaultUserAgent(Context context);
