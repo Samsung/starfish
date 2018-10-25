@@ -1626,10 +1626,10 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     if (newStyle->zIndex() != oldStyle->zIndex()) {
         damagedKeys[CSSStyleValuePair::KeyKind::ZIndex] = true;
         damage = (ComputedStyleDamage)(
-            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
-        damage = (ComputedStyleDamage)(
             ComputedStyleDamage::ComputedStyleDamageEstablishesStackingContext |
             damage);
+        damage = (ComputedStyleDamage)(
+            ComputedStyleDamage::ComputedStyleDamagePainting | damage);
     }
 
     if (newStyle->backgroundColor() != oldStyle->backgroundColor()) {

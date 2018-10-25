@@ -177,7 +177,6 @@ protected:
     void applyStackingContextProperties(ComputeStackingContextContext& ctx);
 
     bool m_needsGraphicsBuffer : 1;
-    bool m_hasGraphicsBufferButPaintingSkipped : 1;
     bool m_hasNon2DRectTransform : 1;
     bool m_isVisibleRectComputedForNonGraphicsLayer : 1;
     NeedsGraphicsLayerReason m_needsGraphicsBufferReason : 2;

@@ -88,7 +88,8 @@ static void traceRepaintRegionJob(
         newInlineResultMap,
     std::unordered_map<Node*, LayoutRect>& dirtyAreaMapPerStackingContext,
     std::unordered_set<Node*, std::hash<Node*>, std::equal_to<Node*>,
-                       GCUtil::gc_malloc_allocator<Node*>>& rootedNodeSet)
+                       GCUtil::gc_malloc_allocator<Node*>>& rootedNodeSet,
+    bool& gotPaintingDirty)
 {
     // collect results related with box
     if (!currentFrame->isAnonymous() && currentFrame->isFrameBox()) {
@@ -108,6 +109,7 @@ static void traceRepaintRegionJob(
             !gotNewNode && (iter->second.first != newLayoutResultRect);
         if (gotNewNode || frameRectChanged) {
             // got new node || frameRectChanged -> dirty
+            gotPaintingDirty = true;
             LayoutRect rt = newLayoutResultRect;
             if (iter != oldResultMap.end()) {
                 rt.unite(iter->second.first);
@@ -179,6 +181,7 @@ static void traceRepaintRegionJob(
             }
 
             if (dirtyRect.size().width()) {
+                gotPaintingDirty = true;
                 Node* stackingContextOwner = lastStackingContextOwner->node();
                 auto iter2 =
                     dirtyAreaMapPerStackingContext.find(stackingContextOwner);
@@ -203,30 +206,33 @@ static void traceRepaintRegionJob(
 
     Frame* f = currentFrame->firstChild();
     while (f) {
-        traceRepaintRegionJob(f, lastStackingContextOwner, oldResultMap,
-                              newLayoutResultMap, oldInlineResultMap,
-                              newInlineResultMap,
-                              dirtyAreaMapPerStackingContext, rootedNodeSet);
+        traceRepaintRegionJob(
+            f, lastStackingContextOwner, oldResultMap, newLayoutResultMap,
+            oldInlineResultMap, newInlineResultMap,
+            dirtyAreaMapPerStackingContext, rootedNodeSet, gotPaintingDirty);
         f = f->next();
     }
 }
 
-void LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
+bool LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
 {
     std::unordered_map<Node*, std::pair<LayoutRect, Node*>> newResult;
     GCVector<std::tuple<FrameBlockBox*, FrameBox*, InlineLayoutResult*>>
         newInlineLayoutResult;
     LayoutRect dirtyArea;
+    bool gotPaintingDirty = false;
     auto oldRootedNodeSet = std::move(m_rootedNodeSet);
     traceRepaintRegionJob(fd, fd, m_lastLayoutResult, newResult,
                           m_lastInlineTextLayoutResult, newInlineLayoutResult,
-                          m_dirtyAreaPerStackingContextOwners, m_rootedNodeSet);
+                          m_dirtyAreaPerStackingContextOwners, m_rootedNodeSet,
+                          gotPaintingDirty);
 
     auto iter = m_lastLayoutResult.begin();
     while (iter != m_lastLayoutResult.end()) {
         if (iter->second.first.location() !=
             LayoutLocation(LayoutUnit::min(), LayoutUnit::min())) {
             // box is disappear
+            gotPaintingDirty = true;
             Node* stackingContextOwner = iter->second.second;
 
             LayoutRect rt = iter->second.first;
@@ -246,6 +252,7 @@ void LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
     while (iter2 != m_lastInlineTextLayoutResult.end()) {
         if (std::get<2>(*iter2)) {
             // FrameBlockBox is disappear
+            gotPaintingDirty = true;
             auto oldInlineResult = std::get<2>(*iter2);
 
             LayoutRect dirtyRect;
@@ -269,5 +276,7 @@ void LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
 
     m_lastLayoutResult = std::move(newResult);
     m_lastInlineTextLayoutResult = std::move(newInlineLayoutResult);
+
+    return gotPaintingDirty;
 }
 }

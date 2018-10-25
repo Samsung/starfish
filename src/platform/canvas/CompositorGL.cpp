@@ -902,6 +902,7 @@ public:
                 g_eglDestroyImageKHRProc(display, m_eglImage);
                 m_eglImage = nullptr;
                 if (m_isEGLBufferOwner) {
+                    LongTaskFinder t("tbm_surface_destroy", 1);
                     tbm_surface_destroy(m_tbmSurface);
                 }
                 m_tbmSurface = nullptr;
@@ -909,6 +910,7 @@ public:
                 g_evasGLAPI->evasglDestroyImage(m_eglImage);
                 m_eglImage = nullptr;
                 if (m_isEGLBufferOwner) {
+                    LongTaskFinder t("tbm_surface_destroy", 1);
                     tbm_surface_destroy(m_tbmSurface);
                 }
                 m_tbmSurface = nullptr;
@@ -975,10 +977,13 @@ public:
                 m_isEGLBufferOwner = m_isEGLImageExternal = true;
                 m_isEGLImageNeedsFlipRGB = false;
 #if defined(STARFISH_TIZEN)
-                m_tbmSurface = tbm_surface_create(m_bufferWidth, m_bufferHeight,
-                                                  TBM_FORMAT_ABGR8888);
                 tbm_surface_info_s surfaceInfo;
-                tbm_surface_get_info(m_tbmSurface, &surfaceInfo);
+                {
+                    LongTaskFinder t("tbm_surface_create", 1);
+                    m_tbmSurface = tbm_surface_create(
+                        m_bufferWidth, m_bufferHeight, TBM_FORMAT_ABGR8888);
+                    tbm_surface_get_info(m_tbmSurface, &surfaceInfo);
+                }
                 STARFISH_RELEASE_ASSERT(surfaceInfo.num_planes == 1);
                 m_bufferStride = surfaceInfo.planes[0].stride;
                 m_buffer = nullptr;
@@ -1215,7 +1220,11 @@ public:
             }
 #if defined(STARFISH_TIZEN)
             tbm_surface_info_s surfaceInfo;
-            tbm_surface_map(m_tbmSurface, TBM_SURF_OPTION_WRITE, &surfaceInfo);
+            {
+                LongTaskFinder t("tbm_surface_map", 1);
+                tbm_surface_map(m_tbmSurface, TBM_SURF_OPTION_WRITE,
+                                &surfaceInfo);
+            }
             STARFISH_RELEASE_ASSERT(surfaceInfo.num_planes == 1);
             STARFISH_RELEASE_ASSERT(surfaceInfo.planes[0].stride ==
                                     m_bufferStride);
@@ -1274,6 +1283,7 @@ public:
     virtual void clear() override
     {
         if (m_buffer) {
+            LongTaskFinder t("CanvasSurfaceGL::clear", 1);
             size_t end = m_bufferStride * m_bufferHeight;
             memset(m_buffer, 0x00, end);
         }
@@ -1289,7 +1299,10 @@ public:
 
         if (m_isEGLImageExternal) {
 #if defined(STARFISH_TIZEN)
-            tbm_surface_unmap(m_tbmSurface);
+            {
+                LongTaskFinder t("tbm_surface_unmap", 1);
+                tbm_surface_unmap(m_tbmSurface);
+            }
 #elif defined(STARFISH_ANDROID)
             int32_t fence = -1;
             AHardwareBuffer_unlock(m_aHardwareBuffer, &fence);

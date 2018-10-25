@@ -129,7 +129,6 @@ void* StackingContextRareData::operator new(size_t size)
 
 StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     : m_needsGraphicsBuffer(false)
-    , m_hasGraphicsBufferButPaintingSkipped(false)
     , m_hasNon2DRectTransform(false)
     , m_isVisibleRectComputedForNonGraphicsLayer(false)
     , m_needsGraphicsBufferReason(
@@ -1015,54 +1014,36 @@ void StackingContext::applyStackingContextProperties(
     LayoutRect screenRect =
         LayoutRect(0, 0, ctx.rootLayer->owner()->node()->window()->innerWidth(),
                    ctx.rootLayer->owner()->node()->window()->innerHeight());
-    bool canSkipPaintingForThisLayer =
-        willBeComposited && !m_owner->needsGraphicsBuffer() &&
-        (!screenRect.containsInVisual(m_screenExtent) &&
-         !screenRect.intersects(m_screenExtent));
 
-    if (canSkipPaintingForThisLayer) {
-        m_rareData->m_visibleRect.setWidth(0);
-        m_rareData->m_visibleRect.setHeight(0);
-        m_hasGraphicsBufferButPaintingSkipped = true;
-    } else if (m_hasGraphicsBufferButPaintingSkipped &&
-               !canSkipPaintingForThisLayer) {
-        m_hasGraphicsBufferButPaintingSkipped = false;
-        m_owner->node()->setNeedsPainting();
-    } else {
-        m_hasGraphicsBufferButPaintingSkipped = false;
-    }
-
-    if (!m_hasGraphicsBufferButPaintingSkipped) {
-        if (compositedBefore != willBeComposited) {
-            if (compositedBefore) {
-                StackingContext* p = m_parent;
-                while (p) {
-                    if (p->needsGraphicsBuffer()) {
-                        break;
-                    }
-                    p = p->parent();
+    if (compositedBefore != willBeComposited) {
+        if (compositedBefore) {
+            StackingContext* p = m_parent;
+            while (p) {
+                if (p->needsGraphicsBuffer()) {
+                    break;
                 }
-                if (!p) {
-                    p = this;
-                }
-                p->m_owner->node()->setNeedsPainting();
-            } else {
+                p = p->parent();
+            }
+            if (!p) {
+                p = this;
+            }
+            p->m_owner->node()->setNeedsPainting();
+        } else {
+            m_owner->node()->setNeedsPainting();
+        }
+    } else if (compositedBefore && compositedBefore == willBeComposited) {
+        m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
+    } else if (!compositedBefore && !willBeComposited) {
+        if (prevDrawnMapIter != prevDrawnMap.end()) {
+            if ((prevDrawnMapIter->second.opacity !=
+                 m_owner->style()->opacity()) ||
+                (prevDrawnMapIter->second.transformMatrix !=
+                 transformMatrix())) {
                 m_owner->node()->setNeedsPainting();
             }
-        } else if (compositedBefore && compositedBefore == willBeComposited) {
-            m_owner->node()->webView()->markNeedsCompositeConsiderInRendering();
-        } else if (!compositedBefore && !willBeComposited) {
-            if (prevDrawnMapIter != prevDrawnMap.end()) {
-                if ((prevDrawnMapIter->second.opacity !=
-                     m_owner->style()->opacity()) ||
-                    (prevDrawnMapIter->second.transformMatrix !=
-                     transformMatrix())) {
-                    m_owner->node()->setNeedsPainting();
-                }
-            } else {
-                if (transformMatrix() != SkMatrix::I()) {
-                    m_owner->node()->setNeedsPainting();
-                }
+        } else {
+            if (transformMatrix() != SkMatrix::I()) {
+                m_owner->node()->setNeedsPainting();
             }
         }
     }

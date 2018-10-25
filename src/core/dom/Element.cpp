@@ -880,8 +880,9 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
 
     if (ensureRareElementMembers()->m_scrollLeft != (LayoutUnit)s) {
         ensureRareElementMembers()->m_scrollLeft = s;
-        webView()->setNeedsComputeStackingContextProperties();
-        setNeedsPainting();
+        // just set needs layout flag solo
+        // this will trigger only layout painting dirty check
+        document()->browsingContext()->setNeedsLayout();
     }
 }
 
@@ -1019,8 +1020,9 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
 
     if (ensureRareElementMembers()->m_scrollTop != (LayoutUnit)s) {
         ensureRareElementMembers()->m_scrollTop = s;
-        webView()->setNeedsComputeStackingContextProperties();
-        setNeedsPainting();
+        // just set needs layout flag solo
+        // this will trigger only layout painting dirty check
+        document()->browsingContext()->setNeedsLayout();
     }
 }
 
