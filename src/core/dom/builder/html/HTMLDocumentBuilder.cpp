@@ -378,7 +378,7 @@ private:
     }
 };
 
-void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
+void HTMLDocumentBuilder::build(ResourceURL* url, ReferrerURL* referrerURL)
 {
 #if defined(STARFISH_ENABLE_NETWORK_PROFILING) || \
     defined(STARFISH_ENABLE_SCRIPT_PROFILING)
@@ -388,21 +388,24 @@ void HTMLDocumentBuilder::build(ResourceURL* url, ResourceURL* referrerURL)
 #endif
 
     m_resource = m_document->resourceLoader().fetch(url);
-    m_resource->setNavigationResoure(true);
     m_resource->addResourceClient(new HTMLResourceClient(m_resource, *this));
+    RequestData* reqData = new RequestData();
+    reqData->m_url = url;
+    reqData->m_referrer = referrerURL;
+    reqData->m_mode = RequestMode::Navigate;
+    reqData->m_destination = RequestDestination::Document;
+
 #ifndef STARFISH_TIZEN_WEARABLE_WIDGET
     if (url->urlString()->isEmpty() ||
         url->urlString()->equals("about:blank")) {
-        m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
-                            referrerURL, true);
+        reqData->m_syncLevel = RequestSyncLevel::AlwaysSync;
     } else {
-        m_resource->request(Resource::ResourceRequestSyncLevel::NeverSync,
-                            referrerURL, true);
+        reqData->m_syncLevel = RequestSyncLevel::NeverSync;
     }
 #else
-    m_resource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
-                        referrerURL);
+    reqData->m_syncLevel = RequestSyncLevel::AlwaysSync;
 #endif
+    m_resource->request(reqData, true);
 }
 
 void HTMLDocumentBuilder::build(String* str)

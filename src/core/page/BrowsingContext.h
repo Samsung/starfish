@@ -272,7 +272,7 @@ private:
     // you can use this function from WebView::navigate or
     // HTMLIFrameElement::navigate
     void open(ResourceURL* url, HistoryManagerAction type,
-              ResourceURL* referrerURL);
+              ReferrerURL* referrerURL);
 
     void didFocusEvent();
 #if defined(STARFISH_ANDROID)

@@ -68,6 +68,34 @@ enum class RequestRedirect {
     Manual,
 };
 
+enum class RequestDestination {
+    Empty,
+    Audio,
+    AudioWorkLet,
+    Document,
+    Embed,
+    Font,
+    Image,
+    Manifest,
+    Object,
+    PaintWorkLet,
+    Report,
+    Script,
+    SharedWorker,
+    Style,
+    Track,
+    Video,
+    Worker,
+    Xslt,
+};
+
+// RequestSyncLevel is used as the synchronous-flag
+enum class RequestSyncLevel {
+    SyncIfAlreadyLoaded,
+    NeverSync,
+    AlwaysSync,
+};
+
 class RequestData : public gc {
     // TODO: encapsulate class members
 public:
@@ -79,6 +107,9 @@ public:
     RequestCredentials m_credentials;
     RequestCache m_cache;
     RequestRedirect m_redirect;
+    RequestDestination m_destination;
+    RequestSyncLevel m_syncLevel;
+
     String* m_integrity;
     bool m_keepalive;
     ResourceURL* m_url;
@@ -89,6 +120,7 @@ public:
     static RequestCredentials requestCredentialsFromString(String* inputString);
     static RequestCache requestCacheFromString(String* inputString);
     static RequestRedirect requestRedirectFromString(String* inputString);
+    static RequestDestination requestDestinationFromString(String* inputString);
 };
 }
 

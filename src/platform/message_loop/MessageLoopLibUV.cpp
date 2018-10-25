@@ -295,7 +295,7 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
 struct InvokeNavigateData : public gc {
     WebView* wv;
     ResourceURL* url;
-    ResourceURL* referrerURL;
+    ReferrerURL* referrerURL;
     uv_timer_t* idler;
     HistoryManagerAction action;
     void** extra;
@@ -376,7 +376,7 @@ void MessageLoop::destroy()
 }
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ResourceURL* referrerURL,
+                                 ReferrerURL* referrerURL,
                                  HistoryManagerAction action, bool force)
 {
     if (m_navigateInvokeIdler != nullptr) {

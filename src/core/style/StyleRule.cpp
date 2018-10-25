@@ -323,9 +323,13 @@ void StyleRuleImport::requestStyleSheet()
     m_styleSheetTextResource->addResourceClient(
         new ImportedStyleSheetDownloadClient(this, m_styleSheetTextResource));
 
-    m_styleSheetTextResource->request(
-        Resource::ResourceRequestSyncLevel::NeverSync,
-        document()->documentURI(), true);
+    RequestData* reqData = new RequestData();
+    reqData->m_url = absURL;
+    reqData->m_referrer = new ReferrerURL(document()->documentURI());
+    reqData->m_destination = RequestDestination::Style;
+    reqData->m_syncLevel = RequestSyncLevel::NeverSync;
+
+    m_styleSheetTextResource->request(reqData, true);
     m_loading = true;
 }
 

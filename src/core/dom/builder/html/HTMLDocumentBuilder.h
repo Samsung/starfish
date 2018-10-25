@@ -40,7 +40,7 @@ public:
     {
     }
 
-    virtual void build(ResourceURL* url, ResourceURL* referrerURL);
+    virtual void build(ResourceURL* url, ReferrerURL* referrerURL);
     virtual void build(String* str);
     virtual void resume();
     void openFunctionExplicitCalled();

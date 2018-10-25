@@ -32,24 +32,21 @@
 namespace Starfish {
 
 // TODO : replace ResourceURL* to ReferrerURL*
-void Resource::request(ResourceRequestSyncLevel syncLevel,
-                       ResourceURL* referrerURL, bool allowCache,
-                       MethodType method)
+void Resource::request(RequestData* requestData, bool allowCache)
 {
     STARFISH_ASSERT(m_state == BeforeSend);
-    STARFISH_ASSERT(referrerURL);
+    STARFISH_ASSERT(requestData->m_referrer);
+    auto syncLevel = requestData->m_syncLevel;
 
     m_isRequested = true;
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
         m_resourceRequest = new ResourceRequest(loader()->document());
 
-        // ResourceRequest::MethodType method = ResourceRequest::GET_METHOD;
         String* entityBody = String::emptyString;
 
         prepare();
-
-        ResourceURL* url = m_url;
+        ResourceURL* url = requestData->m_url;
         if (url->isDocumentURL()) {
             if (url->asDocumentURL()->formSubmitData()) {
                 FormSubmitData* formSubmitData =
@@ -60,7 +57,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
                         String::createASCIIString(
                             "text/html,application/xhtml+xml,application/"
                             "xml;q=0.9,image/webp,image/apng,*/*;q=0.8"));
-                    method = formSubmitData->m_method;
+                    requestData->m_method = formSubmitData->m_method;
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString(HTTPHeaderMap::kContentType),
                         ResourceRequest::encodeType(formSubmitData->m_enctype));
@@ -71,7 +68,7 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
 
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString(HTTPHeaderMap::kOrigin),
-                        referrerURL->origin());
+                        requestData->m_referrer->origin());
 
                     String* nocache = String::createASCIIString("no-cache");
                     m_resourceRequest->setRequestHeader(
@@ -93,28 +90,13 @@ void Resource::request(ResourceRequestSyncLevel syncLevel,
                     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 }
             }
+            requestData->m_url = url;
         }
 
         m_resourceRequest->addResourceRequestClient(
             new ResourceNetworkRequestClient(this));
-
-        RequestData* reqData = new RequestData();
-
-        reqData->m_method = method;
-        reqData->m_url = url;
-        if (referrerURL->isReferrerURL()) {
-            reqData->m_referrer = referrerURL->asReferrerURL();
-        } else {
-            STARFISH_LOG_INFO("referrerURL is not referrerURL Object\n");
-            reqData->m_referrer = new ReferrerURL(referrerURL);
-        }
-        if (m_isNavigationResoure) {
-            reqData->m_mode = RequestMode::Navigate;
-        }
-
-        m_resourceRequest->open(
-            reqData,
-            !(syncLevel == Resource::ResourceRequestSyncLevel::AlwaysSync));
+        m_resourceRequest->open(requestData,
+                                !(syncLevel == RequestSyncLevel::AlwaysSync));
 
         m_resourceRequest->send(entityBody, allowCache);
     }

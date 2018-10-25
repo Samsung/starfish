@@ -436,8 +436,8 @@ void ResourceLoader::decreasePendingResourceCountWhileDocumentOpening()
     }
 }
 
-bool ResourceLoader::requestResourcePreprocess(
-    Resource* res, Resource::ResourceRequestSyncLevel syncLevel)
+bool ResourceLoader::requestResourcePreprocess(Resource* res,
+                                               RequestSyncLevel syncLevel)
 {
     if (m_isDocumentInOpenState &&
         res->isThisResourceDoesAffectWindowOnLoad()) {
@@ -448,7 +448,7 @@ bool ResourceLoader::requestResourcePreprocess(
     }
 
     // TODO cache text resource
-    if (syncLevel != Resource::ResourceRequestSyncLevel::AlwaysSync) {
+    if (syncLevel != RequestSyncLevel::AlwaysSync) {
         if (res->isImageResource()) {
             auto u8Str = res->url()->urlString()->toUTF8NonGCString();
             ASCIIString url(u8Str.data(), u8Str.length());
@@ -505,19 +505,17 @@ bool ResourceLoader::requestResourcePreprocess(
 }
 
 void ResourceLoader::cacheHit(Resource* org, Resource* now,
-                              Resource::ResourceRequestSyncLevel syncLevel)
+                              RequestSyncLevel syncLevel)
 {
     Resource::State s = org->state();
     org->m_isReferencedByAnoterResource = true;
     // STARFISH_LOG_INFO("cache hit! %s\n",
     // org->url()->urlString()->toUTF8NonGCString().data());
     if (s == Resource::State::Finished) {
-        if (syncLevel ==
-            Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded) {
+        if (syncLevel == RequestSyncLevel::SyncIfAlreadyLoaded) {
             now->didCacheHit(org);
         } else {
-            STARFISH_ASSERT(syncLevel ==
-                            Resource::ResourceRequestSyncLevel::NeverSync);
+            STARFISH_ASSERT(syncLevel == RequestSyncLevel::NeverSync);
             webView()->messageLoop()->addIdler(
                 document()->browsingContext(),
                 [](size_t, void* data, void* data2) {

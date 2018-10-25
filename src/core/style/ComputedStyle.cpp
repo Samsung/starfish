@@ -431,22 +431,25 @@ void ComputedStyle::loadBackgroundImage(
                 res->markThisResourceIsDoesNotAffectWindowOnLoad();
                 res->addResourceClient(
                     new BackgroundImageResourceClient(res, consumer));
+
+                RequestData* reqData = new RequestData();
+                reqData->m_url = u;
+                reqData->m_referrer =
+                    new ReferrerURL(consumer->document()->documentURI());
+                reqData->m_destination = RequestDestination::Image;
 #ifdef STARFISH_ENABLE_TEST
                 WebView* wv = consumer->webView();
                 bool enableRegressionTest =
                     wv->startUpFlag() &
                     StarfishStartUpFlag::enableRegressionTest;
-                res->request(
+                reqData->m_syncLevel =
                     (g_enablePixelTest || enableRegressionTest)
-                        ? Resource::ResourceRequestSyncLevel::AlwaysSync
-                        : Resource::ResourceRequestSyncLevel::
-                              SyncIfAlreadyLoaded,
-                    consumer->document()->documentURI(), true);
+                        ? RequestSyncLevel::AlwaysSync
+                        : RequestSyncLevel::SyncIfAlreadyLoaded;
 #else
-                res->request(
-                    Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
-                    consumer->document()->documentURI(), true);
+                reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
 #endif
+                res->request(reqData, true);
             }
         } else if (bImg && bImg->type().isGradient()) {
             // Do nothing at this time
@@ -487,20 +490,24 @@ void ComputedStyle::loadBorderImage(
             res->markThisResourceIsDoesNotAffectWindowOnLoad();
             res->addResourceClient(
                 new BackgroundImageResourceClient(res, consumer));
+
+            RequestData* reqData = new RequestData();
+            reqData->m_url = u;
+            reqData->m_referrer =
+                new ReferrerURL(consumer->document()->documentURI());
+            reqData->m_destination = RequestDestination::Image;
 #ifdef STARFISH_ENABLE_TEST
             WebView* wv = consumer->webView();
             bool enableRegressionTest =
                 wv->startUpFlag() & StarfishStartUpFlag::enableRegressionTest;
-            res->request(
-                (g_enablePixelTest || enableRegressionTest)
-                    ? Resource::ResourceRequestSyncLevel::AlwaysSync
-                    : Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
-                consumer->document()->documentURI(), true);
+
+            reqData->m_syncLevel = (g_enablePixelTest || enableRegressionTest)
+                                       ? RequestSyncLevel::AlwaysSync
+                                       : RequestSyncLevel::SyncIfAlreadyLoaded;
 #else
-            res->request(
-                Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
-                consumer->document()->documentURI(), true);
+            reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
 #endif
+            res->request(reqData, true);
             setBorderImageResource(res);
         }
     }
@@ -534,20 +541,23 @@ void ComputedStyle::loadListStyleImage(
             res->markThisResourceIsDoesNotAffectWindowOnLoad();
             res->addResourceClient(
                 new BackgroundImageResourceClient(res, consumer));
+
+            RequestData* reqData = new RequestData();
+            reqData->m_url = u;
+            reqData->m_referrer =
+                new ReferrerURL(consumer->document()->documentURI());
+            reqData->m_destination = RequestDestination::Image;
 #ifdef STARFISH_ENABLE_TEST
             WebView* wv = consumer->webView();
             bool enableRegressionTest =
                 wv->startUpFlag() & StarfishStartUpFlag::enableRegressionTest;
-            res->request(
-                (g_enablePixelTest || enableRegressionTest)
-                    ? Resource::ResourceRequestSyncLevel::AlwaysSync
-                    : Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
-                consumer->document()->documentURI(), true);
+            reqData->m_syncLevel = (g_enablePixelTest || enableRegressionTest)
+                                       ? RequestSyncLevel::AlwaysSync
+                                       : RequestSyncLevel::SyncIfAlreadyLoaded;
 #else
-            res->request(
-                Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded,
-                consumer->document()->documentURI(), true);
+            reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
 #endif
+            res->request(reqData, true);
             setListStyleImage(res);
         }
     }

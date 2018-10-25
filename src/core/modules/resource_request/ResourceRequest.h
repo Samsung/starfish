@@ -35,6 +35,7 @@ namespace Starfish {
 class Document;
 class ResourceRequest;
 class FormDataSetItem;
+class WebOrigin;
 
 typedef std::vector<char> EntityBody;
 
@@ -221,6 +222,42 @@ public:
         return m_requestData->m_mode;
     }
 
+    RequestDestination requestDestination()
+    {
+        if (!m_requestData) {
+            return RequestDestination::Empty;
+        }
+        return m_requestData->m_destination;
+    }
+
+    bool isSubresourceRequest()
+    {
+        if (!m_requestData) {
+            return false;
+        }
+
+        switch (m_requestData->m_destination) {
+        case RequestDestination::Audio:
+        case RequestDestination::AudioWorkLet:
+        case RequestDestination::Font:
+        case RequestDestination::Image:
+        case RequestDestination::Manifest:
+        case RequestDestination::PaintWorkLet:
+        case RequestDestination::Script:
+        case RequestDestination::Style:
+        case RequestDestination::Track:
+        case RequestDestination::Video:
+        case RequestDestination::Xslt:
+            return true;
+            break;
+        default:
+            return false;
+            break;
+        }
+    }
+
+    bool isSameOriginRequest();
+
     bool isError()
     {
         return m_gotError;
@@ -234,6 +271,13 @@ public:
             return RequestCredentials::Omit;
         }
         return m_requestData->m_credentials;
+    }
+
+    void setRequestCredentials(RequestCredentials value)
+    {
+        if (m_requestData) {
+            m_requestData->m_credentials = value;
+        }
     }
 
     static EncodeType toEncodeType(String* input);
@@ -273,13 +317,12 @@ protected:
     bool m_didSend;
     bool m_gotError;
     bool m_containsBase64Content;
+
     RequestData* m_requestData;
-    // ResourceURL* m_url;
-    // ResourceURL* m_referrer;
+    WebOrigin* m_requestWebOrigin;
+
     ReadyState m_readyState;
     ProgressState m_progressState;
-    // MethodType m_method;
-    // RequestCredentials m_credentialsMode;
 
     ResponseType m_responseType;
     uint16_t m_status;

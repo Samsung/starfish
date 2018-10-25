@@ -58,7 +58,7 @@ public:
     String* hash();
 
     void assign(String* url);
-    void assign(String* url, ResourceURL* referrerURL);
+    void assign(String* url, ReferrerURL* referrerURL);
     void replace(String* url);
     void reload(bool force = true);
 
@@ -75,11 +75,11 @@ public:
     {
     }
 
-    void setLocation(String* newURL, ResourceURL* referrerURL);
+    void setLocation(String* newURL, ReferrerURL* referrerURL);
 
 private:
     void assign(ResourceURL* url, bool force = false);
-    void assign(ResourceURL* url, ResourceURL* referrerURL, bool force = false);
+    void assign(ResourceURL* url, ReferrerURL* referrerURL, bool force = false);
 };
 }
 

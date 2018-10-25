@@ -144,6 +144,8 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
             ret = HTTPHeaderMap::kAcceptLanguage;
         } else if (lower.compare("referrer-policy") == 0) {
             ret = HTTPHeaderMap::kReferrerPolicy;
+        } else if (lower.compare("x-frame-options") == 0) {
+            ret = HTTPHeaderMap::kXFrameOptions;
         }
         break;
     case 16:
@@ -179,6 +181,10 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
             ret = HTTPHeaderMap::kAccessControlRequestHeaders;
         } else if (lower.compare("access-control-request-method") == 0) {
             ret = HTTPHeaderMap::kAccessControlRequestMethod;
+        } else if (lower.compare("access-control-allow-origin") == 0) {
+            ret = HTTPHeaderMap::kAccessControlAllowOrigin;
+        } else if (lower.compare("access-control-allow-credentials") == 0) {
+            ret = HTTPHeaderMap::kAccessControlAllowCredentials;
         }
         break;
     }

@@ -103,7 +103,7 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
         Nullable<String*> hrefAttr = getAttribute(href);
         if (hrefAttr.hasValue()) {
             GET_EFFECTIVE_REFERRERPOLICY();
-            ResourceURL* rUrl =
+            ReferrerURL* rUrl =
                 new ReferrerURL(document()->documentURI(), policy);
             String* hrefStr = hrefAttr.getValue()->trim();
             if (hrefStr->length()) {

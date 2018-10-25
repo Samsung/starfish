@@ -330,10 +330,14 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                     new ScriptDownloadClient(this, res, shouldResumeParsing()));
             }
             res->addResourceClient(new ElementResourceClient(this, res, true));
-            res->request(forceSync
-                             ? Resource::ResourceRequestSyncLevel::AlwaysSync
-                             : Resource::ResourceRequestSyncLevel::NeverSync,
-                         document()->documentURI(), true);
+
+            RequestData* reqData = new RequestData();
+            reqData->m_url = rurl;
+            reqData->m_referrer = new ReferrerURL(document()->documentURI());
+            reqData->m_destination = RequestDestination::Script;
+            reqData->m_syncLevel = forceSync ? RequestSyncLevel::AlwaysSync
+                                             : RequestSyncLevel::NeverSync;
+            res->request(reqData, true);
             if (async() || defer()) {
                 return false;
             } else {

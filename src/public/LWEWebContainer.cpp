@@ -755,7 +755,7 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
             [this, cb](void* param) -> void {
                 struct Param {
                     Starfish::ResourceURL* url;
-                    Starfish::ResourceURL* referrerUrl;
+                    Starfish::ReferrerURL* referrerURL;
                     bool canNavigate;
                     bool force;
                 };
@@ -767,7 +767,7 @@ void WebContainer::RegisterShouldOverrideUrlLoadingHandler(
                     TO_WEBVIEW(m_impl)
                         ->messageLoop()
                         ->invokeNavigate(
-                            TO_WEBVIEW(m_impl), p->url, p->referrerUrl,
+                            TO_WEBVIEW(m_impl), p->url, p->referrerURL,
                             Starfish::HistoryManagerAction::Add, true);
                 }
             });

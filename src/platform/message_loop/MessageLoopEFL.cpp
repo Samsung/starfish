@@ -60,7 +60,7 @@ MessageLoop::MessageLoop(WebView* wv)
 struct InvokeNavigateData : public gc {
     WebView* wv;
     ResourceURL* url;
-    ResourceURL* referrerURL;
+    ReferrerURL* referrerURL;
     Ecore_Animator* idler;
     HistoryManagerAction action;
     void** extra;
@@ -413,7 +413,7 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
 }
 
 void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ResourceURL* referrerURL,
+                                 ReferrerURL* referrerURL,
                                  HistoryManagerAction action, bool force)
 {
     if (m_navigateInvokeIdler != nullptr) {

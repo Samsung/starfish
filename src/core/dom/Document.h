@@ -398,7 +398,7 @@ public:
     String* cookie();
     void setCookie(String* cookie);
 
-    void init(ResourceURL* referrerURL);
+    void init(ReferrerURL* referrerURL);
     void dispose();
 
     Document* open(String* type, String* replace);

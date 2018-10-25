@@ -239,15 +239,17 @@ void HTMLImageElement::loadImage(String* src)
         new ElementResourceClient(this, m_imageResource));
 
     GET_EFFECTIVE_REFERRERPOLICY();
-    ResourceURL* rUrl = new ReferrerURL(document()->documentURI(), policy);
-    if (rUrl->isFileURL()) {
-        m_imageResource->request(Resource::ResourceRequestSyncLevel::AlwaysSync,
-                                 rUrl, true);
+    RequestData* reqData = new RequestData();
+    reqData->m_url = m_imageResource->url();
+    reqData->m_referrer = new ReferrerURL(document()->documentURI(), policy);
+    reqData->m_destination = RequestDestination::Image;
+
+    if (reqData->m_referrer->isFileURL()) {
+        reqData->m_syncLevel = RequestSyncLevel::AlwaysSync;
     } else {
-        m_imageResource->request(
-            Resource::ResourceRequestSyncLevel::SyncIfAlreadyLoaded, rUrl,
-            true);
+        reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
     }
+    m_imageResource->request(reqData, true);
 }
 
 String* HTMLImageElement::referrerPolicy()

@@ -104,12 +104,6 @@ protected:
     ImageResource* m_resource;
 };
 
-void ImageResource::request(ResourceRequestSyncLevel syncLevel,
-                            ResourceURL* referrerURL, bool allowCache)
-{
-    Resource::request(syncLevel, referrerURL, allowCache);
-}
-
 void ImageResource::didLoadFinished()
 {
     bool isSVG = false;
@@ -144,7 +138,8 @@ void ImageResource::didLoadFinished()
             m_mockFrameForSVGDocument->navigate(
                 new ResourceURL(
                     String::fromUTF8(dataURI.data(), dataURI.length())),
-                HistoryManagerAction::Add, loader()->document()->documentURI());
+                HistoryManagerAction::Add,
+                new ReferrerURL(loader()->document()->documentURI()));
             m_imageData = nullptr;
             return;
         }
