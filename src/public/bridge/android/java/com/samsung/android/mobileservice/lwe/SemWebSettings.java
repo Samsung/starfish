@@ -27,22 +27,30 @@ import android.content.Context;
 public class SemWebSettings {
     /**
      * Default cache usage mode
+     *
+     * @since Lightweight Web Engine 1.0
      */
     public static final int LOAD_DEFAULT = -1;
     // static final int LOAD_NORMAL = 0;
 
     /**
      * Use cached resources when they are available, even if they have expired.
+     *
+     * @since Lightweight Web Engine 1.0
      */
     public static final int LOAD_CACHE_ELSE_NETWORK = 1;
 
     /**
      * Don't use the cache, load from the network.
+     *
+     * @since Lightweight Web Engine 1.0
      */
     public static final int LOAD_NO_CACHE = 2;
 
     /**
      * Don't use the network, load from the cache.
+     *
+     * @since Lightweight Web Engine 1.0
      */
     public static final int LOAD_CACHE_ONLY = 3;
 
