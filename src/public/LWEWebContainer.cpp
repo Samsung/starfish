@@ -447,7 +447,9 @@ Settings WebContainer::GetSettings()
     }
 #endif
     result.SetProxyURL(TO_WEBVIEW(m_impl)->proxyURL());
+#ifdef STARFISH_ENABLE_TTS
     result.SetTTSMode(TO_WEBVIEW(m_impl)->tts()->mode());
+#endif
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 
     return result;
@@ -619,7 +621,9 @@ void WebContainer::SetSettings(const Settings& settings)
         ->setCustomUserAgentString(
             Starfish::String::fromUTF8(settings.GetUserAgentString().c_str()));
     TO_WEBVIEW(m_impl)->setProxyURL(settings.GetProxyURL());
+#ifdef STARFISH_ENABLE_TTS
     TO_WEBVIEW(m_impl)->tts()->setMode(settings.GetTTSMode());
+#endif
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (TO_STARFISH(m_impl)->httpCache()) {
         TO_STARFISH(m_impl)->httpCache()->setCacheMode(settings.GetCacheMode());
