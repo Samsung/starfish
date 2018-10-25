@@ -956,6 +956,13 @@ void WebView::setNeedsRendering()
     wnd->setNeedsRendering();
 }
 
+static void cleanupLayoutRepaintTracker(BrowsingContext* ctx)
+{
+    ctx->layoutRepaintTracker().clearDatasRelatedWithStackingContext();
+    ctx->iterateChildContext(
+        [](BrowsingContext* ctx) { cleanupLayoutRepaintTracker(ctx); });
+}
+
 RenderResult WebView::rendering(bool force)
 {
     RenderResult renderResult;
@@ -1072,6 +1079,8 @@ RenderResult WebView::rendering(bool force)
                 scrollY);
             m_paintingDirtyRect = LayoutRect(0, 0, 0, 0);
             LayoutRect repaintRect = tracker.repaintRegion();
+
+            cleanupLayoutRepaintTracker(mainBrowsingContext());
 
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
             STARFISH_LOG_INFO("repaint region %f %f %f %f\n",

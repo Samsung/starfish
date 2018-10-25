@@ -37,6 +37,7 @@ struct PrevDrawnStackingContextInfo {
             false;
         graphicsBuffer = nullptr;
         opacity = 1;
+        transformMatrix = SkMatrix::I();
     }
 
     // flags for RepaintRegionTracker
@@ -45,6 +46,7 @@ struct PrevDrawnStackingContextInfo {
     bool needsGraphicsBuffer;
 
     LayoutRect screenExtent;
+    SkMatrix transformMatrix;
     float opacity;
     CanvasSurface* graphicsBuffer;
 };

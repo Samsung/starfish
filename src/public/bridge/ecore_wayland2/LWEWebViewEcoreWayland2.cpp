@@ -483,14 +483,19 @@ public:
                 Ecore_Event_Key* keyEvent = (Ecore_Event_Key*)(event);
                 WebViewEcoreWayland2* webView = (WebViewEcoreWayland2*)data;
                 if (keyEvent->window ==
-                        static_cast<unsigned int>(
-                            ecore_wl2_window_id_get(webView->mEcoreWindow)) &&
-                    webView->m_hasFocus) {
+                    static_cast<unsigned int>(
+                        ecore_wl2_window_id_get(webView->mEcoreWindow))) {
                     std::string keyName = keyEvent->keyname;
 
                     STARFISH_LOG_INFO(
                         "ECORE_EVENT_KEY_DOWN [%s, %d]\n", keyName.data(),
                         (keyEvent->modifiers & 1) || (keyEvent->modifiers & 2));
+
+                    if (!webView->m_hasFocus) {
+                        STARFISH_LOG_INFO(
+                            "ignore keydown because we dont have focus");
+                        return ECORE_CALLBACK_PASS_ON;
+                    }
 
 #ifdef STARFISH_TIZEN_TV
                     if ((strncmp(keyName.data(), "XF86Red", 7) == 0)) {
@@ -517,14 +522,19 @@ public:
                 Ecore_Event_Key* keyEvent = (Ecore_Event_Key*)(event);
                 WebViewEcoreWayland2* webView = (WebViewEcoreWayland2*)data;
                 if (keyEvent->window ==
-                        static_cast<unsigned int>(
-                            ecore_wl2_window_id_get(webView->mEcoreWindow)) &&
-                    webView->m_hasFocus) {
+                    static_cast<unsigned int>(
+                        ecore_wl2_window_id_get(webView->mEcoreWindow))) {
                     std::string keyName = keyEvent->keyname;
 
                     STARFISH_LOG_INFO(
                         "ECORE_EVENT_KEY_UP [%s, %d]\n", keyName.data(),
                         (keyEvent->modifiers & 1) || (keyEvent->modifiers & 2));
+
+                    if (!webView->m_hasFocus) {
+                        STARFISH_LOG_INFO(
+                            "ignore keyup because we dont have focus");
+                        return ECORE_CALLBACK_PASS_ON;
+                    }
 
 #ifdef STARFISH_TIZEN_TV
                     if ((strncmp(keyName.data(), "XF86Red", 7) == 0)) {

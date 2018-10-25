@@ -166,6 +166,9 @@ void Scrolling::paintScrollbars(T canvas, FrameBlockBox* frame,
     if (getenv("SCREEN_SHOT") && strlen(getenv("SCREEN_SHOT")) > 0) {
         return;
     }
+    if (getenv("PIXEL_TEST") && strlen(getenv("PIXEL_TEST")) > 0) {
+        return;
+    }
 #endif
     canvas->save();
     bool hasVerticalScroll = frame->hasBiggerContentThanFrameHeight() &&

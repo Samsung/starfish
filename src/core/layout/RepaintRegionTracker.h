@@ -81,6 +81,10 @@ protected:
             needsRepainting |=
                 frame->asInlineNonReplacedBox()->origin()->needsPainting();
             frame->asInlineNonReplacedBox()->origin()->clearNeedsPainting();
+        } else if (frame->isInlineTextBox()) {
+            needsRepainting |=
+                frame->asInlineTextBox()->origin()->needsPainting();
+            frame->asInlineTextBox()->origin()->clearNeedsPainting();
         }
 
         StackingContext* sc = frame->stackingContext();
@@ -104,6 +108,21 @@ protected:
             if (frame->style() &&
                 frame->style()->position() == FixedPositionValue) {
                 currentMatrix = frame->computeScreenMatrix();
+            }
+
+            auto& layoutRepaintTracker = frame->node()
+                                             ->document()
+                                             ->browsingContext()
+                                             ->layoutRepaintTracker();
+            auto iter2 =
+                layoutRepaintTracker.dirtyAreaPerStackingContextOwners().find(
+                    frame->node());
+            if (iter2 !=
+                layoutRepaintTracker.dirtyAreaPerStackingContextOwners()
+                    .end()) {
+                LayoutRect r = iter2->second;
+                r = computeBoxExtent(r, currentMatrix);
+                m_repaintRegion.unite(r);
             }
         }
 
