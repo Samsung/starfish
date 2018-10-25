@@ -3328,6 +3328,17 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
             minWidth = std::min(minWidth, p.preferredMinWidth());
         }
 
+        if (isFlexItem() && style->width().isPercent()) {
+            PreferredWidthContext p(ctx, nullptr, this, this,
+                                    parentWidth - mbpWidth());
+            Length oldWidth = style->width();
+            style->setWidth(Length());
+            p.computePreferredWidth();
+            style->setWidth(oldWidth);
+            minWidth = std::min(minWidth, p.preferredWidth());
+            minWidth = std::min(minWidth, p.preferredMinWidth());
+        }
+
         if (minWidth != intMaxForLayoutUnit && minWidth > width) {
             return minWidth;
         }
