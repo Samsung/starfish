@@ -100,7 +100,9 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
         textStyle->arrangeStyleValues(svgElement->style(), svgElement);
         textNode->setStyle(textStyle);
 
-        box->appendChild(new FrameText(textNode, textStyle));
+        auto ft = new FrameText(textNode, textStyle);
+        textNode->setFrame(ft);
+        box->appendChild(ft);
     }
 
     svgElement->clearNeedsFrameTreeBuild();
