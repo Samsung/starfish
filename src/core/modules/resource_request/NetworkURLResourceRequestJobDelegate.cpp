@@ -451,8 +451,6 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     headers.setHeader(HTTPHeaderMap::kHost,
                       m_orgProxy->url()->host()->toUTF8NonGCString().data());
 
-    headers.setHeader(HTTPHeaderMap::kUpgradeInsecureRequests, "1");
-
     if (!m_orgProxy->isSameOriginRequest()) {
         headers.setHeader(HTTPHeaderMap::kOrigin, m_orgProxy->document()
                                                       ->webOrigin()
@@ -682,22 +680,27 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                             .headerMap();
                     auto it2 = resHeaders.find(
                         HTTPHeaderMap::kAccessControlAllowOrigin);
-                    if (it2 == resHeaders.end() ||
-                        ((it2 != resHeaders.end()) &&
-                         !StringUtils::equalsIgnoreCase(it->second,
-                                                        it2->second))) {
+                    if (it2 == resHeaders.end()) {
+                        isAllowedResponse = false;
+                    } else if (!StringUtils::equalsIgnoreCase(it->second,
+                                                              it2->second)) {
                         isAllowedResponse = false;
                     }
-
                     it2 = resHeaders.find(
                         HTTPHeaderMap::kAccessControlAllowCredentials);
-                    if (it2 == resHeaders.end() || ((it2 != resHeaders.end()) &&
-                                                    !(it2->second == "true"))) {
+                    if (it2 == resHeaders.end()) {
+                        isAllowedResponse = false;
+                    } else if (!(it2->second == "true")) {
                         isAllowedResponse = false;
                     }
                 }
                 if (!isAllowedResponse) {
-                    STARFISH_LOG_WARN("The Response is not allowed\n");
+                    STARFISH_LOG_WARN(
+                        "The Response is not allowed (request : %s)\n",
+                        request->url()
+                            ->urlString()
+                            ->toUTF8NonGCString()
+                            .data());
                     nwd->isAborted = true;
                 }
             }
