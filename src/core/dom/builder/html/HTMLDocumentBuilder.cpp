@@ -32,6 +32,7 @@
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/extra/MimeType.h"
+#include "core/dom/WebOrigin.h"
 
 namespace Starfish {
 
@@ -298,6 +299,8 @@ public:
                 new ResourceURL(m_resource->resourceRequest()->lastLocation());
             m_builder.document()->setDocumentURI(newURL);
             m_builder.document()->setBaseURL(newURL);
+            m_builder.document()->setWebOrigin(
+                WebOrigin::createDocumentOrigin(newURL));
             m_builder.document()
                 ->window()
                 ->history()
