@@ -1110,7 +1110,8 @@ private:
                             lastFontFace, 0);
 
                         cairo_matrix_t sizeMatrix;
-                        cairo_matrix_init(&sizeMatrix, size, 0, 0, size, 0, 0);
+                        cairo_matrix_init_identity(&sizeMatrix);
+                        cairo_matrix_scale(&sizeMatrix, size, size);
 
                         cairo_matrix_t identityMatrix;
                         cairo_matrix_init_identity(&identityMatrix);
@@ -1197,8 +1198,8 @@ private:
                                 lastFontFace, 0);
 
                             cairo_matrix_t sizeMatrix;
-                            cairo_matrix_init(&sizeMatrix, size, 0, 0, size, 0,
-                                              0);
+                            cairo_matrix_init_identity(&sizeMatrix);
+                            cairo_matrix_scale(&sizeMatrix, size, size);
 
                             cairo_matrix_t identityMatrix;
                             cairo_matrix_init_identity(&identityMatrix);
