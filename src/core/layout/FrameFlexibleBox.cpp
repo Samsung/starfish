@@ -1162,7 +1162,14 @@ LayoutUnit FrameFlexibleBox::basisSize(
         flexItem->style()->setWidth(oldWidth);
         basisSize = flexItem->contentWidth();
     } else {
-        containingBlockOfFlexItem->setContentWidth(availableCrossSize);
+        Length maxWidth = restorer.m_maxWidth;
+
+        if (maxWidth.isSpecified() &&
+            maxWidth.numberData() < availableCrossSize) {
+            containingBlockOfFlexItem->setContentWidth(maxWidth.numberData());
+        } else {
+            containingBlockOfFlexItem->setContentWidth(availableCrossSize);
+        }
         containingBlockOfFlexItem->markContentWidthDamaged();
         flexItem->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
         Length oldHeight = flexItem->style()->height(), height;
