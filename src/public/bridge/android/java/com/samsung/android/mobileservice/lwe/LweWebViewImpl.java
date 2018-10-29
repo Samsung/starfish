@@ -74,7 +74,7 @@ public class LweWebViewImpl implements LweWebView {
     private SemWebViewClient mWebViewClient = null;
     private SemWebLweClient mWebLweClient = null;
     private SemDownloadListener mDownloadListener = null;
-    private SemWebSettings mWebSettings = new SemWebSettings(this);
+    private SemWebSettings mWebSettings = null;
 
     private int mCacheMode = SemWebSettings.LOAD_DEFAULT;
     private int mDefaultFontSize;
