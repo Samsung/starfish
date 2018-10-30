@@ -3326,17 +3326,6 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
                                     parentWidth - mbpWidth());
             p.computePreferredWidth();
             minWidth = std::min(minWidth, p.preferredMinWidth());
-        } else if (style->width().isPercent() &&
-                   appliedOverflowX() == VisibleOverflow) {
-            PreferredWidthContext p(ctx, nullptr, this, this,
-                                    parentWidth - mbpWidth());
-            Length oldWidth = style->width();
-            style->setWidth(Length());
-            p.computePreferredWidth();
-            style->setWidth(oldWidth);
-
-            minWidth = std::min(minWidth, p.preferredWidth());
-            minWidth = std::min(minWidth, p.preferredMinWidth());
         }
 
         if (minWidth != intMaxForLayoutUnit && minWidth > width) {

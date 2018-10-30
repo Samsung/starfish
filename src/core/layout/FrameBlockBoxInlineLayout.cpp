@@ -4633,6 +4633,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                 ctx.updatePreferredWidth(ctx.remainingWidth());
             } else {
                 ctx.updatePreferredWidth(w);
+                ctx.updatePreferredMinWidth(w);
             }
         } else {
             Frame* f = firstChild();
