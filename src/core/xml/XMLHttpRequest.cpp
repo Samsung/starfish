@@ -29,6 +29,8 @@
 #include "core/dom/WebOrigin.h"
 #include "core/page/Window.h"
 #include "platform/network/http/HTTPStatus.h"
+#include "core/fetch/Body.h"
+#include "core/fetch/Response.h"
 
 namespace Starfish {
 
@@ -98,9 +100,8 @@ public:
         if (fromExplicit) {
             if (request->readyState() == ReadyState::Done) {
                 if (m_xhr->m_responseType ==
-                        XMLHttpRequest::ResponseType::Unspecified ||
-                    m_xhr->m_responseType ==
-                        XMLHttpRequest::ResponseType::Text) {
+                        XMLHttpRequestResponseType::Empty ||
+                    m_xhr->m_responseType == XMLHttpRequestResponseType::Text) {
                     TextConverter textConverter(
                         m_xhr->m_resourceRequest->responseMimeType(),
                         String::fromUTF8("UTF-8"),
@@ -111,7 +112,7 @@ public:
                         m_xhr->m_resourceRequest->response().size(), true);
                     m_xhr->m_resourceRequest->response().clear();
                 } else if (m_xhr->m_responseType ==
-                           XMLHttpRequest::ResponseType::Json) {
+                           XMLHttpRequestResponseType::Json) {
                     TextConverter cvt(
                         m_xhr->m_resourceRequest->responseMimeType(),
                         String::fromUTF8("UTF-8"),
@@ -123,7 +124,7 @@ public:
                     m_xhr->m_responseJsonObject =
                         parseJSON(m_xhr->scriptBindingInstance(), text);
                 } else if (m_xhr->m_responseType ==
-                           XMLHttpRequest::ResponseType::Blob) {
+                           XMLHttpRequestResponseType::Blob) {
                     void* buffer =
                         calloc(1, m_xhr->m_resourceRequest->response().size());
                     memcpy(buffer, m_xhr->m_resourceRequest->response().data(),
@@ -136,7 +137,7 @@ public:
                     m_xhr->m_resourceRequest->response().clear();
                     m_xhr->m_resourceRequest->response().shrink_to_fit();
                 } else if (m_xhr->m_responseType ==
-                           XMLHttpRequest::ResponseType::ArrayBuffer) {
+                           XMLHttpRequestResponseType::ArrayBuffer) {
                     void* buffer =
                         calloc(1, m_xhr->m_resourceRequest->response().size());
                     memcpy(buffer, m_xhr->m_resourceRequest->response().data(),
@@ -147,7 +148,7 @@ public:
                     m_xhr->m_resourceRequest->response().clear();
                     m_xhr->m_resourceRequest->response().shrink_to_fit();
                 } else if (m_xhr->m_responseType ==
-                           XMLHttpRequest::ResponseType::Document) {
+                           XMLHttpRequestResponseType::Document) {
                     void* buffer =
                         calloc(1, m_xhr->m_resourceRequest->response().size());
                     memcpy(buffer, m_xhr->m_resourceRequest->response().data(),
@@ -188,7 +189,7 @@ XMLHttpRequest::XMLHttpRequest(::Starfish::Document* document)
     }, NULL, NULL, NULL);
     */
 
-    m_responseType = ResponseType::Unspecified;
+    m_responseType = XMLHttpRequestResponseType::Empty;
     initResponseData();
     m_resourceRequest->addResourceRequestClient(
         new XMLHttpRequestResourceRequestClient(this));
@@ -283,7 +284,7 @@ void XMLHttpRequest::abort()
     initResponseData();
 }
 
-void XMLHttpRequest::setResponseType(ResponseType type)
+void XMLHttpRequest::setResponseType(XMLHttpRequestResponseType type)
 {
     // If the state is LOADING or DONE, throw an "InvalidStateError" exception.
     if (m_resourceRequest->readyState() == ReadyState::Loading ||
@@ -312,18 +313,18 @@ void XMLHttpRequest::setResponseType(ResponseType type)
 
 void XMLHttpRequest::setResponseType(String* typeStr)
 {
-    XMLHttpRequest::ResponseType type = Unspecified;
+    XMLHttpRequestResponseType type = XMLHttpRequestResponseType::Empty;
 
     if (typeStr->equals("arraybuffer")) {
-        type = ArrayBuffer;
+        type = XMLHttpRequestResponseType::ArrayBuffer;
     } else if (typeStr->equals("blob")) {
-        type = Blob;
+        type = XMLHttpRequestResponseType::Blob;
     } else if (typeStr->equals("document")) {
-        type = Document;
+        type = XMLHttpRequestResponseType::Document;
     } else if (typeStr->equals("json")) {
-        type = Json;
+        type = XMLHttpRequestResponseType::Json;
     } else if (typeStr->equals("text")) {
-        type = Text;
+        type = XMLHttpRequestResponseType::Text;
     } else {
         auto s = typeStr->toUTF8NonGCString();
         STARFISH_LOG_ERROR("setResponseType: Invalid value given: %s\n",
@@ -333,7 +334,7 @@ void XMLHttpRequest::setResponseType(String* typeStr)
     setResponseType(type);
 }
 
-XMLHttpRequest::ResponseType XMLHttpRequest::responseTypeValue() const
+XMLHttpRequestResponseType XMLHttpRequest::responseTypeValue() const
 {
     return m_responseType;
 }
@@ -341,17 +342,17 @@ XMLHttpRequest::ResponseType XMLHttpRequest::responseTypeValue() const
 String* XMLHttpRequest::responseType() const
 {
     switch (m_responseType) {
-    case Unspecified:
+    case XMLHttpRequestResponseType::Empty:
         return String::emptyString;
-    case ArrayBuffer:
+    case XMLHttpRequestResponseType::ArrayBuffer:
         return String::createASCIIString("arraybuffer");
-    case Blob:
+    case XMLHttpRequestResponseType::Blob:
         return String::createASCIIString("blob");
-    case Document:
+    case XMLHttpRequestResponseType::Document:
         return String::createASCIIString("document");
-    case Json:
+    case XMLHttpRequestResponseType::Json:
         return String::createASCIIString("json");
-    case Text:
+    case XMLHttpRequestResponseType::Text:
         return String::createASCIIString("text");
     }
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -384,20 +385,20 @@ ScriptValue XMLHttpRequest::response() const
 {
     ScriptValue result;
 
-    if (m_responseType == ResponseType::Unspecified ||
-        m_responseType == ResponseType::Text) {
+    if (m_responseType == XMLHttpRequestResponseType::Empty ||
+        m_responseType == XMLHttpRequestResponseType::Text) {
         result = scriptStringToScriptValue(createScriptString(responseText()));
-    } else if (m_responseType == ResponseType::Json) {
+    } else if (m_responseType == XMLHttpRequestResponseType::Json) {
         result = m_responseJsonObject;
-    } else if (m_responseType == ResponseType::Blob) {
+    } else if (m_responseType == XMLHttpRequestResponseType::Blob) {
         if (m_responseBlob) {
             result = m_responseBlob->scriptValue();
         } else {
             result = scriptNull();
         }
-    } else if (m_responseType == ResponseType::ArrayBuffer) {
+    } else if (m_responseType == XMLHttpRequestResponseType::ArrayBuffer) {
         result = m_responseArrayBuffer;
-    } else if (m_responseType == ResponseType::Document) {
+    } else if (m_responseType == XMLHttpRequestResponseType::Document) {
         result = m_responseXML->scriptValue();
     } else {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
@@ -411,8 +412,8 @@ ScriptValue XMLHttpRequest::response() const
 
 String* XMLHttpRequest::responseText() const
 {
-    if (!(m_responseType == ResponseType::Unspecified ||
-          m_responseType == ResponseType::Text)) {
+    if (!(m_responseType == XMLHttpRequestResponseType::Empty ||
+          m_responseType == XMLHttpRequestResponseType::Text)) {
         throw new DOMException(
             const_cast<XMLHttpRequest*>(this)
                 ->scriptBindingInstance()
@@ -431,8 +432,8 @@ String* XMLHttpRequest::responseText() const
 
 Document* XMLHttpRequest::responseXML() const
 {
-    if (!(m_responseType == ResponseType::Unspecified ||
-          m_responseType == ResponseType::Document)) {
+    if (!(m_responseType == XMLHttpRequestResponseType::Empty ||
+          m_responseType == XMLHttpRequestResponseType::Document)) {
         throw new DOMException(
             const_cast<XMLHttpRequest*>(this)
                 ->scriptBindingInstance()
@@ -531,6 +532,13 @@ String* XMLHttpRequest::getAllResponseHeaders()
             (key.compare(HTTPHeaderMap::kSetCookie2) == 0)) {
             continue;
         }
+
+        if (m_resourceRequest->responseType() == ResponseType::Cors) {
+            if (!HTTPUtil::isCORSsafelistedResponseHeaderName(key)) {
+                continue;
+            }
+        }
+
         sb.appendString(key.c_str());
         sb.appendChar(':');
         sb.appendChar(' ');
@@ -557,8 +565,17 @@ Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
     const HeaderMap& map = m_resourceRequest->responseHeaderMap();
 
     for (const auto& pair : map) {
-        if (name->equalsIgnoreCase(pair.first.data())) {
-            return String::createASCIIString(pair.second.data());
+        const auto& key = pair.first;
+        const auto& value = pair.second;
+
+        if (m_resourceRequest->responseType() == ResponseType::Cors) {
+            if (!HTTPUtil::isCORSsafelistedResponseHeaderName(key)) {
+                continue;
+            }
+        }
+
+        if (name->equalsIgnoreCase(key.data())) {
+            return String::createASCIIString(value.data());
         }
     }
 

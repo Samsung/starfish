@@ -11,7 +11,7 @@ http://web-platform.test:8000/xhr/open-url-base.htm
 http://web-platform.test:8000/xhr/send-redirect-infinite.htm
 #http://web-platform.test:8000/xhr/responsexml-basic.htm
 #http://web-platform.test:8000/xhr/access-control-sandboxed-iframe-allow.htm
-#http://web-platform.test:8000/xhr/access-control-basic-cors-safelisted-response-headers.htm
+http://web-platform.test:8000/xhr/access-control-basic-cors-safelisted-response-headers.htm
 http://web-platform.test:8000/xhr/open-referer.htm
 #http://web-platform.test:8000/xhr/event-upload-progress.htm
 #http://web-platform.test:8000/xhr/access-control-response-with-exposed-headers.htm
@@ -195,7 +195,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-timeout-twice.html
 http://web-platform.test:8000/xhr/abort-during-unsent.htm
 #http://web-platform.test:8000/xhr/send-authentication-competing-names-passwords.htm
 #http://web-platform.test:8000/xhr/event-abort.htm
-#http://web-platform.test:8000/xhr/access-control-basic-cors-safelisted-request-headers.htm
+http://web-platform.test:8000/xhr/access-control-basic-cors-safelisted-request-headers.htm
 http://web-platform.test:8000/xhr/progressevent-interface.html
 #http://web-platform.test:8000/xhr/abort-during-upload.htm
 #http://web-platform.test:8000/xhr/send-entity-body-get-head.htm
@@ -256,7 +256,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-sync-not-hang-scriptloader.html
 http://web-platform.test:8000/xhr/getresponseheader-special-characters.htm
 #http://web-platform.test:8000/xhr/firing-events-http-no-content-length.html
 http://web-platform.test:8000/xhr/timeout-sync.htm
-#http://web-platform.test:8000/xhr/send-redirect-to-non-cors.htm
+http://web-platform.test:8000/xhr/send-redirect-to-non-cors.htm
 #http://web-platform.test:8000/xhr/open-open-send.htm
 #http://web-platform.test:8000/xhr/overridemimetype-loading-state.htm
 http://web-platform.test:8000/xhr/open-method-case-insensitive.htm

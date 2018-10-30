@@ -27,7 +27,7 @@
 
 namespace Starfish {
 
-Response::Response(Document* document, uint32_t status, FetchResponseType type,
+Response::Response(Document* document, uint32_t status, ResponseType type,
                    std::string statusText)
     : ScriptWrappable(this)
     , Body(document->window())
@@ -46,8 +46,7 @@ Response::Response(Document* document, uint32_t status, FetchResponseType type,
 }
 
 Response::Response(Document* document, Nullable<BodyInit>& body,
-                   uint32_t status, FetchResponseType type,
-                   std::string statusText)
+                   uint32_t status, ResponseType type, std::string statusText)
     : ScriptWrappable(this)
     , Body(document->window(), body)
     , m_instance(document->scriptBindingInstance())
@@ -127,8 +126,7 @@ bool Response::isValidRedirectStatus(uint32_t status)
 
 Response* Response::error(Document* document)
 {
-    Response* response =
-        new Response(document, 200, FetchResponseType::Error, "");
+    Response* response = new Response(document, 200, ResponseType::Error, "");
     response->m_ok = false;
     response->m_bodyInit = nullptr;
     response->m_status = 0;
@@ -145,8 +143,7 @@ Response* Response::redirect(Document* document, String* url)
         throw new DOMException(document, DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
-    Response* response =
-        new Response(document, 302, FetchResponseType::Default, "");
+    Response* response = new Response(document, 302, ResponseType::Default, "");
     response->headers()->setGuard(Headers::Guard::Immutable);
     response->headers()->noCheckValidSet(
         "location", parsedUrl.string()->toUTF8NonGCString());
@@ -190,17 +187,17 @@ void Response::copyResponseData(Response* src)
 String* Response::type()
 {
     switch (m_type) {
-    case FetchResponseType::Basic:
+    case ResponseType::Basic:
         return String::createASCIIString("basic");
-    case FetchResponseType::Cors:
+    case ResponseType::Cors:
         return String::createASCIIString("cors");
-    case FetchResponseType::Default:
+    case ResponseType::Default:
         return String::createASCIIString("default");
-    case FetchResponseType::Error:
+    case ResponseType::Error:
         return String::createASCIIString("error");
-    case FetchResponseType::Opaque:
+    case ResponseType::Opaque:
         return String::createASCIIString("opaque");
-    case FetchResponseType::Opaqueredirect:
+    case ResponseType::Opaqueredirect:
         return String::createASCIIString("opaqueredirect");
     default:
         STARFISH_ASSERT_NOT_REACHED();

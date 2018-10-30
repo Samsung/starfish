@@ -125,8 +125,7 @@ void ReadableStream::close()
 }
 
 void ReadableStream::resolveData(Promise* promise,
-                                 ScriptBindingInstance* instance,
-                                 ResponseType type)
+                                 ScriptBindingInstance* instance, BodyType type)
 {
     if (m_streamBuffer->size() > 0) {
         m_streamBuffer->resolveWithType(promise, instance, type);

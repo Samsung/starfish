@@ -70,7 +70,7 @@ public:
     Promise* cancel();
     void close();
     void resolveData(Promise* promise, ScriptBindingInstance* instance,
-                     ResponseType type);
+                     BodyType type);
 
 protected:
 private:

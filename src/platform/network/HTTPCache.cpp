@@ -242,8 +242,10 @@ bool HTTPCache::initFromIndexFileIfPossible()
     }
 
     expire();
+#ifdef STARFISH_ENABLE_TEST
     STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
+#endif
     return true;
 }
 
@@ -337,9 +339,10 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
         std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
     m_cacheLRUList.push_back(newEntry->url()->urlString());
     m_currentTotalSizeOfBlocks += sizeOfBlocks;
-
+#ifdef STARFISH_ENABLE_TEST
     STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
+#endif
 }
 
 void HTTPCache::update(NetworkURLWorkerData* nwd, HTTPCacheEntry* entry)
@@ -444,10 +447,10 @@ bool HTTPCache::flush()
         clearCacheDir();
         return false;
     }
-
+#ifdef STARFISH_ENABLE_TEST
     STARFISH_LOG_INFO("[HTTPCache] Current size : %.2lf\n",
                       (double)m_currentTotalSizeOfBlocks / (1024 * 1024));
-
+#endif
     auto out = File::open(m_indexFilePath, File::FileMode::Write);
     if (!out) {
         return false;

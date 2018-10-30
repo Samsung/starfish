@@ -61,7 +61,6 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
 #ifdef STARFISH_ENABLE_HTTPCACHE
     , cachedEntry(nullptr)
 #endif
-    , lastLocation("")
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
     , workingTime(0)
     , cachehit(false)
@@ -169,11 +168,6 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     if (nwd->isAborted) {
     } else if (nwd->httpTransaction->res() == 0) {
         if (nwd->isRedirected) {
-            nwd->request->m_lastLocation =
-                String::createASCIIString(nwd->httpTransaction->httpResponse()
-                                              .lastEffectiveURL()
-                                              .data())
-                    ->trim();
         }
 #ifdef STARFISH_ENABLE_HTTPCACHE
         HTTPCache* cache = nwd->request->starfish()->httpCache();
@@ -439,11 +433,16 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     //  * Authorization, Cookie, Expect, From, Host, If-Match,
     //  * Max-Forwards, Origin, Proxy-Authorization, Range, Referer, TE,
     //  * User-Agent ...
-    std::string tmpStr;
-    tmpStr = m_orgProxy->webView()->locale().getName();
-    std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
-    tmpStr = tmpStr + " , en-US , en";
-    headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
+
+    auto it = headers.headerMap().find(HTTPHeaderMap::kAcceptLanguage);
+    if (it == headers.headerMap().end()) {
+        std::string tmpStr;
+        tmpStr = m_orgProxy->webView()->locale().getName();
+        std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
+        tmpStr = tmpStr + " , en-US , en";
+        headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
+    }
+
     headers.setHeader(
         HTTPHeaderMap::kUserAgent,
         m_orgProxy->webView()->userAgent()->toUTF8NonGCString().data());
@@ -705,6 +704,8 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                 }
             }
 
+            request->m_lastEffectiveURL =
+                nwd->httpTransaction->httpResponse().lastEffectiveURL();
             request->m_responseHeaderMap = std::move(
                 nwd->httpTransaction->httpResponse().headers().headerMap());
 

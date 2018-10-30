@@ -20,21 +20,16 @@
 #ifndef __StarfishReadableStreamBuffer__
 #define __StarfishReadableStreamBuffer__
 
-#include "core/modules/resource_request/ResourceRequest.h"
-
 namespace Starfish {
+
+enum class BodyType;
+class Promise;
 
 typedef std::vector<char> ReadableStreamChunk;
 
 class ReadableStreamBuffer {
 public:
-    ReadableStreamBuffer()
-        : m_buffer()
-        , m_type(ResponseType::Default)
-        , m_mimeType(String::emptyString)
-    {
-    }
-
+    ReadableStreamBuffer();
     size_t size()
     {
         return m_buffer.size();
@@ -45,12 +40,12 @@ public:
         return m_buffer.data();
     }
 
-    void setType(ResponseType type)
+    void setType(BodyType type)
     {
         m_type = type;
     }
 
-    ResponseType type()
+    BodyType type()
     {
         return m_type;
     }
@@ -64,11 +59,11 @@ public:
     void clear();
 
     void resolveWithType(Promise* promise, ScriptBindingInstance* instance,
-                         ResponseType type);
+                         BodyType type);
 
 private:
     ReadableStreamChunk m_buffer;
-    ResponseType m_type;
+    BodyType m_type;
     String* m_mimeType;
 };
 }

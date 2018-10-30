@@ -36,6 +36,7 @@ namespace Starfish {
     F(kDNT, "DNT")                                                    \
     F(kDate, "Date")                                                  \
     F(kETag, "ETag")                                                  \
+    F(kExpires, "Expires")                                            \
     F(kPragma, "Pragma")                                              \
     F(kTrailer, "Trailer")                                            \
     F(kTransferEncoding, "Transfer-Encoding")                         \

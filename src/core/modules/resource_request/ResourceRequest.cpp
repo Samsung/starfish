@@ -30,6 +30,9 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/dom/WebOrigin.h"
+#include "core/fetch/Body.h"
+#include "core/fetch/Response.h"
+#include "platform/network/http/HTTPResponse.h"
 
 namespace Starfish {
 
@@ -56,12 +59,13 @@ ResourceRequest::ResourceRequest(Document* document)
     , m_requestWebOrigin(nullptr)
     , m_readyState(ReadyState::Unset)
     , m_progressState(ProgressState::None)
+    , m_bodyType(BodyType::Empty)
     , m_responseType(ResponseType::Default)
     , m_status(0)
     , m_timeout(0)
     , m_activeNetworkURLWorkerData(nullptr)
     , m_mutex(new Mutex())
-    , m_lastLocation(String::emptyString)
+    , m_lastEffectiveURL("")
     , m_networkRequestJobDelegate(nullptr)
     , m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX)
     , m_pendingOnProgressEventIdlerHandle(SIZE_MAX)
@@ -183,6 +187,18 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
             if (part.compare("base64") == 0) {
                 m_containsBase64Content = true;
             }
+        }
+
+        // TODO : https://fetch.spec.whatwg.org/#ref-for-concept-response-type
+        auto resURL = new ResourceURL(
+            String::createASCIIString(m_lastEffectiveURL.data()));
+
+        auto resWebOrigin = WebOrigin::createDocumentOrigin(resURL);
+        if (!document()->webOrigin()->isSameOrigin(resWebOrigin) &&
+            !resWebOrigin->isOpaque()) {
+            m_responseType = ResponseType::Cors;
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
 
     } else if (readyState == ReadyState::Done) {
