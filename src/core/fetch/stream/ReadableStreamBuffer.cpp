@@ -21,8 +21,17 @@
 #include "core/fetch/stream/ReadableStreamBuffer.h"
 #include "core/util/TextConverter.h"
 #include "core/fileapi/Blob.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/fetch/Body.h"
 
 namespace Starfish {
+
+ReadableStreamBuffer::ReadableStreamBuffer()
+    : m_buffer()
+    , m_type(BodyType::Empty)
+    , m_mimeType(String::emptyString)
+{
+}
 
 void ReadableStreamBuffer::push(const char* buffer, size_t length)
 {
@@ -37,31 +46,31 @@ void ReadableStreamBuffer::clear()
 
 void ReadableStreamBuffer::resolveWithType(Promise* promise,
                                            ScriptBindingInstance* instance,
-                                           ResponseType type)
+                                           BodyType type)
 {
     size_t size = m_buffer.size();
 
-    if (type == ResponseType::Text) {
+    if (type == BodyType::Text) {
         TextConverter textConverter(m_mimeType, String::fromUTF8("UTF-8"),
                                     m_buffer.data(), size);
         String* responseText =
             textConverter.convert(m_buffer.data(), size, true);
         promise->fulfill(createScriptValue(responseText));
-    } else if (type == ResponseType::Blob) {
+    } else if (type == BodyType::Blob) {
         void* buffer = calloc(1, size);
         memcpy(buffer, m_buffer.data(), size);
         auto blob = new Blob(instance->ownerDocument(), size, m_mimeType,
                              buffer, false, false);
         promise->fulfill(blob->scriptValue());
         free(buffer);
-    } else if (type == ResponseType::Json) {
+    } else if (type == BodyType::Json) {
         TextConverter textConverter(m_mimeType, String::fromUTF8("UTF-8"),
                                     m_buffer.data(), size);
         String* responseText =
             textConverter.convert(m_buffer.data(), size, true);
         auto json = parseJSON(instance, responseText);
         promise->fulfill(json);
-    } else if (type == ResponseType::ArrayBuffer) {
+    } else if (type == BodyType::ArrayBuffer) {
         void* buffer = calloc(1, size);
         memcpy(buffer, m_buffer.data(), size);
         auto arrayBuffer = createArrayBuffer(instance, buffer, size);

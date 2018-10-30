@@ -29,6 +29,7 @@
 #include "core/page/Window.h"
 #include "core/fetch/stream/ReadableStream.h"
 #include "core/fetch/stream/ReadableStreamDefaultReader.h"
+#include "core/xml/XMLHttpRequest.h"
 
 namespace Starfish {
 
@@ -98,7 +99,7 @@ Promise* Body::arrayBuffer()
             }
         } else {
             m_readableStream->resolveData(promise, scriptBindingInstance(),
-                                          ResponseType::ArrayBuffer);
+                                          BodyType::ArrayBuffer);
         }
     }
 
@@ -138,7 +139,7 @@ Promise* Body::blob()
             }
         } else {
             m_readableStream->resolveData(promise, scriptBindingInstance(),
-                                          ResponseType::Blob);
+                                          BodyType::Blob);
         }
     }
 
@@ -171,7 +172,7 @@ Promise* Body::json()
             }
         } else {
             m_readableStream->resolveData(promise, scriptBindingInstance(),
-                                          ResponseType::Json);
+                                          BodyType::Json);
         }
     }
 
@@ -251,7 +252,7 @@ Promise* Body::text()
             }
         } else {
             m_readableStream->resolveData(promise, scriptBindingInstance(),
-                                          ResponseType::Text);
+                                          BodyType::Text);
         }
     }
 
@@ -318,10 +319,10 @@ void Body::pushResponseData(ResourceRequest* request)
 {
     createReadableStream();
     auto response = request->response();
-    auto responseType = request->responseType();
+    auto responseType = request->bodyType();
 
     auto streamBuffer = m_readableStream->streamBuffer();
-    streamBuffer->setType(request->responseType());
+    streamBuffer->setType(responseType);
     streamBuffer->setMimeType(request->responseMimeType());
     streamBuffer->push(response.data(), response.size());
 }

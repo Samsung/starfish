@@ -39,7 +39,8 @@ class WebOrigin;
 
 typedef std::vector<char> EntityBody;
 
-enum class ResponseType { Text, ArrayBuffer, Blob, Document, Json, Default };
+enum class BodyType;
+enum class ResponseType;
 
 enum class ReadyState : uint8_t {
     Unset,
@@ -160,6 +161,11 @@ public:
         return m_response;
     }
 
+    BodyType bodyType()
+    {
+        return m_bodyType;
+    }
+
     ResponseType responseType()
     {
         return m_responseType;
@@ -175,9 +181,9 @@ public:
         return m_contentLanguage;
     }
 
-    String* lastLocation()
+    std::string lastEffectiveURL()
     {
-        return m_lastLocation;
+        return m_lastEffectiveURL;
     }
 
     void addResourceRequestClient(ResourceRequestClient* client)
@@ -324,6 +330,8 @@ protected:
     ReadyState m_readyState;
     ProgressState m_progressState;
 
+    BodyType m_bodyType;
+
     ResponseType m_responseType;
     uint16_t m_status;
     uint32_t m_timeout;
@@ -331,7 +339,7 @@ protected:
     Mutex* m_mutex;
     String* m_responseMimeType;
     String* m_contentLanguage;
-    String* m_lastLocation;
+    std::string m_lastEffectiveURL;
     EntityBody m_response;
     GCVector<size_t> m_requstedIdlers;
     GCVector<std::pair<String*, String*>> m_requestHeaders;

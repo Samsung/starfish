@@ -21,9 +21,13 @@
 #define __StarfishXMLHttpRequest__
 
 #include "core/dom/EventTarget.h"
-#include "core/modules/resource_request/ResourceRequest.h"
 
 namespace Starfish {
+
+enum class BodyType;
+enum class MethodType;
+class ResourceRequest;
+using XMLHttpRequestResponseType = BodyType;
 
 class XMLHttpRequestEventTarget : public EventTarget {
 public:
@@ -56,8 +60,6 @@ class XMLHttpRequest : public XMLHttpRequestEventTarget {
 public:
     XMLHttpRequest(::Starfish::Document* document);
 
-    enum ResponseType { Unspecified, Text, ArrayBuffer, Document, Blob, Json };
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isXMLHttpRequest() const override;
@@ -67,10 +69,10 @@ public:
         return m_resourceRequest;
     }
 
-    // https://www.w3.org/TR/XMLHttpRequest/#the-responsetype-attribute
-    void setResponseType(ResponseType type);
+    // https://xhr.spec.whatwg.org/#dom-xmlhttprequest-responsetype
+    void setResponseType(XMLHttpRequestResponseType type);
     void setResponseType(String* typeStr);
-    ResponseType responseTypeValue() const;
+    XMLHttpRequestResponseType responseTypeValue() const;
     String* responseType() const;
 
     ScriptValue response() const;
@@ -111,7 +113,7 @@ public:
 protected:
     void initResponseData();
     ResourceRequest* m_resourceRequest;
-    ResponseType m_responseType;
+    XMLHttpRequestResponseType m_responseType;
     bool m_withCredentials;
     // for responseType = "text"
     String* m_responseText;

@@ -26,13 +26,14 @@
 
 namespace Starfish {
 
-std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
+std::string HTTPUtil::tryToConvertToHeaderMapString(
+    const std::string& rawHeader)
 {
-    size_t len = header.length();
-    std::string ret = header;
+    size_t len = rawHeader.length();
+    std::string ret = rawHeader;
     std::string lower;
-    lower.resize(header.length());
-    std::transform(header.begin(), header.end(), lower.begin(), tolower);
+    lower.resize(rawHeader.length());
+    std::transform(rawHeader.begin(), rawHeader.end(), lower.begin(), tolower);
 
     switch (len) {
     case 2:
@@ -87,6 +88,8 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(const std::string& header)
             ret = HTTPHeaderMap::kReferer;
         } else if (lower.compare("cookie2") == 0) {
             ret = HTTPHeaderMap::kCookie2;
+        } else if (lower.compare("expires") == 0) {
+            ret = HTTPHeaderMap::kExpires;
         }
         break;
     case 8:
@@ -321,6 +324,35 @@ bool HTTPUtil::isUnsafeHeader(String* header)
         lower->equalsIgnoreCase(HTTPHeaderMap::kUpgrade) ||
         lower->equalsIgnoreCase(HTTPHeaderMap::kUserAgent) ||
         lower->equalsIgnoreCase(HTTPHeaderMap::kVia)) {
+        return true;
+    }
+    return false;
+}
+
+bool HTTPUtil::isCORSsafelistedResponseHeaderName(
+    const std::string& headerMapString)
+{
+    if (headerMapString == HTTPHeaderMap::kCacheControl ||
+        headerMapString == HTTPHeaderMap::kContentLanguage ||
+        headerMapString == HTTPHeaderMap::kContentLength ||
+        headerMapString == HTTPHeaderMap::kContentType ||
+        headerMapString == HTTPHeaderMap::kExpires ||
+        headerMapString == HTTPHeaderMap::kLastModified ||
+        headerMapString == HTTPHeaderMap::kPragma) {
+        return true;
+    } else if (isForbiddenResponseHeaderName(headerMapString)) {
+        return false;
+    } else {
+        // TODO : Allow headers that be listed by Access-Control-Expose-Headers
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return false;
+    }
+}
+
+bool HTTPUtil::isForbiddenResponseHeaderName(const std::string& headerMapString)
+{
+    if (headerMapString == HTTPHeaderMap::kSetCookie ||
+        headerMapString == HTTPHeaderMap::kSetCookie2) {
         return true;
     }
     return false;

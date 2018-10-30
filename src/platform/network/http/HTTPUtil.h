@@ -80,13 +80,18 @@ struct HTTPFreshnessInfo {
 
 class HTTPUtil {
 public:
-    static std::string tryToConvertToHeaderMapString(const std::string& header);
+    static std::string tryToConvertToHeaderMapString(
+        const std::string& rawHeader);
     static CacheControl parseCacheControl(std::string directives);
     static HTTPFreshnessInfo getHTTPFreshnessInfoFromHeaders(
         ScriptBindingInstance* instance, const HeaderMap& headers);
     static HTTPContentInfo getHTTPContentInfoFromHeaders(
         const HeaderMap& headers);
     static bool isUnsafeHeader(String* header);
+    static bool isCORSsafelistedResponseHeaderName(
+        const std::string& headerMapString);
+    static bool isForbiddenResponseHeaderName(
+        const std::string& headerMapString);
 };
 }
 

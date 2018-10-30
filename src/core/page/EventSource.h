@@ -73,7 +73,6 @@ public:
                       void* domObjectPointer) override;
     virtual bool isEventSource() const override;
 
-    enum ResponseType { Unspecified, Text, ArrayBuffer, Document, Blob, Json };
     enum ReadyState { CONNECTING, OPEN, CLOSED };
     ResourceRequest* resourceRequest()
     {

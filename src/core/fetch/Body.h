@@ -33,6 +33,15 @@ typedef BlobOrBufferSourceOrUSVStringOrReadableStream BodyInit;
 
 class DOMException;
 
+enum class BodyType {
+    Empty,
+    ArrayBuffer,
+    Blob,
+    Document,
+    Json,
+    Text,
+};
+
 class Body : public ResourceRequestClient, public WindowHoldable {
 public:
     Promise* arrayBuffer();

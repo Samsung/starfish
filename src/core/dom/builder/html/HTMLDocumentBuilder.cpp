@@ -292,11 +292,10 @@ public:
             m_builder.document()->setContentLanguage(contentLanguage);
         }
 
-        if (!m_resource->resourceRequest()->lastLocation()->equals(
-                String::emptyString)) {
+        if (!(m_resource->resourceRequest()->lastEffectiveURL() == "")) {
             // Change documentURI and last history when request was redirected.
-            ResourceURL* newURL =
-                new ResourceURL(m_resource->resourceRequest()->lastLocation());
+            ResourceURL* newURL = new ResourceURL(String::createASCIIString(
+                m_resource->resourceRequest()->lastEffectiveURL().data()));
             m_builder.document()->setDocumentURI(newURL);
             m_builder.document()->setBaseURL(newURL);
             m_builder.document()->setWebOrigin(

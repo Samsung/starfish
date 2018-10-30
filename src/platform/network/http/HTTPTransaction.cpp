@@ -163,11 +163,7 @@ void HTTPTransaction::start()
     }
 #endif
     m_httpResponse->setResponseTime(timestamp() / 1000);
-
     updateTransactionStatus();
-
-    char* LastEffectiveURL = nullptr;
-    curl_easy_getinfo(m_curl, CURLINFO_EFFECTIVE_URL, &LastEffectiveURL);
 
 #ifdef STARFISH_ENABLE_TEST
     if (m_res == CURLE_OK && enableLog) {
@@ -204,11 +200,6 @@ void HTTPTransaction::start()
     }
 #endif
 
-    if (LastEffectiveURL) {
-        m_httpResponse->setLastEffectiveURL(LastEffectiveURL);
-        // Do not free LastEffectiveURL
-    }
-
     m_curl = nullptr;
 
     NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(
@@ -238,6 +229,12 @@ void HTTPTransaction::updateTransactionStatus()
         curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &responseCode);
         m_httpResponse->setResponseCode(responseCode);
     }
-    // TODO : Implement additional state management
+
+    char* LastEffectiveURL = nullptr;
+    curl_easy_getinfo(m_curl, CURLINFO_EFFECTIVE_URL, &LastEffectiveURL);
+    if (LastEffectiveURL) {
+        // Do not free
+        m_httpResponse->setLastEffectiveURL(LastEffectiveURL);
+    }
 }
 }
