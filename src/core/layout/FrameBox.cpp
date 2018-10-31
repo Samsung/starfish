@@ -1311,7 +1311,13 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
     }
     FrameBox rootBox(rootOrBodyelement, style);
 
+    bool isRootOrBodyElementNeedsInCompositeState = false;
     if (rootOrBodyelement) {
+        isRootOrBodyElementNeedsInCompositeState =
+            rootOrBodyelement->document()
+                ->browsingContext()
+                ->rootStackingContextNeedsGraphicsBuffer();
+        Document* domDocument = rootOrBodyelement->document();
         HTMLHtmlElement* root;
         if (rootOrBodyelement->isHTMLHtmlElement()) {
             root = rootOrBodyelement->asHTMLHtmlElement();
@@ -1328,35 +1334,47 @@ void FrameBox::paintBackground(Canvas* canvas, FrameBox* box,
             root->frame()->asFrameBox()->absolutePoint(document);
         box->setX(loc.x());
         box->setY(loc.y());
+
+        if (isRootOrBodyElementNeedsInCompositeState) {
+            box->setX(0);
+            box->setY(0);
+            box->setWidth(domDocument->window()->scrollWidth(false));
+            box->setHeight(domDocument->window()->scrollHeight(false));
+        }
     }
 
     if (!style->backgroundColor().isTransparent() &&
         style->visibility() == VisibilityValue::VisibleVisibilityValue) {
-        canvas->save();
-        Unit::Rect paintingRect;
-        if (rootOrBodyelement) {
-            Window* window = rootOrBodyelement->window();
-            FrameDocument* doc = window->document()->frame()->asFrameDocument();
-            paintingRect =
-                Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
-                           window->innerWidth(), window->innerHeight());
+        if (rootOrBodyelement && isRootOrBodyElementNeedsInCompositeState) {
+            // skip painting. compositor will draw color
         } else {
-            unsigned int idx = style->backgroundLayerSize() - 1;
-            paintingRect = box->makeRect(style->backgroundClip(idx));
+            canvas->save();
+            Unit::Rect paintingRect;
+            if (rootOrBodyelement) {
+                Window* window = rootOrBodyelement->window();
+                FrameDocument* doc =
+                    window->document()->frame()->asFrameDocument();
+                paintingRect =
+                    Unit::Rect(doc->scrollLeft(), doc->scrollTop(),
+                               window->innerWidth(), window->innerHeight());
+            } else {
+                unsigned int idx = style->backgroundLayerSize() - 1;
+                paintingRect = box->makeRect(style->backgroundClip(idx));
+            }
+            canvas->setColor(style->backgroundColor());
+            if (box->hasFrameBorderRadius()) {
+                box->applyBorderRadius(
+                    canvas,
+                    LayoutRect(paintingRect.x(), paintingRect.y(),
+                               paintingRect.width(), paintingRect.height()));
+                canvas->fill();
+            } else {
+                canvas->drawPixelSnappedRect(
+                    LayoutRect(paintingRect.x(), paintingRect.y(),
+                               paintingRect.width(), paintingRect.height()));
+            }
+            canvas->restore();
         }
-        canvas->setColor(style->backgroundColor());
-        if (box->hasFrameBorderRadius()) {
-            box->applyBorderRadius(canvas, LayoutRect(paintingRect.x(),
-                                                      paintingRect.y(),
-                                                      paintingRect.width(),
-                                                      paintingRect.height()));
-            canvas->fill();
-        } else {
-            canvas->drawPixelSnappedRect(
-                LayoutRect(paintingRect.x(), paintingRect.y(),
-                           paintingRect.width(), paintingRect.height()));
-        }
-        canvas->restore();
     }
     paintBackgroundLayers(canvas, box, rootOrBodyelement, style);
 }
@@ -3172,6 +3190,45 @@ LayoutRect FrameBox::frameVisibleFilterRect()
     return ret;
 }
 
+static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b)
+{
+    if (!cs->backgroundColor().isTransparent()) {
+        return true;
+    }
+
+    if (cs->backgroundLayerSize() != 0) {
+        return true;
+    }
+
+    if (cs->outlineStyle() != BorderStyleValue::NoneBorderStyleValue &&
+        b->outlineThickness()) {
+        return true;
+    }
+
+    {
+        auto bs = cs->boxShadow();
+        if (bs && bs->size()) {
+            return true;
+        }
+    }
+
+    if (cs->hasAvailableFilter()) {
+        return true;
+    }
+
+    BorderData border = cs->border();
+    if (border.hasBorderStyle()) {
+        return true;
+    }
+
+    const BorderImageData& bi = border.image();
+    if (!bi.isNull()) {
+        return true;
+    }
+
+    return false;
+}
+
 bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
 {
     if (ctx.sourceStackingContext &&
@@ -3193,83 +3250,96 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         return true;
     }
 
-    if (isAbsolutePositioned()) {
-        auto clip = style()->clip();
-        if (clip && clip->left().numberData() == 0 &&
-            clip->top().numberData() == 0 && clip->right().numberData() == 0 &&
-            clip->bottom().numberData() == 0) {
-            return false;
-        }
+    if (isAbsolutePositioned() && style()->hasZeroClipRect()) {
+        return false;
     }
 
     bool ret = !shouldApplyOverflow();
-    LayoutRect outline = frameVisibleRect();
-
-    if (ctx.isVisibleRectCollapsible && isFrameBlockBox()) {
-        BorderData border = cs->border();
-        if (isAnonymous() ||
-            (cs->backgroundColor().isTransparent() &&
-             cs->backgroundLayerSize() == 0 && !border.hasBorderStyle() &&
-             (cs->outlineStyle() == BorderStyleValue::NoneBorderStyleValue ||
-              outlineThickness() == 0))) {
-            outline.setWidth(0);
-            outline.setHeight(0);
-            ret = true;
+    bool boxHasDrawableContents = true;
+    bool drawableContentsInStyle = cs && styleHasDrawableContents(cs, this);
+    if (isFrameBlockBox() && !drawableContentsInStyle) {
+        boxHasDrawableContents = false;
+    } else if (isFrameReplaced() &&
+               asFrameReplaced()->isFrameReplacedIFrame() &&
+               !drawableContentsInStyle) {
+        if (node()->asHTMLIFrameElement()->browsingContext()) {
+            if (node()
+                    ->asHTMLIFrameElement()
+                    ->browsingContext()
+                    ->rootStackingContextNeedsGraphicsBuffer()) {
+                boxHasDrawableContents = false;
+            }
         }
+    }
+
+    LayoutRect outline;
+
+    if (!ctx.isVisibleRectCollapsible || boxHasDrawableContents) {
+        outline = frameVisibleRect();
+    }
+
+    if (ctx.isVisibleRectCollapsible && isFrameBlockBox() &&
+        !boxHasDrawableContents) {
+        ret = true;
     }
 
     if (ctx.isForSpecialValueForTableCell &&
         ctx.purpose == Frame::ComputeVisibleRectContext::Scrolling &&
         isFrameFlexibleBox()) {
         if (cs->height().isDefinite(true)) {
-            ctx.uniteRect(outline);
             ret = false;
         }
     }
+
     ctx.uniteRect(outline);
 
-    size_t len = isInlineTextBox() ? 2 : 1;
-    for (size_t i = 0; cs && i < len; ++i) {
-        CanvasShadowDataList list;
-        LayoutRect owner = frameRect();
-        owner.setX(0);
-        owner.setY(0);
-        LayoutRect shadowsRect = owner;
-        bool hasShadow = false;
-        if (i == 0) {
-            if (cs->boxShadow()) {
-                list = cs->boxShadow()->toCanvasShadowDataList(this);
-                hasShadow = true;
+    if (boxHasDrawableContents) {
+        size_t len = isInlineTextBox() ? 2 : 1;
+        for (size_t i = 0; cs && i < len; ++i) {
+            CanvasShadowDataList list;
+            LayoutRect owner = frameRect();
+            owner.setX(0);
+            owner.setY(0);
+            LayoutRect shadowsRect = owner;
+            bool hasShadow = false;
+            if (i == 0) {
+                if (cs->boxShadow()) {
+                    list = cs->boxShadow()->toCanvasShadowDataList(this);
+                    hasShadow = true;
+                }
+            } else {
+                if (cs->textShadow()) {
+                    list = cs->textShadow()->toCanvasShadowDataList(this);
+                    hasShadow = true;
+                }
             }
-        } else {
-            if (cs->textShadow()) {
-                list = cs->textShadow()->toCanvasShadowDataList(this);
-                hasShadow = true;
-            }
-        }
-        for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
-            if (ctx.isVisibleRectCollapsible && isFrameBlockBox()) {
-                if (shadow->hasColor() && !shadow->color().isTransparent()) {
-                    LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
-                    shadowsRect.unite(rect);
-                    ret = false;
-                } else if (!shadow->hasColor() &&
-                           !cs->color().isTransparent()) {
+            for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
+                if (ctx.isVisibleRectCollapsible && isFrameBlockBox()) {
+                    if (shadow->hasColor() &&
+                        !shadow->color().isTransparent()) {
+                        LayoutRect rect =
+                            computeVisibleShadowRect(owner, *shadow);
+                        shadowsRect.unite(rect);
+                        ret = false;
+                    } else if (!shadow->hasColor() &&
+                               !cs->color().isTransparent()) {
+                        LayoutRect rect =
+                            computeVisibleShadowRect(owner, *shadow);
+                        shadowsRect.unite(rect);
+                        ret = false;
+                    }
+                } else if (ctx.isForSpecialValueForTableCell &&
+                           ctx.purpose ==
+                               Frame::ComputeVisibleRectContext::Scrolling &&
+                           isFrameFlexibleBox()) {
                     LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
                     shadowsRect.unite(rect);
                     ret = false;
                 }
-            } else if (ctx.isForSpecialValueForTableCell &&
-                       ctx.purpose ==
-                           Frame::ComputeVisibleRectContext::Scrolling &&
-                       isFrameFlexibleBox()) {
-                LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
-                shadowsRect.unite(rect);
-                ret = false;
             }
-        }
-        if (hasShadow) {
-            ctx.uniteRect(shadowsRect);
+            if (hasShadow) {
+                ctx.uniteRect(shadowsRect);
+            }
         }
     }
 

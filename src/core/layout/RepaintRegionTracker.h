@@ -87,8 +87,21 @@ protected:
             frame->asInlineTextBox()->origin()->clearNeedsPainting();
         }
 
+        bool isInvisibleFromHere = false;
+
         StackingContext* sc = frame->stackingContext();
         if (sc) {
+            if (frame->isAbsolutePositioned() &&
+                sc->owner()->style()->hasZeroClipRect()) {
+                auto iter =
+                    m_prevDrawnStackingContextInfoMap.find(frame->node());
+                if (iter != m_prevDrawnStackingContextInfoMap.end()) {
+                    iter->second.hasThisLayerThisTime = true;
+                    iter->second.isEqualsWithPrevDrawing = true;
+                }
+                return;
+            }
+
             auto iter = m_prevDrawnStackingContextInfoMap.find(frame->node());
             if (iter == m_prevDrawnStackingContextInfoMap.end()) {
                 // if cannot find prevDrawingStackingContextInfo, force do
@@ -100,15 +113,19 @@ protected:
                 }
             } else {
                 iter->second.hasThisLayerThisTime = true;
-                if (iter->second.screenExtent == sc->screenExtent()) {
-                    iter->second.isEqualsWithPrevDrawing = true;
+                if (sc->isIFrameStackingContext()) {
+                    if (iter->second.screenExtent ==
+                        sc->parent()->screenExtent()) {
+                        iter->second.isEqualsWithPrevDrawing = true;
+                    }
+                } else {
+                    if (iter->second.screenExtent == sc->screenExtent()) {
+                        iter->second.isEqualsWithPrevDrawing = true;
+                    }
                 }
             }
 
-            if (frame->style() &&
-                frame->style()->position() == FixedPositionValue) {
-                currentMatrix = frame->computeScreenMatrix();
-            }
+            currentMatrix = frame->computeScreenMatrix();
 
             auto& layoutRepaintTracker = frame->node()
                                              ->document()
@@ -130,6 +147,13 @@ protected:
             LayoutRect r = frame->frameVisibleRect();
             r = computeBoxExtent(r, currentMatrix);
             m_repaintRegion.unite(r);
+
+            if (frame->isRootElement() && sc && sc->needsGraphicsBuffer()) {
+                LayoutRect r(0, 0, frame->node()->window()->scrollWidth(false),
+                             frame->node()->window()->scrollWidth(false));
+                r = computeBoxExtent(r, currentMatrix);
+                m_repaintRegion.unite(r);
+            }
         }
 
         if (frame->isFrameReplaced() &&

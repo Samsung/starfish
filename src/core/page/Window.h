@@ -267,6 +267,8 @@ public:
     double scrollY(bool canLeadLayoutThrashing = true);
     double pageXOffset();
     double pageYOffset();
+    LayoutUnit scrollWidth(bool canLeadLayoutThrashing = true);
+    LayoutUnit scrollHeight(bool canLeadLayoutThrashing = true);
 
     bool scrollTo() // returns scrolling is actually happened
     {

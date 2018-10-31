@@ -155,6 +155,7 @@ public:
     }
 
     bool isIFrameStackingContext();
+    bool isIFrameStackingContextOwner();
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

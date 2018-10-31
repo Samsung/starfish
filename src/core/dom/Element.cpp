@@ -595,7 +595,7 @@ void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
 
 LayoutRect Element::clientRect()
 {
-    window()->browsingContext()->webView()->layoutIfNeeds();
+    window()->browsingContext()->webView()->layoutIfNeeds(false);
     if (frame()) {
         if (frame()->isFrameBox()) {
             FrameBox* box = frame()->asFrameBox();
@@ -838,6 +838,13 @@ void Element::setScrollLeftProperty(double s, bool layoutIfNeeds)
     setScrollLeft(s, layoutIfNeeds);
 }
 
+static void elementScrollPropertyChanged(Element* e)
+{
+    // just set needs layout flag solo
+    // this will trigger only layout painting dirty check
+    e->document()->browsingContext()->setNeedsLayout();
+}
+
 void Element::setScrollLeft(double s, bool layoutIfNeeds)
 {
     // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
@@ -880,9 +887,7 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
 
     if (ensureRareElementMembers()->m_scrollLeft != (LayoutUnit)s) {
         ensureRareElementMembers()->m_scrollLeft = s;
-        // just set needs layout flag solo
-        // this will trigger only layout painting dirty check
-        document()->browsingContext()->setNeedsLayout();
+        elementScrollPropertyChanged(this);
     }
 }
 
@@ -1020,9 +1025,7 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
 
     if (ensureRareElementMembers()->m_scrollTop != (LayoutUnit)s) {
         ensureRareElementMembers()->m_scrollTop = s;
-        // just set needs layout flag solo
-        // this will trigger only layout painting dirty check
-        document()->browsingContext()->setNeedsLayout();
+        elementScrollPropertyChanged(this);
     }
 }
 

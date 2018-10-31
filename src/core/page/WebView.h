@@ -128,6 +128,9 @@ class ThreadPool;
 class Mutex;
 class Inspector;
 class Console;
+class MouseData;
+class TouchData;
+class PlatformKeyEventData;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class Avplay;
 #endif
@@ -135,6 +138,11 @@ class Avplay;
 class TTS;
 #endif
 union FontFamilyData;
+
+enum class TouchEventKind;
+enum class KeyEventKind;
+enum class MouseEventKind;
+enum class CompositionEventKind;
 
 class WebView : public StarfishHoldable, public gc {
     friend class BrowsingContext;
@@ -487,6 +495,19 @@ public:
         return m_lastRenderingTick;
     }
 
+    void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
+                            size_t touchCount);
+    void dispatchMouseEvent(MouseEventKind kind, MouseData data);
+    void dispatchMouseWheelEvent(
+        float screenX, float screenY, int z,
+        bool isVerticalWheelEvent); // z : -1(up, left) or 1(down, right)
+    void dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData data);
+    void dispatchCompositionEvent(CompositionEventKind kind, String* data,
+                                  Node* node = nullptr);
+    // starting global pointing Intercept must use default event.
+    void addGlobalPointingEventInterceptListener(EventTarget* node);
+    void removeGlobalPointingEventInterceptListener(EventTarget* node);
+
 private:
     WebView(Starfish* starfish, const char* locale, const char* timezoneID,
             uint32_t w, uint32_t h, uint32_t defaultFontSize,
@@ -573,6 +594,9 @@ private:
     PlatformFontSelector* m_platformFontSelector;
     PlatformFontCache* m_platformFontCache;
     FontFamilyData* m_initialFontFamilyDatas;
+
+    GCVector<EventTarget*> m_globalPointingEventListener;
+    Unit::Location m_lastMouseMovePoint;
 
     // options
     icu::Locale m_locale;

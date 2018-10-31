@@ -22,6 +22,8 @@
 #include "LayoutRepaintTracker.h"
 #include "FrameDocument.h"
 
+#include "core/dom/Element.h"
+
 namespace Starfish {
 
 static void collectInlineBoxes(
@@ -91,6 +93,12 @@ static void traceRepaintRegionJob(
                        GCUtil::gc_malloc_allocator<Node*>>& rootedNodeSet,
     bool& gotPaintingDirty)
 {
+    // if box is invisible from here, ignore from currentBox
+    if (currentFrame->isAbsolutePositioned() &&
+        currentFrame->style()->hasZeroClipRect()) {
+        return;
+    }
+
     // collect results related with box
     if (!currentFrame->isAnonymous() && currentFrame->isFrameBox()) {
         FrameBox* currentFrameBox = currentFrame->asFrameBox();
@@ -234,7 +242,6 @@ bool LayoutRepaintTracker::traceRepaintRegion(FrameDocument* fd)
             // box is disappear
             gotPaintingDirty = true;
             Node* stackingContextOwner = iter->second.second;
-
             LayoutRect rt = iter->second.first;
             auto iter2 =
                 m_dirtyAreaPerStackingContextOwners.find(stackingContextOwner);

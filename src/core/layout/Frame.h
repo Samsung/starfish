@@ -1737,11 +1737,6 @@ public:
         return m_flags.m_needsPainting;
     }
 
-    void setNeedsPainting(bool b)
-    {
-        m_flags.m_needsPainting = b;
-    }
-
     void markNeedsPainting()
     {
         m_flags.m_needsPainting = true;

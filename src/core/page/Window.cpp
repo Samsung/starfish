@@ -434,25 +434,43 @@ double Window::pageYOffset()
     return scrollY();
 }
 
+LayoutUnit Window::scrollWidth(bool canLeadLayoutThrashing)
+{
+    if (canLeadLayoutThrashing &&
+        !browsingContext()->webView()->inRendering()) {
+        browsingContext()->webView()->layoutIfNeeds();
+    }
+
+    if (document()->frame()) {
+        return document()->frame()->asFrameDocument()->scrollWidth();
+    }
+    return 0;
+}
+
+LayoutUnit Window::scrollHeight(bool canLeadLayoutThrashing)
+{
+    if (canLeadLayoutThrashing &&
+        !browsingContext()->webView()->inRendering()) {
+        browsingContext()->webView()->layoutIfNeeds();
+    }
+
+    if (document()->frame()) {
+        return document()->frame()->asFrameDocument()->scrollHeight();
+    }
+    return 0;
+}
+
 bool Window::scrollToWithoutLayout(double x, double y)
 {
     if (document()->frame()) {
         if (document()->frame()->asFrameBlockBox()->asFrameDocument()->scrollTo(
                 x, y)) {
-            webView()->setNeedsComputeStackingContextProperties();
-            if (webView()->didCompositeBefore()) {
-                if (!browsingContext()->isTopLevelBrowsingContext()) {
-                    StackingContext* ctx =
-                        document()->frame()->asFrameBox()->stackingContext();
-                    if (ctx && ctx->needsGraphicsBuffer()) {
-                        browsingContext()->setNeedsComposite();
-                    } else {
-                        document()->setNeedsPainting();
-                    }
-                } else {
-                    browsingContext()->setNeedsComposite();
-                }
+            StackingContext* ctx =
+                document()->html()->frame()->asFrameBox()->stackingContext();
+            if (ctx && ctx->needsGraphicsBuffer()) {
+                browsingContext()->setNeedsComposite();
             } else {
+                document()->setNeedsLayout();
                 document()->setNeedsPainting();
             }
             return true;

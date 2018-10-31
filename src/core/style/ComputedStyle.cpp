@@ -259,7 +259,11 @@ public:
     {
         m_node->setNeedsPainting();
         if (m_node->isHTMLHtmlElement() || m_node->isHTMLBodyElement()) {
-            m_node->document()->setNeedsPainting();
+            if (m_node->document()->rootElement()) {
+                m_node->document()->rootElement()->setNeedsPainting();
+            } else {
+                m_node->document()->setNeedsPainting();
+            }
         }
     }
 

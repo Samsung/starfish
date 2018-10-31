@@ -1692,17 +1692,8 @@ bool applyTransitionIfNeeds(
         // <- length series
 
         if (gotTransition) {
-            ActiveAnimationTask* newTask = executor->activeAnimations().back();
-            auto keyNow = executor->activeAnimations().back()->property();
-
-            for (size_t i = 0; i < canceledAnimationProgress.size(); i++) {
-                if (canceledAnimationProgress[i].first == keyNow) {
-                    newTask->updateDuration(
-                        newTask->duration() *
-                        (1 - canceledAnimationProgress[i].second));
-                    break;
-                }
-            }
+            // TODO reduce animation duration here with
+            // canceledAnimationProgress
             ret = true;
         }
     }

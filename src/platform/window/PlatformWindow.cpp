@@ -100,10 +100,7 @@ void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
         touches[i].setClientY(touches[i].clientY() /
                               webView()->screenInfo().devicePixelRatio);
     }
-    if (webView()->mainBrowsingContext()) {
-        webView()->mainBrowsingContext()->dispatchTouchEvent(kind, touches,
-                                                             touchCount);
-    }
+    webView()->dispatchTouchEvent(kind, touches, touchCount);
 }
 
 void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
@@ -112,9 +109,7 @@ void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     data.setScreenY(data.screenY() / webView()->screenInfo().devicePixelRatio);
     data.setClientX(data.clientX() / webView()->screenInfo().devicePixelRatio);
     data.setClientY(data.clientY() / webView()->screenInfo().devicePixelRatio);
-    if (webView()->mainBrowsingContext()) {
-        webView()->mainBrowsingContext()->dispatchMouseEvent(kind, data);
-    }
+    webView()->dispatchMouseEvent(kind, data);
 }
 
 void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
@@ -122,10 +117,8 @@ void PlatformWindow::dispatchMouseWheelEvent(float screenX, float screenY,
 {
     screenX /= webView()->screenInfo().devicePixelRatio;
     screenY /= webView()->screenInfo().devicePixelRatio;
-    if (webView()->mainBrowsingContext()) {
-        webView()->mainBrowsingContext()->dispatchMouseWheelEvent(
-            screenX, screenY, z, isVerticalWheelEvent);
-    }
+    webView()->dispatchMouseWheelEvent(screenX, screenY, z,
+                                       isVerticalWheelEvent);
 }
 
 void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
@@ -269,18 +262,13 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
         }
     }
 
-    if (webView()->mainBrowsingContext()) {
-        webView()->mainBrowsingContext()->dispatchKeyEvent(kind, data);
-    }
+    webView()->dispatchKeyEvent(kind, data);
 }
 
 void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
                                               String* data, Node* node)
 {
-    if (webView()->mainBrowsingContext()) {
-        webView()->mainBrowsingContext()->dispatchCompositionEvent(kind, data,
-                                                                   node);
-    }
+    webView()->dispatchCompositionEvent(kind, data, node);
 }
 
 void PlatformWindow::clearResources()
