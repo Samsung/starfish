@@ -47,6 +47,8 @@ struct StackingContext::ComputeStackingContextContext {
     std::unordered_map<StackingContext*, bool> compositeFlagInfo;
     std::unordered_map<StackingContext*, bool> compositeFlagInfoBecauseSelf;
     std::vector<StackingContext*> compositedLayers;
+    std::set<Document*> compositedDocuments;
+    std::vector<StackingContext*> documentOwners;
     StackingContext* rootLayer;
 
     ComputeStackingContextContext(StackingContext* rootLayer)
@@ -72,6 +74,7 @@ struct StackingContext::ComputeStackingContextContext {
     void pushCompsitedLayer(StackingContext* c)
     {
         compositedLayers.push_back(c);
+        compositedDocuments.insert(c->m_owner->node()->document());
     }
 
     bool isCompsitedLayer(StackingContext* c, size_t* idx = nullptr)
@@ -223,6 +226,14 @@ bool StackingContext::isIFrameStackingContext()
                  ->isTopLevelBrowsingContext()) {
             return true;
         }
+    }
+    return false;
+}
+
+bool StackingContext::isIFrameStackingContextOwner()
+{
+    if (m_owner->node()->isHTMLIFrameElement()) {
+        return true;
     }
     return false;
 }
@@ -419,10 +430,10 @@ public:
                 LayoutUnit minX = visibleRect.x();
                 LayoutUnit minY = visibleRect.y();
 
-                canvas->translate(-minX, -minY);
                 if (ctx.willCompositing) {
                     canvas->pixelSnappedClip(ctx.layerClipRect);
                 }
+                canvas->translate(-minX, -minY);
                 break;
             }
             sc = sc->parent();
@@ -758,19 +769,19 @@ void StackingContext::computeStackingContextProperties(
 {
     computeTransformMatrix();
 
+    if (m_owner->isRootElement()) {
+        compositingState.documentOwners.push_back(this);
+    }
+
     NeedsGraphicsLayerReason reason =
         NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNone;
 
     bool selfNeedsGraphicsBuffer = m_owner->needsGraphicsBuffer();
 
     // check self visibility
-    if (selfNeedsGraphicsBuffer && m_owner->isAbsolutePositioned()) {
-        auto clip = m_owner->style()->clip();
-        if (clip && clip->left().numberData() == 0 &&
-            clip->top().numberData() == 0 && clip->right().numberData() == 0 &&
-            clip->bottom().numberData() == 0) {
-            selfNeedsGraphicsBuffer = false;
-        }
+    if (selfNeedsGraphicsBuffer && m_owner->isAbsolutePositioned() &&
+        m_owner->style()->hasZeroClipRect()) {
+        selfNeedsGraphicsBuffer = false;
     }
     if (selfNeedsGraphicsBuffer &&
         m_owner->style()->visibility() == HiddenVisibilityValue) {
@@ -802,7 +813,10 @@ void StackingContext::computeStackingContextProperties(
     }
     bool willBeComposited = compositedBySelf;
 
-    if (!willBeComposited && compositingState.seenCompsitedLayer()) {
+    if (!willBeComposited && compositingState.seenCompsitedLayer() &&
+        compositingState.compositedDocuments.find(
+            m_owner->node()->document()) !=
+            compositingState.compositedDocuments.end()) {
         // find most nearest Composited ancestor index
         size_t ancestorIndex = 0;
 
@@ -854,15 +868,28 @@ void StackingContext::computeStackingContextProperties(
     }
 
     if (willBeComposited) {
-        StackingContext* p = parent();
-        while (p) {
-            if (p->isRootContext() && !compositingState.isCompsitedLayer(p)) {
-                STARFISH_ASSERT(compositingState.compositedLayers.size() == 0);
-                compositingState.pushCompsitedLayer(p);
-                break;
+        for (size_t i = 0; i < compositingState.documentOwners.size(); i++) {
+            if (compositingState.documentOwners[i]->isRootContext() ||
+                compositingState.documentOwners[i]
+                    ->owner()
+                    ->asFrameBlockBox()
+                    ->hasBiggerContentThanFrameWidth() ||
+                compositingState.documentOwners[i]
+                    ->owner()
+                    ->asFrameBlockBox()
+                    ->hasBiggerContentThanFrameHeight()) {
+                if (compositingState.compositedLayers.size() == 0) {
+                    STARFISH_ASSERT(
+                        compositingState.documentOwners[i]->isRootContext());
+                }
+                if (!compositingState.isCompsitedLayer(
+                        compositingState.documentOwners[i])) {
+                    compositingState.pushCompsitedLayer(
+                        compositingState.documentOwners[i]);
+                }
             }
-            p = p->parent();
         }
+
         compositingState.pushCompsitedLayer(this);
     }
 
@@ -897,11 +924,11 @@ void StackingContext::computeStackingContextProperties(
         iter++;
     }
 
-    if (isRootContext()) {
-        if (compositingState.compositedLayers.size()) {
+    if (m_owner->isRootElement()) {
+        if (compositingState.isCompsitedLayer(this)) {
             willBeComposited = true;
-            m_needsGraphicsBufferReason =
-                NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
+            m_needsGraphicsBufferReason = NeedsGraphicsLayerReason::
+                NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
         }
     }
 
@@ -949,9 +976,8 @@ void StackingContext::applyStackingContextProperties(
 
     if (willBeComposited) {
         ensureRareData();
-
         bool shouldPaintWindowBackgroundImage = false;
-        if (isRootContext()) {
+        if (m_owner->isRootElement()) {
             BrowsingContext* bc =
                 m_owner->node()->document()->browsingContext();
             HTMLElement* e = nullptr;
@@ -977,34 +1003,25 @@ void StackingContext::applyStackingContextProperties(
                 : Frame::ComputeVisibleRectContext::GraphicsBufferByOtherLayer,
             this, l, m_rareData->m_visibleRect);
 
-        LayoutUnit minX, minY, maxX, maxY;
-        minX = m_rareData->m_visibleRect.x().floor();
-        minY = m_rareData->m_visibleRect.y().floor();
-        maxX = m_rareData->m_visibleRect.maxX().ceil();
-        maxY = m_rareData->m_visibleRect.maxY().ceil();
-
-        m_rareData->m_visibleRect =
-            LayoutRect(minX, minY, maxX - minX, maxY - minY);
-
         if (shouldPaintWindowBackgroundImage) {
             ctx.isVisibleRectCollapsible = false;
         }
 
         m_owner->computeVisibleRect(ctx);
 
-        if (m_rareData->m_visibleRect.width() &&
-            m_rareData->m_visibleRect.height()) {
-            // TODO implement sub-visible rect painting & compositing
-            LayoutRect visibleRect = m_owner->frameVisibleRect();
+        if (shouldPaintWindowBackgroundImage) {
+            LayoutRect scrollRect(
+                0, 0, m_owner->document()->window()->scrollWidth(false),
+                m_owner->document()->window()->scrollHeight(false));
+            m_rareData->m_visibleRect.unite(scrollRect);
+            m_rareData->m_visibleRect.unite(
+                LayoutRect(0, 0, m_owner->node()->window()->innerWidth(),
+                           m_owner->node()->window()->innerHeight()));
+        }
 
-            if (m_rareData->m_visibleRect.width() < visibleRect.width() ||
-                m_rareData->m_visibleRect.height() < visibleRect.height()) {
-                m_rareData->m_visibleRect.setWidth(std::max(
-                    visibleRect.width(), m_rareData->m_visibleRect.width()));
-                m_rareData->m_visibleRect.setHeight(std::max(
-                    visibleRect.height(), m_rareData->m_visibleRect.height()));
-            }
-        } else if (!isRootContext() && !inAnimation) {
+        if (m_rareData->m_visibleRect.width() == 0 &&
+            m_rareData->m_visibleRect.height() == 0 && !isRootContext() &&
+            !inAnimation) {
             willBeComposited = false;
         }
     } else {
@@ -1220,7 +1237,11 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                                            PaintingStackingContextContext& ctx)
 {
     PrevDrawnStackingContextInfo info;
-    info.screenExtent = m_screenExtent;
+    if (isIFrameStackingContext()) {
+        info.screenExtent = m_parent->screenExtent();
+    } else {
+        info.screenExtent = m_screenExtent;
+    }
     info.opacity = m_owner->style()->opacity();
     info.needsGraphicsBuffer = needsGraphicsBuffer();
     info.transformMatrix = transformMatrix();
@@ -1328,6 +1349,8 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                                            1);
                 ctx.layerClipRect.setHeight(ctx.layerClipRect.height().ceil() +
                                             1);
+                ctx.layerClipRect.setX(ctx.layerClipRect.x() - minX);
+                ctx.layerClipRect.setY(ctx.layerClipRect.y() - minY);
                 needsInitialClip = true;
 
                 if (ctx.layerClipRect.x() <= 0 && ctx.layerClipRect.y() <= 0 &&
@@ -1352,7 +1375,6 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                           1.0 / m_rareData->m_buffer->pixelRatio());
         }
 
-        canvas->translate(-minX, -minY);
         if (needsInitialClip) {
             deviceLayerClipRect = canvas->pixelSnappedClip(ctx.layerClipRect);
         } else {
@@ -1362,6 +1384,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                            (float)m_rareData->m_buffer->bufferHeight() /
                                m_rareData->m_buffer->pixelRatio());
         }
+        canvas->translate(-minX, -minY);
 
         if (needsInitialClip) {
             canvas->clearColor(Unit::Color(0, 0, 0, 0));
@@ -1506,8 +1529,21 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         canvas->clip(clipRect);
         canvas->translate(iframeBox->borderLeft() + iframeBox->paddingLeft(),
                           iframeBox->borderTop() + iframeBox->paddingTop());
-        m_owner->node()->document()->browsingContext()->paintWindowBackground(
-            canvas);
+
+        if (needsGraphicsBuffer()) {
+            canvas->save();
+            canvas->resetMatrixAndClip();
+            m_owner->node()
+                ->document()
+                ->browsingContext()
+                ->paintWindowBackground(canvas);
+            canvas->restore();
+        } else {
+            m_owner->node()
+                ->document()
+                ->browsingContext()
+                ->paintWindowBackground(canvas);
+        }
     }
 
     if (!hasGraphicsBuffer && owner()->shouldApplyOverflow()) {
@@ -1595,14 +1631,16 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                                   ->scrollY());
             FrameBlockBox* document =
                 m_owner->layoutParent()->asFrameBlockBox();
-            m_owner->node()
-                ->document()
-                ->browsingContext()
-                ->window()
-                ->scrolling()
-                ->paintScrollbars(canvas, document,
-                                  document->appliedOverflowX(),
-                                  document->appliedOverflowY());
+            if (!needsGraphicsBuffer()) {
+                m_owner->node()
+                    ->document()
+                    ->browsingContext()
+                    ->window()
+                    ->scrolling()
+                    ->paintScrollbars(canvas, document,
+                                      document->appliedOverflowX(),
+                                      document->appliedOverflowY());
+            }
             canvas->restore();
         }
     }
@@ -1663,6 +1701,31 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
     if (ownerStyle->opacity() != 1) {
         compositor->beginOpacityLayer(ownerStyle->opacity());
+    }
+
+    if (isIFrameStackingContextOwner()) {
+        if (m_childContexts.size()) {
+            StackingContext* childCtx = m_childContexts[0]->at(0);
+            if (childCtx->needsGraphicsBuffer()) {
+                auto bc = m_owner->node()
+                              ->asHTMLIFrameElement()
+                              ->contentDocument()
+                              ->browsingContext();
+                auto bgColor = bc->hasWindowBackgroundColor();
+                if (bgColor.first) {
+                    CompositorStateRestorer r(compositor, this,
+                                              parent()->owner());
+
+                    compositor->save();
+                    compositor->setColor(bgColor.second);
+                    compositor->drawRect(LayoutRect(
+                        m_owner->borderLeft() + m_owner->paddingLeft(),
+                        m_owner->borderTop() + m_owner->paddingTop(),
+                        m_owner->contentWidth(), m_owner->contentHeight()));
+                    compositor->restore();
+                }
+            }
+        }
     }
 
     if (needsGraphicsBuffer()) {
@@ -1779,6 +1842,30 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 }
             }
             iter++;
+        }
+    }
+
+    if (isIFrameStackingContextOwner()) {
+        if (m_childContexts.size()) {
+            StackingContext* childCtx = m_childContexts[0]->at(0);
+            if (childCtx->needsGraphicsBuffer()) {
+                auto bc = m_owner->node()
+                              ->asHTMLIFrameElement()
+                              ->contentDocument()
+                              ->browsingContext();
+                {
+                    CompositorStateRestorer r(compositor, this,
+                                              parent()->owner());
+                    compositor->translate(
+                        m_owner->borderLeft() + m_owner->paddingLeft(),
+                        m_owner->borderTop() + m_owner->paddingTop());
+                    FrameBlockBox* mainFrame =
+                        bc->document()->frame()->asFrameBlockBox();
+                    bc->window()->scrolling()->paintScrollbars(
+                        compositor, mainFrame, mainFrame->appliedOverflowX(),
+                        mainFrame->appliedOverflowY());
+                }
+            }
         }
     }
 

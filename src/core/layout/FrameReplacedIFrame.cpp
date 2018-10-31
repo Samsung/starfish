@@ -83,6 +83,10 @@ void FrameReplacedIFrame::computeVisibleRect(
         return;
     }
 
+    if (ctx.purpose == ComputeVisibleRectContext::Scrolling) {
+        return;
+    }
+
     HTMLIFrameElement* v = node()->asHTMLIFrameElement();
     if (v->browsingContext()) {
         if (v->browsingContext()->window()) {

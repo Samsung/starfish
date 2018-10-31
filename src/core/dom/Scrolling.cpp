@@ -25,6 +25,7 @@
 #include "core/dom/TouchList.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
@@ -102,6 +103,7 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
 
                 if (m_inVerticalScrolling || m_inHorizontalScrolling) {
                     window->browsingContext()
+                        ->webView()
                         ->addGlobalPointingEventInterceptListener(m_target);
                     return true;
                 }
@@ -120,6 +122,7 @@ void Scrolling::onGlobalPointingEvent(float x, float y,
     if (kind == EventTarget::GlobalPointingEventKindUp) {
         m_target->document()
             ->browsingContext()
+            ->webView()
             ->removeGlobalPointingEventInterceptListener(m_target);
         m_isScrollTarget = false;
         m_inHorizontalScrolling = false;

@@ -214,6 +214,9 @@ public:
     void clearingBeforePaint(T canvas);
     void paintWindowBackground(Canvas* canvas);
 
+    std::pair<bool, Unit::Color> hasWindowBackgroundColor();
+    bool rootStackingContextNeedsGraphicsBuffer();
+
     bool isTopLevelBrowsingContext()
     {
         return m_parentBrowsingContext == nullptr;
@@ -227,10 +230,6 @@ public:
     bool isDescendantOf(BrowsingContext* other);
 
     HistoryManager* historyManager();
-
-    // starting global pointing Intercept must use default event.
-    void addGlobalPointingEventInterceptListener(EventTarget* node);
-    void removeGlobalPointingEventInterceptListener(EventTarget* node);
 
     void addPointerInRootSet(void* ptr);
     void removePointerFromRootSet(void* ptr);
@@ -321,7 +320,6 @@ private:
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
 
-    GCVector<EventTarget*> m_globalPointingEventListener;
     GCUnorderedMap<void*, size_t> m_rootMap;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     GCVector<HTMLMediaElement*> m_existingMediaElements;

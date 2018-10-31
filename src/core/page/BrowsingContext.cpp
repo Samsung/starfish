@@ -562,15 +562,15 @@ void BrowsingContext::clearingBeforePaint(T canvas)
 
 void BrowsingContext::paintWindowBackground(Canvas* canvas)
 {
-    clearingBeforePaint(canvas);
+    if (!rootStackingContextNeedsGraphicsBuffer()) {
+        clearingBeforePaint(canvas);
+    }
 
     if (!document()->rootElement()) {
         return;
     }
 
     if (m_hasRootElementBackground || m_hasBodyElementBackground) {
-        LayoutRect colorRect(0, 0, document()->window()->innerWidth(),
-                             document()->window()->innerHeight());
         if (m_hasRootElementBackground) {
             HTMLHtmlElement* root = document()->rootElement();
             FrameBox::paintBackground(canvas, nullptr, root);
@@ -583,6 +583,38 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
             FrameBox::paintBackground(canvas, nullptr, body);
         }
     }
+}
+
+std::pair<bool, Unit::Color> BrowsingContext::hasWindowBackgroundColor()
+{
+    if (hasRootElementBackground() || hasBodyElementBackground()) {
+        if (hasRootElementBackground()) {
+            HTMLHtmlElement* root = document()->rootElement();
+            return std::make_pair(true, root->style()->backgroundColor());
+        } else {
+            HTMLBodyElement* body = document()->rootElement()->body();
+            if (body) {
+                return std::make_pair(true, body->style()->backgroundColor());
+            }
+        }
+    }
+    return std::make_pair(false, Unit::Color());
+}
+
+bool BrowsingContext::rootStackingContextNeedsGraphicsBuffer()
+{
+    Document* domDocument = document();
+    if (domDocument->rootElement() && domDocument->rootElement()->frame() &&
+        domDocument->rootElement()->frame()->isFrameBlockBox() &&
+        domDocument->rootElement()->frame()->asFrameBox()->stackingContext() &&
+        domDocument->rootElement()
+            ->frame()
+            ->asFrameBox()
+            ->stackingContext()
+            ->needsGraphicsBuffer()) {
+        return true;
+    }
+    return false;
 }
 
 template void BrowsingContext::clearingBeforePaint<Canvas*>(Canvas*);
@@ -663,8 +695,6 @@ void BrowsingContext::dispose()
     m_hoveredNodeSet.clear();
     m_hoveredNodeTarget = nullptr;
     m_documentVersionWhenComputingHoveredNodeSet = 0;
-
-    m_globalPointingEventListener.clear();
 
     webView()->timer()->clear(this);
 
@@ -1103,42 +1133,6 @@ void BrowsingContext::handleHover(MouseEventKind kind, Node* targetNode,
 bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
                                          TouchData* touches, size_t count)
 {
-    if (m_globalPointingEventListener.size()) {
-        float x, y;
-        if (kind == TouchEventKind::TouchEventStart ||
-            kind == TouchEventKind::TouchEventMove) {
-            x = touches[0].screenX();
-            y = touches[0].screenY();
-        } else {
-            x = std::numeric_limits<float>::quiet_NaN();
-            y = std::numeric_limits<float>::quiet_NaN();
-        }
-        Node::GlobalPointingEventKind newKind;
-        if (kind == TouchEventKind::TouchEventStart) {
-            newKind =
-                Node::GlobalPointingEventKind::GlobalPointingEventKindDown;
-        } else if (kind == TouchEventKind::TouchEventMove) {
-            newKind =
-                Node::GlobalPointingEventKind::GlobalPointingEventKindMove;
-        } else {
-            newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
-        }
-        for (size_t i = 0; i < m_globalPointingEventListener.size();) {
-            EventTarget* nd = m_globalPointingEventListener[i];
-            nd->onGlobalPointingEvent(x, y, newKind);
-            if (std::find(m_globalPointingEventListener.begin(),
-                          m_globalPointingEventListener.end(),
-                          nd) != m_globalPointingEventListener.end()) {
-                i++;
-            }
-        }
-
-        if (kind == TouchEventKind::TouchEventEnd) {
-            releaseActiveNode();
-        }
-        return true;
-    }
-
     if (kind == TouchEventKind::TouchEventCancel) {
         releaseActiveNode();
         releaseHoveredNode();
@@ -1246,42 +1240,6 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
     if (kind >= MouseEventKind::MouseEventEnter) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         return false;
-    }
-
-    if (m_globalPointingEventListener.size()) {
-        float x, y;
-        if (kind == MouseEventKind::MouseEventDown ||
-            kind == MouseEventKind::MouseEventMove) {
-            x = data.screenX();
-            y = data.screenY();
-        } else {
-            x = std::numeric_limits<float>::quiet_NaN();
-            y = std::numeric_limits<float>::quiet_NaN();
-        }
-        Node::GlobalPointingEventKind newKind;
-        if (kind == MouseEventKind::MouseEventDown) {
-            newKind =
-                Node::GlobalPointingEventKind::GlobalPointingEventKindDown;
-        } else if (kind == MouseEventKind::MouseEventMove) {
-            newKind =
-                Node::GlobalPointingEventKind::GlobalPointingEventKindMove;
-        } else {
-            newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
-        }
-        for (size_t i = 0; i < m_globalPointingEventListener.size();) {
-            EventTarget* nd = m_globalPointingEventListener[i];
-            nd->onGlobalPointingEvent(x, y, newKind);
-            if (std::find(m_globalPointingEventListener.begin(),
-                          m_globalPointingEventListener.end(),
-                          nd) != m_globalPointingEventListener.end()) {
-                i++;
-            }
-        }
-
-        if (kind == MouseEventKind::MouseEventUp) {
-            releaseActiveNode();
-        }
-        return true;
     }
 
     bool mouseMoved = false;
@@ -1853,30 +1811,6 @@ void BrowsingContext::unRegisterNeedsLayoutInWebView()
     auto iter = std::find(v.begin(), v.end(), this);
     if (iter != v.end()) {
         v.erase(iter);
-    }
-}
-
-void BrowsingContext::addGlobalPointingEventInterceptListener(EventTarget* node)
-{
-    size_t sizeBefore = m_globalPointingEventListener.size();
-    if (sizeBefore == 0) {
-        MouseData mdata(MouseButtonValue::NoButton,
-                        MouseButtonsValue::NoButtonDown,
-                        m_lastMouseMovePoint.x(), m_lastMouseMovePoint.y(), 0);
-        mdata.setDefaultPrevented();
-        dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
-    }
-    m_globalPointingEventListener.insert(m_globalPointingEventListener.end(),
-                                         node);
-}
-
-void BrowsingContext::removeGlobalPointingEventInterceptListener(
-    EventTarget* node)
-{
-    auto iter = std::find(m_globalPointingEventListener.begin(),
-                          m_globalPointingEventListener.end(), node);
-    if (iter != m_globalPointingEventListener.end()) {
-        m_globalPointingEventListener.erase(iter);
     }
 }
 

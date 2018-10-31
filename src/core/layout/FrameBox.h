@@ -930,6 +930,9 @@ public:
     void applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
                            float spreadDistance = 0, bool inset = false);
 
+    // outline-width + outline-offset
+    LayoutUnit outlineThickness();
+
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
@@ -983,9 +986,6 @@ protected:
         STARFISH_ASSERT(hasRareData());
         return (FrameBoxRareData*)m_layoutParent;
     }
-
-    // outline-width + outline-offset
-    LayoutUnit outlineThickness();
 
     Frame* m_layoutParent;
 

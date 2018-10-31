@@ -2749,6 +2749,17 @@ public:
         return rect;
     }
 
+    bool hasZeroClipRect()
+    {
+        auto c = clip();
+        if (c && c->left().numberData() == 0 && c->top().numberData() == 0 &&
+            c->right().numberData() == 0 && c->bottom().numberData() == 0) {
+            return true;
+        }
+
+        return false;
+    }
+
     GCVector<GridLength>* gridTemplateColumns()
     {
         GCVector<GridLength>* gridTemplate =

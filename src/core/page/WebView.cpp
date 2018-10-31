@@ -33,6 +33,7 @@
 
 #include "BrowsingContext.h"
 #include "Starfish.h"
+#include "PlatformIntegrationData.h"
 
 #include "core/page/Window.h"
 #include "core/layout/Frame.h"
@@ -48,6 +49,9 @@
 #include "core/modules/threading/ThreadPool.h"
 #include "core/util/URL.h"
 
+#include "core/dom/MouseEvent.h"
+#include "core/dom/KeyboardEvent.h"
+#include "core/dom/Touch.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
@@ -55,6 +59,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 
 #include "platform/window/PlatformWindow.h"
+#include "platform/event/PlatformKeyEventData.h"
 #include "core/dom/Document.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
@@ -282,6 +287,8 @@ void WebView::destroy()
 #endif
 
     pause();
+
+    m_globalPointingEventListener.clear();
 
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispose();
@@ -1243,31 +1250,11 @@ RenderResult WebView::rendering(bool force)
             compositor->save();
             compositor->translate(-mainFrame->scrollLeft(),
                                   -mainFrame->scrollTop());
-            bool colorFill = false;
-            if (mainBrowsingContext()->hasRootElementBackground() ||
-                mainBrowsingContext()->hasBodyElementBackground()) {
-                Unit::Color clr;
-                if (mainBrowsingContext()->hasRootElementBackground()) {
-                    HTMLHtmlElement* root =
-                        mainBrowsingContext()->document()->rootElement();
-                    colorFill = true;
-                    clr = root->style()->color();
-                } else {
-                    HTMLBodyElement* body = mainBrowsingContext()
-                                                ->document()
-                                                ->rootElement()
-                                                ->body();
-                    if (!body) {
-                        colorFill = true;
-                        clr = body->style()->color();
-                    }
-                }
-                if (colorFill) {
-                    compositor->clearColor(clr);
-                }
-            }
-
-            if (!colorFill) {
+            auto bgColor = mainBrowsingContext()->hasWindowBackgroundColor();
+            bool colorFill = bgColor.first;
+            if (colorFill) {
+                compositor->clearColor(bgColor.second);
+            } else {
                 mainBrowsingContext()->clearingBeforePaint(compositor);
             }
 
@@ -1531,6 +1518,155 @@ void WebView::removeActiveThread(Thread* thread)
         std::find(m_activeThreadList.begin(), m_activeThreadList.end(), thread);
     if (it != m_activeThreadList.end()) {
         m_activeThreadList.erase(it);
+    }
+}
+
+void WebView::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
+                                 size_t touchCount)
+{
+    if (m_globalPointingEventListener.size()) {
+        float x, y;
+        if (kind == TouchEventKind::TouchEventStart ||
+            kind == TouchEventKind::TouchEventMove) {
+            x = touches[0].screenX();
+            y = touches[0].screenY();
+        } else {
+            x = std::numeric_limits<float>::quiet_NaN();
+            y = std::numeric_limits<float>::quiet_NaN();
+        }
+        Node::GlobalPointingEventKind newKind;
+        if (kind == TouchEventKind::TouchEventStart) {
+            newKind =
+                Node::GlobalPointingEventKind::GlobalPointingEventKindDown;
+        } else if (kind == TouchEventKind::TouchEventMove) {
+            newKind =
+                Node::GlobalPointingEventKind::GlobalPointingEventKindMove;
+        } else {
+            newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
+        }
+        for (size_t i = 0; i < m_globalPointingEventListener.size();) {
+            EventTarget* nd = m_globalPointingEventListener[i];
+            nd->onGlobalPointingEvent(x, y, newKind);
+            if (std::find(m_globalPointingEventListener.begin(),
+                          m_globalPointingEventListener.end(),
+                          nd) != m_globalPointingEventListener.end()) {
+                i++;
+            }
+        }
+
+        if (kind == TouchEventKind::TouchEventEnd) {
+            for (size_t i = 0; i < m_globalPointingEventListener.size(); i++) {
+                m_globalPointingEventListener[i]
+                    ->document()
+                    ->browsingContext()
+                    ->releaseActiveNode();
+            }
+        }
+    }
+
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->dispatchTouchEvent(kind, touches, touchCount);
+    }
+}
+
+void WebView::dispatchMouseEvent(MouseEventKind kind, MouseData data)
+{
+    if (m_globalPointingEventListener.size()) {
+        float x, y;
+        if (kind == MouseEventKind::MouseEventDown ||
+            kind == MouseEventKind::MouseEventMove) {
+            x = data.screenX();
+            y = data.screenY();
+        } else {
+            x = std::numeric_limits<float>::quiet_NaN();
+            y = std::numeric_limits<float>::quiet_NaN();
+        }
+        Node::GlobalPointingEventKind newKind;
+        if (kind == MouseEventKind::MouseEventDown) {
+            newKind =
+                Node::GlobalPointingEventKind::GlobalPointingEventKindDown;
+        } else if (kind == MouseEventKind::MouseEventMove) {
+            newKind =
+                Node::GlobalPointingEventKind::GlobalPointingEventKindMove;
+        } else {
+            newKind = Node::GlobalPointingEventKind::GlobalPointingEventKindUp;
+        }
+        for (size_t i = 0; i < m_globalPointingEventListener.size();) {
+            EventTarget* nd = m_globalPointingEventListener[i];
+            nd->onGlobalPointingEvent(x, y, newKind);
+            if (std::find(m_globalPointingEventListener.begin(),
+                          m_globalPointingEventListener.end(),
+                          nd) != m_globalPointingEventListener.end()) {
+                i++;
+            }
+        }
+
+        if (kind == MouseEventKind::MouseEventUp) {
+            for (size_t i = 0; i < m_globalPointingEventListener.size(); i++) {
+                m_globalPointingEventListener[i]
+                    ->document()
+                    ->browsingContext()
+                    ->releaseActiveNode();
+            }
+        }
+    }
+
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->dispatchMouseEvent(kind, data);
+    }
+}
+
+void WebView::dispatchMouseWheelEvent(float screenX, float screenY, int z,
+                                      bool isVerticalWheelEvent)
+{
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->dispatchMouseWheelEvent(screenX, screenY, z,
+                                                       isVerticalWheelEvent);
+    }
+}
+
+void WebView::dispatchKeyEvent(KeyEventKind kind, PlatformKeyEventData data)
+{
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->dispatchKeyEvent(kind, data);
+    }
+}
+
+void WebView::dispatchCompositionEvent(CompositionEventKind kind, String* data,
+                                       Node* node)
+{
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->dispatchCompositionEvent(kind, data, node);
+    }
+}
+
+void WebView::addGlobalPointingEventInterceptListener(EventTarget* node)
+{
+    size_t sizeBefore = m_globalPointingEventListener.size();
+    if (sizeBefore == 0) {
+        MouseData mdata(MouseButtonValue::NoButton,
+                        MouseButtonsValue::NoButtonDown,
+                        m_lastMouseMovePoint.x(), m_lastMouseMovePoint.y(), 0);
+        mdata.setDefaultPrevented();
+
+        node->document()->browsingContext()->dispatchMouseEvent(
+            MouseEventKind::MouseEventUp, mdata);
+    }
+
+    auto iter = std::find(m_globalPointingEventListener.begin(),
+                          m_globalPointingEventListener.end(), node);
+    if (iter == m_globalPointingEventListener.end()) {
+        m_globalPointingEventListener.insert(
+            m_globalPointingEventListener.end(), node);
+    }
+}
+
+void WebView::removeGlobalPointingEventInterceptListener(EventTarget* node)
+{
+    auto iter = std::find(m_globalPointingEventListener.begin(),
+                          m_globalPointingEventListener.end(), node);
+    if (iter != m_globalPointingEventListener.end()) {
+        m_globalPointingEventListener.erase(iter);
     }
 }
 

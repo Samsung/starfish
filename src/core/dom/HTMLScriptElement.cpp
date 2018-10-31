@@ -76,6 +76,9 @@ static bool isJavaScriptType(const char* type, size_t len)
 class JSProifileRAIILogger {
 public:
     JSProifileRAIILogger()
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+        : m_timer("HTMLScriptElement script execution")
+#endif
     {
 #if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
         STARFISH_LOG_INFO("[SCRIPT_PROFILING] Start JS Execution at %dms\n",
@@ -90,6 +93,10 @@ public:
                           (int)(timestamp() - g_profilingBaseTime));
 #endif
     }
+
+#if defined(STARFISH_ENABLE_SCRIPT_PROFILING)
+    ProfilerTimer m_timer;
+#endif
 };
 
 class DeferredScriptDownloadClient : public ResourceClient {
