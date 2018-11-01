@@ -156,9 +156,14 @@ public:
     virtual Canvas* preparePainting() override;
     virtual void willCompositing() override
     {
-        if (m_glPaintingSurface) {
-            m_glPaintingSurface->detachNativeBuffer();
-            m_glPaintingSurface = nullptr;
+        if (!webView()->hasActiveAnimationExecutor()) {
+            if (m_glPaintingSurface) {
+                STARFISH_LOG_INFO(
+                    "WindowImplGL::willCompositing - remove "
+                    "m_glPaintingSurface\n");
+                m_glPaintingSurface->detachNativeBuffer();
+                m_glPaintingSurface = nullptr;
+            }
         }
     }
 
@@ -218,9 +223,14 @@ Canvas* WindowImplGL::preparePainting()
 
 Compositor* WindowImplGL::prepareCompositor()
 {
-    if (m_glPaintingSurface) {
-        m_glPaintingSurface->detachNativeBuffer();
-        m_glPaintingSurface = nullptr;
+    if (!webView()->hasActiveAnimationExecutor()) {
+        if (m_glPaintingSurface) {
+            STARFISH_LOG_INFO(
+                "WindowImplGL::prepareCompositor - remove "
+                "m_glPaintingSurface\n");
+            m_glPaintingSurface->detachNativeBuffer();
+            m_glPaintingSurface = nullptr;
+        }
     }
     return Compositor::create3D(webView(), m_compostiorContext);
 }
