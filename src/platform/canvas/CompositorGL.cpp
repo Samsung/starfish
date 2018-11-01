@@ -1008,9 +1008,9 @@ public:
             } else {
                 m_isEGLImageExternal = false;
                 m_isEGLBufferOwner = false;
-                m_bufferStride = m_bufferWidth * 4;
-                m_buffer = (unsigned char*)malloc(
-                    m_bufferWidth * m_bufferHeight * sizeof(uint32_t));
+                m_bufferStride = m_bufferWidth * sizeof(uint32_t);
+                m_buffer =
+                    (unsigned char*)malloc(m_bufferStride * m_bufferHeight);
             }
 
             g_totalAllocatedCanvasSurfaceSize +=
