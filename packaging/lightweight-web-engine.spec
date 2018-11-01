@@ -205,96 +205,69 @@ an standalone executable binary for wearable.
 %build
 echo "Building for: " %{rpm}
 
-CXXFLAGS+=' -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} '
+#CXXFLAGS+=' -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} '
 
 
 ##############################################
 ## Build rules for each profile
 ##############################################
 
-%if "%{rpm}" == "tv" || "%{rpm}" == "mobile" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
-%ifarch armv7l
-./build_third_party.sh arm
-%endif
-%ifarch aarch64
-./build_third_party.sh aarch64
-%endif
-%ifarch i686
-./build_third_party.sh i686
-%endif
-%ifarch x86_64
-./build_third_party.sh x86_64
-%endif
-
-%endif
-
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 # For Dali
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dprofile=tv %{?gyp_addition_command}
-ninja -C out_tizen/tv/release lwe.tizen.unified_tv.release
-mv out_tizen/tv/release/lib/liblightweight-web-engine.tv.so out_tizen/tv/release/lib/liblightweight-web-engine-dali-plugin.tv.so
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=shared_library -DHOST=tizen -DARCH=arm -DCUSTOM=unified_tv -DBACKEND=dali -DTARGETNAME=lightweight-web-engine-dali-plugin.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
 
 # For Cairo
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dprofile=tv %{?gyp_addition_command}
-ninja -C out_tizen/tv/release lwe.tizen.unified_tv.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=tv %{?gyp_addition_command}
-ninja -C out_tizen/tv/release lwe.tizen.unified_tv.release
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=shared_library -DHOST=tizen -DARCH=arm -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl -DTARGETNAME=lightweight-web-engine.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
+
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=executable -DHOST=tizen -DARCH=arm -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl -DTARGETNAME=lightweight-web-engine.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
 %endif
 
 
 %if "%{rpm}" == "prod_tv"
 # For Dali
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dprofile=tv %{?gyp_addition_command}
-ninja -C out_tizen/tv/release lwe.tizen.prod_tv_dali.release
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=shared_library -DHOST=tizen -DARCH=arm -DCUSTOM=prod_tv -DBACKEND=dali -DTARGETNAME=lightweight-web-engine.prod.dali.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
 
 # For Cairo
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dprofile=tv -Dbackend=ecore_wayland2_cairo_gl %{?gyp_addition_command}
-ninja -C out_tizen/tv/release lwe.tizen.prod_tv.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=tv -Dbackend=ecore_wayland2_cairo_gl %{?gyp_addition_command}
-ninja -C out_tizen/tv/release lwe.tizen.prod_tv.release
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=shared_library -DHOST=tizen -DARCH=arm -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DTARGETNAME=lightweight-web-engine.prod.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
+
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=executable -DHOST=tizen -DARCH=arm -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DTARGETNAME=lightweight-web-engine.prod.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
 %endif
 
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 # For Dali
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/mobile --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dprofile=mobile %{?gyp_addition_command}
-ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
-mv out_tizen/mobile/release/lib/liblightweight-web-engine.mobile.so out_tizen/mobile/release/lib/liblightweight-web-engine-dali-plugin.mobile.so
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=shared_library -DHOST=tizen -DARCH=arm -DCUSTOM=unified_mobile -DBACKEND=dali -DTARGETNAME=lightweight-web-engine-dali-plugin.mobile -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
 
 # For Cairo
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/mobile --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dprofile=mobile %{?gyp_addition_command}
-ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/mobile --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=mobile %{?gyp_addition_command}
-ninja -C out_tizen/mobile/release lwe.tizen.unified_mobile.release
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=shared_library -DHOST=tizen -DARCH=arm -DCUSTOM=unified_mobile -DBACKEND=efl_cairo_gl -DTARGETNAME=lightweight-web-engine.mobile -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
+
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=executable -DHOST=tizen -DARCH=arm -DCUSTOM=unified_mobile -DBACKEND=efl_cairo_gl -DTARGETNAME=lightweight-web-engine.mobile -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
 %endif
+
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 CFLAGS+=' -Os '
 CXXFLAGS+=' -Os '
 
-%ifarch armv7l
-./build_third_party.sh arm gear
-%endif
-%ifarch aarch64
-./build_third_party.sh aarch64 gear
-%endif
-%ifarch i686
-./build_third_party.sh i686 gear
-%endif
-%ifarch x86_64
-./build_third_party.sh x86_64 gear
-%endif
-
 # For Dali
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/wearable --no-parallel --toplevel-dir="." --depth=1 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=dali -Dprofile=wearable %{?gyp_addition_command}
-ninja -C out_tizen/wearable/release lwe.tizen.unified_wearable.release
-mv out_tizen/wearable/release/lib/liblightweight-web-engine.wearable.so out_tizen/wearable/release/lib/liblightweight-web-engine-dali-plugin.wearable.so
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=shared_library -DHOST=tizen -DARCH=arm -DCUSTOM=unified_wearable -DBACKEND=dali -DTARGETNAME=lightweight-web-engine-dali-plugin.wearable -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
 
 # For Cairo
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/wearable --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dbackend=efl_cairo -Dprofile=wearable %{?gyp_addition_command}
-ninja -C out_tizen/wearable/release lwe.tizen.unified_wearable.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/wearable --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dbackend=efl_cairo -Dprofile=wearable %{?gyp_addition_command}
-ninja -C out_tizen/wearable/release lwe.tizen.unified_wearable.release
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=shared_library -DHOST=tizen -DARCH=arm -DCUSTOM=unified_wearable -DBACKEND=efl_cairo -DTARGETNAME=lightweight-web-engine.wearable -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
+
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=executable -DHOST=tizen -DARCH=arm -DCUSTOM=unified_wearable -DBACKEND=efl_cairo -DTARGETNAME=lightweight-web-engine.wearable -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+ninja
 %endif
 
 
@@ -309,35 +282,40 @@ rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}/lwe
 mkdir -p %{buildroot}%{_bindir}
 
-%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
+%if "%{rpm}" == "tv" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/tv
-cp -fr out_tizen/tv/release/lib/*.so %{buildroot}%{_libdir}/lwe/tv
-cp -fr out_tizen/tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
-cp -fr out_tizen/tv/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/unified_tv/release/lib/*.so %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/unified_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 %endif
-%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv"
-cp -fr out_tizen/tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
+%if "%{rpm}" == "tv"
+cp -fr out_tizen/unified_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
 %endif
 
+%if "%{rpm}" == "prod_tv"
+mkdir -p %{buildroot}/%{_libdir}/lwe/tv
+cp -fr out_tizen/prod_tv/release/lib/*.so %{buildroot}%{_libdir}/lwe/tv
+cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
+%endif
+%if "%{rpm}" == "prod_tv"
+cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
+%endif
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/mobile
-cp -fr out_tizen/mobile/release/lib/*.so %{buildroot}%{_libdir}/lwe/mobile
-cp -fr out_tizen/mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
-cp -fr out_tizen/mobile/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/mobile
+cp -fr out_tizen/unified_mobile/release/lib/*.so %{buildroot}%{_libdir}/lwe/mobile
+cp -fr out_tizen/unified_mobile/release/lib/*.mobile.so* %{buildroot}%{_libdir}/lwe/mobile
 %endif
 %if "%{rpm}" == "mobile"
-cp -fr out_tizen/mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
+cp -fr out_tizen/unified_mobile/release/lightweight-web-engine.mobile %{buildroot}%{_bindir}
 %endif
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
 mkdir -p %{buildroot}/%{_libdir}/lwe/wearable
-cp -fr out_tizen/wearable/release/lib/*.so %{buildroot}%{_libdir}/lwe/wearable
-cp -fr out_tizen/wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
-cp -fr out_tizen/wearable/release/lib/tizen/*.so %{buildroot}%{_libdir}/lwe/wearable
+cp -fr out_tizen/unified_wearable/release/lib/*.so %{buildroot}%{_libdir}/lwe/wearable
+cp -fr out_tizen/unified_wearable/release/lib/*.wearable.so* %{buildroot}%{_libdir}/lwe/wearable
 %endif
 %if "%{rpm}" == "wearable"
-cp -fr out_tizen/wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
+cp -fr out_tizen/unified_wearable/release/lightweight-web-engine.wearable %{buildroot}%{_bindir}
 %endif
 
 # for devel files
