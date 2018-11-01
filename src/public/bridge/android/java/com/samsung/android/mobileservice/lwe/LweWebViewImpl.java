@@ -34,6 +34,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 
+import java.io.File;
 import java.lang.reflect.Method;
 
 import javax.microedition.khronos.egl.EGL10;
@@ -55,13 +56,13 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     private static String sTag = "LweWebViewImpl";
-    private static float sDpr = 1;
-
     private static String sLocale = "ko-KR";
     private static String sTimezone = "Asia/Seoul";
-    private static String sLocalStoragePath;
-    private static String sCookiePath;
-    private static String sCachePath;
+
+    private float sDpr = 1;
+    private String sLocalStoragePath;
+    private String sCookiePath;
+    private String sCachePath;
 
     private long mWebViewInternalHandle;
 
@@ -296,7 +297,11 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     public void initWebView(final View appView){
-        mLWEView = (SemWebView)appView;
+        if(appView instanceof SemWebView){
+            mLWEView = (SemWebView)appView;
+        }else{
+            return;
+        }
         Context appContext = mLWEView.getContext();
 
         mLWEView.setFocusable(true);
@@ -306,7 +311,13 @@ public class LweWebViewImpl implements LweWebView {
         sDpr = appContext.getResources().getDisplayMetrics().xdpi / 150;
         sLocalStoragePath = appContext.getDataDir().getAbsolutePath() + "/StarFish-localStorage";
         sCookiePath = appContext.getDataDir().getAbsolutePath() + "/StarFish-cookie";
-        sCachePath = appContext.getCacheDir().getAbsolutePath() + "/StarFish-cache";
+
+        File cachedDir = appContext.getCacheDir();
+        if(cachedDir!=null){
+            sCachePath = cachedDir.getAbsolutePath() + "/StarFish-cache";
+        }else{
+            sCachePath = "/data/local/tmp/StarFish-cache";
+        }
 
         init();
         mWebViewInternalHandle =
@@ -544,13 +555,11 @@ public class LweWebViewImpl implements LweWebView {
             if (mIMM == null) {
                 mIMM = (InputMethodManager) mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             }
-
             if (mLWEView.hasFocus() == false) {
                 if (mLWEView.requestFocus() == false) {
                     Log.w(sTag, "Failed to request focus");
                 }
             }
-
             mIMM.showSoftInput(mLWEView, InputMethodManager.SHOW_IMPLICIT);
             mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
         }
@@ -558,10 +567,7 @@ public class LweWebViewImpl implements LweWebView {
 
     private void hideSoftKeyboard() {
         if (mLWEView != null && mIMM != null) {
-
-            if (mIMM == null) {
-                mIMM = (InputMethodManager) mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-            }
+            mIMM = (InputMethodManager) mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             mIMM.hideSoftInputFromWindow(mLWEView.getWindowToken(), 0);
             mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
         }
@@ -662,9 +668,7 @@ public class LweWebViewImpl implements LweWebView {
         }
         if (mWebViewInternalHandle != 0) {
             String resultStr = evaluateJavaScript(mWebViewInternalHandle, script);
-            if (resultCallback != null) {
-                resultCallback.onReceiveValue(resultStr);
-            }
+            resultCallback.onReceiveValue(resultStr);
         }
     }
 
