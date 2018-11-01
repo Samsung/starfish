@@ -1079,11 +1079,20 @@ private:
     (typenameWithoutPointer*)(LIKELY(bytes < 1024 * 10) ? alloca(bytes) \
                                                         : GC_MALLOC(bytes))
 
+        // Make the scale matrix of font size.
+        cairo_matrix_t sizeMatrix;
+        cairo_matrix_init_identity(&sizeMatrix);
+        cairo_matrix_scale(&sizeMatrix, size, size);
+
+        cairo_matrix_t identityMatrix;
+        cairo_matrix_init_identity(&identityMatrix);
+
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
             LayoutUnit letterSpacingValueSoFar;
             auto stringAccessData = sv.bufferAccessData();
             glyphs = ALLOCA_BIG(stringAccessData.length * sizeof(cairo_glyph_t),
                                 cairo_glyph_t);
+
             for (size_t i = 0; i < stringAccessData.length; i++) {
                 std::pair<std::pair<FontFaceImplCairo*, size_t>,
                           std::pair<unsigned, LayoutUnit>>
@@ -1108,13 +1117,6 @@ private:
                         lastFontFace = g.first.first->freetypeFace();
                         fontFace = cairo_ft_font_face_create_for_ft_face(
                             lastFontFace, 0);
-
-                        cairo_matrix_t sizeMatrix;
-                        cairo_matrix_init_identity(&sizeMatrix);
-                        cairo_matrix_scale(&sizeMatrix, size, size);
-
-                        cairo_matrix_t identityMatrix;
-                        cairo_matrix_init_identity(&identityMatrix);
 
                         cairo_font_options_t* fontOptions =
                             cairo_font_options_create();
@@ -1197,13 +1199,6 @@ private:
                             fontFace = cairo_ft_font_face_create_for_ft_face(
                                 lastFontFace, 0);
 
-                            cairo_matrix_t sizeMatrix;
-                            cairo_matrix_init_identity(&sizeMatrix);
-                            cairo_matrix_scale(&sizeMatrix, size, size);
-
-                            cairo_matrix_t identityMatrix;
-                            cairo_matrix_init_identity(&identityMatrix);
-
                             cairo_font_options_t* fontOptions =
                                 cairo_font_options_create();
                             scaledFontFace = cairo_scaled_font_create(
@@ -1228,14 +1223,17 @@ private:
                 xBias += (run.m_runWidth + letterSpacingValueSoFar);
             }
         }
+
         if (glyphCount) {
             cairo_set_scaled_font(canvas, scaledFontFace);
             cairo_show_glyphs(canvas, glyphs, glyphCount);
         }
+
         cairo_scaled_font_destroy(scaledFontFace);
         cairo_font_face_destroy(fontFace);
         cairo_translate(canvas, -dx, -dy - fontMetrics.m_ascender);
     }
+
     void drawTextDecorationCairo(cairo_t* canvas, LayoutRect rect,
                                  const StringView& sv, LayoutUnit dx,
                                  LayoutUnit dy)
