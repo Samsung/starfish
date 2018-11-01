@@ -83,9 +83,8 @@ public:
         m_element->m_imageData = imageData;
 
         if (m_element->frame()) {
-            if (sizeBefore == sizeNow) {
-                m_element->setNeedsPainting();
-            } else {
+            m_element->setNeedsPainting();
+            if (sizeBefore != sizeNow) {
                 m_element->setNeedsLayout();
             }
         }
@@ -224,6 +223,7 @@ void HTMLImageElement::unloadImage()
     m_imageData = nullptr;
     if (frame()) {
         setNeedsLayout();
+        setNeedsPainting();
     }
 }
 

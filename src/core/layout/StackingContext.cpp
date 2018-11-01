@@ -832,15 +832,21 @@ void StackingContext::computeStackingContextProperties(
         STARFISH_ASSERT(compositedAncestor);
         bool canConveredByParentCompositedLayer = false;
         bool isCollapsedWithSilbingLayer = false;
+        bool parentIsRootElementLayer = false; // parent layer is html element
 
         auto parentExtent =
             compositingState.screenExtentPerLayer(compositedAncestor);
 
-        if (parentExtent.containsInVisual(selfExtent.x(), selfExtent.y()) &&
-            parentExtent.containsInVisual(selfExtent.maxX(), selfExtent.y()) &&
-            parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) &&
-            parentExtent.containsInVisual(selfExtent.maxX(),
-                                          selfExtent.maxY())) {
+        if (compositedAncestor->owner()->isRootElement()) {
+            parentIsRootElementLayer = true;
+        }
+
+        if (parentIsRootElementLayer ||
+            (parentExtent.containsInVisual(selfExtent.x(), selfExtent.y()) &&
+             parentExtent.containsInVisual(selfExtent.maxX(), selfExtent.y()) &&
+             parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) &&
+             parentExtent.containsInVisual(selfExtent.maxX(),
+                                           selfExtent.maxY()))) {
             canConveredByParentCompositedLayer = true;
         } else {
             reason = NeedsGraphicsLayerReason::
@@ -1020,8 +1026,8 @@ void StackingContext::applyStackingContextProperties(
         }
 
         if (m_rareData->m_visibleRect.width() == 0 &&
-            m_rareData->m_visibleRect.height() == 0 && !isRootContext() &&
-            !inAnimation) {
+            m_rareData->m_visibleRect.height() == 0 &&
+            !m_owner->isRootElement() && !inAnimation) {
             willBeComposited = false;
         }
     } else {
@@ -1259,6 +1265,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     bool hasGraphicsBuffer = needsGraphicsBuffer();
     LayoutRect oldLayerClipRect = ctx.layerClipRect;
     LayoutRect deviceLayerClipRect;
+
     if (hasGraphicsBuffer) {
         bool gotNewBuffer = false;
         if (m_rareData->m_buffer == nullptr ||
@@ -1526,7 +1533,9 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                           ->browsingContext()
                           ->window()
                           ->scrollY());
-        canvas->clip(clipRect);
+        if (!hasGraphicsBuffer) {
+            canvas->clip(clipRect);
+        }
         canvas->translate(iframeBox->borderLeft() + iframeBox->paddingLeft(),
                           iframeBox->borderTop() + iframeBox->paddingTop());
 

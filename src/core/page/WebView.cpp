@@ -878,8 +878,8 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
                                     "className:%s"
                                     ", frame %p, buf? %d opacity %f "
                                     "screenExtent %f %f %f %f visibleRect "
-                                    "%d "
-                                    "%d %d %d]",
+                                    "%f "
+                                    "%f %f %f]",
                                     depth / 2, ctx, element,
                                     utf8DataLog1.data(), utf8DataLog2.data(),
                                     className.data(), ctx->owner(),
@@ -887,21 +887,21 @@ void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
                                     ctx->owner()->style()->opacity(),
                                     (float)se.x(), (float)se.y(),
                                     (float)se.width(), (float)se.height(),
-                                    (int)fr.x(), (int)fr.y(), (int)fr.width(),
-                                    (int)fr.height());
+                                    (float)fr.x(), (float)fr.y(),
+                                    (float)fr.width(), (float)fr.height());
                             } else {
                                 printf(
                                     "StackingContext[%d][%p, anonymous node"
                                     ", frame %p, buf %d opacity %f "
-                                    "screenExtent %f %f %f %f visibleRect %d "
-                                    "%d %d %d]",
+                                    "screenExtent %f %f %f %f visibleRect %f "
+                                    "%f %f %f]",
                                     depth / 2, ctx, ctx->owner(),
                                     (int)ctx->needsGraphicsBuffer(),
                                     ctx->owner()->style()->opacity(),
                                     (float)se.x(), (float)se.y(),
                                     (float)se.width(), (float)se.height(),
-                                    (int)fr.x(), (int)fr.y(), (int)fr.width(),
-                                    (int)fr.height());
+                                    (float)fr.x(), (float)fr.y(),
+                                    (float)fr.width(), (float)fr.height());
                             }
 
                             auto reason = ctx->needsGraphicsBufferReason();

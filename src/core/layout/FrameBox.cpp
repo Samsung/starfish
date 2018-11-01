@@ -3250,6 +3250,11 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         return true;
     }
 
+    if (ctx.purpose != Frame::ComputeVisibleRectContext::Scrolling && cs &&
+        cs->opacity() == 0) {
+        return false;
+    }
+
     if (isAbsolutePositioned() && style()->hasZeroClipRect()) {
         return false;
     }
