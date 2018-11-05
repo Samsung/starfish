@@ -366,6 +366,7 @@ bool ResourceURL::isValidURL(String* url)
         case ';':
         case '=':
         case '`':
+        case '%':
             continue;
         default:
             return false;

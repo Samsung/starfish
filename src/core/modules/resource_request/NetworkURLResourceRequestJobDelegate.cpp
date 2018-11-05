@@ -292,7 +292,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         uint64_t start = longTickCount();
 #endif
 #ifdef STARFISH_ENABLE_HTTPCACHE
-        if (allowCache && m_orgProxy->starfish()->httpCache()) {
+        if (allowCache && m_orgProxy->starfish()->httpCache() &&
+            m_orgProxy->requestDestination() != RequestDestination::Document) {
             auto it =
                 m_orgProxy->starfish()->httpCache()->get(m_orgProxy->url());
 
