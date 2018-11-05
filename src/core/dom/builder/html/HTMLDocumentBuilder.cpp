@@ -26,6 +26,7 @@
 #include "core/page/Window.h"
 #include "browser/history/HistoryManager.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/parser/PreloadScanner.h"
 #include "core/dom/HTMLFormElement.h"
@@ -129,7 +130,57 @@ public:
         , m_builder(builder)
         , m_parser(nullptr)
         , m_htmlSource(String::emptyString)
+        , m_isAllowedResponse(true)
     {
+    }
+
+    virtual void didHeaderReceived(
+        const std::unordered_map<std::string, std::string>& headrs)
+    {
+        auto browsingContext =
+            m_resource->loader()->document()->browsingContext();
+        if (browsingContext->isTopLevelBrowsingContext()) {
+            return;
+        }
+        auto origin = browsingContext->document()->webOrigin();
+        auto parentOrigin =
+            browsingContext->parentBrowsingContext()->document()->webOrigin();
+
+        auto it = headrs.find(HTTPHeaderMap::kXFrameOptions);
+        m_isAllowedResponse = true;
+        if (it != headrs.end()) {
+            String* value = String::createASCIIString(it->second.data());
+            if (value->equalsIgnoreCase("deny")) {
+                m_isAllowedResponse = false;
+            } else if (value->equalsIgnoreCase("sameorigin")) {
+                if (!origin->isSameOrigin(parentOrigin)) {
+                    m_isAllowedResponse = false;
+                }
+            } else {
+                GCVector<StringView> tokens;
+                StringUtils::tokenize(value, " ", 1, tokens);
+                if (tokens.size() > 1) {
+                    if (tokens[0].string()->equalsIgnoreCase("allow-from")) {
+                        m_isAllowedResponse = false;
+                        for (int i = 1; i < static_cast<int>(tokens.size());
+                             ++i) {
+                            WebOrigin* allowedOrigin =
+                                WebOrigin::createDocumentOrigin(
+                                    new ResourceURL(tokens[i].string()));
+                            if (allowedOrigin->isSameOrigin(parentOrigin)) {
+                                m_isAllowedResponse = true;
+                                break;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        if (!m_isAllowedResponse) {
+            browsingContext->sourceElement()->markContentDocumentDisabled();
+            STARFISH_LOG_WARN(
+                "Refused to display in iframe according to X-Frame-Options\n");
+        }
     }
 
     virtual void didLoadFailed()
@@ -158,6 +209,11 @@ public:
     virtual void didLoadFinished()
     {
         ResourceClient::didLoadFinished();
+
+        if (!m_isAllowedResponse) {
+            load();
+            return;
+        }
 
         auto mimetype = MimeType::parseFromString(
             m_resource->resourceRequest()->responseMimeType());
@@ -320,8 +376,9 @@ public:
     void load()
     {
         Document* document = m_builder.document();
-
-        if (m_htmlSource->isEmpty()) {
+        if (!m_isAllowedResponse) {
+            m_htmlSource = String::emptyString;
+        } else if (m_htmlSource->isEmpty()) {
             auto mimetype = MimeType::parseFromString(
                 m_resource->resourceRequest()->responseMimeType());
             if (mimetype.stringWithoutParameter()->startsWith("image/",
@@ -371,6 +428,7 @@ protected:
     HTMLDocumentBuilder& m_builder;
     HTMLParser* m_parser;
     String* m_htmlSource;
+    bool m_isAllowedResponse;
 
 private:
     String* createBlankHTMLSource()

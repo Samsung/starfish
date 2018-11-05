@@ -46,6 +46,7 @@ HTMLIFrameElement::HTMLIFrameElement(Document* document,
     : HTMLElement(document, qname)
     , m_browsingContext(nullptr)
     , m_historyManager(nullptr)
+    , m_isContentDocumentDisabled(false)
 {
     m_tabIndexWasSetExplicitly = true;
     m_tabIndex = 0;
@@ -182,7 +183,7 @@ void HTMLIFrameElement::unloadSrc()
 
 Document* HTMLIFrameElement::contentDocument() const
 {
-    if (m_browsingContext) {
+    if (m_browsingContext && !m_isContentDocumentDisabled) {
         return m_browsingContext->document();
     }
     return nullptr;
@@ -213,7 +214,7 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
 {
     if (ResourceURL::isValidURL(url->urlString())) {
         unloadSrc();
-
+        unmarkContentDocumentDisabled();
         if (!m_historyManager) {
             m_historyManager = HistoryManager::create(this);
         }

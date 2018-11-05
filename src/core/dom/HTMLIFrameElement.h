@@ -86,6 +86,14 @@ public:
 
     String* nameAttr();
     void setNameAttr(String* name);
+    void markContentDocumentDisabled()
+    {
+        m_isContentDocumentDisabled = true;
+    }
+    void unmarkContentDocumentDisabled()
+    {
+        m_isContentDocumentDisabled = false;
+    }
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
@@ -99,6 +107,8 @@ protected:
 
     BrowsingContext* m_browsingContext;
     HistoryManager* m_historyManager;
+    bool m_isContentDocumentDisabled;
+
     void loadSrc();
     void unloadSrc();
 };
