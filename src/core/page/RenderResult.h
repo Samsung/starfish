@@ -23,6 +23,7 @@
 namespace Starfish {
 
 class CanvasSurface;
+class GraphicsBufferHolder;
 
 struct RenderResult {
     bool didPaintingOrCompositing;
@@ -35,7 +36,7 @@ struct PrevDrawnStackingContextInfo {
     {
         needsGraphicsBuffer = hasThisLayerThisTime = isEqualsWithPrevDrawing =
             false;
-        graphicsBuffer = nullptr;
+        graphicsBufferHolder = nullptr;
         opacity = 1;
         transformMatrix = SkMatrix::I();
     }
@@ -48,7 +49,8 @@ struct PrevDrawnStackingContextInfo {
     LayoutRect screenExtent;
     SkMatrix transformMatrix;
     float opacity;
-    CanvasSurface* graphicsBuffer;
+    GraphicsBufferHolder* graphicsBufferHolder;
+    LayoutRect graphicsBufferVisibleRect;
 };
 
 typedef GCUnorderedMap<Node*, PrevDrawnStackingContextInfo>

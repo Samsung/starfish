@@ -554,6 +554,7 @@ private:
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
 
     PrevDrawnStackingContextInfoMap m_prevDrawnStackingContextInfo;
+    GCVector<StackingContext*> m_stackingContextsNeedsGraphicsBuffer;
 
     uint64_t m_lastRenderingTick;
     uint64_t m_navigateStartingTime;

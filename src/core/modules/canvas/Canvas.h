@@ -75,7 +75,6 @@ public:
     virtual bool attachNativeBuffer(size_t w,
                                     size_t h) = 0; // returns surface updated
     virtual uint8_t* mapBuffer() = 0;
-    virtual void resize(size_t w, size_t h) = 0;
     virtual void clear() = 0;
     virtual void detachNativeBuffer() = 0;
     virtual void unMapBufferAndNotifyUpdateRegion(size_t x, size_t y, size_t w,
@@ -91,15 +90,8 @@ public:
         return CanvasSurfaceTextureInfo();
     }
 
-    // width / pixelRatio == imageWidth
-    // bufferWidth > imageWidth
-    // buffer is can be lager than image
     virtual size_t width() = 0;
     virtual size_t height() = 0;
-    virtual size_t pixelRatio() = 0;
-
-    virtual size_t imageWidth() = 0;
-    virtual size_t imageHeight() = 0;
 
     virtual size_t bufferWidth() = 0;
     virtual size_t bufferHeight() = 0;
@@ -117,6 +109,7 @@ public:
     }
 
     static size_t g_totalAllocatedCanvasSurfaceSize;
+    static size_t g_canvasSurfaceTileSize;
 };
 
 struct DrawImageInfo {
@@ -169,6 +162,7 @@ public:
     virtual void translate(double x, double y) = 0;
     virtual void translate(LayoutUnit x, LayoutUnit y) = 0;
     virtual void postMatrix(const SkMatrix& matrix) = 0;
+    virtual SkMatrix currentTransformMatrix() = 0;
 
     virtual void clip(const Unit::Rect& rt) = 0;
     virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)

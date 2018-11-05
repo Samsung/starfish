@@ -279,6 +279,11 @@ public:
         m_canvas->concat(m);
     }
 
+    virtual SkMatrix currentTransformMatrix()
+    {
+        return m_canvas->getTotalMatrix();
+    }
+
 protected:
     Starfish* m_starfish;
     std::vector<float> m_opacityVector;

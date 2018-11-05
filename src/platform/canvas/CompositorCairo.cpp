@@ -317,10 +317,11 @@ public:
         cairo_surface_t* image;
         image = cairo_image_surface_create_for_data(
             (unsigned char*)data->mapBuffer(), CAIRO_FORMAT_ARGB32,
-            data->imageWidth(), data->imageHeight(), data->bufferStride());
+            data->bufferWidth(), data->bufferHeight(), data->bufferStride());
         checkError();
-        drawImageCairo(image, dst, data->imageWidth(), data->imageHeight(),
+        drawImageCairo(image, dst, data->bufferWidth(), data->bufferHeight(),
                        true);
+
         cairo_surface_destroy(image);
         data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
     }
@@ -408,6 +409,22 @@ public:
         cairo_matrix_multiply(&result_matrix, &b_matrix, &a_matrix);
         cairo_set_matrix(m_canvas, &result_matrix);
         checkError();
+    }
+
+    virtual SkMatrix currentTransformMatrix()
+    {
+        cairo_matrix_t matrix;
+        cairo_get_matrix(m_canvas, &matrix);
+
+        SkMatrix m = SkMatrix::I();
+        m.set(0, matrix.xx);
+        m.set(1, matrix.yx);
+        m.set(2, matrix.x0);
+        m.set(3, matrix.xy);
+        m.set(4, matrix.yy);
+        m.set(5, matrix.y0);
+
+        return m;
     }
 
     virtual void applyMatrixTo(LayoutLocation& lp)
