@@ -709,8 +709,9 @@ void BrowsingContext::dispose()
         auto& prevDrawnInfo = webView()->prevDrawnStackingContextInfo();
         auto iter = prevDrawnInfo.begin();
         while (iter != prevDrawnInfo.end()) {
-            if (iter->second.graphicsBuffer) {
-                iter->second.graphicsBuffer->detachNativeBuffer();
+            if (iter->second.graphicsBufferHolder) {
+                iter->second.graphicsBufferHolder->detachNativeBuffers();
+                iter->second.graphicsBufferHolder = nullptr;
             }
             iter++;
         }

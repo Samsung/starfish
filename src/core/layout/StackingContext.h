@@ -21,6 +21,7 @@
 #define __StarfishStackingContext__
 
 #include "core/page/RenderResult.h"
+#include "core/modules/canvas/TextDecorationData.h"
 
 namespace Starfish {
 
@@ -40,14 +41,48 @@ enum NeedsGraphicsLayerReason ENSURE_ENUM_UNSIGNED {
     NeedsGraphicsLayerReasonCollapsedWithSiblingLayer,
 };
 
+class GraphicsBufferHolder : public gc {
+    friend class StackingContext;
+
+public:
+    GraphicsBufferHolder(CanvasSurface* s);
+    GraphicsBufferHolder(size_t bufferWidth, size_t bufferHeight);
+
+    size_t bufferWidth() const
+    {
+        return m_bufferWidth;
+    }
+
+    size_t bufferHeight() const
+    {
+        return m_bufferHeight;
+    }
+
+    void detachNativeBuffers();
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+protected:
+    GCVector<CanvasSurface*> m_surfaces;
+    size_t m_bufferWidth;
+    size_t m_bufferHeight;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(GraphicsBufferHolder, m_surfaces));
+    }
+};
+
 class StackingContextChild : public GCVector<StackingContext*> {
 };
 
 struct StackingContextRareData : public gc {
     LayoutRect m_visibleRect;
-    CanvasSurface* m_buffer;
+    GraphicsBufferHolder* m_graphicsBufferHolder;
     SkMatrix m_matrix;
     SkMatrix m_screenMatrix;
+    TextDecorationData m_textDecorationData;
 
     StackingContextRareData();
 
@@ -57,7 +92,8 @@ struct StackingContextRareData : public gc {
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
-        GC_set_bit(desc, GC_WORD_OFFSET(StackingContextRareData, m_buffer));
+        GC_set_bit(desc, GC_WORD_OFFSET(StackingContextRareData,
+                                        m_graphicsBufferHolder));
     }
 };
 
@@ -97,11 +133,6 @@ public:
 
     void clearGraphicsBuffer();
 
-    CanvasSurface* buffer()
-    {
-        return m_rareData ? m_rareData->m_buffer : nullptr;
-    }
-
     LayoutRect visibleRect()
     {
         return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
@@ -122,6 +153,7 @@ public:
         LayoutRect screenClipRect;
         LayoutRect layerClipRect;
         LayoutUnit scrollX, scrollY;
+        LayoutUnit layerBaseX, layerBaseY;
         PaintingStackingContextContext(
             bool willCompositing,
             PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap,
@@ -137,6 +169,7 @@ public:
     };
     void paintStackingContext(Canvas* canvas,
                               PaintingStackingContextContext& ctx);
+    void fillGraphicsBufferContents(PaintingStackingContextContext& globalCtx);
     void compositeStackingContext(Compositor* compositor);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);
@@ -176,6 +209,8 @@ protected:
     struct ComputeStackingContextContext;
     void computeStackingContextProperties(ComputeStackingContextContext& ctx);
     void applyStackingContextProperties(ComputeStackingContextContext& ctx);
+    void fillGraphicsBufferContents(Canvas* canvas,
+                                    PaintingStackingContextContext& ctx);
 
     bool m_needsGraphicsBuffer : 1;
     bool m_hasNon2DRectTransform : 1;

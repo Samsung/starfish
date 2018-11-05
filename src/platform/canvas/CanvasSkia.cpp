@@ -226,6 +226,11 @@ public:
         m_canvas->concat(matrix);
     }
 
+    virtual SkMatrix currentTransformMatrix()
+    {
+        return m_canvas->getTotalMatrix();
+    }
+
     virtual void clip(const Unit::Rect& rt)
     {
         moveTo(rt.x(), rt.y());

@@ -26,6 +26,7 @@
 namespace Starfish {
 
 size_t CanvasSurface::g_totalAllocatedCanvasSurfaceSize = 0;
+size_t CanvasSurface::g_canvasSurfaceTileSize = 384;
 
 #if !defined(PORT_COMPOSITOR_BACKEND_GL)
 class CanvasSurfaceSimple : public CanvasSurface {
@@ -35,9 +36,8 @@ public:
         m_window = wnd;
         m_width = w;
         m_height = h;
-        m_imageWidth = m_bufferWidth = m_width = -1;
-        m_imageHeight = m_bufferHeight = m_height = -1;
-        m_pixelRatio = 1;
+        m_bufferStride = m_bufferWidth = m_width = -1;
+        m_bufferHeight = m_height = -1;
         m_buffer = nullptr;
 
         attachNativeBuffer(w, h);
@@ -59,8 +59,8 @@ public:
             m_buffer = nullptr;
             m_width = 0;
             m_height = 0;
-            m_imageWidth = m_bufferWidth = m_width = 0;
-            m_imageHeight = m_bufferHeight = m_height = 0;
+            m_bufferStride = m_bufferWidth = m_width = 0;
+            m_bufferHeight = m_height = 0;
         }
     }
 
@@ -74,27 +74,12 @@ public:
             float windowDevicePixelRatio =
                 m_window->webView()->screenInfo().devicePixelRatio;
 
-            m_pixelRatio = 1;
-
-            while ((m_width / m_pixelRatio * windowDevicePixelRatio > 20000) ||
-                   (m_height / m_pixelRatio * windowDevicePixelRatio > 20000)) {
-                m_pixelRatio++;
-            }
-
-            m_imageWidth =
-                std::max((size_t)1, (size_t)(m_width / m_pixelRatio *
-                                             windowDevicePixelRatio));
-            m_imageHeight =
-                std::max((size_t)1, (size_t)(m_height / m_pixelRatio *
-                                             windowDevicePixelRatio));
-
-            m_bufferWidth = std::max(
-                (size_t)1, (size_t)(w / m_pixelRatio * windowDevicePixelRatio));
-            m_bufferHeight = std::max(
-                (size_t)1, (size_t)(h / m_pixelRatio * windowDevicePixelRatio));
+            m_bufferWidth =
+                std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
+            m_bufferHeight =
+                std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
 
             m_bufferStride = m_bufferWidth * 4;
-
             m_buffer = (unsigned char*)malloc(m_bufferWidth * m_bufferHeight *
                                               sizeof(uint32_t));
             g_totalAllocatedCanvasSurfaceSize +=
@@ -104,67 +89,37 @@ public:
         return false;
     }
 
-    virtual void resize(size_t w, size_t h)
-    {
-        STARFISH_RELEASE_ASSERT(w <= m_bufferWidth * m_pixelRatio);
-        STARFISH_RELEASE_ASSERT(h <= m_bufferHeight * m_pixelRatio);
-
-        m_width = w;
-        m_height = h;
-
-        m_imageWidth = std::max((size_t)1, m_width / m_pixelRatio);
-        m_imageHeight = std::max((size_t)1, m_height / m_pixelRatio);
-
-        STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
-        STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
-    }
-
     virtual uint8_t* mapBuffer()
     {
         return m_buffer;
     }
 
-    virtual size_t width()
+    virtual size_t width() override
     {
         return m_width;
     }
 
-    virtual size_t height()
+    virtual size_t height() override
     {
         return m_height;
     }
 
-    virtual size_t bufferWidth()
+    virtual size_t bufferWidth() override
     {
         return m_bufferWidth;
     }
 
-    virtual size_t bufferHeight()
+    virtual size_t bufferHeight() override
     {
         return m_bufferHeight;
     }
 
-    virtual size_t imageWidth()
-    {
-        return m_imageWidth;
-    }
-
-    virtual size_t imageHeight()
-    {
-        return m_imageHeight;
-    }
-
-    virtual size_t pixelRatio()
-    {
-        return m_pixelRatio;
-    }
-
-    virtual size_t bufferStride()
+    virtual size_t bufferStride() override
     {
         return m_bufferStride;
     }
 
-    virtual void clear()
+    virtual void clear() override
     {
         size_t end = m_bufferStride * m_bufferHeight;
         memset(m_buffer, 0x00, end);
@@ -175,12 +130,9 @@ protected:
     unsigned char* m_buffer;
     size_t m_width;
     size_t m_height;
-    size_t m_imageWidth;
-    size_t m_imageHeight;
     size_t m_bufferWidth;
     size_t m_bufferHeight;
     size_t m_bufferStride;
-    size_t m_pixelRatio;
 };
 
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)

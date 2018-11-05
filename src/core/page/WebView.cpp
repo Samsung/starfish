@@ -1112,7 +1112,7 @@ RenderResult WebView::rendering(bool force)
                 // remove definitely useless graphics buffer first.
                 auto iter = prevDrawnStackingContextInfo.begin();
                 while (iter != prevDrawnStackingContextInfo.end()) {
-                    if (iter->second.graphicsBuffer) {
+                    if (iter->second.graphicsBufferHolder) {
                         if (!iter->first->frame() ||
                             !iter->first->frame()->isFrameBox() ||
                             !iter->first->frame()
@@ -1122,8 +1122,11 @@ RenderResult WebView::rendering(bool force)
                                  ->asFrameBox()
                                  ->stackingContext()
                                  ->needsGraphicsBuffer()) {
-                            iter->second.graphicsBuffer->detachNativeBuffer();
-                            iter->second.graphicsBuffer = nullptr;
+                            if (iter->second.graphicsBufferHolder) {
+                                iter->second.graphicsBufferHolder
+                                    ->detachNativeBuffers();
+                                iter->second.graphicsBufferHolder = nullptr;
+                            }
                         }
                     }
                     iter++;
@@ -1133,7 +1136,6 @@ RenderResult WebView::rendering(bool force)
             StackingContext::PaintingStackingContextContext ctx(
                 m_needsComposite, prevDrawnStackingContextInfo, repaintRect,
                 scrollX, scrollY);
-
             if (!m_needsComposite) {
                 canvas = platformWindow()->preparePainting();
                 canvas->save();
@@ -1166,7 +1168,13 @@ RenderResult WebView::rendering(bool force)
                 STARFISH_ASSERT(
                     m_rootStackingContext ==
                     mainFrame->firstChild()->asFrameBox()->stackingContext());
-                m_rootStackingContext->paintStackingContext(nullptr, ctx);
+
+                auto iter = m_stackingContextsNeedsGraphicsBuffer.rbegin();
+
+                while (iter != m_stackingContextsNeedsGraphicsBuffer.rend()) {
+                    (*iter)->fillGraphicsBufferContents(ctx);
+                    iter++;
+                }
             }
 
             LayoutRect screen(0, 0, platformWindow()->width(),
@@ -1217,8 +1225,9 @@ RenderResult WebView::rendering(bool force)
              */
             auto iter = prevDrawnStackingContextInfo.begin();
             while (iter != prevDrawnStackingContextInfo.end()) {
-                if (iter->second.graphicsBuffer) {
-                    iter->second.graphicsBuffer->detachNativeBuffer();
+                if (iter->second.graphicsBufferHolder) {
+                    iter->second.graphicsBufferHolder->detachNativeBuffers();
+                    iter->second.graphicsBufferHolder = nullptr;
                 }
                 iter++;
             }

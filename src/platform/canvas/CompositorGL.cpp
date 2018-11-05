@@ -781,6 +781,8 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         checkError();
         g_maxTextureSize = siz;
 
+        g_textureTileSize = CanvasSurface::g_canvasSurfaceTileSize;
+
         if (g_textureTileSize > g_maxTextureSize) {
             g_textureTileSize = g_maxTextureSize;
         }
@@ -848,8 +850,8 @@ public:
         m_window = (PlatformWindow*)wnd;
         m_width = w;
         m_height = h;
-        m_imageWidth = m_bufferWidth = m_width = -1;
-        m_imageHeight = m_bufferHeight = m_height = -1;
+        m_bufferWidth = m_width = -1;
+        m_bufferHeight = m_height = -1;
         m_buffer = nullptr;
         m_isEGLImageExternal = false;
         m_isEGLBufferOwner = false;
@@ -943,8 +945,8 @@ public:
             m_buffer = nullptr;
             m_width = 0;
             m_height = 0;
-            m_imageWidth = m_bufferWidth = m_width = 0;
-            m_imageHeight = m_bufferHeight = m_height = 0;
+            m_bufferStride = m_bufferWidth = m_width = 0;
+            m_bufferHeight = m_height = 0;
 
             m_isEGLImageNeedsFlipRGB = m_isEGLBufferOwner =
                 m_isEGLImageExternal = false;
@@ -960,11 +962,6 @@ public:
 
             float windowDevicePixelRatio =
                 m_window->webView()->screenInfo().devicePixelRatio;
-
-            m_imageWidth =
-                std::max((size_t)1, (size_t)(m_width * windowDevicePixelRatio));
-            m_imageHeight = std::max(
-                (size_t)1, (size_t)(m_height * windowDevicePixelRatio));
 
             m_bufferWidth =
                 std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
@@ -1020,21 +1017,6 @@ public:
             return true;
         }
         return false;
-    }
-
-    virtual void resize(size_t w, size_t h) override
-    {
-        STARFISH_RELEASE_ASSERT(w <= m_bufferWidth);
-        STARFISH_RELEASE_ASSERT(h <= m_bufferHeight);
-
-        m_width = w;
-        m_height = h;
-
-        m_imageWidth = std::max((size_t)1, m_width);
-        m_imageHeight = std::max((size_t)1, m_height);
-
-        STARFISH_RELEASE_ASSERT(m_imageWidth <= m_bufferWidth);
-        STARFISH_RELEASE_ASSERT(m_imageHeight <= m_bufferHeight);
     }
 
     void ensureGenerateTexture()
@@ -1260,21 +1242,6 @@ public:
         return m_bufferHeight;
     }
 
-    virtual size_t imageWidth() override
-    {
-        return m_imageWidth;
-    }
-
-    virtual size_t imageHeight() override
-    {
-        return m_imageHeight;
-    }
-
-    virtual size_t pixelRatio() override
-    {
-        return 1;
-    }
-
     virtual size_t bufferStride() override
     {
         return m_bufferStride;
@@ -1420,11 +1387,6 @@ public:
         float windowDevicePixelRatio =
             m_window->webView()->screenInfo().devicePixelRatio;
 
-        m_imageWidth =
-            std::max((size_t)1, (size_t)(m_width * windowDevicePixelRatio));
-        m_imageHeight =
-            std::max((size_t)1, (size_t)(m_height * windowDevicePixelRatio));
-
         m_bufferWidth =
             std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
         m_bufferHeight =
@@ -1439,8 +1401,6 @@ protected:
     unsigned char* m_buffer;
     size_t m_width;
     size_t m_height;
-    size_t m_imageWidth;
-    size_t m_imageHeight;
     size_t m_bufferWidth;
     size_t m_bufferHeight;
     size_t m_bufferStride;
@@ -1801,10 +1761,10 @@ public:
         ClipperLib::Clipper clipper;
 
         ClipperLib::Path texture;
-        texture.emplace_back(dest[0][0], dest[0][1]);
-        texture.emplace_back(dest[2][0], dest[2][1]);
-        texture.emplace_back(dest[3][0], dest[3][1]);
-        texture.emplace_back(dest[1][0], dest[1][1]);
+        texture.emplace_back(floor(dest[0][0]), floor(dest[0][1]));
+        texture.emplace_back(floor(dest[2][0]), ceil(dest[2][1]));
+        texture.emplace_back(ceil(dest[3][0]), floor(dest[3][1]));
+        texture.emplace_back(ceil(dest[1][0]), ceil(dest[1][1]));
 
         // clipping debug code
         /*
@@ -2216,6 +2176,7 @@ public:
 
                             if (csGL->m_textureFragmentsFlags[i].m_isDirty) {
                                 INSTALL_PROFILE_TIMER("update texture tile..");
+                                LongTaskFinder t("update texture tile..", 1);
 
                                 size_t xx =
                                     csGL->m_dirtyAreaTextureFragments[i].x();
@@ -2304,6 +2265,11 @@ public:
         if (!m_state.back().matrix.rectStaysRect()) {
             m_state.back().matrixStaysInRect = false;
         }
+    }
+
+    SkMatrix currentTransformMatrix()
+    {
+        return m_state.back().matrix;
     }
 
     virtual void applyMatrixTo(LayoutLocation& lp)
