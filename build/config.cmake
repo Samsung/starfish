@@ -158,6 +158,8 @@ SET (LWE_DEFINITIONS
 # CXXFLAGS & LDFLAGS
 #######################################################
 
+SET (CXXFLAGS_FROM_ENV $ENV{CXXFLAGS})
+SEPARATE_ARGUMENTS(CXXFLAGS_FROM_ENV)
 SET (LWE_CXXFLAGS_DEFAULT -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-maybe-uninitialized -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fvisibility=hidden -fno-omit-frame-pointer -fstack-protector -fPIC)
 
 IF (${COMPILER} STREQUAL "gcc")
@@ -184,7 +186,7 @@ IF (NOT ${BACKEND} STREQUAL "dali")
     SET (LWE_CXXFLAGS_BACKEND -fno-rtti)
 ENDIF()
 
-SET (LWE_CXXFLAGS ${LWE_CXXFLAGS_DEFAULT} ${LWE_CXXFLAGS_COMPILER} ${LWE_CXXFLAGS_MODE} ${LWE_CXXFLAGS_HOST} ${LWE_CXXFLAGS_BACKEND})
+SET (LWE_CXXFLAGS ${LWE_CXXFLAGS_DEFAULT} ${LWE_CXXFLAGS_COMPILER} ${LWE_CXXFLAGS_HOST} ${LWE_CXXFLAGS_BACKEND} ${CXXFLAGS_FROM_ENV} ${LWE_CXXFLAGS_MODE})
 
 
 SET (LWE_LDFLAGS_DEFAULT "-Wl,-rpath=/usr/local/lib")
