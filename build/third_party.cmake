@@ -22,18 +22,21 @@ ENDIF()
 #######################################################
 SET (THIRD_PARTY_CXXFLAGS_COMMON -std=c++11 -g3 -Wall -Wextra -Werror -Wno-unused-parameter -Wno-unused-result -Wno-unused-variable -Wno-unused-function -Wno-deprecated-declarations -Wno-type-limits -fno-math-errno -fdata-sections -ffunction-sections -Wno-invalid-offsetof -fno-omit-frame-pointer -fstack-protector -fPIC)
 
-SET (THIRD_PARTY_CXXFLAGS ${THIRD_PARTY_CXXFLAGS_COMMON} ${LWE_CXXFLAGS_COMPILER} ${LWE_CXXFLAGS_MODE})
+SET (THIRD_PARTY_CXXFLAGS ${THIRD_PARTY_CXXFLAGS_COMMON} ${LWE_CXXFLAGS_COMPILER} ${CXXFLAGS_FROM_ENV} ${LWE_CXXFLAGS_MODE})
+SET (THIRD_PARTY_DEFINITIONS ${LWE_DEFINES_MODE})
 
 
 #######################################################
 # SKIA_MATRIX
 #######################################################
-FILE (GLOB_RECURSE SKIA_MATRIX_SRC_CORE ${THIRD_PARTY_ROOT}/skia_matrix/src/core/*.cpp)
-FILE (GLOB_RECURSE SKIA_MATRIX_SRC_PORTS ${THIRD_PARTY_ROOT}/skia_matrix/src/ports/*.cpp)
-ADD_LIBRARY (skia_matrix SHARED ${SKIA_MATRIX_SRC_CORE} ${SKIA_MATRIX_SRC_PORTS})
-TARGET_INCLUDE_DIRECTORIES (skia_matrix PUBLIC ${THIRD_PARTY_ROOT}/skia_matrix ${THIRD_PARTY_ROOT}/skia_matrix/include/core ${THIRD_PARTY_ROOT}/skia_matrix/include/private)
-TARGET_COMPILE_DEFINITIONS (skia_matrix PUBLIC ${LWE_DEFINITIONS})
-TARGET_COMPILE_OPTIONS (skia_matrix PUBLIC ${THIRD_PARTY_CXXFLAGS})
+IF (NOT ${BACKEND} STREQUAL "efl_skia")
+    FILE (GLOB_RECURSE SKIA_MATRIX_SRC_CORE ${THIRD_PARTY_ROOT}/skia_matrix/src/core/*.cpp)
+    FILE (GLOB_RECURSE SKIA_MATRIX_SRC_PORTS ${THIRD_PARTY_ROOT}/skia_matrix/src/ports/*.cpp)
+    ADD_LIBRARY (skia_matrix SHARED ${SKIA_MATRIX_SRC_CORE} ${SKIA_MATRIX_SRC_PORTS})
+    TARGET_INCLUDE_DIRECTORIES (skia_matrix PUBLIC ${THIRD_PARTY_ROOT}/skia_matrix ${THIRD_PARTY_ROOT}/skia_matrix/include/core ${THIRD_PARTY_ROOT}/skia_matrix/include/private)
+    TARGET_COMPILE_DEFINITIONS (skia_matrix PUBLIC ${THIRD_PARTY_DEFINITIONS})
+    TARGET_COMPILE_OPTIONS (skia_matrix PUBLIC ${THIRD_PARTY_CXXFLAGS})
+ENDIF()
 
 
 #######################################################
@@ -41,7 +44,7 @@ TARGET_COMPILE_OPTIONS (skia_matrix PUBLIC ${THIRD_PARTY_CXXFLAGS})
 #######################################################
 ADD_LIBRARY (clipper SHARED ${THIRD_PARTY_ROOT}/clipper/cpp/clipper.cpp)
 TARGET_INCLUDE_DIRECTORIES (clipper PUBLIC ${THIRD_PARTY_ROOT}/clipper/cpp/)
-TARGET_COMPILE_DEFINITIONS (clipper PUBLIC ${LWE_DEFINITIONS})
+TARGET_COMPILE_DEFINITIONS (clipper PUBLIC ${THIRD_PARTY_DEFINITIONS})
 TARGET_COMPILE_OPTIONS (clipper PUBLIC ${THIRD_PARTY_CXXFLAGS})
 
 
@@ -52,7 +55,7 @@ IF (NOT ${CUSTOM} MATCHES "wearable")
     FILE (GLOB MP4PARSE_LIST ${THIRD_PARTY_ROOT}/MP4Parse/source/MP4*.cpp)
     ADD_LIBRARY (mp4parse SHARED ${MP4PARSE_LIST})
     TARGET_INCLUDE_DIRECTORIES (mp4parse PUBLIC ${THIRD_PARTY_ROOT}/MP4Parse/source/include)
-    TARGET_COMPILE_DEFINITIONS (mp4parse PUBLIC ${LWE_DEFINITIONS})
+    TARGET_COMPILE_DEFINITIONS (mp4parse PUBLIC ${THIRD_PARTY_DEFINITIONS})
     TARGET_COMPILE_OPTIONS (mp4parse PUBLIC ${THIRD_PARTY_CXXFLAGS})
 ENDIF()
 
@@ -66,7 +69,7 @@ IF (NOT ${CUSTOM} MATCHES "wearable")
         ${THIRD_PARTY_ROOT}/webm/webvtt/webvttparser.cc
     )
     TARGET_INCLUDE_DIRECTORIES (webm PUBLIC ${THIRD_PARTY_ROOT}/webm/)
-    TARGET_COMPILE_DEFINITIONS (webm PUBLIC ${LWE_DEFINITIONS})
+    TARGET_COMPILE_DEFINITIONS (webm PUBLIC ${THIRD_PARTY_DEFINITIONS})
     TARGET_COMPILE_OPTIONS (webm PUBLIC ${THIRD_PARTY_CXXFLAGS})
 ENDIF()
 
@@ -103,7 +106,7 @@ IF (NOT ${HOST} STREQUAL "tizen")
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${ZMQ_BUILDDIR}
                         COMMAND cd ${ZMQ_BUILDDIR} && ../../../../configure --enable-static CFLAGS=${ZMQ_CFLAGS} LDFLAGS=${ZMQ_CFLAGS} CXXFLAGS=${ZMQ_CFLAGS}
                         COMMAND cd ${ZMQ_BUILDDIR} && make -j
-                        COMMAND ${CMAKE_COMMAND} -E copy ${ZMQ_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                        COMMAND ${CMAKE_COMMAND} -E copy ${ZMQ_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
                         
     )
 
@@ -159,7 +162,7 @@ ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_
                         COMMAND make clean
                         COMMAND ${CMAKE_COMMAND} -E copy ${TUV_DIR}/config/tizen/packaging/libtuv.pc.in .
                         COMMAND make -j TUV_BUILD_TYPE=${MODE} TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen
-                        COMMAND ${CMAKE_COMMAND} -E copy ${TUV_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+                        COMMAND ${CMAKE_COMMAND} -E copy ${TUV_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 
     ADD_CUSTOM_TARGET (tuv
@@ -179,7 +182,7 @@ IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
     ENDIF()
     ADD_CUSTOM_COMMAND (OUTPUT ${OUTPUT_DIRECTORY}/lib/libskia.so
                         DEPENDS ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so
-                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so ${OUTPUT_DIRECTORY}/lib
+                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so ${OUTPUT_DIRECTORY}/lib/.
     )
 ENDIF()
 

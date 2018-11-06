@@ -33,42 +33,33 @@ git clone git@github.sec.samsung.net:lws/starfish.git
 cd starfish
 git submodule init
 git submodule update
-./build_third_party.sh
 ```
 
 ### Compile StarFish
 
 ```sh
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
-ninja -C out/release starfish.x64.release
+cmake CMakeLists.txt -DMODE=release -DCOMPONENT=executable -DHOST=linux -DARCH=x64 -DBACKEND=efl_cairo_gl -G Ninja
+ninja
 ```
 
 #### Build options
 
-The following build options are supported when generating ninja script using gyp.
+The following build options are supported when generating ninja script using cmake.
 Default values are in **bold**.
 
-* -Dcomponent=[ executable | **static_library** | shared_library ]<br>
-  Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
-* -Ddeplib=[ **shared_library** | static_library ]<br>
-  Generate third-party libraries as shared libraries or obj files
-* -Dbackend=[ efl_cairo | **efl_cairo_gl**  | efl_skia | dali ]<br>
-  Use either cairo, cairo_gl, skia, or dali as the backend graphics library
-* -Dplatform=[ **linux** | tizen ]<br>
+* -DHOST=[ **linux** | tizen ]<br>
   Compile Starfish for either Linux or Tizen platform
-* -DtouchUi=[ 0 | **1** ]<br>
+* -DCOMPONENT=[ **executable** | static_library | shared_library ]<br>
+  Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
+* -DMODE=[ debug | **release** ]<br>
+  Compile Starfish for either release or debug mode
+* -DBACKEND=[ efl_cairo | **efl_cairo_gl**  | efl_skia | dali ]<br>
+  Use either cairo, cairo_gl, skia, or dali as the backend graphics library
+* -DARCH=[ **x64** | arm ]
+  Compile Starfish for either x64 or arm target
+* -DTOUCH_UI=[ 0 | **1** ]<br>
   Enable a touch UI.
 
-The following build targets are available when running the ninja script.
-
-```sh
-ninja -C out/release target
-```
-
-where target is either:
-
-* ``starfish.x64.release``
-* ``starfish.x64.debug``
 
 ### Directory Structure
 Starfish is compiled to ``out/release`` (or ``out/debug``) directory.
@@ -77,13 +68,13 @@ The structure is as follows.
 ```
 out
   + release
-    + Starfish.x64.release // Starfish binary
-    + lib                  // contains shared libraries that Starfish needs
+    + bin/Starfish          // Starfish binary
+    + lib                   // contains shared libraries that Starfish needs
 ```
 
 ### How to run
 ```sh
-./out/release/Starfish.x64.release 'html/file/path'
+./out/release/Starfish 'html/file/path'
 ```
 
 ## How to Compile: Tizen
@@ -113,34 +104,34 @@ Default values are in **bold**.
 ### Summary
 ``` sh
 # Run all test at once
-make test_all
+ninja test_all
 ```
 ``` sh
 # Sub tests
 # A. Dom Conformance Test (4)
-make dom_conformance_test
-make dom_conformance_test_[webkit|blink|gecko]
+ninja dom_conformance_test
+ninja dom_conformance_test_[webkit|blink|gecko]
 
 # B. Web Platfrom Test (6)
-make web_platform_test_[dom|dom_events|html|page_visibility|progress_events|xhr]
+ninja web_platform_test_[dom|dom_events|html|page_visibility|progress_events|xhr]
 
 # C. Vendor Test (9)
-make vendor_test_[webkit|blink]_fast_[dom|html|css|etc]
-make vendor_test_gecko_layout
+ninja vendor_test_[webkit|blink]_fast_[dom|html|css|etc]
+ninja vendor_test_gecko_layout
 
 # D. Bidi Test (1)
-make bidi_test
+ninja bidi_test
 
 # E. CSSWG Test (8)
-make csswg_test_css[1|21|3_color|3_backgrounds|3_transforms|3_selectors]
-make csswg_test_[rtl|manual]
+ninja csswg_test_css[1|21|3_color|3_backgrounds|3_transforms|3_selectors]
+ninja csswg_test_[rtl|manual]
 
 # F. Internal Test (1)
-make internal_test
+ninja internal_test
 ```
 ``` sh
 # Specify pool size for multiprocessing
-make [test_name] TEST_NPROCS=5
+ninja [test_name] TEST_NPROCS=5
 ```
 
 ### CSSWG Test (compare with node-WebKit/previous version of StarFish)
@@ -154,13 +145,13 @@ To run the pixel tests, use:
 
 ``` sh
 # (1) Compare with node-webkit
-make csswg_test_[name]
+ninja csswg_test_[name]
 
 # (2) Compare with our previous version of Startfish
-make csswg_test_manual
+ninja csswg_test_manual
 
 # Run (1) + (2) at once
-make csswg_test_all
+ninja csswg_test_all
 ```
 
 If you want to capture the screenshot on the command line, use:
@@ -183,7 +174,7 @@ You can find these in `test/reftest/web-platform-tests/*`
 To run the Web Platform Tests, use:
 
 ``` sh
-make web_platform_test_[name]
+ninja web_platform_test_[name]
 ```
 
 ### Bidi Tests
@@ -192,7 +183,7 @@ Bidi tests perform pixel tests on a device. To run the tests,
 - run the following
 
 ```sh
-make regression_test_bidi.tizen_wearable_arm.debug
+ninja regression_test_bidi.tizen_wearable_arm.debug
 sdb shell
 cd /home/developer
 ./bidi_test_run.sh

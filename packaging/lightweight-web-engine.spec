@@ -255,8 +255,8 @@ ninja
 
 
 %if "%{rpm}" == "wearable" || "%{rpm}" == "all"
-CFLAGS+=' -Os '
-CXXFLAGS+=' -Os '
+#CFLAGS+=' -Os '
+#CXXFLAGS+=' -Os '
 
 # For Dali
 cmake CMakeLists.txt -DMODE=release -DCOMPONENT=shared_library -DHOST=tizen -DARCH=arm -DCUSTOM=unified_wearable -DBACKEND=dali -DTARGETNAME=lightweight-web-engine-dali-plugin.wearable -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
