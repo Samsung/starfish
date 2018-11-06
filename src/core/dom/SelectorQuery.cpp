@@ -64,9 +64,18 @@ public:
         Element* current = m_currentElement;
         STARFISH_ASSERT(current);
         if (onlyRoots) {
-            m_currentElement =
-                nextInternal((Element*)Traverse::nextSkippingChildren(
-                    m_currentElement, m_rootNode));
+            Node* n = nullptr;
+            Node* prevN = m_currentElement;
+            do {
+                n = Traverse::nextSkippingChildren(prevN, m_rootNode);
+                prevN = n;
+            } while (n != nullptr && !n->isElement());
+
+            if (n) {
+                m_currentElement = nextInternal(n->asElement());
+            } else {
+                m_currentElement = nullptr;
+            }
         } else {
             m_currentElement = nextInternal(
                 (Element*)Traverse::nextElement(m_currentElement, m_rootNode));

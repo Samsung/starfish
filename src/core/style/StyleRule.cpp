@@ -262,6 +262,7 @@ public:
             m_ownerRule->m_generatedSheet = sheet;
             m_ownerRule->m_generatedSheet->parseSheetIfneeds();
             m_ownerRule->m_loading = false;
+            m_ownerRule->m_generatedSheet->willAddToDocument();
             doc->window()->browsingContext()->setNeedsStyleSheetsRecalc();
         }
 
@@ -286,6 +287,7 @@ void StyleRuleImport::unloadStyleSheetIfExists()
     }
     if (m_generatedSheet) {
         Document* doc = document();
+        m_generatedSheet->willRemovedFromDocument();
         doc->styleResolver().removeSheet(m_generatedSheet);
         doc->window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet = nullptr;

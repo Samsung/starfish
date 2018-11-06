@@ -93,7 +93,7 @@ void HTMLMetaElement::checkPlatformFlags()
             g_enablePixelTest = true;
             document()->setStyle(
                 document()->styleResolver().resolveDocumentStyle(document()));
-            window()->browsingContext()->setNeedsStyleSheetsRecalc();
+            window()->browsingContext()->setWholeDocumentNeedsStyleRecalc();
         }
 #endif
 #ifdef STARFISH_TIZEN

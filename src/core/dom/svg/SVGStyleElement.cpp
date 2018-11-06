@@ -143,12 +143,14 @@ void SVGStyleElement::generateStyleSheet()
         document()->styleResolver().mediaQueryEvaluator();
     if (evaluator.eval(mediaQuerySet)) {
         window()->browsingContext()->setNeedsStyleSheetsRecalc();
+        m_generatedSheet->willAddToDocument();
     }
 }
 
 void SVGStyleElement::removeStyleSheet()
 {
     if (m_generatedSheet) {
+        m_generatedSheet->willRemovedFromDocument();
         document()->styleResolver().removeSheet(m_generatedSheet);
         window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet = nullptr;

@@ -234,7 +234,6 @@ void BrowsingContext::resolveStyleIfNeeds()
 {
     if (m_needsStyleRecalc || m_needsStyleRecalcForWholeDocument) {
         if (m_needsStyleSheetsRecalc) {
-            m_needsStyleRecalcForWholeDocument = true;
             INSTALL_PROFILE_TIMER("parse sheet & collect rules");
 
             m_needsStyleSheetsRecalc = false;
@@ -736,8 +735,15 @@ void BrowsingContext::setWholeDocumentNeedsStyleRecalc()
 void BrowsingContext::setNeedsStyleSheetsRecalc()
 {
     m_needsStyleSheetsRecalc = true;
-    m_needsStyleRecalcForWholeDocument = true;
+    setNeedsRendering();
+    registerNeedsLayoutInWebView();
+}
 
+void BrowsingContext::
+    setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc()
+{
+    m_needsStyleSheetsRecalc = true;
+    m_needsStyleRecalcForWholeDocument = true;
     setNeedsRendering();
     registerNeedsLayoutInWebView();
 }
@@ -747,7 +753,7 @@ void BrowsingContext::updateDefaultFontSize()
     auto doc = document();
     doc->styleResolver().m_mediumFontSize = webView()->defaultFontSize();
     doc->setStyle(doc->styleResolver().resolveDocumentStyle(doc));
-    setNeedsStyleSheetsRecalc();
+    setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
 
     iterateChildContext(
         [](BrowsingContext* ctx) { ctx->updateDefaultFontSize(); });

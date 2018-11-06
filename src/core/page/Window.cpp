@@ -361,7 +361,8 @@ static void checkVwVh(Node* nd)
 void Window::resize(uint32_t w, uint32_t h)
 {
     if (document()->styleResolver().mediaQueryAffectedByViewportChange()) {
-        browsingContext()->setNeedsStyleSheetsRecalc();
+        browsingContext()
+            ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
     } else {
         checkVwVh(document());
     }

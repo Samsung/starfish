@@ -131,6 +131,9 @@ public:
         m_styleRules.shrink_to_fit();
     }
 
+    void willRemovedFromDocument();
+    void willAddToDocument();
+
     void setOwnerRule(CSSRule* ownerRule);
     void sortStyleRulesBySpecificity();
     bool matchesMediaQueries(const MediaQueryEvaluator& evaluator,

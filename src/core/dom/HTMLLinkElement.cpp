@@ -207,6 +207,7 @@ public:
             m_element->document()->styleResolver().mediaQueryEvaluator();
         if (evaluator.eval(mediaQuerySet)) {
             m_element->window()->browsingContext()->setNeedsStyleSheetsRecalc();
+            m_element->m_generatedSheet->willAddToDocument();
         }
 
         m_element->m_styleSheetTextResource = nullptr;
@@ -281,6 +282,7 @@ void HTMLLinkElement::unloadStyleSheetIfExists()
         m_styleSheetTextResource = nullptr;
     }
     if (m_generatedSheet) {
+        m_generatedSheet->willRemovedFromDocument();
         document()->styleResolver().removeSheet(m_generatedSheet);
         window()->browsingContext()->setNeedsStyleSheetsRecalc();
         m_generatedSheet = nullptr;
