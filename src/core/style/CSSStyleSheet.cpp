@@ -22,6 +22,9 @@
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLLinkElement.h"
 #include "core/dom/Node.h"
+#include "core/dom/NodeList.h"
+#include "core/dom/SelectorQuery.h"
+#include "core/layout/Frame.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/style/CSSParser.h"
@@ -280,6 +283,80 @@ void CSSStyleSheet::collectStyleRules(
     }
 }
 
+static void findPseudoElement(Frame* f)
+{
+    for (size_t i = StyleResolver::PseudoElementGeneralTypeStart;
+         i <= StyleResolver::PseudoElementGeneralTypeEnd; i++) {
+        if (f->style()->seenPseudoElement(
+                (StyleResolver::PseudoElementType)i)) {
+            Node* n = f->node();
+            if (!n->isPseudoElement()) {
+                n->setNeedsStyleRecalc();
+                break;
+            }
+        }
+    }
+
+    Frame* c = f->firstChild();
+    while (c) {
+        findPseudoElement(c);
+        c = c->next();
+    }
+}
+
+void CSSStyleSheet::willRemovedFromDocument()
+{
+    LongTaskFinder t("CSSStyleSheet::willRemovedFromDocument", 1);
+
+    for (size_t i = 0; i < m_styleRules.size(); i++) {
+        auto r = m_styleRules[i];
+        GCVector<CSSSelectorList*> s;
+        s.push_back(&r.first->selectorList());
+        SelectorQuery selectorQuery(s);
+        NodeList* result = selectorQuery.queryAll(*m_origin->document());
+        for (size_t j = 0; j < result->length(); j++) {
+            result->item(j)->setNeedsStyleRecalc();
+        }
+    }
+
+    Frame* f = m_origin->document()->frame();
+    findPseudoElement(f);
+}
+
+void CSSStyleSheet::willAddToDocument()
+{
+    LongTaskFinder t("CSSStyleSheet::willAddToDocument", 1);
+
+    auto viewportDependentResult = &m_origin->document()
+                                        ->styleResolver()
+                                        .viewportDependentMediaQueryResults();
+    auto deviceDependentResult = &m_origin->document()
+                                      ->styleResolver()
+                                      .deviceDependentMediaQueryResults();
+
+    std::vector<CSSStyleDeclaration*> webFonts;
+    clearStyleRules();
+    collectRulesFromImportedSheet(importRules(), webFonts,
+                                  viewportDependentResult,
+                                  deviceDependentResult);
+    collectStyleRules(childRules(), webFonts, url(), viewportDependentResult,
+                      deviceDependentResult);
+
+    for (size_t i = 0; i < m_styleRules.size(); i++) {
+        auto r = m_styleRules[i];
+        GCVector<CSSSelectorList*> s;
+        s.push_back(&r.first->selectorList());
+        SelectorQuery selectorQuery(s);
+        NodeList* result = selectorQuery.queryAll(*m_origin->document());
+        for (size_t j = 0; j < result->length(); j++) {
+            result->item(j)->setNeedsStyleRecalc();
+        }
+    }
+
+    Frame* f = m_origin->document()->frame();
+    findPseudoElement(f);
+}
+
 String* CSSStyleSheet::href() const
 {
     if (m_origin->isHTMLLinkElement()) {
@@ -413,7 +490,7 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setNeedsStyleSheetsRecalc();
+        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
 
     return index;
 }
@@ -470,7 +547,7 @@ void CSSStyleSheet::deleteRule(unsigned index)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setNeedsStyleSheetsRecalc();
+        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
 }
 
 unsigned CSSStyleSheet::length() const
@@ -528,6 +605,6 @@ void CSSStyleSheet::setDisabled(bool disabled)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setNeedsStyleSheetsRecalc();
+        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
 }
 } /* namespace Starfish */

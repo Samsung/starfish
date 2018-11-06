@@ -46,7 +46,8 @@ class GraphicsBufferHolder : public gc {
 
 public:
     GraphicsBufferHolder(CanvasSurface* s);
-    GraphicsBufferHolder(size_t bufferWidth, size_t bufferHeight);
+    GraphicsBufferHolder(size_t bufferWidth, size_t bufferHeight,
+                         size_t screenWidth, size_t screenHeight);
 
     size_t bufferWidth() const
     {
@@ -67,6 +68,10 @@ protected:
     GCVector<CanvasSurface*> m_surfaces;
     size_t m_bufferWidth;
     size_t m_bufferHeight;
+    size_t m_tileDataWidth;
+    size_t m_tileDataHeight;
+    size_t m_horizontalTileCount;
+    size_t m_verticalTileCount;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -189,6 +194,17 @@ public:
 
     bool isIFrameStackingContext();
     bool isIFrameStackingContextOwner();
+
+    bool isAncestorOf(StackingContext* f)
+    {
+        while (f) {
+            if (f == this) {
+                return true;
+            }
+            f = f->parent();
+        }
+        return false;
+    }
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

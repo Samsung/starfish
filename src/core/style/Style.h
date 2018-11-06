@@ -2950,6 +2950,8 @@ public:
         PseudoElementFirstLineInherited,
         PseudoElementFormOnly,
         PseudoElementCounter,
+        PseudoElementGeneralTypeStart = PseudoElementFirstLine,
+        PseudoElementGeneralTypeEnd = PseudoElementFirstLineInherited,
     };
 
     enum Match ENSURE_ENUM_UNSIGNED {

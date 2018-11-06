@@ -3237,6 +3237,14 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         return false;
     }
 
+    if (ctx.purpose != Frame::ComputeVisibleRectContext::Scrolling &&
+        stackingContext() && ctx.sourceStackingContext &&
+        ctx.sourceStackingContext != stackingContext()) {
+        if (!ctx.sourceStackingContext->isAncestorOf(stackingContext())) {
+            return false;
+        }
+    }
+
     ComputedStyle* cs = style();
     ComputedStyle* parentStyle = nullptr;
     if (!cs) {

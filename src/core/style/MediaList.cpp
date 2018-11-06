@@ -79,7 +79,7 @@ void MediaList::modifyStyleSheet()
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setNeedsStyleSheetsRecalc();
+        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
 }
 
 void MediaList::setMediaText(String* text)

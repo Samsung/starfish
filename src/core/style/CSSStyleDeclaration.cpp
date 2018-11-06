@@ -3375,7 +3375,7 @@ void StyleRuleCSSStyleDeclaration::setCssText(String* text)
     scriptBindingInstance()
         ->ownerWindow()
         ->browsingContext()
-        ->setNeedsStyleSheetsRecalc();
+        ->setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
 }
 
 void InlineCSSStyleDeclaration::setCssText(String* text)

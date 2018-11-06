@@ -108,6 +108,7 @@ public:
 
     void setWholeDocumentNeedsStyleRecalc();
     void setNeedsStyleSheetsRecalc();
+    void setNeedsStyleSheetsRecalcAndWholeDocumentNeedsStyleRecalc();
 
     void updateDefaultFontSize();
 

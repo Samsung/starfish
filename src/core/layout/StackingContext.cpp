@@ -112,22 +112,58 @@ struct StackingContext::ComputeStackingContextContext {
 GraphicsBufferHolder::GraphicsBufferHolder(CanvasSurface* s)
     : m_bufferWidth(s->bufferWidth())
     , m_bufferHeight(s->bufferHeight())
+    , m_tileDataWidth(m_bufferWidth)
+    , m_tileDataHeight(m_bufferHeight)
+    , m_horizontalTileCount(1)
+    , m_verticalTileCount(1)
 {
     m_surfaces.push_back(s);
 }
 
 GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
-                                           size_t bufferHeight)
+                                           size_t bufferHeight,
+                                           size_t screenWidth,
+                                           size_t screenHeight)
     : m_bufferWidth(bufferWidth)
     , m_bufferHeight(bufferHeight)
+    , m_tileDataWidth(bufferWidth)
+    , m_tileDataHeight(bufferHeight)
+    , m_horizontalTileCount(1)
+    , m_verticalTileCount(1)
 {
     STARFISH_ASSERT(m_bufferWidth);
     STARFISH_ASSERT(m_bufferHeight);
 
-    size_t wTextureCount =
-        ceil((float)m_bufferWidth / CanvasSurface::g_canvasSurfaceTileSize);
-    size_t hTextureCount =
-        ceil((float)m_bufferHeight / CanvasSurface::g_canvasSurfaceTileSize);
+    size_t wTextureCount = 1;
+    if (m_bufferWidth < screenWidth) {
+        while (m_bufferWidth / wTextureCount >
+               CanvasSurface::g_canvasSurfaceTileSize) {
+            wTextureCount++;
+        }
+    } else {
+        while (screenWidth / wTextureCount >
+               CanvasSurface::g_canvasSurfaceTileSize) {
+            wTextureCount++;
+        }
+    }
+    m_tileDataWidth = ceil(m_bufferWidth / (float)wTextureCount);
+    m_horizontalTileCount = wTextureCount;
+
+    size_t hTextureCount = 1;
+    if (m_bufferHeight < screenHeight) {
+        while (m_bufferHeight / hTextureCount >
+               CanvasSurface::g_canvasSurfaceTileSize) {
+            hTextureCount++;
+        }
+    } else {
+        while (screenHeight / hTextureCount >
+               CanvasSurface::g_canvasSurfaceTileSize) {
+            hTextureCount++;
+        }
+    }
+
+    m_tileDataHeight = ceil(m_bufferHeight / (float)hTextureCount);
+    m_verticalTileCount = hTextureCount;
 
     m_surfaces.resize(wTextureCount * hTextureCount);
     for (size_t i = 0; i < m_surfaces.size(); i++) {
@@ -998,6 +1034,51 @@ void StackingContext::computeStackingContextProperties(
         std::make_pair(this, willBeComposited));
 }
 
+static void computeVisibleRectPedigreeWorker(
+    StackingContext* c, std::vector<FrameBox*>& pedigree,
+    std::vector<FrameBox*>::reverse_iterator iter,
+    Frame::ComputeVisibleRectContext& ctx)
+{
+    if (pedigree.rend() == iter) {
+        c->owner()->computeVisibleRect(ctx);
+    } else {
+        Frame::ComputeVisibleRectContextFragment f(ctx, *iter);
+        computeVisibleRectPedigreeWorker(c, pedigree, iter + 1, ctx);
+    }
+}
+
+static void computeVisibleRect(StackingContext* source, StackingContext* c,
+                               Frame::ComputeVisibleRectContext& ctx)
+{
+    if (c != source && c->needsGraphicsBuffer()) {
+        return;
+    }
+
+    if (c != source) {
+        std::vector<FrameBox*> pedigree;
+        FrameBox* box = c->owner()->layoutParent()->asFrameBox();
+        while (source->owner() != box) {
+            pedigree.push_back(box);
+            box = box->layoutParent()->asFrameBox();
+        }
+
+        computeVisibleRectPedigreeWorker(c, pedigree, pedigree.rbegin(), ctx);
+    } else {
+        c->owner()->computeVisibleRect(ctx);
+    }
+
+    auto iter = c->childContexts().begin();
+    while (iter != c->childContexts().end()) {
+        StackingContextChild* child = *iter;
+        auto iter2 = child->begin();
+        while (iter2 != child->end()) {
+            computeVisibleRect(source, (*iter2), ctx);
+            iter2++;
+        }
+        iter++;
+    }
+}
+
 void StackingContext::applyStackingContextProperties(
     ComputeStackingContextContext& ctx)
 {
@@ -1069,7 +1150,7 @@ void StackingContext::applyStackingContextProperties(
             ctx.isVisibleRectCollapsible = false;
         }
 
-        m_owner->computeVisibleRect(ctx);
+        computeVisibleRect(this, this, ctx);
 
         if (shouldPaintWindowBackgroundImage) {
             LayoutRect scrollRect(
@@ -1530,8 +1611,10 @@ void StackingContext::fillGraphicsBufferContents(
             }
 
             if (!reuse) {
-                m_rareData->m_graphicsBufferHolder =
-                    new GraphicsBufferHolder(bufferWidth, bufferHeight);
+                m_rareData->m_graphicsBufferHolder = new GraphicsBufferHolder(
+                    bufferWidth, bufferHeight,
+                    m_owner->node()->window()->innerWidth(),
+                    m_owner->node()->window()->innerHeight());
             }
         }
     } else {
@@ -1552,11 +1635,12 @@ void StackingContext::fillGraphicsBufferContents(
         }
         return;
     }
-    size_t tileSize = CanvasSurface::g_canvasSurfaceTileSize;
-    size_t wTextureCount = ceil(
-        (float)m_rareData->m_graphicsBufferHolder->bufferWidth() / tileSize);
-    size_t hTextureCount = ceil(
-        (float)m_rareData->m_graphicsBufferHolder->bufferHeight() / tileSize);
+    size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
+    size_t hTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
+    size_t wTextureCount =
+        m_rareData->m_graphicsBufferHolder->m_horizontalTileCount;
+    size_t hTextureCount =
+        m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
 
     SkMatrix screenMatrix = m_rareData->m_screenMatrix;
     LayoutRect screenRect(0, 0, m_owner->node()->window()->innerWidth(),
@@ -1570,11 +1654,11 @@ void StackingContext::fillGraphicsBufferContents(
             size_t tileDataX = coveredColsCount;
             size_t tileDataY = coveredRowsCount;
             size_t tileDataWidth = std::min(
-                tileSize, m_rareData->m_graphicsBufferHolder->bufferWidth() -
-                              coveredColsCount);
+                wTileSize, m_rareData->m_graphicsBufferHolder->bufferWidth() -
+                               coveredColsCount);
             size_t tileDataHeight = std::min(
-                tileSize, m_rareData->m_graphicsBufferHolder->bufferHeight() -
-                              coveredRowsCount);
+                hTileSize, m_rareData->m_graphicsBufferHolder->bufferHeight() -
+                               coveredRowsCount);
 
             LayoutRect tileExtent =
                 computeBoxExtent(LayoutRect(minX + (LayoutUnit)tileDataX,
@@ -1584,7 +1668,7 @@ void StackingContext::fillGraphicsBufferContents(
 
             bool willPaintOnScreen = screenRect.intersects(tileExtent);
             bool isOverlappedWithScreenClipRect =
-                globalCtx.screenClipRect.intersects(m_screenExtent);
+                globalCtx.screenClipRect.intersects(tileExtent);
 
             if (isOverlappedWithScreenClipRect && !willPaintOnScreen) {
                 if (m_rareData->m_graphicsBufferHolder->m_surfaces[tileIndex]) {
@@ -1723,10 +1807,10 @@ void StackingContext::fillGraphicsBufferContents(
             }
 
             tileIndex++;
-            coveredColsCount += tileSize;
+            coveredColsCount += wTileSize;
         }
 
-        coveredRowsCount += tileSize;
+        coveredRowsCount += hTileSize;
     }
 }
 
@@ -1821,7 +1905,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
             Frame::ComputeVisibleRectContext ctx(
                 Frame::ComputeVisibleRectContext::GraphicsBufferBySelf, this, l,
                 m_rareData->m_visibleRect);
-            m_owner->computeVisibleRect(ctx);
+            computeVisibleRect(this, this, ctx);
             m_isVisibleRectComputedForNonGraphicsLayer = true;
         }
 
@@ -2053,14 +2137,15 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     m_rareData->m_graphicsBufferHolder->m_surfaces[0],
                     Unit::Rect(minX, minY, bufferWidth, bufferHeight));
             } else {
+                size_t wTileSize =
+                    m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
+                size_t hTileSize =
+                    m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
                 size_t wTextureCount =
-                    ceil((float)bufferWidth /
-                         CanvasSurface::g_canvasSurfaceTileSize);
+                    m_rareData->m_graphicsBufferHolder->m_horizontalTileCount;
                 size_t hTextureCount =
-                    ceil((float)bufferHeight /
-                         CanvasSurface::g_canvasSurfaceTileSize);
+                    m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
 
-                size_t tileSize = CanvasSurface::g_canvasSurfaceTileSize;
                 size_t tileIndex = 0;
                 size_t coveredRowsCount = 0;
 
@@ -2077,11 +2162,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                         size_t tileDataX = coveredColsCount;
                         size_t tileDataY = coveredRowsCount;
                         size_t tileDataWidth = std::min(
-                            tileSize,
+                            wTileSize,
                             m_rareData->m_graphicsBufferHolder->bufferWidth() -
                                 coveredColsCount);
                         size_t tileDataHeight = std::min(
-                            tileSize,
+                            hTileSize,
                             m_rareData->m_graphicsBufferHolder->bufferHeight() -
                                 coveredRowsCount);
 
@@ -2149,10 +2234,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                                            tileDataHeight));
                         }
                         tileIndex++;
-                        coveredColsCount += tileSize;
+                        coveredColsCount += wTileSize;
                     }
 
-                    coveredRowsCount += tileSize;
+                    coveredRowsCount += hTileSize;
                 }
 
                 compositor->restore();
