@@ -248,9 +248,9 @@ GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-paral
 ninja -C out_tizen/tv/release lwe.tizen.prod_tv_dali.release
 
 # For Cairo
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dprofile=tv %{?gyp_addition_command}
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=shared_library -Dplatform=tizen -Dprofile=tv -Dbackend=ecore_wayland2_cairo_gl %{?gyp_addition_command}
 ninja -C out_tizen/tv/release lwe.tizen.prod_tv.release
-GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=tv %{?gyp_addition_command}
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp -Goutput_dir=out_tizen/tv --no-parallel --toplevel-dir="." --depth=0 -Dcomponent=executable -Dplatform=tizen -Dprofile=tv -Dbackend=ecore_wayland2_cairo_gl %{?gyp_addition_command}
 ninja -C out_tizen/tv/release lwe.tizen.prod_tv.release
 %endif
 
