@@ -1547,6 +1547,67 @@ void StackingContext::fillGraphicsBufferContents(
     canvas->restore();
 }
 
+static LayoutRect computeScreenRect(StackingContext* ctx)
+{
+    LayoutRect screenRect(0, 0, ctx->owner()
+                                    ->node()
+                                    ->webView()
+                                    ->mainBrowsingContext()
+                                    ->window()
+                                    ->innerWidth(),
+                          ctx->owner()
+                              ->node()
+                              ->webView()
+                              ->mainBrowsingContext()
+                              ->window()
+                              ->innerHeight());
+    LayoutRect windowRect = screenRect;
+
+    if (!ctx->owner()
+             ->node()
+             ->document()
+             ->browsingContext()
+             ->isTopLevelBrowsingContext()) {
+        FrameBox* f = ctx->owner();
+
+        while (f) {
+            if (f->isFrameReplaced() &&
+                f->asFrameReplaced()->isFrameReplacedIFrame()) {
+                break;
+            }
+            f = f->layoutParent()->asFrameBox();
+        }
+
+        windowRect = f->computeScreenExtent();
+    }
+
+    return windowRect;
+}
+
+static LayoutRect computeWindowRectOnScreen(StackingContext* ctx)
+{
+    LayoutRect windowRect = computeScreenRect(ctx);
+
+    if (!ctx->owner()
+             ->node()
+             ->document()
+             ->browsingContext()
+             ->isTopLevelBrowsingContext()) {
+        FrameBox* f = ctx->owner();
+
+        while (f) {
+            if (f->isFrameReplaced() &&
+                f->asFrameReplaced()->isFrameReplacedIFrame()) {
+                break;
+            }
+            f = f->layoutParent()->asFrameBox();
+        }
+
+        windowRect = f->computeScreenExtent();
+    }
+    return windowRect;
+}
+
 void StackingContext::fillGraphicsBufferContents(
     PaintingStackingContextContext& globalCtx)
 {
@@ -1643,8 +1704,9 @@ void StackingContext::fillGraphicsBufferContents(
         m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
 
     SkMatrix screenMatrix = m_rareData->m_screenMatrix;
-    LayoutRect screenRect(0, 0, m_owner->node()->window()->innerWidth(),
-                          m_owner->node()->window()->innerHeight());
+
+    LayoutRect screenRect = computeScreenRect(this);
+    LayoutRect windowRect = computeWindowRectOnScreen(this);
 
     size_t tileIndex = 0;
     size_t coveredRowsCount = 0;
@@ -1666,7 +1728,9 @@ void StackingContext::fillGraphicsBufferContents(
                                             tileDataWidth, tileDataHeight),
                                  screenMatrix);
 
-            bool willPaintOnScreen = screenRect.intersects(tileExtent);
+            bool willPaintOnScreen = screenRect.intersects(tileExtent) &&
+                                     windowRect.intersects(tileExtent);
+
             bool isOverlappedWithScreenClipRect =
                 globalCtx.screenClipRect.intersects(tileExtent);
 
@@ -2152,9 +2216,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 compositor->save();
                 compositor->translate(minX, minY);
 
-                LayoutRect screenRect(0, 0,
-                                      m_owner->node()->window()->innerWidth(),
-                                      m_owner->node()->window()->innerHeight());
+                LayoutRect screenRect = computeScreenRect(this);
+                LayoutRect windowRect = computeWindowRectOnScreen(this);
 
                 for (size_t y = 0; y < hTextureCount; y++) {
                     size_t coveredColsCount = 0;
@@ -2175,8 +2238,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                                        minY + (LayoutUnit)tileDataY,
                                        tileDataWidth, tileDataHeight),
                             m_rareData->m_screenMatrix);
+
                         bool willPaintOnScreen =
-                            screenRect.intersects(tileExtent);
+                            screenRect.intersects(tileExtent) &&
+                            windowRect.intersects(tileExtent);
+
                         if (willPaintOnScreen &&
                             m_rareData->m_graphicsBufferHolder
                                     ->m_surfaces[tileIndex] == nullptr) {
