@@ -35,11 +35,6 @@
 #include <Elementary.h>
 #endif
 
-#if defined(STARFISH_TIZEN_TV)
-#define USE_IDLER_AS_ANIMATOR // There timer order issue in tv. we can remove
-                              // this define after platform issue solved.
-#endif
-
 namespace Starfish {
 
 MessageLoop::MessageLoop(WebView* wv)
@@ -98,11 +93,7 @@ struct IdlerData {
     void* m_data;
     void* m_data1;
     void* m_data2;
-#if defined(USE_IDLER_AS_ANIMATOR)
-    Ecore_Animator* m_idler;
-#else
     Ecore_Timer* m_idler;
-#endif
     MessageLoop* m_ml;
     BrowsingContext* m_ctx;
     volatile bool m_valid;
@@ -125,12 +116,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     id->m_data = data;
     id->m_ml = this;
     id->m_ctx = ctx;
-#if defined(USE_IDLER_AS_ANIMATOR)
-    id->m_idler = ecore_animator_add(
-#else
     id->m_idler = ecore_timer_add(
         0.0,
-#endif
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
@@ -167,12 +154,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data1 = data1;
     id->m_ml = this;
     id->m_ctx = ctx;
-#if defined(USE_IDLER_AS_ANIMATOR)
-    id->m_idler = ecore_animator_add(
-#else
     id->m_idler = ecore_timer_add(
         0.0,
-#endif
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
@@ -210,12 +193,8 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data2 = data2;
     id->m_ml = this;
     id->m_ctx = ctx;
-#if defined(USE_IDLER_AS_ANIMATOR)
-    id->m_idler = ecore_animator_add(
-#else
     id->m_idler = ecore_timer_add(
         0.0,
-#endif
         [](void* data) -> Eina_Bool {
             IdlerData* id = (IdlerData*)data;
             removeIderFromList(id->m_ml->m_idlers, id);
@@ -256,12 +235,8 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
     ecore_main_loop_thread_safe_call_async(
         [](void* data) -> void {
-#if defined(USE_IDLER_AS_ANIMATOR)
-            ecore_animator_add(
-#else
             ecore_timer_add(
                 0.0,
-#endif
                 [](void* data) -> Eina_Bool {
                     IdlerData* id = (IdlerData*)data;
                     {
@@ -313,12 +288,8 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 
     ecore_main_loop_thread_safe_call_async(
         [](void* data) -> void {
-#if defined(USE_IDLER_AS_ANIMATOR)
-            ecore_animator_add(
-#else
             ecore_timer_add(
                 0.0,
-#endif
                 [](void* data) -> Eina_Bool {
                     IdlerData* id = (IdlerData*)data;
                     {
@@ -359,13 +330,8 @@ void MessageLoop::removeIdler(size_t handle)
     }
     IdlerData* id = (IdlerData*)handle;
     removeIderFromList(m_idlers, id);
-#if defined(USE_IDLER_AS_ANIMATOR)
-    ecore_animator_freeze(id->m_idler);
-    ecore_animator_del(id->m_idler);
-#else
     ecore_timer_freeze(id->m_idler);
     ecore_timer_del(id->m_idler);
-#endif
     GC_FREE(id);
 }
 
@@ -386,13 +352,8 @@ void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
         if (id->m_ctx == ctx || ctx == nullptr) {
-#if defined(USE_IDLER_AS_ANIMATOR)
-            ecore_animator_freeze(id->m_idler);
-            ecore_animator_del(id->m_idler);
-#else
             ecore_timer_freeze(id->m_idler);
             ecore_timer_del(id->m_idler);
-#endif
             iter = m_idlers.erase(iter);
             GC_FREE(id);
         } else {
