@@ -1142,6 +1142,11 @@ RenderResult WebView::rendering(bool force)
                 canvas->pixelSnappedClip(repaintRect);
                 canvas->translate(-scrollX, -scrollY);
                 canvas->translate(-additionalX, -additionalY);
+
+                if (!mainBrowsingContext()->hasWindowBackgroundColor().first) {
+                    mainBrowsingContext()->clearingBeforePaint(canvas);
+                }
+
                 mainBrowsingContext()->paintWindowBackground(canvas);
                 canvas->translate(additionalX, additionalY);
 

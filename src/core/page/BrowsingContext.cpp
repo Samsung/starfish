@@ -561,10 +561,6 @@ void BrowsingContext::clearingBeforePaint(T canvas)
 
 void BrowsingContext::paintWindowBackground(Canvas* canvas)
 {
-    if (!rootStackingContextNeedsGraphicsBuffer()) {
-        clearingBeforePaint(canvas);
-    }
-
     if (!document()->rootElement()) {
         return;
     }
@@ -587,12 +583,17 @@ void BrowsingContext::paintWindowBackground(Canvas* canvas)
 std::pair<bool, Unit::Color> BrowsingContext::hasWindowBackgroundColor()
 {
     if (hasRootElementBackground() || hasBodyElementBackground()) {
-        if (hasRootElementBackground()) {
+        if (hasRootElementBackground() &&
+            !document()
+                 ->rootElement()
+                 ->style()
+                 ->backgroundColor()
+                 .isTransparent()) {
             HTMLHtmlElement* root = document()->rootElement();
             return std::make_pair(true, root->style()->backgroundColor());
         } else {
             HTMLBodyElement* body = document()->rootElement()->body();
-            if (body) {
+            if (body && !body->style()->backgroundColor().isTransparent()) {
                 return std::make_pair(true, body->style()->backgroundColor());
             }
         }
