@@ -336,6 +336,7 @@ public:
             STARFISH_LOG_INFO("FENCE Error: %d\n", (int)eglGetError());
         }
 
+#if !defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN)
         glClearColor(0.0, 0.0, 0.0, 0.0);
         glClear(GL_COLOR_BUFFER_BIT);
         glFlush();
@@ -346,7 +347,6 @@ public:
             STARFISH_LOG_INFO("Swapped buffers failed\n");
         }
 
-#if !defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN)
         STARFISH_LOG_INFO("wl_display_dispatch few times\n");
         size_t dispatchCount = 0;
         while (dispatchCount < 3) {

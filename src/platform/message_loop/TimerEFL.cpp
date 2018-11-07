@@ -47,7 +47,7 @@ Timer::Timer(WebView* wv)
 struct AnimationTickData : public gc {
     Timer* m_timer;
     int32_t m_id;
-    Ecore_Animator* m_timerID;
+    Ecore_Timer* m_timerID;
     void* m_data;
     GenericAnimationHandler m_handler;
     Window* m_window;
@@ -133,21 +133,25 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
     ad->m_data = data;
     ad->m_handler = handler;
     ad->m_window = window;
-    ad->m_timerID = ecore_animator_add(
-        [](void* data) -> Eina_Bool {
-            AnimationTickData* ad = (AnimationTickData*)data;
-            auto a = ad->m_timer->m_animationHandler.find(ad->m_id);
-            if (ad->m_handler(ad->m_data)) {
-                return ECORE_CALLBACK_RENEW;
-            }
-            a = ad->m_timer->m_animationHandler.find(ad->m_id);
-            if (ad->m_timer->m_animationHandler.end() != a) {
-                ad->m_timer->m_animationHandler.erase(a);
-            }
-            GC_FREE(ad);
-            return ECORE_CALLBACK_CANCEL;
-        },
-        ad);
+    ad->m_timerID =
+        ecore_timer_add(0.0,
+                        [](void* data) -> Eina_Bool {
+                            AnimationTickData* ad = (AnimationTickData*)data;
+                            auto a =
+                                ad->m_timer->m_animationHandler.find(ad->m_id);
+                            if (ad->m_handler(ad->m_data)) {
+                                return ECORE_CALLBACK_RENEW;
+                            }
+                            a = ad->m_timer->m_animationHandler.find(ad->m_id);
+                            if (ad->m_timer->m_animationHandler.end() != a) {
+                                ad->m_timer->m_animationHandler.erase(a);
+                            }
+                            ecore_timer_freeze(ad->m_timerID);
+                            ecore_timer_del(ad->m_timerID);
+                            GC_FREE(ad);
+                            return ECORE_CALLBACK_CANCEL;
+                        },
+                        ad);
     m_animationHandler.insert(std::make_pair(id, ad));
     return id;
 }
@@ -159,8 +163,8 @@ void Timer::removeGenericAnimator(size_t reqID)
     auto handlerData = m_animationHandler.find(reqID);
     if (handlerData != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)handlerData->second;
-        ecore_animator_freeze(ad->m_timerID);
-        ecore_animator_del(ad->m_timerID);
+        ecore_timer_freeze(ad->m_timerID);
+        ecore_timer_del(ad->m_timerID);
         GC_FREE(ad);
         m_animationHandler.erase(handlerData);
     }
@@ -199,8 +203,8 @@ void Timer::clear(BrowsingContext* ctx)
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
         if ((ad->m_window && ad->m_window->browsingContext() == ctx) ||
             ctx == nullptr) {
-            ecore_animator_freeze((Ecore_Animator*)ad->m_timerID);
-            ecore_animator_del((Ecore_Animator*)ad->m_timerID);
+            ecore_timer_freeze(ad->m_timerID);
+            ecore_timer_del(ad->m_timerID);
             GC_FREE(ad);
             aniIter2 = m_animationHandler.erase(aniIter2);
         } else {
@@ -233,8 +237,8 @@ void Timer::destroy()
     auto aniIter2 = m_animationHandler.begin();
     while (aniIter2 != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
-        ecore_animator_freeze((Ecore_Animator*)ad->m_timerID);
-        ecore_animator_del((Ecore_Animator*)ad->m_timerID);
+        ecore_timer_freeze(ad->m_timerID);
+        ecore_timer_del(ad->m_timerID);
         GC_FREE(ad);
         aniIter2++;
     }
