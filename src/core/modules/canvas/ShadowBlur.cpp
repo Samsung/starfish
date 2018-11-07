@@ -40,8 +40,6 @@ ShadowBlur::ShadowBlur(uint8_t* source, const size_t& width,
     , m_workspace(new uint8_t[m_stride * m_height],
                   [](uint8_t* data) { delete[] data; })
 {
-    // TODO
-    STARFISH_RELEASE_ASSERT(m_stride == m_width * 4);
 }
 
 ShadowBlur::~ShadowBlur()
@@ -52,12 +50,13 @@ static void boxBlurH(uint8_t* src, uint8_t* dest, size_t w, size_t h,
                      size_t stride, int r)
 {
     double iarr = 1.0 / (r + r + 1.0);
-    size_t maxIdx = w * h;
+    size_t maxIdx = (stride / 4) * h;
     uint32_t* u32Src = (uint32_t*)src;
     uint32_t* u32Dest = (uint32_t*)dest;
+    int u32Stride = (stride / 4);
 
     for (size_t i = 0; i < h; ++i) {
-        int ti = i * w;
+        int ti = i * u32Stride;
         int li = ti;
         int ri = ti + r;
 
@@ -138,36 +137,37 @@ static void boxBlurT(uint8_t* src, uint8_t* dest, size_t w, size_t h,
                      size_t stride, int r)
 {
     double iarr = 1.0 / (r + r + 1.0);
-    size_t maxIdx = w * h;
+    size_t maxIdx = (stride / 4) * h;
     uint32_t* u32Src = (uint32_t*)src;
     uint32_t* u32Dest = (uint32_t*)dest;
+    int u32Stride = (stride / 4);
 
     for (int i = 0; i < (int)w; ++i) {
         int ti = i;
         int li = ti;
-        int ri = ti + r * w;
+        int ri = ti + r * (stride / 4);
 
         const unsigned& fv0 = READ_ONE(&u32Src[ti], 0);
-        const unsigned& lv0 = READ_ONE(&u32Src[ti + w * (h - 1)], 0);
+        const unsigned& lv0 = READ_ONE(&u32Src[ti + u32Stride * (h - 1)], 0);
         unsigned val0 = (r + 1) * fv0;
 
         const unsigned& fv1 = READ_ONE(&u32Src[ti], 1);
-        const unsigned& lv1 = READ_ONE(&u32Src[ti + w * (h - 1)], 1);
+        const unsigned& lv1 = READ_ONE(&u32Src[ti + u32Stride * (h - 1)], 1);
         unsigned val1 = (r + 1) * fv1;
 
         const unsigned& fv2 = READ_ONE(&u32Src[ti], 2);
-        const unsigned& lv2 = READ_ONE(&u32Src[ti + w * (h - 1)], 2);
+        const unsigned& lv2 = READ_ONE(&u32Src[ti + u32Stride * (h - 1)], 2);
         unsigned val2 = (r + 1) * fv2;
 
         const unsigned& fv3 = READ_ONE(&u32Src[ti], 3);
-        const unsigned& lv3 = READ_ONE(&u32Src[ti + w * (h - 1)], 3);
+        const unsigned& lv3 = READ_ONE(&u32Src[ti + u32Stride * (h - 1)], 3);
         unsigned val3 = (r + 1) * fv3;
 
-        for (int j = 0; j < r && BOUND_CHECK(ti + j * w, maxIdx); ++j) {
-            val0 += READ_ONE(&u32Src[ti + j * w], 0);
-            val1 += READ_ONE(&u32Src[ti + j * w], 1);
-            val2 += READ_ONE(&u32Src[ti + j * w], 2);
-            val3 += READ_ONE(&u32Src[ti + j * w], 3);
+        for (int j = 0; j < r && BOUND_CHECK(ti + j * u32Stride, maxIdx); ++j) {
+            val0 += READ_ONE(&u32Src[ti + j * u32Stride], 0);
+            val1 += READ_ONE(&u32Src[ti + j * u32Stride], 1);
+            val2 += READ_ONE(&u32Src[ti + j * u32Stride], 2);
+            val3 += READ_ONE(&u32Src[ti + j * u32Stride], 3);
         }
         for (int j = 0;
              j <= r && BOUND_CHECK(ri, maxIdx) && BOUND_CHECK(ti, maxIdx);
@@ -180,8 +180,8 @@ static void boxBlurT(uint8_t* src, uint8_t* dest, size_t w, size_t h,
             WRITE_ONE(&u32Dest[ti], 1, ROUND(val1 * iarr));
             WRITE_ONE(&u32Dest[ti], 2, ROUND(val2 * iarr));
             WRITE_ONE(&u32Dest[ti], 3, ROUND(val3 * iarr));
-            ri += w;
-            ti += w;
+            ri += u32Stride;
+            ti += u32Stride;
         }
         int limit = (int)(h - r);
         for (int j = r + 1;
@@ -197,9 +197,9 @@ static void boxBlurT(uint8_t* src, uint8_t* dest, size_t w, size_t h,
             WRITE_ONE(&u32Dest[ti], 2, ROUND(val2 * iarr));
             WRITE_ONE(&u32Dest[ti], 3, ROUND(val3 * iarr));
 
-            li += w;
-            ri += w;
-            ti += w;
+            li += u32Stride;
+            ri += u32Stride;
+            ti += u32Stride;
         }
 
         for (int j = h - r;
@@ -215,8 +215,8 @@ static void boxBlurT(uint8_t* src, uint8_t* dest, size_t w, size_t h,
             WRITE_ONE(&u32Dest[ti], 2, val2 * iarr);
             WRITE_ONE(&u32Dest[ti], 3, val3 * iarr);
 
-            li += w;
-            ti += w;
+            li += u32Stride;
+            ti += u32Stride;
         }
     }
 }
