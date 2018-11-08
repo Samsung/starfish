@@ -58,6 +58,8 @@ MethodType RequestData::methodTypeFromString(String* input)
         return MethodType::TRACE;
     } else if (upper->equals("PATCH")) {
         return MethodType::PATCH;
+    } else if (upper->equals("TRACK")) {
+        return MethodType::TRACK;
     }
     return MethodType::UNKNOWN;
 }
@@ -83,6 +85,8 @@ String* RequestData::methodTypeString(MethodType method)
         return String::createASCIIString("TRACE");
     case MethodType::PATCH:
         return String::createASCIIString("PATCH");
+    case MethodType::TRACK:
+        return String::createASCIIString("TRACK");
     default:
         return String::emptyString;
     }

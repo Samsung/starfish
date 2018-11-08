@@ -37,7 +37,8 @@ enum class MethodType {
     CONNECT,
     OPTIONS,
     TRACE,
-    PATCH
+    PATCH,
+    TRACK
 };
 
 enum class RequestMode {

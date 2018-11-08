@@ -30,6 +30,7 @@
 #include "core/page/Window.h"
 #include "platform/network/http/HTTPStatus.h"
 #include "core/fetch/Body.h"
+#include "core/fetch/FetchUtils.h"
 #include "core/fetch/Response.h"
 
 namespace Starfish {
@@ -249,6 +250,12 @@ void XMLHttpRequest::open(MethodType method, String* url, bool async,
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     }
+
+    if (FetchUtils::isForbiddenMethod(method)) {
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                               DOMException::SECURITY_ERR, "SECURITY_ERR");
+    }
+
     if (!async && m_resourceRequest->timeout() != 0) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INVALID_ACCESS_ERR,
