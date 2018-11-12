@@ -38,8 +38,26 @@ git submodule update
 ### Compile StarFish
 
 ```sh
-cmake CMakeLists.txt -DMODE=release -DCOMPONENT=executable -DHOST=linux -DARCH=x64 -DBACKEND=efl_cairo_gl -G Ninja
-ninja
+cmake CMakeLists.txt -DMODE=release -DHOST=linux -DARCH=x64 -DBACKEND=efl_cairo_gl -DTARGETNAME=Starfish -G Ninja
+ninja starfish.executable
+```
+
+#### Build targets
+
+* starfish.executable
+  Build Starfish as an executable
+```sh
+ninja starfish.executable
+```
+* starfish.shared_library
+  Build Starfish as a shared library (i.e., liblightweight-web-engine.so)
+```sh
+ninja starfish.shared_library
+```
+* starfish.static_library
+  Build Starfish as a static library (i.e., liblightweight-web-engine.a)
+```sh
+ninja starfish.static_library
 ```
 
 #### Build options
@@ -49,16 +67,16 @@ Default values are in **bold**.
 
 * -DHOST=[ **linux** | tizen ]<br>
   Compile Starfish for either Linux or Tizen platform
-* -DCOMPONENT=[ **executable** | static_library | shared_library ]<br>
-  Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
 * -DMODE=[ debug | **release** ]<br>
   Compile Starfish for either release or debug mode
-* -DBACKEND=[ efl_cairo | **efl_cairo_gl**  | efl_skia | dali ]<br>
+* -DBACKEND=[ efl_cairo | **efl_cairo_gl**  | efl_skia | dali | glfw_cairo_gl | ecore_wayland2_cairo_gl ]<br>
   Use either cairo, cairo_gl, skia, or dali as the backend graphics library
 * -DARCH=[ **x64** | arm ]
   Compile Starfish for either x64 or arm target
 * -DTOUCH_UI=[ 0 | **1** ]<br>
   Enable a touch UI.
+* -DTARGETNAME=[ Starfish | **lightweight-web-engine** ]<br>
+  Define target output name
 
 
 ### Directory Structure
@@ -68,13 +86,13 @@ The structure is as follows.
 ```
 out
   + release
-    + bin/Starfish          // Starfish binary
-    + lib                   // contains shared libraries that Starfish needs
+    + bin/lightweight-web-engine    // Starfish binary
+    + lib                           // contains shared libraries that Starfish needs
 ```
 
 ### How to run
 ```sh
-./out/release/Starfish 'html/file/path'
+./out/release/lightweight-web-engine 'html/file/path'
 ```
 
 ## How to Compile: Tizen
