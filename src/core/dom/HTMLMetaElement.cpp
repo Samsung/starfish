@@ -64,10 +64,12 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
         m_httpEquiv = value;
     }
 
-    if (!m_httpEquiv->isEmpty() &&
-        m_httpEquiv->equalsIgnoreCase("content-language") &&
-        !m_content->isEmpty()) {
-        document()->setContentLanguage(m_content);
+    if (!m_httpEquiv->isEmpty() && !m_content->isEmpty()) {
+        if (m_httpEquiv->equalsIgnoreCase("content-language")) {
+            document()->setContentLanguage(m_content);
+        } else if (m_httpEquiv->equalsIgnoreCase("Content-Security-Policy")) {
+            document()->setContentSecurityPolicy(m_content);
+        }
     }
 
     if (m_name->equalsIgnoreCase("referrer")) {

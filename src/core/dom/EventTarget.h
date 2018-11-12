@@ -179,12 +179,7 @@ public:
         setAttributeEventListener(eventType, l);
     }
     void setAttributeEventListener(const QualifiedName& eventTypeName,
-                                   String* str, Element* target)
-    {
-        auto eventType = eventTypeName.localName();
-        EventListener* l = EventListener::toEventListener(str, target, true);
-        setAttributeEventListener(eventType, l);
-    }
+                                   String* str, Element* target);
     bool setAttributeEventListener(const String* eventType,
                                    EventListener* listener);
     EventListener* getAttributeEventListener(const QualifiedName& eventType)

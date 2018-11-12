@@ -285,6 +285,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
 
     m_declare =
         QualifiedName(AtomicString::createAtomicString(starfish, "declare"));
+
+    m_securitypolicyviolation = QualifiedName(
+        AtomicString::createAtomicString(starfish, "securitypolicyviolation"));
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default =
         QualifiedName(AtomicString::createAtomicString(starfish, "default"));

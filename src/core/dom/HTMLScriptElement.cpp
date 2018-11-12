@@ -30,6 +30,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/loader/ElementResourceClient.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -265,6 +266,12 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 return false;
             }
             String* script = text();
+            if (script->length() > 0 &&
+                !document()->contentSecurityPolicy()->allowInlineScript(
+                    document()->urlString())) {
+                return false;
+            }
+
             m_isAlreadyStarted = true;
             document()->appendCurrentScript(this);
             {
@@ -286,6 +293,9 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
 
             ResourceURL* rurl =
                 new ResourceURL(url, document()->baseURL()->baseURI());
+            if (!document()->contentSecurityPolicy()->allowURLScript(rurl)) {
+                return false;
+            }
 
             if (document()->preloadScanner() && !async() && !defer() &&
                 inParser) {

@@ -1,0 +1,34 @@
+// https://w3c.github.io/webappsec-csp/#idl-index
+
+enum SecurityPolicyViolationEventDisposition {
+  "enforce", "report"
+};
+
+[
+  ConstructorCallWith=Document,
+  Constructor(DOMString type, optional SecurityPolicyViolationEventInit eventInitDict),
+] interface SecurityPolicyViolationEvent : Event {
+  [Unimplemented] readonly attribute USVString documentURI;
+  [Unimplemented] readonly attribute DOMString referrer;
+  [Unimplemented] readonly attribute USVString blockedURI;
+  readonly attribute DOMString violatedDirective;
+  [Unimplemented] readonly attribute DOMString effectiveDirective;
+  [Unimplemented] readonly attribute DOMString originalPolicy;
+  [Unimplemented] readonly attribute USVString sourceFile;
+  [Unimplemented] readonly attribute unsigned short statusCode;
+  [Unimplemented] readonly attribute long lineNumber;
+  [Unimplemented] readonly attribute long columnNumber;
+};
+
+dictionary SecurityPolicyViolationEventInit : EventInit {
+  [Unimplemented] USVString documentURI = "";
+  [Unimplemented] DOMString referrer = "";
+  [Unimplemented] USVString blockedURI = "";
+  DOMString violatedDirective = "";
+  [Unimplemented] DOMString effectiveDirective = "";
+  [Unimplemented] DOMString originalPolicy = "";
+  [Unimplemented] USVString sourceFile = "";
+  [Unimplemented] unsigned short statusCode = 0;
+  [Unimplemented] long lineNumber = 0;
+  [Unimplemented] long columnNumber = 0;
+};

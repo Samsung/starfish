@@ -28,6 +28,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -473,6 +474,19 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
     }
     event->setEventPhase(Event::NONE);
     return (event->cancelable() && event->defaultPrevented()) ? false : true;
+}
+
+void EventTarget::setAttributeEventListener(const QualifiedName& eventTypeName,
+                                            String* str, Element* target)
+{
+    if (!document()->contentSecurityPolicy()->allowInlineScript(
+            document()->urlString())) {
+        return;
+    }
+
+    auto eventType = eventTypeName.localName();
+    EventListener* l = EventListener::toEventListener(str, target, true);
+    setAttributeEventListener(eventType, l);
 }
 
 bool EventTarget::setAttributeEventListener(const String* eventType,

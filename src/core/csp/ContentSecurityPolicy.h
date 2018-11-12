@@ -1,0 +1,61 @@
+/*
+ * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+#ifndef __StarfishContentSecurityPolicy__
+#define __StarfishContentSecurityPolicy__
+
+#include "binding/WindowHoldable.h"
+
+namespace Starfish {
+
+enum class ContentSecurityPolicyHeaderType { Report, Enforce };
+
+enum class ContentSecurityPolicyHeaderSource { HTTP, Meta, OriginPolicy };
+
+class ContentSecurityPolicyDirectiveList;
+
+class ContentSecurityPolicy : public WindowHoldable {
+public:
+    ContentSecurityPolicy(Window* window)
+        : WindowHoldable(window)
+    {
+    }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    void didReceiveHeader(String* header, ContentSecurityPolicyHeaderType type,
+                          ContentSecurityPolicyHeaderSource source);
+
+    bool allowInlineScript(String* contextURL);
+    bool allowURLScript(ResourceURL* url);
+
+    void dispatchViolationEvent(String* name);
+
+private:
+    GCVector<ContentSecurityPolicyDirectiveList*> m_policies;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicy, m_policies));
+    }
+};
+}
+
+#endif

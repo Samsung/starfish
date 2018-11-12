@@ -75,6 +75,7 @@
 #include "platform/loader/ImageResource.h"
 #include "core/animation/Animation.h"
 #include "platform/network/NetworkSharedResourceManager.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
@@ -127,6 +128,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_tizenWidgetTransparentBackground(0)
 #endif
     , m_documentCreatedTick(longTickCount())
+    , m_contentSecurityPolicy(new ContentSecurityPolicy(window))
 {
     // TODO https://html.spec.whatwg.org/multipage/origin.html#concept-origin
     // For Document objects
@@ -291,6 +293,13 @@ void Document::init(ReferrerURL* referrerURL)
 
     m_documentBuilder = new HTMLDocumentBuilder(this);
     m_documentBuilder->build(documentURI(), referrerURL);
+}
+
+void Document::setContentSecurityPolicy(String* content)
+{
+    m_contentSecurityPolicy->didReceiveHeader(
+        content, ContentSecurityPolicyHeaderType::Report,
+        ContentSecurityPolicyHeaderSource::Meta);
 }
 
 Window* Document::open(String* url, String* name, String* features)
