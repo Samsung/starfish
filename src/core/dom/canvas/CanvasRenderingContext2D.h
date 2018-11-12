@@ -86,6 +86,7 @@ public:
 
     // CanvasRect
     void fillRect(double x, double y, double w, double h);
+    void strokeRect(double x, double y, double w, double h);
 
     // CanvasDrawPath
     void beginPath();
@@ -165,6 +166,7 @@ private:
     Unit::Color m_fillColor;
     Unit::Color m_strokeColor;
     double m_lineWidth;
+    double m_globalAlpha;
 };
 
 class CanvasGradient : public ScriptWrappable {
