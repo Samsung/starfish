@@ -171,6 +171,16 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
     }
 }
 
+void GraphicsBufferHolder::flushSurfaces()
+{
+    for (size_t i = 0; i < m_surfaces.size(); i++) {
+        if (m_surfaces[i]) {
+            m_surfaces[i]->detachNativeBuffer();
+            m_surfaces[i] = nullptr;
+        }
+    }
+}
+
 void GraphicsBufferHolder::detachNativeBuffers()
 {
     for (size_t i = 0; i < m_surfaces.size(); i++) {
@@ -326,6 +336,16 @@ bool StackingContext::isIFrameStackingContextOwner()
         return true;
     }
     return false;
+}
+
+void StackingContext::flushGraphicsBuffer()
+{
+    STARFISH_ASSERT(needsGraphicsBuffer());
+    STARFISH_ASSERT(!m_owner->hasOwnGraphicsBufferMethod());
+
+    if (m_rareData && m_rareData->m_graphicsBufferHolder) {
+        m_rareData->m_graphicsBufferHolder->flushSurfaces();
+    }
 }
 
 struct OverflowStatus {
@@ -965,6 +985,16 @@ void StackingContext::computeStackingContextProperties(
         }
     }
 
+    if (compositingState.seenCompsitedLayer()) {
+        SkMatrix windowMatrix = m_owner->computeMatrixOnWindow();
+        auto windowRect = computeBoxExtent(
+            LayoutRect(0, 0, m_owner->width(), m_owner->height()),
+            windowMatrix);
+        if (windowRect.maxX() < 0 || windowRect.maxY() < 0) {
+            willBeComposited = true;
+        }
+    }
+
     if (willBeComposited) {
         for (size_t i = 0; i < compositingState.documentOwners.size(); i++) {
             if (compositingState.documentOwners[i]->isRootContext() ||
@@ -987,7 +1017,6 @@ void StackingContext::computeStackingContextProperties(
                 }
             }
         }
-
         compositingState.pushCompsitedLayer(this);
     }
 
@@ -1162,6 +1191,21 @@ void StackingContext::applyStackingContextProperties(
                            m_owner->node()->window()->innerHeight()));
         }
 
+        if (m_owner->isRootElement()) {
+            if (m_rareData->m_visibleRect.x() < 0) {
+                m_rareData->m_visibleRect.setWidth(
+                    m_rareData->m_visibleRect.width() +
+                    m_rareData->m_visibleRect.x());
+                m_rareData->m_visibleRect.setX(0);
+            }
+            if (m_rareData->m_visibleRect.y() < 0) {
+                m_rareData->m_visibleRect.setHeight(
+                    m_rareData->m_visibleRect.height() +
+                    m_rareData->m_visibleRect.y());
+                m_rareData->m_visibleRect.setY(0);
+            }
+        }
+
         if (m_rareData->m_visibleRect.width() == 0 &&
             m_rareData->m_visibleRect.height() == 0 &&
             !m_owner->isRootElement() && !inAnimation) {
@@ -1176,21 +1220,7 @@ void StackingContext::applyStackingContextProperties(
                    ctx.rootLayer->owner()->node()->window()->innerHeight());
 
     if (compositedBefore != willBeComposited) {
-        if (compositedBefore) {
-            StackingContext* p = m_parent;
-            while (p) {
-                if (p->needsGraphicsBuffer()) {
-                    break;
-                }
-                p = p->parent();
-            }
-            if (!p) {
-                p = this;
-            }
-            p->m_owner->node()->setNeedsPainting();
-        } else {
-            m_owner->node()->setNeedsPainting();
-        }
+        m_owner->node()->setNeedsPainting();
     } else if (compositedBefore && compositedBefore == willBeComposited) {
         if (prevDrawnMapIter != prevDrawnMap.end()) {
             if (prevDrawnMapIter->second.graphicsBufferVisibleRect !=
@@ -1900,6 +1930,12 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     info.needsGraphicsBuffer = needsGraphicsBuffer();
     info.transformMatrix = transformMatrix();
 
+    if (ctx.willCompositing) {
+        info.extentOnGraphicsLayer = computeBoxExtent(
+            LayoutRect(0, 0, m_owner->width(), m_owner->height()),
+            m_owner->computeMatrixOnGraphicsBuffer());
+    }
+
     {
         // draw debug rect
         // canvas->save();
@@ -2267,10 +2303,6 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                             ctx.layerBaseX = tileDataX;
                             ctx.layerBaseY = tileDataY;
 
-                            float dpr = m_owner->node()
-                                            ->webView()
-                                            ->screenInfo()
-                                            .devicePixelRatio;
                             ctx.layerClipRect =
                                 LayoutRect(0, 0, canvasSurface->width(),
                                            canvasSurface->height());

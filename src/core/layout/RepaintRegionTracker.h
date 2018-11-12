@@ -33,15 +33,18 @@ public:
     RepaintRegionTracker(
         FrameBox* rootFrame, LayoutRect initialRepaintRegion,
         PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap,
-        LayoutUnit sx, LayoutUnit sy)
+        LayoutUnit sx, LayoutUnit sy, bool wc)
         : m_repaintRegion(initialRepaintRegion)
         , m_prevDrawnStackingContextInfoMap(prevDrawnStackingContextInfoMap)
+        , m_willCompositing(wc)
     {
+        m_screenRect =
+            LayoutRect(0, 0, rootFrame->node()->window()->innerWidth(),
+                       rootFrame->node()->window()->innerHeight());
         if (rootFrame->needsPainting()) {
             LayoutRect r = rootFrame->frameVisibleRect();
             r.setX(r.x() + sx);
             r.setY(r.y() + sy);
-
             m_repaintRegion.unite(r);
         }
         trackRepaintRegion(rootFrame, SkMatrix::I());
@@ -70,7 +73,9 @@ public:
 
 protected:
     LayoutRect m_repaintRegion;
+    LayoutRect m_screenRect;
     PrevDrawnStackingContextInfoMap& m_prevDrawnStackingContextInfoMap;
+    bool m_willCompositing;
 
     void trackRepaintRegion(FrameBox* frame, SkMatrix currentMatrix)
     {
@@ -86,6 +91,8 @@ protected:
                 frame->asInlineTextBox()->origin()->needsPainting();
             frame->asInlineTextBox()->origin()->clearNeedsPainting();
         }
+
+        bool orgNeedsPainting = needsRepainting;
 
         bool isInvisibleFromHere = false;
 
@@ -113,14 +120,32 @@ protected:
                 }
             } else {
                 iter->second.hasThisLayerThisTime = true;
-                if (sc->isIFrameStackingContext()) {
-                    if (iter->second.screenExtent ==
-                        sc->parent()->screenExtent()) {
+
+                if (m_willCompositing) {
+                    if (sc->needsGraphicsBuffer() &&
+                        iter->second.needsGraphicsBuffer) {
                         iter->second.isEqualsWithPrevDrawing = true;
+                    } else if (!sc->needsGraphicsBuffer() &&
+                               !iter->second.needsGraphicsBuffer) {
+                        LayoutRect extentThisTime = computeBoxExtent(
+                            LayoutRect(0, 0, frame->width(), frame->height()),
+                            frame->computeMatrixOnGraphicsBuffer());
+                        if (iter->second.extentOnGraphicsLayer ==
+                            extentThisTime) {
+                            iter->second.isEqualsWithPrevDrawing = true;
+                        }
                     }
+
                 } else {
-                    if (iter->second.screenExtent == sc->screenExtent()) {
-                        iter->second.isEqualsWithPrevDrawing = true;
+                    if (sc->isIFrameStackingContext()) {
+                        if (iter->second.screenExtent ==
+                            sc->parent()->screenExtent()) {
+                            iter->second.isEqualsWithPrevDrawing = true;
+                        }
+                    } else {
+                        if (iter->second.screenExtent == sc->screenExtent()) {
+                            iter->second.isEqualsWithPrevDrawing = true;
+                        }
                     }
                 }
             }

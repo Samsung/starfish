@@ -3547,15 +3547,16 @@ LayoutRect computeBoxExtent(LayoutRect rt, const SkMatrix& m)
     }
 }
 
-SkMatrix FrameBox::computeScreenMatrix()
+enum ComputeMatrixFor { Screen, GraphicsLayer, Window };
+
+static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
 {
-    StackingContext* sc = stackingContext();
     bool seenFixedPositionedLayer = false;
     FrameBox* turnOffScrollUntilMeet = nullptr;
-
     std::vector<FrameBox*> frameList;
+
     frameList.reserve(32);
-    Frame* f = this;
+    Frame* f = self;
     while (f) {
         if (f->style() && f->style()->position() == FixedPositionValue) {
             if (!seenFixedPositionedLayer) {
@@ -3564,6 +3565,16 @@ SkMatrix FrameBox::computeScreenMatrix()
             }
         }
         frameList.push_back(f->asFrameBox());
+
+        if (forWhat == ComputeMatrixFor::GraphicsLayer &&
+            f->asFrameBox()->stackingContext() &&
+            f->asFrameBox()->stackingContext()->needsGraphicsBuffer()) {
+            break;
+        }
+        if (forWhat == ComputeMatrixFor::Window && f->isFrameDocument()) {
+            break;
+        }
+
         f = f->layoutParent();
     }
 
@@ -3609,7 +3620,7 @@ SkMatrix FrameBox::computeScreenMatrix()
         while (iter != frameList.rend()) {
             FrameBox* fBox = *iter;
             LayoutLocation pos;
-            if (fBox == this) {
+            if (fBox == self) {
                 pos = fBox->absolutePoint(lastParentBox);
             } else if (fBox->isFrameDocument()) {
                 pos = fBox->absolutePoint(lastParentBox);
@@ -3641,6 +3652,21 @@ SkMatrix FrameBox::computeScreenMatrix()
         }
     }
     return m;
+}
+
+SkMatrix FrameBox::computeScreenMatrix()
+{
+    return computeBoxMatrix(this, ComputeMatrixFor::Screen);
+}
+
+SkMatrix FrameBox::computeMatrixOnGraphicsBuffer()
+{
+    return computeBoxMatrix(this, ComputeMatrixFor::GraphicsLayer);
+}
+
+SkMatrix FrameBox::computeMatrixOnWindow()
+{
+    return computeBoxMatrix(this, ComputeMatrixFor::Window);
 }
 
 LayoutRect FrameBox::computeScreenExtent()

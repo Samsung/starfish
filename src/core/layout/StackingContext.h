@@ -59,6 +59,7 @@ public:
         return m_bufferHeight;
     }
 
+    void flushSurfaces();
     void detachNativeBuffers();
 
     void* operator new(size_t size);
@@ -205,6 +206,8 @@ public:
         }
         return false;
     }
+
+    void flushGraphicsBuffer();
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

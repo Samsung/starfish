@@ -131,6 +131,18 @@ bool SelectorQuery::matches(Element& element)
     return selectorListMatches(element, &element);
 }
 
+void SelectorQuery::invalidateStyleOfMatchedElement(Node& rootNode)
+{
+    m_inInvalidateStyleOfMatchedElement = true;
+    GCVector<Element*> matchedElement;
+    execute(rootNode, matchedElement, false);
+    m_inInvalidateStyleOfMatchedElement = false;
+
+    for (size_t i = 0; i < matchedElement.size(); i++) {
+        matchedElement[i]->setNeedsStyleRecalc();
+    }
+}
+
 inline bool ancestorHasClassName(Node& rootNode, const String* className)
 {
     if (!rootNode.isElement()) {
@@ -221,8 +233,10 @@ bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element,
     AtomicString elementName = element->name().localNameAtomic();
     AtomicString elementId = element->atomicId();
     const GCVector<AtomicString>& elementClasses = element->classNames();
+
     return resolver.matchSelector(element, elementName, elementId,
-                                  elementClasses, selector, 0, result, true) ==
+                                  elementClasses, selector, 0, result,
+                                  !m_inInvalidateStyleOfMatchedElement) ==
            StyleResolver::Match::SelectorMatches;
 }
 

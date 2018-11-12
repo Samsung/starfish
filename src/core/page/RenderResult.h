@@ -47,6 +47,7 @@ struct PrevDrawnStackingContextInfo {
     bool needsGraphicsBuffer;
 
     LayoutRect screenExtent;
+    LayoutRect extentOnGraphicsLayer;
     SkMatrix transformMatrix;
     float opacity;
     GraphicsBufferHolder* graphicsBufferHolder;
