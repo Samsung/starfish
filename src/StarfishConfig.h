@@ -368,13 +368,14 @@ const char* getWindowsTempDir();
 #undef STARFISH_LOG_INFO
 #include <dlog.h>
 #define STARFISH_LOG_INFO(...) \
-    dlog_print(DLOG_INFO, STARFISH_NAME, __VA_ARGS__);
+    dlog_print(DLOG_INFO, STARFISH_NAME, VERSION ": " __VA_ARGS__);
 #endif
 #ifdef STARFISH_ANDROID
 #include <android/log.h>
 #undef STARFISH_LOG_INFO
-#define STARFISH_LOG_INFO(...) \
-    __android_log_print(ANDROID_LOG_INFO, STARFISH_NAME, __VA_ARGS__);
+#define STARFISH_LOG_INFO(...)                           \
+    __android_log_print(ANDROID_LOG_INFO, STARFISH_NAME, \
+                        VERSION ": " __VA_ARGS__);
 #endif
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_INFO
@@ -386,13 +387,14 @@ const char* getWindowsTempDir();
 #undef STARFISH_LOG_ERROR
 #include <dlog.h>
 #define STARFISH_LOG_ERROR(...) \
-    dlog_print(DLOG_ERROR, STARFISH_NAME, __VA_ARGS__);
+    dlog_print(DLOG_ERROR, STARFISH_NAME, VERSION ": " __VA_ARGS__);
 #endif
 #ifdef STARFISH_ANDROID
 #include <android/log.h>
 #undef STARFISH_LOG_ERROR
-#define STARFISH_LOG_ERROR(...) \
-    __android_log_print(ANDROID_LOG_ERROR, STARFISH_NAME, __VA_ARGS__);
+#define STARFISH_LOG_ERROR(...)                           \
+    __android_log_print(ANDROID_LOG_ERROR, STARFISH_NAME, \
+                        VERSION ": " __VA_ARGS__);
 #endif
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_ERROR
@@ -405,13 +407,14 @@ const char* getWindowsTempDir();
 #undef STARFISH_LOG_WARN
 #include <dlog.h>
 #define STARFISH_LOG_WARN(...) \
-    dlog_print(DLOG_WARN, STARFISH_NAME, __VA_ARGS__);
+    dlog_print(DLOG_WARN, STARFISH_NAME, VERSION ": " __VA_ARGS__);
 #endif
 #ifdef STARFISH_ANDROID
 #include <android/log.h>
 #undef STARFISH_LOG_WARN
-#define STARFISH_LOG_WARN(...) \
-    __android_log_print(ANDROID_LOG_WARN, STARFISH_NAME, __VA_ARGS__);
+#define STARFISH_LOG_WARN(...)                           \
+    __android_log_print(ANDROID_LOG_WARN, STARFISH_NAME, \
+                        VERSION ": " __VA_ARGS__);
 #endif
 #ifdef STARFISH_WINDOWS
 #undef STARFISH_LOG_WARN
