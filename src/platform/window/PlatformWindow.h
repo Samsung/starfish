@@ -158,6 +158,14 @@ public:
     {
         STARFISH_RELEASE_ASSERT_NOT_REACHED();
     }
+    virtual void glEGLImageUpdated()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    virtual void glClearEGLImageUpdated()
+    {
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
 
     void registerRenderingFinishedCallback(
         const std::function<void(const RenderResult& renderResult)>& cb)
@@ -172,7 +180,7 @@ public:
     }
 
     void registerGLSwapBuffersCallback(
-        const std::function<void(PlatformWindow* wnd)>& cb)
+        const std::function<void(PlatformWindow* wnd, bool mayNeedsSync)>& cb)
     {
         m_glSwapBufferCallback = cb;
     }
@@ -261,7 +269,7 @@ protected:
     std::function<void()> m_hideSoftwareKeyboardIfPossibleCallback;
 
     std::function<void(PlatformWindow* wnd)> m_glMakeCurrentCallback;
-    std::function<void(PlatformWindow* wnd)> m_glSwapBufferCallback;
+    std::function<void(PlatformWindow* wnd, bool)> m_glSwapBufferCallback;
 
     std::unordered_map<WindowHandlerKind, std::function<void(void*)>>
         m_handlersToCallbacks;

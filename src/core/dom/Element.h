@@ -259,7 +259,7 @@ public:
     Attr* attr(QualifiedName name);
     Attr* ensureAttr(QualifiedName name);
 
-    AtomicString& atomicId()
+    const AtomicString& atomicId()
     {
         return m_id;
     }

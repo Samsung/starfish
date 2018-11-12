@@ -48,33 +48,35 @@ public:
 private:
     bool canUseFastQuery(const Node& rootNode);
     void traverseDescendants(CSSSelectorList& selectors, Node* traverseRoot,
-                             Node& rootNode, GCVector<Element*>& collection,
+                             Node& rootNode, std::vector<Element*>& collection,
                              bool shouldOnlyMatchFirstElement);
     void executeForTraverseRoot(CSSSelectorList& selector, Node* traverseRoot,
                                 MatchTraverseRootState matchTraverseRoot,
-                                Node& rootNode, GCVector<Element*>& output,
+                                Node& rootNode, std::vector<Element*>& output,
                                 bool shouldOnlyMatchFirstElement);
     template <typename SimpleElementListType>
     void executeForTraverseRoots(CSSSelectorList& selector,
                                  SimpleElementListType& traverseRoots,
                                  MatchTraverseRootState matchTraverseRoots,
-                                 Node& rootNode, GCVector<Element*>& output,
+                                 Node& rootNode, std::vector<Element*>& output,
                                  bool shouldOnlyMatchFirstElement);
-    void findTraverseRootsAndExecute(Node& rootNode, GCVector<Element*>& output,
+    void findTraverseRootsAndExecute(Node& rootNode,
+                                     std::vector<Element*>& output,
                                      bool shouldOnlyMatchFirstElement);
     bool selectorListMatches(Node& rootNode, Element* element);
-    void executeSlow(Node& rootNode, GCVector<Element*>& collection,
+    void executeSlow(Node& rootNode, std::vector<Element*>& collection,
                      bool shouldOnlyMatchFirstElement);
-    void execute(Node& rootNode, GCVector<Element*>& matchedElement,
+    void execute(Node& rootNode, std::vector<Element*>& matchedElement,
                  bool shouldOnlyMatchFirstElement);
-    void collectElementsById(Node& rootNode, const String* id,
-                             GCVector<Element*>& collection,
+    void collectElementsById(Node& rootNode, const AtomicString& id,
+                             std::vector<Element*>& collection,
                              bool shouldOnlyMatchFirstElement);
-    void collectElementsByClassName(Node& rootNode, const String* className,
-                                    GCVector<Element*>& collection,
+    void collectElementsByClassName(Node& rootNode,
+                                    const AtomicString& className,
+                                    std::vector<Element*>& collection,
                                     bool shouldOnlyMatchFirstElement);
-    void collectElementsByTagName(Node& rootNode, const String* tagName,
-                                  GCVector<Element*>& collection,
+    void collectElementsByTagName(Node& rootNode, const AtomicString& tagName,
+                                  std::vector<Element*>& collection,
                                   bool shouldOnlyMatchFirstElement);
     bool selectorMatches(CSSSelectorList& selector, Element* element,
                          Node& rootNode);

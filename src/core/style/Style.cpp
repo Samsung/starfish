@@ -6954,9 +6954,7 @@ static void extractValuesforSelector(const CSSSelector* selector,
         className = selector->selectorText();
         break;
     case CSSSelector::Tag:
-        if (!selector->selectorText().string()->equals("*")) {
-            tagName = selector->selectorText();
-        }
+        tagName = selector->selectorText();
         break;
     default:
         break;

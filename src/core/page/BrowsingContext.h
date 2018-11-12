@@ -144,6 +144,16 @@ public:
         return m_needsLayout;
     }
 
+    bool needsStyleRecalc()
+    {
+        return m_needsStyleRecalc;
+    }
+
+    bool needsStyleRecalcForWholeDocument()
+    {
+        return m_needsStyleRecalcForWholeDocument;
+    }
+
     bool hasRootElementBackground()
     {
         return m_hasRootElementBackground;

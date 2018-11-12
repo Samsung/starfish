@@ -330,11 +330,7 @@ public:
             STARFISH_LOG_INFO("Made current failed\n");
         }
 
-        mFence = g_eglCreateSyncKHRProc(mDisplay, EGL_SYNC_FENCE_KHR, NULL);
-        STARFISH_LOG_INFO("SyncFence info %p\n", mFence);
-        if (!mFence) {
-            STARFISH_LOG_INFO("FENCE Error: %d\n", (int)eglGetError());
-        }
+        mFence = nullptr;
 
 #if !defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN)
         glClearColor(0.0, 0.0, 0.0, 0.0);
@@ -363,15 +359,20 @@ public:
             width, height,
             [this](WebContainer* wc) {
                 if (m_isBufferSwapped) {
-                    // Starfish::ProfilerTimer p("WebViewEcoreWayland2 -
-                    // eglClientWaitSyncKHRProc");
-                    EGLint result = g_eglClientWaitSyncKHRProc(
-                        mDisplay, mFence, EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
-                        EGL_FOREVER_KHR);
-                    if (result == EGL_FALSE) {
-                        STARFISH_LOG_INFO(
-                            "EGL FENCE: error waiting for fence: %d\n",
-                            (int)eglGetError());
+                    if (mFence) {
+                        Starfish::LongTaskFinder p(
+                            "WebViewEcoreWayland2 - eglClientWaitSyncKHRProc",
+                            1);
+                        EGLint result = g_eglClientWaitSyncKHRProc(
+                            mDisplay, mFence, EGL_SYNC_FLUSH_COMMANDS_BIT_KHR,
+                            EGL_FOREVER_KHR);
+                        if (result == EGL_FALSE) {
+                            STARFISH_LOG_INFO(
+                                "EGL FENCE: error waiting for fence: %d\n",
+                                (int)eglGetError());
+                        }
+                        g_eglDestroySyncKHRProc(mDisplay, mFence);
+                        mFence = nullptr;
                     }
                     m_isBufferSwapped = false;
                 }
@@ -381,19 +382,22 @@ public:
                                       (int)eglError);
                 }
             },
-            [this](WebContainer* wc) {
+            [this](WebContainer* wc, bool mayNeedsSync) {
                 {
-                    // Starfish::ProfilerTimer p("WebViewEcoreWayland2 -
-                    // glFlush");
-                    glFlush();
-                }
-                {
-                    // Starfish::ProfilerTimer p("WebViewEcoreWayland2 -
-                    // eglSwapBuffers");
+                    Starfish::LongTaskFinder p(
+                        "WebViewEcoreWayland2 - eglSwapBuffers", 2);
                     if (!eglSwapBuffers(mDisplay, mSurface)) {
                         auto eglError = eglGetError();
                         STARFISH_LOG_INFO("Made current failed error -> %d\n",
                                           (int)eglError);
+                    }
+                }
+                if (mayNeedsSync) {
+                    mFence = g_eglCreateSyncKHRProc(mDisplay,
+                                                    EGL_SYNC_FENCE_KHR, NULL);
+                    if (!mFence) {
+                        STARFISH_LOG_INFO("eglCreateSyncKHR Error: %d\n",
+                                          (int)eglGetError());
                     }
                 }
                 m_isBufferSwapped = true;
@@ -561,7 +565,9 @@ public:
     {
         FetchWebContainer()->Destroy();
 
-        g_eglDestroySyncKHRProc(mDisplay, mFence);
+        if (mFence) {
+            g_eglDestroySyncKHRProc(mDisplay, mFence);
+        }
         eglDestroySurface(mDisplay, mSurface);
         wl_egl_window_destroy(mEglWindow);
         eglDestroyContext(mDisplay, mContext);

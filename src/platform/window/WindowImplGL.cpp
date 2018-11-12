@@ -64,13 +64,14 @@ public:
         , m_height(height)
         , m_glPaintingSurface(nullptr)
         , m_didPaintingOrCompositing(true)
+        , m_isMouseLbuttonDown(true)
+        , m_isKeyDown(true)
+        , m_isEGLImageUpdated(true)
     {
         m_offsetYDueToSoftwareKeyboard = 0;
 
         m_lastMouseX = -1;
         m_lastMouseY = -1;
-        m_isMouseLbuttonDown = false;
-        m_isKeyDown = false;
     }
 
     virtual uint32_t width() override
@@ -104,8 +105,6 @@ public:
 
     virtual RenderResult rendering() override
     {
-        glMakeCurrent();
-
         if (!m_compostiorContext) {
             m_compostiorContext = Compositor::initCompositorContext(this);
         }
@@ -142,6 +141,7 @@ public:
             }
 #endif
             glSwapBuffers();
+            glClearEGLImageUpdated();
         }
 
 #if defined(STARFISH_ENABLE_TEST)
@@ -156,6 +156,7 @@ public:
     virtual Canvas* preparePainting() override;
     virtual void willCompositing() override
     {
+        glMakeCurrent();
         if (!webView()->hasActiveAnimationExecutor()) {
             if (m_glPaintingSurface) {
                 STARFISH_LOG_INFO(
@@ -176,7 +177,17 @@ public:
 
     virtual void glSwapBuffers() override
     {
-        m_glSwapBufferCallback(this);
+        m_glSwapBufferCallback(this, m_isEGLImageUpdated);
+    }
+
+    virtual void glEGLImageUpdated() override
+    {
+        m_isEGLImageUpdated = true;
+    }
+
+    virtual void glClearEGLImageUpdated() override
+    {
+        m_isEGLImageUpdated = false;
     }
 
     virtual void pause() override
@@ -200,9 +211,10 @@ public:
     uint32_t m_height;
     CanvasSurface* m_glPaintingSurface;
     bool m_didPaintingOrCompositing;
-    float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
     bool m_isKeyDown;
+    bool m_isEGLImageUpdated;
+    float m_lastMouseX, m_lastMouseY;
     int m_offsetYDueToSoftwareKeyboard;
 };
 

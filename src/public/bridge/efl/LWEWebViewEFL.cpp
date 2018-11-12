@@ -781,7 +781,7 @@ public:
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
                 g_evasGLAPI = m_glGlapi;
             },
-            [this](WebContainer* wc){
+            [this](WebContainer* wc, bool mayNeedsSync){
 
             },
             devicePixelRatio, defaultFontName, locale, timezoneID);

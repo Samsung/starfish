@@ -285,6 +285,11 @@ void CSSStyleSheet::collectStyleRules(
 
 void CSSStyleSheet::willRemovedFromDocument()
 {
+    if (m_origin->document()
+            ->browsingContext()
+            ->needsStyleRecalcForWholeDocument()) {
+        return;
+    }
     LongTaskFinder t("CSSStyleSheet::willRemovedFromDocument", 1);
 
     for (size_t i = 0; i < m_styleRules.size(); i++) {
@@ -298,6 +303,11 @@ void CSSStyleSheet::willRemovedFromDocument()
 
 void CSSStyleSheet::willAddToDocument()
 {
+    if (m_origin->document()
+            ->browsingContext()
+            ->needsStyleRecalcForWholeDocument()) {
+        return;
+    }
     LongTaskFinder t("CSSStyleSheet::willAddToDocument", 1);
 
     auto viewportDependentResult = &m_origin->document()
