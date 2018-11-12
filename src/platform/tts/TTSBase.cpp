@@ -40,7 +40,6 @@ void TTS::init()
 
 void TTS::speech(String* text, bool forced)
 {
-    STARFISH_ASSERT(isMainThread());
     if (text && text != String::emptyString) {
         webView()->messageLoop()->addIdler(
             nullptr,
