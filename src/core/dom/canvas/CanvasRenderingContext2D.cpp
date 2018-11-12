@@ -40,6 +40,7 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
     HTMLCanvasElement* canvasElement)
     : RenderingContext(canvasElement)
     , m_lineWidth(1)
+    , m_globalAlpha(1.0)
 {
     initialize();
 }
@@ -95,28 +96,45 @@ void CanvasRenderingContext2D::restore()
 
 void CanvasRenderingContext2D::scale(double x, double y)
 {
+    m_surfaceCanvas->scale(x, y);
 }
 
 void CanvasRenderingContext2D::rotate(double angle)
 {
+    m_surfaceCanvas->rotate(angle);
 }
 
 void CanvasRenderingContext2D::translate(double x, double y)
 {
+    m_surfaceCanvas->translate(x, y);
 }
 
 void CanvasRenderingContext2D::transform(double a, double b, double c, double d,
                                          double e, double f)
 {
+    SkMatrix matrix;
+    matrix.reset();
+    matrix.set(0, a);
+    matrix.set(1, c);
+    matrix.set(2, e);
+    matrix.set(3, b);
+    matrix.set(4, d);
+    matrix.set(5, f);
+    m_surfaceCanvas->postMatrix(matrix);
 }
 
 double CanvasRenderingContext2D::globalAlpha()
 {
-    return 1.0;
+    return m_globalAlpha;
 }
 
 void CanvasRenderingContext2D::setGlobalAlpha(double value)
 {
+    if (value < .0f || value > 1.f) {
+        return;
+    }
+
+    m_globalAlpha = value;
 }
 
 String* CanvasRenderingContext2D::globalCompositeOperation()
@@ -189,8 +207,18 @@ void CanvasRenderingContext2D::fillRect(double x, double y, double w, double h)
 {
     HTMLCanvasElement* canvas = m_canvasElement;
     canvas->setNeedsPainting();
-    m_surfaceCanvas->setColor(m_fillColor);
+    Unit::Color color =
+        Unit::Color(m_fillColor.r(), m_fillColor.g(), m_fillColor.b(),
+                    m_fillColor.a() * m_globalAlpha);
+    m_surfaceCanvas->setColor(color);
     m_surfaceCanvas->drawRect(LayoutRect(x, y, w, h));
+}
+
+void CanvasRenderingContext2D::strokeRect(double x, double y, double w,
+                                          double h)
+{
+    rect(x, y, w, h);
+    stroke();
 }
 
 void CanvasRenderingContext2D::beginPath()
@@ -209,7 +237,10 @@ void CanvasRenderingContext2D::stroke()
 {
     HTMLCanvasElement* canvas = m_canvasElement;
     canvas->setNeedsPainting();
-    m_surfaceCanvas->setColor(m_strokeColor);
+    Unit::Color color =
+        Unit::Color(m_strokeColor.r(), m_strokeColor.g(), m_strokeColor.b(),
+                    m_strokeColor.a() * m_globalAlpha);
+    m_surfaceCanvas->setColor(color);
     m_surfaceCanvas->stroke();
 }
 
