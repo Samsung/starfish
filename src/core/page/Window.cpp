@@ -689,6 +689,7 @@ DEFINE_EVENT_LISTENER(Window, mouseup);
 DEFINE_EVENT_LISTENER(Window, progress);
 DEFINE_EVENT_LISTENER(Window, resize);
 DEFINE_EVENT_LISTENER(Window, submit);
+DEFINE_EVENT_LISTENER(Window, securitypolicyviolation);
 DEFINE_EVENT_LISTENER(Window, message);
 DEFINE_EVENT_LISTENER(Window, messageerror);
 DEFINE_EVENT_LISTENER(Window, unload);

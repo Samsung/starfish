@@ -389,6 +389,7 @@ public:
     // DECLARE_EVENT_LISTENER(show);
     // DECLARE_EVENT_LISTENER(toggle);
     DECLARE_EVENT_LISTENER(submit);
+    DECLARE_EVENT_LISTENER(securitypolicyviolation);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     DECLARE_EVENT_LISTENER(suspend);
     DECLARE_EVENT_LISTENER(emptied);

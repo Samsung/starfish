@@ -56,6 +56,7 @@ class AnimationExecutor;
 class DOMImplementation;
 class DeferredScriptDownloadClient;
 class PreloadScanner;
+class ContentSecurityPolicy;
 
 /* VisibilityState */
 enum VisibilityState ENSURE_ENUM_UNSIGNED {
@@ -401,6 +402,8 @@ public:
     void init(ReferrerURL* referrerURL);
     void dispose();
 
+    void setContentSecurityPolicy(String* content);
+
     Document* open(String* type, String* replace);
     Window* open(String* url, String* name, String* features);
     bool openFunctionExplicitCalled()
@@ -553,6 +556,11 @@ public:
         return m_documentCreatedTick;
     }
 
+    ContentSecurityPolicy* contentSecurityPolicy()
+    {
+        return m_contentSecurityPolicy;
+    }
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -672,6 +680,7 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentLanguage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentSecurityPolicy));
     }
 
     // only used in html document builder
@@ -738,6 +747,7 @@ protected:
     size_t m_tizenWidgetTransparentBackground;
 #endif
     uint64_t m_documentCreatedTick;
+    ContentSecurityPolicy* m_contentSecurityPolicy;
 };
 }
 
