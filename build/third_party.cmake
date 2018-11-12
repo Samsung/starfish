@@ -114,23 +114,6 @@ IF (NOT ${HOST} STREQUAL "tizen")
                        DEPENDS ${ZMQ_TARGET}
                        COMMAND echo "ZMQ TARGET"
     )
-
-#    EXECUTE_PROCESS (
-#            COMMAND ${CMAKE_COMMAND} -E make_directory ${ZMQ_BUILDDIR}
-#    )
-#    EXECUTE_PROCESS (
-#            WORKING_DIRECTORY ${ZMQ_BUILDDIR}
-#            COMMAND ../../../../configure --enable-static CFLAGS=${ZMQ_CFLAGS} LDFLAGS=${ZMQ_CFLAGS} CXXFLAGS=${ZMQ_CFLAGS}
-#    )
-#    EXECUTE_PROCESS (
-#            WORKING_DIRECTORY ${ZMQ_BUILDDIR}
-#            COMMAND make -j
-#    )
-#    
-#    ADD_LIBRARY (zmq SHARED IMPORTED)
-#    SET_PROPERTY (TARGET zmq PROPERTY
-#            IMPORTED_LOCATION ${ZMQ_BUILDDIR}/.libs/libzmq.so
-#    )
 ENDIF()
 
 
@@ -226,15 +209,9 @@ SET (GC_CONFFLAGS
 )
 
 SET (GC_BUILDDIR ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared)
-IF (${ARCH} STREQUAL "x64")
+IF (${HOST} STREQUAL "linux")
     SET (GC_TARGET ${GC_BUILDDIR}/.libs/libgc.so)
-ELSEIF (${HOST} STREQUAL "tizen")
-    SET (GC_TARGET ${GC_BUILDDIR}/.libs/libgc.a)
-ELSE()
-    MESSAGE (FATAL_ERROR "GC is NOT SUPPORTED")
-ENDIF()
-
-ADD_CUSTOM_COMMAND (OUTPUT ${GC_TARGET}
+    ADD_CUSTOM_COMMAND (OUTPUT ${GC_TARGET}
         COMMENT "BUILD GC"
         WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
         COMMAND autoreconf -vif
@@ -242,25 +219,27 @@ ADD_CUSTOM_COMMAND (OUTPUT ${GC_TARGET}
         COMMAND ${CMAKE_COMMAND} -E make_directory ${GC_BUILDDIR}
         COMMAND cd ${GC_BUILDDIR} && ../../../../configure ${GC_CONFFLAGS} CFLAGS=${GC_CFLAGS} LDFLAGS=${GC_LDFLAGS}
         COMMAND cd ${GC_BUILDDIR} && make -j
-)
+        COMMAND ${CMAKE_COMMAND} -E copy ${GC_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+    )
+ELSEIF (${HOST} STREQUAL "tizen")
+    SET (GC_TARGET ${GC_BUILDDIR}/.libs/libgc.a)
+    ADD_CUSTOM_COMMAND (OUTPUT ${GC_TARGET}
+        COMMENT "BUILD GC"
+        WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
+        COMMAND autoreconf -vif
+        COMMAND automake --add-missing
+        COMMAND ${CMAKE_COMMAND} -E make_directory ${GC_BUILDDIR}
+        COMMAND cd ${GC_BUILDDIR} && ../../../../configure ${GC_CONFFLAGS} CFLAGS=${GC_CFLAGS} LDFLAGS=${GC_LDFLAGS}
+        COMMAND cd ${GC_BUILDDIR} && make -j
+    )
+ELSE()
+    MESSAGE (FATAL_ERROR "GC is NOT SUPPORTED")
+ENDIF()
 
 ADD_CUSTOM_TARGET (gc
         DEPENDS ${GC_TARGET}
         COMMAND echo "GC TARGET"
 )
-
-#IF (${ARCH} STREQUAL "x64")
-#    ADD_LIBRARY (gc SHARED IMPORTED)
-#    SET_PROPERTY (TARGET gc PROPERTY
-#            IMPORTED_LOCATION ${GC_BUILDDIR}/.libs/libgc.so
-#    )
-#ELSEIF (${HOST} STREQUAL "tizen")
-#    ADD_LIBRARY (gc STATIC IMPORTED)
-#    SET_PROPERTY (TARGET gc PROPERTY
-#            IMPORTED_LOCATION ${GC_BUILDDIR}/.libs/libgc.a
-#    )
-#ENDIF()
-
 
 #######################################################
 # ESCARGOT
@@ -268,7 +247,7 @@ ADD_CUSTOM_TARGET (gc
 SET (ESCARGOT_MODE ${MODE})
 SET (ESCARGOT_ARCH ${ARCH})
 SET (ESCARGOT_OUTPUT static_lib)
-IF (${ARCH} STREQUAL "x64")
+IF (${HOST} STREQUAL "linux")
     SET (ESCARGOT_HOST ${HOST})
 ELSE()
     SET (ESCARGOT_HOST tizen_obs)
