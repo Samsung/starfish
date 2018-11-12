@@ -2929,6 +2929,7 @@ public:
     Document* m_document;
     std::unique_ptr<AncestorSelectorFilter> m_ancestorSelectorFilter;
     GCVector<ComputedStyle*> m_computedStylePool;
+    size_t m_computedElementCount;
 #ifndef NDEBUG
     std::set<ComputedStyle*> m_dbg;
 #endif
@@ -2971,10 +2972,11 @@ public:
         StyleDamageFromAttribute = 1 << 2,
         StyleDamageFromElementState = 1 << 3,
         StyleDamageFromDOMTree = 1 << 4,
-        StyleDamageFromAll = StyleDamageFromID | StyleDamageFromClass |
-                             StyleDamageFromAttribute |
-                             StyleDamageFromElementState |
-                             StyleDamageFromDOMTree
+        StyleDamageFromElementStateDOMTree = 1 << 5,
+        StyleDamageFromAll =
+            StyleDamageFromID | StyleDamageFromClass |
+            StyleDamageFromAttribute | StyleDamageFromElementState |
+            StyleDamageFromDOMTree | StyleDamageFromElementStateDOMTree
     };
 
     struct MatchResult {
@@ -2982,6 +2984,7 @@ public:
             : pseudoType(PseudoElementNone)
             , styleDamageFrom(NoDamage)
             , styleDamageSourceNodeStateMap(0)
+            , styleDamageSourceNodeStateDOMTreeMap(0)
             , seenCombinator(false)
         {
         }
@@ -2989,6 +2992,7 @@ public:
         PseudoElementType pseudoType;
         StyleDamageSource styleDamageFrom;
         int styleDamageSourceNodeStateMap;
+        int styleDamageSourceNodeStateDOMTreeMap;
         bool seenCombinator;
     };
 

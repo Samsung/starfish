@@ -35,12 +35,15 @@ public:
     };
 
     SelectorQuery(GCVector<CSSSelectorList*>& selector)
-        : m_selectorListContainer(selector)
+        : m_inInvalidateStyleOfMatchedElement(false)
+        , m_selectorListContainer(selector)
     {
     }
     Element* queryFirst(Node& rootNode);
     NodeList* queryAll(Node& rootNode);
     bool matches(Element& element);
+
+    void invalidateStyleOfMatchedElement(Node& rootNode);
 
 private:
     bool canUseFastQuery(const Node& rootNode);
@@ -76,6 +79,8 @@ private:
     bool selectorMatches(CSSSelectorList& selector, Element* element,
                          Node& rootNode);
     CSSSelector* selectorForIdLookup(CSSSelectorList& firstSelector);
+
+    bool m_inInvalidateStyleOfMatchedElement;
     GCVector<CSSSelectorList*>& m_selectorListContainer;
 };
 }

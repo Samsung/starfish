@@ -1864,6 +1864,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 StyleResolveContext::StyleResolveContext(Document* document)
     : m_document(document)
     , m_ancestorSelectorFilter(new AncestorSelectorFilter())
+    , m_computedElementCount(0)
 {
 }
 
@@ -1874,14 +1875,12 @@ StyleResolveContext::~StyleResolveContext()
 void StyleResolveContext::pushIntoComputedStylePool(ComputedStyle* b)
 {
     STARFISH_ASSERT(b);
-    if (!b->usedInAnimator()) {
-        memset(b, 0, sizeof(ComputedStyle));
-        m_computedStylePool.push_back(b);
+    memset(b, 0, sizeof(ComputedStyle));
+    m_computedStylePool.push_back(b);
 #ifndef NDEBUG
-        STARFISH_ASSERT(m_dbg.find(b) == m_dbg.end());
-        m_dbg.insert(b);
+    STARFISH_ASSERT(m_dbg.find(b) == m_dbg.end());
+    m_dbg.insert(b);
 #endif
-    }
 }
 
 void* StyleResolveContext::allocateComputedStyle()
@@ -1922,6 +1921,7 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
                                            Element* element,
                                            ComputedStyle* parent)
 {
+    ctx.m_computedElementCount++;
     ComputedStyle* style =
         new (ctx.allocateComputedStyle()) ComputedStyle(parent);
 
@@ -5772,6 +5772,8 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
         }
         ret->setStyleDamageSourceNodeStateMap(
             result.styleDamageSourceNodeStateMap);
+        ret->setStyleDamageSourceNodeStateDOMTreeMap(
+            result.styleDamageSourceNodeStateDOMTreeMap);
     }
 }
 
@@ -6235,34 +6237,74 @@ bool StyleResolver::checkPseudoClass(Element* element,
 {
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoHover:
-        result.styleDamageFrom = (StyleDamageSource)(
-            result.styleDamageFrom | StyleDamageFromElementState);
-        result.styleDamageSourceNodeStateMap =
-            result.styleDamageSourceNodeStateMap | Node::NodeStateHovered;
+        if (result.seenCombinator) {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageSourceNodeStateDOMTreeMap =
+                result.styleDamageSourceNodeStateDOMTreeMap |
+                Node::NodeStateHovered;
+        } else {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageSourceNodeStateMap =
+                result.styleDamageSourceNodeStateMap | Node::NodeStateHovered;
+        }
         return element->state() & Node::NodeState::NodeStateHovered;
     case CSSSelector::PseudoType::PseudoActive:
-        result.styleDamageFrom = (StyleDamageSource)(
-            result.styleDamageFrom | StyleDamageFromElementState);
-        result.styleDamageSourceNodeStateMap =
-            result.styleDamageSourceNodeStateMap | Node::NodeStateActive;
+        if (result.seenCombinator) {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageSourceNodeStateDOMTreeMap =
+                result.styleDamageSourceNodeStateDOMTreeMap |
+                Node::NodeStateActive;
+        } else {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageSourceNodeStateMap =
+                result.styleDamageSourceNodeStateMap | Node::NodeStateActive;
+        }
         return element->state() & Node::NodeState::NodeStateActive;
     case CSSSelector::PseudoType::PseudoFocus:
-        result.styleDamageFrom = (StyleDamageSource)(
-            result.styleDamageFrom | StyleDamageFromElementState);
-        result.styleDamageSourceNodeStateMap =
-            result.styleDamageSourceNodeStateMap | Node::NodeStateFocused;
+        if (result.seenCombinator) {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageSourceNodeStateDOMTreeMap =
+                result.styleDamageSourceNodeStateDOMTreeMap |
+                Node::NodeStateFocused;
+        } else {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageSourceNodeStateMap =
+                result.styleDamageSourceNodeStateMap | Node::NodeStateFocused;
+        }
         return element->state() & Node::NodeState::NodeStateFocused;
     case CSSSelector::PseudoType::PseudoTarget:
-        result.styleDamageFrom = (StyleDamageSource)(
-            result.styleDamageFrom | StyleDamageFromElementState);
-        result.styleDamageSourceNodeStateMap =
-            result.styleDamageSourceNodeStateMap | Node::NodeStateTarget;
+        if (result.seenCombinator) {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageSourceNodeStateDOMTreeMap =
+                result.styleDamageSourceNodeStateDOMTreeMap |
+                Node::NodeStateTarget;
+        } else {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageSourceNodeStateMap =
+                result.styleDamageSourceNodeStateMap | Node::NodeStateTarget;
+        }
         return element->state() & Node::NodeState::NodeStateTarget;
     case CSSSelector::PseudoType::PseudoLink:
-        result.styleDamageFrom = (StyleDamageSource)(
-            result.styleDamageFrom | StyleDamageFromElementState);
-        result.styleDamageSourceNodeStateMap =
-            result.styleDamageSourceNodeStateMap | Node::NodeStateLink;
+        if (result.seenCombinator) {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementStateDOMTree);
+            result.styleDamageSourceNodeStateDOMTreeMap =
+                result.styleDamageSourceNodeStateDOMTreeMap |
+                Node::NodeStateLink;
+        } else {
+            result.styleDamageFrom = (StyleDamageSource)(
+                result.styleDamageFrom | StyleDamageFromElementState);
+            result.styleDamageSourceNodeStateMap =
+                result.styleDamageSourceNodeStateMap | Node::NodeStateLink;
+        }
         return element->state() & Node::NodeState::NodeStateLink;
     case CSSSelector::PseudoType::PseudoRoot:
         result.styleDamageFrom = (StyleDamageSource)(result.styleDamageFrom |

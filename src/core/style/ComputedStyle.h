@@ -730,7 +730,6 @@ class ComputedStyle : public gc {
         m_seenPseudoElementBefore = false;
         m_seenPseudoElementAfter = false;
         m_gotInheritedColor = false;
-        m_usedInAnimator = false;
         m_someNonInheritMemberExplicitlyInherited = false;
         m_originalDisplay = DisplayValue::InlineDisplayValue;
 
@@ -763,16 +762,6 @@ public:
     bool seenViewPortUnitInStyle()
     {
         return m_seenViewPortUnitInStyle;
-    }
-
-    bool usedInAnimator()
-    {
-        return m_usedInAnimator;
-    }
-
-    void markUsedInAnimator()
-    {
-        m_usedInAnimator = true;
     }
 
     bool someNonInheritMemberExplicitlyInherited()
@@ -3069,6 +3058,17 @@ public:
         return m_styleDamageSourceNodeStateMap;
     }
 
+    void setStyleDamageSourceNodeStateDOMTreeMap(int result)
+    {
+        m_styleDamageSourceNodeStateDOMTreeMap =
+            (m_styleDamageSourceNodeStateDOMTreeMap | result);
+    }
+
+    int styleDamageSourceNodeStateDOMTreeMap() const
+    {
+        return m_styleDamageSourceNodeStateDOMTreeMap;
+    }
+
     GCVector<ComputedStyle*>* cachedPseudoStyles()
     {
         if (!m_rareComputedStyleData.m_styles.size()) {
@@ -3533,6 +3533,7 @@ protected:
         m_pseudoId = StyleResolver::PseudoElementType::PseudoElementNone;
         m_styleDamageSource = StyleResolver::StyleDamageSource::NoDamage;
         m_styleDamageSourceNodeStateMap = 0;
+        m_styleDamageSourceNodeStateDOMTreeMap = 0;
     }
 
     // NOTICE
@@ -3564,7 +3565,6 @@ protected:
     bool m_seenPseudoElementBefore : 1;
     bool m_seenPseudoElementAfter : 1;
     bool m_gotInheritedColor : 1;
-    bool m_usedInAnimator : 1;
     bool m_someNonInheritMemberExplicitlyInherited : 1;
     FloatValue m_float : 2;
     ClearValue m_clear : 2;
@@ -3585,8 +3585,9 @@ protected:
     AlignItemValue m_alignSelf : 3;
     AlignContentValue m_alignContent : 3;
     StyleResolver::PseudoElementType m_pseudoId : 3;
-    StyleResolver::StyleDamageSource m_styleDamageSource : 5;
+    StyleResolver::StyleDamageSource m_styleDamageSource : 6;
     int m_styleDamageSourceNodeStateMap : 5;
+    int m_styleDamageSourceNodeStateDOMTreeMap : 5;
     bool m_zIndexSpecifiedByUser : 1;
 
     Font* m_font;

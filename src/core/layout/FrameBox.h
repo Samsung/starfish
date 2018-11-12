@@ -811,6 +811,9 @@ public:
     SkMatrix computeScreenMatrix();
     LayoutRect computeScreenExtent();
 
+    SkMatrix computeMatrixOnGraphicsBuffer();
+    SkMatrix computeMatrixOnWindow();
+
     class ChildFrameBoxIterator {
     public:
         virtual ~ChildFrameBoxIterator()

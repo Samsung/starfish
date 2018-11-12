@@ -1089,7 +1089,7 @@ RenderResult WebView::rendering(bool force)
             RepaintRegionTracker tracker(
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox(),
                 m_paintingDirtyRect, prevDrawnStackingContextInfo, scrollX,
-                scrollY);
+                scrollY, m_needsComposite);
             m_paintingDirtyRect = LayoutRect(0, 0, 0, 0);
             LayoutRect repaintRect = tracker.repaintRegion();
 

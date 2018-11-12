@@ -455,6 +455,7 @@ public:
         AttributeChange = 1 << 2,
         ElementStateChange = 1 << 3,
         DOMTreeChange = 1 << 4,
+        ElementStateChangeDomTree = 1 << 5,
     };
     void setNeedsStyleRecalc(
         StyleChangeReason reason = StyleChangeReason::JustNeedsRecalcSelf);

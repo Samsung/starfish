@@ -283,27 +283,6 @@ void CSSStyleSheet::collectStyleRules(
     }
 }
 
-static void findPseudoElement(Frame* f)
-{
-    for (size_t i = StyleResolver::PseudoElementGeneralTypeStart;
-         i <= StyleResolver::PseudoElementGeneralTypeEnd; i++) {
-        if (f->style()->seenPseudoElement(
-                (StyleResolver::PseudoElementType)i)) {
-            Node* n = f->node();
-            if (!n->isPseudoElement()) {
-                n->setNeedsStyleRecalc();
-                break;
-            }
-        }
-    }
-
-    Frame* c = f->firstChild();
-    while (c) {
-        findPseudoElement(c);
-        c = c->next();
-    }
-}
-
 void CSSStyleSheet::willRemovedFromDocument()
 {
     LongTaskFinder t("CSSStyleSheet::willRemovedFromDocument", 1);
@@ -313,14 +292,8 @@ void CSSStyleSheet::willRemovedFromDocument()
         GCVector<CSSSelectorList*> s;
         s.push_back(&r.first->selectorList());
         SelectorQuery selectorQuery(s);
-        NodeList* result = selectorQuery.queryAll(*m_origin->document());
-        for (size_t j = 0; j < result->length(); j++) {
-            result->item(j)->setNeedsStyleRecalc();
-        }
+        selectorQuery.invalidateStyleOfMatchedElement(*m_origin->document());
     }
-
-    Frame* f = m_origin->document()->frame();
-    findPseudoElement(f);
 }
 
 void CSSStyleSheet::willAddToDocument()
@@ -347,14 +320,8 @@ void CSSStyleSheet::willAddToDocument()
         GCVector<CSSSelectorList*> s;
         s.push_back(&r.first->selectorList());
         SelectorQuery selectorQuery(s);
-        NodeList* result = selectorQuery.queryAll(*m_origin->document());
-        for (size_t j = 0; j < result->length(); j++) {
-            result->item(j)->setNeedsStyleRecalc();
-        }
+        selectorQuery.invalidateStyleOfMatchedElement(*m_origin->document());
     }
-
-    Frame* f = m_origin->document()->frame();
-    findPseudoElement(f);
 }
 
 String* CSSStyleSheet::href() const

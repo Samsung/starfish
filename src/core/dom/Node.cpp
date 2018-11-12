@@ -776,12 +776,13 @@ static void setSiblingsNeedsStyleRecalcIfNeededWithStateChange(Node* startNode,
         if (node->isElement()) {
             int stateDamageMap = 0;
             if (node->style()) {
-                stateDamageMap = node->style()->styleDamageSourceNodeStateMap();
+                stateDamageMap =
+                    node->style()->styleDamageSourceNodeStateDOMTreeMap();
             }
 
             if ((stateDamageMap & oldState) | (stateDamageMap & newState)) {
                 node->setNeedsStyleRecalc(
-                    Node::StyleChangeReason::ElementStateChange);
+                    Node::StyleChangeReason::ElementStateChangeDomTree);
             }
         }
 
@@ -799,12 +800,12 @@ static void setChildrenNeedsStyleRecalcIfNeededWithStateChange(Node* startNode,
             int stateDamageMap = 0;
             if (child->style()) {
                 stateDamageMap =
-                    child->style()->styleDamageSourceNodeStateMap();
+                    child->style()->styleDamageSourceNodeStateDOMTreeMap();
             }
 
             if ((stateDamageMap & oldState) | (stateDamageMap & newState)) {
                 child->setNeedsStyleRecalc(
-                    Node::StyleChangeReason::ElementStateChange);
+                    Node::StyleChangeReason::ElementStateChangeDomTree);
             }
         }
         child = child->nextSibling();
