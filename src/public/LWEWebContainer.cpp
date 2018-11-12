@@ -308,7 +308,7 @@ void WebContainer::RegisterOnRenderedHandler(
 WebContainer* WebContainer::CreateGL(
     unsigned width, unsigned height,
     const std::function<void(WebContainer*)>& onGLMakeCurrent,
-    const std::function<void(WebContainer*)>& onGLSwapBuffers,
+    const std::function<void(WebContainer*, bool)>& onGLSwapBuffers,
     float devicePixelRatio, const char* defaultFontName, const char* locale,
     const char* timezoneID)
 {
@@ -335,9 +335,9 @@ WebContainer* WebContainer::CreateGL(
                 });
 
             webView->platformWindow()->registerGLSwapBuffersCallback(
-                [onGLSwapBuffers,
-                 newWebContainer](Starfish::PlatformWindow* wnd) {
-                    onGLSwapBuffers(newWebContainer);
+                [onGLSwapBuffers, newWebContainer](
+                    Starfish::PlatformWindow* wnd, bool mayNeedsSync) {
+                    onGLSwapBuffers(newWebContainer, mayNeedsSync);
                 });
 
             return (size_t)newWebContainer;
@@ -355,8 +355,9 @@ WebContainer* WebContainer::CreateGL(
         });
 
     webView->platformWindow()->registerGLSwapBuffersCallback(
-        [onGLSwapBuffers, newWebContainer](Starfish::PlatformWindow* wnd) {
-            onGLSwapBuffers(newWebContainer);
+        [onGLSwapBuffers, newWebContainer](Starfish::PlatformWindow* wnd,
+                                           bool mayNeedsSync) {
+            onGLSwapBuffers(newWebContainer, mayNeedsSync);
         });
 
     return newWebContainer;

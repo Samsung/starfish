@@ -109,7 +109,9 @@ public:
         ::LWE::WebContainer* webContainer = ::LWE::WebContainer::CreateGL(
             width, height,
             [this](WebContainer* wc) { glfwMakeContextCurrent(m_glWindow); },
-            [this](WebContainer* wc) { glfwSwapBuffers(m_glWindow); },
+            [this](WebContainer* wc, bool mayNeedsSync) {
+                glfwSwapBuffers(m_glWindow);
+            },
             devicePixelRatio, defaultFontName, locale, timezoneID);
 
         m_impl = webContainer;

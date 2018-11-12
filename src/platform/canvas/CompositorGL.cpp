@@ -1217,6 +1217,7 @@ public:
                                      AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN,
                                  -1, NULL, (void**)&m_buffer);
 #endif
+            m_window->glEGLImageUpdated();
             return m_buffer;
         }
         return m_buffer;
@@ -1451,6 +1452,8 @@ public:
 
     CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
     {
+        webView->platformWindow()->glMakeCurrent();
+
         m_webView = webView;
         m_compositorContext = compositorContext;
         glEnable(GL_BLEND);

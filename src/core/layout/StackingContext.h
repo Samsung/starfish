@@ -138,11 +138,7 @@ public:
     }
 
     void clearGraphicsBuffer();
-
-    LayoutRect visibleRect()
-    {
-        return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
-    }
+    LayoutRect visibleRect();
 
     LayoutLocation transformOrigin();
     void computeTransformMatrix();

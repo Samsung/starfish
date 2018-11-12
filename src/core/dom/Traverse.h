@@ -71,6 +71,35 @@ public:
         return false;
     }
 
+    static bool findMatchedDescendants(Node* root,
+                                       bool (*filter)(Element*, void*),
+                                       void* filterData,
+                                       void (*callback)(Element*, void*),
+                                       void* callbackData,
+                                       bool shouldOnlyMatchFirstElement)
+    {
+        Node* child = root->firstChild();
+        while (child) {
+            if (child->isElement()) {
+                Element* elm = child->asElement();
+                if (filter(elm, filterData)) {
+                    callback(elm, callbackData);
+                    if (shouldOnlyMatchFirstElement) {
+                        return true;
+                    }
+                }
+            }
+
+            if (findMatchedDescendants(child, filter, filterData, callback,
+                                       callbackData,
+                                       shouldOnlyMatchFirstElement)) {
+                return true;
+            }
+            child = child->nextSibling();
+        }
+        return false;
+    }
+
     template <typename Func>
     static Node* firstChild(Node* parent, Func matchingRule)
     {

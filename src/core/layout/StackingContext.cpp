@@ -1146,6 +1146,12 @@ void StackingContext::applyStackingContextProperties(
         m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
     }
 
+#if defined(PORT_COMPOSITOR_BACKEND_GL) && !defined(STARFISH_ENABLE_TEST)
+    if (isRootContext()) {
+        willBeComposited = true;
+    }
+#endif
+
     if (willBeComposited) {
         ensureRareData();
         bool shouldPaintWindowBackgroundImage = false;
@@ -1211,6 +1217,7 @@ void StackingContext::applyStackingContextProperties(
             !m_owner->isRootElement() && !inAnimation) {
             willBeComposited = false;
         }
+        m_isVisibleRectComputedForNonGraphicsLayer = true;
     } else {
         m_isVisibleRectComputedForNonGraphicsLayer = false;
     }
@@ -1575,6 +1582,20 @@ void StackingContext::fillGraphicsBufferContents(
     }
 
     canvas->restore();
+}
+
+LayoutRect StackingContext::visibleRect()
+{
+    if (!m_isVisibleRectComputedForNonGraphicsLayer) {
+        ensureRareData()->m_visibleRect = m_owner->frameVisibleRect();
+        SkMatrix l = SkMatrix::I();
+        Frame::ComputeVisibleRectContext ctx(
+            Frame::ComputeVisibleRectContext::GraphicsBufferBySelf, this, l,
+            m_rareData->m_visibleRect);
+        computeVisibleRect(this, this, ctx);
+        m_isVisibleRectComputedForNonGraphicsLayer = true;
+    }
+    return m_rareData ? m_rareData->m_visibleRect : LayoutRect(0, 0, 0, 0);
 }
 
 static LayoutRect computeScreenRect(StackingContext* ctx)
@@ -1999,16 +2020,6 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         canRejectPainting =
             canvas->canRejectPainting(m_owner->frameVisibleRect());
     } else {
-        if (!m_isVisibleRectComputedForNonGraphicsLayer) {
-            ensureRareData()->m_visibleRect = m_owner->frameVisibleRect();
-            SkMatrix l = SkMatrix::I();
-            Frame::ComputeVisibleRectContext ctx(
-                Frame::ComputeVisibleRectContext::GraphicsBufferBySelf, this, l,
-                m_rareData->m_visibleRect);
-            computeVisibleRect(this, this, ctx);
-            m_isVisibleRectComputedForNonGraphicsLayer = true;
-        }
-
         canRejectPainting =
             canvas->canRejectPainting(StackingContext::visibleRect());
     }

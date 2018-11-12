@@ -1022,6 +1022,9 @@ RenderResult WebView::rendering(bool force)
         }
     }
 
+    size_t totalAllocatedCanvasSurfaceSizeBefore =
+        CanvasSurface::g_totalAllocatedCanvasSurfaceSize;
+
     layoutIfNeeds();
 
     if (m_needsPainting) {
@@ -1291,6 +1294,16 @@ RenderResult WebView::rendering(bool force)
 
     m_needsRendering = false;
     m_inRendering = false;
+
+    size_t totalAllocatedCanvasSurfaceSizeAfter =
+        CanvasSurface::g_totalAllocatedCanvasSurfaceSize;
+
+    if (totalAllocatedCanvasSurfaceSizeBefore !=
+        totalAllocatedCanvasSurfaceSizeAfter) {
+        STARFISH_LOG_INFO("totalAllocatedCanvasSurfaceSize %fMB\n",
+                          totalAllocatedCanvasSurfaceSizeAfter / 1024.f /
+                              1024.f);
+    }
 
 #if defined(STARFISH_ENABLE_TEST)
     {

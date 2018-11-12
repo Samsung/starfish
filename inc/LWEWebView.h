@@ -123,7 +123,8 @@ public:
     static WebContainer* CreateGL(
         unsigned width, unsigned height,
         const std::function<void(WebContainer*)>& onGLMakeCurrent,
-        const std::function<void(WebContainer*)>& onGLSwapBuffers,
+        const std::function<void(WebContainer*, bool mayNeedsSync)>&
+            onGLSwapBuffers,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
     void ResizeTo(size_t width, size_t height);
