@@ -93,7 +93,12 @@ void TTS::init()
                              onAccessibilityChanged, this);
 
     if (m_handle == NULL) {
-        createHandle();
+        ecore_main_loop_thread_safe_call_async(
+            [](void* data) -> void {
+                TTS* tts = (TTS*)data;
+                tts->createHandle();
+            },
+            this);
     }
 }
 
