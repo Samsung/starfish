@@ -90,7 +90,8 @@ protected:
 
 class SyncNetworkWorkHelper : public NetworkURLWorkerHelper {
 protected:
-    virtual void responseHandlerWrapper(int res, NetworkURLWorkerData* nwd);
+    virtual void responseHandlerWrapper(int res,
+                                        NetworkURLWorkerData* nwd) override;
     virtual void abortHandlerWrapper(int res,
                                      NetworkURLWorkerData* nwd) override;
 };
