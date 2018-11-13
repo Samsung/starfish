@@ -640,8 +640,8 @@ public:
         }
 
         auto pixels = data->mapBuffer();
-        auto w = data->imageWidth();
-        auto h = data->imageHeight();
+        auto w = data->bufferWidth();
+        auto h = data->bufferHeight();
 
         SkPaint paint;
         setImageRenderingMode(paint, imageRenderingMode);
