@@ -339,7 +339,13 @@ int main(int argc, char* argv[])
         setenv("EXIT_AFTER_SCREEN_SHOT", "1", 1);
     }
 
-    std::string cacheDir(getenv("HOME"));
+    std::string cacheDir;
+    const char* homeDir = getenv("HOME");
+    if (!homeDir || strlen(homeDir) == 0) {
+        cacheDir = "/tmp";
+    } else {
+        cacheDir = homeDir;
+    }
     cacheDir += "/Starfish-cache";
 
 #ifdef STARFISH_DALI
