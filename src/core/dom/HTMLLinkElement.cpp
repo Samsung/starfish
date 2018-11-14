@@ -242,7 +242,7 @@ void HTMLLinkElement::loadStyleSheet()
     if (document()->preloadScanner()) {
         auto ps = document()->preloadScanner();
         for (size_t i = 0; i < ps->preloadedCSS().size(); i++) {
-            TextResource* res = ps->preloadedJS()[i];
+            TextResource* res = ps->preloadedCSS()[i];
             if (*res->url() == *url) {
                 if (res->isReceiving()) {
                     m_styleSheetTextResource = res;
