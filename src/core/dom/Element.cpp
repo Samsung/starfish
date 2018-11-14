@@ -1056,7 +1056,7 @@ uint32_t Element::scrollHeight()
 void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
 {
     if (layoutIfNeeds) {
-        window()->webView()->layoutIfNeeds();
+        window()->webView()->layoutIfNeeds(false);
     }
 
     Frame* frameObject = this->frame();

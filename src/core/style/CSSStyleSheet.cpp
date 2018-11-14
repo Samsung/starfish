@@ -27,6 +27,7 @@
 #include "core/layout/Frame.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/style/AncestorSelectorFilter.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSRuleList.h"
 #include "core/style/CSSStyleRule.h"
@@ -283,6 +284,61 @@ void CSSStyleSheet::collectStyleRules(
     }
 }
 
+static void invalidateStyleOfMatchedElementWorker(
+    Node* parentElement, AncestorSelectorFilter& filter,
+    GCVector<std::pair<StyleRule*, ResourceURL*>>& styleRules)
+{
+    if (parentElement->isElement()) {
+        filter.pushElement(parentElement->asElement());
+    }
+
+    Node* child = parentElement->firstChild();
+    while (child) {
+        if (child->isElement() && !child->needsStyleRecalc()) {
+            StyleResolver& resolver = child->document()->styleResolver();
+            StyleResolver::MatchResult result;
+            AtomicString elementName =
+                child->asElement()->name().localNameAtomic();
+            AtomicString elementId = child->asElement()->atomicId();
+            const GCVector<AtomicString>& elementClasses =
+                child->asElement()->classNames();
+            bool canUseAncestorSelectorFilter =
+                filter.canUseAncestorSelectorFilter(child->asElement());
+
+            for (size_t i = 0; i < styleRules.size(); i++) {
+                if (canUseAncestorSelectorFilter &&
+                    filter.canIgnoreSelector(styleRules[i].first,
+                                             child->asElement())) {
+                    continue;
+                }
+                bool matches =
+                    resolver.matchSelector(
+                        child->asElement(), elementName, elementId,
+                        elementClasses, styleRules[i].first->selectorList(), 0,
+                        result, false) == StyleResolver::Match::SelectorMatches;
+
+                if (matches) {
+                    child->asElement()->setNeedsStyleRecalc();
+                    break;
+                }
+            }
+        }
+        child = child->nextSibling();
+    }
+
+    child = parentElement->firstChild();
+    while (child) {
+        if (child->isElement()) {
+            invalidateStyleOfMatchedElementWorker(child, filter, styleRules);
+        }
+        child = child->nextSibling();
+    }
+
+    if (parentElement->isElement()) {
+        filter.popElement();
+    }
+}
+
 void CSSStyleSheet::willRemovedFromDocument()
 {
     if (m_origin->document()
@@ -291,14 +347,9 @@ void CSSStyleSheet::willRemovedFromDocument()
         return;
     }
     LongTaskFinder t("CSSStyleSheet::willRemovedFromDocument", 1);
-
-    for (size_t i = 0; i < m_styleRules.size(); i++) {
-        auto r = m_styleRules[i];
-        GCVector<CSSSelectorList*> s;
-        s.push_back(&r.first->selectorList());
-        SelectorQuery selectorQuery(s);
-        selectorQuery.invalidateStyleOfMatchedElement(*m_origin->document());
-    }
+    AncestorSelectorFilter filter;
+    invalidateStyleOfMatchedElementWorker(m_origin->document(), filter,
+                                          m_styleRules);
 }
 
 void CSSStyleSheet::willAddToDocument()
@@ -325,13 +376,9 @@ void CSSStyleSheet::willAddToDocument()
     collectStyleRules(childRules(), webFonts, url(), viewportDependentResult,
                       deviceDependentResult);
 
-    for (size_t i = 0; i < m_styleRules.size(); i++) {
-        auto r = m_styleRules[i];
-        GCVector<CSSSelectorList*> s;
-        s.push_back(&r.first->selectorList());
-        SelectorQuery selectorQuery(s);
-        selectorQuery.invalidateStyleOfMatchedElement(*m_origin->document());
-    }
+    AncestorSelectorFilter filter;
+    invalidateStyleOfMatchedElementWorker(m_origin->document(), filter,
+                                          m_styleRules);
 }
 
 String* CSSStyleSheet::href() const

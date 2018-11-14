@@ -48,6 +48,7 @@ void HTMLBodyElement::didComputedStyleChanged(ComputedStyle* oldStyle,
         document()->setNeedsPainting();
     } else {
         document()->browsingContext()->m_hasBodyElementBackground = false;
+        document()->setNeedsPainting();
     }
 }
 

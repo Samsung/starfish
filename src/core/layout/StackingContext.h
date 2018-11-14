@@ -137,7 +137,6 @@ public:
         return m_needsGraphicsBuffer;
     }
 
-    void clearGraphicsBuffer();
     LayoutRect visibleRect();
 
     LayoutLocation transformOrigin();
@@ -203,6 +202,14 @@ public:
         return false;
     }
 
+    GraphicsBufferHolder* graphicsBufferHolder()
+    {
+        if (m_rareData) {
+            return m_rareData->m_graphicsBufferHolder;
+        }
+        return nullptr;
+    }
+    void clearGraphicsBuffer();
     void flushGraphicsBuffer();
 
     void* operator new(size_t size);

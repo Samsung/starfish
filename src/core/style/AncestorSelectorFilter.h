@@ -32,6 +32,7 @@ class AncestorSelectorFilter {
 public:
     AncestorSelectorFilter()
     {
+        m_parentStack.reserve(32);
     }
     ~AncestorSelectorFilter()
     {
@@ -70,6 +71,7 @@ private:
         AncestorStackFrame(Element* element)
             : m_element(element)
         {
+            m_identifierHashes.reserve(10);
         }
         Element* m_element;
         std::vector<unsigned> m_identifierHashes;

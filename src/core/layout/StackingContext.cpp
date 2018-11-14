@@ -1664,17 +1664,6 @@ void StackingContext::fillGraphicsBufferContents(
 {
     STARFISH_ASSERT(needsGraphicsBuffer());
 
-    PrevDrawnStackingContextInfo info;
-    if (isIFrameStackingContext()) {
-        info.screenExtent = m_parent->screenExtent();
-    } else {
-        info.screenExtent = m_screenExtent;
-    }
-    info.opacity = m_owner->style()->opacity();
-    info.needsGraphicsBuffer = needsGraphicsBuffer();
-    info.transformMatrix = transformMatrix();
-    info.graphicsBufferVisibleRect = StackingContext::visibleRect();
-
     LayoutRect visibleRect = StackingContext::visibleRect();
     LayoutUnit minX = visibleRect.x();
     LayoutUnit maxX = visibleRect.maxX();
@@ -1685,8 +1674,6 @@ void StackingContext::fillGraphicsBufferContents(
     size_t bufferHeight = (int)(maxY - minY);
 
     if (bufferWidth == 0 || bufferHeight == 0) {
-        m_owner->node()->webView()->prevDrawnStackingContextInfo().insert(
-            std::make_pair(m_owner->node(), info));
         return;
     }
 
@@ -1734,10 +1721,6 @@ void StackingContext::fillGraphicsBufferContents(
             globalCtx.prevDrawnStackingContextInfoMap.find(m_owner->node());
         iter->second.graphicsBufferHolder = nullptr;
     }
-
-    info.graphicsBufferHolder = m_rareData->m_graphicsBufferHolder;
-    m_owner->node()->webView()->prevDrawnStackingContextInfo().insert(
-        std::make_pair(m_owner->node(), info));
 
     if (m_owner->hasOwnGraphicsBufferMethod()) {
         auto iter =
@@ -1929,32 +1912,12 @@ void StackingContext::fillGraphicsBufferContents(
     }
 }
 
-#define JOBS_FOR_EXIT_PAITING()                                        \
-    m_owner->node()->webView()->prevDrawnStackingContextInfo().insert( \
-        std::make_pair(m_owner->node(), info));
-
 void StackingContext::paintStackingContext(Canvas* canvas,
                                            PaintingStackingContextContext& ctx)
 {
     if (needsGraphicsBuffer()) {
         ensureRareData()->m_textDecorationData = canvas->textDecorationData();
         return;
-    }
-
-    PrevDrawnStackingContextInfo info;
-    if (isIFrameStackingContext()) {
-        info.screenExtent = m_parent->screenExtent();
-    } else {
-        info.screenExtent = m_screenExtent;
-    }
-    info.opacity = m_owner->style()->opacity();
-    info.needsGraphicsBuffer = needsGraphicsBuffer();
-    info.transformMatrix = transformMatrix();
-
-    if (ctx.willCompositing) {
-        info.extentOnGraphicsLayer = computeBoxExtent(
-            LayoutRect(0, 0, m_owner->width(), m_owner->height()),
-            m_owner->computeMatrixOnGraphicsBuffer());
     }
 
     {
@@ -1983,7 +1946,6 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                     canvas->endOpacityLayer();
                 }
                 canvas->restore();
-                JOBS_FOR_EXIT_PAITING()
                 return;
             }
             LayoutLocation to = transformOrigin();
@@ -2181,8 +2143,6 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     }
 
     canvas->restore();
-
-    JOBS_FOR_EXIT_PAITING()
 }
 
 void StackingContext::compositeStackingContext(Compositor* compositor)

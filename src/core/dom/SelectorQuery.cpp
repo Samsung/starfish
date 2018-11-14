@@ -142,18 +142,6 @@ bool SelectorQuery::matches(Element& element)
     return selectorListMatches(element, &element);
 }
 
-void SelectorQuery::invalidateStyleOfMatchedElement(Node& rootNode)
-{
-    m_inInvalidateStyleOfMatchedElement = true;
-    std::vector<Element*> matchedElement;
-    execute(rootNode, matchedElement, false);
-    m_inInvalidateStyleOfMatchedElement = false;
-
-    for (size_t i = 0; i < matchedElement.size(); i++) {
-        matchedElement[i]->setNeedsStyleRecalc();
-    }
-}
-
 inline bool ancestorHasClassName(Node& rootNode, const AtomicString& className)
 {
     if (!rootNode.isElement()) {
@@ -261,8 +249,7 @@ void SelectorQuery::traverseDescendants(CSSSelectorList& selectors,
         &rootNode,
         [](Element* element, void* data) -> bool {
             Data* d = (Data*)data;
-            return d->selectorQuery->selectorMatches(d->selectors, element,
-                                                     d->rootNode);
+            return d->selectorQuery->selectorMatches(d->selectors, element);
         },
         &d,
         [](Element* e, void* data) {
@@ -272,8 +259,7 @@ void SelectorQuery::traverseDescendants(CSSSelectorList& selectors,
         &collection, shouldOnlyMatchFirstElement);
 }
 
-bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element,
-                                    Node& rootNode)
+bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element)
 {
     StyleResolver& resolver = element->document()->styleResolver();
     StyleResolver::MatchResult result;
@@ -282,8 +268,7 @@ bool SelectorQuery::selectorMatches(CSSSelectorList& selector, Element* element,
     const GCVector<AtomicString>& elementClasses = element->classNames();
 
     return resolver.matchSelector(element, elementName, elementId,
-                                  elementClasses, selector, 0, result,
-                                  !m_inInvalidateStyleOfMatchedElement) ==
+                                  elementClasses, selector, 0, result, true) ==
            StyleResolver::Match::SelectorMatches;
 }
 
@@ -300,7 +285,7 @@ void SelectorQuery::executeForTraverseRoot(
         if (!traverseRoot->isElement()) {
             return;
         }
-        if (selectorMatches(selectors, traverseRoot->asElement(), rootNode)) {
+        if (selectorMatches(selectors, traverseRoot->asElement())) {
             output.push_back(traverseRoot->asElement());
         }
         return;
@@ -323,7 +308,7 @@ void SelectorQuery::executeForTraverseRoots(
     if (matchTraverseRoots) {
         while (!traverseRoots.isEmpty()) {
             Element* element = traverseRoots.next();
-            if (selectorMatches(selectors, element, rootNode)) {
+            if (selectorMatches(selectors, element)) {
                 output.push_back(element);
                 if (shouldOnlyMatchFirstElement) {
                     return;
@@ -449,7 +434,7 @@ bool SelectorQuery::selectorListMatches(Node& rootNode, Element* element)
     size_t len = m_selectorListContainer.size();
 
     for (size_t i = 0; i < len; i++) {
-        if (selectorMatches(*m_selectorListContainer[i], element, rootNode)) {
+        if (selectorMatches(*m_selectorListContainer[i], element)) {
             return true;
         }
     }
@@ -521,7 +506,7 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*>& output,
                       element->isDescendantOf(&rootNode))) {
                     continue;
                 }
-                if (selectorMatches(selectors, element, rootNode)) {
+                if (selectorMatches(selectors, element)) {
                     output.push_back(element);
 
                     if (shouldOnlyMatchFirstElement) {
@@ -538,7 +523,7 @@ void SelectorQuery::execute(Node& rootNode, std::vector<Element*>& output,
             !(rootNode.isDocument() || element->isDescendantOf(&rootNode))) {
             return;
         }
-        if (selectorMatches(selectors, element, rootNode)) {
+        if (selectorMatches(selectors, element)) {
             output.push_back(element);
         }
         return;

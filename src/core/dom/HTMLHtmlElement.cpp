@@ -37,6 +37,7 @@ void HTMLHtmlElement::didComputedStyleChanged(ComputedStyle* oldStyle,
         document()->setNeedsPainting();
     } else {
         window()->browsingContext()->m_hasRootElementBackground = false;
+        document()->setNeedsPainting();
     }
 }
 }
