@@ -1,7 +1,6 @@
 // https://xhr.spec.whatwg.org/#xmlhttprequest
 // NOTE Using DOMString instead of USVString
 
-
 [Exposed=(Window,DedicatedWorker,SharedWorker)]
 interface XMLHttpRequestEventTarget : EventTarget {
   // event handlers
@@ -12,6 +11,10 @@ interface XMLHttpRequestEventTarget : EventTarget {
   attribute EventHandler onload;
   attribute EventHandler ontimeout;
   attribute EventHandler onloadend;
+};
+
+[Exposed=(Window,DedicatedWorker,SharedWorker)]
+interface XMLHttpRequestUpload : XMLHttpRequestEventTarget {
 };
 
 enum XMLHttpRequestResponseType {
@@ -44,7 +47,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [RaisesException] void setRequestHeader(ByteString name, ByteString value);
   [RaisesException=Setter] attribute unsigned long timeout;
   [RaisesException=Setter] attribute boolean withCredentials;
-  [Unimplemented, SameObject] readonly attribute XMLHttpRequestUpload upload;
+  [SameObject] readonly attribute XMLHttpRequestUpload upload;
   // NOTE Partial support
   //      Handle only DOMString
   // void send(optional (Document or BodyInit)? body = null);
