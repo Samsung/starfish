@@ -226,10 +226,12 @@ echo "Building for: " %{rpm}
 
 %if "%{rpm}" == "tv" || "%{rpm}" == "all"
 # For Dali
+rm -f CMakeCache.txt
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_tv -DBACKEND=dali -DTARGETNAME=lightweight-web-engine-dali-plugin.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
 ninja starfish.shared_library
 
 # For Cairo
+rm -f CMakeCache.txt
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_tv -DBACKEND=efl_cairo_gl -DTARGETNAME=lightweight-web-engine.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
@@ -238,10 +240,12 @@ ninja starfish.executable
 
 %if "%{rpm}" == "prod_tv"
 # For Dali
+rm -f CMakeCache.txt
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=dali -DTARGETNAME=lightweight-web-engine.prod.dali.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
 ninja starfish.shared_library
 
 # For Cairo
+rm -f CMakeCache.txt
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DTARGETNAME=lightweight-web-engine.prod.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
@@ -250,10 +254,12 @@ ninja starfish.executable
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 # For Dali
+rm -f CMakeCache.txt
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_mobile -DBACKEND=dali -DTARGETNAME=lightweight-web-engine-dali-plugin.mobile -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
 ninja starfish.shared_library
 
 # For Cairo
+rm -f CMakeCache.txt
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_mobile -DBACKEND=efl_cairo_gl -DTARGETNAME=lightweight-web-engine.mobile -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
@@ -265,10 +271,12 @@ ninja starfish.executable
 #CXXFLAGS+=' -Os '
 
 # For Dali
+rm -f CMakeCache.txt
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_wearable -DBACKEND=dali -DTARGETNAME=lightweight-web-engine-dali-plugin.wearable -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
 ninja starfish.shared_library
 
 # For Cairo
+rm -f CMakeCache.txt
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=unified_wearable -DBACKEND=efl_cairo -DTARGETNAME=lightweight-web-engine.wearable -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
