@@ -3549,6 +3549,31 @@ LayoutRect computeBoxExtent(LayoutRect rt, const SkMatrix& m)
 
 enum ComputeMatrixFor { Screen, GraphicsLayer, Window };
 
+static void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m)
+{
+    if (fBox->isEstablishesStackingContext()) {
+        ComputedStyle* cs = fBox->style();
+        StyleTransformDataGroup* transforms = cs->transforms(fBox);
+        if (transforms) {
+            SkMatrix m2 = cs->transformsToMatrix(fBox->width(), fBox->height(),
+                                                 fBox, true);
+            if (!m2.isIdentity()) {
+                LayoutUnit ox = fBox->width() / 2;
+                LayoutUnit oy = fBox->height() / 2;
+                if (cs->hasTransformOrigin()) {
+                    StyleTransformOrigin* origin = cs->transformOrigin();
+                    auto od = origin->originValue();
+                    ox = od->getXAxis().specifiedValue(fBox->width(), fBox);
+                    oy = od->getYAxis().specifiedValue(fBox->height(), fBox);
+                }
+                m.preTranslate((float)ox, (float)oy);
+                m.preConcat(m2);
+                m.preTranslate(-(float)ox, -(float)oy);
+            }
+        }
+    }
+}
+
 static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
 {
     bool seenFixedPositionedLayer = false;
@@ -3599,17 +3624,8 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
                 }
             }
             m.preTranslate((float)pos.x(), (float)pos.y());
-            StackingContext* sc = fBox->stackingContext();
-            if (sc) {
-                SkMatrix m2 = sc->transformMatrix();
-                if (!m2.isIdentity()) {
-                    LayoutLocation to =
-                        fBox->stackingContext()->transformOrigin();
-                    m.preTranslate((float)to.x(), (float)to.y());
-                    m.preConcat(m2);
-                    m.preTranslate(-(float)to.x(), -(float)to.y());
-                }
-            }
+
+            applyTransformIfNeeded(fBox, m);
 
             lastParentBox = fBox;
             iter++;
@@ -3635,17 +3651,7 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
             }
             m.preTranslate((float)pos.x(), (float)pos.y());
 
-            StackingContext* sc = fBox->stackingContext();
-            if (sc) {
-                SkMatrix m2 = sc->transformMatrix();
-                if (!m2.isIdentity()) {
-                    LayoutLocation to =
-                        fBox->stackingContext()->transformOrigin();
-                    m.preTranslate((float)to.x(), (float)to.y());
-                    m.preConcat(m2);
-                    m.preTranslate(-(float)to.x(), -(float)to.y());
-                }
-            }
+            applyTransformIfNeeded(fBox, m);
 
             lastParentBox = fBox;
             iter++;

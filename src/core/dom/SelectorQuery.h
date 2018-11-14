@@ -35,15 +35,12 @@ public:
     };
 
     SelectorQuery(GCVector<CSSSelectorList*>& selector)
-        : m_inInvalidateStyleOfMatchedElement(false)
-        , m_selectorListContainer(selector)
+        : m_selectorListContainer(selector)
     {
     }
     Element* queryFirst(Node& rootNode);
     NodeList* queryAll(Node& rootNode);
     bool matches(Element& element);
-
-    void invalidateStyleOfMatchedElement(Node& rootNode);
 
 private:
     bool canUseFastQuery(const Node& rootNode);
@@ -78,11 +75,9 @@ private:
     void collectElementsByTagName(Node& rootNode, const AtomicString& tagName,
                                   std::vector<Element*>& collection,
                                   bool shouldOnlyMatchFirstElement);
-    bool selectorMatches(CSSSelectorList& selector, Element* element,
-                         Node& rootNode);
+    bool selectorMatches(CSSSelectorList& selector, Element* element);
     CSSSelector* selectorForIdLookup(CSSSelectorList& firstSelector);
 
-    bool m_inInvalidateStyleOfMatchedElement;
     GCVector<CSSSelectorList*>& m_selectorListContainer;
 };
 }

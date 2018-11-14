@@ -970,6 +970,43 @@ static void cleanupLayoutRepaintTracker(BrowsingContext* ctx)
         [](BrowsingContext* ctx) { cleanupLayoutRepaintTracker(ctx); });
 }
 
+static void saveCurrentPaintingState(StackingContext* ctx)
+{
+    PrevDrawnStackingContextInfo info;
+    if (ctx->isIFrameStackingContext()) {
+        info.screenExtent = ctx->parent()->screenExtent();
+    } else {
+        info.screenExtent = ctx->screenExtent();
+    }
+    info.opacity = ctx->owner()->style()->opacity();
+    info.needsGraphicsBuffer = ctx->needsGraphicsBuffer();
+    info.transformMatrix = ctx->transformMatrix();
+
+    if (info.needsGraphicsBuffer) {
+        info.graphicsBufferVisibleRect = ctx->visibleRect();
+        info.graphicsBufferHolder = ctx->graphicsBufferHolder();
+    } else {
+        info.extentOnGraphicsLayer = computeBoxExtent(
+            LayoutRect(0, 0, ctx->owner()->width(), ctx->owner()->height()),
+            ctx->owner()->computeMatrixOnGraphicsBuffer());
+    }
+
+    ctx->owner()->node()->webView()->prevDrawnStackingContextInfo().insert(
+        std::make_pair(ctx->owner()->node(), info));
+
+    auto iter = ctx->childContexts().begin();
+    while (iter != ctx->childContexts().end()) {
+        StackingContextChild* child = *iter;
+        auto iter2 = child->begin();
+        while (iter2 != child->end()) {
+            StackingContext* childCtx = *iter2;
+            saveCurrentPaintingState(childCtx);
+            iter2++;
+        }
+        iter++;
+    }
+}
+
 RenderResult WebView::rendering(bool force)
 {
     RenderResult renderResult;
@@ -1238,6 +1275,9 @@ RenderResult WebView::rendering(bool force)
                     iter->second.graphicsBufferHolder = nullptr;
                 }
                 iter++;
+            }
+            if (m_rootStackingContext) {
+                saveCurrentPaintingState(m_rootStackingContext);
             }
         }
 

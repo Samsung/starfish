@@ -39,8 +39,9 @@ namespace Starfish {
 
 enum { TagNameSalt = 13, IdSalt = 17, ClassNameSalt = 19 };
 
-static void collectElementIdentifierHashes(
-    Element* element, std::vector<unsigned>& identifierHashes)
+template <typename V>
+static void collectElementIdentifierHashes(Element* element,
+                                           V& identifierHashes)
 {
     identifierHashes.push_back(
         element->name().localNameAtomic().string()->hashValue() * TagNameSalt);
