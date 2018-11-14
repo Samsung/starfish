@@ -46,7 +46,7 @@ http://web-platform.test:8000/xhr/send-redirect.htm
 #http://web-platform.test:8000/xhr/open-method-responsetype-set-sync.htm
 #http://web-platform.test:8000/xhr/open-url-encoding.htm
 #http://web-platform.test:8000/xhr/open-during-abort.htm
-#http://web-platform.test:8000/xhr/send-response-upload-event-progress.htm
+http://web-platform.test:8000/xhr/send-response-upload-event-progress.htm
 #http://web-platform.test:8000/xhr/access-control-preflight-async-method-denied.htm
 #http://web-platform.test:8000/xhr/setrequestheader-allow-empty-value.htm
 #http://web-platform.test:8000/xhr/responsedocument-decoding.htm
@@ -75,8 +75,8 @@ http://web-platform.test:8000/xhr/open-url-about-blank-window.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-simple.html
 #http://web-platform.test:8000/xhr/send-sync-timeout.htm
 http://web-platform.test:8000/xhr/send-no-response-event-loadstart.htm
-#http://web-platform.test:8000/xhr/abort-upload-event-abort.htm
-#http://web-platform.test:8000/xhr/abort-upload-event-loadend.htm
+http://web-platform.test:8000/xhr/abort-upload-event-abort.htm
+http://web-platform.test:8000/xhr/abort-upload-event-loadend.htm
 #http://web-platform.test:8000/xhr/interfaces.html
 http://web-platform.test:8000/xhr/getresponseheader-cookies-and-more.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-aborted.html
@@ -112,7 +112,7 @@ http://web-platform.test:8000/xhr/open-url-fragment.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-synconmain.html
 #http://web-platform.test:8000/xhr/access-control-sandboxed-iframe-denied-without-wildcard.htm
 #http://web-platform.test:8000/xhr/open-send-open.htm
-#http://web-platform.test:8000/xhr/send-response-upload-event-loadstart.htm
+http://web-platform.test:8000/xhr/send-response-upload-event-loadstart.htm
 #http://web-platform.test:8000/xhr/send-authentication-prompt-2-manual.htm
 #http://web-platform.test:8000/xhr/send-data-blob.htm
 #http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-501.htm
@@ -198,7 +198,7 @@ http://web-platform.test:8000/xhr/abort-during-unsent.htm
 http://web-platform.test:8000/xhr/access-control-basic-cors-safelisted-request-headers.htm
 http://web-platform.test:8000/xhr/progressevent-interface.html
 #http://web-platform.test:8000/xhr/abort-during-upload.htm
-#http://web-platform.test:8000/xhr/send-entity-body-get-head.htm
+http://web-platform.test:8000/xhr/send-entity-body-get-head.htm
 #http://web-platform.test:8000/xhr/access-control-basic-allow-preflight-cache-invalidation-by-header.htm
 #http://web-platform.test:8000/xhr/headers-normalize-response.htm
 #http://web-platform.test:8000/xhr/open-during-abort-event.htm
@@ -231,7 +231,7 @@ http://web-platform.test:8000/xhr/open-method-insecure.htm
 #http://web-platform.test:8000/xhr/xmlhttprequest-network-error-sync.htm
 #http://web-platform.test:8000/xhr/event-load.htm
 #http://web-platform.test:8000/xhr/event-timeout.htm
-#http://web-platform.test:8000/xhr/send-response-upload-event-loadend.htm
+http://web-platform.test:8000/xhr/send-response-upload-event-loadend.htm
 #http://web-platform.test:8000/xhr/open-open-sync-send.htm
 #http://web-platform.test:8000/xhr/responsexml-media-type.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-overrides.html

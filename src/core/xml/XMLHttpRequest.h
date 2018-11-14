@@ -53,6 +53,18 @@ public:
 #undef OVERRIDE
 };
 
+class XMLHttpRequestUpload : public XMLHttpRequestEventTarget {
+public:
+    XMLHttpRequestUpload(Document* document)
+        : XMLHttpRequestEventTarget(document)
+    {
+    }
+
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isXMLHttpRequestUpload() const override;
+};
+
 class XMLHttpRequest : public XMLHttpRequestEventTarget {
     friend class XMLHttpRequestEventEmitter;
     friend class XMLHttpRequestResourceRequestClient;
@@ -99,6 +111,8 @@ public:
     bool withCredentials() const;
     void setWithCredentials(bool value);
 
+    XMLHttpRequestUpload* upload() const;
+
     void setRequestHeader(String* header, String* value);
 
     String* getAllResponseHeaders();
@@ -115,6 +129,8 @@ protected:
     ResourceRequest* m_resourceRequest;
     XMLHttpRequestResponseType m_responseType;
     bool m_withCredentials;
+    XMLHttpRequestUpload* m_upload;
+
     // for responseType = "text"
     String* m_responseText;
 

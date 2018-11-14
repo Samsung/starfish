@@ -54,6 +54,10 @@ public:
         String* eventName = String::emptyString;
         ProgressState progState = request->progressState();
         if (progState == ProgressState::Progress) {
+            // If the synchronous flag is set, don't fire this progress event.
+            if (request->isSync()) {
+                return;
+            }
             eventName =
                 request->starfish()->staticStrings()->m_progress.localName();
         } else if (progState == ProgressState::InError) {
@@ -82,6 +86,10 @@ public:
             eventName =
                 request->starfish()->staticStrings()->m_loadend.localName();
         } else if (progState == ProgressState::LoadStart) {
+            // If the synchronous flag is set, don't fire this progress event.
+            if (request->isSync()) {
+                return;
+            }
             eventName =
                 request->starfish()->staticStrings()->m_loadstart.localName();
         } else {
@@ -94,6 +102,12 @@ public:
         pe->setLoaded(request->loaded());
         pe->setTotal(request->total());
         m_xhr->EventTarget::dispatchEventByUA(m_xhr, pe);
+
+        // TODO: Dispatch progress events on the XMLHttpRequestUpload object
+        // according to the spec. (https://xhr.spec.whatwg.org/)
+        if (m_xhr->upload()) {
+            m_xhr->EventTarget::dispatchEventByUA(m_xhr->upload(), pe);
+        }
     }
 
     void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
@@ -183,6 +197,7 @@ XMLHttpRequest::XMLHttpRequest(::Starfish::Document* document)
     : XMLHttpRequestEventTarget(document)
     , m_resourceRequest(new ResourceRequest(document))
     , m_withCredentials(false)
+    , m_upload(new XMLHttpRequestUpload(document))
 {
     /*
     GC_REGISTER_FINALIZER_NO_ORDER(this, [] (void* obj, void* cd) {
@@ -216,11 +231,23 @@ void XMLHttpRequest::send(Nullable<String*> body)
 
 void XMLHttpRequest::send(String* body)
 {
-    if (m_resourceRequest->readyState() != ReadyState::Opened) {
+    // If state is not opened, then throw an "InvalidStateError" DOMException.
+    // If the send() flag is set, then throw an "InvalidStateError"
+    // DOMException.
+    if (m_resourceRequest->readyState() != ReadyState::Opened ||
+        m_resourceRequest->m_didSend) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
+
+    // If the request method is GET or HEAD, set body to null.
+    if (m_resourceRequest->method() == MethodType::GET ||
+        m_resourceRequest->method() == MethodType::HEAD) {
+        // TODO: The body argument should be Document or BodyInit.
+        body = String::emptyString;
+    }
+
     m_resourceRequest->send(body, false);
 }
 
@@ -496,6 +523,11 @@ void XMLHttpRequest::setWithCredentials(bool value)
                 RequestCredentials::SameOrigin);
         }
     }
+}
+
+XMLHttpRequestUpload* XMLHttpRequest::upload() const
+{
+    return m_upload;
 }
 
 void XMLHttpRequest::setRequestHeader(String* header, String* value)
