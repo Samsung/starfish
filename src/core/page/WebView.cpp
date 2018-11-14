@@ -278,6 +278,40 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     m_starfish->m_webViewInstanceCount++;
 }
 
+void WebView::addJavaScriptNativeInterface(
+    String* exposedObjectName, String* jsFunctionName, void* scriptObject,
+    Escargot::ScriptNativeFunctionPointer scriptNativeFunctionPointer)
+{
+    m_jsInterfaceList.push_back(std::make_tuple(exposedObjectName,
+                                                jsFunctionName, scriptObject,
+                                                scriptNativeFunctionPointer));
+}
+
+void WebView::removeJavaScriptNativeInterface(String* exposedObjectName,
+                                              String* jsFunctionName)
+{
+    m_jsInterfaceList.erase(
+        std::remove_if(
+            m_jsInterfaceList.begin(), m_jsInterfaceList.end(),
+            [exposedObjectName, jsFunctionName](
+                const std::tuple<String*, String*, void*,
+                                 Escargot::ScriptNativeFunctionPointer>& e) {
+                return exposedObjectName->equals(std::get<0>(e)) &&
+                       jsFunctionName->equals(std::get<1>(e));
+            }),
+        m_jsInterfaceList.end());
+}
+
+void WebView::applyJavaScriptNativeInterface(ScriptBindingInstance* instance)
+{
+    for (auto it = m_jsInterfaceList.begin(); it != m_jsInterfaceList.end();
+         it++) {
+        registerJavaScriptNativeInterface(instance, std::get<0>(*it),
+                                          std::get<1>(*it), std::get<2>(*it),
+                                          std::get<3>(*it));
+    }
+}
+
 void WebView::destroy()
 {
     STARFISH_LOG_INFO("WebView::destroy\n");
@@ -289,6 +323,7 @@ void WebView::destroy()
     pause();
 
     m_globalPointingEventListener.clear();
+    m_jsInterfaceList.clear();
 
     if (mainBrowsingContext()) {
         mainBrowsingContext()->dispose();
@@ -405,6 +440,8 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     createScriptEngineInstance();
 
     m_topLevelBrowsingContext->open(url, type, referrerURL);
+    applyJavaScriptNativeInterface(
+        mainBrowsingContext()->scriptBindingInstance());
     struct Param : public gc {
         String* url;
     };
