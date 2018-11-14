@@ -213,6 +213,13 @@ public:
         }
     }
 
+    void addJavaScriptNativeInterface(
+        String* exposedObjectName, String* jsFunctionName, void* scriptObject,
+        Escargot::ScriptNativeFunctionPointer scriptNativeFunctionPointer);
+    void removeJavaScriptNativeInterface(String* exposedObjectName,
+                                         String* jsFunctionName);
+    void applyJavaScriptNativeInterface(ScriptBindingInstance* instance);
+
     static bool stringToBlobURLString(String* url, BlobURLStore& result);
     static String* blobURLStoreToString(BlobURLStore store, String* origin);
 
@@ -623,6 +630,10 @@ private:
     // <----
 
     std::unordered_map<std::string, void*> m_publicLayerUserDataMap;
+
+    GCVector<std::tuple<String*, String*, void*,
+                        Escargot::ScriptNativeFunctionPointer>>
+        m_jsInterfaceList;
 
 #ifdef STARFISH_ENABLE_TEST
     unsigned int m_testCompatibleMode;

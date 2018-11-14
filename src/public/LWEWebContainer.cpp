@@ -547,11 +547,19 @@ void WebContainer::AddJavaScriptInterface(
     Starfish::String* functionName =
         Starfish::String::fromUTF8(jsFunctionName.c_str());
 
-    Starfish::registerJavaScriptNativeInterface(
-        TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName, functionName,
-        new Starfish::JavaScriptNativeHandler(TO_WEBVIEW(m_impl), functionName,
-                                              cb),
-        nativeCallbackFunction);
+    TO_WEBVIEW(m_impl)
+        ->addJavaScriptNativeInterface(
+            objectName, functionName, new Starfish::JavaScriptNativeHandler(
+                                          TO_WEBVIEW(m_impl), functionName, cb),
+            nativeCallbackFunction);
+
+    if (TO_WEBVIEW(m_impl)->mainBrowsingContext()) {
+        Starfish::registerJavaScriptNativeInterface(
+            TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName, functionName,
+            new Starfish::JavaScriptNativeHandler(TO_WEBVIEW(m_impl),
+                                                  functionName, cb),
+            nativeCallbackFunction);
+    }
 
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
@@ -643,9 +651,13 @@ void WebContainer::RemoveJavascriptInterface(
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
     Starfish::String* objectName =
         Starfish::String::fromUTF8(exposedObjectName.c_str());
+    Starfish::String* functionName =
+        Starfish::String::fromUTF8(jsFunctionName.c_str());
+
+    TO_WEBVIEW(m_impl)
+        ->removeJavaScriptNativeInterface(objectName, functionName);
+
     if (!jsFunctionName.empty()) {
-        Starfish::String* functionName =
-            Starfish::String::fromUTF8(jsFunctionName.c_str());
         Starfish::unregisterJavaScriptNativeInterface(
             TO_SCRIPT_BINDING_INSTANCE(m_impl), objectName, functionName);
     } else {

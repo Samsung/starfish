@@ -242,7 +242,7 @@ cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM
 ninja starfish.shared_library
 
 # For Cairo
-cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DTARGETNAME=lightweight-web-engine.prod.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
+cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DTARGETNAME=lightweight-web-engine.prod.tv -DSTARFISH_TIZEN_MAJOR_VERSION='%{tizen_version_major}' -G Ninja
 ninja starfish.shared_library
 ninja starfish.executable
 %endif
