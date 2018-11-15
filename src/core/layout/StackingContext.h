@@ -39,6 +39,7 @@ enum NeedsGraphicsLayerReason ENSURE_ENUM_UNSIGNED {
     NeedsGraphicsLayerReasonBySelf,
     NeedsGraphicsLayerReasonNotCoveredByParent,
     NeedsGraphicsLayerReasonCollapsedWithSiblingLayer,
+    NeedsGraphicsLayerReasonSiblingLayerNeedsComposite, // TODO
 };
 
 class GraphicsBufferHolder : public gc {
@@ -171,6 +172,7 @@ public:
     void paintStackingContext(Canvas* canvas,
                               PaintingStackingContextContext& ctx);
     void fillGraphicsBufferContents(PaintingStackingContextContext& globalCtx);
+    void fillGraphicsBufferContentsWithoutClipRect();
     void compositeStackingContext(Compositor* compositor);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);
@@ -237,7 +239,7 @@ protected:
     bool m_needsGraphicsBuffer : 1;
     bool m_hasNon2DRectTransform : 1;
     bool m_isVisibleRectComputedForNonGraphicsLayer : 1;
-    NeedsGraphicsLayerReason m_needsGraphicsBufferReason : 2;
+    NeedsGraphicsLayerReason m_needsGraphicsBufferReason : 3;
     FrameBox* m_owner;
     StackingContext* m_parent;
     GCVector<StackingContextChild*> m_childContexts;

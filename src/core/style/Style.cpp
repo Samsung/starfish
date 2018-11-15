@@ -6662,8 +6662,7 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         }
 
         if (needsToRecomputeStylePropertyDamage) {
-            ComputedStyleDamage damage =
-                ComputedStyleDamage::ComputedStyleDamageNone;
+            damage = ComputedStyleDamage::ComputedStyleDamageNone;
             memset(damagedKeys, 0, sizeof(damagedKeys));
 
             if (!element->frame()) {

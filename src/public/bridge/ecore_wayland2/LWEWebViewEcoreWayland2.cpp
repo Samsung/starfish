@@ -49,6 +49,9 @@ static PFNEGLCREATESYNCKHRPROC g_eglCreateSyncKHRProc;
 static PFNEGLDESTROYSYNCKHRPROC g_eglDestroySyncKHRProc;
 static PFNEGLCLIENTWAITSYNCKHRPROC g_eglClientWaitSyncKHRProc;
 
+const int g_arrowKeyDownMinimumDelayInMS = 200;
+static int g_arrowKeyDownTimestamp[4];
+
 namespace LWE {
 
 static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
@@ -323,6 +326,13 @@ public:
         }
 
         mSurface = eglCreateWindowSurface(mDisplay, eglConf, mEglWindow, NULL);
+        EGLBoolean queryResult = eglSurfaceAttrib(
+            mDisplay, mSurface, EGL_SWAP_BEHAVIOR, EGL_BUFFER_PRESERVED);
+        if (queryResult) {
+            STARFISH_LOG_INFO("EGL_BUFFER_PRESERVED ok\n");
+        } else {
+            STARFISH_LOG_INFO("EGL_BUFFER_PRESERVED failed\n");
+        }
 
         if (eglMakeCurrent(mDisplay, mSurface, mSurface, mContext)) {
             STARFISH_LOG_INFO("Made current\n");
@@ -376,10 +386,15 @@ public:
                     }
                     m_isBufferSwapped = false;
                 }
-                if (!eglMakeCurrent(mDisplay, mSurface, mSurface, mContext)) {
-                    auto eglError = eglGetError();
-                    STARFISH_LOG_INFO("Made current failed error -> %d\n",
-                                      (int)eglError);
+                {
+                    Starfish::LongTaskFinder p(
+                        "WebViewEcoreWayland2 - eglMakeCurrent", 1);
+                    if (!eglMakeCurrent(mDisplay, mSurface, mSurface,
+                                        mContext)) {
+                        auto eglError = eglGetError();
+                        STARFISH_LOG_INFO("Made current failed error -> %d\n",
+                                          (int)eglError);
+                    }
                 }
             },
             [this](WebContainer* wc, bool mayNeedsSync) {
@@ -401,8 +416,6 @@ public:
                     }
                 }
                 m_isBufferSwapped = true;
-                eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE,
-                               EGL_NO_CONTEXT);
             },
             devicePixelRatio, defaultFontName, locale, timezoneID);
 
@@ -510,6 +523,18 @@ public:
 #endif
                     auto keyValue =
                         ecoreEventKeyToKeyValue(keyName.data(), false);
+
+                    if (keyValue >= ArrowDownKey && keyValue <= ArrowRightKey) {
+                        int currentTimestamp = keyEvent->timestamp;
+                        if (currentTimestamp -
+                                g_arrowKeyDownTimestamp[keyValue -
+                                                        ArrowDownKey] <
+                            g_arrowKeyDownMinimumDelayInMS) {
+                            return ECORE_CALLBACK_PASS_ON;
+                        }
+                        g_arrowKeyDownTimestamp[keyValue - ArrowDownKey] =
+                            currentTimestamp;
+                    }
 
                     webView->FetchWebContainer()->DispatchKeyDownEvent(
                         keyValue);

@@ -1101,7 +1101,9 @@ RenderResult WebView::rendering(bool force)
 
     layoutIfNeeds();
 
+    bool didPainting = false;
     if (m_needsPainting) {
+        didPainting = true;
         INSTALL_PROFILE_TIMER("painting");
 
         renderResult.didPaintingOrCompositing = true;
@@ -1337,6 +1339,15 @@ RenderResult WebView::rendering(bool force)
 
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
             m_rootStackingContext->needsGraphicsBuffer()) {
+            if (!didPainting) {
+                // fill blank tiles first before using 3d context
+                auto iter = m_stackingContextsNeedsGraphicsBuffer.rbegin();
+                while (iter != m_stackingContextsNeedsGraphicsBuffer.rend()) {
+                    (*iter)->fillGraphicsBufferContentsWithoutClipRect();
+                    iter++;
+                }
+            }
+
             Compositor* compositor = platformWindow()->prepareCompositor();
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();

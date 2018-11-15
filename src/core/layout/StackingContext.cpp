@@ -1659,6 +1659,114 @@ static LayoutRect computeWindowRectOnScreen(StackingContext* ctx)
     return windowRect;
 }
 
+void StackingContext::fillGraphicsBufferContentsWithoutClipRect()
+{
+    if (needsGraphicsBuffer()) {
+        if (!owner()->hasOwnGraphicsBufferMethod()) {
+            LayoutRect visibleRect = StackingContext::visibleRect();
+            LayoutUnit minX = visibleRect.x();
+            LayoutUnit maxX = visibleRect.maxX();
+            LayoutUnit minY = visibleRect.y();
+            LayoutUnit maxY = visibleRect.maxY();
+            size_t bufferWidth = (int)(maxX - minX);
+            size_t bufferHeight = (int)(maxY - minY);
+
+            if (bufferWidth && bufferHeight) {
+                size_t wTileSize =
+                    m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
+                size_t hTileSize =
+                    m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
+                size_t wTextureCount =
+                    m_rareData->m_graphicsBufferHolder->m_horizontalTileCount;
+                size_t hTextureCount =
+                    m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
+
+                size_t tileIndex = 0;
+                size_t coveredRowsCount = 0;
+
+                LayoutRect screenRect = computeScreenRect(this);
+                LayoutRect windowRect = computeWindowRectOnScreen(this);
+
+                for (size_t y = 0; y < hTextureCount; y++) {
+                    size_t coveredColsCount = 0;
+                    for (size_t x = 0; x < wTextureCount; x++) {
+                        size_t tileDataX = coveredColsCount;
+                        size_t tileDataY = coveredRowsCount;
+                        size_t tileDataWidth = std::min(
+                            wTileSize,
+                            m_rareData->m_graphicsBufferHolder->bufferWidth() -
+                                coveredColsCount);
+                        size_t tileDataHeight = std::min(
+                            hTileSize,
+                            m_rareData->m_graphicsBufferHolder->bufferHeight() -
+                                coveredRowsCount);
+
+                        LayoutRect tileExtent = computeBoxExtent(
+                            LayoutRect(minX + (LayoutUnit)tileDataX,
+                                       minY + (LayoutUnit)tileDataY,
+                                       tileDataWidth, tileDataHeight),
+                            m_rareData->m_screenMatrix);
+
+                        bool willPaintOnScreen =
+                            screenRect.intersects(tileExtent) &&
+                            windowRect.intersects(tileExtent);
+
+                        if (willPaintOnScreen &&
+                            m_rareData->m_graphicsBufferHolder
+                                    ->m_surfaces[tileIndex] == nullptr) {
+                            CanvasSurface* canvasSurface =
+                                CanvasSurface::create(m_owner->document()
+                                                          ->webView()
+                                                          ->platformWindow(),
+                                                      tileDataWidth,
+                                                      tileDataHeight);
+                            Canvas* canvas = Canvas::create(
+                                m_owner->node()->webView(), canvasSurface);
+
+                            canvas->setTextDecorationData(
+                                m_rareData->m_textDecorationData);
+
+                            StackingContext::PaintingStackingContextContext ctx(
+                                true, m_owner->node()
+                                          ->webView()
+                                          ->m_prevDrawnStackingContextInfo,
+                                LayoutRect(0, 0, 0, 0), 0, 0);
+
+                            ctx.layerBaseX = tileDataX;
+                            ctx.layerBaseY = tileDataY;
+
+                            ctx.layerClipRect =
+                                LayoutRect(0, 0, canvasSurface->width(),
+                                           canvasSurface->height());
+
+                            canvas->translate(-minX, -minY);
+                            canvas->translate(-ctx.layerBaseX, -ctx.layerBaseY);
+
+                            canvasSurface->clear();
+
+                            fillGraphicsBufferContents(canvas, ctx);
+
+                            delete canvas;
+
+                            canvasSurface->unMapBufferAndNotifyUpdateRegion(
+                                0, 0, canvasSurface->bufferWidth(),
+                                canvasSurface->bufferHeight());
+
+                            m_rareData->m_graphicsBufferHolder
+                                ->m_surfaces[tileIndex] = canvasSurface;
+                        }
+
+                        tileIndex++;
+                        coveredColsCount += wTileSize;
+                    }
+
+                    coveredRowsCount += hTileSize;
+                }
+            }
+        }
+    }
+}
+
 void StackingContext::fillGraphicsBufferContents(
     PaintingStackingContextContext& globalCtx)
 {
@@ -2252,50 +2360,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
                         if (willPaintOnScreen &&
                             m_rareData->m_graphicsBufferHolder
-                                    ->m_surfaces[tileIndex] == nullptr) {
-                            CanvasSurface* canvasSurface =
-                                CanvasSurface::create(m_owner->document()
-                                                          ->webView()
-                                                          ->platformWindow(),
-                                                      tileDataWidth,
-                                                      tileDataHeight);
-                            Canvas* canvas = Canvas::create(
-                                m_owner->node()->webView(), canvasSurface);
-
-                            canvas->setTextDecorationData(
-                                m_rareData->m_textDecorationData);
-
-                            StackingContext::PaintingStackingContextContext ctx(
-                                true, m_owner->node()
-                                          ->webView()
-                                          ->m_prevDrawnStackingContextInfo,
-                                LayoutRect(0, 0, 0, 0), 0, 0);
-
-                            ctx.layerBaseX = tileDataX;
-                            ctx.layerBaseY = tileDataY;
-
-                            ctx.layerClipRect =
-                                LayoutRect(0, 0, canvasSurface->width(),
-                                           canvasSurface->height());
-
-                            canvas->translate(-minX, -minY);
-                            canvas->translate(-ctx.layerBaseX, -ctx.layerBaseY);
-
-                            canvasSurface->clear();
-
-                            fillGraphicsBufferContents(canvas, ctx);
-
-                            delete canvas;
-
-                            canvasSurface->unMapBufferAndNotifyUpdateRegion(
-                                0, 0, canvasSurface->bufferWidth(),
-                                canvasSurface->bufferHeight());
-
-                            m_rareData->m_graphicsBufferHolder
-                                ->m_surfaces[tileIndex] = canvasSurface;
-                        }
-
-                        if (willPaintOnScreen) {
+                                ->m_surfaces[tileIndex]) {
                             compositor->drawSurface(
                                 m_rareData->m_graphicsBufferHolder
                                     ->m_surfaces[tileIndex],
@@ -2329,10 +2394,13 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 case NeedsGraphicsLayerReasonCollapsedWithSiblingLayer:
                     compositor->setColor(Unit::Color(0, 0, 255, 64));
                     break;
+                case NeedsGraphicsLayerReasonSiblingLayerNeedsComposite:
+                    compositor->setColor(Unit::Color(0, 255, 255, 64));
+                    break;
                 default:
                     STARFISH_RELEASE_ASSERT_NOT_REACHED();
                 }
-                compositor->beginOpacityLayer(0.15);
+                compositor->beginOpacityLayer(0.5);
                 compositor->drawRect(
                     Unit::Rect(minX, minY, bufferWidth, bufferHeight));
                 compositor->endOpacityLayer();
