@@ -44,10 +44,15 @@ import javax.microedition.khronos.egl.EGLContext;
 import javax.microedition.khronos.egl.EGLSurface;
 
 public class LweWebViewImpl implements LweWebView {
+    private static String sTag = "LweWebViewImpl";
+
     static {
         try{
             System.loadLibrary("lightweightwebengine");
-        }catch(final UnsatisfiedLinkError e){}
+        } catch(Exception e) {
+            Log.e(sTag, "Cannot load: liblightweightwebengine.so");
+            e.printStackTrace();
+        }
     }
     public enum ImeComposingStatus {
         NORMAL,
@@ -55,7 +60,6 @@ public class LweWebViewImpl implements LweWebView {
         COMPOSING_END
     }
 
-    private static String sTag = "LweWebViewImpl";
     private static String sLocale = "ko-KR";
     private static String sTimezone = "Asia/Seoul";
 

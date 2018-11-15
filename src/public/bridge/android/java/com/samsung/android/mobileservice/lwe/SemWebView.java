@@ -20,7 +20,9 @@
 package com.samsung.android.mobileservice.lwe;
 
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.TextureView;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
@@ -37,6 +39,11 @@ public class SemWebView extends TextureView {
     private static PathClassLoader pcl = null;
     private static final String packageName = "com.samsung.android.mobileservice.lwe";
     private static final String LweWebViewImplName = "com.samsung.android.mobileservice.lwe.LweWebViewImpl";
+
+    /**
+     * @hide
+     */
+    protected static final String sTag = "SemWebView";
 
     private LweWebView delegate = null;
 
@@ -85,27 +92,36 @@ public class SemWebView extends TextureView {
     }
 
     private LweWebView getWebViewInstance() {
-        /*
-        LweWebView result=null;
-        if(delegate==null){
+        if (delegate == null) {
+            LweWebView result = null;
             try {
-                if(pcl==null){
+                if (pcl == null) {
                     String path = getContext().getPackageManager().getPackageInfo(packageName,0).applicationInfo.nativeLibraryDir;
                     String dexpath = getContext().getPackageManager().getPackageInfo(packageName,0).applicationInfo.publicSourceDir;
-                    pcl= new PathClassLoader(dexpath,path,getContext().getClassLoader());
+                    pcl = new PathClassLoader(dexpath,path,getContext().getClassLoader());
                 }
                 Class<?> cls = pcl.loadClass(LweWebViewImplName);
                 Constructor<?> cons = cls.getConstructor();
                 result = (LweWebView)cons.newInstance();
-            }catch (Exception e){}
+            } catch (PackageManager.NameNotFoundException e) {
+                Log.e(sTag, "apk is not installed");
+                e.printStackTrace();
+            } catch (Exception e) {
+                Log.e(sTag, "apk cannot be loaded");
+                e.printStackTrace();
+            }
+            /*
+            finally {
+                // Testing only: uncomment the following code to test locally
+                // installed LweWebView.
+                if (result == null) {
+                    result = new LweWebViewImpl();
+                }
+            }
+            */
             return result;
         }
-        */
-        {
-            // local mode for test  should be removed next time.
-            if (delegate == null)
-                return new LweWebViewImpl();
-        }
+
         return delegate;
     }
 
