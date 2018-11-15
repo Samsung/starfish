@@ -29,6 +29,7 @@ enum class ContentSecurityPolicyHeaderType { Report, Enforce };
 enum class ContentSecurityPolicyHeaderSource { HTTP, Meta, OriginPolicy };
 
 class ContentSecurityPolicyDirectiveList;
+class ContentSecurityPolicySourceListDirective;
 
 class ContentSecurityPolicy : public WindowHoldable {
 public:
@@ -43,8 +44,12 @@ public:
     void didReceiveHeader(String* header, ContentSecurityPolicyHeaderType type,
                           ContentSecurityPolicyHeaderSource source);
 
-    bool allowInlineScript(String* contextURL);
+    bool allowInlineScript(String* contextURL, String* scriptContent);
+    bool allowInlineEventHandlers(String* contextURL);
     bool allowURLScript(ResourceURL* url);
+
+    bool findHashOfContentInSourceList(
+        ContentSecurityPolicySourceListDirective* policy, String* content);
 
     void dispatchViolationEvent(String* name);
 

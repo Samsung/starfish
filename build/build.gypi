@@ -96,6 +96,7 @@
             'GC_DEBUG', # bdwgc
             '_GLIBCXX_DEBUG',
             'STARFISH_ENABLE_TEST',
+            'STARFISH_ENABLE_CSP',
             #'STARFISH_ENABLE_NETWORK_TEST',
         ],
         'defines_release': [

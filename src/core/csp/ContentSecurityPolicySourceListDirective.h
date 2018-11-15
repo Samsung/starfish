@@ -44,6 +44,8 @@ struct ContentSecurityPolicySourceURL : public gc {
 
 class ContentSecurityPolicyDirectiveList;
 
+typedef std::unordered_set<std::string> HashSet;
+
 class ContentSecurityPolicySourceListDirective : public gc {
 public:
     ContentSecurityPolicySourceListDirective(
@@ -54,6 +56,7 @@ public:
         , m_allowInline(false)
         , m_allowEval(false)
         , m_allowSelf(false)
+        , m_hashAlgorithmsUsed(0)
     {
     }
 
@@ -90,6 +93,7 @@ public:
     }
 
     bool allowURL(ResourceURL* url);
+    bool allowContent(String* content);
 
 protected:
 private:
@@ -100,9 +104,13 @@ private:
     bool m_allowEval;
     bool m_allowSelf;
     GCVector<ContentSecurityPolicySourceURL*> m_URLSourceList;
+    HashSet m_hashes;
+    uint32_t m_hashAlgorithmsUsed;
 
     void parseSource(String* value);
     void parseHost(String* source);
+    bool parseHash(String* source);
+    bool parseHashA(String* source);
 };
 }
 

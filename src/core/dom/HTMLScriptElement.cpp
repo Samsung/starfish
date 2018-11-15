@@ -31,6 +31,7 @@
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "core/util/Cryptographic.h"
 
 namespace Starfish {
 
@@ -266,9 +267,10 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 return false;
             }
             String* script = text();
+
             if (script->length() > 0 &&
                 !document()->contentSecurityPolicy()->allowInlineScript(
-                    document()->urlString())) {
+                    document()->urlString(), script)) {
                 return false;
             }
 
