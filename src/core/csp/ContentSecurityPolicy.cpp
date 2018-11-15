@@ -55,20 +55,6 @@ void ContentSecurityPolicy::didReceiveHeader(
 #endif
 }
 
-bool ContentSecurityPolicy::allowInlineScript(String* contextURL,
-                                              String* scriptContent)
-{
-    for (auto policy : m_policies) {
-        if (findHashOfContentInSourceList(policy->scriptSrc(), scriptContent)) {
-            continue;
-        } else {
-            dispatchViolationEvent(policy->scriptSrc()->name());
-            return false;
-        }
-    }
-    return true;
-}
-
 bool ContentSecurityPolicy::findHashOfContentInSourceList(
     ContentSecurityPolicySourceListDirective* sourceList, String* content)
 {
@@ -76,6 +62,24 @@ bool ContentSecurityPolicy::findHashOfContentInSourceList(
         return true;
     }
     return false;
+}
+
+bool ContentSecurityPolicy::allowInlineScript(String* contextURL,
+                                              String* scriptContent)
+{
+    for (auto policy : m_policies) {
+        if (!policy->scriptSrc()) {
+            continue;
+        }
+        if (policy->allowInlineScript() ||
+            findHashOfContentInSourceList(policy->scriptSrc(), scriptContent)) {
+            continue;
+        } else {
+            dispatchViolationEvent(policy->scriptSrc()->name());
+            return false;
+        }
+    }
+    return true;
 }
 
 bool ContentSecurityPolicy::allowInlineEventHandlers(String* contextURL)
@@ -86,7 +90,6 @@ bool ContentSecurityPolicy::allowInlineEventHandlers(String* contextURL)
             return false;
         }
     }
-
     return true;
 }
 
@@ -98,7 +101,17 @@ bool ContentSecurityPolicy::allowURLScript(ResourceURL* url)
             return false;
         }
     }
+    return true;
+}
 
+bool ContentSecurityPolicy::allowImage(String* src)
+{
+    for (auto policy : m_policies) {
+        if (!policy->allowImage(src)) {
+            dispatchViolationEvent(policy->imgSrc()->name());
+            return false;
+        }
+    }
     return true;
 }
 

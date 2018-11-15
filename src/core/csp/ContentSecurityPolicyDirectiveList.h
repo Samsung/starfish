@@ -41,21 +41,29 @@ public:
 
     bool allowInlineScript();
     bool allowURLScript(ResourceURL* url);
+    bool allowImage(String* src);
 
     ContentSecurityPolicySourceListDirective* scriptSrc()
     {
         return m_scriptSrc;
+    }
+    ContentSecurityPolicySourceListDirective* imgSrc()
+    {
+        return m_imgSrc;
     }
 
 private:
     ContentSecurityPolicy* m_contentSecurityPolicy;
     ResourceURL* m_contextURL;
     ContentSecurityPolicySourceListDirective* m_scriptSrc;
+    ContentSecurityPolicySourceListDirective* m_imgSrc;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_scriptSrc));
+        GC_set_bit(
+            desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList, m_imgSrc));
     }
 
     static size_t skipSpace(String* src, size_t begin, size_t end);

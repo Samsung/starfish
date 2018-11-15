@@ -47,6 +47,7 @@ public:
     bool allowInlineScript(String* contextURL, String* scriptContent);
     bool allowInlineEventHandlers(String* contextURL);
     bool allowURLScript(ResourceURL* url);
+    bool allowImage(String* src);
 
     bool findHashOfContentInSourceList(
         ContentSecurityPolicySourceListDirective* policy, String* content);

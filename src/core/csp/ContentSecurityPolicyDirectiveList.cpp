@@ -28,6 +28,7 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     : m_contentSecurityPolicy(contentSecurityPolicy)
     , m_contextURL(contentSecurityPolicy->document()->documentURI())
     , m_scriptSrc(nullptr)
+    , m_imgSrc(nullptr)
 {
     if (begin == end)
         return;
@@ -85,12 +86,16 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* name,
                                                       String* value)
 {
     value = value->trim();
-
     if (name->equalsIgnoreCase("script-src")) {
         if (!m_scriptSrc) {
             m_scriptSrc = new ContentSecurityPolicySourceListDirective(this);
         }
         m_scriptSrc->setDirective(name, value);
+    } else if (name->equalsIgnoreCase("img-src")) {
+        if (!m_imgSrc) {
+            m_imgSrc = new ContentSecurityPolicySourceListDirective(this);
+        }
+        m_imgSrc->setDirective(name, value);
     }
 }
 
@@ -106,18 +111,48 @@ bool ContentSecurityPolicyDirectiveList::allowURLScript(ResourceURL* url)
 {
     if (!m_scriptSrc) {
         return true;
-    } else if (m_scriptSrc->allowSelf()) {
-        if (m_contextURL->protocol()->equalsIgnoreCase(url->protocol()) &&
-            m_contextURL->host()->equalsIgnoreCase(url->host())) {
-            return true;
-        }
     } else if (m_scriptSrc->allowStar()) {
+        return true;
+    } else if (m_scriptSrc->allowSelf() &&
+               m_contextURL->protocol()->equalsIgnoreCase(url->protocol()) &&
+               m_contextURL->host()->equalsIgnoreCase(url->host())) {
         return true;
     } else if (m_scriptSrc->allowURL(url)) {
         return true;
     }
 
     return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowImage(String* src)
+{
+    if (!m_imgSrc) {
+        return true;
+    }
+
+    const char dataType[] = "data:";
+    if (src->startsWith(dataType, false)) {
+        return m_imgSrc->allowScheme(String::createASCIIString(dataType));
+    }
+
+    if (m_imgSrc->allowStar()) {
+        return true;
+    }
+
+    ContentSecurityPolicySourceURL* url = m_imgSrc->parseHost(src);
+    if (!url) {
+        return true;
+    }
+
+    if (m_imgSrc->allowSelf() &&
+        m_contextURL->protocol()->equalsIgnoreCase(url->protocol) &&
+        m_contextURL->host()->equalsIgnoreCase(url->host)) {
+        return true;
+    } else if (m_imgSrc->allowScheme(url->protocol)) {
+        return true;
+    }
+
+    return m_imgSrc->allowURL(url, true);
 }
 
 size_t ContentSecurityPolicyDirectiveList::skipSpace(String* src, size_t begin,

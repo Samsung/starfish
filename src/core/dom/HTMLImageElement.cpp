@@ -20,10 +20,12 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/Event.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/layout/FrameReplacedImage.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -230,6 +232,13 @@ void HTMLImageElement::unloadImage()
 void HTMLImageElement::loadImage(String* src)
 {
     unloadImage();
+    if (!document()->contentSecurityPolicy()->allowImage(src)) {
+        String* eventType = starfish()->staticStrings()->m_error.localName();
+        Event* e = new Event(document(), eventType, EventInit(false, false));
+        dispatchEventIdleTimeByUA(e);
+        return;
+    }
+
     m_imageResource = document()->resourceLoader().fetchImage(
         new ResourceURL(src, document()->baseURL()->baseURI()),
         isInDocumentScopeAndDocumentParticipateInRendering());

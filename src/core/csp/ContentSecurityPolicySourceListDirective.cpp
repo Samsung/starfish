@@ -37,10 +37,12 @@ void ContentSecurityPolicySourceListDirective::parseSource(String* value)
             m_allowStar = true;
         } else if (token->equalsIgnoreCase("'unsafe-inline'")) {
             m_allowInline = true;
+        } else if (isScheme(token)) {
+            m_schemeList.push_back(token);
         } else if (token->startsWith("'") && parseHash(token)) {
             continue;
-        } else {
-            parseHost(token);
+        } else if (auto sourceURL = parseHost(token)) {
+            m_URLSourceList.push_back(sourceURL);
         }
     }
 }
@@ -99,33 +101,33 @@ bool ContentSecurityPolicySourceListDirective::parseHash(String* source)
     return true;
 }
 
-void ContentSecurityPolicySourceListDirective::parseHost(String* source)
+ContentSecurityPolicySourceURL*
+ContentSecurityPolicySourceListDirective::parseHost(String* source)
 {
     size_t length = source->length();
 
     size_t serverNamePos = source->find(".", 0);
     if (serverNamePos == SIZE_MAX) {
-        return;
+        return nullptr;
     }
-    size_t domainNamePos = source->find(".", serverNamePos + 1);
-    if (domainNamePos == SIZE_MAX) {
-        return;
+    if (source->find(".", serverNamePos + 1) == SIZE_MAX) {
+        return nullptr;
     }
 
     ContentSecurityPolicySourceURL* sourceURL =
         new ContentSecurityPolicySourceURL();
 
     bool isStarProtocol = true;
-    size_t protocolPos = source->find(":");
+    size_t protocolPos = source->find(":/");
     if (protocolPos == SIZE_MAX) {
-        sourceURL->m_isStarProtocol = true;
+        sourceURL->isStarProtocol = true;
         protocolPos = 0;
     } else {
         if (protocolPos + 1 >= length) {
-            return;
+            return nullptr;
         }
-        sourceURL->m_protocol = source->substring(0, protocolPos + 1);
-        sourceURL->m_isStarProtocol = false;
+        sourceURL->protocol = source->substring(0, protocolPos + 1);
+        sourceURL->isStarProtocol = false;
         while (protocolPos < length) {
             auto c = source->charAt(protocolPos);
             if (c != ':' && c != '/')
@@ -134,23 +136,39 @@ void ContentSecurityPolicySourceListDirective::parseHost(String* source)
         }
     }
 
-    STARFISH_ASSERT(serverNamePos - protocolPos >= 0);
-    sourceURL->m_serverName =
-        source->substring(protocolPos, serverNamePos - protocolPos);
-    sourceURL->m_isStarServer = sourceURL->m_serverName->equals("*");
+    if (serverNamePos - protocolPos <= 0) {
+        return nullptr;
+    }
 
-    size_t pathPos = source->find("/", domainNamePos);
+    sourceURL->serverName =
+        source->substring(protocolPos, serverNamePos - protocolPos);
+    sourceURL->isStarServer = sourceURL->serverName->equals("*");
+
+    size_t pathPos = source->find("/", protocolPos);
     if (pathPos != SIZE_MAX && length > pathPos) {
-        sourceURL->m_path = source->substring(pathPos, length - pathPos);
+        sourceURL->path = source->substring(pathPos, length - pathPos);
     } else {
         pathPos = length;
     }
+    if (pathPos - serverNamePos - 1 <= 0 || pathPos - protocolPos <= 0) {
+        return nullptr;
+    }
 
-    STARFISH_ASSERT(length - serverNamePos - 1 >= 0);
-    sourceURL->m_domainName =
+    sourceURL->domainName =
         source->substring(serverNamePos + 1, pathPos - serverNamePos - 1);
+    sourceURL->host = source->substring(protocolPos, pathPos - protocolPos);
 
-    m_URLSourceList.push_back(sourceURL);
+    return sourceURL;
+}
+
+bool ContentSecurityPolicySourceListDirective::isScheme(String* scheme)
+{
+    size_t length = scheme->length();
+    if (scheme->charAt(length - 1) != ':') {
+        return false;
+    }
+
+    return true;
 }
 
 static std::string getCSPHash(CryptoAlgorithmType hashType,
@@ -177,32 +195,59 @@ bool ContentSecurityPolicySourceListDirective::allowContent(String* content)
     return false;
 }
 
-bool ContentSecurityPolicySourceListDirective::allowURL(ResourceURL* url)
+bool ContentSecurityPolicySourceListDirective::allowURL(ResourceURL* url,
+                                                        bool ignoreScheme)
 {
     size_t pos = url->host()->find(".");
     String* serverName = url->host()->substring(0, pos);
     String* domainName =
         url->host()->substring(pos + 1, url->host()->length() - pos - 1);
 
+    return allowURL(url->protocol(), serverName, domainName, url->pathname(),
+                    ignoreScheme);
+}
+
+bool ContentSecurityPolicySourceListDirective::allowURL(
+    ContentSecurityPolicySourceURL* url, bool ignoreScheme)
+{
+    return allowURL(url->protocol, url->serverName, url->domainName, url->path,
+                    ignoreScheme);
+}
+
+bool ContentSecurityPolicySourceListDirective::allowURL(String* scheme,
+                                                        String* serverName,
+                                                        String* domainName,
+                                                        String* path,
+                                                        bool ignoreScheme)
+{
     for (auto source : m_URLSourceList) {
-        if (!source->m_isStarProtocol &&
-            !source->m_protocol->equalsIgnoreCase(url->protocol())) {
+        if (!ignoreScheme && !source->isStarProtocol &&
+            !source->protocol->equalsIgnoreCase(scheme)) {
             continue;
         }
-        if (!source->m_isStarServer &&
-            !source->m_serverName->equalsIgnoreCase(serverName)) {
+        if (!source->isStarServer &&
+            !source->serverName->equalsIgnoreCase(serverName)) {
             continue;
         }
-        if (source->m_domainName->equalsIgnoreCase(domainName)) {
-            if (source->m_path->length() > 1) {
-                if (!source->m_path->equalsIgnoreCase(url->pathname())) {
+        if (source->domainName->equalsIgnoreCase(domainName)) {
+            if (source->path->length() > 1) {
+                if (!source->path->equalsIgnoreCase(path)) {
                     continue;
                 }
             }
             return true;
         }
     }
+    return false;
+}
 
+bool ContentSecurityPolicySourceListDirective::allowScheme(String* str)
+{
+    for (auto scheme : m_schemeList) {
+        if (str->equalsIgnoreCase(scheme)) {
+            return true;
+        }
+    }
     return false;
 }
 }
