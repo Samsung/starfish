@@ -24,22 +24,24 @@ namespace Starfish {
 
 struct ContentSecurityPolicySourceURL : public gc {
     ContentSecurityPolicySourceURL()
-        : m_protocol(String::emptyString)
-        , m_serverName(String::emptyString)
-        , m_domainName(String::emptyString)
-        , m_path(String::emptyString)
-        , m_isStarProtocol(false)
-        , m_isStarServer(false)
+        : protocol(String::emptyString)
+        , serverName(String::emptyString)
+        , domainName(String::emptyString)
+        , host(String::emptyString)
+        , path(String::emptyString)
+        , isStarProtocol(false)
+        , isStarServer(false)
 
     {
     }
-    String* m_protocol;
-    String* m_serverName;
-    String* m_domainName;
-    String* m_path;
+    String* protocol;
+    String* serverName;
+    String* domainName;
+    String* host;
+    String* path;
 
-    bool m_isStarProtocol;
-    bool m_isStarServer;
+    bool isStarProtocol;
+    bool isStarServer;
 };
 
 class ContentSecurityPolicyDirectiveList;
@@ -92,8 +94,15 @@ public:
         return m_allowSelf;
     }
 
-    bool allowURL(ResourceURL* url);
     bool allowContent(String* content);
+    bool allowURL(ResourceURL* url, bool ignoreScheme = false);
+    bool allowURL(ContentSecurityPolicySourceURL* url,
+                  bool ignoreScheme = false);
+    bool allowURL(String* scheme, String* serverName, String* domainName,
+                  String* path, bool ignoreScheme = false);
+    bool allowScheme(String* str);
+
+    ContentSecurityPolicySourceURL* parseHost(String* source);
 
 protected:
 private:
@@ -106,11 +115,12 @@ private:
     GCVector<ContentSecurityPolicySourceURL*> m_URLSourceList;
     HashSet m_hashes;
     uint32_t m_hashAlgorithmsUsed;
+    GCVector<String*> m_schemeList;
 
     void parseSource(String* value);
-    void parseHost(String* source);
     bool parseHash(String* source);
     bool parseHashA(String* source);
+    bool isScheme(String* scheme);
 };
 }
 
