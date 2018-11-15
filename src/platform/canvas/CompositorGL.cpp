@@ -1452,6 +1452,7 @@ public:
 
     CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
     {
+        INSTALL_PROFILE_TIMER("CompositorImplGL::CompositorImplGL");
         webView->platformWindow()->glMakeCurrent();
 
         m_webView = webView;
@@ -1508,6 +1509,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
+        INSTALL_PROFILE_TIMER("CompositorImplGL::clearColor");
         glClearColor(clr.R(), clr.G(), clr.B(), clr.A());
         glClear(GL_COLOR_BUFFER_BIT);
     }
@@ -1814,6 +1816,7 @@ public:
 
     void drawTexture(CanvasSurface* cs, float dest[4][2], GLuint textureID)
     {
+        INSTALL_PROFILE_TIMER("CompositorGL::drawTexture");
         float data[] = { dest[0][0], dest[0][1], // V1
                          0.f,        0.f,        // Texture coordinate .for V1
 
@@ -1901,6 +1904,7 @@ public:
 
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst)
     {
+        INSTALL_PROFILE_TIMER("CompositorGL::drawSurface");
         auto textureInfo = cs->textureInfo();
         if (textureInfo.fragments.size() == 0) {
             return;
@@ -2178,9 +2182,7 @@ public:
                             GLuint tid = (GLuint)fragment.textureID;
 
                             if (csGL->m_textureFragmentsFlags[i].m_isDirty) {
-                                INSTALL_PROFILE_TIMER("update texture tile..");
                                 LongTaskFinder t("update texture tile..", 1);
-
                                 size_t xx =
                                     csGL->m_dirtyAreaTextureFragments[i].x();
                                 size_t xxEnd =
