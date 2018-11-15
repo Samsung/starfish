@@ -1103,6 +1103,7 @@ public:
     static void skipSpaces(const std::string& input,
                            unsigned long int& startIndex);
     static std::vector<std::string> split(const std::string& s, char seperator);
+    static std::string toBase64(const std::string& src);
     static std::string toBase64HTMLDataURI(const std::string& src,
                                            const std::string& type = "html");
 };

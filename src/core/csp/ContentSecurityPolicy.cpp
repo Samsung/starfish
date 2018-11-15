@@ -22,7 +22,9 @@
 #include "core/page/Window.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/csp/ContentSecurityPolicyDirectiveList.h"
+#include "core/csp/ContentSecurityPolicySourceListDirective.h"
 #include "core/csp/SecurityPolicyViolationEvent.h"
+#include "core/util/Cryptographic.h"
 
 namespace Starfish {
 
@@ -53,7 +55,30 @@ void ContentSecurityPolicy::didReceiveHeader(
 #endif
 }
 
-bool ContentSecurityPolicy::allowInlineScript(String* contextURL)
+bool ContentSecurityPolicy::allowInlineScript(String* contextURL,
+                                              String* scriptContent)
+{
+    for (auto policy : m_policies) {
+        if (findHashOfContentInSourceList(policy->scriptSrc(), scriptContent)) {
+            continue;
+        } else {
+            dispatchViolationEvent(policy->scriptSrc()->name());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ContentSecurityPolicy::findHashOfContentInSourceList(
+    ContentSecurityPolicySourceListDirective* sourceList, String* content)
+{
+    if (sourceList->allowContent(content)) {
+        return true;
+    }
+    return false;
+}
+
+bool ContentSecurityPolicy::allowInlineEventHandlers(String* contextURL)
 {
     for (auto policy : m_policies) {
         if (!policy->allowInlineScript()) {

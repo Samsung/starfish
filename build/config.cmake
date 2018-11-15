@@ -119,6 +119,7 @@ IF (${MODE} STREQUAL "debug")
         -DGC_DEBUG # bdwgc
         -D_GLIBCXX_DEBUG
         -DSTARFISH_ENABLE_TEST
+        -DSTARFISH_ENABLE_CSP
         #-DSTARFISH_ENABLE_NETWORK_TEST
     )
 ELSEIF (${MODE} STREQUAL "release")

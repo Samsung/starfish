@@ -73,35 +73,31 @@ static size_t utf8ContentLength(const char* UTF8, size_t len)
                 0x80 == (UTF8[i + 1] & 0xC0)) {
                 i += 2;
                 contentLength++;
-            } else // Start byte for 3byte
-                if (0xE0 == (UTF8[i] & 0xF0) && &UTF8[i + 2] < bufferEnd &&
-                    0x80 == (UTF8[i + 1] & 0xC0) &&
-                    0x80 == (UTF8[i + 2] & 0xC0)) {
-                i += 3;
+            } else if (0xE0 == (UTF8[i] & 0xF0) && &UTF8[i + 2] < bufferEnd &&
+                       0x80 == (UTF8[i + 1] & 0xC0) &&
+                       0x80 == (UTF8[i + 2] & 0xC0)) {
+                i += 3; // Start byte for 3byte
                 contentLength++;
-            } else // Start byte for 4byte
-                if (0xF0 == (UTF8[i] & 0xF8) && &UTF8[i + 3] < bufferEnd &&
-                    0x80 == (UTF8[i + 1] & 0xC0) &&
-                    0x80 == (UTF8[i + 2] & 0xC0) &&
-                    0x80 == (UTF8[i + 3] & 0xC0)) {
-                i += 4;
+            } else if (0xF0 == (UTF8[i] & 0xF8) && &UTF8[i + 3] < bufferEnd &&
+                       0x80 == (UTF8[i + 1] & 0xC0) &&
+                       0x80 == (UTF8[i + 2] & 0xC0) &&
+                       0x80 == (UTF8[i + 3] & 0xC0)) {
+                i += 4; // Start byte for 4byte
                 contentLength++;
-            } else // Start byte for 5byte
-                if (0xF8 == (UTF8[i] & 0xFC) && &UTF8[i + 4] < bufferEnd &&
-                    0x80 == (UTF8[i + 1] & 0xC0) &&
-                    0x80 == (UTF8[i + 2] & 0xC0) &&
-                    0x80 == (UTF8[i + 3] & 0xC0) &&
-                    0x80 == (UTF8[i + 4] & 0xC0)) {
-                i += 5;
+            } else if (0xF8 == (UTF8[i] & 0xFC) && &UTF8[i + 4] < bufferEnd &&
+                       0x80 == (UTF8[i + 1] & 0xC0) &&
+                       0x80 == (UTF8[i + 2] & 0xC0) &&
+                       0x80 == (UTF8[i + 3] & 0xC0) &&
+                       0x80 == (UTF8[i + 4] & 0xC0)) {
+                i += 5; // Start byte for 5byte
                 contentLength++;
-            } else // Start byte for 6byte
-                if (0xFC == (UTF8[i] & 0xFE) && &UTF8[i + 5] < bufferEnd &&
-                    0x80 == (UTF8[i + 1] & 0xC0) &&
-                    0x80 == (UTF8[i + 2] & 0xC0) &&
-                    0x80 == (UTF8[i + 3] & 0xC0) &&
-                    0x80 == (UTF8[i + 4] & 0xC0) &&
-                    0x80 == (UTF8[i + 5] & 0xC0)) {
-                i += 6;
+            } else if (0xFC == (UTF8[i] & 0xFE) && &UTF8[i + 5] < bufferEnd &&
+                       0x80 == (UTF8[i + 1] & 0xC0) &&
+                       0x80 == (UTF8[i + 2] & 0xC0) &&
+                       0x80 == (UTF8[i + 3] & 0xC0) &&
+                       0x80 == (UTF8[i + 4] & 0xC0) &&
+                       0x80 == (UTF8[i + 5] & 0xC0)) {
+                i += 6; // Start byte for 6byte
                 contentLength++;
             } else {
                 i += 1;
@@ -123,43 +119,43 @@ size_t utf8ToUtf32(const char* UTF8, const char* bufferEnd, char32_t& uc)
     if (0 == (UTF8[0] & 0x80)) {
         uc = (char32_t)UTF8[0];
         tRequiredSize = 1;
-    } else // Start byte for 2byte
-        if (0xC0 == (UTF8[0] & 0xE0) && &UTF8[1] < bufferEnd &&
-            0x80 == (UTF8[1] & 0xC0)) {
+    } else if (0xC0 == (UTF8[0] & 0xE0) && &UTF8[1] < bufferEnd &&
+               0x80 == (UTF8[1] & 0xC0)) {
+        // Start byte for 2byte
         uc += (UTF8[0] & 0x1F) << 6;
         uc += (UTF8[1] & 0x3F) << 0;
         tRequiredSize = 2;
-    } else // Start byte for 3byte
-        if (0xE0 == (UTF8[0] & 0xF0) && &UTF8[2] < bufferEnd &&
-            0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0)) {
+    } else if (0xE0 == (UTF8[0] & 0xF0) && &UTF8[2] < bufferEnd &&
+               0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0)) {
+        // Start byte for 3byte
         uc += (UTF8[0] & 0x0F) << 12;
         uc += (UTF8[1] & 0x3F) << 6;
         uc += (UTF8[2] & 0x3F) << 0;
         tRequiredSize = 3;
-    } else // Start byte for 4byte
-        if (0xF0 == (UTF8[0] & 0xF8) && &UTF8[3] < bufferEnd &&
-            0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0) &&
-            0x80 == (UTF8[3] & 0xC0)) {
+    } else if (0xF0 == (UTF8[0] & 0xF8) && &UTF8[3] < bufferEnd &&
+               0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0) &&
+               0x80 == (UTF8[3] & 0xC0)) {
+        // Start byte for 4byte
         uc += (UTF8[0] & 0x07) << 18;
         uc += (UTF8[1] & 0x3F) << 12;
         uc += (UTF8[2] & 0x3F) << 6;
         uc += (UTF8[3] & 0x3F) << 0;
         tRequiredSize = 4;
-    } else // Start byte for 5byte
-        if (0xF8 == (UTF8[0] & 0xFC) && &UTF8[4] < bufferEnd &&
-            0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0) &&
-            0x80 == (UTF8[3] & 0xC0) && 0x80 == (UTF8[4] & 0xC0)) {
+    } else if (0xF8 == (UTF8[0] & 0xFC) && &UTF8[4] < bufferEnd &&
+               0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0) &&
+               0x80 == (UTF8[3] & 0xC0) && 0x80 == (UTF8[4] & 0xC0)) {
+        // Start byte for 5byte
         uc += (UTF8[0] & 0x03) << 24;
         uc += (UTF8[1] & 0x3F) << 18;
         uc += (UTF8[2] & 0x3F) << 12;
         uc += (UTF8[3] & 0x3F) << 6;
         uc += (UTF8[4] & 0x3F) << 0;
         tRequiredSize = 5;
-    } else // Start byte for 6byte
-        if (0xFC == (UTF8[0] & 0xFE) && &UTF8[5] < bufferEnd &&
-            0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0) &&
-            0x80 == (UTF8[3] & 0xC0) && 0x80 == (UTF8[4] & 0xC0) &&
-            0x80 == (UTF8[5] & 0xC0)) {
+    } else if (0xFC == (UTF8[0] & 0xFE) && &UTF8[5] < bufferEnd &&
+               0x80 == (UTF8[1] & 0xC0) && 0x80 == (UTF8[2] & 0xC0) &&
+               0x80 == (UTF8[3] & 0xC0) && 0x80 == (UTF8[4] & 0xC0) &&
+               0x80 == (UTF8[5] & 0xC0)) {
+        // Start byte for 6byte
         uc += (UTF8[0] & 0x01) << 30;
         uc += (UTF8[1] & 0x3F) << 24;
         uc += (UTF8[2] & 0x3F) << 18;
@@ -1329,12 +1325,11 @@ std::vector<std::string> StringUtils::split(const std::string& s,
     return output;
 }
 
-std::string StringUtils::toBase64HTMLDataURI(const std::string& src,
-                                             const std::string& type)
+std::string StringUtils::toBase64(const std::string& src)
 {
     size_t dataLength = src.length();
     const char* originData = src.c_str();
-    std::string dataURI = "data:text/" + type + ";charset=utf-8;base64,";
+    std::string output;
     std::string base64Chars =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     int i = 0, j = 0;
@@ -1352,7 +1347,7 @@ std::string StringUtils::toBase64HTMLDataURI(const std::string& src,
             charArray4[3] = charArray3[2] & 0x3f;
 
             for (i = 0; (i < 4); i++) {
-                dataURI += base64Chars[charArray4[i]];
+                output += base64Chars[charArray4[i]];
             }
             i = 0;
         }
@@ -1371,13 +1366,21 @@ std::string StringUtils::toBase64HTMLDataURI(const std::string& src,
         charArray4[3] = charArray3[2] & 0x3f;
 
         for (j = 0; (j < i + 1); j++) {
-            dataURI += base64Chars[charArray4[j]];
+            output += base64Chars[charArray4[j]];
         }
 
         while ((i++ < 3)) {
-            dataURI += '=';
+            output += '=';
         }
     }
+    return output;
+}
+
+std::string StringUtils::toBase64HTMLDataURI(const std::string& src,
+                                             const std::string& type)
+{
+    std::string dataURI = "data:text/" + type + ";charset=utf-8;base64,";
+    dataURI += toBase64(src);
     return dataURI;
 }
 
@@ -2137,8 +2140,9 @@ void StringBuilder::appendPiece(String* str, size_t s, size_t e)
         m_contentLength += e - s;
         if (m_piecesInlineStorageUsage < STRING_BUILDER_INLINE_STORAGE_MAX) {
             m_piecesInlineStorage[m_piecesInlineStorageUsage++] = piece;
-        } else
+        } else {
             m_pieces.push_back(piece);
+        }
     }
 }
 
@@ -2153,8 +2157,9 @@ void StringBuilder::appendPiece(const char* str)
         m_contentLength += piece.m_end;
         if (m_piecesInlineStorageUsage < STRING_BUILDER_INLINE_STORAGE_MAX) {
             m_piecesInlineStorage[m_piecesInlineStorageUsage++] = piece;
-        } else
+        } else {
             m_pieces.push_back(piece);
+        }
     }
 }
 
@@ -2179,8 +2184,9 @@ void StringBuilder::appendPiece(char32_t ch)
     m_contentLength += 1;
     if (m_piecesInlineStorageUsage < STRING_BUILDER_INLINE_STORAGE_MAX) {
         m_piecesInlineStorage[m_piecesInlineStorageUsage++] = piece;
-    } else
+    } else {
         m_pieces.push_back(piece);
+    }
 }
 
 StringView StringBuilder::finalizeToStringView()
