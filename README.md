@@ -217,6 +217,32 @@ http://10.113.138.181/overview/444
 ## Outdated
 All instructions in this section are outdated. They are listed here only for historical reasons.
 
+### GYP-based Build System
+
+#### Compile StarFish
+```sh
+./build_third_party.sh
+
+GYP_GENERATORS=ninja tool/gyp/gyp build.gyp --toplevel-dir=`pwd` --depth=0 -Dcomponent=executable
+ninja -C out/release starfish.x64.release
+```
+
+#### Build options
+The following build options are supported when generating ninja script using gyp.
+Default values are in **bold**.
+   
+* -Dcomponent=[ executable | **static_library** | shared_library ]<br>
+  Compile Starfish as a executable, static library (i.e., libStarfish.a), or shared library (i.e., libStarfish.so)
+* -Ddeplib=[ **shared_library** | static_library ]<br>
+  Generate third-party libraries as shared libraries or obj files
+* -Dbackend=[ efl_cairo | **efl_cairo_gl**  | efl_skia | dali ]<br>
+  Use either cairo, cairo_gl, skia, or dali as the backend graphics library
+* -Dplatform=[ **linux** | tizen ]<br>
+  Compile Starfish for either Linux or Tizen platform
+* -DtouchUi=[ 0 | **1** ]<br>
+  Enable a touch UI.
+
+
 ### Makefile-based Build System
 
 ``` sh

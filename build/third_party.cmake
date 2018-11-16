@@ -99,15 +99,20 @@ IF (NOT ${HOST} STREQUAL "tizen")
     SET (ZMQ_CFLAGS "${ZMQ_CFLAGS_COMMON} ${ZMQ_CFLAGS_CUSTOM} ${ZMQ_CFLAGS_ARCH} ${ZMQ_CFLAGS_MODE}")
     
     SET (ZMQ_BUILDDIR ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared)
-    SET (ZMQ_TARGET ${ZMQ_BUILDDIR}/.libs/libzmq.so)
+    SET (ZMQ_LOCAL_TARGET ${ZMQ_BUILDDIR}/.libs/libzmq.so)
+    SET (ZMQ_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libzmq.so)
     
-    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_TARGET}
+    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_LOCAL_TARGET}
                         COMMENT "BUILD ZMQ"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${ZMQ_BUILDDIR}
                         COMMAND cd ${ZMQ_BUILDDIR} && ../../../../configure --enable-static CFLAGS=${ZMQ_CFLAGS} LDFLAGS=${ZMQ_CFLAGS} CXXFLAGS=${ZMQ_CFLAGS}
                         COMMAND cd ${ZMQ_BUILDDIR} && make -j
-                        COMMAND ${CMAKE_COMMAND} -E copy ${ZMQ_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
-                        
+    )
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_TARGET}
+                        DEPENDS ${ZMQ_LOCAL_TARGET}
+                        COMMENT "COPY ZMQ"
+                        COMMAND cp ${ZMQ_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 
     ADD_CUSTOM_TARGET (zmq
@@ -137,15 +142,22 @@ IF (${ARCH} STREQUAL "x64" AND (${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUA
     )
 ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali"))
     SET (TUV_DIR ${THIRD_PARTY_ROOT}/libtuv)
-    SET (TUV_TARGET ${TUV_DIR}/build/noarch-tizen/${MODE}/lib/libtuv.so)
+    SET (TUV_LOCAL_TARGET ${TUV_DIR}/build/noarch-tizen/${MODE}/lib/libtuv.so)
+    SET (TUV_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libtuv.so)
 
-    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_TARGET}
+    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_LOCAL_TARGET}
                         WORKING_DIRECTORY ${TUV_DIR}
                         COMMENT "BUILD TUV"
                         COMMAND make clean
-                        COMMAND ${CMAKE_COMMAND} -E copy ${TUV_DIR}/config/tizen/packaging/libtuv.pc.in .
+                        COMMAND cp ${TUV_DIR}/config/tizen/packaging/libtuv.pc.in .
                         COMMAND make -j TUV_BUILD_TYPE=${MODE} TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen
-                        COMMAND ${CMAKE_COMMAND} -E copy ${TUV_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+    )
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${TUV_TARGET}
+                        WORKING_DIRECTORY ${TUV_DIR}
+                        DEPENDS ${TUV_LOCAL_TARGET}
+                        COMMENT "COPY TUV"
+                        COMMAND cp ${TUV_LOCAL_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 
     ADD_CUSTOM_TARGET (tuv
@@ -165,7 +177,7 @@ IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
     ENDIF()
     ADD_CUSTOM_COMMAND (OUTPUT ${OUTPUT_DIRECTORY}/lib/libskia.so
                         DEPENDS ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so
-                        COMMAND ${CMAKE_COMMAND} -E copy ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so ${OUTPUT_DIRECTORY}/lib/.
+                        COMMAND cp ${THIRD_PARTY_ROOT}/android/skia/out/${BUILD_TYPE}/Shared/libskia.so ${OUTPUT_DIRECTORY}/lib/.
     )
 ENDIF()
 
@@ -210,22 +222,30 @@ SET (GC_CONFFLAGS
 
 SET (GC_BUILDDIR ${GCUTIL_ROOT}/bdwgc/out/${HOST}/${ARCH}/${MODE}.shared)
 IF (${HOST} STREQUAL "linux")
-    SET (GC_TARGET ${GC_BUILDDIR}/.libs/libgc.so)
-    ADD_CUSTOM_COMMAND (OUTPUT ${GC_TARGET}
-        COMMENT "BUILD GC"
+    SET (GC_LOCAL_TARGET ${GC_BUILDDIR}/.libs/libgc.so)
+    SET (GC_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libgc.so)
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${GC_LOCAL_TARGET}
         WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
+        COMMENT "BUILD GC"
         COMMAND autoreconf -vif
         COMMAND automake --add-missing
         COMMAND ${CMAKE_COMMAND} -E make_directory ${GC_BUILDDIR}
         COMMAND cd ${GC_BUILDDIR} && ../../../../configure ${GC_CONFFLAGS} CFLAGS=${GC_CFLAGS} LDFLAGS=${GC_LDFLAGS}
         COMMAND cd ${GC_BUILDDIR} && make -j
-        COMMAND ${CMAKE_COMMAND} -E copy ${GC_TARGET} ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+    )
+
+    ADD_CUSTOM_COMMAND (OUTPUT ${GC_TARGET}
+        WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
+        DEPENDS ${GC_LOCAL_TARGET}
+        COMMENT "COPY GC"
+        COMMAND cp ${GC_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 ELSEIF (${HOST} STREQUAL "tizen")
     SET (GC_TARGET ${GC_BUILDDIR}/.libs/libgc.a)
     ADD_CUSTOM_COMMAND (OUTPUT ${GC_TARGET}
-        COMMENT "BUILD GC"
         WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
+        COMMENT "BUILD GC"
         COMMAND autoreconf -vif
         COMMAND automake --add-missing
         COMMAND ${CMAKE_COMMAND} -E make_directory ${GC_BUILDDIR}
