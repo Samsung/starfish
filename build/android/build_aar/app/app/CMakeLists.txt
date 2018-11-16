@@ -175,6 +175,9 @@ set_target_properties( hb-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/
 add_library( curl-lib SHARED IMPORTED )
 set_target_properties( curl-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libcurl.so )
 
+add_library( crypto-lib SHARED IMPORTED )
+set_target_properties( crypto-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libcrypto.so )
+
 #add_library( icui18n-lib SHARED IMPORTED )
 #set_target_properties( icui18n-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicui18n.so )
 
@@ -189,6 +192,7 @@ target_link_libraries( # Specifies the target library.
                        ft2-lib
                        jpeg-lib
                        curl-lib
+                       crypto-lib
 #                       icui18n-lib
 #                       icuuc-lib
                        ${PREBUILT_LIB_PATH}/libgif.a
