@@ -467,6 +467,10 @@ bool Window::scrollToWithoutLayout(double x, double y)
             } else {
                 document()->setNeedsLayout();
                 document()->setNeedsPainting();
+
+                if (!browsingContext()->isTopLevelBrowsingContext()) {
+                    browsingContext()->sourceElement()->setNeedsPainting();
+                }
             }
             return true;
         }

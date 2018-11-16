@@ -31,52 +31,134 @@ namespace Starfish {
 class RepaintRegionTracker {
 public:
     RepaintRegionTracker(
-        FrameBox* rootFrame, LayoutRect initialRepaintRegion,
+        FrameBox* rootFrame, bool needsFullPainting,
         PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap,
         LayoutUnit sx, LayoutUnit sy, bool wc)
-        : m_repaintRegion(initialRepaintRegion)
+        : m_willCompositing(wc)
+        , m_needsFullPainting(needsFullPainting)
         , m_prevDrawnStackingContextInfoMap(prevDrawnStackingContextInfoMap)
-        , m_willCompositing(wc)
     {
         m_screenRect =
             LayoutRect(0, 0, rootFrame->node()->window()->innerWidth(),
                        rootFrame->node()->window()->innerHeight());
+
+        if (m_needsFullPainting) {
+            m_repaintRegionPerGraphicsLayer[nullptr].unite(m_screenRect);
+        }
+
         if (rootFrame->needsPainting()) {
             LayoutRect r = rootFrame->frameVisibleRect();
             r.setX(r.x() + sx);
             r.setY(r.y() + sy);
-            m_repaintRegion.unite(r);
+            m_repaintRegionPerGraphicsLayer[nullptr].unite(r);
+            m_needsFullPainting = true;
+            rootFrame->clearNeedsPainting();
         }
         trackRepaintRegion(rootFrame, SkMatrix::I());
 
         auto iter = m_prevDrawnStackingContextInfoMap.begin();
-
         while (iter != m_prevDrawnStackingContextInfoMap.end()) {
+            bool needsRepainting = false;
             if (!iter->second.hasThisLayerThisTime) {
+                needsRepainting = true;
                 // layer disappear
-                m_repaintRegion.unite(iter->second.screenExtent);
             } else if (!iter->second.isEqualsWithPrevDrawing) {
-                m_repaintRegion.unite(iter->second.screenExtent);
+                needsRepainting = true;
+            }
+
+            if (needsRepainting) {
+                m_repaintRegionPerGraphicsLayer[nullptr].unite(
+                    iter->second.screenExtent);
+                if (m_willCompositing) {
+                    if (iter->second.graphicsLayerOwner) {
+                        if (iter->second.graphicsLayerOwner->frame() &&
+                            iter->second.graphicsLayerOwner->frame()
+                                ->isFrameBox() &&
+                            iter->second.graphicsLayerOwner->frame()
+                                ->asFrameBox()
+                                ->stackingContext() &&
+                            iter->second.graphicsLayerOwner->frame()
+                                ->asFrameBox()
+                                ->stackingContext()
+                                ->needsGraphicsBuffer()) {
+                            m_repaintRegionPerGraphicsLayer
+                                [iter->second.graphicsLayerOwner]
+                                    .unite(iter->second.extentOnGraphicsLayer);
+                        }
+                    }
+                }
             }
             iter++;
         }
+
+        // extend repaint area for removing glitch
+        {
+            auto iter = m_repaintRegionPerGraphicsLayer.begin();
+            while (iter != m_repaintRegionPerGraphicsLayer.end()) {
+                if (!iter->second.isEmpty()) {
+                    iter->second.setX(iter->second.x() - 1);
+                    iter->second.setY(iter->second.y() - 1);
+                    iter->second.setWidth(iter->second.width() + 2);
+                    iter->second.setHeight(iter->second.height() + 2);
+                }
+                iter++;
+            }
+        }
     }
 
-    const LayoutRect& repaintRegion()
+    const RepaintRegion& repaintRegion()
     {
-        return m_repaintRegion;
+        return m_repaintRegionPerGraphicsLayer;
     }
 
     ~RepaintRegionTracker()
     {
     }
 
+    void notifyDirty(FrameBox* frame, StackingContext* sc,
+                     const SkMatrix& currentMatrix, LayoutRect r)
+    {
+        LayoutRect r2 = computeBoxExtent(r, currentMatrix);
+        m_repaintRegionPerGraphicsLayer[nullptr].unite(r2);
+        if (m_willCompositing) {
+            if (sc && sc->needsGraphicsBuffer()) {
+                m_repaintRegionPerGraphicsLayer[frame->node()].unite(
+                    sc->visibleRect());
+            } else {
+                if (frame->isFrameDocument() && frame->parent() == nullptr) {
+                    auto root = frame->node()->webView()->rootStackingContext();
+                    notifyDirty(root->owner(), root,
+                                root->owner()->computeScreenMatrix(),
+                                root->visibleRect());
+                } else {
+                    r = computeBoxExtent(
+                        r, frame->computeMatrixOnGraphicsBuffer());
+                    m_repaintRegionPerGraphicsLayer
+                        [findNearestStackingContextOwner(frame)->node()]
+                            .unite(r);
+                }
+            }
+        }
+    }
+
+    FrameBox* findNearestStackingContextOwner(FrameBox* frame)
+    {
+        while (frame) {
+            if (frame->stackingContext() &&
+                frame->stackingContext()->needsGraphicsBuffer()) {
+                return frame;
+            }
+            frame = frame->layoutParent()->asFrameBox();
+        }
+        return nullptr;
+    }
+
 protected:
-    LayoutRect m_repaintRegion;
+    bool m_willCompositing;
+    bool m_needsFullPainting;
+    std::unordered_map<Node*, LayoutRect> m_repaintRegionPerGraphicsLayer;
     LayoutRect m_screenRect;
     PrevDrawnStackingContextInfoMap& m_prevDrawnStackingContextInfoMap;
-    bool m_willCompositing;
-
     void trackRepaintRegion(FrameBox* frame, SkMatrix currentMatrix)
     {
         bool needsRepainting = frame->needsPainting();
@@ -116,10 +198,95 @@ protected:
                 needsRepainting = true;
                 FrameBox* cb = containingBlock(frame);
                 if (cb) {
-                    m_repaintRegion.unite(cb->computeScreenExtent());
+                    notifyDirty(cb, cb->stackingContext(),
+                                cb->computeScreenMatrix(),
+                                cb->frameVisibleRect());
                 }
             } else {
                 iter->second.hasThisLayerThisTime = true;
+
+                bool compositedBefore = iter->second.needsGraphicsBuffer;
+                bool willBeComposited = sc->needsGraphicsBuffer();
+
+                if (compositedBefore != willBeComposited) {
+                    if (!compositedBefore) {
+                        StackingContext* s = sc->parent();
+                        while (s) {
+                            if (s->needsGraphicsBuffer()) {
+                                LayoutRect r2 = computeBoxExtent(
+                                    sc->visibleRect(),
+                                    frame
+                                        ->computeMatrixOnGraphicsBufferOnGraphicsBuffer());
+                                m_repaintRegionPerGraphicsLayer[s->owner()
+                                                                    ->node()]
+                                    .unite(r2);
+                                break;
+                            }
+                            s = s->parent();
+                        }
+                    } else {
+                        if (frame->isRootElement()) {
+                            if (!frame->node()
+                                     ->document()
+                                     ->browsingContext()
+                                     ->isTopLevelBrowsingContext()) {
+                                FrameBox* holder = frame->node()
+                                                       ->document()
+                                                       ->browsingContext()
+                                                       ->sourceElement()
+                                                       ->frame()
+                                                       ->asFrameBox();
+                                notifyDirty(holder, holder->stackingContext(),
+                                            holder->computeScreenMatrix(),
+                                            holder->frameVisibleRect());
+                            }
+                        }
+                    }
+
+                    if (compositedBefore) {
+                        if (frame->isRootElement()) {
+                            if (!frame->node()
+                                     ->document()
+                                     ->browsingContext()
+                                     ->isTopLevelBrowsingContext()) {
+                                FrameBox* holder = frame->node()
+                                                       ->document()
+                                                       ->browsingContext()
+                                                       ->sourceElement()
+                                                       ->frame()
+                                                       ->asFrameBox();
+                                notifyDirty(holder, holder->stackingContext(),
+                                            holder->computeScreenMatrix(),
+                                            holder->frameVisibleRect());
+                            }
+                        }
+                    }
+
+                    needsRepainting = true;
+                } else if (compositedBefore &&
+                           compositedBefore == willBeComposited) {
+                    if (iter != m_prevDrawnStackingContextInfoMap.end()) {
+                        if (iter->second.graphicsBufferVisibleRect !=
+                            sc->visibleRect()) {
+                            // visible rect changed
+                            needsRepainting = true;
+                        }
+                    }
+
+                } else if (!compositedBefore && !willBeComposited) {
+                    if (iter != m_prevDrawnStackingContextInfoMap.end()) {
+                        if ((iter->second.opacity !=
+                             frame->style()->opacity()) ||
+                            (iter->second.transformMatrix !=
+                             sc->transformMatrix())) {
+                            needsRepainting = true;
+                        }
+                    } else {
+                        if (sc->transformMatrix() != SkMatrix::I()) {
+                            needsRepainting = true;
+                        }
+                    }
+                }
 
                 if (m_willCompositing) {
                     if (sc->needsGraphicsBuffer() &&
@@ -163,21 +330,29 @@ protected:
                 layoutRepaintTracker.dirtyAreaPerStackingContextOwners()
                     .end()) {
                 LayoutRect r = iter2->second;
-                r = computeBoxExtent(r, currentMatrix);
-                m_repaintRegion.unite(r);
+                notifyDirty(frame, sc, currentMatrix, r);
+            }
+        } else {
+            if (frame->node()) {
+                auto iter =
+                    m_prevDrawnStackingContextInfoMap.find(frame->node());
+                if (iter != m_prevDrawnStackingContextInfoMap.end()) {
+                    // stacking context is disappear
+                    // invalidate new region
+                    needsRepainting = true;
+                }
             }
         }
 
         if (needsRepainting) {
             LayoutRect r = frame->frameVisibleRect();
-            r = computeBoxExtent(r, currentMatrix);
-            m_repaintRegion.unite(r);
+            notifyDirty(frame, sc, currentMatrix, r);
 
             if (frame->isRootElement() && sc && sc->needsGraphicsBuffer()) {
                 LayoutRect r(0, 0, frame->node()->window()->scrollWidth(false),
                              frame->node()->window()->scrollWidth(false));
-                r = computeBoxExtent(r, currentMatrix);
-                m_repaintRegion.unite(r);
+
+                notifyDirty(frame, sc, currentMatrix, r);
             }
         }
 

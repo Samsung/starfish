@@ -98,7 +98,7 @@ Starfish::Starfish(const char* localStorageFilePath,
                 iter++;
             }
         });
-        GC_set_free_space_divisor(12);
+        GC_set_free_space_divisor(BDWGC_FREE_SPACE_DIVISOR);
         GC_set_force_unmap_on_gcollect(1);
     }
 

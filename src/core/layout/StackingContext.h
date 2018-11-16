@@ -153,17 +153,19 @@ public:
         bool willCompositing;
         PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap;
         LayoutRect screenClipRect;
+        RepaintRegion& repaintRegion;
         LayoutRect layerClipRect;
         LayoutUnit scrollX, scrollY;
         LayoutUnit layerBaseX, layerBaseY;
         PaintingStackingContextContext(
             bool willCompositing,
             PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap,
-            const LayoutRect& screenClipRect, LayoutUnit scrollX,
-            LayoutUnit scrollY)
+            const LayoutRect& screenClipRect, RepaintRegion& repaintRegion,
+            LayoutUnit scrollX, LayoutUnit scrollY)
             : willCompositing(willCompositing)
             , prevDrawnStackingContextInfoMap(prevDrawnStackingContextInfoMap)
             , screenClipRect(screenClipRect)
+            , repaintRegion(repaintRegion)
             , scrollX(scrollX)
             , scrollY(scrollY)
         {

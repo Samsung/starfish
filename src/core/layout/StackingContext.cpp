@@ -1222,32 +1222,33 @@ void StackingContext::applyStackingContextProperties(
         m_isVisibleRectComputedForNonGraphicsLayer = false;
     }
 
-    LayoutRect screenRect =
-        LayoutRect(0, 0, ctx.rootLayer->owner()->node()->window()->innerWidth(),
-                   ctx.rootLayer->owner()->node()->window()->innerHeight());
-
     if (compositedBefore != willBeComposited) {
-        m_owner->node()->setNeedsPainting();
+        m_owner->node()->webView()->markNeedsPaintingConsiderInRendering();
     } else if (compositedBefore && compositedBefore == willBeComposited) {
         if (prevDrawnMapIter != prevDrawnMap.end()) {
             if (prevDrawnMapIter->second.graphicsBufferVisibleRect !=
                 visibleRect()) {
                 // visible rect changed
-                m_owner->node()->setNeedsPainting();
+                m_owner->node()
+                    ->webView()
+                    ->markNeedsPaintingConsiderInRendering();
             }
         }
-
     } else if (!compositedBefore && !willBeComposited) {
         if (prevDrawnMapIter != prevDrawnMap.end()) {
             if ((prevDrawnMapIter->second.opacity !=
                  m_owner->style()->opacity()) ||
                 (prevDrawnMapIter->second.transformMatrix !=
                  transformMatrix())) {
-                m_owner->node()->setNeedsPainting();
+                m_owner->node()
+                    ->webView()
+                    ->markNeedsPaintingConsiderInRendering();
             }
         } else {
             if (transformMatrix() != SkMatrix::I()) {
-                m_owner->node()->setNeedsPainting();
+                m_owner->node()
+                    ->webView()
+                    ->markNeedsPaintingConsiderInRendering();
             }
         }
     }
@@ -1726,11 +1727,15 @@ void StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                             canvas->setTextDecorationData(
                                 m_rareData->m_textDecorationData);
 
+                            // give empty repaint region
+                            // this stage. we will just filling empty tiles if
+                            // needed
+                            RepaintRegion rr;
                             StackingContext::PaintingStackingContextContext ctx(
                                 true, m_owner->node()
                                           ->webView()
                                           ->m_prevDrawnStackingContextInfo,
-                                LayoutRect(0, 0, 0, 0), 0, 0);
+                                LayoutRect(0, 0, 0, 0), rr, 0, 0);
 
                             ctx.layerBaseX = tileDataX;
                             ctx.layerBaseY = tileDataY;
@@ -1873,8 +1878,15 @@ void StackingContext::fillGraphicsBufferContents(
             bool willPaintOnScreen = screenRect.intersects(tileExtent) &&
                                      windowRect.intersects(tileExtent);
 
+            LayoutRect layerClipRect = globalCtx.repaintRegion[owner()->node()];
             bool isOverlappedWithScreenClipRect =
-                globalCtx.screenClipRect.intersects(tileExtent);
+                layerClipRect.intersects(LayoutRect(
+                    (LayoutUnit)tileDataX + minX, (LayoutUnit)tileDataY + minY,
+                    tileDataWidth, tileDataHeight));
+            layerClipRect.setX(layerClipRect.x() - (LayoutUnit)tileDataX -
+                               minX);
+            layerClipRect.setY(layerClipRect.y() - (LayoutUnit)tileDataY -
+                               minY);
 
             if (isOverlappedWithScreenClipRect && !willPaintOnScreen) {
                 if (m_rareData->m_graphicsBufferHolder->m_surfaces[tileIndex]) {
@@ -1894,51 +1906,34 @@ void StackingContext::fillGraphicsBufferContents(
                     gotNewBuffer = true;
                 }
 
-                CanvasSurface* canvasSurface =
-                    m_rareData->m_graphicsBufferHolder->m_surfaces[tileIndex];
-                Canvas* canvas =
-                    Canvas::create(m_owner->node()->webView(), canvasSurface);
+                if (isOverlappedWithScreenClipRect || gotNewBuffer) {
+                    CanvasSurface* canvasSurface =
+                        m_rareData->m_graphicsBufferHolder
+                            ->m_surfaces[tileIndex];
+                    Canvas* canvas = Canvas::create(m_owner->node()->webView(),
+                                                    canvasSurface);
 
-                canvas->setTextDecorationData(m_rareData->m_textDecorationData);
+                    canvas->setTextDecorationData(
+                        m_rareData->m_textDecorationData);
 
-                StackingContext::PaintingStackingContextContext ctx(
-                    true, globalCtx.prevDrawnStackingContextInfoMap,
-                    globalCtx.screenClipRect, globalCtx.scrollX,
-                    globalCtx.scrollY);
+                    StackingContext::PaintingStackingContextContext ctx(
+                        true, globalCtx.prevDrawnStackingContextInfoMap,
+                        globalCtx.screenClipRect, globalCtx.repaintRegion,
+                        globalCtx.scrollX, globalCtx.scrollY);
 
-                ctx.layerBaseX = tileDataX;
-                ctx.layerBaseY = tileDataY;
+                    ctx.layerBaseX = tileDataX;
+                    ctx.layerBaseY = tileDataY;
 
-                float dpr =
-                    m_owner->node()->webView()->screenInfo().devicePixelRatio;
-                bool needsInitialClip = false;
-                ctx.layerClipRect = LayoutRect(0, 0, canvasSurface->width(),
-                                               canvasSurface->height());
+                    float dpr = m_owner->node()
+                                    ->webView()
+                                    ->screenInfo()
+                                    .devicePixelRatio;
+                    bool needsInitialClip = false;
+                    ctx.layerClipRect = LayoutRect(0, 0, canvasSurface->width(),
+                                                   canvasSurface->height());
 
-                if (isOverlappedWithScreenClipRect && !gotNewBuffer) {
-                    if (m_rareData->m_screenMatrix.rectStaysRect()) {
-                        SkMatrix invertMatrix;
-                        m_rareData->m_screenMatrix.invert(&invertMatrix);
-                        SkRect rt = SkRect::MakeXYWH(
-                            (float)ctx.screenClipRect.x(),
-                            (float)ctx.screenClipRect.y(),
-                            (float)ctx.screenClipRect.width(),
-                            (float)ctx.screenClipRect.height());
-                        invertMatrix.mapRect(&rt);
-                        ctx.layerClipRect =
-                            LayoutRect(rt.x(), rt.y(), rt.width(), rt.height());
-
-                        ctx.layerClipRect.setX(ctx.layerClipRect.x().floor());
-                        ctx.layerClipRect.setY(ctx.layerClipRect.y().floor());
-
-                        ctx.layerClipRect.setWidth(
-                            ctx.layerClipRect.width().ceil() + 1);
-                        ctx.layerClipRect.setHeight(
-                            ctx.layerClipRect.height().ceil() + 1);
-                        ctx.layerClipRect.setX(ctx.layerClipRect.x() - minX -
-                                               (LayoutUnit)tileDataX);
-                        ctx.layerClipRect.setY(ctx.layerClipRect.y() - minY -
-                                               (LayoutUnit)tileDataY);
+                    if (isOverlappedWithScreenClipRect && !gotNewBuffer) {
+                        ctx.layerClipRect = layerClipRect;
                         needsInitialClip = true;
 
                         if (ctx.layerClipRect.x() <= 0 &&
@@ -1952,63 +1947,64 @@ void StackingContext::fillGraphicsBufferContents(
                                 LayoutRect(0, 0, canvasSurface->width(),
                                            canvasSurface->height());
                         }
+                    } else if (isOverlappedWithScreenClipRect || gotNewBuffer) {
+                    } else {
+                        ctx.layerClipRect = LayoutRect(0, 0, 0, 0);
+                        needsInitialClip = true;
                     }
-                } else if (isOverlappedWithScreenClipRect || gotNewBuffer) {
-                } else {
-                    ctx.layerClipRect = LayoutRect(0, 0, 0, 0);
-                    needsInitialClip = true;
-                }
 
-                if (needsInitialClip) {
-                    deviceLayerClipRect =
-                        canvas->pixelSnappedClip(ctx.layerClipRect);
-                } else {
-                    deviceLayerClipRect =
-                        LayoutRect(0, 0, canvasSurface->bufferWidth(),
-                                   canvasSurface->bufferHeight());
-                }
-                canvas->translate(-minX, -minY);
-                canvas->translate(-ctx.layerBaseX, -ctx.layerBaseY);
+                    if (needsInitialClip) {
+                        deviceLayerClipRect =
+                            canvas->pixelSnappedClip(ctx.layerClipRect);
+                    } else {
+                        deviceLayerClipRect =
+                            LayoutRect(0, 0, canvasSurface->bufferWidth(),
+                                       canvasSurface->bufferHeight());
+                    }
+                    canvas->translate(-minX, -minY);
+                    canvas->translate(-ctx.layerBaseX, -ctx.layerBaseY);
 
-                if (needsInitialClip) {
-                    canvas->clearColor(Unit::Color(0, 0, 0, 0));
-                } else {
-                    canvasSurface->clear();
-                }
+                    if (needsInitialClip) {
+                        canvas->clearColor(Unit::Color(0, 0, 0, 0));
+                    } else {
+                        canvasSurface->clear();
+                    }
 
-                fillGraphicsBufferContents(canvas, ctx);
+                    fillGraphicsBufferContents(canvas, ctx);
 
-                delete canvas;
+                    delete canvas;
 
-                if (deviceLayerClipRect.x() < 0) {
-                    deviceLayerClipRect.setX(0);
-                }
-                if (deviceLayerClipRect.y() < 0) {
-                    deviceLayerClipRect.setY(0);
-                }
-                if ((int)deviceLayerClipRect.maxX() >
-                    (int)canvasSurface->bufferWidth()) {
-                    deviceLayerClipRect.setWidth(
-                        deviceLayerClipRect.width() -
-                        ((int)deviceLayerClipRect.maxX() -
-                         (int)canvasSurface->bufferWidth()));
-                }
-                if ((int)deviceLayerClipRect.maxY() >
-                    (int)canvasSurface->bufferHeight()) {
-                    deviceLayerClipRect.setHeight(
-                        deviceLayerClipRect.height() -
-                        ((int)deviceLayerClipRect.maxY() -
-                         (int)canvasSurface->bufferHeight()));
-                }
-                if ((bool)deviceLayerClipRect.width() ||
-                    (bool)deviceLayerClipRect.height()) {
-                    canvasSurface->unMapBufferAndNotifyUpdateRegion(
-                        (int)deviceLayerClipRect.x(),
-                        (int)deviceLayerClipRect.y(),
-                        (int)deviceLayerClipRect.width(),
-                        (int)deviceLayerClipRect.height());
-                } else {
-                    canvasSurface->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
+                    if (deviceLayerClipRect.x() < 0) {
+                        deviceLayerClipRect.setX(0);
+                    }
+                    if (deviceLayerClipRect.y() < 0) {
+                        deviceLayerClipRect.setY(0);
+                    }
+                    if ((int)deviceLayerClipRect.maxX() >
+                        (int)canvasSurface->bufferWidth()) {
+                        deviceLayerClipRect.setWidth(
+                            deviceLayerClipRect.width() -
+                            ((int)deviceLayerClipRect.maxX() -
+                             (int)canvasSurface->bufferWidth()));
+                    }
+                    if ((int)deviceLayerClipRect.maxY() >
+                        (int)canvasSurface->bufferHeight()) {
+                        deviceLayerClipRect.setHeight(
+                            deviceLayerClipRect.height() -
+                            ((int)deviceLayerClipRect.maxY() -
+                             (int)canvasSurface->bufferHeight()));
+                    }
+                    if ((bool)deviceLayerClipRect.width() ||
+                        (bool)deviceLayerClipRect.height()) {
+                        canvasSurface->unMapBufferAndNotifyUpdateRegion(
+                            (int)deviceLayerClipRect.x(),
+                            (int)deviceLayerClipRect.y(),
+                            (int)deviceLayerClipRect.width(),
+                            (int)deviceLayerClipRect.height());
+                    } else {
+                        canvasSurface->unMapBufferAndNotifyUpdateRegion(0, 0, 0,
+                                                                        0);
+                    }
                 }
             }
 
@@ -2358,6 +2354,10 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                             screenRect.intersects(tileExtent) &&
                             windowRect.intersects(tileExtent);
 
+                        if (willPaintOnScreen) {
+                            STARFISH_ASSERT(m_rareData->m_graphicsBufferHolder
+                                                ->m_surfaces[tileIndex]);
+                        }
                         if (willPaintOnScreen &&
                             m_rareData->m_graphicsBufferHolder
                                 ->m_surfaces[tileIndex]) {

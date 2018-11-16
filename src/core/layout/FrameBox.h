@@ -813,6 +813,7 @@ public:
 
     SkMatrix computeMatrixOnGraphicsBuffer();
     SkMatrix computeMatrixOnWindow();
+    SkMatrix computeMatrixOnGraphicsBufferOnGraphicsBuffer();
 
     class ChildFrameBoxIterator {
     public:

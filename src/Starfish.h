@@ -32,6 +32,8 @@ class Mutex;
 class HTTPCache;
 #endif
 
+#define BDWGC_FREE_SPACE_DIVISOR 12
+
 void addGCCollectionListener(void (*fn)(GC_EventType));
 
 // ctor of Starfish class is NOT THREAD-SAFE
