@@ -32,6 +32,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -140,6 +141,12 @@ void HTMLStyleElement::generateStyleSheet()
             str = str->concat(child->asCharacterData()->data());
         }
         child = child->nextSibling();
+    }
+
+    if (str->length() > 0 &&
+        !document()->contentSecurityPolicy()->allowInlineStyle(
+            document()->urlString(), str)) {
+        return;
     }
 
     CSSStyleSheet* sheet = new CSSStyleSheet(this, str);

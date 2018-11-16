@@ -64,29 +64,24 @@ bool ContentSecurityPolicy::findHashOfContentInSourceList(
     return false;
 }
 
+bool ContentSecurityPolicy::allowInlineEventHandlers(String* contextURL)
+{
+    return allowInlineScript(contextURL, nullptr);
+}
+
 bool ContentSecurityPolicy::allowInlineScript(String* contextURL,
                                               String* scriptContent)
 {
     for (auto policy : m_policies) {
-        if (!policy->scriptSrc()) {
+        auto src = policy->scriptSrc();
+
+        if (!src) {
             continue;
-        }
-        if (policy->allowInlineScript() ||
-            findHashOfContentInSourceList(policy->scriptSrc(), scriptContent)) {
+        } else if (policy->allowInlineScript() ||
+                   findHashOfContentInSourceList(src, scriptContent)) {
             continue;
         } else {
-            dispatchViolationEvent(policy->scriptSrc()->name());
-            return false;
-        }
-    }
-    return true;
-}
-
-bool ContentSecurityPolicy::allowInlineEventHandlers(String* contextURL)
-{
-    for (auto policy : m_policies) {
-        if (!policy->allowInlineScript()) {
-            dispatchViolationEvent(policy->scriptSrc()->name());
+            dispatchViolationEvent(src->name());
             return false;
         }
     }
@@ -98,6 +93,36 @@ bool ContentSecurityPolicy::allowURLScript(ResourceURL* url)
     for (auto policy : m_policies) {
         if (!policy->allowURLScript(url)) {
             dispatchViolationEvent(policy->scriptSrc()->name());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ContentSecurityPolicy::allowInlineStyle(String* contextURL,
+                                             String* styleContent)
+{
+    for (auto policy : m_policies) {
+        auto src = policy->styleSrc();
+
+        if (!src) {
+            continue;
+        } else if (policy->allowInlineStyle() ||
+                   findHashOfContentInSourceList(src, styleContent)) {
+            continue;
+        } else {
+            dispatchViolationEvent(src->name());
+            return false;
+        }
+    }
+    return true;
+}
+
+bool ContentSecurityPolicy::allowURLStyle(ResourceURL* url)
+{
+    for (auto policy : m_policies) {
+        if (!policy->allowURLStyle(url)) {
+            dispatchViolationEvent(policy->styleSrc()->name());
             return false;
         }
     }

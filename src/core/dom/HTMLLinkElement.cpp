@@ -31,6 +31,7 @@
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -238,6 +239,10 @@ void HTMLLinkElement::loadStyleSheet()
     }
 
     m_styleSheetTextResource = nullptr;
+
+    if (!document()->contentSecurityPolicy()->allowURLStyle(url)) {
+        return;
+    }
 
     if (document()->preloadScanner()) {
         auto ps = document()->preloadScanner();
