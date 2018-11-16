@@ -59,7 +59,6 @@ IF (${HOST} STREQUAL "tizen")
         #-DSTARFISH_ENABLE_INSPECTOR
         #-DSTARFISH_ENABLE_TEST
         #-DSTARFISH_MEDIAPLAYER_DEBUG
-        -DSTARFISH_TIZEN_MAJOR_VERSION=${STARFISH_TIZEN_MAJOR_VERSION}
     )
 ENDIF()
 
@@ -190,18 +189,12 @@ ENDIF()
 SET (LWE_CXXFLAGS ${LWE_CXXFLAGS_DEFAULT} ${LWE_CXXFLAGS_COMPILER} ${LWE_CXXFLAGS_HOST} ${LWE_CXXFLAGS_BACKEND} ${CXXFLAGS_FROM_ENV} ${LWE_CXXFLAGS_MODE})
 
 
-SET (LWE_LDFLAGS_DEFAULT "-Wl,-rpath=/usr/local/lib")
+SET (LWE_LDFLAGS_DEFAULT -Wl,-rpath=/usr/local/lib)
 IF (${HOST} STREQUAL "linux")
-    SET (LWE_LDFLAGS_HOST "-Wl,--gc-sections -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib")
-ELSEIF (${HOST} STREQUAL "tizen")
-    IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
-        SET (LWE_LDFLAGS_HOST "-Wl,-soname,liblightweight-web-engine.so.1")
-    ELSEIF (${BACKEND} STREQUAL "dali")
-        SET (LWE_LDFLAGS_HOST "-Wl,-soname,liblightweight-web-engine-dali-plugin.so.1")
-    ENDIF()
+    SET (LWE_LDFLAGS_HOST -Wl,--gc-sections -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib)
 ENDIF()
 
-SET (LWE_LDFLAGS "${LWE_LDFLAGS_DEFAULT} ${LWE_LDFLAGS_HOST}")
+SET (LWE_LDFLAGS ${LWE_LDFLAGS_DEFAULT} ${LWE_LDFLAGS_HOST})
 #######################################################
 # PACKAGES
 #######################################################
@@ -292,6 +285,11 @@ IF (${HOST} STREQUAL "tizen")
         dl
         capi-location-manager
     )
+    IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
+        SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} -Wl,-soname,liblightweight-web-engine.so.1)
+    ELSEIF (${BACKEND} STREQUAL "dali")
+        SET (STARFISH_LIBRARIES_HOST ${STARFISH_LIBRARIES_HOST} -Wl,-soname,liblightweight-web-engine-dali-plugin.so.1)
+    ENDIF()
 ENDIF()
 
 IF (${TOUCH_UI} STREQUAL "1")
