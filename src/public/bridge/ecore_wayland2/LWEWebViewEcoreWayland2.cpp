@@ -35,6 +35,7 @@
 #include <EGL/eglext.h>
 
 #include <Ecore_Evas.h>
+#include <Ecore_IMF.h>
 
 typedef EGLSyncKHR(EGLAPIENTRYP PFNEGLCREATESYNCKHRPROC)(
     EGLDisplay dpy, EGLenum type, const EGLint* attrib_list);
@@ -53,6 +54,24 @@ const int g_arrowKeyDownMinimumDelayInMS = 200;
 static int g_arrowKeyDownTimestamp[4];
 
 namespace LWE {
+
+static const char* getIMFMethod()
+{
+    Eina_List* modules;
+
+    modules = ecore_imf_context_available_ids_get();
+    if (!modules) {
+        return nullptr;
+    }
+
+    void* module;
+    EINA_LIST_FREE(modules, module)
+    {
+        return (const char*)module;
+    }
+
+    return nullptr;
+}
 
 static KeyValue ecoreEventKeyToKeyValue(const char* ecoreKeyString,
                                         bool isShiftPressed)
@@ -222,6 +241,8 @@ public:
         , m_isMouseLbuttonDown(false)
         , m_isBufferSwapped(false)
         , m_hasFocus(true)
+        , m_isShowing(false)
+        , m_IMFContext(nullptr)
     {
         Ecore_Wl2_Window* win = (Ecore_Wl2_Window*)winArg;
         mEcoreWindow = win;
@@ -521,6 +542,36 @@ public:
                         keyName = "Escape";
                     }
 #endif
+
+                    if ((strcmp(keyName.data(), "XF86Exit") == 0) ||
+                        (strcmp(keyName.data(), "Select") == 0) ||
+                        (strcmp(keyName.data(), "Cancel") == 0)) {
+                        if (strcmp(keyName.data(), "Select") == 0) {
+                            webView->FetchWebContainer()->AddIdleCallback(
+                                [](void* data) {
+                                    WebViewEcoreWayland2* self =
+                                        (WebViewEcoreWayland2*)data;
+                                    KeyValue kv = KeyValue::EnterKey;
+                                    self->FetchWebContainer()
+                                        ->DispatchKeyDownEvent(kv);
+                                    self->FetchWebContainer()
+                                        ->DispatchKeyPressEvent(kv);
+                                    self->FetchWebContainer()
+                                        ->DispatchKeyUpEvent(kv);
+                                    self->HideSoftwareKeyboardIfPossible();
+                                },
+                                webView);
+                        } else {
+                            webView->FetchWebContainer()->AddIdleCallback(
+                                [](void* data) {
+                                    WebViewEcoreWayland2* self =
+                                        (WebViewEcoreWayland2*)data;
+                                    self->HideSoftwareKeyboardIfPossible();
+                                },
+                                webView);
+                        }
+                    }
+
                     auto keyValue =
                         ecoreEventKeyToKeyValue(keyName.data(), false);
 
@@ -581,14 +632,178 @@ public:
             },
             this));
 
+        ecore_imf_init();
+
+        webContainer->RegisterOnShowSoftwareKeyboardIfPossibleHandler(
+            [this](WebContainer*) { ShowSoftwareKeyboardIfPossible(); });
+
+        webContainer->RegisterOnHideSoftwareKeyboardIfPossibleHandler(
+            [this](WebContainer* t) { HideSoftwareKeyboardIfPossible(); });
+
         webContainer->SetUserData("__internalLWEWebViewEFLEcoreWaylandHandle",
                                   mEcoreWindow);
 
         m_impl = webContainer;
     }
+
+    void createInputMethod()
+    {
+        createIMFContext();
+        registerIMFCallback();
+    }
+
+    void createIMFContext()
+    {
+        const char* contextId = ecore_imf_context_default_id_get();
+        if (contextId) {
+            m_IMFContext = ecore_imf_context_add(contextId);
+        } else {
+            STARFISH_LOG_ERROR("Default context is null. Use fallback\n");
+            m_IMFContext = ecore_imf_context_add(getIMFMethod());
+        }
+        ecore_imf_context_client_window_set(
+            m_IMFContext, (void*)ecore_wl2_window_id_get(mEcoreWindow));
+    }
+
+    static void CommitCallback(void* data, Ecore_IMF_Context* ctx,
+                               void* event_info)
+    {
+        WebViewEcoreWayland2* self = (WebViewEcoreWayland2*)data;
+        char* commit_str = (char*)event_info;
+        STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_COMMIT %s\n", commit_str);
+        self->FetchWebContainer()->DispatchCompositionEndEvent(commit_str);
+    }
+
+    static void PreeditCallback(void* data, Ecore_IMF_Context* ctx,
+                                void* event_info)
+    {
+        WebViewEcoreWayland2* self = (WebViewEcoreWayland2*)data;
+        char* str = NULL;
+        int cursor_pos;
+        ecore_imf_context_preedit_string_get(self->m_IMFContext, &str,
+                                             &cursor_pos);
+        STARFISH_LOG_INFO("ECORE_IMF_CALLBACK_PREEDIT_CHANGED %s %d\n", str,
+                          cursor_pos);
+        if (str) {
+            self->FetchWebContainer()->DispatchCompositionUpdateEvent(str);
+            free(str);
+        }
+    }
+
+    static void PrivateCommandCallback(void* data, Ecore_IMF_Context* ctx,
+                                       void* event_info)
+    {
+        // TODO
+    }
+
+    static void DeleteSurroundingCallback(void* data, Ecore_IMF_Context* ctx,
+                                          void* event_info)
+    {
+        // TODO
+    }
+
+    static void InputPanelStatChangedCallback(void* data,
+                                              Ecore_IMF_Context* context,
+                                              int value)
+    {
+        if (!data) {
+            STARFISH_LOG_INFO("[No Data]\n");
+            return;
+        }
+        WebViewEcoreWayland2* wv = (WebViewEcoreWayland2*)data;
+        switch (value) {
+        case ECORE_IMF_INPUT_PANEL_STATE_SHOW:
+            wv->ShowPanel();
+            STARFISH_LOG_INFO("[PANEL_STATE_SHOW]\n");
+            break;
+        case ECORE_IMF_INPUT_PANEL_STATE_HIDE:
+            wv->HidePanel();
+            STARFISH_LOG_INFO("[PANEL_STATE_HIDE]\n");
+            break;
+        case ECORE_IMF_INPUT_PANEL_STATE_WILL_SHOW:
+            STARFISH_LOG_INFO("[PANEL_STATE_WILL_SHOW]\n");
+            break;
+        default:
+            STARFISH_LOG_INFO("[PANEL_STATE_EVENT (default: %d)]\n", value);
+            break;
+        }
+    }
+
+    static Eina_Bool RetrieveSurroundingCallback(void* data,
+                                                 Ecore_IMF_Context* ctx,
+                                                 char** text, int* cursor_pos)
+    {
+        if (text) {
+            *text = strdup("");
+        }
+        if (cursor_pos) {
+            *cursor_pos = 0;
+        }
+        return EINA_TRUE;
+    }
+
+    void registerIMFCallback()
+    {
+        STARFISH_ASSERT(m_IMFContext);
+
+        ecore_imf_context_input_panel_enabled_set(m_IMFContext, false);
+        ecore_imf_context_use_preedit_set(m_IMFContext, true);
+
+        ecore_imf_context_event_callback_add(
+            m_IMFContext, ECORE_IMF_CALLBACK_COMMIT, &CommitCallback, this);
+        ecore_imf_context_event_callback_add(m_IMFContext,
+                                             ECORE_IMF_CALLBACK_PREEDIT_CHANGED,
+                                             &PreeditCallback, this);
+        ecore_imf_context_event_callback_add(
+            m_IMFContext, ECORE_IMF_CALLBACK_DELETE_SURROUNDING,
+            &DeleteSurroundingCallback, this);
+        ecore_imf_context_event_callback_add(
+            m_IMFContext, ECORE_IMF_CALLBACK_PRIVATE_COMMAND_SEND,
+            &PrivateCommandCallback, this);
+
+        ecore_imf_context_input_panel_event_callback_add(
+            m_IMFContext, ECORE_IMF_INPUT_PANEL_STATE_EVENT,
+            &InputPanelStatChangedCallback, this);
+        ecore_imf_context_retrieve_surrounding_callback_set(
+            m_IMFContext, &RetrieveSurroundingCallback, this);
+
+        // These APIs have to be set when IMF's setting status is changed.
+        ecore_imf_context_autocapital_type_set(m_IMFContext,
+                                               ECORE_IMF_AUTOCAPITAL_TYPE_NONE);
+        ecore_imf_context_prediction_allow_set(m_IMFContext, EINA_FALSE);
+        ecore_imf_context_input_panel_layout_set(
+            m_IMFContext, ECORE_IMF_INPUT_PANEL_LAYOUT_NORMAL);
+        ecore_imf_context_input_panel_return_key_type_set(
+            m_IMFContext, ECORE_IMF_INPUT_PANEL_RETURN_KEY_TYPE_DEFAULT);
+        ecore_imf_context_input_panel_layout_variation_set(m_IMFContext, 0);
+    }
+
+    void unregisterIMFCallback()
+    {
+        ecore_imf_context_event_callback_del(
+            m_IMFContext, ECORE_IMF_CALLBACK_COMMIT, &CommitCallback);
+        ecore_imf_context_event_callback_del(
+            m_IMFContext, ECORE_IMF_CALLBACK_PREEDIT_CHANGED, &PreeditCallback);
+        ecore_imf_context_event_callback_del(
+            m_IMFContext, ECORE_IMF_CALLBACK_DELETE_SURROUNDING,
+            &DeleteSurroundingCallback);
+        ecore_imf_context_event_callback_del(
+            m_IMFContext, ECORE_IMF_CALLBACK_PRIVATE_COMMAND_SEND,
+            &PrivateCommandCallback);
+        ecore_imf_context_input_panel_event_callback_del(
+            m_IMFContext, ECORE_IMF_INPUT_PANEL_STATE_EVENT,
+            &InputPanelStatChangedCallback);
+        ecore_imf_context_del(m_IMFContext);
+    }
+
     virtual void Destroy() override
     {
         FetchWebContainer()->Destroy();
+
+        if (m_IMFContext) {
+            unregisterIMFCallback();
+            m_IMFContext = nullptr;
+        }
 
         if (mFence) {
             g_eglDestroySyncKHRProc(mDisplay, mFence);
@@ -623,6 +838,8 @@ public:
     bool m_isMouseLbuttonDown;
     bool m_isBufferSwapped;
     bool m_hasFocus;
+    bool m_isShowing;
+    Ecore_IMF_Context* m_IMFContext;
     Ecore_Wl2_Window* mEcoreWindow;
     wl_display* mWlDisplay;
     EGLDisplay mDisplay;
@@ -636,6 +853,62 @@ public:
     virtual ::LWE::WebContainer* FetchWebContainer() override
     {
         return (::LWE::WebContainer*)m_impl;
+    }
+
+    void ShowPanel()
+    {
+        Ecore_IMF_Context* ctx = m_IMFContext;
+
+        STARFISH_LOG_INFO("ShowPanel() [wv->m_isShowing:%d] \n", m_isShowing);
+        if (!m_isShowing) {
+            m_isShowing = true;
+            ecore_imf_context_input_panel_show(ctx);
+            ecore_imf_context_focus_in(ctx);
+        }
+    }
+
+    void ShowSoftwareKeyboardIfPossible()
+    {
+        STARFISH_LOG_INFO("1.Show IMF()\n");
+
+#if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
+        FetchWebContainer()->AddIdleCallback(
+            [](void* data) {
+                WebViewEcoreWayland2* wv = (WebViewEcoreWayland2*)data;
+                if (!wv->m_IMFContext) {
+                    wv->createInputMethod();
+                }
+                wv->ShowPanel();
+            },
+            this);
+#endif
+    }
+
+    void HidePanel()
+    {
+        Ecore_IMF_Context* ctx = m_IMFContext;
+
+        STARFISH_LOG_INFO("HidePanel() [wv->m_isShowing:%d] \n", m_isShowing);
+        if (ctx && m_isShowing) {
+            m_isShowing = false;
+            ecore_imf_context_reset(ctx);
+            ecore_imf_context_focus_out(ctx);
+            ecore_imf_context_input_panel_hide(ctx);
+        }
+    }
+
+    void HideSoftwareKeyboardIfPossible()
+    {
+        STARFISH_LOG_INFO("1.Hide IMF()\n");
+
+#if !defined(STARFISH_TIZEN_WEARABLE_WIDGET)
+        FetchWebContainer()->AddIdleCallback(
+            [](void* data) {
+                WebViewEcoreWayland2* wv = (WebViewEcoreWayland2*)data;
+                wv->HidePanel();
+            },
+            this);
+#endif
     }
 };
 
