@@ -2992,7 +2992,8 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
         auto iter = info.find(nd);
         if (iter != info.end() && !isEstablishesStackingContext()) {
             // stacking context is disappear
-            nd->setNeedsPainting();
+            // trigger repaint tracker
+            nd->webView()->markNeedsPaintingConsiderInRendering();
         }
     }
 
@@ -3547,7 +3548,12 @@ LayoutRect computeBoxExtent(LayoutRect rt, const SkMatrix& m)
     }
 }
 
-enum ComputeMatrixFor { Screen, GraphicsLayer, Window };
+enum ComputeMatrixFor {
+    Screen,
+    GraphicsLayer,
+    Window,
+    GraphicsLayerOnGraphicsLayer
+};
 
 static void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m)
 {
@@ -3578,27 +3584,39 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
 {
     bool seenFixedPositionedLayer = false;
     FrameBox* turnOffScrollUntilMeet = nullptr;
-    std::vector<FrameBox*> frameList;
+    FrameBox* graphicsLayerHolder = nullptr;
 
+    std::vector<FrameBox*> frameList;
     frameList.reserve(32);
+
     Frame* f = self;
+
+    if (forWhat == ComputeMatrixFor::GraphicsLayerOnGraphicsLayer) {
+        forWhat = GraphicsLayer;
+        frameList.push_back(f->asFrameBox());
+        f = f->layoutParent();
+    }
+
     while (f) {
+        if (forWhat == ComputeMatrixFor::GraphicsLayer &&
+            f->asFrameBox()->stackingContext() &&
+            f->asFrameBox()->stackingContext()->needsGraphicsBuffer()) {
+            graphicsLayerHolder = f->asFrameBox();
+            break;
+        }
+
         if (f->style() && f->style()->position() == FixedPositionValue) {
             if (!seenFixedPositionedLayer) {
                 seenFixedPositionedLayer = true;
                 turnOffScrollUntilMeet = f->asFrameBox();
             }
         }
-        frameList.push_back(f->asFrameBox());
 
-        if (forWhat == ComputeMatrixFor::GraphicsLayer &&
-            f->asFrameBox()->stackingContext() &&
-            f->asFrameBox()->stackingContext()->needsGraphicsBuffer()) {
-            break;
-        }
         if (forWhat == ComputeMatrixFor::Window && f->isFrameDocument()) {
             break;
         }
+
+        frameList.push_back(f->asFrameBox());
 
         f = f->layoutParent();
     }
@@ -3606,11 +3624,18 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
     SkMatrix m = SkMatrix::I();
     if (seenFixedPositionedLayer) {
         FrameBox* top = *frameList.rbegin();
-        m.preTranslate(top->asFrameBlockBox()->scrollLeft(),
-                       top->asFrameBlockBox()->scrollTop());
+        if (top->isFrameBlockBox()) {
+            m.preTranslate(top->asFrameBlockBox()->scrollLeft(),
+                           top->asFrameBlockBox()->scrollTop());
+        }
 
         auto iter = frameList.rbegin();
         FrameBox* lastParentBox = nullptr;
+
+        if (forWhat == ComputeMatrixFor::GraphicsLayer) {
+            lastParentBox = graphicsLayerHolder;
+        }
+
         bool canScroll = false;
         while (iter != frameList.rend()) {
             FrameBox* fBox = *iter;
@@ -3633,6 +3658,11 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
     } else {
         auto iter = frameList.rbegin();
         FrameBox* lastParentBox = nullptr;
+
+        if (forWhat == ComputeMatrixFor::GraphicsLayer) {
+            lastParentBox = graphicsLayerHolder;
+        }
+
         while (iter != frameList.rend()) {
             FrameBox* fBox = *iter;
             LayoutLocation pos;
@@ -3668,6 +3698,13 @@ SkMatrix FrameBox::computeScreenMatrix()
 SkMatrix FrameBox::computeMatrixOnGraphicsBuffer()
 {
     return computeBoxMatrix(this, ComputeMatrixFor::GraphicsLayer);
+}
+
+SkMatrix FrameBox::computeMatrixOnGraphicsBufferOnGraphicsBuffer()
+{
+    STARFISH_ASSERT(stackingContext()->needsGraphicsBuffer());
+    return computeBoxMatrix(this,
+                            ComputeMatrixFor::GraphicsLayerOnGraphicsLayer);
 }
 
 SkMatrix FrameBox::computeMatrixOnWindow()

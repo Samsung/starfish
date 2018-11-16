@@ -37,6 +37,7 @@ struct PrevDrawnStackingContextInfo {
         needsGraphicsBuffer = hasThisLayerThisTime = isEqualsWithPrevDrawing =
             false;
         graphicsBufferHolder = nullptr;
+        graphicsLayerOwner = nullptr;
         opacity = 1;
         transformMatrix = SkMatrix::I();
     }
@@ -47,7 +48,9 @@ struct PrevDrawnStackingContextInfo {
     bool needsGraphicsBuffer;
 
     LayoutRect screenExtent;
+    Node* graphicsLayerOwner;
     LayoutRect extentOnGraphicsLayer;
+
     SkMatrix transformMatrix;
     float opacity;
     GraphicsBufferHolder* graphicsBufferHolder;
@@ -56,6 +59,8 @@ struct PrevDrawnStackingContextInfo {
 
 typedef GCUnorderedMap<Node*, PrevDrawnStackingContextInfo>
     PrevDrawnStackingContextInfoMap;
+
+typedef std::unordered_map<Node*, LayoutRect> RepaintRegion;
 }
 
 #endif

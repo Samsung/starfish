@@ -1183,6 +1183,8 @@ void Frame::computeStyleFlags()
     // it created a new stacking context.
     m_flags.m_isEstablishesStackingContext |=
         (position != PositionValue::StaticPositionValue);
+    m_flags.m_isEstablishesStackingContext |=
+        isFlexItem() && style->isSpecifiedZIndex();
     m_flags.m_isEstablishesStackingContext |= (style->opacity() != 1);
     m_flags.m_isEstablishesStackingContext |=
         (node && node->isRunningOpacityAnimation());

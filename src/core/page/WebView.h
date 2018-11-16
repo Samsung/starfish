@@ -319,11 +319,6 @@ public:
         return m_needsContinuousRendering;
     }
 
-    void addPaintingDirtyArea(const LayoutRect& rt)
-    {
-        m_paintingDirtyRect.unite(rt);
-    }
-
     PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfo()
     {
         return m_prevDrawnStackingContextInfo;
@@ -573,10 +568,10 @@ private:
     bool m_needsPainting;
     bool m_needsComposite;
     bool m_needsContinuousRendering;
+    bool m_needsFullPainting;
     bool m_didCompositeBefore; // last state of enabling composite
     bool m_isActive; // false means that is paused, then rendering callbacks
                      // will be skipped.
-    LayoutRect m_paintingDirtyRect;
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;
     GCVector<AnimationExecutor*> m_activeAnimationExecutor;

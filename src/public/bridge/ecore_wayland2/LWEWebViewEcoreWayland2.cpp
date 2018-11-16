@@ -50,7 +50,7 @@ static PFNEGLCREATESYNCKHRPROC g_eglCreateSyncKHRProc;
 static PFNEGLDESTROYSYNCKHRPROC g_eglDestroySyncKHRProc;
 static PFNEGLCLIENTWAITSYNCKHRPROC g_eglClientWaitSyncKHRProc;
 
-const int g_arrowKeyDownMinimumDelayInMS = 200;
+const int g_arrowKeyDownMinimumDelayInMS = 150;
 static int g_arrowKeyDownTimestamp[4];
 
 namespace LWE {
@@ -625,6 +625,10 @@ public:
 #endif
                     auto keyValue =
                         ecoreEventKeyToKeyValue(keyName.data(), false);
+
+                    if (keyValue >= ArrowDownKey && keyValue <= ArrowRightKey) {
+                        g_arrowKeyDownTimestamp[keyValue - ArrowDownKey] = 0;
+                    }
 
                     webView->FetchWebContainer()->DispatchKeyUpEvent(keyValue);
                 }

@@ -148,7 +148,8 @@ void MediaPlayerTizen::setNativePlayerDisplayMode()
         m_container->webView()->publicLayerUserDataMap()
             ["__internalLWEWebViewEFLEcoreWaylandHandle"];
 
-    ecore_wl2_window_alpha_set((Ecore_Wl2_Window*)ecoreWaylandHandle, false);
+    // This is need for displaying video
+    // ecore_wl2_window_alpha_set((Ecore_Wl2_Window*)ecoreWaylandHandle, false);
 
     auto width = m_container->webView()->platformWindow()->width();
     auto height = m_container->webView()->platformWindow()->height();
