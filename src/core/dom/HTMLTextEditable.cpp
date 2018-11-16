@@ -186,22 +186,22 @@ bool HTMLTextEditable::handleDefaultEvent(Event* event)
         }
     } else if (event->isCompositionEvent()) {
         if (event->type()->equals("compositionstart")) {
-        } else if (event->type()->equals("compositionupdate")) {
-            value = value->remove(m_currentCaretPosition,
-                                  m_currentEditingText->length());
-            m_currentEditingText = event->asCompositionEvent()->data();
-            value = value->insert(m_currentEditingText, m_currentCaretPosition);
-            m_shouldDrawCaret = true;
-        } else if (event->type()->equals("compositionend") &&
+        } else if (((event->type()->equals("compositionupdate") ||
+                     event->type()->equals("compositionend"))) &&
                    m_currentCaretPosition < (size_t)maxLength()) {
-            value = value->remove(m_currentCaretPosition,
+            size_t originalTextPosition =
+                value->length() - m_currentEditingText->length();
+            value = value->remove(originalTextPosition,
                                   m_currentEditingText->length());
-            value = value->insert(event->asCompositionEvent()->data(),
-                                  m_currentCaretPosition);
-            m_currentEditingText = String::emptyString;
-            m_currentCaretPosition +=
-                event->asCompositionEvent()->data()->length();
+
+            m_currentEditingText = event->asCompositionEvent()->data();
+            value = value->insert(m_currentEditingText, originalTextPosition);
+            m_currentCaretPosition = value->length();
             m_shouldDrawCaret = true;
+
+            if (event->type()->equals("compositionend")) {
+                m_currentEditingText = String::emptyString;
+            }
         }
         if (!value->equals(oldValue)) {
             setValue(value);
