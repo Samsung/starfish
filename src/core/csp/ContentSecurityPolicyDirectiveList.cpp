@@ -29,6 +29,7 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     , m_contextURL(contentSecurityPolicy->document()->documentURI())
     , m_scriptSrc(nullptr)
     , m_imgSrc(nullptr)
+    , m_styleSrc(nullptr)
 {
     if (begin == end)
         return;
@@ -96,32 +97,60 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* name,
             m_imgSrc = new ContentSecurityPolicySourceListDirective(this);
         }
         m_imgSrc->setDirective(name, value);
+    } else if (name->equalsIgnoreCase("style-src")) {
+        if (!m_styleSrc) {
+            m_styleSrc = new ContentSecurityPolicySourceListDirective(this);
+        }
+        m_styleSrc->setDirective(name, value);
     }
 }
 
-bool ContentSecurityPolicyDirectiveList::allowInlineScript()
+bool ContentSecurityPolicyDirectiveList::allowInline(
+    ContentSecurityPolicySourceListDirective* sourceList)
 {
-    if (!m_scriptSrc) {
+    if (!sourceList) {
         return true;
     }
-    return m_scriptSrc->allowInline();
+    return sourceList->allowInline();
 }
 
-bool ContentSecurityPolicyDirectiveList::allowURLScript(ResourceURL* url)
+bool ContentSecurityPolicyDirectiveList::allowURL(
+    ContentSecurityPolicySourceListDirective* sourceList, ResourceURL* url)
 {
-    if (!m_scriptSrc) {
+    if (!sourceList) {
         return true;
-    } else if (m_scriptSrc->allowStar()) {
+    } else if (sourceList->allowSelf()) {
+        if (m_contextURL->protocol()->equalsIgnoreCase(url->protocol()) &&
+            m_contextURL->host()->equalsIgnoreCase(url->host())) {
+            return true;
+        }
+    } else if (sourceList->allowStar()) {
         return true;
-    } else if (m_scriptSrc->allowSelf() &&
-               m_contextURL->protocol()->equalsIgnoreCase(url->protocol()) &&
-               m_contextURL->host()->equalsIgnoreCase(url->host())) {
-        return true;
-    } else if (m_scriptSrc->allowURL(url)) {
+    } else if (sourceList->allowURL(url)) {
         return true;
     }
 
     return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowInlineScript()
+{
+    return allowInline(m_scriptSrc);
+}
+
+bool ContentSecurityPolicyDirectiveList::allowURLScript(ResourceURL* url)
+{
+    return allowURL(m_scriptSrc, url);
+}
+
+bool ContentSecurityPolicyDirectiveList::allowInlineStyle()
+{
+    return allowInline(m_styleSrc);
+}
+
+bool ContentSecurityPolicyDirectiveList::allowURLStyle(ResourceURL* url)
+{
+    return allowURL(m_styleSrc, url);
 }
 
 bool ContentSecurityPolicyDirectiveList::allowImage(String* src)

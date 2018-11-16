@@ -180,18 +180,21 @@ static std::string getCSPHash(CryptoAlgorithmType hashType,
 
 bool ContentSecurityPolicySourceListDirective::allowContent(String* content)
 {
-    uint32_t type = 0;
+    if (content) {
+        uint32_t type = 0;
 
-    for (uint32_t i = 0; i < NUM_SUPPORTED_CRYPTO_ALGORITHM_TYPE; i++) {
-        type = (1 << i);
-        if (m_hashAlgorithmsUsed & type) {
-            auto hash = getCSPHash(static_cast<CryptoAlgorithmType>(type),
-                                   content->toUTF8NonGCString());
-            if (m_hashes.find(hash) != m_hashes.end()) {
-                return true;
+        for (uint32_t i = 0; i < NUM_SUPPORTED_CRYPTO_ALGORITHM_TYPE; i++) {
+            type = (1 << i);
+            if (m_hashAlgorithmsUsed & type) {
+                auto hash = getCSPHash(static_cast<CryptoAlgorithmType>(type),
+                                       content->toUTF8NonGCString());
+                if (m_hashes.find(hash) != m_hashes.end()) {
+                    return true;
+                }
             }
         }
     }
+
     return false;
 }
 

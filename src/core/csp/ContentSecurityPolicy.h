@@ -49,6 +49,9 @@ public:
     bool allowURLScript(ResourceURL* url);
     bool allowImage(String* src);
 
+    bool allowInlineStyle(String* contextURL, String* styleContent);
+    bool allowURLStyle(ResourceURL* url);
+
     bool findHashOfContentInSourceList(
         ContentSecurityPolicySourceListDirective* policy, String* content);
 
