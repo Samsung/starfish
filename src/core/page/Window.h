@@ -309,8 +309,8 @@ public:
     void focus();
     void blur();
 
-    void postMessage(ScriptValue message, String* targetOrigin);
-    void postMessage(ScriptValue message, String* targetOrigin,
+    void postMessage(Window* source, ScriptValue message, String* targetOrigin);
+    void postMessage(Window* source, ScriptValue message, String* targetOrigin,
                      GCVector<ScriptValue>& transfer);
 
     // https://html.spec.whatwg.org/multipage/

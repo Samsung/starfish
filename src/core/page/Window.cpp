@@ -212,19 +212,16 @@ Storage* Window::sessionStorage()
         this, origin);
 }
 
-void Window::postMessage(ScriptValue message, String* targetOrigin)
+void Window::postMessage(Window* source, ScriptValue message,
+                         String* targetOrigin)
 {
     GCVector<ScriptValue> emptyList;
-    postMessage(message, targetOrigin, emptyList);
+    postMessage(source, message, targetOrigin, emptyList);
 }
 
-void Window::postMessage(ScriptValue message, String* targetOrigin,
-                         GCVector<ScriptValue>& transfer)
+void Window::postMessage(Window* source, ScriptValue message,
+                         String* targetOrigin, GCVector<ScriptValue>& transfer)
 {
-    Window* source = parent();
-    while (!source->browsingContext()->isTopLevelBrowsingContext()) {
-        source = source->parent();
-    }
     String* origin = source->location()->origin();
     if (targetOrigin->equals("/")) {
         targetOrigin = origin;
@@ -268,7 +265,7 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
     if (browsingContext()) {
         webView()->messageLoop()->addIdler(
             browsingContext(),
-            [](size_t handle, void* data, void* data1) {
+            [](size_t handle, void* data, void* data1, void* data2) {
                 Window* window = (Window*)data;
                 SerializeWithTransferResult* serializedRecord =
                     (SerializeWithTransferResult*)data1;
@@ -310,16 +307,13 @@ void Window::postMessage(ScriptValue message, String* targetOrigin,
                                     ->m_messageerror.localName();
                     e = new MessageEvent(window->document(), eventType);
                 }
-                Window* source = window->parent();
-                while (
-                    !source->browsingContext()->isTopLevelBrowsingContext()) {
-                    source = source->parent();
-                }
+                Window* source = (Window*)data2;
+
                 e->setSource(source);
                 e->setOrigin(source->location()->origin());
                 window->dispatchEventByUA(e);
             },
-            this, serializedRecord);
+            this, serializedRecord, source);
     }
 }
 

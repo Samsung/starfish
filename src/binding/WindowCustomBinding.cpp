@@ -172,6 +172,64 @@ static void requestAnimationFrameHandler(Window* wnd, void* data)
                        scriptUndefined());
 }
 
+ValueRef* postMessageWindowFunction(ExecutionStateRef* state, ValueRef* thisValue, size_t argc, ValueRef** argv, bool isNewExpression)
+{
+    GENERATE_WINDOW();
+    size_t argCount = argc;
+    if (argCount < 2) {
+        char buffer[2];
+        snprintf(buffer, 2, "%zu", argCount);
+        COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window", reason);
+        THROW_EXCEPTION(msg);
+    }
+    size_t validArgCount = 3;
+    // Declare native value (empty when type is void)
+    ValueRef* arg0 = argv[0];
+    ValueRef* arg1 = argv[1];
+    ValueRef* arg2 = (argc > 2) ? argv[2] : ValueRef::createUndefined();
+    // Handle argument arg2
+    GCVector<ScriptValue> value2;
+    if (arg2->isUndefined()) {
+        validArgCount--;
+    } else {
+        if (!(arg2->isObject() && arg2->asObject()->isArrayObject())) {
+            THROW_EXCEPTION(ILLEGAL_INVOKE);
+        }
+        int arg2Size = (int)arg2->asObject()->get(state, ValueRef::create(StringRef::fromASCII("length")))->toNumber(state);
+        for (int i = 0; i < arg2Size; i++) {
+            ValueRef* itemJS = arg2->asObject()->get(state, ValueRef::create(i));
+            ScriptValue itemNV;
+
+            itemNV = itemJS;
+            value2.push_back(itemNV);
+        }
+    }
+    // Handle argument arg1
+    String* value1 = String::emptyString;
+    value1 = toBrowserString(state, arg1);
+    // Handle argument arg0
+    ScriptValue value0;
+    value0 = arg0;
+    // Call native function (nargs: 2-3)
+
+    Window* lexicalGlobal =
+        (Window*)state->resolveCallerLexicalGlobalObject()->extraData();
+
+    try {
+        if (validArgCount == 2) {
+            window->postMessage(lexicalGlobal, value0, value1);
+        } else {
+            window->postMessage(lexicalGlobal, value0, value1, value2);
+        }
+    } catch (DOMException* e) {
+        state->throwException(e->scriptValue());
+        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    }
+    // Return ValueRef* from native value
+    return ValueRef::createUndefined();
+}
+
 ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
                                               ValueRef* thisValue, size_t argc,
                                               ValueRef** argv,
