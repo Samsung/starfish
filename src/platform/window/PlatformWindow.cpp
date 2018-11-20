@@ -292,13 +292,8 @@ void PlatformWindow::setNeedsRendering()
         return;
     }
 
-    // refresh rendering animator if needs
     if (wnd->m_renderingAnimator != SIZE_MAX) {
-        if (webView()->hasActiveAnimationExecutor()) {
-            return;
-        }
-        webView()->timer()->removeGenericAnimator(m_renderingAnimator);
-        wnd->m_renderingAnimator = SIZE_MAX;
+        return;
     }
 
     wnd->m_renderingAnimator = webView()->timer()->addAnimator(
