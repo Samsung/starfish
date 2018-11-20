@@ -28,6 +28,7 @@
 #include "core/page/EventSourceParser.h"
 #include "core/page/Window.h"
 #include "platform/network/http/HTTPStatus.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -212,6 +213,10 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
         msg.appendString("'. The URL is invalid.");
         auto s = msg.finalize()->toUTF8NonGCString();
         throw new DOMException(document, DOMException::SYNTAX_ERR, s.data());
+    }
+
+    if (!document->contentSecurityPolicy()->allowConnect(fullURL)) {
+        throw new DOMException(document, DOMException::SECURITY_ERR);
     }
 
     m_resourceRequest->addResourceRequestClient(

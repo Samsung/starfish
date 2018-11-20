@@ -29,7 +29,7 @@ public:
     STARFISH_MAKE_STACK_ALLOCATED();
 
     SecurityPolicyViolationEventInit()
-        : EventInit()
+        : EventInit(true, false)
         , m_violatedDirective(String::emptyString)
     {
     }
@@ -52,11 +52,13 @@ public:
     SecurityPolicyViolationEvent(Document* document)
         : Event(document)
     {
+        initSecurityPolicyViolationEvent();
     }
     SecurityPolicyViolationEvent(Document* document, String* eventType)
         : Event(document, eventType)
         , m_violatedDirective(String::emptyString)
     {
+        initSecurityPolicyViolationEvent();
     }
     SecurityPolicyViolationEvent(Document* document, String* eventType,
                                  const SecurityPolicyViolationEventInit& init)
@@ -69,10 +71,11 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSecurityPolicyViolationEvent() const override;
 
-    void initSecurityPolicyViolationEvent(String* type, bool bubbles,
-                                          bool cancelable, ScriptValue detail)
+    void initSecurityPolicyViolationEvent(bool bubbles = true,
+                                          bool cancelable = false)
     {
-        initEvent(type, bubbles, cancelable);
+        setBubbles(bubbles);
+        setCancelable(cancelable);
     }
 
     String* violatedDirective() const

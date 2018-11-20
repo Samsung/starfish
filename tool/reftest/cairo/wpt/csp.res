@@ -18,13 +18,13 @@
 #http://web-platform.test:8000/content-security-policy/connect-src/connect-src-beacon-allowed.sub.html
 #http://web-platform.test:8000/content-security-policy/connect-src/connect-src-beacon-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/connect-src/connect-src-beacon-redirect-to-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/connect-src/connect-src-eventsource-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/connect-src/connect-src-eventsource-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/connect-src/connect-src-eventsource-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/connect-src/connect-src-eventsource-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/connect-src/connect-src-eventsource-redirect-to-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/connect-src/connect-src-websocket-allowed.sub.html
 #http://web-platform.test:8000/content-security-policy/connect-src/connect-src-websocket-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xmlhttprequest-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xmlhttprequest-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xmlhttprequest-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xmlhttprequest-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xmlhttprequest-redirect-to-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/connect-src/shared-worker-connect-src-allowed.sub.html
 #http://web-platform.test:8000/content-security-policy/connect-src/shared-worker-connect-src-blocked.sub.html
@@ -134,7 +134,7 @@ http://web-platform.test:8000/content-security-policy/img-src/img-src-4_1.sub.ht
 http://web-platform.test:8000/content-security-policy/img-src/img-src-full-host-wildcard-blocked.sub.html
 http://web-platform.test:8000/content-security-policy/img-src/img-src-host-partial-wildcard-allowed.sub.html
 http://web-platform.test:8000/content-security-policy/img-src/img-src-none-blocks.html
-#http://web-platform.test:8000/content-security-policy/img-src/img-src-port-wildcard-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/img-src/img-src-port-wildcard-allowed.sub.html
 #http://web-platform.test:8000/content-security-policy/img-src/img-src-self-unique-origin.html
 #http://web-platform.test:8000/content-security-policy/img-src/img-src-wildcard-allowed.html
 http://web-platform.test:8000/content-security-policy/img-src/report-blocked-data-uri.sub.html

@@ -48,6 +48,7 @@ public:
     bool allowInlineEventHandlers(String* contextURL);
     bool allowURLScript(ResourceURL* url);
     bool allowImage(String* src);
+    bool allowConnect(ResourceURL* url);
 
     bool allowInlineStyle(String* contextURL, String* styleContent);
     bool allowURLStyle(ResourceURL* url);

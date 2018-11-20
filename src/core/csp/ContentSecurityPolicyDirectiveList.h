@@ -44,6 +44,7 @@ public:
     bool allowImage(String* src);
     bool allowInlineStyle();
     bool allowURLStyle(ResourceURL* url);
+    bool allowConnect(ResourceURL* url);
 
     ContentSecurityPolicySourceListDirective* scriptSrc()
     {
@@ -57,6 +58,10 @@ public:
     {
         return m_styleSrc;
     }
+    ContentSecurityPolicySourceListDirective* connectSrc()
+    {
+        return m_connectSrc;
+    }
 
     bool allowInline(ContentSecurityPolicySourceListDirective* sourceList);
     bool allowURL(ContentSecurityPolicySourceListDirective* sourceList,
@@ -68,6 +73,7 @@ private:
     ContentSecurityPolicySourceListDirective* m_scriptSrc;
     ContentSecurityPolicySourceListDirective* m_imgSrc;
     ContentSecurityPolicySourceListDirective* m_styleSrc;
+    ContentSecurityPolicySourceListDirective* m_connectSrc;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -77,6 +83,8 @@ private:
             desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList, m_imgSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_styleSrc));
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_connectSrc));
     }
 
     static size_t skipSpace(String* src, size_t begin, size_t end);
