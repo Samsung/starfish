@@ -184,7 +184,7 @@ public class SemWebView extends TextureView {
      */
     public String getUrl() {
         if (delegate != null)
-            delegate.getUrl();
+            return delegate.getUrl();
         return null;
     }
 
