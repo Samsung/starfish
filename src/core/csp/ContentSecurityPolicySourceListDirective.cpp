@@ -105,12 +105,7 @@ ContentSecurityPolicySourceURL*
 ContentSecurityPolicySourceListDirective::parseHost(String* source)
 {
     size_t length = source->length();
-
-    size_t serverNamePos = source->find(".", 0);
-    if (serverNamePos == SIZE_MAX) {
-        return nullptr;
-    }
-    if (source->find(".", serverNamePos + 1) == SIZE_MAX) {
+    if (length == 0) {
         return nullptr;
     }
 
@@ -118,7 +113,7 @@ ContentSecurityPolicySourceListDirective::parseHost(String* source)
         new ContentSecurityPolicySourceURL();
 
     bool isStarProtocol = true;
-    size_t protocolPos = source->find(":/");
+    size_t protocolPos = source->find("://");
     if (protocolPos == SIZE_MAX) {
         sourceURL->isStarProtocol = true;
         protocolPos = 0;
@@ -128,36 +123,47 @@ ContentSecurityPolicySourceListDirective::parseHost(String* source)
         }
         sourceURL->protocol = source->substring(0, protocolPos + 1);
         sourceURL->isStarProtocol = false;
-        while (protocolPos < length) {
-            auto c = source->charAt(protocolPos);
-            if (c != ':' && c != '/')
-                break;
-            protocolPos++;
+        protocolPos += 3;
+    }
+
+    size_t start = protocolPos;
+    size_t cur = start;
+    while (cur < length) {
+        auto c = source->charAt(cur);
+
+        if (c == '.' && sourceURL->serverName->isEmpty()) {
+            if (cur - start <= 0) {
+                return nullptr;
+            }
+            sourceURL->serverName = source->substring(start, cur - start);
+            sourceURL->isStarServer = sourceURL->serverName->equals("*");
+            start = cur + 1;
+        } else if (c == ':') {
+            if (cur - start <= 0) {
+                return nullptr;
+            }
+            sourceURL->domainName = source->substring(start, cur - start);
+            start = cur + 1;
+        } else if (c == '/' || cur == length - 1) {
+            size_t end = (c == '/') ? cur - start : cur - start + 1;
+            if (end <= 0) {
+                return nullptr;
+            }
+            if (sourceURL->domainName->isEmpty()) {
+                sourceURL->domainName = source->substring(start, end);
+                sourceURL->isStarPort = true;
+            } else {
+                sourceURL->port = source->substring(start, end);
+                sourceURL->isStarPort = sourceURL->port->equals("*");
+            }
+            if (cur + 1 < length) {
+                sourceURL->path = source->substring(cur, length - cur);
+            }
+            break;
         }
+
+        cur++;
     }
-
-    if (serverNamePos - protocolPos <= 0) {
-        return nullptr;
-    }
-
-    sourceURL->serverName =
-        source->substring(protocolPos, serverNamePos - protocolPos);
-    sourceURL->isStarServer = sourceURL->serverName->equals("*");
-
-    size_t pathPos = source->find("/", protocolPos);
-    if (pathPos != SIZE_MAX && length > pathPos) {
-        sourceURL->path = source->substring(pathPos, length - pathPos);
-    } else {
-        pathPos = length;
-    }
-    if (pathPos - serverNamePos - 1 <= 0 || pathPos - protocolPos <= 0) {
-        return nullptr;
-    }
-
-    sourceURL->domainName =
-        source->substring(serverNamePos + 1, pathPos - serverNamePos - 1);
-    sourceURL->host = source->substring(protocolPos, pathPos - protocolPos);
-
     return sourceURL;
 }
 
@@ -206,33 +212,32 @@ bool ContentSecurityPolicySourceListDirective::allowURL(ResourceURL* url,
     String* domainName =
         url->host()->substring(pos + 1, url->host()->length() - pos - 1);
 
-    return allowURL(url->protocol(), serverName, domainName, url->pathname(),
-                    ignoreScheme);
+    return allowURL(url->protocol(), serverName, domainName, url->port(),
+                    url->pathname(), ignoreScheme);
 }
 
 bool ContentSecurityPolicySourceListDirective::allowURL(
     ContentSecurityPolicySourceURL* url, bool ignoreScheme)
 {
-    return allowURL(url->protocol, url->serverName, url->domainName, url->path,
-                    ignoreScheme);
+    return allowURL(url->protocol, url->serverName, url->domainName, url->port,
+                    url->path, ignoreScheme);
 }
 
-bool ContentSecurityPolicySourceListDirective::allowURL(String* scheme,
-                                                        String* serverName,
-                                                        String* domainName,
-                                                        String* path,
-                                                        bool ignoreScheme)
+bool ContentSecurityPolicySourceListDirective::allowURL(
+    String* scheme, String* serverName, String* domainName, String* port,
+    String* path, bool ignoreScheme)
 {
     for (auto source : m_URLSourceList) {
         if (!ignoreScheme && !source->isStarProtocol &&
             !source->protocol->equalsIgnoreCase(scheme)) {
             continue;
-        }
-        if (!source->isStarServer &&
-            !source->serverName->equalsIgnoreCase(serverName)) {
+        } else if (!source->isStarServer &&
+                   !source->serverName->equalsIgnoreCase(serverName)) {
             continue;
-        }
-        if (source->domainName->equalsIgnoreCase(domainName)) {
+        } else if (!source->isStarPort &&
+                   !source->port->equalsIgnoreCase(port)) {
+            continue;
+        } else if (source->domainName->equalsIgnoreCase(domainName)) {
             if (source->path->length() > 1) {
                 if (!source->path->equalsIgnoreCase(path)) {
                     continue;

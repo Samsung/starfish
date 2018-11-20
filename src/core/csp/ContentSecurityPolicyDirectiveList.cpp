@@ -102,6 +102,11 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* name,
             m_styleSrc = new ContentSecurityPolicySourceListDirective(this);
         }
         m_styleSrc->setDirective(name, value);
+    } else if (name->equalsIgnoreCase("connect-src")) {
+        if (!m_connectSrc) {
+            m_connectSrc = new ContentSecurityPolicySourceListDirective(this);
+        }
+        m_connectSrc->setDirective(name, value);
     }
 }
 
@@ -119,11 +124,10 @@ bool ContentSecurityPolicyDirectiveList::allowURL(
 {
     if (!sourceList) {
         return true;
-    } else if (sourceList->allowSelf()) {
-        if (m_contextURL->protocol()->equalsIgnoreCase(url->protocol()) &&
-            m_contextURL->host()->equalsIgnoreCase(url->host())) {
-            return true;
-        }
+    } else if (sourceList->allowSelf() &&
+               m_contextURL->protocol()->equalsIgnoreCase(url->protocol()) &&
+               m_contextURL->host()->equalsIgnoreCase(url->host())) {
+        return true;
     } else if (sourceList->allowStar()) {
         return true;
     } else if (sourceList->allowURL(url)) {
@@ -182,6 +186,11 @@ bool ContentSecurityPolicyDirectiveList::allowImage(String* src)
     }
 
     return m_imgSrc->allowURL(url, true);
+}
+
+bool ContentSecurityPolicyDirectiveList::allowConnect(ResourceURL* url)
+{
+    return allowURL(m_connectSrc, url);
 }
 
 size_t ContentSecurityPolicyDirectiveList::skipSpace(String* src, size_t begin,

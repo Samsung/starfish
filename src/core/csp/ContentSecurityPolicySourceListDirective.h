@@ -27,21 +27,25 @@ struct ContentSecurityPolicySourceURL : public gc {
         : protocol(String::emptyString)
         , serverName(String::emptyString)
         , domainName(String::emptyString)
+        , port(String::emptyString)
         , host(String::emptyString)
         , path(String::emptyString)
         , isStarProtocol(false)
         , isStarServer(false)
+        , isStarPort(false)
 
     {
     }
     String* protocol;
     String* serverName;
     String* domainName;
+    String* port;
     String* host;
     String* path;
 
     bool isStarProtocol;
     bool isStarServer;
+    bool isStarPort;
 };
 
 class ContentSecurityPolicyDirectiveList;
@@ -99,7 +103,7 @@ public:
     bool allowURL(ContentSecurityPolicySourceURL* url,
                   bool ignoreScheme = false);
     bool allowURL(String* scheme, String* serverName, String* domainName,
-                  String* path, bool ignoreScheme = false);
+                  String* port, String* path, bool ignoreScheme = false);
     bool allowScheme(String* str);
 
     ContentSecurityPolicySourceURL* parseHost(String* source);

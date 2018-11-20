@@ -140,6 +140,17 @@ bool ContentSecurityPolicy::allowImage(String* src)
     return true;
 }
 
+bool ContentSecurityPolicy::allowConnect(ResourceURL* url)
+{
+    for (auto policy : m_policies) {
+        if (!policy->allowConnect(url)) {
+            dispatchViolationEvent(policy->connectSrc()->name());
+            return false;
+        }
+    }
+    return true;
+}
+
 void ContentSecurityPolicy::dispatchViolationEvent(String* name)
 {
     String* eventType = window()

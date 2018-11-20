@@ -32,6 +32,7 @@
 #include "core/fetch/Body.h"
 #include "core/fetch/FetchUtils.h"
 #include "core/fetch/Response.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -222,6 +223,15 @@ void XMLHttpRequest::initResponseData()
 
 void XMLHttpRequest::send(Nullable<String*> body)
 {
+    if (!document()->contentSecurityPolicy()->allowConnect(
+            m_resourceRequest->url())) {
+        ProgressEvent* pe =
+            new ProgressEvent(scriptBindingInstance()->ownerDocument(),
+                              starfish()->staticStrings()->m_error.localName());
+        dispatchEventIdleTimeByUA(pe);
+        return;
+    }
+
     if (body.hasValue()) {
         send(body.getValue());
     } else {
