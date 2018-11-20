@@ -23,6 +23,7 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.graphics.SurfaceTexture;
+import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
@@ -301,9 +302,9 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     public void initWebView(final View appView){
-        if(appView instanceof SemWebView){
+        if (appView instanceof SemWebView) {
             mLWEView = (SemWebView)appView;
-        }else{
+        } else {
             return;
         }
         Context appContext = mLWEView.getContext();
@@ -317,9 +318,9 @@ public class LweWebViewImpl implements LweWebView {
         sCookiePath = appContext.getDataDir().getAbsolutePath() + "/StarFish-cookie";
 
         File cachedDir = appContext.getCacheDir();
-        if(cachedDir!=null){
+        if (cachedDir != null) {
             sCachePath = cachedDir.getAbsolutePath() + "/StarFish-cache";
-        }else{
+        } else {
             sCachePath = "/data/local/tmp/StarFish-cache";
         }
 
@@ -466,16 +467,24 @@ public class LweWebViewImpl implements LweWebView {
         mLWEView.addOnAttachStateChangeListener(new StateChangeListener());
     }
 
-    private void showDropdownMenu(String[] list, int checkedPosition) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mLWEView.getContext());
-        builder.setSingleChoiceItems(list, checkedPosition,
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int which) {
-                        onDropdownMenuItemSelected(which);
-                    }
-                });
+    private void showDropdownMenu(final String[] list, final int checkedPosition) {
+        if (mLWEView != null) {
+            Handler handler = new Handler(mLWEView.getContext().getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(mLWEView.getContext());
+                    builder.setSingleChoiceItems(list, checkedPosition,
+                        new DialogInterface.OnClickListener() {
+                            public void onClick(DialogInterface dialog, int which) {
+                                onDropdownMenuItemSelected(which);
+                            }
+                        });
 
-        builder.show();
+                    builder.show();
+                }
+            });
+        }
     }
 
     private void onDropdownMenuItemSelected(int position) {
@@ -484,14 +493,21 @@ public class LweWebViewImpl implements LweWebView {
         }
     }
 
-    private void showAlert(String title, String message) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mLWEView.getContext());
-        builder.setTitle(title);
-        builder.setMessage(message);
-        builder.setPositiveButton("OK", null);
-
-        AlertDialog dialog = builder.create();
-        dialog.show();
+    private void showAlert(final String title, final String message) {
+        if (mLWEView != null) {
+            Handler handler = new Handler(mLWEView.getContext().getMainLooper());
+            handler.post(new Runnable() {
+                @Override
+                public void run() {
+                    AlertDialog.Builder builder = new AlertDialog.Builder(mLWEView.getContext());
+                    builder.setTitle(title);
+                    builder.setMessage(message);
+                    builder.setPositiveButton("OK", null);
+                    AlertDialog dialog = builder.create();
+                    dialog.show();
+                }
+            });
+        }
     }
 
 
@@ -507,8 +523,8 @@ public class LweWebViewImpl implements LweWebView {
         mCanGoForward = canGoForward;
         if (mWebViewClient != null) {
             //TODO
-            mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(""),
-                new SemWebResourceError(errorCode, "NotSupported"));
+            // mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(""),
+            //    new SemWebResourceError(errorCode, "NotSupported"));
         }
     }
 
