@@ -1032,9 +1032,9 @@ static void saveCurrentPaintingState(StackingContext* ctx)
         if (owner) {
             info.graphicsLayerOwner = owner->owner()->node();
         }
-        info.extentOnGraphicsLayer = computeBoxExtent(
-            LayoutRect(0, 0, ctx->owner()->width(), ctx->owner()->height()),
-            ctx->owner()->computeMatrixOnGraphicsBuffer());
+        info.extentOnGraphicsLayer =
+            computeBoxExtent(ctx->owner()->frameVisibleRect(),
+                             ctx->owner()->computeMatrixOnGraphicsBuffer());
     }
 
     ctx->owner()->node()->webView()->prevDrawnStackingContextInfo().insert(

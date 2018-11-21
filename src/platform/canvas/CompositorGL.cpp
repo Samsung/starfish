@@ -1575,19 +1575,19 @@ public:
         SkPoint pt;
         pt = SkPoint::Make(rt.x(), rt.y());
         m_state.back().matrix.mapPoints(&pt, 1);
-        path.emplace_back(pt.x(), pt.y());
+        path.emplace_back(floor(pt.x()), floor(pt.y()));
 
         pt = SkPoint::Make(rt.x() + rt.width(), rt.y());
         m_state.back().matrix.mapPoints(&pt, 1);
-        path.emplace_back(pt.x(), pt.y());
+        path.emplace_back(ceil(pt.x()), floor(pt.y()));
 
         pt = SkPoint::Make(rt.x() + rt.width(), rt.y() + rt.height());
         m_state.back().matrix.mapPoints(&pt, 1);
-        path.emplace_back(pt.x(), pt.y());
+        path.emplace_back(ceil(pt.x()), ceil(pt.y()));
 
         pt = SkPoint::Make(rt.x(), rt.y() + rt.height());
         m_state.back().matrix.mapPoints(&pt, 1);
-        path.emplace_back(pt.x(), pt.y());
+        path.emplace_back(floor(pt.x()), ceil(pt.y()));
 
         m_state.back().clipPaths.push_back(path);
     }
@@ -1767,12 +1767,17 @@ public:
 
         ClipperLib::Path texture;
         texture.emplace_back(floor(dest[0][0]), floor(dest[0][1]));
-        texture.emplace_back(floor(dest[2][0]), ceil(dest[2][1]));
-        texture.emplace_back(ceil(dest[3][0]), floor(dest[3][1]));
-        texture.emplace_back(ceil(dest[1][0]), ceil(dest[1][1]));
+        texture.emplace_back(ceil(dest[2][0]), floor(dest[2][1]));
+        texture.emplace_back(ceil(dest[3][0]), ceil(dest[3][1]));
+        texture.emplace_back(floor(dest[1][0]), ceil(dest[1][1]));
 
         // clipping debug code
         /*
+        puts("dest");
+        printf("%f,%f ", dest[0][0], dest[0][1]);
+        printf("%f,%f ", dest[2][0], dest[2][1]);
+        printf("%f,%f ", dest[3][0], dest[3][1]);
+        printf("%f,%f ", dest[1][0], dest[1][1]);
         puts("texture");
         printf("%d,%d ", (int)texture[0].X, (int)texture[0].Y);
         printf("%d,%d ", (int)texture[1].X, (int)texture[1].Y);
@@ -1965,7 +1970,6 @@ public:
 
                     visibleArea =
                         Unit::Rect(minX, minY, maxX - minX, maxY - minY);
-
                     glEnable(GL_SCISSOR_TEST);
                     glScissor(minX,
                               m_webView->platformWindow()->height() - maxY,

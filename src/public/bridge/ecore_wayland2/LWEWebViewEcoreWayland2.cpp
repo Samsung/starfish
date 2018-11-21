@@ -24,6 +24,7 @@
 
 #if defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
 #define PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN
+#define STARFISH_ENABLE_PROFILE_TIMER
 
 #define EFL_BETA_API_SUPPORT
 #include <Ecore_Wl2.h>
@@ -242,6 +243,7 @@ public:
         , m_isBufferSwapped(false)
         , m_hasFocus(true)
         , m_isShowing(false)
+        , m_lastInputTime(0)
         , m_IMFContext(nullptr)
     {
         Ecore_Wl2_Window* win = (Ecore_Wl2_Window*)winArg;
@@ -428,6 +430,14 @@ public:
                                           (int)eglError);
                     }
                 }
+                if (m_lastInputTime) {
+#ifdef STARFISH_ENABLE_PROFILE_TIMER
+                    uint64_t end = Starfish::longTickCount();
+                    float time = (float)((end - m_lastInputTime) / 1000.f);
+                    STARFISH_LOG_INFO("response time is %f ms\n", time);
+#endif
+                    m_lastInputTime = 0;
+                }
                 if (mayNeedsSync) {
                     mFence = g_eglCreateSyncKHRProc(mDisplay,
                                                     EGL_SYNC_FENCE_KHR, NULL);
@@ -529,6 +539,12 @@ public:
                         "ECORE_EVENT_KEY_DOWN [%s, %d]\n", keyName.data(),
                         (keyEvent->modifiers & 1) || (keyEvent->modifiers & 2));
 
+                    bool lastInputTimeWasZeroBefore = false;
+                    if (webView->m_lastInputTime == 0) {
+                        lastInputTimeWasZeroBefore = true;
+                        webView->m_lastInputTime = Starfish::longTickCount();
+                    }
+
                     if (!webView->m_hasFocus) {
                         STARFISH_LOG_INFO(
                             "ignore keydown because we dont have focus");
@@ -587,10 +603,32 @@ public:
                             currentTimestamp;
                     }
 
-                    webView->FetchWebContainer()->DispatchKeyDownEvent(
-                        keyValue);
-                    webView->FetchWebContainer()->DispatchKeyPressEvent(
-                        keyValue);
+                    if (lastInputTimeWasZeroBefore) {
+                        webView->FetchWebContainer()->DispatchKeyDownEvent(
+                            keyValue);
+                        webView->FetchWebContainer()->DispatchKeyPressEvent(
+                            keyValue);
+                    } else {
+                        struct Param {
+                            WebViewEcoreWayland2* webView;
+                            KeyValue keyValue;
+                        };
+                        Param* p = new Param();
+                        p->webView = webView;
+                        p->keyValue = keyValue;
+
+                        webView->FetchWebContainer()->AddIdleCallback(
+                            [](void* data) {
+                                Param* p = (Param*)data;
+                                p->webView->FetchWebContainer()
+                                    ->DispatchKeyDownEvent(p->keyValue);
+                                p->webView->FetchWebContainer()
+                                    ->DispatchKeyPressEvent(p->keyValue);
+                                delete p;
+
+                            },
+                            p);
+                    }
                 }
                 return ECORE_CALLBACK_PASS_ON;
             },
@@ -630,7 +668,22 @@ public:
                         g_arrowKeyDownTimestamp[keyValue - ArrowDownKey] = 0;
                     }
 
-                    webView->FetchWebContainer()->DispatchKeyUpEvent(keyValue);
+                    struct Param {
+                        WebViewEcoreWayland2* webView;
+                        KeyValue keyValue;
+                    };
+                    Param* p = new Param();
+                    p->webView = webView;
+                    p->keyValue = keyValue;
+
+                    webView->FetchWebContainer()->AddIdleCallback(
+                        [](void* data) {
+                            Param* p = (Param*)data;
+                            p->webView->FetchWebContainer()->DispatchKeyUpEvent(
+                                p->keyValue);
+                            delete p;
+                        },
+                        p);
                 }
                 return ECORE_CALLBACK_PASS_ON;
             },
@@ -843,6 +896,7 @@ public:
     bool m_isBufferSwapped;
     bool m_hasFocus;
     bool m_isShowing;
+    uint64_t m_lastInputTime;
     Ecore_IMF_Context* m_IMFContext;
     Ecore_Wl2_Window* mEcoreWindow;
     wl_display* mWlDisplay;
