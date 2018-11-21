@@ -9,7 +9,9 @@ import android.view.KeyEvent;
 import android.view.inputmethod.EditorInfo;
 import android.widget.TextView;
 
-import com.samsung.android.mobileservice.lwe.SemWebView;
+import com.samsung.android.lwe.SemWebSettings;
+import com.samsung.android.lwe.SemWebView;
+import com.samsung.android.lwe.SemWebViewClient;
 
 import java.lang.ref.WeakReference;
 

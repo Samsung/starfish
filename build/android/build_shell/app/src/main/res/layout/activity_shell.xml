@@ -22,7 +22,7 @@
             android:maxLines="1" />
     </android.support.design.widget.TextInputLayout>
 
-    <com.samsung.android.mobileservice.lwe.SemWebView
+    <com.samsung.android.lwe.SemWebView
         android:id="@+id/webView"
         android:layout_width="match_parent"
         android:layout_height="0dp"

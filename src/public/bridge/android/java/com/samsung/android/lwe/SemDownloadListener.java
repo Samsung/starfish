@@ -17,19 +17,22 @@
  *  USA
  */
 
-package com.samsung.android.mobileservice.lwe;
-
-import android.net.Uri;
+package com.samsung.android.lwe;
 
 /**
- * This interface is used to implement a WebResourceRequest for a SemWebViewClient
+ * This interface is used to implement a download listener for a SemWebView
  */
-public interface SemWebResourceRequest {
+public interface SemDownloadListener {
     /**
-     * Gets the URL for which the resource request was made.
+     * Notify the host application that a file should be downloaded.
      *
-     * @return The URL for which the resource request was made.
+     * @param url The full url to the content that should be downloaded
+     * @param userAgent The user agent to be used for the download
+     * @param contentDisposition Content-disposition http header, if present
+     * @param mimetype The mimetype of the content reported by the server
+     * @param contentLength The file size reported by the server
      * @since Lightweight Web Engine 1.0
      */
-    Uri getUrl();
+    void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype,
+                         long contentLength);
 }
