@@ -24,6 +24,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Event.h"
 #include "core/page/BrowsingContext.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -215,6 +216,19 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
     if (ResourceURL::isValidURL(url->urlString())) {
         unloadSrc();
         unmarkContentDocumentDisabled();
+
+        if (!document()->contentSecurityPolicy()->allowSource(
+                CSPDirectives::FrameSrc, url)) {
+            /*
+            NOTE: IFrames blocked by CSP should generate a 'load', not 'error'
+            event, regardless of blocked state. This means they appear to be
+            normal cross-origin loads, thereby not leaking URL information
+            directly to JS.
+            */
+            url = ResourceURL::aboutBlankURL();
+            markContentDocumentDisabled();
+        }
+
         if (!m_historyManager) {
             m_historyManager = HistoryManager::create(this);
         }

@@ -207,6 +207,10 @@ bool ContentSecurityPolicySourceListDirective::allowContent(String* content)
 bool ContentSecurityPolicySourceListDirective::allowURL(ResourceURL* url,
                                                         bool ignoreScheme)
 {
+    if (url->origin()->equalsIgnoreCase("null")) {
+        return false; // not URL scheme
+    }
+
     size_t pos = url->host()->find(".");
     String* serverName = url->host()->substring(0, pos);
     String* domainName =

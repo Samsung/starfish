@@ -64,10 +64,19 @@ public:
     {
         return m_connectSrc;
     }
+    ContentSecurityPolicySourceListDirective* getSourceList(
+        CSPDirectives directive);
 
     bool allowInline(ContentSecurityPolicySourceListDirective* sourceList);
     bool allowURL(ContentSecurityPolicySourceListDirective* sourceList,
                   ResourceURL* url);
+    bool allowScheme(ContentSecurityPolicySourceListDirective* sourceList,
+                     ResourceURL* url);
+
+    bool allowSelf(CSPDirectives directive, ResourceURL* url);
+    bool allowStar(CSPDirectives directive);
+    bool allowURL(CSPDirectives directive, ResourceURL* url);
+    bool allowScheme(CSPDirectives directive, ResourceURL* url);
 
 private:
     ContentSecurityPolicy* m_contentSecurityPolicy;
@@ -76,6 +85,7 @@ private:
     ContentSecurityPolicySourceListDirective* m_imgSrc;
     ContentSecurityPolicySourceListDirective* m_styleSrc;
     ContentSecurityPolicySourceListDirective* m_connectSrc;
+    ContentSecurityPolicySourceListDirective* m_frameSrc;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -87,6 +97,8 @@ private:
                                         m_styleSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_connectSrc));
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_frameSrc));
     }
 
     static size_t skipSpace(String* src, size_t begin, size_t end);

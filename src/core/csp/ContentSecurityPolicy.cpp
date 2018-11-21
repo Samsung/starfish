@@ -99,6 +99,47 @@ bool ContentSecurityPolicy::allowURLScript(ResourceURL* url)
     return true;
 }
 
+static String* getDirectiveName(CSPDirectives directive)
+{
+    String* name = String::emptyString;
+
+    switch (directive) {
+    case CSPDirectives::ScriptSrc:
+        name = String::createASCIIString("script-src");
+        break;
+    case CSPDirectives::StyleSrc:
+        name = String::createASCIIString("style-src");
+        break;
+    case CSPDirectives::FrameSrc:
+        name = String::createASCIIString("frame-src");
+        break;
+    default:
+        break;
+    }
+    return name;
+}
+
+bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
+                                        ResourceURL* resUrl)
+{
+    for (auto policy : m_policies) {
+        if (!policy->getSourceList(directive)) {
+            continue;
+        } else if (policy->allowStar(directive)) {
+            return true;
+        }
+
+        if (!policy->allowSelf(directive, resUrl) &&
+            !policy->allowScheme(directive, resUrl) &&
+            !policy->allowURL(directive, resUrl)) {
+            // TODO: check the query with default-src policies
+            dispatchViolationEvent(getDirectiveName(directive));
+            return false;
+        }
+    }
+    return true;
+}
+
 bool ContentSecurityPolicy::allowInlineStyle(String* contextURL,
                                              String* styleContent)
 {
