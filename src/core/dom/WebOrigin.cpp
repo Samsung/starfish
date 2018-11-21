@@ -35,7 +35,7 @@ WebOrigin::WebOrigin(ResourceURL* url, bool isOpaque)
 
 WebOrigin* WebOrigin::createDocumentOrigin(ResourceURL* url)
 {
-    if (url && (url->isHTTPFamilyURL() || url->isFileURL())) {
+    if (url && url->isHTTPFamilyURL()) {
         return new WebOrigin(url, false);
     }
     return new WebOrigin();
@@ -60,6 +60,12 @@ Nullable<String*> WebOrigin::domain()
     // m_originalURL should not be null unless isOpaque is true
     STARFISH_ASSERT(m_originalURL != nullptr);
 
+    String* domain = m_originalURL->domain();
+
+    if (domain != String::emptyString) {
+        return domain;
+    }
+
     // TODO domain can be changed through the document.domain API.
     // If origin's domain is non-null, then return origin's domain.
 
@@ -69,6 +75,9 @@ Nullable<String*> WebOrigin::domain()
 // https://w3c.github.io/html/browsers.html#same-origin
 bool WebOrigin::isSameOrigin(WebOrigin* otherWebOrigin)
 {
+    if (this == otherWebOrigin) {
+        return true;
+    }
     // If A and B are the same opaque origin, then return true.
     // TODO: comparing for the same opaque origin is not supported yet
     if (isOpaque() || otherWebOrigin->isOpaque()) {
@@ -92,6 +101,9 @@ bool WebOrigin::isSameOrigin(WebOrigin* otherWebOrigin)
 // https://w3c.github.io/html/browsers.html#same-origin-domain
 bool WebOrigin::isSameOriginDomain(WebOrigin* otherWebOrigin)
 {
+    if (this == otherWebOrigin) {
+        return true;
+    }
     // If A and B are the same opaque origin, then return true.
     // TODO: comparing for the same opaque origin is not supported yet
     if (isOpaque() || otherWebOrigin->isOpaque()) {

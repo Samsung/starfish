@@ -265,7 +265,7 @@ String* Document::cookie()
     // * If the contents are sandboxed into a unique origin (e.g. in an iframe
     //   with the sandbox attribute)
 
-    if (webOrigin()->isOpaque()) {
+    if ((!documentURI()->isFileURL()) && webOrigin()->isOpaque()) {
         throw new DOMException(
             this, DOMException::Code::SECURITY_ERR,
             "Access is denied for this document, origin is opaque");
@@ -278,7 +278,7 @@ String* Document::cookie()
 
 void Document::setCookie(String* cookie)
 {
-    if (webOrigin()->isOpaque()) {
+    if ((!documentURI()->isFileURL()) && webOrigin()->isOpaque()) {
         throw new DOMException(
             this, DOMException::Code::SECURITY_ERR,
             "Access is denied for this document, origin is opaque");

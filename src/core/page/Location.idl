@@ -3,19 +3,19 @@
 
 interface Location {
 
-  [Unforgeable] stringifier attribute DOMString href;
-  [Unforgeable] readonly attribute DOMString origin;
-  [Unforgeable] attribute DOMString protocol;
-  [Unforgeable] attribute DOMString host;
-  [Unforgeable] attribute DOMString hostname;
-  [Unforgeable] attribute DOMString port;
-  [Unforgeable] attribute DOMString pathname;
-  [Unforgeable] attribute DOMString search;
-  [Unforgeable] attribute DOMString hash;
+  [Unforgeable, CrossOrigin=Getter] stringifier attribute DOMString href;
+  [Unforgeable, CrossOrigin] readonly attribute DOMString origin;
+  [Unforgeable, CrossOrigin] attribute DOMString protocol;
+  [Unforgeable, CrossOrigin] attribute DOMString host;
+  [Unforgeable, CrossOrigin] attribute DOMString hostname;
+  [Unforgeable, CrossOrigin] attribute DOMString port;
+  [Unforgeable, CrossOrigin] attribute DOMString pathname;
+  [Unforgeable, CrossOrigin] attribute DOMString search;
+  [Unforgeable, CrossOrigin] attribute DOMString hash;
 
-  [Unforgeable] void assign(DOMString url);
+  [Unforgeable, CrossOrigin] void assign(DOMString url);
   [Unforgeable] void replace(DOMString url);
-  [Unforgeable] void reload();
+  [Unforgeable, CrossOrigin] void reload();
 
   [Unimplemented, Unforgeable, SameObject] readonly attribute DOMStringList ancestorOrigins;
 };
