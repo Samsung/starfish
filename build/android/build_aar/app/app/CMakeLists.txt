@@ -13,9 +13,9 @@ cmake_minimum_required(VERSION 3.4.1)
 set (CMAKE_CXX_STANDARD 11)
 
 set (STARFISH_ROOT_PATH ${CMAKE_SOURCE_DIR}/../../../../../ )
-set (PREBUILT_LIB_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/lib)
+set (PREBUILT_LIB_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/lib/arm64-v8a)
 set (ANDROID_PLATFORM_ROOT_PATH ${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/android )
-set (PACKAGED_LIB_PATH ${CMAKE_SOURCE_DIR}/src/main/jniLibs/armeabi-v7a)
+set (PACKAGED_LIB_PATH ${CMAKE_SOURCE_DIR}/src/main/jniLibs/arm64-v8a)
 set(OPENGL_LIB GLESv3)
 
 # Copy prebuilt library to packged lib path.
@@ -32,7 +32,7 @@ file(COPY ${PREBUILT_SHARED_LIBS}
 
 
 add_definitions(-DESCARGOT -DHAVE_CONFIG_H -DPLATFORM_ANDROID -DIGNORE_DYNAMIC_LOADING -DGC_DONT_REGISTER_MAIN_STATIC_DATA -DUSE_GET_STACKBASE_FOR_MAIN -DSTARFISH_ENABLE_DOMPARSER)
-add_definitions(-DSTARFISH_ANDROID -DESCARGOT_ENABLE_TYPEDARRAY -DESCARGOT_ENABLE_PROMISE -DANDROID=1 -DESCARGOT_32=1 -DNDEBUG -DSTARFISH_IGNORE_SSL_VERIFYPEER -DSTARFISH_ENABLE_HTTPCACHE )
+add_definitions(-DSTARFISH_ANDROID -DESCARGOT_ENABLE_TYPEDARRAY -DESCARGOT_ENABLE_PROMISE -DANDROID=1 -DESCARGOT_64=1 -DNDEBUG -DSTARFISH_IGNORE_SSL_VERIFYPEER -DSTARFISH_ENABLE_HTTPCACHE )
 #add_definitions(-D_GLIBCXX_DEBUG -DGC_DEBUG )
 
 include_directories(${STARFISH_ROOT_PATH}/third_party/android/prebuilt_armv-7a_8.1.0/include/bdwgc)
@@ -112,10 +112,8 @@ add_definitions("-fno-rtti
                 -Wno-return-type
                 -Wno-type-limits
                 -Wno-unused-result
-                -mthumb
-                -march=armv7-a
-                -mfloat-abi=softfp
-                -mfpu=neon")
+                -march=armv8-a
+                -Wno-narrowing")
 add_library( # Sets the name of the library.
              lightweightwebengine
              # Sets the library as a shared library.
