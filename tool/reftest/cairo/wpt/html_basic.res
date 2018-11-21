@@ -1769,7 +1769,7 @@ http://web-platform.test:8000/html/browsers/offline/browser-state/navigator_onli
 #http://web-platform.test:8000/html/browsers/offline/application-cache-api/api_status_checking-manual.html
 #http://web-platform.test:8000/html/browsers/offline/appcache/workers/appcache-worker.https.html
 #http://web-platform.test:8000/html/browsers/history/the-session-history-of-browsing-contexts/navigation-in-onload.tentative.html
-#http://web-platform.test:8000/html/browsers/history/the-location-interface/security_location_0.htm
+http://web-platform.test:8000/html/browsers/history/the-location-interface/security_location_0.htm
 #http://web-platform.test:8000/html/browsers/history/the-location-interface/scripted_form_submit_assign_during_load.html
 #http://web-platform.test:8000/html/browsers/history/the-location-interface/scripted_click_location_assign_during_load.html
 #http://web-platform.test:8000/html/browsers/history/the-location-interface/scripted_click_assign_during_load.html

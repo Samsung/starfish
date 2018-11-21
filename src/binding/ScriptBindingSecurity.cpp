@@ -39,24 +39,32 @@ static bool canAccess(Document* source, Document* target)
 bool ScriptBindingSecurity::shouldAllowCrossOriginScriptAPIAccessToWindow(
     Escargot::ExecutionStateRef* state, Window* window)
 {
-    STARFISH_LOG_INFO("Call shouldAllowCrossOriginScriptAPIAccessToWindow\n");
-    Window* sourceWindow = nullptr; // TODO : Needs to update Escargot
+    Window* sourceWindow =
+        (Window*)state->resolveCallerLexicalGlobalObject()->extraData();
 
     if (!sourceWindow || !window) {
         return false;
     }
-    return canAccess(sourceWindow->document(), window->document());
+    if (!canAccess(sourceWindow->document(), window->document())) {
+        throw new DOMException(sourceWindow->document(),
+                               DOMException::Code::SECURITY_ERR);
+    }
+    return true;
 }
 
 bool ScriptBindingSecurity::shouldAllowCrossOriginScriptAPIAccessToLocation(
     Escargot::ExecutionStateRef* state, Location* location)
 {
-    STARFISH_LOG_INFO("Call shouldAllowCrossOriginScriptAPIAccessToLocation\n");
-    Window* sourceWindow = nullptr; // TODO : Needs to update Escargot
+    Window* sourceWindow =
+        (Window*)state->resolveCallerLexicalGlobalObject()->extraData();
 
     if (!sourceWindow || !location) {
         return false;
     }
-    return canAccess(sourceWindow->document(), location->document());
+    if (!canAccess(sourceWindow->document(), location->document())) {
+        throw new DOMException(sourceWindow->document(),
+                               DOMException::Code::SECURITY_ERR);
+    }
+    return true;
 }
 }
