@@ -172,7 +172,9 @@ static void requestAnimationFrameHandler(Window* wnd, void* data)
                        scriptUndefined());
 }
 
-ValueRef* postMessageWindowFunction(ExecutionStateRef* state, ValueRef* thisValue, size_t argc, ValueRef** argv, bool isNewExpression)
+ValueRef* postMessageWindowFunction(ExecutionStateRef* state,
+                                    ValueRef* thisValue, size_t argc,
+                                    ValueRef** argv, bool isNewExpression)
 {
     GENERATE_WINDOW();
     size_t argCount = argc;
@@ -180,7 +182,8 @@ ValueRef* postMessageWindowFunction(ExecutionStateRef* state, ValueRef* thisValu
         char buffer[2];
         snprintf(buffer, 2, "%zu", argCount);
         COMPOSE_MESSAGE(reason, ARGS_NOT_ENOUGH, "2", buffer);
-        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window", reason);
+        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
+                        reason);
         THROW_EXCEPTION(msg);
     }
     size_t validArgCount = 3;
@@ -196,9 +199,13 @@ ValueRef* postMessageWindowFunction(ExecutionStateRef* state, ValueRef* thisValu
         if (!(arg2->isObject() && arg2->asObject()->isArrayObject())) {
             THROW_EXCEPTION(ILLEGAL_INVOKE);
         }
-        int arg2Size = (int)arg2->asObject()->get(state, ValueRef::create(StringRef::fromASCII("length")))->toNumber(state);
+        int arg2Size =
+            (int)arg2->asObject()
+                ->get(state, ValueRef::create(StringRef::fromASCII("length")))
+                ->toNumber(state);
         for (int i = 0; i < arg2Size; i++) {
-            ValueRef* itemJS = arg2->asObject()->get(state, ValueRef::create(i));
+            ValueRef* itemJS =
+                arg2->asObject()->get(state, ValueRef::create(i));
             ScriptValue itemNV;
 
             itemNV = itemJS;

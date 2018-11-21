@@ -134,7 +134,7 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
     ad->m_handler = handler;
     ad->m_window = window;
     ad->m_timerID =
-        ecore_timer_add(0.0,
+        ecore_timer_add(0.0001,
                         [](void* data) -> Eina_Bool {
                             AnimationTickData* ad = (AnimationTickData*)data;
                             auto a =
