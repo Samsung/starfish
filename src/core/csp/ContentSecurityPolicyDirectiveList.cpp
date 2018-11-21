@@ -30,6 +30,8 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     , m_scriptSrc(nullptr)
     , m_imgSrc(nullptr)
     , m_styleSrc(nullptr)
+    , m_connectSrc(nullptr)
+    , m_frameSrc(nullptr)
 {
     if (begin == end)
         return;
@@ -95,6 +97,8 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* name,
         setDirective(m_styleSrc, name, value);
     } else if (name->equalsIgnoreCase("connect-src")) {
         setDirective(m_connectSrc, name, value);
+    } else if (name->equalsIgnoreCase("frame-src")) {
+        setDirective(m_frameSrc, name, value);
     }
 }
 
@@ -118,9 +122,94 @@ bool ContentSecurityPolicyDirectiveList::allowInline(
     return sourceList->allowInline();
 }
 
+ContentSecurityPolicySourceListDirective*
+ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
+{
+    ContentSecurityPolicySourceListDirective* sourceList = nullptr;
+
+    switch (directive) {
+    case CSPDirectives::ScriptSrc:
+        sourceList = m_scriptSrc;
+        break;
+    case CSPDirectives::StyleSrc:
+        sourceList = m_styleSrc;
+        break;
+    case CSPDirectives::FrameSrc:
+        sourceList = m_frameSrc;
+        break;
+    default:
+        break;
+    }
+    return sourceList;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowURL(CSPDirectives directive,
+                                                  ResourceURL* resUrl)
+{
+    auto sourceList = getSourceList(directive);
+
+    if (sourceList) {
+        return allowURL(sourceList, resUrl);
+    }
+
+    return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowStar(CSPDirectives directive)
+{
+    auto sourceList = getSourceList(directive);
+
+    if (sourceList->allowStar()) {
+        return true;
+    }
+
+    return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowSelf(CSPDirectives directive,
+                                                   ResourceURL* resUrl)
+{
+    auto sourceList = getSourceList(directive);
+
+    if (sourceList->allowSelf() &&
+        m_contextURL->protocol()->equalsIgnoreCase(resUrl->protocol()) &&
+        m_contextURL->host()->equalsIgnoreCase(resUrl->host())) {
+        return true;
+    }
+    return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowScheme(CSPDirectives directive,
+                                                     ResourceURL* resUrl)
+{
+    auto sourceList = getSourceList(directive);
+
+    if (sourceList) {
+        return allowScheme(sourceList, resUrl);
+    }
+
+    return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowScheme(
+    ContentSecurityPolicySourceListDirective* sourceList, ResourceURL* resUrl)
+{
+    auto origin = resUrl->origin();
+
+    if (origin->equalsIgnoreCase("null")) {
+        auto protocol = resUrl->protocol();
+        if (sourceList->allowScheme(protocol)) {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool ContentSecurityPolicyDirectiveList::allowURL(
     ContentSecurityPolicySourceListDirective* sourceList, ResourceURL* url)
 {
+    // TODO: checking empty, self, and star needs to be removed.
+    // the occurrences related should be also removed. e.g) allowURLScript.
     if (!sourceList) {
         return true;
     } else if (sourceList->allowSelf() &&

@@ -240,7 +240,8 @@ void HTMLLinkElement::loadStyleSheet()
 
     m_styleSheetTextResource = nullptr;
 
-    if (!document()->contentSecurityPolicy()->allowURLStyle(url)) {
+    if (!document()->contentSecurityPolicy()->allowSource(
+            CSPDirectives::StyleSrc, url)) {
         return;
     }
 

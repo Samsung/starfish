@@ -295,7 +295,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
 
             ResourceURL* rurl =
                 new ResourceURL(url, document()->baseURL()->baseURI());
-            if (!document()->contentSecurityPolicy()->allowURLScript(rurl)) {
+            if (!document()->contentSecurityPolicy()->allowSource(
+                    CSPDirectives::ScriptSrc, rurl)) {
                 return false;
             }
 

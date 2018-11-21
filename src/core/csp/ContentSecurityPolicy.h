@@ -28,6 +28,13 @@ enum class ContentSecurityPolicyHeaderType { Report, Enforce };
 
 enum class ContentSecurityPolicyHeaderSource { HTTP, Meta, OriginPolicy };
 
+enum class CSPDirectives {
+    ScriptSrc,
+    StyleSrc,
+    FrameSrc,
+    ObjectSrc,
+};
+
 class ContentSecurityPolicyDirectiveList;
 class ContentSecurityPolicySourceListDirective;
 
@@ -52,6 +59,8 @@ public:
 
     bool allowInlineStyle(String* contextURL, String* styleContent);
     bool allowURLStyle(ResourceURL* url);
+
+    bool allowSource(CSPDirectives directive, ResourceURL* url);
 
     bool findHashOfContentInSourceList(
         ContentSecurityPolicySourceListDirective* policy, String* content);
