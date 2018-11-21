@@ -110,7 +110,7 @@ http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xm
 #http://web-platform.test:8000/content-security-policy/frame-src/frame-src-redirect.html
 #http://web-platform.test:8000/content-security-policy/frame-src/frame-src-self-unique-origin.html
 #http://web-platform.test:8000/content-security-policy/frame-src/support/frame.html
-#http://web-platform.test:8000/content-security-policy/generic/duplicate-directive.sub.html
+http://web-platform.test:8000/content-security-policy/generic/duplicate-directive.sub.html
 #http://web-platform.test:8000/content-security-policy/generic/filesystem-urls-do-not-match-self.sub.html
 #http://web-platform.test:8000/content-security-policy/generic/filesystem-urls-match-filesystem.sub.html
 #http://web-platform.test:8000/content-security-policy/generic/generic-0_10_1.sub.html

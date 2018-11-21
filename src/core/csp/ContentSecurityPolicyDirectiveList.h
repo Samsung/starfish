@@ -38,6 +38,8 @@ public:
     void parse(String* policy, size_t begin, size_t end);
 
     void addDirective(String* name, String* value);
+    void setDirective(ContentSecurityPolicySourceListDirective*& directive,
+                      String* name, String* value);
 
     bool allowInlineScript();
     bool allowURLScript(ResourceURL* url);
