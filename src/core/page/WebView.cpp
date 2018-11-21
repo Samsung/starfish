@@ -247,6 +247,8 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #ifdef STARFISH_ENABLE_TEST
     , m_testCompatibleMode(StarfishTestCompatibleMode::Normal)
 #endif
+    , m_baseBackgroundColor(Unit::Color(255, 255, 255, 255))
+    , m_baseForegroundColor(Unit::Color(0, 0, 0, 255))
 {
     m_platformWindow->setWebView(this);
     m_deviceKind = deviceKindUseTouchScreen;

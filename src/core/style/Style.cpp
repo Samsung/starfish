@@ -1846,11 +1846,7 @@ ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
 {
     ComputedStyle* ret = new ComputedStyle(m_mediumFontSize);
     ret->m_display = DisplayValue::BlockDisplayValue;
-#ifdef STARFISH_TIZEN_WEARABLE_WIDGET
-    ret->m_inheritedStyles.m_color = Unit::Color(255, 255, 255, 255);
-#else
-    ret->m_inheritedStyles.m_color = Unit::Color(0, 0, 0, 255);
-#endif
+    ret->m_inheritedStyles.m_color = doc->webView()->baseForegroundColor();
     ret->m_inheritedStyles.m_fontFamilyDatas =
         doc->webView()->initialFontFamilyDatas();
     ret->m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;

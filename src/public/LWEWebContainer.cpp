@@ -97,6 +97,14 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
 #endif
     , m_defaultFontSize(LWE_DEFAULT_FONT_SIZE)
     , m_ttsMode(TTSMode::Default)
+    , m_bgR(255)
+    , m_bgG(255)
+    , m_bgB(255)
+    , m_bgA(255)
+    , m_fgR(0)
+    , m_fgG(0)
+    , m_fgB(0)
+    , m_fgA(255)
 {
 }
 

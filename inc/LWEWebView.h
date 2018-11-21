@@ -65,6 +65,10 @@ public:
     void SetProxyURL(const std::string& proxyURL);
     void setDefaultFontSize(int size);
     void SetTTSMode(TTSMode value);
+    void SetBaseBackgroundColor(unsigned char r, unsigned char g,
+                                unsigned char b, unsigned char a);
+    void SetBaseForegroundColor(unsigned char r, unsigned char g,
+                                unsigned char b, unsigned char a);
 
 private:
     std::string m_defaultUserAgent;
@@ -72,8 +76,9 @@ private:
     std::string m_proxyURL;
     int m_cacheMode;
     uint32_t m_defaultFontSize;
-
     TTSMode m_ttsMode;
+    unsigned char m_bgR, m_bgG, m_bgB, m_bgA;
+    unsigned char m_fgR, m_fgG, m_fgB, m_fgA;
 };
 
 class LWE_EXPORT ResourceError {
