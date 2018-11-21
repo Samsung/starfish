@@ -36,7 +36,7 @@ public class SemWebResourceError {
      * @param description Description of the error message
      * @since Lightweight Web Engine 1.0
      */
-    SemWebResourceError(int code, CharSequence description) {
+    public SemWebResourceError(int code, CharSequence description) {
         mErrorCode = code;
         mErrorDescription = description;
     }

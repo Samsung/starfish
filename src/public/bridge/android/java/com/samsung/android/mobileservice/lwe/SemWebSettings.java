@@ -63,7 +63,7 @@ public class SemWebSettings {
      * @param webView LweWebViewImpl
      * @since Lightweight Web Engine 1.0
      */
-    SemWebSettings(LweWebView webView) {
+    public SemWebSettings(LweWebView webView) {
         mWebView = webView;
     }
 
