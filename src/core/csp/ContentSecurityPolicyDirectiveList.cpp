@@ -88,26 +88,25 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* name,
 {
     value = value->trim();
     if (name->equalsIgnoreCase("script-src")) {
-        if (!m_scriptSrc) {
-            m_scriptSrc = new ContentSecurityPolicySourceListDirective(this);
-        }
-        m_scriptSrc->setDirective(name, value);
+        setDirective(m_scriptSrc, name, value);
     } else if (name->equalsIgnoreCase("img-src")) {
-        if (!m_imgSrc) {
-            m_imgSrc = new ContentSecurityPolicySourceListDirective(this);
-        }
-        m_imgSrc->setDirective(name, value);
+        setDirective(m_imgSrc, name, value);
     } else if (name->equalsIgnoreCase("style-src")) {
-        if (!m_styleSrc) {
-            m_styleSrc = new ContentSecurityPolicySourceListDirective(this);
-        }
-        m_styleSrc->setDirective(name, value);
+        setDirective(m_styleSrc, name, value);
     } else if (name->equalsIgnoreCase("connect-src")) {
-        if (!m_connectSrc) {
-            m_connectSrc = new ContentSecurityPolicySourceListDirective(this);
-        }
-        m_connectSrc->setDirective(name, value);
+        setDirective(m_connectSrc, name, value);
     }
+}
+
+void ContentSecurityPolicyDirectiveList::setDirective(
+    ContentSecurityPolicySourceListDirective*& directive, String* name,
+    String* value)
+{
+    if (directive) {
+        m_contentSecurityPolicy->dispatchViolationEvent(name);
+        return;
+    }
+    directive = new ContentSecurityPolicySourceListDirective(this, name, value);
 }
 
 bool ContentSecurityPolicyDirectiveList::allowInline(

@@ -55,21 +55,16 @@ typedef std::unordered_set<std::string> HashSet;
 class ContentSecurityPolicySourceListDirective : public gc {
 public:
     ContentSecurityPolicySourceListDirective(
-        ContentSecurityPolicyDirectiveList* directiveList)
+        ContentSecurityPolicyDirectiveList* directiveList, String* name,
+        String* value)
         : m_directiveList(directiveList)
-        , m_name(String::emptyString)
+        , m_name(name)
         , m_allowStar(false)
         , m_allowInline(false)
         , m_allowEval(false)
         , m_allowSelf(false)
         , m_hashAlgorithmsUsed(0)
     {
-    }
-
-    void setDirective(String* name, String* value)
-    {
-        m_name = name;
-
         parseSource(value);
     }
 
