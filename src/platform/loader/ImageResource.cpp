@@ -106,12 +106,15 @@ protected:
 
 void ImageResource::didLoadFinished()
 {
-    bool isSVG = false;
-    if (m_resourceRequest) {
-        auto m =
-            MimeType::parseFromString(m_resourceRequest->responseMimeType());
-        isSVG = m.subtype()->contains("svg", false);
+    if (!m_resourceRequest) {
+        Resource::didLoadFailed();
+        return;
     }
+
+    bool isSVG = false;
+    auto m = MimeType::parseFromString(m_resourceRequest->responseMimeType());
+    isSVG = m.subtype()->contains("svg", false);
+
     if (!isSVG) {
         isSVG = url()->urlString()->endsWith(".svg", false);
     }

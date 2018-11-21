@@ -638,19 +638,21 @@ void BrowsingContext::unmarkHasPendingStyleSheet()
 void BrowsingContext::iterateChildContext(
     const std::function<void(BrowsingContext*)>& fn)
 {
-    GCVector<Element*> col;
-    Traverse::collectDescendants(col, document(),
-                                 [](Node* nd) -> bool {
-                                     if (nd->isHTMLIFrameElement()) {
-                                         return true;
-                                     }
-                                     return false;
-                                 },
-                                 false);
+    if (document()) {
+        GCVector<Element*> col;
+        Traverse::collectDescendants(col, document(),
+                                     [](Node* nd) -> bool {
+                                         if (nd->isHTMLIFrameElement()) {
+                                             return true;
+                                         }
+                                         return false;
+                                     },
+                                     false);
 
-    for (size_t i = 0; i < col.size(); i++) {
-        if (col[i]->asHTMLIFrameElement()->browsingContext()) {
-            fn(col[i]->asHTMLIFrameElement()->browsingContext());
+        for (size_t i = 0; i < col.size(); i++) {
+            if (col[i]->asHTMLIFrameElement()->browsingContext()) {
+                fn(col[i]->asHTMLIFrameElement()->browsingContext());
+            }
         }
     }
 }

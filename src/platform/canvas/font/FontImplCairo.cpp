@@ -181,7 +181,6 @@ FontImplCairo::loadGlyph(char32_t ch)
 
     FcPattern* resultPattern = FcFontMatch(NULL, pattern, &fontConfigResult);
     if (!resultPattern) {
-        FcCharSetDestroy(fontConfigCharSet);
         return result;
     }
     FcChar8* filePath = NULL;

@@ -1431,7 +1431,8 @@ TimeRanges* SourceBuffer::buffered()
         std::map<uint64_t, MediaPacketGroup*>& oldTrack = i->second;
         STARFISH_ASSERT(oldTrack.size() != 0);
 
-        uint64_t maxDiff = oldTrack.begin()->second->m_maxFrameDuration * 2;
+        uint64_t maxDiff =
+            (uint64_t)oldTrack.begin()->second->m_maxFrameDuration * 2;
         std::pair<uint64_t, uint64_t> item =
             std::make_pair(oldTrack.begin()->first,
                            oldTrack.begin()->second->m_groupTimestampEnd);
@@ -1442,7 +1443,7 @@ TimeRanges* SourceBuffer::buffered()
                 newTrack.push_back(item);
                 item = std::make_pair(t->first, t->second->m_groupTimestampEnd);
             }
-            maxDiff = t->second->m_maxFrameDuration * 2;
+            maxDiff = (uint64_t)t->second->m_maxFrameDuration * 2;
         }
         newTrack.push_back(item);
     }
