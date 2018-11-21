@@ -17,7 +17,7 @@
  *  USA
  */
 
-package com.samsung.android.mobileservice.lwe;
+package com.samsung.android.lwe;
 
 /**
  * This class is a Web LWE client for a SemWebView.

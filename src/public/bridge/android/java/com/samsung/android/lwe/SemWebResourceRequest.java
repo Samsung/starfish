@@ -17,18 +17,19 @@
  *  USA
  */
 
-package com.samsung.android.mobileservice.lwe;
+package com.samsung.android.lwe;
 
 import android.net.Uri;
 
-public class WebResourceRequestImpl implements SemWebResourceRequest {
-    String mUrl;
-
-    WebResourceRequestImpl(String url) {
-        mUrl = url;
-    }
-
-    public Uri getUrl() {
-        return Uri.parse(mUrl);
-    }
+/**
+ * This interface is used to implement a WebResourceRequest for a SemWebViewClient
+ */
+public interface SemWebResourceRequest {
+    /**
+     * Gets the URL for which the resource request was made.
+     *
+     * @return The URL for which the resource request was made.
+     * @since Lightweight Web Engine 1.0
+     */
+    Uri getUrl();
 }

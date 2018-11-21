@@ -17,7 +17,7 @@
  *  USA
  */
 
-package com.samsung.android.mobileservice.lwe;
+package com.samsung.android.lwe;
 
 import android.app.AlertDialog;
 import android.content.Context;

@@ -17,7 +17,7 @@
  *  USA
  */
 
-package com.samsung.android.mobileservice.lwe;
+package com.samsung.android.lwe;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -37,8 +37,8 @@ import java.lang.reflect.Constructor;
 public class SemWebView extends TextureView {
 
     private static PathClassLoader pcl = null;
-    private static final String packageName = "com.samsung.android.mobileservice.lwe";
-    private static final String LweWebViewImplName = "com.samsung.android.mobileservice.lwe.LweWebViewImpl";
+    private static final String packageName = "com.samsung.android.lwe";
+    private static final String LweWebViewImplName = "com.samsung.android.lwe.LweWebViewImpl";
 
     /**
      * @hide
@@ -96,9 +96,9 @@ public class SemWebView extends TextureView {
             LweWebView result = null;
             try {
                 if (pcl == null) {
-                    String path = getContext().getPackageManager().getPackageInfo(packageName,0).applicationInfo.nativeLibraryDir;
-                    String dexpath = getContext().getPackageManager().getPackageInfo(packageName,0).applicationInfo.publicSourceDir;
-                    pcl = new PathClassLoader(dexpath,path,getContext().getClassLoader());
+                    String path = getContext().getPackageManager().getPackageInfo(packageName, 0).applicationInfo.nativeLibraryDir;
+                    String dexpath = getContext().getPackageManager().getPackageInfo(packageName, 0).applicationInfo.publicSourceDir;
+                    pcl = new PathClassLoader(dexpath, path, getContext().getClassLoader());
                 }
                 Class<?> cls = pcl.loadClass(LweWebViewImplName);
                 Constructor<?> cons = cls.getConstructor();

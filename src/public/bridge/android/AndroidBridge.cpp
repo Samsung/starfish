@@ -122,11 +122,10 @@ static jmethodID GetJMethod(JNIEnv* env, jclass clazz, const char name[],
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_init(JNIEnv* env,
-                                                               jobject thiz)
+Java_com_samsung_android_lwe_LweWebViewImpl_init(JNIEnv* env, jobject thiz)
 {
     LOGI(
-        "Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_init called "
+        "Java_com_samsung_android_lwe_LweWebViewImpl_init called "
         "%p "
         "%p",
         env, thiz);
@@ -135,8 +134,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_init(JNIEnv* env,
         return;
     }
     env->GetJavaVM(&g_jvm);
-    jclass clazz =
-        env->FindClass("com/samsung/android/mobileservice/lwe/LweWebViewImpl");
+    jclass clazz = env->FindClass("com/samsung/android/lwe/LweWebViewImpl");
     g_WindowGlue.m_clazz = (jclass)env->NewGlobalRef(clazz);
     g_WindowGlue.m_env = env;
     g_WindowGlue.m_onLoadResource =
@@ -170,7 +168,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_init(JNIEnv* env,
     env->DeleteLocalRef(clazz);
 
     LOGI(
-        "Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_init call "
+        "Java_com_samsung_android_lwe_LweWebViewImpl_init call "
         "end");
 }
 
@@ -443,7 +441,7 @@ void callShowAlert(LWE::WebContainer* view, const std::string& title,
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_onDropdownMenuItemSelected(
+Java_com_samsung_android_lwe_LweWebViewImpl_onDropdownMenuItemSelected(
     JNIEnv* env, jobject thiz, jlong data, jint position)
 {
     LOGI("onDropdownmenuselected: started");
@@ -554,7 +552,7 @@ void glSwapBuffers(void* view)
 }
 
 extern "C" JNIEXPORT jlong JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_create(
+Java_com_samsung_android_lwe_LweWebViewImpl_create(
     JNIEnv* env, jobject thiz, jint w, jint h, jfloat devicePixelRatio,
     jstring jua, jstring locale, jstring timezoneID, jstring localstoragePath,
     jstring cookiePath, jstring cachePath)
@@ -649,9 +647,8 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_create(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_destroy(JNIEnv* env,
-                                                                  jobject thiz,
-                                                                  jlong wv)
+Java_com_samsung_android_lwe_LweWebViewImpl_destroy(JNIEnv* env, jobject thiz,
+                                                    jlong wv)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->Destroy();
@@ -660,18 +657,17 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_destroy(JNIEnv* env,
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_resizeTo(
-    JNIEnv* env, jobject thiz, jlong container, jint w, jint h)
+Java_com_samsung_android_lwe_LweWebViewImpl_resizeTo(JNIEnv* env, jobject thiz,
+                                                     jlong container, jint w,
+                                                     jint h)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)container;
     webContainer->ResizeTo(w, h);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_loadUrl(JNIEnv* env,
-                                                                  jobject thiz,
-                                                                  jlong wv,
-                                                                  jstring url)
+Java_com_samsung_android_lwe_LweWebViewImpl_loadUrl(JNIEnv* env, jobject thiz,
+                                                    jlong wv, jstring url)
 {
     const char* nativeString = env->GetStringUTFChars(url, 0);
     std::string urlString = std::string(nativeString);
@@ -682,10 +678,8 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_loadUrl(JNIEnv* env,
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_loadData(JNIEnv* env,
-                                                                   jobject thiz,
-                                                                   jlong wv,
-                                                                   jstring data)
+Java_com_samsung_android_lwe_LweWebViewImpl_loadData(JNIEnv* env, jobject thiz,
+                                                     jlong wv, jstring data)
 {
     const char* nativeString = env->GetStringUTFChars(data, 0);
     std::string dataString = std::string(nativeString);
@@ -696,8 +690,10 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_loadData(JNIEnv* env,
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_evaluateJavaScript(
-    JNIEnv* env, jobject thiz, jlong wv, jstring data)
+Java_com_samsung_android_lwe_LweWebViewImpl_evaluateJavaScript(JNIEnv* env,
+                                                               jobject thiz,
+                                                               jlong wv,
+                                                               jstring data)
 {
     const char* nativeString = env->GetStringUTFChars(data, 0);
     std::string dataString = std::string(nativeString);
@@ -710,8 +706,8 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_evaluateJavaScript(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_getDefaultUserAgent(
-    JNIEnv* env, jobject thiz)
+Java_com_samsung_android_lwe_LweWebViewImpl_getDefaultUserAgent(JNIEnv* env,
+                                                                jobject thiz)
 {
     std::string result = USER_AGENT(STARFISH_NAME, VERSION);
     jstring jstr = env->NewStringUTF(result.c_str());
@@ -719,85 +715,81 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_getDefaultUserAgent(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_goBack(JNIEnv* env,
-                                                                 jobject thiz,
-                                                                 jlong data)
+Java_com_samsung_android_lwe_LweWebViewImpl_goBack(JNIEnv* env, jobject thiz,
+                                                   jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->GoBack();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_goForward(
-    JNIEnv* env, jobject thiz, jlong data)
+Java_com_samsung_android_lwe_LweWebViewImpl_goForward(JNIEnv* env, jobject thiz,
+                                                      jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->GoForward();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_reload(JNIEnv* env,
-                                                                 jobject thiz,
-                                                                 jlong data)
+Java_com_samsung_android_lwe_LweWebViewImpl_reload(JNIEnv* env, jobject thiz,
+                                                   jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->Reload();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_stopLoading(
-    JNIEnv* env, jobject thiz, jlong data)
+Java_com_samsung_android_lwe_LweWebViewImpl_stopLoading(JNIEnv* env,
+                                                        jobject thiz,
+                                                        jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->StopLoading();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_clearHistory(
-    JNIEnv* env, jobject thiz, jlong data)
+Java_com_samsung_android_lwe_LweWebViewImpl_clearHistory(JNIEnv* env,
+                                                         jobject thiz,
+                                                         jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->ClearHistory();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_resume(JNIEnv* env,
-                                                                 jobject thiz,
-                                                                 jlong data)
+Java_com_samsung_android_lwe_LweWebViewImpl_resume(JNIEnv* env, jobject thiz,
+                                                   jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->Resume();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_pause(JNIEnv* env,
-                                                                jobject thiz,
-                                                                jlong data)
+Java_com_samsung_android_lwe_LweWebViewImpl_pause(JNIEnv* env, jobject thiz,
+                                                  jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->Pause();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_focus(JNIEnv* env,
-                                                                jobject thiz,
-                                                                jlong data)
+Java_com_samsung_android_lwe_LweWebViewImpl_focus(JNIEnv* env, jobject thiz,
+                                                  jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->Focus();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_blur(JNIEnv* env,
-                                                               jobject thiz,
-                                                               jlong data)
+Java_com_samsung_android_lwe_LweWebViewImpl_blur(JNIEnv* env, jobject thiz,
+                                                 jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->Blur();
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_addJavascriptInterface(
+Java_com_samsung_android_lwe_LweWebViewImpl_addJavascriptInterface(
     JNIEnv* env, jobject thiz, jlong wv, jstring objName, jstring funtionName,
     jobject instance)
 {
@@ -866,7 +858,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_addJavascriptInterface
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_removeJavascriptInterface(
+Java_com_samsung_android_lwe_LweWebViewImpl_removeJavascriptInterface(
     JNIEnv* env, jobject thiz, jlong wv, jstring objName)
 {
     const char* nativeString = env->GetStringUTFChars(objName, 0);
@@ -878,7 +870,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_removeJavascriptInterf
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_setUserAgentString(
+Java_com_samsung_android_lwe_LweWebViewImpl_setUserAgentString(
     JNIEnv* env, jobject thiz, jlong wv, jstring userAgent)
 {
     const char* nativeString = env->GetStringUTFChars(userAgent, 0);
@@ -890,8 +882,9 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_setUserAgentString(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_setCacheMode(
-    JNIEnv* env, jobject thiz, jlong wv, jint mode)
+Java_com_samsung_android_lwe_LweWebViewImpl_setCacheMode(JNIEnv* env,
+                                                         jobject thiz, jlong wv,
+                                                         jint mode)
 {
 #ifdef STARFISH_ENABLE_HTTPCACHE
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
@@ -900,16 +893,18 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_setCacheMode(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_setDefaultFontSize(
-    JNIEnv* env, jobject thiz, jlong wv, jint size)
+Java_com_samsung_android_lwe_LweWebViewImpl_setDefaultFontSize(JNIEnv* env,
+                                                               jobject thiz,
+                                                               jlong wv,
+                                                               jint size)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->SetDefaultFontSize(size);
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_clearCache(
-    JNIEnv* env, jobject thiz, jlong wv)
+Java_com_samsung_android_lwe_LweWebViewImpl_clearCache(JNIEnv* env,
+                                                       jobject thiz, jlong wv)
 {
 #ifdef STARFISH_ENABLE_HTTPCACHE
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
@@ -918,7 +913,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_clearCache(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchMouseDown(
+Java_com_samsung_android_lwe_LweWebViewImpl_dispatchMouseDown(
     JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
@@ -927,7 +922,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchMouseDown(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchMouseMove(
+Java_com_samsung_android_lwe_LweWebViewImpl_dispatchMouseMove(
     JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y,
     bool isLButtonPressed, bool isRButtonPressed)
 {
@@ -941,8 +936,10 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchMouseMove(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchMouseUp(
-    JNIEnv* env, jobject thiz, jlong data, jfloat x, jfloat y)
+Java_com_samsung_android_lwe_LweWebViewImpl_dispatchMouseUp(JNIEnv* env,
+                                                            jobject thiz,
+                                                            jlong data,
+                                                            jfloat x, jfloat y)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->DispatchMouseUpEvent(LWE::MouseButtonValue::NoButton,
@@ -951,7 +948,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchMouseUp(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchKeyDown(
+Java_com_samsung_android_lwe_LweWebViewImpl_dispatchKeyDown(
     JNIEnv* env, jobject thiz, jlong wv, jint keyCode, jint modifier)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
@@ -960,7 +957,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchKeyDown(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchKeyUp(
+Java_com_samsung_android_lwe_LweWebViewImpl_dispatchKeyUp(
     JNIEnv* env, jobject thiz, jlong wv, jint keyCode, jint modifier)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
@@ -969,7 +966,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchKeyUp(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchKeyPress(
+Java_com_samsung_android_lwe_LweWebViewImpl_dispatchKeyPress(
     JNIEnv* env, jobject thiz, jlong wv, jint keyCode, jint modifier)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
@@ -978,7 +975,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchKeyPress(
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchCompositionStart(
+Java_com_samsung_android_lwe_LweWebViewImpl_dispatchCompositionStart(
     JNIEnv* env, jobject thiz, jlong wv, jstring keyValue)
 {
     const char* nativeString = env->GetStringUTFChars(keyValue, 0);
@@ -990,7 +987,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchCompositionSta
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchCompositionUpdate(
+Java_com_samsung_android_lwe_LweWebViewImpl_dispatchCompositionUpdate(
     JNIEnv* env, jobject thiz, jlong wv, jstring keyValue)
 {
     const char* nativeString = env->GetStringUTFChars(keyValue, 0);
@@ -1002,7 +999,7 @@ Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchCompositionUpd
 }
 
 extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_mobileservice_lwe_LweWebViewImpl_dispatchCompositionEnd(
+Java_com_samsung_android_lwe_LweWebViewImpl_dispatchCompositionEnd(
     JNIEnv* env, jobject thiz, jlong wv, jstring keyValue)
 {
     const char* nativeString = env->GetStringUTFChars(keyValue, 0);
