@@ -510,6 +510,26 @@ public:
     void addGlobalPointingEventInterceptListener(EventTarget* node);
     void removeGlobalPointingEventInterceptListener(EventTarget* node);
 
+    void setBaseBackgroundColor(Unit::Color color)
+    {
+        m_baseBackgroundColor = color;
+    }
+
+    Unit::Color baseBackgroundColor()
+    {
+        return m_baseBackgroundColor;
+    }
+
+    void setBaseForegroundColor(Unit::Color color)
+    {
+        m_baseForegroundColor = color;
+    }
+
+    Unit::Color baseForegroundColor()
+    {
+        return m_baseForegroundColor;
+    }
+
 private:
     WebView(Starfish* starfish, const char* locale, const char* timezoneID,
             uint32_t w, uint32_t h, uint32_t defaultFontSize,
@@ -633,6 +653,8 @@ private:
 #ifdef STARFISH_ENABLE_TEST
     unsigned int m_testCompatibleMode;
 #endif
+    Unit::Color m_baseBackgroundColor;
+    Unit::Color m_baseForegroundColor;
 };
 }
 
