@@ -168,6 +168,23 @@ ENDIF()
 
 
 #######################################################
+# LIBCAIRO
+#######################################################
+SET (CAIRO_DIR ${THIRD_PARTY_ROOT}/windows/cairo)
+SET (CAIRO_TARGET ${CAIRO_DIR}/src/.libs/libcairo.a)
+
+ADD_CUSTOM_COMMAND (OUTPUT ${CAIRO_TARGET}
+                    WORKING_DIRECTORY ${CAIRO_DIR}/../../../build
+                    COMMENT "BUILD CAIRO"
+                    COMMAND ./build_cairo.sh
+)
+
+ADD_CUSTOM_TARGET (cairo
+                   DEPENDS ${CAIRO_TARGET}
+                   COMMAND echo "CAIRO TARGET"
+)
+
+#######################################################
 # LIBSKIA
 #######################################################
 IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
@@ -296,4 +313,8 @@ IF (${ARCH} STREQUAL "x64" AND (${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUA
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${TUV_TARGET})
 ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali"))
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${TUV_TARGET})
+ENDIF()
+
+IF (${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "efl_cairo_gl")
+    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${CAIRO_TARGET})
 ENDIF()

@@ -46,6 +46,15 @@ if [ "$arch" == "x64" ]; then
 	make clean
 	TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=x86_64-linux make -j$NUMPROC
 	TUV_BUILD_TYPE=debug TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=x86_64-linux make -j$NUMPROC
+    cd -
+
+    cd third_party/windows/cairo
+    export CFLAGS+=" -ffat-lto-objects"
+    export CXXFLAGS+=" -ffat-lto-objects"
+    NOCONFIGURE=1 ./autogen.sh
+    ./configure --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
+    make -j$NUMPROC V=1
+    cd -
 
 elif [ "$arch" == "arm" ]; then
     #cd $STARFISH_ROOT
@@ -62,6 +71,15 @@ elif [ "$arch" == "arm" ]; then
     make clean
     TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
     cd -
+
+    cd third_party/windows/cairo
+    export CFLAGS+=" -ffat-lto-objects"
+    export CXXFLAGS+=" -ffat-lto-objects"
+    NOCONFIGURE=1 ./autogen.sh
+    ./configure --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
+    make -j$NUMPROC V=1
+    cd -
+
 elif [ "$arch" == "aarch64" ]; then
     cd $STARFISH_ROOT
     ./build/build_escargot.sh tizen_obs_aarch64
@@ -74,6 +92,15 @@ elif [ "$arch" == "aarch64" ]; then
     make clean
     TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
     cd -
+
+    cd third_party/windows/cairo
+    export CFLAGS+=" -ffat-lto-objects"
+    export CXXFLAGS+=" -ffat-lto-objects"
+    NOCONFIGURE=1 ./autogen.sh
+    ./configure --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
+    make -j$NUMPROC V=1
+    cd -
+
 elif [ "$arch" == "i686" ]; then
     cd $STARFISH_ROOT
     ./build/build_escargot.sh tizen_obs_i686
@@ -86,6 +113,15 @@ elif [ "$arch" == "i686" ]; then
     make clean
     TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
     cd -
+
+    cd third_party/windows/cairo
+    export CFLAGS+=" -ffat-lto-objects"
+    export CXXFLAGS+=" -ffat-lto-objects"
+    NOCONFIGURE=1 ./autogen.sh
+    ./configure --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
+    make -j$NUMPROC V=1
+    cd -
+
 elif [ "$arch" == "x86_64" ]; then
     cd $STARFISH_ROOT
     ./build/build_escargot.sh tizen_obs_x86_64
@@ -97,6 +133,14 @@ elif [ "$arch" == "x86_64" ]; then
     cd third_party/libtuv
     make clean
     TUV_BUILD_TYPE=release TUV_BUILDTESTER=no TUV_CREATE_SHARED_LIB=yes TUV_BOARD=None TUV_PLATFORM=noarch-tizen make -j$NUMPROC
+    cd -
+
+    cd third_party/windows/cairo
+    export CFLAGS+=" -ffat-lto-objects"
+    export CXXFLAGS+=" -ffat-lto-objects"
+    NOCONFIGURE=1 ./autogen.sh
+    ./configure --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
+    make -j$NUMPROC V=1
     cd -
 else
     echo "Unknown option: $arch"
