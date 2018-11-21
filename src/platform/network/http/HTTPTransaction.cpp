@@ -228,13 +228,13 @@ void HTTPTransaction::updateTransactionStatus()
         long responseCode;
         curl_easy_getinfo(m_curl, CURLINFO_RESPONSE_CODE, &responseCode);
         m_httpResponse->setResponseCode(responseCode);
-    }
 
-    char* LastEffectiveURL = nullptr;
-    curl_easy_getinfo(m_curl, CURLINFO_EFFECTIVE_URL, &LastEffectiveURL);
-    if (LastEffectiveURL) {
-        // Do not free
-        m_httpResponse->setLastEffectiveURL(LastEffectiveURL);
+        char* LastEffectiveURL = nullptr;
+        curl_easy_getinfo(m_curl, CURLINFO_EFFECTIVE_URL, &LastEffectiveURL);
+        if (LastEffectiveURL) {
+            // Do not free
+            m_httpResponse->setLastEffectiveURL(LastEffectiveURL);
+        }
     }
 }
 }

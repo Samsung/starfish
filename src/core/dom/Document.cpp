@@ -1159,10 +1159,10 @@ void Document::setTitle(String* titleString)
                 document(), starfish()->staticStrings()->m_titleTagName);
         }
         // Append element to the head element.
-        head->appendChild(title);
+        head->appendChild(element);
         // Act as if the textContent IDL attribute of element was set to the new
         // value being assigned.
-        title->setTextContent(titleString);
+        element->setTextContent(titleString);
     } else {
         // Otherwise
         // Do nothing.

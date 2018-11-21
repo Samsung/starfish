@@ -623,7 +623,8 @@ void ComputedStyle::blockify(Node* current, bool force)
             }
         }
 
-        if (current->isHTMLInputElement() || current->isHTMLButtonElement()) {
+        if (current &&
+            (current->isHTMLInputElement() || current->isHTMLButtonElement())) {
             switch (m_display) {
             case DisplayValue::InlineDisplayValue:
             case DisplayValue::InlineTableDisplayValue:

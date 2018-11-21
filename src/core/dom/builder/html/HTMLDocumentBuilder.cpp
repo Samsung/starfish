@@ -76,7 +76,7 @@ struct EncodingResult {
     EncodingResult()
         : m_skip(0)
     {
-        m_encoding[0] = '\0';
+        memset(m_encoding, 0, sizeof(char) * 10);
     }
 };
 

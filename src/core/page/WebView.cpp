@@ -721,12 +721,12 @@ BlobURLStore WebView::addMediaSourceInBlobURLStore(MediaSource* ptr)
     a.m_blob = ptr;
 
 #ifdef STARFISH_32
-    a.m_a = rand();
-    a.m_b = rand();
-    a.m_c = rand();
+    a.m_a = rand_r(&m_seed);
+    a.m_b = rand_r(&m_seed);
+    a.m_c = rand_r(&m_seed);
 #else
-    a.m_a = rand();
-    a.m_b = rand();
+    a.m_a = rand_r(&m_seed);
+    a.m_b = rand_r(&m_seed);
 #endif
 
     m_urlMediaSourceBlobStore.insert(a);
