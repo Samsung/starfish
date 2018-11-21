@@ -147,7 +147,13 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 
     // If the Document is the initial "about:blank" document
     // The one it was assigned when its browsing context was created.
-
+    if (uri->urlString()->equals("about:blank") &&
+        browsingContext()->parentBrowsingContext()) {
+        setWebOrigin(browsingContext()
+                         ->parentBrowsingContext()
+                         ->document()
+                         ->webOrigin());
+    }
     // If the Document is a non-initial "about:blank" document
     // The origin of the incumbent settings object when the navigate algorithm
     // was invoked, or, if no script was involved, the origin of the node
