@@ -231,8 +231,10 @@ void HTMLImageElement::unloadImage()
 
 void HTMLImageElement::loadImage(String* src)
 {
+    auto resourceURL = new ResourceURL(src, document()->baseURL()->baseURI());
     unloadImage();
-    if (!document()->contentSecurityPolicy()->allowImage(src)) {
+    if (!document()->contentSecurityPolicy()->allowSource(CSPDirectives::ImgSrc,
+                                                          resourceURL)) {
         String* eventType = starfish()->staticStrings()->m_error.localName();
         Event* e = new Event(document(), eventType, EventInit(false, false));
         dispatchEventIdleTimeByUA(e);
@@ -240,8 +242,7 @@ void HTMLImageElement::loadImage(String* src)
     }
 
     m_imageResource = document()->resourceLoader().fetchImage(
-        new ResourceURL(src, document()->baseURL()->baseURI()),
-        isInDocumentScopeAndDocumentParticipateInRendering());
+        resourceURL, isInDocumentScopeAndDocumentParticipateInRendering());
     m_imageResource->addResourceClient(
         new ImageDownloadClient(this, m_imageResource));
     m_imageResource->addResourceClient(

@@ -29,10 +29,12 @@ enum class ContentSecurityPolicyHeaderType { Report, Enforce };
 enum class ContentSecurityPolicyHeaderSource { HTTP, Meta, OriginPolicy };
 
 enum class CSPDirectives {
+    ConnectSrc,
+    FrameSrc,
+    ImgSrc,
+    ObjectSrc,
     ScriptSrc,
     StyleSrc,
-    FrameSrc,
-    ObjectSrc,
 };
 
 class ContentSecurityPolicyDirectiveList;
@@ -52,11 +54,6 @@ public:
                           ContentSecurityPolicyHeaderSource source);
 
     bool allowInlineEventHandlers(String* contextURL);
-    bool allowURLScript(ResourceURL* url);
-    bool allowImage(String* src);
-    bool allowConnect(ResourceURL* url);
-    bool allowURLStyle(ResourceURL* url);
-
     bool allowSource(CSPDirectives directive, ResourceURL* url);
     bool allowInline(CSPDirectives directive, String* scriptContent,
                      String* nonce = nullptr);

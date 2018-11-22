@@ -139,12 +139,12 @@ http://web-platform.test:8000/content-security-policy/frame-src/frame-src-blocke
 http://web-platform.test:8000/content-security-policy/generic/duplicate-directive.sub.html
 #http://web-platform.test:8000/content-security-policy/generic/filesystem-urls-do-not-match-self.sub.html
 #http://web-platform.test:8000/content-security-policy/generic/filesystem-urls-match-filesystem.sub.html
-#http://web-platform.test:8000/content-security-policy/generic/generic-0_10_1.sub.html
+http://web-platform.test:8000/content-security-policy/generic/generic-0_10_1.sub.html
 #http://web-platform.test:8000/content-security-policy/generic/generic-0_10.html
 #http://web-platform.test:8000/content-security-policy/generic/generic-0_1-img-src.html
 #http://web-platform.test:8000/content-security-policy/generic/generic-0_1-script-src.html
-#http://web-platform.test:8000/content-security-policy/generic/generic-0_2_2.sub.html
-#http://web-platform.test:8000/content-security-policy/generic/generic-0_2_3.html
+http://web-platform.test:8000/content-security-policy/generic/generic-0_2_2.sub.html
+http://web-platform.test:8000/content-security-policy/generic/generic-0_2_3.html
 #http://web-platform.test:8000/content-security-policy/generic/generic-0_2.html
 #http://web-platform.test:8000/content-security-policy/generic/generic-0_8_1.sub.html
 #http://web-platform.test:8000/content-security-policy/generic/generic-0_8.sub.html

@@ -41,12 +41,13 @@ public:
     void setDirective(ContentSecurityPolicySourceListDirective*& directive,
                       String* name, String* value);
 
-    bool allowInlineScript();
-    bool allowURLScript(ResourceURL* url);
-    bool allowImage(String* src);
-    bool allowInlineStyle();
-    bool allowURLStyle(ResourceURL* url);
-    bool allowConnect(ResourceURL* url);
+    bool allowStar(CSPDirectives directive, ResourceURL* resUrl);
+    bool allowSelf(CSPDirectives directive, ResourceURL* url);
+    bool allowScheme(CSPDirectives directive, ResourceURL* url);
+    bool allowHost(CSPDirectives directive, ResourceURL* url);
+    bool allowContent(CSPDirectives directive, String* content);
+    bool allowNonce(CSPDirectives directive, String* nonce);
+    bool allowInline(CSPDirectives sourceList);
 
     ContentSecurityPolicySourceListDirective* scriptSrc()
     {
@@ -66,20 +67,6 @@ public:
     }
     ContentSecurityPolicySourceListDirective* getSourceList(
         CSPDirectives directive);
-
-    bool allowInline(ContentSecurityPolicySourceListDirective* sourceList);
-    bool allowURL(ContentSecurityPolicySourceListDirective* sourceList,
-                  ResourceURL* url);
-    bool allowScheme(ContentSecurityPolicySourceListDirective* sourceList,
-                     ResourceURL* url);
-
-    bool allowSelf(CSPDirectives directive, ResourceURL* url);
-    bool allowStar(CSPDirectives directive);
-    bool allowURL(CSPDirectives directive, ResourceURL* url);
-    bool allowScheme(CSPDirectives directive, ResourceURL* url);
-    bool allowContent(CSPDirectives directive, String* content);
-    bool allowNonce(CSPDirectives directive, String* nonce);
-    bool allowInline(CSPDirectives directive);
 
 private:
     ContentSecurityPolicy* m_contentSecurityPolicy;
