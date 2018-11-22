@@ -4,7 +4,7 @@ apply plugin: 'com.android.library'
 android {
     compileSdkVersion 28
     defaultConfig {
-//        applicationId "com.samsung.android.mobileservice.lwe"
+//        applicationId "com.samsung.android.lwe"
         minSdkVersion 28
         targetSdkVersion 28
         versionCode 1
@@ -16,7 +16,7 @@ android {
             }
         }
         ndk {
-            abiFilters "arm64-v8a"
+            abiFilters "arm64-v8a","armeabi-v7a"
         }
 
     }
