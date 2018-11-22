@@ -144,8 +144,8 @@ void HTMLStyleElement::generateStyleSheet()
     }
 
     if (str->length() > 0 &&
-        !document()->contentSecurityPolicy()->allowInlineStyle(
-            document()->urlString(), str)) {
+        !document()->contentSecurityPolicy()->allowInline(
+            CSPDirectives::StyleSrc, str, nonce())) {
         return;
     }
 
@@ -192,5 +192,15 @@ void HTMLStyleElement::dispatchLoadEvent()
             }
         },
         this);
+}
+
+String* HTMLStyleElement::nonce()
+{
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_nonce);
+}
+
+void HTMLStyleElement::setNonce(String* str)
+{
+    setAttribute(starfish()->staticStrings()->m_nonce, str);
 }
 }

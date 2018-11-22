@@ -68,6 +68,9 @@ public:
     bool defer();
     void setDefer(bool b);
 
+    String* nonce();
+    void setNonce(String* str);
+
     bool shouldResumeParsing()
     {
         return m_shouldResumeParsing;

@@ -269,8 +269,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             String* script = text();
 
             if (script->length() > 0 &&
-                !document()->contentSecurityPolicy()->allowInlineScript(
-                    document()->urlString(), script)) {
+                !document()->contentSecurityPolicy()->allowInline(
+                    CSPDirectives::ScriptSrc, script, nonce())) {
                 return false;
             }
 
@@ -412,6 +412,16 @@ String* HTMLScriptElement::src()
 void HTMLScriptElement::setSrc(String* src)
 {
     setAttribute(starfish()->staticStrings()->m_src, src);
+}
+
+String* HTMLScriptElement::nonce()
+{
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_nonce);
+}
+
+void HTMLScriptElement::setNonce(String* str)
+{
+    setAttribute(starfish()->staticStrings()->m_nonce, str);
 }
 
 String* HTMLScriptElement::type()

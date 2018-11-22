@@ -39,7 +39,7 @@ void ContentSecurityPolicySourceListDirective::parseSource(String* value)
             m_allowInline = true;
         } else if (isScheme(token)) {
             m_schemeList.push_back(token);
-        } else if (token->startsWith("'") && parseHash(token)) {
+        } else if (parseHash(token) || parseNonce(token)) {
             continue;
         } else if (auto sourceURL = parseHost(token)) {
             m_URLSourceList.push_back(sourceURL);
@@ -47,8 +47,31 @@ void ContentSecurityPolicySourceListDirective::parseSource(String* value)
     }
 }
 
+bool ContentSecurityPolicySourceListDirective::parseNonce(String* source)
+{
+    if (!source || source->startsWith("'") == false) {
+        return false;
+    }
+
+    auto prefix = String::createASCIIString("'nonce-");
+
+    if (source->startsWith(prefix)) {
+        // make a substring without the last single quote
+        auto prefixLength = prefix->length();
+        auto nonceValue = source->substring(prefixLength, source->length() -
+                                                              prefixLength - 1);
+        m_nonces.insert(nonceValue->toUTF8NonGCString());
+        return true;
+    }
+    return false;
+}
+
 bool ContentSecurityPolicySourceListDirective::parseHash(String* source)
 {
+    if (!source || source->startsWith("'") == false) {
+        return false;
+    }
+
     // extract algorithm type and digest
     struct SupportedPrefixesStruct {
         const char* prefix;
@@ -74,11 +97,11 @@ bool ContentSecurityPolicySourceListDirective::parseHash(String* source)
         auto prefix = String::createASCIIString(supportedPrefixes[i].prefix);
 
         if (source->startsWith(prefix)) {
-            auto prefix_length = prefix->length();
+            auto prefixLength = prefix->length();
             hashAlgorithmType = supportedPrefixes[i].type;
             // make a substring without the last single quote
-            base64Value = source->substring(
-                prefix_length, source->length() - prefix_length - 1);
+            base64Value = source->substring(prefixLength, source->length() -
+                                                              prefixLength - 1);
             break;
         }
     }
@@ -186,7 +209,7 @@ static std::string getCSPHash(CryptoAlgorithmType hashType,
 
 bool ContentSecurityPolicySourceListDirective::allowContent(String* content)
 {
-    if (content) {
+    if (content && !content->isEmpty()) {
         uint32_t type = 0;
 
         for (uint32_t i = 0; i < NUM_SUPPORTED_CRYPTO_ALGORITHM_TYPE; i++) {
@@ -201,6 +224,17 @@ bool ContentSecurityPolicySourceListDirective::allowContent(String* content)
         }
     }
 
+    return false;
+}
+
+bool ContentSecurityPolicySourceListDirective::allowNonce(String* content)
+{
+    if (content && !content->isEmpty()) {
+        auto nonce = content->trim()->toUTF8NonGCString();
+        if (m_nonces.find(nonce) != m_nonces.end()) {
+            return true;
+        }
+    }
     return false;
 }
 

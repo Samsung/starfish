@@ -51,19 +51,15 @@ public:
     void didReceiveHeader(String* header, ContentSecurityPolicyHeaderType type,
                           ContentSecurityPolicyHeaderSource source);
 
-    bool allowInlineScript(String* contextURL, String* scriptContent);
     bool allowInlineEventHandlers(String* contextURL);
     bool allowURLScript(ResourceURL* url);
     bool allowImage(String* src);
     bool allowConnect(ResourceURL* url);
-
-    bool allowInlineStyle(String* contextURL, String* styleContent);
     bool allowURLStyle(ResourceURL* url);
 
     bool allowSource(CSPDirectives directive, ResourceURL* url);
-
-    bool findHashOfContentInSourceList(
-        ContentSecurityPolicySourceListDirective* policy, String* content);
+    bool allowInline(CSPDirectives directive, String* scriptContent,
+                     String* nonce = nullptr);
 
     void dispatchViolationEvent(String* name);
 
