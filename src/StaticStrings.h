@@ -397,6 +397,7 @@ public:
     QualifiedName m_standby;
     QualifiedName m_declare;
     QualifiedName m_securitypolicyviolation;
+    QualifiedName m_nonce;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;

@@ -76,6 +76,9 @@ public:
         m_loaded = true;
     }
 
+    String* nonce();
+    void setNonce(String* str);
+
 private:
     void dispatchLoadEvent();
 

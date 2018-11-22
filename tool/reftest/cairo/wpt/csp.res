@@ -324,7 +324,7 @@ http://web-platform.test:8000/content-security-policy/script-src/scripthash-allo
 #http://web-platform.test:8000/content-security-policy/script-src/scripthash-unicode-normalization.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-allowed.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-and-scripthash.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-basic-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-basic-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-ignore-unsafeinline.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-redirect.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-1_10_1.html

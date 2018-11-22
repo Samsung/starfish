@@ -11,6 +11,7 @@ interface HTMLScriptElement : HTMLElement {
   [CEReactions] attribute boolean defer;
   [Unimplemented, CEReactions] attribute DOMString? crossOrigin;
   [CEReactions] attribute DOMString text;
+  [CEReactions] attribute DOMString nonce;
 
   // obsolete members
   // https://html.spec.whatwg.org/#HTMLScriptElement-partial

@@ -55,37 +55,9 @@ void ContentSecurityPolicy::didReceiveHeader(
 #endif
 }
 
-bool ContentSecurityPolicy::findHashOfContentInSourceList(
-    ContentSecurityPolicySourceListDirective* sourceList, String* content)
-{
-    if (sourceList->allowContent(content)) {
-        return true;
-    }
-    return false;
-}
-
 bool ContentSecurityPolicy::allowInlineEventHandlers(String* contextURL)
 {
-    return allowInlineScript(contextURL, nullptr);
-}
-
-bool ContentSecurityPolicy::allowInlineScript(String* contextURL,
-                                              String* scriptContent)
-{
-    for (auto policy : m_policies) {
-        auto src = policy->scriptSrc();
-
-        if (!src) {
-            continue;
-        } else if (policy->allowInlineScript() ||
-                   findHashOfContentInSourceList(src, scriptContent)) {
-            continue;
-        } else {
-            dispatchViolationEvent(src->name());
-            return false;
-        }
-    }
-    return true;
+    return allowInline(CSPDirectives::ScriptSrc, nullptr);
 }
 
 bool ContentSecurityPolicy::allowURLScript(ResourceURL* url)
@@ -140,19 +112,20 @@ bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
     return true;
 }
 
-bool ContentSecurityPolicy::allowInlineStyle(String* contextURL,
-                                             String* styleContent)
+bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
+                                        String* scriptContent,
+                                        String* nonce /*= nullptr*/)
 {
     for (auto policy : m_policies) {
-        auto src = policy->styleSrc();
+        if (!policy->getSourceList(directive)) {
+            continue; // allowed if no src-list exists
+        } else if (policy->allowInline(directive)) {
+            return true;
+        }
 
-        if (!src) {
-            continue;
-        } else if (policy->allowInlineStyle() ||
-                   findHashOfContentInSourceList(src, styleContent)) {
-            continue;
-        } else {
-            dispatchViolationEvent(src->name());
+        if (!policy->allowNonce(directive, nonce) &&
+            !policy->allowContent(directive, scriptContent)) {
+            dispatchViolationEvent(getDirectiveName(directive));
             return false;
         }
     }

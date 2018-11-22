@@ -143,6 +143,16 @@ ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
     return sourceList;
 }
 
+bool ContentSecurityPolicyDirectiveList::allowInline(CSPDirectives directive)
+{
+    auto sourceList = getSourceList(directive);
+
+    if (sourceList) {
+        return sourceList->allowInline();
+    }
+    return false;
+}
+
 bool ContentSecurityPolicyDirectiveList::allowURL(CSPDirectives directive,
                                                   ResourceURL* resUrl)
 {
@@ -176,6 +186,30 @@ bool ContentSecurityPolicyDirectiveList::allowSelf(CSPDirectives directive,
         m_contextURL->host()->equalsIgnoreCase(resUrl->host())) {
         return true;
     }
+    return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowContent(CSPDirectives directive,
+                                                      String* content)
+{
+    auto sourceList = getSourceList(directive);
+
+    if (sourceList) {
+        return sourceList->allowContent(content);
+    }
+
+    return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::allowNonce(CSPDirectives directive,
+                                                    String* nonce)
+{
+    auto sourceList = getSourceList(directive);
+
+    if (sourceList) {
+        return sourceList->allowNonce(nonce);
+    }
+
     return false;
 }
 

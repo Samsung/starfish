@@ -94,6 +94,7 @@ public:
     }
 
     bool allowContent(String* content);
+    bool allowNonce(String* content);
     bool allowURL(ResourceURL* url, bool ignoreScheme = false);
     bool allowURL(ContentSecurityPolicySourceURL* url,
                   bool ignoreScheme = false);
@@ -113,12 +114,13 @@ private:
     bool m_allowSelf;
     GCVector<ContentSecurityPolicySourceURL*> m_URLSourceList;
     HashSet m_hashes;
+    HashSet m_nonces;
     uint32_t m_hashAlgorithmsUsed;
     GCVector<String*> m_schemeList;
 
     void parseSource(String* value);
     bool parseHash(String* source);
-    bool parseHashA(String* source);
+    bool parseNonce(String* source);
     bool isScheme(String* scheme);
 };
 }

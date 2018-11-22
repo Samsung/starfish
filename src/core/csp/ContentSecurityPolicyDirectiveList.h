@@ -77,6 +77,9 @@ public:
     bool allowStar(CSPDirectives directive);
     bool allowURL(CSPDirectives directive, ResourceURL* url);
     bool allowScheme(CSPDirectives directive, ResourceURL* url);
+    bool allowContent(CSPDirectives directive, String* content);
+    bool allowNonce(CSPDirectives directive, String* nonce);
+    bool allowInline(CSPDirectives directive);
 
 private:
     ContentSecurityPolicy* m_contentSecurityPolicy;

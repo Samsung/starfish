@@ -5,6 +5,7 @@ interface HTMLStyleElement : HTMLElement {
   [Measure] attribute boolean disabled;
   [CEReactions, Reflect] attribute DOMString media;
   [CEReactions, Reflect] attribute DOMString type;
+  [CEReactions, Reflect] attribute DOMString nonce;
 
 };
 
