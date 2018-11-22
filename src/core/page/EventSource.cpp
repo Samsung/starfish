@@ -215,7 +215,8 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
         throw new DOMException(document, DOMException::SYNTAX_ERR, s.data());
     }
 
-    if (!document->contentSecurityPolicy()->allowConnect(fullURL)) {
+    if (!document->contentSecurityPolicy()->allowSource(
+            CSPDirectives::ConnectSrc, fullURL)) {
         throw new DOMException(document, DOMException::SECURITY_ERR);
     }
 

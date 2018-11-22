@@ -22,13 +22,12 @@
 
 namespace Starfish {
 
-struct ContentSecurityPolicySourceURL : public gc {
-    ContentSecurityPolicySourceURL()
+struct ContentSecurityPolicySource : public gc {
+    ContentSecurityPolicySource()
         : protocol(String::emptyString)
         , serverName(String::emptyString)
         , domainName(String::emptyString)
         , port(String::emptyString)
-        , host(String::emptyString)
         , path(String::emptyString)
         , isStarProtocol(false)
         , isStarServer(false)
@@ -40,7 +39,6 @@ struct ContentSecurityPolicySourceURL : public gc {
     String* serverName;
     String* domainName;
     String* port;
-    String* host;
     String* path;
 
     bool isStarProtocol;
@@ -95,14 +93,12 @@ public:
 
     bool allowContent(String* content);
     bool allowNonce(String* content);
-    bool allowURL(ResourceURL* url, bool ignoreScheme = false);
-    bool allowURL(ContentSecurityPolicySourceURL* url,
-                  bool ignoreScheme = false);
-    bool allowURL(String* scheme, String* serverName, String* domainName,
-                  String* port, String* path, bool ignoreScheme = false);
     bool allowScheme(String* str);
+    bool matcheScheme(String* scheme, ResourceURL* url);
+    bool allowScheme(ResourceURL* resUrl);
+    bool allowHost(ResourceURL* url, bool ignoreScheme = false);
 
-    ContentSecurityPolicySourceURL* parseHost(String* source);
+    static ContentSecurityPolicySource* parseHost(String* source);
 
 protected:
 private:
@@ -112,7 +108,7 @@ private:
     bool m_allowInline;
     bool m_allowEval;
     bool m_allowSelf;
-    GCVector<ContentSecurityPolicySourceURL*> m_URLSourceList;
+    GCVector<ContentSecurityPolicySource*> m_sourceList;
     HashSet m_hashes;
     HashSet m_nonces;
     uint32_t m_hashAlgorithmsUsed;

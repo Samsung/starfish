@@ -89,16 +89,16 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* name,
                                                       String* value)
 {
     value = value->trim();
-    if (name->equalsIgnoreCase("script-src")) {
-        setDirective(m_scriptSrc, name, value);
-    } else if (name->equalsIgnoreCase("img-src")) {
-        setDirective(m_imgSrc, name, value);
-    } else if (name->equalsIgnoreCase("style-src")) {
-        setDirective(m_styleSrc, name, value);
-    } else if (name->equalsIgnoreCase("connect-src")) {
+    if (name->equalsIgnoreCase("connect-src")) {
         setDirective(m_connectSrc, name, value);
     } else if (name->equalsIgnoreCase("frame-src")) {
         setDirective(m_frameSrc, name, value);
+    } else if (name->equalsIgnoreCase("img-src")) {
+        setDirective(m_imgSrc, name, value);
+    } else if (name->equalsIgnoreCase("script-src")) {
+        setDirective(m_scriptSrc, name, value);
+    } else if (name->equalsIgnoreCase("style-src")) {
+        setDirective(m_styleSrc, name, value);
     }
 }
 
@@ -113,74 +113,44 @@ void ContentSecurityPolicyDirectiveList::setDirective(
     directive = new ContentSecurityPolicySourceListDirective(this, name, value);
 }
 
-bool ContentSecurityPolicyDirectiveList::allowInline(
-    ContentSecurityPolicySourceListDirective* sourceList)
-{
-    if (!sourceList) {
-        return true;
-    }
-    return sourceList->allowInline();
-}
-
 ContentSecurityPolicySourceListDirective*
 ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
 {
-    ContentSecurityPolicySourceListDirective* sourceList = nullptr;
-
     switch (directive) {
-    case CSPDirectives::ScriptSrc:
-        sourceList = m_scriptSrc;
-        break;
-    case CSPDirectives::StyleSrc:
-        sourceList = m_styleSrc;
-        break;
+    case CSPDirectives::ConnectSrc:
+        return m_connectSrc;
     case CSPDirectives::FrameSrc:
-        sourceList = m_frameSrc;
-        break;
+        return m_frameSrc;
+    case CSPDirectives::ImgSrc:
+        return m_imgSrc;
+    case CSPDirectives::ScriptSrc:
+        return m_scriptSrc;
+    case CSPDirectives::StyleSrc:
+        return m_styleSrc;
     default:
         break;
     }
-    return sourceList;
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return nullptr;
 }
 
-bool ContentSecurityPolicyDirectiveList::allowInline(CSPDirectives directive)
+bool ContentSecurityPolicyDirectiveList::allowStar(CSPDirectives directive,
+                                                   ResourceURL* resUrl)
 {
-    auto sourceList = getSourceList(directive);
-
-    if (sourceList) {
-        return sourceList->allowInline();
-    }
-    return false;
-}
-
-bool ContentSecurityPolicyDirectiveList::allowURL(CSPDirectives directive,
-                                                  ResourceURL* resUrl)
-{
-    auto sourceList = getSourceList(directive);
-
-    if (sourceList) {
-        return allowURL(sourceList, resUrl);
+    if (directive == CSPDirectives::ImgSrc && resUrl->isDataURL()) {
+        return false;
     }
 
-    return false;
-}
-
-bool ContentSecurityPolicyDirectiveList::allowStar(CSPDirectives directive)
-{
     auto sourceList = getSourceList(directive);
-
-    if (sourceList->allowStar()) {
-        return true;
-    }
-
-    return false;
+    STARFISH_ASSERT(sourceList);
+    return sourceList->allowStar();
 }
 
 bool ContentSecurityPolicyDirectiveList::allowSelf(CSPDirectives directive,
                                                    ResourceURL* resUrl)
 {
     auto sourceList = getSourceList(directive);
-
+    STARFISH_ASSERT(sourceList);
     if (sourceList->allowSelf() &&
         m_contextURL->protocol()->equalsIgnoreCase(resUrl->protocol()) &&
         m_contextURL->host()->equalsIgnoreCase(resUrl->host())) {
@@ -193,126 +163,39 @@ bool ContentSecurityPolicyDirectiveList::allowContent(CSPDirectives directive,
                                                       String* content)
 {
     auto sourceList = getSourceList(directive);
-
-    if (sourceList) {
-        return sourceList->allowContent(content);
-    }
-
-    return false;
+    STARFISH_ASSERT(sourceList);
+    return sourceList->allowContent(content);
 }
 
 bool ContentSecurityPolicyDirectiveList::allowNonce(CSPDirectives directive,
                                                     String* nonce)
 {
     auto sourceList = getSourceList(directive);
-
-    if (sourceList) {
-        return sourceList->allowNonce(nonce);
-    }
-
-    return false;
+    STARFISH_ASSERT(sourceList);
+    return sourceList->allowNonce(nonce);
 }
 
 bool ContentSecurityPolicyDirectiveList::allowScheme(CSPDirectives directive,
                                                      ResourceURL* resUrl)
 {
     auto sourceList = getSourceList(directive);
-
-    if (sourceList) {
-        return allowScheme(sourceList, resUrl);
-    }
-
-    return false;
+    STARFISH_ASSERT(sourceList);
+    return sourceList->allowScheme(resUrl);
 }
 
-bool ContentSecurityPolicyDirectiveList::allowScheme(
-    ContentSecurityPolicySourceListDirective* sourceList, ResourceURL* resUrl)
+bool ContentSecurityPolicyDirectiveList::allowHost(CSPDirectives directive,
+                                                   ResourceURL* resUrl)
 {
-    auto origin = resUrl->origin();
-
-    if (origin->equalsIgnoreCase("null")) {
-        auto protocol = resUrl->protocol();
-        if (sourceList->allowScheme(protocol)) {
-            return true;
-        }
-    }
-    return false;
+    auto sourceList = getSourceList(directive);
+    STARFISH_ASSERT(sourceList);
+    return sourceList->allowHost(resUrl);
 }
 
-bool ContentSecurityPolicyDirectiveList::allowURL(
-    ContentSecurityPolicySourceListDirective* sourceList, ResourceURL* url)
+bool ContentSecurityPolicyDirectiveList::allowInline(CSPDirectives directive)
 {
-    // TODO: checking empty, self, and star needs to be removed.
-    // the occurrences related should be also removed. e.g) allowURLScript.
-    if (!sourceList) {
-        return true;
-    } else if (sourceList->allowSelf() &&
-               m_contextURL->protocol()->equalsIgnoreCase(url->protocol()) &&
-               m_contextURL->host()->equalsIgnoreCase(url->host())) {
-        return true;
-    } else if (sourceList->allowStar()) {
-        return true;
-    } else if (sourceList->allowURL(url)) {
-        return true;
-    }
-
-    return false;
-}
-
-bool ContentSecurityPolicyDirectiveList::allowInlineScript()
-{
-    return allowInline(m_scriptSrc);
-}
-
-bool ContentSecurityPolicyDirectiveList::allowURLScript(ResourceURL* url)
-{
-    return allowURL(m_scriptSrc, url);
-}
-
-bool ContentSecurityPolicyDirectiveList::allowInlineStyle()
-{
-    return allowInline(m_styleSrc);
-}
-
-bool ContentSecurityPolicyDirectiveList::allowURLStyle(ResourceURL* url)
-{
-    return allowURL(m_styleSrc, url);
-}
-
-bool ContentSecurityPolicyDirectiveList::allowImage(String* src)
-{
-    if (!m_imgSrc) {
-        return true;
-    }
-
-    const char dataType[] = "data:";
-    if (src->startsWith(dataType, false)) {
-        return m_imgSrc->allowScheme(String::createASCIIString(dataType));
-    }
-
-    if (m_imgSrc->allowStar()) {
-        return true;
-    }
-
-    ContentSecurityPolicySourceURL* url = m_imgSrc->parseHost(src);
-    if (!url) {
-        return true;
-    }
-
-    if (m_imgSrc->allowSelf() &&
-        m_contextURL->protocol()->equalsIgnoreCase(url->protocol) &&
-        m_contextURL->host()->equalsIgnoreCase(url->host)) {
-        return true;
-    } else if (m_imgSrc->allowScheme(url->protocol)) {
-        return true;
-    }
-
-    return m_imgSrc->allowURL(url, true);
-}
-
-bool ContentSecurityPolicyDirectiveList::allowConnect(ResourceURL* url)
-{
-    return allowURL(m_connectSrc, url);
+    auto sourceList = getSourceList(directive);
+    STARFISH_ASSERT(sourceList);
+    return sourceList->allowInline();
 }
 
 size_t ContentSecurityPolicyDirectiveList::skipSpace(String* src, size_t begin,

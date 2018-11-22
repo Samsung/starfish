@@ -223,8 +223,8 @@ void XMLHttpRequest::initResponseData()
 
 void XMLHttpRequest::send(Nullable<String*> body)
 {
-    if (!document()->contentSecurityPolicy()->allowConnect(
-            m_resourceRequest->url())) {
+    if (!document()->contentSecurityPolicy()->allowSource(
+            CSPDirectives::ConnectSrc, m_resourceRequest->url())) {
         ProgressEvent* pe =
             new ProgressEvent(scriptBindingInstance()->ownerDocument(),
                               starfish()->staticStrings()->m_error.localName());

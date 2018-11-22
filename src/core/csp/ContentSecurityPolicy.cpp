@@ -55,40 +55,29 @@ void ContentSecurityPolicy::didReceiveHeader(
 #endif
 }
 
-bool ContentSecurityPolicy::allowInlineEventHandlers(String* contextURL)
-{
-    return allowInline(CSPDirectives::ScriptSrc, nullptr);
-}
-
-bool ContentSecurityPolicy::allowURLScript(ResourceURL* url)
-{
-    for (auto policy : m_policies) {
-        if (!policy->allowURLScript(url)) {
-            dispatchViolationEvent(policy->scriptSrc()->name());
-            return false;
-        }
-    }
-    return true;
-}
-
 static String* getDirectiveName(CSPDirectives directive)
 {
-    String* name = String::emptyString;
-
     switch (directive) {
-    case CSPDirectives::ScriptSrc:
-        name = String::createASCIIString("script-src");
-        break;
-    case CSPDirectives::StyleSrc:
-        name = String::createASCIIString("style-src");
-        break;
+    case CSPDirectives::ConnectSrc:
+        return String::createASCIIString("connect-src");
     case CSPDirectives::FrameSrc:
-        name = String::createASCIIString("frame-src");
-        break;
+        return String::createASCIIString("frame-src");
+    case CSPDirectives::ImgSrc:
+        return String::createASCIIString("img-src");
+    case CSPDirectives::ScriptSrc:
+        return String::createASCIIString("script-src");
+    case CSPDirectives::StyleSrc:
+        return String::createASCIIString("style-src");
     default:
         break;
     }
-    return name;
+    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    return String::emptyString;
+}
+
+bool ContentSecurityPolicy::allowInlineEventHandlers(String* contextURL)
+{
+    return allowInline(CSPDirectives::ScriptSrc, nullptr);
 }
 
 bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
@@ -97,13 +86,13 @@ bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
     for (auto policy : m_policies) {
         if (!policy->getSourceList(directive)) {
             continue;
-        } else if (policy->allowStar(directive)) {
+        } else if (policy->allowStar(directive, resUrl)) {
             return true;
         }
 
         if (!policy->allowSelf(directive, resUrl) &&
             !policy->allowScheme(directive, resUrl) &&
-            !policy->allowURL(directive, resUrl)) {
+            !policy->allowHost(directive, resUrl)) {
             // TODO: check the query with default-src policies
             dispatchViolationEvent(getDirectiveName(directive));
             return false;
@@ -126,39 +115,6 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
         if (!policy->allowNonce(directive, nonce) &&
             !policy->allowContent(directive, scriptContent)) {
             dispatchViolationEvent(getDirectiveName(directive));
-            return false;
-        }
-    }
-    return true;
-}
-
-bool ContentSecurityPolicy::allowURLStyle(ResourceURL* url)
-{
-    for (auto policy : m_policies) {
-        if (!policy->allowURLStyle(url)) {
-            dispatchViolationEvent(policy->styleSrc()->name());
-            return false;
-        }
-    }
-    return true;
-}
-
-bool ContentSecurityPolicy::allowImage(String* src)
-{
-    for (auto policy : m_policies) {
-        if (!policy->allowImage(src)) {
-            dispatchViolationEvent(policy->imgSrc()->name());
-            return false;
-        }
-    }
-    return true;
-}
-
-bool ContentSecurityPolicy::allowConnect(ResourceURL* url)
-{
-    for (auto policy : m_policies) {
-        if (!policy->allowConnect(url)) {
-            dispatchViolationEvent(policy->connectSrc()->name());
             return false;
         }
     }
