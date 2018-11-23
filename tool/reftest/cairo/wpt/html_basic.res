@@ -87,8 +87,8 @@ http://web-platform.test:8000/html/webappapis/scripting/events/body-onload.html
 #http://web-platform.test:8000/html/webappapis/scripting/event-loops/task_microtask_ordering.html
 #http://web-platform.test:8000/html/webappapis/scripting/event-loops/microtask_after_script.html
 #http://web-platform.test:8000/html/webappapis/scripting/event-loops/microtask_after_raf.html
-#http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/opening-the-input-stream/origin-check-in-document-open-same-origin-domain.sub.html
-#http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/opening-the-input-stream/origin-check-in-document-open-basic.html
+http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/opening-the-input-stream/origin-check-in-document-open-same-origin-domain.sub.html
+http://web-platform.test:8000/html/webappapis/dynamic-markup-insertion/opening-the-input-stream/origin-check-in-document-open-basic.html
 #http://web-platform.test:8000/html/webappapis/atob/base64.html
 http://web-platform.test:8000/html/webappapis/animation-frames/same-dispatch-time.html
 #http://web-platform.test:8000/html/webappapis/animation-frames/idlharness.html

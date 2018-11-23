@@ -240,6 +240,13 @@ Document* fetchDocument(ContextRef* ctx)
     return window->document();
 }
 
+Document* fetchResponsibleDocument(ExecutionStateRef* state)
+{
+    Window* window =
+        (Window*)state->resolveCallerLexicalGlobalObject()->extraData();
+    return window->document();
+}
+
 WebView* fetchWebView(ContextRef* ctx)
 {
     Window* window = (Window*)ctx->globalObject()->extraData();

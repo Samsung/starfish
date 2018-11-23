@@ -316,7 +316,8 @@ Window* Document::open(String* url, String* name, String* features)
     return nullptr;
 }
 
-Document* Document::open(String* type, String* replaceInput)
+Document* Document::open(Document* responsibleDoc, String* type,
+                         String* replaceInput)
 {
     // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#opening-the-input-stream
 
@@ -336,6 +337,10 @@ Document* Document::open(String* type, String* replaceInput)
     // TODO (implement WindowProxy) If document's origin is not same origin to
     // the origin of the responsible document specified by the entry settings
     // object, then throw a "SecurityError" DOMException.
+    if (!responsibleDoc->webOrigin()->isSameOrigin(webOrigin())) {
+        throw new DOMException(responsibleDoc,
+                               DOMException::Code::SECURITY_ERR);
+    }
     // If document has an active parser whose script nesting level is greater
     // than 0, then return document.
     if (m_documentBuilder && currentScript().hasValue()) {
@@ -530,7 +535,7 @@ void Document::close()
     m_documentBuilder->asHTMLDocumentBuilder()->parser()->parseStep();
 }
 
-void Document::write(const GCVector<String*>& str)
+void Document::write(Document* responsibleDoc, const GCVector<String*>& str)
 {
     // https://html.spec.whatwg.org/multipage/dynamic-markup-insertion.html#dom-document-write
     // If document is an XML document, then throw an "InvalidStateError"
@@ -562,7 +567,8 @@ void Document::write(const GCVector<String*>& str)
         // abort these steps.
         // Otherwise, the insertion point will point at just before the end of
         // the (empty) input stream.
-        open(String::createASCIIString("text/html"), String::emptyString);
+        open(responsibleDoc, String::createASCIIString("text/html"),
+             String::emptyString);
     }
 
     // Insert input into the input stream just before the insertion point.
@@ -585,11 +591,11 @@ void Document::write(const GCVector<String*>& str)
     m_documentBuilder->asHTMLDocumentBuilder()->parser()->parseStep(false);
 }
 
-void Document::writeln(const GCVector<String*>& str)
+void Document::writeln(Document* responsibleDoc, const GCVector<String*>& str)
 {
     GCVector<String*> newStr = str;
     newStr.push_back(String::createASCIIString('\n'));
-    write(str);
+    write(responsibleDoc, str);
 }
 
 void Document::resumeDocumentParsing()

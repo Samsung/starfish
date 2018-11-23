@@ -119,7 +119,7 @@ bool HTMLAnchorElement::handleDefaultEvent(Event* event)
                         try {
                             GCVector<String*> value0;
                             value0.push_back(ret2);
-                            document()->write(value0);
+                            document()->write(document(), value0);
                         } catch (DOMException* e) {
                             // TODO: should throw the exception into onError
                             // event handler
