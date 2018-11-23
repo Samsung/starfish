@@ -404,7 +404,7 @@ public:
 
     void setContentSecurityPolicy(String* content);
 
-    Document* open(String* type, String* replace);
+    Document* open(Document* responsibleDoc, String* type, String* replace);
     Window* open(String* url, String* name, String* features);
     bool openFunctionExplicitCalled()
     {
@@ -412,8 +412,8 @@ public:
     }
     void close();
     void unload();
-    void write(const GCVector<String*>& str);
-    void writeln(const GCVector<String*>& str);
+    void write(Document* responsibleDoc, const GCVector<String*>& str);
+    void writeln(Document* responsibleDoc, const GCVector<String*>& str);
 
     // method for script element
     void resumeDocumentParsing();

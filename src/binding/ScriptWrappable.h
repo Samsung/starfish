@@ -66,6 +66,7 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
 WebView* fetchWebView(Escargot::ContextRef* context);
 Window* fetchWindow(Escargot::ContextRef* context);
 Document* fetchDocument(Escargot::ContextRef* context);
+Document* fetchResponsibleDocument(Escargot::ExecutionStateRef* state);
 StaticStrings* fetchStaticStrings(Escargot::ContextRef* context);
 
 String* toBrowserString(ScriptBindingInstance* instance, Escargot::ValueRef* v,

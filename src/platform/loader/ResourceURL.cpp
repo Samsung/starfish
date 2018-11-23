@@ -900,9 +900,10 @@ String* ResourceURL::domain()
         return String::emptyString;
     }
 
-    int start = 0;
+    int start =
+        (m_passwordEnd == m_usernameStart) ? m_passwordEnd : m_passwordEnd + 1;
     int cnt = 0;
-    for (int pos = (int)m_hostEnd; pos >= 0; --pos) {
+    for (int pos = (int)m_hostEnd; pos >= start; --pos) {
         if (m_urlString->charAt(pos) == '.') {
             cnt++;
         }
