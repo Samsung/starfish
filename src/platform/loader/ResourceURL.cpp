@@ -607,7 +607,16 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         }
     }
 
-    if (!isAbsolute && !baseURL->equals("about:blank") && !url->contains(":")) {
+    String* urlWithoutQueryString = nullptr;
+    size_t idx = url->lastIndexOf('?');
+    if (idx != SIZE_MAX) {
+        urlWithoutQueryString = url->substring(0, idx);
+    } else {
+        urlWithoutQueryString = url;
+    }
+
+    if (!isAbsolute && !baseURL->equals("about:blank") &&
+        !urlWithoutQueryString->contains(":")) {
         STARFISH_ASSERT(baseURL->contains("://"));
         bool baseEndsWithSlash = baseURL->charAt(baseURL->length() - 1) == '/';
 
