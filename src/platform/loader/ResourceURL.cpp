@@ -926,8 +926,11 @@ ResourceURL* ResourceURL::setHostname(String* newHostname)
     StringBuilder builder;
     builder.appendString(m_urlString->substring(0, start));
     builder.appendString(newHostname);
-    builder.appendString(
-        m_urlString->substring(m_portEnd, m_urlString->length() - m_portEnd));
+    if (m_hostEnd != m_portEnd) {
+        builder.appendChar(':');
+        builder.appendString(m_urlString->substring(
+            m_hostEnd + 1, m_urlString->length() - m_portEnd));
+    }
     return new ResourceURL(builder.finalize());
 }
 
