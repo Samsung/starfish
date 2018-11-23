@@ -214,6 +214,10 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
                                  ReferrerURL* referrerURL)
 {
     if (ResourceURL::isValidURL(url->urlString())) {
+        String* name = nameAttr();
+        if (m_browsingContext) {
+            name = m_browsingContext->name();
+        }
         unloadSrc();
         unmarkContentDocumentDisabled();
 
@@ -237,7 +241,7 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
             m_browsingContext->dispose();
         }
         m_browsingContext = BrowsingContext::create(this);
-        m_browsingContext->setName(nameAttr());
+        m_browsingContext->setName(name);
         m_browsingContext->open(url, type, referrerURL);
     }
 }

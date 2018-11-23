@@ -1944,10 +1944,10 @@ http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-d
 #http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/003.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/002.html
 http://web-platform.test:8000/html/browsers/browsing-the-web/navigating-across-documents/001.html
-#http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-same-origin-sub-frame-navigation.sub.html
+http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-same-origin-sub-frame-navigation.sub.html
 #http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-same-origin-main-frame-navigation.sub.html
 #http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-same-origin-aux-frame-navigation.sub.html
-#http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-cross-origin-sub-frame-navigation.sub.html
+http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-cross-origin-sub-frame-navigation.sub.html
 #http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-cross-origin-main-frame-navigation.sub.html
 #http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/window-name-after-cross-origin-aux-frame-navigation.sub.html
 #http://web-platform.test:8000/html/browsers/browsing-the-web/history-traversal/unset_context_name-1.html

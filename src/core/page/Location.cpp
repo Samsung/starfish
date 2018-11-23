@@ -170,7 +170,26 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
         ctx->webView()->messageLoop()->invokeNavigate(ctx->webView(), url,
                                                       referrerURL, action);
     } else {
-        ctx->sourceElement()->navigate(url, action, referrerURL);
+        struct Param : public gc {
+            BrowsingContext* ctx;
+            ResourceURL* url;
+            ReferrerURL* referrerURL;
+            HistoryManagerAction action;
+        };
+        Param* p = new Param;
+        p->ctx = ctx;
+        p->url = url;
+        p->referrerURL = referrerURL;
+        p->action = action;
+
+        ctx->webView()->messageLoop()->addIdler(
+            ctx,
+            [](size_t handle, void* data) {
+                Param* p = (Param*)data;
+                p->ctx->sourceElement()->navigate(p->url, p->action,
+                                                  p->referrerURL);
+            },
+            p);
     }
 }
 
