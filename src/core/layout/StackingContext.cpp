@@ -1630,7 +1630,9 @@ static LayoutRect computeScreenRect(StackingContext* ctx)
             f = f->layoutParent()->asFrameBox();
         }
 
-        windowRect = f->computeScreenExtent();
+        if (f) {
+            windowRect = f->computeScreenExtent();
+        }
     }
 
     return windowRect;
@@ -1655,7 +1657,9 @@ static LayoutRect computeWindowRectOnScreen(StackingContext* ctx)
             f = f->layoutParent()->asFrameBox();
         }
 
-        windowRect = f->computeScreenExtent();
+        if (f) {
+            windowRect = f->computeScreenExtent();
+        }
     }
     return windowRect;
 }
