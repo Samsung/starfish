@@ -27,7 +27,7 @@
 
 namespace Starfish {
 
-void TTS::init()
+void TTS::initialize()
 {
 #ifdef STARFISH_ENABLE_TEST
     m_isTTSEnabled = true;
@@ -36,6 +36,10 @@ void TTS::init()
         speech(text);
     }
 #endif
+}
+
+void TTS::destroy()
+{
 }
 
 void TTS::speech(String* text, bool forced)
@@ -55,10 +59,6 @@ void TTS::speech(String* text, bool forced)
 bool TTS::createHandle()
 {
     return false;
-}
-
-void TTS::destroyHandle()
-{
 }
 
 bool TTS::startPlay(const char* text)

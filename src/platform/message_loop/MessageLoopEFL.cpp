@@ -84,7 +84,7 @@ void MessageLoop::destroy()
                 break;
             }
         }
-        ecore_main_loop_begin();
+        clearPendingIdlers(nullptr);
     }
 }
 
