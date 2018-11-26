@@ -105,6 +105,7 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
     , m_fgG(0)
     , m_fgB(0)
     , m_fgA(255)
+    , m_webSecurityMode(WebSecurityMode::Enable)
 {
 }
 
@@ -151,6 +152,16 @@ void Settings::SetProxyURL(const std::string& s)
 void Settings::SetTTSMode(TTSMode mode)
 {
     m_ttsMode = mode;
+}
+
+WebSecurityMode Settings::GetWebSecurityMode() const
+{
+    return m_webSecurityMode;
+}
+
+void Settings::SetWebSecurityMode(WebSecurityMode value)
+{
+    m_webSecurityMode = value;
 }
 
 ResourceError::ResourceError(int code, const std::string& description)
@@ -650,6 +661,7 @@ void WebContainer::SetSettings(const Settings& settings)
             "effect.. ");
     }
 #endif
+    TO_WEBVIEW(m_impl)->setWebSecurityMode(settings.GetWebSecurityMode());
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 

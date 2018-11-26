@@ -25,6 +25,10 @@
 #include "core/page/RenderResult.h"
 #include "platform/public/ScreenInfo.h"
 
+namespace LWE {
+enum class WebSecurityMode;
+}
+
 namespace Starfish {
 struct BlobURLStore {
 #ifdef STARFISH_32
@@ -354,6 +358,9 @@ public:
         return m_proxyURL;
     }
 
+    LWE::WebSecurityMode getWebSecurityMode() const;
+    void setWebSecurityMode(LWE::WebSecurityMode value);
+
     uint32_t defaultFontSize() const
     {
         return m_defaultFontSize;
@@ -655,6 +662,7 @@ private:
 #endif
     Unit::Color m_baseBackgroundColor;
     Unit::Color m_baseForegroundColor;
+    LWE::WebSecurityMode m_webSecurityMode;
 };
 }
 

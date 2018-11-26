@@ -19,10 +19,12 @@
 #include "StarfishConfig.h"
 
 #include "binding/ScriptBindingSecurity.h"
+#include "PlatformIntegrationData.h"
 #include "core/page/Window.h"
 #include "core/dom/Document.h"
 #include "core/page/Location.h"
 #include "core/dom/WebOrigin.h"
+#include "core/page/WebView.h"
 #include <EscargotPublic.h>
 
 namespace Starfish {
@@ -30,6 +32,11 @@ namespace Starfish {
 // https://html.spec.whatwg.org/multipage/browsers.html#isplatformobjectsameorigin-(-o-)
 static bool canAccess(Document* source, Document* target)
 {
+    if (source->webView()->getWebSecurityMode() ==
+        LWE::WebSecurityMode::Disable) {
+        return true;
+    }
+
     if (source->webOrigin()->isSameOriginDomain(target->webOrigin())) {
         return true;
     }

@@ -59,6 +59,7 @@ public:
     std::string GetProxyURL() const;
     int GetCacheMode() const;
     TTSMode GetTTSMode() const;
+    WebSecurityMode GetWebSecurityMode() const;
 
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
@@ -69,6 +70,7 @@ public:
                                 unsigned char b, unsigned char a);
     void SetBaseForegroundColor(unsigned char r, unsigned char g,
                                 unsigned char b, unsigned char a);
+    void SetWebSecurityMode(WebSecurityMode value);
 
 private:
     std::string m_defaultUserAgent;
@@ -79,6 +81,7 @@ private:
     TTSMode m_ttsMode;
     unsigned char m_bgR, m_bgG, m_bgB, m_bgA;
     unsigned char m_fgR, m_fgG, m_fgB, m_fgA;
+    WebSecurityMode m_webSecurityMode;
 };
 
 class LWE_EXPORT ResourceError {
