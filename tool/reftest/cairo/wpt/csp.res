@@ -4,10 +4,10 @@
 #http://web-platform.test:8000/content-security-policy/base-uri/report-uri-does-not-respect-base-uri.sub.html
 #
 #
-#http://web-platform.test:8000/content-security-policy/blob/blob-urls-do-not-match-self.sub.html
-#http://web-platform.test:8000/content-security-policy/blob/blob-urls-match-blob.sub.html
-#http://web-platform.test:8000/content-security-policy/blob/self-doesnt-match-blob.sub.html
-#http://web-platform.test:8000/content-security-policy/blob/star-doesnt-match-blob.sub.html
+http://web-platform.test:8000/content-security-policy/blob/blob-urls-do-not-match-self.sub.html
+http://web-platform.test:8000/content-security-policy/blob/blob-urls-match-blob.sub.html
+#http://web-platform.test:8000/content-security-policy/blob/self-doesnt-match-blob.sub.html # Worker
+#http://web-platform.test:8000/content-security-policy/blob/star-doesnt-match-blob.sub.html # Worker
 #
 #
 #http://web-platform.test:8000/content-security-policy/child-src/child-src-about-blank-allowed-by-default.sub.html
@@ -47,13 +47,9 @@ http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xm
 #
 #http://web-platform.test:8000/content-security-policy/embedded-enforcement/allow_csp_from-header.html
 #http://web-platform.test:8000/content-security-policy/embedded-enforcement/iframe-csp-attribute.html
-#
-#
 #http://web-platform.test:8000/content-security-policy/embedded-enforcement/required-csp-header-cascade.html
 #http://web-platform.test:8000/content-security-policy/embedded-enforcement/required_csp-header-crlf.html
 #http://web-platform.test:8000/content-security-policy/embedded-enforcement/required_csp-header.html
-#
-#
 #http://web-platform.test:8000/content-security-policy/embedded-enforcement/subsumption_algorithm-general.html
 #http://web-platform.test:8000/content-security-policy/embedded-enforcement/subsumption_algorithm-hashes.html
 #http://web-platform.test:8000/content-security-policy/embedded-enforcement/subsumption_algorithm-host_sources-hosts.html
@@ -313,35 +309,35 @@ http://web-platform.test:8000/content-security-policy/img-src/report-blocked-dat
 #http://web-platform.test:8000/content-security-policy/sandbox/window-reuse-unsandboxed.html
 #
 #
-#http://web-platform.test:8000/content-security-policy/script-src/injected-inline-script-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/injected-inline-script-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/injected-inline-script-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/injected-inline-script-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/javascript-window-open-blocked.html
 #http://web-platform.test:8000/content-security-policy/script-src/nonce-enforce-blocked.html
 http://web-platform.test:8000/content-security-policy/script-src/scripthash-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/scripthash-basic-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/scripthash-basic-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/scripthash-default-src.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/scripthash-ignore-unsafeinline.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/scripthash-unicode-normalization.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-and-scripthash.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/scripthash-ignore-unsafeinline.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/scripthash-unicode-normalization.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-and-scripthash.sub.html
 http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-basic-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-ignore-unsafeinline.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-redirect.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_10_1.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_10.html
+http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-redirect.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-1_10_1.html
+#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_10.html # default-src
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_1.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_2_1.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_2.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_3.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4_1.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4_2.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-multiple-policies-multiple-hashing-algorithms.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-multiple-policies-one-using-hashing-algorithms.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-1_3.html
+#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4_1.html # setTimeout
+#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4_2.html # Function
+#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4.html # Eval
+http://web-platform.test:8000/content-security-policy/script-src/script-src-multiple-policies-multiple-hashing-algorithms.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-multiple-policies-one-using-hashing-algorithms.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-overrides-default-src.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-report-only-policy-works-with-external-hash-policy.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-report-only-policy-works-with-hash-policy.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-sri_hash.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-sri_hash.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_and_unsafe_eval_eval.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_and_unsafe_eval_new_function.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_discard_whitelist.html
@@ -360,7 +356,7 @@ http://web-platform.test:8000/content-security-policy/script-src/script-src-1_2.
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_parser_inserted.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_worker.https.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_worker-importScripts.https.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-wildcards-disallowed.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-wildcards-disallowed.html
 #http://web-platform.test:8000/content-security-policy/script-src/srcdoc-doesnt-bypass-script-src.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/worker-eval-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/worker-function-function-blocked.sub.html
@@ -389,7 +385,7 @@ http://web-platform.test:8000/content-security-policy/script-src/script-src-1_2.
 #
 #
 #http://web-platform.test:8000/content-security-policy/style-src/injected-inline-style-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/injected-inline-style-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/style-src/injected-inline-style-blocked.sub.html
 http://web-platform.test:8000/content-security-policy/style-src/inline-style-allowed.sub.html
 #http://web-platform.test:8000/content-security-policy/style-src/inline-style-allowed-while-cloning-objects.sub.html
 #http://web-platform.test:8000/content-security-policy/style-src/inline-style-attribute-allowed.sub.html
