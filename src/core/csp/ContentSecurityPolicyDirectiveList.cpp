@@ -137,7 +137,10 @@ ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
 bool ContentSecurityPolicyDirectiveList::allowStar(CSPDirectives directive,
                                                    ResourceURL* resUrl)
 {
-    if (directive == CSPDirectives::ImgSrc && resUrl->isDataURL()) {
+    // 4.2.2.2 https://www.w3.org/TR/CSP2/#match-source-expression
+    // If the source expression a consists of a single (*) character and url’s
+    // scheme is not one of blob, data, filesystem, then return does match.
+    if (resUrl->isDataURL() || resUrl->isBlobURL() || resUrl->isFileURL()) {
         return false;
     }
 

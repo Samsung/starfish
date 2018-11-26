@@ -95,6 +95,10 @@ bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
             !policy->allowHost(directive, resUrl)) {
             // TODO: check the query with default-src policies
             dispatchViolationEvent(getDirectiveName(directive));
+            STARFISH_LOG_WARN(
+                "Refused to use '%s' as a source of '%s' because it violates "
+                "the Content Security Policy\n",
+                CSTR(resUrl->urlString()), CSTR(getDirectiveName(directive)));
             return false;
         }
     }
@@ -115,6 +119,11 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
         if (!policy->allowNonce(directive, nonce) &&
             !policy->allowContent(directive, scriptContent)) {
             dispatchViolationEvent(getDirectiveName(directive));
+            STARFISH_LOG_WARN(
+                "Refused to execute contents as a inline-source of '%s' "
+                "because it violates the Content Security Policy\n",
+                CSTR(getDirectiveName(directive)));
+
             return false;
         }
     }

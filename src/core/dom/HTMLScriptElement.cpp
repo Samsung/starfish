@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/Event.h"
 #include "core/dom/HTMLScriptElement.h"
 #include "core/dom/Text.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
@@ -271,6 +272,11 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             if (script->length() > 0 &&
                 !document()->contentSecurityPolicy()->allowInline(
                     CSPDirectives::ScriptSrc, script, nonce())) {
+                String* eventType =
+                    starfish()->staticStrings()->m_error.localName();
+                Event* e =
+                    new Event(document(), eventType, EventInit(false, false));
+                dispatchEventIdleTimeByUA(e);
                 return false;
             }
 
@@ -297,6 +303,11 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                 new ResourceURL(url, document()->baseURL()->baseURI());
             if (!document()->contentSecurityPolicy()->allowSource(
                     CSPDirectives::ScriptSrc, rurl)) {
+                String* eventType =
+                    starfish()->staticStrings()->m_error.localName();
+                Event* e =
+                    new Event(document(), eventType, EventInit(false, false));
+                dispatchEventIdleTimeByUA(e);
                 return false;
             }
 
