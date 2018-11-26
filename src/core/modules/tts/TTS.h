@@ -24,7 +24,7 @@
 #include "PlatformIntegrationData.h"
 #include "binding/StarfishHoldable.h"
 
-#if defined(STARFISH_TIZEN) && defined(STARFISH_ENABLE_TTS)
+#if defined(STARFISH_TIZEN)
 #include <tts.h>
 #include <tts_internal.h>
 #endif
@@ -38,12 +38,11 @@ public:
         , m_state(-1)
         , m_mode(LWE::TTSMode::Default)
     {
-        init();
+        initialize();
     }
 
     ~TTS()
     {
-        destroyHandle();
     }
 
     bool isTTSEnabled()
@@ -65,15 +64,14 @@ public:
         return m_mode;
     }
 
+    void destroy();
     void speech(String* text, bool forced = false);
     const char* state(int s);
 
 private:
-    void init();
+    void initialize();
 
     bool createHandle();
-    void destroyHandle();
-
     bool startPlay(const char* text);
     bool stopPlay();
     bool addText(const char* text);

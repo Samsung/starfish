@@ -325,6 +325,10 @@ void WebView::destroy()
 
     pause();
 
+#ifdef STARFISH_ENABLE_TTS
+    m_tts->destroy();
+#endif
+
     m_globalPointingEventListener.clear();
     m_jsInterfaceList.clear();
 

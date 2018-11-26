@@ -81,7 +81,7 @@ void utterenceCompletedCB(tts_h tts_handle, int utteranceId, void* data)
     }
 }
 
-void TTS::init()
+void TTS::initialize()
 {
     int at = 0;
     int vconf_ret = vconf_get_bool(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS, &at);
@@ -99,6 +99,31 @@ void TTS::init()
                 tts->createHandle();
             },
             this);
+    }
+}
+
+void TTS::destroy()
+{
+    int ret = 0;
+
+    if (m_handle) {
+        if ((ret = tts_stop(m_handle)) != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("tts_stop failed : %d", ret);
+        }
+        if ((ret = tts_unprepare(m_handle)) != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("tts_unprepare failed : %d", ret);
+        }
+        if ((ret = tts_unset_state_changed_cb(m_handle)) != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("tts_unset_state_changed_cb failed : %d", ret);
+        }
+        if ((ret = tts_destroy(m_handle)) != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("tts_destroy failed : %d", ret);
+        }
+
+        STARFISH_LOG_INFO("TTS destroyed successfully");
+        m_handle = NULL;
+    } else {
+        STARFISH_LOG_INFO("tts handle is null in destroyTTSHandle()");
     }
 }
 
@@ -180,31 +205,6 @@ bool TTS::createHandle()
     }
 
     return true;
-}
-
-void TTS::destroyHandle()
-{
-    int ret = 0;
-
-    if (m_handle) {
-        if ((ret = tts_stop(m_handle)) != TTS_ERROR_NONE) {
-            STARFISH_LOG_ERROR("tts_stop failed : %d", ret);
-        }
-        if ((ret = tts_unprepare(m_handle)) != TTS_ERROR_NONE) {
-            STARFISH_LOG_ERROR("tts_unprepare failed : %d", ret);
-        }
-        if ((ret = tts_unset_state_changed_cb(m_handle)) != TTS_ERROR_NONE) {
-            STARFISH_LOG_ERROR("tts_unset_state_changed_cb failed : %d", ret);
-        }
-        if ((ret = tts_destroy(m_handle)) != TTS_ERROR_NONE) {
-            STARFISH_LOG_ERROR("tts_destroy failed : %d", ret);
-        }
-
-        STARFISH_LOG_INFO("TTS destroyed successfully");
-        m_handle = NULL;
-    } else {
-        STARFISH_LOG_INFO("tts handle is null in destroyTTSHandle()");
-    }
 }
 
 bool TTS::startPlay(const char* text)
