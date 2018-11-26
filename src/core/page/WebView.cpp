@@ -466,6 +466,16 @@ String* WebView::userAgent()
     return String::createASCIIString(USER_AGENT(STARFISH_NAME, VERSION));
 }
 
+LWE::WebSecurityMode WebView::getWebSecurityMode() const
+{
+    return m_webSecurityMode;
+}
+
+void WebView::setWebSecurityMode(LWE::WebSecurityMode value)
+{
+    m_webSecurityMode = value;
+}
+
 String* WebView::evaluateJavaScript(String* s)
 {
     if (mainBrowsingContext()) {

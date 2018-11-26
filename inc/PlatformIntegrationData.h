@@ -240,6 +240,8 @@ enum TTSMode {
     Default = 0,
     Forced = 1,
 };
+
+enum class WebSecurityMode { Enable = 0, Disable = 1 };
 }
 
 #endif
