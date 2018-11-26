@@ -504,6 +504,11 @@ public:
         return m_lastRenderingTick;
     }
 
+    const RepaintRegion& repaintRegionInRendering()
+    {
+        return m_repaintRegionInRendering;
+    }
+
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);
     void dispatchMouseEvent(MouseEventKind kind, MouseData data);
@@ -588,6 +593,7 @@ private:
     uint64_t m_lastRenderingTick;
     uint64_t m_navigateStartingTime;
     uint32_t m_currentActiveAnimatorCount;
+    RepaintRegion m_repaintRegionInRendering;
     bool m_inRendering;
     bool m_needsRendering;
     bool m_needsEstablishesStackingContext;
@@ -602,7 +608,6 @@ private:
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;
     GCVector<AnimationExecutor*> m_activeAnimationExecutor;
-    size_t m_activeAnimatorForAnimationExecutor;
 
     // message loop contexts
     MessageLoop* m_messageLoop;

@@ -225,7 +225,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_didCompositeBefore(false)
     , m_isActive(false)
     , m_rootStackingContext(nullptr)
-    , m_activeAnimatorForAnimationExecutor(SIZE_MAX)
     , m_messageLoop(new MessageLoop(this))
     , m_timer(new Timer(this))
     , m_console(new Console(this))
@@ -329,6 +328,7 @@ void WebView::destroy()
     m_tts->destroy();
 #endif
 
+    m_repaintRegionInRendering.clear();
     m_globalPointingEventListener.clear();
     m_jsInterfaceList.clear();
 
@@ -1188,14 +1188,14 @@ RenderResult WebView::rendering(bool force)
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox(),
                 needsFullPainting, prevDrawnStackingContextInfo, scrollX,
                 scrollY, m_needsComposite);
-            auto repaintRegion = tracker.repaintRegion();
-            auto repaintRect = repaintRegion[nullptr];
+            m_repaintRegionInRendering = std::move(tracker.repaintRegion());
+            auto repaintRect = m_repaintRegionInRendering[nullptr];
             cleanupLayoutRepaintTracker(mainBrowsingContext());
 
 #if defined(STARFISH_ENABLE_PROFILE_TIMER)
             {
-                auto iter = repaintRegion.begin();
-                while (iter != repaintRegion.end()) {
+                auto iter = m_repaintRegionInRendering.begin();
+                while (iter != m_repaintRegionInRendering.end()) {
                     if (iter->first) {
                         STARFISH_LOG_INFO(
                             "repaint region node %s #%s className(%s) %f %f %f "
@@ -1255,7 +1255,7 @@ RenderResult WebView::rendering(bool force)
 
             StackingContext::PaintingStackingContextContext ctx(
                 m_needsComposite, prevDrawnStackingContextInfo, repaintRect,
-                repaintRegion, scrollX, scrollY);
+                m_repaintRegionInRendering, scrollX, scrollY);
             if (!m_needsComposite) {
                 canvas = platformWindow()->preparePainting();
                 canvas->save();

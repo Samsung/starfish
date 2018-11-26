@@ -1032,7 +1032,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_textIndent;
         }
-        return InheritedStylesRareData().m_textIndent;
+        return Length(Length::Fixed, 0);
     }
 
     void setTextIndent(Length val)
@@ -1047,7 +1047,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_textTransform;
         }
-        return InheritedStylesRareData().m_textTransform;
+        return NoneTextTransformValue;
     }
 
     void setTextTransform(TextTransformValue val)
@@ -1188,7 +1188,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_textUnderlinePosition;
         }
-        return InheritedStylesRareData().m_textUnderlinePosition;
+        return TextUnderlinePositionValue::AutoTextUnderlinePositionValue;
     }
 
     void setTextUnderlinePosition(TextUnderlinePositionValue v)
@@ -1201,7 +1201,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_pointerEventsValue;
         }
-        return InheritedStylesRareData().m_pointerEventsValue;
+        return PointerEventsValue::PointerEventsAutoValue;
     }
 
     void setPointerEvents(PointerEventsValue v)
@@ -2268,7 +2268,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_fontKerning;
         }
-        return InheritedStylesRareData().m_fontKerning;
+        return FontKerningValue::FontKerningAutoValue;
     }
 
     void setFontKerning(FontKerningValue v)
@@ -2282,7 +2282,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_imageRendering;
         }
-        return InheritedStylesRareData().m_imageRendering;
+        return ImageRenderingValue::ImageRenderingAutoValue;
     }
 
     void setImageRendering(ImageRenderingValue v)
@@ -2296,7 +2296,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_letterSpacing;
         }
-        return InheritedStylesRareData().m_letterSpacing;
+        return Length(Length::Fixed, 0);
     }
 
     static bool isDisplayTableValueType(DisplayValue display)
@@ -2465,7 +2465,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_horizontalBorderSpacing;
         }
-        return InheritedStylesRareData().m_horizontalBorderSpacing;
+        return Length(Length::Fixed, 0);
     }
 
     void setHorizontalBorderSpacing(Length v)
@@ -2479,7 +2479,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_verticalBorderSpacing;
         }
-        return InheritedStylesRareData().m_verticalBorderSpacing;
+        return Length(Length::Fixed, 0);
     }
 
     void setVerticalBorderSpacing(Length v)
@@ -2493,7 +2493,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_fill;
         }
-        return InheritedStylesRareData().m_fill;
+        return Unit::Color(0, 0, 0, 0xff);
     }
 
     void setFill(StylePaintData v)
@@ -2507,7 +2507,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_fillRule;
         }
-        return InheritedStylesRareData().m_fillRule;
+        return FillRuleNonZero;
     }
 
     void setFillRule(FillRuleValue v)
@@ -2521,7 +2521,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_fillOpacity;
         }
-        return InheritedStylesRareData().m_fillOpacity;
+        return 1;
     }
 
     void setFillOpacity(float v)
@@ -2535,7 +2535,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_stroke;
         }
-        return InheritedStylesRareData().m_stroke;
+        return Unit::Color(0, 0, 0, 0);
     }
 
     void setStroke(StylePaintData v)
@@ -2549,7 +2549,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_strokeWidth;
         }
-        return InheritedStylesRareData().m_strokeWidth;
+        return Length(Length::Fixed, 1);
     }
 
     void setStrokeWidth(Length v)
@@ -3395,7 +3395,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_caretColor;
         }
-        return InheritedStylesRareData().m_caretColor;
+        return Unit::Color();
     }
 
     void setCaretColor(Unit::Color c)
@@ -3408,7 +3408,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_hyphens;
         }
-        return InheritedStylesRareData().m_hyphens;
+        return HyphensValue::NoneHyphensValue;
     }
 
     void setHyphens(HyphensValue v)
@@ -3440,7 +3440,7 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_wordBreak;
         }
-        return InheritedStylesRareData().m_wordBreak;
+        return WordBreakValue::NormalWordBreakValue;
     }
 
     void setWordBreak(WordBreakValue v)

@@ -5631,6 +5631,15 @@ void StyleResolver::apply(Element* element,
                         willChangeData->setScrollPosition();
                         continue;
                     }
+
+                    if (item.string()->equals("transform")) {
+                        willChangeData->setTransform();
+                    }
+
+                    if (item.string()->equals("opacity")) {
+                        willChangeData->setOpacity();
+                    }
+
                     willChangeData->push_back(item);
                 }
                 style->setWillChange(willChangeData);

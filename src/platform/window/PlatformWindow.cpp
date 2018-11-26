@@ -127,6 +127,8 @@ void PlatformWindow::dispatchKeyEvent(KeyEventKind kind,
     STARFISH_LOG_INFO("PlatformWindow::dispatchKeyEvent %d\n",
                       (int)data.keyValue());
 
+    LongTaskFinder p("PlatformWindow::dispatchKeyEvent", 1);
+
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     if (!isIMEEnabledNow()) {
         const int virtualCursorInitialSpeed = 1;

@@ -273,8 +273,20 @@ public:
         return m_data.m_numberData >= 0;
     }
 
-    bool operator==(const Length& src) const;
-    bool operator!=(const Length& src) const
+    ALWAYS_INLINE bool operator==(const Length& src) const
+    {
+        if (m_type != src.m_type) {
+            return false;
+        }
+
+        if (UNLIKELY(isCalc())) {
+            return compareWithSlowCase(src);
+        } else {
+            return m_data.m_numberData == src.m_data.m_numberData;
+        }
+    }
+
+    ALWAYS_INLINE bool operator!=(const Length& src) const
     {
         return !operator==(src);
     }
@@ -282,6 +294,8 @@ public:
     String* dumpString() const;
 
 protected:
+    bool compareWithSlowCase(const Length& src) const;
+
     union ValueData {
         float m_numberData;
         CalcData* m_calcData;

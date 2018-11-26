@@ -269,6 +269,7 @@ int main(int argc, char* argv[])
 #endif
     int x = 0, y = 0;
     float scaleFactor = 1;
+    bool enableSecurity = true;
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -329,6 +330,8 @@ int main(int argc, char* argv[])
             testCompatibleMode =
                 Starfish::StarfishTestCompatibleMode::ChromiumLayout;
 #endif
+        } else if (strcmp(argv[i], "--disable-web-security") == 0) {
+            enableSecurity = false;
         }
     }
 
@@ -466,16 +469,18 @@ int main(int argc, char* argv[])
                              "ko-KR", "Asia/Seoul");
 #endif
 
-#ifndef STARFISH_DALI
     {
         auto settings = webView->GetSettings();
         if (customUserAgentString.length()) {
             settings.SetUserAgentString(customUserAgentString);
         }
 
+        if (!enableSecurity) {
+            settings.SetWebSecurityMode(LWE::WebSecurityMode::Disable);
+        }
+
         webView->SetSettings(settings);
     }
-#endif
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     Evas_Object* obj = (Evas_Object*)webView->Unwrap();
