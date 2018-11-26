@@ -126,20 +126,6 @@ public:
                 delete c;
                 webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
             }
-#if defined(STARFISH_ENABLE_TEST)
-            if ((webView()->startUpFlag() &
-                 StarfishStartUpFlag::enableDebugRepaintRegion)) {
-                STARFISH_LOG_INFO("repaint region %f %f %f %f\n",
-                                  (float)ret.computedRepaintRect.x(),
-                                  (float)ret.computedRepaintRect.y(),
-                                  (float)ret.computedRepaintRect.width(),
-                                  (float)ret.computedRepaintRect.height());
-                auto c = Compositor::create3D(webView(), m_compostiorContext);
-                c->setColor(Unit::Color(255, 0, 0, 128));
-                c->drawRect(ret.computedRepaintRect);
-                delete c;
-            }
-#endif
             glSwapBuffers();
             glClearEGLImageUpdated();
         }

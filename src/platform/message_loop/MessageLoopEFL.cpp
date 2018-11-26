@@ -84,7 +84,8 @@ void MessageLoop::destroy()
                 break;
             }
         }
-        clearPendingIdlers(nullptr);
+
+        ecore_main_loop_iterate();
     }
 }
 
@@ -116,27 +117,18 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     id->m_data = data;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler = ecore_timer_add(
-        0.0,
-        [](void* data) -> Eina_Bool {
-            IdlerData* id = (IdlerData*)data;
-            removeIderFromList(id->m_ml->m_idlers, id);
+    id->m_idler =
+        ecore_timer_add(0.0,
+                        [](void* data) -> Eina_Bool {
+                            IdlerData* id = (IdlerData*)data;
+                            removeIderFromList(id->m_ml->m_idlers, id);
 
-            id->m_fn((size_t)id, id->m_data);
+                            id->m_fn((size_t)id, id->m_data);
 
-            {
-                Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
-                if (id->m_ml->m_inClosingState &&
-                    id->m_ml->m_idlers.size() == 0 &&
-                    id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                    ecore_main_loop_quit();
-                }
-            }
-
-            GC_FREE(id);
-            return ECORE_CALLBACK_CANCEL;
-        },
-        id);
+                            GC_FREE(id);
+                            return ECORE_CALLBACK_CANCEL;
+                        },
+                        id);
 
     return (size_t)id;
 }
@@ -154,27 +146,18 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     id->m_data1 = data1;
     id->m_ml = this;
     id->m_ctx = ctx;
-    id->m_idler = ecore_timer_add(
-        0.0,
-        [](void* data) -> Eina_Bool {
-            IdlerData* id = (IdlerData*)data;
-            removeIderFromList(id->m_ml->m_idlers, id);
-            ((void (*)(size_t, void*, void*))id->m_fn)((size_t)id, id->m_data,
-                                                       id->m_data1);
+    id->m_idler =
+        ecore_timer_add(0.0,
+                        [](void* data) -> Eina_Bool {
+                            IdlerData* id = (IdlerData*)data;
+                            removeIderFromList(id->m_ml->m_idlers, id);
+                            ((void (*)(size_t, void*, void*))id->m_fn)(
+                                (size_t)id, id->m_data, id->m_data1);
 
-            {
-                Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
-                if (id->m_ml->m_inClosingState &&
-                    id->m_ml->m_idlers.size() == 0 &&
-                    id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                    ecore_main_loop_quit();
-                }
-            }
-
-            GC_FREE(id);
-            return ECORE_CALLBACK_CANCEL;
-        },
-        id);
+                            GC_FREE(id);
+                            return ECORE_CALLBACK_CANCEL;
+                        },
+                        id);
 
     return (size_t)id;
 }
@@ -201,14 +184,6 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
             ((void (*)(size_t, void*, void*, void*))id->m_fn)(
                 (size_t)id, id->m_data, id->m_data1, id->m_data2);
 
-            {
-                Locker<Mutex> l(*id->m_ml->m_idlersFromOtherThreadMutex);
-                if (id->m_ml->m_inClosingState &&
-                    id->m_ml->m_idlers.size() == 0 &&
-                    id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                    ecore_main_loop_quit();
-                }
-            }
             GC_FREE(id);
             return ECORE_CALLBACK_CANCEL;
         },
@@ -247,16 +222,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                     }
                     if (id->m_valid) {
                         id->m_fn((size_t)id, id->m_data);
-                    }
-
-                    {
-                        Locker<Mutex> l(
-                            *id->m_ml->m_idlersFromOtherThreadMutex);
-                        if (id->m_ml->m_inClosingState &&
-                            id->m_ml->m_idlers.size() == 0 &&
-                            id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                            ecore_main_loop_quit();
-                        }
                     }
 
                     delete id;
@@ -301,16 +266,6 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
                     if (id->m_valid) {
                         ((void (*)(size_t, void*, void*))id->m_fn)(
                             (size_t)id, id->m_data, id->m_data1);
-                    }
-
-                    {
-                        Locker<Mutex> l(
-                            *id->m_ml->m_idlersFromOtherThreadMutex);
-                        if (id->m_ml->m_inClosingState &&
-                            id->m_ml->m_idlers.size() == 0 &&
-                            id->m_ml->m_idlersFromOtherThread.size() == 0) {
-                            ecore_main_loop_quit();
-                        }
                     }
 
                     delete id;

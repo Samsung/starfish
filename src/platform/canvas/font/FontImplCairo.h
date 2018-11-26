@@ -22,7 +22,8 @@
 
 #include <cairo.h>
 
-#if defined(STARFISH_ANDROID) || defined(STARFISH_WINDOWS)
+#if defined(STARFISH_ANDROID) || defined(STARFISH_WINDOWS) || \
+    defined(STARFISH_TIZEN)
 #include <cairo-ft.h>
 #else
 #include <cairo/cairo-ft.h>

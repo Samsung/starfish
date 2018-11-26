@@ -874,8 +874,7 @@ public:
         }
         mEcoreEventHandlers.clear();
 
-        // FIXME memory of <this> pointer is leaking now
-        this->~WebView();
+        delete this;
     }
 
     virtual void Focus() override

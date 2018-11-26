@@ -33,6 +33,12 @@ public:
     {
     }
 
+    enum InitiallyZero { InitiallyZeroValue };
+    BorderData(InitiallyZero)
+    {
+        makeZeroWidth();
+    }
+
     bool hasBorderStyle()
     {
         return m_top.hasBorderStyle() || m_right.hasBorderStyle() ||

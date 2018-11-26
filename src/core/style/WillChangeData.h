@@ -27,6 +27,8 @@ public:
     WillChangeData()
         : m_contents(false)
         , m_scrollPosition(false)
+        , m_transform(false)
+        , m_opacity(false)
     {
     }
 
@@ -50,9 +52,31 @@ public:
         return m_scrollPosition;
     }
 
+    bool transform() const
+    {
+        return m_transform;
+    }
+
+    void setTransform()
+    {
+        m_transform = true;
+    }
+
+    void setOpacity()
+    {
+        m_opacity = true;
+    }
+
+    bool opacity() const
+    {
+        return m_opacity;
+    }
+
 protected:
     bool m_contents;
     bool m_scrollPosition;
+    bool m_transform;
+    bool m_opacity;
 };
 }
 #endif

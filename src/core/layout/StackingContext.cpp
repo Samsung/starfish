@@ -917,6 +917,24 @@ void StackingContext::computeStackingContextProperties(
                             m_owner->isRunningOpacityAnimation() ||
                             m_owner->isRunningTransformAnimation();
 
+#if !defined(STARFISH_ENABLE_TEST)
+    if (m_owner->isRootElement() &&
+        (m_owner->asFrameBlockBox()->hasBiggerContentThanFrameWidth() ||
+         m_owner->asFrameBlockBox()->hasBiggerContentThanFrameHeight())) {
+        compositedBySelf = true;
+    }
+#endif
+
+    if (compositingState.seenCompsitedLayer() && !isRootContext()) {
+        SkMatrix windowMatrix = m_owner->computeMatrixOnWindow();
+        auto windowRect = computeBoxExtent(
+            LayoutRect(0, 0, m_owner->width(), m_owner->height()),
+            windowMatrix);
+        if (windowRect.maxX() < 0 || windowRect.maxY() < 0) {
+            compositedBySelf = true;
+        }
+    }
+
     if (compositedBySelf) {
         reason = NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonBySelf;
         compositingState.compositeFlagInfoBecauseSelf[this] = true;
@@ -981,16 +999,6 @@ void StackingContext::computeStackingContextProperties(
         if (canConveredByParentCompositedLayer &&
             !isCollapsedWithSilbingLayer) {
         } else {
-            willBeComposited = true;
-        }
-    }
-
-    if (compositingState.seenCompsitedLayer()) {
-        SkMatrix windowMatrix = m_owner->computeMatrixOnWindow();
-        auto windowRect = computeBoxExtent(
-            LayoutRect(0, 0, m_owner->width(), m_owner->height()),
-            windowMatrix);
-        if (windowRect.maxX() < 0 || windowRect.maxY() < 0) {
             willBeComposited = true;
         }
     }
@@ -1145,12 +1153,6 @@ void StackingContext::applyStackingContextProperties(
     if (m_rareData) {
         m_rareData->m_visibleRect = LayoutRect(0, 0, 0, 0);
     }
-
-#if defined(PORT_COMPOSITOR_BACKEND_GL) && !defined(STARFISH_ENABLE_TEST)
-    if (isRootContext()) {
-        willBeComposited = true;
-    }
-#endif
 
     if (willBeComposited) {
         ensureRareData();
@@ -2382,8 +2384,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             }
 
 #ifdef STARFISH_ENABLE_TEST
-            if (owner()->node()->webView()->startUpFlag() &
-                StarfishStartUpFlag::enableDebugGraphicsLayer) {
+            if (UNLIKELY(owner()->node()->webView()->startUpFlag() &
+                         StarfishStartUpFlag::enableDebugGraphicsLayer)) {
                 // debug compositing method
                 switch (m_needsGraphicsBufferReason) {
                 case NeedsGraphicsLayerReasonNone:
@@ -2409,12 +2411,28 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     Unit::Rect(minX, minY, bufferWidth, bufferHeight));
                 compositor->endOpacityLayer();
             }
+
+            if (UNLIKELY(owner()->node()->webView()->startUpFlag() &
+                         StarfishStartUpFlag::enableDebugRepaintRegion)) {
+                auto iter =
+                    owner()->node()->webView()->repaintRegionInRendering().find(
+                        owner()->node());
+
+                if (iter !=
+                    owner()
+                        ->node()
+                        ->webView()
+                        ->repaintRegionInRendering()
+                        .end()) {
+                    compositor->beginOpacityLayer(0.5);
+                    compositor->setColor(Unit::Color(0, 255, 0, 64));
+                    compositor->drawRect(iter->second);
+                    compositor->endOpacityLayer();
+                }
+            }
 #endif
             owner()->didCompsiteStackingContext(compositor);
         }
-        // draw debug rect
-        // canvas->setColor(Color(255, 0, 0, 128));
-        // canvas->drawRect(Rect(minX, minY, bufferWidth, bufferHeight));
     } else {
         owner()->compsitingStackingContext(compositor);
     }

@@ -1192,9 +1192,16 @@ void Frame::computeStyleFlags()
     m_flags.m_isEstablishesStackingContext |=
         (node && node->isRunningTransformAnimation());
     m_flags.m_isEstablishesStackingContext |= (style->hasAvailableFilter());
+    auto wc = style->willChange();
+    if (wc && (wc->transform() || wc->opacity())) {
+        m_flags.m_isEstablishesStackingContext |= true;
+    }
 
     // TODO add condition
     m_flags.m_needsGraphicsBuffer = (style->has3DTransforms(this));
+    if (wc && (wc->transform() || wc->opacity())) {
+        m_flags.m_needsGraphicsBuffer |= true;
+    }
 }
 
 Node* Frame::nodeSlowCase() const

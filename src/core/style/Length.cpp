@@ -258,17 +258,9 @@ float Length::fontPercentValue(Node* n, bool isFontSize) const
     return fontPercentValue(fontSize, rootElementFixedFontSize, font);
 }
 
-bool Length::operator==(const Length& src) const
+bool Length::compareWithSlowCase(const Length& src) const
 {
-    if (m_type != src.m_type) {
-        return false;
-    }
-
-    if (isCalc()) {
-        return calcData()->toString()->equals(src.calcData()->toString());
-    } else {
-        return m_data.m_numberData == src.m_data.m_numberData;
-    }
+    return calcData()->toString()->equals(src.calcData()->toString());
 }
 
 String* Length::dumpString() const
