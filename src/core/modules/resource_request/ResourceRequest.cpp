@@ -79,6 +79,7 @@ ResourceRequest::ResourceRequest(Document* document)
             ResourceRequest* nr = (ResourceRequest*)obj;
             EntityBody().swap(nr->m_response);
             HeaderMap().swap(nr->m_responseHeaderMap);
+            std::string().swap(nr->m_lastEffectiveURL);
         },
         NULL, NULL, NULL);
 
@@ -92,6 +93,7 @@ void ResourceRequest::initVariables()
     m_contentLanguage = String::emptyString;
     EntityBody().swap(m_response);
     HeaderMap().swap(m_responseHeaderMap);
+    std::string().swap(m_lastEffectiveURL);
     m_isSync = false;
     m_gotError = false;
     m_containsBase64Content = false;

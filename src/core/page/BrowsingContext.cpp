@@ -689,6 +689,8 @@ void BrowsingContext::dispose()
     m_hoveredNodeTarget = nullptr;
     m_documentVersionWhenComputingHoveredNodeSet = 0;
 
+    m_layoutRepaintTracker.dispose();
+
     webView()->timer()->clear(this);
 
     if (m_window) {

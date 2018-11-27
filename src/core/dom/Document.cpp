@@ -726,6 +726,7 @@ void Document::dispose()
     while (m_activeResourceRequests.size()) {
         m_activeResourceRequests.back()->abort();
     }
+    m_fontSelector->clearWholeCache();
 }
 
 String* Document::nodeName()

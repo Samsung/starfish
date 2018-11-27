@@ -279,6 +279,12 @@ public:
     }
 
     void clearCache(String* relatedFamilyName);
+    void clearWholeCache()
+    {
+        m_fontFaceListCache.clear();
+        m_fontCache.clear();
+        m_webFontLocalSrcCache.clear();
+    }
 
     static FontSelector* create(Document* document,
                                 PlatformFontSelector* platformFontSelector,

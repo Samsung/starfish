@@ -371,6 +371,7 @@ public:
         FcPattern* resultPattern =
             FcFontMatch(NULL, pattern, &fontConfigResult);
         if (!resultPattern) {
+            FcPatternDestroy(resultPattern);
             FcPatternDestroy(pattern);
             return UTF8StringDataNonGCStd();
         }
@@ -385,6 +386,8 @@ public:
                 .m_familyName->toUTF8NonGCString()) {
             if (after != familyName) {
                 if (!isGenericName) {
+                    FcPatternDestroy(resultPattern);
+                    FcPatternDestroy(pattern);
                     return UTF8StringDataNonGCStd();
                 }
             }
@@ -393,6 +396,8 @@ public:
         FcChar8* filePath = NULL;
         if (!(FcPatternGetString(resultPattern, FC_FILE, 0, &filePath) ==
               FcResultMatch)) {
+            FcPatternDestroy(resultPattern);
+            FcPatternDestroy(pattern);
             return UTF8StringDataNonGCStd();
         }
         std::string u8FilePath = (char*)filePath;

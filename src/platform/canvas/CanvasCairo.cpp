@@ -142,7 +142,7 @@ public:
     CanvasCairo(WebView* webView, NativeImageData* data)
     {
         m_shouldDestroyCairo = true;
-        m_shouldDestroySurface = false;
+        m_shouldDestroySurface = true;
         m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
