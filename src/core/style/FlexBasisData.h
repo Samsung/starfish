@@ -23,7 +23,7 @@
 #include "core/style/Length.h"
 
 namespace Starfish {
-class FlexBasisData {
+class FlexBasisData : public gc {
     enum Type { Content, Width };
 
     Type m_type;

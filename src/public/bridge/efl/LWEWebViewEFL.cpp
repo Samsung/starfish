@@ -903,8 +903,7 @@ public:
             m_mainBox = nullptr;
         }
 
-        // FIXME memory of <this> pointer is leaking now
-        this->~WebView();
+        delete this;
     }
 
     virtual void* Unwrap() override

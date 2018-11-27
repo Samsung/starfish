@@ -51,9 +51,11 @@ public:
     void dispose()
     {
         m_rootedNodeSet.clear();
-        m_lastLayoutResult.clear();
-        m_dirtyAreaPerStackingContextOwners.clear();
         m_lastInlineTextLayoutResult.clear();
+        std::unordered_map<Node*, std::pair<LayoutRect, Node*>>().swap(
+            m_lastLayoutResult);
+        std::unordered_map<Node*, LayoutRect>().swap(
+            m_dirtyAreaPerStackingContextOwners);
     }
 
     void clearDatasRelatedWithStackingContext()

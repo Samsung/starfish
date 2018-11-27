@@ -225,6 +225,7 @@ public:
     virtual void pause();
     virtual void resume();
     virtual void destroy();
+    void clearNativeHandlers();
 
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     template <typename T>

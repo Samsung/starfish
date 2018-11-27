@@ -87,6 +87,9 @@ void MessageLoop::destroy()
 
         ecore_main_loop_iterate();
     }
+
+    std::unordered_set<size_t>().swap(m_idlers);
+    std::unordered_set<size_t>().swap(m_idlersFromOtherThread);
 }
 
 struct IdlerData {

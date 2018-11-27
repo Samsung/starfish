@@ -81,6 +81,19 @@ void PlatformWindow::resume()
     }
 }
 
+void PlatformWindow::clearNativeHandlers()
+{
+    m_setNeedsRenderingCallback = nullptr;
+    m_renderingFinishedCallback = nullptr;
+    m_showSoftwareKeyboardIfPossibleCallback = nullptr;
+    m_hideSoftwareKeyboardIfPossibleCallback = nullptr;
+    m_glMakeCurrentCallback = nullptr;
+    m_glSwapBufferCallback = nullptr;
+
+    std::unordered_map<WindowHandlerKind, std::function<void(void*)>>().swap(
+        m_handlersToCallbacks);
+}
+
 void PlatformWindow::destroy()
 {
     STARFISH_LOG_INFO("PlatformWindow::destroy()\n");

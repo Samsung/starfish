@@ -382,6 +382,8 @@ void WebView::destroy()
     m_starfish->m_webViewInstanceCount--;
     this->WebView::~WebView();
 
+    m_platformWindow->clearNativeHandlers();
+
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 }
 
