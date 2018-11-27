@@ -112,7 +112,7 @@ IF (NOT ${HOST} STREQUAL "tizen")
     ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_TARGET}
                         DEPENDS ${ZMQ_LOCAL_TARGET}
                         COMMENT "COPY ZMQ"
-                        COMMAND cp ${ZMQ_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+                        COMMAND cp -P ${ZMQ_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 
     ADD_CUSTOM_TARGET (zmq
@@ -170,19 +170,23 @@ ENDIF()
 #######################################################
 # LIBCAIRO
 #######################################################
-SET (CAIRO_DIR ${THIRD_PARTY_ROOT}/windows/cairo)
-SET (CAIRO_TARGET ${CAIRO_DIR}/src/.libs/libcairo.a)
+IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
+    SET (CAIRO_DIR ${THIRD_PARTY_ROOT}/windows/cairo)
+    SET (CAIRO_TARGET ${CAIRO_DIR}/src/.libs/libcairo.a)
 
-ADD_CUSTOM_COMMAND (OUTPUT ${CAIRO_TARGET}
-                    WORKING_DIRECTORY ${CAIRO_DIR}/../../../build
-                    COMMENT "BUILD CAIRO"
-                    COMMAND ./build_cairo.sh
-)
+    ADD_CUSTOM_COMMAND (OUTPUT ${CAIRO_TARGET}
+                        WORKING_DIRECTORY ${CAIRO_DIR}
+                        COMMENT "BUILD CAIRO"
+                        COMMAND NOCONFIGURE=1 ./autogen.sh
+                        COMMAND ./configure --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
+                        COMMAND make -j${NPROCS} V=1
+    )
 
-ADD_CUSTOM_TARGET (cairo
-                   DEPENDS ${CAIRO_TARGET}
-                   COMMAND echo "CAIRO TARGET"
-)
+    ADD_CUSTOM_TARGET (cairo
+                       DEPENDS ${CAIRO_TARGET}
+                       COMMAND echo "CAIRO TARGET"
+    )
+ENDIF()
 
 #######################################################
 # LIBSKIA
@@ -256,7 +260,7 @@ IF (${HOST} STREQUAL "linux")
         WORKING_DIRECTORY ${GCUTIL_ROOT}/bdwgc
         DEPENDS ${GC_LOCAL_TARGET}
         COMMENT "COPY GC"
-        COMMAND cp ${GC_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+        COMMAND cp -P ${GC_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
     )
 ELSEIF (${HOST} STREQUAL "tizen")
     SET (GC_TARGET ${GC_BUILDDIR}/.libs/libgc.a)
@@ -312,9 +316,9 @@ ENDIF()
 IF (${ARCH} STREQUAL "x64" AND (${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl"))
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${TUV_TARGET})
 ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" OR ${BACKEND} STREQUAL "dali"))
-    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${TUV_TARGET} ${CAIRO_TARGET})
+    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${TUV_TARGET})
 ENDIF()
 
-IF (${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "efl_cairo_gl")
+IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${CAIRO_TARGET})
 ENDIF()
