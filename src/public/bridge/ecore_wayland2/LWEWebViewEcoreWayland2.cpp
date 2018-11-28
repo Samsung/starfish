@@ -38,6 +38,8 @@
 #include <Ecore_Evas.h>
 #include <Ecore_IMF.h>
 
+#include "streamline_annotate.h"
+
 typedef EGLSyncKHR(EGLAPIENTRYP PFNEGLCREATESYNCKHRPROC)(
     EGLDisplay dpy, EGLenum type, const EGLint* attrib_list);
 typedef EGLBoolean(EGLAPIENTRYP PFNEGLDESTROYSYNCKHRPROC)(EGLDisplay dpy,
@@ -431,12 +433,16 @@ public:
                     }
                 }
                 if (m_lastInputTime) {
+                    ANNOTATE_SETUP;
+                    ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
+                                           "response time");
 #ifdef STARFISH_ENABLE_PROFILE_TIMER
                     uint64_t end = Starfish::longTickCount();
                     float time = (float)((end - m_lastInputTime) / 1000.f);
                     STARFISH_LOG_INFO("response time is %f ms\n", time);
 #endif
                     m_lastInputTime = 0;
+                    ANNOTATE_CHANNEL_END(3002);
                 }
                 if (mayNeedsSync) {
                     mFence = g_eglCreateSyncKHRProc(mDisplay,
@@ -541,8 +547,12 @@ public:
 
                     bool lastInputTimeWasZeroBefore = false;
                     if (webView->m_lastInputTime == 0) {
+                        ANNOTATE_SETUP;
+                        ANNOTATE_CHANNEL_COLOR(3000, ANNOTATE_GREEN,
+                                               "ECORE_EVENT_KEY_DOWN");
                         lastInputTimeWasZeroBefore = true;
                         webView->m_lastInputTime = Starfish::longTickCount();
+                        ANNOTATE_CHANNEL_END(3000);
                     }
 
                     if (!webView->m_hasFocus) {
