@@ -35,6 +35,8 @@ void ContentSecurityPolicySourceListDirective::parseSource(String* value)
             m_allowSelf = true;
         } else if (token->equalsIgnoreCase("*")) {
             m_allowStar = true;
+        } else if (token->equalsIgnoreCase("'unsafe-eval'")) {
+            m_allowEval = true;
         } else if (token->equalsIgnoreCase("'unsafe-inline'")) {
             m_allowInline = true;
         } else if (isScheme(token)) {

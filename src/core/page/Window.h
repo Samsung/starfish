@@ -333,6 +333,8 @@ public:
 
     void dispatchErrorEvent(ErrorEventInit& errorInfo);
 
+    bool checkSecurityPolicy();
+
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
     void screenShot(std::string filePath, void (*callback)(void*), void* data);

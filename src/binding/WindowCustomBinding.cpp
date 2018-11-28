@@ -94,6 +94,9 @@ ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
     if (argv[0]->isFunction()) {
         td->listener = argv[0]->asObject();
     } else {
+        if (!window->checkSecurityPolicy()) {
+            return ValueRef::create(0);
+        }
         String* bodyStr = toBrowserString(state, argv[0]);
         String* name[] = { String::emptyString };
         bool error = false;
@@ -140,6 +143,9 @@ ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
     if (argv[0]->isFunction()) {
         td->listener = argv[0]->asObject();
     } else {
+        if (!window->checkSecurityPolicy()) {
+            return ValueRef::create(0);
+        }
         String* bodyStr = toBrowserString(state, argv[0]);
         String* name[] = { String::emptyString };
         bool error = false;
