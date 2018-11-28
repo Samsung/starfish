@@ -57,6 +57,7 @@ ResourceRequest::ResourceRequest(Document* document)
     : DocumentHoldable(document)
     , m_requestData(nullptr)
     , m_requestWebOrigin(nullptr)
+    , m_corsFlag(true)
     , m_readyState(ReadyState::Unset)
     , m_progressState(ProgressState::None)
     , m_bodyType(BodyType::Empty)
@@ -251,6 +252,11 @@ void ResourceRequest::open(RequestData* reqData, bool async)
     bool shouldAbort = false;
     m_requestData = reqData;
     m_requestWebOrigin = WebOrigin::createDocumentOrigin(m_requestData->m_url);
+
+    if (isSameOriginRequest()) {
+        // TODO : request’s tainted origin flag is unset
+        m_corsFlag = false;
+    }
 
     {
         STARFISH_ASSERT(!(!async && m_timeout != 0));

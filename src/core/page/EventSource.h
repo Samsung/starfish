@@ -92,7 +92,7 @@ public:
     }
 
     void connectFired();
-    void start(MethodType method);
+    void start(String* method);
     void initResponseData();
 
     void didHeaderReceived(const HeaderMap& headrs);

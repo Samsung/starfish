@@ -20,21 +20,12 @@
 #ifndef __StarfishFetchUtils__
 #define __StarfishFetchUtils__
 
-#include "core/fetch/RequestData.h"
-
 namespace Starfish {
 
 class FetchUtils {
 public:
-    static bool isForbiddenMethod(const MethodType method)
-    {
-        // https://fetch.spec.whatwg.org/#methods
-        if (method == MethodType::CONNECT || method == MethodType::TRACE ||
-            method == MethodType::TRACK) {
-            return true;
-        }
-        return false;
-    }
+    static bool isForbiddenMethod(const String* method);
+    static String* normalizeMethod(String* method);
 };
 }
 

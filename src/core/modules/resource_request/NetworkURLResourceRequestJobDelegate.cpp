@@ -54,6 +54,7 @@ extern uint64_t g_profilingBaseTime;
 NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     : isAborted(false)
     , isRedirected(false)
+    , needsToHandleError(false)
     , lastTransactionResponseCode(0)
     , request(orgRequest)
     , helper(nullptr)
@@ -85,8 +86,8 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     nwd->httpTransaction->start();
 
-    // TODO : Do not use libur libcurl error codes
-    if (nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK) {
+    if (!(nwd->httpTransaction->res() == CURLE_ABORTED_BY_CALLBACK ||
+          nwd->httpTransaction->res() == CURLE_WRITE_ERROR)) {
 #ifdef STARFISH_ENABLE_HTTPCACHE
         if (nwd->cachedEntry) {
             nwd->cachedEntry->setNeedsPropertiesUpdate(true);
@@ -120,8 +121,6 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
 
     bool ret;
     {
-        // NOTE: may need the headers received when RawData cached, but
-        // currently only the entity-body is cached.
         Locker<Mutex> locker(*request->m_mutex);
         ret = nwd->cachedEntry->readRawDataFromEntryFile(
             nwd->request->response());
@@ -150,6 +149,9 @@ void NetworkURLWorkerHelper::abortHandeler(size_t handle, void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     if (nwd == nwd->request->m_activeNetworkURLWorkerData) {
+        if (nwd->needsToHandleError) {
+            nwd->request->handleError(ProgressState::InError);
+        }
         nwd->request->m_activeNetworkURLWorkerData = nullptr;
     }
     nwd->~NetworkURLWorkerData();
@@ -284,10 +286,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     m_orgProxy->m_activeNetworkURLWorkerData = nwd;
     HTTPHeaderMap headers;
 
-    std::string method;
-    switch (m_orgProxy->method()) {
-    case MethodType::GET: {
-        method = "GET";
+    if (m_orgProxy->method()->equals("GET")) {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
         uint64_t start = longTickCount();
 #endif
@@ -308,46 +307,6 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         uint64_t end = longTickCount();
         nwd->workingTime += end - start;
 #endif
-        break;
-    }
-    case MethodType::HEAD: {
-        method = "HEAD";
-        break;
-    }
-    case MethodType::POST: {
-        method = "POST";
-        break;
-    }
-    case MethodType::PUT: {
-        method = "PUT";
-        break;
-    }
-    case MethodType::DELETE: {
-        method = "DELETE";
-        break;
-    }
-    case MethodType::CONNECT: {
-        method = "CONNECT";
-        break;
-    }
-    case MethodType::OPTIONS: {
-        method = "OPTIONS";
-        break;
-    }
-    case MethodType::TRACE: {
-        method = "TRACE";
-        break;
-    }
-    case MethodType::PATCH: {
-        method = "PATCH";
-        break;
-    }
-    case MethodType::UNKNOWN: {
-        STARFISH_ASSERT_NOT_REACHED();
-        break;
-    }
-    default:
-        STARFISH_ASSERT_NOT_REACHED();
     }
 
     fillHeadersWithResourceRequestHeader(headers);
@@ -376,6 +335,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         includeCredentials = true;
     }
 
+    auto method = m_orgProxy->method()->toUTF8NonGCString();
     nwd->httpTransaction->setHTTPRequest(
         HTTPRequest::create(urlUTF8Data, hostUTF8Data, method, headers,
                             bodyUTF8Data, includeCredentials));
@@ -650,6 +610,60 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
     return realSize;
 }
 
+// https://fetch.spec.whatwg.org/#concept-cors-check
+// Caution : Use in curlWriteHeaderCallback only
+static bool checkCors(NetworkURLWorkerData* nwd)
+{
+    const auto request = nwd->request;
+    const auto& reqHeaders =
+        nwd->httpTransaction->httpRequest().headers().headerMap();
+    const auto& resHeaders =
+        nwd->httpTransaction->httpResponse().headers().headerMap();
+
+    auto origin = resHeaders.find(HTTPHeaderMap::kAccessControlAllowOrigin);
+    if (origin == resHeaders.end()) {
+        STARFISH_LOG_WARN(
+            "Failed to load %s : request doesn't pass CORS check, please "
+            "check %s header in reponse\n",
+            nwd->httpTransaction->httpRequest().url().data(),
+            HTTPHeaderMap::kAccessControlAllowOrigin);
+        return false;
+    }
+
+    if (request->requestCredentials() != RequestCredentials::Include &&
+        origin->second == "*") {
+        return true;
+    }
+
+    // The origin in request header was serialized
+    auto serializedRequestOrigin = reqHeaders.find(HTTPHeaderMap::kOrigin);
+    if (serializedRequestOrigin == reqHeaders.end() ||
+        serializedRequestOrigin->second != origin->second) {
+        STARFISH_LOG_WARN(
+            "Failed to load %s : request doesn't pass CORS check, please "
+            "check %s header in reponse\n",
+            nwd->httpTransaction->httpRequest().url().data(),
+            HTTPHeaderMap::kAccessControlAllowOrigin);
+        return false;
+    }
+
+    if (request->requestCredentials() != RequestCredentials::Include) {
+        return true;
+    }
+
+    auto credentials =
+        resHeaders.find(HTTPHeaderMap::kAccessControlAllowCredentials);
+    if (credentials != resHeaders.end() && credentials->second == "true") {
+        return true;
+    }
+    STARFISH_LOG_WARN(
+        "Failed to load %s : request doesn't pass CORS check, please "
+        "check %s header in reponse\n",
+        nwd->httpTransaction->httpRequest().url().data(),
+        HTTPHeaderMap::kAccessControlAllowCredentials);
+    return false;
+}
+
 size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     void* ptr, size_t size, size_t nmemb, void* data)
 {
@@ -667,44 +681,14 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     if (nwd->httpTransaction->httpResponse().isSuccessfulResponseStatus()) {
         if ((rawHeader.compare("\r\n") == 0) ||
             (rawHeader.compare("\n") == 0)) {
-            if (request->requestCredentials() == RequestCredentials::Include &&
-                !request->isSubresourceRequest()) {
-                bool isAllowedResponse = true;
-                const auto& reqHeaders =
-                    nwd->httpTransaction->httpRequest().headers().headerMap();
-                auto it = reqHeaders.find(HTTPHeaderMap::kOrigin);
-                if (it != reqHeaders.end()) {
-                    const auto& resHeaders =
-                        nwd->httpTransaction->httpResponse()
-                            .headers()
-                            .headerMap();
-                    auto it2 = resHeaders.find(
-                        HTTPHeaderMap::kAccessControlAllowOrigin);
-                    if (it2 == resHeaders.end()) {
-                        isAllowedResponse = false;
-                    } else if (!StringUtils::equalsIgnoreCase(it->second,
-                                                              it2->second)) {
-                        isAllowedResponse = false;
-                    }
-                    it2 = resHeaders.find(
-                        HTTPHeaderMap::kAccessControlAllowCredentials);
-                    if (it2 == resHeaders.end()) {
-                        isAllowedResponse = false;
-                    } else if (!(it2->second == "true")) {
-                        isAllowedResponse = false;
-                    }
-                }
-                if (!isAllowedResponse) {
-                    STARFISH_LOG_WARN(
-                        "The Response is not allowed (request : %s)\n",
-                        request->url()
-                            ->urlString()
-                            ->toUTF8NonGCString()
-                            .data());
+            if (request->corsFlag() &&
+                !(request->isSubresourceRequest() ||
+                  request->requestMode() == RequestMode::Navigate)) {
+                if (!checkCors(nwd)) {
                     nwd->isAborted = true;
+                    nwd->needsToHandleError = true;
                 }
             }
-
             request->m_lastEffectiveURL =
                 nwd->httpTransaction->httpResponse().lastEffectiveURL();
             request->m_responseHeaderMap = std::move(

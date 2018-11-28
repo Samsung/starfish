@@ -333,7 +333,7 @@ void Location::assign(ResourceURL* url, ReferrerURL* referrerURL, bool force)
     reqData->m_referrer = referrerURL;
     reqData->m_destination = RequestDestination::Document;
     reqData->m_syncLevel = RequestSyncLevel::NeverSync;
-    reqData->m_method = MethodType::HEAD;
+    reqData->m_method = String::createASCIIString("HEAD");
     reqData->m_mode = RequestMode::Navigate;
 
     resource->request(reqData, true);

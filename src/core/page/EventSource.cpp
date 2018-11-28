@@ -200,6 +200,7 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
     , m_withCredentials(init.withCredentials())
     , m_time(std::numeric_limits<uint32_t>::max())
 {
+    // https://html.spec.whatwg.org/multipage/server-sent-events.html#dom-eventsource
     if (url->isEmpty()) {
         throw new DOMException(document, DOMException::SYNTAX_ERR,
                                "Cannot open an EventSource to an empty URL.");
@@ -269,11 +270,11 @@ void EventSource::connect()
     }
 
     if (m_readyState == CONNECTING) {
-        start(MethodType::GET);
+        start(String::createASCIIString("GET"));
     }
 }
 
-void EventSource::start(MethodType method)
+void EventSource::start(String* method)
 {
     if (m_resourceRequest->timeout() != 0) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),

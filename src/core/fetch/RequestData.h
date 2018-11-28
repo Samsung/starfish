@@ -41,11 +41,15 @@ enum class MethodType {
     TRACK
 };
 
+// https://fetch.spec.whatwg.org/#concept-request-mode
+// A request has an associated mode, which is "same-origin", "cors", "no-cors",
+// "navigate", or "websocket". Unless stated otherwise, it is "no-cors".
 enum class RequestMode {
-    Navigate,
     SameOrigin,
-    NoCORS,
     CORS,
+    NoCORS,
+    Navigate,
+    Websocket,
 };
 
 enum class RequestCredentials {
@@ -102,7 +106,7 @@ class RequestData : public gc {
 public:
     RequestData();
 
-    MethodType m_method;
+    String* m_method;
     ReferrerURL* m_referrer;
     RequestMode m_mode;
     RequestCredentials m_credentials;
@@ -110,6 +114,7 @@ public:
     RequestRedirect m_redirect;
     RequestDestination m_destination;
     RequestSyncLevel m_syncLevel;
+    bool m_useCorsPreflight;
 
     String* m_integrity;
     bool m_keepalive;

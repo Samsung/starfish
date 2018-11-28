@@ -78,10 +78,10 @@ void Resource::request(RequestData* requestData, bool allowCache)
                         String::createASCIIString(HTTPHeaderMap::kCacheControl),
                         nocache);
 
-                    if (formSubmitData->m_method == MethodType::GET) {
+                    if (formSubmitData->m_method->equals("GET")) {
                         url = m_resourceRequest->mutateActionURL(
                             url, formSubmitData);
-                    } else if (formSubmitData->m_method == MethodType::POST) {
+                    } else if (formSubmitData->m_method->equals("POST")) {
                         entityBody = m_resourceRequest->encodeFormDataSet(
                             formSubmitData->m_formDataSet,
                             formSubmitData->m_enctype);
