@@ -49,7 +49,7 @@ public:
 class FormSubmitData : public gc {
 public:
     FormSubmitData(GCVector<FormDataSetItem*>* formDataSet, EncodeType enctype,
-                   MethodType method);
+                   String* method);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -58,7 +58,7 @@ public:
 
     GCVector<FormDataSetItem*>* m_formDataSet;
     EncodeType m_enctype;
-    MethodType m_method;
+    String* m_method;
 };
 
 class HTMLFormControl : public HTMLElement {
@@ -213,14 +213,14 @@ public:
 private:
     void submit(HTMLElement* submitter);
     void submitData(ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
-                    EncodeType encodeType, MethodType methodType);
+                    EncodeType encodeType, String* method);
 
     void mutateActionUrl(ResourceURL* url,
                          GCVector<FormDataSetItem*>* formDataSet,
-                         EncodeType enctype, MethodType method);
+                         EncodeType enctype, String* method);
     void submitAsEntityBody(ResourceURL* url,
                             GCVector<FormDataSetItem*>* formDataSet,
-                            EncodeType enctype, MethodType method);
+                            EncodeType enctype, String* method);
 
     void clearPlannedNavigationTask();
     bool isFormAssociatedElement(Node* node);

@@ -212,10 +212,10 @@ public:
         return m_requestData->m_referrer;
     }
 
-    MethodType method()
+    String* method()
     {
         if (!m_requestData) {
-            return MethodType::UNKNOWN;
+            return String::emptyString;
         }
         return m_requestData->m_method;
     }
@@ -294,6 +294,15 @@ public:
     ResourceURL* mutateActionURL(ResourceURL* url,
                                  FormSubmitData* formSubmitData);
 
+    void setCorsFlag(bool value)
+    {
+        m_corsFlag = value;
+    }
+    bool corsFlag()
+    {
+        return m_corsFlag;
+    }
+
 protected:
     void pareseHeader(const char* header, size_t len);
     void initVariables();
@@ -326,6 +335,7 @@ protected:
 
     RequestData* m_requestData;
     WebOrigin* m_requestWebOrigin;
+    bool m_corsFlag; // https://fetch.spec.whatwg.org/#main-fetch
 
     ReadyState m_readyState;
     ProgressState m_progressState;

@@ -25,6 +25,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Event.h"
+#include "core/fetch/FetchUtils.h"
 #include "core/dom/HTMLInputElement.h"
 #include "core/dom/HTMLButtonElement.h"
 #include "core/dom/HTMLSelectElement.h"
@@ -82,7 +83,7 @@ String* FormDataSetItem::toString()
 }
 
 FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
-                               EncodeType enctype, MethodType method)
+                               EncodeType enctype, String* method)
     : m_formDataSet(formDataSet)
     , m_enctype(enctype)
     , m_method(method)
@@ -97,6 +98,7 @@ void* FormSubmitData::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(FormSubmitData)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(FormSubmitData, m_formDataSet));
+        GC_set_bit(desc, GC_WORD_OFFSET(FormSubmitData, m_method));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(FormSubmitData));
         typeInited = true;
     }
@@ -695,12 +697,12 @@ void HTMLFormElement::submit(HTMLElement* submitter)
     }
 
     EncodeType formEnctype = EncodeType::MissingOrInvalidEncodeType;
-    MethodType formMethod = MethodType::UNKNOWN;
+    String* formMethod = String::emptyString;
     String* formTarget = String::emptyString;
 
     if (inputNode) {
         formEnctype = ResourceRequest::toEncodeType(inputNode->formEnctype());
-        formMethod = RequestData::methodTypeFromString(inputNode->formMethod());
+        formMethod = inputNode->formMethod();
         formTarget = inputNode->formTarget();
     }
 
@@ -710,12 +712,15 @@ void HTMLFormElement::submit(HTMLElement* submitter)
             formEnctype = EncodeType::ApplicationXWWWFormURLEncoded;
         }
     }
-    if (formMethod == MethodType::UNKNOWN) {
-        formMethod = RequestData::methodTypeFromString(method());
-        if (formMethod == MethodType::UNKNOWN) {
-            formMethod = MethodType::GET;
-        }
+    if (formMethod == String::emptyString) {
+        formMethod = method();
     }
+    formMethod = FetchUtils::normalizeMethod(formMethod);
+
+    if (formMethod == String::emptyString) {
+        formMethod = String::createASCIIString("GET");
+    }
+
     if (formTarget->equals(String::emptyString)) {
         formTarget = target();
         if (formTarget->equals(String::emptyString)) {
@@ -744,11 +749,11 @@ void HTMLFormElement::submit(HTMLElement* submitter)
 
 void HTMLFormElement::submitData(ResourceURL* url,
                                  GCVector<FormDataSetItem*>* formDataSet,
-                                 EncodeType enctype, MethodType method)
+                                 EncodeType enctype, String* method)
 {
-    if (method == MethodType::GET) {
+    if (method->equals("GET")) {
         mutateActionUrl(url, formDataSet, enctype, method);
-    } else if (method == MethodType::POST) {
+    } else if (method->equals("POST")) {
         submitAsEntityBody(url, formDataSet, enctype, method);
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -757,7 +762,7 @@ void HTMLFormElement::submitData(ResourceURL* url,
 
 void HTMLFormElement::mutateActionUrl(ResourceURL* url,
                                       GCVector<FormDataSetItem*>* formDataSet,
-                                      EncodeType enctype, MethodType method)
+                                      EncodeType enctype, String* method)
 {
     if (m_plannedNavigationTaskId != (size_t)-1) {
         webView()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
@@ -783,7 +788,7 @@ void HTMLFormElement::mutateActionUrl(ResourceURL* url,
 
 void HTMLFormElement::submitAsEntityBody(
     ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
-    EncodeType enctype, MethodType method)
+    EncodeType enctype, String* method)
 {
     if (enctype == EncodeType::ApplicationXWWWFormURLEncoded) {
         if (m_plannedNavigationTaskId != (size_t)-1) {

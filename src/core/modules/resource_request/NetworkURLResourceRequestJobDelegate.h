@@ -36,6 +36,7 @@ struct NetworkURLWorkerData {
 
     bool isAborted;
     bool isRedirected;
+    bool needsToHandleError;
     long lastTransactionResponseCode;
     ResourceRequest* request;
     NetworkURLWorkerHelper* helper;

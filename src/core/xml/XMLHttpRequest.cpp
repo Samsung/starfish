@@ -31,6 +31,7 @@
 #include "platform/network/http/HTTPStatus.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/FetchUtils.h"
+#include "core/fetch/Headers.h"
 #include "core/fetch/Response.h"
 #include "core/csp/ContentSecurityPolicy.h"
 
@@ -194,6 +195,11 @@ public:
     XMLHttpRequest* m_xhr;
 };
 
+bool XMLHttpRequestUpload::hasEventListeners() const
+{
+    return m_eventListeners.size() > 0 ? true : false;
+}
+
 XMLHttpRequest::XMLHttpRequest(::Starfish::Document* document)
     : XMLHttpRequestEventTarget(document)
     , m_resourceRequest(new ResourceRequest(document))
@@ -241,6 +247,8 @@ void XMLHttpRequest::send(Nullable<String*> body)
 
 void XMLHttpRequest::send(String* body)
 {
+    // FIXME : apply https://xhr.spec.whatwg.org/#the-send()-method
+
     // If state is not opened, then throw an "InvalidStateError" DOMException.
     // If the send() flag is set, then throw an "InvalidStateError"
     // DOMException.
@@ -252,8 +260,8 @@ void XMLHttpRequest::send(String* body)
     }
 
     // If the request method is GET or HEAD, set body to null.
-    if (m_resourceRequest->method() == MethodType::GET ||
-        m_resourceRequest->method() == MethodType::HEAD) {
+    if (m_resourceRequest->method()->equals("GET") ||
+        m_resourceRequest->method()->equals("HEAD")) {
         // TODO: The body argument should be Document or BodyInit.
         body = String::emptyString;
     }
@@ -265,8 +273,7 @@ DEFINE_EVENT_LISTENER(XMLHttpRequest, readystatechange);
 
 void XMLHttpRequest::open(String* method, String* url)
 {
-    open(RequestData::methodTypeFromString(method), url, true,
-         String::emptyString, String::emptyString);
+    open(method, url, true, String::emptyString, String::emptyString);
 }
 
 void XMLHttpRequest::open(String* method, String* url, bool async,
@@ -277,13 +284,14 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
         userName.hasValue() ? userName.getValue() : String::emptyString;
     String* pValue =
         password.hasValue() ? password.getValue() : String::emptyString;
-    open(RequestData::methodTypeFromString(method), url, async, uValue, pValue);
+    open(method, url, async, uValue, pValue);
 }
 
-void XMLHttpRequest::open(MethodType method, String* url, bool async,
+void XMLHttpRequest::open(String* method, String* url, bool async,
                           String* userName, String* password)
 {
-    if (method == MethodType::UNKNOWN) {
+    // FIXME : https://xhr.spec.whatwg.org/#the-open()-method
+    if (!Headers::isValidHTTPToken(method)) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     }
@@ -299,12 +307,18 @@ void XMLHttpRequest::open(MethodType method, String* url, bool async,
                                "InvalidAccessError");
     }
 
+    String* nomalizedMethod = FetchUtils::normalizeMethod(method);
+
+    // FIXME : According to the specification, a new request must be initialized
+    // in the send method.
     RequestData* reqData = new RequestData();
-    reqData->m_method = method;
+    reqData->m_method = nomalizedMethod;
     reqData->m_url = new ResourceURL(url, document()->baseURL()->baseURI());
     reqData->m_referrer = new ReferrerURL(document()->documentURI(),
                                           document()->referrerPolicy());
     reqData->m_destination = RequestDestination::Empty;
+    reqData->m_mode = RequestMode::CORS;
+    reqData->m_useCorsPreflight = m_upload->hasEventListeners();
 
     if (userName->length()) {
         reqData->m_url->setUsername(userName);

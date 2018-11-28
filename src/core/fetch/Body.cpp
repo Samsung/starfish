@@ -239,7 +239,6 @@ Promise* Body::text()
                 m_resourceRequest->addResourceRequestClient(this);
 
                 RequestData* reqData = new RequestData();
-                reqData->m_method = MethodType::GET;
                 reqData->m_url =
                     new ResourceURL(url, document()->baseURL()->baseURI());
                 reqData->m_referrer = new ReferrerURL(

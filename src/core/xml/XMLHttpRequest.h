@@ -63,6 +63,7 @@ public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isXMLHttpRequestUpload() const override;
+    bool hasEventListeners() const;
 };
 
 class XMLHttpRequest : public XMLHttpRequestEventTarget {
@@ -98,7 +99,7 @@ public:
     void open(String* method, String* url);
     void open(String* method, String* url, bool async,
               Nullable<String*> userName, Nullable<String*> password);
-    void open(MethodType method, String* url, bool async,
+    void open(String* method, String* url, bool async,
               String* userName = String::emptyString,
               String* password = String::emptyString);
     void send(Nullable<String*> body);

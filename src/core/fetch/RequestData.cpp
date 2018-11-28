@@ -23,14 +23,15 @@
 namespace Starfish {
 
 RequestData::RequestData()
-    : m_method(MethodType::GET)
+    : m_method(String::createASCIIString("GET"))
     , m_referrer(new ReferrerURL(String::createASCIIString("about:client"),
                                  ReferrerPolicy::Empty))
-    , m_mode(RequestMode::CORS)
+    , m_mode(RequestMode::NoCORS)
     , m_credentials(RequestCredentials::SameOrigin)
     , m_cache(RequestCache::Default)
     , m_redirect(RequestRedirect::Follow)
     , m_destination(RequestDestination::Empty)
+    , m_useCorsPreflight(false)
     , m_integrity(String::emptyString)
     , m_keepalive(false)
     , m_url(nullptr)

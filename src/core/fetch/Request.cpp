@@ -25,6 +25,7 @@
 #include "core/page/Window.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
+#include "core/fetch/FetchUtils.h"
 
 #include <EscargotPublic.h>
 using namespace Escargot;
@@ -70,7 +71,7 @@ static String* computeReferrer(String* referrer, Document* document)
     // TODO: remove checking 'undefined' and 'about:blank'
     if (referrer->equals("about:blank") || referrer->isEmpty() ||
         referrer->equals("undefined")) {
-        return String::createASCIIString("");
+        return String::emptyString;
     }
 
     String* contextOrigin = document->baseURL()->origin();
@@ -104,6 +105,10 @@ static String* computeReferrer(String* referrer, Document* document)
 
 void Request::initialize(RequestInfo* input, RequestInit* init)
 {
+    // TODO : https://fetch.spec.whatwg.org/#dom-request
+    String* fallbackMode = nullptr;
+    String* fallbackCredentials = nullptr;
+
     // check input is string or Request
     if (input->isRequestValue()) {
         Request* request = input->getRequestValue();
@@ -128,13 +133,23 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         if (input->isUSVStringValue()) {
             m_data.m_url = new ResourceURL(input->getUSVStringValue(),
                                            document()->baseURL()->baseURI());
+            fallbackMode = String::createASCIIString("cors");
+            fallbackCredentials = String::createASCIIString("same-origin");
         } else {
             return; // ignore or read the result of toString
         }
     }
 
     if (init) {
-        m_data.m_method = RequestData::methodTypeFromString(init->method());
+        String* method = init->method();
+        if (!Headers::isValidHTTPToken(method) ||
+            FetchUtils::isForbiddenMethod(method)) {
+            throw new DOMException(scriptBindingInstance()->ownerDocument(),
+                                   DOMException::SCRIPT_TYPE_ERR,
+                                   "SCRIPT_TYPE_ERR");
+        }
+
+        m_data.m_method = FetchUtils::normalizeMethod(method);
 
         if (init->referrer()->isEmpty()) {
             m_data.m_referrer = new ReferrerURL(
@@ -163,8 +178,8 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         // ScriptValue type.
         ScriptValue body = init->body();
         if (!body->isUndefinedOrNull()) {
-            if (m_data.m_method == MethodType::GET ||
-                m_data.m_method == MethodType::HEAD) {
+            if (m_data.m_method->equals("GET") ||
+                m_data.m_method->equals("HEAD")) {
                 throw new DOMException(document(),
                                        DOMException::Code::SCRIPT_TYPE_ERR);
             }
@@ -179,6 +194,16 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
             }
         } else {
             this->setBodyInit(nullptr);
+        }
+    } else {
+        if (input->isUSVStringValue()) {
+            STARFISH_ASSERT(fallbackMode);
+            STARFISH_ASSERT(fallbackCredentials);
+            fallbackMode = String::createASCIIString("cors");
+            fallbackCredentials = String::createASCIIString("same-origin");
+            m_data.m_mode = RequestData::requestModeFromString(fallbackMode);
+            m_data.m_credentials =
+                RequestData::requestCredentialsFromString(fallbackCredentials);
         }
     }
 }
@@ -196,7 +221,7 @@ Headers* Request::headers()
 
 String* Request::method()
 {
-    return RequestData::methodTypeString(m_data.m_method);
+    return m_data.m_method;
 }
 
 String* Request::url()
@@ -235,7 +260,7 @@ String* Request::mode()
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return String::createASCIIString("");
+    return String::emptyString;
 }
 
 String* Request::credentials()
@@ -252,7 +277,7 @@ String* Request::credentials()
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return String::createASCIIString("");
+    return String::emptyString;
 }
 
 String* Request::cache()
@@ -275,7 +300,7 @@ String* Request::cache()
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return String::createASCIIString("");
+    return String::emptyString;
 }
 
 String* Request::redirect()
@@ -292,7 +317,7 @@ String* Request::redirect()
     }
 
     STARFISH_RELEASE_ASSERT_NOT_REACHED();
-    return String::createASCIIString("");
+    return String::emptyString;
 }
 
 String* Request::integrity()
