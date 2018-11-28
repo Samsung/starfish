@@ -329,9 +329,9 @@ http://web-platform.test:8000/content-security-policy/script-src/script-src-1_1.
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_2_1.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_2.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_3.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4_1.html # setTimeout
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4_2.html # Function
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4.html # Eval
+http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4_1.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4_2.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-multiple-policies-multiple-hashing-algorithms.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-multiple-policies-one-using-hashing-algorithms.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-overrides-default-src.sub.html
@@ -437,16 +437,18 @@ http://web-platform.test:8000/content-security-policy/style-src/style-src-inline
 #http://web-platform.test:8000/content-security-policy/svg/svg-policy-with-resource.html
 #
 #
-#http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-blocked-and-sends-report.sub.html
+http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-blocked-and-sends-report.sub.html
 #http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-blocked-in-about-blank-iframe.sub.html
-#http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-scripts-setInterval-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-scripts-setInterval-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-scripts-setTimeout-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-scripts-setTimeout-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/unsafe-eval/function-constructor-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/unsafe-eval/function-constructor-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-scripts-setInterval-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-scripts-setInterval-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-scripts-setTimeout-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/unsafe-eval/eval-scripts-setTimeout-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/unsafe-eval/function-constructor-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/unsafe-eval/function-constructor-blocked.sub.html
+#
+#
 #http://web-platform.test:8000/content-security-policy/unsafe-hashed-attributes/script_event_handlers_allowed.html
 #http://web-platform.test:8000/content-security-policy/unsafe-hashed-attributes/script_event_handlers_denied_matching_hash_no_unsafe_inline_attribute.html
 #http://web-platform.test:8000/content-security-policy/unsafe-hashed-attributes/script_event_handlers_denied_not_matching_hash.html

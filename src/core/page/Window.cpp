@@ -23,6 +23,7 @@
 #include "core/page/Window.h"
 
 #include "binding/ScriptBindingInstance.h"
+#include "core/csp/ContentSecurityPolicy.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ErrorEvent.h"
 #include "core/dom/HTMLAnchorElement.h"
@@ -662,6 +663,12 @@ void Window::dispatchErrorEvent(ErrorEventInit& errorInfo)
         document(), starfish()->staticStrings()->m_error.localName(),
         errorInfo);
     dispatchEventByUA(errorEvent);
+}
+
+bool Window::checkSecurityPolicy()
+{
+    return document()->contentSecurityPolicy()->allowEval(
+        CSPDirectives::ScriptSrc);
 }
 
 DEFINE_EVENT_LISTENER(Window, abort);

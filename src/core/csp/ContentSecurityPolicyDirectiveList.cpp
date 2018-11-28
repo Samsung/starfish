@@ -201,6 +201,13 @@ bool ContentSecurityPolicyDirectiveList::allowInline(CSPDirectives directive)
     return sourceList->allowInline();
 }
 
+bool ContentSecurityPolicyDirectiveList::allowEval(CSPDirectives directive)
+{
+    auto sourceList = getSourceList(directive);
+    STARFISH_ASSERT(sourceList);
+    return sourceList->allowEval();
+}
+
 size_t ContentSecurityPolicyDirectiveList::skipSpace(String* src, size_t begin,
                                                      size_t end)
 {

@@ -17,9 +17,13 @@
  *  USA
  */
 
+#include <EscargotPublic.h>
+using namespace Escargot;
+
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/page/Window.h"
+#include "core/dom/Document.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/csp/ContentSecurityPolicyDirectiveList.h"
 #include "core/csp/ContentSecurityPolicySourceListDirective.h"
@@ -27,6 +31,15 @@
 #include "core/util/Cryptographic.h"
 
 namespace Starfish {
+
+ContentSecurityPolicy::ContentSecurityPolicy(Window* window)
+    : WindowHoldable(window)
+{
+    window->scriptBindingInstance()
+        ->scriptContext()
+        ->setSecurityPolicyCheckCallback(
+            ContentSecurityPolicy::checkUnsafeEvalCallback);
+}
 
 void* ContentSecurityPolicy::operator new(size_t size)
 {
@@ -130,6 +143,22 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
     return true;
 }
 
+bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
+{
+    for (auto policy : m_policies) {
+        if (policy->getSourceList(directive)) {
+            if (!policy->allowEval(directive)) {
+                dispatchViolationEvent(getDirectiveName(directive));
+                STARFISH_LOG_WARN(
+                    "Refused to execute a string as JavaScript' "
+                    "because it violates the Content Security Policy\n");
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
 void ContentSecurityPolicy::dispatchViolationEvent(String* name)
 {
     String* eventType = window()
@@ -140,5 +169,22 @@ void ContentSecurityPolicy::dispatchViolationEvent(String* name)
         new SecurityPolicyViolationEvent(window()->document(), eventType);
     event->setViolatedDirective(name);
     window()->dispatchEventIdleTimeByUA(event);
+}
+
+ScriptValue ContentSecurityPolicy::checkUnsafeEvalCallback(
+    ScriptExecutionState state, bool isEval)
+{
+    Document* document = fetchDocument(state->context());
+    ContentSecurityPolicy* csp = document->contentSecurityPolicy();
+    if (!csp->allowEval(CSPDirectives::ScriptSrc)) {
+        if (isEval) {
+            return ValueRef::create(
+                StringRef::fromASCII("Exception EvalError"));
+        }
+        return ValueRef::create(
+            StringRef::fromASCII("Exception function EvalError"));
+    }
+
+    return ValueRef::createEmpty();
 }
 }

@@ -21,6 +21,7 @@
 #define __StarfishContentSecurityPolicy__
 
 #include "binding/WindowHoldable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace Starfish {
 
@@ -42,10 +43,7 @@ class ContentSecurityPolicySourceListDirective;
 
 class ContentSecurityPolicy : public WindowHoldable {
 public:
-    ContentSecurityPolicy(Window* window)
-        : WindowHoldable(window)
-    {
-    }
+    ContentSecurityPolicy(Window* window);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -57,6 +55,7 @@ public:
     bool allowSource(CSPDirectives directive, ResourceURL* url);
     bool allowInline(CSPDirectives directive, String* scriptContent,
                      String* nonce = nullptr);
+    bool allowEval(CSPDirectives directive);
 
     void dispatchViolationEvent(String* name);
 
@@ -67,6 +66,9 @@ private:
     {
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicy, m_policies));
     }
+
+    static ScriptValue checkUnsafeEvalCallback(ScriptExecutionState state,
+                                               bool isEval);
 };
 }
 

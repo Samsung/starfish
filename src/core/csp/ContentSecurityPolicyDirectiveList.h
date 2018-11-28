@@ -47,7 +47,8 @@ public:
     bool allowHost(CSPDirectives directive, ResourceURL* url);
     bool allowContent(CSPDirectives directive, String* content);
     bool allowNonce(CSPDirectives directive, String* nonce);
-    bool allowInline(CSPDirectives sourceList);
+    bool allowInline(CSPDirectives directive);
+    bool allowEval(CSPDirectives directive);
 
     ContentSecurityPolicySourceListDirective* scriptSrc()
     {
