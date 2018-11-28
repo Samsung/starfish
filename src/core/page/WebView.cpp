@@ -71,6 +71,9 @@
 #include "core/style/ComputedStyle.h"
 #include "platform/file/File.h"
 
+#include "streamline_annotate.h"
+ANNOTATE_DEFINE;
+
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/Avplay.h"
 #endif
@@ -481,9 +484,15 @@ void WebView::setWebSecurityMode(LWE::WebSecurityMode value)
 String* WebView::evaluateJavaScript(String* s)
 {
     if (mainBrowsingContext()) {
-        return toBrowserString(
+        ANNOTATE_SETUP;
+        ANNOTATE_CHANNEL_COLOR(3003, ANNOTATE_BLUE,
+                               "WebView::evaluateJavaScript");
+        String* result = toBrowserString(
             mainBrowsingContext()->scriptBindingInstance(),
             evaluateString(mainBrowsingContext()->scriptBindingInstance(), s));
+        ANNOTATE_CHANNEL_END(3003);
+        return result;
+
     } else {
         return String::emptyString;
     }
@@ -1099,13 +1108,14 @@ RenderResult WebView::rendering(bool force)
         renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
                                              platformWindow()->height());
         delete canvas;
-
         return renderResult;
     }
 
     uint64_t currentTick = longTickCount();
     m_lastRenderingTick = currentTick;
     m_inRendering = true;
+    ANNOTATE_SETUP;
+    ANNOTATE_CHANNEL_COLOR(3001, ANNOTATE_BLUE, "WebView::rendering");
     INSTALL_PROFILE_TIMER("WebView::rendering");
 
     {
@@ -1456,12 +1466,14 @@ RenderResult WebView::rendering(bool force)
 
                 fprintf(stderr, "#EOF\n");
                 g_enableDumpAsText = false;
+                ANNOTATE_CHANNEL_END(3001);
                 exit(0);
             }
         }
 
         if (g_fireOnloadEvent && g_referenceTestState > 0) {
             rtDoTest(m_topLevelBrowsingContext->document());
+            ANNOTATE_CHANNEL_END(3001);
             return renderResult;
         }
 
@@ -1470,6 +1482,7 @@ RenderResult WebView::rendering(bool force)
             screenShotInRendering(this, path, []() {
                 if (getenv("EXIT_AFTER_SCREEN_SHOT") &&
                     strlen(getenv("EXIT_AFTER_SCREEN_SHOT"))) {
+                    ANNOTATE_CHANNEL_END(3001);
                     exit(0);
                 }
             });
@@ -1483,6 +1496,7 @@ RenderResult WebView::rendering(bool force)
                 "`STARFISH_ENABLE_PROFILE_LOADING` => %fms elapsed since "
                 "starting loading\n",
                 (float)diff);
+            ANNOTATE_CHANNEL_END(3001);
             exit(0);
         }
 #endif
@@ -1515,6 +1529,7 @@ RenderResult WebView::rendering(bool force)
         GC_set_free_space_divisor(BDWGC_FREE_SPACE_DIVISOR);
     }
 
+    ANNOTATE_CHANNEL_END(3001);
     return renderResult;
 }
 
