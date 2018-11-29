@@ -172,7 +172,7 @@ void ContentSecurityPolicy::dispatchViolationEvent(String* name,
         new SecurityPolicyViolationEvent(window()->document(), eventType);
     event->setViolatedDirective(name);
     event->setBlockedURI(blockedURI);
-    window()->dispatchEventIdleTimeByUA(event);
+    window()->document()->dispatchEventIdleTimeByUA(event);
 }
 
 ScriptValue ContentSecurityPolicy::checkUnsafeEvalCallback(
