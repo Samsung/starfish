@@ -41,36 +41,40 @@ enum { TagNameSalt = 13, IdSalt = 17, ClassNameSalt = 19 };
 
 template <typename V>
 static void collectElementIdentifierHashes(Element* element,
-                                           V& identifierHashes)
+                                           V& identifierHashes,
+                                           BloomFilter<12>& bloomFilter)
 {
-    identifierHashes.push_back(
-        element->name().localNameAtomic().string()->hashValue() * TagNameSalt);
+    unsigned hash =
+        element->name().localNameAtomic().string()->hashValue() * TagNameSalt;
+    bloomFilter.add(hash);
+    identifierHashes.push_back(hash);
+
     if (element->hasId()) {
-        identifierHashes.push_back(element->atomicId().string()->hashValue() *
-                                   IdSalt);
+        unsigned hash = element->atomicId().string()->hashValue() * IdSalt;
+        identifierHashes.push_back(hash);
+        bloomFilter.add(hash);
     }
     const auto& classes = element->classNames();
     size_t classNameSize = classes.size();
     for (size_t i = 0; i < classNameSize; i++) {
-        identifierHashes.push_back(classes[i].string()->hashValue() *
-                                   ClassNameSalt);
+        unsigned hash = classes[i].string()->hashValue() * ClassNameSalt;
+        identifierHashes.push_back(hash);
+        bloomFilter.add(hash);
     }
 }
 
 void AncestorSelectorFilter::pushElement(Element* e)
 {
     AncestorStackFrame frame(e);
-    collectElementIdentifierHashes(e, frame.m_identifierHashes);
-    for (size_t i = 0; i < frame.m_identifierHashes.size(); i++) {
-        m_bloomFilter.add(frame.m_identifierHashes[i]);
-    }
+    collectElementIdentifierHashes(e, frame.m_identifierHashes, m_bloomFilter);
     m_parentStack.push_back(std::move(frame));
 }
 
 void AncestorSelectorFilter::popElement()
 {
     AncestorStackFrame& frame = m_parentStack.back();
-    for (size_t i = 0; i < frame.m_identifierHashes.size(); i++) {
+    size_t cnt = frame.m_identifierHashes.size();
+    for (size_t i = 0; i < cnt; i++) {
         m_bloomFilter.remove(frame.m_identifierHashes[i]);
     }
     m_parentStack.pop_back();

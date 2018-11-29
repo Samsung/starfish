@@ -76,7 +76,7 @@ NetworkURLWorkerData::~NetworkURLWorkerData()
 {
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (cachedEntry) {
-        cachedEntry->decreaseUsingCount();
+        cachedEntry->deref();
     }
 #endif
 }
@@ -297,8 +297,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
                 m_orgProxy->starfish()->httpCache()->get(m_orgProxy->url());
 
             if (it != m_orgProxy->starfish()->httpCache()->end()) {
-                nwd->cachedEntry = it->second;
-                nwd->cachedEntry->increaseUsingCount();
+                nwd->cachedEntry = it->second.get();
+                nwd->cachedEntry->ref();
                 fillHeadersWithCachedEntry(headers, nwd->cachedEntry);
             }
         }

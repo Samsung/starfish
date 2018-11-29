@@ -221,6 +221,7 @@ Canvas* WindowImplGL::preparePainting()
 
 Compositor* WindowImplGL::prepareCompositor()
 {
+    LongTaskFinder p("WindowImplGL::prepareCompositor", 1);
     if (!webView()->hasActiveAnimationExecutor()) {
         if (m_glPaintingSurface) {
             STARFISH_LOG_INFO(

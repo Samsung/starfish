@@ -3041,28 +3041,107 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
     }
 }
 
+ALWAYS_INLINE LayoutRect computeVisibleShadowRect(
+    const LayoutRect& owner, const CanvasShadowData& shadow)
+{
+    LayoutRect ret = owner;
+    if (!shadow.inset()) {
+        float radiusOffset = 0.0f;
+        if (shadow.radius()) {
+            radiusOffset = shadow.radius();
+            radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
+        }
+        float sd = shadow.spreadDistance();
+        LayoutRect rect(owner.x() + shadow.offsetX() - radiusOffset - sd,
+                        owner.y() + shadow.offsetY() - radiusOffset - sd,
+                        ceil(owner.width() + sd * 2 + radiusOffset * 2),
+                        ceil(owner.height() + sd * 2 + radiusOffset * 2));
+
+        ret.unite(rect);
+    }
+    return ret;
+}
+
 LayoutRect FrameBox::frameVisibleRect()
 {
-    LayoutRect out = frameVisibleOutlineRect();
-    LayoutRect shadow = frameVisibleShadowsRect();
-    out.unite(shadow);
-    LayoutRect filter = frameVisibleFilterRect();
-    out.unite(filter);
-
+    LayoutRect out(0, 0, width(), height());
     ComputedStyle* cs = style();
+    OutlineData* outline = nullptr;
+    ShadowDataList* boxShadow = nullptr;
+    BorderData* border = nullptr;
+    FilterFunctions* filter = nullptr;
+
     if (cs) {
-        BorderData border = cs->border();
-        const BorderImageData& bi = border.image();
+        size_t len = cs->rareComputedStyleData()->m_styles.size();
+        for (size_t i = 0; i < len; i++) {
+            switch (cs->rareComputedStyleData()->m_styles[i].keyKind()) {
+            case RareComputedStyleData::KeyKind::Outline:
+                outline =
+                    cs->rareComputedStyleData()->m_styles[i].m_value.m_outline;
+                break;
+            case RareComputedStyleData::KeyKind::BoxShadow:
+                boxShadow = cs->rareComputedStyleData()
+                                ->m_styles[i]
+                                .m_value.m_boxShadowDataList;
+                break;
+            case RareComputedStyleData::KeyKind::Border:
+                border = cs->rareComputedStyleData()
+                             ->m_styles[i]
+                             .m_value.m_borderData;
+                break;
+            case RareComputedStyleData::KeyKind::Filter:
+                filter =
+                    cs->rareComputedStyleData()->m_styles[i].m_value.m_filter;
+                break;
+            default:
+                break;
+            }
+        }
+    }
+
+    if (outline) {
+        LayoutRect outlineRect = frameVisibleOutlineRect(outline);
+        out.unite(outlineRect);
+    }
+
+    if (boxShadow) {
+        LayoutRect shadowRect = frameVisibleShadowsRect(boxShadow);
+        out.unite(shadowRect);
+    }
+
+    if (filter) {
+        LayoutRect filterRect = frameVisibleFilterRect(filter);
+        out.unite(filterRect);
+    }
+
+    if (isInlineTextBox()) {
+        // every text node must have SomputedStyle
+        auto textShadow = cs->textShadow();
+        if (textShadow) {
+            CanvasShadowDataList list =
+                textShadow->toCanvasShadowDataList(this);
+            LayoutRect owner = frameRect();
+            owner.setX(0);
+            owner.setY(0);
+            for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
+                LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
+                out.unite(rect);
+            }
+        }
+    }
+
+    if (border) {
+        const BorderImageData& bi = border->image();
         if (!bi.isNull()) {
             auto outsets = bi.outsets();
             double bLWidth =
-                border.left().width().specifiedValue(width(), this);
+                border->left().width().specifiedValue(width(), this);
             double bTWidth =
-                border.top().width().specifiedValue(height(), this);
+                border->top().width().specifiedValue(height(), this);
             double bRWidth =
-                border.right().width().specifiedValue(width(), this);
+                border->right().width().specifiedValue(width(), this);
             double bBWidth =
-                border.bottom().width().specifiedValue(height(), this);
+                border->bottom().width().specifiedValue(height(), this);
 
             double bLOutset =
                 outsets.left().computedBorderImageOutset(bLWidth, this);
@@ -3095,15 +3174,13 @@ LayoutRect FrameBox::frameVisibleRect()
     return out;
 }
 
-LayoutRect FrameBox::frameVisibleOutlineRect()
+LayoutRect FrameBox::frameVisibleOutlineRect(OutlineData* outline)
 {
     LayoutRect r = frameRect();
     r.setX(0);
     r.setY(0);
 
-    ComputedStyle* cs = style();
-
-    if (cs && cs->outlineStyle() != BorderStyleValue::NoneBorderStyleValue) {
+    if (outline->border().style() != BorderStyleValue::NoneBorderStyleValue) {
         LayoutUnit t = outlineThickness();
         r.setX(r.x() - t);
         r.setY(r.y() - t);
@@ -3113,75 +3190,32 @@ LayoutRect FrameBox::frameVisibleOutlineRect()
 
     return r;
 }
-ALWAYS_INLINE LayoutRect computeVisibleShadowRect(
-    const LayoutRect& owner, const CanvasShadowData& shadow)
-{
-    LayoutRect ret = owner;
-    if (!shadow.inset()) {
-        float radiusOffset = 0.0f;
-        if (shadow.radius()) {
-            radiusOffset = shadow.radius();
-            radiusOffset = std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
-        }
-        float sd = shadow.spreadDistance();
-        LayoutRect rect(owner.x() + shadow.offsetX() - radiusOffset - sd,
-                        owner.y() + shadow.offsetY() - radiusOffset - sd,
-                        ceil(owner.width() + sd * 2 + radiusOffset * 2),
-                        ceil(owner.height() + sd * 2 + radiusOffset * 2));
 
+LayoutRect FrameBox::frameVisibleShadowsRect(ShadowDataList* boxShadow)
+{
+    LayoutRect owner = frameRect();
+    owner.setX(0);
+    owner.setY(0);
+    LayoutRect ret = owner;
+
+    CanvasShadowDataList list = boxShadow->toCanvasShadowDataList(this);
+    for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
+        LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
         ret.unite(rect);
     }
+
     return ret;
 }
 
-LayoutRect FrameBox::frameVisibleShadowsRect()
+LayoutRect FrameBox::frameVisibleFilterRect(FilterFunctions* filter)
 {
     LayoutRect owner = frameRect();
     owner.setX(0);
     owner.setY(0);
-
     LayoutRect ret = owner;
-
-    ComputedStyle* cs = style();
-    if (!cs) {
-        return ret;
-    }
-
-    if (cs->boxShadow()) {
-        CanvasShadowDataList list =
-            cs->boxShadow()->toCanvasShadowDataList(this);
-        for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
-            LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
-            ret.unite(rect);
-        }
-    }
-
-    if (cs->textShadow()) {
-        CanvasShadowDataList list =
-            cs->textShadow()->toCanvasShadowDataList(this);
-        for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
-            LayoutRect rect = computeVisibleShadowRect(owner, *shadow);
-            ret.unite(rect);
-        }
-    }
-    return ret;
-}
-
-LayoutRect FrameBox::frameVisibleFilterRect()
-{
-    LayoutRect owner = frameRect();
-    owner.setX(0);
-    owner.setY(0);
-
-    LayoutRect ret = owner;
-
-    ComputedStyle* cs = style();
-    if (!cs || !cs->hasAvailableFilter()) {
-        return ret;
-    }
 
     Length standardDeviation;
-    if (cs->filter()->getStandardDeviationOfBlurFilter(standardDeviation)) {
+    if (filter->getStandardDeviationOfBlurFilter(standardDeviation)) {
         CanvasShadowData data(0, 0, standardDeviation.numberData() * 2, 0,
                               Unit::Color(), false, false);
         LayoutRect rect = computeVisibleShadowRect(owner, data);
@@ -3193,37 +3227,63 @@ LayoutRect FrameBox::frameVisibleFilterRect()
 
 static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b)
 {
-    if (!cs->backgroundColor().isTransparent()) {
-        return true;
-    }
+    StyleBackgroundData* background = nullptr;
+    OutlineData* outline = nullptr;
+    ShadowDataList* boxShadow = nullptr;
+    BorderData* border = nullptr;
+    FilterFunctions* filter = nullptr;
 
-    if (cs->backgroundLayerSize() != 0) {
-        return true;
-    }
-
-    if (cs->outlineStyle() != BorderStyleValue::NoneBorderStyleValue &&
-        b->outlineThickness()) {
-        return true;
-    }
-
-    {
-        auto bs = cs->boxShadow();
-        if (bs && bs->size()) {
-            return true;
+    size_t len = cs->rareComputedStyleData()->m_styles.size();
+    for (size_t i = 0; i < len; i++) {
+        switch (cs->rareComputedStyleData()->m_styles[i].keyKind()) {
+        case RareComputedStyleData::KeyKind::Background:
+            background =
+                cs->rareComputedStyleData()->m_styles[i].m_value.m_background;
+            break;
+        case RareComputedStyleData::KeyKind::Outline:
+            outline =
+                cs->rareComputedStyleData()->m_styles[i].m_value.m_outline;
+            break;
+        case RareComputedStyleData::KeyKind::BoxShadow:
+            boxShadow = cs->rareComputedStyleData()
+                            ->m_styles[i]
+                            .m_value.m_boxShadowDataList;
+            break;
+        case RareComputedStyleData::KeyKind::Border:
+            border =
+                cs->rareComputedStyleData()->m_styles[i].m_value.m_borderData;
+            break;
+        case RareComputedStyleData::KeyKind::Filter:
+            filter = cs->rareComputedStyleData()->m_styles[i].m_value.m_filter;
+            break;
+        default:
+            break;
         }
     }
 
-    if (cs->hasAvailableFilter()) {
+    if (background && !background->color().isTransparent()) {
         return true;
     }
 
-    BorderData border = cs->border();
-    if (border.hasBorderStyle()) {
+    if (background && background->sizeOfLayers()) {
         return true;
     }
 
-    const BorderImageData& bi = border.image();
-    if (!bi.isNull()) {
+    if (outline &&
+        outline->border().style() != BorderStyleValue::NoneBorderStyleValue &&
+        outline->border().width().specifiedValue(1, b->node())) {
+        return true;
+    }
+
+    if (boxShadow && boxShadow->size()) {
+        return true;
+    }
+
+    if (filter && filter->size()) {
+        return true;
+    }
+
+    if (border && (border->hasBorderStyle() || !border->image().isNull())) {
         return true;
     }
 
@@ -3265,13 +3325,16 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         return false;
     }
 
-    if (isAbsolutePositioned() && style()->hasZeroClipRect()) {
+    if (cs && cs->isAbsolutePositioned() && cs->hasZeroClipRect()) {
         return false;
     }
 
     bool ret = !shouldApplyOverflow();
     bool boxHasDrawableContents = true;
-    bool drawableContentsInStyle = cs && styleHasDrawableContents(cs, this);
+    bool drawableContentsInStyle = true;
+    if (ctx.isVisibleRectCollapsible) {
+        drawableContentsInStyle = cs && styleHasDrawableContents(cs, this);
+    }
     if (isFrameBlockBox() && !drawableContentsInStyle) {
         boxHasDrawableContents = false;
     } else if (isFrameReplaced() &&
@@ -3287,10 +3350,8 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         }
     }
 
-    LayoutRect outline;
-
     if (!ctx.isVisibleRectCollapsible || boxHasDrawableContents) {
-        outline = frameVisibleRect();
+        ctx.uniteRect(frameVisibleRect());
     }
 
     if (ctx.isVisibleRectCollapsible && isFrameBlockBox() &&
@@ -3305,8 +3366,6 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
             ret = false;
         }
     }
-
-    ctx.uniteRect(outline);
 
     if (boxHasDrawableContents) {
         size_t len = isInlineTextBox() ? 2 : 1;
@@ -3555,26 +3614,42 @@ enum ComputeMatrixFor {
     GraphicsLayerOnGraphicsLayer
 };
 
-static void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m)
+ALWAYS_INLINE void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m,
+                                          bool inRendering)
 {
     if (fBox->isEstablishesStackingContext()) {
-        ComputedStyle* cs = fBox->style();
-        StyleTransformDataGroup* transforms = cs->transforms(fBox);
-        if (transforms) {
-            SkMatrix m2 = cs->transformsToMatrix(fBox->width(), fBox->height(),
-                                                 fBox, true);
-            if (!m2.isIdentity()) {
-                LayoutUnit ox = fBox->width() / 2;
-                LayoutUnit oy = fBox->height() / 2;
-                if (cs->hasTransformOrigin()) {
-                    StyleTransformOrigin* origin = cs->transformOrigin();
-                    auto od = origin->originValue();
-                    ox = od->getXAxis().specifiedValue(fBox->width(), fBox);
-                    oy = od->getYAxis().specifiedValue(fBox->height(), fBox);
+        if (inRendering) {
+            StackingContext* sc = fBox->stackingContext();
+            if (sc) {
+                SkMatrix m2 = sc->transformMatrix();
+                if (!m2.isIdentity()) {
+                    LayoutLocation to =
+                        fBox->stackingContext()->transformOrigin();
+                    m.preTranslate((float)to.x(), (float)to.y());
+                    m.preConcat(m2);
+                    m.preTranslate(-(float)to.x(), -(float)to.y());
                 }
-                m.preTranslate((float)ox, (float)oy);
-                m.preConcat(m2);
-                m.preTranslate(-(float)ox, -(float)oy);
+            }
+        } else {
+            ComputedStyle* cs = fBox->style();
+            StyleTransformDataGroup* transforms = cs->transforms(fBox);
+            if (transforms) {
+                SkMatrix m2 = cs->transformsToMatrix(
+                    fBox->width(), fBox->height(), fBox, true);
+                if (!m2.isIdentity()) {
+                    LayoutUnit ox = fBox->width() / 2;
+                    LayoutUnit oy = fBox->height() / 2;
+                    if (cs->hasTransformOrigin()) {
+                        StyleTransformOrigin* origin = cs->transformOrigin();
+                        auto od = origin->originValue();
+                        ox = od->getXAxis().specifiedValue(fBox->width(), fBox);
+                        oy =
+                            od->getYAxis().specifiedValue(fBox->height(), fBox);
+                    }
+                    m.preTranslate((float)ox, (float)oy);
+                    m.preConcat(m2);
+                    m.preTranslate(-(float)ox, -(float)oy);
+                }
             }
         }
     }
@@ -3583,6 +3658,12 @@ static void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m)
 static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
 {
     bool seenFixedPositionedLayer = false;
+    bool inRendering = false;
+
+    if (self->node() && self->node()->webView()->inRendering()) {
+        inRendering = true;
+    }
+
     FrameBox* turnOffScrollUntilMeet = nullptr;
     FrameBox* graphicsLayerHolder = nullptr;
 
@@ -3650,7 +3731,7 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
             }
             m.preTranslate((float)pos.x(), (float)pos.y());
 
-            applyTransformIfNeeded(fBox, m);
+            applyTransformIfNeeded(fBox, m, inRendering);
 
             lastParentBox = fBox;
             iter++;
@@ -3675,13 +3756,22 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
             } else {
                 pos = fBox->absolutePoint(lastParentBox);
                 if (fBox->isFrameBlockBox()) {
-                    pos.setX(pos.x() - fBox->asFrameBlockBox()->scrollLeft());
-                    pos.setY(pos.y() - fBox->asFrameBlockBox()->scrollTop());
+                    Node* nd = fBox->node();
+                    if (nd) {
+                        if (nd->asElement()->hasRareMembers()) {
+                            pos.setX(
+                                pos.x() -
+                                nd->asElement()->rareMembers()->m_scrollLeft);
+                            pos.setY(
+                                pos.y() -
+                                nd->asElement()->rareMembers()->m_scrollTop);
+                        }
+                    }
                 }
             }
             m.preTranslate((float)pos.x(), (float)pos.y());
 
-            applyTransformIfNeeded(fBox, m);
+            applyTransformIfNeeded(fBox, m, inRendering);
 
             lastParentBox = fBox;
             iter++;

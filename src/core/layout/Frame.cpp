@@ -1113,9 +1113,7 @@ bool Frame::isAbsolutePositioned()
         return false;
     }
 
-    PositionValue position = style->position();
-    return position == PositionValue::AbsolutePositionValue ||
-           position == PositionValue::FixedPositionValue;
+    return style->isAbsolutePositioned();
 }
 
 bool Frame::isFloating()

@@ -225,16 +225,16 @@ bool HTTPCache::initFromIndexFileIfPossible()
         einfo.lastModificationTime = String::parseInt64(&columns[16]);
         einfo.byteLength = String::parseInt64(&columns[17]);
 
-        HTTPCacheEntry* newEntry =
-            new HTTPCacheEntry(url, cc, cinfo, finfo, einfo);
+        RefPtr<HTTPCacheEntry> newEntry =
+            adoptRef(new HTTPCacheEntry(url, cc, cinfo, finfo, einfo));
 
         if (!newEntry->isConsistent()) {
             STARFISH_LOG_ERROR("[HTTPCache] Cached entries are corrupted");
             return false;
         }
 
-        m_cacheEntryTable->insert(
-            std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
+        m_cacheEntryTable->insert(std::pair<size_t, RefPtr<HTTPCacheEntry>>(
+            newEntry->entryKey(), newEntry));
 
         m_cacheLRUList.push_back(urlString);
 
@@ -323,8 +323,8 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
         return;
     }
 
-    HTTPCacheEntry* newEntry =
-        new HTTPCacheEntry(nwd->request->url(), cc, cinfo, finfo);
+    RefPtr<HTTPCacheEntry> newEntry =
+        adoptRef(new HTTPCacheEntry(nwd->request->url(), cc, cinfo, finfo));
 
     newEntry->setEntryFileNameUsingCachePath(m_cacheDirPath);
 
@@ -335,8 +335,8 @@ void HTTPCache::put(NetworkURLWorkerData* nwd)
         return;
     }
 
-    m_cacheEntryTable->insert(
-        std::pair<size_t, HTTPCacheEntry*>(newEntry->entryKey(), newEntry));
+    m_cacheEntryTable->insert(std::pair<size_t, RefPtr<HTTPCacheEntry>>(
+        newEntry->entryKey(), newEntry));
     m_cacheLRUList.push_back(newEntry->url()->urlString());
     m_currentTotalSizeOfBlocks += sizeOfBlocks;
 #ifdef STARFISH_ENABLE_TEST
@@ -458,7 +458,7 @@ bool HTTPCache::flush()
 
     for (auto it : m_cacheLRUList) {
         auto tableItr = findEntryInCacheEntryTable(it);
-        HTTPCacheEntry* entry = tableItr->second;
+        RefPtr<HTTPCacheEntry> entry = tableItr->second;
         if (!out->writeLine(entry->toString())) {
             return false;
         }
@@ -483,9 +483,9 @@ bool HTTPCache::pruneAsNeededForCacheSpace(const size_t reserve)
         auto iter = m_cacheLRUList.begin();
         while (iter != m_cacheLRUList.end() && removedSize < reserve) {
             auto tableIter = findEntryInCacheEntryTable(*iter);
-            HTTPCacheEntry* cacheEntry = tableIter->second;
+            HTTPCacheEntry* cacheEntry = tableIter->second.get();
 
-            if (cacheEntry->usingCount() > 0) {
+            if (cacheEntry->refCount() > 1) {
                 iter++;
                 continue;
             }
@@ -588,7 +588,7 @@ void HTTPCache::remove(HTTPCacheEntry* entry)
     STARFISH_ASSERT(isMainThread());
     entry->setToBad();
 
-    if (1 < entry->usingCount()) {
+    if (1 < entry->refCount()) {
         return;
     }
 
@@ -633,7 +633,7 @@ size_t HTTPCache::calcBlocksSizeOfIndexFile()
     size_t bytes = 0;
     for (auto it : m_cacheLRUList) {
         auto tableIter = findEntryInCacheEntryTable(it);
-        HTTPCacheEntry* entry = tableIter->second;
+        RefPtr<HTTPCacheEntry> entry = tableIter->second;
         bytes += entry->toString()->toUTF8NonGCString().size() + 1;
     }
     return calcBlocksSize(bytes);

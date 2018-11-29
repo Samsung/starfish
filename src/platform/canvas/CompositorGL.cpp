@@ -1462,6 +1462,7 @@ public:
         glViewport(0, 0, m_webView->platformWindow()->width(),
                    m_webView->platformWindow()->height());
 
+        m_state.reserve(32);
         m_state.push_back(CompositorImplGLState());
         m_state.back().matrixStaysInRect = true;
         m_state.back().matrix = SkMatrix::I();
@@ -1509,7 +1510,7 @@ public:
 
     virtual void clearColor(const Unit::Color& clr)
     {
-        INSTALL_PROFILE_TIMER("CompositorImplGL::clearColor");
+        LongTaskFinder p("CompositorImplGL::clearColor", 1);
         glClearColor(clr.R(), clr.G(), clr.B(), clr.A());
         glClear(GL_COLOR_BUFFER_BIT);
     }

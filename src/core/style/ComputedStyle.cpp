@@ -332,7 +332,7 @@ void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
                 for (size_t i = 0; i < len; i++) {
                     auto a = parentStyle->fontFamily()[i + 1].m_familyName;
                     auto b = fontFamily()[i + 1].m_familyName;
-                    if (a != b && !a->equals(b)) {
+                    if (a != b) {
                         canUseParentFont = false;
                         break;
                     }
@@ -1118,10 +1118,10 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
     } else {
         size_t len = newStyle->m_inheritedStyles.m_fontFamilyDatas[0].m_length;
         for (size_t i = 0; i < len; i++) {
-            if (!newStyle->m_inheritedStyles.m_fontFamilyDatas[i + 1]
-                     .m_familyName->equals(
-                         oldStyle->m_inheritedStyles.m_fontFamilyDatas[i + 1]
-                             .m_familyName)) {
+            if (newStyle->m_inheritedStyles.m_fontFamilyDatas[i + 1]
+                    .m_familyName !=
+                oldStyle->m_inheritedStyles.m_fontFamilyDatas[i + 1]
+                    .m_familyName) {
                 damagedKeys[CSSStyleValuePair::KeyKind::FontFamily] = true;
                 damage = (ComputedStyleDamage)(
                     ComputedStyleDamage::ComputedStyleDamageInherited |

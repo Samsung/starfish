@@ -258,6 +258,36 @@ StaticStrings* fetchStaticStrings(ContextRef* ctx)
     return fetchWebView(ctx)->starfish()->staticStrings();
 }
 
+static String* toBrowserString(StringRef* v)
+{
+    auto bufData = v->stringBufferAccessData();
+
+    if (bufData.has8BitContent) {
+        ASCIIString fastCase;
+        fastCase.reserve(bufData.length);
+        bool hasASCIIContent = true;
+        for (size_t i = 0; i < bufData.length; i++) {
+            StringRef::StringBufferAccessDataRef::LChar ch =
+                bufData.uncheckedCharAtFor8Bit(i);
+            if (LIKELY(ch < 128)) {
+                fastCase.push_back(ch);
+            } else {
+                hasASCIIContent = false;
+                break;
+            }
+        }
+
+        if (hasASCIIContent) {
+            return new StringDataASCII(std::move(fastCase));
+        } else {
+            auto b = v->toStdUTF8String();
+            return String::fromUTF8(b.data(), b.length());
+        }
+    } else {
+        return String::fromUTF16((char16_t*)bufData.buffer, bufData.length);
+    }
+}
+
 String* toBrowserString(ExecutionStateRef* state, ValueRef* v)
 {
     return toBrowserString(state, v->toString(state));
@@ -282,16 +312,13 @@ String* toBrowserString(ScriptBindingInstance* instance, Escargot::ValueRef* v,
         if (result) {
             *result = true;
         }
-        std::string s = sbresult.result->asString()->toStdUTF8String();
-        return String::fromUTF8(s.data(), s.length());
+        return toBrowserString(sbresult.result->asString());
     }
 }
 
 String* toBrowserString(ExecutionStateRef* state, StringRef* v)
 {
-    std::string s = v->toStdUTF8String();
-    String* newStr = String::fromUTF8(s.data(), s.length());
-    return newStr;
+    return toBrowserString(v);
 }
 
 StringRef* toJSString(String* v)

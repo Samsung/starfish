@@ -308,12 +308,12 @@ public:
 
     bool isHexDigit(char32_t code)
     {
-        return (code < 256 && (kLexTable[code] & IS_HEX_DIGIT) != 0);
+        return (LIKELY(code < 256) && (kLexTable[code] & IS_HEX_DIGIT) != 0);
     }
 
     bool isIdentStart(char32_t code)
     {
-        return (code >= 256 || (kLexTable[code] & START_IDENT) != 0);
+        return (UNLIKELY(code >= 256) || (kLexTable[code] & START_IDENT) != 0);
     }
 
     bool startsWithIdent(char32_t aFirstChar, char32_t aSecondChar)
@@ -325,7 +325,7 @@ public:
 
     bool isIdent(char32_t code)
     {
-        return (code >= 256 || (kLexTable[code] & IS_IDENT) != 0);
+        return (UNLIKELY(code >= 256) || (kLexTable[code] & IS_IDENT) != 0);
     }
 
     void pushback()

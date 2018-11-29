@@ -1148,6 +1148,43 @@ public:
         m_piecesInlineStorageUsage = 0;
     }
 
+    StringBuilder(const StringBuilder& src)
+    {
+        m_resultBufferKind = src.m_resultBufferKind;
+        m_contentLength = src.m_contentLength;
+        m_piecesInlineStorageUsage = src.m_piecesInlineStorageUsage;
+        memcpy(&m_piecesInlineStorage, &src.m_piecesInlineStorage,
+               sizeof(StringBuilderPiece) * src.m_piecesInlineStorageUsage);
+        m_pieces = src.m_pieces;
+    }
+
+    StringBuilder(StringBuilder&& src)
+    {
+        m_resultBufferKind = src.m_resultBufferKind;
+        m_contentLength = src.m_contentLength;
+        m_piecesInlineStorageUsage = src.m_piecesInlineStorageUsage;
+        memcpy(&m_piecesInlineStorage, &src.m_piecesInlineStorage,
+               sizeof(StringBuilderPiece) * src.m_piecesInlineStorageUsage);
+        m_pieces = std::move(src.m_pieces);
+
+        src.m_resultBufferKind =
+            StringBufferAccessData::BufferDataKind::ASCIIData;
+        src.m_contentLength = 0;
+        src.m_piecesInlineStorageUsage = 0;
+    }
+
+    StringBuilder& operator=(const StringBuilder& src)
+    {
+        m_resultBufferKind = src.m_resultBufferKind;
+        m_contentLength = src.m_contentLength;
+        m_piecesInlineStorageUsage = src.m_piecesInlineStorageUsage;
+        memcpy(&m_piecesInlineStorage, &src.m_piecesInlineStorage,
+               sizeof(StringBuilderPiece) * src.m_piecesInlineStorageUsage);
+        m_pieces = src.m_pieces;
+
+        return *this;
+    }
+
     size_t contentLength()
     {
         return m_contentLength;
@@ -1190,6 +1227,11 @@ public:
         m_piecesInlineStorageUsage = 0;
         m_contentLength = 0;
         m_pieces.clear();
+    }
+
+    size_t length() const
+    {
+        return m_contentLength;
     }
 
 protected:
