@@ -31,6 +31,7 @@ public:
     SecurityPolicyViolationEventInit()
         : EventInit(true, false)
         , m_violatedDirective(String::emptyString)
+        , m_blockedURI(String::emptyString)
     {
     }
 
@@ -43,8 +44,18 @@ public:
         m_violatedDirective = violatedDirective;
     }
 
+    String* blockedURI() const
+    {
+        return m_blockedURI;
+    }
+    void setBlockedURI(String* blockedURI)
+    {
+        m_blockedURI = blockedURI;
+    }
+
 protected:
     String* m_violatedDirective;
+    String* m_blockedURI;
 };
 
 class SecurityPolicyViolationEvent : public Event {
@@ -57,6 +68,7 @@ public:
     SecurityPolicyViolationEvent(Document* document, String* eventType)
         : Event(document, eventType)
         , m_violatedDirective(String::emptyString)
+        , m_blockedURI(String::emptyString)
     {
         initSecurityPolicyViolationEvent();
     }
@@ -64,6 +76,7 @@ public:
                                  const SecurityPolicyViolationEventInit& init)
         : Event(document, eventType, init)
         , m_violatedDirective(init.violatedDirective())
+        , m_blockedURI(init.blockedURI())
     {
     }
 
@@ -82,14 +95,23 @@ public:
     {
         return m_violatedDirective;
     }
-
     void setViolatedDirective(String* violatedDirective)
     {
         m_violatedDirective = violatedDirective;
     }
 
+    String* blockedURI() const
+    {
+        return m_blockedURI;
+    }
+    void setBlockedURI(String* blockedURI)
+    {
+        m_blockedURI = blockedURI;
+    }
+
 protected:
     String* m_violatedDirective;
+    String* m_blockedURI;
 };
 }
 

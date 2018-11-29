@@ -27,11 +27,12 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     size_t end)
     : m_contentSecurityPolicy(contentSecurityPolicy)
     , m_contextURL(contentSecurityPolicy->document()->documentURI())
-    , m_scriptSrc(nullptr)
-    , m_imgSrc(nullptr)
-    , m_styleSrc(nullptr)
     , m_connectSrc(nullptr)
     , m_frameSrc(nullptr)
+    , m_imgSrc(nullptr)
+    , m_mediaSrc(nullptr)
+    , m_scriptSrc(nullptr)
+    , m_styleSrc(nullptr)
 {
     if (begin == end)
         return;
@@ -95,6 +96,8 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* name,
         setDirective(m_frameSrc, name, value);
     } else if (name->equalsIgnoreCase("img-src")) {
         setDirective(m_imgSrc, name, value);
+    } else if (name->equalsIgnoreCase("media-src")) {
+        setDirective(m_mediaSrc, name, value);
     } else if (name->equalsIgnoreCase("script-src")) {
         setDirective(m_scriptSrc, name, value);
     } else if (name->equalsIgnoreCase("style-src")) {
@@ -123,6 +126,8 @@ ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
         return m_frameSrc;
     case CSPDirectives::ImgSrc:
         return m_imgSrc;
+    case CSPDirectives::MediaSrc:
+        return m_mediaSrc;
     case CSPDirectives::ScriptSrc:
         return m_scriptSrc;
     case CSPDirectives::StyleSrc:

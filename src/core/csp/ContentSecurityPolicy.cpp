@@ -77,6 +77,8 @@ static String* getDirectiveName(CSPDirectives directive)
         return String::createASCIIString("frame-src");
     case CSPDirectives::ImgSrc:
         return String::createASCIIString("img-src");
+    case CSPDirectives::MediaSrc:
+        return String::createASCIIString("media-src");
     case CSPDirectives::ScriptSrc:
         return String::createASCIIString("script-src");
     case CSPDirectives::StyleSrc:
@@ -107,7 +109,8 @@ bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
             !policy->allowScheme(directive, resUrl) &&
             !policy->allowHost(directive, resUrl)) {
             // TODO: check the query with default-src policies
-            dispatchViolationEvent(getDirectiveName(directive));
+            dispatchViolationEvent(getDirectiveName(directive),
+                                   resUrl->urlString());
             STARFISH_LOG_WARN(
                 "Refused to use '%s' as a source of '%s' because it violates "
                 "the Content Security Policy\n",
@@ -136,7 +139,6 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
                 "Refused to execute contents as an inline-source of '%s' "
                 "because it violates the Content Security Policy\n",
                 CSTR(getDirectiveName(directive)));
-
             return false;
         }
     }
@@ -159,7 +161,8 @@ bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
     return true;
 }
 
-void ContentSecurityPolicy::dispatchViolationEvent(String* name)
+void ContentSecurityPolicy::dispatchViolationEvent(String* name,
+                                                   String* blockedURI)
 {
     String* eventType = window()
                             ->starfish()
@@ -168,6 +171,7 @@ void ContentSecurityPolicy::dispatchViolationEvent(String* name)
     auto event =
         new SecurityPolicyViolationEvent(window()->document(), eventType);
     event->setViolatedDirective(name);
+    event->setBlockedURI(blockedURI);
     window()->dispatchEventIdleTimeByUA(event);
 }
 

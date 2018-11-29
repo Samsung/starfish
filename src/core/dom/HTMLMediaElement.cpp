@@ -40,6 +40,7 @@
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/util/URL.h"
+#include "core/csp/ContentSecurityPolicy.h"
 #include "platform/multimedia/MediaPlayer.h"
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
@@ -155,8 +156,8 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-
-    if (name == starfish()->staticStrings()->m_src) {
+    StaticStrings* ss = starfish()->staticStrings();
+    if (name == ss->m_src) {
         if (!document()->inParsing() &&
             (autoplay() || preloadValue() != HTMLMediaElement::PRELOAD_NONE)) {
             MEDIA_ELEMENT_LOG(
@@ -167,11 +168,13 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
                 preload()->toUTF8NonGCString().data());
             load();
         }
-    } else if (name == starfish()->staticStrings()->m_loop) {
+    } else if (name == ss->m_loop) {
         MediaPlayer* player = activeMediaPlayer();
         if (player) {
             player->setLoop(!attributeRemoved);
         }
+    } else if (name == ss->m_onloadeddata) {
+        setAttributeEventListener(ss->m_loadeddata, value, this);
     }
 }
 
@@ -1295,18 +1298,20 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
     }
 
     if (context->m_mode == ResourceSelectionContext::MODE_ATTRIBUTE) {
+        ResourceURL* url =
+            new ResourceURL(self->src(), self->document()->urlString());
         // If the src attribute's value is the empty string, then end the
         // synchronous section, and jump down to the failed with attribute step
         // below.
-        if (self->src()->containsOnlyWhitespace()) {
+        if (self->src()->containsOnlyWhitespace() ||
+            !self->document()->contentSecurityPolicy()->allowSource(
+                CSPDirectives::MediaSrc, url)) {
             self->dedicatedMediaSourceFailure();
             return;
         }
 
         // If urlString was obtained successfully, set the currentSrc attribute
         // to urlString.
-        ResourceURL* url =
-            new ResourceURL(self->src(), self->document()->urlString());
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in
         // parallel.
@@ -1325,8 +1330,12 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
             return;
         }
         // Process candidate:
+        ResourceURL* url =
+            new ResourceURL(candidate->src(), self->document()->urlString());
         if (candidate->src()->length() == 0 ||
-            candidate->src()->containsOnlyWhitespace()) {
+            candidate->src()->containsOnlyWhitespace() ||
+            !self->document()->contentSecurityPolicy()->allowSource(
+                CSPDirectives::MediaSrc, url)) {
             // If candidate does not have a src attribute, or if its src
             // attribute's value is the empty string,
             // then end the synchronous section, and jump down to the failed
@@ -1351,8 +1360,6 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
                 new MediaOperationQueueDataRequestResourceSelection(self));
             return;
         }
-        ResourceURL* url =
-            new ResourceURL(candidate->src(), self->document()->urlString());
         self->m_currentSrc = url->urlString();
         // End the synchronous section, continuing the remaining steps in
         // parallel.
