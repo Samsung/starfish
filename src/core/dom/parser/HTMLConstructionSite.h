@@ -305,7 +305,7 @@ private:
             parent = newParent;
             STARFISH_ASSERT(!nextChild || nextChild == newNextChild);
             nextChild = newNextChild;
-            stringBuilder.append(newString->toUTF32String());
+            stringBuilder.appendString(newString);
             whitespaceMode = std::min(whitespaceMode, newWhitespaceMode);
         }
 
@@ -336,8 +336,7 @@ private:
 
         Node* parent;
         Node* nextChild;
-        // StringBuilder stringBuilder;
-        UTF32String stringBuilder;
+        StringBuilder stringBuilder;
         WhitespaceMode whitespaceMode;
     };
 

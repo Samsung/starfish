@@ -329,3 +329,5 @@ test/cairo/internal-test/css/style/style-content-with-quotes.html
 test/cairo/internal-test/css/display/inlineblock_ascender.html
 test/cairo/internal-test/css/table/table_min_height.html
 test/cairo/internal-test/css/transform/screenExtentTest.html
+test/cairo/internal-test/css/style/cssinherit.html
+test/cairo/internal-test/css/opacity/3d-layer-overlapped.html

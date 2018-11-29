@@ -57,14 +57,14 @@ enum ComputedStyleDamage {
 
 union FontFamilyData {
     size_t m_length;
-    String* m_familyName;
+    AtomicString m_familyName;
 
     FontFamilyData(size_t len)
         : m_length(len)
     {
     }
 
-    FontFamilyData(String* familyName)
+    FontFamilyData(const AtomicString& familyName)
         : m_familyName(familyName)
     {
     }
@@ -73,6 +73,7 @@ union FontFamilyData {
 class FilterFunctions;
 
 class RareComputedStyleData : public gc {
+public:
     enum KeyKind {
         Order,
         ZIndex,
@@ -384,16 +385,19 @@ class RareComputedStyleData : public gc {
         }
     };
 
-public:
     RareComputedStyleData()
     {
     }
 
-#define FIND_VALUE(Name)                                               \
-    auto it = std::find_if(m_styles.begin(), m_styles.end(),           \
-                           [](RareComputedStyleValuePair pair) {       \
-                               return pair.keyKind() == KeyKind::Name; \
-                           });
+#define FIND_VALUE(Name)                        \
+    auto it = m_styles.begin();                 \
+    auto end = m_styles.end();                  \
+    while (end != it) {                         \
+        if ((*it).keyKind() == KeyKind::Name) { \
+            break;                              \
+        }                                       \
+        it++;                                   \
+    }
 
 #define CLEARER(Name)               \
     void clear##Name()              \
@@ -812,6 +816,12 @@ public:
     PositionValue position()
     {
         return m_position;
+    }
+
+    bool isAbsolutePositioned()
+    {
+        return m_position == PositionValue::AbsolutePositionValue ||
+               m_position == PositionValue::FixedPositionValue;
     }
 
     void setPosition(PositionValue p)

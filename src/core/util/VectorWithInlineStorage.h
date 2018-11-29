@@ -35,15 +35,40 @@ public:
     }
 
     VectorWithInlineStorage<InlineStorageSize, T, ExternalStoreageAllocator>&
-    operator=(const VectorWithInlineStorage<
-              InlineStorageSize, T, ExternalStoreageAllocator>&& src) = delete;
+    operator=(VectorWithInlineStorage<InlineStorageSize, T,
+                                      ExternalStoreageAllocator>&& src)
+    {
+        m_size = src.m_size;
+
+        if (LIKELY(m_size <= InlineStorageSize)) {
+            for (size_t i = 0; i < m_size; i++) {
+                m_inlineStorage[i] = std::move(src.m_inlineStorage[i]);
+            }
+        } else {
+            m_externalStorage = std::move(src.m_externalStorage);
+        }
+        src.m_size = 0;
+        return *this;
+    }
+
     VectorWithInlineStorage<InlineStorageSize, T, ExternalStoreageAllocator>&
-    operator=(const VectorWithInlineStorage<
-              InlineStorageSize, T, ExternalStoreageAllocator>& src) = delete;
+    operator=(const VectorWithInlineStorage<InlineStorageSize, T,
+                                            ExternalStoreageAllocator>& src)
+    {
+        m_size = src.m_size;
+        if (LIKELY(m_size <= InlineStorageSize)) {
+            for (size_t i = 0; i < m_size; i++) {
+                m_inlineStorage[i] = src.m_inlineStorage[i];
+            }
+        } else {
+            m_externalStorage = src.m_externalStorage;
+        }
+        return *this;
+    }
 
     void push_back(const T& decl)
     {
-        if (m_size < InlineStorageSize) {
+        if (LIKELY(m_size < InlineStorageSize)) {
             m_inlineStorage[m_size] = decl;
         } else if (m_size == InlineStorageSize) {
             m_externalStorage.assign(m_inlineStorage, m_inlineStorage + m_size);
@@ -56,7 +81,7 @@ public:
 
     void push_back(T&& decl)
     {
-        if (m_size < InlineStorageSize) {
+        if (LIKELY(m_size < InlineStorageSize)) {
             m_inlineStorage[m_size] = std::move(decl);
         } else if (m_size == InlineStorageSize) {
             m_externalStorage.assign(m_inlineStorage, m_inlineStorage + m_size);
@@ -69,7 +94,7 @@ public:
 
     T& operator[](const size_t& idx)
     {
-        if (m_size <= InlineStorageSize) {
+        if (LIKELY(m_size <= InlineStorageSize)) {
             return m_inlineStorage[idx];
         } else {
             return m_externalStorage[idx];
@@ -78,7 +103,7 @@ public:
 
     const T& operator[](const size_t& idx) const
     {
-        if (m_size <= InlineStorageSize) {
+        if (LIKELY(m_size <= InlineStorageSize)) {
             return m_inlineStorage[idx];
         } else {
             return m_externalStorage[idx];
@@ -87,7 +112,7 @@ public:
 
     T* data()
     {
-        if (m_size <= InlineStorageSize) {
+        if (LIKELY(m_size <= InlineStorageSize)) {
             return m_inlineStorage;
         } else {
             return m_externalStorage.data();

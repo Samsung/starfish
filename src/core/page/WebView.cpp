@@ -271,8 +271,12 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     initRenderingFlags();
     initStorage();
 
-    m_initialFontFamilyDatas = (new (GC_MALLOC(sizeof(FontFamilyData) * 2))
-                                    FontFamilyData[2]{ 1, defaultFontName });
+    AtomicString atomicDefaultFontName =
+        AtomicString::createAtomicString(starfish, defaultFontName);
+
+    m_initialFontFamilyDatas =
+        (new (GC_MALLOC_ATOMIC(sizeof(FontFamilyData) * 2))
+             FontFamilyData[2]{ 1, atomicDefaultFontName });
 
     m_platformFontSelector = PlatformFontSelector::create(this);
     m_platformFontCache = PlatformFontCache::create(this);
@@ -1306,8 +1310,8 @@ RenderResult WebView::rendering(bool force)
                     m_rootStackingContext ==
                     mainFrame->firstChild()->asFrameBox()->stackingContext());
 
-                auto iter = m_stackingContextsNeedsGraphicsBuffer.rbegin();
-                while (iter != m_stackingContextsNeedsGraphicsBuffer.rend()) {
+                auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
+                while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
                     (*iter)->fillGraphicsBufferContents(ctx);
                     iter++;
                 }
@@ -1392,9 +1396,10 @@ RenderResult WebView::rendering(bool force)
         if (mainBrowsingContext()->document()->frame()->firstChild() &&
             m_rootStackingContext->needsGraphicsBuffer()) {
             if (!didPainting) {
+                INSTALL_PROFILE_TIMER("composite - fill blank tiles");
                 // fill blank tiles first before using 3d context
-                auto iter = m_stackingContextsNeedsGraphicsBuffer.rbegin();
-                while (iter != m_stackingContextsNeedsGraphicsBuffer.rend()) {
+                auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
+                while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
                     (*iter)->fillGraphicsBufferContentsWithoutClipRect();
                     iter++;
                 }
@@ -1415,7 +1420,13 @@ RenderResult WebView::rendering(bool force)
                 mainBrowsingContext()->clearingBeforePaint(compositor);
             }
 
-            m_rootStackingContext->compositeStackingContext(compositor);
+            {
+                auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
+                while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
+                    (*iter)->compositeStackingContext(compositor);
+                    iter++;
+                }
+            }
 
             compositor->restore();
 

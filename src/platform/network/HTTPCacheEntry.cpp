@@ -59,23 +59,6 @@ HTTPCacheEntry::~HTTPCacheEntry()
 {
 }
 
-HTTPCacheEntry::HTTPCacheEntry(const HTTPCacheEntry& rhs)
-{
-    if (this == &rhs) {
-        return;
-    }
-
-    m_url = new ResourceURL(*(rhs.m_url));
-    m_cacheControl = rhs.m_cacheControl;
-    m_httpContentInfo = rhs.m_httpContentInfo;
-    m_httpFreshnessInfo = rhs.m_httpFreshnessInfo;
-    m_entryFileInfo = rhs.m_entryFileInfo;
-
-    m_mutex = new Mutex();
-    m_usingCount = rhs.m_usingCount;
-    m_good = rhs.m_good;
-}
-
 size_t HTTPCacheEntry::entryKey() const
 {
     Locker<Mutex> locker(*m_mutex);
@@ -169,27 +152,25 @@ bool HTTPCacheEntry::readRawDataFromEntryFile(std::vector<char>& out)
 void HTTPCacheEntry::readEntryHeaders(HeaderMap& out)
 {
     char buf[256];
-    m_mutex->lock();
-    HTTPContentInfo copied = m_httpContentInfo;
-    m_mutex->unlock();
+    Locker<Mutex> locker(*m_mutex);
 
-    if (copied.contentLanguage.size()) {
+    if (m_httpContentInfo.contentLanguage.size()) {
         out.insert(std::make_pair(HTTPHeaderMap::kContentLanguage,
-                                  copied.contentLanguage));
+                                  m_httpContentInfo.contentLanguage));
     }
 
-    if (copied.contentLength) {
-        snprintf(buf, sizeof(buf), "%zu", copied.contentLength);
+    if (m_httpContentInfo.contentLength) {
+        snprintf(buf, sizeof(buf), "%zu", m_httpContentInfo.contentLength);
         out.insert(
             std::make_pair(HTTPHeaderMap::kContentLength, std::string(buf)));
     }
-    if (copied.contentType.size()) {
-        out.insert(
-            std::make_pair(HTTPHeaderMap::kContentType, copied.contentType));
+    if (m_httpContentInfo.contentType.size()) {
+        out.insert(std::make_pair(HTTPHeaderMap::kContentType,
+                                  m_httpContentInfo.contentType));
     }
-    if (copied.contentTransferEncoding.size()) {
+    if (m_httpContentInfo.contentTransferEncoding.size()) {
         out.insert(std::make_pair(HTTPHeaderMap::kContentTransferEncoding,
-                                  copied.contentTransferEncoding));
+                                  m_httpContentInfo.contentTransferEncoding));
     }
 }
 
@@ -313,18 +294,6 @@ String* HTTPCacheEntry::toString() const
     builder.appendString(byteLength.data());
 
     return builder.finalize();
-}
-
-void HTTPCacheEntry::increaseUsingCount()
-{
-    Locker<Mutex> locker(*m_mutex);
-    m_usingCount++;
-}
-
-void HTTPCacheEntry::decreaseUsingCount()
-{
-    Locker<Mutex> locker(*m_mutex);
-    m_usingCount--;
 }
 
 void HTTPCacheEntry::setNeedsRawDataUpdate(bool value)

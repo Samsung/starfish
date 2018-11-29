@@ -20,6 +20,8 @@
 #ifndef __StarfishHTTPCacheEntry_
 #define __StarfishHTTPCacheEntry_
 
+#include "core/util/RefCounted.h"
+#include "core/util/RefPtr.h"
 #include "platform/network/http/HTTPUtil.h"
 
 namespace Starfish {
@@ -39,7 +41,7 @@ struct EntryFileInfo {
     size_t byteLength;
 };
 
-class HTTPCacheEntry : public gc {
+class HTTPCacheEntry : public RefCounted<HTTPCacheEntry>, public gc {
 public:
     HTTPCacheEntry(ResourceURL* url, CacheControl& cacheControl,
                    HTTPContentInfo& cinfo, HTTPFreshnessInfo& finfo);
@@ -48,7 +50,6 @@ public:
                    EntryFileInfo& einfo);
 
     ~HTTPCacheEntry();
-    HTTPCacheEntry(const HTTPCacheEntry& rhs);
 
     ResourceURL* url() const
     {
@@ -115,9 +116,6 @@ public:
                *this->m_url == *other.m_url;
     }
 
-    void increaseUsingCount();
-    void decreaseUsingCount();
-
     size_t usingCount()
     {
         return m_usingCount;
@@ -169,7 +167,8 @@ private:
     bool m_good;
 };
 
-typedef GCUnorderedMultiMap<size_t, HTTPCacheEntry*> HTTPCacheEntryMultiMap;
+typedef GCUnorderedMultiMap<size_t, RefPtr<HTTPCacheEntry>>
+    HTTPCacheEntryMultiMap;
 }
 #endif
 #endif

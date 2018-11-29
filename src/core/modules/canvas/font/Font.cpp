@@ -315,7 +315,8 @@ Font* FontSelector::loadFont(String* familyNameArray[],
     UTF8StringDataNonGCStd familyName = document()
                                             ->webView()
                                             ->initialFontFamilyDatas()[1]
-                                            .m_familyName->toUTF8NonGCString();
+                                            .m_familyName.string()
+                                            ->toUTF8NonGCString();
     UTF8StringDataNonGCStd cacheStr =
         mergeStyleWeightWithString(familyName, style, weight);
 

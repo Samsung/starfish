@@ -464,6 +464,11 @@ public:
         return m_needsStyleRecalc;
     }
 
+    void markNeedsStyleRecalc()
+    {
+        m_needsStyleRecalc = true;
+    }
+
     void clearNeedsStyleRecalc()
     {
         m_needsStyleRecalc = false;
@@ -491,6 +496,11 @@ public:
             parent->m_childNeedsStyleRecalc = true;
             parent = parent->parentNode();
         }
+    }
+
+    void markChildNeedsStyleRecalc()
+    {
+        m_childNeedsStyleRecalc = true;
     }
 
     bool childNeedsStyleRecalc()

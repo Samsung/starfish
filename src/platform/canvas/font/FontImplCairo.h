@@ -383,7 +383,8 @@ public:
 
         if (familyName !=
             m_webView->initialFontFamilyDatas()[1]
-                .m_familyName->toUTF8NonGCString()) {
+                .m_familyName.string()
+                ->toUTF8NonGCString()) {
             if (after != familyName) {
                 if (!isGenericName) {
                     FcPatternDestroy(resultPattern);

@@ -71,10 +71,17 @@ private:
         AncestorStackFrame(Element* element)
             : m_element(element)
         {
-            m_identifierHashes.reserve(10);
         }
+
+        AncestorStackFrame(AncestorStackFrame&& frame)
+        {
+            m_element = frame.m_element;
+            m_identifierHashes = std::move(frame.m_identifierHashes);
+        }
+
         Element* m_element;
-        std::vector<unsigned> m_identifierHashes;
+        VectorWithInlineStorage<16, unsigned, std::allocator<unsigned>>
+            m_identifierHashes;
     };
     std::vector<AncestorStackFrame> m_parentStack;
 

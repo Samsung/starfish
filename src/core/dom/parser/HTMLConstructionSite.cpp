@@ -306,16 +306,16 @@ void HTMLConstructionSite::flushPendingText()
     // unsigned lengthLimit = textLengthLimitForContainer(pendingText.parent);
 
     unsigned currentPosition = 0;
-    const UTF32String& string = pendingText.stringBuilder;
-    while (currentPosition < string.length()) {
+    while (currentPosition < pendingText.stringBuilder.length()) {
         // unsigned proposedBreakIndex = std::min(currentPosition + lengthLimit,
         // (unsigned)string.length());
         // unsigned breakIndex = findBreakIndexBetween(string, currentPosition,
         // proposedBreakIndex);
-        unsigned breakIndex = string.length();
-        STARFISH_ASSERT(breakIndex <= string.length());
-        String* substring = String::createASCIIStringFromUTF32SourceIfPossible(
-            string.substr(currentPosition, breakIndex - currentPosition));
+        unsigned breakIndex = pendingText.stringBuilder.length();
+        STARFISH_ASSERT(breakIndex <= pendingText.stringBuilder.length());
+
+        String* substring = pendingText.stringBuilder.finalize()->substring(
+            currentPosition, breakIndex - currentPosition);
         substring =
             atomizeIfAllWhitespace(substring, pendingText.whitespaceMode);
 

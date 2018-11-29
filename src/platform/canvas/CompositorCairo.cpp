@@ -235,9 +235,6 @@ public:
         checkError();
         cairo_set_source(m_canvas, resizePattern);
 
-        cairo_rectangle(m_canvas, 0, 0, ww, hh);
-        cairo_clip(m_canvas);
-
         cairo_matrix_t t;
         cairo_get_matrix(m_canvas, &t);
         double x, y;
@@ -293,25 +290,6 @@ public:
         cairo_restore(m_canvas);
     }
 
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& dst)
-    {
-        void* imgData = data->data();
-        double surfaceWidth = 0, surfaceHeight = 0;
-        cairo_surface_t* image;
-
-        int stride = data->stride();
-        image = cairo_image_surface_create_for_data((unsigned char*)imgData,
-                                                    CAIRO_FORMAT, data->width(),
-                                                    data->height(), stride);
-        surfaceWidth = data->width();
-        surfaceHeight = data->height();
-        STARFISH_ASSERT(surfaceWidth);
-        STARFISH_ASSERT(surfaceHeight);
-        STARFISH_ASSERT(stride);
-        drawImageCairo(image, dst, surfaceWidth, surfaceHeight);
-        cairo_surface_destroy(image);
-    }
-
     virtual void drawSurface(CanvasSurface* data, const Unit::Rect& dst)
     {
         cairo_surface_t* image;
@@ -324,74 +302,6 @@ public:
 
         cairo_surface_destroy(image);
         data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
-    }
-
-    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
-                                 float imageWidth, float imageHeight,
-                                 bool xRepeat, bool yRepeat)
-    {
-        cairo_save(m_canvas);
-        float xx = 0.0, yy = 0.0, ww = 0.0, hh = 0.0;
-        ww = dst.width();
-        hh = dst.height();
-
-        float x = 0.0, y = 0.0;
-        if (xRepeat) {
-            x = (dst.x() - floor(dst.x() / imageWidth) * imageWidth) -
-                imageWidth;
-        } else {
-            xx += dst.x();
-        }
-        if (yRepeat) {
-            y = (dst.y() - floor(dst.y() / imageHeight) * imageHeight) -
-                imageHeight;
-        } else {
-            yy += dst.y();
-        }
-
-        cairo_pattern_t* pattern;
-        cairo_matrix_t matrix;
-        cairo_surface_t* image = nullptr;
-
-        void* imgData = data->data();
-        double surfaceWidth = 0, surfaceHeight = 0;
-
-        if (imgData) {
-            int stride = data->stride();
-            image = cairo_image_surface_create_for_data(
-                (unsigned char*)imgData, CAIRO_FORMAT, data->width(),
-                data->height(), stride);
-            surfaceWidth = data->width();
-            surfaceHeight = data->height();
-        } else {
-            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        }
-
-        pattern = cairo_pattern_create_for_surface(image);
-        cairo_matrix_init_scale(&matrix, surfaceWidth / imageWidth,
-                                surfaceHeight / imageHeight);
-        cairo_matrix_translate(&matrix, -x, -y);
-
-        cairo_pattern_set_matrix(pattern, &matrix);
-        cairo_pattern_set_extend(pattern, CAIRO_EXTEND_REPEAT);
-
-        cairo_translate(m_canvas, xx, yy);
-        cairo_set_source(m_canvas, pattern);
-
-        cairo_rectangle(m_canvas, 0, 0, ww, hh);
-        cairo_clip(m_canvas);
-        cairo_paint(m_canvas);
-
-        cairo_pattern_destroy(pattern);
-        cairo_surface_destroy(image);
-
-        cairo_restore(m_canvas);
-    }
-
-    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
-                           const Unit::Rect& dst, bool xRepeat, bool yRepeat)
-    {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

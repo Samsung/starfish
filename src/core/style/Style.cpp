@@ -1927,7 +1927,7 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
     return style;
 }
 
-static void applyTransitionProperty(ComputedStyle* style,
+static void applyTransitionProperty(Element* element, ComputedStyle* style,
                                     ComputedStyle* parentStyle,
                                     CSSStyleValuePair& item, size_t layer)
 {
@@ -1937,7 +1937,9 @@ static void applyTransitionProperty(ComputedStyle* style,
         style->setTransitionProperty(CSSStyleValuePair::KeyKind::All, layer);
         break;
     case CSSStyleValuePair::Inherit:
-        style->markSomeNonInheritMemberExplicitlyInherited();
+        element->parentNode()
+            ->style()
+            ->markSomeNonInheritMemberExplicitlyInherited();
         STARFISH_ASSERT(layer == 0);
         style->setTransitionProperty(parentStyle->transitionProperty());
         break;
@@ -1949,7 +1951,7 @@ static void applyTransitionProperty(ComputedStyle* style,
     }
 }
 
-static void applyTransitionDuration(ComputedStyle* style,
+static void applyTransitionDuration(Element* element, ComputedStyle* style,
                                     ComputedStyle* parentStyle,
                                     CSSStyleValuePair& item, size_t layer)
 {
@@ -1959,7 +1961,9 @@ static void applyTransitionDuration(ComputedStyle* style,
         style->setTransitionDuration(CSSTime(0), layer);
         break;
     case CSSStyleValuePair::Inherit:
-        style->markSomeNonInheritMemberExplicitlyInherited();
+        element->parentNode()
+            ->style()
+            ->markSomeNonInheritMemberExplicitlyInherited();
         STARFISH_ASSERT(layer == 0);
         style->setTransitionDuration(parentStyle->transitionDuration());
         break;
@@ -1981,7 +1985,8 @@ static void applyTransitionDuration(ComputedStyle* style,
     }
 }
 
-static void applyTransitionTimingFunction(ComputedStyle* style,
+static void applyTransitionTimingFunction(Element* element,
+                                          ComputedStyle* style,
                                           ComputedStyle* parentStyle,
                                           CSSStyleValuePair& item, size_t layer)
 {
@@ -1992,7 +1997,9 @@ static void applyTransitionTimingFunction(ComputedStyle* style,
                                            layer);
         break;
     case CSSStyleValuePair::Inherit:
-        style->markSomeNonInheritMemberExplicitlyInherited();
+        element->parentNode()
+            ->style()
+            ->markSomeNonInheritMemberExplicitlyInherited();
         STARFISH_ASSERT(layer == 0);
         style->setTransitionTimingFunction(
             parentStyle->transitionTimingFunction());
@@ -2010,7 +2017,7 @@ static void applyTransitionTimingFunction(ComputedStyle* style,
     }
 }
 
-static void applyTransitionDelay(ComputedStyle* style,
+static void applyTransitionDelay(Element* element, ComputedStyle* style,
                                  ComputedStyle* parentStyle,
                                  CSSStyleValuePair& item, size_t layer)
 {
@@ -2020,7 +2027,9 @@ static void applyTransitionDelay(ComputedStyle* style,
         style->setTransitionDelay(CSSTime(0), layer);
         break;
     case CSSStyleValuePair::Inherit:
-        style->markSomeNonInheritMemberExplicitlyInherited();
+        element->parentNode()
+            ->style()
+            ->markSomeNonInheritMemberExplicitlyInherited();
         STARFISH_ASSERT(layer == 0);
         style->setTransitionDelay(parentStyle->transitionDelay());
         break;
@@ -2111,7 +2120,9 @@ void StyleResolver::apply(Element* element,
 
 #define MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED()                 \
     if (cssValues[k].valueKind() == CSSStyleValuePair::ValueKind::Inherit) { \
-        style->markSomeNonInheritMemberExplicitlyInherited();                \
+        element->parentNode()                                                \
+            ->style()                                                        \
+            ->markSomeNonInheritMemberExplicitlyInherited();                 \
     }
         switch (cssValues[k].keyKind()) {
         case CSSStyleValuePair::KeyKind::Display:
@@ -2455,20 +2466,22 @@ void StyleResolver::apply(Element* element,
                     element->document()->webView()->initialFontFamilyDatas();
             } else if (cssValues[k].valueKind() ==
                        CSSStyleValuePair::ValueKind::KeywordValueKind) {
-                FontFamilyData* data =
-                    (FontFamilyData*)GC_MALLOC(sizeof(FontFamilyData) * 2);
+                FontFamilyData* data = (FontFamilyData*)GC_MALLOC_ATOMIC(
+                    sizeof(FontFamilyData) * 2);
                 data[0].m_length = 1;
-                data[1].m_familyName = cssValues[k].keywordValue();
+                data[1].m_familyName = AtomicString::createAtomicString(
+                    element->starfish(), cssValues[k].keywordValue());
                 style->m_inheritedStyles.m_fontFamilyDatas = data;
             } else {
                 STARFISH_ASSERT(cssValues[k].valueKind() ==
                                 CSSStyleValuePair::ValueKind::ValueListKind);
                 ValueList* val = cssValues[k].multiValue();
-                FontFamilyData* data = (FontFamilyData*)GC_MALLOC(
+                FontFamilyData* data = (FontFamilyData*)GC_MALLOC_ATOMIC(
                     sizeof(FontFamilyData) * (val->size() + 1));
                 data[0].m_length = val->size();
                 for (size_t i = 0; i < val->size(); i++) {
-                    data[i + 1].m_familyName = val->at(i).keywordValue();
+                    data[i + 1].m_familyName = AtomicString::createAtomicString(
+                        element->starfish(), val->at(i).keywordValue());
                 }
                 style->m_inheritedStyles.m_fontFamilyDatas = data;
             }
@@ -3436,34 +3449,38 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::TransitionProperty:
             style->resetTransitionProperties();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyTransitionProperty(style, parentStyle, cssValues[k], 0);
+                applyTransitionProperty(element, style, parentStyle,
+                                        cssValues[k], 0);
             } else {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    applyTransitionProperty(style, parentStyle, (*list)[i], i);
+                    applyTransitionProperty(element, style, parentStyle,
+                                            (*list)[i], i);
                 }
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionDuration:
             style->resetTransitionDurations();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyTransitionDuration(style, parentStyle, cssValues[k], 0);
+                applyTransitionDuration(element, style, parentStyle,
+                                        cssValues[k], 0);
             } else {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    applyTransitionDuration(style, parentStyle, (*list)[i], i);
+                    applyTransitionDuration(element, style, parentStyle,
+                                            (*list)[i], i);
                 }
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
             style->resetTransitionTimingFunctions();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyTransitionTimingFunction(style, parentStyle, cssValues[k],
-                                              0);
+                applyTransitionTimingFunction(element, style, parentStyle,
+                                              cssValues[k], 0);
             } else {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    applyTransitionTimingFunction(style, parentStyle,
+                    applyTransitionTimingFunction(element, style, parentStyle,
                                                   (*list)[i], i);
                 }
             }
@@ -3471,11 +3488,13 @@ void StyleResolver::apply(Element* element,
         case CSSStyleValuePair::KeyKind::TransitionDelay:
             style->resetTransitionDelays();
             if (cssValues[k].valueKind() != CSSStyleValuePair::ValueListKind) {
-                applyTransitionDelay(style, parentStyle, cssValues[k], 0);
+                applyTransitionDelay(element, style, parentStyle, cssValues[k],
+                                     0);
             } else {
                 ValueList* list = cssValues[k].multiValue();
                 for (unsigned int i = 0; i < list->size(); i++) {
-                    applyTransitionDelay(style, parentStyle, (*list)[i], i);
+                    applyTransitionDelay(element, style, parentStyle,
+                                         (*list)[i], i);
                 }
             }
             break;
@@ -3894,7 +3913,9 @@ void StyleResolver::apply(Element* element,
         if (cssValues[k].valueKind() ==                                   \
             CSSStyleValuePair::ValueKind::Inherit) {                      \
             style->set##POS(parentStyle->pos());                          \
-            style->markSomeNonInheritMemberExplicitlyInherited();         \
+            element->parentNode()                                         \
+                ->style()                                                 \
+                ->markSomeNonInheritMemberExplicitlyInherited();          \
         } else if (cssValues[k].valueKind() ==                            \
                        CSSStyleValuePair::ValueKind::Initial ||           \
                    cssValues[k].valueKind() ==                            \
@@ -3934,7 +3955,9 @@ void StyleResolver::apply(Element* element,
             break;                                                         \
         } else if (cssValues[k].valueKind() ==                             \
                    CSSStyleValuePair::ValueKind::Inherit) {                \
-            style->markSomeNonInheritMemberExplicitlyInherited();          \
+            element->parentNode()                                          \
+                ->style()                                                  \
+                ->markSomeNonInheritMemberExplicitlyInherited();           \
             BorderData pBorder = parentStyle->border();                    \
             style->setBorder##POS##Style(pBorder.pos().style());           \
         } else if ((cssValues[k].valueKind() ==                            \
@@ -3961,7 +3984,9 @@ void StyleResolver::apply(Element* element,
             CSSStyleValuePair::ValueKind::Inherit) {                     \
             BorderData pBorder = parentStyle->border();                  \
             style->setBorder##POS##Width(pBorder.pos().width());         \
-            style->markSomeNonInheritMemberExplicitlyInherited();        \
+            element->parentNode()                                        \
+                ->style()                                                \
+                ->markSomeNonInheritMemberExplicitlyInherited();         \
         } else if ((cssValues[k].valueKind() ==                          \
                     CSSStyleValuePair::ValueKind::Initial) ||            \
                    (cssValues[k].valueKind() ==                          \
@@ -3998,7 +4023,9 @@ void StyleResolver::apply(Element* element,
             CSSStyleValuePair::ValueKind::Inherit) {                        \
             BorderData pBorder = parentStyle->border();                     \
             style->setBorder##POS##Color(pBorder.pos().color());            \
-            style->markSomeNonInheritMemberExplicitlyInherited();           \
+            element->parentNode()                                           \
+                ->style()                                                   \
+                ->markSomeNonInheritMemberExplicitlyInherited();            \
         } else if ((cssValues[k].valueKind() ==                             \
                     CSSStyleValuePair::ValueKind::Initial) ||               \
                    (cssValues[k].valueKind() ==                             \
@@ -4025,27 +4052,29 @@ void StyleResolver::apply(Element* element,
             ADD_RESOLVE_STYLE_BORDER_COLOR(Bottom, bottom)
             ADD_RESOLVE_STYLE_BORDER_COLOR(Left, left)
 #undef ADD_RESOLVE_STYLE_BORDER_COLOR
-#define ADD_RESOLVE_STYLE_MARGIN(POS, pos)                        \
-    case CSSStyleValuePair::KeyKind::Margin##POS:                 \
-        if (cssValues[k].valueKind() ==                           \
-            CSSStyleValuePair::ValueKind::Inherit) {              \
-            LengthData pMargin = parentStyle->margin();           \
-            style->setMargin##POS(pMargin.pos());                 \
-            style->markSomeNonInheritMemberExplicitlyInherited(); \
-        } else if ((cssValues[k].valueKind() ==                   \
-                    CSSStyleValuePair::ValueKind::Initial) ||     \
-                   (cssValues[k].valueKind() ==                   \
-                    CSSStyleValuePair::ValueKind::Unset)) {       \
-            style->setMargin##POS(Length(Length::Fixed, 0));      \
-        } else {                                                  \
-            Nullable<Length> length = convertValueToLength(       \
-                cssValues[k].valueKind(), cssValues[k].value());  \
-            if (length.hasValue()) {                              \
-                style->setMargin##POS(length.getValue());         \
-            } else {                                              \
-                style->setMargin##POS(Length(Length::Fixed, 0));  \
-            }                                                     \
-        }                                                         \
+#define ADD_RESOLVE_STYLE_MARGIN(POS, pos)                       \
+    case CSSStyleValuePair::KeyKind::Margin##POS:                \
+        if (cssValues[k].valueKind() ==                          \
+            CSSStyleValuePair::ValueKind::Inherit) {             \
+            LengthData pMargin = parentStyle->margin();          \
+            style->setMargin##POS(pMargin.pos());                \
+            element->parentNode()                                \
+                ->style()                                        \
+                ->markSomeNonInheritMemberExplicitlyInherited(); \
+        } else if ((cssValues[k].valueKind() ==                  \
+                    CSSStyleValuePair::ValueKind::Initial) ||    \
+                   (cssValues[k].valueKind() ==                  \
+                    CSSStyleValuePair::ValueKind::Unset)) {      \
+            style->setMargin##POS(Length(Length::Fixed, 0));     \
+        } else {                                                 \
+            Nullable<Length> length = convertValueToLength(      \
+                cssValues[k].valueKind(), cssValues[k].value()); \
+            if (length.hasValue()) {                             \
+                style->setMargin##POS(length.getValue());        \
+            } else {                                             \
+                style->setMargin##POS(Length(Length::Fixed, 0)); \
+            }                                                    \
+        }                                                        \
         break;
             ADD_RESOLVE_STYLE_MARGIN(Top, top)
             ADD_RESOLVE_STYLE_MARGIN(Right, right)
@@ -4058,7 +4087,9 @@ void StyleResolver::apply(Element* element,
             CSSStyleValuePair::ValueKind::Inherit) {              \
             LengthData pPadding = parentStyle->padding();         \
             style->setPadding##POS(pPadding.pos());               \
-            style->markSomeNonInheritMemberExplicitlyInherited(); \
+            element->parentNode()                                 \
+                ->style()                                         \
+                ->markSomeNonInheritMemberExplicitlyInherited();  \
         } else if ((cssValues[k].valueKind() ==                   \
                     CSSStyleValuePair::ValueKind::Initial) ||     \
                    (cssValues[k].valueKind() ==                   \
@@ -5217,7 +5248,9 @@ void StyleResolver::apply(Element* element,
                                          Length(Length::Fixed, 0));           \
         } else if (cssValues[k].valueKind() ==                                \
                    CSSStyleValuePair::ValueKind::Inherit) {                   \
-            style->markSomeNonInheritMemberExplicitlyInherited();             \
+            element->parentNode()                                             \
+                ->style()                                                     \
+                ->markSomeNonInheritMemberExplicitlyInherited();              \
             auto p = parentStyle->borderRadius();                             \
             style->setBorder##AB##Radius(p.m_##ab##AA, p.m_##ab##BB);         \
         } else if (cssValues[k].valueKind() ==                                \
@@ -6546,12 +6579,6 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             }
             damage = (ComputedStyleDamage)(
                 damage | compareStyle(element->style(), style, damagedKeys));
-
-            if (damage != ComputedStyleDamage::ComputedStyleDamageNone &&
-                element->style()->someNonInheritMemberExplicitlyInherited()) {
-                damage = (ComputedStyleDamage)(
-                    damage | ComputedStyleDamage::ComputedStyleDamageInherited);
-            }
         }
 
         ComputedStyle* oldStyle = element->style();
@@ -6677,12 +6704,6 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
 
             damage = (ComputedStyleDamage)(
                 damage | compareStyle(oldStyle, style, damagedKeys));
-
-            if (damage != ComputedStyleDamage::ComputedStyleDamageNone &&
-                element->style()->someNonInheritMemberExplicitlyInherited()) {
-                damage = (ComputedStyleDamage)(
-                    damage | ComputedStyleDamage::ComputedStyleDamageInherited);
-            }
         }
 
         {
@@ -6805,6 +6826,19 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
             auto damage =
                 resolveElementStyle(ctx, resolver, child->asElement(),
                                     parentElementStyle, inheritedStyleChanged);
+
+            if (damage != ComputedStyleDamage::ComputedStyleDamageNone &&
+                oldStyle &&
+                oldStyle->someNonInheritMemberExplicitlyInherited()) {
+                child->markChildNeedsStyleRecalc();
+                Node* grandChild = child->firstChild();
+                while (grandChild) {
+                    if (grandChild->isElement()) {
+                        grandChild->markNeedsStyleRecalc();
+                    }
+                    grandChild = grandChild->nextSibling();
+                }
+            }
 
             child->m_gotInheritedStyleDirty =
                 damage & ComputedStyleDamage::ComputedStyleDamageInherited;

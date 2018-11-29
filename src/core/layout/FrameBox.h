@@ -146,9 +146,9 @@ public:
 
     // FrameRect including outline, box-shadow
     LayoutRect frameVisibleRect();
-    LayoutRect frameVisibleOutlineRect();
-    LayoutRect frameVisibleShadowsRect();
-    LayoutRect frameVisibleFilterRect();
+    LayoutRect frameVisibleOutlineRect(OutlineData* outline);
+    LayoutRect frameVisibleShadowsRect(ShadowDataList* boxShadow);
+    LayoutRect frameVisibleFilterRect(FilterFunctions* filter);
 
     LayoutUnit x() const
     {
@@ -799,12 +799,6 @@ public:
     }
 
     virtual void didCompsiteStackingContext(Compositor* c)
-    {
-    }
-
-    // this callback only called (establishesStackingContext &&
-    // !needsGraphicsBuffer)
-    virtual void compsitingStackingContext(Compositor* c)
     {
     }
 
