@@ -88,7 +88,7 @@ static String* getDirectiveName(CSPDirectives directive)
     return String::emptyString;
 }
 
-bool ContentSecurityPolicy::allowInlineEventHandlers(String* contextURL)
+bool ContentSecurityPolicy::allowInlineEventHandler()
 {
     return allowInline(CSPDirectives::ScriptSrc, nullptr);
 }
@@ -133,7 +133,7 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
             !policy->allowContent(directive, scriptContent)) {
             dispatchViolationEvent(getDirectiveName(directive));
             STARFISH_LOG_WARN(
-                "Refused to execute contents as a inline-source of '%s' "
+                "Refused to execute contents as an inline-source of '%s' "
                 "because it violates the Content Security Policy\n",
                 CSTR(getDirectiveName(directive)));
 

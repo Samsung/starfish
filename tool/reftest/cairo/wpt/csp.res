@@ -384,22 +384,22 @@ http://web-platform.test:8000/content-security-policy/script-src/script-src-wild
 #http://web-platform.test:8000/content-security-policy/securitypolicyviolation/upgrade-insecure-requests-reporting.https.html
 #
 #
-#http://web-platform.test:8000/content-security-policy/style-src/injected-inline-style-allowed.sub.html
+#http://web-platform.test:8000/content-security-policy/style-src/injected-inline-style-allowed.sub.html # document.styleSheets.length
 http://web-platform.test:8000/content-security-policy/style-src/injected-inline-style-blocked.sub.html
 http://web-platform.test:8000/content-security-policy/style-src/inline-style-allowed.sub.html
 #http://web-platform.test:8000/content-security-policy/style-src/inline-style-allowed-while-cloning-objects.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/inline-style-attribute-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/inline-style-attribute-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/inline-style-attribute-on-html.sub.html
+http://web-platform.test:8000/content-security-policy/style-src/inline-style-attribute-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/style-src/inline-style-attribute-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/style-src/inline-style-attribute-on-html.sub.html
 http://web-platform.test:8000/content-security-policy/style-src/inline-style-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/style-allowed.sub.html
+#http://web-platform.test:8000/content-security-policy/style-src/style-allowed.sub.html # document.styleSheets.length
 http://web-platform.test:8000/content-security-policy/style-src/style-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/stylehash-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/style-src/stylehash-allowed.sub.html
 http://web-platform.test:8000/content-security-policy/style-src/stylehash-basic-blocked.sub.html
 http://web-platform.test:8000/content-security-policy/style-src/stylehash-default-src.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/stylenonce-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/stylenonce-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/style-src-error-event-fires.html
+http://web-platform.test:8000/content-security-policy/style-src/stylenonce-allowed.sub.html
+#http://web-platform.test:8000/content-security-policy/style-src/stylenonce-blocked.sub.html # window.getComputedStyle(el).color
+http://web-platform.test:8000/content-security-policy/style-src/style-src-error-event-fires.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-allowed.html
 #http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-blocked.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-default-src-allowed.html

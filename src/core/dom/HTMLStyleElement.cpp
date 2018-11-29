@@ -146,6 +146,9 @@ void HTMLStyleElement::generateStyleSheet()
     if (str->length() > 0 &&
         !document()->contentSecurityPolicy()->allowInline(
             CSPDirectives::StyleSrc, str, nonce())) {
+        String* eventType = starfish()->staticStrings()->m_error.localName();
+        Event* e = new Event(document(), eventType, EventInit(false, false));
+        dispatchEventIdleTimeByUA(e);
         return;
     }
 

@@ -382,7 +382,10 @@ const char* getWindowsTempDir();
 #define STARFISH_LOG_INFO(...) ::Starfish::forwardPrintingLogInfo(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_ERROR(...) fprintf(stderr, __VA_ARGS__);
+#define STARFISH_LOG_ERROR(fmt, ...)                                \
+    do {                                                            \
+        fprintf(stderr, "\033[0;31m" fmt "\033[0m", ##__VA_ARGS__); \
+    } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_ERROR
 #include <dlog.h>
@@ -402,7 +405,10 @@ const char* getWindowsTempDir();
     ::Starfish::forwardPrintingLogError(__VA_ARGS__);
 #endif
 
-#define STARFISH_LOG_WARN(...) fprintf(stderr, __VA_ARGS__);
+#define STARFISH_LOG_WARN(fmt, ...)                                 \
+    do {                                                            \
+        fprintf(stderr, "\033[0;33m" fmt "\033[0m", ##__VA_ARGS__); \
+    } while (0);
 #ifdef STARFISH_TIZEN
 #undef STARFISH_LOG_WARN
 #include <dlog.h>

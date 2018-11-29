@@ -29,6 +29,7 @@
 #include "core/dom/DOMStringMap.h"
 #include "core/dom/DOMTokenList.h"
 #include "core/dom/Element.h"
+#include "core/dom/Event.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLBodyElement.h"
@@ -50,10 +51,10 @@
 #include "core/style/ComputedStyle.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSStyleDeclaration.h"
+#include "core/csp/ContentSecurityPolicy.h"
 #ifdef STARFISH_ENABLE_TTS
 #include "core/modules/tts/TextAlternativeHelper.h"
 #include "core/modules/tts/TTS.h"
-#include "core/dom/Event.h"
 #endif
 
 namespace Starfish {
@@ -498,6 +499,17 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
 
         setNeedsStyleRecalc(StyleChangeReason::ClassChange);
     } else if (name == ss->m_style) {
+        if (!value->isEmpty() &&
+            !document()->contentSecurityPolicy()->allowInline(
+                CSPDirectives::StyleSrc, value)) {
+            String* eventType =
+                starfish()->staticStrings()->m_error.localName();
+            Event* e =
+                new Event(document(), eventType, EventInit(false, false));
+            dispatchEventIdleTimeByUA(e);
+            return;
+        }
+
         if (attributeCreated) {
             registerInlineStyleCallback();
         }
