@@ -80,7 +80,7 @@ private:
                                         m_styleSrc));
     }
 
-    static size_t skipSpace(String* src, size_t begin, size_t end);
+    static size_t skipSpaceAndNewline(String* src, size_t begin, size_t end);
 };
 }
 
