@@ -50,46 +50,34 @@ public:
     bool allowInline(CSPDirectives directive);
     bool allowEval(CSPDirectives directive);
 
-    ContentSecurityPolicySourceListDirective* scriptSrc()
-    {
-        return m_scriptSrc;
-    }
-    ContentSecurityPolicySourceListDirective* imgSrc()
-    {
-        return m_imgSrc;
-    }
-    ContentSecurityPolicySourceListDirective* styleSrc()
-    {
-        return m_styleSrc;
-    }
-    ContentSecurityPolicySourceListDirective* connectSrc()
-    {
-        return m_connectSrc;
-    }
     ContentSecurityPolicySourceListDirective* getSourceList(
         CSPDirectives directive);
 
 private:
     ContentSecurityPolicy* m_contentSecurityPolicy;
     ResourceURL* m_contextURL;
-    ContentSecurityPolicySourceListDirective* m_scriptSrc;
-    ContentSecurityPolicySourceListDirective* m_imgSrc;
-    ContentSecurityPolicySourceListDirective* m_styleSrc;
+
     ContentSecurityPolicySourceListDirective* m_connectSrc;
     ContentSecurityPolicySourceListDirective* m_frameSrc;
+    ContentSecurityPolicySourceListDirective* m_imgSrc;
+    ContentSecurityPolicySourceListDirective* m_mediaSrc;
+    ContentSecurityPolicySourceListDirective* m_scriptSrc;
+    ContentSecurityPolicySourceListDirective* m_styleSrc;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
-                                        m_scriptSrc));
-        GC_set_bit(
-            desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList, m_imgSrc));
-        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
-                                        m_styleSrc));
-        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_connectSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_frameSrc));
+        GC_set_bit(
+            desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList, m_imgSrc));
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_mediaSrc));
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_scriptSrc));
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_styleSrc));
     }
 
     static size_t skipSpace(String* src, size_t begin, size_t end);

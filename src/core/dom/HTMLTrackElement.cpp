@@ -22,9 +22,11 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/Event.h"
 #include "core/dom/HTMLTrackElement.h"
 #include "core/dom/TextTrack.h"
 #include "core/dom/VTTCue.h"
+#include "core/csp/ContentSecurityPolicy.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "webvttparser.h"
 
@@ -147,18 +149,21 @@ void HTMLTrackElement::didAttributeChanged(QualifiedName name, String* old,
 {
     HTMLElement::didAttributeChanged(name, old, value, attributeCreated,
                                      attributeRemoved);
-    if (name == starfish()->staticStrings()->m_kind) {
+    StaticStrings* ss = starfish()->staticStrings();
+    if (name == ss->m_kind) {
         m_track->setKind(value);
-    } else if (name == starfish()->staticStrings()->m_src) {
+    } else if (name == ss->m_src) {
         // TODO : FIX HERE
         m_track->clear();
         if (!value->equals(String::emptyString)) {
             load(value);
         }
-    } else if (name == starfish()->staticStrings()->m_srclang) {
+    } else if (name == ss->m_srclang) {
         m_track->setLanguage(value);
-    } else if (name == starfish()->staticStrings()->m_label) {
+    } else if (name == ss->m_label) {
         m_track->setLabel(value);
+    } else if (name == ss->m_onloadeddata) {
+        setAttributeEventListener(ss->m_loadeddata, value, this);
     }
 }
 
@@ -210,6 +215,15 @@ void HTMLTrackElement::load(String* srcURL)
 
     ResourceURL* url =
         new ResourceURL(srcURL, document()->documentURI()->baseURI());
+    if (!document()->contentSecurityPolicy()->allowSource(
+            CSPDirectives::MediaSrc, url)) {
+        String* eventName =
+            document()->starfish()->staticStrings()->m_error.localName();
+        Event* event =
+            new Event(document(), eventName, EventInit(false, false));
+        dispatchEventIdleTimeByUA(event);
+        return;
+    }
     clearResource();
 
     m_VTTFileResource = document()->resourceLoader().fetch(url);

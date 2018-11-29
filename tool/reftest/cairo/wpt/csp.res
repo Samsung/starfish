@@ -185,6 +185,16 @@ http://web-platform.test:8000/content-security-policy/img-src/report-blocked-dat
 #http://web-platform.test:8000/content-security-policy/media-src/media-src-redir-bug.sub.html
 #
 #
+http://web-platform.test:8000/content-security-policy/media-src/media-src-7_1_2.sub.mp4.html
+http://web-platform.test:8000/content-security-policy/media-src/media-src-7_1.mp4.html
+http://web-platform.test:8000/content-security-policy/media-src/media-src-7_2_2.sub.mp4.html
+http://web-platform.test:8000/content-security-policy/media-src/media-src-7_2.mp4.html
+http://web-platform.test:8000/content-security-policy/media-src/media-src-7_3_2.sub.mp4.html
+http://web-platform.test:8000/content-security-policy/media-src/media-src-7_3.sub.mp4.html
+http://web-platform.test:8000/content-security-policy/media-src/media-src-blocked.sub.mp4.html
+http://web-platform.test:8000/content-security-policy/media-src/media-src-redir-bug.sub.mp4.html
+#
+#
 #http://web-platform.test:8000/content-security-policy/meta/combine-header-and-meta-policies.sub.html
 #http://web-platform.test:8000/content-security-policy/meta/meta-img-src.html
 #http://web-platform.test:8000/content-security-policy/meta/meta-modified.html

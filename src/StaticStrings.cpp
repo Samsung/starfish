@@ -520,6 +520,8 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "loadedmetadata"));
     m_loadeddata =
         QualifiedName(AtomicString::createAtomicString(starfish, "loadeddata"));
+    m_onloadeddata = QualifiedName(
+        AtomicString::createAtomicString(starfish, "onloadeddata"));
     m_canplay =
         QualifiedName(AtomicString::createAtomicString(starfish, "canplay"));
     m_canplaythrough = QualifiedName(

@@ -520,6 +520,7 @@ public:
     QualifiedName m_stalled;
     QualifiedName m_loadedmetadata;
     QualifiedName m_loadeddata;
+    QualifiedName m_onloadeddata;
     QualifiedName m_canplay;
     QualifiedName m_canplaythrough;
     QualifiedName m_playing;

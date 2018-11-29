@@ -33,6 +33,7 @@ enum class CSPDirectives {
     ConnectSrc,
     FrameSrc,
     ImgSrc,
+    MediaSrc,
     ObjectSrc,
     ScriptSrc,
     StyleSrc,
@@ -57,7 +58,8 @@ public:
                      String* nonce = nullptr);
     bool allowEval(CSPDirectives directive);
 
-    void dispatchViolationEvent(String* name);
+    void dispatchViolationEvent(String* name,
+                                String* blockedURI = String::emptyString);
 
 private:
     GCVector<ContentSecurityPolicyDirectiveList*> m_policies;
