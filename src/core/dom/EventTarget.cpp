@@ -479,8 +479,7 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
 void EventTarget::setAttributeEventListener(const QualifiedName& eventTypeName,
                                             String* str, Element* target)
 {
-    if (!document()->contentSecurityPolicy()->allowInlineEventHandlers(
-            document()->urlString())) {
+    if (!document()->contentSecurityPolicy()->allowInlineEventHandler()) {
         return;
     }
 

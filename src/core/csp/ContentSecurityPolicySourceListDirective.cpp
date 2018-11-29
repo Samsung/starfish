@@ -113,10 +113,7 @@ bool ContentSecurityPolicySourceListDirective::parseHash(String* source)
     }
 
     // TODO: check the need to support base64url-encoded
-    if (base64Value->length() > kMaxDigestSize) {
-        // TODO: validate base64 encoding more strictly
-        return false;
-    }
+    // TODO: validate base64 encoding if needed
 
     // add hash-algorithm
     m_hashAlgorithmsUsed |= static_cast<uint32_t>(hashAlgorithmType);

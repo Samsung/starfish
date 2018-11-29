@@ -24,6 +24,7 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMTokenList.h"
+#include "core/dom/Event.h"
 #include "platform/loader/ElementResourceClient.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
@@ -242,6 +243,9 @@ void HTMLLinkElement::loadStyleSheet()
 
     if (!document()->contentSecurityPolicy()->allowSource(
             CSPDirectives::StyleSrc, url)) {
+        String* eventType = starfish()->staticStrings()->m_error.localName();
+        Event* e = new Event(document(), eventType, EventInit(false, false));
+        dispatchEventIdleTimeByUA(e);
         return;
     }
 

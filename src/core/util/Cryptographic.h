@@ -37,8 +37,6 @@ enum class DigestEncodingType {
     Hex,
 };
 
-static const size_t kMaxDigestSize = 64;
-
 class CryptoAlgorithm : public gc {
 public:
     virtual void update(const std::string& str) = 0;

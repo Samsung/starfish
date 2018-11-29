@@ -51,7 +51,7 @@ public:
     void didReceiveHeader(String* header, ContentSecurityPolicyHeaderType type,
                           ContentSecurityPolicyHeaderSource source);
 
-    bool allowInlineEventHandlers(String* contextURL);
+    bool allowInlineEventHandler();
     bool allowSource(CSPDirectives directive, ResourceURL* url);
     bool allowInline(CSPDirectives directive, String* scriptContent,
                      String* nonce = nullptr);
