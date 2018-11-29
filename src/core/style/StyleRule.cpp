@@ -28,6 +28,7 @@
 #include "core/style/StyleRule.h"
 #include "core/style/MediaQuerySet.h"
 #include "core/style/AncestorSelectorFilter.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -308,6 +309,12 @@ void StyleRuleImport::requestStyleSheet()
     unloadStyleSheetIfExists();
     ResourceURL* absURL =
         new ResourceURL(m_strHref, m_parentStyleSheet->url()->urlString());
+
+    if (!document()->contentSecurityPolicy()->allowSource(
+            CSPDirectives::StyleSrc, absURL)) {
+        return;
+    }
+
     CSSStyleSheet* rootSheet = m_parentStyleSheet;
     for (CSSStyleSheet* sheet = m_parentStyleSheet; sheet;
          sheet = sheet->parentStyleSheet()) {

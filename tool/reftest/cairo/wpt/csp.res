@@ -414,7 +414,7 @@ http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-a
 http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-blocked.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-hash-default-src-allowed.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-imported-style-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/style-src/style-src-imported-style-blocked.html
+http://web-platform.test:8000/content-security-policy/style-src/style-src-imported-style-blocked.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-injected-inline-style-allowed.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-injected-inline-style-blocked.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-injected-stylesheet-allowed.sub.html
@@ -428,9 +428,9 @@ http://web-platform.test:8000/content-security-policy/style-src/style-src-inline
 http://web-platform.test:8000/content-security-policy/style-src/style-src-inline-style-nonce-blocked.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-multiple-policies-multiple-hashing-algorithms.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-none-blocked.html
-#http://web-platform.test:8000/content-security-policy/style-src/style-src-star-allowed.html
-#http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-allowed.html
-#http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-blocked.html
+#http://web-platform.test:8000/content-security-policy/style-src/style-src-star-allowed.html # window.getComputedStyle(el).getPropertyValue('margin-left')
+#http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-allowed.html # window.getComputedStyle(el).getPropertyValue('margin-left')
+#http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-blocked.html # window.getComputedStyle(el).getPropertyValue('margin-left')
 #
 #
 #http://web-platform.test:8000/content-security-policy/support/fail.html
