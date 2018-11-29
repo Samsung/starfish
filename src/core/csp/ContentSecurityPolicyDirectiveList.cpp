@@ -37,13 +37,13 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     if (begin == end)
         return;
 
-    size_t current = skipSpace(policy, begin, end);
+    size_t current = skipSpaceAndNewline(policy, begin, end);
     size_t directiveBegin = current;
 
     String* name = nullptr;
     String* value = nullptr;
     while (current <= end) {
-        if (policy->charAt(current) == ' ') {
+        if (String::isSpaceOrNewline(policy->charAt(current))) {
             if (!name && directiveBegin < current) {
                 name =
                     policy->substring(directiveBegin, current - directiveBegin);
@@ -59,7 +59,7 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
                 value = nullptr;
                 if (current + 1 <= end) {
                     directiveBegin = current =
-                        skipSpace(policy, current + 1, end);
+                        skipSpaceAndNewline(policy, current + 1, end);
                     continue;
                 }
             }
@@ -89,7 +89,6 @@ void* ContentSecurityPolicyDirectiveList::operator new(size_t size)
 void ContentSecurityPolicyDirectiveList::addDirective(String* name,
                                                       String* value)
 {
-    value = value->trim();
     if (name->equalsIgnoreCase("connect-src")) {
         setDirective(m_connectSrc, name, value);
     } else if (name->equalsIgnoreCase("frame-src")) {
@@ -213,13 +212,13 @@ bool ContentSecurityPolicyDirectiveList::allowEval(CSPDirectives directive)
     return sourceList->allowEval();
 }
 
-size_t ContentSecurityPolicyDirectiveList::skipSpace(String* src, size_t begin,
-                                                     size_t end)
+size_t ContentSecurityPolicyDirectiveList::skipSpaceAndNewline(String* src,
+                                                               size_t begin,
+                                                               size_t end)
 {
     size_t current = begin;
-    if (src->charAt(current) == ' ') {
-        while (current <= end && src->charAt(current) == ' ')
-            current++;
+    while (current < end && String::isSpaceOrNewline(src->charAt(current))) {
+        current++;
     }
     return current;
 }
