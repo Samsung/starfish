@@ -26,7 +26,7 @@ fi
 
 echo "Found: $repo"
 
-# Syncing with the current starfish repo
+# Syncing with the current Starfish repo
 
 git submodule init
 git submodule update
