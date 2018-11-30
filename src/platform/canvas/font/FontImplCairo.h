@@ -226,7 +226,8 @@ private:
 
             FT_UInt glyph_index = FT_Get_Char_Index(m_face, ' ');
             if (glyph_index) {
-                FT_Load_Glyph(m_face, glyph_index, FT_LOAD_RENDER);
+                FT_Load_Glyph(m_face, glyph_index,
+                              FT_LOAD_RENDER | FT_LOAD_NO_SCALE);
             }
 
             m_hbFace = hb_ft_font_create(m_face, [](void* userData) {});
