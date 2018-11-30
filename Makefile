@@ -964,6 +964,7 @@ test_all:
 internal_test_cairo:
 	./tool/drivers/run_test.py basic tool/reftest/cairo/internal.res common -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py basic tool/reftest/cairo/internal_manual.res common --font-dep -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py csswg tool/pixel_test/svg.res cairo -p$(TEST_NPROCS)
 
 internal_test_gitlab_prerequisite_cairo:
 	./tool/reftest/cairo/internal.sh $(div)

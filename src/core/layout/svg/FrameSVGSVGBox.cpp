@@ -147,7 +147,16 @@ void FrameSVGSVGBox::paintReplaced(Canvas* canvas)
         Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
         float sx = contentWidth() / rt.width();
         float sy = contentHeight() / rt.height();
-        float s = std::min(sx, sy);
+        float s = 1;
+
+        auto size = intrinsicSize().m_intrinsicContentSize;
+
+        if (size.width() < rt.width() && size.height() < rt.height()) {
+            s = std::max(sx, sy);
+        } else {
+            s = std::min(sx, sy);
+        }
+
         if (s == 0 || std::isnan(s)) {
             canvas->restore();
             return;
