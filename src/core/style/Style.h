@@ -647,6 +647,10 @@ class CSSFilterFunction;
     F(StrokeWidth, strokeWidth, "stroke-width")                                \
     F(X, x, "x")                                                               \
     F(Y, y, "y")                                                               \
+    F(X1, x1, "x1")                                                            \
+    F(Y1, y1, "y1")                                                            \
+    F(X2, x2, "x2")                                                            \
+    F(Y2, y2, "y2")                                                            \
     F(R, r, "r")                                                               \
     F(RX, rx, "rx")                                                            \
     F(RY, ry, "ry")                                                            \

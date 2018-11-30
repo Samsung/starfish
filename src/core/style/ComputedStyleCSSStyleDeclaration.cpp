@@ -1353,6 +1353,26 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         p.setKeyKind(CSSStyleValuePair::KeyKind::Y);
         addValuePair(p);
     } break;
+    case CSSStyleValuePair::KeyKind::X1: {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->x1());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::X1);
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::Y1: {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->y1());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Y1);
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::X2: {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->x2());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::X2);
+        addValuePair(p);
+    } break;
+    case CSSStyleValuePair::KeyKind::Y2: {
+        CSSStyleValuePair p = lengthToCSSStyleValue(style->y2());
+        p.setKeyKind(CSSStyleValuePair::KeyKind::Y2);
+        addValuePair(p);
+    } break;
     case CSSStyleValuePair::KeyKind::CX: {
         CSSStyleValuePair p = lengthToCSSStyleValue(style->cx());
         p.setKeyKind(CSSStyleValuePair::KeyKind::CX);

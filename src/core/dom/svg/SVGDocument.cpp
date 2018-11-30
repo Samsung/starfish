@@ -30,6 +30,7 @@
 #include "core/dom/svg/SVGImageElement.h"
 #include "core/dom/svg/SVGTextElement.h"
 #include "core/dom/svg/SVGStyleElement.h"
+#include "core/dom/svg/SVGLineElement.h"
 
 namespace Starfish {
 
@@ -58,6 +59,8 @@ Element* SVGDocument::createSVGElement(Document* document,
         return new SVGTextElement(document, qname);
     } else if (str->m_svgstyleTagName == localName) {
         return new SVGStyleElement(document, qname);
+    } else if (str->m_svglineTagName == localName) {
+        return new SVGLineElement(document, qname);
     } else {
         return new SVGElement(document, qname);
     }

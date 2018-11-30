@@ -113,6 +113,10 @@ public:
         ObjectSizing,
         X,
         Y,
+        X1,
+        Y1,
+        X2,
+        Y2,
         CX,
         CY,
         RX,
@@ -483,6 +487,10 @@ public:
     GETTER_VALUE(Length, length, verticalAlignLength, VerticalAlignLength, 0);
     GETTER_VALUE(Length, length, x, X, 0);
     GETTER_VALUE(Length, length, y, Y, 0);
+    GETTER_VALUE(Length, length, x1, X1, 0);
+    GETTER_VALUE(Length, length, y1, Y1, 0);
+    GETTER_VALUE(Length, length, x2, X2, 0);
+    GETTER_VALUE(Length, length, y2, Y2, 0);
     GETTER_VALUE(Length, length, r, R, 0);
     GETTER_VALUE(Length, length, cx, CX, 0);
     GETTER_VALUE(Length, length, cy, CY, 0);
@@ -1772,6 +1780,82 @@ public:
     void setY(Length y)
     {
         *m_rareComputedStyleData.ensureY() = y;
+    }
+
+    Length x1()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> x1 = m_rareComputedStyleData.x1();
+        if (x1.hasValue()) {
+            return x1.getValue();
+        }
+
+        return Length();
+    }
+
+    void setX1(Length x1)
+    {
+        *m_rareComputedStyleData.ensureX1() = x1;
+    }
+
+    Length y1()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> y1 = m_rareComputedStyleData.y1();
+        if (y1.hasValue()) {
+            return y1.getValue();
+        }
+
+        return Length();
+    }
+
+    void setY1(Length y1)
+    {
+        *m_rareComputedStyleData.ensureY1() = y1;
+    }
+
+    Length x2()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> x2 = m_rareComputedStyleData.x2();
+        if (x2.hasValue()) {
+            return x2.getValue();
+        }
+
+        return Length();
+    }
+
+    void setX2(Length x2)
+    {
+        *m_rareComputedStyleData.ensureX2() = x2;
+    }
+
+    Length y2()
+    {
+        if (!m_rareComputedStyleData.m_styles.size()) {
+            return Length();
+        }
+
+        Nullable<Length> y2 = m_rareComputedStyleData.y2();
+        if (y2.hasValue()) {
+            return y2.getValue();
+        }
+
+        return Length();
+    }
+
+    void setY2(Length y2)
+    {
+        *m_rareComputedStyleData.ensureY2() = y2;
     }
 
     Length r()

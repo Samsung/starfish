@@ -4848,6 +4848,86 @@ void StyleResolver::apply(Element* element,
                 }
             }
             break;
+        case CSSStyleValuePair::KeyKind::X1:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Initial) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                style->setX1(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setX1(parentStyle->x1());
+                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setX1(length.getValue());
+                } else {
+                    style->setX1(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Y1:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Initial) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                style->setY1(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setY1(parentStyle->y1());
+                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setY1(length.getValue());
+                } else {
+                    style->setY1(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::X2:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Initial) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                style->setX2(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setX2(parentStyle->x2());
+                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setX2(length.getValue());
+                } else {
+                    style->setX2(Length());
+                }
+            }
+            break;
+        case CSSStyleValuePair::KeyKind::Y2:
+            if ((cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Initial) ||
+                (cssValues[k].valueKind() ==
+                 CSSStyleValuePair::ValueKind::Unset)) {
+                style->setY2(Length(Length::Fixed, 0));
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::Inherit) {
+                style->setY2(parentStyle->y2());
+                MARK_SOME_NONE_INHERIT_MEMBER_EXPLICITLY_INHERITED();
+            } else {
+                Nullable<Length> length = convertValueToLength(
+                    cssValues[k].valueKind(), cssValues[k].value());
+                if (length.hasValue()) {
+                    style->setY2(length.getValue());
+                } else {
+                    style->setY2(Length());
+                }
+            }
+            break;
         case CSSStyleValuePair::KeyKind::R:
             if ((cssValues[k].valueKind() ==
                  CSSStyleValuePair::ValueKind::Initial) ||
@@ -11648,6 +11728,30 @@ bool CSSStyleValuePair::updateValueX(Document* document,
 
 bool CSSStyleValuePair::updateValueY(Document* document,
                                      const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueX1(Document* document,
+                                      const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueY1(Document* document,
+                                      const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueX2(Document* document,
+                                      const CSSTokenVector& tokens)
+{
+    return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
+}
+
+bool CSSStyleValuePair::updateValueY2(Document* document,
+                                      const CSSTokenVector& tokens)
 {
     return updateValueLength(tokens, CSSPropertyParser::AllowPercent);
 }

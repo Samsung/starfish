@@ -31,6 +31,7 @@
 #include "core/layout/svg/FrameSVGCircleBox.h"
 #include "core/layout/svg/FrameSVGImageBox.h"
 #include "core/layout/svg/FrameSVGTextBox.h"
+#include "core/layout/svg/FrameSVGLineBox.h"
 #include "core/layout/FrameBlockBox.h"
 
 namespace Starfish {
@@ -77,6 +78,9 @@ Frame* FrameTreeBuilder::buildSVGFrameTree(SVGElement* svgElement)
     } else if (svgElement->isSVGImageElement()) {
         shouldContinue = true;
         currentFrame = new FrameSVGImageBox(svgElement);
+    } else if (svgElement->isSVGLineElement()) {
+        shouldContinue = true;
+        currentFrame = new FrameSVGLineBox(svgElement);
     } else if (svgElement->isSVGTextElement()) {
         shouldContinue = true;
         auto txt = svgElement->textContent();
