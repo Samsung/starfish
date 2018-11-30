@@ -241,8 +241,9 @@ void HTMLLinkElement::loadStyleSheet()
 
     m_styleSheetTextResource = nullptr;
 
-    if (!document()->contentSecurityPolicy()->allowSource(
-            CSPDirectives::StyleSrc, url)) {
+    auto csp = document()->contentSecurityPolicy();
+    if (!csp->allowNonce(CSPDirectives::StyleSrc, nonce()) &&
+        !csp->allowSource(CSPDirectives::StyleSrc, url)) {
         String* eventType = starfish()->staticStrings()->m_error.localName();
         Event* e = new Event(document(), eventType, EventInit(false, false));
         dispatchEventIdleTimeByUA(e);
@@ -329,5 +330,10 @@ void HTMLLinkElement::willStyleSheetLoad()
 void HTMLLinkElement::didStyleSheetLoadComplete()
 {
     window()->browsingContext()->unmarkHasPendingStyleSheet();
+}
+
+String* HTMLLinkElement::nonce()
+{
+    return getAttributeOrEmpty(starfish()->staticStrings()->m_nonce);
 }
 }

@@ -50,6 +50,8 @@ public:
     bool allowInline(CSPDirectives directive);
     bool allowEval(CSPDirectives directive);
 
+    bool hasNonceOrHash(CSPDirectives directive);
+
     ContentSecurityPolicySourceListDirective* getSourceList(
         CSPDirectives directive);
 
