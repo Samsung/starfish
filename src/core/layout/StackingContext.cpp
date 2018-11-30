@@ -73,6 +73,7 @@ struct StackingContext::ComputeStackingContextContext {
 
     void pushCompsitedLayer(StackingContext* c)
     {
+        STARFISH_ASSERT(!isCompsitedLayer(c));
         compositedLayers.push_back(c);
         compositedDocuments.insert(c->m_owner->node()->document());
     }
@@ -1032,12 +1033,14 @@ void StackingContext::computeStackingContextProperties(
         if (canConveredByParentCompositedLayer) {
             auto& cv = compositingState.compositedLayers;
             for (size_t i = ancestorIndex + 1; i < cv.size(); i++) {
-                auto extent = compositingState.screenExtentPerLayer(cv[i]);
-                if (extent.intersects(selfExtent)) {
-                    isCollapsedWithSilbingLayer = true;
-                    reason = NeedsGraphicsLayerReason::
-                        NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
-                    break;
+                if (cv[i]->owner()->document() == owner()->document()) {
+                    auto extent = compositingState.screenExtentPerLayer(cv[i]);
+                    if (extent.intersects(selfExtent)) {
+                        isCollapsedWithSilbingLayer = true;
+                        reason = NeedsGraphicsLayerReason::
+                            NeedsGraphicsLayerReasonCollapsedWithSiblingLayer;
+                        break;
+                    }
                 }
             }
         }
@@ -1071,7 +1074,9 @@ void StackingContext::computeStackingContextProperties(
                 }
             }
         }
-        compositingState.pushCompsitedLayer(this);
+        if (!compositingState.isCompsitedLayer(this)) {
+            compositingState.pushCompsitedLayer(this);
+        }
     }
 
     m_needsGraphicsBufferReason = reason;

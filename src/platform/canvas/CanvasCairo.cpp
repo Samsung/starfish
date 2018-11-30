@@ -1075,14 +1075,34 @@ private:
         }
     }
 #endif
+
+    void drawGlyphs(cairo_t* canvas, const FT_Face& ftFace,
+                    const cairo_matrix_t& sizeMatrix,
+                    const cairo_matrix_t& identityMatrix, cairo_glyph_t* glyphs,
+                    size_t glyphCount)
+    {
+        cairo_font_face_t* fontFace =
+            cairo_ft_font_face_create_for_ft_face(ftFace, 0);
+        cairo_font_options_t* fontOptions = cairo_font_options_create();
+        cairo_scaled_font_t* scaledFontFace = cairo_scaled_font_create(
+            fontFace, &sizeMatrix, &identityMatrix, fontOptions);
+        cairo_font_options_destroy(fontOptions);
+        auto oldScaledFont = cairo_get_scaled_font(canvas);
+        cairo_scaled_font_reference(oldScaledFont);
+        cairo_set_scaled_font(canvas, scaledFontFace);
+        cairo_show_glyphs(canvas, glyphs, glyphCount);
+        cairo_set_scaled_font(canvas, oldScaledFont);
+        cairo_scaled_font_destroy(oldScaledFont);
+        cairo_scaled_font_destroy(scaledFontFace);
+        cairo_font_face_destroy(fontFace);
+    }
+
     void drawGlyphsCairo(cairo_t* canvas, LayoutRect rect, const StringView& sv,
                          LayoutUnit dx, LayoutUnit dy)
     {
         LayoutUnit xBias = 0;
         FT_UInt glyph_index = 0;
         FT_Face lastFontFace = nullptr;
-        cairo_font_face_t* fontFace = nullptr;
-        cairo_scaled_font_t* scaledFontFace = nullptr;
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
         int size = f->size();
 
@@ -1124,23 +1144,12 @@ private:
                         }
                     }
                     if (lastFontFace != g.first.first->freetypeFace()) {
-                        if (fontFace) {
-                            cairo_set_scaled_font(canvas, scaledFontFace);
-                            cairo_show_glyphs(canvas, glyphs, glyphCount);
+                        if (glyphCount) {
+                            drawGlyphs(canvas, lastFontFace, sizeMatrix,
+                                       identityMatrix, glyphs, glyphCount);
                             glyphCount = 0;
-                            cairo_scaled_font_destroy(scaledFontFace);
-                            cairo_font_face_destroy(fontFace);
                         }
                         lastFontFace = g.first.first->freetypeFace();
-                        fontFace = cairo_ft_font_face_create_for_ft_face(
-                            lastFontFace, 0);
-
-                        cairo_font_options_t* fontOptions =
-                            cairo_font_options_create();
-                        scaledFontFace = cairo_scaled_font_create(
-                            fontFace, &sizeMatrix, &identityMatrix,
-                            fontOptions);
-                        cairo_font_options_destroy(fontOptions);
                     }
                     glyphs[glyphCount].index = g.second.first;
                     glyphs[glyphCount].x = xBias + letterSpacingValueSoFar;
@@ -1205,23 +1214,12 @@ private:
                         f->seenUnresolvedWebFontIndex() <= run.m_faceIndex) {
                     } else {
                         if (run.m_ftFace != lastFontFace) {
-                            if (lastFontFace) {
-                                cairo_set_scaled_font(canvas, scaledFontFace);
-                                cairo_show_glyphs(canvas, glyphs, glyphCount);
+                            if (glyphCount) {
+                                drawGlyphs(canvas, lastFontFace, sizeMatrix,
+                                           identityMatrix, glyphs, glyphCount);
                                 glyphCount = 0;
-                                cairo_scaled_font_destroy(scaledFontFace);
-                                cairo_font_face_destroy(fontFace);
                             }
                             lastFontFace = run.m_ftFace;
-                            fontFace = cairo_ft_font_face_create_for_ft_face(
-                                lastFontFace, 0);
-
-                            cairo_font_options_t* fontOptions =
-                                cairo_font_options_create();
-                            scaledFontFace = cairo_scaled_font_create(
-                                fontFace, &sizeMatrix, &identityMatrix,
-                                fontOptions);
-                            cairo_font_options_destroy(fontOptions);
                         }
 
                         for (size_t j = 0; j < run.m_glyphs.size(); j++) {
@@ -1242,12 +1240,11 @@ private:
         }
 
         if (glyphCount) {
-            cairo_set_scaled_font(canvas, scaledFontFace);
-            cairo_show_glyphs(canvas, glyphs, glyphCount);
+            drawGlyphs(canvas, lastFontFace, sizeMatrix, identityMatrix, glyphs,
+                       glyphCount);
+            glyphCount = 0;
         }
 
-        cairo_scaled_font_destroy(scaledFontFace);
-        cairo_font_face_destroy(fontFace);
         cairo_translate(canvas, -dx, -dy - fontMetrics.m_ascender);
     }
 

@@ -22,6 +22,8 @@
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 
+#define STARFISH_ENABLE_PROFILE_TIMER
+
 #include <Elementary.h>
 #include <Ecore_Input.h>
 #include <Ecore_Input_Evas.h>
@@ -29,11 +31,16 @@
 #include <Ecore_IMF_Evas.h>
 #include <Evas_GL.h>
 
+#include "streamline_annotate.h"
+
 #if defined(PORT_WINDOW_BACKEND_GL)
 extern Evas_GL_API* g_evasGLAPI;
 #endif
 
 namespace LWE {
+
+const int g_arrowKeyDownMinimumDelayInMS = 150;
+static int g_arrowKeyDownTimestamp[4];
 
 static void elm_box_layout_cb(Evas_Object* o, Evas_Object_Box_Data* priv,
                               void* user_data)
@@ -232,6 +239,7 @@ public:
                const char* defaultFontName, const char* locale,
                const char* timezoneID)
         : WebView(nullptr)
+        , m_lastInputTime(0)
     {
         STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
         Evas_Object* win = (Evas_Object*)winArg;
@@ -432,6 +440,14 @@ public:
                 return;
             }
 
+            if (webView->m_lastInputTime == 0) {
+                ANNOTATE_SETUP;
+                ANNOTATE_CHANNEL_COLOR(3000, ANNOTATE_GREEN,
+                                       "EVAS_CALLBACK_KEY_DOWN");
+                webView->m_lastInputTime = Starfish::longTickCount();
+                ANNOTATE_CHANNEL_END(3000);
+            }
+
 #ifdef STARFISH_TIZEN_TV
             if ((strncmp(ev->key, "XF86Red", 7) == 0)) {
                 ev->key = "Tab";
@@ -444,6 +460,17 @@ public:
                           EINA_TRUE) ||
                              (evas_key_modifier_is_set(
                                   ev->modifiers, "Shift_R") == EINA_TRUE));
+
+            if (keyValue >= ArrowDownKey && keyValue <= ArrowRightKey) {
+                int currentTimestamp = ev->timestamp;
+                if (currentTimestamp -
+                        g_arrowKeyDownTimestamp[keyValue - ArrowDownKey] <
+                    g_arrowKeyDownMinimumDelayInMS) {
+                    return;
+                }
+                g_arrowKeyDownTimestamp[keyValue - ArrowDownKey] =
+                    currentTimestamp;
+            }
 
             webView->FetchWebContainer()->DispatchKeyDownEvent(keyValue);
             webView->FetchWebContainer()->DispatchKeyPressEvent(keyValue);
@@ -473,6 +500,10 @@ public:
                           EINA_TRUE) ||
                              (evas_key_modifier_is_set(
                                   ev->modifiers, "Shift_R") == EINA_TRUE));
+
+            if (keyValue >= ArrowDownKey && keyValue <= ArrowRightKey) {
+                g_arrowKeyDownTimestamp[keyValue - ArrowDownKey] = 0;
+            }
 
             webView->FetchWebContainer()->DispatchKeyUpEvent(keyValue);
             webView->m_isKeyDown = false;
@@ -781,8 +812,19 @@ public:
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
                 g_evasGLAPI = m_glGlapi;
             },
-            [this](WebContainer* wc, bool mayNeedsSync){
-
+            [this](WebContainer* wc, bool mayNeedsSync) {
+                if (m_lastInputTime) {
+                    ANNOTATE_SETUP;
+                    ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
+                                           "response time");
+#ifdef STARFISH_ENABLE_PROFILE_TIMER
+                    uint64_t end = Starfish::longTickCount();
+                    float time = (float)((end - m_lastInputTime) / 1000.f);
+                    STARFISH_LOG_INFO("response time is %f ms\n", time);
+#endif
+                    m_lastInputTime = 0;
+                    ANNOTATE_CHANNEL_END(3002);
+                }
             },
             devicePixelRatio, defaultFontName, locale, timezoneID);
 
@@ -1013,6 +1055,7 @@ protected:
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;
     uint64_t m_lastRenderingTime;
+    uint64_t m_lastInputTime;
     int m_offsetYDueToSoftwareKeyboard;
     size_t m_keyboardTimeoutId;
     size_t m_hideKeyboardTimeoutId;

@@ -1452,7 +1452,7 @@ public:
 
     CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
     {
-        INSTALL_PROFILE_TIMER("CompositorImplGL::CompositorImplGL");
+        LongTaskFinder t("CompositorImplGL::CompositorImplGL", 1);
         webView->platformWindow()->glMakeCurrent();
 
         m_webView = webView;
