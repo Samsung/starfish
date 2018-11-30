@@ -161,6 +161,7 @@ namespace Starfish {
 #define STARFISH_ENUM_SVG_TAG_NAMES(F) \
     F(svg)                             \
     F(rect)                            \
+    F(line)                            \
     F(circle)                          \
     F(g)                               \
     F(path)                            \
@@ -419,6 +420,10 @@ public:
     QualifiedName m_strokeWidth;
     QualifiedName m_x;
     QualifiedName m_y;
+    QualifiedName m_x1;
+    QualifiedName m_y1;
+    QualifiedName m_x2;
+    QualifiedName m_y2;
     QualifiedName m_r;
     QualifiedName m_rx;
     QualifiedName m_ry;

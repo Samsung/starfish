@@ -45,6 +45,14 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
             return CSSStyleValuePair::KeyKind::RX;
         } else if (memcmp(data, "ry", 2) == 0) {
             return CSSStyleValuePair::KeyKind::RY;
+        } else if (memcmp(data, "x1", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::X1;
+        } else if (memcmp(data, "y1", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::Y1;
+        } else if (memcmp(data, "x2", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::X2;
+        } else if (memcmp(data, "y2", 2) == 0) {
+            return CSSStyleValuePair::KeyKind::Y2;
         }
         break;
     case 3:

@@ -321,6 +321,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "stroke-width"));
     m_x = QualifiedName(AtomicString::createAtomicString(starfish, "x"));
     m_y = QualifiedName(AtomicString::createAtomicString(starfish, "y"));
+    m_x1 = QualifiedName(AtomicString::createAtomicString(starfish, "x1"));
+    m_y1 = QualifiedName(AtomicString::createAtomicString(starfish, "y1"));
+    m_x2 = QualifiedName(AtomicString::createAtomicString(starfish, "x2"));
+    m_y2 = QualifiedName(AtomicString::createAtomicString(starfish, "y2"));
     m_r = QualifiedName(AtomicString::createAtomicString(starfish, "r"));
     m_rx = QualifiedName(AtomicString::createAtomicString(starfish, "rx"));
     m_ry = QualifiedName(AtomicString::createAtomicString(starfish, "ry"));
