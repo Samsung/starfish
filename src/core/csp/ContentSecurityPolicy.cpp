@@ -128,7 +128,8 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
     for (auto policy : m_policies) {
         if (!policy->getSourceList(directive)) {
             continue; // allowed if no src-list exists
-        } else if (policy->allowInline(directive)) {
+        } else if (!policy->hasNonceOrHash(directive) &&
+                   policy->allowInline(directive)) {
             return true;
         }
 
@@ -140,6 +141,18 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
                 "because it violates the Content Security Policy\n",
                 CSTR(getDirectiveName(directive)));
             return false;
+        }
+    }
+    return true;
+}
+
+bool ContentSecurityPolicy::allowNonce(CSPDirectives directive, String* nonce)
+{
+    for (auto policy : m_policies) {
+        if (policy->getSourceList(directive)) {
+            if (!policy->allowNonce(directive, nonce)) {
+                return false;
+            }
         }
     }
     return true;

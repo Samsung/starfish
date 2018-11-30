@@ -90,6 +90,8 @@ protected:
 
 private:
     DOMTokenList* m_relList;
+
+    String* nonce();
 };
 }
 

@@ -212,6 +212,13 @@ bool ContentSecurityPolicyDirectiveList::allowEval(CSPDirectives directive)
     return sourceList->allowEval();
 }
 
+bool ContentSecurityPolicyDirectiveList::hasNonceOrHash(CSPDirectives directive)
+{
+    auto sourceList = getSourceList(directive);
+    STARFISH_ASSERT(sourceList);
+    return sourceList->hasNonceOrHash();
+}
+
 size_t ContentSecurityPolicyDirectiveList::skipSpaceAndNewline(String* src,
                                                                size_t begin,
                                                                size_t end)

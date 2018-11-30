@@ -98,6 +98,11 @@ public:
     bool allowScheme(ResourceURL* resUrl);
     bool allowHost(ResourceURL* url, bool ignoreScheme = false);
 
+    bool hasNonceOrHash()
+    {
+        return (m_nonces.size() > 0) || (m_hashes.size() > 0);
+    }
+
     static ContentSecurityPolicySource* parseHost(String* source);
 
 protected:

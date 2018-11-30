@@ -430,7 +430,7 @@ http://web-platform.test:8000/content-security-policy/style-src/style-src-multip
 http://web-platform.test:8000/content-security-policy/style-src/style-src-none-blocked.html
 #http://web-platform.test:8000/content-security-policy/style-src/style-src-star-allowed.html # window.getComputedStyle(el).getPropertyValue('margin-left')
 #http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-allowed.html # window.getComputedStyle(el).getPropertyValue('margin-left')
-#http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-blocked.html # window.getComputedStyle(el).getPropertyValue('margin-left')
+http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-blocked.html
 #
 #
 #http://web-platform.test:8000/content-security-policy/support/fail.html
