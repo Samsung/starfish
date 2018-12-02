@@ -168,27 +168,6 @@ ENDIF()
 
 
 #######################################################
-# LIBCAIRO
-#######################################################
-IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
-    SET (CAIRO_DIR ${THIRD_PARTY_ROOT}/windows/cairo)
-    SET (CAIRO_TARGET ${CAIRO_DIR}/src/.libs/libcairo.a)
-
-    ADD_CUSTOM_COMMAND (OUTPUT ${CAIRO_TARGET}
-                        WORKING_DIRECTORY ${CAIRO_DIR}
-                        COMMENT "BUILD CAIRO"
-                        COMMAND NOCONFIGURE=1 ./autogen.sh
-                        COMMAND ./configure --with-pic --enable-fc --enable-ft --enable-tee --disable-xlib --disable-xcb --disable-gtk-doc --enable-static
-                        COMMAND make -j${NPROCS} V=1
-    )
-
-    ADD_CUSTOM_TARGET (cairo
-                       DEPENDS ${CAIRO_TARGET}
-                       COMMAND echo "CAIRO TARGET"
-    )
-ENDIF()
-
-#######################################################
 # LIBSKIA
 #######################################################
 IF (${HOST} STREQUAL "linux" AND ${BACKEND} STREQUAL "efl_skia")
@@ -320,5 +299,5 @@ ELSEIF (${HOST} STREQUAL "tizen" AND (${BACKEND} STREQUAL "ecore_wayland2_cairo_
 ENDIF()
 
 IF (${BACKEND} MATCHES "efl_cairo" OR ${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl" OR ${BACKEND} STREQUAL "ecore_wayland2_cairo_gl")
-    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${CAIRO_TARGET})
+    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY})
 ENDIF()
