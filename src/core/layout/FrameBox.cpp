@@ -3301,7 +3301,54 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     if (ctx.purpose != Frame::ComputeVisibleRectContext::Scrolling &&
         stackingContext() && ctx.sourceStackingContext &&
         ctx.sourceStackingContext != stackingContext()) {
-        if (!ctx.sourceStackingContext->isAncestorOf(stackingContext())) {
+        StackingContext* sc = stackingContext();
+        bool isAncestor = ctx.sourceStackingContext->isAncestorOf(sc);
+        bool isBrother = false;
+        bool isSonOfBrother = false;
+
+        // younger brother of source also needs computing
+        if (!isAncestor && ctx.sourceStackingContext->parent()) {
+            bool meetSource = false;
+            auto iter =
+                ctx.sourceStackingContext->parent()->childContexts().begin();
+            while (iter !=
+                   ctx.sourceStackingContext->parent()->childContexts().end()) {
+                StackingContextChild* child = *iter;
+                auto iter2 = child->begin();
+                while (iter2 != child->end()) {
+                    if (*iter2 == ctx.sourceStackingContext) {
+                        meetSource = true;
+                    } else if (meetSource && sc == *iter2) {
+                        isBrother = true;
+                    }
+                    iter2++;
+                }
+                iter++;
+            }
+        }
+
+        // son of brother of source also needs computing
+        if (!isAncestor && !isBrother) {
+            bool meetSource = false;
+            auto iter =
+                ctx.sourceStackingContext->parent()->childContexts().begin();
+            while (iter !=
+                   ctx.sourceStackingContext->parent()->childContexts().end()) {
+                StackingContextChild* child = *iter;
+                auto iter2 = child->begin();
+                while (iter2 != child->end()) {
+                    if (*iter2 == ctx.sourceStackingContext) {
+                        meetSource = true;
+                    } else if (meetSource && (*iter2)->isAncestorOf(sc)) {
+                        isSonOfBrother = true;
+                    }
+                    iter2++;
+                }
+                iter++;
+            }
+        }
+
+        if (!isAncestor && !isBrother && !isSonOfBrother) {
             return false;
         }
     }
@@ -3320,6 +3367,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
     }
 
     if (ctx.isVisibleRectCollapsible &&
+        this != ctx.sourceStackingContext->owner() &&
         ctx.purpose != Frame::ComputeVisibleRectContext::Scrolling && cs &&
         cs->opacity() == 0) {
         return false;

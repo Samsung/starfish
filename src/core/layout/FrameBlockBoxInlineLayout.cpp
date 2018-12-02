@@ -5060,7 +5060,8 @@ void InlineTextBox::computeVisibleRect(Frame::ComputeVisibleRectContext& ctx)
 {
     FrameBox::computeVisibleRect(ctx);
 
-    if (ctx.purpose != Frame::ComputeVisibleRectContext::Scrolling) {
+    if (ctx.purpose != Frame::ComputeVisibleRectContext::Scrolling &&
+        !style()->color().isTransparent()) {
         LayoutRect f = frameRect();
         float diff =
             FONT_WIDTH_DIFFERENCE_GLYPH_ADVANCE_AND_ACTUAL_WIDTH_OF_GLYPH(
