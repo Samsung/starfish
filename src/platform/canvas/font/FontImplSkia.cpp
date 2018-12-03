@@ -632,7 +632,8 @@ sk_sp<SkTypeface> PlatformFontSelectorImplSkia::findAndLoadFontFace(
     if (result == nullptr) {
         if (StringUtils::equalsIgnoreCase(u8FamilyName.c_str(),
                                           m_webView->initialFontFamilyDatas()[1]
-                                              .m_familyName->toUTF8NonGCString()
+                                              .m_familyName.string()
+                                              ->toUTF8NonGCString()
                                               .c_str())) {
             result = SkTypeface::MakeFromName(u8FamilyName.c_str(), fontStyle);
         }
