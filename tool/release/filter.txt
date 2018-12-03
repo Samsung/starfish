@@ -31,20 +31,7 @@ P /.github
 - tool/*
 
 - third_party/android
-
-+ third_party/windows/cairo/test
-- third_party/windows/cairo/test/reference
-- third_party/windows/curl
-- third_party/windows/fontconfig
-- third_party/windows/freetype2
-- third_party/windows/giflib
-- third_party/windows/harfbuzz
-- third_party/windows/libiconv
-- third_party/windows/libpng
-- third_party/windows/libxml2
-- third_party/windows/pixman
-- third_party/windows/windows_pthread
-- third_party/windows/zlib
+- third_party/windows
 
 - test
 - test_new
