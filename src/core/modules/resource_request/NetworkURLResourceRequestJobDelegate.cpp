@@ -569,13 +569,13 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
     size_t realSize = size * nmemb;
     const char* memPtr = (const char*)ptr;
 
-    auto& entityBody = request->response();
-
-    if (entityBody.capacity() < entityBody.size() + realSize) {
-        entityBody.reserve(entityBody.size() + realSize);
+    if (request->isSync()) {
+        auto& entityBody = request->response();
+        entityBody.insert(entityBody.end(), memPtr, memPtr + realSize);
+    } else {
+        nwd->pendingResponseData.insert(nwd->pendingResponseData.end(), memPtr,
+                                        memPtr + realSize);
     }
-
-    entityBody.insert(entityBody.end(), memPtr, memPtr + realSize);
 
     if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
         if (request->isSync()) {
@@ -588,7 +588,9 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                     ->addIdlerWithNoGCRootingInOtherThread(
                         nullptr,
                         [](size_t handle, void* data) {
-                            ResourceRequest* request = (ResourceRequest*)data;
+                            NetworkURLWorkerData* nwd =
+                                (NetworkURLWorkerData*)data;
+                            ResourceRequest* request = nwd->request;
                             Locker<Mutex> locker(*request->m_mutex);
                             {
                                 STARFISH_ASSERT(
@@ -598,12 +600,19 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                 request->m_pendingOnProgressEventIdlerHandle =
                                     SIZE_MAX;
                             }
+                            if (!request->isSync()) {
+                                request->response().insert(
+                                    request->response().end(),
+                                    nwd->pendingResponseData.begin(),
+                                    nwd->pendingResponseData.end());
+                                nwd->pendingResponseData.clear();
+                            }
                             request->changeReadyState(ReadyState::Loading,
                                                       true);
                             request->changeProgress(ProgressState::Progress,
                                                     true);
                         },
-                        request);
+                        nwd);
         }
     }
 

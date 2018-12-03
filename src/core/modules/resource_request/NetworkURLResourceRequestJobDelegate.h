@@ -41,6 +41,7 @@ struct NetworkURLWorkerData {
     ResourceRequest* request;
     NetworkURLWorkerHelper* helper;
     std::unique_ptr<HTTPTransaction> httpTransaction;
+    std::vector<char> pendingResponseData;
 #ifdef STARFISH_ENABLE_HTTPCACHE
     HTTPCacheEntry* cachedEntry;
 #endif
