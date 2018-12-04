@@ -94,6 +94,9 @@ public class SemWebView extends TextureView {
     private LweWebView getWebViewInstance() {
         if (delegate == null) {
             LweWebView result = null;
+
+            // Should uncomment following code for downloadable mode.
+            /*
             try {
                 if (pcl == null) {
                     String path = getContext().getPackageManager().getPackageInfo(packageName, 0).applicationInfo.nativeLibraryDir;
@@ -110,15 +113,10 @@ public class SemWebView extends TextureView {
                 Log.e(sTag, "apk cannot be loaded");
                 e.printStackTrace();
             }
-            /*
-            finally {
-                // Testing only: uncomment the following code to test locally
-                // installed LweWebView.
-                if (result == null) {
-                    result = new LweWebViewImpl();
-                }
-            }
             */
+            if (result == null) {
+                result = new LweWebViewImpl();
+            }
             return result;
         }
 
