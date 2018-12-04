@@ -70,6 +70,9 @@ public:
     void setSrc(String* src);
     String* src();
 
+    Nullable<String*> crossOrigin();
+    void setCrossOrigin(Nullable<String*> crossOrigin);
+
     unsigned long width();
     void setWidth(unsigned long width);
 

@@ -4,7 +4,7 @@
 [HTMLConstructor]
 interface HTMLLinkElement : HTMLElement {
   [CEReactions] attribute DOMString href;
-  [Unimplemented, CEReactions] attribute DOMString? crossOrigin;
+  [CEReactions] attribute DOMString? crossOrigin;
   [CEReactions, Reflect] attribute DOMString rel;
   [Unimplemented, CEReactions] attribute RequestDestination as; // (default "")
   [SameObject, PutForwards=value] readonly attribute DOMTokenList relList;

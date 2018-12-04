@@ -175,6 +175,17 @@ void HTMLMediaElement::didAttributeChanged(QualifiedName name, String* old,
         }
     } else if (name == ss->m_onloadeddata) {
         setAttributeEventListener(ss->m_loadeddata, value, this);
+    } else if (name == starfish()->staticStrings()->m_crossorigin) {
+        if (attributeRemoved) {
+            removeAttribute(value);
+        } else if (attributeCreated || !old->equalsIgnoreCase(value)) {
+            if (value->equalsIgnoreCase("use-credentials")) {
+                setAttribute(starfish()->staticStrings()->m_crossorigin, value);
+            } else {
+                setAttribute(starfish()->staticStrings()->m_crossorigin,
+                             String::fromUTF8("anonymous"));
+            }
+        }
     }
 }
 
@@ -741,6 +752,21 @@ bool HTMLMediaElement::muted()
 String* HTMLMediaElement::currentSrc()
 {
     return m_currentSrc;
+}
+
+Nullable<String*> HTMLMediaElement::crossOrigin()
+{
+    return getAttribute(starfish()->staticStrings()->m_crossorigin);
+}
+
+void HTMLMediaElement::setCrossOrigin(Nullable<String*> crossOrigin)
+{
+    if (crossOrigin.hasValue()) {
+        setAttribute(starfish()->staticStrings()->m_crossorigin,
+                     crossOrigin.getValue());
+    } else {
+        removeAttribute(starfish()->staticStrings()->m_crossorigin);
+    }
 }
 
 void HTMLMediaElement::setPreload(String* preload)

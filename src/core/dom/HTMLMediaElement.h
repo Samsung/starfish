@@ -253,6 +253,10 @@ public:
     String* src();
 
     String* currentSrc();
+
+    Nullable<String*> crossOrigin();
+    void setCrossOrigin(Nullable<String*> crossOrigin);
+
     NetworkState networkState();
     PreloadState preloadValue();
     String* preload();

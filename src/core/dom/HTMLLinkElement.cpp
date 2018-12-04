@@ -69,6 +69,21 @@ void HTMLLinkElement::setHref(String* href)
     setAttribute(starfish()->staticStrings()->m_href, href);
 }
 
+Nullable<String*> HTMLLinkElement::crossOrigin()
+{
+    return getAttribute(starfish()->staticStrings()->m_crossorigin);
+}
+
+void HTMLLinkElement::setCrossOrigin(Nullable<String*> crossOrigin)
+{
+    if (crossOrigin.hasValue()) {
+        setAttribute(starfish()->staticStrings()->m_crossorigin,
+                     crossOrigin.getValue());
+    } else {
+        removeAttribute(starfish()->staticStrings()->m_crossorigin);
+    }
+}
+
 String* HTMLLinkElement::rel()
 {
     return getAttributeOrEmpty(starfish()->staticStrings()->m_rel);
@@ -283,6 +298,17 @@ void HTMLLinkElement::loadStyleSheet()
     reqData->m_destination = RequestDestination::Style;
     reqData->m_syncLevel = RequestSyncLevel::NeverSync;
 
+    auto crossOrigin = getAttribute(starfish()->staticStrings()->m_crossorigin);
+    if (crossOrigin.hasValue()) {
+        reqData->m_mode = RequestMode::CORS;
+        reqData->m_credentials =
+            crossOrigin.getValue()->equalsIgnoreCase("use-credentials")
+                ? RequestCredentials::Include
+                : RequestCredentials::SameOrigin;
+    } else {
+        reqData->m_mode = RequestMode::NoCORS;
+    }
+
     m_styleSheetTextResource->request(reqData, true);
 }
 
@@ -317,6 +343,17 @@ void HTMLLinkElement::didAttributeChanged(QualifiedName name, String* old,
     } else if (name == starfish()->staticStrings()->m_media) {
         if (!old->equals(value)) {
             checkLoadStyleSheet();
+        }
+    } else if (name == starfish()->staticStrings()->m_crossorigin) {
+        if (attributeRemoved) {
+            removeAttribute(value);
+        } else if (attributeCreated || !old->equalsIgnoreCase(value)) {
+            if (value->equalsIgnoreCase("use-credentials")) {
+                setAttribute(starfish()->staticStrings()->m_crossorigin, value);
+            } else {
+                setAttribute(starfish()->staticStrings()->m_crossorigin,
+                             String::fromUTF8("anonymous"));
+            }
         }
     }
 }
