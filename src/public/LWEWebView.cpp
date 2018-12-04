@@ -84,6 +84,12 @@ std::string WebView::EvaluateJavaScript(const std::string& script)
     return FetchWebContainer()->EvaluateJavaScript(script);
 }
 
+void WebView::EvaluateJavaScript(const std::string& script,
+                                 std::function<void(const std::string&)> cb)
+{
+    return FetchWebContainer()->EvaluateJavaScript(script, cb);
+}
+
 void WebView::ClearHistory()
 {
     FetchWebContainer()->ClearHistory();

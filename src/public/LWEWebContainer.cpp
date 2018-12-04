@@ -596,6 +596,43 @@ std::string WebContainer::EvaluateJavaScript(const std::string& script)
     return ret;
 }
 
+void WebContainer::EvaluateJavaScript(
+    const std::string& script, std::function<void(const std::string&)> cb)
+{
+    struct Params : public gc {
+        Starfish::WebView* webview;
+        std::string script;
+        std::function<void(const std::string&)> cb;
+    };
+    Params* p = new Params;
+    p->webview = TO_WEBVIEW(m_impl);
+    p->script = script;
+    p->cb = cb;
+
+    if (Starfish::isMainThread()) {
+        p->webview->messageLoop()->addIdler(
+            p->webview->mainBrowsingContext(),
+            [](size_t handle, void* data) {
+                Params* p = (Params*)data;
+                p->webview->evaluateJavaScript(
+                    Starfish::String::fromUTF8(p->script.c_str()), p->cb);
+                delete p;
+            },
+            p);
+    } else {
+        p->webview->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+            p->webview->mainBrowsingContext(),
+            [](size_t handle, void* data) {
+                Params* p = (Params*)data;
+
+                p->webview->evaluateJavaScript(
+                    Starfish::String::fromUTF8(p->script.c_str()), p->cb);
+                delete p;
+            },
+            p);
+    }
+}
+
 void WebContainer::ClearHistory()
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
