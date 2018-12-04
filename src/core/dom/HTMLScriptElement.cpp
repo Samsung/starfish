@@ -404,20 +404,15 @@ void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old,
     if (name == starfish()->staticStrings()->m_src) {
         executeScript();
     } else if (name == starfish()->staticStrings()->m_crossorigin) {
-        if (attributeCreated) {
-            bool useCredentials = false;
-            if (!old->equalsIgnoreCase(value) &&
-                value->equalsIgnoreCase("use-credentials")) {
-                useCredentials = true;
+        if (attributeRemoved) {
+            removeAttribute(value);
+        } else if (attributeCreated || !old->equalsIgnoreCase(value)) {
+            if (value->equalsIgnoreCase("use-credentials")) {
                 setAttribute(starfish()->staticStrings()->m_crossorigin, value);
-            }
-            if (!useCredentials) {
+            } else {
                 setAttribute(starfish()->staticStrings()->m_crossorigin,
                              String::fromUTF8("anonymous"));
             }
-        }
-        if (attributeRemoved) {
-            removeAttribute(value);
         }
     }
 }

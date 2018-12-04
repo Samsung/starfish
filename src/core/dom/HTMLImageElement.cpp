@@ -113,6 +113,21 @@ String* HTMLImageElement::src()
     }
 }
 
+Nullable<String*> HTMLImageElement::crossOrigin()
+{
+    return getAttribute(starfish()->staticStrings()->m_crossorigin);
+}
+
+void HTMLImageElement::setCrossOrigin(Nullable<String*> crossOrigin)
+{
+    if (crossOrigin.hasValue()) {
+        setAttribute(starfish()->staticStrings()->m_crossorigin,
+                     crossOrigin.getValue());
+    } else {
+        removeAttribute(starfish()->staticStrings()->m_crossorigin);
+    }
+}
+
 unsigned long HTMLImageElement::width()
 {
     unsigned long result = 0;
@@ -188,6 +203,17 @@ void HTMLImageElement::didAttributeChanged(QualifiedName name, String* old,
         if (frame()) {
             setNeedsLayout();
         }
+    } else if (name == starfish()->staticStrings()->m_crossorigin) {
+        if (attributeRemoved) {
+            removeAttribute(value);
+        } else if (attributeCreated || !old->equalsIgnoreCase(value)) {
+            if (value->equalsIgnoreCase("use-credentials")) {
+                setAttribute(starfish()->staticStrings()->m_crossorigin, value);
+            } else {
+                setAttribute(starfish()->staticStrings()->m_crossorigin,
+                             String::fromUTF8("anonymous"));
+            }
+        }
     }
 }
 
@@ -259,6 +285,18 @@ void HTMLImageElement::loadImage(String* src)
     } else {
         reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
     }
+
+    auto crossOrigin = getAttribute(starfish()->staticStrings()->m_crossorigin);
+    if (crossOrigin.hasValue()) {
+        reqData->m_mode = RequestMode::CORS;
+        reqData->m_credentials =
+            crossOrigin.getValue()->equalsIgnoreCase("use-credentials")
+                ? RequestCredentials::Include
+                : RequestCredentials::SameOrigin;
+    } else {
+        reqData->m_mode = RequestMode::NoCORS;
+    }
+
     m_imageResource->request(reqData, true);
 }
 

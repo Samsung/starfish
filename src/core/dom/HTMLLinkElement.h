@@ -50,6 +50,9 @@ public:
     String* href();
     void setHref(String* href);
 
+    Nullable<String*> crossOrigin();
+    void setCrossOrigin(Nullable<String*> crossOrigin);
+
     String* media();
     void setMedia(String* media);
 
