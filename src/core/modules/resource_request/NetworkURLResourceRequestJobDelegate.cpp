@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/fetch/FetchUtils.h"
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "platform/network/HTTPCache.h"
 #include "platform/network/HTTPCacheEntry.h"
@@ -53,9 +54,11 @@ extern uint64_t g_profilingBaseTime;
 
 NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     : isAborted(false)
-    , isRedirected(false)
     , needsToHandleError(false)
     , lastTransactionResponseCode(0)
+    , corsFlag(false)
+    , corsPreflightFlag(false)
+    , needsToSendPreflightRequest(false)
     , request(orgRequest)
     , helper(nullptr)
     , httpTransaction(HTTPTransaction::create())
@@ -81,9 +84,20 @@ NetworkURLWorkerData::~NetworkURLWorkerData()
 #endif
 }
 
-void* NetworkURLWorkerHelper::networkWorker(void* data)
+void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    if (nwd->needsToSendPreflightRequest) {
+        nwd->httpTransaction->startPreFlightRequest();
+        if (!nwd->httpTransaction->httpResponse()
+                 .isSuccessfulResponseStatus() ||
+            nwd->needsToHandleError) {
+            nwd->helper->abortHandlerWrapper(nwd);
+            return nullptr;
+        }
+        nwd->needsToSendPreflightRequest = false;
+    }
+
     nwd->httpTransaction->start();
 
     if (!(nwd->httpTransaction->res() == CURLE_ABORTED_BY_CALLBACK ||
@@ -93,25 +107,25 @@ void* NetworkURLWorkerHelper::networkWorker(void* data)
             nwd->cachedEntry->setNeedsPropertiesUpdate(true);
             if (nwd->httpTransaction->httpResponse().responseCode() ==
                 HTTPStatusCode::HTTP_STATUS_NOT_MODIFIED) {
-                NetworkURLWorkerHelper::httpCacheWorker(nwd);
+                NetworkURLResourceRequestJobDelegate::httpCacheWorker(nwd);
             } else {
                 nwd->cachedEntry->setNeedsRawDataUpdate(true);
-                responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
+                nwd->helper->responseHandlerWrapper(nwd);
             }
         } else {
-            responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
+            nwd->helper->responseHandlerWrapper(nwd);
         }
 #else
-        responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
+        nwd->helper->responseHandlerWrapper(nwd);
 #endif
     } else {
-        abortHandlerWrapper(nwd->httpTransaction->res(), nwd);
+        nwd->helper->abortHandlerWrapper(nwd);
     }
     return nullptr;
 }
 
 #ifdef STARFISH_ENABLE_HTTPCACHE
-void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
+void* NetworkURLResourceRequestJobDelegate::httpCacheWorker(void* data)
 {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
     uint64_t start = longTickCount();
@@ -136,10 +150,10 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
 #endif
     }
     if (ret) {
-        nwd->httpTransaction->httpResponse().setResponseCode(200);
-        responseHandlerWrapper(nwd->httpTransaction->res(), nwd);
+        request->m_responseData->m_status = 200;
+        nwd->helper->responseHandlerWrapper(nwd);
     } else {
-        abortHandlerWrapper(nwd->httpTransaction->res(), nwd);
+        nwd->helper->abortHandlerWrapper(nwd);
     }
     return nullptr;
 }
@@ -148,33 +162,38 @@ void* NetworkURLWorkerHelper::httpCacheWorker(void* data)
 void NetworkURLWorkerHelper::abortHandeler(size_t handle, void* data)
 {
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
-    if (nwd == nwd->request->m_activeNetworkURLWorkerData) {
-        if (nwd->needsToHandleError) {
-            nwd->request->handleError(ProgressState::InError);
+
+    {
+        Locker<Mutex> locker(*nwd->request->m_mutex);
+        if (nwd == nwd->request->m_activeNetworkURLWorkerData) {
+            if (nwd->needsToHandleError) {
+                nwd->request->handleError(ProgressState::InError);
+            }
+            nwd->request->m_activeNetworkURLWorkerData = nullptr;
         }
-        nwd->request->m_activeNetworkURLWorkerData = nullptr;
     }
+
     nwd->~NetworkURLWorkerData();
     GC_FREE(nwd);
 }
 
 void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 {
-    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     STARFISH_ASSERT(isMainThread());
-    // TODO : Do not use libur libcurl error codes
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK);
-
+    STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_WRITE_ERROR);
     Locker<Mutex> locker(*nwd->request->m_mutex);
 
     if (nwd->isAborted) {
     } else if (nwd->httpTransaction->res() == 0) {
-        if (nwd->isRedirected) {
-        }
 #ifdef STARFISH_ENABLE_HTTPCACHE
         HTTPCache* cache = nwd->request->starfish()->httpCache();
         if (cache) {
-            if (!nwd->cachedEntry) {
+            // FIXME : remove '!nwd->corsPreflightFlag'
+            // When 'network-or-cache-fetch' is implemented, the response for
+            // request that has useCorsPreflightFlag can be cached.
+            if (!nwd->cachedEntry && !nwd->corsPreflightFlag) {
                 cache->put(nwd);
             } else if (nwd->cachedEntry) { // TODO : If the entry is before it
                                            // expires but is no longer fresh
@@ -223,20 +242,17 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     GC_FREE(nwd);
 }
 
-void SyncNetworkWorkHelper::responseHandlerWrapper(int res,
-                                                   NetworkURLWorkerData* nwd)
+void SyncNetworkWorkHelper::responseHandlerWrapper(NetworkURLWorkerData* nwd)
 {
-    responseHandler(res, nwd);
+    responseHandler(0, nwd);
 }
 
-void SyncNetworkWorkHelper::abortHandlerWrapper(int res,
-                                                NetworkURLWorkerData* nwd)
+void SyncNetworkWorkHelper::abortHandlerWrapper(NetworkURLWorkerData* nwd)
 {
-    abortHandeler(res, nwd);
+    abortHandeler(0, nwd);
 }
 
-void AsyncNetworkWorkHelper::responseHandlerWrapper(int res,
-                                                    NetworkURLWorkerData* nwd)
+void AsyncNetworkWorkHelper::responseHandlerWrapper(NetworkURLWorkerData* nwd)
 {
     Locker<Mutex> locker(*nwd->request->m_mutex);
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
@@ -260,8 +276,7 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(int res,
                                                nwd);
 }
 
-void AsyncNetworkWorkHelper::abortHandlerWrapper(int res,
-                                                 NetworkURLWorkerData* nwd)
+void AsyncNetworkWorkHelper::abortHandlerWrapper(NetworkURLWorkerData* nwd)
 {
     Locker<Mutex> locker(*nwd->request->m_mutex);
     nwd->request->webView()
@@ -347,6 +362,19 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     nwd->httpTransaction->setWriteHeaderCallbackAndData(curlWriteHeaderCallback,
                                                         nwd);
     nwd->httpTransaction->setWriteCallbackAndData(curlWriteCallback, nwd);
+
+    // https://fetch.spec.whatwg.org/#ref-for-use-cors-preflight-flag%E2%91%A1
+    if (m_orgProxy->useCorsPreflightFlag() ||
+        (m_orgProxy->unsafeRequestFlag() &&
+         !FetchUtils::iSCorsSafelistedMethod(m_orgProxy->method()))) {
+        m_orgProxy->setResponseTainting(ResponseTainting::Cors);
+        nwd->corsFlag = true;
+        nwd->corsPreflightFlag = true;
+    }
+
+    if (m_orgProxy->isSameOriginRequest()) {
+        nwd->corsFlag = false;
+    }
 
     if (m_orgProxy->isSync()) {
         nwd->helper = new SyncNetworkWorkHelper();
@@ -527,14 +555,29 @@ void* NetworkURLResourceRequestJobDelegate::worker(void* data)
     NetworkProifileRAIILogger logger(nwd);
 #endif
 
+    if (nwd->corsPreflightFlag) {
+        ResourceRequest* request = nwd->request;
+        Locker<Mutex> locker(*request->m_mutex);
+        if (!FetchUtils::iSCorsSafelistedMethod(request->method()) ||
+            request->useCorsPreflightFlag()) {
+            nwd->needsToSendPreflightRequest = true;
+            request->m_preflightRequestData->m_url =
+                request->m_requestData->m_url;
+            request->m_preflightRequestData->m_destination =
+                request->m_requestData->m_destination;
+            request->m_preflightRequestData->m_referrer =
+                request->m_requestData->m_referrer;
+        }
+    }
+
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (!nwd->cachedEntry || (nwd->cachedEntry->shouldReValidate())) {
-        return nwd->helper->networkWorker(data);
+        return networkWorker(data);
     } else {
-        return nwd->helper->httpCacheWorker(data);
+        return httpCacheWorker(data);
     }
 #else
-    return nwd->helper->networkWorker(data);
+    return networkWorker(data);
 #endif
 }
 
@@ -619,6 +662,55 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
     return realSize;
 }
 
+// https://fetch.spec.whatwg.org/#cors-preflight-fetch-0
+// Caution : Use in curlWriteHeaderCallback only
+static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
+{
+    // TODO: apply `Access-Control-Allow-Headers`,`Access-Control-Max-Age` and
+    // CORS-preflight cache
+    const auto request = nwd->request;
+    const auto& resHeaders = nwd->httpTransaction->httpResponse().headers();
+
+    std::vector<std::string> methods;
+    bool ret = resHeaders.extractHeaderListValues(
+        methods, HTTPHeaderMap::kAccessControlAllowMethods);
+
+    if (ret == false) {
+        return false;
+    }
+    std::string requestMethod = request->method()->toUTF8NonGCString();
+    if (methods.size() == 0 && request->useCorsPreflightFlag()) {
+        methods.push_back(requestMethod);
+    }
+    bool hasRequestMethod = false;
+    bool hasWildCard = false;
+    bool isCorsSafelistedMethod =
+        StringUtils::equalsIgnoreCase("GET", requestMethod) ||
+        StringUtils::equalsIgnoreCase("POST", requestMethod) ||
+        StringUtils::equalsIgnoreCase("HEAD", requestMethod);
+
+    const std::string whildCard = "*";
+    for (const auto& method : methods) {
+        if (StringUtils::equalsIgnoreCase(requestMethod, method)) {
+            hasRequestMethod = true;
+        }
+        if (StringUtils::equalsIgnoreCase(whildCard, method)) {
+            hasWildCard = true;
+        }
+    }
+    if ((!hasRequestMethod && isCorsSafelistedMethod) &&
+        ((request->requestCredentials() == RequestCredentials::Include) ||
+         !hasWildCard)) {
+        return false;
+    }
+
+    if (hasRequestMethod || hasWildCard) {
+        return true;
+    }
+
+    return false;
+}
+
 // https://fetch.spec.whatwg.org/#concept-cors-check
 // Caution : Use in curlWriteHeaderCallback only
 static bool checkCors(NetworkURLWorkerData* nwd)
@@ -670,6 +762,7 @@ static bool checkCors(NetworkURLWorkerData* nwd)
         "check %s header in reponse\n",
         nwd->httpTransaction->httpRequest().url().data(),
         HTTPHeaderMap::kAccessControlAllowCredentials);
+
     return false;
 }
 
@@ -685,17 +778,37 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     size_t realSize = size * nmemb;
     std::string rawHeader(static_cast<const char*>(ptr), realSize);
 
-    request->m_status = nwd->httpTransaction->httpResponse().responseCode();
+    request->m_responseData->m_status =
+        nwd->httpTransaction->httpResponse().responseCode();
 
     if (nwd->httpTransaction->httpResponse().isSuccessfulResponseStatus()) {
         if ((rawHeader.compare("\r\n") == 0) ||
             (rawHeader.compare("\n") == 0)) {
-            if (request->corsFlag() &&
+            if (nwd->corsFlag &&
                 !(request->isSubresourceRequest() ||
                   request->requestMode() == RequestMode::Navigate)) {
-                if (!checkCors(nwd)) {
+                bool allowed = true;
+                if (checkCors(nwd)) {
+                    if (nwd->needsToSendPreflightRequest) {
+                        if (!checkCORSPreflight(nwd)) {
+                            STARFISH_LOG_WARN(
+                                "Failed to load %s : Request doesn't pass CORS "
+                                "Preflight request, please "
+                                "check %s header in reponse\n",
+                                nwd->httpTransaction->httpRequest()
+                                    .url()
+                                    .data(),
+                                HTTPHeaderMap::kAccessControlAllowMethods);
+                            allowed = false;
+                        }
+                    }
+                } else {
+                    allowed = false;
+                }
+                if (!allowed) {
                     nwd->isAborted = true;
                     nwd->needsToHandleError = true;
+                    request->m_responseData->m_status = 0;
                 }
             }
             request->m_lastEffectiveURL =
@@ -708,9 +821,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
         }
     } else if (nwd->httpTransaction->httpResponse()
                    .isRedirectionResponseStatus()) {
-        if (!nwd->isRedirected) {
-            nwd->isRedirected = true;
-        }
+        request->m_responseData->m_redirected = true;
     }
 
     return realSize;

@@ -49,7 +49,7 @@ private:
 class FileURLResourceRequestJobDelegate : public gc,
                                           public ResourceRequestJobInterface {
 public:
-    static void worker(ResourceRequest* res, String* filePath);
+    static void worker(ResourceRequest* request, String* filePath);
     FileURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);
@@ -61,7 +61,7 @@ private:
 class DataURLResourceRequestJobDelegate : public gc,
                                           public ResourceRequestJobInterface {
 public:
-    static void worker(ResourceRequest* res, String* filePath);
+    static void worker(ResourceRequest* request, String* filePath);
     DataURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);
@@ -73,7 +73,7 @@ private:
 class BlobURLResourceRequestJobDelegate : public gc,
                                           public ResourceRequestJobInterface {
 public:
-    static void worker(ResourceRequest* res, String* filePath);
+    static void worker(ResourceRequest* request, String* filePath);
     BlobURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);
@@ -85,7 +85,7 @@ private:
 class AboutURLResourceRequestJobDelegate : public gc,
                                            public ResourceRequestJobInterface {
 public:
-    static void worker(ResourceRequest* res, String* filePath);
+    static void worker(ResourceRequest* request, String* filePath);
     AboutURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);
@@ -98,7 +98,7 @@ class JavaScriptURLResourceRequestJobDelegate
     : public gc,
       public ResourceRequestJobInterface {
 public:
-    static void worker(ResourceRequest* res, String* filePath);
+    static void worker(ResourceRequest* request, String* filePath);
     JavaScriptURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);
@@ -111,7 +111,7 @@ class UnknownURLResourceRequestJobDelegate
     : public gc,
       public ResourceRequestJobInterface {
 public:
-    static void worker(ResourceRequest* res, String* filePath);
+    static void worker(ResourceRequest* request, String* filePath);
     UnknownURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);

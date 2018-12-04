@@ -101,6 +101,13 @@ enum class RequestSyncLevel {
     AlwaysSync,
 };
 
+// https://fetch.spec.whatwg.org/#concept-request-response-tainting
+enum class ResponseTainting {
+    Basic,
+    Cors,
+    Opaque,
+};
+
 class RequestData : public gc {
     // TODO: encapsulate class members
 public:
@@ -114,7 +121,13 @@ public:
     RequestRedirect m_redirect;
     RequestDestination m_destination;
     RequestSyncLevel m_syncLevel;
-    bool m_useCorsPreflight;
+
+    // https://fetch.spec.whatwg.org/#use-cors-preflight-flag
+    bool m_useCorsPreflightFlag;
+    // https://fetch.spec.whatwg.org/#unsafe-request-flag
+    bool m_unsafeRequestFlag;
+
+    ResponseTainting m_responseTainting;
 
     String* m_integrity;
     bool m_keepalive;

@@ -23,6 +23,7 @@
 #include "core/fetch/Body.h"
 #include "core/fetch/Headers.h"
 #include "core/fetch/GetSet.h"
+#include "core/fetch/ResponseData.h"
 
 namespace Starfish {
 
@@ -31,8 +32,8 @@ class Document;
 struct ResponseInit {
 public:
     ResponseInit()
-        : m_status(200)
-        , m_statusText(String::createASCIIString("OK"))
+        : m_status(0)
+        , m_statusText(String::emptyString)
         , m_headers()
     {
     }
@@ -47,18 +48,12 @@ private:
     HeadersInit m_headers;
 };
 
-enum class ResponseType { Basic, Cors, Default, Error, Opaque, Opaqueredirect };
-
 class ScriptWrappable;
 
 class Response final : public ScriptWrappable, public Body {
 public:
-    Response(Document* document, uint32_t status = 200,
-             ResponseType type = ResponseType::Default,
-             std::string statusText = "OK");
-    Response(Document* document, Nullable<BodyInit>& body,
-             uint32_t status = 200, ResponseType type = ResponseType::Default,
-             std::string statusText = "OK");
+    Response(Document* document);
+    Response(Document* document, Nullable<BodyInit>& body);
     Response(Document* document, Nullable<BodyInit>& body, ResponseInit& init);
 
     virtual void init(ScriptBindingInstance* instance,
@@ -80,27 +75,26 @@ public:
     static Response* redirect(Document* document, String* url,
                               unsigned short status);
 
-    GETTER_SETTER(String*, url, Url);
-    GETTER_SETTER(bool, redirected, Redirected);
-    GETTER_SETTER(uint32_t, status, Status);
+    String* url();
+    void setUrl(String* url);
 
-    void setType(ResponseType type)
-    {
-        m_type = type;
-    }
+    bool redirected();
+    void setRedirected(bool value);
+
+    uint32_t status();
+    void setStatus(uint32_t);
+
+    void setType(ResponseType type);
+    ResponseType typeValue();
     String* type();
 
-    bool ok()
-    {
-        return 200 <= m_status && 299 >= m_status;
-    }
+    String* statusText();
+    void setStatusText(String* statusText);
 
-    void setOk(int statusCode)
-    {
-        m_ok = (statusCode >= 200 && statusCode < 300);
-    }
+    String* mimeType();
+    void setMimeType(String* mimeType);
 
-    GETTER_SETTER(String*, statusText, StatusText);
+    bool ok();
 
     Headers* headers()
     {
@@ -113,15 +107,8 @@ public:
 
 private:
     ScriptBindingInstance* m_instance;
-    ResponseInit m_responseInit;
     Headers m_headers;
-    ResponseType m_type;
-    String* m_url;
-    bool m_redirected;
-    bool m_ok;
-    uint32_t m_status;
-    String* m_statusText;
-    String* m_mimeType;
+    ResponseData m_responseData;
 
     void handleBodyInit(Nullable<BodyInit>& body);
     void copyResponseData(Response* destResponse);

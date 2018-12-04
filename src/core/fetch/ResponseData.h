@@ -17,17 +17,30 @@
  *  USA
  */
 
-#ifndef __StarfishFetchUtils__
-#define __StarfishFetchUtils__
+#ifndef __StarfishResponseData__
+#define __StarfishResponseData__
 
 namespace Starfish {
 
-class FetchUtils {
+// https://fetch.spec.whatwg.org/#responsetype
+enum class ResponseType { Basic, Cors, Default, Error, Opaque, Opaqueredirect };
+
+class ResponseData : public gc {
 public:
-    static bool isForbiddenMethod(const String* method);
-    static String* normalizeMethod(String* method);
-    static bool iSCorsSafelistedMethod(const String* method);
+    ResponseData();
+    ~ResponseData()
+    {
+    }
+
+    ResponseType m_type;
+    String* m_url;
+    bool m_redirected;
+    bool m_ok;
+    uint32_t m_status;
+    String* m_statusText;
+    String* m_mimeType;
+
+    static String* reponseTypeString(ResponseType type);
 };
 }
-
 #endif

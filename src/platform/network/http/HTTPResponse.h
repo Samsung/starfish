@@ -28,11 +28,7 @@ class HTTPHeaderMap;
 
 class HTTPResponse {
 public:
-    static std::unique_ptr<HTTPResponse> create()
-    {
-        return std::unique_ptr<HTTPResponse>(new HTTPResponse());
-    }
-
+    HTTPResponse();
     ~HTTPResponse();
     void setResponseCode(long responseCode)
     {
@@ -81,7 +77,6 @@ public:
     }
 
 private:
-    HTTPResponse();
     long m_responseCode;
     std::string m_reasonPhrase;
     std::string m_lastEffectiveURL;

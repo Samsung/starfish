@@ -314,11 +314,17 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
     RequestData* reqData = new RequestData();
     reqData->m_method = nomalizedMethod;
     reqData->m_url = new ResourceURL(url, document()->baseURL()->baseURI());
+    reqData->m_unsafeRequestFlag = true;
     reqData->m_referrer = new ReferrerURL(document()->documentURI(),
                                           document()->referrerPolicy());
     reqData->m_destination = RequestDestination::Empty;
     reqData->m_mode = RequestMode::CORS;
-    reqData->m_useCorsPreflight = m_upload->hasEventListeners();
+    reqData->m_useCorsPreflightFlag = m_upload->hasEventListeners();
+    if (async) {
+        reqData->m_syncLevel = RequestSyncLevel::NeverSync;
+    } else {
+        reqData->m_syncLevel = RequestSyncLevel::AlwaysSync;
+    }
 
     if (userName->length()) {
         reqData->m_url->setUsername(userName);
@@ -331,7 +337,8 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
     } else {
         reqData->m_credentials = RequestCredentials::SameOrigin;
     }
-    m_resourceRequest->open(reqData, async);
+
+    m_resourceRequest->open(reqData);
 
     initResponseData();
 }

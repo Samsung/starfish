@@ -293,14 +293,14 @@ void EventSource::start(String* method)
     reqData->m_url = m_url;
     reqData->m_referrer = new ReferrerURL(document()->documentURI(),
                                           document()->referrerPolicy());
-
+    reqData->m_syncLevel = RequestSyncLevel::NeverSync;
     if (m_withCredentials) {
         reqData->m_credentials = RequestCredentials::Include;
     } else {
         reqData->m_credentials = RequestCredentials::SameOrigin;
     }
 
-    m_resourceRequest->open(reqData, true);
+    m_resourceRequest->open(reqData);
     m_resourceRequest->send();
 }
 

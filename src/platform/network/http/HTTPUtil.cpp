@@ -188,6 +188,8 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(
             ret = HTTPHeaderMap::kAccessControlAllowOrigin;
         } else if (lower.compare("access-control-allow-credentials") == 0) {
             ret = HTTPHeaderMap::kAccessControlAllowCredentials;
+        } else if (lower.compare("access-control-allow-methods") == 0) {
+            ret = HTTPHeaderMap::kAccessControlAllowMethods;
         }
         break;
     }

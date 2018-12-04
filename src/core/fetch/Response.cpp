@@ -27,58 +27,42 @@
 
 namespace Starfish {
 
-Response::Response(Document* document, uint32_t status, ResponseType type,
-                   std::string statusText)
+Response::Response(Document* document)
     : ScriptWrappable(this)
     , Body(document->window())
     , m_instance(document->scriptBindingInstance())
-    , m_responseInit()
     , m_headers(Headers(document))
-    , m_type(type)
-    , m_url(String::emptyString)
-    , m_redirected(false)
-    , m_ok(true)
-    , m_status(status)
-    , m_statusText(String::createASCIIString(statusText.data()))
-    , m_mimeType(String::emptyString)
+    , m_responseData()
 {
     m_headers.setGuard(Headers::Guard::Response);
 }
 
-Response::Response(Document* document, Nullable<BodyInit>& body,
-                   uint32_t status, ResponseType type, std::string statusText)
+Response::Response(Document* document, Nullable<BodyInit>& body)
     : ScriptWrappable(this)
     , Body(document->window(), body)
     , m_instance(document->scriptBindingInstance())
-    , m_responseInit()
     , m_headers(Headers(document))
-    , m_type(type)
-    , m_url(String::emptyString)
-    , m_redirected(false)
-    , m_ok(true)
-    , m_status(status)
-    , m_statusText(String::createASCIIString(statusText.data()))
-    , m_mimeType(String::emptyString)
+    , m_responseData()
 {
     m_headers.setGuard(Headers::Guard::Response);
     handleBodyInit(body);
+    setStatusText(String::createASCIIString("OK"));
 }
 
 Response::Response(Document* document, Nullable<BodyInit>& body,
                    ResponseInit& init)
     : Response(document, body)
 {
-    m_status = init.status();
-
-    if (m_status < 200 || m_status > 599) {
+    if (init.status() < 200 || init.status() > 599) {
         throw new DOMException(document, DOMException::Code::SCRIPT_RANGE_ERR);
     }
+    setStatus(init.status());
 
     if (!isValidReasonPhrase(init.statusText())) {
         throw new DOMException(document, DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
-    m_statusText = init.statusText();
+    setStatusText(init.statusText());
 
     if (!isNullOrUndefinedScriptValue(init.headers())) {
         m_headers.fill(init.headers());
@@ -86,14 +70,14 @@ Response::Response(Document* document, Nullable<BodyInit>& body,
 
     handleBodyInit(body);
 
-    m_mimeType = m_headers.extractMIMEType();
+    setMimeType(m_headers.extractMIMEType());
 }
 
 void Response::handleBodyInit(Nullable<BodyInit>& body)
 {
+    const auto st = status();
     if (body.hasValue()) {
-        if (m_status == 101 || m_status == 204 || m_status == 205 ||
-            m_status == 304) {
+        if (st == 101 || st == 204 || st == 205 || st == 304) {
             throw new DOMException(document(),
                                    DOMException::Code::SCRIPT_TYPE_ERR);
         }
@@ -126,10 +110,11 @@ bool Response::isValidRedirectStatus(uint32_t status)
 
 Response* Response::error(Document* document)
 {
-    Response* response = new Response(document, 200, ResponseType::Error, "");
-    response->m_ok = false;
+    Response* response = new Response(document);
+    response->setStatus(0);
+    response->setStatusText(String::emptyString);
+    response->setType(ResponseType::Error);
     response->m_bodyInit = nullptr;
-    response->m_status = 0;
     response->headers()->setGuard(Headers::Guard::Immutable);
 
     return response;
@@ -143,7 +128,11 @@ Response* Response::redirect(Document* document, String* url)
         throw new DOMException(document, DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
-    Response* response = new Response(document, 302, ResponseType::Default, "");
+    Response* response = new Response(document);
+    response->setStatus(302);
+    response->setStatusText(String::emptyString);
+    response->setType(ResponseType::Default);
+
     response->headers()->setGuard(Headers::Guard::Immutable);
     response->headers()->noCheckValidSet(
         "location", parsedUrl.string()->toUTF8NonGCString());
@@ -165,43 +154,91 @@ Response* Response::redirect(Document* document, String* url,
 
 Response* Response::clone()
 {
-    Response* clonedResponse = new Response(
-        document(), 200, m_type, m_statusText->toUTF8NonGCString().data());
-
+    Response* clonedResponse = new Response(document());
     clonedResponse->copyResponseData(this);
     clonedResponse->m_headers.copyHeaders(&m_headers);
     clonedResponse->copyBody(this);
-
     return clonedResponse;
 }
 
 void Response::copyResponseData(Response* src)
 {
     auto url = src->url()->toUTF8NonGCString();
-    m_url = String::fromUTF8(url.data(), url.length());
-    m_redirected = src->redirected();
-    m_status = src->status();
-    m_ok = src->ok();
+    setUrl(String::fromUTF8(url.data(), url.length()));
+    setRedirected(src->redirected());
+    setStatus(src->status());
+    setType(src->typeValue());
+    setStatusText(String::createASCIIString(
+        src->statusText()->toUTF8NonGCString().data()));
+}
+
+String* Response::url()
+{
+    return m_responseData.m_url;
+}
+
+void Response::setUrl(String* url)
+{
+    m_responseData.m_url = url;
+}
+
+bool Response::redirected()
+{
+    return m_responseData.m_redirected;
+}
+
+void Response::setRedirected(bool value)
+{
+    m_responseData.m_redirected = value;
+}
+
+uint32_t Response::status()
+{
+    return m_responseData.m_status;
+}
+
+void Response::setStatus(uint32_t status)
+{
+    m_responseData.m_status = status;
+}
+
+void Response::setType(ResponseType type)
+{
+    m_responseData.m_type = type;
+}
+
+ResponseType Response::typeValue()
+{
+    return m_responseData.m_type;
 }
 
 String* Response::type()
 {
-    switch (m_type) {
-    case ResponseType::Basic:
-        return String::createASCIIString("basic");
-    case ResponseType::Cors:
-        return String::createASCIIString("cors");
-    case ResponseType::Default:
-        return String::createASCIIString("default");
-    case ResponseType::Error:
-        return String::createASCIIString("error");
-    case ResponseType::Opaque:
-        return String::createASCIIString("opaque");
-    case ResponseType::Opaqueredirect:
-        return String::createASCIIString("opaqueredirect");
-    default:
-        STARFISH_ASSERT_NOT_REACHED();
-        return String::emptyString;
-    }
+    return ResponseData::reponseTypeString(typeValue());
 }
-};
+
+bool Response::ok()
+{
+    return 200 <= status() && 299 >= status();
+}
+
+String* Response::statusText()
+{
+    return m_responseData.m_statusText;
+}
+
+void Response::setStatusText(String* statusText)
+{
+    m_responseData.m_statusText = statusText;
+}
+
+String* Response::mimeType()
+{
+    return m_responseData.m_mimeType;
+}
+
+void Response::setMimeType(String* mimeType)
+{
+    m_responseData.m_mimeType = mimeType;
+}
+}

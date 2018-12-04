@@ -95,9 +95,7 @@ void Resource::request(RequestData* requestData, bool allowCache)
 
         m_resourceRequest->addResourceRequestClient(
             new ResourceNetworkRequestClient(this));
-        m_resourceRequest->open(requestData,
-                                !(syncLevel == RequestSyncLevel::AlwaysSync));
-
+        m_resourceRequest->open(requestData);
         m_resourceRequest->send(entityBody, allowCache);
     }
     m_state = Receiving;

@@ -77,6 +77,7 @@ namespace Starfish {
     F(kAccessControlRequestHeaders, "Access-Control-Request-Headers") \
     F(kAccessControlRequestMethod, "Access-Control-Request-Method")   \
     F(kAccessControlAllowOrigin, "Access-Control-Allow-Origin")       \
+    F(kAccessControlAllowMethods, "Access-Control-Allow-Methods")     \
     F(kAccessControlAllowCredentials, "Access-Control-Allow-Credentials")
 
 class HTTPHeaderMap {
@@ -97,14 +98,17 @@ public:
 
     // map interface
     unsigned long length();
-    HeaderMap::iterator findHeader(const std::string& key);
-    HeaderMap::const_iterator findHeader(const std::string& key) const;
+    HeaderMap::iterator findHeader(const std::string& name);
+    HeaderMap::const_iterator findHeader(const std::string& name) const;
+    bool extractHeaderListValues(std::vector<std::string>& out,
+                                 const std::string& name) const;
 
-    void setHeader(const std::string& key, const std::string& value);
-    void removeHeader(const std::string& key);
+    void setHeader(const std::string& name, const std::string& value);
+    void removeHeader(const std::string& name);
     void clear();
 
     struct curl_slist* generateCurlList();
+    struct curl_slist* generateCurlListToPreflightRequest();
 
 #ifdef STARFISH_ENABLE_TEST
     void dump();

@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "FetchUtils.h"
 #include "core/fetch/RequestData.h"
+#include "core/modules/threading/Thread.h"
 
 namespace Starfish {
 
@@ -36,6 +37,7 @@ bool FetchUtils::isForbiddenMethod(const String* method)
 
 String* FetchUtils::normalizeMethod(String* method)
 {
+    STARFISH_RELEASE_ASSERT(isMainThread());
     STARFISH_RELEASE_ASSERT(method);
     if (method->equalsIgnoreCase("DELETE")) {
         return String::createASCIIString("DELETE");
@@ -51,5 +53,15 @@ String* FetchUtils::normalizeMethod(String* method)
         return String::createASCIIString("PUT");
     }
     return method;
+}
+
+bool FetchUtils::iSCorsSafelistedMethod(const String* method)
+{
+    // https://fetch.spec.whatwg.org/#cors-safelisted-method
+    if (method->equalsIgnoreCase("GET") || method->equalsIgnoreCase("HEAD") ||
+        method->equalsIgnoreCase("POST")) {
+        return true;
+    }
+    return false;
 }
 }
