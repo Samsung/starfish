@@ -51,6 +51,8 @@ public:
 #define LWE_MIN_FONT_SIZE 1
 #define LWE_MAX_FONT_SIZE 72
 
+enum class WebSecurityMode;
+
 class LWE_EXPORT Settings {
 public:
     Settings(const std::string& defaultUA, const std::string& ua);
