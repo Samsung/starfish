@@ -162,6 +162,8 @@ public:
         const std::string& exposedObjectName, const std::string& jsFunctionName,
         std::function<std::string(const std::string&)> cb);
     std::string EvaluateJavaScript(const std::string& script);
+    void EvaluateJavaScript(const std::string& script,
+                            std::function<void(const std::string&)> cb);
     void ClearHistory();
     void Destroy();
     void Pause();
@@ -285,6 +287,8 @@ public:
         const std::string& exposedObjectName, const std::string& jsFunctionName,
         std::function<std::string(const std::string&)> cb);
     std::string EvaluateJavaScript(const std::string& script);
+    void EvaluateJavaScript(const std::string& script,
+                            std::function<void(const std::string&)> cb);
     void ClearHistory();
     void SetSettings(const Settings& setttings);
     void RemoveJavascriptInterface(const std::string& exposedObjectName,

@@ -439,6 +439,8 @@ public:
     }
 
     String* evaluateJavaScript(String* s);
+    void evaluateJavaScript(String* s, std::function<void(std::string)> cb);
+
     void registerPublicWebViewHandler(
         StarfishPubicWebViewHandlerKind handlerKind,
         std::function<void(void*)> handler);

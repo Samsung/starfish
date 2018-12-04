@@ -502,6 +502,18 @@ String* WebView::evaluateJavaScript(String* s)
     }
 }
 
+void WebView::evaluateJavaScript(String* s, std::function<void(std::string)> cb)
+{
+    String* ret = String::emptyString;
+
+    if (mainBrowsingContext()) {
+        toBrowserString(
+            mainBrowsingContext()->scriptBindingInstance(),
+            evaluateString(mainBrowsingContext()->scriptBindingInstance(), s));
+    }
+    cb(ret->toUTF8NonGCString());
+}
+
 bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
 {
     size_t idx = url->lastIndexOf('/');
