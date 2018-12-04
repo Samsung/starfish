@@ -340,6 +340,9 @@ void FlexFormattingContext::applyFlexFactor()
                                                  remainingFreeSpace;
                         }
                     }
+
+                    targetMainSize = std::ceil(targetMainSize.toDouble());
+
                     unclampedSize += targetMainSize;
 
                     if (m_isMainAxisInInlineAxis) {
