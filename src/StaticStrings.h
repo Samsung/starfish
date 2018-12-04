@@ -399,6 +399,7 @@ public:
     QualifiedName m_declare;
     QualifiedName m_securitypolicyviolation;
     QualifiedName m_nonce;
+    QualifiedName m_crossorigin;
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_default;

@@ -300,8 +300,8 @@ http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/scri
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/scripting-enabled.html
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/script-for-event.html
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/script-defer.html
-#http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/script-crossorigin-network.html
-#http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/script-crossorigin.html
+http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/script-crossorigin-network.html
+http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/script-crossorigin.html
 http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/script-charset-03.html
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/script-charset-02.html
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/script-charset-01.html

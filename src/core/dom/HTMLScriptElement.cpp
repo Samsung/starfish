@@ -25,6 +25,7 @@
 #include "core/dom/Text.h"
 #include "core/dom/builder/html/HTMLDocumentBuilder.h"
 #include "core/dom/parser/HTMLParser.h"
+#include "core/fetch/RequestData.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/extra/MimeType.h"
@@ -368,6 +369,20 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
             reqData->m_destination = RequestDestination::Script;
             reqData->m_syncLevel = forceSync ? RequestSyncLevel::AlwaysSync
                                              : RequestSyncLevel::NeverSync;
+
+            // https://html.spec.whatwg.org/multipage/urls-and-fetching.html#cors-settings-attributes
+            auto crossOrigin =
+                getAttribute(starfish()->staticStrings()->m_crossorigin);
+            if (crossOrigin.hasValue()) {
+                reqData->m_mode = RequestMode::CORS;
+                reqData->m_credentials =
+                    crossOrigin.getValue()->equalsIgnoreCase("use-credentials")
+                        ? RequestCredentials::Include
+                        : RequestCredentials::SameOrigin;
+            } else {
+                reqData->m_mode = RequestMode::NoCORS;
+            }
+
             res->request(reqData, true);
             if (async() || defer()) {
                 return false;
@@ -388,6 +403,22 @@ void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old,
                                      attributeRemoved);
     if (name == starfish()->staticStrings()->m_src) {
         executeScript();
+    } else if (name == starfish()->staticStrings()->m_crossorigin) {
+        if (attributeCreated) {
+            bool useCredentials = false;
+            if (!old->equalsIgnoreCase(value) &&
+                value->equalsIgnoreCase("use-credentials")) {
+                useCredentials = true;
+                setAttribute(starfish()->staticStrings()->m_crossorigin, value);
+            }
+            if (!useCredentials) {
+                setAttribute(starfish()->staticStrings()->m_crossorigin,
+                             String::fromUTF8("anonymous"));
+            }
+        }
+        if (attributeRemoved) {
+            removeAttribute(value);
+        }
     }
 }
 
@@ -453,6 +484,21 @@ String* HTMLScriptElement::charset()
 void HTMLScriptElement::setCharset(String* charset)
 {
     setAttribute(starfish()->staticStrings()->m_charset, charset);
+}
+
+Nullable<String*> HTMLScriptElement::crossOrigin()
+{
+    return getAttribute(starfish()->staticStrings()->m_crossorigin);
+}
+
+void HTMLScriptElement::setCrossOrigin(Nullable<String*> crossOrigin)
+{
+    if (crossOrigin.hasValue()) {
+        setAttribute(starfish()->staticStrings()->m_crossorigin,
+                     crossOrigin.getValue());
+    } else {
+        removeAttribute(starfish()->staticStrings()->m_crossorigin);
+    }
 }
 
 String* HTMLScriptElement::text()

@@ -292,6 +292,9 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_nonce =
         QualifiedName(AtomicString::createAtomicString(starfish, "nonce"));
 
+    m_crossorigin = QualifiedName(
+        AtomicString::createAtomicString(starfish, "crossorigin"));
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_default =
         QualifiedName(AtomicString::createAtomicString(starfish, "default"));

@@ -9,7 +9,7 @@ interface HTMLScriptElement : HTMLElement {
   [CEReactions] attribute DOMString charset;
   [CEReactions] attribute boolean async;
   [CEReactions] attribute boolean defer;
-  [Unimplemented, CEReactions] attribute DOMString? crossOrigin;
+  [CEReactions] attribute DOMString? crossOrigin;
   [CEReactions] attribute DOMString text;
   [CEReactions] attribute DOMString nonce;
 
