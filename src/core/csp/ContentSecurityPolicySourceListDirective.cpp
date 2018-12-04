@@ -60,8 +60,11 @@ bool ContentSecurityPolicySourceListDirective::parseNonce(String* source)
     if (source->startsWith(prefix)) {
         // make a substring without the last single quote
         auto prefixLength = prefix->length();
-        auto nonceValue = source->substring(prefixLength, source->length() -
-                                                              prefixLength - 1);
+        auto nonceLength = source->length() - prefixLength - 1;
+        if (nonceLength < 0) {
+            return false;
+        }
+        auto nonceValue = source->substring(prefixLength, nonceLength);
         m_nonces.insert(nonceValue->toUTF8NonGCString());
         return true;
     }
@@ -101,9 +104,12 @@ bool ContentSecurityPolicySourceListDirective::parseHash(String* source)
         if (source->startsWith(prefix)) {
             auto prefixLength = prefix->length();
             hashAlgorithmType = supportedPrefixes[i].type;
+            auto base64Length = source->length() - prefixLength - 1;
+            if (base64Length < 0) {
+                return false;
+            }
             // make a substring without the last single quote
-            base64Value = source->substring(prefixLength, source->length() -
-                                                              prefixLength - 1);
+            base64Value = source->substring(prefixLength, base64Length);
             break;
         }
     }
@@ -257,13 +263,14 @@ bool ContentSecurityPolicySourceListDirective::allowHost(ResourceURL* url,
     }
 
     String* host = url->hostname();
+    size_t hostLength = host->length();
     size_t pos = host->find(".");
-    if (pos == SIZE_MAX) {
+    if (pos == SIZE_MAX || pos >= hostLength - 1) {
         return false;
     }
 
     String* server = host->substring(0, pos);
-    String* domain = host->substring(pos + 1, host->length() - pos - 1);
+    String* domain = host->substring(pos + 1, hostLength - pos - 1);
     String* port = url->port();
     String* path = url->pathname();
 
