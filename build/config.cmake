@@ -101,7 +101,7 @@ ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
         -DSTARFISH_TIZEN_TRANSPARENT_BACKGROUND
         -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
         -DSTARFISH_DISABLE_OVERFLOW_SCROLL
-        #-DSTARFISH_ENABLE_MULTIMEDIA
+        -DSTARFISH_ENABLE_MULTIMEDIA
     )
 ELSEIF (${CUSTOM} STREQUAL "prod_wearable")
     SET (LWE_DEFINES_CUSTOM
@@ -232,7 +232,7 @@ IF (${HOST} STREQUAL "tizen")
     ELSEIF (${CUSTOM} MATCHES "mobile")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-media-player capi-network-connection)
     ELSEIF (${CUSTOM} MATCHES "wearable")
-        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog)
+        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-media-player capi-media-sound-manager)
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_BUNDLE REQUIRED bundle)
     ELSEIF (${CUSTOM} STREQUAL "unified_tv")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-network-connection capi-media-player)
@@ -345,9 +345,10 @@ ELSEIF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "efl_cairo_gl")
     )
 ENDIF()
 
-IF (NOT ${CUSTOM} MATCHES "wearable")
-    SET (STARFISH_INCLUDE_DIRS_CUSTOM ${THIRD_PARTY_ROOT}/MP4Parse/source/include ${THIRD_PARTY_ROOT}/webm)
-ENDIF()
+SET (STARFISH_INCLUDE_DIRS_CUSTOM
+    ${THIRD_PARTY_ROOT}/MP4Parse/source/include
+    ${THIRD_PARTY_ROOT}/webm
+)
 
 IF (${TOUCH_UI} STREQUAL "1")
     #SET (STARFISH_TOUCH_UI_ADDITIONAL_INCLUDE_DIRS /usr/include/location)
