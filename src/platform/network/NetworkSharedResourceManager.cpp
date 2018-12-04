@@ -166,8 +166,12 @@ static String* transformetoNetscapeCookieFormat(Document* document,
         cookieName = new StringView(tokens[0]);
     }
     int64_t expires = 0;
-    String* domain = url->host();
+    String* domain = url->hostname();
     String* path = url->pathname();
+    size_t idx = path->lastIndexOf('/');
+    if (idx != SIZE_MAX) {
+        path = path->substring(0, idx);
+    }
     const char* secure = "FALSE";
 
     for (size_t i = 1; i < tokens.size(); ++i) {
@@ -430,8 +434,13 @@ String* NetworkSharedResourceManager::cookeis(ResourceURL* url)
     curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookieList);
 
     if (cookieList) {
-        String* domain = url->host();
+        String* domain = url->hostname();
         String* path = url->pathname();
+        size_t idx = path->lastIndexOf('/');
+        if (idx != SIZE_MAX) {
+            path = path->substring(0, idx);
+        }
+
         StringBuilder cookiesBuilder;
         for (struct curl_slist* p = cookieList; p; p = p->next) {
             String* cookie = String::fromUTF8(p->data);

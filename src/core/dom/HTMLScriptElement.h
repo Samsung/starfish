@@ -59,6 +59,9 @@ public:
     String* charset();
     void setCharset(String* charset);
 
+    Nullable<String*> crossOrigin();
+    void setCrossOrigin(Nullable<String*> crossOrigin);
+
     String* text();
     void setText(String* s);
 
