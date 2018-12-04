@@ -59,13 +59,11 @@ void ContentSecurityPolicy::didReceiveHeader(
     String* header, ContentSecurityPolicyHeaderType type,
     ContentSecurityPolicyHeaderSource source)
 {
-#ifdef STARFISH_ENABLE_CSP
     ContentSecurityPolicyDirectiveList* policy =
         new ContentSecurityPolicyDirectiveList(this, header, 0,
                                                header->length());
 
     m_policies.push_back(policy);
-#endif
 }
 
 static String* getDirectiveName(CSPDirectives directive)
@@ -99,15 +97,16 @@ bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
                                         ResourceURL* resUrl)
 {
     for (auto policy : m_policies) {
-        if (!policy->getSourceList(directive)) {
+        auto sourceDirective = policy->getSourceList(directive);
+        if (!sourceDirective) {
             continue;
-        } else if (policy->allowStar(directive, resUrl)) {
+        } else if (policy->allowStar(sourceDirective, resUrl)) {
             return true;
         }
 
-        if (!policy->allowSelf(directive, resUrl) &&
-            !policy->allowScheme(directive, resUrl) &&
-            !policy->allowHost(directive, resUrl)) {
+        if (!policy->allowSelf(sourceDirective, resUrl) &&
+            !policy->allowScheme(sourceDirective, resUrl) &&
+            !policy->allowHost(sourceDirective, resUrl)) {
             // TODO: check the query with default-src policies
             dispatchViolationEvent(getDirectiveName(directive),
                                    resUrl->urlString());
@@ -126,15 +125,16 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
                                         String* nonce /*= nullptr*/)
 {
     for (auto policy : m_policies) {
-        if (!policy->getSourceList(directive)) {
+        auto sourceDirective = policy->getSourceList(directive);
+        if (!sourceDirective) {
             continue; // allowed if no src-list exists
-        } else if (!policy->hasNonceOrHash(directive) &&
-                   policy->allowInline(directive)) {
+        } else if (!policy->hasNonceOrHash(sourceDirective) &&
+                   policy->allowInline(sourceDirective)) {
             return true;
         }
 
-        if (!policy->allowNonce(directive, nonce) &&
-            !policy->allowContent(directive, scriptContent)) {
+        if (!policy->allowNonce(sourceDirective, nonce) &&
+            !policy->allowContent(sourceDirective, scriptContent)) {
             dispatchViolationEvent(getDirectiveName(directive));
             STARFISH_LOG_WARN(
                 "Refused to execute contents as an inline-source of '%s' "
@@ -149,10 +149,9 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
 bool ContentSecurityPolicy::allowNonce(CSPDirectives directive, String* nonce)
 {
     for (auto policy : m_policies) {
-        if (policy->getSourceList(directive)) {
-            if (!policy->allowNonce(directive, nonce)) {
-                return false;
-            }
+        auto sourceDirective = policy->getSourceList(directive);
+        if (sourceDirective && !policy->allowNonce(sourceDirective, nonce)) {
+            return false;
         }
     }
     return true;
@@ -161,14 +160,13 @@ bool ContentSecurityPolicy::allowNonce(CSPDirectives directive, String* nonce)
 bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
 {
     for (auto policy : m_policies) {
-        if (policy->getSourceList(directive)) {
-            if (!policy->allowEval(directive)) {
-                dispatchViolationEvent(getDirectiveName(directive));
-                STARFISH_LOG_WARN(
-                    "Refused to execute a string as JavaScript' "
-                    "because it violates the Content Security Policy\n");
-                return false;
-            }
+        auto sourceDirective = policy->getSourceList(directive);
+        if (sourceDirective && !policy->allowEval(sourceDirective)) {
+            dispatchViolationEvent(getDirectiveName(directive));
+            STARFISH_LOG_WARN(
+                "Refused to execute a string as JavaScript' "
+                "because it violates the Content Security Policy\n");
+            return false;
         }
     }
     return true;

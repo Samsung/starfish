@@ -41,16 +41,22 @@ public:
     void setDirective(ContentSecurityPolicySourceListDirective*& directive,
                       String* name, String* value);
 
-    bool allowStar(CSPDirectives directive, ResourceURL* resUrl);
-    bool allowSelf(CSPDirectives directive, ResourceURL* url);
-    bool allowScheme(CSPDirectives directive, ResourceURL* url);
-    bool allowHost(CSPDirectives directive, ResourceURL* url);
-    bool allowContent(CSPDirectives directive, String* content);
-    bool allowNonce(CSPDirectives directive, String* nonce);
-    bool allowInline(CSPDirectives directive);
-    bool allowEval(CSPDirectives directive);
+    bool allowStar(ContentSecurityPolicySourceListDirective* directive,
+                   ResourceURL* resUrl);
+    bool allowSelf(ContentSecurityPolicySourceListDirective* directive,
+                   ResourceURL* url);
+    bool allowScheme(ContentSecurityPolicySourceListDirective* directive,
+                     ResourceURL* url);
+    bool allowHost(ContentSecurityPolicySourceListDirective* directive,
+                   ResourceURL* url);
+    bool allowContent(ContentSecurityPolicySourceListDirective* directive,
+                      String* content);
+    bool allowNonce(ContentSecurityPolicySourceListDirective* directive,
+                    String* nonce);
+    bool allowInline(ContentSecurityPolicySourceListDirective* directive);
+    bool allowEval(ContentSecurityPolicySourceListDirective* directive);
 
-    bool hasNonceOrHash(CSPDirectives directive);
+    bool hasNonceOrHash(ContentSecurityPolicySourceListDirective* directive);
 
     ContentSecurityPolicySourceListDirective* getSourceList(
         CSPDirectives directive);
