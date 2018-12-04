@@ -51,27 +51,23 @@ TARGET_COMPILE_OPTIONS (clipper PUBLIC ${THIRD_PARTY_CXXFLAGS})
 #######################################################
 # MP4PARSE
 #######################################################
-IF (NOT ${CUSTOM} MATCHES "wearable")
-    FILE (GLOB MP4PARSE_LIST ${THIRD_PARTY_ROOT}/MP4Parse/source/MP4*.cpp)
-    ADD_LIBRARY (mp4parse SHARED ${MP4PARSE_LIST})
-    TARGET_INCLUDE_DIRECTORIES (mp4parse PUBLIC ${THIRD_PARTY_ROOT}/MP4Parse/source/include)
-    TARGET_COMPILE_DEFINITIONS (mp4parse PUBLIC ${THIRD_PARTY_DEFINITIONS})
-    TARGET_COMPILE_OPTIONS (mp4parse PUBLIC ${THIRD_PARTY_CXXFLAGS})
-ENDIF()
+FILE (GLOB MP4PARSE_LIST ${THIRD_PARTY_ROOT}/MP4Parse/source/MP4*.cpp)
+ADD_LIBRARY (mp4parse SHARED ${MP4PARSE_LIST})
+TARGET_INCLUDE_DIRECTORIES (mp4parse PUBLIC ${THIRD_PARTY_ROOT}/MP4Parse/source/include)
+TARGET_COMPILE_DEFINITIONS (mp4parse PUBLIC ${THIRD_PARTY_DEFINITIONS})
+TARGET_COMPILE_OPTIONS (mp4parse PUBLIC ${THIRD_PARTY_CXXFLAGS})
 
 
 #######################################################
 # WEBM
 #######################################################
-IF (NOT ${CUSTOM} MATCHES "wearable")
-    ADD_LIBRARY (webm SHARED
-        ${THIRD_PARTY_ROOT}/webm/mkvparser/mkvparser.cc
-        ${THIRD_PARTY_ROOT}/webm/webvtt/webvttparser.cc
-    )
-    TARGET_INCLUDE_DIRECTORIES (webm PUBLIC ${THIRD_PARTY_ROOT}/webm/)
-    TARGET_COMPILE_DEFINITIONS (webm PUBLIC ${THIRD_PARTY_DEFINITIONS})
-    TARGET_COMPILE_OPTIONS (webm PUBLIC ${THIRD_PARTY_CXXFLAGS})
-ENDIF()
+ADD_LIBRARY (webm SHARED
+    ${THIRD_PARTY_ROOT}/webm/mkvparser/mkvparser.cc
+    ${THIRD_PARTY_ROOT}/webm/webvtt/webvttparser.cc
+)
+TARGET_INCLUDE_DIRECTORIES (webm PUBLIC ${THIRD_PARTY_ROOT}/webm/)
+TARGET_COMPILE_DEFINITIONS (webm PUBLIC ${THIRD_PARTY_DEFINITIONS})
+TARGET_COMPILE_OPTIONS (webm PUBLIC ${THIRD_PARTY_CXXFLAGS})
 
 
 #######################################################
@@ -83,25 +79,25 @@ IF (NOT ${HOST} STREQUAL "tizen")
     IF (${CUSTOM} STREQUAL "unified_wearable")
         SET (ZMQ_CFLAGS_CUSTOM "-Os")
     ENDIF()
-    
+
     IF (${ARCH} STREQUAL "x86")
         SET (ZMQ_CFLAGS_ARCH "-m32")
     ELSEIF (${ARCH} STREQUAL "arm")
         SET (ZMQ_CFLAGS_ARCH "-march=armv7-a -mthumb -finline-limit=64")
     ENDIF()
-    
+
     IF (${MODE} STREQUAL "debug")
         SET (ZMQ_CFLAGS_MODE "-O0")
     ELSE()
         SET (ZMQ_CFLAGS_MODE "-O2")
     ENDIF()
-    
+
     SET (ZMQ_CFLAGS "${ZMQ_CFLAGS_COMMON} ${ZMQ_CFLAGS_CUSTOM} ${ZMQ_CFLAGS_ARCH} ${ZMQ_CFLAGS_MODE}")
-    
+
     SET (ZMQ_BUILDDIR ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared)
     SET (ZMQ_LOCAL_TARGET ${ZMQ_BUILDDIR}/.libs/libzmq.so)
     SET (ZMQ_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libzmq.so)
-    
+
     ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_LOCAL_TARGET}
                         COMMENT "BUILD ZMQ"
                         COMMAND ${CMAKE_COMMAND} -E make_directory ${ZMQ_BUILDDIR}
@@ -279,10 +275,7 @@ ADD_SUBDIRECTORY (third_party/escargot)
 # LINK THIRD PARTY LIBRARIES
 #######################################################
 SET (STARFISH_LIBRARIES_THIRD_PARTY ${GC_TARGET} clipper escargot)
-
-IF (NOT ${CUSTOM} MATCHES "wearable")
-    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} mp4parse webm)
-ENDIF()
+SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} mp4parse webm)
 
 IF (NOT ${BACKEND} STREQUAL "efl_skia")
     SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} skia_matrix)
