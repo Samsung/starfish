@@ -26,6 +26,7 @@ class FetchUtils {
 public:
     static bool isForbiddenMethod(const String* method);
     static String* normalizeMethod(String* method);
+    static bool iSCorsSafelistedMethod(const String* method);
 };
 }
 

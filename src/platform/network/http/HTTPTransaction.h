@@ -46,6 +46,8 @@ public:
 
     // Transaction interface
     void start();
+    void startPreFlightRequest();
+
     void abort()
     {
         // TODO
@@ -104,12 +106,16 @@ public:
 
 private:
     HTTPTransaction();
+    void preprocess();
+    void postprocess();
+    void registerCurlHandlers();
 
     std::unique_ptr<HTTPRequest> m_httpRequest;
     std::unique_ptr<HTTPResponse> m_httpResponse;
 
     unsigned long m_timeout;
     CURL* m_curl;
+    CURLSH* m_curlsh;
     CURLcode m_res;
 
     // proxy
@@ -126,6 +132,11 @@ private:
     // write
     WriteCallback m_writeCB;
     void* m_writeData; // NetworkURLWorkerData
+
+#ifdef STARFISH_ENABLE_TEST
+    void printCurlRequestDump();
+    bool m_enableLog;
+#endif
 };
 }
 

@@ -29,6 +29,7 @@
 #include "core/modules/resource_request/ResourceRequestJob.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/fetch/RequestData.h"
+#include "core/fetch/ResponseData.h"
 
 namespace Starfish {
 
@@ -104,7 +105,7 @@ public:
     }
 
     ResourceRequest(Document* document);
-    void open(RequestData* reqData, bool async);
+    void open(RequestData* reqData);
     void abort(bool isExplicitAction = true);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);
@@ -141,12 +142,18 @@ public:
 
     uint16_t status() const
     {
-        return m_status;
+        if (!m_responseData) {
+            return 200;
+        }
+        return m_responseData->m_status;
     }
 
     bool isSync() const
     {
-        return m_isSync;
+        if (!m_requestData) {
+            return false;
+        }
+        return m_requestData->m_syncLevel == RequestSyncLevel::AlwaysSync;
     }
 
     const HeaderMap& responseHeaderMap()
@@ -168,12 +175,18 @@ public:
 
     ResponseType responseType()
     {
-        return m_responseType;
+        if (!m_responseData) {
+            return ResponseType::Default;
+        }
+        return m_responseData->m_type;
     }
 
     String* responseMimeType()
     {
-        return m_responseMimeType;
+        if (!m_responseData) {
+            return String::emptyString;
+        }
+        return m_responseData->m_mimeType;
     }
 
     String* contentLanguage()
@@ -286,6 +299,51 @@ public:
         }
     }
 
+    ResponseTainting responseTainting()
+    {
+        if (!m_requestData) {
+            return ResponseTainting::Basic;
+        }
+        return m_requestData->m_responseTainting;
+    }
+
+    void setResponseTainting(ResponseTainting value)
+    {
+        if (m_requestData) {
+            m_requestData->m_responseTainting = value;
+        }
+    }
+
+    bool useCorsPreflightFlag()
+    {
+        if (!m_requestData) {
+            return false;
+        }
+        return m_requestData->m_useCorsPreflightFlag;
+    }
+
+    void setUseCorsPreflightFlag(bool value)
+    {
+        if (m_requestData) {
+            m_requestData->m_useCorsPreflightFlag = value;
+        }
+    }
+
+    bool unsafeRequestFlag()
+    {
+        if (!m_requestData) {
+            return false;
+        }
+        return m_requestData->m_unsafeRequestFlag;
+    }
+
+    void setUnsafeRequestFlag(bool value)
+    {
+        if (m_requestData) {
+            m_requestData->m_unsafeRequestFlag = value;
+        }
+    }
+
     static EncodeType toEncodeType(String* input);
     static String* encodeType(EncodeType input);
 
@@ -293,15 +351,6 @@ public:
                               EncodeType formEnctype);
     ResourceURL* mutateActionURL(ResourceURL* url,
                                  FormSubmitData* formSubmitData);
-
-    void setCorsFlag(bool value)
-    {
-        m_corsFlag = value;
-    }
-    bool corsFlag()
-    {
-        return m_corsFlag;
-    }
 
 protected:
     void pareseHeader(const char* header, size_t len);
@@ -328,33 +377,31 @@ protected:
                                          m_requstedIdlers.end(), handle));
     }
 
-    bool m_isSync;
     bool m_didSend;
     bool m_gotError;
     bool m_containsBase64Content;
 
     RequestData* m_requestData;
+    RequestData* m_preflightRequestData;
     WebOrigin* m_requestWebOrigin;
-    bool m_corsFlag; // https://fetch.spec.whatwg.org/#main-fetch
+
+    ResponseData* m_responseData;
 
     ReadyState m_readyState;
     ProgressState m_progressState;
 
     BodyType m_bodyType;
 
-    ResponseType m_responseType;
-    uint16_t m_status;
     uint32_t m_timeout;
     NetworkURLWorkerData* m_activeNetworkURLWorkerData;
     Mutex* m_mutex;
-    String* m_responseMimeType;
     String* m_contentLanguage;
     std::string m_lastEffectiveURL;
     EntityBody m_response;
     GCVector<size_t> m_requstedIdlers;
     GCVector<std::pair<String*, String*>> m_requestHeaders;
 
-    ResourceRequestJobInterface* m_networkRequestJobDelegate;
+    ResourceRequestJobInterface* m_jobDelegate;
 
     volatile size_t m_pendingOnHeaderReceivedEventIdlerHandle;
     volatile size_t m_pendingOnProgressEventIdlerHandle;

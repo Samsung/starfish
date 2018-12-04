@@ -31,7 +31,6 @@ namespace Starfish {
 
 HTTPTransaction::HTTPTransaction()
     : m_httpRequest()
-    , m_httpResponse(HTTPResponse::create())
     , m_timeout(0)
     , m_curl(nullptr)
     , m_res(CURLE_OK)
@@ -41,6 +40,9 @@ HTTPTransaction::HTTPTransaction()
     , m_writeHeaderData(nullptr)
     , m_writeCB(nullptr)
     , m_writeData(nullptr)
+#ifdef STARFISH_ENABLE_TEST
+    , m_enableLog(false)
+#endif
 {
 }
 
@@ -48,53 +50,29 @@ HTTPTransaction::~HTTPTransaction()
 {
 }
 
-void HTTPTransaction::start()
+void HTTPTransaction::preprocess()
 {
-    CURLSH* curlsh =
-        NetworkSharedResourceManager::getInstance()->curlShareHandle();
+    m_httpResponse.reset(new HTTPResponse());
+    m_curlsh = NetworkSharedResourceManager::getInstance()->curlShareHandle();
     CurlHandleData cd =
         NetworkSharedResourceManager::getInstance()->getCurlHandleData(
             m_httpRequest->baseURL());
-
     m_curl = cd.curl;
-    bool includeCredentials = m_httpRequest->includeCredentials();
 
-    STARFISH_ASSERT(m_curl);
-    STARFISH_ASSERT(curlsh);
-
-#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
-    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
-    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
-#endif
 #ifdef STARFISH_ENABLE_TEST
     const char* verbose = getenv("NETWORK_LOG_VERBOSE");
-    bool enableLog = false;
     if (verbose && strlen(verbose)) {
-        enableLog = true;
+        m_enableLog = true;
+    } else {
+        m_enableLog = false;
     }
-    if (enableLog) {
+    if (m_enableLog) {
         curl_easy_setopt(m_curl, CURLOPT_VERBOSE, 1L);
     }
 #endif
 
-    struct curl_slist* list = m_httpRequest->headers().generateCurlList();
-    curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
-
-    if (includeCredentials) {
-        curl_easy_setopt(m_curl, CURLOPT_SHARE, curlsh);
-        if (NetworkSharedResourceManager::getInstance()
-                ->cookieStoreFilePath()
-                .compare("") != 0) {
-            curl_easy_setopt(m_curl, CURLOPT_COOKIEJAR,
-                             NetworkSharedResourceManager::getInstance()
-                                 ->cookieStoreFilePath()
-                                 .data());
-        }
-    }
-
     curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
-    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
 
     curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
     curl_easy_setopt(m_curl, CURLOPT_AUTOREFERER, 1L);
@@ -109,28 +87,51 @@ void HTTPTransaction::start()
     // Enable all encoding (zlib, gzip)
     curl_easy_setopt(m_curl, CURLOPT_ACCEPT_ENCODING, "");
 
-    if (m_procCB) {
-        curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION, m_procCB);
-    }
+    registerCurlHandlers();
 
-    if (m_procData) {
-        curl_easy_setopt(m_curl, CURLOPT_XFERINFODATA, m_procData);
-    }
+    STARFISH_ASSERT(m_curl);
+    STARFISH_ASSERT(m_curlsh);
+}
 
-    if (m_writeHeaderCB) {
-        curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, m_writeHeaderCB);
-    }
+void HTTPTransaction::postprocess()
+{
+    STARFISH_ASSERT(m_curl);
 
-    if (m_writeHeaderData) {
-        curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, m_writeHeaderData);
-    }
+#ifdef STARFISH_ENABLE_TEST
+    printCurlRequestDump();
+#endif
+    CurlHandleData cd = { m_curl, 0 };
+    NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(
+        m_httpRequest->baseURL(), cd);
+    m_curl = nullptr;   // Do not free;
+    m_curlsh = nullptr; // Do not free;
+}
 
-    if (m_writeCB) {
-        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, m_writeCB);
-    }
+void HTTPTransaction::start()
+{
+    preprocess();
 
-    if (m_writeData) {
-        curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, m_writeData);
+#if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
+    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
+    curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
+#endif
+
+    curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
+
+    struct curl_slist* list = m_httpRequest->headers().generateCurlList();
+    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
+
+    bool includeCredentials = m_httpRequest->includeCredentials();
+    if (includeCredentials) {
+        curl_easy_setopt(m_curl, CURLOPT_SHARE, m_curlsh);
+        if (NetworkSharedResourceManager::getInstance()
+                ->cookieStoreFilePath()
+                .compare("") != 0) {
+            curl_easy_setopt(m_curl, CURLOPT_COOKIEJAR,
+                             NetworkSharedResourceManager::getInstance()
+                                 ->cookieStoreFilePath()
+                                 .data());
+        }
     }
 
     if (m_httpRequest->method().compare("POST") == 0) {
@@ -138,12 +139,6 @@ void HTTPTransaction::start()
                          m_httpRequest->entityBody().length());
         curl_easy_setopt(m_curl, CURLOPT_COPYPOSTFIELDS,
                          m_httpRequest->entityBody().data());
-#ifdef STARFISH_ENABLE_TEST
-        if (enableLog) {
-            STARFISH_LOG_INFO("POST FIELDS\n");
-            STARFISH_LOG_INFO("%s\n", m_httpRequest->entityBody().data());
-        }
-#endif
     } else if (m_httpRequest->method().compare("GET") == 0) {
         curl_easy_setopt(m_curl, CURLOPT_HTTPGET, 1L);
     } else if (m_httpRequest->method().compare("HEAD") == 0) {
@@ -155,6 +150,7 @@ void HTTPTransaction::start()
 
     m_httpRequest->setRequestTime(timestamp() / 1000);
     m_res = curl_easy_perform(m_curl);
+
 #if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
     if (m_res == CURLE_RECV_ERROR) {
         // when gives CURLOPT_SSL_VERIFYHOST to curl,
@@ -164,47 +160,35 @@ void HTTPTransaction::start()
 #endif
     m_httpResponse->setResponseTime(timestamp() / 1000);
     updateTransactionStatus();
-
-#ifdef STARFISH_ENABLE_TEST
-    if (m_res == CURLE_OK && enableLog) {
-        STARFISH_LOG_INFO("==============Dump Request info==============\n");
-        STARFISH_LOG_INFO("[Request url : %s]\n", m_httpRequest->url().data());
-        double val = 0.0;
-        CURLcode res;
-        res = curl_easy_getinfo(m_curl, CURLINFO_SIZE_DOWNLOAD, &val);
-        if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Data downloaded: %.0fbytes]\n", val);
-        }
-
-        res = curl_easy_getinfo(m_curl, CURLINFO_TOTAL_TIME, &val);
-        if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Total download time: %.5f sec]\n", val);
-        }
-
-        res = curl_easy_getinfo(m_curl, CURLINFO_SPEED_DOWNLOAD, &val);
-        if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Average download speed: %.0f kbyte/sec]\n",
-                              val / 1024);
-        }
-
-        res = curl_easy_getinfo(m_curl, CURLINFO_NAMELOOKUP_TIME, &val);
-        if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Name lookup time: %.5f sec]\n", val);
-        }
-
-        res = curl_easy_getinfo(m_curl, CURLINFO_CONNECT_TIME, &val);
-        if ((CURLE_OK == res) && (val > 0)) {
-            STARFISH_LOG_INFO("[Connect time: %.5f sec]\n", val);
-        }
-        STARFISH_LOG_INFO("=============================================\n");
-    }
-#endif
-
-    m_curl = nullptr;
-
-    NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(
-        m_httpRequest->baseURL(), cd);
     curl_slist_free_all(list);
+
+    postprocess();
+}
+
+void HTTPTransaction::startPreFlightRequest()
+{
+    preprocess();
+
+    curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, "OPTIONS");
+    curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
+
+    curl_slist* list =
+        m_httpRequest->headers().generateCurlListToPreflightRequest();
+
+    std::string header(HTTPHeaderMap::kAccessControlRequestMethod);
+    header.append(": ");
+    header.append(m_httpRequest->method());
+
+    list = curl_slist_append(list, header.data());
+    curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
+
+    m_res = curl_easy_perform(m_curl);
+    updateTransactionStatus();
+
+    curl_slist_free_all(list);
+    list = nullptr;
+
+    postprocess();
 }
 
 void HTTPTransaction::didReceiveHeader(const std::string& header)
@@ -237,4 +221,73 @@ void HTTPTransaction::updateTransactionStatus()
         }
     }
 }
+
+void HTTPTransaction::registerCurlHandlers()
+{
+    if (m_proxyURL.size()) {
+        curl_easy_setopt(m_curl, CURLOPT_PROXY, m_proxyURL.data());
+    }
+
+    if (m_procCB) {
+        curl_easy_setopt(m_curl, CURLOPT_XFERINFOFUNCTION, m_procCB);
+    }
+
+    if (m_procData) {
+        curl_easy_setopt(m_curl, CURLOPT_XFERINFODATA, m_procData);
+    }
+
+    if (m_writeHeaderCB) {
+        curl_easy_setopt(m_curl, CURLOPT_HEADERFUNCTION, m_writeHeaderCB);
+    }
+
+    if (m_writeHeaderData) {
+        curl_easy_setopt(m_curl, CURLOPT_HEADERDATA, m_writeHeaderData);
+    }
+
+    if (m_writeCB) {
+        curl_easy_setopt(m_curl, CURLOPT_WRITEFUNCTION, m_writeCB);
+    }
+
+    if (m_writeData) {
+        curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, m_writeData);
+    }
+}
+
+#ifdef STARFISH_ENABLE_TEST
+void HTTPTransaction::printCurlRequestDump()
+{
+    if (m_enableLog) {
+        STARFISH_LOG_INFO("==============Dump Request info==============\n");
+        STARFISH_LOG_INFO("[Request url : %s]\n", m_httpRequest->url().data());
+        double val = 0.0;
+        CURLcode res;
+        res = curl_easy_getinfo(m_curl, CURLINFO_SIZE_DOWNLOAD, &val);
+        if ((CURLE_OK == res) && (val > 0)) {
+            STARFISH_LOG_INFO("[Data downloaded: %.0fbytes]\n", val);
+        }
+
+        res = curl_easy_getinfo(m_curl, CURLINFO_TOTAL_TIME, &val);
+        if ((CURLE_OK == res) && (val > 0)) {
+            STARFISH_LOG_INFO("[Total download time: %.5f sec]\n", val);
+        }
+
+        res = curl_easy_getinfo(m_curl, CURLINFO_SPEED_DOWNLOAD, &val);
+        if ((CURLE_OK == res) && (val > 0)) {
+            STARFISH_LOG_INFO("[Average download speed: %.0f kbyte/sec]\n",
+                              val / 1024);
+        }
+
+        res = curl_easy_getinfo(m_curl, CURLINFO_NAMELOOKUP_TIME, &val);
+        if ((CURLE_OK == res) && (val > 0)) {
+            STARFISH_LOG_INFO("[Name lookup time: %.5f sec]\n", val);
+        }
+
+        res = curl_easy_getinfo(m_curl, CURLINFO_CONNECT_TIME, &val);
+        if ((CURLE_OK == res) && (val > 0)) {
+            STARFISH_LOG_INFO("[Connect time: %.5f sec]\n", val);
+        }
+        STARFISH_LOG_INFO("=============================================\n");
+    }
+}
+#endif
 }

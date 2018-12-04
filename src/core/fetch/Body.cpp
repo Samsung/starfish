@@ -243,8 +243,8 @@ Promise* Body::text()
                     new ResourceURL(url, document()->baseURL()->baseURI());
                 reqData->m_referrer = new ReferrerURL(
                     document()->documentURI(), document()->referrerPolicy());
-
-                m_resourceRequest->open(reqData, true);
+                reqData->m_syncLevel = RequestSyncLevel::NeverSync;
+                m_resourceRequest->open(reqData);
                 m_resourceRequest->send();
             } else {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();

@@ -35,9 +35,15 @@ struct NetworkURLWorkerData {
     ~NetworkURLWorkerData();
 
     bool isAborted;
-    bool isRedirected;
     bool needsToHandleError;
     long lastTransactionResponseCode;
+
+    // FIXME : These flags should better be arguments of http-fetch
+    // https://fetch.spec.whatwg.org/#http-fetch
+    bool corsFlag;
+    bool corsPreflightFlag;
+    bool needsToSendPreflightRequest;
+
     ResourceRequest* request;
     NetworkURLWorkerHelper* helper;
     std::unique_ptr<HTTPTransaction> httpTransaction;
@@ -64,38 +70,24 @@ public:
     {
     }
 
-    void* networkWorker(void* data);
-#ifdef STARFISH_ENABLE_HTTPCACHE
-    void* httpCacheWorker(void* data);
-#endif
+    virtual void responseHandlerWrapper(NetworkURLWorkerData* nwd) = 0;
+    virtual void abortHandlerWrapper(NetworkURLWorkerData* nwd) = 0;
 
 protected:
-    virtual void responseHandlerWrapper(int res, NetworkURLWorkerData* nwd)
-    {
-    }
-
-    virtual void abortHandlerWrapper(int res, NetworkURLWorkerData* nwd)
-    {
-    }
-
-    static void responseHandler(size_t handle, void* data);
-    static void abortHandeler(size_t handle, void* data);
+    static void responseHandler(size_t, void* data);
+    static void abortHandeler(size_t, void* data);
 };
 
 class AsyncNetworkWorkHelper : public NetworkURLWorkerHelper {
 protected:
-    virtual void responseHandlerWrapper(int res,
-                                        NetworkURLWorkerData* nwd) override;
-    virtual void abortHandlerWrapper(int res,
-                                     NetworkURLWorkerData* nwd) override;
+    virtual void responseHandlerWrapper(NetworkURLWorkerData* nwd) override;
+    virtual void abortHandlerWrapper(NetworkURLWorkerData* nwd) override;
 };
 
 class SyncNetworkWorkHelper : public NetworkURLWorkerHelper {
 protected:
-    virtual void responseHandlerWrapper(int res,
-                                        NetworkURLWorkerData* nwd) override;
-    virtual void abortHandlerWrapper(int res,
-                                     NetworkURLWorkerData* nwd) override;
+    virtual void responseHandlerWrapper(NetworkURLWorkerData* nwd) override;
+    virtual void abortHandlerWrapper(NetworkURLWorkerData* nwd) override;
 };
 
 class NetworkURLResourceRequestJobDelegate
@@ -115,13 +107,16 @@ public:
                       bool allowCache = false);
 
 private:
-    void fillHeadersWithGeneralHeaders(HTTPHeaderMap& headers);
-    void fillHeadersWithClientHeaders(HTTPHeaderMap& headers);
-    void fillHeadersWithResourceRequestHeader(HTTPHeaderMap& headers);
+    static void* networkWorker(void* data);
 #ifdef STARFISH_ENABLE_HTTPCACHE
+    static void* httpCacheWorker(void* data);
     void fillHeadersWithCachedEntry(HTTPHeaderMap& headers,
                                     HTTPCacheEntry* cachedEntry);
 #endif
+    void fillHeadersWithGeneralHeaders(HTTPHeaderMap& headers);
+    void fillHeadersWithClientHeaders(HTTPHeaderMap& headers);
+    void fillHeadersWithResourceRequestHeader(HTTPHeaderMap& headers);
+
     ResourceRequest* m_orgProxy;
 };
 }

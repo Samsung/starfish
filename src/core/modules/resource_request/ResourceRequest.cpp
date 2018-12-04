@@ -56,18 +56,16 @@ public:
 ResourceRequest::ResourceRequest(Document* document)
     : DocumentHoldable(document)
     , m_requestData(nullptr)
+    , m_preflightRequestData(nullptr)
     , m_requestWebOrigin(nullptr)
-    , m_corsFlag(true)
     , m_readyState(ReadyState::Unset)
     , m_progressState(ProgressState::None)
     , m_bodyType(BodyType::Empty)
-    , m_responseType(ResponseType::Default)
-    , m_status(0)
     , m_timeout(0)
     , m_activeNetworkURLWorkerData(nullptr)
     , m_mutex(new Mutex())
     , m_lastEffectiveURL("")
-    , m_networkRequestJobDelegate(nullptr)
+    , m_jobDelegate(nullptr)
     , m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX)
     , m_pendingOnProgressEventIdlerHandle(SIZE_MAX)
     , m_loaded(0)
@@ -90,18 +88,17 @@ ResourceRequest::ResourceRequest(Document* document)
 
 void ResourceRequest::initVariables()
 {
-    m_responseMimeType = String::emptyString;
+    m_responseData = new ResponseData();
+
     m_contentLanguage = String::emptyString;
     EntityBody().swap(m_response);
     HeaderMap().swap(m_responseHeaderMap);
     std::string().swap(m_lastEffectiveURL);
-    m_isSync = false;
     m_gotError = false;
     m_containsBase64Content = false;
     m_didSend = false;
     m_total = 0;
     m_loaded = 0;
-    m_status = 0;
 }
 
 void ResourceRequest::clearIdlers()
@@ -169,7 +166,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         // FIXME remove duplicate code
         auto it = m_responseHeaderMap.find(HTTPHeaderMap::kContentType);
         if (it != m_responseHeaderMap.end()) {
-            m_responseMimeType = String::fromUTF8(it->second.data());
+            m_responseData->m_mimeType = String::fromUTF8(it->second.data());
         }
 
         it = m_responseHeaderMap.find(HTTPHeaderMap::kContentLanguage);
@@ -199,7 +196,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         auto resWebOrigin = WebOrigin::createDocumentOrigin(resURL);
         if (!document()->webOrigin()->isSameOrigin(resWebOrigin) &&
             !resWebOrigin->isOpaque()) {
-            m_responseType = ResponseType::Cors;
+            m_responseData->m_type = ResponseType::Cors;
         } else {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
         }
@@ -225,8 +222,8 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
                 ((BrowsingContext*)data)->removePointerFromRootSet(data2);
             },
             document()->browsingContext(), this);
-        if (m_networkRequestJobDelegate) {
-            m_networkRequestJobDelegate = nullptr;
+        if (m_jobDelegate) {
+            m_jobDelegate = nullptr;
         }
     }
 }
@@ -247,19 +244,19 @@ void ResourceRequest::changeProgress(ProgressState progress,
     }
 }
 
-void ResourceRequest::open(RequestData* reqData, bool async)
+void ResourceRequest::open(RequestData* reqData)
 {
     bool shouldAbort = false;
     m_requestData = reqData;
+    m_preflightRequestData = new RequestData();
+    m_preflightRequestData->m_method = String::createASCIIString("OPTIONS");
+
     m_requestWebOrigin = WebOrigin::createDocumentOrigin(m_requestData->m_url);
 
-    if (isSameOriginRequest()) {
-        // TODO : request’s tainted origin flag is unset
-        m_corsFlag = false;
-    }
-
     {
-        STARFISH_ASSERT(!(!async && m_timeout != 0));
+        STARFISH_ASSERT(
+            !((m_requestData->m_syncLevel == RequestSyncLevel::AlwaysSync) &&
+              m_timeout != 0));
         shouldAbort = m_progressState >= ProgressState::LoadStart;
     }
     if (shouldAbort) {
@@ -267,13 +264,11 @@ void ResourceRequest::open(RequestData* reqData, bool async)
     }
     {
         initVariables();
-        m_isSync = !async;
     }
 
-    STARFISH_ASSERT(!m_networkRequestJobDelegate);
+    STARFISH_ASSERT(!m_jobDelegate);
 
-    m_networkRequestJobDelegate =
-        ResourceRequestJobDelegateFactory::createJob(this);
+    m_jobDelegate = ResourceRequestJobDelegateFactory::createJob(this);
     changeReadyState(ReadyState::Opened, true);
 }
 
@@ -305,8 +300,8 @@ void ResourceRequest::send(String* body, bool allowCache)
     document()->browsingContext()->addPointerInRootSet(this);
     m_didSend = true;
 
-    STARFISH_ASSERT(m_networkRequestJobDelegate);
-    m_networkRequestJobDelegate->send(body, allowCache);
+    STARFISH_ASSERT(m_jobDelegate);
+    m_jobDelegate->send(body, allowCache);
 
     changeProgress(ProgressState::LoadStart, true);
 }
