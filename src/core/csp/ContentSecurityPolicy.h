@@ -53,14 +53,16 @@ public:
                           ContentSecurityPolicyHeaderSource source);
 
     bool allowInlineEventHandler();
-    bool allowSource(CSPDirectives directive, ResourceURL* url);
+    bool allowSource(CSPDirectives directive, ResourceURL* url,
+                     bool isSendingEventInIdleTime = true);
     bool allowInline(CSPDirectives directive, String* scriptContent,
                      String* nonce = nullptr);
     bool allowEval(CSPDirectives directive);
     bool allowNonce(CSPDirectives directive, String* nonce);
 
     void dispatchViolationEvent(String* name,
-                                String* blockedURI = String::emptyString);
+                                String* blockedURI = String::emptyString,
+                                bool isSendingEventInIdleTime = true);
 
 private:
     GCVector<ContentSecurityPolicyDirectiveList*> m_policies;

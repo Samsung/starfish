@@ -94,7 +94,8 @@ bool ContentSecurityPolicy::allowInlineEventHandler()
 }
 
 bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
-                                        ResourceURL* resUrl)
+                                        ResourceURL* resUrl,
+                                        bool isSendingEventInIdleTime)
 {
     for (auto policy : m_policies) {
         auto sourceDirective = policy->getSourceList(directive);
@@ -109,7 +110,8 @@ bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
             !policy->allowHost(sourceDirective, resUrl)) {
             // TODO: check the query with default-src policies
             dispatchViolationEvent(getDirectiveName(directive),
-                                   resUrl->urlString());
+                                   resUrl->urlString(),
+                                   isSendingEventInIdleTime);
             STARFISH_LOG_WARN(
                 "Refused to use '%s' as a source of '%s' because it violates "
                 "the Content Security Policy\n",
@@ -172,8 +174,8 @@ bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
     return true;
 }
 
-void ContentSecurityPolicy::dispatchViolationEvent(String* name,
-                                                   String* blockedURI)
+void ContentSecurityPolicy::dispatchViolationEvent(
+    String* name, String* blockedURI, bool isSendingEventInIdleTime)
 {
     String* eventType = window()
                             ->starfish()
@@ -183,7 +185,11 @@ void ContentSecurityPolicy::dispatchViolationEvent(String* name,
         new SecurityPolicyViolationEvent(window()->document(), eventType);
     event->setViolatedDirective(name);
     event->setBlockedURI(blockedURI);
-    window()->document()->dispatchEventIdleTimeByUA(event);
+    if (isSendingEventInIdleTime) {
+        window()->document()->dispatchEventIdleTimeByUA(event);
+    } else {
+        window()->document()->dispatchEventByUA(event);
+    }
 }
 
 ScriptValue ContentSecurityPolicy::checkUnsafeEvalCallback(

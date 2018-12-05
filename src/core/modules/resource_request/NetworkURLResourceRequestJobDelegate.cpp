@@ -183,10 +183,15 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_ABORTED_BY_CALLBACK);
     STARFISH_ASSERT(nwd->httpTransaction->res() != CURLE_WRITE_ERROR);
-    Locker<Mutex> locker(*nwd->request->m_mutex);
 
     if (nwd->isAborted) {
-    } else if (nwd->httpTransaction->res() == 0) {
+        abortHandeler(handle, data);
+        return;
+    }
+
+    Locker<Mutex> locker(*nwd->request->m_mutex);
+
+    if (nwd->httpTransaction->res() == 0) {
 #ifdef STARFISH_ENABLE_HTTPCACHE
         HTTPCache* cache = nwd->request->starfish()->httpCache();
         if (cache) {
@@ -624,38 +629,47 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
         if (request->isSync()) {
             request->changeReadyState(ReadyState::Loading, true);
             request->changeProgress(ProgressState::Progress, true);
+            if (!request->checkProgressAllowanceWithContentSecurityPolicy()) {
+                nwd->isAborted = true;
+                nwd->needsToHandleError = true;
+                request->m_responseData->m_status = 0;
+                return 0;
+            }
         } else {
             request->m_pendingOnProgressEventIdlerHandle =
-                request->webView()
-                    ->messageLoop()
-                    ->addIdlerWithNoGCRootingInOtherThread(
-                        nullptr,
-                        [](size_t handle, void* data) {
-                            NetworkURLWorkerData* nwd =
-                                (NetworkURLWorkerData*)data;
-                            ResourceRequest* request = nwd->request;
-                            Locker<Mutex> locker(*request->m_mutex);
-                            {
-                                STARFISH_ASSERT(
-                                    handle ==
-                                    request
-                                        ->m_pendingOnProgressEventIdlerHandle);
-                                request->m_pendingOnProgressEventIdlerHandle =
-                                    SIZE_MAX;
-                            }
-                            if (!request->isSync()) {
-                                request->response().insert(
-                                    request->response().end(),
-                                    nwd->pendingResponseData.begin(),
-                                    nwd->pendingResponseData.end());
-                                nwd->pendingResponseData.clear();
-                            }
-                            request->changeReadyState(ReadyState::Loading,
-                                                      true);
-                            request->changeProgress(ProgressState::Progress,
-                                                    true);
-                        },
-                        nwd);
+                request->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
+                    nullptr,
+                    [](size_t handle, void* data) {
+                        NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+                        ResourceRequest* request = nwd->request;
+                        Locker<Mutex> locker(*request->m_mutex);
+                        {
+                            STARFISH_ASSERT(
+                                handle ==
+                                request->m_pendingOnProgressEventIdlerHandle);
+                            request->m_pendingOnProgressEventIdlerHandle =
+                                SIZE_MAX;
+                        }
+                        if (!request->isSync()) {
+                            request->response().insert(
+                                request->response().end(),
+                                nwd->pendingResponseData.begin(),
+                                nwd->pendingResponseData.end());
+                            nwd->pendingResponseData.clear();
+                        }
+
+                        request->changeReadyState(ReadyState::Loading, true);
+                        request->changeProgress(ProgressState::Progress, true);
+
+                        if (!request
+                                 ->checkProgressAllowanceWithContentSecurityPolicy()) {
+                            nwd->isAborted = true;
+                            nwd->needsToHandleError = true;
+                            request->m_responseData->m_status = 0;
+                        }
+
+                    },
+                    nwd);
         }
     }
 
