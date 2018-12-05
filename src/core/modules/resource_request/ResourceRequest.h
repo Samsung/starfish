@@ -148,6 +148,11 @@ public:
         return m_responseData->m_status;
     }
 
+    bool isRedirected() const
+    {
+        return m_responseData->m_redirected;
+    }
+
     bool isSync() const
     {
         if (!m_requestData) {
@@ -365,6 +370,7 @@ protected:
     void handleResponseEOF();
     void handleError(ProgressState error);
     void handleConnectError();
+    bool checkProgressAllowanceWithContentSecurityPolicy();
 
     void pushIdlerHandle(size_t handle)
     {

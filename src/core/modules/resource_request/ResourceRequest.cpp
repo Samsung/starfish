@@ -32,6 +32,7 @@
 #include "core/dom/WebOrigin.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/Response.h"
+#include "core/csp/ContentSecurityPolicy.h"
 #include "platform/network/http/HTTPResponse.h"
 
 namespace Starfish {
@@ -143,6 +144,19 @@ void ResourceRequest::handleError(ProgressState error)
     changeProgress(ProgressState::Progress, true);
     changeProgress(error, true);
     changeProgress(ProgressState::LoadEnd, true);
+}
+
+bool ResourceRequest::checkProgressAllowanceWithContentSecurityPolicy()
+{
+    STARFISH_ASSERT(isMainThread());
+    if (isRedirected()) {
+        auto csp = document()->contentSecurityPolicy();
+        auto resourceURL = new ResourceURL(lastEffectiveURL().c_str());
+        if (!csp->allowSource(CSPDirectives::ConnectSrc, resourceURL, false)) {
+            return false;
+        }
+    }
+    return true;
 }
 
 void ResourceRequest::changeReadyState(ReadyState readyState,

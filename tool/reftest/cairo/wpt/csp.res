@@ -31,7 +31,7 @@ http://web-platform.test:8000/content-security-policy/connect-src/connect-src-ev
 #http://web-platform.test:8000/content-security-policy/connect-src/connect-src-websocket-blocked.sub.html
 http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xmlhttprequest-allowed.sub.html
 http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xmlhttprequest-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xmlhttprequest-redirect-to-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xmlhttprequest-redirect-to-blocked.sub.html
 #
 #
 #http://web-platform.test:8000/content-security-policy/connect-src/shared-worker-connect-src-allowed.sub.html
