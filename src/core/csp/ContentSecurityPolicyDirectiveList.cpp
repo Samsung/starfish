@@ -28,6 +28,7 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     : m_contentSecurityPolicy(contentSecurityPolicy)
     , m_contextURL(contentSecurityPolicy->document()->documentURI())
     , m_connectSrc(nullptr)
+    , m_defaultSrc(nullptr)
     , m_frameSrc(nullptr)
     , m_imgSrc(nullptr)
     , m_mediaSrc(nullptr)
@@ -91,6 +92,8 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* name,
 {
     if (name->equalsIgnoreCase("connect-src")) {
         setDirective(m_connectSrc, name, value);
+    } else if (name->equalsIgnoreCase("default-src")) {
+        setDirective(m_defaultSrc, name, value);
     } else if (name->equalsIgnoreCase("frame-src")) {
         setDirective(m_frameSrc, name, value);
     } else if (name->equalsIgnoreCase("img-src")) {
@@ -121,6 +124,8 @@ ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
     switch (directive) {
     case CSPDirectives::ConnectSrc:
         return m_connectSrc;
+    case CSPDirectives::DefaultSrc:
+        return m_defaultSrc;
     case CSPDirectives::FrameSrc:
         return m_frameSrc;
     case CSPDirectives::ImgSrc:
@@ -138,7 +143,25 @@ ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
     return nullptr;
 }
 
-bool ContentSecurityPolicyDirectiveList::allowStar(
+bool ContentSecurityPolicyDirectiveList::allowSource(CSPDirectives directive,
+                                                     ResourceURL* resUrl)
+{
+    auto sourceListDirective = getSourceList(directive);
+    if (!sourceListDirective) {
+        if (m_defaultSrc) {
+            return allowSource(CSPDirectives::DefaultSrc, resUrl);
+        }
+        return true;
+    } else if (isMatchingStar(sourceListDirective, resUrl) ||
+               isMatchingSelf(sourceListDirective, resUrl) ||
+               sourceListDirective->allowScheme(resUrl) ||
+               sourceListDirective->allowHost(resUrl)) {
+        return true;
+    }
+    return false;
+}
+
+bool ContentSecurityPolicyDirectiveList::isMatchingStar(
     ContentSecurityPolicySourceListDirective* directive, ResourceURL* resUrl)
 {
     // 4.2.2.2 https://www.w3.org/TR/CSP2/#match-source-expression
@@ -152,7 +175,7 @@ bool ContentSecurityPolicyDirectiveList::allowStar(
     return directive->allowStar();
 }
 
-bool ContentSecurityPolicyDirectiveList::allowSelf(
+bool ContentSecurityPolicyDirectiveList::isMatchingSelf(
     ContentSecurityPolicySourceListDirective* directive, ResourceURL* resUrl)
 {
     STARFISH_ASSERT(directive);
@@ -164,53 +187,52 @@ bool ContentSecurityPolicyDirectiveList::allowSelf(
     return false;
 }
 
-bool ContentSecurityPolicyDirectiveList::allowContent(
-    ContentSecurityPolicySourceListDirective* directive, String* content)
+bool ContentSecurityPolicyDirectiveList::allowNonce(CSPDirectives directive,
+                                                    String* nonce)
 {
-    STARFISH_ASSERT(directive);
-    return directive->allowContent(content);
+    auto sourceListDirective = getSourceList(directive);
+    if (!sourceListDirective) {
+        if (m_defaultSrc) {
+            return allowNonce(CSPDirectives::DefaultSrc, nonce);
+        }
+        return true;
+    } else if (sourceListDirective->allowNonce(nonce)) {
+        return true;
+    }
+    return false;
 }
 
-bool ContentSecurityPolicyDirectiveList::allowNonce(
-    ContentSecurityPolicySourceListDirective* directive, String* nonce)
+bool ContentSecurityPolicyDirectiveList::allowInline(CSPDirectives directive,
+                                                     String* scriptContent,
+                                                     String* nonce)
 {
-    STARFISH_ASSERT(directive);
-    return directive->allowNonce(nonce);
+    auto sourceListDirective = getSourceList(directive);
+    if (!sourceListDirective) {
+        if (m_defaultSrc) {
+            return allowInline(CSPDirectives::DefaultSrc, scriptContent, nonce);
+        }
+        return true;
+    } else if ((!sourceListDirective->hasNonceOrHash() &&
+                sourceListDirective->allowInline()) ||
+               sourceListDirective->allowNonce(nonce) ||
+               sourceListDirective->allowContent(scriptContent)) {
+        return true;
+    }
+    return false;
 }
 
-bool ContentSecurityPolicyDirectiveList::allowScheme(
-    ContentSecurityPolicySourceListDirective* directive, ResourceURL* resUrl)
+bool ContentSecurityPolicyDirectiveList::allowEval(CSPDirectives directive)
 {
-    STARFISH_ASSERT(directive);
-    return directive->allowScheme(resUrl);
-}
-
-bool ContentSecurityPolicyDirectiveList::allowHost(
-    ContentSecurityPolicySourceListDirective* directive, ResourceURL* resUrl)
-{
-    STARFISH_ASSERT(directive);
-    return directive->allowHost(resUrl);
-}
-
-bool ContentSecurityPolicyDirectiveList::allowInline(
-    ContentSecurityPolicySourceListDirective* directive)
-{
-    STARFISH_ASSERT(directive);
-    return directive->allowInline();
-}
-
-bool ContentSecurityPolicyDirectiveList::allowEval(
-    ContentSecurityPolicySourceListDirective* directive)
-{
-    STARFISH_ASSERT(directive);
-    return directive->allowEval();
-}
-
-bool ContentSecurityPolicyDirectiveList::hasNonceOrHash(
-    ContentSecurityPolicySourceListDirective* directive)
-{
-    STARFISH_ASSERT(directive);
-    return directive->hasNonceOrHash();
+    auto sourceListDirective = getSourceList(directive);
+    if (!sourceListDirective) {
+        if (m_defaultSrc) {
+            return allowEval(CSPDirectives::DefaultSrc);
+        }
+        return true;
+    } else if (sourceListDirective->allowEval()) {
+        return true;
+    }
+    return false;
 }
 
 size_t ContentSecurityPolicyDirectiveList::skipSpaceAndNewline(String* src,

@@ -38,25 +38,12 @@ public:
     void parse(String* policy, size_t begin, size_t end);
 
     void addDirective(String* name, String* value);
-    void setDirective(ContentSecurityPolicySourceListDirective*& directive,
-                      String* name, String* value);
 
-    bool allowStar(ContentSecurityPolicySourceListDirective* directive,
-                   ResourceURL* resUrl);
-    bool allowSelf(ContentSecurityPolicySourceListDirective* directive,
-                   ResourceURL* url);
-    bool allowScheme(ContentSecurityPolicySourceListDirective* directive,
-                     ResourceURL* url);
-    bool allowHost(ContentSecurityPolicySourceListDirective* directive,
-                   ResourceURL* url);
-    bool allowContent(ContentSecurityPolicySourceListDirective* directive,
-                      String* content);
-    bool allowNonce(ContentSecurityPolicySourceListDirective* directive,
-                    String* nonce);
-    bool allowInline(ContentSecurityPolicySourceListDirective* directive);
-    bool allowEval(ContentSecurityPolicySourceListDirective* directive);
-
-    bool hasNonceOrHash(ContentSecurityPolicySourceListDirective* directive);
+    bool allowSource(CSPDirectives directive, ResourceURL* resUrl);
+    bool allowNonce(CSPDirectives directive, String* nonce);
+    bool allowInline(CSPDirectives directive, String* scriptContent,
+                     String* nonce);
+    bool allowEval(CSPDirectives directive);
 
     ContentSecurityPolicySourceListDirective* getSourceList(
         CSPDirectives directive);
@@ -66,6 +53,7 @@ private:
     ResourceURL* m_contextURL;
 
     ContentSecurityPolicySourceListDirective* m_connectSrc;
+    ContentSecurityPolicySourceListDirective* m_defaultSrc;
     ContentSecurityPolicySourceListDirective* m_frameSrc;
     ContentSecurityPolicySourceListDirective* m_imgSrc;
     ContentSecurityPolicySourceListDirective* m_mediaSrc;
@@ -77,6 +65,8 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_connectSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_defaultSrc));
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_frameSrc));
         GC_set_bit(
             desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList, m_imgSrc));
@@ -87,6 +77,14 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_styleSrc));
     }
+
+    void setDirective(ContentSecurityPolicySourceListDirective*& directive,
+                      String* name, String* value);
+
+    bool isMatchingStar(ContentSecurityPolicySourceListDirective* directive,
+                        ResourceURL* resUrl);
+    bool isMatchingSelf(ContentSecurityPolicySourceListDirective* directive,
+                        ResourceURL* url);
 
     static size_t skipSpaceAndNewline(String* src, size_t begin, size_t end);
 };

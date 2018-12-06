@@ -31,6 +31,7 @@ enum class ContentSecurityPolicyHeaderSource { HTTP, Meta, OriginPolicy };
 
 enum class CSPDirectives {
     ConnectSrc,
+    DefaultSrc,
     FrameSrc,
     ImgSrc,
     MediaSrc,

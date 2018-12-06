@@ -41,8 +41,8 @@ http://web-platform.test:8000/content-security-policy/connect-src/connect-src-xm
 #http://web-platform.test:8000/content-security-policy/connect-src/worker-from-guid.sub.html
 #
 #
-#http://web-platform.test:8000/content-security-policy/default-src/default-src-inline-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/default-src/default-src-inline-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/default-src/default-src-inline-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/default-src/default-src-inline-blocked.sub.html
 #
 #
 #http://web-platform.test:8000/content-security-policy/embedded-enforcement/allow_csp_from-header.html
@@ -136,8 +136,8 @@ http://web-platform.test:8000/content-security-policy/generic/duplicate-directiv
 #http://web-platform.test:8000/content-security-policy/generic/filesystem-urls-do-not-match-self.sub.html
 #http://web-platform.test:8000/content-security-policy/generic/filesystem-urls-match-filesystem.sub.html
 http://web-platform.test:8000/content-security-policy/generic/generic-0_10_1.sub.html
-#http://web-platform.test:8000/content-security-policy/generic/generic-0_10.html
-#http://web-platform.test:8000/content-security-policy/generic/generic-0_1-img-src.html
+http://web-platform.test:8000/content-security-policy/generic/generic-0_10.html
+http://web-platform.test:8000/content-security-policy/generic/generic-0_1-img-src.html
 #http://web-platform.test:8000/content-security-policy/generic/generic-0_1-script-src.html
 http://web-platform.test:8000/content-security-policy/generic/generic-0_2_2.sub.html
 http://web-platform.test:8000/content-security-policy/generic/generic-0_2_3.html
@@ -325,7 +325,7 @@ http://web-platform.test:8000/content-security-policy/script-src/injected-inline
 #http://web-platform.test:8000/content-security-policy/script-src/nonce-enforce-blocked.html
 http://web-platform.test:8000/content-security-policy/script-src/scripthash-allowed.sub.html
 http://web-platform.test:8000/content-security-policy/script-src/scripthash-basic-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/scripthash-default-src.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/scripthash-default-src.sub.html
 http://web-platform.test:8000/content-security-policy/script-src/scripthash-ignore-unsafeinline.sub.html
 http://web-platform.test:8000/content-security-policy/script-src/scripthash-unicode-normalization.sub.html
 http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-allowed.sub.html
@@ -334,7 +334,7 @@ http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-bas
 #http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-ignore-unsafeinline.sub.html
 http://web-platform.test:8000/content-security-policy/script-src/scriptnonce-redirect.sub.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_10_1.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-1_10.html # default-src
+http://web-platform.test:8000/content-security-policy/script-src/script-src-1_10.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_1.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_2_1.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_2.html
@@ -344,7 +344,7 @@ http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4_
 http://web-platform.test:8000/content-security-policy/script-src/script-src-1_4.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-multiple-policies-multiple-hashing-algorithms.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-multiple-policies-one-using-hashing-algorithms.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-overrides-default-src.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-overrides-default-src.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-report-only-policy-works-with-external-hash-policy.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-report-only-policy-works-with-hash-policy.html
 http://web-platform.test:8000/content-security-policy/script-src/script-src-sri_hash.sub.html
