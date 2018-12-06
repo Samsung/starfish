@@ -71,6 +71,8 @@ static String* getDirectiveName(CSPDirectives directive)
     switch (directive) {
     case CSPDirectives::ConnectSrc:
         return String::createASCIIString("connect-src");
+    case CSPDirectives::DefaultSrc:
+        return String::createASCIIString("default-src");
     case CSPDirectives::FrameSrc:
         return String::createASCIIString("frame-src");
     case CSPDirectives::ImgSrc:
@@ -97,18 +99,9 @@ bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
                                         ResourceURL* resUrl,
                                         bool isSendingEventInIdleTime)
 {
+    bool isAllowed = true;
     for (auto policy : m_policies) {
-        auto sourceDirective = policy->getSourceList(directive);
-        if (!sourceDirective) {
-            continue;
-        } else if (policy->allowStar(sourceDirective, resUrl)) {
-            return true;
-        }
-
-        if (!policy->allowSelf(sourceDirective, resUrl) &&
-            !policy->allowScheme(sourceDirective, resUrl) &&
-            !policy->allowHost(sourceDirective, resUrl)) {
-            // TODO: check the query with default-src policies
+        if (!policy->allowSource(directive, resUrl)) {
             dispatchViolationEvent(getDirectiveName(directive),
                                    resUrl->urlString(),
                                    isSendingEventInIdleTime);
@@ -116,43 +109,33 @@ bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
                 "Refused to use '%s' as a source of '%s' because it violates "
                 "the Content Security Policy\n",
                 CSTR(resUrl->urlString()), CSTR(getDirectiveName(directive)));
-            return false;
+            isAllowed = false;
         }
     }
-    return true;
+    return isAllowed;
 }
 
 bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
-                                        String* scriptContent,
-                                        String* nonce /*= nullptr*/)
+                                        String* scriptContent, String* nonce)
 {
+    bool isAllowed = true;
     for (auto policy : m_policies) {
-        auto sourceDirective = policy->getSourceList(directive);
-        if (!sourceDirective) {
-            continue; // allowed if no src-list exists
-        } else if (!policy->hasNonceOrHash(sourceDirective) &&
-                   policy->allowInline(sourceDirective)) {
-            return true;
-        }
-
-        if (!policy->allowNonce(sourceDirective, nonce) &&
-            !policy->allowContent(sourceDirective, scriptContent)) {
+        if (!policy->allowInline(directive, scriptContent, nonce)) {
             dispatchViolationEvent(getDirectiveName(directive));
             STARFISH_LOG_WARN(
                 "Refused to execute contents as an inline-source of '%s' "
                 "because it violates the Content Security Policy\n",
                 CSTR(getDirectiveName(directive)));
-            return false;
+            isAllowed = false;
         }
     }
-    return true;
+    return isAllowed;
 }
 
 bool ContentSecurityPolicy::allowNonce(CSPDirectives directive, String* nonce)
 {
     for (auto policy : m_policies) {
-        auto sourceDirective = policy->getSourceList(directive);
-        if (sourceDirective && !policy->allowNonce(sourceDirective, nonce)) {
+        if (!policy->allowNonce(directive, nonce)) {
             return false;
         }
     }
@@ -161,17 +144,17 @@ bool ContentSecurityPolicy::allowNonce(CSPDirectives directive, String* nonce)
 
 bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
 {
+    bool isAllowed = true;
     for (auto policy : m_policies) {
-        auto sourceDirective = policy->getSourceList(directive);
-        if (sourceDirective && !policy->allowEval(sourceDirective)) {
+        if (!policy->allowEval(directive)) {
             dispatchViolationEvent(getDirectiveName(directive));
             STARFISH_LOG_WARN(
                 "Refused to execute a string as JavaScript' "
                 "because it violates the Content Security Policy\n");
-            return false;
+            isAllowed = false;
         }
     }
-    return true;
+    return isAllowed;
 }
 
 void ContentSecurityPolicy::dispatchViolationEvent(
