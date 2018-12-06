@@ -154,6 +154,41 @@ void Settings::SetTTSMode(TTSMode mode)
     m_ttsMode = mode;
 }
 
+void Settings::SetBaseBackgroundColor(unsigned char r, unsigned char g,
+                                      unsigned char b, unsigned char a)
+{
+    m_bgR = r;
+    m_bgG = g;
+    m_bgB = b;
+    m_bgA = a;
+}
+
+void Settings::SetBaseForegroundColor(unsigned char r, unsigned char g,
+                                      unsigned char b, unsigned char a)
+{
+    m_fgR = r;
+    m_fgG = g;
+    m_fgB = b;
+    m_fgA = a;
+}
+
+void Settings::GetBaseBackgroundColor(unsigned char& r, unsigned char& g,
+                                      unsigned char& b, unsigned char& a) const
+{
+    r = m_bgR;
+    g = m_bgG;
+    b = m_bgB;
+    a = m_bgA;
+}
+void Settings::GetBaseForegroundColor(unsigned char& r, unsigned char& g,
+                                      unsigned char& b, unsigned char& a) const
+{
+    r = m_fgR;
+    g = m_fgG;
+    b = m_fgB;
+    a = m_fgA;
+}
+
 WebSecurityMode Settings::GetWebSecurityMode() const
 {
     return m_webSecurityMode;
@@ -689,6 +724,13 @@ void WebContainer::SetSettings(const Settings& settings)
 #ifdef STARFISH_ENABLE_TTS
     TO_WEBVIEW(m_impl)->tts()->setMode(settings.GetTTSMode());
 #endif
+    unsigned char r, g, b, a;
+    settings.GetBaseBackgroundColor(r, g, b, a);
+    TO_WEBVIEW(m_impl)
+        ->setBaseBackgroundColor(Starfish::Unit::Color(r, g, b, a));
+    settings.GetBaseForegroundColor(r, g, b, a);
+    TO_WEBVIEW(m_impl)
+        ->setBaseForegroundColor(Starfish::Unit::Color(r, g, b, a));
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (TO_STARFISH(m_impl)->httpCache()) {
         TO_STARFISH(m_impl)->httpCache()->setCacheMode(settings.GetCacheMode());

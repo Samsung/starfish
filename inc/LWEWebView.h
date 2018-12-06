@@ -62,7 +62,10 @@ public:
     int GetCacheMode() const;
     TTSMode GetTTSMode() const;
     WebSecurityMode GetWebSecurityMode() const;
-
+    void GetBaseBackgroundColor(unsigned char& r, unsigned char& g,
+                                unsigned char& b, unsigned char& a) const;
+    void GetBaseForegroundColor(unsigned char& r, unsigned char& g,
+                                unsigned char& b, unsigned char& a) const;
     void SetUserAgentString(const std::string& ua);
     void SetCacheMode(int mode);
     void SetProxyURL(const std::string& proxyURL);
