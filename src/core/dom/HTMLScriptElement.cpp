@@ -414,6 +414,13 @@ void HTMLScriptElement::didAttributeChanged(QualifiedName name, String* old,
                              String::fromUTF8("anonymous"));
             }
         }
+    } else if (name == starfish()->staticStrings()->m_nonce) {
+        if (attributeRemoved) {
+            removeAttribute(value);
+            m_nonce = nullptr;
+        } else if (attributeCreated || !old->equals(value)) {
+            m_nonce = value;
+        }
     }
 }
 
@@ -451,14 +458,21 @@ void HTMLScriptElement::setSrc(String* src)
     setAttribute(starfish()->staticStrings()->m_src, src);
 }
 
-String* HTMLScriptElement::nonce()
+String* HTMLScriptElement::nonce() const
 {
+    if (m_nonce) {
+        return m_nonce;
+    }
     return getAttributeOrEmpty(starfish()->staticStrings()->m_nonce);
 }
 
 void HTMLScriptElement::setNonce(String* str)
 {
-    setAttribute(starfish()->staticStrings()->m_nonce, str);
+    // In order to mitigate nonce exfiltration via content attributes,
+    // we hide the nonce from the element’s content attribute and move it into
+    // an internal slot.
+    // https://w3c.github.io/webappsec-csp/#nonce-exfiltration-content-attributes
+    m_nonce = str;
 }
 
 String* HTMLScriptElement::type()
