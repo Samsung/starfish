@@ -126,6 +126,9 @@ public:
     FOR_EACH_STYLE_ATTRIBUTE_STICKY(DECLARE_ATTRIBUTE_GETTER)
 #undef DECLARE_ATTRIBUTE_GETTER
 
+    void addCSSValuePairForVar(CSSStyleValuePair::KeyKind name,
+                               const CSSStyleValuePair& ret);
+
     void addCSSValuePair(CSSStyleValuePair::KeyKind name,
                          const CSSStyleValuePair& ret);
 

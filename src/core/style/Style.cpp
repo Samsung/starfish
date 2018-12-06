@@ -2064,7 +2064,7 @@ void StyleResolver::apply(Element* element,
 
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
         if (cssValues[k].keyKind() == CSSStyleValuePair::KeyKind::VarValue) {
-            // TODO: Define the new value againe.
+            // TODO: Define the new value again.
             String* keyword = cssValues[k].varFunctionValue();
             size_t len = keyword->length();
             CSSTokenVector tokens;
@@ -2083,29 +2083,29 @@ void StyleResolver::apply(Element* element,
                 CSSTokenValue token(tokens[i]);
                 variablesSyntaxBuilder.build(token);
                 if (variablesSyntaxBuilder.isValid()) {
-                    // Replace a old style with a new style coverted with the
-                    // syntax builder.
+                    // Replace a old style with a new style converted with the
+                    // variable syntax builder.
                     tokens[i] = CSSTokenValue(
                         variablesSyntaxBuilder.generateStyle(cssCustomValues));
                 }
             }
 
-#define SET_CASES(name, ...)                                                  \
-    case CSSStyleValuePair::KeyKind::name:                                    \
-        if (CSSStyleValuePair::KeyKind::name ==                               \
-            CSSStyleValuePair::KeyKind::VarValue) {                           \
-            break;                                                            \
-        }                                                                     \
-                                                                              \
-        if (ret.updateValueCommon(tokens) || ret.updateValue##name(tokens)) { \
-            ret.setKeyKind(CSSStyleValuePair::KeyKind::name);                 \
-        }                                                                     \
+#define SET_CASES(name, ...)                                  \
+    case CSSStyleValuePair::KeyKind::name:                    \
+        if (CSSStyleValuePair::KeyKind::name ==               \
+            CSSStyleValuePair::KeyKind::VarValue) {           \
+            break;                                            \
+        }                                                     \
+                                                              \
+        if (ret.updateValueCommon(tokens) ||                  \
+            ret.updateValue##name(document(), tokens)) {      \
+            ret.setKeyKind(CSSStyleValuePair::KeyKind::name); \
+        }                                                     \
         break;
 
             CSSStyleValuePair ret;
             switch (cssValues[k].temporaryKeyKind()) {
                 FOR_EACH_STYLE_ATTRIBUTE_BASIC(SET_CASES)
-                FOR_EACH_STYLE_ATTRIBUTE_STICKY(SET_CASES)
             case CSSStyleValuePair::KeyKind::Unknown:
                 break;
             default:
