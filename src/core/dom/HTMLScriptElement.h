@@ -35,6 +35,7 @@ public:
         , m_isParserInserted(false)
         , m_didScriptExecuted(false)
         , m_shouldResumeParsing(false)
+        , m_nonce(nullptr)
     {
 #ifdef STARFISH_TC_COVERAGE
         STARFISH_LOG_INFO("+++tag:script\n");
@@ -71,7 +72,7 @@ public:
     bool defer();
     void setDefer(bool b);
 
-    String* nonce();
+    String* nonce() const;
     void setNonce(String* str);
 
     bool shouldResumeParsing()
@@ -123,6 +124,7 @@ protected:
     bool m_isParserInserted;
     bool m_didScriptExecuted;
     bool m_shouldResumeParsing;
+    String* m_nonce;
 };
 }
 

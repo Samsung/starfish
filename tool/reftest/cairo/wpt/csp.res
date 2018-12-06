@@ -249,7 +249,7 @@ http://web-platform.test:8000/content-security-policy/media-src/media-src-redir-
 #http://web-platform.test:8000/content-security-policy/navigation/to-javascript-url-script-src.html
 #
 #
-#http://web-platform.test:8000/content-security-policy/nonce-hiding/script-nonces-hidden-meta.tentative.sub.html
+http://web-platform.test:8000/content-security-policy/nonce-hiding/script-nonces-hidden-meta.tentative.sub.html
 #http://web-platform.test:8000/content-security-policy/nonce-hiding/script-nonces-hidden.tentative.html
 #http://web-platform.test:8000/content-security-policy/nonce-hiding/svgscript-nonces-hidden-meta.tentative.sub.html
 #http://web-platform.test:8000/content-security-policy/nonce-hiding/svgscript-nonces-hidden.tentative.html
