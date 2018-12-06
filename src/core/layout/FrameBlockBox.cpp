@@ -189,13 +189,12 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                           style()->height());
     ctx.setMarginInfo(this, &marginInfo);
 
-    if (isEstablishesBlockFormattingContext()) {
+    if (isEstablishesBlockFormattingContext() && !isPositioned()) {
         if (!shouldLayout(ctx, LayoutWantToResolve::ResolveHeight, cb)) {
             bool isQuickLayout = ctx.isQuickLayout();
             ctx.setIsQuickLayout(true);
             quickLayout(ctx);
             ctx.setIsQuickLayout(isQuickLayout);
-            registerRelativePositionIfNeeds(ctx);
             return;
         }
     }
