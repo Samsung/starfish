@@ -10,12 +10,12 @@ http://web-platform.test:8000/content-security-policy/blob/blob-urls-match-blob.
 #http://web-platform.test:8000/content-security-policy/blob/star-doesnt-match-blob.sub.html # Worker
 #
 #
-#http://web-platform.test:8000/content-security-policy/child-src/child-src-about-blank-allowed-by-default.sub.html
-#http://web-platform.test:8000/content-security-policy/child-src/child-src-about-blank-allowed-by-scheme.sub.html
-#http://web-platform.test:8000/content-security-policy/child-src/child-src-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/child-src/child-src-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/child-src/child-src-conflicting-frame-src.sub.html
-#http://web-platform.test:8000/content-security-policy/child-src/child-src-cross-origin-load.sub.html
+http://web-platform.test:8000/content-security-policy/child-src/child-src-about-blank-allowed-by-default.sub.html
+http://web-platform.test:8000/content-security-policy/child-src/child-src-about-blank-allowed-by-scheme.sub.html
+http://web-platform.test:8000/content-security-policy/child-src/child-src-allowed.sub.html
+http://web-platform.test:8000/content-security-policy/child-src/child-src-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/child-src/child-src-conflicting-frame-src.sub.html
+http://web-platform.test:8000/content-security-policy/child-src/child-src-cross-origin-load.sub.html
 #http://web-platform.test:8000/content-security-policy/child-src/child-src-redirect-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/child-src/child-src-worker-allowed.sub.html
 #http://web-platform.test:8000/content-security-policy/child-src/child-src-worker-blocked.sub.html
@@ -126,7 +126,7 @@ http://web-platform.test:8000/content-security-policy/frame-src/frame-src-about-
 http://web-platform.test:8000/content-security-policy/frame-src/frame-src-about-blank-allowed-by-scheme.sub.html
 http://web-platform.test:8000/content-security-policy/frame-src/frame-src-allowed.sub.html
 http://web-platform.test:8000/content-security-policy/frame-src/frame-src-blocked.sub.html
-#http://web-platform.test:8000/content-security-policy/frame-src/frame-src-cross-origin-load.sub.html
+http://web-platform.test:8000/content-security-policy/frame-src/frame-src-cross-origin-load.sub.html
 #http://web-platform.test:8000/content-security-policy/frame-src/frame-src-redirect.html
 #http://web-platform.test:8000/content-security-policy/frame-src/frame-src-self-unique-origin.html
 #http://web-platform.test:8000/content-security-policy/frame-src/support/frame.html
@@ -431,13 +431,6 @@ http://web-platform.test:8000/content-security-policy/style-src/style-src-none-b
 #http://web-platform.test:8000/content-security-policy/style-src/style-src-star-allowed.html # window.getComputedStyle(el).getPropertyValue('margin-left')
 #http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-allowed.html # window.getComputedStyle(el).getPropertyValue('margin-left')
 http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-blocked.html
-#
-#
-#http://web-platform.test:8000/content-security-policy/support/fail.html
-#http://web-platform.test:8000/content-security-policy/support/file-prefetch-allowed.html
-#http://web-platform.test:8000/content-security-policy/support/postmessage-fail.html
-#http://web-platform.test:8000/content-security-policy/support/postmessage-pass.html
-#http://web-platform.test:8000/content-security-policy/support/postmessage-pass-to-opener.html
 #
 #
 #http://web-platform.test:8000/content-security-policy/svg/object-in-svg-foreignobject.sub.html

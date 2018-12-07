@@ -29,8 +29,8 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     , m_contextURL(contentSecurityPolicy->document()->documentURI())
     , m_baseURI(nullptr)
     , m_connectSrc(nullptr)
+    , m_childSrc(nullptr)
     , m_defaultSrc(nullptr)
-    , m_frameSrc(nullptr)
     , m_imgSrc(nullptr)
     , m_mediaSrc(nullptr)
     , m_scriptSrc(nullptr)
@@ -95,10 +95,15 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* name,
         setDirective(m_baseURI, name, value);
     } else if (name->equalsIgnoreCase("connect-src")) {
         setDirective(m_connectSrc, name, value);
+    } else if (name->equalsIgnoreCase("child-src")) {
+        setDirective(m_childSrc, name, value);
     } else if (name->equalsIgnoreCase("default-src")) {
         setDirective(m_defaultSrc, name, value);
     } else if (name->equalsIgnoreCase("frame-src")) {
-        setDirective(m_frameSrc, name, value);
+        STARFISH_LOG_INFO(
+            "'frame-src' is deprecated. Using 'child-src' is recommended "
+            "instead.\n");
+        setDirective(m_childSrc, name, value);
     } else if (name->equalsIgnoreCase("img-src")) {
         setDirective(m_imgSrc, name, value);
     } else if (name->equalsIgnoreCase("media-src")) {
@@ -129,10 +134,10 @@ ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
         return m_baseURI;
     case CSPDirectives::ConnectSrc:
         return m_connectSrc;
+    case CSPDirectives::ChildSrc:
+        return m_childSrc;
     case CSPDirectives::DefaultSrc:
         return m_defaultSrc;
-    case CSPDirectives::FrameSrc:
-        return m_frameSrc;
     case CSPDirectives::ImgSrc:
         return m_imgSrc;
     case CSPDirectives::MediaSrc:

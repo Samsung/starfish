@@ -75,7 +75,7 @@ static String* getDirectiveName(CSPDirectives directive)
         return String::createASCIIString("connect-src");
     case CSPDirectives::DefaultSrc:
         return String::createASCIIString("default-src");
-    case CSPDirectives::FrameSrc:
+    case CSPDirectives::ChildSrc:
         return String::createASCIIString("frame-src");
     case CSPDirectives::ImgSrc:
         return String::createASCIIString("img-src");

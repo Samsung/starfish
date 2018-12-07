@@ -54,8 +54,8 @@ private:
 
     ContentSecurityPolicySourceListDirective* m_baseURI;
     ContentSecurityPolicySourceListDirective* m_connectSrc;
+    ContentSecurityPolicySourceListDirective* m_childSrc;
     ContentSecurityPolicySourceListDirective* m_defaultSrc;
-    ContentSecurityPolicySourceListDirective* m_frameSrc;
     ContentSecurityPolicySourceListDirective* m_imgSrc;
     ContentSecurityPolicySourceListDirective* m_mediaSrc;
     ContentSecurityPolicySourceListDirective* m_scriptSrc;
@@ -68,9 +68,9 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_connectSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
-                                        m_defaultSrc));
+                                        m_childSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
-                                        m_frameSrc));
+                                        m_defaultSrc));
         GC_set_bit(
             desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList, m_imgSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
