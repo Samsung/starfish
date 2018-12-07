@@ -5,17 +5,19 @@ lightweight Web engine (LWE).
 
 ## Table of Contents
 
-[HTML](#html)<br>
-[DOM](#dom)<br>
-[Events](#events)<br>
-[CSS](#css)<br>
-[Selectors](#selectors)<br>
-[Additional Supported APIs](#additional-supported-apis)<br>
-&nbsp; &nbsp; &nbsp; &nbsp;[XMLHttpRequest](#xmlhttprequest)<br>
-&nbsp; &nbsp; &nbsp; &nbsp;[EventSource](#eventsource)<br>
-&nbsp; &nbsp; &nbsp; &nbsp;[Blob](#blob)<br>
-&nbsp; &nbsp; &nbsp; &nbsp;[Geolocation](#geolocation)<br>
-&nbsp; &nbsp; &nbsp; &nbsp;[Web Device API](#web-device-api)<br>
+- [HTML](#html)
+- [DOM](#dom)
+- [Events](#events)
+- [CSS](#css)
+- [Selectors](#selectors)
+- [HTTP](#http)
+    - [Content Security Policy](#content-security-policy)
+- [Additional Supported APIs](#additional-supported-apis)
+    - [XMLHttpRequest](#xmlhttprequest)
+    - [EventSource](#eventsource)
+    - [Blob](#blob)
+    - [Geolocation](#geolocation)
+    - [Web Device API](#web-device-api)
 
 ## Encoding Scheme
 All files (i.e., .html, .css, and .js) are to be encoded in UTF-8. This is
@@ -1145,6 +1147,9 @@ supported.
 | | attribute | onmessage | Fired at an object when it receives a message. |
 | | attribute | onmessageerror | Fired at an object when it receives a message that cannot be deserialized. |
 | | attribute | onunload | Fired at the Window object when the page is going away. |
+| [SecurityPolicyViolationEventInit](https://www.w3.org/TR/CSP2/#securitypolicyviolationeventinit-interface) | dictionary | SecurityPolicyViolationEventInit | Dictionary that is used to create SecurityPolicyViolationEvent. |
+| | attribute | blockedURI | Returns the requested URL of the resource that was prevented from loading. |
+| | attribute | violatedDirective | Returns the policy directive that was violated. |
 
 ## CSS
 
@@ -1367,6 +1372,38 @@ This section describes the complete list of supported selectors by LWE.
 | | The ::first-letter pseudo-element | ::first-letter | p::first-letter | Selects the first letter of every \<p\> element |
 | [Tree-Abiding Pseudo-elements](https://www.w3.org/TR/css-pseudo-4/#treelike) | Generated Content Pseudo-elements: '::before' | ::before | p::before | Insert something before the content of each \<p\> element |
 | | Generated Content Pseudo-elements: '::after' | ::after | p::after | Insert something after the content of each \<p\> element |
+
+## HTTP
+
+### Content Security Policy
+
+This section describes the list of supported Directives and their corresponding Sources of Content Security Policies. To enable CSP, configuring a policy via [HTML meta Element](https://www.w3.org/TR/CSP2/#delivery-html-meta-element) is required. The configuration with [Content-Security-Policy HTTP header](https://www.w3.org/TR/CSP2/#content-security-policy-header-field) isn't supported yet.
+
+#### Supported Directives
+
+| Directive      | Description | Note |
+|----------------|-------------|------|
+| [base-uri](https://www.w3.org/TR/CSP2/#directive-base-uri) | The base-uri directive restricts the URLs that can be used to specify the document base URL. | |
+| [connect-src](https://www.w3.org/TR/CSP2/#directive-connect-src) | The connect-src directive restricts which URLs the protected resource can load using script interfaces. | |
+| [default-src](https://www.w3.org/TR/CSP2/#directive-default-src) | The default-src directive sets a default source list for a number of directives. | |
+| [frame-src](https://www.w3.org/TR/CSP2/#directive-frame-src) | The frame-src directive restricts from where the protected resource can embed frames. | |
+| [img-src](https://www.w3.org/TR/CSP2/#directive-img-src) | The img-src directive restricts from where the protected resource can load images. | |
+| [media-src](https://www.w3.org/TR/CSP2/#directive-media-src) | The media-src directive restricts from where the protected resource can load video, audio, and associated text tracks. | |
+| [script-src](https://www.w3.org/TR/CSP2/#directive-script-src) | The script-src directive restricts which scripts the protected resource can execute. | |
+| [style-src](https://www.w3.org/TR/CSP2/#directive-style-src) | The style-src directive restricts which styles the user may applies to the protected resource. | |
+
+#### Supported Sources
+
+| Source      | Description | Note |
+|----------------|-------------|------|
+| [\<host-source\>](https://www.w3.org/TR/CSP2/#source-list-syntax) | Internet hosts by name or IP address, as well as an optional URL scheme and/or port number. The site's address may include an optional leading wildcard (the asterisk character, '\*'), and you may use a wildcard (again, '\*') as the port number, indicating that all legal ports are valid for the source. | |
+| [\<scheme-source\>](https://www.w3.org/TR/CSP2/#source-list-syntax) | A schema such as 'http:' or 'https:'. *The colon is required, single quotes shouldn't be used.* You can also specify data schemas (not recommended). | |
+| ['self'](https://www.w3.org/TR/CSP2/#source-list-syntax) | Refers to the origin from which the protected document is being served, including the same URL scheme and port number. You must include the single quotes. | |
+| ['unsafe-inline'](https://www.w3.org/TR/CSP2/#source-list-syntax) | Allows the use of inline resources, such as inline \<script\> elements, javascript: URLs, inline event handlers, and inline \<style\> elements. You must include the single quotes. | |
+| ['unsafe-eval'](https://www.w3.org/TR/CSP2/#source-list-syntax) | Allows the use of `eval()` and similar methods for creating code from strings. You must include the single quotes. | |
+| ['none'](https://www.w3.org/TR/CSP2/#source-list-syntax) | Refers to the empty set; that is, no URLs match. The single quotes are required. | |
+| ['nonce-\<base64-value\>'](https://www.w3.org/TR/CSP2/#source-list-syntax) | A whitelist for specific inline scripts using a cryptographic nonce. Specifying nonce will ignore 'unsafe-inline'. | |
+| ['\<hash-algorithm\>-\<base64-value\>'](https://www.w3.org/TR/CSP2/#source-list-syntax) | A sha256, sha384 or sha512 hash of scripts or styles. The use of this source consists of two portions separated by a dash: the encryption algorithm used to create the hash and the base64-encoded hash of the script or style. | |
 
 ## Additional Supported APIs
 
