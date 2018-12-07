@@ -752,6 +752,36 @@ void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
         const auto& boxes = iter->second;
         for (size_t i = 0; i < boxes.size(); i++) {
             FrameBox* box = boxes[i];
+            if (m_isQuickLayout) {
+                // related with issue 2264
+                // this is very ugly...
+                // in quicklayout, x value of box is already computed
+                // but, if user doesn't specify left, right && specify
+                // {margin-left, margin-right}
+                // box will move box by its margin in FrameBlockBox::layout
+                // function
+                // we should remove this code when renovate quickLayout
+                LengthData offset = box->style()->offset();
+                Length left = offset.left();
+                Length right = offset.right();
+                if (left.isAuto() && right.isAuto()) {
+                    DirectionValue parentDirection =
+                        blockContainer(box)->style()->direction();
+                    if (box->parent()->isAnonymous() &&
+                        box->parent()->parent()->isFrameFlexibleBox() &&
+                        !box->parent()->isFlexItem()) {
+                        // DO NOTHING
+                    } else {
+                        if (parentDirection == LtrDirectionValue) {
+                            box->moveX(-box->FrameBox::marginLeft());
+                        } else {
+                            box->moveX(box->FrameBox::width() +
+                                       box->FrameBox::marginRight());
+                        }
+                    }
+                }
+                // <-- issue 2264
+            }
             box->layout(*this, Frame::LayoutWantToResolve::ResolveAll);
         }
         m_absolutePositionedBoxes.erase(iter);

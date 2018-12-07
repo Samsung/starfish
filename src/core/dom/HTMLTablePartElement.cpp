@@ -171,16 +171,16 @@ GEN_FOURSIDE(ADDITIONAL_BORDER_RULES)
 void HTMLTablePartElement::additionalPadding(
     CSSStyleValuePairVectorHolder& cssValues, String* padding)
 {
-#define ADDITIONAL_PADDING(POS, ...)                                    \
-    {                                                                   \
-        CSSStyleValuePair pair;                                         \
-        CSSTokenVector tokens;                                          \
-        CSSTokenValue token = padding->toNullableUTF8String().m_buffer; \
-        tokens.push_back(token);                                        \
-        if (pair.updateValueLength(tokens, 0)) {                        \
-            pair.setKeyKind(CSSStyleValuePair::KeyKind::Padding##POS);  \
-            cssValues.push_back(pair);                                  \
-        }                                                               \
+#define ADDITIONAL_PADDING(POS, ...)                                   \
+    {                                                                  \
+        CSSStyleValuePair pair;                                        \
+        CSSTokenVector tokens;                                         \
+        CSSTokenValue token(std::move(padding->toUTF8NonGCString()));  \
+        tokens.push_back(token);                                       \
+        if (pair.updateValueLength(tokens, 0)) {                       \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::Padding##POS); \
+            cssValues.push_back(pair);                                 \
+        }                                                              \
     }
 
     GEN_FOURSIDE(ADDITIONAL_PADDING);

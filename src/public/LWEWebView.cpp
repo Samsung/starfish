@@ -151,7 +151,7 @@ void WebView::RegisterOnPageStartedHandler(
 void WebView::RegisterOnLoadResourceHandler(
     std::function<void(WebView*, const std::string&)> cb)
 {
-    FetchWebContainer()->RegisterOnPageLoadedHandler(
+    FetchWebContainer()->RegisterOnLoadResourceHandler(
         [this, cb](WebContainer*, const std::string& a) { cb(this, a); });
 }
 

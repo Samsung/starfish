@@ -159,7 +159,7 @@ public:
     void setFlex(const char* value, size_t len, bool isImportant);
     void setOutline(const char* value, size_t len, bool isImportant);
     void setListStyle(const char* value, size_t len, bool isImportant);
-    void setCustomProperty(String* key, String* value, size_t len);
+    void setCustomProperty(String* key, String* value);
 
 #define DECLARE_ATTRIBUTE_SETTER(name, ...) \
     void set##name(const char* value, size_t len, bool isImportant);
