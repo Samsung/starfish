@@ -222,7 +222,7 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
         unmarkContentDocumentDisabled();
 
         if (!document()->contentSecurityPolicy()->allowSource(
-                CSPDirectives::FrameSrc, url)) {
+                CSPDirectives::ChildSrc, url)) {
             /*
             NOTE: IFrames blocked by CSP should generate a 'load', not 'error'
             event, regardless of blocked state. This means they appear to be
