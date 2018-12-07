@@ -1106,6 +1106,7 @@ public:
     static std::string toBase64(const std::string& src);
     static std::string toBase64HTMLDataURI(const std::string& src,
                                            const std::string& type = "html");
+    static std::string toLowerCase(const std::string& str);
 };
 
 #ifndef STRING_BUILDER_INLINE_STORAGE_MAX

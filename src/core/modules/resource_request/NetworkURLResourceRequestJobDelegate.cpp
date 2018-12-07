@@ -138,7 +138,8 @@ void* NetworkURLResourceRequestJobDelegate::httpCacheWorker(void* data)
         Locker<Mutex> locker(*request->m_mutex);
         ret = nwd->cachedEntry->readRawDataFromEntryFile(
             nwd->request->response());
-        nwd->cachedEntry->readEntryHeaders(nwd->request->m_responseHeaderMap);
+        nwd->cachedEntry->readEntryHeaders(
+            nwd->request->m_responseHeaders->httpHeaderMap()->headerMap());
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
         nwd->cachehit = true;
         uint64_t end = longTickCount();
@@ -304,8 +305,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     NetworkURLWorkerData* nwd = new (NoGC) NetworkURLWorkerData(m_orgProxy);
 
     m_orgProxy->m_activeNetworkURLWorkerData = nwd;
-    HTTPHeaderMap headers;
-
+    HTTPHeaderMap headers = *(m_orgProxy->m_requestHeaders->httpHeaderMap());
     if (m_orgProxy->method()->equals("GET")) {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
         uint64_t start = longTickCount();
@@ -329,7 +329,6 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 #endif
     }
 
-    fillHeadersWithResourceRequestHeader(headers);
     fillHeadersWithClientHeaders(headers);
     fillHeadersWithGeneralHeaders(headers);
 
@@ -371,7 +370,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     // https://fetch.spec.whatwg.org/#ref-for-use-cors-preflight-flag%E2%91%A1
     if (m_orgProxy->useCorsPreflightFlag() ||
         (m_orgProxy->unsafeRequestFlag() &&
-         !FetchUtils::iSCorsSafelistedMethod(m_orgProxy->method()))) {
+         (!FetchUtils::isCorsSafelistedMethod(m_orgProxy->method()) ||
+          FetchUtils::corsUnsafeRequestHeaderNames(headers).size() != 0))) {
         m_orgProxy->setResponseTainting(ResponseTainting::Cors);
         nwd->corsFlag = true;
         nwd->corsPreflightFlag = true;
@@ -416,7 +416,7 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithGeneralHeaders(
     // Set General header
     //  * Cache-Control, Connection, Date, Pragma, Trailer, Transfer-Encoding,
     //  * Upgrade, Via, Warning ...
-    headers.setHeader(HTTPHeaderMap::kConnection, "keep-alive");
+    headers.append(HTTPHeaderMap::kConnection, "keep-alive");
 }
 
 void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
@@ -434,25 +434,22 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
         tmpStr = m_orgProxy->webView()->locale().getName();
         std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
         tmpStr = tmpStr + " , en-US , en";
-        headers.setHeader(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
+        headers.append(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
     }
 
-    headers.setHeader(
+    headers.append(
         HTTPHeaderMap::kUserAgent,
         m_orgProxy->webView()->userAgent()->toUTF8NonGCString().data());
 
-    headers.setHeader(HTTPHeaderMap::kHost,
-                      m_orgProxy->url()->host()->toUTF8NonGCString().data());
+    headers.append(HTTPHeaderMap::kHost,
+                   m_orgProxy->url()->host()->toUTF8NonGCString().data());
 
     if (!m_orgProxy->isSameOriginRequest()) {
-        headers.setHeader(HTTPHeaderMap::kOrigin, m_orgProxy->document()
-                                                      ->webOrigin()
-                                                      ->serialize()
-                                                      ->toUTF8NonGCString()
-                                                      .data());
+        headers.append(HTTPHeaderMap::kOrigin,
+                       CSTR(m_orgProxy->document()->webOrigin()->serialize()));
     }
 
-    auto it2 = headers.findHeader(HTTPHeaderMap::kReferer);
+    auto it2 = headers.find(HTTPHeaderMap::kReferer);
     if (it2 == headers.headerMap().end() && m_orgProxy->referrer()) {
         ResourceURL* rUrl = m_orgProxy->referrer();
         String* rString;
@@ -462,23 +459,11 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
             rString = rUrl->urlString();
         }
         if (!rString->isEmpty()) {
-            auto urlUTF8Data = rString->toUTF8NonGCString();
-            headers.setHeader(HTTPHeaderMap::kReferer, urlUTF8Data);
+            headers.append(HTTPHeaderMap::kReferer, CSTR(rString));
         }
     }
 }
 
-void NetworkURLResourceRequestJobDelegate::fillHeadersWithResourceRequestHeader(
-    HTTPHeaderMap& headers)
-{
-    for (size_t i = 0; i < m_orgProxy->m_requestHeaders.size(); i++) {
-        auto utf8Data1 =
-            m_orgProxy->m_requestHeaders[i].first->toUTF8NonGCString();
-        auto utf8Data2 =
-            m_orgProxy->m_requestHeaders[i].second->toUTF8NonGCString();
-        headers.setHeader(utf8Data1, utf8Data2);
-    }
-}
 #ifdef STARFISH_ENABLE_HTTPCACHE
 void NetworkURLResourceRequestJobDelegate::fillHeadersWithCachedEntry(
     HTTPHeaderMap& headers, HTTPCacheEntry* cachedEntry)
@@ -509,17 +494,17 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithCachedEntry(
             timeToUTCString(m_orgProxy->document()->scriptBindingInstance(),
                             info.lastModified * 1000)
                 ->toUTF8NonGCString();
-        headers.setHeader(HTTPHeaderMap::kIfModifiedSince, value);
+        headers.append(HTTPHeaderMap::kIfModifiedSince, value);
     } else if (info.date) {
         std::string value =
             timeToUTCString(m_orgProxy->document()->scriptBindingInstance(),
                             info.date * 1000)
                 ->toUTF8NonGCString();
-        headers.setHeader(HTTPHeaderMap::kIfModifiedSince, value);
+        headers.append(HTTPHeaderMap::kIfModifiedSince, value);
     }
 
     if (info.etag.size()) {
-        headers.setHeader(HTTPHeaderMap::kIfNoneMatch, info.etag);
+        headers.append(HTTPHeaderMap::kIfNoneMatch, info.etag);
     }
 }
 #endif
@@ -563,7 +548,7 @@ void* NetworkURLResourceRequestJobDelegate::worker(void* data)
     if (nwd->corsPreflightFlag) {
         ResourceRequest* request = nwd->request;
         Locker<Mutex> locker(*request->m_mutex);
-        if (!FetchUtils::iSCorsSafelistedMethod(request->method()) ||
+        if (!FetchUtils::isCorsSafelistedMethod(request->method()) ||
             request->useCorsPreflightFlag()) {
             nwd->needsToSendPreflightRequest = true;
             request->m_preflightRequestData->m_url =
@@ -827,7 +812,11 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
             }
             request->m_lastEffectiveURL =
                 nwd->httpTransaction->httpResponse().lastEffectiveURL();
-            request->m_responseHeaderMap = std::move(
+            auto& headers =
+                request->m_responseHeaders->httpHeaderMap()->headerMap();
+            // TODO : Refactor HTTPTransction using RequestData, ResponseData,
+            // HeadersData
+            headers = std::move(
                 nwd->httpTransaction->httpResponse().headers().headerMap());
 
         } else {

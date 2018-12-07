@@ -45,7 +45,6 @@ void Resource::request(RequestData* requestData, bool allowCache)
 
         String* entityBody = String::emptyString;
 
-        prepare();
         ResourceURL* url = requestData->m_url;
         if (url->isDocumentURL()) {
             if (url->asDocumentURL()->formSubmitData()) {
@@ -96,6 +95,7 @@ void Resource::request(RequestData* requestData, bool allowCache)
         m_resourceRequest->addResourceRequestClient(
             new ResourceNetworkRequestClient(this));
         m_resourceRequest->open(requestData);
+        prepare();
         m_resourceRequest->send(entityBody, allowCache);
     }
     m_state = Receiving;

@@ -30,6 +30,7 @@
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/fetch/RequestData.h"
 #include "core/fetch/ResponseData.h"
+#include "core/fetch/HeadersData.h"
 
 namespace Starfish {
 
@@ -37,6 +38,7 @@ class Document;
 class ResourceRequest;
 class FormDataSetItem;
 class WebOrigin;
+class HeadersData;
 
 typedef std::vector<char> EntityBody;
 
@@ -163,7 +165,7 @@ public:
 
     const HeaderMap& responseHeaderMap()
     {
-        return m_responseHeaderMap;
+        return m_responseHeaders->httpHeaderMap()->headerMap();
     }
 
     // Reading response is only safe when onProgress callback fired | request
@@ -287,7 +289,8 @@ public:
         return m_gotError;
     }
 
-    void setRequestHeader(String* h, String* c);
+    void setRequestHeader(String* name, String* value);
+    void deleteRequestHeader(String* name);
 
     RequestCredentials requestCredentials()
     {
@@ -390,8 +393,10 @@ protected:
     RequestData* m_requestData;
     RequestData* m_preflightRequestData;
     WebOrigin* m_requestWebOrigin;
+    HeadersData* m_requestHeaders;
 
     ResponseData* m_responseData;
+    HeadersData* m_responseHeaders;
 
     ReadyState m_readyState;
     ProgressState m_progressState;
@@ -405,7 +410,6 @@ protected:
     std::string m_lastEffectiveURL;
     EntityBody m_response;
     GCVector<size_t> m_requstedIdlers;
-    GCVector<std::pair<String*, String*>> m_requestHeaders;
 
     ResourceRequestJobInterface* m_jobDelegate;
 
@@ -416,8 +420,6 @@ protected:
     volatile size_t m_total;
 
     GCVector<ResourceRequestClient*> m_clients;
-
-    HeaderMap m_responseHeaderMap;
 };
 }
 

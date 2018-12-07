@@ -22,11 +22,22 @@
 
 namespace Starfish {
 
+class HTTPHeaderMap;
+
 class FetchUtils {
 public:
     static bool isForbiddenMethod(const String* method);
     static String* normalizeMethod(String* method);
-    static bool iSCorsSafelistedMethod(const String* method);
+    static bool isCorsSafelistedMethod(const String* method);
+    static bool isCorsSafelistedRequestHeader(const String* name,
+                                              const String* value);
+    static bool isCorsSafelistedRequestHeader(const std::string name,
+                                              const std::string value);
+    static bool isCorsUnsafeRequestHeaderValue(const std::string& value);
+    static bool isCorsUnsafeRequestHeaderByte(unsigned char c);
+    static bool isValidLanguageValue(const std::string& value);
+    static std::vector<std::string> corsUnsafeRequestHeaderNames(
+        HTTPHeaderMap& httpHeaderMap);
 };
 }
 

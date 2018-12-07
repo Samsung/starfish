@@ -131,6 +131,8 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(
             ret = HTTPHeaderMap::kAuthorization;
         } else if (lower.compare("last-modified") == 0) {
             ret = HTTPHeaderMap::kLastModified;
+        } else if (lower.compare("last-event-id") == 0) {
+            ret = HTTPHeaderMap::kLastEventID;
         }
         break;
     case 14:

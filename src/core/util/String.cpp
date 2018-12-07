@@ -1384,6 +1384,14 @@ std::string StringUtils::toBase64HTMLDataURI(const std::string& src,
     return dataURI;
 }
 
+std::string StringUtils::toLowerCase(const std::string& str)
+{
+    std::string lower;
+    lower.resize(str.length());
+    std::transform(str.begin(), str.end(), lower.begin(), tolower);
+    return lower;
+}
+
 size_t utf32ToUtf16(char32_t i, char16_t* u)
 {
     if (i <= 0xffff) {

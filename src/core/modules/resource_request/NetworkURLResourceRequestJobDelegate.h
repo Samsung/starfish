@@ -115,7 +115,6 @@ private:
 #endif
     void fillHeadersWithGeneralHeaders(HTTPHeaderMap& headers);
     void fillHeadersWithClientHeaders(HTTPHeaderMap& headers);
-    void fillHeadersWithResourceRequestHeader(HTTPHeaderMap& headers);
 
     ResourceRequest* m_orgProxy;
 };

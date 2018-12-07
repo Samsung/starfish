@@ -202,7 +202,7 @@ void HTTPTransaction::didReceiveHeader(const std::string& header)
         StringUtils::trim(value);
 
         std::string converted = HTTPUtil::tryToConvertToHeaderMapString(key);
-        m_httpResponse->headers().setHeader(converted, value);
+        m_httpResponse->headers().append(converted, value);
     }
 }
 
