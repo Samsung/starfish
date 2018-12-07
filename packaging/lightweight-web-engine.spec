@@ -360,15 +360,7 @@ popd
 # Post Install
 %post
 /sbin/ldconfig
-exit 0
 
-# Post Uninstall
-%postun
-/sbin/ldconfig
-exit 0
-
-
-#############################################
 %if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "all"
 %post profile_tv
 pushd %{_libdir}/lwe
@@ -395,6 +387,7 @@ exit 0
 pushd %{_bindir}
 ln -sf lightweight-web-engine.prod.tv %{bin}
 popd
+/sbin/ldconfig
 exit 0
 %endif
 
@@ -413,6 +406,7 @@ popd
 pushd %{_bindir}
 ln -sf lightweight-web-engine.mobile %{bin}
 popd
+/sbin/ldconfig
 exit 0
 %endif
 
@@ -431,9 +425,13 @@ popd
 pushd %{_bindir}
 ln -sf lightweight-web-engine.wearable %{bin}
 popd
+/sbin/ldconfig
 exit 0
 %endif
 
+# Post Uninstall
+%postun
+/sbin/ldconfig
 
 ##############################################
 ## Packaging rpms
