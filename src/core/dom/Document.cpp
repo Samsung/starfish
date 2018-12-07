@@ -1346,6 +1346,10 @@ void Document::processBaseElement()
     ResourceURL* baseElementURL = nullptr;
     if (href) {
         baseElementURL = new ResourceURL(href, fallbackBaseURL()->urlString());
+        if (!contentSecurityPolicy()->allowSource(CSPDirectives::BaseURI,
+                                                  baseElementURL)) {
+            baseElementURL = nullptr;
+        }
     }
     if (baseElementURL) {
         if (baseElementURL->isDataURL()) {

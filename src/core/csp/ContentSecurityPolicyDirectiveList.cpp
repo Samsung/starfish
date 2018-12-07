@@ -27,6 +27,7 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     size_t end)
     : m_contentSecurityPolicy(contentSecurityPolicy)
     , m_contextURL(contentSecurityPolicy->document()->documentURI())
+    , m_baseURI(nullptr)
     , m_connectSrc(nullptr)
     , m_defaultSrc(nullptr)
     , m_frameSrc(nullptr)
@@ -90,7 +91,9 @@ void* ContentSecurityPolicyDirectiveList::operator new(size_t size)
 void ContentSecurityPolicyDirectiveList::addDirective(String* name,
                                                       String* value)
 {
-    if (name->equalsIgnoreCase("connect-src")) {
+    if (name->equalsIgnoreCase("base-uri")) {
+        setDirective(m_baseURI, name, value);
+    } else if (name->equalsIgnoreCase("connect-src")) {
         setDirective(m_connectSrc, name, value);
     } else if (name->equalsIgnoreCase("default-src")) {
         setDirective(m_defaultSrc, name, value);
@@ -122,6 +125,8 @@ ContentSecurityPolicySourceListDirective*
 ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
 {
     switch (directive) {
+    case CSPDirectives::BaseURI:
+        return m_baseURI;
     case CSPDirectives::ConnectSrc:
         return m_connectSrc;
     case CSPDirectives::DefaultSrc:
@@ -148,7 +153,7 @@ bool ContentSecurityPolicyDirectiveList::allowSource(CSPDirectives directive,
 {
     auto sourceListDirective = getSourceList(directive);
     if (!sourceListDirective) {
-        if (m_defaultSrc) {
+        if (m_defaultSrc && directive != CSPDirectives::BaseURI) {
             return allowSource(CSPDirectives::DefaultSrc, resUrl);
         }
         return true;

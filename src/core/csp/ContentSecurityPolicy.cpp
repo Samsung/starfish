@@ -69,6 +69,8 @@ void ContentSecurityPolicy::didReceiveHeader(
 static String* getDirectiveName(CSPDirectives directive)
 {
     switch (directive) {
+    case CSPDirectives::BaseURI:
+        return String::createASCIIString("base-uri");
     case CSPDirectives::ConnectSrc:
         return String::createASCIIString("connect-src");
     case CSPDirectives::DefaultSrc:
