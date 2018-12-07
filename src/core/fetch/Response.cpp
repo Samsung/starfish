@@ -34,7 +34,7 @@ Response::Response(Document* document)
     , m_headers(Headers(document))
     , m_responseData()
 {
-    m_headers.setGuard(Headers::Guard::Response);
+    m_headers.setGuard(Guard::Response);
 }
 
 Response::Response(Document* document, Nullable<BodyInit>& body)
@@ -44,7 +44,7 @@ Response::Response(Document* document, Nullable<BodyInit>& body)
     , m_headers(Headers(document))
     , m_responseData()
 {
-    m_headers.setGuard(Headers::Guard::Response);
+    m_headers.setGuard(Guard::Response);
     handleBodyInit(body);
     setStatusText(String::createASCIIString("OK"));
 }
@@ -115,7 +115,7 @@ Response* Response::error(Document* document)
     response->setStatusText(String::emptyString);
     response->setType(ResponseType::Error);
     response->m_bodyInit = nullptr;
-    response->headers()->setGuard(Headers::Guard::Immutable);
+    response->headers()->setGuard(Guard::Immutable);
 
     return response;
 }
@@ -133,7 +133,7 @@ Response* Response::redirect(Document* document, String* url)
     response->setStatusText(String::emptyString);
     response->setType(ResponseType::Default);
 
-    response->headers()->setGuard(Headers::Guard::Immutable);
+    response->headers()->setGuard(Guard::Immutable);
     response->headers()->noCheckValidSet(
         "location", parsedUrl.string()->toUTF8NonGCString());
 

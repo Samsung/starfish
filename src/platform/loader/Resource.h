@@ -73,6 +73,8 @@ public:
 
     virtual void prepare()
     {
+        // FIXME : Move to the appropriate Fetching step.
+        // https://fetch.spec.whatwg.org/#fetching
         if (m_resourceRequest) {
             m_resourceRequest->setRequestHeader(
                 String::createASCIIString(HTTPHeaderMap::kAccept),

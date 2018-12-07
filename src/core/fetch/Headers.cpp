@@ -27,6 +27,14 @@ using namespace Escargot;
 #include "core/fetch/Headers.h"
 #include "core/dom/Document.h"
 
+#define THROW_SCRIPT_TYPE_ERROR_IF_NEEDS()                               \
+    do {                                                                 \
+        if (error) {                                                     \
+            throw new DOMException(document(),                           \
+                                   DOMException::Code::SCRIPT_TYPE_ERR); \
+        }                                                                \
+    } while (0)
+
 namespace Starfish {
 
 class HeadersIterationSource final
@@ -69,7 +77,7 @@ Headers::Headers(Document* document)
     : ScriptWrappable(this)
     , DocumentHoldable(document)
     , m_instance(document->scriptBindingInstance())
-    , m_guard(Guard::None)
+    , m_headersData(new HeadersData())
 {
 }
 
@@ -77,36 +85,6 @@ Headers::Headers(Document* document, HeadersInit headersInit)
     : Headers(document)
 {
     fill(headersInit);
-}
-
-// https://tools.ietf.org/html/rfc2616#section-2.2
-bool Headers::isValidHTTPToken(const String* name)
-{
-    if (name->isEmpty()) {
-        return false;
-    }
-
-    for (size_t i = 0; i < name->length(); i++) {
-        auto c = name->charAt(i);
-        if (c <= 0x20 || c >= 0x7F || c == '(' || c == ')' || c == '<' ||
-            c == '>' || c == '@' || c == ',' || c == ';' || c == ':' ||
-            c == '\\' || c == '"' || c == '/' || c == '[' || c == ']' ||
-            c == '?' || c == '=' || c == '{' || c == '}') {
-            return false;
-        }
-    }
-    return true;
-}
-
-bool Headers::isValidHTTPHeaderValue(const String* value)
-{
-    for (size_t i = 0; i < value->length(); i++) {
-        auto c = value->charAt(i);
-        if (c > 0xFF) {
-            return false;
-        }
-    }
-    return true;
 }
 
 void Headers::fill(HeadersInit headersInit)
@@ -129,9 +107,9 @@ void Headers::fill(HeadersInit headersInit)
 
 void Headers::initHeadersFromHeaders(Headers* headers)
 {
-    auto srcHeaderMap = headers->m_headerMap.headerMap();
+    auto srcHeaderMap = headers->m_headersData->httpHeaderMap()->headerMap();
     for (auto it = srcHeaderMap.begin(); it != srcHeaderMap.end(); ++it) {
-        m_headerMap.setHeader(it->first, it->second);
+        m_headersData->httpHeaderMap()->append(it->first, it->second);
     }
 }
 
@@ -184,108 +162,84 @@ void Headers::setHeader(ScriptValue keyValue, ScriptValue nameValue,
 {
     String* name = toBrowserString(state, keyValue->toString(state));
     String* value = toBrowserString(state, nameValue->toString(state));
-    checkValidHeader(name, value);
 
-    m_headerMap.setHeader(name->toLower()->toUTF8NonGCString(),
-                          value->trim()->toUTF8NonGCString());
+    bool error = false;
+    m_headersData->set(name, value, &error);
+    THROW_SCRIPT_TYPE_ERROR_IF_NEEDS();
 }
 
 Nullable<String*> Headers::get(String* name)
 {
-    checkValidHeader(name);
-    Nullable<std::string> value =
-        noCheckValidGet(name->toLower()->toUTF8NonGCString());
-    if (value.hasValue()) {
-        return String::fromUTF8(value.getValue().data());
-    }
-    return nullptr;
-}
-
-Nullable<std::string> Headers::noCheckValidGet(const std::string& name)
-{
-    auto it = m_headerMap.findHeader(name);
-    if (it == m_headerMap.headerMap().end()) {
-        return nullptr;
-    }
-    return it->second;
+    bool error = false;
+    auto nullable = m_headersData->get(name, &error);
+    THROW_SCRIPT_TYPE_ERROR_IF_NEEDS();
+    return nullable;
 }
 
 void Headers::append(String* name, String* value)
 {
-    checkValidHeader(name, value);
-
-    m_headerMap.setHeader(name->toLower()->toUTF8NonGCString(),
-                          value->trim()->toUTF8NonGCString());
+    bool error = false;
+    m_headersData->append(name, value, &error);
+    THROW_SCRIPT_TYPE_ERROR_IF_NEEDS();
 }
 
 void Headers::set(String* name, String* value)
 {
-    checkValidHeader(name, value);
-    noCheckValidSet(name->toLower()->toUTF8NonGCString().data(),
-                    value->trim()->toUTF8NonGCString().data());
+    bool error = false;
+    m_headersData->set(name, value, &error);
+    THROW_SCRIPT_TYPE_ERROR_IF_NEEDS();
 }
 
-void Headers::noCheckValidSet(const std::string& name, const std::string& value)
+void Headers::noCheckValidSet(const std::string& lowerCaseName,
+                              const std::string& value)
 {
-    m_headerMap.headerMap()[name] = value;
+    m_headersData->noCheckValidSet(lowerCaseName, value);
 }
 
 bool Headers::has(String* name)
 {
-    checkValidHeader(name);
-    return noCheckValidHas(name->toLower()->toUTF8NonGCString().data());
+    bool error = false;
+    bool ret = m_headersData->has(name, &error);
+    THROW_SCRIPT_TYPE_ERROR_IF_NEEDS();
+    return ret;
 }
 
-bool Headers::noCheckValidHas(const std::string& name)
+bool Headers::noCheckValidHas(const std::string& lowerCaseName)
 {
-    auto it = m_headerMap.findHeader(name);
-    return !(it == m_headerMap.headerMap().end());
+    return m_headersData->noCheckValidHas(lowerCaseName);
 }
 
 void Headers::deleteHeader(String* name)
 {
-    checkValidHeader(name);
-
-    m_headerMap.removeHeader(name->toLower()->toUTF8NonGCString());
+    bool error = false;
+    m_headersData->deleteHeader(name, &error);
+    THROW_SCRIPT_TYPE_ERROR_IF_NEEDS();
 }
 
-void Headers::checkValidHeader(String* name)
+void Headers::setGuard(Guard guard)
 {
-    if (!isValidHTTPToken(name)) {
-        throw new DOMException(document(), DOMException::Code::SCRIPT_TYPE_ERR);
-    }
-    // TODO: check guard(https://fetch.spec.whatwg.org/#headers-class)
-    // TODO: check CORS-safelisted
-    // (https://fetch.spec.whatwg.org/#terminology-headers)
+    m_headersData->setGuard(guard);
 }
 
-void Headers::checkValidHeader(String* name, String* value)
+Guard Headers::guard()
 {
-    checkValidHeader(name);
-
-    if (!isValidHTTPHeaderValue(value)) {
-        throw new DOMException(document(), DOMException::Code::SCRIPT_TYPE_ERR);
-    }
+    return m_headersData->guard();
 }
 
 void Headers::copyHeaders(Headers* src)
 {
     initHeadersFromHeaders(src);
-    m_guard = src->guard();
+    setGuard(src->guard());
 }
 
 String* Headers::extractMIMEType()
 {
-    auto mimeType = noCheckValidGet("content-type");
-    if (!mimeType.hasValue()) {
-        return String::emptyString;
-    }
-    return String::fromUTF8(mimeType.getValue().data())->toLower();
+    return m_headersData->extractMIMEType();
 }
 
 IterationSource<Nullable<String*>, Nullable<String*>>* Headers::startIteration(
     ExecutionStateRef* state)
 {
-    return new HeadersIterationSource(&m_headerMap);
+    return new HeadersIterationSource(m_headersData->httpHeaderMap());
 }
 }

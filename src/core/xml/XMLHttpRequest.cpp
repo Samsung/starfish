@@ -297,7 +297,7 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
                           String* userName, String* password)
 {
     // FIXME : https://xhr.spec.whatwg.org/#the-open()-method
-    if (!Headers::isValidHTTPToken(method)) {
+    if (!HeadersData::isValidHTTPToken(method)) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     }

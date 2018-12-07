@@ -18,7 +18,10 @@
  */
 
 #include "StarfishConfig.h"
+
 #include "HTTPHeaderMap.h"
+#include "core/fetch/FetchUtils.h"
+
 #include <curl/curl.h>
 namespace Starfish {
 
@@ -32,6 +35,7 @@ HTTPHeaderMap::HTTPHeaderMap()
 
 HTTPHeaderMap::~HTTPHeaderMap()
 {
+    HeaderMap().swap(m_headerMap);
 }
 
 HTTPHeaderMap::HTTPHeaderMap(const HTTPHeaderMap& rhs)
@@ -54,7 +58,7 @@ unsigned long HTTPHeaderMap::length()
     return m_headerMap.size();
 }
 
-HeaderMap::iterator HTTPHeaderMap::findHeader(const std::string& name)
+HeaderMap::iterator HTTPHeaderMap::find(const std::string& name)
 {
     HeaderMap::iterator it = m_headerMap.find(name);
     if (it == m_headerMap.end()) {
@@ -63,8 +67,7 @@ HeaderMap::iterator HTTPHeaderMap::findHeader(const std::string& name)
     return it;
 }
 
-HeaderMap::const_iterator HTTPHeaderMap::findHeader(
-    const std::string& name) const
+HeaderMap::const_iterator HTTPHeaderMap::find(const std::string& name) const
 {
     HeaderMap::const_iterator it = m_headerMap.find(name);
     if (it == m_headerMap.end()) {
@@ -97,9 +100,9 @@ bool HTTPHeaderMap::extractHeaderListValues(std::vector<std::string>& out,
     return true;
 }
 
-void HTTPHeaderMap::setHeader(const std::string& name, const std::string& value)
+void HTTPHeaderMap::append(const std::string& name, const std::string& value)
 {
-    auto it = findHeader(name);
+    auto it = find(name);
     if (it == m_headerMap.end()) {
         m_headerMap[name] = value;
     } else {
@@ -107,7 +110,7 @@ void HTTPHeaderMap::setHeader(const std::string& name, const std::string& value)
     }
 }
 
-void HTTPHeaderMap::removeHeader(const std::string& name)
+void HTTPHeaderMap::remove(const std::string& name)
 {
     m_headerMap.erase(name);
 }

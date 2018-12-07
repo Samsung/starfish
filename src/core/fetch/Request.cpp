@@ -142,7 +142,7 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
 
     if (init) {
         String* method = init->method();
-        if (!Headers::isValidHTTPToken(method) ||
+        if (!HeadersData::isValidHTTPToken(method) ||
             FetchUtils::isForbiddenMethod(method)) {
             throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                    DOMException::SCRIPT_TYPE_ERR,

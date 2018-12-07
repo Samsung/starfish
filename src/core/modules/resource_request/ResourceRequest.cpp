@@ -59,6 +59,9 @@ ResourceRequest::ResourceRequest(Document* document)
     , m_requestData(nullptr)
     , m_preflightRequestData(nullptr)
     , m_requestWebOrigin(nullptr)
+    , m_requestHeaders(nullptr)
+    , m_responseData(nullptr)
+    , m_responseHeaders(nullptr)
     , m_readyState(ReadyState::Unset)
     , m_progressState(ProgressState::None)
     , m_bodyType(BodyType::Empty)
@@ -78,7 +81,6 @@ ResourceRequest::ResourceRequest(Document* document)
             // STARFISH_LOG_INFO("ResourceRequest::~ResourceRequest %p\n", obj);
             ResourceRequest* nr = (ResourceRequest*)obj;
             EntityBody().swap(nr->m_response);
-            HeaderMap().swap(nr->m_responseHeaderMap);
             std::string().swap(nr->m_lastEffectiveURL);
         },
         NULL, NULL, NULL);
@@ -89,11 +91,8 @@ ResourceRequest::ResourceRequest(Document* document)
 
 void ResourceRequest::initVariables()
 {
-    m_responseData = new ResponseData();
-
     m_contentLanguage = String::emptyString;
     EntityBody().swap(m_response);
-    HeaderMap().swap(m_responseHeaderMap);
     std::string().swap(m_lastEffectiveURL);
     m_gotError = false;
     m_containsBase64Content = false;
@@ -177,14 +176,14 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
         changeReadyState(ReadyState::Loading, true);
     }
     if (readyState == ReadyState::HeadersReceived) {
-        // FIXME remove duplicate code
-        auto it = m_responseHeaderMap.find(HTTPHeaderMap::kContentType);
-        if (it != m_responseHeaderMap.end()) {
+        auto& headerMap = m_responseHeaders->httpHeaderMap()->headerMap();
+        auto it = headerMap.find(HTTPHeaderMap::kContentType);
+        if (it != headerMap.end()) {
             m_responseData->m_mimeType = String::fromUTF8(it->second.data());
         }
 
-        it = m_responseHeaderMap.find(HTTPHeaderMap::kContentLanguage);
-        if (it != m_responseHeaderMap.end()) {
+        it = headerMap.find(HTTPHeaderMap::kContentLanguage);
+        if (it != headerMap.end()) {
             size_t pos = it->second.find(";");
             if (pos != std::string::npos) {
                 m_contentLanguage = String::fromUTF8(it->second.data());
@@ -194,8 +193,8 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
             }
         }
 
-        it = m_responseHeaderMap.find(HTTPHeaderMap::kContentTransferEncoding);
-        if (it != m_responseHeaderMap.end()) {
+        it = headerMap.find(HTTPHeaderMap::kContentTransferEncoding);
+        if (it != headerMap.end()) {
             std::string part = it->second;
             std::transform(part.begin(), part.end(), part.begin(), tolower);
             if (part.compare("base64") == 0) {
@@ -262,25 +261,24 @@ void ResourceRequest::open(RequestData* reqData)
 {
     bool shouldAbort = false;
     m_requestData = reqData;
+    m_requestHeaders = new HeadersData();
+
     m_preflightRequestData = new RequestData();
     m_preflightRequestData->m_method = String::createASCIIString("OPTIONS");
-
     m_requestWebOrigin = WebOrigin::createDocumentOrigin(m_requestData->m_url);
 
-    {
-        STARFISH_ASSERT(
-            !((m_requestData->m_syncLevel == RequestSyncLevel::AlwaysSync) &&
-              m_timeout != 0));
-        shouldAbort = m_progressState >= ProgressState::LoadStart;
-    }
+    m_responseData = new ResponseData();
+    m_responseHeaders = new HeadersData();
+
+    STARFISH_ASSERT(
+        !((m_requestData->m_syncLevel == RequestSyncLevel::AlwaysSync) &&
+          m_timeout != 0));
+    shouldAbort = m_progressState >= ProgressState::LoadStart;
+
     if (shouldAbort) {
         abort(true);
     }
-    {
-        initVariables();
-    }
-
-    STARFISH_ASSERT(!m_jobDelegate);
+    initVariables();
 
     m_jobDelegate = ResourceRequestJobDelegateFactory::createJob(this);
     changeReadyState(ReadyState::Opened, true);
@@ -328,9 +326,16 @@ bool ResourceRequest::isSameOriginRequest()
     return document()->webOrigin()->isSameOrigin(m_requestWebOrigin);
 }
 
-void ResourceRequest::setRequestHeader(String* h, String* c)
+void ResourceRequest::setRequestHeader(String* name, String* value)
 {
-    m_requestHeaders.push_back(std::make_pair(h, c));
+    // Do not use HeadersData's append here, becuase name will change to lower
+    // in the append. but xhr's behavior of append should not work that way
+    m_requestHeaders->httpHeaderMap()->append(CSTR(name), CSTR(value));
+}
+
+void ResourceRequest::deleteRequestHeader(String* name)
+{
+    m_requestHeaders->httpHeaderMap()->remove(CSTR(name));
 }
 
 EncodeType ResourceRequest::toEncodeType(String* input)

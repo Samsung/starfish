@@ -27,6 +27,7 @@
 #include "core/page/EventSource.h"
 #include "core/page/EventSourceParser.h"
 #include "core/page/Window.h"
+#include "platform/network/http/HTTPHeaderMap.h"
 #include "platform/network/http/HTTPStatus.h"
 #include "core/csp/ContentSecurityPolicy.h"
 
@@ -224,19 +225,6 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
     m_resourceRequest->addResourceRequestClient(
         new EventSourceResourceRequestClient(this));
 
-    m_resourceRequest->m_requestHeaders.push_back(
-        std::make_pair(String::createASCIIString("Accept"),
-                       String::createASCIIString("text/event-stream")));
-    m_resourceRequest->m_requestHeaders.push_back(
-        std::make_pair(String::createASCIIString("Cache-Control"),
-                       String::createASCIIString("no-cache")));
-
-    if (m_parser && !m_parser->lastEventId()->isEmpty()) {
-        m_resourceRequest->m_requestHeaders.push_back(
-            std::make_pair(String::createASCIIString("Last-Event-ID"),
-                           m_parser->lastEventId()));
-    }
-
     m_url = fullURL;
     connectFired();
 
@@ -258,15 +246,12 @@ void EventSource::connect()
     }
 
     if (m_parser && !m_parser->lastEventId()->isEmpty()) {
-        auto& header = m_resourceRequest->m_requestHeaders;
-        header.erase(std::remove_if(header.begin(), header.end(),
-                                    [](const std::pair<String*, String*>& o) {
-                                        return o.first->equals("Last-Event-ID");
-                                    }),
-                     header.end());
-        header.push_back(
-            std::make_pair(String::createASCIIString("Last-Event-ID"),
-                           m_parser->lastEventId()));
+        m_resourceRequest->deleteRequestHeader(
+            String::createASCIIString(HTTPHeaderMap::kLastEventID));
+
+        m_resourceRequest->setRequestHeader(
+            String::createASCIIString(HTTPHeaderMap::kLastEventID),
+            m_parser->lastEventId());
     }
 
     if (m_readyState == CONNECTING) {
@@ -301,6 +286,21 @@ void EventSource::start(String* method)
     }
 
     m_resourceRequest->open(reqData);
+
+    m_resourceRequest->setRequestHeader(
+        String::createASCIIString(HTTPHeaderMap::kAccept),
+        String::createASCIIString("text/event-stream"));
+
+    m_resourceRequest->setRequestHeader(
+        String::createASCIIString(HTTPHeaderMap::kCacheControl),
+        String::createASCIIString("no-cache"));
+
+    if (m_parser && !m_parser->lastEventId()->isEmpty()) {
+        m_resourceRequest->setRequestHeader(
+            String::createASCIIString(HTTPHeaderMap::kLastEventID),
+            m_parser->lastEventId());
+    }
+
     m_resourceRequest->send();
 }
 

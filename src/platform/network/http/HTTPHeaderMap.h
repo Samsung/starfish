@@ -62,6 +62,7 @@ namespace Starfish {
     F(kIfRange, "If-Range")                                           \
     F(kIfUnmodifiedSince, "If-Unmodified-Since")                      \
     F(kLastModified, "Last-Modified")                                 \
+    F(kLastEventID, "Last-Event-ID")                                  \
     F(kMaxForwards, "Max-Forwards")                                   \
     F(kOrigin, "Origin")                                              \
     F(kProxyAuthorization, "Proxy-Authorization")                     \
@@ -98,13 +99,13 @@ public:
 
     // map interface
     unsigned long length();
-    HeaderMap::iterator findHeader(const std::string& name);
-    HeaderMap::const_iterator findHeader(const std::string& name) const;
+    HeaderMap::iterator find(const std::string& name);
+    HeaderMap::const_iterator find(const std::string& name) const;
     bool extractHeaderListValues(std::vector<std::string>& out,
                                  const std::string& name) const;
 
-    void setHeader(const std::string& name, const std::string& value);
-    void removeHeader(const std::string& name);
+    void append(const std::string& name, const std::string& value);
+    void remove(const std::string& name);
     void clear();
 
     struct curl_slist* generateCurlList();
