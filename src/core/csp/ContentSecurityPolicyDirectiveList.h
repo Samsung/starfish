@@ -52,6 +52,7 @@ private:
     ContentSecurityPolicy* m_contentSecurityPolicy;
     ResourceURL* m_contextURL;
 
+    ContentSecurityPolicySourceListDirective* m_baseURI;
     ContentSecurityPolicySourceListDirective* m_connectSrc;
     ContentSecurityPolicySourceListDirective* m_defaultSrc;
     ContentSecurityPolicySourceListDirective* m_frameSrc;
@@ -62,6 +63,8 @@ private:
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_baseURI));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_connectSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,

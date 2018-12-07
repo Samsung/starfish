@@ -1,7 +1,7 @@
-#http://web-platform.test:8000/content-security-policy/base-uri/base-uri-allow.sub.html
-#http://web-platform.test:8000/content-security-policy/base-uri/base-uri-deny.sub.html
-#http://web-platform.test:8000/content-security-policy/base-uri/base-uri_iframe_sandbox.sub.html
-#http://web-platform.test:8000/content-security-policy/base-uri/report-uri-does-not-respect-base-uri.sub.html
+http://web-platform.test:8000/content-security-policy/base-uri/base-uri-allow.sub.html
+http://web-platform.test:8000/content-security-policy/base-uri/base-uri-deny.sub.html
+#http://web-platform.test:8000/content-security-policy/base-uri/base-uri_iframe_sandbox.sub.html # inheritance
+#http://web-platform.test:8000/content-security-policy/base-uri/report-uri-does-not-respect-base-uri.sub.html # Response Header
 #
 #
 http://web-platform.test:8000/content-security-policy/blob/blob-urls-do-not-match-self.sub.html
