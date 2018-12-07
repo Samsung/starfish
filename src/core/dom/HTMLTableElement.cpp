@@ -39,7 +39,7 @@ namespace Starfish {
         }                                                                    \
         CSSStyleValuePair pair;                                              \
         CSSTokenVector tokens;                                               \
-        CSSTokenValue token = border->toNullableUTF8String().m_buffer;       \
+        CSSTokenValue token(std::move(border->toUTF8NonGCString()));         \
         tokens.push_back(token);                                             \
         if (pair.updateValueBorder##POS##Width(document(), tokens)) {        \
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Width); \
@@ -51,7 +51,7 @@ namespace Starfish {
     {                                                                        \
         CSSStyleValuePair pair;                                              \
         CSSTokenVector tokens;                                               \
-        CSSTokenValue token = bordercolor->toNullableUTF8String().m_buffer;  \
+        CSSTokenValue token(std::move(bordercolor->toUTF8NonGCString()));    \
         tokens.push_back(token);                                             \
         if (pair.updateValueBorder##POS##Color(document(), tokens)) {        \
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Border##POS##Color); \
@@ -297,7 +297,8 @@ void HTMLTableElement::styleForPresentationAttribute(
 
         CSSStyleValuePair pair;
         CSSTokenVector tokens;
-        CSSTokenValue token = w->toNullableUTF8String().m_buffer;
+        CSSTokenValue token(std::move(w->toUTF8NonGCString()));
+        ;
         tokens.push_back(token);
         if (pair.updateValueWidth(document(), tokens)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Width);
@@ -309,7 +310,7 @@ void HTMLTableElement::styleForPresentationAttribute(
         getAttributeOrEmpty(starfish()->staticStrings()->m_bgcolor);
     if (!bgColor->isEmpty()) {
         CSSStyleValuePair pair;
-        CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
+        CSSTokenValue token(std::move(bgColor->toUTF8NonGCString()));
         if (pair.updateValueUnitColor(token)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
             cssValues.push_back(pair);
@@ -327,7 +328,7 @@ void HTMLTableElement::styleForPresentationAttribute(
         }
         CSSStyleValuePair pair;
         CSSTokenVector tokens;
-        CSSTokenValue token = value->toNullableUTF8String().m_buffer;
+        CSSTokenValue token(std::move(value->toUTF8NonGCString()));
         tokens.push_back(token);
         if (pair.updateValueBorderSpacing(document(), tokens)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BorderSpacing);

@@ -1284,8 +1284,7 @@ String* CSSStyleDeclaration::customProperty(String* key)
     return val;
 }
 
-void CSSStyleDeclaration::setCustomProperty(String* key, String* value,
-                                            size_t len)
+void CSSStyleDeclaration::setCustomProperty(String* key, String* value)
 {
     for (size_t i = 0; i < m_cssCustomValues.size(); i++) {
         MutablePropertyValue property = m_cssCustomValues[i];
@@ -1587,9 +1586,28 @@ String* CSSStyleDeclaration::item(uint32_t index)
 
 String* CSSStyleDeclaration::getPropertyValue(String* name)
 {
-    auto str = name->toASCIILower()->toNullableUTF8String();
-    CSSStyleValuePair::KeyKind kind =
-        lookupCSSStyle(str.m_buffer, str.m_bufferSize);
+    struct Sender {
+        CSSStyleValuePair::KeyKind kind;
+    } sender;
+    name->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            Sender* s = (Sender*)data;
+
+            char* mutableBuf = ALLOCA(len, char);
+            memcpy(mutableBuf, buf, len);
+
+            for (size_t i = 0; i < len; i++) {
+                mutableBuf[i] = tolower(mutableBuf[i]);
+            }
+
+            s->kind = lookupCSSStyle(mutableBuf, len);
+
+            return 0;
+        },
+        &sender);
+
+    CSSStyleValuePair::KeyKind kind = sender.kind;
+
     String* val = String::emptyString;
     switch (kind) {
 #define MATCH_KEY(Name, ...)               \
@@ -1608,9 +1626,27 @@ String* CSSStyleDeclaration::getPropertyValue(String* name)
 // https://drafts.csswg.org/cssom/#dom-cssstyledeclaration-getpropertypriority
 String* CSSStyleDeclaration::getPropertyPriority(String* name)
 {
-    auto str = name->toASCIILower()->toNullableUTF8String();
-    CSSStyleValuePair::KeyKind kind =
-        lookupCSSStyle(str.m_buffer, str.m_bufferSize);
+    struct Sender {
+        CSSStyleValuePair::KeyKind kind;
+    } sender;
+    name->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            Sender* s = (Sender*)data;
+
+            char* mutableBuf = ALLOCA(len, char);
+            memcpy(mutableBuf, buf, len);
+
+            for (size_t i = 0; i < len; i++) {
+                mutableBuf[i] = tolower(mutableBuf[i]);
+            }
+
+            s->kind = lookupCSSStyle(mutableBuf, len);
+
+            return 0;
+        },
+        &sender);
+
+    CSSStyleValuePair::KeyKind kind = sender.kind;
     auto iter = std::find_if(
         m_cssValues.begin(), m_cssValues.end(),
         [kind](CSSStyleValuePair p) { return p.keyKind() == kind; });
@@ -1624,34 +1660,52 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
                                       String* prior)
 {
     bool isImportant = false;
-    auto str = name->toNullableUTF8String();
-    CSSStyleValuePair::KeyKind kind =
-        lookupCSSStyle(str.m_buffer, str.m_bufferSize);
+    struct Sender {
+        CSSStyleValuePair::KeyKind kind;
+    } sender;
+    name->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            Sender* s = (Sender*)data;
+
+            char* mutableBuf = ALLOCA(len, char);
+            memcpy(mutableBuf, buf, len);
+
+            for (size_t i = 0; i < len; i++) {
+                mutableBuf[i] = tolower(mutableBuf[i]);
+            }
+
+            s->kind = lookupCSSStyle(mutableBuf, len);
+
+            return 0;
+        },
+        &sender);
+
+    CSSStyleValuePair::KeyKind kind = sender.kind;
 
     if (prior->length() > 0) {
         if (prior->equalsIgnoreCase("important")) {
             isImportant = true;
         } else {
             if (kind == CSSStyleValuePair::KeyKind::CustomProperty) {
-                setCustomProperty(name, value, str.m_bufferSize);
+                setCustomProperty(name, value);
             }
             return;
         }
     }
 
-    struct Sender {
+    struct Sender2 {
         CSSStyleDeclaration* self;
         CSSStyleValuePair::KeyKind kind;
         bool isImportant;
-    } sender;
-    sender.self = this;
-    sender.kind = kind;
-    sender.isImportant = isImportant;
+    } sender2;
+    sender2.self = this;
+    sender2.kind = kind;
+    sender2.isImportant = isImportant;
     value->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
-            CSSStyleValuePair::KeyKind kind = ((Sender*)data)->kind;
-            CSSStyleDeclaration* self = ((Sender*)data)->self;
-            bool isImportant = ((Sender*)data)->isImportant;
+            CSSStyleValuePair::KeyKind kind = ((Sender2*)data)->kind;
+            CSSStyleDeclaration* self = ((Sender2*)data)->self;
+            bool isImportant = ((Sender2*)data)->isImportant;
             if (kind == CSSStyleValuePair::KeyKind::Unknown) {
             } else {
                 switch (kind) {
@@ -1669,7 +1723,7 @@ void CSSStyleDeclaration::setProperty(String* name, String* value,
             }
             return 0;
         },
-        &sender);
+        &sender2);
 }
 
 String* CSSStyleDeclaration::cssText() const
@@ -1721,13 +1775,23 @@ void CSSStyleDeclaration::defaultNamedEnumerator(GCVector<String*>& enums)
 bool CSSStyleDeclaration::defaultNamedSetter(String* name,
                                              Nullable<String*> value)
 {
-    auto str = name->toNullableUTF8String();
-    CSSStyleValuePair::KeyKind kind =
-        lookupCSSStyleCamelCase(str.m_buffer, str.m_bufferSize);
+    struct Sender {
+        CSSStyleValuePair::KeyKind kind;
+    } sender;
 
-    if (kind == CSSStyleValuePair::KeyKind::Unknown) {
-        kind = lookupCSSStyle(str.m_buffer, str.m_bufferSize);
-    }
+    name->peekUTF8Buffer(
+        [](const char* buf, size_t len, void* data) -> size_t {
+            Sender* s = (Sender*)data;
+            s->kind = lookupCSSStyleCamelCase(buf, len);
+            if (s->kind == CSSStyleValuePair::KeyKind::Unknown) {
+                s->kind = lookupCSSStyle(buf, len);
+            }
+            return 0;
+        },
+        &sender);
+
+    CSSStyleValuePair::KeyKind kind = sender.kind;
+
     if (kind == CSSStyleValuePair::KeyKind::Unknown) {
         return false;
     }
@@ -1741,17 +1805,17 @@ bool CSSStyleDeclaration::defaultNamedSetter(String* name,
         valueTo = value.getValue();
     }
 
-    struct Sender {
+    struct Sender2 {
         CSSStyleDeclaration* self;
         CSSStyleValuePair::KeyKind kind;
-    } sender;
-    sender.self = this;
-    sender.kind = kind;
+    } sender2;
+    sender2.self = this;
+    sender2.kind = kind;
 
     valueTo->peekUTF8Buffer(
         [](const char* buf, size_t len, void* data) -> size_t {
-            CSSStyleValuePair::KeyKind kind = ((Sender*)data)->kind;
-            CSSStyleDeclaration* self = ((Sender*)data)->self;
+            CSSStyleValuePair::KeyKind kind = ((Sender2*)data)->kind;
+            CSSStyleDeclaration* self = ((Sender2*)data)->self;
             switch (kind) {
 #define SET_ATTR(name, ...)                  \
     case CSSStyleValuePair::KeyKind::name: { \
@@ -1766,7 +1830,7 @@ bool CSSStyleDeclaration::defaultNamedSetter(String* name,
 
             return 0;
         },
-        &sender);
+        &sender2);
     return true;
 }
 

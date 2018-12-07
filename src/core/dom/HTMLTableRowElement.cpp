@@ -64,7 +64,7 @@ void HTMLTableRowElement::styleForPresentationAttribute(
         getAttributeOrEmpty(starfish()->staticStrings()->m_bgcolor);
     if (!bgColor->equals(String::emptyString)) {
         CSSStyleValuePair pair;
-        CSSTokenValue token = bgColor->toNullableUTF8String().m_buffer;
+        CSSTokenValue token(std::move(bgColor->toUTF8NonGCString()));
         if (pair.updateValueUnitColor(token)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::BackgroundColor);
             cssValues.push_back(pair);

@@ -258,33 +258,92 @@ StaticStrings* fetchStaticStrings(ContextRef* ctx)
     return fetchWebView(ctx)->starfish()->staticStrings();
 }
 
+class EscargotStringView : public String {
+public:
+    EscargotStringView(StringRef* str)
+        : String()
+        , m_data(str)
+    {
+    }
+
+    virtual size_t length() const override
+    {
+        return m_data->length();
+    }
+
+    virtual char32_t charAt(const size_t& idx) const override
+    {
+        return m_data->charAt(idx);
+    }
+
+    virtual StringBufferAccessData bufferAccessData() const override
+    {
+        auto jsBufData = m_data->stringBufferAccessData();
+        StringBufferAccessData ret;
+        ret.bufferDataKind = jsBufData.has8BitContent
+                                 ? StringBufferAccessData::ASCIIData
+                                 : StringBufferAccessData::BMPData;
+        ret.isNullTerminated = false;
+        ret.buffer = jsBufData.buffer;
+        ret.length = jsBufData.length;
+        return ret;
+    }
+
+    void* operator new(size_t size)
+    {
+        STARFISH_ASSERT(size == sizeof(EscargotStringView));
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word obj_bitmap[GC_BITMAP_SIZE(EscargotStringView)] = { 0 };
+            GC_set_bit(obj_bitmap, GC_WORD_OFFSET(EscargotStringView, m_data));
+            descr =
+                GC_make_descriptor(obj_bitmap, GC_WORD_LEN(EscargotStringView));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    StringRef* m_data;
+};
+
 static String* toBrowserString(StringRef* v)
 {
     auto bufData = v->stringBufferAccessData();
-
     if (bufData.has8BitContent) {
-        ASCIIString fastCase;
-        fastCase.reserve(bufData.length);
         bool hasASCIIContent = true;
         for (size_t i = 0; i < bufData.length; i++) {
             StringRef::StringBufferAccessDataRef::LChar ch =
                 bufData.uncheckedCharAtFor8Bit(i);
-            if (LIKELY(ch < 128)) {
-                fastCase.push_back(ch);
-            } else {
+            if (UNLIKELY(ch >= 128)) {
                 hasASCIIContent = false;
                 break;
             }
         }
 
         if (hasASCIIContent) {
-            return new StringDataASCII(std::move(fastCase));
+            return new EscargotStringView(v);
         } else {
             auto b = v->toStdUTF8String();
             return String::fromUTF8(b.data(), b.length());
         }
     } else {
-        return String::fromUTF16((char16_t*)bufData.buffer, bufData.length);
+        bool hasBMPContent = true;
+        for (size_t i = 0; i < bufData.length; i++) {
+            auto ch = bufData.uncheckedCharAtFor16Bit(i);
+            if (UNLIKELY(U16_IS_LEAD(ch))) {
+                hasBMPContent = false;
+                break;
+            }
+        }
+
+        if (hasBMPContent) {
+            return new EscargotStringView(v);
+        } else {
+            return String::fromUTF16((char16_t*)bufData.buffer, bufData.length);
+        }
     }
 }
 

@@ -263,7 +263,7 @@ const char* utf16ToUtf8(const char16_t* t, const size_t& len,
 {
     unsigned strLength = 0;
     char buffer[8];
-    for (size_t i = 0; i < len;) {
+    for (size_t i = 0; i < len; /* U16_NEXT post-increments */) {
         char32_t c;
         U16_NEXT(t, i, len, c);
         int length = utf32ToUtf8(c, buffer);
@@ -275,7 +275,7 @@ const char* utf16ToUtf8(const char16_t* t, const size_t& len,
         *bufferSize = strLength + 1;
     unsigned currentPosition = 0;
 
-    for (size_t i = 0; i < len; i++) {
+    for (size_t i = 0; i < len; /* U16_NEXT post-increments */) {
         char32_t c;
         U16_NEXT(t, i, len, c);
         int length = utf32ToUtf8(c, buffer);
@@ -1958,6 +1958,9 @@ size_t String::peekUTF8Buffer(size_t (*cb)(const char* buffer, size_t len,
 
             buf[realUsage] = 0;
             STARFISH_ASSERT(realUsage <= (bufData.length * 6) + 1);
+            STARFISH_ASSERT((realUsage == toUTF8NonGCString().length()) &&
+                            (memcmp(toUTF8NonGCString().data(), buf,
+                                    toUTF8NonGCString().length()) == 0));
             return cb(buf, realUsage, data);
         }
     }

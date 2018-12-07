@@ -42,9 +42,10 @@ Element* DocumentFragment::getElementById(String* id)
     if (id->length() == 0) {
         return nullptr;
     }
+
+    AtomicString aid = AtomicString::createAtomicString(starfish(), id);
     return (Element*)Traverse::findDescendant(this, [&](Node* child) {
-        if (child->isHTMLElement() && child->asHTMLElement()->hasId() &&
-            child->asHTMLElement()->id()->equals(id)) {
+        if (child->isElement() && child->asElement()->atomicId() == aid) {
             return true;
         } else {
             return false;

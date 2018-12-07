@@ -212,8 +212,8 @@ std::vector<FontCairoTextRun> generateFontCairoTextRuns(const String* text,
                                                         FontImplCairo* font)
 {
     std::vector<FontCairoTextRun> result;
-    size_t length = text->length();
     auto accessData = text->bufferAccessData();
+    size_t length = accessData.length;
     UErrorCode errorCode = U_ZERO_ERROR;
     for (size_t i = 0; i < length;) {
         size_t pos = 0;

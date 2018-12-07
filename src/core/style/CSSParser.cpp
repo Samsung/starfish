@@ -1728,9 +1728,8 @@ CSSParser::ParseResult CSSParser::parseDeclaration(
                                             // https://www.w3.org/TR/css-variables-1/
                                             String* key = ((Sender*)data)->key;
                                             declaration->setCustomProperty(
-                                                key, String::createASCIIString(
-                                                         value),
-                                                len);
+                                                key,
+                                                String::fromUTF8(value, len));
                                         } break;
 #define SET_ATTR(name, nameLower, nameCSSCase)        \
     case CSSStyleValuePair::KeyKind::name: {          \

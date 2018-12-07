@@ -149,11 +149,12 @@ void HTMLFontElement::styleForPresentationAttribute(
         CSSStyleValuePair pair;
         String* color =
             getAttributeOrEmpty(starfish()->staticStrings()->m_color);
-        auto utf8Str = color->toNullableUTF8String();
+
+        CSSTokenValue utf8Str(std::move(color->toUTF8NonGCString()));
         // TODO: Some obsolete legacy attributes parse colors in a more
         // complicated manner, using the rules for parsing a legacy color value.
         // https://html.spec.whatwg.org/multipage/common-microsyntaxes.html#rules-for-parsing-a-legacy-colour-value
-        if (pair.updateValueUnitColor(utf8Str.m_buffer)) {
+        if (pair.updateValueUnitColor(utf8Str)) {
             pair.setKeyKind(CSSStyleValuePair::KeyKind::Color);
             cssValues.push_back(pair);
         }

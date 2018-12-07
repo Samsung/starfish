@@ -892,11 +892,13 @@ public:
             ecore_imf_context_del(m_imfContext);
         }
 
+        ecore_imf_shutdown();
+
         evas_object_hide(m_graphicsAdapter);
 #if defined(PORT_WINDOW_BACKEND_GL)
         evas_object_image_native_surface_set(m_graphicsAdapter, NULL);
-        evas_gl_context_destroy(m_glEvasgl, m_glCtx);
         evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
+        evas_gl_context_destroy(m_glEvasgl, m_glCtx);
         evas_gl_config_free(m_glCfg);
         evas_gl_free(m_glEvasgl);
 #endif
