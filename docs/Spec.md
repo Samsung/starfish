@@ -474,6 +474,7 @@ section are supported.
 | [HTMLImageElement](https://html.spec.whatwg.org/multipage/embedded-content.html#the-img-element) | interface | HTMLImageElement | Represents an image. |
 |  | constructor | Image(optional unsigned long width = 0, optional unsigned long height = 0) |  |
 |  | attribute | src | Reflects the src HTML attribute, containing the full URL of the image including base URI. |
+|  | attribute | crossOrigin | A DOMString representing the CORS setting for this image element. |
 |  | attribute | width | Reflects the width HTML attribute, indicating the rendered width of the image in CSS pixels. |
 |  | attribute | height | Reflects the height HTML attribute, indicating the rendered height of the image in CSS pixels. |
 |  | attribute | referrerPolicy | Reflects the referrerpolicy HTML attribute indicating which referrer to use when fetching the linked resource. |
@@ -521,6 +522,7 @@ section are supported.
 |  | attribute  | type | Returns the style of the bullet point of a list item in a list. |
 | [HTMLLinkElement](https://html.spec.whatwg.org/multipage/semantics.html#the-link-element) | interface | HTMLLinkElement | The HTMLLinkElement interface represents reference information for external resources and the relationship of those resources to a document and vice-versa |
 |  | attribute | href | Is a DOMString representing the URI for the target resource. |
+|  | attribute | crossOrigin | A DOMString that corresponds to the CORS setting for this link element. |
 |  | attribute | rel | Is a DOMString representing the forward relationship of the linked resource from the document to the resource. |
 |  | attribute | relList | Is a DOMTokenList that reflects the rel HTML attribute, as a list of tokens. |
 |  | attribute | media | Is a DOMString representing a list of one or more media formats to which the resource applies. |
@@ -547,6 +549,7 @@ section are supported.
 |  | enum | CanPlayTypeResult | "", "maybe", "probably" |
 |  | attribute | src | Is a DOMString that reflects the src HTML attribute, which contains the URL of a media resource to use. |
 |  | attribute | currentSrc | Returns a DOMString with the absolute URL of the chosen media resource. |
+|  | attribute | crossOrigin | A DOMString indicating the CORS setting for this media element. |
 |  | constant | NETWORK_EMPTY = 0 |  |
 |  | constant | NETWORK_IDLE = 1 |  |
 |  | constant | NETWORK_LOADING = 2 |  |
@@ -597,6 +600,7 @@ section are supported.
 |  | attribute | noModule | Stops the script's execution in browsers. |
 |  | attribute | charset | Character encoding of the external script resource.<br>Allowed value: UTF-8 |
 |  | attribute | text | Return the child text content of the script element |
+|  | attribute | crossOrigin | A DOMString reflecting the CORS setting for the script element. |
 |  | attribute | event | An old, quirky way of registering event handlers on elements in an HTML document. |
 |  | attribute | htmlFor | Use DOM events mechanisms to register event listeners. |
 | [HTMLSelectElement](https://html.spec.whatwg.org/#the-select-element) | interface | HTMLSelectElement |  The select element represents a control for selecting amongst a set of options. |
@@ -1390,6 +1394,7 @@ XMLHttpRequest is a constructor object. It is created by a `new` command, e.g., 
 | | attribute	| readyState*	| Returns the current state, which is one of the readyState code shown below.|
 | | method    | void open(ByteString method, DOMString url, boolean async = true, optional DOMString? username = null, optional DOMString? password = null)    | Sets the request method, request URL, and synchronous flag. Supported request method : GET, POST |
 | | method    | void setRequestHeader(ByteString name, ByteString value)    | Combines a header in author request headers. |
+| | attribute | upload | Returns an XMLHttpRequestUpload object that can be observed to monitor the progress of an upload. |
 | | method    | void send(optional DOMString? body = null)    | Initiates the request. The optional 'data' argument allows only UTF-8 encoded string type. The argument is ignored if request method is GET. |
 | | method    | void abort()    | Cancels any network activity. |
 | | method    | ByteString getAllResponseHeaders()    | Returns a string that contains all response headers. |
