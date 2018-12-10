@@ -815,7 +815,8 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
             STARFISH_LOG_INFO("GL_EXTENSIONS -> returns null...\n");
         }
 
-#if !defined(STARFISH_TIZEN) && !defined(STARFISH_ANDROID)
+#if (!defined(STARFISH_TIZEN) && !defined(STARFISH_ANDROID)) || \
+    (defined(STARFISH_ANDROID) && !defined(USE_EGLIMAGE_EXT_ANDROID))
         g_isSupportExtensionEGLImageExternal = false;
 #endif
 
@@ -860,7 +861,7 @@ public:
 #if defined(STARFISH_TIZEN)
         m_tbmSurface = nullptr;
         m_eglImage = nullptr;
-#elif defined(STARFISH_ANDROID)
+#elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
         m_aHardwareBuffer = nullptr;
         m_eglImage = nullptr;
 #endif
@@ -916,7 +917,7 @@ public:
                     tbm_surface_destroy(m_tbmSurface);
                 }
                 m_tbmSurface = nullptr;
-#elif defined(STARFISH_ANDROID)
+#elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
                 EGLDisplay display = eglGetCurrentDisplay();
                 eglDestroyImageKHR(display, m_eglImage);
 
@@ -984,7 +985,7 @@ public:
                 STARFISH_RELEASE_ASSERT(surfaceInfo.num_planes == 1);
                 m_bufferStride = surfaceInfo.planes[0].stride;
                 m_buffer = nullptr;
-#elif defined(STARFISH_ANDROID)
+#elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
                 AHardwareBuffer_Desc desc{
                     m_bufferWidth, m_bufferHeight, 1,
                     AHARDWAREBUFFER_FORMAT_R8G8B8A8_UNORM,
@@ -1049,7 +1050,7 @@ public:
                     eglImgAttr);
                 checkError();
             }
-#elif defined(STARFISH_ANDROID)
+#elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
             {
                 STARFISH_RELEASE_ASSERT(m_aHardwareBuffer);
                 STARFISH_RELEASE_ASSERT(m_eglImage == nullptr);
@@ -1073,10 +1074,12 @@ public:
                 }
             }
 #endif
+
+#if defined(USE_EGLIMAGE_EXT_ANDROID) || !defined(STARFISH_ANDROID)
             if (nullptr == m_eglImage) {
                 STARFISH_LOG_INFO("result of eglCreateImageKHR is fail\n");
             }
-
+#endif
             {
                 GLuint textureID;
                 glGenTextures(1, &textureID);
@@ -1102,7 +1105,7 @@ public:
 #elif defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
                 g_evasGLAPI->glEvasGLImageTargetTexture2DOES(
                     GL_TEXTURE_EXTERNAL_OES, m_eglImage);
-#elif defined(STARFISH_ANDROID)
+#elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
                 glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES,
                                              m_eglImage);
 #endif
@@ -1211,7 +1214,7 @@ public:
             STARFISH_RELEASE_ASSERT(surfaceInfo.planes[0].stride ==
                                     m_bufferStride);
             m_buffer = surfaceInfo.planes[0].ptr;
-#elif defined(STARFISH_ANDROID)
+#elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
             AHardwareBuffer_lock(m_aHardwareBuffer,
                                  AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN |
                                      AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN,
@@ -1271,7 +1274,7 @@ public:
                 LongTaskFinder t("tbm_surface_unmap", 1);
                 tbm_surface_unmap(m_tbmSurface);
             }
-#elif defined(STARFISH_ANDROID)
+#elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
             int32_t fence = -1;
             AHardwareBuffer_unlock(m_aHardwareBuffer, &fence);
 #endif
@@ -1372,7 +1375,7 @@ public:
             m_isEGLImageNeedsFlipRGB = true;
             break;
         }
-#elif defined(STARFISH_ANDROID)
+#elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
         m_aHardwareBuffer = (AHardwareBuffer*)buffer;
         AHardwareBuffer_Desc outDesc;
         AHardwareBuffer_describe(m_aHardwareBuffer, &outDesc);
@@ -1422,7 +1425,7 @@ protected:
 #elif defined(STARFISH_TIZEN)
     tbm_surface_h m_tbmSurface;
     EGLImageKHR m_eglImage;
-#elif defined(STARFISH_ANDROID)
+#elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
     AHardwareBuffer* m_aHardwareBuffer;
     EGLImageKHR m_eglImage;
 #endif

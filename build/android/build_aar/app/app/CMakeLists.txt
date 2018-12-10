@@ -185,6 +185,7 @@ set_target_properties( png-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}
 
 add_library( skia-lib SHARED IMPORTED )
 set_target_properties( skia-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libskia_shared.so )
+#set_target_properties( skia-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libhwui.so )
 
 add_library( jpeg-lib SHARED IMPORTED )
 set_target_properties( jpeg-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libjpeg.so )
@@ -198,11 +199,11 @@ set_target_properties( curl-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH
 add_library( crypto-lib SHARED IMPORTED )
 set_target_properties( crypto-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libcrypto.so )
 
-#add_library( icui18n-lib SHARED IMPORTED )
-#set_target_properties( icui18n-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicui18n.so )
+add_library( icui18n-lib SHARED IMPORTED )
+set_target_properties( icui18n-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicui18n.so )
 
-#add_library( icuuc-lib SHARED IMPORTED )
-#set_target_properties( icuuc-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicuuc.so )
+add_library( icuuc-lib SHARED IMPORTED )
+set_target_properties( icuuc-lib PROPERTIES IMPORTED_LOCATION ${PREBUILT_LIB_PATH}/libicuuc.so )
 
 target_link_libraries( # Specifies the target library.
                        lightweightwebengine
@@ -225,4 +226,5 @@ target_link_libraries( # Specifies the target library.
                        ${log-lib}
                        ${OPENGL_LIB}
                        ${android-lib}
-                       EGL)
+                       EGL
+                        )
