@@ -61,7 +61,7 @@ bool ContentSecurityPolicySourceListDirective::parseNonce(String* source)
         // make a substring without the last single quote
         auto prefixLength = prefix->length();
         auto nonceLength = source->length() - prefixLength - 1;
-        if (nonceLength < 0) {
+        if (!nonceLength) {
             return false;
         }
         auto nonceValue = source->substring(prefixLength, nonceLength);
@@ -105,7 +105,7 @@ bool ContentSecurityPolicySourceListDirective::parseHash(String* source)
             auto prefixLength = prefix->length();
             hashAlgorithmType = supportedPrefixes[i].type;
             auto base64Length = source->length() - prefixLength - 1;
-            if (base64Length < 0) {
+            if (!base64Length) {
                 return false;
             }
             // make a substring without the last single quote
