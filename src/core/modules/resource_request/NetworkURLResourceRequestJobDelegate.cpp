@@ -58,6 +58,7 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     , lastTransactionResponseCode(0)
     , corsFlag(false)
     , corsPreflightFlag(false)
+    , hasCorsUnsafeRequestHeaderNames(false)
     , needsToSendPreflightRequest(false)
     , request(orgRequest)
     , helper(nullptr)
@@ -89,8 +90,7 @@ void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     if (nwd->needsToSendPreflightRequest) {
         nwd->httpTransaction->startPreFlightRequest();
-        if (!nwd->httpTransaction->httpResponse()
-                 .isSuccessfulResponseStatus() ||
+        if (nwd->httpTransaction->httpResponse().isSuccessfulResponseStatus() &&
             nwd->needsToHandleError) {
             nwd->helper->abortHandlerWrapper(nwd);
             return nullptr;
@@ -328,13 +328,6 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         nwd->workingTime += end - start;
 #endif
     }
-
-    fillHeadersWithClientHeaders(headers);
-    fillHeadersWithGeneralHeaders(headers);
-
-    auto urlUTF8Data = m_orgProxy->url()->urlString()->toUTF8NonGCString();
-    auto hostUTF8Data = m_orgProxy->url()->host()->toUTF8NonGCString();
-    auto bodyUTF8Data = body->toUTF8NonGCString();
     bool includeCredentials = false;
     switch (m_orgProxy->requestCredentials()) {
     case RequestCredentials::SameOrigin:
@@ -353,25 +346,13 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->requestMode() == RequestMode::Navigate) {
         includeCredentials = true;
     }
-
-    auto method = m_orgProxy->method()->toUTF8NonGCString();
-    nwd->httpTransaction->setHTTPRequest(
-        HTTPRequest::create(urlUTF8Data, hostUTF8Data, method, headers,
-                            bodyUTF8Data, includeCredentials));
-    nwd->httpTransaction->setTimeout(
-        static_cast<unsigned long>(m_orgProxy->m_timeout));
-    nwd->httpTransaction->setProxyURL(m_orgProxy->webView()->proxyURL());
-
-    nwd->httpTransaction->setProgressCallbackAndData(curlProgressCallback, nwd);
-    nwd->httpTransaction->setWriteHeaderCallbackAndData(curlWriteHeaderCallback,
-                                                        nwd);
-    nwd->httpTransaction->setWriteCallbackAndData(curlWriteCallback, nwd);
-
+    auto unsafeHeaders = FetchUtils::corsUnsafeRequestHeaderNames(headers);
+    nwd->hasCorsUnsafeRequestHeaderNames = unsafeHeaders.size() != 0;
     // https://fetch.spec.whatwg.org/#ref-for-use-cors-preflight-flag%E2%91%A1
     if (m_orgProxy->useCorsPreflightFlag() ||
         (m_orgProxy->unsafeRequestFlag() &&
          (!FetchUtils::isCorsSafelistedMethod(m_orgProxy->method()) ||
-          FetchUtils::corsUnsafeRequestHeaderNames(headers).size() != 0))) {
+          nwd->hasCorsUnsafeRequestHeaderNames))) {
         m_orgProxy->setResponseTainting(ResponseTainting::Cors);
         nwd->corsFlag = true;
         nwd->corsPreflightFlag = true;
@@ -380,6 +361,23 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->isSameOriginRequest()) {
         nwd->corsFlag = false;
     }
+
+    fillHeadersWithClientHeaders(headers);
+    fillHeadersWithGeneralHeaders(headers);
+    nwd->httpTransaction->setHTTPRequest(
+        HTTPRequest::create(m_orgProxy->url()->urlString()->toUTF8NonGCString(),
+                            m_orgProxy->url()->host()->toUTF8NonGCString(),
+                            m_orgProxy->method()->toUTF8NonGCString(), headers,
+                            body->toUTF8NonGCString(), includeCredentials));
+    nwd->httpTransaction->httpRequest().setUnsafeRequestHeaderNames(
+        unsafeHeaders);
+    nwd->httpTransaction->setTimeout(
+        static_cast<unsigned long>(m_orgProxy->m_timeout));
+    nwd->httpTransaction->setProxyURL(m_orgProxy->webView()->proxyURL());
+    nwd->httpTransaction->setProgressCallbackAndData(curlProgressCallback, nwd);
+    nwd->httpTransaction->setWriteHeaderCallbackAndData(curlWriteHeaderCallback,
+                                                        nwd);
+    nwd->httpTransaction->setWriteCallbackAndData(curlWriteCallback, nwd);
 
     if (m_orgProxy->isSync()) {
         nwd->helper = new SyncNetworkWorkHelper();
@@ -434,19 +432,20 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
         tmpStr = m_orgProxy->webView()->locale().getName();
         std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
         tmpStr = tmpStr + " , en-US , en";
-        headers.append(HTTPHeaderMap::kAcceptLanguage, tmpStr.data());
+        headers.append(HTTPHeaderMap::kAcceptLanguage, tmpStr);
     }
 
-    headers.append(
-        HTTPHeaderMap::kUserAgent,
-        m_orgProxy->webView()->userAgent()->toUTF8NonGCString().data());
+    headers.append(HTTPHeaderMap::kUserAgent,
+                   m_orgProxy->webView()->userAgent()->toUTF8NonGCString());
 
     headers.append(HTTPHeaderMap::kHost,
-                   m_orgProxy->url()->host()->toUTF8NonGCString().data());
+                   m_orgProxy->url()->host()->toUTF8NonGCString());
 
     if (!m_orgProxy->isSameOriginRequest()) {
-        headers.append(HTTPHeaderMap::kOrigin,
-                       CSTR(m_orgProxy->document()->webOrigin()->serialize()));
+        headers.append(HTTPHeaderMap::kOrigin, m_orgProxy->document()
+                                                   ->webOrigin()
+                                                   ->serialize()
+                                                   ->toUTF8NonGCString());
     }
 
     auto it2 = headers.find(HTTPHeaderMap::kReferer);
@@ -459,7 +458,8 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
             rString = rUrl->urlString();
         }
         if (!rString->isEmpty()) {
-            headers.append(HTTPHeaderMap::kReferer, CSTR(rString));
+            headers.append(HTTPHeaderMap::kReferer,
+                           rString->toUTF8NonGCString());
         }
     }
 }
@@ -548,9 +548,13 @@ void* NetworkURLResourceRequestJobDelegate::worker(void* data)
     if (nwd->corsPreflightFlag) {
         ResourceRequest* request = nwd->request;
         Locker<Mutex> locker(*request->m_mutex);
-        if (!FetchUtils::isCorsSafelistedMethod(request->method()) ||
-            request->useCorsPreflightFlag()) {
+        // https://fetch.spec.whatwg.org/#concept-http-fetch
+        if ((!FetchUtils::isCorsSafelistedMethod(request->method()) ||
+             request->useCorsPreflightFlag()) ||
+            nwd->hasCorsUnsafeRequestHeaderNames) {
             nwd->needsToSendPreflightRequest = true;
+
+            // https://fetch.spec.whatwg.org/#cors-preflight-fetch-0
             request->m_preflightRequestData->m_url =
                 request->m_requestData->m_url;
             request->m_preflightRequestData->m_destination =
@@ -671,10 +675,14 @@ static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
     const auto& resHeaders = nwd->httpTransaction->httpResponse().headers();
 
     std::vector<std::string> methods;
-    bool ret = resHeaders.extractHeaderListValues(
+    bool ret1 = resHeaders.extractHeaderListValues(
         methods, HTTPHeaderMap::kAccessControlAllowMethods);
 
-    if (ret == false) {
+    std::vector<std::string> headerNames;
+    bool ret2 = resHeaders.extractHeaderListValues(
+        headerNames, HTTPHeaderMap::kAccessControlAllowHeaders);
+
+    if (ret1 == false || ret2 == false) {
         return false;
     }
     std::string requestMethod = request->method()->toUTF8NonGCString();
@@ -697,17 +705,54 @@ static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
             hasWildCard = true;
         }
     }
-    if ((!hasRequestMethod && isCorsSafelistedMethod) &&
+    if ((!hasRequestMethod && !isCorsSafelistedMethod) &&
         ((request->requestCredentials() == RequestCredentials::Include) ||
          !hasWildCard)) {
+        STARFISH_LOG_WARN(
+            "Failed to load %s : Request doesn't pass CORS Preflight request, "
+            "please check %s header in reponse\n",
+            nwd->httpTransaction->httpRequest().url().data(),
+            HTTPHeaderMap::kAccessControlAllowMethods);
         return false;
     }
 
-    if (hasRequestMethod || hasWildCard) {
-        return true;
+    auto unsafeNames =
+        nwd->httpTransaction->httpRequest().unsafeRequestHeaderNames();
+
+    bool hasUnsafeName = unsafeNames.size() == 0;
+    for (const auto& unsafeName : unsafeNames) {
+        hasUnsafeName = false;
+        for (const auto& name : headerNames) {
+            if (StringUtils::equalsIgnoreCase(unsafeName, name)) {
+                hasUnsafeName = true;
+                break;
+            }
+        }
+        if (!hasUnsafeName) {
+            break;
+        }
     }
 
-    return false;
+    bool hasWildCardHeaderValue = unsafeNames.size() == 0;
+    for (const auto& name : headerNames) {
+        if (StringUtils::equalsIgnoreCase(whildCard, name)) {
+            hasWildCardHeaderValue = true;
+            break;
+        }
+    }
+
+    if (!hasUnsafeName &&
+        ((request->requestCredentials() == RequestCredentials::Include) ||
+         !hasWildCardHeaderValue)) {
+        STARFISH_LOG_WARN(
+            "Failed to load %s : Request doesn't pass CORS Preflight request, "
+            "please check %s header in reponse\n",
+            nwd->httpTransaction->httpRequest().url().data(),
+            HTTPHeaderMap::kAccessControlAllowHeaders);
+        return false;
+    }
+
+    return true;
 }
 
 // https://fetch.spec.whatwg.org/#concept-cors-check
@@ -790,14 +835,6 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                 if (checkCors(nwd)) {
                     if (nwd->needsToSendPreflightRequest) {
                         if (!checkCORSPreflight(nwd)) {
-                            STARFISH_LOG_WARN(
-                                "Failed to load %s : Request doesn't pass CORS "
-                                "Preflight request, please "
-                                "check %s header in reponse\n",
-                                nwd->httpTransaction->httpRequest()
-                                    .url()
-                                    .data(),
-                                HTTPHeaderMap::kAccessControlAllowMethods);
                             allowed = false;
                         }
                     }

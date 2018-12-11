@@ -135,11 +135,12 @@ struct curl_slist* HTTPHeaderMap::generateCurlList()
     return list;
 }
 
-static bool isClientHeader(const std::string& name)
+static bool isClientOrGeneralHeader(const std::string& name)
 {
     if (name == HTTPHeaderMap::kAcceptLanguage ||
         name == HTTPHeaderMap::kUserAgent || name == HTTPHeaderMap::kHost ||
-        name == HTTPHeaderMap::kOrigin) {
+        name == HTTPHeaderMap::kOrigin || name == HTTPHeaderMap::kReferer ||
+        name == HTTPHeaderMap::kConnection) {
         return true;
     }
     return false;
@@ -150,7 +151,7 @@ curl_slist* HTTPHeaderMap::generateCurlListToPreflightRequest()
     curl_slist* list = nullptr;
     std::string header;
     for (auto it = m_headerMap.begin(); it != m_headerMap.end(); ++it) {
-        if (isClientHeader(it->first)) {
+        if (isClientOrGeneralHeader(it->first)) {
             header = std::string(it->first) + ": " + it->second;
             list = curl_slist_append(list, header.data());
             if (list == nullptr) {
@@ -159,6 +160,25 @@ curl_slist* HTTPHeaderMap::generateCurlListToPreflightRequest()
         }
     }
     return list;
+}
+
+std::string HTTPHeaderMap::generateAccessControlRequestHeaders()
+{
+    std::string header(HTTPHeaderMap::kAccessControlRequestHeaders);
+    header.append(": ");
+    bool hasValue = false;
+    for (auto it = m_headerMap.begin(); it != m_headerMap.end(); ++it) {
+        if (!isClientOrGeneralHeader(it->first)) {
+            if (hasValue) {
+                header.append(",");
+            }
+            header.append(it->first);
+            if (!hasValue) {
+                hasValue = true;
+            }
+        }
+    }
+    return header;
 }
 
 #ifdef STARFISH_ENABLE_TEST

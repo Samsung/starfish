@@ -79,6 +79,7 @@ namespace Starfish {
     F(kAccessControlRequestMethod, "Access-Control-Request-Method")   \
     F(kAccessControlAllowOrigin, "Access-Control-Allow-Origin")       \
     F(kAccessControlAllowMethods, "Access-Control-Allow-Methods")     \
+    F(kAccessControlAllowHeaders, "Access-Control-Allow-Headers")     \
     F(kAccessControlAllowCredentials, "Access-Control-Allow-Credentials")
 
 class HTTPHeaderMap {
@@ -110,6 +111,7 @@ public:
 
     struct curl_slist* generateCurlList();
     struct curl_slist* generateCurlListToPreflightRequest();
+    std::string generateAccessControlRequestHeaders();
 
 #ifdef STARFISH_ENABLE_TEST
     void dump();

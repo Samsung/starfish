@@ -39,5 +39,6 @@ HTTPRequest::HTTPRequest(const std::string& url, const std::string& baseURL,
 
 HTTPRequest::~HTTPRequest()
 {
+    std::vector<std::string>().swap(m_unsafeRequestHeaderNames);
 }
 }

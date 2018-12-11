@@ -22,6 +22,7 @@
 #include "core/fetch/RequestData.h"
 #include "core/modules/threading/Thread.h"
 #include "platform/network/http/HTTPHeaderMap.h"
+#include "core/extra/MimeType.h"
 
 namespace Starfish {
 
@@ -76,21 +77,34 @@ bool FetchUtils::isCorsSafelistedRequestHeader(const String* name,
 bool FetchUtils::isCorsSafelistedRequestHeader(const std::string name,
                                                const std::string value)
 {
+    STARFISH_ASSERT(isMainThread());
     // https://fetch.spec.whatwg.org/#cors-safelisted-request-header
     auto lower = StringUtils::toLowerCase(name);
 
     if (lower == "accept") {
-        if (isCorsUnsafeRequestHeaderValue(value)) {
-            return false;
-        }
-    } else if (lower == "accept-languag" || lower == "content-language") {
-        if (!isValidLanguageValue(value)) {
-            return false;
-        }
+        return !isCorsUnsafeRequestHeaderValue(value);
+    } else if (lower == "accept-language" || lower == "content-language") {
+        return isValidLanguageValue(value);
     } else if (lower == "content-type") {
         if (isCorsUnsafeRequestHeaderValue(value)) {
             return false;
         }
+        MimeType mimeType =
+            MimeType::parseFromString(String::createASCIIString(value.data()));
+        if (!mimeType.isValid()) {
+            return false;
+        }
+        String* essence = mimeType.string();
+        if (!(essence->equalsIgnoreCase("application/x-www-form-urlencoded") ||
+              essence->equalsIgnoreCase("multipart/form-data") ||
+              essence->equalsIgnoreCase("text/plain"))) {
+            return false;
+        }
+        return true;
+    } else if (lower == "dpr" || lower == "downlink" || lower == "save-data" ||
+               lower == "viewport-width" || lower == "width") {
+        // TODO : If value, once extracted, is failure, then return false.
+        return true;
     }
 
     return false;
