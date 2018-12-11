@@ -179,11 +179,11 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
     bool canApplyMaxHeight = maxHeight.isDefinite(parentHeightHasFixedValue);
 
     if (minWidth.isSpecified()) {
-        newWidth = std::max(w, contentWidthApplyingBoxSizing(
+        newWidth = std::max(w, contentWidthAfterApplyingBoxSizing(
                                    minWidth.specifiedValue(parentWidth, this)));
         if (canApplyMinHeight) {
             newHeight =
-                std::max(h, contentHeightApplyingBoxSizing(
+                std::max(h, contentHeightAfterApplyingBoxSizing(
                                 minHeight.specifiedValue(parentHeight, this)));
             if (width.isAuto() && height.isAuto()) {
                 if (hasAspectRatio) {
@@ -206,7 +206,7 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
             // in the case minWidth and maxHeight, then apply values
             // respectively.
             newHeight =
-                std::min(h, contentHeightApplyingBoxSizing(
+                std::min(h, contentHeightAfterApplyingBoxSizing(
                                 maxHeight.specifiedValue(parentHeight, this)));
         } else {
             if (hasAspectRatio && height.isAuto()) {
@@ -214,17 +214,17 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
             }
         }
     } else if (maxWidth.isSpecified()) {
-        newWidth = std::min(w, contentWidthApplyingBoxSizing(
+        newWidth = std::min(w, contentWidthAfterApplyingBoxSizing(
                                    maxWidth.specifiedValue(parentWidth, this)));
         if (canApplyMinHeight) {
             // in the case maxWidth and minHeight, then apply values
             // respectively.
             newHeight =
-                std::max(h, contentHeightApplyingBoxSizing(
+                std::max(h, contentHeightAfterApplyingBoxSizing(
                                 minHeight.specifiedValue(parentHeight, this)));
         } else if (canApplyMaxHeight) {
             newHeight =
-                std::min(h, contentHeightApplyingBoxSizing(
+                std::min(h, contentHeightAfterApplyingBoxSizing(
                                 maxHeight.specifiedValue(parentHeight, this)));
             if (width.isAuto() && height.isAuto()) {
                 if (hasAspectRatio) {
@@ -257,14 +257,14 @@ FrameReplaced::minMaxWidthAndHeightAppliedIfNeeds(
     } else {
         if (canApplyMinHeight) {
             newHeight =
-                std::max(h, contentHeightApplyingBoxSizing(
+                std::max(h, contentHeightAfterApplyingBoxSizing(
                                 minHeight.specifiedValue(parentHeight, this)));
             if (hasAspectRatio && width.isAuto()) {
                 newWidth = newHeight * (w / h);
             }
         } else if (canApplyMaxHeight) {
             newHeight =
-                std::min(h, contentHeightApplyingBoxSizing(
+                std::min(h, contentHeightAfterApplyingBoxSizing(
                                 maxHeight.specifiedValue(parentHeight, this)));
             if (hasAspectRatio && width.isAuto()) {
                 newWidth = newHeight * (w / h);
@@ -326,7 +326,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
         h = intrinsicHeight;
     } else if (height.isAuto()) {
         w = width.specifiedValue(parentContentWidth, this);
-        w = contentWidthApplyingBoxSizing(w);
+        w = contentWidthAfterApplyingBoxSizing(w);
         if (hasAspectRatio) {
             h = w * (intrinsicHeight / intrinsicWidth);
         } else {
@@ -335,7 +335,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     } else if (width.isAuto()) {
         if (height.isDefinite(parentHasFixedHeight)) {
             h = height.specifiedValue(parentContentHeight, this);
-            h = contentHeightApplyingBoxSizing(h);
+            h = contentHeightAfterApplyingBoxSizing(h);
             if (hasAspectRatio && intrinsicHeight) {
                 w = h * (intrinsicWidth / intrinsicHeight);
             } else {
@@ -348,10 +348,10 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
     } else {
         STARFISH_ASSERT(width.isSpecified() && height.isSpecified());
         w = width.specifiedValue(parentContentWidth, this);
-        w = contentWidthApplyingBoxSizing(w);
+        w = contentWidthAfterApplyingBoxSizing(w);
         if (height.isDefinite(parentHasFixedHeight)) {
             h = height.specifiedValue(parentContentHeight, this);
-            h = contentHeightApplyingBoxSizing(h);
+            h = contentHeightAfterApplyingBoxSizing(h);
         } else {
             if (hasAspectRatio && intrinsicWidth) {
                 h = w * (intrinsicHeight / intrinsicWidth);
@@ -399,8 +399,8 @@ void FrameReplaced::layout(LayoutContext& ctx,
         }
 
         if (isAbsolutePositioned()) {
-            HorizontalDataLocToContainingBlock data =
-                computeHorizontalDataToContainingBlock(ctx, cb);
+            HorizontalInfoForAbsoluteBlockBox data =
+                calHorizontalInfoRelativeToContainingBlock(ctx, cb);
             LengthData offset = style()->offset();
             Length left = offset.left();
             Length right = offset.right();
@@ -461,8 +461,8 @@ void FrameReplaced::layout(LayoutContext& ctx,
 
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveHeight) {
         if (isAbsolutePositioned()) {
-            VerticalDataLocToContainingBlock data =
-                computeVerticalDataToContainingBlock(ctx, cb);
+            VerticalInfoForAbsoluteBlockBox data =
+                calVerticalInfoRelativeToContainingBlock(ctx, cb);
             LengthData offset = style()->offset();
             Length top = offset.top();
             Length bottom = offset.bottom();

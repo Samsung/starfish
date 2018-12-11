@@ -1365,7 +1365,7 @@ void FrameTableBox::layoutHeight(LayoutContext& ctx)
             }
         }
 
-        specifiedHeight = minMaxHeightAppliedIfNeeds(
+        specifiedHeight = heightAfterApplyingMinMaxHeights(
             ctx, specifiedHeight, parentHeight, parentHasFixedHeight);
     }
 

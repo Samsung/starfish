@@ -225,9 +225,9 @@ void FrameBox::computeBorderMarginPadding(LayoutContext& ctx,
     }
 }
 
-HorizontalDataLocToContainingBlock
-FrameBox::computeHorizontalDataToContainingBlock(LayoutContext& ctx,
-                                                 FrameBox* cb)
+HorizontalInfoForAbsoluteBlockBox
+FrameBox::calHorizontalInfoRelativeToContainingBlock(LayoutContext& ctx,
+                                                     FrameBox* cb)
 {
     STARFISH_ASSERT(cb);
     DirectionValue parentDirection = blockContainer(this)->style()->direction();
@@ -258,12 +258,13 @@ FrameBox::computeHorizontalDataToContainingBlock(LayoutContext& ctx,
         r = right.specifiedValue(containgBlockContentWidth, this);
     }
 
-    return HorizontalDataLocToContainingBlock(containgBlockContentWidth, absX,
-                                              l, r);
+    return HorizontalInfoForAbsoluteBlockBox(containgBlockContentWidth, absX, l,
+                                             r);
 }
 
-VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
-    LayoutContext& ctx, FrameBox* cb)
+VerticalInfoForAbsoluteBlockBox
+FrameBox::calVerticalInfoRelativeToContainingBlock(LayoutContext& ctx,
+                                                   FrameBox* cb)
 {
     STARFISH_ASSERT(cb);
     FrameBox* parent = layoutParent()->asFrameBox();
@@ -291,8 +292,8 @@ VerticalDataLocToContainingBlock FrameBox::computeVerticalDataToContainingBlock(
         b = bottom.specifiedValue(containgBlockContentHeight, this);
     }
 
-    return VerticalDataLocToContainingBlock(containgBlockContentHeight, absY, t,
-                                            b);
+    return VerticalInfoForAbsoluteBlockBox(containgBlockContentHeight, absY, t,
+                                           b);
 }
 
 void FrameBox::moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
@@ -3481,7 +3482,7 @@ void FrameBox::clearStackingContextIfNeeds()
     }
 }
 
-LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
+LayoutUnit FrameBox::widthAfterApplyingMinMaxWidths(
     LayoutContext& ctx, LayoutUnit width, LayoutUnit parentWidth,
     bool underComputingPreferredWidth)
 {
@@ -3490,7 +3491,7 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
         if (style->minWidth().isDefinite(!underComputingPreferredWidth)) {
             LayoutUnit minWidth =
                 style->minWidth().specifiedValue(parentWidth, this);
-            minWidth = contentWidthApplyingBoxSizing(minWidth);
+            minWidth = contentWidthAfterApplyingBoxSizing(minWidth);
 
             if (minWidth > width) {
                 return minWidth;
@@ -3508,7 +3509,7 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
                 if (style->width().isSpecified()) {
                     LayoutUnit width =
                         style->width().specifiedValue(parentWidth, this);
-                    width = contentWidthApplyingBoxSizing(width);
+                    width = contentWidthAfterApplyingBoxSizing(width);
 
                     minWidth = width;
                 }
@@ -3524,12 +3525,13 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
             return minWidth;
         }
     }
+
     if (style->maxWidth().isSpecified()) {
         if (style->maxWidth().isDefinite(!underComputingPreferredWidth)) {
             LayoutUnit maxWidth =
                 style->maxWidth().specifiedValue(parentWidth, this);
 
-            maxWidth = contentWidthApplyingBoxSizing(maxWidth);
+            maxWidth = contentWidthAfterApplyingBoxSizing(maxWidth);
 
             if (maxWidth >= 0 && maxWidth < width) {
                 return maxWidth;
@@ -3539,10 +3541,10 @@ LayoutUnit FrameBox::minMaxWidthAppliedIfNeeds(
     return width;
 }
 
-LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
-                                                LayoutUnit height,
-                                                LayoutUnit parentHeight,
-                                                bool parentHasFixedValue)
+LayoutUnit FrameBox::heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
+                                                      LayoutUnit height,
+                                                      LayoutUnit parentHeight,
+                                                      bool parentHasFixedValue)
 {
     ComputedStyle* style = Frame::style();
     if (style->minHeight().isSpecified()) {
@@ -3553,7 +3555,7 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
         LayoutUnit minHeight =
             style->minHeight().specifiedValue(parentHeight, this);
 
-        minHeight = contentHeightApplyingBoxSizing(minHeight);
+        minHeight = contentHeightAfterApplyingBoxSizing(minHeight);
 
         if (minHeight > height) {
             return minHeight;
@@ -3569,7 +3571,7 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
                 if (style->height().isDefinite(parentHasFixedValue)) {
                     LayoutUnit height = LayoutUnit(
                         style->height().specifiedValue(parentHeight, this));
-                    height = contentHeightApplyingBoxSizing(height);
+                    height = contentHeightAfterApplyingBoxSizing(height);
 
                     minHeight = height;
                 }
@@ -3590,7 +3592,7 @@ LayoutUnit FrameBox::minMaxHeightAppliedIfNeeds(LayoutContext& ctx,
         LayoutUnit maxHeight =
             style->maxHeight().specifiedValue(parentHeight, this);
 
-        maxHeight = contentHeightApplyingBoxSizing(maxHeight);
+        maxHeight = contentHeightAfterApplyingBoxSizing(maxHeight);
 
         if (maxHeight >= 0 && maxHeight < height) {
             return maxHeight;

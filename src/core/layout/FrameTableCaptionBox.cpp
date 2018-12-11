@@ -42,10 +42,11 @@ void FrameTableCaptionBox::layoutWidth(LayoutContext& ctx)
         contentWidth = p.preferredWidth();
     } else {
         contentWidth = width.specifiedValue(parentContentWidth, this);
-        contentWidth = contentWidthApplyingBoxSizing(contentWidth);
+        contentWidth = contentWidthAfterApplyingBoxSizing(contentWidth);
     }
 
-    applyMinMaxWidthIfNeeds(ctx, contentWidth, parentContentWidth);
+    setContentWidthConsideringMinMaxWidths(ctx, contentWidth,
+                                           parentContentWidth);
 }
 
 void* FrameTableCaptionBox::operator new(size_t size)

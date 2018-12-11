@@ -68,7 +68,7 @@ void FlexFormattingContext::computeAvailableSpace(LayoutUnit availableWidth)
         }
         contentHeight = height.specifiedValue(parentContentHeight, m_container);
         contentHeight =
-            m_container->contentHeightApplyingBoxSizing(contentHeight);
+            m_container->contentHeightAfterApplyingBoxSizing(contentHeight);
     } else if (height.isAuto() && m_container->isAbsolutePositioned()) {
         LengthData offset = m_container->style()->offset();
         Length top = offset.top();
@@ -136,14 +136,14 @@ void FlexFormattingContext::computeMainSize()
         STARFISH_ASSERT(mainSize != intMaxForLayoutUnit);
 
         if (m_isMainAxisInInlineAxis) {
-            flexItem->applyMinMaxWidthIfNeeds(m_layoutContext, mainSize,
-                                              m_availableMainSize);
+            flexItem->setContentWidthConsideringMinMaxWidths(
+                m_layoutContext, mainSize, m_availableMainSize);
         } else {
             bool parentHasFixedHeight =
                 m_layoutContext.parentHasFixedHeight(flexItem);
-            flexItem->applyMinMaxHeightIfNeeds(m_layoutContext, mainSize,
-                                               m_availableMainSize,
-                                               parentHasFixedHeight);
+            flexItem->setContentHeightConsideringMinMaxHeights(
+                m_layoutContext, mainSize, m_availableMainSize,
+                parentHasFixedHeight);
         }
 
         if (m_isSingleLine || (lineMainSize == 0) ||
@@ -346,14 +346,14 @@ void FlexFormattingContext::applyFlexFactor()
                     unclampedSize += targetMainSize;
 
                     if (m_isMainAxisInInlineAxis) {
-                        flexItem->applyMinMaxWidthIfNeeds(m_layoutContext,
-                                                          targetMainSize,
-                                                          m_availableMainSize);
+                        flexItem->setContentWidthConsideringMinMaxWidths(
+                            m_layoutContext, targetMainSize,
+                            m_availableMainSize);
                         mainSize = flexItem->contentWidth();
                     } else {
-                        flexItem->applyMinMaxHeightIfNeeds(m_layoutContext,
-                                                           targetMainSize,
-                                                           m_availableMainSize);
+                        flexItem->setContentHeightConsideringMinMaxHeights(
+                            m_layoutContext, targetMainSize,
+                            m_availableMainSize);
                         mainSize = flexItem->contentHeight();
                     }
                     clampedSize += mainSize;
@@ -1087,9 +1087,11 @@ LayoutUnit FrameFlexibleBox::basisSize(
         if (basisWidth.isDefinite(availableMainSize != intMaxForLayoutUnit)) {
             basisSize = basisWidth.specifiedValue(availableMainSize, this);
             if (isMainAxisInInlineAxis) {
-                basisSize = flexItem->contentWidthApplyingBoxSizing(basisSize);
+                basisSize =
+                    flexItem->contentWidthAfterApplyingBoxSizing(basisSize);
             } else {
-                basisSize = flexItem->contentHeightApplyingBoxSizing(basisSize);
+                basisSize =
+                    flexItem->contentHeightAfterApplyingBoxSizing(basisSize);
             }
             return basisSize;
         }
