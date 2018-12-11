@@ -193,6 +193,21 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     Locker<Mutex> locker(*nwd->request->m_mutex);
 
     if (nwd->httpTransaction->res() == 0) {
+        if (nwd->request->m_pendingOnProgressEventIdlerHandle != SIZE_MAX) {
+            ResourceRequest* request = nwd->request;
+            if (!request->isSync()) {
+                request->response().insert(request->response().end(),
+                                           nwd->pendingResponseData.begin(),
+                                           nwd->pendingResponseData.end());
+                nwd->pendingResponseData.clear();
+            }
+            request->changeReadyState(ReadyState::Loading, true);
+            request->changeProgress(ProgressState::Progress, true);
+
+            request->webView()->messageLoop()->removeIdlerWithNoGCRooting(
+                request->m_pendingOnProgressEventIdlerHandle);
+            request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
+        }
 #ifdef STARFISH_ENABLE_HTTPCACHE
         HTTPCache* cache = nwd->request->starfish()->httpCache();
         if (cache) {
@@ -243,6 +258,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         NetworkSharedResourceManager::getInstance()->setCacheClearTimerID(
             timerID);
     }
+
     nwd->request->m_activeNetworkURLWorkerData = nullptr;
     nwd->~NetworkURLWorkerData();
     GC_FREE(nwd);
