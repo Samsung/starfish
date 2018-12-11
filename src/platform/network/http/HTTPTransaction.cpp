@@ -176,11 +176,16 @@ void HTTPTransaction::startPreFlightRequest()
     curl_slist* list =
         m_httpRequest->headers().generateCurlListToPreflightRequest();
 
-    std::string header(HTTPHeaderMap::kAccessControlRequestMethod);
-    header.append(": ");
-    header.append(m_httpRequest->method());
+    std::string accessControlRequestMethod(
+        HTTPHeaderMap::kAccessControlRequestMethod);
+    accessControlRequestMethod.append(": ");
+    accessControlRequestMethod.append(m_httpRequest->method());
+    list = curl_slist_append(list, accessControlRequestMethod.data());
 
-    list = curl_slist_append(list, header.data());
+    auto accessControlRequestHeaders =
+        m_httpRequest->headers().generateAccessControlRequestHeaders();
+    list = curl_slist_append(list, accessControlRequestHeaders.data());
+
     curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
 
     m_res = curl_easy_perform(m_curl);

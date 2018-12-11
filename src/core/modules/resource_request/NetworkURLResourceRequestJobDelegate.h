@@ -42,6 +42,8 @@ struct NetworkURLWorkerData {
     // https://fetch.spec.whatwg.org/#http-fetch
     bool corsFlag;
     bool corsPreflightFlag;
+    bool hasCorsUnsafeRequestHeaderNames;
+
     bool needsToSendPreflightRequest;
 
     ResourceRequest* request;

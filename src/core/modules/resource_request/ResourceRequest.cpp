@@ -330,12 +330,13 @@ void ResourceRequest::setRequestHeader(String* name, String* value)
 {
     // Do not use HeadersData's append here, becuase name will change to lower
     // in the append. but xhr's behavior of append should not work that way
-    m_requestHeaders->httpHeaderMap()->append(CSTR(name), CSTR(value));
+    m_requestHeaders->httpHeaderMap()->append(name->toUTF8NonGCString(),
+                                              value->toUTF8NonGCString());
 }
 
 void ResourceRequest::deleteRequestHeader(String* name)
 {
-    m_requestHeaders->httpHeaderMap()->remove(CSTR(name));
+    m_requestHeaders->httpHeaderMap()->remove(name->toUTF8NonGCString());
 }
 
 EncodeType ResourceRequest::toEncodeType(String* input)

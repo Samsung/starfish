@@ -192,6 +192,8 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(
             ret = HTTPHeaderMap::kAccessControlAllowCredentials;
         } else if (lower.compare("access-control-allow-methods") == 0) {
             ret = HTTPHeaderMap::kAccessControlAllowMethods;
+        } else if (lower.compare("access-control-allow-headers") == 0) {
+            ret = HTTPHeaderMap::kAccessControlAllowHeaders;
         }
         break;
     }

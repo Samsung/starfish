@@ -79,6 +79,21 @@ public:
         return m_includeCredentials;
     }
 
+    void setUnsafeRequestHeaderNames(const std::vector<std::string>& headers)
+    {
+        m_unsafeRequestHeaderNames = headers;
+    }
+
+    std::vector<std::string> unsafeRequestHeaderNames() const
+    {
+        return m_unsafeRequestHeaderNames;
+    }
+
+    bool hasUnsafeRequestHeaderNames() const
+    {
+        return m_unsafeRequestHeaderNames.size() != 0;
+    }
+
 private:
     HTTPRequest(const std::string& url, const std::string& baseURL,
                 const std::string& method, const HTTPHeaderMap& headers,
@@ -88,6 +103,7 @@ private:
     std::string m_baseURL;
     std::string m_method;
     HTTPHeaderMap m_headers;
+    std::vector<std::string> m_unsafeRequestHeaderNames;
     std::string m_entityBody;
     bool m_includeCredentials;
 
