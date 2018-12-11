@@ -502,8 +502,8 @@ bool BrowsingContext::layoutIfNeeds()
 
     bool ret = false;
     if (m_needsLayout) {
-        // lay out frame tree
-        INSTALL_PROFILE_TIMER("lay out frame tree");
+        // layout frame tree
+        INSTALL_PROFILE_TIMER("layout frame tree");
 
         LayoutContext ctx(starfish(), document()
                                           ->frame()

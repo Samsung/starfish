@@ -4385,14 +4385,15 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
     if (width.isDefinite(false)) {
         LayoutUnit unused;
         w = width.specifiedValue(unused, this);
-        w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), w, unused, true);
+        w = widthAfterApplyingMinMaxWidths(ctx.layoutContext(), w, unused,
+                                           true);
     } else {
         w = intrinsicWidth;
         h = intrinsicHeight;
 
         if (height.isDefinite(parentHasFixedHeight)) {
             h = height.specifiedValue(parentContentHeight, this);
-            h = contentHeightApplyingBoxSizing(h);
+            h = contentHeightAfterApplyingBoxSizing(h);
 
             if (hasAspectRatio) {
                 w = h * (intrinsicWidth / intrinsicHeight);
@@ -4450,7 +4451,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     if (width.isDefinite(false) && this != ctx.owner()) {
         LayoutUnit unused;
         LayoutUnit w = width.specifiedValue(unused, this);
-        w = contentWidthApplyingBoxSizing(w);
+        w = contentWidthAfterApplyingBoxSizing(w);
         ctx.updatePreferredMinWidth(w);
         ctx.updatePreferredWidth(w);
     } else {
@@ -4507,11 +4508,11 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     }
 
     LayoutUnit unused;
-    LayoutUnit w = minMaxWidthAppliedIfNeeds(
+    LayoutUnit w = widthAfterApplyingMinMaxWidths(
         ctx.layoutContext(), ctx.preferredWidth(), unused, true);
     ctx.updatePreferredWidth(w);
-    w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), ctx.preferredMinWidth(),
-                                  unused, true);
+    w = widthAfterApplyingMinMaxWidths(ctx.layoutContext(),
+                                       ctx.preferredMinWidth(), unused, true);
     ctx.updatePreferredMinWidth(w);
 }
 
@@ -4529,7 +4530,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
     if (width.isDefinite(false)) {
         LayoutUnit unused;
         LayoutUnit w = width.specifiedValue(unused, this);
-        w = contentWidthApplyingBoxSizing(w);
+        w = contentWidthAfterApplyingBoxSizing(w);
         ctx.updatePreferredMinWidth(w);
         ctx.updatePreferredWidth(w);
     } else {
@@ -4569,9 +4570,10 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                     maxContentContributeSize =
                         std::max(maxContentContributeSize, basisSize);
                 }
-                maxContentContributeSize = flexItem->minMaxWidthAppliedIfNeeds(
-                    ctx.layoutContext(), maxContentContributeSize, unused,
-                    false);
+                maxContentContributeSize =
+                    flexItem->widthAfterApplyingMinMaxWidths(
+                        ctx.layoutContext(), maxContentContributeSize, unused,
+                        false);
                 LayoutUnit diff = maxContentContributeSize - outerBasisSize;
                 if (diff > 0) {
                     if (f->style()->flexGrow() > 0) {
@@ -4612,7 +4614,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
                     itemWidth = f->style()->flexShrink() * basisSize *
                                 -maxContentFlexShrinkFraction;
                 }
-                itemWidth = flexItem->minMaxWidthAppliedIfNeeds(
+                itemWidth = flexItem->widthAfterApplyingMinMaxWidths(
                     ctx.layoutContext(), itemWidth, unused, false);
                 w += itemWidth;
                 w += mbpWidth;
@@ -4658,11 +4660,11 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
     }
 
     LayoutUnit unused;
-    LayoutUnit w = minMaxWidthAppliedIfNeeds(
+    LayoutUnit w = widthAfterApplyingMinMaxWidths(
         ctx.layoutContext(), ctx.preferredWidth(), unused, true);
     ctx.updatePreferredWidth(w);
-    w = minMaxWidthAppliedIfNeeds(ctx.layoutContext(), ctx.preferredMinWidth(),
-                                  unused, true);
+    w = widthAfterApplyingMinMaxWidths(ctx.layoutContext(),
+                                       ctx.preferredMinWidth(), unused, true);
     ctx.updatePreferredMinWidth(w);
 }
 
@@ -4675,7 +4677,8 @@ void FrameGridBox::computePreferredWidth(PreferredWidthContext& ctx)
     if (width.isDefinite(false)) {
         LayoutUnit unused;
         gridPreferredWidth = width.specifiedValue(unused, this);
-        gridPreferredWidth = contentWidthApplyingBoxSizing(gridPreferredWidth);
+        gridPreferredWidth =
+            contentWidthAfterApplyingBoxSizing(gridPreferredWidth);
         gridPreferredMinWidth = gridPreferredWidth;
         ctx.updatePreferredMinWidth(gridPreferredMinWidth);
         ctx.updatePreferredWidth(gridPreferredWidth);

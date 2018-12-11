@@ -30,14 +30,14 @@ class Compositor;
 class LineBox;
 class HTMLElement;
 
-struct HorizontalDataLocToContainingBlock {
+struct HorizontalInfoForAbsoluteBlockBox {
     LayoutUnit m_contentWidth;
     LayoutUnit m_absX;
     LayoutUnit m_left;
     LayoutUnit m_right;
 
-    HorizontalDataLocToContainingBlock(LayoutUnit contentWidth, LayoutUnit absX,
-                                       LayoutUnit left, LayoutUnit right)
+    HorizontalInfoForAbsoluteBlockBox(LayoutUnit contentWidth, LayoutUnit absX,
+                                      LayoutUnit left, LayoutUnit right)
         : m_contentWidth(contentWidth)
         , m_absX(absX)
         , m_left(left)
@@ -46,14 +46,14 @@ struct HorizontalDataLocToContainingBlock {
     }
 };
 
-struct VerticalDataLocToContainingBlock {
+struct VerticalInfoForAbsoluteBlockBox {
     LayoutUnit m_contentHeight;
     LayoutUnit m_absY;
     LayoutUnit m_top;
     LayoutUnit m_bottom;
 
-    VerticalDataLocToContainingBlock(LayoutUnit contentHeight, LayoutUnit absY,
-                                     LayoutUnit top, LayoutUnit bottom)
+    VerticalInfoForAbsoluteBlockBox(LayoutUnit contentHeight, LayoutUnit absY,
+                                    LayoutUnit top, LayoutUnit bottom)
         : m_contentHeight(contentHeight)
         , m_absY(absY)
         , m_top(top)
@@ -200,30 +200,32 @@ public:
         m_frameRect.setHeight(height);
     }
 
-    LayoutUnit minMaxWidthAppliedIfNeeds(LayoutContext& ctx, LayoutUnit width,
-                                         LayoutUnit parentWidth,
-                                         bool underComputingPreferredWidth);
+    LayoutUnit widthAfterApplyingMinMaxWidths(
+        LayoutContext& ctx, LayoutUnit width, LayoutUnit parentWidth,
+        bool underComputingPreferredWidth);
 
-    LayoutUnit minMaxHeightAppliedIfNeeds(LayoutContext& ctx, LayoutUnit height,
-                                          LayoutUnit parentHeight,
-                                          bool parentHasFixedValue);
+    LayoutUnit heightAfterApplyingMinMaxHeights(LayoutContext& ctx,
+                                                LayoutUnit height,
+                                                LayoutUnit parentHeight,
+                                                bool parentHasFixedValue);
 
-    void applyMinMaxWidthIfNeeds(LayoutContext& ctx, LayoutUnit width,
-                                 LayoutUnit parentWidth)
+    void setContentWidthConsideringMinMaxWidths(LayoutContext& ctx,
+                                                LayoutUnit width,
+                                                LayoutUnit parentWidth)
     {
         setContentWidth(
-            minMaxWidthAppliedIfNeeds(ctx, width, parentWidth, false));
+            widthAfterApplyingMinMaxWidths(ctx, width, parentWidth, false));
     }
 
-    void applyMinMaxHeightIfNeeds(LayoutContext& ctx, LayoutUnit height,
-                                  LayoutUnit parentHeight,
-                                  bool parentHasFixedValue = true)
+    void setContentHeightConsideringMinMaxHeights(
+        LayoutContext& ctx, LayoutUnit height, LayoutUnit parentHeight,
+        bool parentHasFixedValue = true)
     {
-        setContentHeight(minMaxHeightAppliedIfNeeds(ctx, height, parentHeight,
-                                                    parentHasFixedValue));
+        setContentHeight(heightAfterApplyingMinMaxHeights(
+            ctx, height, parentHeight, parentHasFixedValue));
     }
 
-    LayoutUnit contentWidthApplyingBoxSizing(LayoutUnit width)
+    LayoutUnit contentWidthAfterApplyingBoxSizing(LayoutUnit width)
     {
         if (style()->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
             return std::max(width - paddingWidth() - borderWidth(),
@@ -233,7 +235,7 @@ public:
         return width;
     }
 
-    LayoutUnit contentHeightApplyingBoxSizing(LayoutUnit height)
+    LayoutUnit contentHeightAfterApplyingBoxSizing(LayoutUnit height)
     {
         if (style()->boxSizing() == BoxSizingValue::BorderBoxBoxSizingValue) {
             return std::max(height - paddingHeight() - borderHeight(),
@@ -614,9 +616,10 @@ public:
         return m_frameRect.height() - paddingHeight() - borderHeight();
     }
 
-    HorizontalDataLocToContainingBlock computeHorizontalDataToContainingBlock(
-        LayoutContext& ctx, FrameBox* cb);
-    VerticalDataLocToContainingBlock computeVerticalDataToContainingBlock(
+    HorizontalInfoForAbsoluteBlockBox
+    calHorizontalInfoRelativeToContainingBlock(LayoutContext& ctx,
+                                               FrameBox* cb);
+    VerticalInfoForAbsoluteBlockBox calVerticalInfoRelativeToContainingBlock(
         LayoutContext& ctx, FrameBox* cb);
     void moveToStaticPositionForAbsolutedPositionedBoxHorizontally(
         FrameBox* box);

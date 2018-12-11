@@ -568,13 +568,13 @@ LayoutUnit LayoutContext::parentFixedHeight(Frame* currentFrame)
         result = height.specifiedValue(unused, container);
     }
 
-    result = container->contentHeightApplyingBoxSizing(result);
+    result = container->contentHeightAfterApplyingBoxSizing(result);
     reverse.pop_back();
     while (reverse.size()) {
         height = reverse.back().second;
         container = reverse.back().first;
         result = height.specifiedValue(result, container);
-        result = container->contentHeightApplyingBoxSizing(result);
+        result = container->contentHeightAfterApplyingBoxSizing(result);
         reverse.pop_back();
     }
 
@@ -753,14 +753,13 @@ void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
         for (size_t i = 0; i < boxes.size(); i++) {
             FrameBox* box = boxes[i];
             if (m_isQuickLayout) {
-                // related with issue 2264
-                // this is very ugly...
-                // in quicklayout, x value of box is already computed
-                // but, if user doesn't specify left, right && specify
-                // {margin-left, margin-right}
-                // box will move box by its margin in FrameBlockBox::layout
-                // function
-                // we should remove this code when renovate quickLayout
+                // FIXME: related to Issue #2264
+                // In quicklayout(), x value of the box has already been
+                // computed, but the x value is recomputed and incremented twice
+                // in FrameBlockBox::layout(), when left (or right) value is
+                // missing and margin-left (or margin-right) is specified.
+                // Below is an ad-hoc fix which should be removed after
+                // fixing quicklayout().
                 LengthData offset = box->style()->offset();
                 Length left = offset.left();
                 Length right = offset.right();
@@ -780,7 +779,7 @@ void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
                         }
                     }
                 }
-                // <-- issue 2264
+                // <-- Issue #2264
             }
             box->layout(*this, Frame::LayoutWantToResolve::ResolveAll);
         }

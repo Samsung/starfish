@@ -158,10 +158,11 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
         } else {
             contentWidth =
                 width.specifiedValue(containgBlockContentWidth, this);
-            contentWidth = contentWidthApplyingBoxSizing(contentWidth);
+            contentWidth = contentWidthAfterApplyingBoxSizing(contentWidth);
         }
 
-        applyMinMaxWidthIfNeeds(ctx, contentWidth, containgBlockContentWidth);
+        setContentWidthConsideringMinMaxWidths(ctx, contentWidth,
+                                               containgBlockContentWidth);
     }
 }
 
@@ -257,10 +258,12 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
                 }
             } else {
                 contentHeight = height.specifiedValue(parentHeight, this);
-                contentHeight = contentHeightApplyingBoxSizing(contentHeight);
+                contentHeight =
+                    contentHeightAfterApplyingBoxSizing(contentHeight);
             }
 
-            applyMinMaxHeightIfNeeds(ctx, contentHeight, parentHeight);
+            setContentHeightConsideringMinMaxHeights(ctx, contentHeight,
+                                                     parentHeight);
         } else {
             computeContentHeight(ctx, contentHeight);
         }
@@ -289,11 +292,11 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
 
     if (height.isDefinite(parentHasFixedHeight)) {
         contentHeight = height.specifiedValue(parentHeight, this);
-        contentHeight = contentHeightApplyingBoxSizing(contentHeight);
+        contentHeight = contentHeightAfterApplyingBoxSizing(contentHeight);
     }
 
-    applyMinMaxHeightIfNeeds(ctx, contentHeight, parentHeight,
-                             parentHasFixedHeight);
+    setContentHeightConsideringMinMaxHeights(ctx, contentHeight, parentHeight,
+                                             parentHasFixedHeight);
 }
 
 static LayoutLocation relativeLocation(LayoutContext& ctx, Frame* f,
@@ -474,6 +477,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     BlockFormattingContextBlock blockFormattingContextBlock(this, ctx);
     FrameBox* cb = containingBlock(this);
     LayoutUnit parentContentWidth = cb->contentWidth();
+
     // Determine the horizontal margins and the width of this object.
     if (resolveWhat & Frame::LayoutWantToResolve::ResolveWidth) {
         clearContentWidthDamaged();
@@ -490,8 +494,9 @@ void FrameBlockBox::layout(LayoutContext& ctx,
         if (isAbsolutePositioned()) {
             // 10.3.7 Absolutely positioned, non-replaced elements
             STARFISH_ASSERT(!isAnonymous());
-            HorizontalDataLocToContainingBlock data =
-                computeHorizontalDataToContainingBlock(ctx, cb);
+
+            HorizontalInfoForAbsoluteBlockBox data =
+                calHorizontalInfoRelativeToContainingBlock(ctx, cb);
 
             LengthData offset = style()->offset();
             Length left = offset.left();
@@ -610,8 +615,8 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     }
 
     if (isAbsolutePositioned()) {
-        VerticalDataLocToContainingBlock data =
-            computeVerticalDataToContainingBlock(ctx, cb);
+        VerticalInfoForAbsoluteBlockBox data =
+            calVerticalInfoRelativeToContainingBlock(ctx, cb);
 
         LengthData offset = style()->offset();
         Length top = offset.top();
