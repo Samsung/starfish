@@ -74,6 +74,7 @@ ResourceRequest::ResourceRequest(Document* document)
     , m_pendingOnProgressEventIdlerHandle(SIZE_MAX)
     , m_loaded(0)
     , m_total(0)
+    , m_abortRequestState(AbortRequestType::NoPendingRequest)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -151,19 +152,6 @@ void ResourceRequest::handleResponseEOFwithPreflightRequestRedirected()
     changeProgress(ProgressState::Progress, true);
     changeProgress(ProgressState::InError, true);
     changeProgress(ProgressState::LoadEnd, true);
-}
-
-bool ResourceRequest::checkProgressAllowanceWithContentSecurityPolicy()
-{
-    STARFISH_ASSERT(isMainThread());
-    if (isRedirected()) {
-        auto csp = document()->contentSecurityPolicy();
-        auto resourceURL = new ResourceURL(lastEffectiveURL().c_str());
-        if (!csp->allowSource(CSPDirectives::ConnectSrc, resourceURL, false)) {
-            return false;
-        }
-    }
-    return true;
 }
 
 void ResourceRequest::changeReadyState(ReadyState readyState,

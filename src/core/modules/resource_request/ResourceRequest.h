@@ -71,6 +71,12 @@ enum class EncodeType {
     MissingOrInvalidEncodeType,
 };
 
+enum class AbortRequestType {
+    NoPendingRequest,
+    AbortWithNoError,
+    AbortWithError,
+};
+
 class ResourceRequestClient : public gc {
 public:
     virtual ~ResourceRequestClient()
@@ -360,6 +366,12 @@ public:
     ResourceURL* mutateActionURL(ResourceURL* url,
                                  FormSubmitData* formSubmitData);
 
+    void requestAbortOnRequestClient(
+        AbortRequestType type = AbortRequestType::AbortWithError)
+    {
+        m_abortRequestState = type;
+    }
+
 protected:
     void pareseHeader(const char* header, size_t len);
     void initVariables();
@@ -374,7 +386,6 @@ protected:
     void handleError(ProgressState error);
     void handleConnectError();
     void handleResponseEOFwithPreflightRequestRedirected();
-    bool checkProgressAllowanceWithContentSecurityPolicy();
 
     void pushIdlerHandle(size_t handle)
     {
@@ -419,6 +430,7 @@ protected:
     // progress event data
     volatile size_t m_loaded;
     volatile size_t m_total;
+    AbortRequestType m_abortRequestState;
 
     GCVector<ResourceRequestClient*> m_clients;
 };

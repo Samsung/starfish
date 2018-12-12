@@ -639,47 +639,66 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
         if (request->isSync()) {
             request->changeReadyState(ReadyState::Loading, true);
             request->changeProgress(ProgressState::Progress, true);
-            if (!request->checkProgressAllowanceWithContentSecurityPolicy()) {
+
+            if (request->m_abortRequestState !=
+                AbortRequestType::NoPendingRequest) {
                 nwd->isAborted = true;
-                nwd->needsToHandleError = true;
+                nwd->needsToHandleError = (request->m_abortRequestState ==
+                                           AbortRequestType::AbortWithError)
+                                              ? true
+                                              : false;
                 request->m_responseData->m_status = 0;
+                request->m_abortRequestState =
+                    AbortRequestType::NoPendingRequest;
                 return 0;
             }
         } else {
             request->m_pendingOnProgressEventIdlerHandle =
-                request->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-                    nullptr,
-                    [](size_t handle, void* data) {
-                        NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
-                        ResourceRequest* request = nwd->request;
-                        Locker<Mutex> locker(*request->m_mutex);
-                        {
-                            STARFISH_ASSERT(
-                                handle ==
-                                request->m_pendingOnProgressEventIdlerHandle);
-                            request->m_pendingOnProgressEventIdlerHandle =
-                                SIZE_MAX;
-                        }
-                        if (!request->isSync()) {
-                            request->response().insert(
-                                request->response().end(),
-                                nwd->pendingResponseData.begin(),
-                                nwd->pendingResponseData.end());
-                            nwd->pendingResponseData.clear();
-                        }
+                request->webView()
+                    ->messageLoop()
+                    ->addIdlerWithNoGCRootingInOtherThread(
+                        nullptr,
+                        [](size_t handle, void* data) {
+                            NetworkURLWorkerData* nwd =
+                                (NetworkURLWorkerData*)data;
+                            ResourceRequest* request = nwd->request;
+                            Locker<Mutex> locker(*request->m_mutex);
+                            {
+                                STARFISH_ASSERT(
+                                    handle ==
+                                    request
+                                        ->m_pendingOnProgressEventIdlerHandle);
+                                request->m_pendingOnProgressEventIdlerHandle =
+                                    SIZE_MAX;
+                            }
+                            if (!request->isSync()) {
+                                request->response().insert(
+                                    request->response().end(),
+                                    nwd->pendingResponseData.begin(),
+                                    nwd->pendingResponseData.end());
+                                nwd->pendingResponseData.clear();
+                            }
 
-                        request->changeReadyState(ReadyState::Loading, true);
-                        request->changeProgress(ProgressState::Progress, true);
+                            request->changeReadyState(ReadyState::Loading,
+                                                      true);
+                            request->changeProgress(ProgressState::Progress,
+                                                    true);
 
-                        if (!request
-                                 ->checkProgressAllowanceWithContentSecurityPolicy()) {
-                            nwd->isAborted = true;
-                            nwd->needsToHandleError = true;
-                            request->m_responseData->m_status = 0;
-                        }
+                            if (request->m_abortRequestState !=
+                                AbortRequestType::NoPendingRequest) {
+                                nwd->isAborted = true;
+                                nwd->needsToHandleError =
+                                    (request->m_abortRequestState ==
+                                     AbortRequestType::AbortWithError)
+                                        ? true
+                                        : false;
+                                request->m_responseData->m_status = 0;
+                                request->m_abortRequestState =
+                                    AbortRequestType::NoPendingRequest;
+                            }
 
-                    },
-                    nwd);
+                        },
+                        nwd);
         }
     }
 

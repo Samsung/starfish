@@ -97,16 +97,15 @@ bool ContentSecurityPolicy::allowInlineEventHandler()
     return allowInline(CSPDirectives::ScriptSrc, nullptr);
 }
 
-bool ContentSecurityPolicy::allowSource(CSPDirectives directive,
-                                        ResourceURL* resUrl,
-                                        bool isSendingEventInIdleTime)
+bool ContentSecurityPolicy::allowSource(
+    CSPDirectives directive, ResourceURL* resUrl,
+    SecurityPolicyViolationEventDelegator eventDelegator)
 {
     bool isAllowed = true;
     for (auto policy : m_policies) {
         if (!policy->allowSource(directive, resUrl)) {
             dispatchViolationEvent(getDirectiveName(directive),
-                                   resUrl->urlString(),
-                                   isSendingEventInIdleTime);
+                                   resUrl->urlString(), eventDelegator);
             STARFISH_LOG_WARN(
                 "Refused to use '%s' as a source of '%s' because it violates "
                 "the Content Security Policy\n",
@@ -160,7 +159,8 @@ bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
 }
 
 void ContentSecurityPolicy::dispatchViolationEvent(
-    String* name, String* blockedURI, bool isSendingEventInIdleTime)
+    String* name, String* blockedURI,
+    SecurityPolicyViolationEventDelegator eventDelegator)
 {
     String* eventType = window()
                             ->starfish()
@@ -170,10 +170,11 @@ void ContentSecurityPolicy::dispatchViolationEvent(
         new SecurityPolicyViolationEvent(window()->document(), eventType);
     event->setViolatedDirective(name);
     event->setBlockedURI(blockedURI);
-    if (isSendingEventInIdleTime) {
-        window()->document()->dispatchEventIdleTimeByUA(event);
+
+    if (eventDelegator) {
+        eventDelegator(event, window());
     } else {
-        window()->document()->dispatchEventByUA(event);
+        window()->document()->dispatchEventIdleTimeByUA(event);
     }
 }
 
