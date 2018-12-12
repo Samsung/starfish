@@ -34,6 +34,8 @@
 #include "platform/loader/ResourceURL.h"
 #include "core/extra/MimeType.h"
 #include "core/dom/WebOrigin.h"
+#include "core/csp/ContentSecurityPolicy.h"
+#include "core/csp/SecurityPolicyViolationEvent.h"
 
 namespace Starfish {
 
@@ -135,7 +137,7 @@ public:
     }
 
     virtual void didHeaderReceived(
-        const std::unordered_map<std::string, std::string>& headrs)
+        const std::unordered_map<std::string, std::string>& headers)
     {
         auto browsingContext =
             m_resource->loader()->document()->browsingContext();
@@ -146,9 +148,9 @@ public:
         auto parentOrigin =
             browsingContext->parentBrowsingContext()->document()->webOrigin();
 
-        auto it = headrs.find(HTTPHeaderMap::kXFrameOptions);
+        auto it = headers.find(HTTPHeaderMap::kXFrameOptions);
         m_isAllowedResponse = true;
-        if (it != headrs.end()) {
+        if (it != headers.end()) {
             String* value = String::createASCIIString(it->second.data());
             if (value->equalsIgnoreCase("deny")) {
                 m_isAllowedResponse = false;
@@ -180,6 +182,29 @@ public:
             browsingContext->sourceElement()->markContentDocumentDisabled();
             STARFISH_LOG_WARN(
                 "Refused to display in iframe according to X-Frame-Options\n");
+        }
+
+        auto request = m_resource->resourceRequest();
+        if (request->isRedirected()) {
+            auto csp = request->document()->contentSecurityPolicy();
+            auto resourceURL =
+                new ResourceURL(request->lastEffectiveURL().c_str());
+            auto f = [](SecurityPolicyViolationEvent* event, Window* window) {
+                auto parentBrowsingContext = window->document()
+                                                 ->browsingContext()
+                                                 ->parentBrowsingContext();
+                if (parentBrowsingContext) {
+                    parentBrowsingContext->document()->dispatchEventByUA(event);
+                } else {
+                    window->document()->dispatchEventByUA(event);
+                }
+            };
+
+            if (csp->allowSource(CSPDirectives::ChildSrc, resourceURL, f) ==
+                false) {
+                m_isAllowedResponse = false;
+                browsingContext->sourceElement()->markContentDocumentDisabled();
+            }
         }
     }
 

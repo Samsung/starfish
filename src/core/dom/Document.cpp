@@ -301,6 +301,11 @@ void Document::init(ReferrerURL* referrerURL)
     m_documentBuilder->build(documentURI(), referrerURL);
 }
 
+void Document::initContentSecurityPolicy(ContentSecurityPolicy* inheritedPolicy)
+{
+    m_contentSecurityPolicy->copyFrom(inheritedPolicy);
+}
+
 void Document::setContentSecurityPolicy(String* content)
 {
     m_contentSecurityPolicy->didReceiveHeader(

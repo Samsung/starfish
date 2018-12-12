@@ -24,7 +24,8 @@
 namespace Starfish {
 ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     ContentSecurityPolicy* contentSecurityPolicy, String* policy, size_t begin,
-    size_t end)
+    size_t end, ContentSecurityPolicyHeaderType type,
+    ContentSecurityPolicyHeaderSource source)
     : m_contentSecurityPolicy(contentSecurityPolicy)
     , m_contextURL(contentSecurityPolicy->document()->documentURI())
     , m_baseURI(nullptr)
@@ -35,9 +36,14 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     , m_mediaSrc(nullptr)
     , m_scriptSrc(nullptr)
     , m_styleSrc(nullptr)
+    , m_header(nullptr)
 {
+    m_headerType = type;
+
     if (begin == end)
         return;
+
+    m_header = policy->substring(begin, end);
 
     size_t current = skipSpaceAndNewline(policy, begin, end);
     size_t directiveBegin = current;

@@ -16,7 +16,7 @@ http://web-platform.test:8000/content-security-policy/child-src/child-src-allowe
 http://web-platform.test:8000/content-security-policy/child-src/child-src-blocked.sub.html
 http://web-platform.test:8000/content-security-policy/child-src/child-src-conflicting-frame-src.sub.html
 http://web-platform.test:8000/content-security-policy/child-src/child-src-cross-origin-load.sub.html
-#http://web-platform.test:8000/content-security-policy/child-src/child-src-redirect-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/child-src/child-src-redirect-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/child-src/child-src-worker-allowed.sub.html
 #http://web-platform.test:8000/content-security-policy/child-src/child-src-worker-blocked.sub.html
 #
