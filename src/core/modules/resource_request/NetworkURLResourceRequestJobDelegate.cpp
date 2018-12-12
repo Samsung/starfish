@@ -371,17 +371,16 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     auto unsafeHeaders = FetchUtils::corsUnsafeRequestHeaderNames(headers);
     nwd->hasCorsUnsafeRequestHeaderNames = unsafeHeaders.size() != 0;
     // https://fetch.spec.whatwg.org/#ref-for-use-cors-preflight-flag%E2%91%A1
-    if (m_orgProxy->useCorsPreflightFlag() ||
-        (m_orgProxy->unsafeRequestFlag() &&
-         (!FetchUtils::isCorsSafelistedMethod(m_orgProxy->method()) ||
-          nwd->hasCorsUnsafeRequestHeaderNames))) {
-        m_orgProxy->setResponseTainting(ResponseTainting::Cors);
-        nwd->corsFlag = true;
-        nwd->corsPreflightFlag = true;
-    }
 
-    if (m_orgProxy->isSameOriginRequest()) {
-        nwd->corsFlag = false;
+    if (!m_orgProxy->isSameOriginRequest()) {
+        if (m_orgProxy->useCorsPreflightFlag() ||
+            (m_orgProxy->unsafeRequestFlag() &&
+             (!FetchUtils::isCorsSafelistedMethod(m_orgProxy->method()) ||
+              nwd->hasCorsUnsafeRequestHeaderNames))) {
+            m_orgProxy->setResponseTainting(ResponseTainting::Cors);
+            nwd->corsFlag = true;
+            nwd->corsPreflightFlag = true;
+        }
     }
 
     fillHeadersWithClientHeaders(headers);
