@@ -9,7 +9,6 @@ enum SupportedType {
 };
 
 [
-  STARFISH_ENABLE_DOMPARSER,
   Constructor,
   ConstructorCallWith=Document
 ] interface DOMParser {

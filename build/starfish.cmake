@@ -82,10 +82,8 @@ IF (${HOST} STREQUAL "linux")
     )
 ENDIF()
 
-IF (NOT ${HOST} STREQUAL "linux")
-    ADD_LIBRARY (starfish.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}>)
-    ADD_LIBRARY (starfish.static_library STATIC $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}>)
-ENDIF()
+ADD_LIBRARY (starfish.shared_library SHARED $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}>)
+ADD_LIBRARY (starfish.static_library STATIC $<TARGET_OBJECTS:${STARFISH_OBJECT_LIBRARY}>)
 
 SET (STARFISH_DEPENDENCIES_COMMON
     escargot
@@ -134,23 +132,18 @@ TARGET_COMPILE_DEFINITIONS (starfish.executable PUBLIC ${LWE_DEFINITIONS})
 TARGET_COMPILE_OPTIONS (starfish.executable PUBLIC ${LWE_CXXFLAGS})
 
 TARGET_LINK_LIBRARIES (starfish.executable ${STARFISH_LINK_LIBRARIES})
-IF (NOT ${HOST} STREQUAL "linux")
-    TARGET_LINK_LIBRARIES (starfish.shared_library ${STARFISH_LINK_LIBRARIES})
-    TARGET_LINK_LIBRARIES (starfish.static_library ${STARFISH_LINK_LIBRARIES})
-ENDIF()
+TARGET_LINK_LIBRARIES (starfish.shared_library ${STARFISH_LINK_LIBRARIES})
+TARGET_LINK_LIBRARIES (starfish.static_library ${STARFISH_LINK_LIBRARIES})
 
 SET_TARGET_PROPERTIES (starfish.executable PROPERTIES 
             LINK_FLAGS ${LWE_LDFLAGS}
             OUTPUT_NAME ${TARGETNAME}
         )
-
-IF (NOT ${HOST} STREQUAL "linux")
-    SET_TARGET_PROPERTIES (starfish.shared_library PROPERTIES 
+SET_TARGET_PROPERTIES (starfish.shared_library PROPERTIES 
             LINK_FLAGS ${LWE_LDFLAGS}
             OUTPUT_NAME ${TARGETNAME}
-            )
-    SET_TARGET_PROPERTIES (starfish.static_library PROPERTIES 
+        )
+SET_TARGET_PROPERTIES (starfish.static_library PROPERTIES 
             LINK_FLAGS ${LWE_LDFLAGS}
             OUTPUT_NAME ${TARGETNAME}
-            )
-ENDIF()
+        )
