@@ -91,7 +91,7 @@ http://web-platform.test:8000/xhr/responseText-status.html
 #http://web-platform.test:8000/xhr/setrequestheader-open-setrequestheader.htm
 #http://web-platform.test:8000/xhr/access-control-basic-allow-non-cors-safelisted-method-async.htm
 http://web-platform.test:8000/xhr/send-data-es-object.htm
-#http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-301.htm
+http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-301.htm
 #http://web-platform.test:8000/xhr/abort-during-loading.htm
 #http://web-platform.test:8000/xhr/send-network-error-async-events.sub.htm
 #http://web-platform.test:8000/xhr/abort-event-order.htm
@@ -111,7 +111,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-timeout-synconmain.html
 http://web-platform.test:8000/xhr/send-response-upload-event-loadstart.htm
 #http://web-platform.test:8000/xhr/send-authentication-prompt-2-manual.htm
 #http://web-platform.test:8000/xhr/send-data-blob.htm
-#http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-501.htm
+http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-501.htm
 http://web-platform.test:8000/xhr/setrequestheader-header-forbidden.htm
 #http://web-platform.test:8000/xhr/abort-after-timeout.htm
 #http://web-platform.test:8000/xhr/event-readystatechange-loaded.htm
@@ -126,7 +126,7 @@ http://web-platform.test:8000/xhr/getallresponseheaders-status.htm
 http://web-platform.test:8000/xhr/open-url-base-inserted.htm
 http://web-platform.test:8000/xhr/response-data-gzip.htm
 #http://web-platform.test:8000/xhr/setrequestheader-header-allowed.htm
-#http://web-platform.test:8000/xhr/access-control-preflight-request-headers-origin.htm
+http://web-platform.test:8000/xhr/access-control-preflight-request-headers-origin.htm
 #http://web-platform.test:8000/xhr/access-control-basic-get-fail-non-simple.htm
 #http://web-platform.test:8000/xhr/abort-event-abort.htm
 #http://web-platform.test:8000/xhr/send-entity-body-document-bogus.htm
@@ -248,7 +248,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-sync-not-hang-scriptloader.html
 http://web-platform.test:8000/xhr/getresponseheader-special-characters.htm
 #http://web-platform.test:8000/xhr/firing-events-http-no-content-length.html
 http://web-platform.test:8000/xhr/timeout-sync.htm
-http://web-platform.test:8000/xhr/send-redirect-to-non-cors.htm
+#http://web-platform.test:8000/xhr/send-redirect-to-non-cors.htm
 #http://web-platform.test:8000/xhr/open-open-send.htm
 #http://web-platform.test:8000/xhr/overridemimetype-loading-state.htm
 http://web-platform.test:8000/xhr/open-method-case-insensitive.htm
@@ -257,7 +257,7 @@ http://web-platform.test:8000/xhr/progressevent-constructor.html
 http://web-platform.test:8000/xhr/historical.html
 http://web-platform.test:8000/xhr/getallresponseheaders-cookies.htm
 #http://web-platform.test:8000/xhr/overridemimetype-unsent-state-force-shiftjis.htm
-#http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-400.htm
+http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-400.htm
 #http://web-platform.test:8000/xhr/overridemimetype-invalid-mime-type.htm
 #http://web-platform.test:8000/xhr/send-entity-body-get-head-async.htm
 http://web-platform.test:8000/xhr/open-url-multi-window.htm

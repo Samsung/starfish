@@ -90,12 +90,14 @@ void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
     NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
     if (nwd->needsToSendPreflightRequest) {
         nwd->httpTransaction->startPreFlightRequest();
-        if (nwd->httpTransaction->httpResponse().isSuccessfulResponseStatus() &&
-            nwd->needsToHandleError) {
+        if (!nwd->httpTransaction->httpResponse()
+                 .isRedirectionResponseStatus() &&
+            (!nwd->httpTransaction->httpResponse()
+                  .isSuccessfulResponseStatus() ||
+             nwd->needsToHandleError)) {
             nwd->helper->abortHandlerWrapper(nwd);
             return nullptr;
         }
-        nwd->needsToSendPreflightRequest = false;
     }
 
     nwd->httpTransaction->start();
@@ -167,9 +169,8 @@ void NetworkURLWorkerHelper::abortHandeler(size_t handle, void* data)
     {
         Locker<Mutex> locker(*nwd->request->m_mutex);
         if (nwd == nwd->request->m_activeNetworkURLWorkerData) {
-            if (nwd->needsToHandleError) {
-                nwd->request->handleError(ProgressState::InError);
-            }
+            nwd->request->m_responseData->m_status = 0;
+            nwd->request->handleError(ProgressState::InError);
             nwd->request->m_activeNetworkURLWorkerData = nullptr;
         }
     }
@@ -192,7 +193,12 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 
     Locker<Mutex> locker(*nwd->request->m_mutex);
 
-    if (nwd->httpTransaction->res() == 0) {
+    if (nwd->request->m_responseData->m_redirected &&
+        nwd->httpTransaction->isPreflightReqeustDone()) {
+        // TODO : https://fetch.spec.whatwg.org/#http-redirect-fetch
+        nwd->request->m_responseData->m_status = 0;
+        nwd->request->handleResponseEOFwithPreflightRequestRedirected();
+    } else if (nwd->httpTransaction->res() == 0) {
         if (nwd->request->m_pendingOnProgressEventIdlerHandle != SIZE_MAX) {
             ResourceRequest* request = nwd->request;
             if (!request->isSync()) {
@@ -685,8 +691,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
 // Caution : Use in curlWriteHeaderCallback only
 static bool checkCORSPreflight(NetworkURLWorkerData* nwd)
 {
-    // TODO: apply `Access-Control-Allow-Headers`,`Access-Control-Max-Age` and
-    // CORS-preflight cache
+    // TODO: 'Access-Control-Max-Age' and CORS-preflight cache
     const auto request = nwd->request;
     const auto& resHeaders = nwd->httpTransaction->httpResponse().headers();
 
@@ -849,7 +854,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                   request->requestMode() == RequestMode::Navigate)) {
                 bool allowed = true;
                 if (checkCors(nwd)) {
-                    if (nwd->needsToSendPreflightRequest) {
+                    if (nwd->httpTransaction->inPreflightRequest()) {
                         if (!checkCORSPreflight(nwd)) {
                             allowed = false;
                         }
@@ -860,7 +865,6 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
                 if (!allowed) {
                     nwd->isAborted = true;
                     nwd->needsToHandleError = true;
-                    request->m_responseData->m_status = 0;
                 }
             }
             request->m_lastEffectiveURL =

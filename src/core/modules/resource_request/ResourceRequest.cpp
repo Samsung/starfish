@@ -145,6 +145,14 @@ void ResourceRequest::handleError(ProgressState error)
     changeProgress(ProgressState::LoadEnd, true);
 }
 
+void ResourceRequest::handleResponseEOFwithPreflightRequestRedirected()
+{
+    changeReadyState(ReadyState::Done, true);
+    changeProgress(ProgressState::Progress, true);
+    changeProgress(ProgressState::InError, true);
+    changeProgress(ProgressState::LoadEnd, true);
+}
+
 bool ResourceRequest::checkProgressAllowanceWithContentSecurityPolicy()
 {
     STARFISH_ASSERT(isMainThread());
