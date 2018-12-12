@@ -55,6 +55,16 @@ public:
         m_value = value;
     }
 
+    bool operator==(MutablePropertyValue& v)
+    {
+        return name()->equals(v.name()) && value()->equals(v.value());
+    }
+
+    bool operator!=(MutablePropertyValue& v)
+    {
+        return !(name()->equals(v.name()) && value()->equals(v.value()));
+    }
+
 private:
     String* m_name;
     String* m_value;
@@ -200,6 +210,11 @@ public:
     const GCAtomicVector<CSSStyleValuePair>& cssValues()
     {
         return m_cssValues;
+    }
+
+    GCVector<MutablePropertyValue>& cssCustomValues()
+    {
+        return m_cssCustomValues;
     }
 
     virtual CSSRule* parentRule() const

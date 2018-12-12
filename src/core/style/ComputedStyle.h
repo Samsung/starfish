@@ -25,6 +25,7 @@
 #include "core/style/LengthData.h"
 #include "core/style/ContentData.h"
 #include "core/style/CounterBaseList.h"
+#include "core/style/CSSStyleDeclaration.h"
 #include "core/style/FlexBasisData.h"
 #include "core/style/Style.h"
 #include "core/style/StyleBackgroundData.h"
@@ -3574,6 +3575,25 @@ public:
         m_rareComputedStyleData.setFilter(v);
     }
 
+    // Inherited Custom properties.
+    std::vector<MutablePropertyValue> customProperty()
+    {
+        return m_inheritedStyles.m_cssCustomValues;
+    }
+
+    // Store Custom properties.
+    void setCustomProperty(MutablePropertyValue v)
+    {
+        auto cssCustomValues = m_inheritedStyles.m_cssCustomValues;
+        for (size_t i = 0; i < cssCustomValues.size(); i++) {
+            MutablePropertyValue property = cssCustomValues[i];
+            if (property.name()->equals(v.name())) {
+                return;
+            }
+        }
+        m_inheritedStyles.m_cssCustomValues.push_back(v);
+    }
+
     static AnimationTimingFunction* knownTransitionTimingFunction(
         TransitionTimingFunctionValue v);
 
@@ -3651,6 +3671,7 @@ protected:
         Length m_fontSize;
         Length m_lineHeight;
         InheritedStylesRareData* m_rareData;
+        std::vector<MutablePropertyValue> m_cssCustomValues;
     } m_inheritedStyles;
 
     bool m_seenViewPortUnitInStyle : 1;
