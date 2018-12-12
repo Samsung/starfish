@@ -27,7 +27,12 @@ namespace Starfish {
 
 enum class ContentSecurityPolicyHeaderType { Report, Enforce };
 
-enum class ContentSecurityPolicyHeaderSource { HTTP, Meta, OriginPolicy };
+enum class ContentSecurityPolicyHeaderSource {
+    HTTP,
+    Meta,
+    OriginPolicy,
+    Inherited,
+};
 
 enum class CSPDirectives {
     BaseURI,
@@ -70,7 +75,7 @@ public:
         String* name, String* blockedURI = String::emptyString,
         SecurityPolicyViolationEventDelegator eventDelegator = nullptr);
 
-    void copy(ContentSecurityPolicy* policy);
+    void copyFrom(ContentSecurityPolicy* policy);
 
 private:
     GCVector<ContentSecurityPolicyDirectiveList*> m_policies;

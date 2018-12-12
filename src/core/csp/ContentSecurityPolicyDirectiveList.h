@@ -30,7 +30,8 @@ class ContentSecurityPolicyDirectiveList : public gc {
 public:
     ContentSecurityPolicyDirectiveList(
         ContentSecurityPolicy* contentSecurityPolicy, String* policy,
-        size_t begin, size_t end);
+        size_t begin, size_t end, ContentSecurityPolicyHeaderType type,
+        ContentSecurityPolicyHeaderSource source);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -48,6 +49,16 @@ public:
     ContentSecurityPolicySourceListDirective* getSourceList(
         CSPDirectives directive);
 
+    const String* header() const
+    {
+        return m_header;
+    }
+
+    ContentSecurityPolicyHeaderType headerType() const
+    {
+        return m_headerType;
+    }
+
 private:
     ContentSecurityPolicy* m_contentSecurityPolicy;
     ResourceURL* m_contextURL;
@@ -60,6 +71,9 @@ private:
     ContentSecurityPolicySourceListDirective* m_mediaSrc;
     ContentSecurityPolicySourceListDirective* m_scriptSrc;
     ContentSecurityPolicySourceListDirective* m_styleSrc;
+
+    String* m_header;
+    ContentSecurityPolicyHeaderType m_headerType;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {

@@ -55,13 +55,22 @@ void* ContentSecurityPolicy::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+void ContentSecurityPolicy::copyFrom(ContentSecurityPolicy* source)
+{
+    for (auto& policy : source->m_policies) {
+        didReceiveHeader(const_cast<String*>(policy->header()),
+                         policy->headerType(),
+                         ContentSecurityPolicyHeaderSource::Inherited);
+    }
+}
+
 void ContentSecurityPolicy::didReceiveHeader(
     String* header, ContentSecurityPolicyHeaderType type,
     ContentSecurityPolicyHeaderSource source)
 {
     ContentSecurityPolicyDirectiveList* policy =
         new ContentSecurityPolicyDirectiveList(this, header, 0,
-                                               header->length());
+                                               header->length(), type, source);
 
     m_policies.push_back(policy);
 }
