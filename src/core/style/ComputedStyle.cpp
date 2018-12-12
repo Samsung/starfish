@@ -2086,6 +2086,30 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
         }
     }
 
+    {
+        auto newCustomProperty = newStyle->customProperty();
+        auto oldCustomProperty = oldStyle->customProperty();
+
+        if (newCustomProperty.size() != oldCustomProperty.size()) {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        } else {
+            bool changedCustomProperty = false;
+            for (auto newValue : newCustomProperty) {
+                for (auto oldValue : oldCustomProperty) {
+                    if (oldValue != newValue) {
+                        changedCustomProperty = true;
+                    }
+                }
+            }
+
+            if (changedCustomProperty) {
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+            }
+        }
+    }
+
     return damage;
 }
 

@@ -1141,19 +1141,22 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
     timingFunction->setValueKind(CSSStyleValuePair::ValueKind::Initial);
     delay->setValueKind(CSSStyleValuePair::ValueKind::Initial);
 
-    CSSStyleValuePair temp;
     bool foundProperty = false;
     bool foundDuration = false;
     bool foundTimingFunction = false;
     bool foundDelay = false;
 
     for (size_t i = 0; i < len; i++) {
+        CSSStyleValuePair temp;
         const CSSTokenValue& tok = tokens[i];
         if (!foundProperty && temp.updateValueUnitTransitionProperty(tok)) {
             foundProperty = true;
             *property = temp;
             continue;
         }
+
+        // TODO: This coide is for ValueUnitTransitionProperty of 'var'.
+
         if ((!foundDuration || !foundDelay) &&
             temp.updateValueUnitTimeOrCalc(tok, 0)) {
             if (!foundDuration) {
@@ -1167,12 +1170,24 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
                 continue;
             }
         }
+
+        // TODO: This code is for Duration and Delay of 'var'.
+        CSSTokenVector toks;
+        toks.push_back(tok);
         if (!foundTimingFunction &&
             temp.updateValueUnitTransitionTimingFunction(tok)) {
             foundTimingFunction = true;
             *timingFunction = temp;
             continue;
+        } else if (!foundTimingFunction &&
+                   temp.updateVarValue(tok.c_str(), toks)) {
+            temp.setTemporaryKeyKind(
+                CSSStyleValuePair::KeyKind::TransitionTimingFunction);
+            foundTimingFunction = true;
+            *timingFunction = temp;
+            continue;
         }
+
         return false;
     }
     return true;
@@ -1253,6 +1268,7 @@ void CSSStyleDeclaration::clear()
 {
     m_cssValues.clear();
     m_pointerRooter.clear();
+    m_cssCustomValues.clear();
 }
 
 ScriptBindingInstance* CSSStyleDeclaration::scriptBindingInstance()
@@ -1265,7 +1281,7 @@ CSSStyleDeclaration* CSSStyleDeclaration::clone(Element* element)
 {
     CSSStyleDeclaration* newStyle = new CSSStyleDeclaration(element);
     newStyle->m_cssValues = m_cssValues;
-
+    newStyle->m_cssCustomValues = m_cssCustomValues;
     return newStyle;
 }
 
@@ -1566,6 +1582,7 @@ FOR_EACH_STYLE_ATTRIBUTE_STICKY(DEFINE_ATTRIBUTE_GETTER)
             ret.setFlagImportant(isImportant);                            \
             addCSSValuePair(CSSStyleValuePair::KeyKind::name, ret);       \
         }                                                                 \
+        return;                                                           \
     }
 
 FOR_EACH_STYLE_ATTRIBUTE_BASIC(DEFINE_ATTRIBUTE_SETTER)
@@ -3375,6 +3392,7 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
                                         bool isImportant)
 {
     if (length == 0) {
+        // There are not arguments.
         removeCSSValuePair(CSSStyleValuePair::TransitionProperty);
         removeCSSValuePair(CSSStyleValuePair::TransitionDuration);
         removeCSSValuePair(CSSStyleValuePair::TransitionDelay);
@@ -3410,18 +3428,19 @@ void CSSStyleDeclaration::setTransition(const char* value, size_t length,
 
     CSSStyleValuePair r0, r1, r2, r3;
     r0.setValueList(properties);
-    r1.setValueList(durations);
-    r2.setValueList(timingFns);
-    r3.setValueList(delays);
-
     r0.setFlagImportant(isImportant);
-    r1.setFlagImportant(isImportant);
-    r2.setFlagImportant(isImportant);
-    r3.setFlagImportant(isImportant);
-
     addCSSValuePair(CSSStyleValuePair::TransitionProperty, r0);
+
+    r1.setValueList(durations);
+    r1.setFlagImportant(isImportant);
     addCSSValuePair(CSSStyleValuePair::TransitionDuration, r1);
+
+    r2.setValueList(timingFns);
+    r2.setFlagImportant(isImportant);
     addCSSValuePair(CSSStyleValuePair::TransitionTimingFunction, r2);
+
+    r3.setValueList(delays);
+    r3.setFlagImportant(isImportant);
     addCSSValuePair(CSSStyleValuePair::TransitionDelay, r3);
 }
 
@@ -3432,6 +3451,7 @@ StyleRuleCSSStyleDeclaration::StyleRuleCSSStyleDeclaration(
                               ->ownerDocument())
 {
     m_cssValues = src->m_cssValues;
+    m_cssCustomValues = src->m_cssCustomValues;
     m_pointerRooter = src->m_pointerRooter;
     m_parentRule = parentRule;
 }

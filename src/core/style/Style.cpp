@@ -2057,6 +2057,35 @@ void StyleResolver::apply(Element* element,
                           ResourceURL* origin, ComputedStyle* style,
                           ComputedStyle* parentStyle, bool isImportant)
 {
+#ifdef STARFISH_ENABLE_CSS_VARIABLE
+    // Get the css-custom-property from 'parentStyle'.
+    if (parentStyle) {
+        auto parentCustomProperty = parentStyle->customProperty();
+
+        for (size_t i = 0; i < parentCustomProperty.size(); i++) {
+            auto parentValue = parentCustomProperty[i];
+
+            bool skip = false;
+            for (auto value : cssCustomValues) {
+                if (value.name()->equals(parentValue.name())) {
+                    skip = true;
+                    break;
+                }
+            }
+
+            if (!skip) {
+                cssCustomValues.push_back(parentValue);
+            }
+        }
+    }
+
+    // Store the css-custom-property into 'style'.
+    for (size_t i = 0; i < cssCustomValues.size(); i++) {
+        auto value = cssCustomValues[i];
+        style->setCustomProperty(value);
+    }
+#endif
+
     for (unsigned k = 0; k < cssValues.size(); k++) {
         if (isImportant != cssValues[k].flagImportant()) {
             continue;
@@ -2106,6 +2135,13 @@ void StyleResolver::apply(Element* element,
             CSSStyleValuePair ret;
             switch (cssValues[k].temporaryKeyKind()) {
                 FOR_EACH_STYLE_ATTRIBUTE_BASIC(SET_CASES)
+            case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
+                if (ret.updateValueCommon(tokens) ||
+                    ret.updateValueLayerTransitionTimingFunction(tokens)) {
+                    ret.setKeyKind(
+                        CSSStyleValuePair::KeyKind::TransitionTimingFunction);
+                }
+                break;
             case CSSStyleValuePair::KeyKind::Unknown:
                 break;
             default:
@@ -2115,6 +2151,59 @@ void StyleResolver::apply(Element* element,
             cssValues[k].setKeyKind(ret.keyKind());
             cssValues[k].setValueKind(ret.valueKind());
             cssValues[k].setValue(ret.value());
+        } else if (cssValues[k].valueKind() ==
+                   CSSStyleValuePair::ValueListKind) {
+            ValueList* list = cssValues[k].multiValue();
+            for (unsigned int i = 0; i < list->size(); i++) {
+                CSSStyleValuePair pair = (*list)[i];
+                if (pair.keyKind() == CSSStyleValuePair::KeyKind::VarValue) {
+                    String* keyword = pair.varFunctionValue();
+                    size_t len = keyword->length();
+                    CSSTokenVector tokens;
+                    if (UNLIKELY(cssValues[k].temporaryKeyKind() ==
+                                 CSSStyleValuePair::KeyKind::Content)) {
+                        CSSStyleDeclaration::tokenizeCSSValue(
+                            tokens, keyword->toUTF8NonGCString().data(), len,
+                            "", 0, true);
+                    } else {
+                        CSSStyleDeclaration::tokenizeCSSValue(
+                            tokens, keyword->toUTF8NonGCString().data(), len,
+                            ",", 1);
+                    }
+
+                    for (size_t l = 0; l < tokens.size(); l++) {
+                        CSSVariableSyntaxTreeBuilder variablesSyntaxBuilder;
+                        CSSTokenValue token(tokens[l]);
+                        variablesSyntaxBuilder.build(token);
+                        if (variablesSyntaxBuilder.isValid()) {
+                            // Replace a old style with a new style converted
+                            // with the
+                            // variable syntax builder.
+                            tokens[i] = CSSTokenValue(
+                                variablesSyntaxBuilder.generateStyle(
+                                    cssCustomValues));
+                        }
+                    }
+
+                    CSSStyleValuePair ret;
+                    switch (pair.temporaryKeyKind()) {
+                    // TODO: Add other properties.
+                    case CSSStyleValuePair::KeyKind::TransitionTimingFunction:
+                        if (ret.updateValueCommon(tokens) ||
+                            ret.updateValueLayerTransitionTimingFunction(
+                                tokens)) {
+                            ret.setKeyKind(CSSStyleValuePair::KeyKind::
+                                               TransitionTimingFunction);
+                        }
+                        break;
+                    default:
+                        break;
+                    }
+                    (*list)[i].setKeyKind(ret.keyKind());
+                    (*list)[i].setValueKind(ret.valueKind());
+                    (*list)[i].setValue(ret.value());
+                }
+            }
         }
 #endif
 
