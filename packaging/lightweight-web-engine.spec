@@ -207,6 +207,14 @@ an standalone executable binary for wearable.
 echo "Building for: " %{rpm}
 
 CXXFLAGS+=' -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} '
+%if 0%{?build_option:1}
+%if "%{build_option}" == "ecore_elm_window"
+CXXFLAGS+=' -DPORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN '
+%endif
+%if "%{build_option}" == "evas_gl_transparent_window"
+CXXFLAGS+=' -DSTARFISH_ENABLE_TRANSPARENT_WINDOW '
+%endif
+%endif
 
 
 ##############################################

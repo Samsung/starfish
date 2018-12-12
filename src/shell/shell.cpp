@@ -25,7 +25,6 @@
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 #include <Elementary.h>
 #elif defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
-#define PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN
 #include <Ecore.h>
 #if defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN)
 #include <Elementary.h>
