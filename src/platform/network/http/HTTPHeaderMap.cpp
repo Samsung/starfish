@@ -164,19 +164,21 @@ curl_slist* HTTPHeaderMap::generateCurlListToPreflightRequest()
 
 std::string HTTPHeaderMap::generateAccessControlRequestHeaders()
 {
-    std::string header(HTTPHeaderMap::kAccessControlRequestHeaders);
-    header.append(": ");
-    bool hasValue = false;
+    std::vector<std::string> reqeustHeaders;
     for (auto it = m_headerMap.begin(); it != m_headerMap.end(); ++it) {
         if (!isClientOrGeneralHeader(it->first)) {
-            if (hasValue) {
-                header.append(",");
-            }
-            header.append(it->first);
-            if (!hasValue) {
-                hasValue = true;
-            }
+            reqeustHeaders.emplace_back(StringUtils::toLowerCase(it->first));
         }
+    }
+    std::sort(reqeustHeaders.begin(), reqeustHeaders.end());
+
+    std::string header(HTTPHeaderMap::kAccessControlRequestHeaders);
+    header.append(": ");
+    for (auto it = reqeustHeaders.begin(); it != reqeustHeaders.end(); ++it) {
+        if (it != reqeustHeaders.begin()) {
+            header.append(",");
+        }
+        header.append(*it);
     }
     return header;
 }

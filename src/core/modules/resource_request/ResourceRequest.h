@@ -373,6 +373,7 @@ protected:
     void handleResponseEOF();
     void handleError(ProgressState error);
     void handleConnectError();
+    void handleResponseEOFwithPreflightRequestRedirected();
     bool checkProgressAllowanceWithContentSecurityPolicy();
 
     void pushIdlerHandle(size_t handle)

@@ -45,6 +45,8 @@ struct NetworkURLWorkerData {
     bool hasCorsUnsafeRequestHeaderNames;
 
     bool needsToSendPreflightRequest;
+    bool inPreflightRequest;
+    bool isPreflightReqeustDone;
 
     ResourceRequest* request;
     NetworkURLWorkerHelper* helper;

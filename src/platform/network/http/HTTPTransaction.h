@@ -104,10 +104,20 @@ public:
         m_writeData = data;
     }
 
+    bool inPreflightRequest()
+    {
+        return m_inPreflightRequest;
+    }
+
+    bool isPreflightReqeustDone()
+    {
+        return m_isPreflightReqeustDone;
+    }
+
 private:
     HTTPTransaction();
-    void preprocess();
-    void postprocess();
+    void preprocess(bool preflight);
+    void postprocess(bool preflight);
     void registerCurlHandlers();
 
     std::unique_ptr<HTTPRequest> m_httpRequest;
@@ -132,6 +142,9 @@ private:
     // write
     WriteCallback m_writeCB;
     void* m_writeData; // NetworkURLWorkerData
+
+    bool m_inPreflightRequest;
+    bool m_isPreflightReqeustDone;
 
 #ifdef STARFISH_ENABLE_TEST
     void printCurlRequestDump();

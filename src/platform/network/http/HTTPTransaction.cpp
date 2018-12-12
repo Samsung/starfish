@@ -41,6 +41,8 @@ HTTPTransaction::HTTPTransaction()
     , m_writeHeaderData(nullptr)
     , m_writeCB(nullptr)
     , m_writeData(nullptr)
+    , m_inPreflightRequest(false)
+    , m_isPreflightReqeustDone(false)
 #ifdef STARFISH_ENABLE_TEST
     , m_enableLog(false)
 #endif
@@ -51,14 +53,18 @@ HTTPTransaction::~HTTPTransaction()
 {
 }
 
-void HTTPTransaction::preprocess()
+void HTTPTransaction::preprocess(bool preflight)
 {
     m_httpResponse.reset(new HTTPResponse());
     m_curlsh = NetworkSharedResourceManager::getInstance()->curlShareHandle();
-    CurlHandleData cd =
-        NetworkSharedResourceManager::getInstance()->getCurlHandleData(
-            m_httpRequest->baseURL());
-    m_curl = cd.curl;
+    if (preflight) {
+        m_curl = curl_easy_init();
+    } else {
+        CurlHandleData cd =
+            NetworkSharedResourceManager::getInstance()->getCurlHandleData(
+                m_httpRequest->baseURL());
+        m_curl = cd.curl;
+    }
 
 #ifdef STARFISH_ENABLE_TEST
     const char* verbose = getenv("NETWORK_LOG_VERBOSE");
@@ -75,10 +81,14 @@ void HTTPTransaction::preprocess()
     curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
 
-    curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
+    if (preflight) {
+        curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 0L);
+        curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 0);
+    } else {
+        curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
+        curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
+    }
     curl_easy_setopt(m_curl, CURLOPT_AUTOREFERER, 1L);
-    curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
-
     curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
 
     if (m_proxyURL.size()) {
@@ -94,23 +104,27 @@ void HTTPTransaction::preprocess()
     STARFISH_ASSERT(m_curlsh);
 }
 
-void HTTPTransaction::postprocess()
+void HTTPTransaction::postprocess(bool preflight)
 {
     STARFISH_ASSERT(m_curl);
 
 #ifdef STARFISH_ENABLE_TEST
     printCurlRequestDump();
 #endif
-    CurlHandleData cd = { m_curl, 0 };
-    NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(
-        m_httpRequest->baseURL(), cd);
-    m_curl = nullptr;   // Do not free;
+    if (preflight) {
+        curl_easy_cleanup(m_curl);
+    } else {
+        CurlHandleData cd = { m_curl, 0 };
+        NetworkSharedResourceManager::getInstance()->cachingCurlHandleData(
+            m_httpRequest->baseURL(), cd);
+    }
+    m_curl = nullptr;
     m_curlsh = nullptr; // Do not free;
 }
 
 void HTTPTransaction::start()
 {
-    preprocess();
+    preprocess(false);
 
 #if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
@@ -163,12 +177,12 @@ void HTTPTransaction::start()
     updateTransactionStatus();
     curl_slist_free_all(list);
 
-    postprocess();
+    postprocess(false);
 }
 
 void HTTPTransaction::startPreFlightRequest()
 {
-    preprocess();
+    preprocess(true);
 
     curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, "OPTIONS");
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
@@ -188,13 +202,19 @@ void HTTPTransaction::startPreFlightRequest()
 
     curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
 
+    m_inPreflightRequest = true;
+
     m_res = curl_easy_perform(m_curl);
+
+    m_inPreflightRequest = false;
+    m_isPreflightReqeustDone = true;
+
     updateTransactionStatus();
 
     curl_slist_free_all(list);
     list = nullptr;
 
-    postprocess();
+    postprocess(true);
 }
 
 void HTTPTransaction::didReceiveHeader(const std::string& header)
