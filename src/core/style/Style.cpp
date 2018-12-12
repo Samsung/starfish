@@ -2373,6 +2373,10 @@ void StyleResolver::apply(Element* element,
                        (cssValues[k].valueKind() ==
                         CSSStyleValuePair::ValueKind::Unset)) {
                 style->setHeight(Length());
+            } else if (cssValues[k].valueKind() ==
+                       CSSStyleValuePair::ValueKind::
+                           WidthHeightKeywordValueKind) {
+                STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
             } else {
                 Nullable<Length> length = convertValueToLength(
                     cssValues[k].valueKind(), cssValues[k].value());

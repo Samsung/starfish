@@ -509,7 +509,7 @@ enum ResizeValue ENSURE_ENUM_UNSIGNED {
 };
 
 // These values are introduced in CSS basic box model
-// (https://drafts.csswg.org/css-box-3/). But, it is undergoing changes and many
+// (https://www.w3.org/TR/css-sizing-3/). But, it is undergoing changes and many
 // parts are not consistent with other modules of CSS.
 enum WidthHeightKeywordValue ENSURE_ENUM_UNSIGNED {
     AvailableValue,
