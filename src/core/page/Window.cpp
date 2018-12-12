@@ -138,18 +138,7 @@ Window* Window::parent()
         return this;
     }
 
-    bool ignoreCrossOrigin = false;
-#ifdef STARFISH_IGNORE_CROSS_ORIGIN
-    ignoreCrossOrigin = true;
-#endif
-
-    if (ignoreCrossOrigin ||
-        (browsingContext()->sourceElement()->isInDocumentScope() &&
-         browsingContext()->document()->webOrigin()->isSameOriginDomain(
-             browsingContext()
-                 ->parentBrowsingContext()
-                 ->document()
-                 ->webOrigin()))) {
+    if (browsingContext()->parentBrowsingContext()) {
         return browsingContext()->parentBrowsingContext()->window();
     }
 
@@ -176,23 +165,7 @@ Element* Window::frameElement()
     if (browsingContext()->isTopLevelBrowsingContext()) {
         return nullptr;
     }
-
-    bool ignoreCrossOrigin = false;
-#ifdef STARFISH_IGNORE_CROSS_ORIGIN
-    ignoreCrossOrigin = true;
-#endif
-
-    if (ignoreCrossOrigin ||
-        (browsingContext()->document()->webOrigin()->isSameOriginDomain(
-            browsingContext()
-                ->parentBrowsingContext()
-                ->document()
-                ->webOrigin()))) {
-        HTMLIFrameElement* frameElement = browsingContext()->sourceElement();
-        return frameElement;
-    }
-
-    return nullptr;
+    return browsingContext()->sourceElement();
 }
 
 Storage* Window::localStorage()
@@ -250,18 +223,6 @@ void Window::postMessage(Window* source, ScriptValue message,
         throw e;
     }
 
-#ifndef STARFISH_IGNORE_CROSS_ORIGIN
-    if (!targetOrigin->equals("*") && !targetOrigin->equals("about:blank") &&
-        !targetOrigin->equals(origin)) {
-        COMPOSE_MESSAGE(reason, ORIGINS_ARE_NOT_MATCHED,
-                        targetOrigin->toUTF8NonGCString().data(),
-                        origin->toUTF8NonGCString().data());
-        COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
-                        reason);
-        webView()->console()->error(String::fromUTF8(msg));
-        return;
-    }
-#endif
     // NOTE addIder would hold serializedRecord
     if (browsingContext()) {
         webView()->messageLoop()->addIdler(
