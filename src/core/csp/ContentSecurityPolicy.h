@@ -44,6 +44,9 @@ enum class CSPDirectives {
 class ContentSecurityPolicyDirectiveList;
 class ContentSecurityPolicySourceListDirective;
 
+using SecurityPolicyViolationEventDelegator =
+    void (*)(SecurityPolicyViolationEvent* event, Window* window);
+
 class ContentSecurityPolicy : public WindowHoldable {
 public:
     ContentSecurityPolicy(Window* window);
@@ -55,16 +58,19 @@ public:
                           ContentSecurityPolicyHeaderSource source);
 
     bool allowInlineEventHandler();
-    bool allowSource(CSPDirectives directive, ResourceURL* url,
-                     bool isSendingEventInIdleTime = true);
+    bool allowSource(
+        CSPDirectives directive, ResourceURL* url,
+        SecurityPolicyViolationEventDelegator eventDelegator = nullptr);
     bool allowInline(CSPDirectives directive, String* scriptContent,
                      String* nonce = nullptr);
     bool allowEval(CSPDirectives directive);
     bool allowNonce(CSPDirectives directive, String* nonce);
 
-    void dispatchViolationEvent(String* name,
-                                String* blockedURI = String::emptyString,
-                                bool isSendingEventInIdleTime = true);
+    void dispatchViolationEvent(
+        String* name, String* blockedURI = String::emptyString,
+        SecurityPolicyViolationEventDelegator eventDelegator = nullptr);
+
+    void copy(ContentSecurityPolicy* policy);
 
 private:
     GCVector<ContentSecurityPolicyDirectiveList*> m_policies;

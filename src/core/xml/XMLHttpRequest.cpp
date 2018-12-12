@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/page/BrowsingContext.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMParser.h"
 #include "core/dom/ProgressEvent.h"
@@ -34,6 +35,7 @@
 #include "core/fetch/Headers.h"
 #include "core/fetch/Response.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "core/csp/SecurityPolicyViolationEvent.h"
 
 namespace Starfish {
 
@@ -115,7 +117,11 @@ public:
     void onReadyStateChange(ResourceRequest* request, bool fromExplicit)
     {
         if (fromExplicit) {
-            if (request->readyState() == ReadyState::Done) {
+            if (request->readyState() == ReadyState::HeadersReceived) {
+                if (checkContentSecurityPolicy(request) == false) {
+                    request->requestAbortOnRequestClient();
+                }
+            } else if (request->readyState() == ReadyState::Done) {
                 if (!request->isError()) {
                     if (m_xhr->m_responseType ==
                             XMLHttpRequestResponseType::Empty ||
@@ -196,6 +202,23 @@ public:
                           eventType, EventInit(true, true));
             m_xhr->EventTarget::dispatchEventByUA(m_xhr, e);
         }
+    }
+
+    bool checkContentSecurityPolicy(ResourceRequest* request)
+    {
+        if (request->isRedirected()) {
+            auto csp = request->document()->contentSecurityPolicy();
+            auto resourceURL =
+                new ResourceURL(request->lastEffectiveURL().c_str());
+            auto f = [](SecurityPolicyViolationEvent* event, Window* window) {
+                window->document()->dispatchEventByUA(event);
+            };
+
+            if (!csp->allowSource(CSPDirectives::ConnectSrc, resourceURL, f)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     XMLHttpRequest* m_xhr;
