@@ -16,7 +16,6 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-#ifdef STARFISH_ENABLE_DOMPARSER
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/CDATASection.h"
@@ -198,4 +197,3 @@ Document* DOMParser::parseFromString(String* str, String* type)
     }
 }
 }
-#endif

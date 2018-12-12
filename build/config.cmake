@@ -30,6 +30,30 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 # DEFINITION
 #######################################################
 
+# DEFINITION Description
+# ESCARGOT_ENABLE_TYPEDARRAY : enable typed array es6 feature [default: enabled]
+# ESCARGOT_ENABLE_PROMISE : enable promise es6 feature [default: enabled]
+# STARFISH_ENABLE_MULTIMEDIA : enable multimedia element (video, audio, track) features
+# STARFISH_ENABLE_INSPECTOR : enable inspector which is used for message sender in separate thread
+# STARFISH_ENABLE_TTS : enable TTS (Text-To-Speech)
+# STARFISH_ENABLE_HTTPCACHE : enable HTTPCache feature which caches resources downloaded through HTML
+# STARFISH_TIZEN : enable several TIZEN specific features such as media player, backend graphic library
+# TIZEN_DEVICE_API : enable TIZEN device API Loader for escargot. define JS Object extension which has supported TIZEN properties.
+# SIZE_MAX=0xffffffff : define maximum size of 32bit unsigned value
+# STARFISH_IGNORE_SSL_VERIFYPEER : ignore SSL connection verification only for Android
+# STARFISH_ENABLE_TEST : enable features only necessary for TC runs
+# STARFISH_MEDIAPLAYER_DEBUG : enable debugging and messaging for mediaplayer
+# STARFISH_TIZEN_TV : enable features only necessary for TIZEN based TV targets
+# STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED : enable TIZEN specific GEOLOCATION feature
+# STARFISH_ENABLE_AVPLAY : enable AVPLAY only necessary for TIZEN based TV targets
+# STARFISH_ENABLE_TRANSPARENT_WINDOW : enable transparent window (transparent background) currently necessary for TIZEN based TV targets
+# STARFISH_ENABLE_BODY_FOCUS_RING : draw focus ring when focus event occurred
+# STARFISH_ENABLE_VIRTUAL_CURSOR : enable painting of virtual cursor
+# STARFISH_TIZEN_WEARABLE_WIDGET : enable features only necessary for TIZEN wearable targets
+# STARFISH_DISABLE_OVERFLOW_SCROLL : disable scroll event for wearable targets
+# _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
+
+
 SET (LWE_DEFINES_DEFAULT
     -DESCARGOT_ENABLE_TYPEDARRAY=1
     -DESCARGOT_ENABLE_PROMISE=1
@@ -39,7 +63,6 @@ IF (${ARCH} STREQUAL "x64")
     SET (LWE_DEFINES_ARCH
         -DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_ENABLE_INSPECTOR
-        -DSTARFISH_ENABLE_DOMPARSER
         -DSTARFISH_ENABLE_TTS
         -DSTARFISH_IGNORE_CROSS_ORIGIN
         -DSTARFISH_ENABLE_HTTPCACHE
@@ -50,7 +73,6 @@ IF (${HOST} STREQUAL "tizen")
     SET (LWE_DEFINES_HOST
         -DSTARFISH_TIZEN
         -DSTARFISH_TIZEN_OBS
-        -DSTARFISH_ENABLE_DOMPARSER
         -DSTARFISH_IGNORE_CROSS_ORIGIN
         # -DSTARFISH_ENABLE_MULTIMEDIA
         -DTIZEN_DEVICE_API
@@ -96,9 +118,7 @@ ELSEIF (${CUSTOM} STREQUAL "prod_tv")
     ENDIF()
 ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
     SET (LWE_DEFINES_CUSTOM
-        #-DSTARFISH_TIZEN_WEARABLE
         -DSTARFISH_TIZEN_WEARABLE_WIDGET
-        -DSTARFISH_TIZEN_TRANSPARENT_BACKGROUND
         -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
         #-DSTARFISH_DISABLE_OVERFLOW_SCROLL
         -DSTARFISH_ENABLE_MULTIMEDIA
@@ -110,7 +130,6 @@ IF (${MODE} STREQUAL "debug")
         -DGC_DEBUG # bdwgc
         -D_GLIBCXX_DEBUG
         -DSTARFISH_ENABLE_TEST
-        #-DSTARFISH_ENABLE_NETWORK_TEST
     )
 ELSEIF (${MODE} STREQUAL "release")
     SET (LWE_DEFINES_MODE -DNDEBUG)
