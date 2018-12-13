@@ -2384,12 +2384,30 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     hTileSize,
                     m_rareData->m_graphicsBufferHolder->bufferHeight() -
                         coveredRowsCount);
+
+                LayoutRect tileExtent =
+                    computeBoxExtent(LayoutRect(minX + (LayoutUnit)tileDataX,
+                                                minY + (LayoutUnit)tileDataY,
+                                                tileDataWidth, tileDataHeight),
+                                     m_rareData->m_screenMatrix);
+
+                bool willPaintOnScreen = screenRect.intersects(tileExtent) &&
+                                         windowRect.intersects(tileExtent);
+
                 if (m_rareData->m_graphicsBufferHolder->m_surfaces[tileIndex]) {
-                    compositor->drawSurface(m_rareData->m_graphicsBufferHolder
-                                                ->m_surfaces[tileIndex],
-                                            Unit::Rect(tileDataX, tileDataY,
-                                                       tileDataWidth,
-                                                       tileDataHeight));
+                    if (willPaintOnScreen) {
+                        compositor->drawSurface(
+                            m_rareData->m_graphicsBufferHolder
+                                ->m_surfaces[tileIndex],
+                            Unit::Rect(tileDataX, tileDataY, tileDataWidth,
+                                       tileDataHeight));
+                    } else {
+                        m_rareData->m_graphicsBufferHolder
+                            ->m_surfaces[tileIndex]
+                            ->detachNativeBuffer();
+                        m_rareData->m_graphicsBufferHolder
+                            ->m_surfaces[tileIndex] = nullptr;
+                    }
                 }
                 tileIndex++;
                 coveredColsCount += wTileSize;

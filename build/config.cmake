@@ -195,15 +195,17 @@ IF (NOT ${BACKEND} STREQUAL "dali")
     SET (LWE_CXXFLAGS_BACKEND -fno-rtti)
 ENDIF()
 
-SET (LWE_CXXFLAGS ${LWE_CXXFLAGS_DEFAULT} ${LWE_CXXFLAGS_COMPILER} ${LWE_CXXFLAGS_HOST} ${LWE_CXXFLAGS_BACKEND} ${CXXFLAGS_FROM_ENV} ${LWE_CXXFLAGS_MODE})
+SET (LWE_CXXFLAGS ${LWE_CXXFLAGS_DEFAULT} ${LWE_CXXFLAGS_COMPILER} ${LWE_CXXFLAGS_HOST} ${LWE_CXXFLAGS_BACKEND} ${LWE_CXXFLAGS_MODE} ${CXXFLAGS_FROM_ENV})
 
+SET (LDFLAGS_FROM_ENV $ENV{LDFLAGS})
+SEPARATE_ARGUMENTS(LDFLAGS_FROM_ENV)
 
-SET (LWE_LDFLAGS_DEFAULT -Wl,-rpath=/usr/local/lib)
+SET (LWE_LDFLAGS_DEFAULT -Wl,--gc-sections -Wl,-rpath=/usr/local/lib)
 IF (${HOST} STREQUAL "linux")
-    SET (LWE_LDFLAGS_HOST -Wl,--gc-sections -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib)
+    SET (LWE_LDFLAGS_HOST -L/usr/local/lib -Wl,-rpath=\$$ORIGIN/lib -Wl,-rpath-link=lib)
 ENDIF()
 
-SET (LWE_LDFLAGS ${LWE_LDFLAGS_DEFAULT} ${LWE_LDFLAGS_HOST})
+SET (LWE_LDFLAGS ${LWE_LDFLAGS_DEFAULT} ${LWE_LDFLAGS_HOST} ${LDFLAGS_FROM_ENV})
 #######################################################
 # PACKAGES
 #######################################################
