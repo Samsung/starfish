@@ -1,6 +1,6 @@
 http://web-platform.test:8000/xhr/open-url-javascript-window.htm
 http://web-platform.test:8000/xhr/send-sync-no-response-event-load.htm
-#http://web-platform.test:8000/xhr/access-control-basic-allow-access-control-origin-header.htm
+http://web-platform.test:8000/xhr/access-control-basic-allow-access-control-origin-header.htm
 #http://web-platform.test:8000/xhr/access-control-and-redirects-async-same-origin.htm
 #http://web-platform.test:8000/xhr/access-control-basic-allow-preflight-cache-invalidation-by-method.htm
 http://web-platform.test:8000/xhr/open-url-base.htm
@@ -13,7 +13,7 @@ http://web-platform.test:8000/xhr/send-redirect-infinite.htm
 http://web-platform.test:8000/xhr/access-control-basic-cors-safelisted-response-headers.htm
 http://web-platform.test:8000/xhr/open-referer.htm
 #http://web-platform.test:8000/xhr/event-upload-progress.htm
-#http://web-platform.test:8000/xhr/access-control-response-with-exposed-headers.htm
+http://web-platform.test:8000/xhr/access-control-response-with-exposed-headers.htm
 #http://web-platform.test:8000/xhr/abort-after-send.htm
 #http://web-platform.test:8000/xhr/getallresponseheaders.htm
 http://web-platform.test:8000/xhr/access-control-basic-preflight-denied.htm
@@ -68,7 +68,7 @@ http://web-platform.test:8000/xhr/open-url-about-blank-window.htm
 #http://web-platform.test:8000/xhr/overridemimetype-done-state.htm
 #http://web-platform.test:8000/xhr/open-url-redirected-worker-origin.htm
 #http://web-platform.test:8000/xhr/loadstart-and-state.html
-#http://web-platform.test:8000/xhr/access-control-basic-allow-star.htm
+http://web-platform.test:8000/xhr/access-control-basic-allow-star.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-simple.html
 #http://web-platform.test:8000/xhr/send-sync-timeout.htm
 http://web-platform.test:8000/xhr/send-no-response-event-loadstart.htm
@@ -79,14 +79,14 @@ http://web-platform.test:8000/xhr/getresponseheader-cookies-and-more.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-aborted.html
 #http://web-platform.test:8000/xhr/template-element.html
 http://web-platform.test:8000/xhr/access-control-preflight-request-header-lowercase.htm
-#http://web-platform.test:8000/xhr/access-control-basic-allow.htm
+http://web-platform.test:8000/xhr/access-control-basic-allow.htm
 #http://web-platform.test:8000/xhr/access-control-sandboxed-iframe-denied.htm
 #http://web-platform.test:8000/xhr/xmlhttprequest-sync-default-feature-policy.sub.html
 http://web-platform.test:8000/xhr/send-accept-language.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-eventtarget.htm
 #http://web-platform.test:8000/xhr/header-user-agent-sync.htm
 #http://web-platform.test:8000/xhr/send-blob-with-no-mime-type.html
-#http://web-platform.test:8000/xhr/access-control-basic-post-with-non-cors-safelisted-content-type.htm
+http://web-platform.test:8000/xhr/access-control-basic-post-with-non-cors-safelisted-content-type.htm
 http://web-platform.test:8000/xhr/responseText-status.html
 #http://web-platform.test:8000/xhr/setrequestheader-open-setrequestheader.htm
 #http://web-platform.test:8000/xhr/access-control-basic-allow-non-cors-safelisted-method-async.htm
@@ -100,7 +100,7 @@ http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-statu
 http://web-platform.test:8000/xhr/access-control-preflight-credential-async.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-abortedonmain.html
 http://web-platform.test:8000/xhr/xmlhttprequest-basic.htm
-#http://web-platform.test:8000/xhr/access-control-basic-allow-access-control-origin-header-data-url.htm
+http://web-platform.test:8000/xhr/access-control-basic-allow-access-control-origin-header-data-url.htm
 http://web-platform.test:8000/xhr/send-accept.htm
 http://web-platform.test:8000/xhr/send-no-response-event-loadend.htm
 #http://web-platform.test:8000/xhr/send-content-type-charset.htm
@@ -127,7 +127,7 @@ http://web-platform.test:8000/xhr/open-url-base-inserted.htm
 http://web-platform.test:8000/xhr/response-data-gzip.htm
 #http://web-platform.test:8000/xhr/setrequestheader-header-allowed.htm
 http://web-platform.test:8000/xhr/access-control-preflight-request-headers-origin.htm
-#http://web-platform.test:8000/xhr/access-control-basic-get-fail-non-simple.htm
+http://web-platform.test:8000/xhr/access-control-basic-get-fail-non-simple.htm
 #http://web-platform.test:8000/xhr/abort-event-abort.htm
 #http://web-platform.test:8000/xhr/send-entity-body-document-bogus.htm
 http://web-platform.test:8000/xhr/open-method-bogus.htm
@@ -183,7 +183,7 @@ http://web-platform.test:8000/xhr/responsexml-get-twice.htm
 http://web-platform.test:8000/xhr/open-url-base-inserted-after-open.htm
 #http://web-platform.test:8000/xhr/getresponseheader-chunked-trailer.htm
 #http://web-platform.test:8000/xhr/timeout-cors-async.htm
-#http://web-platform.test:8000/xhr/access-control-basic-allow-async.htm
+http://web-platform.test:8000/xhr/access-control-basic-allow-async.htm
 http://web-platform.test:8000/xhr/event-loadstart.htm
 http://web-platform.test:8000/xhr/abort-during-unsent.htm
 #http://web-platform.test:8000/xhr/send-authentication-competing-names-passwords.htm
@@ -241,7 +241,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-timeout-overridesexpires.html
 #http://web-platform.test:8000/xhr/send-authentication-basic-setrequestheader-existing-session.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-sync-not-hang-scriptloader.html
 #http://web-platform.test:8000/xhr/overridemimetype-headers-received-state-force-shiftjis.htm
-#http://web-platform.test:8000/xhr/access-control-basic-post-success-no-content-type.htm
+http://web-platform.test:8000/xhr/access-control-basic-post-success-no-content-type.htm
 #http://web-platform.test:8000/xhr/event-loadend.htm
 #http://web-platform.test:8000/xhr/firing-events-http-content-length.html
 #http://web-platform.test:8000/xhr/send-sync-no-response-event-order.htm

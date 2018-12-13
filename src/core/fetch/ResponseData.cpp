@@ -31,6 +31,7 @@ ResponseData::ResponseData()
     , m_status(200)
     , m_statusText(String::emptyString)
     , m_mimeType(String::emptyString)
+    , m_corsExposedHeaderNameList()
 {
 }
 

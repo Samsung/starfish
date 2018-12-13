@@ -88,10 +88,6 @@ public:
     static HTTPContentInfo getHTTPContentInfoFromHeaders(
         const HeaderMap& headers);
     static bool isUnsafeHeader(String* header);
-    static bool isCORSsafelistedResponseHeaderName(
-        const std::string& headerMapString);
-    static bool isForbiddenResponseHeaderName(
-        const std::string& headerMapString);
 };
 }
 

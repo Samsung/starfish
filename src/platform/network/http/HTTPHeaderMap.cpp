@@ -79,6 +79,7 @@ HeaderMap::const_iterator HTTPHeaderMap::find(const std::string& name) const
 bool HTTPHeaderMap::extractHeaderListValues(std::vector<std::string>& out,
                                             const std::string& name) const
 {
+    // https://fetch.spec.whatwg.org/#extract-header-list-values
     auto it = m_headerMap.find(name);
     if (it == m_headerMap.end()) {
         return true;

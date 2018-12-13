@@ -176,4 +176,39 @@ std::vector<std::string> FetchUtils::corsUnsafeRequestHeaderNames(
     std::sort(unsafeNames.begin(), unsafeNames.end());
     return unsafeNames;
 }
+
+bool FetchUtils::isCORSsafelistedResponseHeaderName(
+    const std::string& name, const GCVector<String*>* exposedNames)
+{
+    // https://fetch.spec.whatwg.org/#cors-safelisted-response-header-name
+    if (StringUtils::equalsIgnoreCase(name, HTTPHeaderMap::kCacheControl) ||
+        StringUtils::equalsIgnoreCase(name, HTTPHeaderMap::kContentLanguage) ||
+        StringUtils::equalsIgnoreCase(name, HTTPHeaderMap::kContentLength) ||
+        StringUtils::equalsIgnoreCase(name, HTTPHeaderMap::kContentType) ||
+        StringUtils::equalsIgnoreCase(name, HTTPHeaderMap::kExpires) ||
+        StringUtils::equalsIgnoreCase(name, HTTPHeaderMap::kLastModified) ||
+        StringUtils::equalsIgnoreCase(name, HTTPHeaderMap::kPragma)) {
+        return true;
+    } else if (isForbiddenResponseHeaderName(name)) {
+        return false;
+    } else {
+        if (exposedNames) {
+            for (auto const& exposedName : *exposedNames) {
+                if (exposedName->equalsIgnoreCase(name.data())) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+bool FetchUtils::isForbiddenResponseHeaderName(const std::string& name)
+{
+    if (StringUtils::equalsIgnoreCase(name, HTTPHeaderMap::kSetCookie) ||
+        StringUtils::equalsIgnoreCase(name, HTTPHeaderMap::kSetCookie2)) {
+        return true;
+    }
+    return false;
+}
 }
