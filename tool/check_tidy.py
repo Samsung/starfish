@@ -109,7 +109,7 @@ def check_whitespace_error(files):
             count_empty_lines += 1
 
 def check_tidy(args):
-    print args.path
+    print(args.path)
 
     if args.update:
         print("Files will be fomatted. Check the change: git diff")
@@ -135,16 +135,16 @@ def check_tidy(args):
 
         check_whitespace_error(files)
 
-    print "* total lines of code: %d" % count_lines
-    print ("* total non-blank lines of code: %d"
+    print("* total lines of code: %d" % count_lines)
+    print("* total non-blank lines of code: %d"
            % (count_lines - count_empty_lines))
-    print "%s* total suggestion files: %d%s" % (TERM_RED if count_suggestion > 0 else TERM_GREEN,
+    print("%s* total suggestion files: %d%s" % (TERM_RED if count_suggestion > 0 else TERM_GREEN,
                                                 count_suggestion,
-                                                TERM_EMPTY)
-    print "%s* total errors: %d%s" % (TERM_RED if count_err > 0 else TERM_GREEN,
+                                                TERM_EMPTY))
+    print("%s* total errors: %d%s" % (TERM_RED if count_err > 0 else TERM_GREEN,
                                       count_err,
-                                      TERM_EMPTY)
-    print
+                                      TERM_EMPTY))
+    print()
 
     return count_err == 0
 
