@@ -27,7 +27,9 @@
 #include <Elementary.h>
 #include "core/modules/message_loop/MessageLoop.h"
 #include <vconf/vconf.h>
-#include <vconf-internal-keys-tv/vconf-internal-keys-menu-system.h>
+
+// NOTE: Original TTS_MODE_INTERRUPT is defined in tts_internal.h.
+#define TTS_MODE_INTERRUPT 3
 
 namespace Starfish {
 
@@ -179,6 +181,9 @@ bool TTS::createHandle()
         STARFISH_LOG_ERROR("tts handle is null in createTTSHandle()");
         return false;
     }
+
+    // NOTE: Because we need to use interrupt mode though we should use
+    // managed APIs, we set only the value.
     if ((ret = tts_set_mode(m_handle, (tts_mode_e)TTS_MODE_INTERRUPT)) !=
         TTS_ERROR_NONE) {
         STARFISH_LOG_ERROR("tts_set_mode failed : %d", ret);
