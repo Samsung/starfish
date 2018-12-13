@@ -256,6 +256,7 @@ public:
             evas_object_image_filled_add(evas_object_evas_get(win));
         evas_object_resize(m_graphicsAdapter, width, height);
         evas_object_image_size_set(m_graphicsAdapter, width, height);
+        evas_object_image_alpha_set(m_graphicsAdapter, EINA_TRUE);
 
         elm_box_pack_end(m_mainBox, m_graphicsAdapter);
 
