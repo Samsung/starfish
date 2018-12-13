@@ -1236,7 +1236,7 @@ CSSStyleValuePair CSSStyleDeclaration::lengthToCSSStyleValue(Length len)
     } else if (len.isInheritableNumber()) {
         p.setNumberValue(len.inheritableNumber());
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     return p;
 }
@@ -1481,7 +1481,7 @@ CSSStyleValuePair CSSStyleDeclaration::getCSSValuePair(
         }
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 void CSSStyleDeclaration::notifyNeedsStyleRecalc()

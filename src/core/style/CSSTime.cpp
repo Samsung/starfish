@@ -53,7 +53,7 @@ double CSSTime::toTimeValue() const
         return m_value;
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return m_value;
 }
 
@@ -68,7 +68,7 @@ String* CSSTime::toString() const
         return String::fromUTF8(stdStr.append("ms").c_str());
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::emptyString;
 }
 }

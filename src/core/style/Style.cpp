@@ -124,7 +124,7 @@ static FontWeightValue lighterWeight(FontWeightValue weight)
     case FontWeightValue::NineHundredsFontWeightValue:
         return FontWeightValue::BoldFontWeightValue; // 700
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
@@ -144,7 +144,7 @@ static FontWeightValue bolderWeight(FontWeightValue weight)
     case FontWeightValue::NineHundredsFontWeightValue:
         return FontWeightValue::NineHundredsFontWeightValue; // 900
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
@@ -188,7 +188,7 @@ static Nullable<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
             return Nullable<Length>();
         }
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
@@ -209,7 +209,7 @@ static void setComputedStyleBackgroundPositionX(ComputedStyle* style,
         } else if (side == SideValue::CenterSideValue) {
             style->setBackgroundPositionX(Length(Length::Percent, 0.5f), layer);
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (value.valueKind() ==
                CSSStyleValuePair::ValueKind::ValueListKind) {
@@ -244,7 +244,7 @@ static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
         } else if (value.sideValue() == SideValue::CenterSideValue) {
             style->setBackgroundPositionY(Length(Length::Percent, 0.5f), layer);
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (value.valueKind() ==
                CSSStyleValuePair::ValueKind::ValueListKind) {
@@ -296,7 +296,7 @@ String* CSSStyleValuePair::keyName() const
         FOR_EACH_STYLE_ATTRIBUTE_STICKY(ADD_CASE_FOR_KEYNAME)
 #undef ADD_CASE_FOR_KEYNAME
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
@@ -860,7 +860,7 @@ String* CSSStyleValuePair::toString() const
         case DisplayValue::NoneDisplayValue:
             return String::fromUTF8("none");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::PositionValueKind:
@@ -874,7 +874,7 @@ String* CSSStyleValuePair::toString() const
         case PositionValue::FixedPositionValue:
             return String::fromUTF8("fixed");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FloatValueKind:
@@ -886,7 +886,7 @@ String* CSSStyleValuePair::toString() const
         case FloatValue::NoneFloatValue:
             return String::fromUTF8("none");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::ClearValueKind:
@@ -900,7 +900,7 @@ String* CSSStyleValuePair::toString() const
         case ClearValue::NoneClearValue:
             return String::fromUTF8("none");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::VerticalAlignValueKind:
@@ -925,10 +925,10 @@ String* CSSStyleValuePair::toString() const
             // FIXME:mh.byun
             // FIXED: NumericVAlignValue cannot be here. (only used in
             // ComputedStyle)
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             break;
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::TextAlignValueKind:
@@ -946,7 +946,7 @@ String* CSSStyleValuePair::toString() const
         case TextAlignValue::StarfishCenterTextAlignValue:
             return String::fromUTF8("-starfish-center");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::TextTransformValueKind:
@@ -960,7 +960,7 @@ String* CSSStyleValuePair::toString() const
         case TextTransformValue::LowercaseTextTransformValue:
             return String::fromUTF8("lowercase");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::SideValueKind:
@@ -978,7 +978,7 @@ String* CSSStyleValuePair::toString() const
         case SideValue::NoneSideValue:
             return String::emptyString;
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::DirectionValueKind:
@@ -988,7 +988,7 @@ String* CSSStyleValuePair::toString() const
         case RtlDirectionValue:
             return String::fromUTF8("rtl");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::WhiteSpaceValueKind:
@@ -1004,7 +1004,7 @@ String* CSSStyleValuePair::toString() const
         case PreLineWhiteSpaceValue:
             return String::fromUTF8("pre-line");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::PointerEventsValueKind:
@@ -1030,7 +1030,7 @@ String* CSSStyleValuePair::toString() const
         case PointerEventsAllValue:
             return String::fromUTF8("all");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::ObjectFitValueKind:
@@ -1046,7 +1046,7 @@ String* CSSStyleValuePair::toString() const
         case ScaledownObjectFitValue:
             return String::fromUTF8("scale-down");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::BackgroundSizeValueKind:
@@ -1064,7 +1064,7 @@ String* CSSStyleValuePair::toString() const
         case NoRepeatRepeatValue:
             return String::fromUTF8("no-repeat");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::BackgroundAttachmentValueKind:
@@ -1076,7 +1076,7 @@ String* CSSStyleValuePair::toString() const
         case LocalBackgroundAttachmentValue:
             return String::fromUTF8("local");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::BoxValueKind:
@@ -1088,7 +1088,7 @@ String* CSSStyleValuePair::toString() const
         case ContentBoxBoxValue:
             return String::fromUTF8("content-box");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FontSizeValueKind:
@@ -1112,7 +1112,7 @@ String* CSSStyleValuePair::toString() const
         case FontSizeValue::SmallerFontSizeValue:
             return String::fromUTF8("smaller");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FontStyleValueKind:
@@ -1124,7 +1124,7 @@ String* CSSStyleValuePair::toString() const
         case FontStyleValue::ObliqueFontStyleValue:
             return String::fromUTF8("oblique");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FontWeightValueKind:
@@ -1156,7 +1156,7 @@ String* CSSStyleValuePair::toString() const
         case FontWeightValue::NineHundredsFontWeightValue:
             return String::fromUTF8("900");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FontKerningValueKind:
@@ -1168,7 +1168,7 @@ String* CSSStyleValuePair::toString() const
         case FontKerningValue::FontKerningNoneValue:
             return String::fromUTF8("none");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::WordWrapValueKind:
@@ -1178,7 +1178,7 @@ String* CSSStyleValuePair::toString() const
         case WordWrapValue::BreakWordWordWrapValue:
             return String::fromUTF8("break-word");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::BorderStyleValueKind:
@@ -1204,7 +1204,7 @@ String* CSSStyleValuePair::toString() const
         case BorderStyleValue::RidgeBorderStyleValue:
             return String::fromUTF8("ridge");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::BorderWidthValueKind:
@@ -1216,7 +1216,7 @@ String* CSSStyleValuePair::toString() const
         case BorderWidthValue::ThickBorderWidthValue:
             return String::fromUTF8("thick");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::BorderImageRepeatValueKind:
@@ -1230,7 +1230,7 @@ String* CSSStyleValuePair::toString() const
         case BorderImageRepeatValue::SpaceValue:
             return String::fromUTF8("space");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::OverflowValueKind:
@@ -1244,7 +1244,7 @@ String* CSSStyleValuePair::toString() const
         case OverflowValue::ScrollOverflow:
             return String::fromUTF8("scroll");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::TextDecorationLineValueKind:
@@ -1260,7 +1260,7 @@ String* CSSStyleValuePair::toString() const
         case TextDecorationLineValue::BlinkTextDecorationLineValue:
             return String::fromUTF8("blink");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::TextDecorationStyleValueKind:
@@ -1276,7 +1276,7 @@ String* CSSStyleValuePair::toString() const
         case TextDecorationStyleValue::WavyTextDecorationStyleValue:
             return String::fromUTF8("wavy");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::TextUnderlinePositionValueKind:
@@ -1290,7 +1290,7 @@ String* CSSStyleValuePair::toString() const
         case TextUnderlinePositionValue::RightTextUnderlinePositionValue:
             return String::fromUTF8("right");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::ResizeValueKind:
@@ -1308,7 +1308,7 @@ String* CSSStyleValuePair::toString() const
         case ResizeValue::InlineResizeValue:
             return String::fromUTF8("inline");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::VisibilityValueKind:
@@ -1320,7 +1320,7 @@ String* CSSStyleValuePair::toString() const
         case VisibilityValue::HiddenVisibilityValue:
             return String::fromUTF8("hidden");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::ImageRenderingValueKind:
@@ -1332,7 +1332,7 @@ String* CSSStyleValuePair::toString() const
         case ImageRenderingValue::ImageRenderingCrispEdgesValue:
             return String::fromUTF8("crisp-edges");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::UnicodeBidiValueKind:
@@ -1344,7 +1344,7 @@ String* CSSStyleValuePair::toString() const
         case IsolateUnicodeBidiValue:
             return String::fromUTF8("isolate");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::TransformFunctions:
@@ -1377,7 +1377,7 @@ String* CSSStyleValuePair::toString() const
         case TransitionTimingFunctionStepEndValue:
             return String::fromUTF8("step-end");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::BoxSizingValueKind:
@@ -1387,7 +1387,7 @@ String* CSSStyleValuePair::toString() const
         case BorderBoxBoxSizingValue:
             return String::fromUTF8("border-box");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FlexDirectionValueKind:
@@ -1401,7 +1401,7 @@ String* CSSStyleValuePair::toString() const
         case ColumnReverseFlexDirectionValue:
             return String::fromUTF8("column-reverse");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FlexWrapValueKind:
@@ -1413,7 +1413,7 @@ String* CSSStyleValuePair::toString() const
         case WrapReverseFlexWrapValue:
             return String::fromUTF8("wrap-reverse");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::JustifyContentValueKind:
@@ -1429,7 +1429,7 @@ String* CSSStyleValuePair::toString() const
         case SpaceAroundJustifyContentValue:
             return String::fromUTF8("space-around");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::AlignItemValueKind:
@@ -1445,7 +1445,7 @@ String* CSSStyleValuePair::toString() const
         case StretchAlignItemValue:
             return String::fromUTF8("stretch");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::AlignContentValueKind:
@@ -1463,7 +1463,7 @@ String* CSSStyleValuePair::toString() const
         case CenterAlignContentValue:
             return String::fromUTF8("center");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FlexBasisValueKind:
@@ -1471,7 +1471,7 @@ String* CSSStyleValuePair::toString() const
         case ContentFlexBasisValue:
             return String::fromUTF8("content");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::TableLayoutValueKind:
@@ -1481,7 +1481,7 @@ String* CSSStyleValuePair::toString() const
         case TableLayoutValue::FixedTableLayoutValue:
             return String::fromUTF8("fixed");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FillRuleValueKind:
@@ -1491,7 +1491,7 @@ String* CSSStyleValuePair::toString() const
         case FillRuleEvenOdd:
             return String::fromUTF8("evenodd");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::FontFaceSrcDataValueKind:
@@ -1503,7 +1503,7 @@ String* CSSStyleValuePair::toString() const
         case ContainMaskSizeValue:
             return String::fromUTF8("contain");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::ListStylePositionValueKind:
@@ -1513,7 +1513,7 @@ String* CSSStyleValuePair::toString() const
         case ListStylePositionInside:
             return String::fromUTF8("inside");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::RectValueKind:
@@ -1528,7 +1528,7 @@ String* CSSStyleValuePair::toString() const
         case CollapseBorderCollapseValue:
             return String::fromUTF8("collapse");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::CaptionSideValueKind:
@@ -1538,7 +1538,7 @@ String* CSSStyleValuePair::toString() const
         case BottomCaptionSideValue:
             return String::fromUTF8("bottom");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::EmptyCellsValueKind:
@@ -1548,7 +1548,7 @@ String* CSSStyleValuePair::toString() const
         case HideEmptyCellsValue:
             return String::fromUTF8("hide");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::UserSelectValueKind:
@@ -1562,7 +1562,7 @@ String* CSSStyleValuePair::toString() const
         case AllUserSelectValue:
             return String::fromUTF8("all");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::HyphensValueKind:
@@ -1572,7 +1572,7 @@ String* CSSStyleValuePair::toString() const
         case ManualHyphensValue:
             return String::fromUTF8("manual");
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     case CSSStyleValuePair::ValueKind::LineBreakValueKind:
@@ -1624,7 +1624,7 @@ String* CSSStyleValuePair::toString() const
             builder.appendString("\"");
             return builder.finalize();
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         break;
     }
@@ -1676,7 +1676,7 @@ String* CSSStyleValuePair::toString() const
         STARFISH_ASSERT(animationTimingFunctionValue());
         return animationTimingFunctionValue()->toString();
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 static bool attributeValueMatches(
@@ -1759,7 +1759,7 @@ static bool attributeValueMatches(
         break;
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return false;
 }
 
@@ -2261,7 +2261,7 @@ void StyleResolver::apply(Element* element,
                                  cssCustomValues, origin, style, parentStyle,
                                  isImportant);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::Float:
@@ -2603,7 +2603,7 @@ void StyleResolver::apply(Element* element,
                         FontKerningValue::FontKerningNoneValue);
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::FontWeight:
@@ -2642,7 +2642,7 @@ void StyleResolver::apply(Element* element,
                         cssValues[k].fontWeightValue();
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::WordWrap:
@@ -2720,7 +2720,7 @@ void StyleResolver::apply(Element* element,
                         ImageRenderingValue::ImageRenderingPixelatedValue);
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::TableLayout:
@@ -3254,11 +3254,11 @@ void StyleResolver::apply(Element* element,
                         }
                         style->setBackgroundSize(result, l);
                     } else {
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                     }
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundRepeatX:
@@ -3379,7 +3379,7 @@ void StyleResolver::apply(Element* element,
                 break;
             }
             default:
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundClip:
@@ -3414,7 +3414,7 @@ void StyleResolver::apply(Element* element,
                 break;
             }
             default:
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::BackgroundOrigin:
@@ -3450,7 +3450,7 @@ void StyleResolver::apply(Element* element,
                 break;
             }
             default:
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::MaskImage:
@@ -3532,11 +3532,11 @@ void StyleResolver::apply(Element* element,
                         }
                         style->setMaskSize(result, l);
                     } else {
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                     }
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::TransitionProperty:
@@ -3726,7 +3726,7 @@ void StyleResolver::apply(Element* element,
                         (*list)[1].borderImageRepeatValue());
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::BorderImageOutset:
@@ -4033,7 +4033,7 @@ void StyleResolver::apply(Element* element,
                 style->set##POS(Length());                                \
             }                                                             \
         } else {                                                          \
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();                        \
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                 \
         }                                                                 \
         break;
             ADD_RESOLVE_STYLE_POS(Top, top)
@@ -4063,7 +4063,7 @@ void StyleResolver::apply(Element* element,
                    CSSStyleValuePair::ValueKind::BorderStyleValueKind) {   \
             style->setBorder##POS##Style(cssValues[k].borderStyleValue()); \
         } else {                                                           \
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();                         \
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                  \
         }                                                                  \
         break;
             ADD_RESOLVE_STYLE_BORDER_STYLE(Top, top)
@@ -4102,7 +4102,7 @@ void StyleResolver::apply(Element* element,
                 style->setBorder##POS##Width(Length(Length::Fixed, 5));  \
             }                                                            \
         } else {                                                         \
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();                       \
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                \
         }                                                                \
         break;
             ADD_RESOLVE_STYLE_BORDER_WIDTH(Top, top)
@@ -4219,7 +4219,7 @@ void StyleResolver::apply(Element* element,
                 style->setOpacity(
                     beforeClip < 0 ? 0 : (beforeClip > 1.0 ? 1.0 : beforeClip));
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::OverflowX:
@@ -4384,7 +4384,7 @@ void StyleResolver::apply(Element* element,
                         } else if (valueSize == 2) {
                             style->setTransformScale(dValues[0], dValues[1]);
                         } else {
-                            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                         }
                         break;
                     case CSSTransformFunction::Kind::ScaleX:
@@ -4490,7 +4490,7 @@ void StyleResolver::apply(Element* element,
 
                 style->setTransformOriginValue(xAxis, yAxis, zAxis);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
 
             break;
@@ -4508,7 +4508,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::UnicodeBidiValueKind) {
                 style->setUnicodeBidi(cssValues[k].unicodeBidiValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::BoxSizing:
@@ -4525,7 +4525,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::BoxSizingValueKind) {
                 style->setBoxSizing(cssValues[k].boxSizingValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::Content:
@@ -4596,7 +4596,7 @@ void StyleResolver::apply(Element* element,
                                CSSStyleValuePair::ValueKind::QuoteValueKind) {
                         style->setContentQuote(item.quoteValue());
                     } else {
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                     }
                 }
             }
@@ -4616,7 +4616,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::FlexDirectionValueKind) {
                 style->setFlexDirection(cssValues[k].flexDirectionValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::FlexWrap:
@@ -4633,7 +4633,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::FlexWrapValueKind) {
                 style->setFlexWrap(cssValues[k].flexWrapValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::Order:
@@ -4650,7 +4650,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Int32) {
                 style->setOrder(cssValues[k].int32Value());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::JustifyContent:
@@ -4668,7 +4668,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::JustifyContentValueKind) {
                 style->setJustifyContent(cssValues[k].justifyContentValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::AlignItems:
@@ -4685,7 +4685,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::AlignItemValueKind) {
                 style->setAlignItems(cssValues[k].alignItemValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::AlignSelf:
@@ -4706,7 +4706,7 @@ void StyleResolver::apply(Element* element,
                 style->m_alignSelfSpecifiedByUser = true;
                 style->setAlignSelf(cssValues[k].alignItemValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::AlignContent:
@@ -4724,7 +4724,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::AlignContentValueKind) {
                 style->setAlignContent(cssValues[k].alignContentValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::FlexGrow:
@@ -4741,7 +4741,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Number) {
                 style->setFlexGrow(cssValues[k].numberValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::FlexShrink:
@@ -4758,7 +4758,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Number) {
                 style->setFlexShrink(cssValues[k].numberValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::FlexBasis:
@@ -4790,7 +4790,7 @@ void StyleResolver::apply(Element* element,
                     Length(Length::Percent, cssValues[k].percentageValue());
                 style->setFlexBasis(FlexBasisData(false, length));
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::Fill:
@@ -4818,7 +4818,7 @@ void StyleResolver::apply(Element* element,
                         cssValues[k].namedColorValue())));
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::FillRule:
@@ -4834,7 +4834,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::FillRuleValueKind) {
                 style->setFillRule(cssValues[k].fillRuleValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::FillOpacity:
@@ -4850,7 +4850,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Number) {
                 style->setFillOpacity(cssValues[k].numberValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::Stroke:
@@ -4879,7 +4879,7 @@ void StyleResolver::apply(Element* element,
                             cssValues[k].namedColorValue())));
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::StrokeWidth:
@@ -5149,7 +5149,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::ObjectFitValueKind) {
                 style->setObjectFit(cssValues[k].objectFitValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::ObjectPosition:
@@ -5290,7 +5290,7 @@ void StyleResolver::apply(Element* element,
 
                 style->setObjectPosition(x, y);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::OutlineWidth:
@@ -5319,7 +5319,7 @@ void StyleResolver::apply(Element* element,
                     style->setOutlineWidth(Length(Length::Fixed, 5));
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::OutlineColor:
@@ -5357,7 +5357,7 @@ void StyleResolver::apply(Element* element,
                         cssValues[k].namedColorValue()));
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::OutlineStyle:
@@ -5374,7 +5374,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::BorderStyleValueKind) {
                 style->setOutlineStyle(cssValues[k].borderStyleValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::OutlineOffset:
@@ -5391,7 +5391,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::Length) {
                 style->setOutlineOffset(cssValues[k].lengthValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
         case CSSStyleValuePair::KeyKind::TextTransform:
@@ -5407,7 +5407,7 @@ void StyleResolver::apply(Element* element,
                        CSSStyleValuePair::ValueKind::TextTransformValueKind) {
                 style->setTextTransform(cssValues[k].textTransformValue());
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             break;
 
@@ -5455,7 +5455,7 @@ void StyleResolver::apply(Element* element,
             }                                                                 \
             style->setBorder##AB##Radius(v1, v2);                             \
         } else {                                                              \
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();                            \
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();                     \
         }                                                                     \
         break;
             BORDER_RADIUS_APPLY(TopLeft, topLeft, Horizontal, Vertical)

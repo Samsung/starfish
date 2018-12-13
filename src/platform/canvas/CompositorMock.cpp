@@ -127,7 +127,7 @@ Compositor* Compositor::create2D(Starfish* starfish, CompositorContext* ctx,
 
 Compositor* Compositor::create3D(Starfish* starfish, CompositorContext* ctx)
 {
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 }
 

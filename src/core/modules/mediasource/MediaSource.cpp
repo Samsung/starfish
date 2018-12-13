@@ -114,7 +114,7 @@ SourceBuffer* MediaSource::addSourceBuffer(String* type)
     } else if (type->contains("mpeg") || type->contains("aac")) {
         generateTimestampsFlag = true;
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     // If the generate timestamps flag equals true:
@@ -347,7 +347,7 @@ String* MediaSource::readyState()
     case MediaSource::Closed:
         return starfish()->staticStrings()->m_closed.localName();
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
@@ -373,7 +373,7 @@ void MediaSource::setReadyState(MediaSource::ReadyState state)
         eventName = starfish()->staticStrings()->m_sourceclose.localName();
         break;
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     if (m_attachedMediaElement) {
         m_attachedMediaElement->addEventToOperationQueue(

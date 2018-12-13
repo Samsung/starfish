@@ -127,7 +127,7 @@ static bool parseArguments(FilterFunctionType type, const CSSTokenValue& from,
     case FilterFunctionType::SepiaFilterFunctionType:
         return parseNumberOrPercentageFilter(from.trim(), result);
     case FilterFunctionType::SVGUrlFilterFunctionType:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         break;
     }
     return false;

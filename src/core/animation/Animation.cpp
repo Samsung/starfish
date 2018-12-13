@@ -823,7 +823,7 @@ void ActiveLengthSizeAnimationTask::execute(float progress,
             interpolateLengthSize(progress, m_fromValue, m_toValue),
             m_indexForBgLayer);
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 

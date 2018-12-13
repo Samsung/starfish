@@ -392,7 +392,7 @@ Compositor* Compositor::create2D(WebView* wv, CompositorContext* ctx,
 
 Compositor* Compositor::create3D(WebView* wv, CompositorContext* ctx)
 {
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 } // namespace Starfish

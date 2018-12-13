@@ -805,23 +805,22 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
             VisibilityValue::CollapseVisibilityValue) {
         return nullptr;
     }
-    if (current->isHTMLImageElement()) {
-        return new FrameReplacedImage(current);
-    }
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-    else if (current->isHTMLVideoElement()) {
+    if (current->isHTMLVideoElement()) {
         return new FrameReplacedVideo(current);
     }
 #endif
-    else if (current->isHTMLIFrameElement()) {
-        return new FrameReplacedIFrame(current);
-    }
 #ifdef STARFISH_ENABLE_CANVAS
-    else if (current->isHTMLCanvasElement()) {
+    if (current->isHTMLCanvasElement()) {
         return new FrameReplacedCanvas(current);
     }
 #endif
-    else if (current->isHTMLBRElement()) {
+    if (current->isHTMLImageElement()) {
+        return new FrameReplacedImage(current);
+    } else if (current->isHTMLIFrameElement()) {
+        return new FrameReplacedIFrame(current);
+    } else if (current->isHTMLBRElement()) {
         return new FrameLineBreak(current);
     } else if (current->isHTMLObjectElement()) {
         return new FrameReplacedObject(current);
@@ -877,7 +876,7 @@ Frame* FrameTreeBuilder::createFrame(Node* current,
                 return new FrameInline(current);
             }
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
 }
@@ -1453,7 +1452,7 @@ void QuoteContext::updateFrameQuoteText(FrameQuoteText* frame)
         frame->setText(String::emptyString);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 

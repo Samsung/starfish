@@ -92,7 +92,7 @@ public:
             }
             return m_readPos;
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
 
@@ -473,11 +473,11 @@ void SourceBuffer::setUpdating(bool flag, UpdateState state)
         } else if (state == SourceBuffer::Abort) {
             events.push_back(ss->m_abort.localName());
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         events.push_back(ss->m_updateend.localName());
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     for (size_t i = 0; i < events.size(); i++) {
         m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(
@@ -1520,7 +1520,7 @@ StreamInfo* SourceBuffer::streamInfo(size_t initSegmentIndex,
             return streamInfo[i];
         }
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 void SourceBuffer::increaseUsedBufferSize(size_t amount)

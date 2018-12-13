@@ -371,7 +371,7 @@ String* NamedColor::namedColorToString(NamedColorValue namedColor)
     case NamedColorValue::currentColor:
         return String::createASCIIString("currentColor");
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
@@ -390,7 +390,7 @@ Unit::Color NamedColor::namedColorToColor(NamedColorValue namedColor)
         NAMED_COLOR_FOR_EACH(ADD_COLOR_ITEM)
 #undef ADD_COLOR_ITEM
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     return Unit::Color();
 }

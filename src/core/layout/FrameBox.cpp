@@ -1288,7 +1288,7 @@ Unit::Rect FrameBox::makeRect(BoxValue box)
         h = contentHeight();
         break;
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     return Unit::Rect(x, y, w, h);
@@ -2945,7 +2945,7 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
 
 void FrameBox::paintContent(PaintingContext& ctx)
 {
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 void FrameBox::paintChildrenWith(PaintingContext& ctx)

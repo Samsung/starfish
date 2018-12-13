@@ -155,7 +155,7 @@ HTMLTableElement::CellBorders getCellBordersFromRule(
     case HTMLTableElement::AllRules:
         return HTMLTableElement::SolidBorders;
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     return HTMLTableElement::NoBorders;
 }
@@ -670,7 +670,7 @@ TextAlignValue HTMLTableElement::alignValue(String* align)
     } else if (align->equalsIgnoreCase("-starfish-center")) {
         return TextAlignValue::StarfishCenterTextAlignValue;
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 

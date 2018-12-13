@@ -237,7 +237,7 @@ ValueRef* postMessageWindowFunction(ExecutionStateRef* state,
         }
     } catch (DOMException* e) {
         state->throwException(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     // Return ValueRef* from native value
     return ValueRef::createUndefined();
@@ -624,7 +624,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
         int ch;
 
         if (!fp) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
 
         std::string output;

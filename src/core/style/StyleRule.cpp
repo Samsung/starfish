@@ -75,7 +75,7 @@ CSSRule* StyleRuleBase::createCSSOMWrapper(CSSStyleSheet* parentSheet,
         rule = new CSSKeyframesRule(self->asStyleRuleKeyframes(), parentSheet);
         break;
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return nullptr;
     }
 

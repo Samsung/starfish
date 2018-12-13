@@ -66,7 +66,7 @@ float CSSAngle::toDegreeValue() const
         return convertFromTurnToDeg(m_value);
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return m_value;
 }
 
@@ -85,7 +85,7 @@ String* CSSAngle::toString() const
         return String::fromUTF8(stdStr.append("turn").c_str());
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::emptyString;
 }
 } // namespace Starfish

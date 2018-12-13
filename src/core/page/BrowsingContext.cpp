@@ -1232,7 +1232,7 @@ bool BrowsingContext::dispatchTouchEvent(TouchEventKind kind,
         break;
     }
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     // Handle properties
     handleActiveAndFocus((MouseEventKind)kind, targetNode, targetX, targetY);
@@ -1330,7 +1330,7 @@ bool BrowsingContext::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         break;
     }
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     // Handle properties
     handleActiveAndFocus(kind, t, targetX, targetY);

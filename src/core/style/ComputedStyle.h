@@ -1599,7 +1599,7 @@ public:
     {
         StyleBackgroundData* background = this->background();
         if (background == nullptr) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             return BackgroundSizeValue::ContainBackgroundSizeValue;
         }
         return background->sizeTypeValue(layer);

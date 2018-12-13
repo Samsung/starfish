@@ -97,7 +97,7 @@ static String* getDirectiveName(CSPDirectives directive)
     default:
         break;
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::emptyString;
 }
 

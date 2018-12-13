@@ -269,7 +269,7 @@ bool operator==(const StyleTransformData& a, const StyleTransformData& b)
     case StyleTransformData::OperationType::None:
         break;
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     return true;
 }

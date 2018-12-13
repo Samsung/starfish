@@ -494,6 +494,6 @@ void FrameTableSectionBox::layout(LayoutContext& ctx,
                                   Frame::LayoutWantToResolve resolveWhat)
 {
     // This method should not be called, as table uses its own layout algorithm
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 }

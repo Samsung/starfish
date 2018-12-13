@@ -224,7 +224,7 @@ public:
 
     virtual void scale(double x, double y, double ox, double oy)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     virtual void rotate(double angle)
@@ -234,7 +234,7 @@ public:
 
     virtual void rotate(double angle, double ox, double oy)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     virtual void translate(double x, double y)

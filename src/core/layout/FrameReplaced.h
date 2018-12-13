@@ -141,7 +141,7 @@ public:
         const LayoutRect rect(0, 0, width(), height());
         applyBorderRadiusClippingIfNeeds(canvas, rect);
         if (!isFrameReplaced()) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
 

@@ -326,7 +326,7 @@ UTF8StringDataNonGCStd utf32ToUtf8(const char32_t* str, size_t start,
             ret.push_back(buffer[4]);
             ret.push_back(buffer[5]);
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
     return ret;
@@ -1471,7 +1471,7 @@ UTF16String String::toUTF16String() const
             out.push_back(dst[0]);
             out.push_back(dst[1]);
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
     return out;
@@ -1503,7 +1503,7 @@ UTF16StringDataNonGCStd String::toUTF16NonGCString(size_t start,
                 out.push_back(dst[0]);
                 out.push_back(dst[1]);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         }
     }

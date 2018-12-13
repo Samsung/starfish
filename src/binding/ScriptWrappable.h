@@ -159,14 +159,14 @@ STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
 
 #define THROW_DOM_EXCEPTION(INSTANCE, ERR_CODE, MSG) \
     throw new DOMException(INSTANCE, ERR_CODE, MSG); \
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 
 #define THROW_EXCEPTION(MSG)                                         \
     state->throwException(                                           \
         Escargot::ValueRef::create(Escargot::ErrorObjectRef::create( \
             state, Escargot::ErrorObjectRef::TypeError,              \
             Escargot::StringRef::fromASCII(MSG))));                  \
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 
 #define _CHECK_TYPEOF(v, type)                        \
     (v->isObject() && (v->asObject()->extraData()) && \

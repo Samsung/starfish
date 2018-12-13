@@ -49,7 +49,7 @@ LayoutUnit Frame::lineHeight()
         } else if (lineHeight.isInheritableNumber()) {
             return style()->font()->size() * lineHeight.inheritableNumber();
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
 
@@ -172,7 +172,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                     std::min(y - rb->height(), maxDescenderSoFar);
                 rb->setY(y);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         } else if (box->isFrameReplaced()) {
             hasBoxOtherThanText = true;
@@ -221,7 +221,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                     std::min(amount - outerHeight, maxDescenderSoFar);
                 box->setY(amount);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         } else if (box->isFrameBlockBox() && box->isInlineLevel()) {
             hasBoxOtherThanText = true;
@@ -259,10 +259,10 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                                              maxDescenderSoFar);
             } else if (va == VerticalAlignValue::SubVAlignValue) {
                 // TODO : Need Implement Here
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             } else if (va == VerticalAlignValue::SuperVAlignValue) {
                 // TODO : Need Implement Here
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             } else if (va == VerticalAlignValue::TextTopVAlignValue) {
                 maxDescenderSoFar =
                     std::min(ascender - outerHeight, maxDescenderSoFar);
@@ -283,7 +283,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
                     std::min(amount - ascender, maxDescenderSoFar);
                 box->setY(amount);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         }
     }
@@ -479,7 +479,7 @@ void LineFormattingContext::computeVerticalProperties(FrameBox* parentBox,
             } else if (va == VerticalAlignValue::NumericVAlignValue) {
                 f->setY(maxAscender - f->y() + marginTop);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         }
     }
@@ -1947,7 +1947,7 @@ LayoutUnit LineFormattingContext::offsetApplyingTextAlign()
         } else if (m_block.style()->textAlign() ==
                    SideValue::JustifySideValue) {
             // issue #145
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             if (lineFormattingContext.isBreakedLineWithoutBR(i)) {
                 LayoutUnit remainSpace = (inlineContentWidth - x);
                 if (remainSpace > 0) {
@@ -3635,7 +3635,7 @@ void LineFormattingContext::computeDirection(Frame* parent,
                     m_computedDirectionValuePerFrame[f] = direction;
                 }
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         } else if (f->isFrameLineBreak()) {
             everMetNonNeutralThing = true;

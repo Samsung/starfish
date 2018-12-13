@@ -184,7 +184,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
     if (retValue == 0) {
         m_alive = true;
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 

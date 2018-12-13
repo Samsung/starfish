@@ -106,7 +106,7 @@ HTMLFormattingElementList::Bookmark HTMLFormattingElementList::bookmarkFor(
             return Bookmark(&(*iter));
         }
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 void HTMLFormattingElementList::swapTo(Element* oldElement,

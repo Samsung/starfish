@@ -434,7 +434,7 @@ static void checkError()
 #ifndef NDEBUG
     volatile auto error = glGetError();
     if (error != 0) {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 #endif
 }
@@ -448,7 +448,7 @@ static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
     shader = glCreateShader(type);
 
     if (glGetError()) {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     // Load the shader source
@@ -461,7 +461,7 @@ static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
 
     if (!compiled) {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     return shader;
 }
@@ -1059,7 +1059,7 @@ public:
                     eglGetNativeClientBufferANDROID(m_aHardwareBuffer);
                 if (UNLIKELY(!clientBuffer)) {
                     logEglError("eglGetNativeClientBufferANDROID");
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                 }
                 EGLint attribs[] = { EGL_IMAGE_PRESERVED_KHR, EGL_TRUE,
                                      EGL_NONE };
@@ -1070,7 +1070,7 @@ public:
                                                clientBuffer, attribs);
                 if (UNLIKELY(!m_eglImage)) {
                     logEglError("eglCreateImageKHR");
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                 }
             }
 #endif
@@ -2339,7 +2339,7 @@ Compositor* Compositor::create3D(WebView* webView, CompositorContext* ctx)
 Compositor* Compositor::create2D(WebView* webView, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 #if defined(STARFISH_ENABLE_TEST)

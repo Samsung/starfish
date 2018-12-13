@@ -146,7 +146,7 @@ public:
             snprintf(temp, sizeof(temp), "%f", m_number);
             return String::fromUTF8(temp);
         }
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     void checkComputed(Length curFontSize, Length rootFontSize, Font* font,

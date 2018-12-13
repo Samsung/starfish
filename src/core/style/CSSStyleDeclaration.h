@@ -261,7 +261,7 @@ public:
 
     virtual Stage requiredStage(CSSStyleValuePair::KeyKind keyKind)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     static bool parseBackgroundPositionShorthand(const CSSTokenVector& tokens,

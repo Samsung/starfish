@@ -428,7 +428,7 @@ const char* getWindowsTempDir();
 #define STARFISH_LOG_WARN(...) ::Starfish::forwardPrintingLogWarn(__VA_ARGS__);
 #endif
 
-#define STARFISH_CRASH STARFISH_RELEASE_ASSERT_NOT_REACHED
+#define STARFISH_CRASH STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE
 
 #if defined(NDEBUG)
 #define STARFISH_ASSERT(assertion) ((void)0)
@@ -459,7 +459,7 @@ const char* getWindowsTempDir();
             ::abort();                                                  \
         }                                                               \
     } while (0);
-#define STARFISH_RELEASE_ASSERT_NOT_REACHED()                         \
+#define STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE()                  \
     do {                                                              \
         STARFISH_LOG_ERROR("RELEASE_ASSERT_NOT_REACHED at %s (%d)\n", \
                            __FILE__, __LINE__);                       \

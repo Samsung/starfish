@@ -1396,7 +1396,7 @@ void MediaOperationQueueDataRequestResourceSelection::processOperationQueue()
             new MediaOperationQueueDataRequestSeekToDefault(self));
         return;
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 

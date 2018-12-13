@@ -136,7 +136,7 @@ public:
     virtual void* drawingBufferAddress()
     {
 #if !defined(PORT_WINDOW_BACKEND_GB)
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
         return nullptr;
     }
@@ -146,25 +146,25 @@ public:
 #if defined(PORT_WINDOW_BACKEND_GB)
         resizeTo(width, height);
 #else
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
     }
 
     virtual void glMakeCurrent()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     virtual void glSwapBuffers()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     virtual void glEGLImageUpdated()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     virtual void glClearEGLImageUpdated()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     void registerRenderingFinishedCallback(

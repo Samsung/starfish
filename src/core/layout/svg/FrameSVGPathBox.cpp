@@ -524,7 +524,7 @@ void FrameSVGPathBox::paintSVG(PaintingContext& ctx)
                     lastY = targetY;
                     REWIND_IF_NEEDED();
                 } else {
-                    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                 }
             }
         }

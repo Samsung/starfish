@@ -42,9 +42,9 @@
 namespace Starfish {
 
 extern FT_Library g_freeTypeInstance;
-#define CHECK_ERROR                            \
-    if (error) {                               \
-        STARFISH_RELEASE_ASSERT_NOT_REACHED(); \
+#define CHECK_ERROR                                   \
+    if (error) {                                      \
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE(); \
     }
 
 class FontSelectorImplCairo : public FontSelector {
@@ -220,7 +220,7 @@ private:
             FT_Error error = FT_New_Memory_Face(
                 g_freeTypeInstance, m_dataBuffer, m_dataBufferSize, 0, &m_face);
             if (error) {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
             FT_Set_Pixel_Sizes(m_face, 0, 16);
 

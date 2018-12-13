@@ -156,7 +156,7 @@ public:
     virtual void didLoadCanceled();
     virtual void didCacheHit(Resource* cache)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     virtual size_t contentSize()
