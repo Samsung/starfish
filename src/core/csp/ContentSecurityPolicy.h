@@ -69,7 +69,8 @@ public:
     bool allowInline(CSPDirectives directive, String* scriptContent,
                      String* nonce = nullptr);
     bool allowEval(CSPDirectives directive);
-    bool allowNonce(CSPDirectives directive, String* nonce);
+    bool allowNonceOrSource(CSPDirectives directive, String* nonce,
+                            ResourceURL* resUrl);
 
     void dispatchViolationEvent(
         String* name, String* blockedURI = String::emptyString,

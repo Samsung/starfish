@@ -196,7 +196,7 @@ http://web-platform.test:8000/content-security-policy/media-src/media-src-redir-
 #
 #
 #http://web-platform.test:8000/content-security-policy/meta/combine-header-and-meta-policies.sub.html
-#http://web-platform.test:8000/content-security-policy/meta/meta-img-src.html
+http://web-platform.test:8000/content-security-policy/meta/meta-img-src.html
 #http://web-platform.test:8000/content-security-policy/meta/meta-modified.html
 #http://web-platform.test:8000/content-security-policy/meta/meta-outside-head.sub.html
 #
@@ -347,16 +347,16 @@ http://web-platform.test:8000/content-security-policy/script-src/script-src-mult
 http://web-platform.test:8000/content-security-policy/script-src/script-src-overrides-default-src.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-report-only-policy-works-with-external-hash-policy.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-report-only-policy-works-with-hash-policy.html
-http://web-platform.test:8000/content-security-policy/script-src/script-src-sri_hash.sub.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_and_unsafe_eval_eval.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_and_unsafe_eval_new_function.html
+#http://web-platform.test:8000/content-security-policy/script-src/script-src-sri_hash.sub.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_and_unsafe_eval_eval.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_and_unsafe_eval_new_function.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_discard_whitelist.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_double_policy_different_nonce.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_double_policy_honor_whitelist.sub.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_double_policy_report_only.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_eval.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_hashes.html
-#http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_in_img-src.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_hashes.html
+http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_in_img-src.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_javascript_uri.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_meta_tag.html
 #http://web-platform.test:8000/content-security-policy/script-src/script-src-strict_dynamic_new_function.html
@@ -426,7 +426,7 @@ http://web-platform.test:8000/content-security-policy/style-src/style-src-inline
 http://web-platform.test:8000/content-security-policy/style-src/style-src-inline-style-nonce-allowed.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-inline-style-nonce-blocked-error-event.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-inline-style-nonce-blocked.html
-http://web-platform.test:8000/content-security-policy/style-src/style-src-multiple-policies-multiple-hashing-algorithms.html
+#http://web-platform.test:8000/content-security-policy/style-src/style-src-multiple-policies-multiple-hashing-algorithms.html
 http://web-platform.test:8000/content-security-policy/style-src/style-src-none-blocked.html
 #http://web-platform.test:8000/content-security-policy/style-src/style-src-star-allowed.html # window.getComputedStyle(el).getPropertyValue('margin-left')
 #http://web-platform.test:8000/content-security-policy/style-src/style-src-stylesheet-nonce-allowed.html # window.getComputedStyle(el).getPropertyValue('margin-left')

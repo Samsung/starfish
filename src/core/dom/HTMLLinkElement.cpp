@@ -257,8 +257,7 @@ void HTMLLinkElement::loadStyleSheet()
     m_styleSheetTextResource = nullptr;
 
     auto csp = document()->contentSecurityPolicy();
-    if (!csp->allowNonce(CSPDirectives::StyleSrc, nonce()) &&
-        !csp->allowSource(CSPDirectives::StyleSrc, url)) {
+    if (!csp->allowNonceOrSource(CSPDirectives::StyleSrc, nonce(), url)) {
         String* eventType = starfish()->staticStrings()->m_error.localName();
         Event* e = new Event(document(), eventType, EventInit(false, false));
         dispatchEventIdleTimeByUA(e);

@@ -25,6 +25,7 @@
 #include "core/dom/Document.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -68,7 +69,9 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
         if (m_httpEquiv->equalsIgnoreCase("content-language")) {
             document()->setContentLanguage(m_content);
         } else if (m_httpEquiv->equalsIgnoreCase("Content-Security-Policy")) {
-            document()->setContentSecurityPolicy(m_content);
+            document()->contentSecurityPolicy()->didReceiveHeader(
+                m_content, ContentSecurityPolicyHeaderType::Enforce,
+                ContentSecurityPolicyHeaderSource::Meta);
         }
     }
 

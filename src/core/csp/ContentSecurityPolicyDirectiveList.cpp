@@ -203,16 +203,17 @@ bool ContentSecurityPolicyDirectiveList::isMatchingSelf(
     return false;
 }
 
-bool ContentSecurityPolicyDirectiveList::allowNonce(CSPDirectives directive,
-                                                    String* nonce)
+bool ContentSecurityPolicyDirectiveList::allowNonceOrSource(
+    CSPDirectives directive, String* nonce, ResourceURL* resUrl)
 {
     auto sourceListDirective = getSourceList(directive);
     if (!sourceListDirective) {
         if (m_defaultSrc) {
-            return allowNonce(CSPDirectives::DefaultSrc, nonce);
+            return allowNonceOrSource(CSPDirectives::DefaultSrc, nonce, resUrl);
         }
         return true;
-    } else if (sourceListDirective->allowNonce(nonce)) {
+    } else if (sourceListDirective->allowNonce(nonce) ||
+               allowSource(directive, resUrl)) {
         return true;
     }
     return false;

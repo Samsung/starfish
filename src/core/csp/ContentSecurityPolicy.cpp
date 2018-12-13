@@ -142,14 +142,22 @@ bool ContentSecurityPolicy::allowInline(CSPDirectives directive,
     return isAllowed;
 }
 
-bool ContentSecurityPolicy::allowNonce(CSPDirectives directive, String* nonce)
+bool ContentSecurityPolicy::allowNonceOrSource(CSPDirectives directive,
+                                               String* nonce,
+                                               ResourceURL* resUrl)
 {
+    bool isAllowed = true;
     for (auto policy : m_policies) {
-        if (!policy->allowNonce(directive, nonce)) {
-            return false;
+        if (!policy->allowNonceOrSource(directive, nonce, resUrl)) {
+            dispatchViolationEvent(getDirectiveName(directive));
+            STARFISH_LOG_WARN(
+                "Refused to use '%s' as a source of '%s' because it violates "
+                "the Content Security Policy\n",
+                CSTR(resUrl->urlString()), CSTR(getDirectiveName(directive)));
+            isAllowed = false;
         }
     }
-    return true;
+    return isAllowed;
 }
 
 bool ContentSecurityPolicy::allowEval(CSPDirectives directive)
