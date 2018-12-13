@@ -26,7 +26,6 @@
 
 #if defined(STARFISH_TIZEN)
 #include <tts.h>
-#include <tts_internal.h>
 #endif
 
 namespace Starfish {
