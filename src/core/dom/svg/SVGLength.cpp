@@ -67,7 +67,7 @@ static Nullable<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
             return Nullable<Length>();
         }
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return Nullable<Length>();
     }
 }

@@ -83,7 +83,7 @@ public:
                 STARFISH_LOG_ERROR(
                     "failed to create OpenGL 3.0 context. please check your "
                     "environment...\n");
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         }
 

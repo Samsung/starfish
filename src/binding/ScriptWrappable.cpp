@@ -468,7 +468,7 @@ StringRef* createScriptString(String* str)
                 out.push_back(dst[0]);
                 out.push_back(dst[1]);
             } else {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         }
 

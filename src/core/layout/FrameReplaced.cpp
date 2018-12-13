@@ -600,7 +600,7 @@ LayoutRect FrameReplaced::computeObjectFit(const LayoutUnit& w,
     case ObjectFitValue::FillObjectFitValue:
         break;
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     LayoutUnit offsetX = style()->objectPositionX().specifiedValue(

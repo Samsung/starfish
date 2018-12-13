@@ -2422,7 +2422,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             compositor->setColor(Unit::Color(0, 255, 255, 64));
             break;
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         compositor->beginOpacityLayer(0.5);
         compositor->drawRect(Unit::Rect(minX, minY, bufferWidth, bufferHeight));

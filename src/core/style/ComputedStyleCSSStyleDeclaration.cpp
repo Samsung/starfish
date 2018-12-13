@@ -439,7 +439,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         } else if (minWidth.isCalc()) {
             minW.setCalcValue(minWidth.calcData());
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
 
         addValuePair(minW);
@@ -464,7 +464,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         } else if (minHeight.isCalc()) {
             minH.setCalcValue(minHeight.calcData());
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
 
         addValuePair(minH);
@@ -485,7 +485,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         } else if (maxWidth.isCalc()) {
             maxW.setCalcValue(maxWidth.calcData());
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
 
         addValuePair(maxW);
@@ -506,7 +506,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
         } else if (maxHeight.isCalc()) {
             maxH.setCalcValue(maxHeight.calcData());
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         addValuePair(maxH);
     } break;

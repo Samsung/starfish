@@ -259,7 +259,7 @@ String* Request::mode()
         break;
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::emptyString;
 }
 
@@ -276,7 +276,7 @@ String* Request::credentials()
         break;
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::emptyString;
 }
 
@@ -299,7 +299,7 @@ String* Request::cache()
         break;
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::emptyString;
 }
 
@@ -316,7 +316,7 @@ String* Request::redirect()
         break;
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return String::emptyString;
 }
 

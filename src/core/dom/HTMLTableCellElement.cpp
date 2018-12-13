@@ -152,7 +152,7 @@ void HTMLTableCellElement::styleForPresentationAttribute(
             additionalBorderRulesLeft(cssValues, "1px", "solid");
             break;
         default:
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         String* padding = tableElement->cellpadding();
         if (!padding->isEmpty()) {
@@ -248,7 +248,7 @@ String* HTMLTableCellElement::scope()
         return scope;
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 void HTMLTableCellElement::setScope(String* scope)

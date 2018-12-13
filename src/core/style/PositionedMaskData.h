@@ -167,7 +167,7 @@ public:
     MaskSizeValue maskSizeTypeValue(unsigned int layer = 0) const
     {
         if (m_layers.size() <= layer) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             return MaskSizeValue::ContainMaskSizeValue;
         }
         return m_layers[layer].sizeTypeValue();

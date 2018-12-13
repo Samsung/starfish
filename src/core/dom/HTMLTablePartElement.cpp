@@ -89,7 +89,7 @@ TextAlignValue HTMLTablePartElement::alignValue(String* align)
     } else if (align->equalsIgnoreCase("-starfish-center")) {
         return TextAlignValue::StarfishCenterTextAlignValue;
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 
@@ -119,7 +119,7 @@ VerticalAlignValue HTMLTablePartElement::valignValue(String* valign)
     } else if (valign->equalsIgnoreCase("bottom")) {
         return VerticalAlignValue::BottomVAlignValue;
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 }
 

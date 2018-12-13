@@ -342,7 +342,7 @@ FrameTableCellBox* FrameTableBox::cellInTheFirstRowAt(unsigned id)
             }
         }
         // empty cells in the first row
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return nullptr;
     }
 }
@@ -1223,7 +1223,7 @@ void FrameTableBox::layoutWidth(LayoutContext& ctx)
         } else if (c->isFrameTableColBox()) {
             // The FrameTableColBox must not be laid out.
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
 
@@ -1563,7 +1563,7 @@ Unit::Rect FrameTableBox::makeRect(BoxValue box)
         h = tableRect.height() - borderHeight() - paddingHeight();
         break;
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     return Unit::Rect(x, y, w, h);

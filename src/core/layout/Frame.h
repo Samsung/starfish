@@ -1547,7 +1547,7 @@ public:
 
     virtual const char* name()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     enum LayoutWantToResolve {
@@ -1557,7 +1557,7 @@ public:
     };
     virtual void layout(LayoutContext& ctx, LayoutWantToResolve resolveWhat)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     virtual void quickLayout(LayoutContext& ctx)
     {
@@ -1587,17 +1587,17 @@ public:
 
     virtual void computePreferredWidth(PreferredWidthContext& ctx)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     virtual void layoutInline(LineFormattingContext& ctx)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     virtual InlineNonReplacedBox* firstInlineNonReplacedBox(FrameInline* f)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     virtual FrameInline* firstFrameInline(Node* n)
@@ -1634,7 +1634,7 @@ public:
 
     virtual void establishesStackingContextIfNeedsAndComputingPaintingFlags()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     struct ComputeVisibleRectContext {
@@ -1701,7 +1701,7 @@ public:
 
     virtual void computeVisibleRect(ComputeVisibleRectContext& ctx)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     void propagateMarkNeedsLayout()
@@ -1812,7 +1812,7 @@ public:
 
     virtual Frame* hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     bool isAncestorOf(Frame* f)
@@ -2072,7 +2072,7 @@ protected:
 
     virtual FrameTreeItemModel* frameTreeItemModel()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     const FrameTreeItemModel* frameTreeItemModel() const

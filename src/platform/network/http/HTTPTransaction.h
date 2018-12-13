@@ -51,7 +51,7 @@ public:
     void abort()
     {
         // TODO
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     void setHTTPRequest(std::unique_ptr<HTTPRequest> httpRequest)

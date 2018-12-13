@@ -97,7 +97,7 @@ public:
             eventName =
                 request->starfish()->staticStrings()->m_loadstart.localName();
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
 
         ProgressEvent* pe = new ProgressEvent(
@@ -189,7 +189,7 @@ public:
                         m_xhr->m_resourceRequest->response().clear();
                         m_xhr->m_resourceRequest->response().shrink_to_fit();
                     } else {
-                        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
                     }
                 }
             }
@@ -449,7 +449,7 @@ String* XMLHttpRequest::responseType() const
     case XMLHttpRequestResponseType::Text:
         return String::createASCIIString("text");
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 uint8_t XMLHttpRequest::readyState() const
@@ -495,7 +495,7 @@ ScriptValue XMLHttpRequest::response() const
     } else if (m_responseType == XMLHttpRequestResponseType::Document) {
         result = m_responseXML->scriptValue();
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 #ifdef STARFISH_TC_COVERAGE
     STARFISH_LOG_INFO("&&&response\n");

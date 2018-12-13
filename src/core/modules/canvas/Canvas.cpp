@@ -157,18 +157,18 @@ public:
 
     virtual void detachNativeBuffer()
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     bool attachNativeBuffer(size_t w, size_t h)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return false;
     }
 
     virtual void resize(size_t w, size_t h)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     virtual uint8_t* mapBuffer()

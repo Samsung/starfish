@@ -105,7 +105,7 @@ public:
 
     virtual void attachPlatformExternalBuffer(void* buffer)
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     static size_t g_totalAllocatedCanvasSurfaceSize;

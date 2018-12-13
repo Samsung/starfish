@@ -154,7 +154,7 @@ static rapidxml::xml_node<char>* createXMLNodeFromElement(
             childXMLNode = xmlDocument.allocate_node(
                 rapidxml::node_type::node_doctype, allocateName);
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
 
         xmlNode->append_node(childXMLNode);

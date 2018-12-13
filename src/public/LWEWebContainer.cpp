@@ -252,7 +252,7 @@ static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
         STARFISH_LOG_ERROR(
             "You must call LWE::Initialize function before using WebContainer "
             "or WebView");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
@@ -281,7 +281,7 @@ WebContainer* WebContainer::Create(void* buffer, unsigned width,
 {
 #if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     return nullptr;
 #endif
 
@@ -320,7 +320,7 @@ void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
 {
 #if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
 
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -336,7 +336,7 @@ void WebContainer::RegisterOnRenderedHandler(
 {
 #if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
@@ -368,7 +368,7 @@ WebContainer* WebContainer::CreateGL(
 {
 #if !defined(PORT_WINDOW_BACKEND_GL)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
 
 #if defined(PORT_NEEDS_THREADED_PUBLIC_API)
@@ -422,7 +422,7 @@ void WebContainer::ResizeTo(size_t width, size_t height)
 {
 #if !defined(PORT_WINDOW_BACKEND_GL)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->resizeTo((int)width, (int)height);

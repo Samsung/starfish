@@ -881,7 +881,7 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
             return;
         } else {
             // fire eror
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else {
         auto s = url->urlString()->toUTF8NonGCString();
@@ -1532,7 +1532,7 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
         media_format_set_video_mime(mediaFormat, MEDIA_FORMAT_VP9);
     } else {
         // TODO
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     m_videoWidth = info->videoWidth();

@@ -106,7 +106,7 @@ DOMException::DOMException(Document* document, Code code, const char* message)
             overrideScriptObject(scriptURIError(scriptBindingInstance(),
                                                 String::fromUTF8(message)));
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
     m_message = String::fromUTF8(message);

@@ -135,7 +135,7 @@ static void buildDocumentFromXML(
         newNode =
             parent->document()->createTextNode(String::fromUTF8(node->value()));
     } else {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     parent->appendChild(newNode);

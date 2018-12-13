@@ -245,7 +245,7 @@ AnimationTimingFunction* ComputedStyle::knownTransitionTimingFunction(
     case TransitionTimingFunctionValue::TransitionTimingFunctionStepEndValue:
         return new Steps(1, true);
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 class BackgroundImageResourceClient : public ResourceClient {
@@ -309,7 +309,7 @@ void ComputedStyle::loadFont(Node* consumer, bool respectLetterSpacing)
         fontWeight = 9;
         break;
     default:
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     FontSelector* fs = consumer->document()->fontSelector();
@@ -2163,7 +2163,7 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
             matrix.preTranslate(m->tx().specifiedValue(containerWidth, f),
                                 m->ty().specifiedValue(containerHeight, f));
         } else {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     }
     // printf("[%8.4f %8.4f %8.4f][%8.4f %8.4f %8.4f][%8.4f %8.4f %8.4f]\n",

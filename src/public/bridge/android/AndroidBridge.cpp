@@ -179,17 +179,17 @@ void callOnLoadResourceHandler(LWE::WebContainer* view, const char* url)
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_onLoadResource) {
         LOGE("OnLoadResource error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     jstring jstr = env->NewStringUTF(url);
     env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onLoadResource, jstr);
@@ -204,17 +204,17 @@ void callOnReceivedError(LWE::WebContainer* view, int errorCode, bool canGoBack,
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_onReceivedError) {
         LOGE("OnReceived: error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     jint jint1 = errorCode;
     jboolean jboolean1 = canGoBack;
@@ -231,17 +231,17 @@ void callOnPageParsed(LWE::WebContainer* view, const char* url, bool canGoBack,
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_onPageParsed) {
         LOGE("OnPageParsed error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     jstring jstr = env->NewStringUTF(url);
     jboolean jboolean1 = canGoBack;
@@ -259,17 +259,17 @@ void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_onPageStarted) {
         LOGE("OnPageStarted error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     jstring jstr = env->NewStringUTF(url);
     jboolean jboolean1 = canGoBack;
@@ -287,17 +287,17 @@ bool callShouldOverrideUrlLoading(LWE::WebContainer* view, const char* url)
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_shouldOverrideUrlLoading) {
         LOGE("ShouldOverrideUrlLoading error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     jstring jstr = env->NewStringUTF(url);
@@ -315,17 +315,17 @@ void callOnProgressChanged(LWE::WebContainer* view, int progress)
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_onProgressed) {
         LOGE("OnProgressChanged error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     jint newProgress = progress;
@@ -343,17 +343,17 @@ void callOnDownloadStart(LWE::WebContainer* view, const char* url,
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_onDownloadStart) {
         LOGE("OnDownloadStarted: error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     jstring jurl = env->NewStringUTF(url);
@@ -380,17 +380,17 @@ void callShowDropdownMenu(LWE::WebContainer* view,
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_showDropdownMenu) {
         LOGE("ShowDropdownMenu: error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     jsize len = list->size();
@@ -419,17 +419,17 @@ void callShowAlert(LWE::WebContainer* view, const std::string& title,
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_showAlert) {
         LOGE("showAlert: error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     jstring jtitle = env->NewStringUTF(title.c_str());
@@ -464,17 +464,17 @@ void showIME(void* view)
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_showIME) {
         LOGE("showIME error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
@@ -488,17 +488,17 @@ void hideIME(void* view)
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv: version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_hideIME) {
         LOGE("hideIME error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
@@ -512,17 +512,17 @@ void glMakeCurrent(void* view)
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv : version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_glMakeCurrent) {
         LOGE("glMakeCurrent error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
                         g_WindowGlue.m_glMakeCurrent);
@@ -535,17 +535,17 @@ void glSwapBuffers(void* view)
     if (getEnvStat == JNI_EDETACHED) {
         if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
             LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
     } else if (getEnvStat == JNI_OK) {
     } else if (getEnvStat == JNI_EVERSION) {
         LOGE("GetEnv : version not supported");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     if (!env || !g_WindowGlue.m_glSwapBuffers) {
         LOGE("glMakeCurrent error");
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
                         g_WindowGlue.m_glSwapBuffers);
@@ -812,14 +812,14 @@ Java_com_samsung_android_lwe_LweWebViewImpl_addJavascriptInterface(
         int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
         if (getEnvStat == JNI_EDETACHED) {
             if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         } else if (getEnvStat == JNI_OK) {
         } else if (getEnvStat == JNI_EVERSION) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         if (!env) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         env->DeleteGlobalRef(ref);
     });
@@ -832,14 +832,14 @@ Java_com_samsung_android_lwe_LweWebViewImpl_addJavascriptInterface(
         int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
         if (getEnvStat == JNI_EDETACHED) {
             if (g_jvm->AttachCurrentThread(&env, NULL) != 0) {
-                STARFISH_RELEASE_ASSERT_NOT_REACHED();
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
             }
         } else if (getEnvStat == JNI_OK) {
         } else if (getEnvStat == JNI_EVERSION) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         if (!env) {
-            STARFISH_RELEASE_ASSERT_NOT_REACHED();
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
         jstring paramStr = env->NewStringUTF(param.c_str());
         jstring result = (jstring)env->CallObjectMethod(

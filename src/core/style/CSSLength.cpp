@@ -162,7 +162,7 @@ Length CSSLength::toLength() const
         return Length(Length::Ch, m_value);
     }
 
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 String* CSSLength::toString() const
@@ -198,7 +198,7 @@ String* CSSLength::toString() const
     } else if (m_kind == CH) {
         return String::fromUTF8(stdStr.append("ch").c_str());
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 } // namespace Starfish

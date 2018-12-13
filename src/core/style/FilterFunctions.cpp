@@ -46,7 +46,7 @@ FilterFunction* FilterFunction::create(const CSSFilterFunction& from)
     case FilterFunctionType::SVGUrlFilterFunctionType:
         return new UnsupportedFilterFunction(type);
     }
-    STARFISH_RELEASE_ASSERT_NOT_REACHED();
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
 String* UnsupportedFilterFunction::toString() const

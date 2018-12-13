@@ -37,7 +37,7 @@ public:
 
     virtual ScriptBindingInstance* scriptBindingInstance() override
     {
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
     virtual unsigned length() const = 0;

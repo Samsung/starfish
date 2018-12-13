@@ -40,7 +40,7 @@ ValueRef* sizeHTMLInputElementSetterFunction(ExecutionStateRef* state,
         originalObj->setSize(value0);
     } catch (DOMException* e) {
         state->throwException(e->scriptValue());
-        STARFISH_RELEASE_ASSERT_NOT_REACHED();
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     return scriptUndefined();
 }
