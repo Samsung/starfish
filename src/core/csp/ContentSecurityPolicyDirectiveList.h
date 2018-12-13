@@ -41,7 +41,8 @@ public:
     void addDirective(String* name, String* value);
 
     bool allowSource(CSPDirectives directive, ResourceURL* resUrl);
-    bool allowNonce(CSPDirectives directive, String* nonce);
+    bool allowNonceOrSource(CSPDirectives directive, String* nonce,
+                            ResourceURL* resUrl);
     bool allowInline(CSPDirectives directive, String* scriptContent,
                      String* nonce);
     bool allowEval(CSPDirectives directive);

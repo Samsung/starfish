@@ -302,8 +302,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
 
             ResourceURL* rurl =
                 new ResourceURL(url, document()->baseURL()->baseURI());
-            if (!document()->contentSecurityPolicy()->allowSource(
-                    CSPDirectives::ScriptSrc, rurl)) {
+            if (!document()->contentSecurityPolicy()->allowNonceOrSource(
+                    CSPDirectives::ScriptSrc, nonce(), rurl)) {
                 String* eventType =
                     starfish()->staticStrings()->m_error.localName();
                 Event* e =

@@ -306,13 +306,6 @@ void Document::initContentSecurityPolicy(ContentSecurityPolicy* inheritedPolicy)
     m_contentSecurityPolicy->copyFrom(inheritedPolicy);
 }
 
-void Document::setContentSecurityPolicy(String* content)
-{
-    m_contentSecurityPolicy->didReceiveHeader(
-        content, ContentSecurityPolicyHeaderType::Report,
-        ContentSecurityPolicyHeaderSource::Meta);
-}
-
 Window* Document::open(String* url, String* name, String* features)
 {
     // TODO If this Document object is not an active document, then throw an

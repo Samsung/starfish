@@ -142,6 +142,17 @@ public:
         auto browsingContext =
             m_resource->loader()->document()->browsingContext();
         if (browsingContext->isTopLevelBrowsingContext()) {
+            // TODO: In 'iframe' case also, check CSP
+            auto csp = headers.find("Content-Security-Policy");
+            if (csp != headers.end()) {
+                String* value = String::createASCIIString(csp->second.data());
+                m_resource->loader()
+                    ->document()
+                    ->contentSecurityPolicy()
+                    ->didReceiveHeader(value,
+                                       ContentSecurityPolicyHeaderType::Enforce,
+                                       ContentSecurityPolicyHeaderSource::HTTP);
+            }
             return;
         }
         auto origin = browsingContext->document()->webOrigin();

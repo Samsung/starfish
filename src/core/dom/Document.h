@@ -402,7 +402,6 @@ public:
     void init(ReferrerURL* referrerURL);
     void dispose();
 
-    void setContentSecurityPolicy(String* content);
     void initContentSecurityPolicy(ContentSecurityPolicy* inheritedPolicy);
 
     Document* open(Document* responsibleDoc, String* type, String* replace);
