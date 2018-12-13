@@ -75,6 +75,7 @@ namespace Starfish {
     F(kKeepAlive, "Keep-Alive")                                       \
     F(kXFrameOptions, "X-Frame-Options")                              \
     F(kUpgradeInsecureRequests, "Upgrade-Insecure-Requests")          \
+    F(kAccessControlExposeHeaders, "Access-Control-Expose-Headers")   \
     F(kAccessControlRequestHeaders, "Access-Control-Request-Headers") \
     F(kAccessControlRequestMethod, "Access-Control-Request-Method")   \
     F(kAccessControlAllowOrigin, "Access-Control-Allow-Origin")       \

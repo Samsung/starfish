@@ -194,6 +194,8 @@ std::string HTTPUtil::tryToConvertToHeaderMapString(
             ret = HTTPHeaderMap::kAccessControlAllowMethods;
         } else if (lower.compare("access-control-allow-headers") == 0) {
             ret = HTTPHeaderMap::kAccessControlAllowHeaders;
+        } else if (lower.compare("access-control-expose-headers") == 0) {
+            ret = HTTPHeaderMap::kAccessControlExposeHeaders;
         }
         break;
     }
@@ -330,35 +332,6 @@ bool HTTPUtil::isUnsafeHeader(String* header)
         lower->equalsIgnoreCase(HTTPHeaderMap::kUpgrade) ||
         lower->equalsIgnoreCase(HTTPHeaderMap::kUserAgent) ||
         lower->equalsIgnoreCase(HTTPHeaderMap::kVia)) {
-        return true;
-    }
-    return false;
-}
-
-bool HTTPUtil::isCORSsafelistedResponseHeaderName(
-    const std::string& headerMapString)
-{
-    if (headerMapString == HTTPHeaderMap::kCacheControl ||
-        headerMapString == HTTPHeaderMap::kContentLanguage ||
-        headerMapString == HTTPHeaderMap::kContentLength ||
-        headerMapString == HTTPHeaderMap::kContentType ||
-        headerMapString == HTTPHeaderMap::kExpires ||
-        headerMapString == HTTPHeaderMap::kLastModified ||
-        headerMapString == HTTPHeaderMap::kPragma) {
-        return true;
-    } else if (isForbiddenResponseHeaderName(headerMapString)) {
-        return false;
-    } else {
-        // TODO : Allow headers that be listed by Access-Control-Expose-Headers
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-        return false;
-    }
-}
-
-bool HTTPUtil::isForbiddenResponseHeaderName(const std::string& headerMapString)
-{
-    if (headerMapString == HTTPHeaderMap::kSetCookie ||
-        headerMapString == HTTPHeaderMap::kSetCookie2) {
         return true;
     }
     return false;

@@ -358,6 +358,8 @@ public:
         }
     }
 
+    bool isCORSsafelistedResponseHeaderName(const std::string& name);
+
     static EncodeType toEncodeType(String* input);
     static String* encodeType(EncodeType input);
 

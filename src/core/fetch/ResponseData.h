@@ -39,6 +39,8 @@ public:
     uint32_t m_status;
     String* m_statusText;
     String* m_mimeType;
+    // https://fetch.spec.whatwg.org/#concept-response-cors-exposed-header-name-list
+    GCVector<String*> m_corsExposedHeaderNameList;
 
     static String* reponseTypeString(ResponseType type);
 };

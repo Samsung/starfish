@@ -38,6 +38,9 @@ public:
     static bool isValidLanguageValue(const std::string& value);
     static std::vector<std::string> corsUnsafeRequestHeaderNames(
         HTTPHeaderMap& httpHeaderMap);
+    static bool isCORSsafelistedResponseHeaderName(
+        const std::string& name, const GCVector<String*>* exposedNames);
+    static bool isForbiddenResponseHeaderName(const std::string& name);
 };
 }
 

@@ -633,7 +633,7 @@ String* XMLHttpRequest::getAllResponseHeaders()
         }
 
         if (m_resourceRequest->responseType() == ResponseType::Cors) {
-            if (!HTTPUtil::isCORSsafelistedResponseHeaderName(key)) {
+            if (!m_resourceRequest->isCORSsafelistedResponseHeaderName(key)) {
                 continue;
             }
         }
@@ -660,19 +660,17 @@ Nullable<String*> XMLHttpRequest::getResponseHeader(String* name)
         name->equalsIgnoreCase(HTTPHeaderMap::kSetCookie2)) {
         return nullptr;
     }
+    auto n = name->toUTF8NonGCString();
+    if (m_resourceRequest->responseType() == ResponseType::Cors) {
+        if (!m_resourceRequest->isCORSsafelistedResponseHeaderName(n)) {
+            return nullptr;
+        }
+    }
 
     const HeaderMap& map = m_resourceRequest->responseHeaderMap();
-
     for (const auto& pair : map) {
         const auto& key = pair.first;
         const auto& value = pair.second;
-
-        if (m_resourceRequest->responseType() == ResponseType::Cors) {
-            if (!HTTPUtil::isCORSsafelistedResponseHeaderName(key)) {
-                continue;
-            }
-        }
-
         if (name->equalsIgnoreCase(key.data())) {
             return String::createASCIIString(value.data());
         }

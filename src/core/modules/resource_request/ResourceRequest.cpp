@@ -32,6 +32,7 @@
 #include "core/dom/WebOrigin.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/Response.h"
+#include "core/fetch/FetchUtils.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "platform/network/http/HTTPResponse.h"
 
@@ -198,6 +199,15 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
             }
         }
 
+        std::vector<std::string> values;
+        m_responseHeaders->httpHeaderMap()->extractHeaderListValues(
+            values, HTTPHeaderMap::kAccessControlExposeHeaders);
+
+        for (const auto& value : values) {
+            m_responseData->m_corsExposedHeaderNameList.push_back(
+                String::createASCIIString(value.data()));
+        }
+
         // TODO : https://fetch.spec.whatwg.org/#ref-for-concept-response-type
         auto resURL = new ResourceURL(
             String::createASCIIString(m_lastEffectiveURL.data()));
@@ -333,6 +343,14 @@ void ResourceRequest::setRequestHeader(String* name, String* value)
 void ResourceRequest::deleteRequestHeader(String* name)
 {
     m_requestHeaders->httpHeaderMap()->remove(name->toUTF8NonGCString());
+}
+
+bool ResourceRequest::isCORSsafelistedResponseHeaderName(
+    const std::string& name)
+{
+    return FetchUtils::isCORSsafelistedResponseHeaderName(
+        name, m_responseData ? &(m_responseData->m_corsExposedHeaderNameList)
+                             : nullptr);
 }
 
 EncodeType ResourceRequest::toEncodeType(String* input)
