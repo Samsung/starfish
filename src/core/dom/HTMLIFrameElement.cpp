@@ -227,10 +227,10 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
             NOTE: IFrames blocked by CSP should generate a 'load', not 'error'
             event, regardless of blocked state. This means they appear to be
             normal cross-origin loads, thereby not leaking URL information
-            directly to JS.
+            directly to JS. We solve that through replacing the requested url
+            with blankurl.
             */
             url = ResourceURL::aboutBlankURL();
-            markContentDocumentDisabled();
         }
 
         if (!m_historyManager) {
