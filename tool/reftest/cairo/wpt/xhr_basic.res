@@ -156,13 +156,13 @@ http://web-platform.test:8000/xhr/setrequestheader-after-send.htm
 #http://web-platform.test:8000/xhr/abort-after-stop.htm
 #http://web-platform.test:8000/xhr/send-conditional-cors.htm
 #http://web-platform.test:8000/xhr/access-control-and-redirects-async.htm
-#http://web-platform.test:8000/xhr/access-control-response-with-body-sync.htm
+http://web-platform.test:8000/xhr/access-control-response-with-body-sync.htm
 http://web-platform.test:8000/xhr/event-error.sub.html
 http://web-platform.test:8000/xhr/response-invalid-responsetype.htm
 #http://web-platform.test:8000/xhr/send-no-response-event-order.htm
 http://web-platform.test:8000/xhr/response-data-deflate.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-reused.html
-#http://web-platform.test:8000/xhr/access-control-response-with-body.htm
+http://web-platform.test:8000/xhr/access-control-response-with-body.htm
 http://web-platform.test:8000/xhr/send-entity-body-basic.htm
 #http://web-platform.test:8000/xhr/send-after-setting-document-domain.htm
 #http://web-platform.test:8000/xhr/send-authentication-basic-cors.htm
@@ -210,7 +210,7 @@ http://web-platform.test:8000/xhr/abort-after-receive.htm
 #http://web-platform.test:8000/xhr/access-control-sandboxed-iframe-allow-origin-null.htm
 #http://web-platform.test:8000/xhr/preserve-ua-header-on-redirect.htm
 http://web-platform.test:8000/xhr/event-readystate-sync-open.htm
-#http://web-platform.test:8000/xhr/access-control-basic-denied.htm
+http://web-platform.test:8000/xhr/access-control-basic-denied.htm
 #http://web-platform.test:8000/xhr/send-authentication-basic-repeat-no-args.htm
 #http://web-platform.test:8000/xhr/access-control-basic-allow-non-cors-safelisted-method.htm
 #http://web-platform.test:8000/xhr/event-loadstart-upload.htm
