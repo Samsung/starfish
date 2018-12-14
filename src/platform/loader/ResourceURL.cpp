@@ -567,6 +567,7 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
     m_isValid = true;
 
     bool isAbsolute = false;
+    bool isBaseUrlValid = true;
 
     if (url->startsWith("data:", false) || url->startsWith("blob:", false) ||
         url->startsWith("about:", false) ||
@@ -581,6 +582,13 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
             isAbsolute = true;
         }
         STARFISH_ASSERT(isAbsolute);
+    } else {
+        // if the given baseURL isn't a special scheme it can't be a base url.
+        if (!baseURL->startsWith("file:", false) &&
+            !baseURL->startsWith("http:", false) &&
+            !baseURL->startsWith("https:", false)) {
+            isBaseUrlValid = false;
+        }
     }
 
     if (url->startsWith("//")) {
@@ -594,7 +602,7 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         isAbsolute = true;
         if (baseURL->startsWith("file://", false)) {
             url = String::createASCIIString("file://")->concat(url);
-        } else {
+        } else if (isBaseUrlValid) {
             size_t pos = baseURL->find("://");
             STARFISH_ASSERT(pos != SIZE_MAX);
             size_t pos2 = baseURL->find("/", pos + 3);
@@ -615,7 +623,7 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
         urlWithoutQueryString = url;
     }
 
-    if (!isAbsolute && !baseURL->equals("about:blank") &&
+    if (isBaseUrlValid && !isAbsolute && !baseURL->equals("about:blank") &&
         !urlWithoutQueryString->contains(":")) {
         STARFISH_ASSERT(baseURL->contains("://"));
         bool baseEndsWithSlash = baseURL->charAt(baseURL->length() - 1) == '/';
@@ -674,6 +682,10 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
 
     // TODO: need to check validity for other components (protocol, host,
     // etc)
+    if (!isBaseUrlValid) {
+        m_isValid = false;
+        return;
+    }
     m_isValid = isValidPort();
 }
 
