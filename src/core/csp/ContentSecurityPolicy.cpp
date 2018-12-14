@@ -22,6 +22,7 @@ using namespace Escargot;
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "PlatformIntegrationData.h"
 #include "core/page/Window.h"
 #include "core/dom/Document.h"
 #include "core/csp/ContentSecurityPolicy.h"
@@ -29,6 +30,7 @@ using namespace Escargot;
 #include "core/csp/ContentSecurityPolicySourceListDirective.h"
 #include "core/csp/SecurityPolicyViolationEvent.h"
 #include "core/util/Cryptographic.h"
+#include "core/page/WebView.h"
 
 namespace Starfish {
 
@@ -68,6 +70,11 @@ void ContentSecurityPolicy::didReceiveHeader(
     String* header, ContentSecurityPolicyHeaderType type,
     ContentSecurityPolicyHeaderSource source)
 {
+    if (window()->document()->webView()->getWebSecurityMode() ==
+        LWE::WebSecurityMode::Disable) {
+        return;
+    }
+
     ContentSecurityPolicyDirectiveList* policy =
         new ContentSecurityPolicyDirectiveList(this, header, 0,
                                                header->length(), type, source);
