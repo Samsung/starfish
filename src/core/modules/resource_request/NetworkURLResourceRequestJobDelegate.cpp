@@ -98,6 +98,14 @@ void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
             nwd->helper->abortHandlerWrapper(nwd);
             return nullptr;
         }
+        Locker<Mutex> locker(*nwd->request->m_mutex);
+        // TODO : Below codes will be removed after refactoring HTTPTransaction
+        // Note : Preflight-request ensures that the main thread does not read
+        // or write these. because it does not trigger an event. So I remove it
+        // now.
+        EntityBody().swap(nwd->request->m_response);
+        HeaderMap().swap(
+            nwd->request->m_responseHeaders->httpHeaderMap()->headerMap());
     }
 
     nwd->httpTransaction->start();
@@ -370,8 +378,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     }
     auto unsafeHeaders = FetchUtils::corsUnsafeRequestHeaderNames(headers);
     nwd->hasCorsUnsafeRequestHeaderNames = unsafeHeaders.size() != 0;
-    // https://fetch.spec.whatwg.org/#ref-for-use-cors-preflight-flag%E2%91%A1
 
+    // https://fetch.spec.whatwg.org/#ref-for-use-cors-preflight-flag%E2%91%A1
     if (!m_orgProxy->isSameOriginRequest()) {
         if (m_orgProxy->useCorsPreflightFlag() ||
             (m_orgProxy->unsafeRequestFlag() &&
@@ -380,6 +388,9 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
             m_orgProxy->setResponseTainting(ResponseTainting::Cors);
             nwd->corsFlag = true;
             nwd->corsPreflightFlag = true;
+        } else {
+            m_orgProxy->setResponseTainting(ResponseTainting::Cors);
+            nwd->corsFlag = true;
         }
     }
 
@@ -625,8 +636,11 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
     }
 
     size_t realSize = size * nmemb;
-    const char* memPtr = (const char*)ptr;
+    if (nwd->httpTransaction->inPreflightRequest()) {
+        return realSize;
+    }
 
+    const char* memPtr = (const char*)ptr;
     if (request->isSync()) {
         auto& entityBody = request->response();
         entityBody.insert(entityBody.end(), memPtr, memPtr + realSize);
