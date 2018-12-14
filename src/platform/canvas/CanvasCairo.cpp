@@ -1105,16 +1105,22 @@ private:
         FT_Face lastFontFace = nullptr;
         FontImplCairo* f = (FontImplCairo*)lastState().m_font;
         int size = f->size();
+        auto stringAccessData = sv.bufferAccessData();
 
         FontMetrics fontMetrics = f->metrics();
         cairo_translate(canvas, dx, fontMetrics.m_ascender + dy);
         cairo_glyph_t* glyphs = nullptr;
+
+        const size_t stackProcessingSize = 128;
+        cairo_glyph_t glyphsStackBuffer[stackProcessingSize];
+        glyphs = glyphsStackBuffer;
+        if (UNLIKELY(stringAccessData.length > stackProcessingSize)) {
+            glyphs = (cairo_glyph_t*)malloc(sizeof(cairo_glyph_t) *
+                                            stringAccessData.length);
+        }
+
         size_t glyphCount = 0;
         LayoutUnit letterSpacing = f->letterSpacing();
-
-#define ALLOCA_BIG(bytes, typenameWithoutPointer)                       \
-    (typenameWithoutPointer*)(LIKELY(bytes < 1024 * 10) ? alloca(bytes) \
-                                                        : GC_MALLOC(bytes))
 
         // Make the scale matrix of font size.
         cairo_matrix_t sizeMatrix;
@@ -1126,9 +1132,6 @@ private:
 
         if (cairoBackendCanUseSimpleFontPath(f, sv)) {
             LayoutUnit letterSpacingValueSoFar;
-            auto stringAccessData = sv.bufferAccessData();
-            glyphs = ALLOCA_BIG(stringAccessData.length * sizeof(cairo_glyph_t),
-                                cairo_glyph_t);
 
             for (size_t i = 0; i < stringAccessData.length; i++) {
                 std::pair<std::pair<FontFaceImplCairo*, size_t>,
@@ -1178,15 +1181,6 @@ private:
         } else {
             auto runs = generateFontCairoTextRuns(&sv, f);
 
-            size_t glyphAllocCount = 0;
-            for (size_t i = 0; i < runs.size(); i++) {
-                const FontCairoTextRun& run = runs[i];
-                glyphAllocCount += run.m_glyphs.size();
-            }
-
-            glyphs = ALLOCA_BIG(glyphAllocCount * sizeof(cairo_glyph_t),
-                                cairo_glyph_t);
-
             float xBias = 0;
             for (size_t i = 0; i < runs.size(); i++) {
                 const FontCairoTextRun& run = runs[i];
@@ -1229,7 +1223,6 @@ private:
                                                    letterSpacingValueSoFar;
                             letterSpacingValueSoFar += letterSpacing;
                             glyphs[glyphCount].y = run.m_glyphPositions[j].y();
-                            STARFISH_ASSERT(glyphCount < glyphAllocCount);
                             glyphCount++;
                         }
                     }
@@ -1246,6 +1239,10 @@ private:
         }
 
         cairo_translate(canvas, -dx, -dy - fontMetrics.m_ascender);
+
+        if (UNLIKELY(stringAccessData.length > stackProcessingSize)) {
+            free(glyphs);
+        }
     }
 
     void drawTextDecorationCairo(cairo_t* canvas, LayoutRect rect,

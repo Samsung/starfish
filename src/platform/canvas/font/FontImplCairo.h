@@ -47,6 +47,10 @@ extern FT_Library g_freeTypeInstance;
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE(); \
     }
 
+extern std::unordered_map<UTF8StringDataNonGCStd,
+                          std::pair<FT_Face, hb_font_t*>>
+    g_systemFontPathToFace;
+
 class FontSelectorImplCairo : public FontSelector {
 public:
     FontSelectorImplCairo(Document* document,
@@ -103,12 +107,13 @@ public:
             this,
             [](void* obj, void* cd) {
                 FontFaceImplCairo* m = (FontFaceImplCairo*)obj;
-                if (m->m_hbFace) {
+                if (m->m_dataBuffer) {
+                    // only web font should be deleted
                     hb_font_destroy(m->m_hbFace);
                     FT_Done_Face(m->m_face);
+                    delete[] m->m_dataBuffer;
                 }
                 GlyphIndexCache().swap(m->m_glyphIndexCache);
-                free(m->m_dataBuffer);
             },
             NULL, NULL, NULL);
 
@@ -416,12 +421,26 @@ public:
         if (iter != m_fontPathToFace.end()) {
             return iter->second;
         }
+
         FT_Face face;
-        FT_Error error;
-        error = FT_New_Face(g_freeTypeInstance, (char*)path.data(), 0, &face);
-        CHECK_ERROR;
-        FT_Set_Pixel_Sizes(face, 0, 16);
-        auto hbFace = hb_ft_font_create(face, [](void* userData) {});
+        hb_font_t* hbFace;
+        auto siter = g_systemFontPathToFace.find(path);
+        if (siter == g_systemFontPathToFace.end()) {
+            FT_Error error;
+            error =
+                FT_New_Face(g_freeTypeInstance, (char*)path.data(), 0, &face);
+            CHECK_ERROR;
+            FT_Set_Pixel_Sizes(face, 0, 16);
+            hbFace = hb_ft_font_create(face, [](void* userData) {});
+            g_systemFontPathToFace.insert(
+                std::make_pair(path, std::make_pair(face, hbFace)));
+
+            STARFISH_LOG_ERROR("load system font %s %p %p\n", path.data(), face,
+                               hbFace);
+        } else {
+            face = siter->second.first;
+            hbFace = siter->second.second;
+        }
 
         auto impl = new (PointerFreeGC) FontFaceImplCairo(face, hbFace);
         m_fontPathToFace.insert(std::make_pair(path, impl));

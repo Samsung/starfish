@@ -43,6 +43,8 @@
 
 namespace Starfish {
 
+std::unordered_map<UTF8StringDataNonGCStd, std::pair<FT_Face, hb_font_t*>>
+    g_systemFontPathToFace;
 FT_Library g_freeTypeInstance;
 
 PlatformFontSelector* PlatformFontSelector::create(WebView* webView)
