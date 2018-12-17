@@ -10,7 +10,9 @@ lightweight Web engine (LWE).
 - [Events](#events)
 - [CSS](#css)
 - [Selectors](#selectors)
+- [Cross-origin script API accessSection](#cross-origin-script-api-accesssection)
 - [HTTP](#http)
+    - [Cross-Origin Resource Sharing](#cross-origin-resource-sharing)
     - [Content Security Policy](#content-security-policy)
 - [Additional Supported APIs](#additional-supported-apis)
     - [XMLHttpRequest](#xmlhttprequest)
@@ -1373,7 +1375,63 @@ This section describes the complete list of supported selectors by LWE.
 | [Tree-Abiding Pseudo-elements](https://www.w3.org/TR/css-pseudo-4/#treelike) | Generated Content Pseudo-elements: '::before' | ::before | p::before | Insert something before the content of each \<p\> element |
 | | Generated Content Pseudo-elements: '::after' | ::after | p::after | Insert something after the content of each \<p\> element |
 
+## Cross-origin script API accessSection
+
+JavaScript APIs like iframe.contentWindow, window.parent, window.open, and window.opener allow documents to directly reference each other. When two documents do not have the same origin, these references provide very limited access to Window and Location objects, as described in the next two sections.
+To communicate between documents from different origins, use window.postMessage.
+
+The following cross-origin access to these properties is allowed:
+
+| Interface | Type | Name | Description |
+|-----------|------|------|-------------|
+| Window | method | focus | |
+| | method | focus | |
+| | method | blur | |
+| | method | postMessage | |
+| | attribute | frames | read only |
+| | attribute | length | read only |
+| | attribute | top | read only |
+| | attribute | location | read/write |
+| Location | method | replace ||
+| | attribute | href | write only |
+
 ## HTTP
+
+### Cross-Origin Resource Sharing
+
+#### The HTTP response headers
+
+This section describes the HTTP response headers that the server responds to for access control, as defined by the [Cross-Origin Resource Sharing](https://www.w3.org/TR/cors/) specification.
+
+#### Supported HTTP response headers
+| Name      | Description | Note |
+|-----------|-------------|------|
+| [Access-Control-Allow-Origin](https://fetch.spec.whatwg.org/#http-access-control-allow-origin) | Indicates whether the response can be shared, via returning the literal value of the `Origin` request header (which can be `null`) or `*` in a response. | |
+| [Access-Control-Allow-Credentials](https://fetch.spec.whatwg.org/#http-access-control-allow-credentials) | Indicates whether the response can be shared when request’s credentials mode is "include". | |
+| [Access-Control-Allow-Methods](https://fetch.spec.whatwg.org/#http-access-control-allow-methods) | Indicates which methods are supported by the response’s URL for the purposes of the CORS protocol. | |
+| [Access-Control-Expose-Headers](https://fetch.spec.whatwg.org/#http-access-control-expose-headers) | Indicates which headers can be exposed as part of the response by listing their names. | |
+
+#### The HTTP request headers
+This section describes the HTTP request headers that the user-agent request to make use of the cross-origin sharing feature, as defined by the [Cross-Origin Resource Sharing](https://www.w3.org/TR/cors/) specification.
+
+| Name      | Description | Note |
+|-----------|-------------|------|
+| [Access-Control-Request-Method](https://fetch.spec.whatwg.org/#http-access-control-request-method) | Indicates which method a future CORS request to the same resource might use. | |
+| [Access-Control-Request-Headers`](https://fetch.spec.whatwg.org/#http-access-control-request-headers) | Indicates which method a future CORS request to the same resource might use. | |
+
+#### Preflighted requests
+[Preflighted requests](https://fetch.spec.whatwg.org/#cors-preflight-fetch) is a CORS request that checks to see if the CORS protocol is understood. It uses `OPTIONS` as method and includes above request headers
+
+#### X-Frame-Options
+The [X-Frame-Options](https://tools.ietf.org/html/rfc7034) HTTP response header can be used to indicate whether or not a browser should be allowed to render a page in a \<frame\>, \<iframe\>, \<embed\> or \<object\> . 
+
+| Directive      | Description | Note |
+|----------------|-------------|------|
+| [deny]() | The page cannot be displayed in a frame, regardless of the site attempting to do so. | |
+| [sameorigin]() | The page cannot be displayed in a frame, regardless of the site attempting to do so. | |
+| [allow-from uri]() | The page cannot be displayed in a frame, regardless of the site attempting to do so. | |
+
+Note : The above things is partially supported because Starfish does not support [Fetch](https://fetch.spec.whatwg.org/)
 
 ### Content Security Policy
 
