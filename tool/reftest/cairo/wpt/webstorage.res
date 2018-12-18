@@ -8,7 +8,7 @@ http://web-platform.test:8000/webstorage/storage_functions_not_overwritten.html
 #http://web-platform.test:8000/webstorage/event_local_newvalue.html
 http://web-platform.test:8000/webstorage/storage_getitem.html
 http://web-platform.test:8000/webstorage/storage_builtins.html
-#http://web-platform.test:8000/webstorage/storage_setitem.html
+http://web-platform.test:8000/webstorage/storage_setitem.html
 #http://web-platform.test:8000/webstorage/event_local_removeitem.html
 #http://web-platform.test:8000/webstorage/event_setattribute.html
 #http://web-platform.test:8000/webstorage/storage_local-manual.html

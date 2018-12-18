@@ -91,15 +91,7 @@ GCVector<String*> StorageImpl::getKeyNames()
 
 bool StorageImpl::setItem(String* key, String* value)
 {
-    Nullable<String*> val = getItem(key);
-    if (val.hasValue()) {
-        // Update only if the existing value is different
-        if (!(val.getValue()->equals(value))) {
-            m_map->insert(std::pair<String*, String*>(key, value));
-        }
-    } else {
-        m_map->insert(std::pair<String*, String*>(key, value));
-    }
+    (*m_map)[key] = value;
     if (m_storageManager) {
         m_storageManager->setItem(m_securityOriginData, key, value);
     }
