@@ -211,7 +211,8 @@ void HTMLIFrameElement::setReferrerPolicy(String* policy)
 }
 
 void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
-                                 ReferrerURL* referrerURL)
+                                 ReferrerURL* referrerURL,
+                                 CustomHTMLIFrameElementType elementType)
 {
     if (ResourceURL::isValidURL(url->urlString())) {
         String* name = nameAttr();
@@ -221,8 +222,15 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
         unloadSrc();
         unmarkContentDocumentDisabled();
 
-        if (!document()->contentSecurityPolicy()->allowSource(
-                CSPDirectives::ChildSrc, url)) {
+        CSPDirectives directiveType;
+        if (elementType == CustomHTMLIFrameElementType::SVG) {
+            directiveType = CSPDirectives::ImgSrc;
+        } else {
+            directiveType = CSPDirectives::ChildSrc;
+        }
+
+        if (!document()->contentSecurityPolicy()->allowSource(directiveType,
+                                                              url)) {
             /*
             NOTE: IFrames blocked by CSP should generate a 'load', not 'error'
             event, regardless of blocked state. This means they appear to be

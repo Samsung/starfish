@@ -32,6 +32,7 @@
 #include "core/dom/svg/SVGSVGElement.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/BrowsingContext.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -142,7 +143,8 @@ void ImageResource::didLoadFinished()
                 new ResourceURL(
                     String::fromUTF8(dataURI.data(), dataURI.length())),
                 HistoryManagerAction::Add,
-                new ReferrerURL(loader()->document()->documentURI()));
+                new ReferrerURL(loader()->document()->documentURI()),
+                CustomHTMLIFrameElementType::SVG);
             m_imageData = nullptr;
             return;
         }
