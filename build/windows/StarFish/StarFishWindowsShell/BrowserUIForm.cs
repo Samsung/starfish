@@ -510,6 +510,7 @@ namespace StarFishWindowsShell
         uint mStarFishThreadID;
         ArrayList mJSResultCallbackList;
         StarFishFontInitWaitForm mWaitingForm;
+        WndHookProc mWndHookProc;
 
         public ScreenBufferUpdated OnScreenBufferUpdate { get; set; }
         public LoadPageStart OnLoadPageStart { get; set; }
@@ -525,6 +526,7 @@ namespace StarFishWindowsShell
         public StarFish(BrowserUIForm form, int initialWidth, int initialHeight, string initialURL)
         {
             mForm = form;
+            mWndHookProc = WndHookProcImpl;
             mJSResultCallbackList = new ArrayList();
             mStarFishThread = new Thread(new ParameterizedThreadStart(this.WorkThread), 1024 * 1024 * 4);
             StartArg arg = new StartArg();
@@ -878,8 +880,7 @@ namespace StarFishWindowsShell
         {
             mStarFishThreadID = GetCurrentThreadId();
 
-
-            IntPtr ret = SetWindowsHookEx(3, WndHookProcImpl, new IntPtr(), mStarFishThreadID);
+            IntPtr ret = SetWindowsHookEx(3, mWndHookProc, new IntPtr(), mStarFishThreadID);
 
             StartArg arg = (StartArg)o;
             int initialWidth = arg.initialWidth;

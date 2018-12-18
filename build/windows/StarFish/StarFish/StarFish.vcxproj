@@ -72,6 +72,7 @@
     <ClCompile Include="..\..\..\..\src\binding\AttrBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\BlobBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\BlobCustomBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\BlobOrBufferSourceOrUSVStringOrReadableStreamBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\BufferSourceOrBlobOrDOMStringBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\CanvasGradientBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\CanvasPatternBinding.cpp" />
@@ -140,10 +141,12 @@
     <ClCompile Include="..\..\..\..\src\binding\EventTargetBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\FocusEventBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\FocusEventInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\FormDataBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\GeolocationBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\GeolocationCustomBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\GeopositionBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\GetRootNodeOptionsBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\HeadersBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\HistoryBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\HTMLAnchorElementBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\HTMLAreaElementBinding.cpp" />
@@ -242,12 +245,23 @@
     <ClCompile Include="..\..\..\..\src\binding\ProgressEventBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\ProgressEventInitBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\RangeBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ReadableStreamBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ReadableStreamDefaultControllerBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ReadableStreamDefaultReaderBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\RequestBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\RequestInitBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\RequestOrUSVStringBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ResponseBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ResponseInitBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\ScreenBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\ScriptBindingInstance.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\ScriptBindingSecurity.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\ScriptEngineInstance.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\ScriptWrappable.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\ScrollOptionsBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\ScrollToOptionsBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SecurityPolicyViolationEventBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SecurityPolicyViolationEventInitBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\SourceBufferBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\SourceBufferListBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\StorageBinding.cpp" />
@@ -260,6 +274,7 @@
     <ClCompile Include="..\..\..\..\src\binding\SVGGElementBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\SVGImageElementBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\SVGLengthBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\SVGLineElementBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\SVGPathElementBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\SVGPolygonElementBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\SVGPolylineElementBinding.cpp" />
@@ -294,6 +309,7 @@
     <ClCompile Include="..\..\..\..\src\binding\XMLDocumentBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\XMLHttpRequestBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\binding\XMLHttpRequestEventTargetBinding.cpp" />
+    <ClCompile Include="..\..\..\..\src\binding\XMLHttpRequestUploadBinding.cpp" />
     <ClCompile Include="..\..\..\..\src\browser\history\HistoryManager.cpp" />
     <ClCompile Include="..\..\..\..\src\browser\storage\StorageImpl.cpp" />
     <ClCompile Include="..\..\..\..\src\browser\storage\StorageManager.cpp" />
@@ -303,6 +319,9 @@
     <ClCompile Include="..\..\..\..\src\core\animation\AnimationTimingFunction.cpp" />
     <ClCompile Include="..\..\..\..\src\core\animation\AnimationUtil.cpp" />
     <ClCompile Include="..\..\..\..\src\core\animation\CubicBezier.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\csp\ContentSecurityPolicy.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\csp\ContentSecurityPolicyDirectiveList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\csp\ContentSecurityPolicySourceListDirective.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\Attr.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\Attribute.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\builder\html\HTMLDocumentBuilder.cpp" />
@@ -417,6 +436,7 @@
     <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGElement.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGImageElement.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGLength.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGLineElement.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGPathElement.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGPolygonElement.cpp" />
     <ClCompile Include="..\..\..\..\src\core\dom\svg\SVGPolylineElement.cpp" />
@@ -439,6 +459,18 @@
     <ClCompile Include="..\..\..\..\src\core\extra\Avplay.cpp" />
     <ClCompile Include="..\..\..\..\src\core\extra\Console.cpp" />
     <ClCompile Include="..\..\..\..\src\core\extra\MimeType.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\Body.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\FetchUtils.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\Headers.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\HeadersData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\Request.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\RequestData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\Response.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\ResponseData.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\stream\ReadableStream.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\stream\ReadableStreamBuffer.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\stream\ReadableStreamDefaultController.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\fetch\stream\ReadableStreamDefaultReader.cpp" />
     <ClCompile Include="..\..\..\..\src\core\fileapi\Blob.cpp" />
     <ClCompile Include="..\..\..\..\src\core\inspector\Inspector.cpp" />
     <ClCompile Include="..\..\..\..\src\core\layout\Frame.cpp" />
@@ -471,9 +503,11 @@
     <ClCompile Include="..\..\..\..\src\core\layout\FrameTableRowBox.cpp" />
     <ClCompile Include="..\..\..\..\src\core\layout\FrameTableSectionBox.cpp" />
     <ClCompile Include="..\..\..\..\src\core\layout\FrameTreeBuilder.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\LayoutRepaintTracker.cpp" />
     <ClCompile Include="..\..\..\..\src\core\layout\StackingContext.cpp" />
     <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGBox.cpp" />
     <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGCircleBox.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGLineBox.cpp" />
     <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGPathBox.cpp" />
     <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGPolygonBox.cpp" />
     <ClCompile Include="..\..\..\..\src\core\layout\svg\FrameSVGPolylineBox.cpp" />
@@ -492,6 +526,7 @@
     <ClCompile Include="..\..\..\..\src\core\modules\mediasource\MediaSource.cpp" />
     <ClCompile Include="..\..\..\..\src\core\modules\mediasource\SourceBuffer.cpp" />
     <ClCompile Include="..\..\..\..\src\core\modules\mediasource\SourceBufferList.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\modules\message_loop\Timer.cpp" />
     <ClCompile Include="..\..\..\..\src\core\modules\profiling\Profiling.cpp" />
     <ClCompile Include="..\..\..\..\src\core\modules\resource_request\NetworkURLResourceRequestJobDelegate.cpp" />
     <ClCompile Include="..\..\..\..\src\core\modules\resource_request\ResourceRequest.cpp" />
@@ -511,7 +546,6 @@
     <ClCompile Include="..\..\..\..\src\core\page\Serializer.cpp" />
     <ClCompile Include="..\..\..\..\src\core\page\WebView.cpp" />
     <ClCompile Include="..\..\..\..\src\core\page\Window.cpp" />
-    <ClCompile Include="..\..\..\..\src\core\paint\PaintCommandBuffer.cpp" />
     <ClCompile Include="..\..\..\..\src\core\storage\Storage.cpp" />
     <ClCompile Include="..\..\..\..\src\core\style\AncestorSelectorFilter.cpp" />
     <ClCompile Include="..\..\..\..\src\core\style\BorderImage.cpp" />
@@ -561,12 +595,14 @@
     <ClCompile Include="..\..\..\..\src\core\style\UnitHelper.cpp" />
     <ClCompile Include="..\..\..\..\src\core\util\AtomicString.cpp" />
     <ClCompile Include="..\..\..\..\src\core\util\AttributeName.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\util\Cryptographic.cpp" />
     <ClCompile Include="..\..\..\..\src\core\util\LineBreakerIteratorPool.cpp" />
     <ClCompile Include="..\..\..\..\src\core\util\Message.cpp" />
     <ClCompile Include="..\..\..\..\src\core\util\QualifiedName.cpp" />
     <ClCompile Include="..\..\..\..\src\core\util\String.cpp" />
     <ClCompile Include="..\..\..\..\src\core\util\TextConverter.cpp" />
     <ClCompile Include="..\..\..\..\src\core\util\URL.cpp" />
+    <ClCompile Include="..\..\..\..\src\core\xml\FormData.cpp" />
     <ClCompile Include="..\..\..\..\src\core\xml\XMLHttpRequest.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\canvas\CanvasCairo.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\canvas\CanvasMock.cpp" />
@@ -590,7 +626,6 @@
     <ClCompile Include="..\..\..\..\src\platform\loader\ResourceLoader.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\loader\ResourceURL.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\loader\TextResource.cpp" />
-    <ClCompile Include="..\..\..\..\src\platform\message_loop\MessageLoopAndroid.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\message_loop\MessageLoopEFL.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\message_loop\MessageLoopLibUV.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\message_loop\MessageLoopWindows.cpp" />
@@ -604,6 +639,7 @@
     <ClCompile Include="..\..\..\..\src\platform\multimedia\MediaPlayer.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\multimedia\MediaPlayerTizen.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\multimedia\MediaPlayerTizenBase.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\multimedia\MediaPlayerTV.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\multimedia\MockMediaPlayer.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\multimedia\MP4PacketGenerator.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\multimedia\StreamInfo.cpp" />
@@ -616,19 +652,22 @@
     <ClCompile Include="..\..\..\..\src\platform\network\http\HTTPUtil.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\network\NetworkSharedResourceManager.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\tts\TTSBase.cpp" />
+    <ClCompile Include="..\..\..\..\src\platform\tts\TTSTV.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\PlatformWindow.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\VirtualCursorData.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplGB.cpp" />
     <ClCompile Include="..\..\..\..\src\platform\window\WindowImplGL.cpp" />
     <ClCompile Include="..\..\..\..\src\public\bridge\android\AndroidBridge.cpp" />
     <ClCompile Include="..\..\..\..\src\public\bridge\dali\LWEWebViewDALi.cpp" />
+    <ClCompile Include="..\..\..\..\src\public\bridge\ecore_wayland2\LWEWebViewEcoreWayland2.cpp" />
     <ClCompile Include="..\..\..\..\src\public\bridge\efl\LWEWebViewEFL.cpp" />
     <ClCompile Include="..\..\..\..\src\public\bridge\glfw\LWEWebViewGLFW.cpp" />
     <ClCompile Include="..\..\..\..\src\public\JavaScriptNativeHandler.cpp" />
+    <ClCompile Include="..\..\..\..\src\public\LWE.cpp" />
     <ClCompile Include="..\..\..\..\src\public\LWEWebContainer.cpp" />
     <ClCompile Include="..\..\..\..\src\public\LWEWebView.cpp" />
     <ClCompile Include="..\..\..\..\src\shell\testRunner.cpp" />
-    <ClCompile Include="..\..\..\..\src\StarFish.cpp" />
+    <ClCompile Include="..\..\..\..\src\Starfish.cpp" />
     <ClCompile Include="..\..\..\..\src\StaticStrings.cpp" />
     <ClCompile Include="..\..\..\..\third_party\clipper\cpp\clipper.cpp" />
     <ClCompile Include="..\..\..\..\third_party\MP4Parse\source\MP4.Atom.cpp" />
@@ -709,9 +748,6 @@
     <ClCompile Include="StarFishLoggingAndConsoleBridge.cpp" />
     <ClCompile Include="StarFishWinformBridge.cpp" />
   </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{30238400-8542-41E4-9722-0F066B61EEE6}</ProjectGuid>
@@ -780,7 +816,7 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;STARFISH_WINDOWS;_ITERATOR_DEBUG_LEVEL=0;_TIMESPEC_DEFINED;_USE_MATH_DEFINES;GC_DEBUG;ESCARGOT_ENABLE_TYPEDARRAY;ESCARGOT_ENABLE_PROMISE;ESCARGOT_32;_DEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;STARFISH_ENABLE_MULTIMEDIA;STARFISH_ENABLE_DOMPARSER;STARFISH_IGNORE_CROSS_ORIGIN;STARFISH_IGNORE_SSL_VERIFYPEER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;STARFISH_WINDOWS;ESCARGOT;_ITERATOR_DEBUG_LEVEL=0;_TIMESPEC_DEFINED;_USE_MATH_DEFINES;GC_DEBUG;ESCARGOT_ENABLE_TYPEDARRAY;ESCARGOT_ENABLE_PROMISE;ESCARGOT_32;_DEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;STARFISH_ENABLE_MULTIMEDIA;STARFISH_ENABLE_DOMPARSER;STARFISH_IGNORE_CROSS_ORIGIN;STARFISH_IGNORE_SSL_VERIFYPEER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.\..\..\..\..\src;.\..\..\..\..\inc;.\..\..\..\..\third_party\escargot\third_party\GCutil;.\..\..\..\..\third_party\escargot\third_party\GCutil\bdwgc\include;.\..\..\..\..\third_party\escargot\src\api;.\..\..\..\..\third_party\clipper\cpp;.\..\..\..\..\third_party\skia_matrix;.\..\..\..\..\third_party\skia_matrix\include\core;.\..\..\..\..\third_party\skia_matrix\include\private;.\..\..\..\..\third_party\earcut.hpp\include\mapbox;.\..\..\..\..\third_party\MP4Parse\source\include;.\..\..\..\..\third_party\escargot\third_party\icu\include;.\..\..\..\..\third_party\windows_pthread\include;.\..\..\..\..\third_party\curl\include;.\..\..\..\..\third_party\cairo\src;.\..\..\..\..\third_party\cairo\build\windows\cairo\cairo;.\..\..\..\..\third_party\fontconfig;.\..\..\..\..\third_party\freetype2\include;.\..\..\..\..\third_party\giflib\lib;.\..\..\..\..\third_party\libpng;.\..\..\..\..\third_party\escargot\third_party\rapidjson\include;.\..\..\..\..\third_party\rapidxml;.\..\..\..\..\third_party\harfbuzz\src;.\..\..\..\..\third_party\webm;.\..\..\..\..\third_party\MP4Parse\source</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
@@ -814,7 +850,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;STARFISH_WINDOWS;_TIMESPEC_DEFINED;_USE_MATH_DEFINES;ESCARGOT_ENABLE_TYPEDARRAY;ESCARGOT_ENABLE_PROMISE;ESCARGOT_32;NDEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;STARFISH_ENABLE_MULTIMEDIA;STARFISH_ENABLE_DOMPARSER;STARFISH_IGNORE_CROSS_ORIGIN;STARFISH_IGNORE_SSL_VERIFYPEER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;STARFISH_WINDOWS;ESCARGOT;_TIMESPEC_DEFINED;_USE_MATH_DEFINES;ESCARGOT_ENABLE_TYPEDARRAY;ESCARGOT_ENABLE_PROMISE;ESCARGOT_32;NDEBUG;STARFISH_EXPORTS;_WINDOWS;_USRDLL;STARFISH_ENABLE_MULTIMEDIA;STARFISH_ENABLE_DOMPARSER;STARFISH_IGNORE_CROSS_ORIGIN;STARFISH_IGNORE_SSL_VERIFYPEER;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <AdditionalIncludeDirectories>.\..\..\..\..\src;.\..\..\..\..\inc;.\..\..\..\..\third_party\escargot\third_party\GCutil;.\..\..\..\..\third_party\escargot\third_party\GCutil\bdwgc\include;.\..\..\..\..\third_party\escargot\src\api;.\..\..\..\..\third_party\clipper\cpp;.\..\..\..\..\third_party\skia_matrix;.\..\..\..\..\third_party\skia_matrix\include\core;.\..\..\..\..\third_party\skia_matrix\include\private;.\..\..\..\..\third_party\earcut.hpp\include\mapbox;.\..\..\..\..\third_party\skia_matrix\include\private;.\..\..\..\..\third_party\skia_matrix\include\core;.\..\..\..\..\third_party\MP4Parse\source\include;.\..\..\..\..\third_party\escargot\third_party\icu\include;.\..\..\..\..\third_party\windows_pthread\include;.\..\..\..\..\third_party\curl\include;.\..\..\..\..\third_party\cairo\src;.\..\..\..\..\third_party\cairo\build\windows\cairo\cairo;.\..\..\..\..\third_party\fontconfig;.\..\..\..\..\third_party\freetype2\include;.\..\..\..\..\third_party\giflib\lib;.\..\..\..\..\third_party\libpng;.\..\..\..\..\third_party\escargot\third_party\rapidjson\include;.\..\..\..\..\third_party\rapidxml;.\..\..\..\..\third_party\harfbuzz\src;.\..\..\..\..\third_party\webm;.\..\..\..\..\third_party\MP4Parse\source</AdditionalIncludeDirectories>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
