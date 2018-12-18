@@ -135,33 +135,18 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
     STARFISH_ASSERT(m_bufferHeight);
 
     size_t wTextureCount = 1;
-    if (m_bufferWidth < screenWidth) {
-        while (m_bufferWidth / wTextureCount >
-               CanvasSurface::g_canvasSurfaceTileSize) {
-            wTextureCount++;
-        }
-    } else {
-        while (screenWidth / wTextureCount >
-               CanvasSurface::g_canvasSurfaceTileSize) {
-            wTextureCount++;
-        }
+    while (m_bufferWidth / wTextureCount >
+           CanvasSurface::g_canvasSurfaceTileSize) {
+        wTextureCount++;
     }
     m_tileDataWidth = ceil(m_bufferWidth / (float)wTextureCount);
     m_horizontalTileCount = wTextureCount;
 
     size_t hTextureCount = 1;
-    if (m_bufferHeight < screenHeight) {
-        while (m_bufferHeight / hTextureCount >
-               CanvasSurface::g_canvasSurfaceTileSize) {
-            hTextureCount++;
-        }
-    } else {
-        while (screenHeight / hTextureCount >
-               CanvasSurface::g_canvasSurfaceTileSize) {
-            hTextureCount++;
-        }
+    while (m_bufferHeight / hTextureCount >
+           CanvasSurface::g_canvasSurfaceTileSize) {
+        hTextureCount++;
     }
-
     m_tileDataHeight = ceil(m_bufferHeight / (float)hTextureCount);
     m_verticalTileCount = hTextureCount;
 
@@ -212,7 +197,6 @@ StackingContextRareData::StackingContextRareData()
     : m_visibleRect(0, 0, 0, 0)
     , m_graphicsBufferHolder(nullptr)
     , m_matrix(SkMatrix::I())
-    , m_screenMatrix(SkMatrix::I())
 {
 }
 
@@ -964,10 +948,19 @@ void StackingContext::computeStackingContextProperties(
                             m_owner->isRunningTransformAnimation();
 
 #if !defined(STARFISH_ENABLE_TEST)
-    if (m_owner->isRootElement() &&
-        (m_owner->asFrameBlockBox()->hasBiggerContentThanFrameWidth() ||
-         m_owner->asFrameBlockBox()->hasBiggerContentThanFrameHeight())) {
-        compositedBySelf = true;
+    if (m_owner->isRootElement()) {
+        FrameBlockBox* fb = m_owner->asFrameBlockBox();
+        if (isRootContext()) {
+            fb = m_owner->node()
+                     ->document()
+                     ->frame()
+                     ->asFrameBox()
+                     ->asFrameBlockBox();
+        }
+        if ((fb->hasBiggerContentThanFrameWidth() ||
+             fb->hasBiggerContentThanFrameHeight())) {
+            compositedBySelf = true;
+        }
     }
 #endif
 
@@ -1308,7 +1301,6 @@ void StackingContext::applyStackingContextProperties(
 
     if (willBeComposited) {
         m_needsGraphicsBuffer = true;
-        m_rareData->m_screenMatrix = m_owner->computeScreenMatrix();
     } else {
         m_needsGraphicsBuffer = false;
     }
@@ -1740,6 +1732,7 @@ void StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 
                 LayoutRect screenRect = computeScreenRect(this);
                 LayoutRect windowRect = computeWindowRectOnScreen(this);
+                auto screenMatrix = m_owner->computeScreenMatrix();
 
                 for (size_t y = 0; y < hTextureCount; y++) {
                     size_t coveredColsCount = 0;
@@ -1759,7 +1752,7 @@ void StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                             LayoutRect(minX + (LayoutUnit)tileDataX,
                                        minY + (LayoutUnit)tileDataY,
                                        tileDataWidth, tileDataHeight),
-                            m_rareData->m_screenMatrix);
+                            screenMatrix);
 
                         bool willPaintOnScreen =
                             screenRect.intersects(tileExtent) &&
@@ -1903,7 +1896,7 @@ void StackingContext::fillGraphicsBufferContents(
     size_t hTextureCount =
         m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
 
-    SkMatrix screenMatrix = m_rareData->m_screenMatrix;
+    auto screenMatrix = m_owner->computeScreenMatrix();
 
     LayoutRect screenRect = computeScreenRect(this);
     LayoutRect windowRect = computeWindowRectOnScreen(this);
@@ -2371,6 +2364,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         LayoutRect screenRect = computeScreenRect(this);
         LayoutRect windowRect = computeWindowRectOnScreen(this);
 
+        auto screenMatrix = m_owner->computeScreenMatrix();
+
         for (size_t y = 0; y < hTextureCount; y++) {
             size_t coveredColsCount = 0;
             for (size_t x = 0; x < wTextureCount; x++) {
@@ -2389,7 +2384,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     computeBoxExtent(LayoutRect(minX + (LayoutUnit)tileDataX,
                                                 minY + (LayoutUnit)tileDataY,
                                                 tileDataWidth, tileDataHeight),
-                                     m_rareData->m_screenMatrix);
+                                     screenMatrix);
 
                 bool willPaintOnScreen = screenRect.intersects(tileExtent) &&
                                          windowRect.intersects(tileExtent);

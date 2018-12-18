@@ -88,7 +88,6 @@ struct StackingContextRareData : public gc {
     LayoutRect m_visibleRect;
     GraphicsBufferHolder* m_graphicsBufferHolder;
     SkMatrix m_matrix;
-    SkMatrix m_screenMatrix;
     TextDecorationData m_textDecorationData;
 
     StackingContextRareData();
