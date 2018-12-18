@@ -1096,6 +1096,7 @@ wpt_others_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/xhr_single_thread.res basic -p1
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/x-frame-options.res basic -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/csp.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/webstorage.res basic -p$(TEST_NPROCS)
 
 wpt_pwa_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_basic.res basic -p$(TEST_NPROCS)
