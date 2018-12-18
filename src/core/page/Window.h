@@ -430,7 +430,7 @@ public:
     // DECLARE_EVENT_LISTENER(storage);
     // DECLARE_EVENT_LISTENER(unhandledrejection);
     DECLARE_EVENT_LISTENER(unload);
-// DECLARE_EVENT_LISTENER(scroll);
+    DECLARE_EVENT_LISTENER(scroll);
 #undef VIRTUAL
 #undef OVERRIDE
 

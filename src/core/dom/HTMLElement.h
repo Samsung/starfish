@@ -127,7 +127,7 @@ public:
     // DECLARE_EVENT_LISTENER(wheel);
     DECLARE_EVENT_LISTENER(progress);
     // DECLARE_EVENT_LISTENER(reset);
-    // DECLARE_EVENT_LISTENER(scroll);
+    DECLARE_EVENT_LISTENER(scroll);
     // DECLARE_EVENT_LISTENER(select);
     // DECLARE_EVENT_LISTENER(show);
     DECLARE_EVENT_LISTENER(submit);
@@ -168,7 +168,6 @@ public:
     DECLARE_EVENT_LISTENER(focus);
     DECLARE_EVENT_LISTENER(load);
     DECLARE_EVENT_LISTENER(resize);
-// DECLARE_EVENT_LISTENER(scroll);
 #undef VIRTUAL
 #undef OVERRIDE
 

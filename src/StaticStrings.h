@@ -500,6 +500,8 @@ public:
     QualifiedName m_onfocusin;
     QualifiedName m_focusout;
     QualifiedName m_onfocusout;
+    QualifiedName m_scroll;
+    QualifiedName m_onscroll;
     QualifiedName m_reset;
     QualifiedName m_resize;
     QualifiedName m_onresize;

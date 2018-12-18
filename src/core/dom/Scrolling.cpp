@@ -151,6 +151,18 @@ void Scrolling::onGlobalPointingEvent(float x, float y,
                                                m_target->asWindow()->scrollY());
             }
         }
+
+        String* eventType =
+            m_target->starfish()->staticStrings()->m_scroll.localName();
+        UIEvent* e = new UIEvent(m_target->document(), eventType);
+        e->setView(m_target->asWindow());
+        if (m_target->document()
+                ->browsingContext()
+                ->isTopLevelBrowsingContext()) {
+            m_target->dispatchEventByUA(e);
+        } else {
+            m_target->dispatchEventIdleTimeByUA(e);
+        }
     }
 }
 
