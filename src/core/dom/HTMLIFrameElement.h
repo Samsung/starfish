@@ -30,6 +30,11 @@ namespace Starfish {
 
 class BrowsingContext;
 
+enum class CustomHTMLIFrameElementType {
+    NotCustomHTMLIFrameElement,
+    SVG,
+};
+
 class HTMLIFrameElement : public HTMLElement {
     friend class BrowsingContext;
     friend class ResourceLoader;
@@ -82,7 +87,9 @@ public:
     }
 
     void navigate(ResourceURL* url, HistoryManagerAction type,
-                  ReferrerURL* referrerURL);
+                  ReferrerURL* referrerURL,
+                  CustomHTMLIFrameElementType elementType =
+                      CustomHTMLIFrameElementType::NotCustomHTMLIFrameElement);
 
     String* nameAttr();
     void setNameAttr(String* name);
