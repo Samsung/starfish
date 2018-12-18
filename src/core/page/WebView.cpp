@@ -831,19 +831,19 @@ void WebView::clearBlobURLStore()
     GCUnorderedSet<BlobURLStore>().swap(m_urlBlobStore);
 }
 
-void WebView::layoutIfNeeds(bool shouldCareStackingContextNow)
+void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)
 {
-    INSTALL_PROFILE_TIMER("WebView::rendering::layoutIfNeeds");
+    INSTALL_PROFILE_TIMER("WebView::rendering::layoutIfNeeded");
     bool didLayout = false;
 
     {
-        didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeds();
+        didLayout = didLayout | m_topLevelBrowsingContext->layoutIfNeeded();
         auto browsingContextsNeedsLayout =
             std::move(m_browsingContextsNeedsLayout);
         m_browsingContextsNeedsLayout.clear();
         for (size_t i = 0; i < browsingContextsNeedsLayout.size(); i++) {
             didLayout =
-                didLayout | browsingContextsNeedsLayout[i]->layoutIfNeeds();
+                didLayout | browsingContextsNeedsLayout[i]->layoutIfNeeded();
         }
 
         if (didLayout) {
@@ -1153,7 +1153,7 @@ RenderResult WebView::rendering(bool force)
     size_t totalAllocatedCanvasSurfaceSizeBefore =
         CanvasSurface::g_totalAllocatedCanvasSurfaceSize;
 
-    layoutIfNeeds();
+    layoutIfNeeded();
 
     bool didPainting = false;
     if (m_needsPainting) {

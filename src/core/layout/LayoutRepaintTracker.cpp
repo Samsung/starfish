@@ -138,7 +138,7 @@ static void traceRepaintRegionJob(
             iter->second.first.setY(LayoutUnit::min());
         }
 
-        if (currentFrame->isEstablishesStackingContext()) {
+        if (currentFrame->needToEstablishStackingContext()) {
             lastStackingContextOwner = currentFrameBox;
         }
 

@@ -74,7 +74,7 @@ static Nullable<Length> valueToLength(CSSStyleValuePair::ValueKind kind,
 
 float SVGLength::value()
 {
-    m_sourceElement->document()->browsingContext()->layoutIfNeeds();
+    m_sourceElement->document()->browsingContext()->layoutIfNeeded();
 
     String* attrValue = m_sourceElement->getAttributeOrEmpty(m_targetAttribute);
     Length len;

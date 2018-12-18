@@ -250,7 +250,7 @@ public:
     void resolveStyleIfNeeds();
     void buildFrameTreeIfNeeds();
     // return did layout
-    bool layoutIfNeeds();
+    bool layoutIfNeeded();
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     void registerMediaElement(HTMLMediaElement* element);
 #endif

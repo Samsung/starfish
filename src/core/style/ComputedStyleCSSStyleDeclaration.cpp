@@ -44,7 +44,7 @@ void ComputedStyleCSSStyleDeclaration::layoutIfNeeds()
         return;
     }
 
-    m_node->window()->browsingContext()->webView()->layoutIfNeeds(false);
+    m_node->window()->browsingContext()->webView()->layoutIfNeeded(false);
 }
 
 void ComputedStyleCSSStyleDeclaration::buildFrameTreeIfNeeds()

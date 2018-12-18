@@ -1472,7 +1472,7 @@ void Document::invalidFocusRingCacheIfNeeded()
 
 const GCAtomicVector<Element*>& Document::focusRing()
 {
-    webView()->layoutIfNeeds(false);
+    webView()->layoutIfNeeded(false);
 
     if (!m_isFocusRingCacheValid) {
         m_focusRingCache.clear();

@@ -842,7 +842,7 @@ void InlineBoxLayoutParentBox::quickInlineLayout(LineFormattingContext* ctx)
                 ctx->registerInlineBlockAscender(ascender,
                                                  box->asFrameBlockBox());
             } else {
-                if (box->isEstablishesBlockFormattingContext()) {
+                if (box->needToEstablishBlockFormattingContext()) {
                     box->layout(ctx->m_layoutContext,
                                 LayoutWantToResolve::ResolveAll);
                 } else {
@@ -1409,8 +1409,7 @@ void InlineBoxLayoutParentBox::coordinateVerticalProperties(
     }
 }
 
-void InlineBoxLayoutParentBox::registerRelativePositionedBoxes(
-    LayoutContext& ctx)
+void InlineBoxLayoutParentBox::addToRelativePositionedBoxes(LayoutContext& ctx)
 {
     for (size_t k = 0; k < m_boxes.size(); k++) {
         FrameBox* childBox = m_boxes[k];
@@ -1418,12 +1417,12 @@ void InlineBoxLayoutParentBox::registerRelativePositionedBoxes(
         if (!childBox->isFrameBlockBox()) {
             if (childBox->style()->position() ==
                 PositionValue::RelativePositionValue) {
-                ctx.registerRelativePositionedBox(childBox, true);
+                ctx.addToRelativePositionedBoxes(childBox, true);
             }
 
             if (childBox->isInlineNonReplacedBox()) {
                 childBox->asInlineNonReplacedBox()
-                    ->registerRelativePositionedBoxes(ctx);
+                    ->addToRelativePositionedBoxes(ctx);
             }
         }
     }
@@ -1526,7 +1525,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
 
     for (size_t k = 0; k < m_boxes.size(); k++) {
         FrameBox* childBox = m_boxes[k];
-        if (childBox->isEstablishesStackingContext()) {
+        if (childBox->needToEstablishStackingContext()) {
             continue;
         }
 
@@ -1621,7 +1620,7 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                     canvas->setVisible(true);
                 }
 
-                STARFISH_ASSERT(!childBox->isEstablishesStackingContext());
+                STARFISH_ASSERT(!childBox->needToEstablishStackingContext());
 
                 if (overflowApplied) {
                     canvas->save();
@@ -3372,8 +3371,7 @@ void FrameInline::layoutInline(LineFormattingContext& ctx)
 
 void LineFormattingContext::layoutInline(Frame* origin)
 {
-    Frame* f = origin->firstChild();
-    while (f) {
+    for (Frame* f = origin->firstChild(); f; f = f->next()) {
         // Don't put any inline box leaving pending inline boxes ahead.
         STARFISH_ASSERT(m_pendingInlineBoxes.size() == 0);
 
@@ -3386,8 +3384,6 @@ void LineFormattingContext::layoutInline(Frame* origin)
         } else {
             f->layoutInline(*this);
         }
-
-        f = f->next();
     }
 }
 
@@ -3861,19 +3857,19 @@ void LineFormattingContext::breakLineForInlineNonReplacedBox(FrameLineBreak* br)
     markInlineBoxIndex(current);
 }
 
-bool LineFormattingContext::removeLastLineBoxIfNeeds()
+bool LineFormattingContext::removeLastLineBoxIfEmpty()
 {
-    LineBox* back = currentLine();
+    LineBox* lastLine = currentLine();
 
-    back->removeDanglingSpace(this);
-    if (back->containOnlyEmptyInlineNonReplacedBoxes(this)) {
+    lastLine->removeDanglingSpace(this);
+    if (lastLine->containOnlyEmptyInlineNonReplacedBoxes(this)) {
         if (m_pendingFloatingBoxes.size() == 0 &&
             m_pendingInlineBoxes.size() == 0 &&
-            absolutePositionedBoxLayoutParentCnt(back) == 0) {
+            absolutePositionedBoxLayoutParentCnt(lastLine) == 0) {
             m_block->m_lineBoxes.erase(m_block->m_lineBoxes.end() - 1);
             return true;
         } else {
-            back->boxes().clear();
+            lastLine->boxes().clear();
         }
     }
 
@@ -3899,7 +3895,7 @@ LayoutUnit LineFormattingContext::contentHeightForBlock()
         riter++;
     }
 
-    if (m_block->isEstablishesBlockFormattingContext()) {
+    if (m_block->needToEstablishBlockFormattingContext()) {
         bottom = std::max(bottom, m_layoutContext.clearedDistanceToFloatBottom(
                                       m_absPosition.y(), BothClearValue));
     }
@@ -3930,8 +3926,8 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
     if (lineFormattingContext.isWordProcessing()) {
         lineFormattingContext.insertWord(nullptr);
     }
-    bool skipFinishLine = lineFormattingContext.removeLastLineBoxIfNeeds();
-    if (!skipFinishLine) {
+    bool lastLineRemoved = lineFormattingContext.removeLastLineBoxIfEmpty();
+    if (!lastLineRemoved) {
         lineFormattingContext.finishLineForLineBox(nullptr, true);
     }
 
@@ -3966,7 +3962,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                 (borderLeft() + paddingLeft()) - LayoutUnit::epsilon();
 
             while (true) {
-                bool seenHidedText = false;
+                bool seenHiddenText = false;
                 if (isLtr) {
                     iterateChildFrameBox([&](FrameBox* box) {
                         LayoutRect absRect;
@@ -3974,18 +3970,18 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                             (absRect = box->absoluteRect(this)).maxX() >=
                                 rightBoundary) {
                             if (!box->asInlineTextBox()
-                                     ->isHidedByTextOverflow()) {
+                                     ->isHiddenByTextOverflow()) {
                                 LayoutUnit diff =
                                     absRect.maxX() - width() +
                                     (borderRight() + paddingRight());
                                 box->asInlineTextBox()
                                     ->markNeedsConsiderTextOverflow(
                                         overflowString, true, diff);
-                                seenHidedText = seenHidedText |
-                                                box->asInlineTextBox()
-                                                    ->isHidedByTextOverflow();
+                                seenHiddenText = seenHiddenText |
+                                                 box->asInlineTextBox()
+                                                     ->isHiddenByTextOverflow();
                                 if (box->asInlineTextBox()
-                                        ->isHidedByTextOverflow()) {
+                                        ->isHiddenByTextOverflow()) {
                                     rightBoundary =
                                         std::min(absRect.x(), rightBoundary);
                                 }
@@ -4002,7 +3998,7 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                                 ->markNeedsConsiderTextOverflow(overflowString,
                                                                 false, 0);
                             if (!box->asInlineTextBox()
-                                     ->isHidedByTextOverflow()) {
+                                     ->isHiddenByTextOverflow()) {
                                 LayoutUnit diff =
                                     (borderLeft() + paddingLeft()) -
                                     absRect.x();
@@ -4010,11 +4006,11 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                                 box->asInlineTextBox()
                                     ->markNeedsConsiderTextOverflow(
                                         overflowString, false, diff);
-                                seenHidedText = seenHidedText |
-                                                box->asInlineTextBox()
-                                                    ->isHidedByTextOverflow();
+                                seenHiddenText = seenHiddenText |
+                                                 box->asInlineTextBox()
+                                                     ->isHiddenByTextOverflow();
                                 if (box->asInlineTextBox()
-                                        ->isHidedByTextOverflow()) {
+                                        ->isHiddenByTextOverflow()) {
                                     leftBoundary = std::max(
                                         absRect.maxX() +
                                             box->style()->font()->measureText(
@@ -4026,19 +4022,19 @@ LayoutUnit FrameBlockBox::layoutInline(LayoutContext& ctx)
                     });
                 }
 
-                if (!seenHidedText) {
+                if (!seenHiddenText) {
                     break;
                 }
             }
         }
     }
 
-    registerRelativePositionedBoxes(ctx);
+    addToRelativePositionedBoxes(ctx);
 
     return lineFormattingContext.contentHeightForBlock();
 }
 
-void FrameBlockBox::registerRelativePositionedBoxes(LayoutContext& ctx)
+void FrameBlockBox::addToRelativePositionedBoxes(LayoutContext& ctx)
 {
     auto iter = m_lineBoxes.begin();
 
@@ -4053,7 +4049,7 @@ void FrameBlockBox::registerRelativePositionedBoxes(LayoutContext& ctx)
             }
         }
 
-        lineBox->registerRelativePositionedBoxes(ctx);
+        lineBox->addToRelativePositionedBoxes(ctx);
         iter++;
     }
 }
@@ -4462,7 +4458,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                 auto widths =
                     ctx.preferredWidthsWithNewContext(f->asFrameBox());
 
-                if (f->isEstablishesBlockFormattingContext()) {
+                if (f->needToEstablishBlockFormattingContext()) {
                     if (f->isNormalFlow()) {
                         if (f->style()->clear() & ClearValue::LeftClearValue) {
                             ctx.floatLeftWidth() = 0;
@@ -5046,7 +5042,7 @@ void InlineNonReplacedBox::paintInlineContent(Canvas* canvas,
                                               PaintingInlineStage stage,
                                               LayoutUnit dx, LayoutUnit dy)
 {
-    if (isEstablishesStackingContext()) {
+    if (needToEstablishStackingContext()) {
         return;
     }
 
@@ -5158,7 +5154,7 @@ void InlineTextBox::markNeedsConsiderTextOverflow(String* overflowString,
 Frame* InlineNonReplacedBox::hitTest(LayoutUnit x, LayoutUnit y,
                                      HitTestStage stage)
 {
-    if (isEstablishesStackingContext()) {
+    if (needToEstablishStackingContext()) {
         return nullptr;
     }
 

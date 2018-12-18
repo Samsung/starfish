@@ -72,7 +72,7 @@ public:
         : m_ctx(ctx)
         , m_needs(false)
     {
-        if (frm->isEstablishesBlockFormattingContext()) {
+        if (frm->needToEstablishBlockFormattingContext()) {
             m_needs = true;
             m_ctx.establishBlockFormattingContext(frm->isNormalFlow());
         }
@@ -91,7 +91,7 @@ public:
 void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
                                         LayoutUnit containgBlockContentWidth)
 {
-    if (isEstablishesBlockFormattingContext()) {
+    if (needToEstablishBlockFormattingContext()) {
         if (!shouldLayout(ctx, Frame::ResolveWidth, cb)) {
             return;
         }
@@ -166,17 +166,17 @@ void FrameBlockBox::computeContentWidth(LayoutContext& ctx, FrameBox* cb,
     }
 }
 
-void FrameBlockBox::registerRelativePositionIfNeeds(LayoutContext& ctx)
+void FrameBlockBox::addToRelativePositionedBoxesIfNeeded(LayoutContext& ctx)
 {
     if (style()->position() == PositionValue::RelativePositionValue) {
-        ctx.registerRelativePositionedBox(this, true);
+        ctx.addToRelativePositionedBoxes(this, true);
     }
 
     if (node() && node()->parentElement()) {
         Node* nd = node()->parentElement();
         if (nd->frame()->isFrameInline() &&
             nd->style()->position() == RelativePositionValue) {
-            ctx.registerRelativePositionedBox(this, false);
+            ctx.addToRelativePositionedBoxes(this, false);
         }
     }
 }
@@ -185,23 +185,24 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 {
     LayoutUnit top = paddingTop() + borderTop();
     LayoutUnit bottom = paddingBottom() + borderBottom();
-    MarginInfo marginInfo(top, bottom, isEstablishesBlockFormattingContext() ||
-                                           isFrameDocument(),
+    MarginInfo marginInfo(top, bottom,
+                          needToEstablishBlockFormattingContext() ||
+                              isFrameDocument(),
                           style()->height());
     ctx.setMarginInfo(this, &marginInfo);
 
-    if (isEstablishesBlockFormattingContext()) {
+    if (needToEstablishBlockFormattingContext()) {
         if (!shouldLayout(ctx, LayoutWantToResolve::ResolveHeight, cb)) {
             bool isQuickLayout = ctx.isQuickLayout();
             ctx.setIsQuickLayout(true);
             quickLayout(ctx);
             ctx.setIsQuickLayout(isQuickLayout);
-            registerRelativePositionedBoxes(ctx);
+            addToRelativePositionedBoxes(ctx);
             return;
         }
     }
 
-    registerRelativePositionIfNeeds(ctx);
+    addToRelativePositionedBoxesIfNeeded(ctx);
 
     if (isFrameTableBox()) {
         bool isCollapsedBefore = false;
@@ -218,7 +219,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             // yet.
             // because there is so many annoying anonymous boxes.
             Frame* stackingContextOwner = this;
-            while (!stackingContextOwner->isEstablishesStackingContext()) {
+            while (!stackingContextOwner->needToEstablishStackingContext()) {
                 stackingContextOwner = stackingContextOwner->parent();
             }
             stackingContextOwner->markNeedsPainting();
@@ -411,14 +412,14 @@ LayoutRect FrameBlockBox::computeVisibleRectForScroll(
 
 void FrameBlockBox::quickLayout(LayoutContext& ctx)
 {
-    if (!isEstablishesBlockFormattingContext()) {
+    if (!needToEstablishBlockFormattingContext()) {
         Frame::quickLayout(ctx);
     }
 
     if (hasBlockFlow()) {
         Frame* child = firstChild();
         while (child) {
-            if (child->isEstablishesBlockFormattingContext()) {
+            if (child->needToEstablishBlockFormattingContext()) {
                 child->layout(ctx, ResolveAll);
             } else {
                 child->quickLayout(ctx);
@@ -444,8 +445,8 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                 box->setX(orgX - (box->x() - orgX));
                 box->setY(orgY - (box->y() - orgY));
 
-                if (!child->isEstablishesBlockFormattingContext()) {
-                    ctx.registerRelativePositionedBox(box, dueToSelf);
+                if (!child->needToEstablishBlockFormattingContext()) {
+                    ctx.addToRelativePositionedBoxes(box, dueToSelf);
                 }
             }
             child = child->next();
@@ -462,10 +463,10 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
             lCtx.registerInlineContent(nullptr);
             m_lineBoxes[i]->coordinateVerticalProperties(&lCtx, 0);
         }
-        registerRelativePositionedBoxes(ctx);
+        addToRelativePositionedBoxes(ctx);
     }
 
-    if (!isEstablishesBlockFormattingContext()) {
+    if (!needToEstablishBlockFormattingContext()) {
         ctx.layoutRegisteredAbsolutePositionedBoxes(this);
         ctx.layoutRegisteredRelativePositionedBoxes(this);
     }
@@ -857,7 +858,7 @@ static bool isNonSelfCollapsingHeight(LayoutContext& ctx, FrameBlockBox* box,
 
 bool FrameBlockBox::isSelfCollapsingBlock(LayoutContext& ctx)
 {
-    if (isEstablishesBlockFormattingContext()) {
+    if (needToEstablishBlockFormattingContext()) {
         return false;
     }
 
@@ -939,7 +940,7 @@ Frame* FrameBlockBox::hitTestChildrenWith(LayoutUnit x, LayoutUnit y,
 
 Frame* FrameBlockBox::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 {
-    if (isEstablishesStackingContext()) {
+    if (needToEstablishStackingContext()) {
         return nullptr;
     }
 

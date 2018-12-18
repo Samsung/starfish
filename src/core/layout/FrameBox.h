@@ -672,7 +672,7 @@ public:
 
     bool canSkipPaintingStage(PaintingContext& ctx)
     {
-        if (isEstablishesStackingContext()) {
+        if (needToEstablishStackingContext()) {
             return true;
         }
 

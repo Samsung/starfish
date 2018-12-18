@@ -73,7 +73,7 @@ protected:
                 return false;
             });
         if (r) {
-            m_browsingContext->layoutIfNeeds();
+            m_browsingContext->layoutIfNeeded();
             SVGSVGElement* svg = r->asSVGSVGElement();
             if (!svg->frame()) {
                 m_resource->didLoadFailed();

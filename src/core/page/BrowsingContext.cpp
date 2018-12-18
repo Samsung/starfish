@@ -498,7 +498,7 @@ void BrowsingContext::buildFrameTreeIfNeeds()
     }
 }
 
-bool BrowsingContext::layoutIfNeeds()
+bool BrowsingContext::layoutIfNeeded()
 {
     buildFrameTreeIfNeeds();
 
@@ -759,7 +759,7 @@ void BrowsingContext::updateDefaultFontSize()
 
 Node* BrowsingContext::hitTest(float x, float y)
 {
-    webView()->layoutIfNeeds();
+    webView()->layoutIfNeeded();
 
     if (window() && document() && document()->frame()) {
         Frame* frame = document()->frame()->hitTest(x, y, HitTestStageEnd);
