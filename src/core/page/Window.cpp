@@ -361,7 +361,7 @@ double Window::scrollX(bool canLeadLayoutThrashing)
 {
     if (canLeadLayoutThrashing &&
         !browsingContext()->webView()->inRendering()) {
-        browsingContext()->webView()->layoutIfNeeds(false);
+        browsingContext()->webView()->layoutIfNeeded(false);
     }
     if (document()->frame()) {
         return document()->frame()->asFrameDocument()->scrollLeft();
@@ -373,7 +373,7 @@ double Window::scrollY(bool canLeadLayoutThrashing)
 {
     if (canLeadLayoutThrashing &&
         !browsingContext()->webView()->inRendering()) {
-        browsingContext()->webView()->layoutIfNeeds(false);
+        browsingContext()->webView()->layoutIfNeeded(false);
     }
     if (document()->frame()) {
         return document()->frame()->asFrameDocument()->scrollTop();
@@ -395,7 +395,7 @@ LayoutUnit Window::scrollWidth(bool canLeadLayoutThrashing)
 {
     if (canLeadLayoutThrashing &&
         !browsingContext()->webView()->inRendering()) {
-        browsingContext()->webView()->layoutIfNeeds(false);
+        browsingContext()->webView()->layoutIfNeeded(false);
     }
 
     if (document()->frame()) {
@@ -408,7 +408,7 @@ LayoutUnit Window::scrollHeight(bool canLeadLayoutThrashing)
 {
     if (canLeadLayoutThrashing &&
         !browsingContext()->webView()->inRendering()) {
-        browsingContext()->webView()->layoutIfNeeds(false);
+        browsingContext()->webView()->layoutIfNeeded(false);
     }
 
     if (document()->frame()) {
@@ -457,7 +457,7 @@ bool Window::scrollTo(ScrollToOptions options)
         y = scrollY();
     }
 
-    browsingContext()->webView()->layoutIfNeeds(false);
+    browsingContext()->webView()->layoutIfNeeded(false);
     return scrollToWithoutLayout(x.toDouble(), y.toDouble());
 }
 

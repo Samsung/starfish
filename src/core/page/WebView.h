@@ -240,7 +240,7 @@ public:
     BlobURLStore findMediaSourceBlobURL(MediaSource* ptr);
     void clearBlobURLStore();
 
-    void layoutIfNeeds(bool shouldCareStackingContextNow = true);
+    void layoutIfNeeded(bool shouldCareStackingContextNow = true);
     void clearStackingContext();
     StackingContext* rootStackingContext()
     {

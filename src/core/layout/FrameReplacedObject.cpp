@@ -58,7 +58,7 @@ void FrameReplacedObject::didCompsiteStackingContext(Compositor* c)
 void FrameReplacedObject::computeStyleFlags()
 {
     FrameReplaced::computeStyleFlags();
-    m_flags.m_isEstablishesStackingContext = true;
+    m_flags.m_needToEstablishStackingContext = true;
     if (node()->asHTMLObjectElement()->content()) {
         m_flags.m_needsGraphicsBuffer =
             node()->asHTMLObjectElement()->content()->needsGraphicsBuffer();

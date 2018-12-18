@@ -555,7 +555,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                             return;
                         }
 
-                        doc->webView()->layoutIfNeeds();
+                        doc->webView()->layoutIfNeeded();
 
                         if (doc->browsingContext()
                                 ->isTopLevelBrowsingContext()) {

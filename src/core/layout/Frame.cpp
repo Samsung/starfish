@@ -787,7 +787,7 @@ void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
     }
 }
 
-void LayoutContext::registerRelativePositionedBox(FrameBox* box, bool dueToSelf)
+void LayoutContext::addToRelativePositionedBoxes(FrameBox* box, bool dueToSelf)
 {
     FrameBlockBox* cb = containingFrameBlockBox(box);
     m_relativePositionedBoxes.emplace(
@@ -1029,11 +1029,11 @@ Frame::Frame(Node* node, ComputedStyle* s)
     m_flags.m_paddingWidthDamaged = false;
     m_flags.m_contentHeightDamaged = false;
     m_flags.m_paddingHeightDamaged = false;
-    m_flags.m_isEstablishesBlockFormattingContext = false;
+    m_flags.m_needToEstablishBlockFormattingContext = false;
 
     computeStyleFlags();
 
-    if (m_flags.m_isEstablishesBlockFormattingContext) {
+    if (m_flags.m_needToEstablishBlockFormattingContext) {
         m_flags.m_needsLayout = true;
     }
     m_flags.m_needsPainting = true;
@@ -1074,7 +1074,7 @@ void Frame::seenPaintingKind(PaintingKind kind)
             f->m_flags.m_seenNormalFlowBlockChild = true;
         }
 
-        if (f->isEstablishesStackingContext()) {
+        if (f->needToEstablishStackingContext()) {
             break;
         }
 
@@ -1159,8 +1159,8 @@ void Frame::computeStyleFlags()
 {
     Node* node = this->node();
     bool isRootElement = node && node->isHTMLHtmlElement();
-    m_flags.m_isEstablishesBlockFormattingContext = isRootElement;
-    m_flags.m_isEstablishesStackingContext = isRootElement;
+    m_flags.m_needToEstablishBlockFormattingContext = isRootElement;
+    m_flags.m_needToEstablishStackingContext = isRootElement;
 
     computeShouldApplyOverflow();
 
@@ -1176,29 +1176,29 @@ void Frame::computeStyleFlags()
     bool isFloating = (style->floating() != FloatValue::NoneFloatValue);
 
     // TODO add condition
-    m_flags.m_isEstablishesBlockFormattingContext |= (shouldApplyOverflow());
-    m_flags.m_isEstablishesBlockFormattingContext |= isFlexItem();
-    m_flags.m_isEstablishesBlockFormattingContext |= isAbsolutePositioned;
-    m_flags.m_isEstablishesBlockFormattingContext |= isFloating;
-    m_flags.m_isEstablishesBlockFormattingContext |=
+    m_flags.m_needToEstablishBlockFormattingContext |= (shouldApplyOverflow());
+    m_flags.m_needToEstablishBlockFormattingContext |= isFlexItem();
+    m_flags.m_needToEstablishBlockFormattingContext |= isAbsolutePositioned;
+    m_flags.m_needToEstablishBlockFormattingContext |= isFloating;
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::InlineBlockDisplayValue);
-    m_flags.m_isEstablishesBlockFormattingContext |=
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::TableCellDisplayValue);
-    m_flags.m_isEstablishesBlockFormattingContext |=
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::TableCaptionDisplayValue);
-    m_flags.m_isEstablishesBlockFormattingContext |=
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::FlexDisplayValue);
-    m_flags.m_isEstablishesBlockFormattingContext |=
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::InlineFlexDisplayValue);
     // https://www.w3.org/TR/html5/rendering.html#the-fieldset-and-legend-elements
-    m_flags.m_isEstablishesBlockFormattingContext |=
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (!isAnonymous() && node->isHTMLFieldSetElement());
 
     // https://www.w3.org/TR/2011/REC-CSS2-20110607/tables.html#model
     // The table wrapper box establishes a block formatting context
-    m_flags.m_isEstablishesBlockFormattingContext |=
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::TableDisplayValue);
-    m_flags.m_isEstablishesBlockFormattingContext |=
+    m_flags.m_needToEstablishBlockFormattingContext |=
         (style->originalDisplay() == DisplayValue::InlineTableDisplayValue);
 
     // TODO add condition
@@ -1208,20 +1208,20 @@ void Frame::computeStyleFlags()
     // All positioned descendants with 'z-index: auto' or 'z-index: 0', in
     // tree order. For those with 'z-index: auto', treat the element as if
     // it created a new stacking context.
-    m_flags.m_isEstablishesStackingContext |=
+    m_flags.m_needToEstablishStackingContext |=
         (position != PositionValue::StaticPositionValue);
-    m_flags.m_isEstablishesStackingContext |=
+    m_flags.m_needToEstablishStackingContext |=
         isFlexItem() && style->isSpecifiedZIndex();
-    m_flags.m_isEstablishesStackingContext |= (style->opacity() != 1);
-    m_flags.m_isEstablishesStackingContext |=
+    m_flags.m_needToEstablishStackingContext |= (style->opacity() != 1);
+    m_flags.m_needToEstablishStackingContext |=
         (node && node->isRunningOpacityAnimation());
-    m_flags.m_isEstablishesStackingContext |= (style->hasTransforms(this));
-    m_flags.m_isEstablishesStackingContext |=
+    m_flags.m_needToEstablishStackingContext |= (style->hasTransforms(this));
+    m_flags.m_needToEstablishStackingContext |=
         (node && node->isRunningTransformAnimation());
-    m_flags.m_isEstablishesStackingContext |= (style->hasAvailableFilter());
+    m_flags.m_needToEstablishStackingContext |= (style->hasAvailableFilter());
     auto wc = style->willChange();
     if (wc && (wc->transform() || wc->opacity())) {
-        m_flags.m_isEstablishesStackingContext |= true;
+        m_flags.m_needToEstablishStackingContext |= true;
     }
 
     // TODO add condition
@@ -1463,8 +1463,9 @@ void Frame::markFlexItem()
 
     if (FlexFormattingContext::doesParticipateInFlexFormattingContext(this)) {
         m_flags.m_isFlexItem = true;
-        m_flags.m_isEstablishesStackingContext |= style()->isSpecifiedZIndex();
-        m_flags.m_isEstablishesBlockFormattingContext = true;
+        m_flags.m_needToEstablishStackingContext |=
+            style()->isSpecifiedZIndex();
+        m_flags.m_needToEstablishBlockFormattingContext = true;
         m_flags.m_needsLayout = true;
     }
 }

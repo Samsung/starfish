@@ -439,7 +439,7 @@ static ValueRef* getXYWHFunction(ExecutionStateRef* state, ValueRef* thisValue,
 {
     GENERATE_WINDOW();
 
-    window->browsingContext()->webView()->layoutIfNeeds(false);
+    window->browsingContext()->webView()->layoutIfNeeded(false);
 
     ValueRef* arg0 = argv[0];
     Node* value0 = nullptr;

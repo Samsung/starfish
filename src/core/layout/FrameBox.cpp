@@ -2991,14 +2991,14 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
         Node* nd = node();
         auto& info = nd->webView()->prevDrawnStackingContextInfo();
         auto iter = info.find(nd);
-        if (iter != info.end() && !isEstablishesStackingContext()) {
+        if (iter != info.end() && !needToEstablishStackingContext()) {
             // stacking context is disappear
             // trigger repaint tracker
             nd->webView()->markNeedsPaintingConsiderInRendering();
         }
     }
 
-    if (isEstablishesStackingContext()) {
+    if (needToEstablishStackingContext()) {
         STARFISH_ASSERT(isRootElement() || stackingContext() == nullptr);
         if (isRootElement()) {
             if (node()
@@ -3028,7 +3028,7 @@ void FrameBox::establishesStackingContextIfNeedsAndComputingPaintingFlags()
             FrameBox* p;
             p = layoutParent()->asFrameBox();
             while (true) {
-                if (p->isEstablishesStackingContext()) {
+                if (p->needToEstablishStackingContext()) {
                     if (p->canOwnsStackingContext() ||
                         p->shouldApplyOverflow()) {
                         break;
@@ -3667,7 +3667,7 @@ enum ComputeMatrixFor {
 ALWAYS_INLINE void applyTransformIfNeeded(FrameBox* fBox, SkMatrix& m,
                                           bool inRendering)
 {
-    if (fBox->isEstablishesStackingContext()) {
+    if (fBox->needToEstablishStackingContext()) {
         if (inRendering) {
             StackingContext* sc = fBox->stackingContext();
             if (sc) {

@@ -453,7 +453,7 @@ public:
             Frame* s = self->layoutParent();
             while (s) {
                 if ((s->shouldApplyOverflow() &&
-                     (!s->isEstablishesStackingContext() ||
+                     (!s->needToEstablishStackingContext() ||
                       (s->isFrameBox() &&
                        !s->asFrameBox()->canOwnsStackingContext()))) ||
                     (s->style() &&

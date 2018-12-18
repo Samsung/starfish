@@ -100,7 +100,7 @@ static bool shouldAvoidFloatingBox(Frame* f)
 {
     return f->isFrameReplaced() ||
            (f->node() && f->node()->isHTMLLegendElement()) ||
-           f->isEstablishesBlockFormattingContext();
+           f->needToEstablishBlockFormattingContext();
 }
 
 static bool shouldStretchWidth(Frame* f)
@@ -134,7 +134,6 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     LayoutUnit marginTopOfClearedSelfCollapsingBlock = 0,
                maxMarginOfSelfCollapsingBlocks = 0,
                yPositionOfClearedSelfCollapsingBlock = 0;
-    Frame* child = firstChild();
     DirectionValue direction = style()->direction();
     bool wasClearedSelfCollapsingBlock = false;
     bool clearAffected = false;
@@ -146,11 +145,11 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         ctx.setMaxMarginTop(0, 0);
     }
 
-    if (!child) {
+    if (!firstChild()) {
         marginInfo->setMargin(0, 0);
     }
 
-    while (child) {
+    for (Frame* child = firstChild(); child; child = child->next()) {
         STARFISH_ASSERT(child->isNormalFlow());
         yAbsPosition = loc.y() + normalFlowHeight + top;
         child->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
@@ -411,8 +410,6 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
             normalFlowHeight =
                 child->asFrameBox()->height() + child->asFrameBox()->y() - top;
         }
-
-        child = child->next();
     }
 
     // NOTE: At this point, ctx.max[P/N]MarginTop has the collapsed margin
@@ -431,7 +428,7 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
         ctx.setMaxMarginBottom(0, 0);
     }
 
-    if (isEstablishesBlockFormattingContext()) {
+    if (needToEstablishBlockFormattingContext()) {
         LayoutUnit clearedDistanceToFloatBottom =
             ctx.clearedDistanceToFloatBottom(loc.y(), BothClearValue);
         if (clearedDistanceToFloatBottom > maxNormalFlowBottom) {

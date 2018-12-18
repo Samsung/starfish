@@ -170,7 +170,7 @@ public:
         return m_flags.m_isFirstLine;
     }
 
-    bool isHidedByTextOverflow()
+    bool isHiddenByTextOverflow()
     {
         if (!hasInlineTextBoxRareData()) {
             return false;
@@ -301,7 +301,7 @@ public:
 
             childBox->markSeenNormalFlowInline();
 
-            if (!childBox->isEstablishesStackingContext()) {
+            if (!childBox->needToEstablishStackingContext()) {
                 if (childBox->isInlineNonReplacedBox()) {
                     seenInlineBox(PaintingInlineStage::PaintingInlineBox);
                 } else if (childBox->isInlineTextBox()) {
@@ -352,7 +352,7 @@ public:
     void layoutInlineBoxes(LineFormattingContext* ctx, LayoutUnit start);
     void coordinateVerticalProperties(LineFormattingContext* ctx,
                                       LayoutUnit yOffset);
-    void registerRelativePositionedBoxes(LayoutContext& ctx);
+    void addToRelativePositionedBoxes(LayoutContext& ctx);
 
     void moveToNewLineBox(LineFormattingContext* ctx, FrameBox* box,
                           LineBox* lineBox);
@@ -971,9 +971,9 @@ protected:
     void updateScrollWidthAndHeightIfNeeds();
     LayoutUnit layoutBlock(LayoutContext& ctx);
     LayoutUnit layoutInline(LayoutContext& ctx);
-    void registerRelativePositionedBoxes(LayoutContext& ctx);
+    void addToRelativePositionedBoxes(LayoutContext& ctx);
     void computeContentHeight(LayoutContext& ctx, FrameBox* cb);
-    void registerRelativePositionIfNeeds(LayoutContext& ctx);
+    void addToRelativePositionedBoxesIfNeeded(LayoutContext& ctx);
 
     virtual bool hasFrameTreeItemModel() override
     {
@@ -1212,7 +1212,7 @@ public:
     void insertWord(Frame* next);
     void markInlineBoxIndex(FrameBox* box);
 
-    bool removeLastLineBoxIfNeeds();
+    bool removeLastLineBoxIfEmpty();
     LayoutUnit contentHeightForBlock();
     void* allocateInlineTextBox();
     void* allocateInlineNonReplacedBox();

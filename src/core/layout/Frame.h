@@ -425,7 +425,7 @@ public:
     void layoutRegisteredAbsolutePositionedBoxes(
         FrameBlockBox* containingBlock);
 
-    void registerRelativePositionedBox(FrameBox* box, bool dueToSelf);
+    void addToRelativePositionedBoxes(FrameBox* box, bool dueToSelf);
 
     void layoutRegisteredRelativePositionedBoxes(
         FrameBlockBox* containingBlock);
@@ -1706,9 +1706,8 @@ public:
 
     void propagateMarkNeedsLayout()
     {
-        Frame* f = this;
-        while (f) {
-            if (f->isEstablishesBlockFormattingContext() ||
+        for (Frame* f = this; f; f = f->parent()) {
+            if (f->needToEstablishBlockFormattingContext() ||
                 f->isFrameDocument()) {
                 if (f->needsLayout()) {
                     break;
@@ -1716,8 +1715,6 @@ public:
 
                 f->markNeedsLayout();
             }
-
-            f = f->parent();
         }
     }
 
@@ -1826,14 +1823,14 @@ public:
         return false;
     }
 
-    bool isEstablishesBlockFormattingContext() const
+    bool needToEstablishBlockFormattingContext() const
     {
-        return m_flags.m_isEstablishesBlockFormattingContext;
+        return m_flags.m_needToEstablishBlockFormattingContext;
     }
 
-    bool isEstablishesStackingContext() const
+    bool needToEstablishStackingContext() const
     {
-        return m_flags.m_isEstablishesStackingContext;
+        return m_flags.m_needToEstablishStackingContext;
     }
 
     bool isPositioned();
@@ -2091,7 +2088,7 @@ protected:
         // boxes, and block boxes with 'overflow' other than 'visible' (except
         // when that value has been propagated to the viewport) establish new
         // block formatting contexts for their contents.
-        bool m_isEstablishesBlockFormattingContext : 1;
+        bool m_needToEstablishBlockFormattingContext : 1;
         bool m_needsGraphicsBuffer : 1;
 
         // https://www.w3.org/TR/CSS21/visuren.html#propdef-z-index
@@ -2101,7 +2098,7 @@ protected:
         // related to containing blocks. In future levels of CSS, other
         // properties may introduce stacking contexts, for example 'opacity'
         // [CSS3COLOR].
-        bool m_isEstablishesStackingContext : 1;
+        bool m_needToEstablishStackingContext : 1;
 
         bool m_isLeftMBPCleared : 1;
         bool m_isRightMBPCleared : 1;

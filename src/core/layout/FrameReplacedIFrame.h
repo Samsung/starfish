@@ -35,7 +35,7 @@ public:
     virtual void computeStyleFlags() override
     {
         FrameReplaced::computeStyleFlags();
-        m_flags.m_isEstablishesStackingContext = true;
+        m_flags.m_needToEstablishStackingContext = true;
     }
 
     virtual bool isFrameReplacedIFrame() override

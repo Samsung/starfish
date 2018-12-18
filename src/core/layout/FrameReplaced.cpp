@@ -279,7 +279,7 @@ void FrameReplaced::computeContentWidthAndHeight(LayoutContext& ctx,
                                                  FrameBox* cb)
 {
     STARFISH_ASSERT(cb);
-    if (isEstablishesBlockFormattingContext()) {
+    if (needToEstablishBlockFormattingContext()) {
         if (!shouldLayout(ctx, Frame::ResolveAll, cb)) {
             return;
         }
@@ -657,7 +657,7 @@ void FrameReplaced::paintContent(PaintingContext& ctx)
 
 Frame* FrameReplaced::hitTest(LayoutUnit x, LayoutUnit y, HitTestStage stage)
 {
-    if (isEstablishesStackingContext()) {
+    if (needToEstablishStackingContext()) {
         return nullptr;
     }
 

@@ -1095,7 +1095,7 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 
     if (!shouldSkipChildren && (current->childNeedsFrameTreeBuild() || force)) {
         if (currentFrame->isFrameDocument() ||
-            currentFrame->isEstablishesBlockFormattingContext()) {
+            currentFrame->needToEstablishBlockFormattingContext()) {
             currentFrame->markNeedsLayout();
             if (currentFrame->isFrameTableCellBox() ||
                 currentFrame->isFrameTableCaptionBox()) {

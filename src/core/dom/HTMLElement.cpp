@@ -223,7 +223,7 @@ int HTMLElement::tabIndex()
 
 LayoutRect HTMLElement::offsetRect()
 {
-    window()->browsingContext()->webView()->layoutIfNeeds(false);
+    window()->browsingContext()->webView()->layoutIfNeeded(false);
     if (frame()) {
         Frame* frameObject = frame();
         if (frameObject->isFrameBox()) {
@@ -277,7 +277,7 @@ LayoutRect HTMLElement::offsetRect()
 
 Element* HTMLElement::offsetParent()
 {
-    window()->browsingContext()->webView()->layoutIfNeeds(false);
+    window()->browsingContext()->webView()->layoutIfNeeded(false);
 
     Frame* frameObject = frame();
     return frameObject ? frameObject->offsetParent() : nullptr;
@@ -285,7 +285,7 @@ Element* HTMLElement::offsetParent()
 
 long HTMLElement::offsetLeft()
 {
-    window()->browsingContext()->webView()->layoutIfNeeds(false);
+    window()->browsingContext()->webView()->layoutIfNeeded(false);
 
     Frame* frameObject = frame();
     if (frameObject) {
@@ -296,7 +296,7 @@ long HTMLElement::offsetLeft()
 
 long HTMLElement::offsetTop()
 {
-    window()->browsingContext()->webView()->layoutIfNeeds(false);
+    window()->browsingContext()->webView()->layoutIfNeeded(false);
 
     Frame* frameObject = frame();
     if (frameObject) {
