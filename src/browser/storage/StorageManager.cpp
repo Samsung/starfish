@@ -261,7 +261,7 @@ void StorageManager::jsonDocumentWrite()
     STARFISH_ASSERT(root->IsArray());
     root->Accept(writer);
 
-    auto fileIO = File::open(m_localStoragePath, File::Read);
+    auto fileIO = File::open(m_localStoragePath, File::Write);
     if (fileIO) {
         fileIO->write((void*)buffer.GetString(), 1, buffer.GetSize());
     }

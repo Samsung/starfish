@@ -1403,7 +1403,9 @@ size_t utf32ToUtf16(char32_t i, char16_t* u)
             *u = (char16_t)(i & 0xffff);
         }
         return 1;
-    } else if (i < 0x10ffff) {
+    } else if (i <= 0x10ffff) {
+        // surrogate pair can encode to 0x10ffff
+        // https://en.wikipedia.org/wiki/UTF-16
         i -= 0x10000;
         *u++ = 0xd800 | (i >> 10);
         *u = 0xdc00 | (i & 0x3ff);
