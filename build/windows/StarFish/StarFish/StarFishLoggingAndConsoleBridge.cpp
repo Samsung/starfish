@@ -36,7 +36,7 @@ void SkDebugf(const char format[], ...)
     va_end(args);
 }
 
-namespace StarFish {
+namespace Starfish {
 
 
 const char* getWindowsTempDir()

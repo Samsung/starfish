@@ -117,6 +117,11 @@ Nullable<std::string> FileUtil::absolutePath(const std::string& filePath)
     DWORD dresult = GetFullPathNameW(wideString.data(), MAX_PATH, result, NULL);
     // TODO convert into longPathString
     if (dresult) {
+        for (size_t i = 0; i < wcslen(result); i++) {
+            if (result[i] == '\\') {
+                result[i] = '/';
+            }
+        }
         return Nullable<std::string>(toNarrowString(result));
     } else {
         return Nullable<std::string>();
@@ -223,12 +228,11 @@ std::unique_ptr<File> File::open(const std::string& filePath, FileMode mode)
         return nullptr;
     }
 
-    const char* fileModeStrList[] = { "r", "w", "w+" };
-    const char* m = "r";
+    const char* m = "rb";
     if (mode == FileMode::Write) {
-        m = "w";
+        m = "wb";
     } else if (mode == FileMode::ReadWrite) {
-        m = "w+";
+        m = "wb+";
     }
     FILE* fp = fopen(filePath.data(), m);
     if (fp) {

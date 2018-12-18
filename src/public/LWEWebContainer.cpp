@@ -506,7 +506,7 @@ Settings WebContainer::GetSettings()
     result.SetTTSMode(TO_WEBVIEW(m_impl)->tts()->mode());
 #endif
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
-
+    result.SetWebSecurityMode(TO_WEBVIEW(m_impl)->getWebSecurityMode());
     return result;
 }
 

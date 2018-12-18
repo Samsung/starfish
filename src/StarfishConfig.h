@@ -297,6 +297,12 @@ typedef unsigned int uint;
 
 #include <curl/curl.h>
 
+#if defined(OS_WINDOWS)
+#ifdef DELETE
+#undef DELETE
+#endif
+#endif
+
 #define DEFAULT_CLEAR_STACK_SIZE 102400
 #define ELABORATE_CLEAR_STACK_SIZE DEFAULT_CLEAR_STACK_SIZE * 4
 
@@ -360,7 +366,7 @@ void forwardPrintingLogInfo(const char* fmt, ...);
 void forwardPrintingLogError(const char* fmt, ...);
 void forwardPrintingLogWarn(const char* fmt, ...);
 const char* getWindowsTempDir();
-}
+} // namespace Starfish
 #endif
 
 #define STARFISH_LOG_INFO(...) fprintf(stdout, __VA_ARGS__);
