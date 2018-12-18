@@ -425,7 +425,7 @@ bool Window::scrollToWithoutLayout(double x, double y)
             StackingContext* ctx =
                 document()->html()->frame()->asFrameBox()->stackingContext();
             if (ctx && ctx->needsGraphicsBuffer()) {
-                webView()->setNeedsComputeStackingContextProperties();
+                webView()->markNeedsCompositeConsiderInRendering();
             } else {
                 document()->setNeedsLayout();
                 document()->setNeedsPainting();

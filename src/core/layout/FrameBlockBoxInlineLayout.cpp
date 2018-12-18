@@ -22,6 +22,7 @@
 #include "core/dom/CharacterData.h"
 #include "core/dom/Node.h"
 #include "core/dom/HTMLTableElement.h"
+#include "core/page/Window.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameBlockBoxInlineLayout.h"
 #include "core/layout/FrameDocument.h"
@@ -4931,6 +4932,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
             CanvasShadowDataList list =
                 s->textShadow()->toCanvasShadowDataList(this);
+            float dp = node()->window()->devicePixelRatio();
             for (auto shadow = list.rbegin(); shadow != list.rend(); shadow++) {
                 float radiusOffset = 0.0f;
                 if (shadow->radius()) {
@@ -4939,8 +4941,15 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                         std::min(ShadowBlur::RADIUS_LIMIT, radiusOffset);
                     radiusOffset *= 2;
                 }
-                NativeImageData* nativeImage = NativeImageData::create(
-                    width + ceil(radiusOffset), height + ceil(radiusOffset));
+
+                auto orgWidth = width + ceil(radiusOffset);
+                auto orgHeight = height + ceil(radiusOffset);
+                auto imageWidth = orgWidth;
+                imageWidth *= dp;
+                auto imageHeight = orgHeight;
+                imageHeight *= dp;
+                NativeImageData* nativeImage =
+                    NativeImageData::create(imageWidth, imageHeight);
                 Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
                 cv->setFont(s->font());
@@ -4962,8 +4971,7 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
 
                 delete cv;
 
-                Unit::Rect rect(0, 0, nativeImage->width(),
-                                nativeImage->height());
+                Unit::Rect rect(0, 0, orgWidth, orgHeight);
                 float offset = ceil(radiusOffset / 2);
                 canvas->translate(-offset + shadow->offsetX(),
                                   -offset + shadow->offsetY());
