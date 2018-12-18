@@ -472,6 +472,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "focusout"));
     m_onfocusout =
         QualifiedName(AtomicString::createAtomicString(starfish, "onfocusout"));
+    m_scroll =
+        QualifiedName(AtomicString::createAtomicString(starfish, "scroll"));
+    m_onscroll =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onscroll"));
 
     m_reset =
         QualifiedName(AtomicString::createAtomicString(starfish, "reset"));

@@ -157,6 +157,8 @@ void HTMLElement::didAttributeChanged(QualifiedName name, String* old,
         setAttributeEventListener(ss->m_focusin, value, this);
     } else if (name == ss->m_onfocusout) {
         setAttributeEventListener(ss->m_focusout, value, this);
+    } else if (name == ss->m_onscroll) {
+        setAttributeEventListener(ss->m_scroll, value, this);
     } else if (name == ss->m_onkeydown) {
         setAttributeEventListener(ss->m_keydown, value, this);
     } else if (name == ss->m_onkeypress) {
@@ -445,6 +447,7 @@ DEFINE_EVENT_LISTENER(HTMLElement, mouseenter);
 DEFINE_EVENT_LISTENER(HTMLElement, mouseleave);
 DEFINE_EVENT_LISTENER(HTMLElement, mouseup);
 DEFINE_EVENT_LISTENER(HTMLElement, progress);
+DEFINE_EVENT_LISTENER(HTMLElement, scroll);
 DEFINE_EVENT_LISTENER(HTMLElement, resize);
 DEFINE_EVENT_LISTENER(HTMLElement, submit);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
