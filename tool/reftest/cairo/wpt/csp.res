@@ -74,12 +74,12 @@ http://web-platform.test:8000/content-security-policy/default-src/default-src-in
 #
 #http://web-platform.test:8000/content-security-policy/form-action/form-action-self-allowed-target-blank.html
 #http://web-platform.test:8000/content-security-policy/form-action/form-action-src-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/form-action/form-action-src-allowed-target-blank.sub.html
-#http://web-platform.test:8000/content-security-policy/form-action/form-action-src-allowed-target-frame.sub.html
-#http://web-platform.test:8000/content-security-policy/form-action/form-action-src-blocked.sub.html
+#http://web-platform.test:8000/content-security-policy/form-action/form-action-src-allowed-target-blank.sub.html # let 
+#http://web-platform.test:8000/content-security-policy/form-action/form-action-src-allowed-target-frame.sub.html # let
+http://web-platform.test:8000/content-security-policy/form-action/form-action-src-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/form-action/form-action-src-default-ignored.sub.html
 #http://web-platform.test:8000/content-security-policy/form-action/form-action-src-get-allowed.sub.html
-#http://web-platform.test:8000/content-security-policy/form-action/form-action-src-get-blocked.sub.html
+http://web-platform.test:8000/content-security-policy/form-action/form-action-src-get-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/form-action/form-action-src-javascript-blocked.sub.html
 #http://web-platform.test:8000/content-security-policy/form-action/form-action-src-redirect-allowed-target-blank.sub.html
 #http://web-platform.test:8000/content-security-policy/form-action/form-action-src-redirect-allowed-target-frame.sub.html

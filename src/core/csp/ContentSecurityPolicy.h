@@ -39,6 +39,7 @@ enum class CSPDirectives {
     ConnectSrc,
     ChildSrc,
     DefaultSrc,
+    FormAction,
     ImgSrc,
     MediaSrc,
     ObjectSrc,

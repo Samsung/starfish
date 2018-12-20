@@ -68,6 +68,7 @@ private:
     ContentSecurityPolicySourceListDirective* m_connectSrc;
     ContentSecurityPolicySourceListDirective* m_childSrc;
     ContentSecurityPolicySourceListDirective* m_defaultSrc;
+    ContentSecurityPolicySourceListDirective* m_formAction;
     ContentSecurityPolicySourceListDirective* m_imgSrc;
     ContentSecurityPolicySourceListDirective* m_mediaSrc;
     ContentSecurityPolicySourceListDirective* m_scriptSrc;
@@ -86,6 +87,8 @@ private:
                                         m_childSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
                                         m_defaultSrc));
+        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,
+                                        m_formAction));
         GC_set_bit(
             desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList, m_imgSrc));
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicyDirectiveList,

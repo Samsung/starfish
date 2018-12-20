@@ -32,6 +32,7 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     , m_connectSrc(nullptr)
     , m_childSrc(nullptr)
     , m_defaultSrc(nullptr)
+    , m_formAction(nullptr)
     , m_imgSrc(nullptr)
     , m_mediaSrc(nullptr)
     , m_scriptSrc(nullptr)
@@ -98,6 +99,8 @@ void ContentSecurityPolicyDirectiveList::addDirective(String* value)
         setDirective(m_childSrc, name, tokens);
     } else if (name->equalsIgnoreCase("default-src")) {
         setDirective(m_defaultSrc, name, tokens);
+    } else if (name->equalsIgnoreCase("form-action")) {
+        setDirective(m_formAction, name, tokens);
     } else if (name->equalsIgnoreCase("frame-src")) {
         STARFISH_LOG_INFO(
             "'frame-src' is deprecated. Using 'child-src' is recommended "
@@ -131,12 +134,14 @@ ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
     switch (directive) {
     case CSPDirectives::BaseURI:
         return m_baseURI;
-    case CSPDirectives::ConnectSrc:
-        return m_connectSrc;
     case CSPDirectives::ChildSrc:
         return m_childSrc;
+    case CSPDirectives::ConnectSrc:
+        return m_connectSrc;
     case CSPDirectives::DefaultSrc:
         return m_defaultSrc;
+    case CSPDirectives::FormAction:
+        return m_formAction;
     case CSPDirectives::ImgSrc:
         return m_imgSrc;
     case CSPDirectives::MediaSrc:
@@ -152,12 +157,33 @@ ContentSecurityPolicyDirectiveList::getSourceList(CSPDirectives directive)
     return nullptr;
 }
 
+static bool isAllowedCascadigDefault(CSPDirectives directive)
+{
+    switch (directive) {
+    case CSPDirectives::ChildSrc:
+    case CSPDirectives::ConnectSrc:
+    case CSPDirectives::ImgSrc:
+    case CSPDirectives::MediaSrc:
+    case CSPDirectives::ScriptSrc:
+    case CSPDirectives::StyleSrc:
+        return true;
+    default:
+        return false;
+    }
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return false;
+}
+
 bool ContentSecurityPolicyDirectiveList::allowSource(CSPDirectives directive,
                                                      ResourceURL* resUrl)
 {
+    if (resUrl->isAboutURL()) {
+        return true;
+    }
+
     auto sourceListDirective = getSourceList(directive);
     if (!sourceListDirective) {
-        if (m_defaultSrc && directive != CSPDirectives::BaseURI) {
+        if (m_defaultSrc && isAllowedCascadigDefault(directive)) {
             return allowSource(CSPDirectives::DefaultSrc, resUrl);
         }
         return true;

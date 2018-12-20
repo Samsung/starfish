@@ -47,6 +47,7 @@
 #include "core/page/History.h"
 #include "browser/history/HistoryManager.h"
 #include "core/modules/resource_request/ResourceRequest.h"
+#include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {
 
@@ -756,6 +757,13 @@ void HTMLFormElement::submitData(ResourceURL* url,
                                  GCVector<FormDataSetItem*>* formDataSet,
                                  EncodeType enctype, String* method)
 {
+    if (!document()->contentSecurityPolicy()->allowSource(
+            CSPDirectives::FormAction, url)) {
+        String* eventType = starfish()->staticStrings()->m_error.localName();
+        Event* e = new Event(document(), eventType, EventInit(false, false));
+        dispatchEventIdleTimeByUA(e);
+        return;
+    }
     if (method->equals("GET")) {
         mutateActionUrl(url, formDataSet, enctype, method);
     } else if (method->equals("POST")) {
