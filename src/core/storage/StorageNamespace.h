@@ -24,13 +24,13 @@
 
 namespace Starfish {
 
-class SecurityOriginData;
+class WebOrigin;
 class Storage;
 class Window;
 
 class StorageNamespace : public gc {
 public:
-    virtual Storage* storage(Window* window, SecurityOriginData* origin) = 0;
+    virtual Storage* storage(Window* window, WebOrigin* origin) = 0;
     virtual ~StorageNamespace()
     {
     }

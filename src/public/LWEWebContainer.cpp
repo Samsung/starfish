@@ -505,8 +505,8 @@ Settings WebContainer::GetSettings()
 #ifdef STARFISH_ENABLE_TTS
     result.SetTTSMode(TO_WEBVIEW(m_impl)->tts()->mode());
 #endif
-    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     result.SetWebSecurityMode(TO_WEBVIEW(m_impl)->getWebSecurityMode());
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return result;
 }
 

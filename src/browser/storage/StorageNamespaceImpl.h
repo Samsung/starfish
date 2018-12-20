@@ -20,7 +20,7 @@
 #ifndef __StarfishStorageNamespaceImpl__
 #define __StarfishStorageNamespaceImpl__
 
-#include "core/page/SecurityOriginData.h"
+#include "core/dom/WebOrigin.h"
 #include "core/storage/StorageNamespace.h"
 #include "core/storage/StorageType.h"
 
@@ -35,17 +35,15 @@ public:
     StorageNamespaceImpl(StorageType storageType, String* localStoragePath);
     virtual ~StorageNamespaceImpl();
 
-    virtual Storage* storage(Window* window,
-                             SecurityOriginData* origin) override;
+    virtual Storage* storage(Window* window, WebOrigin* origin) override;
 
 private:
     StorageType m_storageType;
     StorageManager* m_storageManager;
 
-    std::unordered_map<SecurityOriginData*, StorageImpl*,
-                       SecurityOriginDataHash, SecurityOriginDataEqual,
-                       gc_allocator_ignore_off_page<
-                           std::pair<SecurityOriginData* const, StorageImpl*>>>
+    std::unordered_map<
+        WebOrigin*, StorageImpl*, WebOriginHash, WebOriginEqual,
+        gc_allocator_ignore_off_page<std::pair<WebOrigin* const, StorageImpl*>>>
         m_originToStorage;
 };
 }

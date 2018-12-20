@@ -42,7 +42,7 @@ WebOrigin* WebOrigin::createDocumentOrigin(ResourceURL* url)
 }
 
 // https://html.spec.whatwg.org/multipage/origin.html#ascii-serialisation-of-an-origin
-String* WebOrigin::serialize()
+String* WebOrigin::serialize() const
 {
     if (isOpaque()) {
         return String::createASCIIString("null");
@@ -52,7 +52,7 @@ String* WebOrigin::serialize()
     return m_originalURL->origin();
 }
 
-Nullable<String*> WebOrigin::domain()
+Nullable<String*> WebOrigin::domain() const
 {
     if (isOpaque()) {
         return nullptr;
@@ -73,7 +73,7 @@ Nullable<String*> WebOrigin::domain()
 }
 
 // https://w3c.github.io/html/browsers.html#same-origin
-bool WebOrigin::isSameOrigin(WebOrigin* otherWebOrigin)
+bool WebOrigin::isSameOrigin(const WebOrigin* otherWebOrigin) const
 {
     if (this == otherWebOrigin) {
         return true;
@@ -99,7 +99,7 @@ bool WebOrigin::isSameOrigin(WebOrigin* otherWebOrigin)
 }
 
 // https://w3c.github.io/html/browsers.html#same-origin-domain
-bool WebOrigin::isSameOriginDomain(WebOrigin* otherWebOrigin)
+bool WebOrigin::isSameOriginDomain(const WebOrigin* otherWebOrigin) const
 {
     if (this == otherWebOrigin) {
         return true;

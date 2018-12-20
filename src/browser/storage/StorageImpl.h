@@ -24,12 +24,12 @@
 
 namespace Starfish {
 
-class SecurityOriginData;
+class WebOrigin;
 class StorageManager;
 
 class StorageImpl : public gc {
 public:
-    StorageImpl(StorageType storageType, SecurityOriginData* securityOriginData,
+    StorageImpl(StorageType storageType, WebOrigin* webOrigin,
                 StorageManager* storageManager);
     virtual ~StorageImpl();
 
@@ -45,10 +45,10 @@ private:
     StorageImpl();
 
     StorageType m_storageType;
-    SecurityOriginData* m_securityOriginData;
+    WebOrigin* m_webOrigin;
     StorageManager* m_storageManager;
 
-    GCUnorderedMap<String*, String*>* m_map;
+    GCUnorderedMap<String*, String*> m_map;
 };
 }
 
