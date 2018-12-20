@@ -90,6 +90,8 @@ static String* getDirectiveName(CSPDirectives directive)
         return String::createASCIIString("connect-src");
     case CSPDirectives::DefaultSrc:
         return String::createASCIIString("default-src");
+    case CSPDirectives::FormAction:
+        return String::createASCIIString("form-action");
     case CSPDirectives::ChildSrc:
         return String::createASCIIString("frame-src");
     case CSPDirectives::ImgSrc:
