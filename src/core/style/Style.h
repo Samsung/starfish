@@ -1055,6 +1055,7 @@ public:
     }
 
     String* keyName() const;
+    String* temporaryKeyName() const;
 
     ValueKind valueKind() const
     {
