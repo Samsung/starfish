@@ -1064,8 +1064,9 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
     }
 
     // https://www.w3.org/TR/css-variables-1/#defining-variables
-    if (length >= 2 && data[0] == '-' && data[1] == '-')
+    if (length >= 2 && data[0] == '-' && data[1] == '-') {
         return CSSStyleValuePair::KeyKind::CustomProperty;
+    }
 
     return CSSStyleValuePair::KeyKind::Unknown;
 }
