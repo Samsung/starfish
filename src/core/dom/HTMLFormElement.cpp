@@ -302,6 +302,11 @@ bool HTMLFormControl::isDisabled()
     return false;
 }
 
+bool HTMLFormControl::isDisabledFormControl()
+{
+    return isDisabled();
+}
+
 Node* HTMLFormControl::findAncestor(Node* ancestorToFind, Node* fromThisNode)
 {
     for (Node* p = fromThisNode->parentNode(); p; p = p->parentNode()) {

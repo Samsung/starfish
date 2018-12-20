@@ -561,6 +561,11 @@ public:
         return m_contentSecurityPolicy;
     }
 
+    Event* createSimulatedMouseClickEvent();
+    bool isElementInClickProgress(const Element* element) const;
+    void markElementInClickProgress(Element* element);
+    void unmarkElementInClickProgress(Element* element);
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -682,6 +687,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentSecurityPolicy));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(Document, m_elementInClickProgressList));
     }
 
     // only used in html document builder
@@ -749,6 +756,7 @@ protected:
 #endif
     uint64_t m_documentCreatedTick;
     ContentSecurityPolicy* m_contentSecurityPolicy;
+    GCVector<Element*> m_elementInClickProgressList;
 };
 }
 
