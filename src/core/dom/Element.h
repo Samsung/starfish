@@ -305,6 +305,10 @@ public:
 
     virtual bool supportsFocus();
     virtual bool isFocusable();
+    virtual bool isDisabledFormControl()
+    {
+        return false;
+    }
 
     virtual int tabIndex();
     void setTabIndex(int32_t t)

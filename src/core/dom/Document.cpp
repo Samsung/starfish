@@ -1990,6 +1990,39 @@ void Document::evalMediaQueryLists()
     }
 }
 
+Event* Document::createSimulatedMouseClickEvent()
+{
+    // NOTE: we may consider creating an event dispatcher separated
+    // if more events are needed.
+    auto eventType = starfish()->staticStrings()->m_click.localName();
+    MouseData clickData(MouseButtonValue::LeftButton,
+                        MouseButtonsValue::LeftButtonDown, 0, 0, 1);
+    MouseEvent* event = new MouseEvent(this, eventType, clickData);
+    event->setBubbles(true);
+    event->setCancelable(true);
+    event->setView(this->window());
+    return event;
+}
+
+bool Document::isElementInClickProgress(const Element* element) const
+{
+    return std::find(m_elementInClickProgressList.begin(),
+                     m_elementInClickProgressList.end(), element);
+}
+
+void Document::markElementInClickProgress(Element* element)
+{
+    m_elementInClickProgressList.push_back(element);
+}
+
+void Document::unmarkElementInClickProgress(Element* element)
+{
+    m_elementInClickProgressList.erase(
+        std::remove(m_elementInClickProgressList.begin(),
+                    m_elementInClickProgressList.end(), element),
+        m_elementInClickProgressList.end());
+}
+
 DEFINE_EVENT_LISTENER(Document, abort);
 DEFINE_EVENT_LISTENER(Document, blur);
 DEFINE_EVENT_LISTENER(Document, click);

@@ -368,8 +368,14 @@ void HTMLElement::setLang(String* lang)
 
 void HTMLElement::click()
 {
-    String* eventType = starfish()->staticStrings()->m_click.localName();
-    dispatchEvent(new Event(document(), eventType, EventInit(true, true)));
+    // https://html.spec.whatwg.org/multipage/interaction.html#dom-click
+    if (isDisabledFormControl() || document()->isElementInClickProgress(this)) {
+        return;
+    }
+
+    document()->markElementInClickProgress(this);
+    dispatchEvent(document()->createSimulatedMouseClickEvent());
+    document()->unmarkElementInClickProgress(this);
 }
 
 String* HTMLElement::contentEditable()

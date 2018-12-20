@@ -91,6 +91,7 @@ public:
 
     virtual bool disabled() override;
     virtual void setDisabled(bool disabled);
+    virtual bool isDisabledFormControl() override;
 
     virtual HTMLFormElement* form();
 
