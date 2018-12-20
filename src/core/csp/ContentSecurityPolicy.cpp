@@ -76,8 +76,7 @@ void ContentSecurityPolicy::didReceiveHeader(
     }
 
     ContentSecurityPolicyDirectiveList* policy =
-        new ContentSecurityPolicyDirectiveList(this, header, 0,
-                                               header->length(), type, source);
+        new ContentSecurityPolicyDirectiveList(this, header, type, source);
 
     m_policies.push_back(policy);
 }

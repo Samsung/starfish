@@ -18,18 +18,22 @@
  */
 
 #include "StarfishConfig.h"
+#include "platform/loader/ResourceURL.h"
 #include "core/csp/ContentSecurityPolicySourceListDirective.h"
 #include "core/util/Cryptographic.h"
 
 namespace Starfish {
 
-void ContentSecurityPolicySourceListDirective::parseSource(String* value)
+void ContentSecurityPolicySourceListDirective::parseSource(
+    const GCVector<StringView>& sources)
 {
-    GCVector<StringView> tokens;
-    StringUtils::wordTokenizer(value, tokens);
+    auto sourcesSize = sources.size();
+    if (sourcesSize < 2) {
+        return;
+    }
 
-    for (size_t i = 0; i < tokens.size(); i++) {
-        auto token = tokens[i].substring();
+    for (size_t i = 1; i < sourcesSize; i++) {
+        auto token = sources[i].substring();
 
         if (token->equalsIgnoreCase("'self'")) {
             m_allowSelf = true;
@@ -39,12 +43,14 @@ void ContentSecurityPolicySourceListDirective::parseSource(String* value)
             m_allowEval = true;
         } else if (token->equalsIgnoreCase("'unsafe-inline'")) {
             m_allowInline = true;
+        } else if (token->equalsIgnoreCase("'none'")) {
+            continue;
         } else if (isScheme(token)) {
             m_schemeList.push_back(token);
         } else if (parseHash(token) || parseNonce(token)) {
             continue;
-        } else if (auto sourceURL = parseHost(token)) {
-            m_sourceList.push_back(sourceURL);
+        } else if (parseHostSource(token)) {
+            continue;
         }
     }
 }
@@ -129,73 +135,214 @@ bool ContentSecurityPolicySourceListDirective::parseHash(String* source)
     return true;
 }
 
-ContentSecurityPolicySource*
-ContentSecurityPolicySourceListDirective::parseHost(String* sourceString)
+bool ContentSecurityPolicySourceListDirective::parseHostSource(
+    String* sourceString)
 {
     size_t length = sourceString->length();
     if (length == 0) {
-        return nullptr;
+        return false;
     }
 
     ContentSecurityPolicySource* source = new ContentSecurityPolicySource();
+    size_t position = 0;
 
-    bool isStarProtocol = true;
-    size_t protocolPos = sourceString->find("://");
-    if (protocolPos == SIZE_MAX) {
-        source->isStarProtocol = true;
-        protocolPos = 0;
-    } else {
-        if (protocolPos + 1 >= length) {
-            return nullptr;
-        }
-        source->protocol = sourceString->substring(0, protocolPos + 1);
-        source->isStarProtocol = false;
-        protocolPos += 3;
+    if (!parseScheme(source, sourceString, position) ||
+        !parseHost(source, sourceString, position) ||
+        !parsePort(source, sourceString, position) ||
+        !parsePath(source, sourceString, position)) {
+        return false;
     }
 
-    size_t start = protocolPos;
-    size_t cur = start;
-    while (cur < length) {
-        auto c = sourceString->charAt(cur);
+    m_sourceList.push_back(source);
+    return true;
+}
 
-        if (c == '.' && source->serverName->isEmpty()) {
-            if (cur - start <= 0) {
-                return nullptr;
-            }
-            source->serverName = sourceString->substring(start, cur - start);
-            source->isStarServer = source->serverName->equals("*");
-            start = cur + 1;
-        } else if (c == ':') {
-            if (cur - start <= 0) {
-                return nullptr;
-            }
-            source->domainName = sourceString->substring(start, cur - start);
-            start = cur + 1;
-        } else if (c == '/' || cur == length - 1) {
-            size_t end = (c == '/') ? cur - start : cur - start + 1;
-            if (end <= 0) {
-                return nullptr;
-            }
-            if (source->domainName->isEmpty()) {
-                source->domainName = sourceString->substring(start, end);
-                source->isStarPort = false;
-            } else {
-                source->port = sourceString->substring(start, end);
-                source->isStarPort = source->port->equals("*");
-            }
-            if (cur + 1 < length) {
-                source->path = sourceString->substring(cur, length - cur);
+bool ContentSecurityPolicySourceListDirective::parseScheme(
+    ContentSecurityPolicySource* source, String* sourceString, size_t& position)
+{
+    // scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." )
+
+    size_t end = sourceString->length();
+    if (position >= end) {
+        return false;
+    }
+    size_t begin = position;
+    char32_t c = sourceString->charAt(position);
+
+    if (!isASCIIAlpha(c)) {
+        source->isStarProtocol = true;
+    }
+    position++;
+
+    while (position < end) {
+        c = sourceString->charAt(position);
+
+        if (c == ':') {
+            if ((position + 2 < end) &&
+                sourceString->charAt(position + 1) == '/' &&
+                sourceString->charAt(position + 2) == '/') {
+                if (source->isStarProtocol) {
+                    return false;
+                }
+                source->protocol =
+                    sourceString->substring(begin, position - begin + 1);
+                source->isStarProtocol = false;
+                position += 3;
+                return true;
             }
             break;
+        } else if (!isSchemeCharacter(c)) {
+            break;
         }
-        cur++;
+
+        position++;
     }
-    return source;
+    position = begin;
+    source->isStarProtocol = true;
+    return true;
+}
+
+bool ContentSecurityPolicySourceListDirective::parseHost(
+    ContentSecurityPolicySource* source, String* sourceString, size_t& position)
+{
+    // host-part = "*" / [ "*." ] 1*host-char *( "." 1*host-char )
+
+    size_t end = sourceString->length();
+    if (position >= end) {
+        return false;
+    }
+    size_t begin = position;
+    char32_t c = sourceString->charAt(position);
+
+    if (c == '*') {
+        position++;
+        if (position == end ||
+            (position < end && (sourceString->charAt(position) == '/' ||
+                                sourceString->charAt(position) == ':'))) {
+            source->isStarServer = true;
+            source->isStarDomain = true;
+            return true;
+        }
+    }
+
+    while (position < end) {
+        c = sourceString->charAt(position);
+
+        if (c == '.') {
+            if (source->serverName->isEmpty()) {
+                if (position == begin ||
+                    (source->isStarPort && position - begin > 1)) {
+                    return false;
+                }
+                source->serverName =
+                    sourceString->substring(begin, position - begin);
+                source->isStarServer = source->serverName->equals("*");
+                begin = position + 1;
+            }
+        } else if (c == ':' || c == '/') {
+            break;
+        } else if (!isHostCharacter(c)) {
+            return false;
+        }
+        position++;
+    }
+
+    if (position == begin || sourceString->charAt(position - 1) == '.') {
+        return false;
+    }
+
+    String* host = sourceString->substring(begin, position - begin);
+    if (source->serverName->isEmpty()) {
+        source->serverName = host;
+        source->isStarServer = source->serverName->equals("*");
+        source->isStarDomain = true;
+    } else {
+        source->domainName = host;
+    }
+    return true;
+}
+
+bool ContentSecurityPolicySourceListDirective::parsePort(
+    ContentSecurityPolicySource* source, String* sourceString, size_t& position)
+{
+    // port-part = 1*DIGIT / "*"
+    size_t end = sourceString->length();
+    if (position >= end || sourceString->charAt(position) != ':') {
+        return true; // port does not exist
+    }
+
+    position++;
+    size_t begin = position;
+
+    char32_t c = sourceString->charAt(position);
+    if (c == '*') {
+        source->isStarPort = true;
+        position++;
+    }
+
+    while (position < end) {
+        c = sourceString->charAt(position);
+        if (c == '/') {
+            break;
+        } else if (!isASCIIDigit(c)) {
+            return false;
+        }
+        position++;
+    }
+
+    if (source->isStarPort) {
+        if (position - begin == 1) {
+            return true;
+        }
+        return false;
+    } else if (begin == position) {
+        return false;
+    }
+
+    source->port = sourceString->substring(begin, position - begin);
+    return true;
+}
+
+bool ContentSecurityPolicySourceListDirective::parsePath(
+    ContentSecurityPolicySource* source, String* sourceString, size_t& position)
+{
+    size_t end = sourceString->length();
+    if (position >= end || sourceString->charAt(position) != '/') {
+        return true; // path does not exist
+    }
+    size_t begin = position;
+    position++;
+
+    char32_t c;
+    while (position < end) {
+        c = sourceString->charAt(position);
+        if (c == '?' || c == '#') {
+            return false;
+        }
+        position++;
+    }
+
+    source->path = sourceString->substring(begin, position - begin);
+    return true;
 }
 
 bool ContentSecurityPolicySourceListDirective::isScheme(String* scheme)
 {
-    return scheme->charAt(scheme->length() - 1) == ':';
+    size_t end = scheme->length();
+    if (end == 0 || scheme->charAt(end - 1) != ':') {
+        return false;
+    }
+
+    size_t position = 0;
+    char32_t c;
+    while (position < end - 1) {
+        c = scheme->charAt(position);
+        if (!isSchemeCharacter(c)) {
+            return false;
+        }
+        position++;
+    }
+    return true;
 }
 
 static std::string getCSPHash(CryptoAlgorithmType hashType,
@@ -236,15 +383,6 @@ bool ContentSecurityPolicySourceListDirective::allowNonce(String* content)
     return false;
 }
 
-bool ContentSecurityPolicySourceListDirective::matcheScheme(String* scheme,
-                                                            ResourceURL* url)
-{
-    if (scheme->equalsIgnoreCase("http:")) {
-        return url->isHTTPFamilyURL();
-    }
-    return scheme->equalsIgnoreCase(url->protocol());
-}
-
 bool ContentSecurityPolicySourceListDirective::allowScheme(ResourceURL* resUrl)
 {
     for (auto scheme : m_schemeList) {
@@ -255,44 +393,81 @@ bool ContentSecurityPolicySourceListDirective::allowScheme(ResourceURL* resUrl)
     return false;
 }
 
-bool ContentSecurityPolicySourceListDirective::allowHost(ResourceURL* url,
-                                                         bool ignoreScheme)
+bool ContentSecurityPolicySourceListDirective::allowHost(ResourceURL* url)
 {
     if (url->origin()->equalsIgnoreCase("null")) {
         return false; // not URL scheme
     }
 
-    String* host = url->hostname();
-    size_t hostLength = host->length();
-    size_t pos = host->find(".");
-    if (pos == SIZE_MAX || pos >= hostLength - 1) {
-        return false;
-    }
-
-    String* server = host->substring(0, pos);
-    String* domain = host->substring(pos + 1, hostLength - pos - 1);
-    String* port = url->port();
-    String* path = url->pathname();
-
     for (auto source : m_sourceList) {
-        if (!ignoreScheme && !source->isStarProtocol &&
-            !matcheScheme(source->protocol, url)) {
-            continue;
-        } else if (!source->isStarServer &&
-                   !source->serverName->equalsIgnoreCase(server)) {
+        if (!source->isStarProtocol && !matcheScheme(source->protocol, url)) {
             continue;
         } else if (!source->isStarPort &&
-                   !source->port->equalsIgnoreCase(port)) {
+                   !matchePort(source->port, source->protocol, url)) {
             continue;
-        } else if (source->domainName->equalsIgnoreCase(domain)) {
-            if (source->path->length() > 1) {
-                if (!source->path->equalsIgnoreCase(path)) {
-                    continue;
-                }
-            }
-            return true;
+        } else if (!matchePath(source->path, url->pathname())) {
+            continue;
         }
+
+        String* host = url->hostname();
+        String* server = nullptr;
+        String* domain = nullptr;
+        size_t pos = host->find(".");
+        if (pos == SIZE_MAX) {
+            server = host;
+        } else {
+            server = host->substring(0, pos);
+            domain = host->substring(pos + 1, host->length() - pos - 1);
+        }
+
+        if (!source->isStarServer &&
+            !source->serverName->equalsIgnoreCase(server)) {
+            continue;
+        } else if (!source->isStarDomain &&
+                   (domain && !source->domainName->equalsIgnoreCase(domain))) {
+            continue;
+        }
+        return true;
     }
     return false;
+}
+
+bool ContentSecurityPolicySourceListDirective::matcheScheme(String* scheme,
+                                                            ResourceURL* url)
+{
+    if (scheme->equalsIgnoreCase("http:")) {
+        return url->isHTTPFamilyURL();
+    }
+    return scheme->equalsIgnoreCase(url->protocol());
+}
+
+bool ContentSecurityPolicySourceListDirective::matchePort(
+    String* sourcePort, String* sourceProtocol, ResourceURL* url)
+{
+    String* port = url->port();
+    if (sourcePort->equals(port)) {
+        return true;
+    } else if (sourcePort->isEmpty()) {
+        return ResourceURL::isDefaultPortForProtocol(port, url->protocol());
+    } else if (port->isEmpty()) {
+        return ResourceURL::isDefaultPortForProtocol(sourcePort,
+                                                     url->protocol());
+    }
+    return false;
+}
+
+bool ContentSecurityPolicySourceListDirective::matchePath(String* sourcePath,
+                                                          String* urlPath)
+{
+    if (sourcePath->isEmpty() ||
+        (sourcePath->equals("/") && urlPath->isEmpty())) {
+        return true;
+    }
+    if (sourcePath->endsWith("/")) {
+        return urlPath->startsWith(sourcePath);
+    }
+
+    // TODO: decode escape sequences
+    return sourcePath->equalsIgnoreCase(urlPath);
 }
 }

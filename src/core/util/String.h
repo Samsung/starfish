@@ -158,6 +158,12 @@ inline bool isASCII(CharType c)
 }
 
 template <typename CharType>
+inline bool isASCIIAlpha(CharType c)
+{
+    return (c | 0x20) >= 'a' && (c | 0x20) <= 'z';
+}
+
+template <typename CharType>
 inline bool isASCIIUpper(CharType c)
 {
     return c >= 'A' && c <= 'Z';

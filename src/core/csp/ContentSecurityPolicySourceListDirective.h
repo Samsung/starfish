@@ -31,6 +31,7 @@ struct ContentSecurityPolicySource : public gc {
         , path(String::emptyString)
         , isStarProtocol(false)
         , isStarServer(false)
+        , isStarDomain(false)
         , isStarPort(false)
 
     {
@@ -43,6 +44,7 @@ struct ContentSecurityPolicySource : public gc {
 
     bool isStarProtocol;
     bool isStarServer;
+    bool isStarDomain;
     bool isStarPort;
 };
 
@@ -54,7 +56,7 @@ class ContentSecurityPolicySourceListDirective : public gc {
 public:
     ContentSecurityPolicySourceListDirective(
         ContentSecurityPolicyDirectiveList* directiveList, String* name,
-        String* value)
+        const GCVector<StringView>& token)
         : m_directiveList(directiveList)
         , m_name(name)
         , m_allowStar(false)
@@ -63,7 +65,7 @@ public:
         , m_allowSelf(false)
         , m_hashAlgorithmsUsed(0)
     {
-        parseSource(value);
+        parseSource(token);
     }
 
     String* name()
@@ -94,16 +96,30 @@ public:
     bool allowContent(String* content);
     bool allowNonce(String* content);
     bool allowScheme(String* str);
-    bool matcheScheme(String* scheme, ResourceURL* url);
     bool allowScheme(ResourceURL* resUrl);
-    bool allowHost(ResourceURL* url, bool ignoreScheme = false);
+    bool allowHost(ResourceURL* url);
 
     bool hasNonceOrHash()
     {
         return (m_nonces.size() > 0) || (m_hashes.size() > 0);
     }
 
-    static ContentSecurityPolicySource* parseHost(String* source);
+    static inline bool isHostCharacter(char32_t c)
+    {
+        return isASCIIDigit(c) || isASCIIAlpha(c) || c == '-';
+    }
+
+    static inline bool isSchemeCharacter(char32_t c)
+    {
+        // https://tools.ietf.org/html/rfc3986#section-3.1
+        return isASCIIAlpha(c) || isASCIIDigit(c) || c == '+' || c == '-' ||
+               c == '.';
+    }
+
+    static bool matcheScheme(String* scheme, ResourceURL* url);
+    static bool matchePort(String* sourcePort, String* sourceProtocol,
+                           ResourceURL* url);
+    static bool matchePath(String* sourcePath, String* urlPath);
 
 protected:
 private:
@@ -119,10 +135,19 @@ private:
     uint32_t m_hashAlgorithmsUsed;
     GCVector<String*> m_schemeList;
 
-    void parseSource(String* value);
+    void parseSource(const GCVector<StringView>& sources);
     bool parseHash(String* source);
     bool parseNonce(String* source);
     bool isScheme(String* scheme);
+    bool parseHostSource(String* source);
+    static bool parseScheme(ContentSecurityPolicySource* source,
+                            String* sourceString, size_t& position);
+    static bool parseHost(ContentSecurityPolicySource* source,
+                          String* sourceString, size_t& position);
+    static bool parsePort(ContentSecurityPolicySource* source,
+                          String* sourceString, size_t& position);
+    static bool parsePath(ContentSecurityPolicySource* source,
+                          String* sourceString, size_t& position);
 };
 }
 

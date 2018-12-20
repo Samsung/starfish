@@ -1040,6 +1040,21 @@ ResourceURL* ResourceURL::setHash(String* newHash)
     return new ResourceURL(builder.finalize());
 }
 
+bool ResourceURL::isDefaultPortForProtocol(String* port, String* protocol)
+{
+    if (protocol->isEmpty() || port->isEmpty()) {
+        return false;
+    }
+
+    if (protocol->equalsIgnoreCase("http:")) {
+        return port->equals("80");
+    } else if (protocol->equalsIgnoreCase("https:")) {
+        return port->equals("443");
+    }
+
+    return false;
+}
+
 DocumentURL::DocumentURL(String* url)
     : DocumentURL(url, nullptr)
 {
