@@ -19,247 +19,164 @@
 
 #include "StarfishConfig.h"
 #include "StorageManager.h"
-#include "core/page/SecurityOriginData.h"
+#include "core/dom/WebOrigin.h"
 #include "platform/file/File.h"
 
-#include "rapidjson/document.h"
-#include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 #include "rapidjson/encodings.h"
 
-#define PROTOCOL "protocol"
-#define HOST "host"
-#define PORT "port"
-#define KEY "key"
-#define VALUE "value"
-
 typedef rapidjson::GenericStringBuffer<rapidjson::UTF8<>> JosnStringBuffer;
-typedef rapidjson::GenericDocument<rapidjson::UTF8<>> JsonDocument;
 typedef rapidjson::GenericValue<rapidjson::UTF8<>> JsonValue;
 
 namespace Starfish {
 
 StorageManager::StorageManager(String* localStoragePath)
     : m_localStoragePath(localStoragePath)
-    , m_jsonHolder(new JsonDocument())
+    , m_jsonDocument(new JsonDocument())
 {
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    root->SetNull();
-
-    jsonDocumentRead();
+    m_jsonDocument->SetObject();
     GC_REGISTER_FINALIZER_NO_ORDER(this,
                                    [](void* obj, void* cd) {
-                                       // STARFISH_LOG_INFO("StorageManager::~StorageManager\n");
                                        StorageManager* mgr =
                                            (StorageManager*)obj;
-                                       mgr->jsonDocumentWrite();
-                                       mgr = nullptr;
-                                       JsonDocument* root = (JsonDocument*)cd;
-                                       if (root) {
-                                           delete root;
-                                           root = nullptr;
-                                       }
+                                       mgr->writeJsonDocumentAsFile();
+                                       delete mgr->m_jsonDocument;
                                    },
-                                   m_jsonHolder, NULL, NULL);
+                                   NULL, NULL, NULL);
 }
 
-Nullable<String*> StorageManager::key(SecurityOriginData* securityOriginData,
-                                      unsigned long index)
+Nullable<String*> StorageManager::getItem(WebOrigin* webOrigin, String* key)
 {
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    STARFISH_ASSERT(root->IsArray());
+    auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
+    auto& allocator = m_jsonDocument->GetAllocator();
 
-    unsigned long securityOriginCount = 0;
-    for (auto itr = root->Begin(); itr != root->End(); ++itr) {
-        STARFISH_ASSERT(itr->IsObject());
-        auto v1 = securityOriginData->protocol()->toUTF8NonGCString();
-        auto v2 = securityOriginData->host()->toUTF8NonGCString();
-        auto v3 = securityOriginData->port();
-        if ((*itr)[PROTOCOL] == v1.data() && (*itr)[HOST] == v2.data() &&
-            (*itr)[PORT] == v3) {
-            if (securityOriginCount == index) {
-                return String::fromUTF8((*itr)[KEY].GetString(),
-                                        (*itr)[KEY].GetStringLength());
-            }
-            securityOriginCount++;
+    JsonValue::MemberIterator it1 =
+        m_jsonDocument->FindMember(serializedOrigin.data());
+    if (it1 != m_jsonDocument->MemberEnd()) {
+        auto& o = it1->value;
+        auto utf8Key = key->toUTF8NonGCString();
+        JsonValue k(utf8Key.data(), utf8Key.length(), allocator);
+        JsonValue::MemberIterator it2 = o.FindMember(k);
+        if (it2 != o.MemberEnd()) {
+            return String::fromUTF8(it2->value.GetString(),
+                                    it2->value.GetStringLength());
         }
     }
     return nullptr;
 }
 
-Nullable<String*> StorageManager::getItem(
-    SecurityOriginData* securityOriginData, String* key)
+void StorageManager::load(GCUnorderedMap<String*, String*>& out,
+                          WebOrigin* webOrigin)
 {
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    STARFISH_ASSERT(root->IsArray());
+    loadFromFileToJsonDocument();
 
-    for (auto itr = root->Begin(); itr != root->End(); ++itr) {
-        STARFISH_ASSERT(itr->IsObject());
-        auto v1 = securityOriginData->protocol()->toUTF8NonGCString();
-        auto v2 = securityOriginData->host()->toUTF8NonGCString();
-        auto v3 = securityOriginData->port();
-        auto v4 = key->toUTF8NonGCString();
-        if ((*itr)[PROTOCOL] == v1.data() && (*itr)[HOST] == v2.data() &&
-            (*itr)[PORT] == v3 && (*itr)[KEY] == v4.data()) {
-            return String::fromUTF8((*itr)[VALUE].GetString(),
-                                    (*itr)[VALUE].GetStringLength());
-        }
-    }
-    return nullptr;
-}
+    auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
 
-GCUnorderedMap<String*, String*>* StorageManager::getItems(
-    SecurityOriginData* securityOriginData)
-{
-    GCUnorderedMap<String*, String*>* ret =
-        new (GC) GCUnorderedMap<String*, String*>();
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    STARFISH_ASSERT(root->IsArray());
-
-    for (auto itr = root->Begin(); itr != root->End(); ++itr) {
-        STARFISH_ASSERT(itr->IsObject());
-        auto v1 = securityOriginData->protocol()->toUTF8NonGCString();
-        auto v2 = securityOriginData->host()->toUTF8NonGCString();
-        auto v3 = securityOriginData->port();
-        if ((*itr)[PROTOCOL] == v1.data() && (*itr)[HOST] == v2.data() &&
-            (*itr)[PORT] == v3) {
-            ret->insert(std::pair<String*, String*>(
-                String::fromUTF8((*itr)[KEY].GetString(),
-                                 (*itr)[KEY].GetStringLength()),
-                String::fromUTF8((*itr)[VALUE].GetString(),
-                                 (*itr)[VALUE].GetStringLength())));
-        }
-    }
-    return ret;
-}
-
-void StorageManager::setItem(SecurityOriginData* securityOriginData,
-                             String* key, String* value)
-{
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    STARFISH_ASSERT(root->IsArray());
-    JsonDocument::AllocatorType& alloactor = root->GetAllocator();
-
-    for (auto itr = root->Begin(); itr != root->End(); ++itr) {
-        STARFISH_ASSERT(itr->IsObject());
-        auto v1 = securityOriginData->protocol()->toUTF8NonGCString();
-        auto v2 = securityOriginData->host()->toUTF8NonGCString();
-        auto v3 = securityOriginData->port();
-        auto v4 = key->toUTF8NonGCString();
-        if ((*itr)[PROTOCOL] == v1.data() && (*itr)[HOST] == v2.data() &&
-            (*itr)[PORT] == v3 && (*itr)[KEY] == v4.data()) {
-            auto s = value->toUTF8NonGCString();
-            (*itr)[VALUE].SetString(s.data(), s.length(), alloactor);
-            jsonDocumentWrite();
-            return;
-        }
-    }
-
-    JsonValue makeSetItem(rapidjson::kObjectType);
-    JsonValue jsonValue1, jsonValue2, jsonValue3, jsonValue4;
-    auto v = securityOriginData->protocol()->toUTF8NonGCString();
-    jsonValue1.SetString(v.data(), v.length(), alloactor);
-    v = securityOriginData->host()->toUTF8NonGCString();
-    jsonValue2.SetString(v.data(), v.length(), alloactor);
-    v = key->toUTF8NonGCString();
-    jsonValue3.SetString(v.data(), v.length(), alloactor);
-    v = value->toUTF8NonGCString();
-    jsonValue4.SetString(v.data(), v.length(), alloactor);
-
-    makeSetItem.AddMember(PROTOCOL, jsonValue1, alloactor);
-    makeSetItem.AddMember(HOST, jsonValue2, alloactor);
-    makeSetItem.AddMember(PORT, securityOriginData->port(), alloactor);
-    makeSetItem.AddMember(KEY, jsonValue3, alloactor);
-    makeSetItem.AddMember(VALUE, jsonValue4, alloactor);
-    root->PushBack(makeSetItem, alloactor);
-    jsonDocumentWrite();
-}
-
-void StorageManager::removeItem(SecurityOriginData* securityOriginData,
-                                String* key)
-{
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    STARFISH_ASSERT(root->IsArray());
-
-    for (auto itr = root->Begin(); itr != root->End(); ++itr) {
-        STARFISH_ASSERT(itr->IsObject());
-        auto v1 = securityOriginData->protocol()->toUTF8NonGCString();
-        auto v2 = securityOriginData->host()->toUTF8NonGCString();
-        auto v3 = securityOriginData->port();
-        auto v4 = key->toUTF8NonGCString();
-        if ((*itr)[PROTOCOL] == v1.data() && (*itr)[HOST] == v2.data() &&
-            (*itr)[PORT] == v3 && (*itr)[KEY] == v4.data()) {
-            root->Erase(itr);
-            jsonDocumentWrite();
-            return;
+    JsonValue::MemberIterator it1 =
+        m_jsonDocument->FindMember(serializedOrigin.data());
+    if (it1 != m_jsonDocument->MemberEnd()) {
+        auto& o = it1->value;
+        for (JsonValue::MemberIterator it2 = o.MemberBegin();
+             it2 != o.MemberEnd(); ++it2) {
+            out.insert(std::pair<String*, String*>(
+                String::fromUTF8(it2->name.GetString(),
+                                 it2->name.GetStringLength()),
+                String::fromUTF8(it2->value.GetString(),
+                                 it2->value.GetStringLength())));
         }
     }
 }
 
-void StorageManager::clear(SecurityOriginData* securityOriginData)
+void StorageManager::setItem(WebOrigin* webOrigin, String* key, String* value)
 {
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    STARFISH_ASSERT(root->IsArray());
+    auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
+    auto& allocator = m_jsonDocument->GetAllocator();
+    auto utf8Key = key->toUTF8NonGCString();
+    auto utf8Value = value->toUTF8NonGCString();
 
-    for (auto itr = root->Begin(); itr != root->End();) {
-        STARFISH_ASSERT(itr->IsObject());
-        auto v1 = securityOriginData->protocol()->toUTF8NonGCString();
-        auto v2 = securityOriginData->host()->toUTF8NonGCString();
-        auto v3 = securityOriginData->port();
-        if ((*itr)[PROTOCOL] == v1.data() && (*itr)[HOST] == v2.data() &&
-            (*itr)[PORT] == v3) {
-            itr = root->Erase(itr);
+    JsonValue k(utf8Key.data(), utf8Key.length(), allocator);
+    JsonValue v(utf8Value.data(), utf8Value.length(), allocator);
+
+    JsonValue::MemberIterator it1 =
+        m_jsonDocument->FindMember(serializedOrigin.data());
+    if (it1 != m_jsonDocument->MemberEnd()) {
+        auto& o = it1->value;
+        JsonValue::MemberIterator it2 = o.FindMember(k);
+        if (it2 != o.MemberEnd()) {
+            it2->value = v;
         } else {
-            ++itr;
+            o.AddMember(k, v, allocator);
         }
+    } else {
+        JsonValue s(serializedOrigin.data(), allocator);
+        JsonValue o(rapidjson::kObjectType);
+        o.AddMember(k, v, allocator);
+        m_jsonDocument->AddMember(s, o, allocator);
     }
-    jsonDocumentWrite();
+    writeJsonDocumentAsFile();
 }
 
-unsigned long StorageManager::length(SecurityOriginData* securityOriginData)
+void StorageManager::removeItem(WebOrigin* webOrigin, String* key)
 {
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    STARFISH_ASSERT(root->IsArray());
+    auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
+    auto& allocator = m_jsonDocument->GetAllocator();
+    auto utf8Key = key->toUTF8NonGCString();
+    JsonValue k(utf8Key.data(), utf8Key.length(), allocator);
 
-    unsigned long securityOriginCount = 0;
-    for (auto itr = root->Begin(); itr != root->End(); ++itr) {
-        STARFISH_ASSERT(itr->IsObject());
-        auto v1 = securityOriginData->protocol()->toUTF8NonGCString();
-        auto v2 = securityOriginData->host()->toUTF8NonGCString();
-        auto v3 = securityOriginData->port();
-        if ((*itr)[PROTOCOL] == v1.data() && (*itr)[HOST] == v2.data() &&
-            (*itr)[PORT] == v3) {
-            securityOriginCount++;
-        }
+    JsonValue::MemberIterator it =
+        m_jsonDocument->FindMember(serializedOrigin.data());
+    if (it != m_jsonDocument->MemberEnd()) {
+        it->value.RemoveMember(k);
     }
-    return securityOriginCount;
+    writeJsonDocumentAsFile();
 }
 
-void StorageManager::jsonDocumentRead()
+void StorageManager::clear(WebOrigin* webOrigin)
 {
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
+    auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
+
+    JsonValue::MemberIterator it =
+        m_jsonDocument->FindMember(serializedOrigin.data());
+    if (it != m_jsonDocument->MemberEnd()) {
+        it->value.RemoveAllMembers();
+    }
+    writeJsonDocumentAsFile();
+}
+
+unsigned long StorageManager::size(WebOrigin* webOrigin)
+{
+    auto serializedOrigin = webOrigin->serialize()->toUTF8NonGCString();
+
+    JsonValue::MemberIterator it =
+        m_jsonDocument->FindMember(serializedOrigin.data());
+    if (it != m_jsonDocument->MemberEnd()) {
+        return it->value.MemberCount();
+    }
+    return 0;
+}
+
+void StorageManager::loadFromFileToJsonDocument()
+{
     auto fileIO = File::open(m_localStoragePath, File::Read);
     if (fileIO) {
         Nullable<String*> filedata = fileIO->readAll();
         if (filedata.hasValue()) {
             auto s = filedata.getValue()->toUTF8NonGCString();
-            root->Parse(s.data());
+            m_jsonDocument->Parse(s.data());
         }
     }
-
-    if (root->GetType() != rapidjson::kArrayType) {
-        root->SetArray();
+    if (!m_jsonDocument->IsObject()) {
+        JsonDocument().Swap(*m_jsonDocument);
+        m_jsonDocument->SetObject();
     }
 }
 
-void StorageManager::jsonDocumentWrite()
+void StorageManager::writeJsonDocumentAsFile()
 {
     JosnStringBuffer buffer;
     buffer.Clear();
     rapidjson::Writer<JosnStringBuffer> writer(buffer);
-    JsonDocument* root = (JsonDocument*)m_jsonHolder;
-    STARFISH_ASSERT(root->IsArray());
-    root->Accept(writer);
+    m_jsonDocument->Accept(writer);
 
     auto fileIO = File::open(m_localStoragePath, File::Write);
     if (fileIO) {

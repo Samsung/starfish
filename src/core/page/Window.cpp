@@ -47,8 +47,6 @@
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
 #include "core/page/Serializer.h"
-#include "core/page/SecurityOriginData.h"
-#include "core/page/Serializer.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
 #include "core/style/CSSParser.h"
@@ -170,20 +168,14 @@ Element* Window::frameElement()
 
 Storage* Window::localStorage()
 {
-    ResourceURL* url = m_document->documentURI();
-    SecurityOriginData* origin = new SecurityOriginData(
-        url->protocol(), url->host(), String::parseInt(url->port()));
     return browsingContext()->webView()->localStorageNamespace()->storage(
-        this, origin);
+        this, m_document->webOrigin());
 }
 
 Storage* Window::sessionStorage()
 {
-    ResourceURL* url = m_document->documentURI();
-    SecurityOriginData* origin = new SecurityOriginData(
-        url->protocol(), url->host(), String::parseInt(url->port()));
     return browsingContext()->webView()->sessionStorageNamespace()->storage(
-        this, origin);
+        this, m_document->webOrigin());
 }
 
 void Window::postMessage(Window* source, ScriptValue message,

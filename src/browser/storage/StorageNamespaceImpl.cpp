@@ -42,16 +42,14 @@ StorageNamespaceImpl::~StorageNamespaceImpl()
 {
 }
 
-Storage* StorageNamespaceImpl::storage(Window* window,
-                                       SecurityOriginData* securityOriginData)
+Storage* StorageNamespaceImpl::storage(Window* window, WebOrigin* webOrigin)
 {
     StorageImpl* storageImpl = nullptr;
-    auto itr = m_originToStorage.find(securityOriginData);
+    auto itr = m_originToStorage.find(webOrigin);
     if (itr == m_originToStorage.end()) {
-        storageImpl = new StorageImpl(m_storageType, securityOriginData,
-                                      m_storageManager);
-        m_originToStorage.insert(
-            std::make_pair(securityOriginData, storageImpl));
+        storageImpl =
+            new StorageImpl(m_storageType, webOrigin, m_storageManager);
+        m_originToStorage.insert(std::make_pair(webOrigin, storageImpl));
     } else {
         storageImpl = itr->second;
     }

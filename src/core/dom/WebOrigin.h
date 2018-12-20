@@ -31,19 +31,34 @@ protected:
 
 public:
     static WebOrigin* createDocumentOrigin(ResourceURL* url);
-    String* serialize();
-    Nullable<String*> domain();
-    bool isOpaque()
+    String* serialize() const;
+    Nullable<String*> domain() const;
+    bool isOpaque() const
     {
         return m_isOpaque;
     }
 
-    bool isSameOrigin(WebOrigin* otherWebOrigin);
-    bool isSameOriginDomain(WebOrigin* otherWebOrigin);
+    bool isSameOrigin(const WebOrigin* otherWebOrigin) const;
+    bool isSameOriginDomain(const WebOrigin* otherWebOrigin) const;
 
 protected:
     ResourceURL* m_originalURL;
     bool m_isOpaque;
+};
+
+struct WebOriginHash {
+    size_t operator()(const WebOrigin* data) const
+    {
+        size_t seed = 0;
+        return seed ^ std::hash<String*>{}(data->serialize());
+    }
+};
+
+struct WebOriginEqual {
+    bool operator()(const WebOrigin* data1, const WebOrigin* data2) const
+    {
+        return data1 == data2 ? true : data1->isSameOrigin(data2);
+    }
 };
 }
 

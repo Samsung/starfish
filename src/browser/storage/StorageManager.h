@@ -20,9 +20,13 @@
 #ifndef __StarfishStorageManager__
 #define __StarfishStorageManager__
 
+#include "rapidjson/document.h"
+
 namespace Starfish {
 
-class SecurityOriginData;
+class WebOrigin;
+
+typedef rapidjson::GenericDocument<rapidjson::UTF8<>> JsonDocument;
 
 class StorageManager : public gc {
 public:
@@ -30,23 +34,18 @@ public:
     ~StorageManager()
     {
     }
-    Nullable<String*> key(SecurityOriginData* securityOriginData,
-                          unsigned long index);
-    Nullable<String*> getItem(SecurityOriginData* securityOriginData,
-                              String* key);
-    GCUnorderedMap<String*, String*>* getItems(
-        SecurityOriginData* securityOriginData);
-    void setItem(SecurityOriginData* securityOriginData, String* key,
-                 String* value);
-    void removeItem(SecurityOriginData* securityOriginData, String* key);
-    void clear(SecurityOriginData* securityOriginData);
-    unsigned long length(SecurityOriginData* securityOriginData);
+    void load(GCUnorderedMap<String*, String*>& out, WebOrigin* webOrigin);
+    Nullable<String*> getItem(WebOrigin* webOrigin, String* key);
+    void setItem(WebOrigin* webOrigin, String* key, String* value);
+    void removeItem(WebOrigin* webOrigin, String* key);
+    void clear(WebOrigin* webOrigin);
+    unsigned long size(WebOrigin* webOrigin);
 
 private:
-    void jsonDocumentRead();
-    void jsonDocumentWrite();
+    void loadFromFileToJsonDocument();
+    void writeJsonDocumentAsFile();
     String* m_localStoragePath;
-    void* m_jsonHolder;
+    JsonDocument* m_jsonDocument;
 };
 }
 

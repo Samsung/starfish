@@ -22,7 +22,6 @@
 #include "Storage.h"
 
 #include "browser/storage/StorageImpl.h"
-#include "core/page/SecurityOriginData.h"
 
 namespace Starfish {
 

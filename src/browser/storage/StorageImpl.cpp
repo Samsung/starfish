@@ -21,7 +21,7 @@
 #include "StorageImpl.h"
 
 #include "StorageManager.h"
-#include "core/page/SecurityOriginData.h"
+#include "core/dom/WebOrigin.h"
 
 namespace Starfish {
 
@@ -29,46 +29,38 @@ StorageImpl::~StorageImpl()
 {
 }
 
-StorageImpl::StorageImpl(StorageType storageType,
-                         SecurityOriginData* securityOriginData,
+StorageImpl::StorageImpl(StorageType storageType, WebOrigin* webOrigin,
                          StorageManager* storageManager)
     : m_storageType(storageType)
-    , m_securityOriginData(securityOriginData)
+    , m_webOrigin(webOrigin)
     , m_storageManager(storageManager)
-    , m_map(new (GC) GCUnorderedMap<String*, String*>())
+    , m_map()
 {
     if (m_storageManager) {
-        unsigned long size = m_storageManager->length(m_securityOriginData);
-        if (size != 0) {
-            m_map->clear();
-            m_map = m_storageManager->getItems(m_securityOriginData);
-        }
+        m_storageManager->load(m_map, m_webOrigin);
     }
 }
 
 unsigned long StorageImpl::length()
 {
-    return m_map->size();
+    return m_map.size();
 }
 
 Nullable<String*> StorageImpl::key(unsigned long index)
 {
-    if (index >= m_map->size()) {
-        if (m_storageManager) {
-            return m_storageManager->key(m_securityOriginData, index);
-        }
+    if (index >= m_map.size()) {
         return nullptr;
     }
-    auto itr = std::next(m_map->begin(), index);
+    auto itr = std::next(m_map.begin(), index);
     return itr->first;
 }
 
 Nullable<String*> StorageImpl::getItem(String* key)
 {
-    auto itr = m_map->find(key);
-    if (itr == m_map->end()) {
+    auto itr = m_map.find(key);
+    if (itr == m_map.end()) {
         if (m_storageManager) {
-            return m_storageManager->getItem(m_securityOriginData, key);
+            return m_storageManager->getItem(m_webOrigin, key);
         }
         return nullptr;
     }
@@ -80,8 +72,8 @@ GCVector<String*> StorageImpl::getKeyNames()
 {
     GCVector<String*> ret;
 
-    auto iter = m_map->begin();
-    while (iter != m_map->end()) {
+    auto iter = m_map.begin();
+    while (iter != m_map.end()) {
         ret.push_back(iter->first);
         iter++;
     }
@@ -91,27 +83,27 @@ GCVector<String*> StorageImpl::getKeyNames()
 
 bool StorageImpl::setItem(String* key, String* value)
 {
-    (*m_map)[key] = value;
+    m_map[key] = value;
     if (m_storageManager) {
-        m_storageManager->setItem(m_securityOriginData, key, value);
+        m_storageManager->setItem(m_webOrigin, key, value);
     }
     return true;
 }
 
 bool StorageImpl::removeItem(String* key)
 {
-    m_map->erase(key);
+    m_map.erase(key);
     if (m_storageManager) {
-        m_storageManager->removeItem(m_securityOriginData, key);
+        m_storageManager->removeItem(m_webOrigin, key);
     }
     return true;
 }
 
 void StorageImpl::clear()
 {
-    m_map->clear();
+    m_map.clear();
     if (m_storageManager) {
-        m_storageManager->clear(m_securityOriginData);
+        m_storageManager->clear(m_webOrigin);
     }
 }
 }
