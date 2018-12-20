@@ -23,8 +23,8 @@
 
 namespace Starfish {
 ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
-    ContentSecurityPolicy* contentSecurityPolicy, String* policy, size_t begin,
-    size_t end, ContentSecurityPolicyHeaderType type,
+    ContentSecurityPolicy* contentSecurityPolicy, String* policy,
+    ContentSecurityPolicyHeaderType type,
     ContentSecurityPolicyHeaderSource source)
     : m_contentSecurityPolicy(contentSecurityPolicy)
     , m_contextURL(contentSecurityPolicy->document()->documentURI())
@@ -39,41 +39,29 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     , m_header(nullptr)
 {
     m_headerType = type;
-
-    if (begin == end)
+    size_t end = policy->length();
+    if (end == 0)
         return;
 
-    m_header = policy->substring(begin, end);
+    m_header = policy;
 
-    size_t current = skipSpaceAndNewline(policy, begin, end);
-    size_t directiveBegin = current;
+    size_t current = 0;
+    size_t directiveBegin = 0;
 
-    String* name = nullptr;
-    String* value = nullptr;
-    while (current <= end) {
-        if (String::isSpaceOrNewline(policy->charAt(current))) {
-            if (!name && directiveBegin < current) {
-                name =
-                    policy->substring(directiveBegin, current - directiveBegin);
+    while (current < end) {
+        if (policy->charAt(current) == ';' || policy->charAt(current) == ',') {
+            if (directiveBegin < current) {
+                addDirective(policy->substring(directiveBegin,
+                                               current - directiveBegin));
                 directiveBegin = current + 1;
             }
-        } else if (policy->charAt(current) == ';' || current == end) {
-            if (directiveBegin < current && name != nullptr) {
-                value =
-                    policy->substring(directiveBegin, current - directiveBegin);
-                addDirective(name, value);
-
-                name = nullptr;
-                value = nullptr;
-                if (current + 1 <= end) {
-                    directiveBegin = current =
-                        skipSpaceAndNewline(policy, current + 1, end);
-                    continue;
-                }
-            }
         }
-
         current++;
+    }
+
+    if (directiveBegin < current) {
+        addDirective(
+            policy->substring(directiveBegin, current - directiveBegin));
     }
 }
 
@@ -94,42 +82,47 @@ void* ContentSecurityPolicyDirectiveList::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-void ContentSecurityPolicyDirectiveList::addDirective(String* name,
-                                                      String* value)
+void ContentSecurityPolicyDirectiveList::addDirective(String* value)
 {
+    GCVector<StringView> tokens;
+    StringUtils::wordTokenizer(value, tokens);
+    if (tokens.size() == 0) {
+        return;
+    }
+    auto name = tokens[0].substring();
     if (name->equalsIgnoreCase("base-uri")) {
-        setDirective(m_baseURI, name, value);
+        setDirective(m_baseURI, name, tokens);
     } else if (name->equalsIgnoreCase("connect-src")) {
-        setDirective(m_connectSrc, name, value);
+        setDirective(m_connectSrc, name, tokens);
     } else if (name->equalsIgnoreCase("child-src")) {
-        setDirective(m_childSrc, name, value);
+        setDirective(m_childSrc, name, tokens);
     } else if (name->equalsIgnoreCase("default-src")) {
-        setDirective(m_defaultSrc, name, value);
+        setDirective(m_defaultSrc, name, tokens);
     } else if (name->equalsIgnoreCase("frame-src")) {
         STARFISH_LOG_INFO(
             "'frame-src' is deprecated. Using 'child-src' is recommended "
             "instead.\n");
-        setDirective(m_childSrc, name, value);
+        setDirective(m_childSrc, name, tokens);
     } else if (name->equalsIgnoreCase("img-src")) {
-        setDirective(m_imgSrc, name, value);
+        setDirective(m_imgSrc, name, tokens);
     } else if (name->equalsIgnoreCase("media-src")) {
-        setDirective(m_mediaSrc, name, value);
+        setDirective(m_mediaSrc, name, tokens);
     } else if (name->equalsIgnoreCase("script-src")) {
-        setDirective(m_scriptSrc, name, value);
+        setDirective(m_scriptSrc, name, tokens);
     } else if (name->equalsIgnoreCase("style-src")) {
-        setDirective(m_styleSrc, name, value);
+        setDirective(m_styleSrc, name, tokens);
     }
 }
 
 void ContentSecurityPolicyDirectiveList::setDirective(
     ContentSecurityPolicySourceListDirective*& directive, String* name,
-    String* value)
+    const GCVector<StringView>& token)
 {
     if (directive) {
         m_contentSecurityPolicy->dispatchViolationEvent(name);
         return;
     }
-    directive = new ContentSecurityPolicySourceListDirective(this, name, value);
+    directive = new ContentSecurityPolicySourceListDirective(this, name, token);
 }
 
 ContentSecurityPolicySourceListDirective*
@@ -195,10 +188,15 @@ bool ContentSecurityPolicyDirectiveList::isMatchingSelf(
     ContentSecurityPolicySourceListDirective* directive, ResourceURL* resUrl)
 {
     STARFISH_ASSERT(directive);
-    if (directive->allowSelf() &&
-        m_contextURL->protocol()->equalsIgnoreCase(resUrl->protocol()) &&
-        m_contextURL->host()->equalsIgnoreCase(resUrl->host())) {
-        return true;
+    if (directive->allowSelf()) {
+        if (m_contextURL->origin()->equalsIgnoreCase(resUrl->origin())) {
+            return true;
+        } else if (m_contextURL->protocol()->equalsIgnoreCase(
+                       resUrl->protocol()) &&
+                   m_contextURL->host()->equalsIgnoreCase(resUrl->host())) {
+            return ContentSecurityPolicySourceListDirective::matchePort(
+                m_contextURL->port(), m_contextURL->protocol(), resUrl);
+        }
     }
     return false;
 }
@@ -250,16 +248,5 @@ bool ContentSecurityPolicyDirectiveList::allowEval(CSPDirectives directive)
         return true;
     }
     return false;
-}
-
-size_t ContentSecurityPolicyDirectiveList::skipSpaceAndNewline(String* src,
-                                                               size_t begin,
-                                                               size_t end)
-{
-    size_t current = begin;
-    while (current < end && String::isSpaceOrNewline(src->charAt(current))) {
-        current++;
-    }
-    return current;
 }
 }

@@ -207,6 +207,8 @@ public:
         return (ReferrerURL*)this;
     }
 
+    static bool isDefaultPortForProtocol(String* port, String* protocol);
+
 protected:
     void resolvePositions();
     void parseURLString(String* baseURL, String* url);

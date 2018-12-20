@@ -30,7 +30,7 @@ class ContentSecurityPolicyDirectiveList : public gc {
 public:
     ContentSecurityPolicyDirectiveList(
         ContentSecurityPolicy* contentSecurityPolicy, String* policy,
-        size_t begin, size_t end, ContentSecurityPolicyHeaderType type,
+        ContentSecurityPolicyHeaderType type,
         ContentSecurityPolicyHeaderSource source);
 
     void* operator new(size_t size);
@@ -38,7 +38,7 @@ public:
 
     void parse(String* policy, size_t begin, size_t end);
 
-    void addDirective(String* name, String* value);
+    void addDirective(String* value);
 
     bool allowSource(CSPDirectives directive, ResourceURL* resUrl);
     bool allowNonceOrSource(CSPDirectives directive, String* nonce,
@@ -97,14 +97,12 @@ private:
     }
 
     void setDirective(ContentSecurityPolicySourceListDirective*& directive,
-                      String* name, String* value);
+                      String* name, const GCVector<StringView>& token);
 
     bool isMatchingStar(ContentSecurityPolicySourceListDirective* directive,
                         ResourceURL* resUrl);
     bool isMatchingSelf(ContentSecurityPolicySourceListDirective* directive,
                         ResourceURL* url);
-
-    static size_t skipSpaceAndNewline(String* src, size_t begin, size_t end);
 };
 }
 
