@@ -1484,13 +1484,15 @@ void dump(Frame* frm, unsigned depth)
     for (unsigned i = 0; i < depth; i++) {
         printf("  ");
     }
+    // print framenode in green for readability
     if (frm->isFlexItem()) {
-        printf("%s(FlexItem)[%d]", frm->name(), (int)depth);
+        printf("\033[0;32m%s(FlexItem)[%d]\033[0m", frm->name(), (int)depth);
     } else if (frm->isGridItem()) {
-        printf("%s(GridItem)[%d]", frm->name(), (int)depth);
+        printf("\033[0;32m%s(GridItem)[%d]\033[0m", frm->name(), (int)depth);
     } else {
-        printf("%s[%d]", frm->name(), (int)depth);
+        printf("\033[0;32m%s[%d]\033[0m", frm->name(), (int)depth);
     }
+
     printf("[%p]", frm);
     if (frm->isAnonymous()) {
         printf("[anonymous block box] ");

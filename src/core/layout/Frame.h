@@ -1538,7 +1538,8 @@ public:
 #ifdef STARFISH_ENABLE_TEST
     virtual void dump(int depth)
     {
-        printf("%s [%p]", name(), this);
+        // print FrameNode type in blue for debugging readability
+        printf("\033[0;34m%s\033[0m [%p]", name(), this);
         if (!isAnonymous()) {
             printf(" node [%p] ", node());
         }

@@ -1039,8 +1039,9 @@ void FrameBlockBox::dump(int depth)
                 for (int k = 0; k < depth + 1; k++) {
                     printf("  ");
                 }
-                printf("LineBox[%p] (%g,%g,%g,%g)\n", m_lineBoxes[i],
-                       (float)m_lineBoxes[i]->m_frameRect.x(),
+                // print 'LineBox' keyword in blue for debugging readability
+                printf("\033[0;34mLineBox\033[0m[%p] (%g,%g,%g,%g)\n",
+                       m_lineBoxes[i], (float)m_lineBoxes[i]->m_frameRect.x(),
                        (float)m_lineBoxes[i]->m_frameRect.y(),
                        (float)m_lineBoxes[i]->m_frameRect.width(),
                        (float)m_lineBoxes[i]->m_frameRect.height());
