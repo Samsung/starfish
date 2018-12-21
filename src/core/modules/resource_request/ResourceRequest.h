@@ -39,6 +39,7 @@ class ResourceRequest;
 class FormDataSetItem;
 class WebOrigin;
 class HeadersData;
+class Resource;
 
 typedef std::vector<char> EntityBody;
 
@@ -106,6 +107,7 @@ class ResourceRequest : public gc,
     friend class NetworkURLResourceRequestJobDelegate;
     friend class UnknownURLResourceRequestJobDelegate;
     friend class EventSource;
+    friend class Resource;
 
 public:
     virtual ~ResourceRequest()

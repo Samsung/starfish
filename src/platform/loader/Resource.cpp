@@ -42,10 +42,12 @@ void Resource::request(RequestData* requestData, bool allowCache)
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
         m_resourceRequest = new ResourceRequest(loader()->document());
-
+        m_resourceRequest->open(requestData);
         String* entityBody = String::emptyString;
 
         ResourceURL* url = requestData->m_url;
+
+        // FIXME : move to the suitable place according to the fetch spec.
         if (url->isDocumentURL()) {
             if (url->asDocumentURL()->formSubmitData()) {
                 FormSubmitData* formSubmitData =
@@ -56,7 +58,8 @@ void Resource::request(RequestData* requestData, bool allowCache)
                         String::createASCIIString(
                             "text/html,application/xhtml+xml,application/"
                             "xml;q=0.9,image/webp,image/apng,*/*;q=0.8"));
-                    requestData->m_method = formSubmitData->m_method;
+                    m_resourceRequest->m_requestData->m_method =
+                        formSubmitData->m_method;
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString(HTTPHeaderMap::kContentType),
                         ResourceRequest::encodeType(formSubmitData->m_enctype));
@@ -67,7 +70,7 @@ void Resource::request(RequestData* requestData, bool allowCache)
 
                     m_resourceRequest->setRequestHeader(
                         String::createASCIIString(HTTPHeaderMap::kOrigin),
-                        requestData->m_referrer->origin());
+                        m_resourceRequest->m_requestData->m_referrer->origin());
 
                     String* nocache = String::createASCIIString("no-cache");
                     m_resourceRequest->setRequestHeader(
@@ -89,12 +92,12 @@ void Resource::request(RequestData* requestData, bool allowCache)
                     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                 }
             }
-            requestData->m_url = url;
+            m_resourceRequest->m_requestData->m_url = url;
         }
 
         m_resourceRequest->addResourceRequestClient(
             new ResourceNetworkRequestClient(this));
-        m_resourceRequest->open(requestData);
+
         prepare();
         m_resourceRequest->send(entityBody, allowCache);
     }
