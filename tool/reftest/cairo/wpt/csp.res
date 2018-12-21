@@ -197,8 +197,8 @@ http://web-platform.test:8000/content-security-policy/media-src/media-src-redir-
 #
 #http://web-platform.test:8000/content-security-policy/meta/combine-header-and-meta-policies.sub.html
 http://web-platform.test:8000/content-security-policy/meta/meta-img-src.html
-#http://web-platform.test:8000/content-security-policy/meta/meta-modified.html
-#http://web-platform.test:8000/content-security-policy/meta/meta-outside-head.sub.html
+http://web-platform.test:8000/content-security-policy/meta/meta-modified.html
+http://web-platform.test:8000/content-security-policy/meta/meta-outside-head.sub.html
 #
 #
 #http://web-platform.test:8000/content-security-policy/navigate-to/anchor-navigation-always-allowed.html
