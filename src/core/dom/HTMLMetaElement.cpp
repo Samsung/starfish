@@ -68,10 +68,6 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
     if (!m_httpEquiv->isEmpty() && !m_content->isEmpty()) {
         if (m_httpEquiv->equalsIgnoreCase("content-language")) {
             document()->setContentLanguage(m_content);
-        } else if (m_httpEquiv->equalsIgnoreCase("Content-Security-Policy")) {
-            document()->contentSecurityPolicy()->didReceiveHeader(
-                m_content, ContentSecurityPolicyHeaderType::Enforce,
-                ContentSecurityPolicyHeaderSource::Meta);
         }
     }
 
@@ -83,6 +79,16 @@ void HTMLMetaElement::didAttributeChanged(QualifiedName name, String* old,
 void HTMLMetaElement::didNodeInsertedToDocumentTree()
 {
     checkPlatformFlags();
+
+    if (m_httpEquiv->equalsIgnoreCase("Content-Security-Policy") &&
+        !m_content->isEmpty()) {
+        Node* parent = parentNode();
+        if (parent && parent->isHTMLHeadElement()) {
+            document()->contentSecurityPolicy()->didReceiveHeader(
+                m_content, ContentSecurityPolicyHeaderType::Enforce,
+                ContentSecurityPolicyHeaderSource::Meta);
+        }
+    }
 }
 
 void HTMLMetaElement::didNodeRemovedFromDocumentTree()
