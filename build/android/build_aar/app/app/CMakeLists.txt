@@ -35,6 +35,7 @@ file(REMOVE ${REMAIN_SHARED_LIBS})
 file(GLOB PREBUILT_SHARED_LIBS
   "${PREBUILT_LIB_PATH}/*.so"
 )
+list(REMOVE_ITEM PREBUILT_SHARED_LIBS ${PREBUILT_LIB_PATH}/libicui18n.so ${PREBUILT_LIB_PATH}/libicuuc.so )
 file(COPY ${PREBUILT_SHARED_LIBS}
      DESTINATION ${PACKAGED_LIB_PATH})
 
@@ -214,13 +215,13 @@ target_link_libraries( # Specifies the target library.
                        jpeg-lib
                        curl-lib
                        crypto-lib
-#                       icui18n-lib
-#                       icuuc-lib
+                       icui18n-lib
+                       icuuc-lib
                        ${PREBUILT_LIB_PATH}/libgif.a
                        ${PREBUILT_LIB_PATH}/libtuv.a
-                       ${PREBUILT_LIB_PATH}/libicui18n.a
-                       ${PREBUILT_LIB_PATH}/libicuuc.a
-                       ${PREBUILT_LIB_PATH}/icudtl_dat.o
+#                       ${PREBUILT_LIB_PATH}/libicui18n.a
+#                       ${PREBUILT_LIB_PATH}/libicuuc.a
+#                       ${PREBUILT_LIB_PATH}/icudtl_dat.o
                        ${z-lib}
                        ${jnig-lib}
                        ${log-lib}
