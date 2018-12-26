@@ -1,4 +1,4 @@
-http://10.113.111.47:7000/xmlhttprequest-recursive-sync-event.html
+http://web-platform.test:7000/xmlhttprequest-recursive-sync-event.html
 test/cairo/reftest/vendor/webkit/fast/animation/request-animation-frame-callback-id.html
 test/cairo/reftest/vendor/webkit/fast/backgrounds/obscured-background-child-style-change.html
 test/cairo/reftest/vendor/webkit/fast/backgrounds/root-background-propagation2.html
