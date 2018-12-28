@@ -172,8 +172,8 @@ public:
     };
     void paintStackingContext(Canvas* canvas,
                               PaintingStackingContextContext& ctx);
-    void fillGraphicsBufferContents(PaintingStackingContextContext& globalCtx);
-    void fillGraphicsBufferContentsWithoutClipRect();
+    bool fillGraphicsBufferContents(PaintingStackingContextContext& globalCtx);
+    bool fillGraphicsBufferContentsWithoutClipRect();
     void compositeStackingContext(Compositor* compositor);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);

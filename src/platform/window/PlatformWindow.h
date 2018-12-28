@@ -260,8 +260,9 @@ protected:
     WebView* m_webView;
     size_t m_renderingAnimator;
     CompositorContext* m_compostiorContext;
-    size_t m_idleCleanerTimerID;
     EventModifierData m_eventModifierData;
+    float m_lastMouseMoveX;
+    float m_lastMouseMoveY;
 
     std::function<void(PlatformWindow* wnd)> m_setNeedsRenderingCallback;
     std::function<void(const RenderResult& renderResult)>

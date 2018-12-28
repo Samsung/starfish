@@ -670,6 +670,8 @@ private:
     Unit::Color m_baseBackgroundColor;
     Unit::Color m_baseForegroundColor;
     LWE::WebSecurityMode m_webSecurityMode;
+
+    static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };
 }
 

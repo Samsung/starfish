@@ -2396,7 +2396,7 @@ void screenShotImpl(PlatformWindow* wnd, const char* path,
     cairo_surface_write_to_png(png_buffer, path);
     cairo_surface_destroy(png_buffer);
 
-    delete buffer;
+    delete[] buffer;
     callback();
 }
 #elif defined(PORT_CANVAS_BACKEND_SKIA)

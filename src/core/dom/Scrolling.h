@@ -35,12 +35,21 @@ public:
     Scrolling(EventTarget* target)
         : m_isScrollTarget(false)
         , m_inVerticalScrolling(false)
+        , m_inVerticalScrollingUp(false)
+        , m_inVerticalScrollingDown(false)
         , m_inHorizontalScrolling(false)
+        , m_inHorizontalScrollingLeft(false)
+        , m_inHorizontalScrollingRight(false)
         , m_pointingEventX(0)
         , m_pointingEventY(0)
+        , m_lastPointingEventX(0)
+        , m_lastPointingEventY(0)
         , m_target(target)
     {
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     bool handleDefaultEvent(Event* event, Window* window, FrameBlockBox* frame,
                             OverflowValue ox, OverflowValue oy);
@@ -51,12 +60,40 @@ public:
     void paintScrollbars(T canvas, FrameBlockBox* frame, OverflowValue ox,
                          OverflowValue oy);
 
+    static void onAnimationFrameHandler(Window* window, void* data);
+
+    bool inVerticalScrollingUp()
+    {
+        return m_inVerticalScrollingUp;
+    }
+
+    bool inVerticalScrollingDown()
+    {
+        return m_inVerticalScrollingDown;
+    }
+
+    bool inHorizontalScrollingLeft()
+    {
+        return m_inHorizontalScrollingLeft;
+    }
+
+    bool inHorizontalScrollingRight()
+    {
+        return m_inHorizontalScrollingRight;
+    }
+
 protected:
-    bool m_isScrollTarget;
-    bool m_inVerticalScrolling;
-    bool m_inHorizontalScrolling;
+    bool m_isScrollTarget : 1;
+    bool m_inVerticalScrolling : 1;
+    bool m_inVerticalScrollingUp : 1;
+    bool m_inVerticalScrollingDown : 1;
+    bool m_inHorizontalScrolling : 1;
+    bool m_inHorizontalScrollingLeft : 1;
+    bool m_inHorizontalScrollingRight : 1;
     float m_pointingEventX;
     float m_pointingEventY;
+    float m_lastPointingEventX;
+    float m_lastPointingEventY;
 
     EventTarget* m_target;
 };

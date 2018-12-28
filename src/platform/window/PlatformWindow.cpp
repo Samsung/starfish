@@ -50,7 +50,8 @@ PlatformWindow::PlatformWindow(Starfish* starfish)
     , m_webView(nullptr)
     , m_renderingAnimator(SIZE_MAX)
     , m_compostiorContext(nullptr)
-    , m_idleCleanerTimerID(0)
+    , m_lastMouseMoveX(std::numeric_limits<float>::max())
+    , m_lastMouseMoveY(std::numeric_limits<float>::max())
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     , m_isButtonOfVirtualCursorClicked(false)
     , m_virtualCursorX(-1)
@@ -118,6 +119,17 @@ void PlatformWindow::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
 
 void PlatformWindow::dispatchMouseEvent(MouseEventKind kind, MouseData data)
 {
+    if (kind == MouseEventKind::MouseEventMove) {
+        if (m_lastMouseMoveX == data.screenX() &&
+            m_lastMouseMoveY == data.screenY()) {
+            return;
+        }
+        m_lastMouseMoveX = data.screenX();
+        m_lastMouseMoveY = data.screenY();
+    } else {
+        m_lastMouseMoveX = data.screenX();
+        m_lastMouseMoveY = data.screenY();
+    }
     data.setScreenX(data.screenX() / webView()->screenInfo().devicePixelRatio);
     data.setScreenY(data.screenY() / webView()->screenInfo().devicePixelRatio);
     data.setClientX(data.clientX() / webView()->screenInfo().devicePixelRatio);

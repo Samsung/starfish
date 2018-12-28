@@ -190,6 +190,8 @@ static void rtDoTest(Document* document)
 }
 #endif
 
+size_t WebView::g_fillingGraphicsBufferTileFrameTimeLimitInMS = 25;
+
 WebView* WebView::create(Starfish* starfish, const char* locale,
                          const char* timezoneID, uint32_t w, uint32_t h,
                          uint32_t defaultFontSize, String* defaultFontName,
@@ -215,6 +217,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_sessionStorageNamespace(nullptr)
     , m_historyManager(nullptr)
     , m_seed((unsigned int)time(NULL))
+    , m_lastRenderingTick(0)
     , m_navigateStartingTime(0)
     , m_currentActiveAnimatorCount(0)
     , m_inRendering(false)
@@ -1400,6 +1403,7 @@ RenderResult WebView::rendering(bool force)
         clearStack<DEFAULT_CLEAR_STACK_SIZE>();
     }
 
+    bool someTilesSkippedPaintingDueToTimeOver = false;
     if (m_needsComposite) {
         INSTALL_PROFILE_TIMER("composite");
         renderResult.didPaintingOrCompositing = true;
@@ -1413,7 +1417,10 @@ RenderResult WebView::rendering(bool force)
                 // fill blank tiles first before using 3d context
                 auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
                 while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
-                    (*iter)->fillGraphicsBufferContentsWithoutClipRect();
+                    if ((*iter)->fillGraphicsBufferContentsWithoutClipRect()) {
+                        someTilesSkippedPaintingDueToTimeOver = true;
+                        break;
+                    }
                     iter++;
                 }
             }
@@ -1543,6 +1550,11 @@ RenderResult WebView::rendering(bool force)
 
     if (timer()->m_requestAnimationFrameHandler.size()) {
         needsContinuousRendering = true;
+    }
+
+    if (someTilesSkippedPaintingDueToTimeOver) {
+        needsContinuousRendering = true;
+        m_needsComposite = true;
     }
 
     if (needsContinuousRendering) {
