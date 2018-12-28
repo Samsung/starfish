@@ -6778,6 +6778,11 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         bool needsToCheckActiveAnimationExecutorInWebView = false;
         bool needsToRecomputeStylePropertyDamage = false;
         bool elementHasAnimation = false;
+        bool isRunningOpacityAnimationBefore =
+            element->isRunningOpacityAnimation();
+        bool isRunningTransformAnimationBefore =
+            element->isRunningTransformAnimation();
+
         AnimationExecutor* executor = element->document()->animationExecutor();
         auto tick =
             element->document()->browsingContext()->styleResolveStartTick();
@@ -6884,6 +6889,11 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
             needsToRecomputeStylePropertyDamage = true;
         }
 
+        bool isRunningOpacityAnimationAfter =
+            element->isRunningOpacityAnimation();
+        bool isRunningTransformAnimationAfter =
+            element->isRunningTransformAnimation();
+
         if (needsToRecomputeStylePropertyDamage) {
             damage = ComputedStyleDamage::ComputedStyleDamageNone;
             memset(damagedKeys, 0, sizeof(damagedKeys));
@@ -6895,6 +6905,20 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
 
             damage = (ComputedStyleDamage)(
                 damage | compareStyle(oldStyle, style, damagedKeys));
+
+            if (isRunningOpacityAnimationAfter !=
+                    isRunningOpacityAnimationBefore &&
+                style->opacity() == 1) {
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamageEstablishesStackingContext);
+            }
+            if (isRunningTransformAnimationAfter !=
+                    isRunningTransformAnimationBefore &&
+                (style->transforms() == nullptr ||
+                 style->transforms()->size() == 0)) {
+                damage = (ComputedStyleDamage)(
+                    ComputedStyleDamageEstablishesStackingContext);
+            }
         }
 
         {
@@ -6904,9 +6928,12 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                 for (size_t i = 0; i < CSSStyleValuePair::KeyKindSize; i++) {
                     if (damagedKeys[i]) {
                         switch (i) {
-#define ADD_CSS_KEYKIND(Name, name, cssname)                              \
-    case CSSStyleValuePair::KeyKind::Name:                                \
-        STARFISH_LOG_INFO("element %p, %s damaged\n", element, #Name ""); \
+#define ADD_CSS_KEYKIND(Name, name, cssname)                                \
+    case CSSStyleValuePair::KeyKind::Name:                                  \
+        STARFISH_LOG_INFO("element %p, #%s, .%s %s damaged\n", element,     \
+                          element->id()->toUTF8NonGCString().data(),        \
+                          element->className()->toUTF8NonGCString().data(), \
+                          #Name "");                                        \
         break;
                             FOR_EACH_STYLE_ATTRIBUTE_TOTAL(ADD_CSS_KEYKIND)
 #undef ADD_CSS_KEYKIND

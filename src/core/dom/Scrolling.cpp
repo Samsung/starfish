@@ -29,8 +29,23 @@
 #include "core/page/Window.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
+#include "core/modules/message_loop/Timer.h"
 
 namespace Starfish {
+
+void* Scrolling::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(Scrolling));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(Scrolling)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(Scrolling, m_target));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(Scrolling));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
 
 bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                                    FrameBlockBox* frame, OverflowValue ox,
@@ -93,24 +108,100 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
 #define STARFISH_SCROLL_THRESHOLD 10
                 unsigned t = STARFISH_SCROLL_THRESHOLD;
 
-                if (std::abs(m_pointingEventY - y) > t &&
-                    verticalScrollEnabled) {
-                    m_inVerticalScrolling = true;
-                } else if (std::abs(m_pointingEventX - x) > t &&
-                           horizontalScrollEnabled) {
-                    m_inHorizontalScrolling = true;
-                }
+                bool inScrolling =
+                    m_inVerticalScrolling || m_inHorizontalScrolling;
+                if (!inScrolling) {
+                    if (std::abs(m_pointingEventY - y) > t &&
+                        verticalScrollEnabled) {
+                        m_inVerticalScrolling = true;
+                    } else if (std::abs(m_pointingEventX - x) > t &&
+                               horizontalScrollEnabled) {
+                        m_inHorizontalScrolling = true;
+                    }
 
-                if (m_inVerticalScrolling || m_inHorizontalScrolling) {
-                    window->browsingContext()
-                        ->webView()
-                        ->addGlobalPointingEventInterceptListener(m_target);
-                    return true;
+                    if (m_inVerticalScrolling || m_inHorizontalScrolling) {
+                        window->browsingContext()
+                            ->webView()
+                            ->addGlobalPointingEventInterceptListener(m_target);
+                        m_lastPointingEventX = x;
+                        m_lastPointingEventY = y;
+                        m_target->webView()->timer()->requestAnimationFrame(
+                            m_target->window(), onAnimationFrameHandler, this);
+                    }
                 }
+                return true;
             }
         }
     }
     return false;
+}
+
+void Scrolling::onAnimationFrameHandler(Window* window, void* data)
+{
+    Scrolling* self = (Scrolling*)data;
+
+    if (!self->m_isScrollTarget) {
+        return;
+    }
+
+    float dx = self->m_lastPointingEventX - self->m_pointingEventX;
+    float dy = self->m_lastPointingEventY - self->m_pointingEventY;
+
+    if (self->m_inVerticalScrolling) {
+        if (dy > 0) {
+            self->m_inVerticalScrollingDown = true;
+            self->m_inVerticalScrollingUp = false;
+        } else {
+            self->m_inVerticalScrollingDown = false;
+            self->m_inVerticalScrollingUp = true;
+        }
+    }
+    if (self->m_inHorizontalScrolling) {
+        if (dy > 0) {
+            self->m_inHorizontalScrollingLeft = true;
+            self->m_inHorizontalScrollingRight = false;
+        } else {
+            self->m_inHorizontalScrollingLeft = false;
+            self->m_inHorizontalScrollingRight = true;
+        }
+    }
+
+    if (self->m_target->isElement()) {
+        if (self->m_inVerticalScrolling) {
+            self->m_target->asElement()->setScrollTop(
+                self->m_target->asElement()->scrollTop() + dy);
+        } else if (self->m_inHorizontalScrolling) {
+            self->m_target->asElement()->setScrollLeft(
+                self->m_target->asElement()->scrollLeft() + dx);
+        }
+    } else {
+        if (self->m_inVerticalScrolling) {
+            self->m_target->asWindow()->scrollTo(
+                self->m_target->asWindow()->scrollX(),
+                self->m_target->asWindow()->scrollY() + dy);
+        } else if (self->m_inHorizontalScrolling) {
+            self->m_target->asWindow()->scrollTo(
+                self->m_target->asWindow()->scrollX() + dx,
+                self->m_target->asWindow()->scrollY());
+        }
+    }
+
+    String* eventType =
+        self->m_target->starfish()->staticStrings()->m_scroll.localName();
+    UIEvent* e = new UIEvent(self->m_target->document(), eventType);
+    e->setView(self->m_target->asWindow());
+    if (self->m_target->document()
+            ->browsingContext()
+            ->isTopLevelBrowsingContext()) {
+        self->m_target->dispatchEventByUA(e);
+    } else {
+        self->m_target->dispatchEventIdleTimeByUA(e);
+    }
+
+    self->m_lastPointingEventX = self->m_pointingEventX;
+    self->m_lastPointingEventY = self->m_pointingEventY;
+    self->m_target->webView()->timer()->requestAnimationFrame(
+        self->m_target->window(), onAnimationFrameHandler, self);
 }
 
 void Scrolling::onGlobalPointingEvent(float x, float y,
@@ -128,41 +219,8 @@ void Scrolling::onGlobalPointingEvent(float x, float y,
         m_inHorizontalScrolling = false;
         m_inVerticalScrolling = false;
     } else if (kind == EventTarget::GlobalPointingEventKindMove) {
-        float dx = m_pointingEventX - x;
-        float dy = m_pointingEventY - y;
         m_pointingEventX = x;
         m_pointingEventY = y;
-        if (m_target->isElement()) {
-            if (m_inVerticalScrolling) {
-                m_target->asElement()->setScrollTop(
-                    m_target->asElement()->scrollTop() + dy);
-            } else if (m_inHorizontalScrolling) {
-                m_target->asElement()->setScrollLeft(
-                    m_target->asElement()->scrollLeft() + dx);
-            }
-        } else {
-            if (m_inVerticalScrolling) {
-                m_target->asWindow()->scrollTo(m_target->asWindow()->scrollX(),
-                                               m_target->asWindow()->scrollY() +
-                                                   dy);
-            } else if (m_inHorizontalScrolling) {
-                m_target->asWindow()->scrollTo(m_target->asWindow()->scrollX() +
-                                                   dx,
-                                               m_target->asWindow()->scrollY());
-            }
-        }
-
-        String* eventType =
-            m_target->starfish()->staticStrings()->m_scroll.localName();
-        UIEvent* e = new UIEvent(m_target->document(), eventType);
-        e->setView(m_target->asWindow());
-        if (m_target->document()
-                ->browsingContext()
-                ->isTopLevelBrowsingContext()) {
-            m_target->dispatchEventByUA(e);
-        } else {
-            m_target->dispatchEventIdleTimeByUA(e);
-        }
     }
 }
 

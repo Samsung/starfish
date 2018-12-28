@@ -83,7 +83,12 @@ GCVector<String*> StorageImpl::getKeyNames()
 
 bool StorageImpl::setItem(String* key, String* value)
 {
-    m_map[key] = value;
+    auto iter = m_map.find(key);
+    if (iter == m_map.end()) {
+        m_map.insert(std::make_pair(key, value));
+    } else {
+        iter->second = value;
+    }
     if (m_storageManager) {
         m_storageManager->setItem(m_webOrigin, key, value);
     }

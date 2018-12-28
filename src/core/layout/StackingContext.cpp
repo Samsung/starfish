@@ -1705,7 +1705,7 @@ static LayoutRect computeWindowRectOnScreen(StackingContext* ctx)
     return windowRect;
 }
 
-void StackingContext::fillGraphicsBufferContentsWithoutClipRect()
+bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 {
     if (needsGraphicsBuffer()) {
         if (!owner()->hasOwnGraphicsBufferMethod()) {
@@ -1734,6 +1734,11 @@ void StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                 LayoutRect windowRect = computeWindowRectOnScreen(this);
                 auto screenMatrix = m_owner->computeScreenMatrix();
 
+                size_t hVisibleTextureStart = hTextureCount;
+                size_t hVisibleTextureEnd = 0;
+                size_t wVisibleTextureStart = wTextureCount;
+                size_t wVisibleTextureEnd = 0;
+
                 for (size_t y = 0; y < hTextureCount; y++) {
                     size_t coveredColsCount = 0;
                     for (size_t x = 0; x < wTextureCount; x++) {
@@ -1758,53 +1763,154 @@ void StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                             screenRect.intersects(tileExtent) &&
                             windowRect.intersects(tileExtent);
 
-                        if (willPaintOnScreen &&
-                            m_rareData->m_graphicsBufferHolder
+                        if (willPaintOnScreen) {
+                            wVisibleTextureStart =
+                                std::min(wVisibleTextureStart, x);
+                            wVisibleTextureEnd =
+                                std::max(wVisibleTextureEnd, x + 1);
+                            hVisibleTextureStart =
+                                std::min(hVisibleTextureStart, y);
+                            hVisibleTextureEnd =
+                                std::max(hVisibleTextureEnd, y + 1);
+                        }
+
+                        coveredColsCount += wTileSize;
+                    }
+                    coveredRowsCount += hTileSize;
+                }
+
+                Scrolling* scrolling = nullptr;
+                if (m_owner->isRootElement()) {
+                    scrolling = m_owner->node()->window()->scrolling();
+                } else {
+                    if (m_owner->node()->isElement() &&
+                        m_owner->node()->asElement()->rareMembers()) {
+                        scrolling = m_owner->node()
+                                        ->asElement()
+                                        ->rareMembers()
+                                        ->asRareElementMembers()
+                                        ->m_scrolling;
+                    }
+                }
+
+                if (scrolling) {
+                    if (scrolling->inVerticalScrollingDown()) {
+                        hVisibleTextureEnd++;
+                    }
+                    if (hVisibleTextureStart != 0 &&
+                        scrolling->inVerticalScrollingUp()) {
+                        hVisibleTextureStart--;
+                    }
+
+                    if (scrolling->inHorizontalScrollingRight()) {
+                        wVisibleTextureEnd++;
+                    }
+                    if (wVisibleTextureStart != 0 &&
+                        scrolling->inHorizontalScrollingLeft()) {
+                        wVisibleTextureStart--;
+                    }
+                }
+
+                tileIndex = 0;
+                coveredRowsCount = 0;
+
+                for (size_t y = 0; y < hTextureCount; y++) {
+                    size_t coveredColsCount = 0;
+                    for (size_t x = 0; x < wTextureCount; x++) {
+                        size_t tileDataX = coveredColsCount;
+                        size_t tileDataY = coveredRowsCount;
+                        size_t tileDataWidth = std::min(
+                            wTileSize,
+                            m_rareData->m_graphicsBufferHolder->bufferWidth() -
+                                coveredColsCount);
+                        size_t tileDataHeight = std::min(
+                            hTileSize,
+                            m_rareData->m_graphicsBufferHolder->bufferHeight() -
+                                coveredRowsCount);
+
+                        LayoutRect tileExtent = computeBoxExtent(
+                            LayoutRect(minX + (LayoutUnit)tileDataX,
+                                       minY + (LayoutUnit)tileDataY,
+                                       tileDataWidth, tileDataHeight),
+                            screenMatrix);
+
+                        if (hVisibleTextureStart <= y &&
+                            y < hVisibleTextureEnd &&
+                            wVisibleTextureStart <= x &&
+                            x < wVisibleTextureEnd) {
+                            if (m_rareData->m_graphicsBufferHolder
                                     ->m_surfaces[tileIndex] == nullptr) {
-                            CanvasSurface* canvasSurface =
-                                CanvasSurface::create(m_owner->document()
-                                                          ->webView()
-                                                          ->platformWindow(),
-                                                      tileDataWidth,
-                                                      tileDataHeight);
-                            Canvas* canvas = Canvas::create(
-                                m_owner->node()->webView(), canvasSurface);
+                                CanvasSurface* canvasSurface =
+                                    CanvasSurface::create(
+                                        m_owner->document()
+                                            ->webView()
+                                            ->platformWindow(),
+                                        tileDataWidth, tileDataHeight);
+                                Canvas* canvas = Canvas::create(
+                                    m_owner->node()->webView(), canvasSurface);
 
-                            canvas->setTextDecorationData(
-                                m_rareData->m_textDecorationData);
+                                canvas->setTextDecorationData(
+                                    m_rareData->m_textDecorationData);
 
-                            // give empty repaint region
-                            // this stage. we will just filling empty tiles if
-                            // needed
-                            RepaintRegion rr;
-                            StackingContext::PaintingStackingContextContext ctx(
-                                true, m_owner->node()
-                                          ->webView()
-                                          ->m_prevDrawnStackingContextInfo,
-                                LayoutRect(0, 0, 0, 0), rr, 0, 0);
+                                // give empty repaint region
+                                // this stage. we will just filling empty tiles
+                                // if
+                                // needed
+                                RepaintRegion rr;
+                                StackingContext::PaintingStackingContextContext
+                                    ctx(true,
+                                        m_owner->node()
+                                            ->webView()
+                                            ->m_prevDrawnStackingContextInfo,
+                                        LayoutRect(0, 0, 0, 0), rr, 0, 0);
 
-                            ctx.layerBaseX = tileDataX;
-                            ctx.layerBaseY = tileDataY;
+                                ctx.layerBaseX = tileDataX;
+                                ctx.layerBaseY = tileDataY;
 
-                            ctx.layerClipRect =
-                                LayoutRect(0, 0, canvasSurface->width(),
-                                           canvasSurface->height());
+                                ctx.layerClipRect =
+                                    LayoutRect(0, 0, canvasSurface->width(),
+                                               canvasSurface->height());
 
-                            canvas->translate(-minX, -minY);
-                            canvas->translate(-ctx.layerBaseX, -ctx.layerBaseY);
+                                canvas->translate(-minX, -minY);
+                                canvas->translate(-ctx.layerBaseX,
+                                                  -ctx.layerBaseY);
 
-                            canvasSurface->clear();
+                                canvasSurface->clear();
 
-                            fillGraphicsBufferContents(canvas, ctx);
+                                fillGraphicsBufferContents(canvas, ctx);
 
-                            delete canvas;
+                                delete canvas;
 
-                            canvasSurface->unMapBufferAndNotifyUpdateRegion(
-                                0, 0, canvasSurface->bufferWidth(),
-                                canvasSurface->bufferHeight());
+                                canvasSurface->unMapBufferAndNotifyUpdateRegion(
+                                    0, 0, canvasSurface->bufferWidth(),
+                                    canvasSurface->bufferHeight());
 
-                            m_rareData->m_graphicsBufferHolder
-                                ->m_surfaces[tileIndex] = canvasSurface;
+                                m_rareData->m_graphicsBufferHolder
+                                    ->m_surfaces[tileIndex] = canvasSurface;
+
+                                auto tick = longTickCount();
+                                if (tick -
+                                        m_owner->node()
+                                            ->webView()
+                                            ->lastRenderingTick() >
+                                    WebView::
+                                            g_fillingGraphicsBufferTileFrameTimeLimitInMS *
+                                        1000) {
+                                    STARFISH_LOG_INFO(
+                                        "drop filling graphics buffer contents "
+                                        "because time over\n");
+                                    return true;
+                                }
+                            }
+                        } else {
+                            if (m_rareData->m_graphicsBufferHolder
+                                    ->m_surfaces[tileIndex]) {
+                                m_rareData->m_graphicsBufferHolder
+                                    ->m_surfaces[tileIndex]
+                                    ->detachNativeBuffer();
+                                m_rareData->m_graphicsBufferHolder
+                                    ->m_surfaces[tileIndex] = nullptr;
+                            }
                         }
 
                         tileIndex++;
@@ -1813,16 +1919,21 @@ void StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 
                     coveredRowsCount += hTileSize;
                 }
+
+                STARFISH_ASSERT(tileIndex == wTextureCount * hTextureCount);
             }
         }
     }
+
+    return false;
 }
 
-void StackingContext::fillGraphicsBufferContents(
+bool StackingContext::fillGraphicsBufferContents(
     PaintingStackingContextContext& globalCtx)
 {
     STARFISH_ASSERT(needsGraphicsBuffer());
 
+    bool drawnSomething = false;
     LayoutRect visibleRect = StackingContext::visibleRect();
     LayoutUnit minX = visibleRect.x();
     LayoutUnit maxX = visibleRect.maxX();
@@ -1833,7 +1944,7 @@ void StackingContext::fillGraphicsBufferContents(
     size_t bufferHeight = (int)(maxY - minY);
 
     if (bufferWidth == 0 || bufferHeight == 0) {
-        return;
+        return drawnSomething;
     }
 
     LayoutRect deviceLayerClipRect;
@@ -1887,7 +1998,7 @@ void StackingContext::fillGraphicsBufferContents(
         if (iter != globalCtx.prevDrawnStackingContextInfoMap.end()) {
             iter->second.graphicsBufferHolder = nullptr;
         }
-        return;
+        return drawnSomething;
     }
     size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
     size_t hTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
@@ -2051,6 +2162,8 @@ void StackingContext::fillGraphicsBufferContents(
                         canvasSurface->unMapBufferAndNotifyUpdateRegion(0, 0, 0,
                                                                         0);
                     }
+
+                    drawnSomething = true;
                 }
             }
 
@@ -2060,6 +2173,8 @@ void StackingContext::fillGraphicsBufferContents(
 
         coveredRowsCount += hTileSize;
     }
+
+    return drawnSomething;
 }
 
 void StackingContext::paintStackingContext(Canvas* canvas,
@@ -2347,7 +2462,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         compositor->drawSurface(
             m_rareData->m_graphicsBufferHolder->m_surfaces[0],
             Unit::Rect(minX, minY, bufferWidth, bufferHeight));
-    } else {
+    } else if (m_rareData->m_graphicsBufferHolder) {
         size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
         size_t hTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
         size_t wTextureCount =
@@ -2360,11 +2475,6 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
         compositor->save();
         compositor->translate(minX, minY);
-
-        LayoutRect screenRect = computeScreenRect(this);
-        LayoutRect windowRect = computeWindowRectOnScreen(this);
-
-        auto screenMatrix = m_owner->computeScreenMatrix();
 
         for (size_t y = 0; y < hTextureCount; y++) {
             size_t coveredColsCount = 0;
@@ -2380,29 +2490,12 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     m_rareData->m_graphicsBufferHolder->bufferHeight() -
                         coveredRowsCount);
 
-                LayoutRect tileExtent =
-                    computeBoxExtent(LayoutRect(minX + (LayoutUnit)tileDataX,
-                                                minY + (LayoutUnit)tileDataY,
-                                                tileDataWidth, tileDataHeight),
-                                     screenMatrix);
-
-                bool willPaintOnScreen = screenRect.intersects(tileExtent) &&
-                                         windowRect.intersects(tileExtent);
-
                 if (m_rareData->m_graphicsBufferHolder->m_surfaces[tileIndex]) {
-                    if (willPaintOnScreen) {
-                        compositor->drawSurface(
-                            m_rareData->m_graphicsBufferHolder
-                                ->m_surfaces[tileIndex],
-                            Unit::Rect(tileDataX, tileDataY, tileDataWidth,
-                                       tileDataHeight));
-                    } else {
-                        m_rareData->m_graphicsBufferHolder
-                            ->m_surfaces[tileIndex]
-                            ->detachNativeBuffer();
-                        m_rareData->m_graphicsBufferHolder
-                            ->m_surfaces[tileIndex] = nullptr;
-                    }
+                    compositor->drawSurface(m_rareData->m_graphicsBufferHolder
+                                                ->m_surfaces[tileIndex],
+                                            Unit::Rect(tileDataX, tileDataY,
+                                                       tileDataWidth,
+                                                       tileDataHeight));
                 }
                 tileIndex++;
                 coveredColsCount += wTileSize;
