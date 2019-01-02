@@ -31,7 +31,14 @@
 #include <Ecore_IMF_Evas.h>
 #include <Evas_GL.h>
 
+#ifdef STREAMLINE_PROFILE
 #include "streamline_annotate.h"
+#else
+#define ANNOTATE_SETUP
+#define ANNOTATE_CHANNEL_COLOR(channel, color, str)
+#define ANNOTATE_CHANNEL_END(channel)
+#define ANNOTATE_GREEN 0x00ff001b
+#endif
 
 #if defined(PORT_WINDOW_BACKEND_GL)
 extern Evas_GL_API* g_evasGLAPI;
