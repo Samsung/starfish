@@ -37,7 +37,14 @@
 #include <Ecore_Evas.h>
 #include <Ecore_IMF.h>
 
+#ifdef STREAMLINE_PROFILE
 #include "streamline_annotate.h"
+#else
+#define ANNOTATE_SETUP
+#define ANNOTATE_CHANNEL_COLOR(channel, color, str)
+#define ANNOTATE_CHANNEL_END(channel)
+#define ANNOTATE_GREEN 0x00ff001b
+#endif
 
 typedef EGLSyncKHR(EGLAPIENTRYP PFNEGLCREATESYNCKHRPROC)(
     EGLDisplay dpy, EGLenum type, const EGLint* attrib_list);

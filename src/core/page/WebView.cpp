@@ -71,8 +71,15 @@
 #include "core/style/ComputedStyle.h"
 #include "platform/file/File.h"
 
+#ifdef STREAMLINE_PROFILE
 #include "streamline_annotate.h"
 ANNOTATE_DEFINE;
+#else
+#define ANNOTATE_SETUP
+#define ANNOTATE_CHANNEL_COLOR(channel, color, str)
+#define ANNOTATE_CHANNEL_END(channel)
+#define ANNOTATE_BLUE 0xff00001b
+#endif
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 #include "core/extra/Avplay.h"
