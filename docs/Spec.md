@@ -444,6 +444,7 @@ section are supported.
 |  | attribute | dir | Returns the dir attribute specifies the element's text directionality |
 |  | attribute | title | Reflects the "title" content attribute of HTMLElement. |
 |  | attribute | lang |  Reflects the "lang" content attribute of HTMLElement. |
+|  | attribute | nonce | Reflects the cryptographic number used by Content Security Policy. It's supported only on `HTMLScriptElement` and `HTMLStyleElement`. |
 |  | method | void click() | Acts as if the element was clicked. |
 |  | attribute | tabIndex | Reflects the value of the "tabindex" content attribute of HTMLElement. Its default value is 0 for elements that are focusable and −1 for elements that are not focusable. |
 |  | method | void focus() | This method sets focus on the specified element, if it can be focused. |
@@ -1435,15 +1436,17 @@ Note : The above things is partially supported because Starfish does not support
 
 ### Content Security Policy
 
-This section describes the list of supported Directives and their corresponding Sources of Content Security Policies. To enable CSP, configuring a policy via [HTML meta Element](https://www.w3.org/TR/CSP2/#delivery-html-meta-element) is required. The configuration with [Content-Security-Policy HTTP header](https://www.w3.org/TR/CSP2/#content-security-policy-header-field) isn't supported yet.
+This section describes the list of supported `Directives` and their corresponding `Sources` of Content Security Policies. To enable CSP, configuring a policy via [Content-Security-Policy HTTP header](https://www.w3.org/TR/CSP2/#content-security-policy-header-field) or [HTML meta Element](https://www.w3.org/TR/CSP2/#delivery-html-meta-element) is required.
 
 #### Supported Directives
 
 | Directive      | Description | Note |
 |----------------|-------------|------|
 | [base-uri](https://www.w3.org/TR/CSP2/#directive-base-uri) | The base-uri directive restricts the URLs that can be used to specify the document base URL. | |
+| [child-src](https://www.w3.org/TR/CSP2/#directive-child-src) | The child-src directive governs the creation of nested browsing contexts (e.g. iframe and frame navigations). | |
 | [connect-src](https://www.w3.org/TR/CSP2/#directive-connect-src) | The connect-src directive restricts which URLs the protected resource can load using script interfaces. | |
 | [default-src](https://www.w3.org/TR/CSP2/#directive-default-src) | The default-src directive sets a default source list for a number of directives. | |
+| [form-action](https://www.w3.org/TR/CSP2/#directive-form-action) | The form-action restricts which URLs can be used as the action of HTML form elements. | |
 | [frame-src](https://www.w3.org/TR/CSP2/#directive-frame-src) | The frame-src directive restricts from where the protected resource can embed frames. | |
 | [img-src](https://www.w3.org/TR/CSP2/#directive-img-src) | The img-src directive restricts from where the protected resource can load images. | |
 | [media-src](https://www.w3.org/TR/CSP2/#directive-media-src) | The media-src directive restricts from where the protected resource can load video, audio, and associated text tracks. | |
