@@ -34,14 +34,7 @@ AtomicString AtomicString::createAtomicString(Starfish* starfish, String* str)
     if (starfish->m_atomicStringMap.end() == iter) {
         String* ns = str;
         if (str->isStringView()) {
-            auto data = str->bufferAccessData();
-            if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
-                ns = new StringDataASCII((char*)data.buffer, data.length);
-            } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
-                ns = new StringDataBMP((char16_t*)data.buffer, data.length);
-            } else {
-                ns = new StringDataUTF32((char32_t*)data.buffer, data.length);
-            }
+            ns = String::fromStringView(str);
         }
         starfish->m_atomicStringMap.insert(ns);
         return AtomicString(ns);
@@ -53,14 +46,8 @@ AtomicString AtomicString::createAtomicString(Starfish* starfish, String* str)
 AtomicString AtomicString::createAtomicString(Starfish* starfish,
                                               StringView str)
 {
-    auto iter = starfish->m_atomicStringMap.find(&str);
-    if (starfish->m_atomicStringMap.end() == iter) {
-        auto sv = new StringView(str);
-        starfish->m_atomicStringMap.insert(sv);
-        return AtomicString(sv);
-    } else {
-        return AtomicString(iter.operator*());
-    }
+    return AtomicString::createAtomicString(starfish,
+                                            dynamic_cast<String*>(&str));
 }
 
 AtomicString AtomicString::createAtomicString(Starfish* starfish,

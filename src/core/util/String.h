@@ -150,6 +150,7 @@ namespace Starfish {
 
 class StringDataASCII;
 class String;
+class StringView;
 
 template <typename CharType>
 inline bool isASCII(CharType c)
@@ -356,6 +357,8 @@ public:
     static String* fromUTF8(const char* src);
     static String* fromUTF8(const char* src, size_t len);
     static String* fromUTF16(const char16_t* src, size_t len);
+    static String* fromStringView(StringView view);
+    static String* fromStringView(String* view);
     static String* createASCIIString(const char c);
     static String* createASCIIString(const char* src);
     static String* createASCIIStringWithNoGC(const char* src);
