@@ -269,6 +269,10 @@ ResourceURL::ResourceURL(String* url)
 ResourceURL::ResourceURL(String* url, String* baseURL)
     : m_baseURL(baseURL)
 {
+    if (m_baseURL->isStringView()) {
+        m_baseURL = String::fromStringView(m_baseURL);
+    }
+
     unsigned numLeadingSpaces = 0;
     unsigned numTrailingSpaces = 0;
     size_t urlLength = url->length();
@@ -295,6 +299,11 @@ ResourceURL::ResourceURL(String* url, String* baseURL)
 
     url = ResourceURL::createPercentEncodingString(url, false);
     m_string = url;
+
+    if (m_string->isStringView()) {
+        m_string = String::fromStringView(m_string);
+    }
+
     m_protocolEnd = m_usernameStart = m_usernameEnd = m_passwordEnd =
         m_hostEnd = m_portEnd = m_pathEnd = m_searchEnd = m_hashEnd = 0;
     m_isValid = false;
@@ -650,6 +659,9 @@ void ResourceURL::parseURLString(String* baseURL, String* url)
     }
 
     m_urlString = url;
+    if (m_urlString->isStringView()) {
+        m_urlString = String::fromStringView(m_urlString);
+    }
 
     // protocol
     if (m_urlString->startsWith("file", false)) {

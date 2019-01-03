@@ -728,6 +728,26 @@ String* String::fromUTF16(const char16_t* src, size_t len)
     return new StringDataASCII(std::move(ascii));
 }
 
+String* String::fromStringView(StringView view)
+{
+    return fromStringView(dynamic_cast<String*>(&view));
+}
+
+String* String::fromStringView(String* view)
+{
+    STARFISH_ASSERT(view->isStringView());
+    String* ret;
+    auto data = view->bufferAccessData();
+    if (data.bufferDataKind == StringBufferAccessData::ASCIIData) {
+        ret = new StringDataASCII((char*)data.buffer, data.length);
+    } else if (data.bufferDataKind == StringBufferAccessData::BMPData) {
+        ret = new StringDataBMP((char16_t*)data.buffer, data.length);
+    } else {
+        ret = new StringDataUTF32((char32_t*)data.buffer, data.length);
+    }
+    return ret;
+}
+
 String* String::createASCIIString(const char c)
 {
     char s[2] = { c, '\0' };

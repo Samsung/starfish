@@ -289,6 +289,11 @@ public:
         return ret;
     }
 
+    virtual bool isStringView()
+    {
+        return true;
+    }
+
     void* operator new(size_t size)
     {
         STARFISH_ASSERT(size == sizeof(EscargotStringView));
