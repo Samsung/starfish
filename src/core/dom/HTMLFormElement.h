@@ -214,14 +214,14 @@ public:
 private:
     void submit(HTMLElement* submitter);
     void submitData(ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
-                    EncodeType encodeType, String* method);
+                    EncodeType encodeType, String* method, String* target);
 
     void mutateActionUrl(ResourceURL* url,
                          GCVector<FormDataSetItem*>* formDataSet,
-                         EncodeType enctype, String* method);
+                         EncodeType enctype, String* method, String* target);
     void submitAsEntityBody(ResourceURL* url,
                             GCVector<FormDataSetItem*>* formDataSet,
-                            EncodeType enctype, String* method);
+                            EncodeType enctype, String* method, String* target);
 
     void clearPlannedNavigationTask();
     bool isFormAssociatedElement(Node* node);

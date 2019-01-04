@@ -36,6 +36,7 @@
 #include "core/dom/HTMLLabelElement.h"
 #include "core/dom/HTMLLegendElement.h"
 #include "core/dom/HTMLBaseElement.h"
+#include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/Node.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/dom/Traverse.h"
@@ -746,36 +747,58 @@ void HTMLFormElement::submit(HTMLElement* submitter)
         }
     }
 
-    if (url->isHTTPFamilyURL() || url->isFileURL()) {
-        submitData(url, formDataSet, formEnctype, formMethod);
-    } else {
-        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-    }
-}
-
-void HTMLFormElement::submitData(ResourceURL* url,
-                                 GCVector<FormDataSetItem*>* formDataSet,
-                                 EncodeType enctype, String* method)
-{
     if (!document()->contentSecurityPolicy()->allowSource(
             CSPDirectives::FormAction, url)) {
         String* eventType = starfish()->staticStrings()->m_error.localName();
         Event* e = new Event(document(), eventType, EventInit(false, false));
         dispatchEventIdleTimeByUA(e);
         return;
+    } else {
+        if (url->isHTTPFamilyURL() || url->isFileURL()) {
+            submitData(url, formDataSet, formEnctype, formMethod, formTarget);
+        } else {
+            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        }
     }
+}
+
+void HTMLFormElement::submitData(ResourceURL* url,
+                                 GCVector<FormDataSetItem*>* formDataSet,
+                                 EncodeType enctype, String* method,
+                                 String* target)
+{
     if (method->equals("GET")) {
-        mutateActionUrl(url, formDataSet, enctype, method);
+        mutateActionUrl(url, formDataSet, enctype, method, target);
     } else if (method->equals("POST")) {
-        submitAsEntityBody(url, formDataSet, enctype, method);
+        submitAsEntityBody(url, formDataSet, enctype, method, target);
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 }
 
+static HTMLElement* findHTMLIFrameElement(Node* root, String* targetName)
+{
+    HTMLElement* targetElement = nullptr;
+
+    if (!targetName->equals(String::emptyString)) {
+        targetElement =
+            (HTMLElement*)Traverse::findDescendant(root, [&](Node* child) {
+                if (child->isHTMLIFrameElement() &&
+                    child->asHTMLIFrameElement()->browsingContext() &&
+                    child->asHTMLIFrameElement()->nameAttr()->equals(
+                        targetName)) {
+                    return true;
+                }
+                return false;
+            });
+    }
+    return targetElement;
+}
+
 void HTMLFormElement::mutateActionUrl(ResourceURL* url,
                                       GCVector<FormDataSetItem*>* formDataSet,
-                                      EncodeType enctype, String* method)
+                                      EncodeType enctype, String* method,
+                                      String* target)
 {
     if (m_plannedNavigationTaskId != (size_t)-1) {
         webView()->messageLoop()->removeIdler(m_plannedNavigationTaskId);
@@ -787,21 +810,32 @@ void HTMLFormElement::mutateActionUrl(ResourceURL* url,
         url->urlString()->concat("?")->concat(dataToSubmit->toString());
 
     DocumentURL* urlToOpen = new DocumentURL(urlStr, dataToSubmit);
-    auto fn = [](size_t handle, void* data1, void* data2) {
+    auto fn = [](size_t handle, void* data1, void* data2, void* data3) {
         HTMLFormElement* formElement = (HTMLFormElement*)data1;
         DocumentURL* urlToOpen = (DocumentURL*)data2;
-        formElement->document()->window()->location()->assign(
-            urlToOpen, formElement->document()->documentURI());
+        HTMLIFrameElement* iframeElement = (HTMLIFrameElement*)data3;
+
+        if (iframeElement) {
+            iframeElement->navigate(
+                urlToOpen, HistoryManagerAction::Add,
+                new ReferrerURL(formElement->document()->documentURI()));
+        } else {
+            formElement->document()->window()->location()->assign(
+                urlToOpen, formElement->document()->documentURI());
+        }
+
         formElement->clearPlannedNavigationTask();
     };
 
+    auto targetElement = findHTMLIFrameElement(document(), target);
+
     m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
-        document()->browsingContext(), fn, this, urlToOpen);
+        document()->browsingContext(), fn, this, urlToOpen, targetElement);
 }
 
 void HTMLFormElement::submitAsEntityBody(
     ResourceURL* url, GCVector<FormDataSetItem*>* formDataSet,
-    EncodeType enctype, String* method)
+    EncodeType enctype, String* method, String* target)
 {
     if (enctype == EncodeType::ApplicationXWWWFormURLEncoded) {
         if (m_plannedNavigationTaskId != (size_t)-1) {
@@ -813,18 +847,30 @@ void HTMLFormElement::submitAsEntityBody(
 
         DocumentURL* urlToOpen =
             new DocumentURL(url->urlString(), dataToSubmit);
-        auto fn = [](size_t handle, void* data1, void* data2) {
+        auto fn = [](size_t handle, void* data1, void* data2, void* data3) {
             HTMLFormElement* formElement = (HTMLFormElement*)data1;
             DocumentURL* urlToOpen = (DocumentURL*)data2;
-            // force open as the url does not change in method="post"
-            formElement->document()->window()->location()->assign(
-                urlToOpen,
-                new ReferrerURL(formElement->document()->documentURI()), true);
+            HTMLIFrameElement* iframeElement = (HTMLIFrameElement*)data3;
+
+            if (iframeElement) {
+                iframeElement->navigate(
+                    urlToOpen, HistoryManagerAction::Add,
+                    new ReferrerURL(formElement->document()->documentURI()));
+            } else {
+                // force open as the url does not change in method="post"
+                formElement->document()->window()->location()->assign(
+                    urlToOpen,
+                    new ReferrerURL(formElement->document()->documentURI()),
+                    true);
+            }
+
             formElement->clearPlannedNavigationTask();
         };
 
+        auto targetElement = findHTMLIFrameElement(document(), target);
+
         m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
-            document()->browsingContext(), fn, this, urlToOpen);
+            document()->browsingContext(), fn, this, urlToOpen, targetElement);
     } else if (enctype == EncodeType::MultiPartFormData) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     } else if (enctype == EncodeType::TextPlain) {
