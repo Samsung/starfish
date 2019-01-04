@@ -226,7 +226,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         }
 #ifdef STARFISH_ENABLE_HTTPCACHE
         HTTPCache* cache = nwd->request->starfish()->httpCache();
-        if (cache) {
+        if (cache && !nwd->request->isRedirected()) {
             // FIXME : remove '!nwd->corsPreflightFlag'
             // When 'network-or-cache-fetch' is implemented, the response for
             // request that has useCorsPreflightFlag can be cached.

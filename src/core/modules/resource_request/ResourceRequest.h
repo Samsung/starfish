@@ -152,22 +152,19 @@ public:
 
     uint16_t status() const
     {
-        if (!m_responseData) {
-            return 200;
-        }
+        STARFISH_ASSERT(m_responseData);
         return m_responseData->m_status;
     }
 
     bool isRedirected() const
     {
+        STARFISH_ASSERT(m_responseData);
         return m_responseData->m_redirected;
     }
 
     bool isSync() const
     {
-        if (!m_requestData) {
-            return false;
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_syncLevel == RequestSyncLevel::AlwaysSync;
     }
 
@@ -190,17 +187,13 @@ public:
 
     ResponseType responseType()
     {
-        if (!m_responseData) {
-            return ResponseType::Default;
-        }
+        STARFISH_ASSERT(m_responseData);
         return m_responseData->m_type;
     }
 
     String* responseMimeType()
     {
-        if (!m_responseData) {
-            return String::emptyString;
-        }
+        STARFISH_ASSERT(m_responseData);
         return m_responseData->m_mimeType;
     }
 
@@ -226,50 +219,37 @@ public:
 
     ResourceURL* url()
     {
-        if (!m_requestData) {
-            return new ResourceURL(String::emptyString);
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_url;
     }
 
     ReferrerURL* referrer()
     {
-        if (!m_requestData) {
-            return new ReferrerURL(String::emptyString);
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_referrer;
     }
 
     String* method()
     {
-        if (!m_requestData) {
-            return String::emptyString;
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_method;
     }
 
     RequestMode requestMode()
     {
-        if (!m_requestData) {
-            return RequestMode::CORS;
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_mode;
     }
 
     RequestDestination requestDestination()
     {
-        if (!m_requestData) {
-            return RequestDestination::Empty;
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_destination;
     }
 
     bool isSubresourceRequest()
     {
-        if (!m_requestData) {
-            return false;
-        }
-
+        STARFISH_ASSERT(m_requestData);
         switch (m_requestData->m_destination) {
         case RequestDestination::Audio:
         case RequestDestination::AudioWorkLet:
@@ -302,62 +282,50 @@ public:
 
     RequestCredentials requestCredentials()
     {
-        if (!m_requestData) {
-            return RequestCredentials::Omit;
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_credentials;
     }
 
     void setRequestCredentials(RequestCredentials value)
     {
-        if (m_requestData) {
-            m_requestData->m_credentials = value;
-        }
+        STARFISH_ASSERT(m_requestData);
+        m_requestData->m_credentials = value;
     }
 
     ResponseTainting responseTainting()
     {
-        if (!m_requestData) {
-            return ResponseTainting::Basic;
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_responseTainting;
     }
 
     void setResponseTainting(ResponseTainting value)
     {
-        if (m_requestData) {
-            m_requestData->m_responseTainting = value;
-        }
+        STARFISH_ASSERT(m_requestData);
+        m_requestData->m_responseTainting = value;
     }
 
     bool useCorsPreflightFlag()
     {
-        if (!m_requestData) {
-            return false;
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_useCorsPreflightFlag;
     }
 
     void setUseCorsPreflightFlag(bool value)
     {
-        if (m_requestData) {
-            m_requestData->m_useCorsPreflightFlag = value;
-        }
+        STARFISH_ASSERT(m_requestData);
+        m_requestData->m_useCorsPreflightFlag = value;
     }
 
     bool unsafeRequestFlag()
     {
-        if (!m_requestData) {
-            return false;
-        }
+        STARFISH_ASSERT(m_requestData);
         return m_requestData->m_unsafeRequestFlag;
     }
 
     void setUnsafeRequestFlag(bool value)
     {
-        if (m_requestData) {
-            m_requestData->m_unsafeRequestFlag = value;
-        }
+        STARFISH_ASSERT(m_requestData);
+        m_requestData->m_unsafeRequestFlag = value;
     }
 
     bool isCORSsafelistedResponseHeaderName(const std::string& name);

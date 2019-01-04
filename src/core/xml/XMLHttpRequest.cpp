@@ -258,15 +258,6 @@ void XMLHttpRequest::initResponseData()
 
 void XMLHttpRequest::send(Nullable<String*> body)
 {
-    if (!document()->contentSecurityPolicy()->allowSource(
-            CSPDirectives::ConnectSrc, m_resourceRequest->url())) {
-        ProgressEvent* pe =
-            new ProgressEvent(scriptBindingInstance()->ownerDocument(),
-                              starfish()->staticStrings()->m_error.localName());
-        dispatchEventIdleTimeByUA(pe);
-        return;
-    }
-
     if (body.hasValue()) {
         send(body.getValue());
     } else {
@@ -293,6 +284,15 @@ void XMLHttpRequest::send(String* body)
         m_resourceRequest->method()->equals("HEAD")) {
         // TODO: The body argument should be Document or BodyInit.
         body = String::emptyString;
+    }
+
+    if (!document()->contentSecurityPolicy()->allowSource(
+            CSPDirectives::ConnectSrc, m_resourceRequest->url())) {
+        ProgressEvent* pe =
+            new ProgressEvent(scriptBindingInstance()->ownerDocument(),
+                              starfish()->staticStrings()->m_error.localName());
+        dispatchEventIdleTimeByUA(pe);
+        return;
     }
 
     m_resourceRequest->send(body, false);
@@ -391,7 +391,8 @@ void XMLHttpRequest::setResponseType(XMLHttpRequestResponseType type)
     }
     // If the JavaScript global environment is a document environment and the
     // synchronous flag is set, throw an "InvalidAccessError" exception.
-    if (m_resourceRequest->isSync()) {
+    if (m_resourceRequest->readyState() != ReadyState::Unset &&
+        m_resourceRequest->isSync()) {
         throw new DOMException(
             scriptBindingInstance()->ownerDocument(),
             DOMException::INVALID_ACCESS_ERR,
@@ -551,7 +552,8 @@ uint32_t XMLHttpRequest::timeout() const
 
 void XMLHttpRequest::setTimeout(uint32_t timeout)
 {
-    if (m_resourceRequest->isSync() == true) {
+    if (m_resourceRequest->readyState() != ReadyState::Unset &&
+        m_resourceRequest->isSync() == true) {
         throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
