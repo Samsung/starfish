@@ -165,7 +165,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-timeout-reused.html
 http://web-platform.test:8000/xhr/access-control-response-with-body.htm
 http://web-platform.test:8000/xhr/send-entity-body-basic.htm
 #http://web-platform.test:8000/xhr/send-after-setting-document-domain.htm
-#http://web-platform.test:8000/xhr/send-authentication-basic-cors.htm
+http://web-platform.test:8000/xhr/send-authentication-basic-cors.htm
 #http://web-platform.test:8000/xhr/allow-lists-starting-with-comma.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-sync-block-scripts.html
 #http://web-platform.test:8000/xhr/send-sync-blocks-async.htm
@@ -229,7 +229,7 @@ http://web-platform.test:8000/xhr/send-response-upload-event-loadend.htm
 http://web-platform.test:8000/xhr/xmlhttprequest-timeout-overrides.html
 #http://web-platform.test:8000/xhr/open-sync-open-send.htm
 #http://web-platform.test:8000/xhr/response-data-blob.htm
-#http://web-platform.test:8000/xhr/send-authentication-basic-cors-not-enabled.htm
+http://web-platform.test:8000/xhr/send-authentication-basic-cors-not-enabled.htm
 http://web-platform.test:8000/xhr/setrequestheader-before-open.htm
 #http://web-platform.test:8000/xhr/responseType-document-in-worker.html
 http://web-platform.test:8000/xhr/event-progress.htm
@@ -248,7 +248,7 @@ http://web-platform.test:8000/xhr/access-control-basic-post-success-no-content-t
 http://web-platform.test:8000/xhr/getresponseheader-special-characters.htm
 #http://web-platform.test:8000/xhr/firing-events-http-no-content-length.html
 http://web-platform.test:8000/xhr/timeout-sync.htm
-#http://web-platform.test:8000/xhr/send-redirect-to-non-cors.htm
+http://web-platform.test:8000/xhr/send-redirect-to-non-cors.htm
 #http://web-platform.test:8000/xhr/open-open-send.htm
 #http://web-platform.test:8000/xhr/overridemimetype-loading-state.htm
 http://web-platform.test:8000/xhr/open-method-case-insensitive.htm

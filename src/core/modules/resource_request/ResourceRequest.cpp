@@ -326,9 +326,7 @@ void ResourceRequest::send(String* body, bool allowCache)
 
 bool ResourceRequest::isSameOriginRequest()
 {
-    if (!m_requestWebOrigin) {
-        return false;
-    }
+    STARFISH_ASSERT(m_requestWebOrigin);
     return document()->webOrigin()->isSameOrigin(m_requestWebOrigin);
 }
 
