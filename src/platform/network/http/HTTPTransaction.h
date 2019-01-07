@@ -116,8 +116,8 @@ public:
 
 private:
     HTTPTransaction();
-    void preprocess(bool preflight);
-    void postprocess(bool preflight);
+    void preprocess(bool useNewHandle);
+    void postprocess(bool useNewHandle);
     void registerCurlHandlers();
 
     std::unique_ptr<HTTPRequest> m_httpRequest;

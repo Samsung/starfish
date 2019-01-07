@@ -375,7 +375,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         break;
     }
 
-    if (m_orgProxy->requestMode() == RequestMode::Navigate) {
+    if (m_orgProxy->requestMode() == RequestMode::Navigate ||
+        m_orgProxy->isSubresourceRequest()) {
         includeCredentials = true;
     }
     auto unsafeHeaders = FetchUtils::corsUnsafeRequestHeaderNames(headers);
@@ -460,13 +461,22 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
     //  * Max-Forwards, Origin, Proxy-Authorization, Range, Referer, TE,
     //  * User-Agent ...
 
-    auto it = headers.headerMap().find(HTTPHeaderMap::kAcceptLanguage);
-    if (it == headers.headerMap().end()) {
-        std::string tmpStr;
-        tmpStr = m_orgProxy->webView()->locale().getName();
-        std::replace(tmpStr.begin(), tmpStr.end(), '_', '-');
-        tmpStr = tmpStr + " , en-US , en";
-        headers.append(HTTPHeaderMap::kAcceptLanguage, tmpStr);
+    bool hasAcceptLanguage = false;
+    auto it = headers.headerMap().begin();
+    for (; it != headers.headerMap().end(); ++it) {
+        if (StringUtils::equalsIgnoreCase(it->first,
+                                          HTTPHeaderMap::kAcceptLanguage)) {
+            hasAcceptLanguage = true;
+            break;
+        }
+    }
+
+    if (!hasAcceptLanguage) {
+        std::string value;
+        value = m_orgProxy->webView()->locale().getName();
+        std::replace(value.begin(), value.end(), '_', '-');
+        value = value + " , en-US , en";
+        headers.headerMap()[HTTPHeaderMap::kAcceptLanguage] = value;
     }
 
     headers.append(HTTPHeaderMap::kUserAgent,
@@ -880,7 +890,8 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     request->m_responseData->m_status =
         nwd->httpTransaction->httpResponse().responseCode();
 
-    if (nwd->httpTransaction->httpResponse().isSuccessfulResponseStatus()) {
+    if (nwd->httpTransaction->httpResponse().isSuccessfulResponseStatus() ||
+        request->m_responseData->m_status == 400) {
         if ((rawHeader.compare("\r\n") == 0) ||
             (rawHeader.compare("\n") == 0)) {
             if (nwd->corsFlag &&
