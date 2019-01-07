@@ -27,10 +27,7 @@ ENDIF()
 set(OPENGL_LIB GLESv3)
 
 # Copy prebuilt library to packged lib path.
-file(GLOB REMAIN_SHARED_LIBS
-  "${PACKAGED_LIB_PATH}/*.*"
-)
-file(REMOVE ${REMAIN_SHARED_LIBS})
+execute_process(COMMAND @rm ${PACKAGED_LIB_PATH}/*)
 
 file(GLOB PREBUILT_SHARED_LIBS
   "${PREBUILT_LIB_PATH}/*.so"
