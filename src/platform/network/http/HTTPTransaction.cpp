@@ -53,11 +53,12 @@ HTTPTransaction::~HTTPTransaction()
 {
 }
 
-void HTTPTransaction::preprocess(bool preflight)
+void HTTPTransaction::preprocess(bool useNewHandle)
 {
     m_httpResponse.reset(new HTTPResponse());
     m_curlsh = NetworkSharedResourceManager::getInstance()->curlShareHandle();
-    if (preflight) {
+
+    if (useNewHandle) {
         m_curl = curl_easy_init();
     } else {
         CurlHandleData cd =
@@ -81,13 +82,6 @@ void HTTPTransaction::preprocess(bool preflight)
     curl_easy_setopt(m_curl, CURLOPT_NOSIGNAL, 1L);
     curl_easy_setopt(m_curl, CURLOPT_TIMEOUT_MS, m_timeout);
 
-    if (preflight) {
-        curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 0L);
-        curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 0);
-    } else {
-        curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
-        curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
-    }
     curl_easy_setopt(m_curl, CURLOPT_AUTOREFERER, 1L);
     curl_easy_setopt(m_curl, CURLOPT_NOPROGRESS, 0L);
 
@@ -124,19 +118,21 @@ void HTTPTransaction::postprocess(bool preflight)
 
 void HTTPTransaction::start()
 {
-    preprocess(false);
+    bool includeCredentials = m_httpRequest->includeCredentials();
+
+    preprocess(!includeCredentials);
 
 #if defined(STARFISH_IGNORE_SSL_VERIFYPEER) || defined(STARFISH_ENABLE_TEST)
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYPEER, 0L);
     curl_easy_setopt(m_curl, CURLOPT_SSL_VERIFYHOST, 0L);
 #endif
-
+    curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 1L);
+    curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 128);
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
 
     struct curl_slist* list = m_httpRequest->headers().generateCurlList();
     curl_easy_setopt(m_curl, CURLOPT_HTTPHEADER, list);
 
-    bool includeCredentials = m_httpRequest->includeCredentials();
     if (includeCredentials) {
         curl_easy_setopt(m_curl, CURLOPT_SHARE, m_curlsh);
         if (NetworkSharedResourceManager::getInstance()
@@ -177,13 +173,15 @@ void HTTPTransaction::start()
     updateTransactionStatus();
     curl_slist_free_all(list);
 
-    postprocess(false);
+    postprocess(!includeCredentials);
 }
 
 void HTTPTransaction::startPreFlightRequest()
 {
     preprocess(true);
 
+    curl_easy_setopt(m_curl, CURLOPT_FOLLOWLOCATION, 0L);
+    curl_easy_setopt(m_curl, CURLOPT_MAXREDIRS, 0);
     curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST, "OPTIONS");
     curl_easy_setopt(m_curl, CURLOPT_URL, m_httpRequest->url().data());
 

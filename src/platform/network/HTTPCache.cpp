@@ -84,6 +84,9 @@ bool HTTPCache::lock()
         if (flock(m_lockfd, LOCK_EX | LOCK_NB) != -1) {
             STARFISH_LOG_INFO("[HTTPCache] Lock cache dir\n");
             return true;
+        } else {
+            close(m_lockfd);
+            m_lockfd = -1;
         }
     }
     STARFISH_LOG_ERROR("[HTTPCache] Failed to lock cache dir\n");

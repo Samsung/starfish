@@ -97,7 +97,9 @@ bool HTTPHeaderMap::extractHeaderListValues(std::vector<std::string>& out,
         out.push_back(value);
         prev_pos = ++pos;
     }
-    out.push_back(values.substr(prev_pos, pos - prev_pos)); // Last word
+    std::string value = values.substr(prev_pos, pos - prev_pos); // Last word
+    StringUtils::trim(value);
+    out.push_back(value);
     return true;
 }
 
