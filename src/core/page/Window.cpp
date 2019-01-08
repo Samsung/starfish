@@ -426,6 +426,17 @@ bool Window::scrollToWithoutLayout(double x, double y)
                     browsingContext()->sourceElement()->setNeedsPainting();
                 }
             }
+
+            String* eventType =
+                starfish()->staticStrings()->m_scroll.localName();
+            UIEvent* e = new UIEvent(document(), eventType);
+            e->setView(this);
+            if (document()->browsingContext()->isTopLevelBrowsingContext()) {
+                dispatchEventByUA(e);
+            } else {
+                dispatchEventIdleTimeByUA(e);
+            }
+
             return true;
         }
     }
