@@ -186,18 +186,6 @@ void Scrolling::onAnimationFrameHandler(Window* window, void* data)
         }
     }
 
-    String* eventType =
-        self->m_target->starfish()->staticStrings()->m_scroll.localName();
-    UIEvent* e = new UIEvent(self->m_target->document(), eventType);
-    e->setView(self->m_target->asWindow());
-    if (self->m_target->document()
-            ->browsingContext()
-            ->isTopLevelBrowsingContext()) {
-        self->m_target->dispatchEventByUA(e);
-    } else {
-        self->m_target->dispatchEventIdleTimeByUA(e);
-    }
-
     self->m_lastPointingEventX = self->m_pointingEventX;
     self->m_lastPointingEventY = self->m_pointingEventY;
     self->m_target->webView()->timer()->requestAnimationFrame(
