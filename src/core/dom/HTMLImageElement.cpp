@@ -280,7 +280,7 @@ void HTMLImageElement::loadImage(String* src)
     reqData->m_referrer = new ReferrerURL(document()->documentURI(), policy);
     reqData->m_destination = RequestDestination::Image;
 
-    if (reqData->m_referrer->isFileURL()) {
+    if (reqData->m_url->isFileURL()) {
         reqData->m_syncLevel = RequestSyncLevel::AlwaysSync;
     } else {
         reqData->m_syncLevel = RequestSyncLevel::SyncIfAlreadyLoaded;
