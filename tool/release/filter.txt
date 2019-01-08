@@ -11,6 +11,7 @@ P /.github
 - .gbs.conf
 - *.list
 - .clang-format
+- .circleci
 
 - *debug*.manifest
 - *.tar.gz
