@@ -63,7 +63,7 @@ public:
     }
 
     bool locked();
-    void setLocked(bool lock);
+    void lock();
     void releaseLock();
     bool disturbed();
     bool isDisturbedOrLocked();

@@ -635,6 +635,16 @@ bool Window::checkSecurityPolicy()
         CSPDirectives::ScriptSrc);
 }
 
+Promise* Window::fetch(RequestInfo& input)
+{
+    return Fetch::fetch(this, input);
+}
+
+Promise* Window::fetch(RequestInfo& input, RequestInit& init)
+{
+    return Fetch::fetch(this, input, init);
+}
+
 DEFINE_EVENT_LISTENER(Window, abort);
 DEFINE_EVENT_LISTENER(Window, blur);
 DEFINE_EVENT_LISTENER(Window, click);

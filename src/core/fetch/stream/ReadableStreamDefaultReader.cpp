@@ -30,7 +30,7 @@ ReadableStreamDefaultReader::ReadableStreamDefaultReader(Document* document,
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_stream(stream)
     , m_pendingCount(0)
-    , m_locked(true)
+    , m_locked(false)
     , m_disturbed(false)
     , m_state(ReadableStreamState::Readable)
     , m_closedPromise(new Promise(m_scriptBindingInstance))
@@ -41,6 +41,7 @@ Promise* ReadableStreamDefaultReader::read()
 {
     Promise* promise = new Promise(m_scriptBindingInstance);
     m_disturbed = true;
+
     if (m_state == ReadableStreamState::Closed ||
         m_state == ReadableStreamState::Errored) {
         promise->reject(scriptUndefined());

@@ -222,6 +222,11 @@ bool Response::ok()
     return 200 <= status() && 299 >= status();
 }
 
+void Response::setOk(bool ok)
+{
+    m_responseData.m_ok = ok;
+}
+
 String* Response::statusText()
 {
     return m_responseData.m_statusText;

@@ -1,0 +1,5 @@
+// https://fetch.spec.whatwg.org/#fetch-method
+
+partial interface Window {
+  Promise<Response> fetch(RequestInfo input, optional RequestInit init);
+};
