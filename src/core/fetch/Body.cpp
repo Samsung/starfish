@@ -81,6 +81,7 @@ Promise* Body::arrayBuffer()
         promise->reject(createScriptValue(error));
     } else {
         if (m_bodyInit.hasValue()) {
+            m_readableStream->lock();
             m_promise = promise;
 
             BodyInit body = m_bodyInit.getValue();
@@ -119,6 +120,7 @@ Promise* Body::blob()
         promise->reject(createScriptValue(error));
     } else {
         if (m_bodyInit.hasValue()) {
+            m_readableStream->lock();
             m_promise = promise;
 
             BodyInit body = m_bodyInit.getValue();
@@ -159,6 +161,7 @@ Promise* Body::json()
         promise->reject(createScriptValue(error));
     } else {
         if (m_bodyInit.hasValue()) {
+            m_readableStream->lock();
             m_promise = promise;
 
             BodyInit body = m_bodyInit.getValue();
@@ -208,6 +211,7 @@ Promise* Body::text()
         promise->reject(createScriptValue(error));
     } else {
         if (m_bodyInit.hasValue()) {
+            m_readableStream->lock();
             m_promise = promise;
 
             BodyInit body = m_bodyInit.getValue();

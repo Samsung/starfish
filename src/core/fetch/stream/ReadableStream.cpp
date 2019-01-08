@@ -83,9 +83,11 @@ ReadableStreamDefaultReader* ReadableStream::getReader()
 {
     auto state = m_reader->state();
     if (state == ReadableStreamState::Closed ||
-        state == ReadableStreamState::Errored) {
+        state == ReadableStreamState::Errored || locked()) {
         throw new DOMException(document(), DOMException::Code::SCRIPT_TYPE_ERR);
     }
+
+    lock();
     return m_reader;
 }
 
@@ -94,9 +96,9 @@ bool ReadableStream::locked()
     return m_reader->locked();
 }
 
-void ReadableStream::setLocked(bool locked)
+void ReadableStream::lock()
 {
-    m_reader->setLocked(locked);
+    m_reader->setLocked(true);
 }
 
 void ReadableStream::releaseLock()

@@ -95,6 +95,7 @@ public:
     void setMimeType(String* mimeType);
 
     bool ok();
+    void setOk(bool ok);
 
     Headers* headers()
     {

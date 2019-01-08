@@ -21,6 +21,7 @@
 
 #include "core/dom/EventTarget.h"
 #include "core/dom/Scrolling.h"
+#include "core/fetch/Fetch.h"
 
 namespace Starfish {
 
@@ -334,6 +335,9 @@ public:
     void dispatchErrorEvent(ErrorEventInit& errorInfo);
 
     bool checkSecurityPolicy();
+
+    Promise* fetch(RequestInfo& input);
+    Promise* fetch(RequestInfo& input, RequestInit& init);
 
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
