@@ -166,7 +166,8 @@ Document* DOMParser::parseFromString(String* str, String* type)
         char* cStr = (char*)utf8String.data();
         try {
             doc.parse<rapidxml::parse_doctype_node |
-                      rapidxml::parse_comment_nodes>(cStr);
+                      rapidxml::parse_comment_nodes |
+                      rapidxml::parse_validate_closing_tags>(cStr);
             XMLDocument* document =
                 new XMLDocument(window(), window()->scriptBindingInstance(),
                                 DOMParser::document()->documentURI(),
@@ -187,6 +188,9 @@ Document* DOMParser::parseFromString(String* str, String* type)
             strncpy(buffer, err.where<char>(), 16);
             errStr += buffer;
             return DOMParser::parseFromString(String::fromUTF8(errStr.data()),
+                                              String::fromUTF8("text/html"));
+        } catch (DOMException* e) {
+            return DOMParser::parseFromString(e->message(),
                                               String::fromUTF8("text/html"));
         }
     } else {

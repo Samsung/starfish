@@ -25,6 +25,7 @@
 #include "core/dom/DOMParser.h"
 #include "core/dom/ProgressEvent.h"
 #include "core/fileapi/Blob.h"
+#include "core/extra/MimeType.h"
 #include "core/xml/XMLHttpRequest.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/dom/WebOrigin.h"
@@ -36,6 +37,7 @@
 #include "core/fetch/Response.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/csp/SecurityPolicyViolationEvent.h"
+#include "core/dom/xml/XMLSerializer.h"
 
 namespace Starfish {
 
@@ -123,10 +125,30 @@ public:
                 }
             } else if (request->readyState() == ReadyState::Done) {
                 if (!request->isError()) {
-                    if (m_xhr->m_responseType ==
-                            XMLHttpRequestResponseType::Empty ||
+                    auto mimeType =
+                        MimeType::parseFromString(request->responseMimeType());
+                    if (mimeType.subtype()->contains("xml") ||
                         m_xhr->m_responseType ==
-                            XMLHttpRequestResponseType::Text) {
+                            XMLHttpRequestResponseType::Document) {
+                        void* buffer = calloc(
+                            1, m_xhr->m_resourceRequest->response().size());
+                        memcpy(buffer,
+                               m_xhr->m_resourceRequest->response().data(),
+                               m_xhr->m_resourceRequest->response().size());
+                        DOMParser* parser = new DOMParser(m_xhr->document());
+                        m_xhr->m_responseXML = parser->parseFromString(
+                            String::fromUTF8(static_cast<const char*>(buffer)),
+                            request->responseMimeType());
+                        free(buffer);
+                        if (!m_xhr->m_responseXML->isXMLDocument()) {
+                            m_xhr->m_responseXML = nullptr;
+                        }
+                        m_xhr->m_resourceRequest->response().clear();
+                        m_xhr->m_resourceRequest->response().shrink_to_fit();
+                    } else if (m_xhr->m_responseType ==
+                                   XMLHttpRequestResponseType::Empty ||
+                               m_xhr->m_responseType ==
+                                   XMLHttpRequestResponseType::Text) {
                         TextConverter textConverter(
                             m_xhr->m_resourceRequest->responseMimeType(),
                             String::fromUTF8("UTF-8"),
@@ -172,20 +194,6 @@ public:
                         m_xhr->m_responseArrayBuffer = createArrayBuffer(
                             m_xhr->scriptBindingInstance(), buffer,
                             m_xhr->m_resourceRequest->response().size());
-                        m_xhr->m_resourceRequest->response().clear();
-                        m_xhr->m_resourceRequest->response().shrink_to_fit();
-                    } else if (m_xhr->m_responseType ==
-                               XMLHttpRequestResponseType::Document) {
-                        void* buffer = calloc(
-                            1, m_xhr->m_resourceRequest->response().size());
-                        memcpy(buffer,
-                               m_xhr->m_resourceRequest->response().data(),
-                               m_xhr->m_resourceRequest->response().size());
-                        DOMParser* parser = new DOMParser(m_xhr->document());
-                        m_xhr->m_responseXML = parser->parseFromString(
-                            String::fromUTF8(static_cast<const char*>(buffer)),
-                            request->responseMimeType());
-                        free(buffer);
                         m_xhr->m_resourceRequest->response().clear();
                         m_xhr->m_resourceRequest->response().shrink_to_fit();
                     } else {
@@ -480,8 +488,9 @@ ScriptValue XMLHttpRequest::response() const
 {
     ScriptValue result;
 
-    if (m_responseType == XMLHttpRequestResponseType::Empty ||
-        m_responseType == XMLHttpRequestResponseType::Text) {
+    if ((m_responseType == XMLHttpRequestResponseType::Empty ||
+         m_responseType == XMLHttpRequestResponseType::Text) &&
+        m_responseXML == nullptr) {
         result = scriptStringToScriptValue(createScriptString(responseText()));
     } else if (m_responseType == XMLHttpRequestResponseType::Json) {
         result = m_responseJsonObject;
@@ -493,8 +502,14 @@ ScriptValue XMLHttpRequest::response() const
         }
     } else if (m_responseType == XMLHttpRequestResponseType::ArrayBuffer) {
         result = m_responseArrayBuffer;
-    } else if (m_responseType == XMLHttpRequestResponseType::Document) {
-        result = m_responseXML->scriptValue();
+    } else if (m_responseXML) {
+        if (m_responseType == XMLHttpRequestResponseType::Document) {
+            result = m_responseXML->scriptValue();
+        } else {
+            result = scriptStringToScriptValue(
+                createScriptString(XMLSerializer::serializeToXML(
+                    m_responseXML->documentElement(), true)));
+        }
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
