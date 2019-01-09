@@ -99,6 +99,10 @@ void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
              nwd->needsToHandleError)) {
             nwd->helper->abortHandlerWrapper(nwd);
             return nullptr;
+        } else if (nwd->httpTransaction->httpResponse()
+                       .isRedirectionResponseStatus()) {
+            nwd->helper->abortHandlerWrapper(nwd);
+            return nullptr;
         }
         Locker<Mutex> locker(*nwd->request->m_mutex);
         // TODO : Below codes will be removed after refactoring HTTPTransaction

@@ -102,7 +102,8 @@ bool FetchUtils::isCorsSafelistedRequestHeader(const std::string name,
         }
         return true;
     } else if (lower == "dpr" || lower == "downlink" || lower == "save-data" ||
-               lower == "viewport-width" || lower == "width") {
+               lower == "viewport-width" || lower == "width" ||
+               lower == "device-memory") {
         // TODO : If value, once extracted, is failure, then return false.
         return true;
     }
@@ -139,7 +140,7 @@ bool FetchUtils::isValidLanguageValue(const std::string& value)
         if ((isASCIILower(value[i]) || isASCIIUpper(value[i]) ||
              isASCIIDigit(value[i]) || value[i] == 0x20 || value[i] == 0x2A ||
              value[i] == 0x2C || value[i] == 0x2D || value[i] == 0x2E ||
-             value[i] == 0x3B || value[i] == 0x3D)) {
+             value[i] == 0x3B || value[i] == 0x3D || value[i] == 0x5F)) {
             continue;
         } else {
             return false;

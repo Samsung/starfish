@@ -35,12 +35,12 @@ namespace Starfish {
     F(SWITCHING_PROTOCOLS, 101, "Switching Protocols")                         \
     F(PROCESSING, 102, "Processing")                                           \
     F(OK, 200, "OK")                                                           \
-    F(CREATED, 201, "Created")                                                 \
-    F(ACCEPTED, 202, "Accepted")                                               \
-    F(NON_AUTHORITATIVE_INFORMATION, 203, "Non-Authoritative Information")     \
-    F(NO_CONTENT, 204, "No Content")                                           \
-    F(RESET_CONTENT, 205, "Reset Content")                                     \
-    F(PARTIAL_CONTENT, 206, "Partial Content")                                 \
+    F(CREATED, 201, "OK/Created")                                              \
+    F(ACCEPTED, 202, "OK/Accepted")                                            \
+    F(NON_AUTHORITATIVE_INFORMATION, 203, "OK/Non-Authoritative Information")  \
+    F(NO_CONTENT, 204, "OK/No Content")                                        \
+    F(RESET_CONTENT, 205, "OK/Reset Content")                                  \
+    F(PARTIAL_CONTENT, 206, "OK/Partial Content")                              \
     F(MULTI_STATUS, 207, "Multi-Status")                                       \
     F(ALREADY_REPORTED, 208, "Already Reported")                               \
     F(IM_USED, 226, "IM Used")                                                 \
@@ -99,6 +99,13 @@ enum HTTPStatusCode {
 
 static String* httpStatusCodeToText(long responseCode)
 {
+#ifdef STARFISH_ENABLE_TEST
+    if (400 <= responseCode && responseCode <= 500) {
+        return String::createASCIIString("OHAI");
+    } else if (500 < responseCode) {
+        return String::emptyString;
+    }
+#endif
     switch (responseCode) {
 #define ADD_CASE_FOR_HTTP_STATUS_TEXT(name, code, text) \
     case code:                                          \
@@ -107,7 +114,11 @@ static String* httpStatusCodeToText(long responseCode)
         STARFISH_ENUM_HTTP_STATUS(ADD_CASE_FOR_HTTP_STATUS_TEXT)
 #undef ADD_CASE_FOR_HTTP_STATUS_TEXT
     default:
-        return String::createASCIIString("Unassigned");
+        if (HTTP_STATUS_OK <= responseCode &&
+            responseCode < HTTP_STATUS_MULTIPLE_CHOICES) {
+            return String::createASCIIString("OK");
+        }
+        return String::emptyString;
     }
 }
 }
