@@ -172,6 +172,14 @@ void FrameInputBox::layout(LayoutContext& ctx,
             fontSize = Length(Length::Fixed, std::min(width, height));
         }
 
+        // Aligning type="checkbox" to baseline if no valign is given
+        String* verticalAlign =
+            textEditable->asHTMLInputElement()->getAttributeOrEmpty(
+                ctx.starfish()->staticStrings()->m_valign);
+        if (verticalAlign->equals(String::emptyString)) {
+            style()->setVerticalAlign(VerticalAlignValue::BaselineVAlignValue);
+        }
+
         style()->setFontSize(fontSize);
         style()->loadFont(textEditable);
         // TODO: propagate fontsize

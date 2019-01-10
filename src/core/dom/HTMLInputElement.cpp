@@ -678,6 +678,8 @@ bool HTMLInputElement::ignoreLineBreaks()
         return true;
     } else if (typeString->equals("number")) {
         return true;
+    } else if (typeString->equals("checkbox")) {
+        return true;
     }
     return false;
 }
