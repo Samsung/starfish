@@ -1103,6 +1103,7 @@ wpt_others_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/csp.res basic -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/webstorage.res basic -p$(TEST_NPROCS)
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/cors.res basic -p$(TEST_NPROCS)
+	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/cookies.res basic -p$(TEST_NPROCS)
 
 wpt_pwa_cairo:
 	./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_basic.res basic -p$(TEST_NPROCS)

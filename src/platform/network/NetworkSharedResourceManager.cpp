@@ -34,6 +34,38 @@
 #define CURLHANDLE_CACHE_IDLE_TIME_LIMIT_S 0.25
 
 namespace Starfish {
+
+#ifdef STARFISH_ENABLE_TEST
+static void dumpCookies(CURL* curl, const char* message)
+{
+    CURLcode res;
+    struct curl_slist* cookies;
+    struct curl_slist* nc;
+    int i;
+    STARFISH_LOG_INFO("=========Dump cookie : %s=========\n", message);
+    STARFISH_LOG_INFO("Cookies, curl knows:\n");
+    res = curl_easy_getinfo(curl, CURLINFO_COOKIELIST, &cookies);
+    if (res != CURLE_OK) {
+        STARFISH_LOG_INFO("Curl curl_easy_getinfo failed: %s\n",
+                          curl_easy_strerror(res));
+        STARFISH_LOG_INFO("===================================\n");
+        return;
+    }
+    nc = cookies;
+    i = 1;
+    while (nc) {
+        STARFISH_LOG_INFO("[%d]: %s\n", i, nc->data);
+        nc = nc->next;
+        i++;
+    }
+    if (i == 1) {
+        STARFISH_LOG_INFO("(none)\n");
+    }
+    curl_slist_free_all(cookies);
+    STARFISH_LOG_INFO("===================================\n");
+}
+#endif
+
 #if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
 static pthread_mutex_t* sslLockarray;
 
@@ -120,10 +152,27 @@ static void appendMatchingCookie(String* cookie, String* domain, String* path,
     if (!domainMatch(&tokens[0], domain)) {
         return;
     }
-    int index = path->find(&tokens[2]);
-    if (index) {
+    GCVector<StringView> pathTokens;
+    StringUtils::tokenize(path, "/", 1, pathTokens);
+    GCVector<StringView> pathTokensFromCookie;
+    StringUtils::tokenize(tokens[2].substring(), "/", 1, pathTokensFromCookie);
+    if (pathTokens.size() < pathTokensFromCookie.size()) {
         return;
     }
+
+    for (size_t i = 0;
+         i < pathTokensFromCookie.size() && pathTokensFromCookie.size() != 1;
+         ++i) {
+        String* p1 = pathTokens[i].substring();
+        String* p2 = pathTokensFromCookie[i].substring();
+        if (i == pathTokensFromCookie.size() - 1 && p2->isEmpty()) {
+            break;
+        }
+        if (!p1->equals(p2)) {
+            return;
+        }
+    }
+
     time_t now = 0;
     time(&now);
     // Use int64_t to explicitly specify the width of bits.
@@ -436,11 +485,6 @@ String* NetworkSharedResourceManager::cookeis(ResourceURL* url)
     if (cookieList) {
         String* domain = url->hostname();
         String* path = url->pathname();
-        size_t idx = path->lastIndexOf('/');
-        if (idx != SIZE_MAX) {
-            path = path->substring(0, idx);
-        }
-
         StringBuilder cookiesBuilder;
         for (struct curl_slist* p = cookieList; p; p = p->next) {
             String* cookie = String::fromUTF8(p->data);
@@ -462,15 +506,20 @@ void NetworkSharedResourceManager::setCookies(Document* document,
         return;
     }
     curl_easy_setopt(curl, CURLOPT_SHARE, m_curlShareHandle);
-
     if (m_cookieStoreFilePath.compare("") != 0) {
         curl_easy_setopt(curl, CURLOPT_COOKIEJAR, m_cookieStoreFilePath.data());
     }
+#ifdef STARFISH_ENABLE_TEST
+// dumpCookies(curl, "Before setCookie");
+#endif
     String* cookie = transformetoNetscapeCookieFormat(document, url, value);
     STARFISH_ASSERT(cookie->containsOnlyASCIIChars());
     STARFISH_ASSERT(cookie->bufferAccessData().isNullTerminated);
     curl_easy_setopt(curl, CURLOPT_COOKIELIST,
                      cookie->bufferAccessData().asciiData());
+#ifdef STARFISH_ENABLE_TEST
+// dumpCookies(curl, "Affter setCookie");
+#endif
     curl_easy_cleanup(curl);
 }
 } // namespace Starfish
