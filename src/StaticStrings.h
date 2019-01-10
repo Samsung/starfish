@@ -513,6 +513,10 @@ public:
     QualifiedName m_transitionend;
     QualifiedName m_transitioncancel;
     QualifiedName m_open;
+    QualifiedName m_ttsstart;
+    QualifiedName m_onttsstart;
+    QualifiedName m_ttsend;
+    QualifiedName m_onttsend;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
     QualifiedName m_sourceopen;

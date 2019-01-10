@@ -29,6 +29,7 @@
 #endif
 
 namespace Starfish {
+class Element;
 class TTS : public gc, public WebViewHoldable {
 public:
     TTS(WebView* webView)
@@ -63,8 +64,13 @@ public:
         return m_mode;
     }
 
+    Element* element()
+    {
+        return m_element;
+    }
+
     void destroy();
-    void speech(String* text, bool forced = false);
+    void speech(Element* element, String* text);
     const char* state(int s);
 
 private:
@@ -78,6 +84,7 @@ private:
 #if defined(STARFISH_TIZEN)
     tts_h m_handle;
 #endif
+    Element* m_element;
     bool m_isTTSEnabled;
     int m_state;
     LWE::TTSMode m_mode;

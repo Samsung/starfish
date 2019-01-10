@@ -21,9 +21,14 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/dom/Document.h"
+#include "core/dom/Element.h"
+#include "core/dom/Event.h"
+#include "core/page/Window.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/tts/TTS.h"
 #include "core/page/WebView.h"
+
 #include <Elementary.h>
 #include "core/modules/message_loop/MessageLoop.h"
 #include <vconf/vconf.h>
@@ -53,33 +58,36 @@ void stateChangedCB(tts_h ttsHandle, tts_state_e previous, tts_state_e current,
                       ttsData->state(previous), ttsData->state(current));
 }
 
+void utteranceErrorCB(tts_h tts, int utteranceId, tts_error_e reason,
+                      void* data)
+{
+    STARFISH_LOG_INFO("TTS: utteranceErrorCB [ID : %d][Error : %d] \n",
+                      utteranceId, (int)reason);
+}
+
 void utteranceStartedCB(tts_h ttsHandle, int utteranceId, void* data)
 {
-    // TODO: If Needed
     TTS* ttsData = (TTS*)data;
     if (ttsData) {
-        // String* eventName =
-        //    request->starFish()->staticStrings()->m_ttsStart.localName();
-        // Event* e = new Event(m_eventSource->document(), eventName);
-        // e->setBubbles(false);
-        // e->setCancelable(false);
-        // e->setComposed(false);
-        // m_eventSource->dispatchEventByUA(m_eventSource, e);
+        Element* element = ttsData->element();
+        String* eventName =
+            element->starfish()->staticStrings()->m_ttsstart.localName();
+        Event* e = new Event(element->document(), eventName);
+
+        element->window()->dispatchEventByUA(e);
     }
 }
 
 void utterenceCompletedCB(tts_h tts_handle, int utteranceId, void* data)
 {
-    // TODO: If Needed
     TTS* ttsData = (TTS*)data;
     if (ttsData) {
-        // String* eventName =
-        //    request->starFish()->staticStrings()->m_ttsEnd.localName();
-        // Event* e = new Event(m_eventSource->document(), eventName);
-        // e->setBubbles(false);
-        // e->setCancelable(false);
-        // e->setComposed(false);
-        // m_eventSource->dispatchEventByUA(m_eventSource, e);
+        Element* element = ttsData->element();
+        String* eventName =
+            element->starfish()->staticStrings()->m_ttsend.localName();
+        Event* e = new Event(element->document(), eventName);
+
+        element->window()->dispatchEventByUA(e);
     }
 }
 
@@ -118,6 +126,19 @@ void TTS::destroy()
         if ((ret = tts_unset_state_changed_cb(m_handle)) != TTS_ERROR_NONE) {
             STARFISH_LOG_ERROR("tts_unset_state_changed_cb failed : %d", ret);
         }
+        if ((ret = tts_unset_utterance_started_cb(m_handle)) !=
+            TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("tts_unset_utterance_started_cb failed : %d",
+                               ret);
+        }
+        if ((ret = tts_unset_error_cb(m_handle)) != TTS_ERROR_NONE) {
+            STARFISH_LOG_ERROR("tts_unset_error_cb failed : %d", ret);
+        }
+        if ((ret = tts_unset_utterance_completed_cb(m_handle)) !=
+            TTS_ERROR_NONE) {
+            STARFISH_LOG_INFO("tts_unset_utterance_completed_cb failed : %d",
+                              ret);
+        }
         if ((ret = tts_destroy(m_handle)) != TTS_ERROR_NONE) {
             STARFISH_LOG_ERROR("tts_destroy failed : %d", ret);
         }
@@ -129,40 +150,33 @@ void TTS::destroy()
     }
 }
 
-void TTS::speech(String* text, bool forced)
+void TTS::speech(Element* element, String* text)
 {
     if (!text->equals(String::emptyString)) {
         auto u8String = text->toUTF8NonGCString();
         char* buf = (char*)malloc(u8String.length() + 1);
         memcpy(buf, u8String.data(), u8String.length());
         buf[u8String.length()] = 0;
+        m_element = element;
 
         struct Dummy {
             TTS* tts;
             char* buf;
-            bool forced;
         };
 
         Dummy* d = new Dummy;
         d->tts = this;
         d->buf = buf;
-        d->forced = forced;
 
         ecore_main_loop_thread_safe_call_async(
             [](void* data) -> void {
                 Dummy* d = (Dummy*)data;
                 TTS* tts = d->tts;
                 char* text = d->buf;
-                bool forced = d->forced;
-                LWE::TTSMode mode = tts->mode();
 
-                if (mode == LWE::TTSMode::Forced || forced == true) {
-                    STARFISH_LOG_INFO("[tts_play] speech TV : %s\n", text);
-                    tts->startPlay(text);
-                } else {
-                    STARFISH_LOG_INFO("[elm_access_say] speech TV: %s\n", text);
-                    elm_access_say(text);
-                }
+                STARFISH_LOG_INFO("[TTS Play] speech TV : %s\n", text);
+                tts->startPlay(text);
+
                 free(text);
                 delete d;
             },
@@ -196,6 +210,11 @@ bool TTS::createHandle()
     if ((ret = tts_set_state_changed_cb(m_handle, stateChangedCB, this)) !=
         TTS_ERROR_NONE) {
         STARFISH_LOG_ERROR("tts_set_state_changed_cb failed : %d", ret);
+        return false;
+    }
+    if ((ret = tts_set_error_cb(m_handle, utteranceErrorCB, this)) !=
+        TTS_ERROR_NONE) {
+        STARFISH_LOG_ERROR("tts_set_error_cb failed : %d", ret);
         return false;
     }
     if ((ret = tts_set_utterance_started_cb(m_handle, utteranceStartedCB,
@@ -248,7 +267,6 @@ bool TTS::addText(const char* text)
     int ret = 0;
     int utt_id = 0;
 
-    // TODO : Do we need this API?
     if ((ret = tts_stop(m_handle)) != TTS_ERROR_NONE) {
         STARFISH_LOG_ERROR("tts_stop failed : %d", ret);
         return false;

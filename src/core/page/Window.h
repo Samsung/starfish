@@ -435,6 +435,8 @@ public:
     // DECLARE_EVENT_LISTENER(unhandledrejection);
     DECLARE_EVENT_LISTENER(unload);
     DECLARE_EVENT_LISTENER(scroll);
+    DECLARE_EVENT_LISTENER(ttsstart);
+    DECLARE_EVENT_LISTENER(ttsend);
 #undef VIRTUAL
 #undef OVERRIDE
 
