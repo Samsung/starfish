@@ -673,7 +673,7 @@ bool Element::handleDefaultEvent(Event* event)
             TextAlternativeHelper tah(wv);
             String* altText = tah.getComputedTextAlternative(this);
             if (altText->length()) {
-                wv->tts()->speech(altText);
+                wv->tts()->speech(this, altText);
             }
         }
     }

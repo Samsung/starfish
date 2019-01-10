@@ -269,6 +269,7 @@ int main(int argc, char* argv[])
     int x = 0, y = 0;
     float scaleFactor = 1;
     bool enableSecurity = true;
+    LWE::TTSMode ttsMode = LWE::TTSMode::Default;
 
     for (int i = 2; i < argc; i++) {
         if (strcmp(argv[i], "--dump-computed-style") == 0) {
@@ -331,6 +332,8 @@ int main(int argc, char* argv[])
 #endif
         } else if (strcmp(argv[i], "--disable-web-security") == 0) {
             enableSecurity = false;
+        } else if (strcmp(argv[i], "--tts-forced") == 0) {
+            ttsMode = LWE::TTSMode::Forced;
         }
     }
 
@@ -477,7 +480,7 @@ int main(int argc, char* argv[])
         if (!enableSecurity) {
             settings.SetWebSecurityMode(LWE::WebSecurityMode::Disable);
         }
-
+        settings.SetTTSMode(ttsMode);
         webView->SetSettings(settings);
     }
 

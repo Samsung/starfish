@@ -673,6 +673,8 @@ DEFINE_EVENT_LISTENER(Window, message);
 DEFINE_EVENT_LISTENER(Window, messageerror);
 DEFINE_EVENT_LISTENER(Window, unload);
 DEFINE_EVENT_LISTENER(Window, scroll);
+DEFINE_EVENT_LISTENER(Window, ttsstart);
+DEFINE_EVENT_LISTENER(Window, ttsend);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
 DEFINE_EVENT_LISTENER(Window, suspend);
 DEFINE_EVENT_LISTENER(Window, emptied);

@@ -501,6 +501,15 @@ StaticStrings::StaticStrings(Starfish* starfish)
 
     m_open = QualifiedName(AtomicString::createAtomicString(starfish, "open"));
 
+    m_ttsstart =
+        QualifiedName(AtomicString::createAtomicString(starfish, "ttsstart"));
+    m_onttsstart =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onttsstart"));
+    m_ttsend =
+        QualifiedName(AtomicString::createAtomicString(starfish, "ttsend"));
+    m_onttsend =
+        QualifiedName(AtomicString::createAtomicString(starfish, "onttsend"));
+
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     m_cuechange =
         QualifiedName(AtomicString::createAtomicString(starfish, "cuechange"));

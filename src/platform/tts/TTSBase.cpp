@@ -20,6 +20,7 @@
 #if defined(STARFISH_ENABLE_TTS)
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/dom/Element.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/tts/TTS.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -33,7 +34,7 @@ void TTS::initialize()
     m_isTTSEnabled = true;
     if (m_isTTSEnabled) {
         String* text = String::createASCIIString("Hi, I am Starfish");
-        speech(text);
+        speech(nullptr, text);
     }
 #endif
 }
@@ -42,7 +43,7 @@ void TTS::destroy()
 {
 }
 
-void TTS::speech(String* text, bool forced)
+void TTS::speech(Element* element, String* text)
 {
     if (text && text != String::emptyString) {
         webView()->messageLoop()->addIdler(
