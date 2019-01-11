@@ -46,7 +46,7 @@ FrameButtonBox::FrameButtonBox(Node* node, ComputedStyle* style)
 {
 }
 
-void FrameButtonBox::inlineLayoutAdditionalPath(LayoutContext& ctx)
+void FrameButtonBox::optionalInlineLayout(LayoutContext& ctx)
 {
     layoutLineBoxesVerticallyCenter();
 }

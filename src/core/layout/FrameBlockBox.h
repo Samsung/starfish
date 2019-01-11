@@ -884,7 +884,7 @@ public:
         }
     }
 
-    virtual void inlineLayoutAdditionalPath(LayoutContext& ctx)
+    virtual void optionalInlineLayout(LayoutContext& ctx)
     {
     }
 
@@ -1186,7 +1186,7 @@ private:
     void resolveBidi(DirectionValue parentDir, GCVector<FrameBox*>& boxes);
     void splitInlineBoxes(GCVector<FrameBox*>& boxes);
 
-    bool canInsertToLineBox(FrameBox* f, LayoutUnit width);
+    bool canAppendToCurrentLineBox(FrameBox* f, LayoutUnit width);
     bool hasFloatingBoxAlreadyInLineBox(Frame* f);
     bool canInsertFloatingBox(FrameBox* f, bool allowPendingFloatingBox);
 
@@ -1286,7 +1286,7 @@ public:
         m_absolutePositionedLayoutParentCnt[box]--;
     }
 
-    bool dontBreakLine(FrameBox* box, LayoutUnit width);
+    bool canAppendToCurrentLine(FrameBox* box, LayoutUnit width);
 
     void computeDirection(Frame* parent, DirectionValue direction);
 

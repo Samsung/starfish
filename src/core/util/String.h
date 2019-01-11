@@ -496,7 +496,7 @@ public:
         return false;
     }
 
-    static inline bool isNBSP(char32_t c)
+    static inline bool isNonBreakingSpace(char32_t c)
     {
         return c == 0x00A0;
     }

@@ -917,7 +917,7 @@ public:
             return;
         }
 
-        if (dontBreakLine(m_wordWidth)) {
+        if (canAppendToCurrentLine(m_wordWidth)) {
             m_currentLineWidth += m_wordWidth;
         } else {
             breakLine(true, false);
@@ -955,14 +955,14 @@ private:
     bool m_isPendingWrapLine;
     bool m_hasAppliedTextIndent;
 
-    bool canInsertToLineBox(LayoutUnit width);
+    bool canAppendToCurrentLineBox(LayoutUnit width);
     bool hasFloatingBoxAlreadyInLineBox() const
     {
         return m_hasFloat != HasNone;
     }
 
     bool canInsertFloatingBox(Frame* f);
-    bool dontBreakLine(LayoutUnit width);
+    bool canAppendToCurrentLine(LayoutUnit width);
 
     void removeDanglingSpace()
     {

@@ -612,7 +612,7 @@ void FrameBlockBox::layout(LayoutContext& ctx,
 
     if (!hasBlockFlow() && !isFrameFlexibleBox() && !isFrameTableBox() &&
         !isFrameGridBox()) {
-        inlineLayoutAdditionalPath(ctx);
+        optionalInlineLayout(ctx);
     }
 
     if (isAbsolutePositioned()) {
