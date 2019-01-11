@@ -235,15 +235,22 @@ public:
     double scrollLeftProperty(bool layoutIfNeeds = true);
     double scrollLeft(bool layoutIfNeeds = true);
     void setScrollLeftProperty(double s, bool layoutIfNeeds = true);
-    void setScrollLeft(double s, bool layoutIfNeeds = true);
+    bool setScrollLeft(
+        double s,
+        bool layoutIfNeeds = true); // returns scrolling is actually happened
     double scrollTopProperty(bool layoutIfNeeds = true);
     double scrollTop(bool layoutIfNeeds = true);
     void setScrollTopProperty(double s, bool layoutIfNeeds = true);
-    void setScrollTop(double s, bool layoutIfNeeds = true);
+    bool setScrollTop(
+        double s,
+        bool layoutIfNeeds = true); // returns scrolling is actually happened
     bool canScrollVerticaly(bool layoutIfNeeds = true);
     bool canScrollHorizontally(bool layoutIfNeeds = true);
     uint32_t scrollWidth();
     uint32_t scrollHeight();
+
+    void scroll(double x, double y);
+    void scrollTo(double x, double y);
 
     // https://www.w3.org/TR/cssom-view-1/#dom-element-getclientrects
     DOMRectList* getClientRects();

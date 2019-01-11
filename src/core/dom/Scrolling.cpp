@@ -31,6 +31,12 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/Timer.h"
 
+#define STARFISH_SCROLL_START_THRESHOLD 10
+#define STARFISH_SCROLL_START_FLING_THRESHOLD 300
+#define STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE \
+    (STARFISH_SCROLL_START_FLING_THRESHOLD * 5)
+#define STARFISH_SCROLL_FLING_BASE_TIME_IN_MS 1000
+
 namespace Starfish {
 
 void* Scrolling::operator new(size_t size)
@@ -41,6 +47,7 @@ void* Scrolling::operator new(size_t size)
     if (!typeInited) {
         GC_word desc[GC_BITMAP_SIZE(Scrolling)] = { 0 };
         GC_set_bit(desc, GC_WORD_OFFSET(Scrolling, m_target));
+        GC_set_bit(desc, GC_WORD_OFFSET(Scrolling, m_lastScrollingData));
         descr = GC_make_descriptor(desc, GC_WORD_LEN(Scrolling));
         typeInited = true;
     }
@@ -61,7 +68,7 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
         oy >= OverflowValue::AutoOverflow &&
         frame->asFrameBlockBox()->hasBiggerContentThanFrameHeight();
 
-    if (m_isScrollTarget ||
+    if (!m_isScrollTarget &&
         (horizontalScrollEnabled || verticalScrollEnabled)) {
         bool isPointingDownEvent = false;
         bool isPointingUpEvent = false;
@@ -98,42 +105,43 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
         }
         if (shouldProcess) {
             if (isPointingDownEvent) {
-                m_isScrollTarget = true;
                 m_pointingEventX = x;
                 m_pointingEventY = y;
+                m_gotPointingDownEvent = true;
                 return true;
             } else if (isPointingUpEvent) {
-                m_isScrollTarget = false;
-            } else if (m_isScrollTarget) {
-#define STARFISH_SCROLL_THRESHOLD 10
-                unsigned t = STARFISH_SCROLL_THRESHOLD;
+                m_gotPointingDownEvent = false;
+            } else if (m_gotPointingDownEvent) {
+                unsigned t = STARFISH_SCROLL_START_THRESHOLD;
 
-                bool inScrolling =
-                    m_inVerticalScrolling || m_inHorizontalScrolling;
-                if (!inScrolling) {
-                    if (std::abs(m_pointingEventY - y) > t &&
-                        verticalScrollEnabled) {
-                        m_inVerticalScrolling = true;
-                    } else if (std::abs(m_pointingEventX - x) > t &&
-                               horizontalScrollEnabled) {
-                        m_inHorizontalScrolling = true;
-                    }
+                if (std::abs(m_pointingEventY - y) > t &&
+                    verticalScrollEnabled) {
+                    m_inVerticalScrolling = true;
+                } else if (std::abs(m_pointingEventX - x) > t &&
+                           horizontalScrollEnabled) {
+                    m_inHorizontalScrolling = true;
+                }
 
-                    if (m_inVerticalScrolling || m_inHorizontalScrolling) {
-                        window->browsingContext()
-                            ->webView()
-                            ->addGlobalPointingEventInterceptListener(m_target);
-                        m_lastPointingEventX = x;
-                        m_lastPointingEventY = y;
-                        m_target->webView()->timer()->requestAnimationFrame(
-                            m_target->window(), onAnimationFrameHandler, this);
-                    }
+                if (m_inVerticalScrolling || m_inHorizontalScrolling) {
+                    window->browsingContext()
+                        ->webView()
+                        ->addGlobalPointingEventInterceptListener(m_target);
+                    m_isScrollTarget = true;
+                    m_pointingEventX = m_lastPointingEventX = x;
+                    m_pointingEventY = m_lastPointingEventY = y;
+                    m_target->webView()->timer()->requestAnimationFrame(
+                        m_target->window(), onAnimationFrameHandler, this);
                 }
                 return true;
             }
         }
     }
     return false;
+}
+
+static float flingInterpolationFunction(float pos)
+{
+    return -pow(2, -10 * pos) + 1;
 }
 
 void Scrolling::onAnimationFrameHandler(Window* window, void* data)
@@ -144,50 +152,130 @@ void Scrolling::onAnimationFrameHandler(Window* window, void* data)
         return;
     }
 
-    float dx = self->m_lastPointingEventX - self->m_pointingEventX;
-    float dy = self->m_lastPointingEventY - self->m_pointingEventY;
+    // do fling
+    if (self->m_inHorizontalFling || self->m_inVerticalFling) {
+        auto currentTime = longTickCount();
+        auto flingLength = STARFISH_SCROLL_FLING_BASE_TIME_IN_MS;
 
-    if (self->m_inVerticalScrolling) {
-        if (dy > 0) {
-            self->m_inVerticalScrollingDown = true;
-            self->m_inVerticalScrollingUp = false;
-        } else {
-            self->m_inVerticalScrollingDown = false;
-            self->m_inVerticalScrollingUp = true;
+        if (STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE <
+            std::abs(self->m_flingStartSpeed)) {
+            flingLength *= std::abs(self->m_flingStartSpeed /
+                                    STARFISH_SCROLL_FLING_LENGTH_MULTIPLY_BASE);
         }
-    }
-    if (self->m_inHorizontalScrolling) {
-        if (dy > 0) {
-            self->m_inHorizontalScrollingLeft = true;
-            self->m_inHorizontalScrollingRight = false;
-        } else {
-            self->m_inHorizontalScrollingLeft = false;
-            self->m_inHorizontalScrollingRight = true;
-        }
-    }
 
-    if (self->m_target->isElement()) {
-        if (self->m_inVerticalScrolling) {
-            self->m_target->asElement()->setScrollTop(
-                self->m_target->asElement()->scrollTop() + dy);
-        } else if (self->m_inHorizontalScrolling) {
-            self->m_target->asElement()->setScrollLeft(
-                self->m_target->asElement()->scrollLeft() + dx);
+        bool shouldExitFling =
+            currentTime - self->m_flingStartTime > uint64_t(flingLength * 1000);
+
+        float progress =
+            shouldExitFling
+                ? 1
+                : ((currentTime - self->m_flingStartTime) / 1000.f) /
+                      flingLength;
+        progress = flingInterpolationFunction(progress);
+        if (progress >= 0.95) {
+            shouldExitFling = true;
+        }
+
+        if (shouldExitFling) {
+            // end
+            self->stopFling();
+            self->stopScrolling();
+            return;
+        }
+        float speed = self->m_flingStartSpeed * (1 - progress);
+        float distance = speed * ((currentTime - self->m_flingProcessingTime) /
+                                  (1000.f * 1000.f));
+
+        bool isScrollEffective = false;
+        if (self->m_target->isElement()) {
+            if (self->m_inVerticalScrolling) {
+                isScrollEffective = self->m_target->asElement()->setScrollTop(
+                    self->m_target->asElement()->scrollTop() + distance);
+            } else if (self->m_inHorizontalScrolling) {
+                isScrollEffective = self->m_target->asElement()->setScrollLeft(
+                    self->m_target->asElement()->scrollLeft() + distance);
+            }
+        } else {
+            if (self->m_inVerticalScrolling) {
+                isScrollEffective = self->m_target->asWindow()->scrollTo(
+                    self->m_target->asWindow()->scrollX(),
+                    self->m_target->asWindow()->scrollY() + distance);
+            } else if (self->m_inHorizontalScrolling) {
+                isScrollEffective = self->m_target->asWindow()->scrollTo(
+                    self->m_target->asWindow()->scrollX() + distance,
+                    self->m_target->asWindow()->scrollY());
+            }
+        }
+
+        self->m_flingProcessingTime = currentTime;
+
+        if (!isScrollEffective) {
+            self->stopFling();
+            self->stopScrolling();
         }
     } else {
+        float dx = self->m_lastPointingEventX - self->m_pointingEventX;
+        float dy = self->m_lastPointingEventY - self->m_pointingEventY;
+
+        auto currentTime = longTickCount();
         if (self->m_inVerticalScrolling) {
-            self->m_target->asWindow()->scrollTo(
-                self->m_target->asWindow()->scrollX(),
-                self->m_target->asWindow()->scrollY() + dy);
-        } else if (self->m_inHorizontalScrolling) {
-            self->m_target->asWindow()->scrollTo(
-                self->m_target->asWindow()->scrollX() + dx,
-                self->m_target->asWindow()->scrollY());
+            if (dy > 0) {
+                self->m_inVerticalScrollingDown = true;
+                self->m_inVerticalScrollingUp = false;
+            } else {
+                self->m_inVerticalScrollingDown = false;
+                self->m_inVerticalScrollingUp = true;
+            }
+            self->m_lastScrollingData.push_back(
+                std::make_pair(currentTime, dy));
         }
+        if (self->m_inHorizontalScrolling) {
+            if (dy > 0) {
+                self->m_inHorizontalScrollingLeft = true;
+                self->m_inHorizontalScrollingRight = false;
+            } else {
+                self->m_inHorizontalScrollingLeft = false;
+                self->m_inHorizontalScrollingRight = true;
+            }
+            self->m_lastScrollingData.push_back(
+                std::make_pair(currentTime, dx));
+        }
+
+        // collect datas within 100ms
+        while (self->m_lastScrollingData.size()) {
+            if (currentTime - self->m_lastScrollingData.front().first <
+                1000 * 100) {
+                break;
+            } else {
+                self->m_lastScrollingData.erase(
+                    self->m_lastScrollingData.begin());
+            }
+        }
+
+        if (self->m_target->isElement()) {
+            if (self->m_inVerticalScrolling) {
+                self->m_target->asElement()->setScrollTop(
+                    self->m_target->asElement()->scrollTop() + dy);
+            } else if (self->m_inHorizontalScrolling) {
+                self->m_target->asElement()->setScrollLeft(
+                    self->m_target->asElement()->scrollLeft() + dx);
+            }
+        } else {
+            if (self->m_inVerticalScrolling) {
+                self->m_target->asWindow()->scrollTo(
+                    self->m_target->asWindow()->scrollX(),
+                    self->m_target->asWindow()->scrollY() + dy);
+            } else if (self->m_inHorizontalScrolling) {
+                self->m_target->asWindow()->scrollTo(
+                    self->m_target->asWindow()->scrollX() + dx,
+                    self->m_target->asWindow()->scrollY());
+            }
+        }
+
+        self->m_lastPointingEventX = self->m_pointingEventX;
+        self->m_lastPointingEventY = self->m_pointingEventY;
     }
 
-    self->m_lastPointingEventX = self->m_pointingEventX;
-    self->m_lastPointingEventY = self->m_pointingEventY;
     self->m_target->webView()->timer()->requestAnimationFrame(
         self->m_target->window(), onAnimationFrameHandler, self);
 }
@@ -199,17 +287,76 @@ void Scrolling::onGlobalPointingEvent(float x, float y,
     return;
 #endif
     if (kind == EventTarget::GlobalPointingEventKindUp) {
-        m_target->document()
-            ->browsingContext()
-            ->webView()
-            ->removeGlobalPointingEventInterceptListener(m_target);
-        m_isScrollTarget = false;
-        m_inHorizontalScrolling = false;
-        m_inVerticalScrolling = false;
+        bool userWantsFling = false;
+        float postiveAverage = 0;
+        float negativeAverage = 0;
+        float flingSpeed = 0;
+
+        uint64_t t = 0;
+        if (m_lastScrollingData.size()) {
+            t = m_lastScrollingData[0].first;
+        }
+        for (size_t i = 1; i < m_lastScrollingData.size(); i++) {
+            auto td = m_lastScrollingData[i].first - t;
+            float speed =
+                m_lastScrollingData[i].second / (td / (1000.f * 1000.f));
+            if (speed > 0) {
+                postiveAverage += speed;
+            } else {
+                negativeAverage += speed;
+            }
+            t = m_lastScrollingData[i].first;
+        }
+
+        if (m_lastScrollingData.size() > 1) {
+            postiveAverage /= (float)(m_lastScrollingData.size() - 1);
+            negativeAverage /= (float)(m_lastScrollingData.size() - 1);
+        }
+
+        if (postiveAverage >= STARFISH_SCROLL_START_FLING_THRESHOLD ||
+            -negativeAverage >= STARFISH_SCROLL_START_FLING_THRESHOLD) {
+            userWantsFling = true;
+        }
+
+        if (userWantsFling) {
+            m_inHorizontalFling = m_inHorizontalScrolling;
+            m_inVerticalFling = m_inVerticalScrolling;
+            m_flingProcessingTime = m_flingStartTime = longTickCount();
+            m_flingStartSpeed = (postiveAverage > -negativeAverage)
+                                    ? postiveAverage
+                                    : negativeAverage;
+        } else {
+            stopScrolling();
+        }
+
+        m_lastScrollingData.clear();
     } else if (kind == EventTarget::GlobalPointingEventKindMove) {
         m_pointingEventX = x;
         m_pointingEventY = y;
+    } else if (kind == EventTarget::GlobalPointingEventKindDown) {
+        if (m_inHorizontalFling || m_inVerticalFling) {
+            m_pointingEventX = m_lastPointingEventX = x;
+            m_pointingEventY = m_lastPointingEventY = y;
+            stopFling();
+        }
     }
+}
+
+void Scrolling::stopScrolling()
+{
+    m_inHorizontalScrolling = false;
+    m_inVerticalScrolling = false;
+    m_isScrollTarget = false;
+    m_gotPointingDownEvent = false;
+    m_target->document()
+        ->browsingContext()
+        ->webView()
+        ->removeGlobalPointingEventInterceptListener(m_target);
+}
+
+void Scrolling::stopFling()
+{
+    m_inHorizontalFling = m_inVerticalFling = false;
 }
 
 template <typename T>

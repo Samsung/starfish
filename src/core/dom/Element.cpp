@@ -39,6 +39,7 @@
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/parser/HTMLParserIdioms.h"
 #include "core/dom/xml/XMLSerializer.h"
+#include "core/dom/UIEvent.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/FrameBlockBox.h"
@@ -850,14 +851,25 @@ void Element::setScrollLeftProperty(double s, bool layoutIfNeeds)
     setScrollLeft(s, layoutIfNeeds);
 }
 
-static void elementScrollPropertyChanged(Element* e)
+static void elementScrollPropertyChanged(Element* element)
 {
     // just set needs layout flag solo
     // this will trigger only layout painting dirty check
-    e->document()->browsingContext()->setNeedsLayout();
+    element->document()->browsingContext()->setNeedsLayout();
+
+    String* eventType =
+        element->starfish()->staticStrings()->m_scroll.localName();
+    UIEvent* e = new UIEvent(element->document(), eventType);
+    e->setTarget(element);
+    e->setView(element->window());
+    if (element->document()->browsingContext()->isTopLevelBrowsingContext()) {
+        element->dispatchEventByUA(e);
+    } else {
+        element->dispatchEventIdleTimeByUA(e);
+    }
 }
 
-void Element::setScrollLeft(double s, bool layoutIfNeeds)
+bool Element::setScrollLeft(double s, bool layoutIfNeeds)
 {
     // https://drafts.csswg.org/cssom-view/#dom-element-scrollleft
     if (layoutIfNeeds) {
@@ -865,25 +877,24 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
     }
 
     if (!window()) {
-        return;
+        return false;
     }
 
     if (document()->rootElement() == this) {
         if (!document()->inQuirksMode()) {
-            window()->scrollTo(s, window()->scrollY());
+            return window()->scrollTo(s, window()->scrollY());
         }
-        return;
+        return false;
     }
 
     if (isHTMLBodyElement() && document()->inQuirksMode() &&
         !asHTMLBodyElement()->isPotentiallyScrollable()) {
-        window()->scrollTo(s, window()->scrollY());
-        return;
+        return window()->scrollTo(s, window()->scrollY());
     }
 
     if (!frame() || !frame()->isFrameBlockBox() ||
         appliedOverflowX() < OverflowValue::HiddenOverflow) {
-        return;
+        return false;
     }
 
     auto scrollMax = (frame()->asFrameBlockBox()->width() -
@@ -900,7 +911,10 @@ void Element::setScrollLeft(double s, bool layoutIfNeeds)
     if (ensureRareElementMembers()->m_scrollLeft != (LayoutUnit)s) {
         ensureRareElementMembers()->m_scrollLeft = s;
         elementScrollPropertyChanged(this);
+        return true;
     }
+
+    return false;
 }
 
 double Element::scrollTopProperty(bool layoutIfNeeds)
@@ -995,7 +1009,7 @@ void Element::setScrollTopProperty(double s, bool layoutIfNeeds)
     setScrollTop(s, layoutIfNeeds);
 }
 
-void Element::setScrollTop(double s, bool layoutIfNeeds)
+bool Element::setScrollTop(double s, bool layoutIfNeeds)
 {
     // https://drafts.csswg.org/cssom-view/#dom-element-scrolltop
     if (layoutIfNeeds) {
@@ -1003,25 +1017,24 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
     }
 
     if (!window()) {
-        return;
+        return false;
     }
 
     if (document()->rootElement() == this) {
         if (!document()->inQuirksMode()) {
-            window()->scrollTo(window()->scrollX(), s);
+            return window()->scrollTo(window()->scrollX(), s);
         }
-        return;
+        return false;
     }
 
     if (isHTMLBodyElement() && document()->inQuirksMode() &&
         !asHTMLBodyElement()->isPotentiallyScrollable()) {
-        window()->scrollTo(window()->scrollX(), s);
-        return;
+        return window()->scrollTo(window()->scrollX(), s);
     }
 
     if (!frame() || !frame()->isFrameBlockBox() ||
         appliedOverflowY() < OverflowValue::HiddenOverflow) {
-        return;
+        return false;
     }
 
     auto scrollMax = (frame()->asFrameBlockBox()->height() -
@@ -1038,7 +1051,10 @@ void Element::setScrollTop(double s, bool layoutIfNeeds)
     if (ensureRareElementMembers()->m_scrollTop != (LayoutUnit)s) {
         ensureRareElementMembers()->m_scrollTop = s;
         elementScrollPropertyChanged(this);
+        return true;
     }
+
+    return false;
 }
 
 uint32_t Element::scrollWidth()
@@ -1063,6 +1079,78 @@ uint32_t Element::scrollHeight()
         return 0;
     }
     return frame()->asFrameBlockBox()->scrollHeight();
+}
+
+void Element::scroll(double x, double y)
+{
+    scrollTo(x, y);
+}
+
+void Element::scrollTo(double x, double y)
+{
+    window()->browsingContext()->webView()->layoutIfNeeded(false);
+
+    if (!window()) {
+        return;
+    }
+
+    if (document()->rootElement() == this) {
+        if (!document()->inQuirksMode()) {
+            window()->scrollTo(x, y);
+        }
+        return;
+    }
+
+    if (isHTMLBodyElement() && document()->inQuirksMode() &&
+        !asHTMLBodyElement()->isPotentiallyScrollable()) {
+        window()->scrollTo(x, y);
+        return;
+    }
+
+    if (!frame() || !frame()->isFrameBlockBox()) {
+        return;
+    }
+
+    bool scrolled = false;
+    if (appliedOverflowX() >= OverflowValue::HiddenOverflow) {
+        auto scrollMaxW = (frame()->asFrameBlockBox()->width() -
+                           frame()->asFrameBlockBox()->borderWidth())
+                              .toUnsigned();
+        if (x > scrollWidth() - scrollMaxW) {
+            x = scrollWidth() - scrollMaxW;
+        }
+
+        if (x < 0) {
+            x = 0;
+        }
+
+        if (ensureRareElementMembers()->m_scrollLeft != (LayoutUnit)x) {
+            ensureRareElementMembers()->m_scrollLeft = x;
+            scrolled = true;
+        }
+    }
+
+    if (appliedOverflowY() >= OverflowValue::HiddenOverflow) {
+        auto scrollMaxH = (frame()->asFrameBlockBox()->height() -
+                           frame()->asFrameBlockBox()->borderHeight())
+                              .toUnsigned();
+        if (y > scrollHeight() - scrollMaxH) {
+            y = scrollHeight() - scrollMaxH;
+        }
+
+        if (y < 0) {
+            y = 0;
+        }
+
+        if (ensureRareElementMembers()->m_scrollTop != (LayoutUnit)y) {
+            ensureRareElementMembers()->m_scrollTop = y;
+            scrolled = true;
+        }
+    }
+
+    if (scrolled) {
+        elementScrollPropertyChanged(this);
+    }
 }
 
 void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)

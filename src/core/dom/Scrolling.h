@@ -33,17 +33,23 @@ class Compositor;
 class Scrolling : public gc {
 public:
     Scrolling(EventTarget* target)
-        : m_isScrollTarget(false)
+        : m_gotPointingDownEvent(false)
+        , m_isScrollTarget(false)
         , m_inVerticalScrolling(false)
         , m_inVerticalScrollingUp(false)
         , m_inVerticalScrollingDown(false)
         , m_inHorizontalScrolling(false)
         , m_inHorizontalScrollingLeft(false)
         , m_inHorizontalScrollingRight(false)
+        , m_inVerticalFling(false)
+        , m_inHorizontalFling(false)
         , m_pointingEventX(0)
         , m_pointingEventY(0)
         , m_lastPointingEventX(0)
         , m_lastPointingEventY(0)
+        , m_flingStartSpeed(0)
+        , m_flingStartTime(0)
+        , m_flingProcessingTime(0)
         , m_target(target)
     {
     }
@@ -82,7 +88,11 @@ public:
         return m_inHorizontalScrollingRight;
     }
 
+    void stopScrolling();
+    void stopFling();
+
 protected:
+    bool m_gotPointingDownEvent : 1;
     bool m_isScrollTarget : 1;
     bool m_inVerticalScrolling : 1;
     bool m_inVerticalScrollingUp : 1;
@@ -90,12 +100,20 @@ protected:
     bool m_inHorizontalScrolling : 1;
     bool m_inHorizontalScrollingLeft : 1;
     bool m_inHorizontalScrollingRight : 1;
+    bool m_inVerticalFling : 1;
+    bool m_inHorizontalFling : 1;
     float m_pointingEventX;
     float m_pointingEventY;
     float m_lastPointingEventX;
     float m_lastPointingEventY;
+    float m_flingStartSpeed;
+
+    uint64_t m_flingStartTime;
+    uint64_t m_flingProcessingTime;
 
     EventTarget* m_target;
+
+    GCAtomicVector<std::pair<uint64_t, float>> m_lastScrollingData;
 };
 }
 

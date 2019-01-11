@@ -67,10 +67,10 @@ interface Element : Node {
   // void scrollIntoView((boolean or object) arg);
   // TODO implement options version of scrollIntoView
   void scrollIntoView(boolean arg);
+  void scroll(unrestricted double x, unrestricted double y);
+  void scrollTo(unrestricted double x, unrestricted double y);
   [Unimplemented] void scroll(optional ScrollToOptions options);
-  [Unimplemented] void scroll(unrestricted double x, unrestricted double y);
   [Unimplemented] void scrollTo(optional ScrollToOptions options);
-  [Unimplemented] void scrollTo(unrestricted double x, unrestricted double y);
   [Unimplemented] void scrollBy(optional ScrollToOptions options);
   [Unimplemented] void scrollBy(unrestricted double x, unrestricted double y);
   [Rename=scrollTopProperty] attribute unrestricted double scrollTop;
