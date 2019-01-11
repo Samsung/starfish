@@ -197,7 +197,11 @@ static void rtDoTest(Document* document)
 }
 #endif
 
-size_t WebView::g_fillingGraphicsBufferTileFrameTimeLimitInMS = 25;
+#ifndef STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT
+#define STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT 25
+#endif
+size_t WebView::g_fillingGraphicsBufferTileFrameTimeLimitInMS =
+    STARFISH_FILLING_GRAPHICS_BUFFER_TIME_LIMIT;
 
 WebView* WebView::create(Starfish* starfish, const char* locale,
                          const char* timezoneID, uint32_t w, uint32_t h,

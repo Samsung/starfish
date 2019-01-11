@@ -26,7 +26,11 @@
 namespace Starfish {
 
 size_t CanvasSurface::g_totalAllocatedCanvasSurfaceSize = 0;
-size_t CanvasSurface::g_canvasSurfaceTileSize = 384;
+#ifndef STARFISH_CANVAS_SURFACE_TILE_SIZE
+#define STARFISH_CANVAS_SURFACE_TILE_SIZE 256
+#endif
+size_t CanvasSurface::g_canvasSurfaceTileSize =
+    STARFISH_CANVAS_SURFACE_TILE_SIZE;
 
 #if !defined(PORT_COMPOSITOR_BACKEND_GL)
 class CanvasSurfaceSimple : public CanvasSurface {

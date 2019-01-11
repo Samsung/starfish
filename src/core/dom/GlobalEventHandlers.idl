@@ -53,7 +53,7 @@ interface GlobalEventHandlers {
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onratechange;
   [Unimplemented] attribute EventHandler onreset;
   attribute EventHandler onresize;
-  [Unimplemented] attribute EventHandler onscroll;
+  attribute EventHandler onscroll;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onseeked;
   [STARFISH_ENABLE_MULTIMEDIA] attribute EventHandler onseeking;
   [Unimplemented] attribute EventHandler onselect;
