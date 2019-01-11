@@ -738,6 +738,29 @@ void FrameTableBox::calCellWidth(LayoutContext& ctx)
                 } else {
                     // Adjust cell width in proportion to its preferred
                     // width
+
+                    // Step 1: prescan
+                    // For each cell, check if the candidate 'newCellWidth' is
+                    // smaller than the minCellWidth. In this case, adjust the
+                    // cell width to its minimum, and adjust the remainingWidth,
+                    // which is used in the second iteration to calculate the
+                    // cell widths for the rest of cells
+                    for (auto& c : cellsWithAutoWidths) {
+                        ColSizeStruct& col = *c;
+                        LayoutUnit newCellWidth =
+                            LayoutUnit(col.maxCellWidth.toDouble() /
+                                       sumOfAutoCellPreferredWidths.toDouble() *
+                                       remainingWidth.toDouble());
+
+                        if ((0 < newCellWidth) &&
+                            (newCellWidth < col.minCellWidth)) {
+                            col.cellWidth = col.minCellWidth;
+                            remainingWidth -= col.minCellWidth - newCellWidth;
+                        }
+                    }
+
+                    // Step 2:
+                    // Calculate cell widths for the rest of cells
                     LayoutUnit newEqualCellWidth = LayoutUnit(
                         remainingWidth.toDouble() / cellsWithAutoWidths.size());
 

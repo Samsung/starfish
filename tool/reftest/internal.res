@@ -200,6 +200,7 @@ test/internal-test/css/table/table_fixed_16.html
 test/internal-test/css/style/style-tag-modify.html
 test/internal-test/css/table/table_border-spacing_03.html
 test/internal-test/css/table/table_layer_01.html
+test/internal-test/css/table/table_w3docs_01.html
 test/internal-test/css/clear/linebox-relayout.html
 test/internal-test/css/border/starting_unprocessed_mbp.html
 test/internal-test/css/position2/replaced-left-margin-auto-right-margin-fixed-width-fixed.html
