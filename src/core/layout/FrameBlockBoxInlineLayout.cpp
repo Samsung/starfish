@@ -1747,7 +1747,7 @@ void LineFormattingContext::insertPendingFloatingBoxes()
         if ((m_pendingFloatingBoxNumsBeforeCurrentLine > 0 ||
              !onlyAllowBeforeCurrentLine) &&
             canInsertFloatingBox(box, true) &&
-            dontBreakLine(box, box->outerWidth())) {
+            canAppendToCurrentLine(box, box->outerWidth())) {
             insertFloatingBoxAndReLayoutLineBoxIfNeeds(box);
 
             iter = m_pendingFloatingBoxes.erase(iter);
@@ -2143,7 +2143,7 @@ void LineFormattingContext::insertPendingInlineBoxes()
             if (box->isAbsolutePositioned()) {
                 handleAbsoluteBox(box, true, false);
             } else {
-                if (!dontBreakLine(box, box->outerWidth())) {
+                if (!canAppendToCurrentLine(box, box->outerWidth())) {
                     if (breakableWord(box)) {
                         InlineTextBox* box2 =
                             splitInlineTextBox(box->asInlineTextBox());
@@ -2360,7 +2360,7 @@ bool PreferredWidthContext::canInsertFloatingBox(Frame* f)
     return (f->style()->clear() == NoneClearValue || dontClear(m_hasFloat, f));
 }
 
-bool PreferredWidthContext::canInsertToLineBox(LayoutUnit width)
+bool PreferredWidthContext::canAppendToCurrentLineBox(LayoutUnit width)
 {
     LayoutUnit remainingWidth =
         (m_remainingWidth - m_currentLineWidth - m_unprocessedStartingMBPWidth -
@@ -2368,13 +2368,14 @@ bool PreferredWidthContext::canInsertToLineBox(LayoutUnit width)
     return width <= remainingWidth;
 }
 
-bool PreferredWidthContext::dontBreakLine(LayoutUnit width)
+bool PreferredWidthContext::canAppendToCurrentLine(LayoutUnit width)
 {
     return (!hasFloatingBoxAlreadyInLineBox() && m_currentLineWidth == 0) ||
-           canInsertToLineBox(width);
+           canAppendToCurrentLineBox(width);
 }
 
-bool LineFormattingContext::canInsertToLineBox(FrameBox* f, LayoutUnit width)
+bool LineFormattingContext::canAppendToCurrentLineBox(FrameBox* f,
+                                                      LayoutUnit width)
 {
     if (f->isFloating()) {
         FloatingBoxLayoutContext& fbCtx = *m_floatingBoxLayoutContexts.rbegin();
@@ -2441,7 +2442,8 @@ bool LineFormattingContext::breakableWord(FrameBox* box) const
 
 // TODO: when concatenating word, we should check if word to concatenate
 // is shouldWrapLines.
-bool LineFormattingContext::dontBreakLine(FrameBox* box, LayoutUnit width)
+bool LineFormattingContext::canAppendToCurrentLine(FrameBox* box,
+                                                   LayoutUnit width)
 {
     bool wrapLine;
     if (box->layoutParent()->isLineBox()) {
@@ -2454,7 +2456,7 @@ bool LineFormattingContext::dontBreakLine(FrameBox* box, LayoutUnit width)
     }
     return (!hasFloatingBoxAlreadyInLineBox(box) && m_currentLineWidth == 0 &&
             !breakableWord(box)) ||
-           !wrapLine || canInsertToLineBox(box, width);
+           !wrapLine || canAppendToCurrentLineBox(box, width);
 }
 
 void LineFormattingContext::handleSoftHyphenate(bool hyphenateOnLine)
@@ -2501,7 +2503,7 @@ void LineFormattingContext::insertWord(Frame* next)
     }
 
     STARFISH_ASSERT(m_canConcatWord);
-    if (dontBreakLine(m_word.boxes()[0], m_word.width())) {
+    if (canAppendToCurrentLine(m_word.boxes()[0], m_word.width())) {
         handleSoftHyphenate(false);
         auto& boxes = m_word.boxes();
         auto iter = boxes.begin();
@@ -2586,7 +2588,8 @@ LayoutUnit LineFormattingContext::wordSpacing(
 {
     if (box->isInlineTextBox() &&
         (isWhiteSpace(box->asInlineTextBox()->textRun()) ||
-         String::isNBSP(box->asInlineTextBox()->text().charAt(0)))) {
+         String::isNonBreakingSpace(
+             box->asInlineTextBox()->text().charAt(0)))) {
         if (parentBox->isLineBox()) {
             return m_block->style()->wordSpacing().specifiedValue(LayoutUnit(),
                                                                   m_block);
@@ -2603,7 +2606,7 @@ LayoutUnit PreferredWidthContext::wordSpacing(const TextToken& token)
     int cnt = 0;
     for (size_t i = token.m_start; i < token.m_end; i++) {
         if (String::isSpace(token.m_frameText->text()->charAt(i)) ||
-            String::isNBSP(token.m_frameText->text()->charAt(i))) {
+            String::isNonBreakingSpace(token.m_frameText->text()->charAt(i))) {
             cnt++;
         }
     }
@@ -2691,7 +2694,7 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
             m_isPendingBreakLine = true;
         }
     } else {
-        if (!dontBreakLine(box, box->outerWidth())) {
+        if (!canAppendToCurrentLine(box, box->outerWidth())) {
             if (isCollapsibleWhiteSpace(box)) {
                 m_isPendingBreakLine = true;
             } else if (breakableWord(box)) {
@@ -2704,7 +2707,7 @@ void LineFormattingContext::tryInsertInlineBox(FrameBox* box)
                 tryInsertInlineBox(box);
             } else {
                 breakLine(nullptr);
-                if (!canInsertToLineBox(box, box->outerWidth()) &&
+                if (!canAppendToCurrentLineBox(box, box->outerWidth()) &&
                     m_lastLineHasFloatValue == HasFloat::HasNone) {
                     insertInlineBox(box);
                     markInlineBoxIndex(box);
@@ -2725,7 +2728,7 @@ void LineFormattingContext::tryInsertFloatingBox(FrameBox* box)
     STARFISH_ASSERT(m_word.isEmpty());
 
     if (canInsertFloatingBox(box, false) &&
-        dontBreakLine(box, box->outerWidth())) {
+        canAppendToCurrentLine(box, box->outerWidth())) {
         insertFloatingBoxAndReLayoutLineBoxIfNeeds(box);
     } else {
         m_pendingFloatingBoxes.push_back(box);
@@ -2934,7 +2937,8 @@ void LineFormattingContext::handleTextToken(TextToken& token)
     size_t cur = token.m_start;
     size_t end = token.m_end;
     while (cur < end) {
-        if (String::isNBSP(token.m_frameText->text()->charAt(cur))) {
+        if (String::isNonBreakingSpace(
+                token.m_frameText->text()->charAt(cur))) {
             TextToken t = TextToken(token.m_frameText, cur, cur + 1,
                                     token.m_type, token.m_isFirstLine);
             tokens.push_back(t);
@@ -2942,7 +2946,8 @@ void LineFormattingContext::handleTextToken(TextToken& token)
         } else {
             size_t offset = cur + 1;
             while (offset < end &&
-                   !String::isNBSP(token.m_frameText->text()->charAt(offset))) {
+                   !String::isNonBreakingSpace(
+                       token.m_frameText->text()->charAt(offset))) {
                 offset++;
             }
             TextToken t = TextToken(token.m_frameText, cur, offset,
@@ -3214,13 +3219,14 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
     while (iter != locs.end()) {
         next = *iter;
         if (String::isNewline(c)) {
-        } else if (isSeparator(c) || String::isNBSP(c) ||
+        } else if (isSeparator(c) || String::isNonBreakingSpace(c) ||
                    String::isPunctuation(c)) {
             int32_t offset = cur + 1;
 
             c = txt->charAt(offset);
-            while (offset < next && (isSeparator(c) || String::isNBSP(c) ||
-                                     String::isPunctuation(c))) {
+            while (offset < next &&
+                   (isSeparator(c) || String::isNonBreakingSpace(c) ||
+                    String::isPunctuation(c))) {
                 if (String::isNewline(c)) {
                     break;
                 }
@@ -3229,7 +3235,7 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
             next = offset;
         } else {
             int32_t offset;
-            if (isSeparator(prev) || String::isNBSP(prev) ||
+            if (isSeparator(prev) || String::isNonBreakingSpace(prev) ||
                 String::isPunctuation(prev)) {
                 c = txt->charAt(cur);
                 sb.appendChar((char32_t)u_totitle(c));
@@ -3241,7 +3247,7 @@ String* FrameText::makeCapitalized(String* txt, char32_t prev)
 
             c = txt->charAt(offset);
             while (offset < next &&
-                   !(isSeparator(c) || String::isNBSP(c) ||
+                   !(isSeparator(c) || String::isNonBreakingSpace(c) ||
                      String::isPunctuation(c))) {
                 c = txt->charAt(++offset);
             }
@@ -4125,7 +4131,7 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w,
 {
     if (f->isFloating()) {
         if (canInsertFloatingBox(f)) {
-            if (dontBreakLine(w)) {
+            if (canAppendToCurrentLine(w)) {
                 m_currentLineWidth += w;
             } else {
                 breakLine(true, false);
@@ -4145,7 +4151,7 @@ void PreferredWidthContext::updateCurrentLineWidth(Frame* f, LayoutUnit w,
         if ((!m_hasAppliedTextIndent || hasFloatingBoxAlreadyInLineBox()) &&
             f->isFrameText() && type == WordType::General) {
             m_wordWidth += w;
-        } else if (dontBreakLine(w)) {
+        } else if (canAppendToCurrentLine(w)) {
             m_currentLineWidth += w;
         } else {
             if (type == WordType::CollapsibleWhiteSpace) {
