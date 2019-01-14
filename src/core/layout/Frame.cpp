@@ -793,7 +793,17 @@ void LayoutContext::addToRelativePositionedBoxes(FrameBox* box, bool dueToSelf)
     m_relativePositionedBoxes.emplace(
         cb, std::vector<std::pair<FrameBox*, bool>>());
     auto& vec = m_relativePositionedBoxes[cb];
-    vec.emplace_back(box, dueToSelf);
+
+    bool has = false;
+    for (size_t i = 0; i < vec.size(); i++) {
+        if (vec[i].first == box) {
+            has = true;
+            break;
+        }
+    }
+    if (!has) {
+        vec.emplace_back(box, dueToSelf);
+    }
 }
 
 void LayoutContext::layoutRelativePositionedBox(FrameBox* box, bool dueToSelf)

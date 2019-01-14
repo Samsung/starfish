@@ -47,8 +47,7 @@ public:
         if (m_resourceRequest) {
             m_resourceRequest->setRequestHeader(
                 String::createASCIIString(HTTPHeaderMap::kAccept),
-                String::createASCIIString(
-                    "image/png , image/jpeg , image/gif"));
+                String::createASCIIString("*/*"));
         }
     }
 
