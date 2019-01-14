@@ -175,7 +175,6 @@ public:
     void setLoop(bool loop);
 
     virtual void prepare(ResourceURL* url);
-    virtual void initDisplay();
     virtual void setNativePlayerDefaultOptions(ResourceURL* url);
     virtual void printNativePlayerError(int errorCode);
 
@@ -238,7 +237,6 @@ public:
     media_packet_h m_lastDecodedVideoPacket;
 
     ResourceURL* m_currentURL;
-    CanvasSurface* m_canvasSurface;
 
     player_h m_nativePlayer;
     bool* m_playerDeadFlag;

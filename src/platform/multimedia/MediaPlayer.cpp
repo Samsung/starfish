@@ -46,6 +46,11 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     , m_currentTimeUpdateTimer(SIZE_MAX)
     , m_playerStateMutex(new Mutex())
 {
+    m_canvasSurface =
+        CanvasSurface::create(m_container->webView()->platformWindow(), 1, 1);
+    m_canvasSurface->mapBuffer();
+    m_canvasSurface->clear();
+    m_canvasSurface->unMapBufferAndNotifyUpdateRegion(0, 0, 1, 1);
 }
 
 void MediaPlayer::processNextOperationQueueInContainer()
@@ -70,11 +75,7 @@ Window* MediaPlayer::window()
 CanvasSurface* MediaPlayer::createGraphicsBuffer(size_t visibleWidth,
                                                  size_t visibleHeight)
 {
-    auto s = CanvasSurface::create(window()->webView()->platformWindow(), 1, 1);
-    s->mapBuffer();
-    s->clear();
-    s->unMapBufferAndNotifyUpdateRegion(0, 0, 1, 1);
-    return s;
+    return m_canvasSurface;
 }
 
 SourceBuffer* MediaPlayer::activeSourceBuffer(StreamType type)
