@@ -445,9 +445,7 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
                 box->setX(orgX - (box->x() - orgX));
                 box->setY(orgY - (box->y() - orgY));
 
-                if (!child->needToEstablishBlockFormattingContext()) {
-                    ctx.addToRelativePositionedBoxes(box, dueToSelf);
-                }
+                ctx.addToRelativePositionedBoxes(box, dueToSelf);
             }
             child = child->next();
         }
@@ -468,8 +466,8 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
 
     if (!needToEstablishBlockFormattingContext()) {
         ctx.layoutRegisteredAbsolutePositionedBoxes(this);
-        ctx.layoutRegisteredRelativePositionedBoxes(this);
     }
+    ctx.layoutRegisteredRelativePositionedBoxes(this);
 }
 
 void FrameBlockBox::layout(LayoutContext& ctx,

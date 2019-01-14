@@ -793,6 +793,8 @@ void InlineBoxLayoutParentBox::resetChildrenVerticalPositions(
 
                 box->setX(orgX - (box->x() - orgX));
                 box->setY(orgY - (box->y() - orgY));
+
+                ctx.addToRelativePositionedBoxes(box, dueToSelf);
             }
         } else {
             m_boxes[i]->setY(0);
@@ -1415,7 +1417,7 @@ void InlineBoxLayoutParentBox::addToRelativePositionedBoxes(LayoutContext& ctx)
     for (size_t k = 0; k < m_boxes.size(); k++) {
         FrameBox* childBox = m_boxes[k];
         STARFISH_ASSERT(childBox != nullptr);
-        if (!childBox->isFrameBlockBox()) {
+        if (!childBox->isFrameBlockBox() || childBox->isFloating()) {
             if (childBox->style()->position() ==
                 PositionValue::RelativePositionValue) {
                 ctx.addToRelativePositionedBoxes(childBox, true);
