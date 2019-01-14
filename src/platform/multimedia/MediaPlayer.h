@@ -163,6 +163,7 @@ protected:
     volatile unsigned long m_videoWidth, m_videoHeight;
     size_t m_currentTimeUpdateTimer;
     Mutex* m_playerStateMutex;
+    CanvasSurface* m_canvasSurface;
 };
 }
 #endif

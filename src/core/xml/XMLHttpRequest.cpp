@@ -136,9 +136,27 @@ public:
                                m_xhr->m_resourceRequest->response().data(),
                                m_xhr->m_resourceRequest->response().size());
                         DOMParser* parser = new DOMParser(m_xhr->document());
-                        m_xhr->m_responseXML = parser->parseFromString(
-                            String::fromUTF8(static_cast<const char*>(buffer)),
-                            request->responseMimeType());
+                        String* mimeTypeString =
+                            mimeType.stringWithoutParameter();
+                        try {
+                            m_xhr->m_responseXML = parser->parseFromString(
+                                String::fromUTF8(
+                                    static_cast<const char*>(buffer)),
+                                mimeTypeString);
+                        } catch (DOMException* e) {
+                            StringBuilder b;
+                            b.appendString("Unsupported type ");
+                            b.appendString(mimeTypeString);
+                            String* errorMessage = b.finalize();
+
+                            STARFISH_LOG_ERROR(
+                                "failed to parse resonse on "
+                                "XMLHttpRequest(%s)\n",
+                                errorMessage->toUTF8NonGCString().data());
+
+                            m_xhr->m_responseXML = parser->parseFromString(
+                                errorMessage, String::fromUTF8("text/html"));
+                        }
                         free(buffer);
                         if (!m_xhr->m_responseXML->isXMLDocument()) {
                             m_xhr->m_responseXML = nullptr;

@@ -385,13 +385,11 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_fillBufferMutex(new Mutex())
     , m_decodedVideoFrameMutex(new Mutex())
     , m_lastDecodedVideoPacket(nullptr)
-    , m_canvasSurface(nullptr)
     , m_playerDeadFlag(nullptr)
     , m_audioStream(nullptr)
     , m_videoStream(nullptr)
 {
     player_create(&m_nativePlayer);
-    initDisplay();
 
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -757,15 +755,6 @@ void MediaPlayerTizen::pause()
     m_currentTimeUpdateTimer = SIZE_MAX;
 }
 
-void MediaPlayerTizen::initDisplay()
-{
-    m_canvasSurface =
-        CanvasSurface::create(m_container->webView()->platformWindow(), 1, 1);
-    m_canvasSurface->mapBuffer();
-    m_canvasSurface->clear();
-    m_canvasSurface->unMapBufferAndNotifyUpdateRegion(0, 0, 1, 1);
-}
-
 void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)
 {
 #if defined(STARFISH_TIZEN_HEADLESS)
@@ -1033,6 +1022,10 @@ void MediaPlayerTizen::dispose()
     if (m_container) {
         m_container->mediaPlayerNotifyUpdateReadyStateItsContainer(
             HTMLMediaElement::HAVE_NOTHING);
+    }
+    if (m_canvasSurface) {
+        m_canvasSurface->detachNativeBuffer();
+        m_canvasSurface = nullptr;
     }
     if (m_playerDeadFlag) {
         *m_playerDeadFlag = true;

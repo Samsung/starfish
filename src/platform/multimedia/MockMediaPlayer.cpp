@@ -443,6 +443,10 @@ void MockMediaPlayer::destroy()
             HTMLMediaElement::HAVE_NOTHING);
     }
     m_container = nullptr;
+    if (m_canvasSurface) {
+        m_canvasSurface->detachNativeBuffer();
+        m_canvasSurface = nullptr;
+    }
 }
 }
 #endif

@@ -752,35 +752,6 @@ void LayoutContext::layoutRegisteredAbsolutePositionedBoxes(
         const auto& boxes = iter->second;
         for (size_t i = 0; i < boxes.size(); i++) {
             FrameBox* box = boxes[i];
-            if (m_isQuickLayout) {
-                // FIXME: related to Issue #2264
-                // In quicklayout(), x value of the box has already been
-                // computed, but the x value is recomputed and incremented twice
-                // in FrameBlockBox::layout(), when left (or right) value is
-                // missing and margin-left (or margin-right) is specified.
-                // Below is an ad-hoc fix which should be removed after
-                // fixing quicklayout().
-                LengthData offset = box->style()->offset();
-                Length left = offset.left();
-                Length right = offset.right();
-                if (left.isAuto() && right.isAuto()) {
-                    DirectionValue parentDirection =
-                        blockContainer(box)->style()->direction();
-                    if (box->parent()->isAnonymous() &&
-                        box->parent()->parent()->isFrameFlexibleBox() &&
-                        !box->parent()->isFlexItem()) {
-                        // DO NOTHING
-                    } else {
-                        if (parentDirection == LtrDirectionValue) {
-                            box->moveX(-box->FrameBox::marginLeft());
-                        } else {
-                            box->moveX(box->FrameBox::width() +
-                                       box->FrameBox::marginRight());
-                        }
-                    }
-                }
-                // <-- Issue #2264
-            }
             box->layout(*this, Frame::LayoutWantToResolve::ResolveAll);
         }
         m_absolutePositionedBoxes.erase(iter);
