@@ -41,6 +41,8 @@ HTTPTransaction::HTTPTransaction()
     , m_writeHeaderData(nullptr)
     , m_writeCB(nullptr)
     , m_writeData(nullptr)
+    , m_uploadBufferDataCB(nullptr)
+    , m_uploadData(nullptr)
     , m_inPreflightRequest(false)
     , m_isPreflightReqeustDone(false)
 #ifdef STARFISH_ENABLE_TEST
@@ -144,7 +146,6 @@ void HTTPTransaction::start()
                                  .data());
         }
     }
-
     if (m_httpRequest->method().compare("POST") == 0) {
         curl_easy_setopt(m_curl, CURLOPT_POSTFIELDSIZE,
                          m_httpRequest->entityBody().length());
@@ -154,11 +155,14 @@ void HTTPTransaction::start()
         curl_easy_setopt(m_curl, CURLOPT_HTTPGET, 1L);
     } else if (m_httpRequest->method().compare("HEAD") == 0) {
         curl_easy_setopt(m_curl, CURLOPT_NOBODY, 1L);
+    } else if (m_httpRequest->method().compare("PUT") == 0) {
+        curl_easy_setopt(m_curl, CURLOPT_UPLOAD, 1L);
+        curl_easy_setopt(m_curl, CURLOPT_INFILESIZE_LARGE,
+                         m_httpRequest->entityBody().length());
     } else {
         curl_easy_setopt(m_curl, CURLOPT_CUSTOMREQUEST,
                          m_httpRequest->method().c_str());
     }
-
     m_httpRequest->setRequestTime(timestamp() / 1000);
     m_res = curl_easy_perform(m_curl);
 
@@ -172,7 +176,6 @@ void HTTPTransaction::start()
     m_httpResponse->setResponseTime(timestamp() / 1000);
     updateTransactionStatus();
     curl_slist_free_all(list);
-
     postprocess(!includeCredentials);
 }
 
@@ -274,6 +277,14 @@ void HTTPTransaction::registerCurlHandlers()
 
     if (m_writeData) {
         curl_easy_setopt(m_curl, CURLOPT_WRITEDATA, m_writeData);
+    }
+
+    if (m_uploadBufferDataCB) {
+        curl_easy_setopt(m_curl, CURLOPT_READFUNCTION, m_uploadBufferDataCB);
+    }
+
+    if (m_uploadData) {
+        curl_easy_setopt(m_curl, CURLOPT_READDATA, m_uploadData);
     }
 }
 
