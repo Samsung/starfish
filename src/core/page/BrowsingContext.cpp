@@ -547,8 +547,9 @@ void BrowsingContext::clearingBeforePaint(T canvas)
         canvas->clearColor(Unit::Color(0, 0, 0, 0));
     }
 #else
-    if (document()->browsingContext()->isTopLevelBrowsingContext())
-        canvas->clearColor(Unit::Color(255, 255, 255, 255));
+    if (document()->browsingContext()->isTopLevelBrowsingContext()) {
+        canvas->clearColor(webView()->baseBackgroundColor());
+    }
 #endif
 }
 

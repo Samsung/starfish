@@ -35,7 +35,8 @@ public:
         Length,
         Angle,
         Time,
-        Percentage
+        Percentage,
+        CalcDataValue,
     };
 
     STARFISH_MAKE_STACK_ALLOCATED();
@@ -85,6 +86,11 @@ public:
         return m_type == Percentage;
     }
 
+    bool isCalcData() const
+    {
+        return m_type == CalcDataValue;
+    }
+
     bool operator==(CalcValueType& other) const
     {
         return m_type == other.m_type;
@@ -105,6 +111,7 @@ public:
         CSSLength m_lengthData;
         CSSAngle m_angleData;
         CSSTime m_timeData;
+        CalcData* m_calcData;
 
         CalcValueData()
             : m_timeData(0)
@@ -133,17 +140,23 @@ public:
             : m_timeData(data)
         {
         }
+
+        CalcValueData(CalcData* data)
+        {
+            m_timeData = 0; // initialize this union first
+            m_calcData = data;
+        }
     };
 
     CalcValue()
         : m_type(CalcValueType::None)
-        , m_data(0)
+        , m_data(0.f)
     {
     }
 
     CalcValue(CalcValueType type)
         : m_type(type)
-        , m_data(0)
+        , m_data(0.f)
     {
     }
 
@@ -219,6 +232,12 @@ public:
     {
         STARFISH_ASSERT(m_type.isTime());
         return m_data.m_timeData;
+    }
+
+    CalcData* calcDataValue() const
+    {
+        STARFISH_ASSERT(m_type.isCalcData());
+        return m_data.m_calcData;
     }
 
     String* toString();

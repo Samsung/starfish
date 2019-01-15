@@ -31,6 +31,8 @@ LayoutUnit CalcValue::specifiedValue(const LayoutUnit& parentContentLength,
     } else if (m_type.isPercentage()) {
         return Length(Length::Percent, m_data.m_numberData)
             .percentValue(parentContentLength);
+    } else if (m_type.isCalcData()) {
+        return m_data.m_calcData->specifiedValue(parentContentLength, n);
     }
 
     return LayoutUnit();
@@ -43,6 +45,8 @@ LayoutUnit CalcValue::specifiedFontValue(Node* n) const
     } else if (m_type.isPercentage()) {
         return Length(Length::Percent, m_data.m_numberData)
             .specifiedFontValue(n);
+    } else if (m_type.isCalcData()) {
+        return m_data.m_calcData->specifiedFontValue(n);
     }
 
     return LayoutUnit();
@@ -63,6 +67,9 @@ String* CalcValue::toString()
         builder.appendString(String::fromFloat(m_data.m_numberData * 100.f));
         builder.appendChar('%');
         return builder.finalize();
+    } else if (m_type.isCalcData()) {
+        String* s = m_data.m_calcData->toString();
+        return s->substring(4, s->length() - 4);
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
@@ -77,10 +84,16 @@ CalcValueType CalcTerm::type() const
     STARFISH_ASSERT(m_values.size() - 1 == m_operators.size());
     auto it = m_values.begin();
     CalcValueType lType = (*it).type();
+    if (lType.isCalcData()) {
+        lType = it->calcDataValue()->type();
+    }
     it++;
     auto it2 = m_operators.begin();
     while (it != m_values.end()) {
         CalcValueType rType = (*it).type();
+        if (rType.isCalcData()) {
+            rType = it->calcDataValue()->type();
+        }
         bool operand = *it2;
 
         if (operand == MUL) {

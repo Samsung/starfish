@@ -8633,6 +8633,146 @@ bool CSSStyleValuePair::updateValueUnitNumber(const CSSTokenValue& token,
     return false;
 }
 
+static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
+                      bool isLenParser, bool isAngleParser, bool isTimeParser,
+                      uint8_t parserOption)
+{
+    bool isPlus = true;
+    while (true) {
+        CalcTerm* term = new CalcTerm();
+        bool isMul = false;
+        bool unitParsed = false;
+        while (!parser.isEnd()) {
+            parser.consumeWhitespaces();
+
+            CSSStyleValuePair ret;
+            char* pos = parser.curPos();
+            parser.consumeString(CSSPropertyParser::AllowDot |
+                                 CSSPropertyParser::AllowPlus |
+                                 CSSPropertyParser::AllowNegative |
+                                 CSSPropertyParser::AllowPercent);
+
+            auto str = parser.parsedString();
+            CalcValue val;
+            if (parser.consumeIfNext('(')) {
+                if (unitParsed) {
+                    return false;
+                }
+                CalcData* newData = new CalcData();
+                if (parseCalc(parser, newData, isLenParser, isAngleParser,
+                              isTimeParser, parserOption)) {
+                    val.setType(CalcValueType::CalcDataValue);
+                    val.setValue(newData);
+                    unitParsed = true;
+                } else {
+                    return false;
+                }
+            } else if (isLenParser &&
+                       ret.updateValueUnitLength(CSSTokenValue(str),
+                                                 parserOption)) {
+                if (unitParsed) {
+                    return false;
+                }
+                unitParsed = true;
+                if (isPlus) {
+                    if (ret.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Percentage) {
+                        val.setType(CalcValueType::Percentage);
+                        val.setValue(ret.percentageValue());
+                    } else {
+                        val.setType(CalcValueType::Length);
+                        val.setValue(ret.cssLengthValue());
+                    }
+                } else {
+                    if (ret.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Percentage) {
+                        val.setType(CalcValueType::Percentage);
+                        val.setValue(-1 * ret.percentageValue());
+                    } else {
+                        val.setType(CalcValueType::Length);
+                        val.setValue(-1 * ret.cssLengthValue());
+                    }
+                }
+            } else if (isTimeParser &&
+                       ret.updateValueUnitTime(CSSTokenValue(str),
+                                               parserOption)) {
+                if (unitParsed) {
+                    return false;
+                }
+                unitParsed = true;
+                val.setType(CalcValueType::Time);
+                if (isPlus) {
+                    val.setValue(ret.timeValue());
+                } else {
+                    val.setValue(-1 * ret.timeValue());
+                }
+            } else if (isAngleParser &&
+                       ret.updateValueUnitAngle(CSSTokenValue(str),
+                                                parserOption)) {
+                if (unitParsed) {
+                    return false;
+                }
+                unitParsed = true;
+                val.setType(CalcValueType::Angle);
+                if (isPlus) {
+                    val.setValue(ret.angleValue());
+                } else {
+                    val.setValue(-1 * ret.angleValue());
+                }
+            } else {
+                parser.swap(pos);
+                if (parser.consumeNumber()) {
+                    float num = parser.parsedNumber();
+                    val.setType(CalcValueType::Number);
+                    if (isPlus) {
+                        val.setValue(num);
+                    } else {
+                        val.setValue(-1 * num);
+                    }
+                } else {
+                    return false;
+                }
+            }
+
+            if (term->hasValue()) {
+                term->appendValue(isMul, val);
+            } else {
+                term->appendValue(val);
+            }
+
+            parser.consumeWhitespaces();
+
+            if (parser.consumeIfNext('*')) {
+                isMul = true;
+            } else if (parser.consumeIfNext('/')) {
+                isMul = false;
+            } else {
+                if (!unitParsed) {
+                    return false;
+                }
+                break;
+            }
+        }
+
+        data->appendTerm(term);
+
+        parser.consumeWhitespaces();
+
+        if (parser.consumeIfNext('+')) {
+            isPlus = true;
+        } else if (parser.consumeIfNext('-')) {
+            isPlus = false;
+        } else if (parser.consumeIfNext(')')) {
+            break;
+        }
+
+        if (parser.isEnd()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
                                             uint8_t calcParserOption,
                                             uint8_t parserOption)
@@ -8653,127 +8793,9 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
         }
 
         CalcData* data = new CalcData();
-        bool isPlus = true;
-        while (true) {
-            CalcTerm* term = new CalcTerm();
-            bool isMul = false;
-            bool unitParsed = false;
-            while (!parser.isEnd()) {
-                parser.consumeWhitespaces();
-
-                CSSStyleValuePair ret;
-                char* pos = parser.curPos();
-                parser.consumeString(CSSPropertyParser::AllowDot |
-                                     CSSPropertyParser::AllowPlus |
-                                     CSSPropertyParser::AllowNegative |
-                                     CSSPropertyParser::AllowPercent);
-                auto str = parser.parsedString();
-                CalcValue val;
-                if (isLenParser &&
-                    ret.updateValueUnitLength(CSSTokenValue(str),
-                                              parserOption)) {
-                    if (unitParsed) {
-                        return false;
-                    }
-                    unitParsed = true;
-                    if (isPlus) {
-                        if (ret.valueKind() ==
-                            CSSStyleValuePair::ValueKind::Percentage) {
-                            val.setType(CalcValueType::Percentage);
-                            val.setValue(ret.percentageValue());
-                        } else {
-                            val.setType(CalcValueType::Length);
-                            val.setValue(ret.cssLengthValue());
-                        }
-                    } else {
-                        if (ret.valueKind() ==
-                            CSSStyleValuePair::ValueKind::Percentage) {
-                            val.setType(CalcValueType::Percentage);
-                            val.setValue(-1 * ret.percentageValue());
-                        } else {
-                            val.setType(CalcValueType::Length);
-                            val.setValue(-1 * ret.cssLengthValue());
-                        }
-                    }
-                } else if (isTimeParser &&
-                           ret.updateValueUnitTime(CSSTokenValue(str),
-                                                   parserOption)) {
-                    if (unitParsed) {
-                        return false;
-                    }
-                    unitParsed = true;
-                    val.setType(CalcValueType::Time);
-                    if (isPlus) {
-                        val.setValue(ret.timeValue());
-                    } else {
-                        val.setValue(-1 * ret.timeValue());
-                    }
-                } else if (isAngleParser &&
-                           ret.updateValueUnitAngle(CSSTokenValue(str),
-                                                    parserOption)) {
-                    if (unitParsed) {
-                        return false;
-                    }
-                    unitParsed = true;
-                    val.setType(CalcValueType::Angle);
-                    if (isPlus) {
-                        val.setValue(ret.angleValue());
-                    } else {
-                        val.setValue(-1 * ret.angleValue());
-                    }
-                } else {
-                    parser.swap(pos);
-                    if (parser.consumeNumber()) {
-                        float num = parser.parsedNumber();
-                        val.setType(CalcValueType::Number);
-                        if (isPlus) {
-                            val.setValue(num);
-                        } else {
-                            val.setValue(-1 * num);
-                        }
-                    } else {
-                        return false;
-                    }
-                }
-
-                if (term->hasValue()) {
-                    term->appendValue(isMul, val);
-                } else {
-                    term->appendValue(val);
-                }
-
-                parser.consumeWhitespaces();
-
-                if (parser.consumeIfNext('*')) {
-                    isMul = true;
-                } else if (parser.consumeIfNext('/')) {
-                    isMul = false;
-                } else {
-                    if (!unitParsed) {
-                        return false;
-                    }
-                    break;
-                }
-            }
-
-            data->appendTerm(term);
-
-            parser.consumeWhitespaces();
-
-            if (parser.consumeIfNext('+')) {
-                isPlus = true;
-            } else if (parser.consumeIfNext('-')) {
-                isPlus = false;
-            } else if (parser.consumeIfNext(')')) {
-                break;
-            }
-
-            if (parser.isEnd()) {
-                return false;
-            }
-        }
-
-        if (parser.isEnd()) {
+        bool result = parseCalc(parser, data, isLenParser, isAngleParser,
+                                isTimeParser, parserOption);
+        if (result && parser.isEnd()) {
             m_valueKind = CSSStyleValuePair::ValueKind::CalcValueKind;
             m_value = data;
             return true;
