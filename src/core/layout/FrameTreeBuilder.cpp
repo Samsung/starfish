@@ -1152,7 +1152,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
                         ctx.currentBlockContainer(), current,
                         DisplayValue::BlockDisplayValue);
 
-                ctx.currentBlockContainer()->appendChild(blockBox);
+                FrameTreeBuilder::insertChild(ctx.currentBlockContainer(),
+                                              blockBox, current, ctx);
                 blockBox->appendChild(in);
             } else {
                 prev->appendChild(in);
