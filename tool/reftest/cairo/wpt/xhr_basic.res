@@ -90,7 +90,7 @@ http://web-platform.test:8000/xhr/xmlhttprequest-eventtarget.htm
 http://web-platform.test:8000/xhr/access-control-basic-post-with-non-cors-safelisted-content-type.htm
 http://web-platform.test:8000/xhr/responseText-status.html
 #http://web-platform.test:8000/xhr/setrequestheader-open-setrequestheader.htm
-#http://web-platform.test:8000/xhr/access-control-basic-allow-non-cors-safelisted-method-async.htm
+http://web-platform.test:8000/xhr/access-control-basic-allow-non-cors-safelisted-method-async.htm
 http://web-platform.test:8000/xhr/send-data-es-object.htm
 http://web-platform.test:8000/xhr/access-control-preflight-request-invalid-status-301.htm
 #http://web-platform.test:8000/xhr/abort-during-loading.htm
@@ -141,7 +141,7 @@ http://web-platform.test:8000/xhr/open-method-bogus.htm
 #http://web-platform.test:8000/xhr/xmlhttprequest-timeout-worker-simple.html
 #http://web-platform.test:8000/xhr/data-uri.htm
 #http://web-platform.test:8000/xhr/xmlhttprequest-sync-block-defer-scripts-subframe.html
-#http://web-platform.test:8000/xhr/access-control-basic-non-cors-safelisted-content-type.htm
+http://web-platform.test:8000/xhr/access-control-basic-non-cors-safelisted-content-type.htm
 #http://web-platform.test:8000/xhr/send-timeout-events.htm
 #http://web-platform.test:8000/xhr/send-authentication-basic.htm
 #http://web-platform.test:8000/xhr/access-control-and-redirects.htm
@@ -213,7 +213,7 @@ http://web-platform.test:8000/xhr/abort-after-receive.htm
 http://web-platform.test:8000/xhr/event-readystate-sync-open.htm
 http://web-platform.test:8000/xhr/access-control-basic-denied.htm
 #http://web-platform.test:8000/xhr/send-authentication-basic-repeat-no-args.htm
-#http://web-platform.test:8000/xhr/access-control-basic-allow-non-cors-safelisted-method.htm
+http://web-platform.test:8000/xhr/access-control-basic-allow-non-cors-safelisted-method.htm
 #http://web-platform.test:8000/xhr/event-loadstart-upload.htm
 #http://web-platform.test:8000/xhr/access-control-recursive-failed-request.htm
 http://web-platform.test:8000/xhr/open-after-abort.htm

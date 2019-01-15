@@ -62,6 +62,8 @@ NetworkURLWorkerData::NetworkURLWorkerData(ResourceRequest* orgRequest)
     , needsToSendPreflightRequest(false)
     , inPreflightRequest(false)
     , isPreflightReqeustDone(false)
+    , readptrToUpload(nullptr)
+    , sizeleftToUpload(0)
     , request(orgRequest)
     , helper(nullptr)
     , httpTransaction(HTTPTransaction::create())
@@ -364,6 +366,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         nwd->workingTime += end - start;
 #endif
     }
+
     bool includeCredentials = false;
     switch (m_orgProxy->requestCredentials()) {
     case RequestCredentials::SameOrigin:
@@ -417,6 +420,15 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     nwd->httpTransaction->setWriteHeaderCallbackAndData(curlWriteHeaderCallback,
                                                         nwd);
     nwd->httpTransaction->setWriteCallbackAndData(curlWriteCallback, nwd);
+
+    if (m_orgProxy->method()->equals("PUT")) {
+        nwd->readptrToUpload =
+            nwd->httpTransaction->httpRequest().entityBody().data();
+        nwd->sizeleftToUpload =
+            nwd->httpTransaction->httpRequest().entityBody().length();
+        nwd->httpTransaction->setUploadBufferDataCallbackAndData(
+            curlUploadBufferDataCallback, nwd);
+    }
 
     if (m_orgProxy->isSync()) {
         nwd->helper = new SyncNetworkWorkHelper();
@@ -934,5 +946,31 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteHeaderCallback(
     }
 
     return realSize;
+}
+
+size_t NetworkURLResourceRequestJobDelegate::curlUploadBufferDataCallback(
+    void* ptr, size_t size, size_t nmemb, void* data)
+{
+    NetworkURLWorkerData* nwd = (NetworkURLWorkerData*)data;
+    ResourceRequest* request = nwd->request;
+
+    Locker<Mutex> locker(*request->m_mutex);
+
+    if (nwd->isAborted) {
+        return 0;
+    }
+
+    size_t bufferSize = size * nmemb;
+    if (nwd->sizeleftToUpload) {
+        size_t copyThisMuch = nwd->sizeleftToUpload;
+        if (copyThisMuch > bufferSize) {
+            copyThisMuch = bufferSize;
+        }
+        memcpy(ptr, nwd->readptrToUpload, copyThisMuch);
+        nwd->readptrToUpload += copyThisMuch;
+        nwd->sizeleftToUpload -= copyThisMuch;
+        return copyThisMuch;
+    }
+    return 0;
 }
 }

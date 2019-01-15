@@ -47,7 +47,8 @@ struct NetworkURLWorkerData {
     bool needsToSendPreflightRequest;
     bool inPreflightRequest;
     bool isPreflightReqeustDone;
-
+    const char* readptrToUpload;
+    size_t sizeleftToUpload;
     ResourceRequest* request;
     NetworkURLWorkerHelper* helper;
     std::unique_ptr<HTTPTransaction> httpTransaction;
@@ -106,6 +107,9 @@ public:
                                     void* data);
     static size_t curlWriteHeaderCallback(void* ptr, size_t size, size_t nmemb,
                                           void* data);
+    static size_t curlUploadBufferDataCallback(void* ptr, size_t size,
+                                               size_t nmemb, void* data);
+
     NetworkURLResourceRequestJobDelegate(ResourceRequest* proxy);
     virtual void send(String* body = String::emptyString,
                       bool allowCache = false);

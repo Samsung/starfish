@@ -30,10 +30,8 @@ class HTTPResponse;
 typedef int (*ProgressCallBack)(void* clientp, curl_off_t dltotal,
                                 curl_off_t dlnow, curl_off_t ultotal,
                                 curl_off_t ulnow);
-typedef size_t (*WriteHeaderCallback)(void* ptr, size_t size, size_t nmemb,
-                                      void* data);
-typedef size_t (*WriteCallback)(void* ptr, size_t size, size_t nmemb,
-                                void* data);
+
+typedef size_t (*Callback)(void* ptr, size_t size, size_t nmemb, void* data);
 
 class HTTPTransaction {
 public:
@@ -91,17 +89,22 @@ public:
         m_procData = data;
     }
 
-    void setWriteHeaderCallbackAndData(WriteHeaderCallback cb,
-                                       void* data = nullptr)
+    void setWriteHeaderCallbackAndData(Callback cb, void* data = nullptr)
     {
         m_writeHeaderCB = cb;
         m_writeHeaderData = data;
     }
 
-    void setWriteCallbackAndData(WriteCallback cb, void* data = nullptr)
+    void setWriteCallbackAndData(Callback cb, void* data = nullptr)
     {
         m_writeCB = cb;
         m_writeData = data;
+    }
+
+    void setUploadBufferDataCallbackAndData(Callback cb, void* data = nullptr)
+    {
+        m_uploadBufferDataCB = cb;
+        m_uploadData = data;
     }
 
     bool inPreflightRequest()
@@ -128,20 +131,19 @@ private:
     CURLSH* m_curlsh;
     CURLcode m_res;
 
-    // proxy
     std::string m_proxyURL;
 
-    // progress
     ProgressCallBack m_procCB;
-    void* m_procData; // NetworkURLWorkerData
+    void* m_procData;
 
-    // writeheader
-    WriteHeaderCallback m_writeHeaderCB;
-    void* m_writeHeaderData; // ResourceRequest
+    Callback m_writeHeaderCB;
+    void* m_writeHeaderData;
 
-    // write
-    WriteCallback m_writeCB;
-    void* m_writeData; // NetworkURLWorkerData
+    Callback m_writeCB;
+    void* m_writeData;
+
+    Callback m_uploadBufferDataCB;
+    void* m_uploadData;
 
     bool m_inPreflightRequest;
     bool m_isPreflightReqeustDone;
