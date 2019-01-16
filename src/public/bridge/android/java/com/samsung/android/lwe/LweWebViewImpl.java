@@ -575,11 +575,6 @@ public class LweWebViewImpl implements LweWebView {
             if (mIMM == null) {
                 mIMM = (InputMethodManager) mLWEView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
             }
-            if (mLWEView.hasFocus() == false) {
-                if (mLWEView.requestFocus() == false) {
-                    Log.w(sTag, "Failed to request focus");
-                }
-            }
             mIMM.showSoftInput(mLWEView, InputMethodManager.SHOW_IMPLICIT);
             mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
         }
