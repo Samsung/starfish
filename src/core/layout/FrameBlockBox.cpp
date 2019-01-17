@@ -238,7 +238,6 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         LayoutUnit contentHeight;
         LayoutUnit parentHeight;
         Length height = style()->height();
-        BoxSizingValue boxSizing = style()->boxSizing();
 
         if (hasBlockFlow()) {
             contentHeight = layoutBlock(ctx);

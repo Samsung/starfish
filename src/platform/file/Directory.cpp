@@ -272,6 +272,8 @@ public:
     }
 
 private:
+    DIR* m_dir;
+
     void removeDirectory(const char* path)
     {
         clearDirectory(path);
@@ -298,7 +300,6 @@ private:
             return;
         }
 
-        size_t pathLen = strlen(path);
         while ((entry = readdir(dir)) != NULL) {
             // Skip entries "." and ".."
             if (!strncmp(entry->d_name, ".", 1) ||
@@ -327,7 +328,6 @@ private:
         }
         closedir(dir);
     }
-    DIR* m_dir;
 };
 
 Directory* Directory::create()

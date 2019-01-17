@@ -6740,6 +6740,8 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
         ComputedStyle* style =
             resolver->resolveStyle(ctx, element, parentStyle);
 
+        STARFISH_ASSERT(style != nullptr);
+
         // TODO use needsStyleRecalcOnlyForAnimation
         // bool needsStyleRecalcOnlyForAnimation =
         // element->needsStyleRecalcForAnimation();
@@ -7665,8 +7667,6 @@ static bool updatePositionValue(const GCVector<CSSStyleValuePair>& values,
         if (!current.isSideValueKind()) {
             return false;
         }
-
-        SideValue id = current.sideValue();
 
         if (isCenterValue(current)) {
             if (center.isSideValueKind()) {

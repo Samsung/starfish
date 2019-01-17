@@ -28,6 +28,9 @@ namespace Starfish {
 
 class PseudoElement : public Element {
 public:
+    QualifiedName pseudoElementTagName(
+        Document* document, StyleResolver::PseudoElementType pseudoId);
+
     PseudoElement(Document* document, StyleResolver::PseudoElementType pseudoId)
         : Element(document, pseudoElementTagName(document, pseudoId))
         , m_pseudoId(pseudoId)
@@ -53,9 +56,6 @@ public:
     {
         return m_pseudoId;
     }
-
-    QualifiedName pseudoElementTagName(
-        Document* document, StyleResolver::PseudoElementType pseudoId);
 
 protected:
     StyleResolver::PseudoElementType m_pseudoId;

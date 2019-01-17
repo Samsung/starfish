@@ -1117,6 +1117,7 @@ private:
         if (UNLIKELY(stringAccessData.length > stackProcessingSize)) {
             glyphs = (cairo_glyph_t*)malloc(sizeof(cairo_glyph_t) *
                                             stringAccessData.length);
+            STARFISH_ASSERT(glyphs != nullptr);
         }
 
         size_t glyphCount = 0;
