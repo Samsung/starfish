@@ -474,7 +474,8 @@ public:
 
                 if (shareWithStackingBuffer && f &&
                     f->asFrameBox()->stackingContext() &&
-                    f->asFrameBox()->stackingContext()->needsGraphicsBuffer()) {
+                    f->asFrameBox()->stackingContext()->needsGraphicsBuffer() &&
+                    f->asFrameBox()->stackingContext()->isAncestorOf(sCtx)) {
                     nearstBufferedFrame = f;
                     shareWithStackingBuffer = false;
                 }
