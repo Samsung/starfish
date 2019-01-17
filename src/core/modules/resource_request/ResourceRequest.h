@@ -41,8 +41,6 @@ class WebOrigin;
 class HeadersData;
 class Resource;
 
-typedef std::vector<char> EntityBody;
-
 enum class BodyType;
 enum class ResponseType;
 
@@ -175,9 +173,10 @@ public:
 
     // Reading response is only safe when onProgress callback fired | request
     // ended
-    EntityBody& response()
+    ResponseBody& response()
     {
-        return m_response;
+        STARFISH_ASSERT(m_responseData);
+        return m_responseData->m_responseBody;
     }
 
     BodyType bodyType()
@@ -350,8 +349,8 @@ protected:
     void clearIdlers();
 
     template <typename StrType>
-    static EntityBody parseBase64String(const StrType& str, size_t startAt,
-                                        size_t endAt);
+    static ResponseBody parseBase64String(const StrType& str, size_t startAt,
+                                          size_t endAt);
     void changeReadyState(ReadyState readyState, bool isExplicitAction);
     void changeProgress(ProgressState progress, bool isExplicitAction);
     void handleResponseEOF();
@@ -392,7 +391,7 @@ protected:
     Mutex* m_mutex;
     String* m_contentLanguage;
     std::string m_lastEffectiveURL;
-    EntityBody m_response;
+
     GCVector<size_t> m_requstedIdlers;
 
     ResourceRequestJobInterface* m_jobDelegate;

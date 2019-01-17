@@ -22,8 +22,8 @@
 #include "core/dom/Document.h"
 #include "core/fetch/FetchUtils.h"
 #if defined(STARFISH_ENABLE_HTTPCACHE)
-#include "platform/network/HTTPCache.h"
-#include "platform/network/HTTPCacheEntry.h"
+#include "platform/network/http/HTTPCache.h"
+#include "platform/network/http/HTTPCacheEntry.h"
 #endif
 #include "binding/ScriptWrappable.h"
 #include "platform/network/http/HTTPHeaderMap.h"
@@ -34,7 +34,7 @@
 #include "platform/network/http/HTTPUtil.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
-#include "platform/network/NetworkSharedResourceManager.h"
+#include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
@@ -111,7 +111,7 @@ void* NetworkURLResourceRequestJobDelegate::networkWorker(void* data)
         // Note : Preflight-request ensures that the main thread does not read
         // or write these. because it does not trigger an event. So I remove it
         // now.
-        EntityBody().swap(nwd->request->m_response);
+        EntityBody().swap(nwd->request->m_responseData->m_responseBody);
         HeaderMap().swap(
             nwd->request->m_responseHeaders->httpHeaderMap()->headerMap());
     }

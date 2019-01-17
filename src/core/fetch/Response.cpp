@@ -32,7 +32,7 @@ Response::Response(Document* document)
     , Body(document->window())
     , m_instance(document->scriptBindingInstance())
     , m_headers(Headers(document))
-    , m_responseData()
+    , m_responseData(new ResponseData())
 {
     m_headers.setGuard(Guard::Response);
 }
@@ -42,7 +42,7 @@ Response::Response(Document* document, Nullable<BodyInit>& body)
     , Body(document->window(), body)
     , m_instance(document->scriptBindingInstance())
     , m_headers(Headers(document))
-    , m_responseData()
+    , m_responseData(new ResponseData())
 {
     m_headers.setGuard(Guard::Response);
     handleBodyInit(body);
@@ -174,42 +174,42 @@ void Response::copyResponseData(Response* src)
 
 String* Response::url()
 {
-    return m_responseData.m_url;
+    return m_responseData->m_url;
 }
 
 void Response::setUrl(String* url)
 {
-    m_responseData.m_url = url;
+    m_responseData->m_url = url;
 }
 
 bool Response::redirected()
 {
-    return m_responseData.m_redirected;
+    return m_responseData->m_redirected;
 }
 
 void Response::setRedirected(bool value)
 {
-    m_responseData.m_redirected = value;
+    m_responseData->m_redirected = value;
 }
 
 uint32_t Response::status()
 {
-    return m_responseData.m_status;
+    return m_responseData->m_status;
 }
 
 void Response::setStatus(uint32_t status)
 {
-    m_responseData.m_status = status;
+    m_responseData->m_status = status;
 }
 
 void Response::setType(ResponseType type)
 {
-    m_responseData.m_type = type;
+    m_responseData->m_type = type;
 }
 
 ResponseType Response::typeValue()
 {
-    return m_responseData.m_type;
+    return m_responseData->m_type;
 }
 
 String* Response::type()
@@ -224,26 +224,26 @@ bool Response::ok()
 
 void Response::setOk(bool ok)
 {
-    m_responseData.m_ok = ok;
+    m_responseData->m_ok = ok;
 }
 
 String* Response::statusText()
 {
-    return m_responseData.m_statusText;
+    return m_responseData->m_statusText;
 }
 
 void Response::setStatusText(String* statusText)
 {
-    m_responseData.m_statusText = statusText;
+    m_responseData->m_statusText = statusText;
 }
 
 String* Response::mimeType()
 {
-    return m_responseData.m_mimeType;
+    return m_responseData->m_mimeType;
 }
 
 void Response::setMimeType(String* mimeType)
 {
-    m_responseData.m_mimeType = mimeType;
+    m_responseData->m_mimeType = mimeType;
 }
 }

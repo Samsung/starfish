@@ -39,9 +39,9 @@
 #include "core/util/LineBreakerIteratorPool.h"
 #include "LWEWebView.h"
 #ifdef STARFISH_ENABLE_HTTPCACHE
-#include "platform/network/HTTPCache.h"
+#include "platform/network/http/HTTPCache.h"
 #endif
-#include "platform/network/NetworkSharedResourceManager.h"
+#include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace Starfish {

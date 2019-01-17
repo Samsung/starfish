@@ -82,7 +82,6 @@ ResourceRequest::ResourceRequest(Document* document)
         [](void* obj, void* cd) {
             // STARFISH_LOG_INFO("ResourceRequest::~ResourceRequest %p\n", obj);
             ResourceRequest* nr = (ResourceRequest*)obj;
-            EntityBody().swap(nr->m_response);
             std::string().swap(nr->m_lastEffectiveURL);
         },
         NULL, NULL, NULL);
@@ -94,7 +93,6 @@ ResourceRequest::ResourceRequest(Document* document)
 void ResourceRequest::initVariables()
 {
     m_contentLanguage = String::emptyString;
-    EntityBody().swap(m_response);
     std::string().swap(m_lastEffectiveURL);
     m_gotError = false;
     m_containsBase64Content = false;
@@ -222,7 +220,9 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
 
     } else if (readyState == ReadyState::Done) {
         if (m_containsBase64Content) {
-            m_response = parseBase64String(m_response, 0, m_response.size());
+            m_responseData->m_responseBody =
+                parseBase64String(m_responseData->m_responseBody, 0,
+                                  m_responseData->m_responseBody.size());
         }
     }
 
@@ -259,7 +259,9 @@ void ResourceRequest::changeProgress(ProgressState progress,
     }
 
     if (m_progressState == ProgressState::LoadEnd) {
-        EntityBody().swap(m_response);
+        if (m_responseData) {
+            ResponseBody().swap(m_responseData->m_responseBody);
+        }
     }
 }
 
@@ -572,15 +574,15 @@ static inline bool isBase64(unsigned char c)
 }
 
 template <typename StrType>
-EntityBody ResourceRequest::parseBase64String(const StrType& str,
-                                              size_t startAt, size_t endAt)
+ResponseBody ResourceRequest::parseBase64String(const StrType& str,
+                                                size_t startAt, size_t endAt)
 {
     size_t inLen = endAt - startAt;
     size_t i = 0;
     size_t j = 0;
     size_t in_ = startAt;
     unsigned char charArray4[4] = {}, charArray3[3] = {};
-    EntityBody result;
+    ResponseBody result;
 
     while (inLen--) {
         if (((unsigned char)str[in_] != '=') &&

@@ -20,7 +20,11 @@
 #ifndef __StarfishResponseData__
 #define __StarfishResponseData__
 
+#include "core/fetch/stream/ReadableStreamChunk.h"
+
 namespace Starfish {
+
+typedef ReadableStreamChunk ResponseBody;
 
 // https://fetch.spec.whatwg.org/#responsetype
 enum class ResponseType { Basic, Cors, Default, Error, Opaque, Opaqueredirect };
@@ -39,6 +43,9 @@ public:
     uint32_t m_status;
     String* m_statusText;
     String* m_mimeType;
+
+    ResponseBody m_responseBody;
+
     // https://fetch.spec.whatwg.org/#concept-response-cors-exposed-header-name-list
     GCVector<String*> m_corsExposedHeaderNameList;
 

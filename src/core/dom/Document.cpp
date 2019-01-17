@@ -74,7 +74,7 @@
 #include "platform/file/File.h"
 #include "platform/loader/ImageResource.h"
 #include "core/animation/Animation.h"
-#include "platform/network/NetworkSharedResourceManager.h"
+#include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {

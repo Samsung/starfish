@@ -639,7 +639,7 @@ void XMLHttpRequest::setRequestHeader(String* header, String* value)
                                DOMException::SYNTAX_ERR, "InvalidStateError");
     }
 
-    if (HTTPUtil::isUnsafeHeader(header)) {
+    if (FetchUtils::isForbiddenHeaderName(header)) {
         STARFISH_LOG_WARN("Refused to set unsafe header \"%s\"",
                           header->toUTF8NonGCString().data());
         return;

@@ -17,55 +17,10 @@
  *  USA
  */
 
-#ifndef __StarfishReadableStreamBuffer__
-#define __StarfishReadableStreamBuffer__
-
-#include "ReadableStreamChunk.h"
+#ifndef __StarfishReadableStreamChunk__
+#define __StarfishReadableStreamChunk__
 
 namespace Starfish {
-
-enum class BodyType;
-class Promise;
-
-class ReadableStreamBuffer {
-public:
-    ReadableStreamBuffer();
-    size_t size()
-    {
-        return m_buffer.size();
-    }
-
-    ReadableStreamChunk::pointer data()
-    {
-        return m_buffer.data();
-    }
-
-    void setType(BodyType type)
-    {
-        m_type = type;
-    }
-
-    BodyType type()
-    {
-        return m_type;
-    }
-
-    void setMimeType(String* mimeType)
-    {
-        m_mimeType = mimeType;
-    }
-
-    void push(const char* buffer, size_t length);
-    void clear();
-
-    void resolveWithType(Promise* promise, ScriptBindingInstance* instance,
-                         BodyType type);
-
-private:
-    ReadableStreamChunk m_buffer;
-    BodyType m_type;
-    String* m_mimeType;
-};
+typedef std::vector<char> ReadableStreamChunk;
 }
-
 #endif

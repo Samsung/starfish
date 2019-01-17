@@ -109,7 +109,7 @@ public:
 private:
     ScriptBindingInstance* m_instance;
     Headers m_headers;
-    ResponseData m_responseData;
+    ResponseData* m_responseData;
 
     void handleBodyInit(Nullable<BodyInit>& body);
     void copyResponseData(Response* destResponse);
