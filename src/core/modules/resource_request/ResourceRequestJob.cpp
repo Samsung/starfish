@@ -108,9 +108,9 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         request->changeReadyState(ReadyState::Loading, true);
         size_t responseLength =
             request->webView()->m_fileLengthCallback(handle);
-        request->m_response.resize(responseLength);
+        request->response().resize(responseLength);
         request->webView()->m_fileReadCallback(
-            (uint8_t*)request->m_response.data(), request->m_response.size(),
+            (uint8_t*)request->response().data(), request->response().size(),
             handle);
         request->webView()->m_fileCloseCallback(handle);
         request->handleResponseEOF();
@@ -122,8 +122,8 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         request->changeReadyState(ReadyState::HeadersReceived, true);
         request->changeReadyState(ReadyState::Loading, true);
         size_t responseLength = fio->size();
-        request->m_response.resize(responseLength);
-        fio->read(request->m_response.data(), sizeof(const char),
+        request->response().resize(responseLength);
+        fio->read(request->response().data(), sizeof(const char),
                   responseLength);
         fio.reset();
         request->handleResponseEOF();
@@ -195,7 +195,7 @@ void DataURLResourceRequestJobDelegate::worker(ResourceRequest* request,
 
     size_t len = utf8Data.length();
     for (size_t i = 0; i < len; i++) {
-        request->m_response.push_back(utf8Data[i]);
+        request->response().push_back(utf8Data[i]);
     }
 
     request->handleResponseEOF();
@@ -359,7 +359,7 @@ void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* request,
 
     request->changeReadyState(ReadyState::Loading, true);
     char* buf = (char*)((Blob*)store.m_blob)->data();
-    request->m_response.assign(buf, &buf[((Blob*)store.m_blob)->size()]);
+    request->response().assign(buf, &buf[((Blob*)store.m_blob)->size()]);
 
     request->handleResponseEOF();
 }

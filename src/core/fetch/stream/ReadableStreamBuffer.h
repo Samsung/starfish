@@ -20,12 +20,12 @@
 #ifndef __StarfishReadableStreamBuffer__
 #define __StarfishReadableStreamBuffer__
 
+#include "ReadableStreamChunk.h"
+
 namespace Starfish {
 
 enum class BodyType;
 class Promise;
-
-typedef std::vector<char> ReadableStreamChunk;
 
 class ReadableStreamBuffer {
 public:

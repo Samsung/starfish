@@ -23,7 +23,7 @@
 #include "HTTPResponse.h"
 #include "HTTPTransaction.h"
 #include "HTTPUtil.h"
-#include "platform/network/NetworkSharedResourceManager.h"
+#include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "core/modules/profiling/Profiling.h"
 

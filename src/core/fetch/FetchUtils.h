@@ -41,6 +41,7 @@ public:
     static bool isCORSsafelistedResponseHeaderName(
         const std::string& name, const GCVector<String*>* exposedNames);
     static bool isForbiddenResponseHeaderName(const std::string& name);
+    static bool isForbiddenHeaderName(String* name);
 };
 }
 

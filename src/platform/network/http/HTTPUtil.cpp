@@ -306,34 +306,4 @@ HTTPContentInfo HTTPUtil::getHTTPContentInfoFromHeaders(
 
     return info;
 }
-
-bool HTTPUtil::isUnsafeHeader(String* header)
-{
-    auto lower = header->toLower();
-    if (lower->startsWith("proxy-") || lower->startsWith("sec-") ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kAcceptCharset) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kAcceptEncoding) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kAccessControlRequestHeaders) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kAccessControlRequestMethod) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kConnection) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kContentLength) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kCookie) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kCookie2) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kDate) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kDNT) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kExpect) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kHost) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kKeepAlive) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kOrigin) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kReferer) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kTE) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kTrailer) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kTransferEncoding) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kUpgrade) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kUserAgent) ||
-        lower->equalsIgnoreCase(HTTPHeaderMap::kVia)) {
-        return true;
-    }
-    return false;
-}
 }

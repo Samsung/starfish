@@ -31,8 +31,15 @@ ResponseData::ResponseData()
     , m_status(200)
     , m_statusText(String::emptyString)
     , m_mimeType(String::emptyString)
+    , m_responseBody()
     , m_corsExposedHeaderNameList()
 {
+    GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                   [](void* obj, void* cd) {
+                                       ResponseData* res = (ResponseData*)obj;
+                                       ResponseBody().swap(res->m_responseBody);
+                                   },
+                                   NULL, NULL, NULL);
 }
 
 String* ResponseData::reponseTypeString(ResponseType type)
