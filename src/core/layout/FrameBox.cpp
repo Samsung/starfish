@@ -230,7 +230,6 @@ FrameBox::calHorizontalInfoRelativeToContainingBlock(LayoutContext& ctx,
                                                      FrameBox* cb)
 {
     STARFISH_ASSERT(cb);
-    DirectionValue parentDirection = blockContainer(this)->style()->direction();
 
     FrameBox* parent = layoutParent()->asFrameBox();
 

@@ -503,8 +503,6 @@ void FlexFormattingContext::applyJustifyContent()
         LayoutUnit separator;
         JustifyContentValue justifyContent =
             m_container->style()->justifyContent();
-        FlexDirectionValue flexDirection =
-            m_container->style()->flexDirection();
         switch (justifyContent) {
         case JustifyContentValue::FlexStartJustifyContentValue:
             break;

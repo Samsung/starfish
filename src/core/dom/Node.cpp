@@ -585,6 +585,8 @@ unsigned Node::index()
 
     while (child != this) {
         index++;
+
+        STARFISH_ASSERT(child != nullptr);
         child = child->nextSibling();
     }
 
