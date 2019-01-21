@@ -1556,10 +1556,10 @@ Extensions to the Navigator Object: The navigator is extended by the following a
 | [NavigatorID](https://html.spec.whatwg.org/multipage/#navigatorid) | interface | | NavigatorID is used for identifying Navigator. |
 | | attribute | appCodeName | Returns the string "Mozilla". |
 | | attribute | appName | Returns the string "Netscape". |
-| | attribute | appVersion | Returns the string "Mozilla/5.0 (like Firefox, Gecko) StarFish/0.1.0". |
+| | attribute | appVersion | Returns the string "Mozilla/5.0 (like Firefox, Gecko) Starfish/0.1.0". |
 | | attribute | platform | Returns either the empty string or a string representing the platform on which the MWE is executing. |
 | | attribute | product | Returns the string "Gecko". |
-| | attribute | userAgent | Returns the string "Mozilla/5.0 (like Firefox, Gecko) StarFish/0.1.0". |
+| | attribute | userAgent | Returns the string "Mozilla/5.0 (like Firefox, Gecko) Starfish/0.1.0". |
 | | attribute | vendor | Returns the string "Samsung Electronics Co., Ltd.". |
 | | attribute | vendorSub | Returns the empty string. |
 | [Geolocation](https://dev.w3.org/geo/api/spec-source.html#geolocation) | interface	| Geolocation | |

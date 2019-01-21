@@ -215,19 +215,19 @@ function doTest {
         filenames[$cnt]=$i
         if [ $TESTSUITE -eq 2 ]; then
             RESIMG="out"$cnt".png"
-            ./StarFish $i --pixel-test --hide-window --screen-shot=$RESIMG --screen-shot-width=800 --screen-shot-height=600 --width=800 --height=600 &> /dev/null 2>&1 &
+            ./Starfish $i --pixel-test --hide-window --screen-shot=$RESIMG --screen-shot-width=800 --screen-shot-height=600 --width=800 --height=600 &> /dev/null 2>&1 &
         elif [ $TESTSUITE -eq 3 ] || [ $TESTSUITE -eq 6 ]; then
             RESIMG="out"$cnt".png"
-            ./StarFish $i --regression-test --hide-window --screen-shot=$RESIMG --screen-shot-width=800 --screen-shot-height=600 --width=800 --height=600 &> /dev/null 2>&1 &
+            ./Starfish $i --regression-test --hide-window --screen-shot=$RESIMG --screen-shot-width=800 --screen-shot-height=600 --width=800 --height=600 &> /dev/null 2>&1 &
         elif [ $TESTSUITE -eq 5 ]; then
             RESIMG="out"$cnt".png"
-            ./StarFish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 --width=900 --height=900 &> /dev/null 2>&1 &
+            ./Starfish $i --regression-test --screen-shot=$RESIMG --screen-shot-width=900 --screen-shot-height=900 --width=900 --height=900 &> /dev/null 2>&1 &
         elif [ $TESTSUITE -eq 7 ]; then
-            ./StarFish $i --hide-window --width=800 --height=600 &> $RESFILE &
+            ./Starfish $i --hide-window --width=800 --height=600 &> $RESFILE &
         elif [ $TESTSUITE -eq 8 ]; then
-            ./StarFish $i --regression-test --hide-window --width=800 --height=600 &> $RESFILE &
+            ./Starfish $i --regression-test --hide-window --width=800 --height=600 &> $RESFILE &
         else
-            ./StarFish $i --hide-window &> $RESFILE &
+            ./Starfish $i --hide-window &> $RESFILE &
         fi
         if [[ $cnt != $((ROTATE-1)) ]] && [[ $i != $last ]]; then
             continue;

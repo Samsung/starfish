@@ -40,7 +40,7 @@ def _timeout(proc, tc_file):
     print("Timeout(" + str(TIMEOUT_SEC) + "s): " + tc_file)
 
 def _run_starfish_reftest(tc_file):
-    starfish_command = ["./StarFish", tc_file,
+    starfish_command = ["./Starfish", tc_file,
                         "--ref-test", "--width=800", "--height=600"]
     outs = ""
     errs = ""
@@ -111,7 +111,7 @@ def wpt_reftest_case_runner(tc, gen_diff=False):
         print("ERROR : TC file does not exist - " + tc_file)
         return False
 
-    # Run StarFish
+    # Run Starfish
     result, outs = _run_starfish_reftest(tc_file)
     if not result:
         print(Strings.FAIL_SIGN + tc_file + " TC_CRASH")

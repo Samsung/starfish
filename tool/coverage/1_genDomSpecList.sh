@@ -63,7 +63,7 @@ for tc in ${TESTSUITE[@]}; do
     res="in/dom.$res.raw"
     for f in `find $path/$tc -name '*.htm*' | sort`; do
         echo $f | sed 's/\.\.\/\.\.\/test/test/' > out/t.txt
-        $path/StarFish $f --screen-shot="out/tmp.png" &> out/tt.txt
+        $path/Starfish $f --screen-shot="out/tmp.png" &> out/tt.txt
         grep '&&&' out/tt.txt | sort | uniq >> out/t.txt
         tr '\n' '\t' < out/t.txt | sed 's/\t$/\n/' >> $res
     done

@@ -10,13 +10,13 @@ This document highlights core coding style.
 Use `#define` directive in all header files to prevent multiple
 inclusion of header files. The format of the identifier name should be
 `__[Project Name][HeaderFileName]__`. For example, for
-`MyVeryCoolClass.h` in `StarFish` project, the guard should be
-`__StarFishMyVeryCoolClass__` .
+`MyVeryCoolClass.h` in `Starfish` project, the guard should be
+`__StarfishMyVeryCoolClass__` .
 
 
 ```cpp
-#ifndef __StarFishMyVeryCoolClass__
-#define __StarFishMyVeryCoolClass__
+#ifndef __StarfishMyVeryCoolClass__
+#define __StarfishMyVeryCoolClass__
 ...
 #endif
 ```

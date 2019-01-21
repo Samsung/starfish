@@ -77,9 +77,9 @@ for i in ${TESTSUITE[@]}; do
 
         echo -e "+++TC:"$j >> $RAWFILE
         if [[ "$j" = *"/csswg-test/"* || "$j" = *"/bidi/"* || "$j" = *"/demo/"* ]]; then
-            ./StarFish $j --screen-shot=./out.png &>> $RAWFILE &
+            ./Starfish $j --screen-shot=./out.png &>> $RAWFILE &
         else
-            ./StarFish $j --hide-window &>> $RAWFILE &
+            ./Starfish $j --hide-window &>> $RAWFILE &
         fi
 
         if [[ $CNT != $((ROTATE-1)) && $j != $LAST ]]; then

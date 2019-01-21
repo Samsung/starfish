@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarFishLayoutRepaintTracker__
-#define __StarFishLayoutRepaintTracker__
+#ifndef __StarfishLayoutRepaintTracker__
+#define __StarfishLayoutRepaintTracker__
 
 namespace Starfish {
 

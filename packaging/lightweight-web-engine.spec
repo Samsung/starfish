@@ -297,7 +297,7 @@ ninja starfish.executable
 ##############################################
 
 %install
-%define bin StarFish
+%define bin Starfish
 
 rm -rf %{buildroot}
 mkdir -p %{buildroot}%{_libdir}/lwe

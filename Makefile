@@ -1,8 +1,8 @@
 BUILDDIR=./build
 HOST=linux
 
-BIN=StarFish
-LIB=libStarFish.so
+BIN=Starfish
+LIB=libStarfish.so
 
 ################################################################################
 ################################################################################
@@ -793,7 +793,7 @@ install_git_prepush:
 install_pixel_test_dep:
 	$(CXX) -O3 -g3 --std=c++11 -o tool/imgdiff/imgdiff tool/imgdiff/imgdiff.cpp $(shell pkg-config --cflags libpng) $(shell pkg-config --libs libpng)
 	mkdir -p ~/.fonts
-	cp tool/fonts/StarFishAhem.ttf ~/.fonts/
+	cp tool/fonts/StarfishAhem.ttf ~/.fonts/
 	cp tool/fonts/SamsungOne-300C_v1.0.ttf ~/.fonts/
 	cp tool/fonts/SamsungOne-600C_v1.0.ttf ~/.fonts/
 	fc-cache -fv
@@ -856,7 +856,7 @@ internal_test_manual:
 	./tool/drivers/run_test.py basic tool/reftest/efl/internal_manual.res common --font-dep -p$(TEST_NPROCS)
 
 tct:
-	./StarFish test/tct/index.html
+	./Starfish test/tct/index.html
 
 wpt_syntax_checker:
 	./tool/pixel_test/syntaxChecker.sh css1
