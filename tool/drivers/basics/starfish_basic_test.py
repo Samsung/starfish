@@ -58,7 +58,7 @@ def case_runner(tc):
         return __opts.tc_handler(tc_file, "FAIL", __opts.show_progress)
 
     # Run starfish
-    starfish_command = ["./StarFish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression]
+    starfish_command = ["./Starfish", tc_file, "--hide-window", __opts.width, __opts.height, __opts.regression]
     try:
         p = Popen(starfish_command, stdin=PIPE, stdout=PIPE, stderr=PIPE)
         starfish_output, starfish_err = p.communicate("")

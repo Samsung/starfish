@@ -1,4 +1,4 @@
-# StarFish
+# Starfish
 ## Abstract
 Starfish is a lightweight Web browser engine for TV, mobile and wearable devices.
 
@@ -26,7 +26,7 @@ sudo apt-get install libefl-dev
 sudo apt-get install asciidoc xmlto
 ```
 
-### Download StarFish and compile third party libraries
+### Download Starfish and compile third party libraries
 
 ```sh
 git clone git@github.sec.samsung.net:lws/starfish.git
@@ -35,7 +35,7 @@ git submodule init
 git submodule update
 ```
 
-### Compile StarFish
+### Compile Starfish
 
 ```sh
 cmake CMakeLists.txt -DMODE=release -DHOST=linux -DARCH=x64 -DBACKEND=efl_cairo_gl -DTARGETNAME=Starfish -G Ninja
@@ -105,7 +105,7 @@ vi gbs-conf/gbs.conf
 # fill out 'user' and 'passwd'
 ```
 
-Build StarFish
+Build Starfish
 ```
 cd starfish
 gbs -c ../gbs-conf/gbs.conf build -A armv7l -P profile.50std  --incremental --include-all
@@ -152,7 +152,7 @@ ninja internal_test
 ninja [test_name] TEST_NPROCS=5
 ```
 
-### CSSWG Test (compare with node-WebKit/previous version of StarFish)
+### CSSWG Test (compare with node-WebKit/previous version of Starfish)
 
 We use the W3C's CSS conformance test suites.
 (W3C CSS WG Test Suites Repository: https://hg.csswg.org/test)
@@ -175,7 +175,7 @@ ninja csswg_test_all
 If you want to capture the screenshot on the command line, use:
 
 ``` sh
-# StarFish
+# Starfish
 ELM_ENGINE="shot:file=[capture.png]" ./run.sh [filepath=*.html] --pixel-test --width=800 --height=600
 
 # node-WebKit
@@ -219,7 +219,7 @@ All instructions in this section are outdated. They are listed here only for his
 
 ### GYP-based Build System
 
-#### Compile StarFish
+#### Compile Starfish
 ```sh
 ./build_third_party.sh
 

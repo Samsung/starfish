@@ -90,12 +90,12 @@ function checkDevice {
 
 function checkBinary {
     if [ $DEVICE = "emulator" ]; then
-        if [[ `file StarFish` != *"ELF 32-bit"* || `file StarFish` = *"ARM"* ]]; then
+        if [[ `file Starfish` != *"ELF 32-bit"* || `file Starfish` = *"ARM"* ]]; then
             echo -e "${RED}Build Failed${RESET}"
             exit
         fi
     else
-        if [[ `file StarFish` != *"ARM"* ]]; then
+        if [[ `file Starfish` != *"ARM"* ]]; then
             echo -e "${RED}Build Failed${RESET}"
             exit
         fi
@@ -104,28 +104,28 @@ function checkBinary {
 
 function buildBinary {
     # ./build_third_party.sh
-    rm StarFish &> /dev/null 2>&1
+    rm Starfish &> /dev/null 2>&1
     make clean &> /dev/null 2>&1
     if [ $DEVICE = "emulator" ]; then
         if [ $VERSION = "2.3.1" ]; then
             make tizen_wearable_emulator.exe.debug -j &> /dev/null 2>&1
             checkBinary 
-            cp StarFish test/regression/bin/tizen-wearable-2.3-emulator
+            cp Starfish test/regression/bin/tizen-wearable-2.3-emulator
         else
             cp -rf deps/tizen/lib/tizen-wearable-2.3.1-i386 deps/tizen/lib/tizen-wearable-3.0-i386
             make tizen3_wearable_emulator.exe.debug -j &> /dev/null 2&>1
             checkBinary
-            cp StarFish test/regression/bin/tizen-wearable-3.0-emulator
+            cp Starfish test/regression/bin/tizen-wearable-3.0-emulator
         fi
     else
         if [ $VERSION = "2.3.1" ]; then
             make tizen_wearable_arm.exe.debug -j &> /dev/null 2&>1
             checkBinary
-            cp StarFish test/regression/bin/tizen-wearable-2.3-target-arm
+            cp Starfish test/regression/bin/tizen-wearable-2.3-target-arm
         else
             make tizen3_wearable_arm.exe.debug -j &> /dev/null 2&>1
             checkBinary
-            cp StarFish test/regression/bin/tizen-wearable-3.0-target-arm
+            cp Starfish test/regression/bin/tizen-wearable-3.0-target-arm
         fi
     fi
 }

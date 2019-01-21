@@ -400,7 +400,7 @@ int main(int argc, char* argv[])
     elm_config_accel_preference_set("opengl");
 
     Evas_Object* wndObj = nullptr;
-    wndObj = elm_win_add(NULL, "StarFish", ELM_WIN_BASIC);
+    wndObj = elm_win_add(NULL, "Starfish", ELM_WIN_BASIC);
     elm_win_title_set(wndObj, STARFISH_NAME);
     elm_win_autodel_set(wndObj, EINA_TRUE);
     evas_object_resize(wndObj, width, height);

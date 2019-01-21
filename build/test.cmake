@@ -42,7 +42,7 @@ TARGET_COMPILE_OPTIONS (imgdiff PUBLIC -O3 -g3 --std=c++11 ${TEST_PNG_CFLAGS})
 ADD_CUSTOM_TARGET (install_pixel_test_dep
     DEPENDS imgdiff
     COMMAND ${CMAKE_COMMAND} -E make_directory ~/.fonts}
-    COMMAND ${CMAKE_COMMAND} -E copy ${TOOL_ROOT}/fonts/StarFishAhem.ttf ~/.fonts
+    COMMAND ${CMAKE_COMMAND} -E copy ${TOOL_ROOT}/fonts/StarfishAhem.ttf ~/.fonts
     COMMAND ${CMAKE_COMMAND} -E copy ${TOOL_ROOT}/fonts/SamsungOne-300C_v1.0.ttf ~/.fonts
     COMMAND ${CMAKE_COMMAND} -E copy ${TOOL_ROOT}/fonts/SamsungOne-600C_v1.0.ttf ~/.fonts
     COMMAND fc-cache -fv

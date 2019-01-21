@@ -102,7 +102,7 @@ def case_runner(tc):
         return __opts.tc_handler(tc_file, ERRSTR)
 
     # Create screen-shot image using Starfish
-    starfish_command = ["./StarFish", tc_file, HIDE_WINDOW_OPT,
+    starfish_command = ["./Starfish", tc_file, HIDE_WINDOW_OPT,
                         __opts.font_opt, __opts.width, __opts.height,
                         SCREENSHOT_OPT_PREFIX + tc_result_png]
     starfish_output=""
