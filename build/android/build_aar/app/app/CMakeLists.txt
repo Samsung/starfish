@@ -52,7 +52,7 @@ include_directories(${STARFISH_ROOT_PATH} ${STARFISH_ROOT_PATH}/inc ${STARFISH_R
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil/bdwgc/include)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/GCutil)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/src)
-include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/include)
+include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/src/api)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/checked_arithmetic)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/double_conversion)
 include_directories(${STARFISH_ROOT_PATH}/third_party/escargot/third_party/rapidjson/include)
