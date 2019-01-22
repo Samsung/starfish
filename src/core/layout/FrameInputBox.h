@@ -61,6 +61,9 @@ protected:
     void paintCaret(Canvas* canvas);
     virtual void paintInlineContentBlock(Canvas* canvas) override;
     static ComputedStyle* createInputElementStyleFrom(Node* parent);
+
+private:
+    FrameText* firstFrameTextChild();
 };
 }
 

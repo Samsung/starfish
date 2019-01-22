@@ -127,7 +127,12 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
 
         HTMLTextEditable* textEditable = current->asHTMLTextEditable();
         if (textEditable->shouldCreateFrameText()) {
-            currentFrame->appendChild(createFrameText(textEditable));
+            FrameText* child = currentFrame->firstFrameTextChild();
+            if (child) {
+                child->setText(textEditable->value());
+            } else {
+                currentFrame->appendChild(createFrameText(textEditable));
+            }
             currentFrame->markNeedsLayout();
         }
 
@@ -136,6 +141,19 @@ FrameInputBox* FrameInputBox::buildFrameTree(Node* current,
 
     STARFISH_ASSERT(currentFrame);
     return currentFrame;
+}
+
+FrameText* FrameInputBox::firstFrameTextChild()
+{
+    // InputBox should have at most one FrameText box that is internally
+    // used to display an inputBox's value
+    for (Frame* c = firstChild(); c; c = c->next()) {
+        if (c->isFrameText()) {
+            return c->asFrameText();
+        }
+    }
+
+    return nullptr;
 }
 
 ComputedStyle* FrameInputBox::createInputElementStyleFrom(Node* parent)
