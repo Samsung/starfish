@@ -12,6 +12,15 @@ jobs:
       - run:
           name: Set proxy enviroment
           command: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
+      - run:
+          name: Update cmake
+          command: (while sleep 3; do echo "y"; done) | /opt/android/sdk/tools/bin/sdkmanager "cmake;3.10.2.4988404" --proxy=http --proxy_host=${proxyHost} --proxy_port=${proxyPort} || true
+      - run:
+          name: Update SDK
+          command: /opt/android/sdk/tools/bin/sdkmanager --update --proxy=http --proxy_host=${proxyHost} --proxy_port=${proxyPort} || true
+      - run:
+          name: Accpect SDK license
+          command: /opt/android/sdk/tools/bin/sdkmanager --licenses --proxy=http --proxy_host=${proxyHost} --proxy_port=${proxyPort} || true
       - checkout
       - run:
           name: Prepare submodule
