@@ -232,6 +232,24 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
 
     } else if (isFrameFlexibleBox()) {
         asFrameFlexibleBox()->layoutFlex(ctx);
+
+        if (isAbsolutePositioned()) {
+            Length height = style()->height();
+            LengthData offset = style()->offset();
+            Length top = offset.top();
+            Length bottom = offset.bottom();
+            if (height.isAuto() && top.isSpecified() && bottom.isSpecified()) {
+                LayoutUnit parentHeight =
+                    cb->contentHeight() + cb->paddingHeight();
+                LayoutUnit t = top.specifiedValue(parentHeight, this);
+                LayoutUnit b = bottom.specifiedValue(parentHeight, this);
+                LayoutUnit contentHeight =
+                    parentHeight - t - b - paddingHeight() - borderHeight();
+
+                setContentHeightConsideringMinMaxHeights(ctx, contentHeight,
+                                                         parentHeight);
+            }
+        }
     } else if (isFrameGridBox()) {
         asFrameGridBox()->layoutGrid(ctx);
     } else {

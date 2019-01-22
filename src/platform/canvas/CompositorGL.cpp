@@ -2325,10 +2325,64 @@ public:
                         m_webView->platformWindow()->height()));
     }
 
+    void addToPath(float x, float y)
+    {
+        SkPoint pt = SkPoint::Make(x, y);
+        m_state.back().matrix.mapPoints(&pt, 1);
+        m_path.push_back(
+            ClipperLib::IntPoint(floor(pt.x() + 0.5f), floor(pt.y() + 0.5f)));
+    }
+
+    virtual void moveTo(float x, float y)
+    {
+        addToPath(x, y);
+    }
+
+    virtual void lineTo(float x, float y)
+    {
+        addToPath(x, y);
+    }
+
+    virtual void arcNegative(double cx, double cy, double radius, double angle1,
+                             double angle2)
+    {
+        float angleDiff = angle2 - angle1;
+        if (std::abs(angleDiff) >= M_PI * 2) {
+            angleDiff = -M_PI * 2;
+        } else {
+            while (angleDiff > 0.0f) {
+                angleDiff -= M_PI * 2;
+            }
+        }
+
+        size_t divCount = std::abs(radius * angleDiff) *
+                          m_state.back().matrix.getScaleX() *
+                          m_state.back().matrix.getScaleY();
+        if (divCount == 0) {
+            divCount = 1;
+        }
+
+        for (size_t i = 0; i <= divCount; i++) {
+            float a = angle1 + angleDiff * (i / (float)divCount);
+            float dx = cos(a);
+            float dy = sin(a);
+            float x = cx + dx * radius;
+            float y = cy + dy * radius;
+            addToPath(x, y);
+        }
+    }
+    virtual void clipPath()
+    {
+        m_state.back().clipPaths.push_back(m_path);
+        m_path.clear();
+        m_path.shrink_to_fit();
+    }
+
 protected:
     WebView* m_webView;
     CompositorContext* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;
+    ClipperLib::Path m_path;
 };
 
 Compositor* Compositor::create3D(WebView* webView, CompositorContext* ctx)

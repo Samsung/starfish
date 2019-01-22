@@ -284,6 +284,44 @@ public:
         return m_canvas->getTotalMatrix();
     }
 
+    virtual void moveTo(float x, float y)
+    {
+        SkMatrix m = m_canvas->getTotalMatrix();
+        SkPoint src = SkPoint::Make(x, y);
+        m.mapPoints(&src, 1);
+        m_path.moveTo(src.x(), src.y());
+    }
+
+    virtual void lineTo(float x, float y)
+    {
+        SkMatrix m = m_canvas->getTotalMatrix();
+        SkPoint src = SkPoint::Make(x, y);
+        m.mapPoints(&src, 1);
+        m_path.lineTo(src.x(), src.y());
+    }
+
+    virtual void arcNegative(double xc, double yc, double radius, double angle1,
+                             double angle2)
+    {
+        SkPath path;
+        double a1 = angle1 * 180 / M_PI;
+        double a2 = angle2 * 180 / M_PI;
+        SkRect rect =
+            SkRect::MakeXYWH(xc - radius, yc - radius, radius * 2, radius * 2);
+        path.arcTo(rect, a1, a2 - a1, true);
+        m_path.addPath(path, m_canvas->getTotalMatrix(),
+                       SkPath::kExtend_AddPathMode);
+    }
+
+    virtual void clipPath()
+    {
+        SkMatrix m = m_canvas->getTotalMatrix();
+        m_canvas->resetMatrix();
+        m_canvas->clipPath(m_path, true);
+        m_canvas->setMatrix(m);
+        m_path.reset();
+    }
+
 protected:
     Starfish* m_starfish;
     std::vector<float> m_opacityVector;
@@ -291,6 +329,7 @@ protected:
     sk_sp<SkSurface> m_surface;
     SkCanvas* m_canvas;
     SkPaint m_paint;
+    SkPath m_path;
     unsigned m_width;
     unsigned m_height;
     bool m_shouldDestroySkia;

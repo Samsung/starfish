@@ -531,7 +531,7 @@ public:
         }
 
         auto iter = frameList.rbegin();
-        shareWithStackingBuffer = nearstBufferedFrame == nullptr;
+        shareWithStackingBuffer = nearstBufferedFrame ? false : true;
         LayoutUnit dx, dy;
         while (iter != frameList.rend()) {
             FrameBox* b = *iter;
@@ -617,7 +617,8 @@ public:
                 }
             }
 
-            if (ctx && ctx->isIFrameStackingContext()) {
+            if (ctx && ctx->isIFrameStackingContext() &&
+                nearstBufferedFrame != b) {
                 FrameBlockBox* document =
                     ctx->owner()->layoutParent()->asFrameBlockBox();
                 FrameBox* iframeBox = ctx->owner()
@@ -756,6 +757,10 @@ public:
                                   b->width() - b->borderWidth(),
                                   b->height() - b->borderHeight());
                     compositor->clip(rt);
+                    if (b->hasFrameBorderRadius()) {
+                        const LayoutRect rect(0, 0, b->width(), b->height());
+                        b->applyBorderRadiusClippingIfNeeds(compositor, rect);
+                    }
                 }
 
                 if (style->isAbsolutePositioned()) {
@@ -1520,8 +1525,12 @@ void StackingContext::fillGraphicsBufferContents(
                           ->browsingContext()
                           ->window()
                           ->scrollY());
-        canvas->translate(iframeBox->borderLeft() + iframeBox->paddingLeft(),
-                          iframeBox->borderTop() + iframeBox->paddingTop());
+
+        if (!needsGraphicsBuffer()) {
+            canvas->translate(iframeBox->borderLeft() +
+                                  iframeBox->paddingLeft(),
+                              iframeBox->borderTop() + iframeBox->paddingTop());
+        }
 
         if (needsGraphicsBuffer()) {
             canvas->save();
@@ -1584,6 +1593,7 @@ void StackingContext::fillGraphicsBufferContents(
                 auto iter2 = child->begin();
                 while (iter2 != child->end()) {
                     StackingContext* sCtx = *iter2;
+
                     CanvasStateRestorer r(canvas, sCtx, m_owner, ctx);
                     sCtx->paintStackingContext(canvas, ctx);
                     iter2++;
@@ -2430,6 +2440,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
     ComputedStyle* ownerStyle = m_owner->style();
     FrameBox* parentBox = parent() ? parent()->owner() : nullptr;
+
     CompositorStateRestorer r(compositor, this, parentBox);
 
     if (isIFrameStackingContextOwner()) {
