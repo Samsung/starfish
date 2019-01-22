@@ -372,6 +372,27 @@ public:
         cairo_reset_clip(m_canvas);
     }
 
+    virtual void moveTo(float x, float y)
+    {
+        cairo_move_to(m_canvas, x, y);
+    }
+
+    virtual void lineTo(float x, float y)
+    {
+        cairo_line_to(m_canvas, x, y);
+    }
+
+    virtual void arcNegative(double xc, double yc, double radius, double angle1,
+                             double angle2)
+    {
+        cairo_arc_negative(m_canvas, xc, yc, radius, angle1, angle2);
+    }
+
+    virtual void clipPath()
+    {
+        cairo_clip(m_canvas);
+    }
+
 protected:
     WebView* m_webView;
     std::vector<float> m_opacityVector;

@@ -4355,6 +4355,7 @@ void StyleResolver::apply(Element* element,
                                 ->m_hasComplexTransform = true;
                         }
                         break;
+                    case CSSTransformFunction::Kind::Translate3D:
                     case CSSTransformFunction::Kind::Translate: {
                         Length a, b(Length::Fixed, 0);
                         Nullable<Length> nA =
@@ -4374,6 +4375,12 @@ void StyleResolver::apply(Element* element,
                             } else {
                                 break;
                             }
+                        }
+                        if (f.kind() ==
+                            CSSTransformFunction::Kind::Translate3D) {
+                            style->m_rareComputedStyleData.ensureTransforms()
+                                ->m_has3DTransform = true;
+                            STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
                         }
                         style->setTransformTranslate(a, b);
                         break;

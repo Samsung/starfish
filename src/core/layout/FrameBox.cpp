@@ -32,6 +32,7 @@
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/Compositor.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
@@ -545,7 +546,8 @@ void FrameBox::computeBorderRadiusProperties(
         br.m_bottomRightHorizontal.specifiedValue(rect.width(), this);
 }
 
-void FrameBox::applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
+template <typename T>
+void FrameBox::applyBorderRadius(T canvas, const LayoutRect& rect,
                                  float spreadDistance, bool inset)
 {
     // apply clip if border-radius exists
@@ -778,7 +780,17 @@ void FrameBox::applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
     }
 }
 
-void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
+template void FrameBox::applyBorderRadius<Canvas*>(Canvas*,
+                                                   const LayoutRect& rect,
+                                                   float spreadDistance,
+                                                   bool inset);
+template void FrameBox::applyBorderRadius<Compositor*>(Compositor*,
+                                                       const LayoutRect& rect,
+                                                       float spreadDistance,
+                                                       bool inset);
+
+template <typename T>
+void FrameBox::applyBorderRadiusClippingIfNeeds(T canvas,
                                                 const LayoutRect& rect,
                                                 float spreadDistance,
                                                 bool inset)
@@ -788,6 +800,11 @@ void FrameBox::applyBorderRadiusClippingIfNeeds(Canvas* canvas,
         canvas->clipPath();
     }
 }
+
+template void FrameBox::applyBorderRadiusClippingIfNeeds<Canvas*>(
+    Canvas*, const LayoutRect& rect, float spreadDistance, bool inset);
+template void FrameBox::applyBorderRadiusClippingIfNeeds<Compositor*>(
+    Compositor*, const LayoutRect& rect, float spreadDistance, bool inset);
 
 void FrameBox::paintBackgroundAndBorders(Canvas* canvas)
 {

@@ -924,11 +924,12 @@ public:
         return false;
     }
 
-    void applyBorderRadiusClippingIfNeeds(Canvas* canvas,
-                                          const LayoutRect& rect,
+    template <typename T>
+    void applyBorderRadiusClippingIfNeeds(T canvas, const LayoutRect& rect,
                                           float spreadDistance = 0,
                                           bool inset = false);
-    void applyBorderRadius(Canvas* canvas, const LayoutRect& rect,
+    template <typename T>
+    void applyBorderRadius(T canvas, const LayoutRect& rect,
                            float spreadDistance = 0, bool inset = false);
 
     // outline-width + outline-offset

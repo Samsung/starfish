@@ -87,8 +87,11 @@ void FrameSVGSVGBox::layout(LayoutContext& ctx,
 
         if (node()->asSVGSVGElement()->hasViewBox()) {
             Unit::Rect rt = node()->asSVGSVGElement()->viewBox();
-            float sx = rt.width() / contentWidth();
-            float sy = rt.height() / contentHeight();
+            float sx = contentWidth() ? rt.width() / contentWidth()
+                                      : std::numeric_limits<float>::quiet_NaN();
+            float sy = contentHeight()
+                           ? rt.height() / contentHeight()
+                           : std::numeric_limits<float>::quiet_NaN();
             float s = std::min(sx, sy);
             if (s == 0 || std::isnan(s)) {
             } else {

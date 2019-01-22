@@ -78,6 +78,13 @@ public:
 
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;
     virtual void applyMatrixTo(LayoutRect& lp) = 0;
+
+    // those four methods are needed for border-radius clipping
+    virtual void moveTo(float x, float y) = 0;
+    virtual void lineTo(float x, float y) = 0;
+    virtual void arcNegative(double xc, double yc, double radius, double angle1,
+                             double angle2) = 0;
+    virtual void clipPath() = 0;
 };
 }
 
