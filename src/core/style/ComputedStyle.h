@@ -3490,7 +3490,8 @@ public:
         if (m_inheritedStyles.m_rareData) {
             return m_inheritedStyles.m_rareData->m_caretColor;
         }
-        return Unit::Color();
+        // https://drafts.csswg.org/css-ui-3/#propdef-caret-color
+        return m_inheritedStyles.m_color;
     }
 
     void setCaretColor(Unit::Color c)
