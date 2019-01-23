@@ -25,6 +25,7 @@
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/page/WebView.h"
 #include "platform/window/PlatformWindow.h"
 
 #include "SkCanvas.h"
@@ -37,7 +38,7 @@
 
 namespace Starfish {
 
-class CompositorSkia : public Compositor {
+class CompositorImplSkia : public Compositor {
     void initFromBuffer(void* buffer, int width, int height, int stride)
     {
         SkImageInfo info = SkImageInfo::MakeN32Premul(width, height);
@@ -51,14 +52,14 @@ class CompositorSkia : public Compositor {
 
     void applyDevicePixelRatio(SkCanvas* canvas)
     {
-        canvas->scale(m_starfish->screenInfo().devicePixelRatio,
-                      m_starfish->screenInfo().devicePixelRatio);
+        canvas->scale(m_webView->screenInfo().devicePixelRatio,
+                      m_webView->screenInfo().devicePixelR
     }
 
 public:
-    CompositorSkia(Starfish* starfish, CanvasSurface* data)
+    CompositorImplSkia(WebView* webView, CanvasSurface* data)
     {
-        m_starfish = starfish;
+        m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
         m_shouldDestroySkia = true;
@@ -72,7 +73,7 @@ public:
         save();
     }
 
-    ~CompositorSkia()
+    ~CompositorImplSkia()
     {
         restore();
         STARFISH_ASSERT(m_stateSize == 0);
@@ -227,10 +228,10 @@ public:
     virtual void drawSurface(CanvasSurface* data, const Unit::Rect& dst)
     {
         SkBitmap bitmap;
-        bitmap.installPixels(
-            SkImageInfo::MakeN32Premul(data->imageWidth(), data->imageHeight()),
-            data->mapBuffer(), data->bufferStride());
-        drawImageSkia(&bitmap, dst, data->imageWidth(), data->imageHeight());
+        bitmap.installPixels(SkImageInfo::MakeN32Premul(data->bufferWidth(),
+                                                        data->bufferHeight()),
+                             data->mapBuffer(), data->bufferStride());
+        drawImageSkia(&bitmap, dst, data->bufferWidth(), data->bufferHeight());
         data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
     }
 
@@ -323,7 +324,7 @@ public:
     }
 
 protected:
-    Starfish* m_starfish;
+    WebView* m_webView;
     std::vector<float> m_opacityVector;
     size_t m_stateSize;
     sk_sp<SkSurface> m_surface;
@@ -336,13 +337,13 @@ protected:
     bool m_shouldDestroySurface;
 };
 
-Compositor* Compositor::create2D(Starfish* starfish, CompositorContext* ctx,
+Compositor* Compositor::create2D(WebView* wv, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
-    return new CompositorSkia(starfish, surface);
+    return new CompositorImplSkia(wv, surface);
 }
 
-Compositor* Compositor::create3D(Starfish* starfish, CompositorContext* ctx)
+Compositor* Compositor::create3D(WebView* wv, CompositorContext* ctx)
 {
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
