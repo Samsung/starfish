@@ -1104,8 +1104,10 @@ bool applyTransitionIfNeeds(
 
                     if (toValue.isPercent() && !fromValue.isPercent()) {
                         FrameBox* cb = containingBlock(oldFrame);
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                        if (cb->contentWidth() == 0) {
+                            fromValue = Length(Length::Percent, 0);
+                        } else if (oldStyle->boxSizing() ==
+                                   BoxSizingValue::BorderBoxBoxSizingValue) {
                             fromValue = Length(Length::Percent,
                                                oldFrame->asFrameBox()->width() /
                                                    cb->contentWidth());
@@ -1151,8 +1153,10 @@ bool applyTransitionIfNeeds(
 
                     if (toValue.isPercent() && !fromValue.isPercent()) {
                         FrameBox* cb = containingBlock(oldFrame);
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                        if (cb->contentWidth() == 0) {
+                            fromValue = Length(Length::Percent, 0);
+                        } else if (oldStyle->boxSizing() ==
+                                   BoxSizingValue::BorderBoxBoxSizingValue) {
                             fromValue =
                                 Length(Length::Percent,
                                        oldFrame->asFrameBox()->height() /
@@ -1199,8 +1203,10 @@ bool applyTransitionIfNeeds(
 
                     if (toValue.isPercent() && !fromValue.isPercent()) {
                         FrameBox* cb = containingBlock(oldFrame);
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                        if (cb->contentWidth() == 0) {
+                            fromValue = Length(Length::Percent, 0);
+                        } else if (oldStyle->boxSizing() ==
+                                   BoxSizingValue::BorderBoxBoxSizingValue) {
                             fromValue = Length(Length::Percent,
                                                oldFrame->asFrameBox()->width() /
                                                    cb->contentWidth());
@@ -1246,8 +1252,10 @@ bool applyTransitionIfNeeds(
 
                     if (toValue.isPercent() && !fromValue.isPercent()) {
                         FrameBox* cb = containingBlock(oldFrame);
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                        if (cb->contentWidth() == 0) {
+                            fromValue = Length(Length::Percent, 0);
+                        } else if (oldStyle->boxSizing() ==
+                                   BoxSizingValue::BorderBoxBoxSizingValue) {
                             fromValue =
                                 Length(Length::Percent,
                                        oldFrame->asFrameBox()->height() /
@@ -1294,8 +1302,10 @@ bool applyTransitionIfNeeds(
 
                     if (toValue.isPercent() && !fromValue.isPercent()) {
                         FrameBox* cb = containingBlock(oldFrame);
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                        if (cb->contentWidth() == 0) {
+                            fromValue = Length(Length::Percent, 0);
+                        } else if (oldStyle->boxSizing() ==
+                                   BoxSizingValue::BorderBoxBoxSizingValue) {
                             fromValue = Length(Length::Percent,
                                                oldFrame->asFrameBox()->width() /
                                                    cb->contentWidth());
@@ -1341,8 +1351,10 @@ bool applyTransitionIfNeeds(
 
                     if (toValue.isPercent() && !fromValue.isPercent()) {
                         FrameBox* cb = containingBlock(oldFrame);
-                        if (oldStyle->boxSizing() ==
-                            BoxSizingValue::BorderBoxBoxSizingValue) {
+                        if (cb->contentWidth() == 0) {
+                            fromValue = Length(Length::Percent, 0);
+                        } else if (oldStyle->boxSizing() ==
+                                   BoxSizingValue::BorderBoxBoxSizingValue) {
                             fromValue =
                                 Length(Length::Percent,
                                        oldFrame->asFrameBox()->height() /
