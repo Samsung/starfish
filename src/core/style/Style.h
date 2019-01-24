@@ -2311,7 +2311,12 @@ public:
 
     bool updateValueNumber(const CSSTokenVector& tokens, uint8_t option);
     bool updateValueUnitNumber(const CSSTokenValue& token, uint8_t option);
-    enum CalcParserOption { LengthParser = 0, AngleParser = 1, TimeParser = 2 };
+    enum CalcParserOption {
+        LengthParser = 0,
+        AngleParser = 1,
+        TimeParser = 2,
+        LineheightParser = 3
+    };
     bool updateValueUnitCalc(const CSSTokenValue& token, uint8_t parserOption,
                              uint8_t lengthOption);
     bool updateValueLength(const CSSTokenVector& tokens, uint8_t option);

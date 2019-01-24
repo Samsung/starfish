@@ -182,7 +182,7 @@ static Nullable<Length> convertValueToLength(CSSStyleValuePair::ValueKind kind,
         return Length(Length::Fixed, data.m_floatValue);
     } else if (kind == CSSStyleValuePair::ValueKind::CalcValueKind) {
         CalcValueType type = data.m_calc->type();
-        if (type.isLength() || type.isPercentage()) {
+        if (type.isLength() || type.isPercentage() || type.isNumber()) {
             return Length(data.m_calc);
         } else {
             return Nullable<Length>();
@@ -4013,7 +4013,18 @@ void StyleResolver::apply(Element* element,
                 Nullable<Length> length = convertValueToLength(
                     cssValues[k].valueKind(), cssValues[k].value());
                 if (length.hasValue()) {
-                    style->setLineHeight(length.getValue());
+                    auto value = length.getValue();
+                    if (value.isCalc() &&
+                        value.calcData()->type().m_type ==
+                            CalcValueType::CalcValueType::Number) {
+                        // The computed value should be same as the specified
+                        // value.
+                        style->setLineHeight(Length(
+                            Length::InheritableNumber,
+                            value.calcData()->specifiedValue(0, element)));
+                    } else {
+                        style->setLineHeight(length.getValue());
+                    }
                 } else {
                     style->setLineHeight(Length(Length::Percent, -100));
                 }
@@ -8642,7 +8653,7 @@ bool CSSStyleValuePair::updateValueUnitNumber(const CSSTokenValue& token,
 
 static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                       bool isLenParser, bool isAngleParser, bool isTimeParser,
-                      uint8_t parserOption)
+                      bool isLineheightParser, uint8_t parserOption)
 {
     bool isPlus = true;
     while (true) {
@@ -8667,7 +8678,7 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 }
                 CalcData* newData = new CalcData();
                 if (parseCalc(parser, newData, isLenParser, isAngleParser,
-                              isTimeParser, parserOption)) {
+                              isTimeParser, isLineheightParser, parserOption)) {
                     val.setType(CalcValueType::CalcDataValue);
                     val.setValue(newData);
                     unitParsed = true;
@@ -8726,6 +8737,54 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                 } else {
                     val.setValue(-1 * ret.angleValue());
                 }
+            } else if (isLineheightParser &&
+                       ret.updateValueUnitLineHeight(CSSTokenValue(str))) {
+                if (unitParsed) {
+                    parser.swap(pos);
+                    if (parser.consumeNumber()) {
+                        float num = parser.parsedNumber();
+                        val.setType(CalcValueType::Number);
+                        if (isPlus) {
+                            val.setValue(num);
+                        } else {
+                            val.setValue(-1 * num);
+                        }
+                    } else {
+                        return false;
+                    }
+                }
+
+                if (isPlus) {
+                    if (ret.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Percentage) {
+                        val.setType(CalcValueType::Percentage);
+                        val.setValue(ret.percentageValue());
+                        unitParsed = true;
+                    } else if (ret.valueKind() ==
+                               CSSStyleValuePair::ValueKind::Number) {
+                        val.setType(CalcValueType::Number);
+                        val.setValue(ret.numberValue());
+                    } else {
+                        val.setType(CalcValueType::Length);
+                        val.setValue(ret.cssLengthValue());
+                        unitParsed = true;
+                    }
+                } else {
+                    if (ret.valueKind() ==
+                        CSSStyleValuePair::ValueKind::Percentage) {
+                        val.setType(CalcValueType::Percentage);
+                        val.setValue(-1 * ret.percentageValue());
+                        unitParsed = true;
+                    } else if (ret.valueKind() ==
+                               CSSStyleValuePair::ValueKind::Number) {
+                        val.setType(CalcValueType::Number);
+                        val.setValue(-1 * ret.numberValue());
+                    } else {
+                        val.setType(CalcValueType::Length);
+                        val.setValue(-1 * ret.cssLengthValue());
+                        unitParsed = true;
+                    }
+                }
             } else {
                 parser.swap(pos);
                 if (parser.consumeNumber()) {
@@ -8754,8 +8813,10 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
             } else if (parser.consumeIfNext('/')) {
                 isMul = false;
             } else {
-                if (!unitParsed) {
-                    return false;
+                if (!isLineheightParser) {
+                    if (!unitParsed) {
+                        return false;
+                    }
                 }
                 break;
             }
@@ -8790,6 +8851,9 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
         (calcParserOption == CSSStyleValuePair::CalcParserOption::AngleParser);
     bool isTimeParser =
         (calcParserOption == CSSStyleValuePair::CalcParserOption::TimeParser);
+    bool isLineheightParser =
+        (calcParserOption ==
+         CSSStyleValuePair::CalcParserOption::LineheightParser);
 
     CSSPropertyParser parser((char*)token.data());
 
@@ -8801,7 +8865,7 @@ bool CSSStyleValuePair::updateValueUnitCalc(const CSSTokenValue& token,
 
         CalcData* data = new CalcData();
         bool result = parseCalc(parser, data, isLenParser, isAngleParser,
-                                isTimeParser, parserOption);
+                                isTimeParser, isLineheightParser, parserOption);
         if (result && parser.isEnd()) {
             m_valueKind = CSSStyleValuePair::ValueKind::CalcValueKind;
             m_value = data;
@@ -9351,8 +9415,15 @@ bool CSSStyleValuePair::updateValueUnitLineHeight(const CSSTokenValue& value)
         m_value.m_floatValue = result;
         return true;
     } else {
-        return updateValueUnitLengthOrCalc(value,
-                                           CSSPropertyParser::AllowPercent);
+        uint8_t option = CSSPropertyParser::AllowPercent;
+        if (updateValueUnitLength(value, option)) {
+            return true;
+        } else {
+            option = option | CSSPropertyParser::ParserOption::AllowWithoutUnit;
+            return updateValueUnitCalc(
+                value, CSSStyleValuePair::CalcParserOption::LineheightParser,
+                option);
+        }
     }
 }
 
