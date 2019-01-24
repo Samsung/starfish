@@ -207,8 +207,6 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
         }
     }
 
-    addToRelativePositionedBoxesIfNeeded(ctx);
-
     if (isFrameTableBox()) {
         bool isCollapsedBefore = false;
         if (width() == 0 && height() == 0) {
@@ -291,6 +289,7 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
             computeContentHeight(ctx, contentHeight);
         }
     }
+    addToRelativePositionedBoxesIfNeeded(ctx);
 }
 
 void FrameBlockBox::computeContentHeight(LayoutContext& ctx,
