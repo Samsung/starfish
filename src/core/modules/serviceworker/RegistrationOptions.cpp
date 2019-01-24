@@ -1,0 +1,45 @@
+/*
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+// FIXME: The type of dictionary needs to supports STARFISH_ENABLE** flag
+// RegistrationOptions is also built on release now.
+// #ifdef STARFISH_ENABLE_SERVICE_WORKER
+
+#include "StarfishConfig.h"
+#include "core/modules/serviceworker/RegistrationOptions.h"
+
+namespace Starfish {
+
+RegistrationOptions::RegistrationOptions()
+    : m_scope(String::emptyString)
+{
+}
+
+String* RegistrationOptions::scope() const
+{
+    return m_scope;
+}
+
+void RegistrationOptions::setScope(String* scope)
+{
+    m_scope = scope;
+}
+}
+
+// #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

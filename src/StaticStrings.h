@@ -517,6 +517,9 @@ public:
     QualifiedName m_onttsstart;
     QualifiedName m_ttsend;
     QualifiedName m_onttsend;
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    QualifiedName m_statechange;
+#endif
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     QualifiedName m_cuechange;
     QualifiedName m_sourceopen;

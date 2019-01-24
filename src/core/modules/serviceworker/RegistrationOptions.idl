@@ -1,0 +1,6 @@
+// [STARFISH_ENABLE_SERVICE_WORKER] // FIXME: this doesn't work in binding generator
+dictionary RegistrationOptions {
+  [STARFISH_ENABLE_SERVICE_WORKER] USVString scope;
+  // WorkerType type = "classic";
+  // ServiceWorkerUpdateViaCache updateViaCache = "imports";
+};

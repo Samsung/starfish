@@ -23,6 +23,9 @@
 #include "core/dom/Document.h"
 #include "core/modules/location/Geolocation.h"
 #include "core/page/WebView.h"
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#include "core/modules/serviceworker/ServiceWorkerContainer.h"
+#endif
 #if defined(OS_WINDOWS)
 #include <Windows.h>
 #else
@@ -35,6 +38,9 @@ Navigator::Navigator(Document* document)
     : ScriptWrappable(this)
     , DocumentHoldable(document)
     , m_geolocation(nullptr)
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    , m_serviceWorker(nullptr)
+#endif
 {
 }
 
@@ -45,6 +51,16 @@ Geolocation* Navigator::geolocation()
     }
     return m_geolocation;
 }
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+ServiceWorkerContainer* Navigator::serviceWorker()
+{
+    if (m_serviceWorker == nullptr) {
+        m_serviceWorker = new ServiceWorkerContainer(document());
+    }
+    return m_serviceWorker;
+}
+#endif
 
 void Navigator::dispose()
 {

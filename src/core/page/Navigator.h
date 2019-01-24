@@ -27,6 +27,9 @@ namespace Starfish {
 
 class Starfish;
 class Geolocation;
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+class ServiceWorkerContainer;
+#endif
 
 class Navigator : public ScriptWrappable, public DocumentHoldable {
 public:
@@ -94,6 +97,13 @@ public:
 
 protected:
     Geolocation* m_geolocation;
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+public:
+    ServiceWorkerContainer* serviceWorker();
+
+protected:
+    ServiceWorkerContainer* m_serviceWorker;
+#endif
 };
 }
 #endif

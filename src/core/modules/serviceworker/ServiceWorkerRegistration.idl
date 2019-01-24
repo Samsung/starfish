@@ -1,0 +1,23 @@
+[STARFISH_ENABLE_SERVICE_WORKER, SecureContext, Exposed=(Window,Worker)]
+interface ServiceWorkerRegistration : EventTarget {
+  readonly attribute ServiceWorker? installing;
+  readonly attribute ServiceWorker? waiting;
+  readonly attribute ServiceWorker? active;
+  // [SameObject] readonly attribute NavigationPreloadManager navigationPreload;
+
+  readonly attribute USVString scope;
+  readonly attribute ServiceWorkerUpdateViaCache updateViaCache;
+
+  // [NewObject] Promise<void> update();
+  // [NewObject] Promise<boolean> unregister();
+
+  // event
+  // attribute EventHandler onupdatefound;
+};
+
+[STARFISH_ENABLE_SERVICE_WORKER]
+enum ServiceWorkerUpdateViaCache {
+  "imports",
+  "all",
+  "none"
+};

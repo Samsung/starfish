@@ -70,6 +70,7 @@
 #include "core/extra/Console.h"
 #include "core/style/ComputedStyle.h"
 #include "platform/file/File.h"
+#include "core/modules/serviceworker/ServiceWorkerServiceHost.h"
 
 #ifdef STREAMLINE_PROFILE
 #include "streamline_annotate.h"
@@ -299,6 +300,12 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     // saidly.. few port layer needs this variable
     m_publicLayerUserDataMap["__internalWebContainerImplementLayerVariable"] =
         this;
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    // TODO: creating host from a certain host manager
+    ServiceWorkerServiceHost::getInstance()->init(m_messageLoop);
+#endif
+
     m_starfish->m_webViewInstanceCount++;
 }
 
