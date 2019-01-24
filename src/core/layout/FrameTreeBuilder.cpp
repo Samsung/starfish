@@ -177,6 +177,8 @@ void FrameTreeBuilder::needsFrameTreeBuildFromChildrenOfThisFrame(Frame* f)
         node->markChildNeedsFrameTreeBuild();
         node = node->parentNode();
     }
+
+    parent->propagateMarkNeedsLayout();
 }
 
 Frame* FrameTreeBuilder::findNearestBlock(Frame* f)
