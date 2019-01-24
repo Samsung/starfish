@@ -1,0 +1,5 @@
+// https://slightlyoff.github.io/ServiceWorker/spec/service_worker/index.html#navigator-service-worker
+[STARFISH_ENABLE_SERVICE_WORKER] // TODO: this doesn't work
+partial interface Navigator {
+    [STARFISH_ENABLE_SERVICE_WORKER, RaisesException] readonly attribute ServiceWorkerContainer serviceWorker;
+};

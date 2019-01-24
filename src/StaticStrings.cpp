@@ -500,6 +500,10 @@ StaticStrings::StaticStrings(Starfish* starfish)
         AtomicString::createAtomicString(starfish, "transitioncancel"));
 
     m_open = QualifiedName(AtomicString::createAtomicString(starfish, "open"));
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    m_statechange = QualifiedName(
+        AtomicString::createAtomicString(starfish, "statechange"));
+#endif
 
     m_ttsstart =
         QualifiedName(AtomicString::createAtomicString(starfish, "ttsstart"));

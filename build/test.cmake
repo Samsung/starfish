@@ -220,6 +220,7 @@ IF (${BACKEND} STREQUAL "efl_cairo" OR ${BACKEND} STREQUAL "glfw_cairo_gl")
         COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/xhr_basic.res basic -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_basic.res basic -p${NPROCS}
         COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/csp.res basic -p${NPROCS}
+        COMMAND python ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/serviceworker.res basic -p${NPROCS}
     )
 
 ELSE()

@@ -1,0 +1,20 @@
+// https://w3c.github.io/ServiceWorker/#serviceworker
+[STARFISH_ENABLE_SERVICE_WORKER]
+enum ServiceWorkerState {
+    "installing",
+    "installed",
+    "activating",
+    "activated",
+    "redundant"
+};
+
+[STARFISH_ENABLE_SERVICE_WORKER, SecureContext, Exposed=(Window,Worker)]
+interface ServiceWorker : EventTarget {
+  readonly attribute USVString scriptURL;
+  readonly attribute ServiceWorkerState state;
+  [Unimplemented] void postMessage(any message, optional sequence<object> transfer = []);
+
+  // event
+  attribute EventHandler onstatechange;
+};
+//ServiceWorker includes AbstractWorker;

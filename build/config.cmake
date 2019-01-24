@@ -51,6 +51,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 # STARFISH_ENABLE_VIRTUAL_CURSOR : enable painting of virtual cursor
 # STARFISH_TIZEN_WEARABLE_WIDGET : enable features only necessary for TIZEN wearable targets
 # STARFISH_DISABLE_OVERFLOW_SCROLL : disable scroll event for wearable targets
+# STARFISH_ENABLE_SERVICE_WORKER : enable service worker
 # _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
 
 
@@ -128,6 +129,7 @@ IF (${MODE} STREQUAL "debug")
         -DGC_DEBUG # bdwgc
         -D_GLIBCXX_DEBUG
         -DSTARFISH_ENABLE_TEST
+        -DSTARFISH_ENABLE_SERVICE_WORKER
     )
 ELSEIF (${MODE} STREQUAL "release")
     SET (LWE_DEFINES_MODE -DNDEBUG)
