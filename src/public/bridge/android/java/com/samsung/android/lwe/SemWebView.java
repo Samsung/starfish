@@ -23,7 +23,7 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.util.AttributeSet;
 import android.util.Log;
-import android.view.TextureView;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -34,7 +34,7 @@ import java.lang.reflect.Constructor;
 /**
  * This class is a view that displays Web pages.
  */
-public class SemWebView extends TextureView {
+public class SemWebView extends SurfaceView {
 
     private static PathClassLoader pcl = null;
     private static final String packageName = "com.samsung.android.lwe";
