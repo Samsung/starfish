@@ -29,6 +29,7 @@
 #include "platform/window/PlatformWindow.h"
 
 #include "SkCanvas.h"
+#include "SkPath.h"
 #include "SkSurface.h"
 
 #include <vector>
@@ -53,7 +54,7 @@ class CompositorImplSkia : public Compositor {
     void applyDevicePixelRatio(SkCanvas* canvas)
     {
         canvas->scale(m_webView->screenInfo().devicePixelRatio,
-                      m_webView->screenInfo().devicePixelR
+                      m_webView->screenInfo().devicePixelRatio);
     }
 
 public:

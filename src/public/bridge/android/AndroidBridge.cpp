@@ -25,6 +25,7 @@
 
 #include <jni.h>
 #include <android/log.h>
+#include <android/bitmap.h>
 
 #define LOG_TAG "Starfish"
 #define LOGI(...) __android_log_print(ANDROID_LOG_INFO, LOG_TAG, __VA_ARGS__)
@@ -46,8 +47,7 @@ struct WindowGlue {
     jmethodID m_showAlert;
     jmethodID m_showIME;
     jmethodID m_hideIME;
-    jmethodID m_glMakeCurrent;
-    jmethodID m_glSwapBuffers;
+    jmethodID m_updateBuffer;
 
     WindowGlue()
     {
@@ -159,11 +159,8 @@ Java_com_samsung_android_lwe_LweWebViewImpl_init(JNIEnv* env, jobject thiz)
         clazz, "showAlert", "(Ljava/lang/String;Ljava/lang/String;)V");
     g_WindowGlue.m_showIME = env->GetMethodID(clazz, "showSoftKeyboard", "()V");
     g_WindowGlue.m_hideIME = env->GetMethodID(clazz, "hideSoftKeyboard", "()V");
-
-    g_WindowGlue.m_glMakeCurrent =
-        env->GetMethodID(clazz, "glMakeCurrent", "()V");
-    g_WindowGlue.m_glSwapBuffers =
-        env->GetMethodID(clazz, "glSwapBuffers", "()V");
+    g_WindowGlue.m_updateBuffer =
+        env->GetMethodID(clazz, "updateBuffer", "(IIII)V");
 
     env->DeleteLocalRef(clazz);
 
@@ -505,7 +502,7 @@ void hideIME(void* view)
                         g_WindowGlue.m_hideIME);
 }
 
-void glMakeCurrent(void* view)
+void updateBuffers(void* view, int x, int y, int width, int height)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -520,66 +517,16 @@ void glMakeCurrent(void* view)
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
-    if (!env || !g_WindowGlue.m_glMakeCurrent) {
-        LOGE("glMakeCurrent error");
+    if (!env || !g_WindowGlue.m_updateBuffer) {
+        LOGE("updateBuffer error");
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
-                        g_WindowGlue.m_glMakeCurrent);
+                        g_WindowGlue.m_updateBuffer, x, y, width, height);
 }
 
-void glSwapBuffers(void* view)
+void registerWebContainerHandler(LWE::WebContainer* webContainer)
 {
-    JNIEnv* env = g_WindowGlue.m_env;
-    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-    if (getEnvStat == JNI_EDETACHED) {
-        if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
-            LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        }
-    } else if (getEnvStat == JNI_OK) {
-    } else if (getEnvStat == JNI_EVERSION) {
-        LOGE("GetEnv : version not supported");
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
-
-    if (!env || !g_WindowGlue.m_glSwapBuffers) {
-        LOGE("glMakeCurrent error");
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
-    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
-                        g_WindowGlue.m_glSwapBuffers);
-}
-
-extern "C" JNIEXPORT jlong JNICALL
-Java_com_samsung_android_lwe_LweWebViewImpl_create(
-    JNIEnv* env, jobject thiz, jint w, jint h, jfloat devicePixelRatio,
-    jstring jua, jstring locale, jstring timezoneID, jstring localstoragePath,
-    jstring cookiePath, jstring cachePath)
-{
-    const char* localeString = env->GetStringUTFChars(locale, 0);
-    const char* timezoneIDString = env->GetStringUTFChars(timezoneID, 0);
-    const char* localstoragePathString =
-        env->GetStringUTFChars(localstoragePath, 0);
-    const char* cookiePathString = env->GetStringUTFChars(cookiePath, 0);
-    const char* cachePathString = env->GetStringUTFChars(cachePath, 0);
-
-    if (!LWE::LWE::IsInitialized()) {
-        LWE::LWE::Initialize(localstoragePathString, cookiePathString,
-                             cachePathString);
-    }
-
-    LWE::WebContainer* webContainer = LWE::WebContainer::CreateGL(
-        w, h, [](LWE::WebContainer* wc) { glMakeCurrent(wc); },
-        [](LWE::WebContainer* wc, bool mayNeedsSync) { glSwapBuffers(wc); },
-        devicePixelRatio, "serif", localeString, timezoneIDString);
-
-    env->ReleaseStringUTFChars(locale, localeString);
-    env->ReleaseStringUTFChars(timezoneID, timezoneIDString);
-    env->ReleaseStringUTFChars(localstoragePath, localstoragePathString);
-    env->ReleaseStringUTFChars(cookiePath, cookiePathString);
-    env->ReleaseStringUTFChars(cachePath, cachePathString);
-
     webContainer->RegisterOnReceivedErrorHandler(
         [](LWE::WebContainer* view, LWE::ResourceError error) -> void {
             callOnReceivedError(view, error.GetErrorCode(), view->CanGoBack(),
@@ -640,6 +587,64 @@ Java_com_samsung_android_lwe_LweWebViewImpl_create(
     webContainer->RegisterOnHideSoftwareKeyboardIfPossibleHandler(
         [](LWE::WebContainer* wv) -> void { hideIME(wv); });
 
+#if defined(PORT_WINDOW_BACKEND_GB)
+    webContainer->RegisterOnRenderedHandler(
+        [](LWE::WebContainer* wv, LWE::WebContainer::RenderResult r) {
+            updateBuffers(wv, r.updatedX, r.updatedY, r.updatedWidth,
+                          r.updatedHeight);
+        });
+#endif
+}
+
+extern "C" JNIEXPORT jlong JNICALL
+Java_com_samsung_android_lwe_LweWebViewImpl_create(
+    JNIEnv* env, jobject thiz, jobject bitmap, jfloat devicePixelRatio,
+    jstring jua, jstring locale, jstring timezoneID, jstring localstoragePath,
+    jstring cookiePath, jstring cachePath)
+{
+    const char* localeString = env->GetStringUTFChars(locale, 0);
+    const char* timezoneIDString = env->GetStringUTFChars(timezoneID, 0);
+    const char* localstoragePathString =
+        env->GetStringUTFChars(localstoragePath, 0);
+    const char* cookiePathString = env->GetStringUTFChars(cookiePath, 0);
+    const char* cachePathString = env->GetStringUTFChars(cachePath, 0);
+
+    if (!LWE::LWE::IsInitialized()) {
+        LWE::LWE::Initialize(localstoragePathString, cookiePathString,
+                             cachePathString);
+    }
+
+    int ret;
+    AndroidBitmapInfo info;
+    if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
+        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+    }
+
+    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+        LOGE("Bitmap format is not RGBA_8888 !");
+    }
+
+    int w = info.width;
+    int h = info.height;
+    int stride = info.stride;
+
+    void* pixels;
+    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
+        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+    }
+
+    LWE::WebContainer* webContainer =
+        LWE::WebContainer::Create(pixels, w, h, stride, devicePixelRatio,
+                                  "serif", localeString, timezoneIDString);
+
+    env->ReleaseStringUTFChars(locale, localeString);
+    env->ReleaseStringUTFChars(timezoneID, timezoneIDString);
+    env->ReleaseStringUTFChars(localstoragePath, localstoragePathString);
+    env->ReleaseStringUTFChars(cookiePath, cookiePathString);
+    env->ReleaseStringUTFChars(cachePath, cachePathString);
+
+    registerWebContainerHandler(webContainer);
+
     jobject java_webview = env->NewGlobalRef(thiz);
     g_webViews.insert(std::make_pair(webContainer, java_webview));
 
@@ -652,7 +657,22 @@ Java_com_samsung_android_lwe_LweWebViewImpl_destroy(JNIEnv* env, jobject thiz,
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->Destroy();
-    env->DeleteGlobalRef(g_webViews[webContainer]);
+    jobject java_webview = g_webViews[webContainer];
+    jclass clazz = env->GetObjectClass(java_webview);
+    if (clazz != NULL) {
+        jfieldID fid = env->GetFieldID(clazz, "mScreenBuffer",
+                                       "Landroid/graphics/Bitmap;");
+        if (fid != NULL) {
+            jobject bitmap = env->GetObjectField(java_webview, fid);
+            if (bitmap != NULL) {
+                int ret = 0;
+                if ((ret = AndroidBitmap_unlockPixels(env, bitmap)) < 0) {
+                    LOGE("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
+                }
+            }
+        }
+    }
+    env->DeleteGlobalRef(java_webview);
     g_webViews.erase(webContainer);
 }
 

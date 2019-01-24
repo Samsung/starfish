@@ -22,12 +22,16 @@ package com.samsung.android.lwe;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.graphics.SurfaceTexture;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.PorterDuff;
+import android.graphics.PorterDuffXfermode;
 import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
-import android.view.TextureView;
+import android.view.SurfaceHolder;
 import android.view.View;
 import android.view.inputmethod.BaseInputConnection;
 import android.view.inputmethod.InputConnection;
@@ -37,12 +41,6 @@ import android.webkit.ValueCallback;
 
 import java.io.File;
 import java.lang.reflect.Method;
-
-import javax.microedition.khronos.egl.EGL10;
-import javax.microedition.khronos.egl.EGLDisplay;
-import javax.microedition.khronos.egl.EGLConfig;
-import javax.microedition.khronos.egl.EGLContext;
-import javax.microedition.khronos.egl.EGLSurface;
 
 public class LweWebViewImpl implements LweWebView {
     private static String sTag = "LweWebViewImpl";
@@ -70,7 +68,7 @@ public class LweWebViewImpl implements LweWebView {
     private String sCachePath;
 
     private long mWebViewInternalHandle;
-
+    private Bitmap mScreenBuffer;
     private int mWindowWidth;
     private int mWindowHeight;
 
@@ -90,94 +88,6 @@ public class LweWebViewImpl implements LweWebView {
     private String mIMEComposingStr = null;
     private SemWebView mLWEView = null;
     private InputMethodManager mIMM = null;
-
-    private EGL10 mEgl;
-    private EGLDisplay mEglDisplay;
-    private EGLContext mEglContext;
-    private EGLSurface mEglSurface;
-
-
-    private int findConfigAttrib(EGLConfig config, int attribute, int defaultValue) {
-        int[] value = new int[1];
-        if (mEgl.eglGetConfigAttrib(mEglDisplay, config, attribute, value)) {
-            return value[0];
-        }
-        return defaultValue;
-    }
-
-    private void initGLContext() {
-        if (mEglSurface != null && mEglContext != null) {
-            return;
-        }
-
-        final int RED_SIZE = 8;
-        final int GREEN_SIZE = 8;
-        final int BLUE_SIZE = 8;
-        final int ALPHA_SIZE = 8;
-
-        final int DEPTH_SIZE = 0;
-        final int STENCIL_SIZE = 1;
-        final int EGL_CONTEXT_CLIENT_VERSION = 0x3098;
-
-        mEgl = (EGL10) EGLContext.getEGL();
-        mEglDisplay = mEgl.eglGetDisplay(EGL10.EGL_DEFAULT_DISPLAY);
-
-        if (mEglDisplay == EGL10.EGL_NO_DISPLAY) {
-            throw new RuntimeException("eglGetDisplay failed");
-        }
-
-        int[] version = new int[2];
-        if (!mEgl.eglInitialize(mEglDisplay, version)) {
-            throw new RuntimeException("eglInitialize failed");
-        }
-
-        int[] configSpec = {
-                EGL10.EGL_RED_SIZE, RED_SIZE, EGL10.EGL_GREEN_SIZE, GREEN_SIZE, EGL10.EGL_BLUE_SIZE, BLUE_SIZE,
-                EGL10.EGL_ALPHA_SIZE, ALPHA_SIZE, EGL10.EGL_DEPTH_SIZE, DEPTH_SIZE, EGL10.EGL_STENCIL_SIZE, STENCIL_SIZE,
-                EGL10.EGL_NONE
-        };
-
-        int[] value = new int[1];
-        if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, null, 1, value)) {
-            throw new IllegalArgumentException("eglChooseConfig failed");
-        }
-        EGLConfig[] configs = new EGLConfig[value[0]];
-        if (!mEgl.eglChooseConfig(mEglDisplay, configSpec, configs, value[0], value)) {
-            throw new IllegalArgumentException("eglChooseConfig failed");
-        }
-
-        EGLConfig eglConfig = configs[0];
-        for (EGLConfig c : configs) {
-            int depth = findConfigAttrib(c, EGL10.EGL_DEPTH_SIZE, 0);
-            int stencil = findConfigAttrib(c, EGL10.EGL_STENCIL_SIZE, 0);
-
-            if ((depth >= DEPTH_SIZE) && (stencil >= STENCIL_SIZE)) {
-                int r = findConfigAttrib(c, EGL10.EGL_RED_SIZE, 0);
-                int g = findConfigAttrib(c, EGL10.EGL_GREEN_SIZE, 0);
-                int b = findConfigAttrib(c, EGL10.EGL_BLUE_SIZE, 0);
-                int a = findConfigAttrib(c, EGL10.EGL_ALPHA_SIZE, 0);
-                if ((r == RED_SIZE) && (g == GREEN_SIZE)
-                        && (b == BLUE_SIZE) && (a == ALPHA_SIZE)) {
-                    eglConfig = c;
-                    break;
-                }
-            }
-        }
-
-        int[] attribList = { EGL_CONTEXT_CLIENT_VERSION, 3, EGL10.EGL_NONE };
-
-        mEglContext = mEgl.eglCreateContext(mEglDisplay, eglConfig, EGL10.EGL_NO_CONTEXT, attribList);
-        mEglSurface = mEgl.eglCreateWindowSurface(mEglDisplay, eglConfig, mLWEView.getSurfaceTexture(), null);
-    }
-
-    private void destroyGLContext() {
-        mEgl.eglDestroyContext(mEglDisplay, mEglContext);
-        mEgl.eglDestroySurface(mEglDisplay, mEglSurface);
-        mEgl.eglTerminate(mEglDisplay);
-        mEglDisplay = null;
-        mEglContext = null;
-        mEglSurface = null;
-    }
 
     public long getWebViewInternalHandle() {
         return mWebViewInternalHandle;
@@ -297,7 +207,6 @@ public class LweWebViewImpl implements LweWebView {
             }
             mWebViewInternalHandle = 0;
             mWebViewClient = null;
-            destroyGLContext();
         }
     }
 
@@ -325,10 +234,24 @@ public class LweWebViewImpl implements LweWebView {
         }
 
         init();
-        mWebViewInternalHandle =
-                create(mWindowWidth, mWindowHeight, sDpr,
-                        mUserAgentString, sLocale, sTimezone,
-                        sLocalStoragePath, sCookiePath, sCachePath);
+        mLWEView.getHolder().addCallback(
+                new SurfaceHolder.Callback() {
+                    @Override
+                    public void surfaceCreated(SurfaceHolder holder) {
+                        mWindowWidth = mLWEView.getWidth();
+                        mWindowHeight = mLWEView.getHeight();
+                        mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
+                        mWebViewInternalHandle =
+                                create(mScreenBuffer, sDpr,
+                                        mUserAgentString, sLocale, sTimezone,
+                                        sLocalStoragePath, sCookiePath, sCachePath);
+                    }
+                    @Override
+                    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+                    @Override
+                    public void surfaceDestroyed(SurfaceHolder holder) {}
+                }
+        );
 
         mLWEView.setOnFocusChangeListener(new View.OnFocusChangeListener() {
             @Override
@@ -340,42 +263,6 @@ public class LweWebViewImpl implements LweWebView {
                         blur(mWebViewInternalHandle);
                     }
                 }
-            }
-        });
-
-        mLWEView.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
-
-            @Override
-            public void onSurfaceTextureAvailable(SurfaceTexture surface, int width, int height) {
-                initGLContext();
-                mWindowWidth = width;
-                mWindowHeight = height;
-                if (mWebViewInternalHandle != 0) {
-                    resizeTo(mWebViewInternalHandle, mWindowWidth, mWindowHeight);
-                    resume(mWebViewInternalHandle);
-                }
-            }
-
-            @Override
-            public void onSurfaceTextureSizeChanged(SurfaceTexture surface, int width, int height) {
-                mWindowWidth = width;
-                mWindowHeight = height;
-                if (mWebViewInternalHandle != 0) {
-                    resizeTo(mWebViewInternalHandle, mWindowWidth, mWindowHeight);
-                    resume(mWebViewInternalHandle);
-                }
-            }
-
-            @Override
-            public boolean onSurfaceTextureDestroyed(SurfaceTexture surface) {
-                if (mWebViewInternalHandle != 0) {
-                    pause(mWebViewInternalHandle);
-                }
-                return true;
-            }
-
-            @Override
-            public void onSurfaceTextureUpdated(SurfaceTexture surface) {
             }
         });
 
@@ -664,7 +551,6 @@ public class LweWebViewImpl implements LweWebView {
         if (name == null) {
             return;
         }
-
         if (mWebViewInternalHandle != 0) {
             removeJavascriptInterface(mWebViewInternalHandle, name);
         }
@@ -697,19 +583,16 @@ public class LweWebViewImpl implements LweWebView {
         if (mWebSettings == null) {
             mWebSettings = new SemWebSettings(this);
         }
-
         return mWebSettings;
     }
 
-    private void glMakeCurrent() {
-        if (mEgl != null) {
-            mEgl.eglMakeCurrent(mEglDisplay, mEglSurface, mEglSurface, mEglContext);
-        }
-    }
-
-    private void glSwapBuffers() {
-        if (mEgl != null) {
-            mEgl.eglSwapBuffers(mEglDisplay, mEglSurface);
+    private void updateBuffer(int x, int y, int width, int height){
+        Canvas canvas = mLWEView.getHolder().lockCanvas();
+        if (canvas != null) {
+            Paint paint = new Paint();
+            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
+            canvas.drawBitmap(mScreenBuffer, 0, 0, paint);
+            mLWEView.getHolder().unlockCanvasAndPost(canvas);
         }
     }
 
@@ -726,7 +609,7 @@ public class LweWebViewImpl implements LweWebView {
     // Following methods are internal use only
     native private void loadUrl(long starfish, String url);
     native private void loadData(long starfish, String data);
-    native private long create(int initialNaturalWidth, int initialNaturalHeight,
+    native private long create(Bitmap buffer,
                                float devicePixelRatio, String userAgentString, String locale,
                                String timezoneID, String localstoragePath, String cookiePath,
                                String cachePath);
