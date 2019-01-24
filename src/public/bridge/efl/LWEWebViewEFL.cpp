@@ -247,6 +247,10 @@ public:
                const char* timezoneID)
         : WebView(nullptr)
         , m_lastInputTime(0)
+        , m_lastMouseX(0)
+        , m_lastMouseY(0)
+        , m_isMouseLbuttonDown(false)
+        , m_isKeyDown(false)
     {
         STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
         Evas_Object* win = (Evas_Object*)winArg;
