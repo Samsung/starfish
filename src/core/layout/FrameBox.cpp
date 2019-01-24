@@ -3459,13 +3459,11 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
                         LayoutRect rect =
                             computeVisibleShadowRect(owner, *shadow);
                         shadowsRect.unite(rect);
-                        ret = false;
                     } else if (!shadow->hasColor() &&
                                !cs->color().isTransparent()) {
                         LayoutRect rect =
                             computeVisibleShadowRect(owner, *shadow);
                         shadowsRect.unite(rect);
-                        ret = false;
                     }
                 } else if (ctx.isForSpecialValueForTableCell &&
                            ctx.purpose ==

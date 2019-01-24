@@ -145,7 +145,7 @@ LayoutUnit CalcTerm::specifiedValue(const LayoutUnit& parentContentLength,
     auto it = m_values.begin();
     CalcValueType lType = (*it).type();
     float num = 1;
-    LayoutUnit l;
+    LayoutUnit l = 1;
     if (lType.isNumber()) {
         num = (*it).numberValue();
     } else {
