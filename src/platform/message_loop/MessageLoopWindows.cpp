@@ -26,7 +26,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/page/Window.h"
-#include "core/page/BrowsingContext.h"
+#include "core/page/ScriptExecutionContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
@@ -44,7 +44,7 @@ struct IdlerData {
     void* m_data1;
     void* m_data2;
     MessageLoop* m_ml;
-    BrowsingContext* m_ctx;
+    ScriptExecutionContext* m_ctx;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
     UINT_PTR m_timerID;
@@ -172,8 +172,8 @@ void MessageLoop::destroy()
     }
 }
 
-size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
-                             void* data)
+size_t MessageLoop::addIdler(ScriptExecutionContext* ctx,
+                             void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new (GC_MALLOC_UNCOLLECTABLE(sizeof(IdlerData))) IdlerData;
     m_idlers.insert((size_t)id);
@@ -186,7 +186,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx, void (*fn)(size_t, void*),
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(BrowsingContext* ctx,
+size_t MessageLoop::addIdler(ScriptExecutionContext* ctx,
                              void (*fn)(size_t, void*, void*), void* data,
                              void* data1)
 {
@@ -203,7 +203,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(BrowsingContext* ctx,
+size_t MessageLoop::addIdler(ScriptExecutionContext* ctx,
                              void (*fn)(size_t, void*, void*, void*),
                              void* data, void* data1, void* data2)
 {
@@ -222,7 +222,7 @@ size_t MessageLoop::addIdler(BrowsingContext* ctx,
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    BrowsingContext* ctx, void (*fn)(size_t, void*), void* data)
+    ScriptExecutionContext* ctx, void (*fn)(size_t, void*), void* data)
 {
     STARFISH_ASSERT(_CrtCheckMemory());
     IdlerData* id = new IdlerData;
@@ -244,7 +244,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    BrowsingContext* ctx, void (*fn)(size_t, void*, void*), void* data,
+    ScriptExecutionContext* ctx, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
     STARFISH_ASSERT(_CrtCheckMemory());
@@ -280,7 +280,7 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
     id->m_shouldExecute = false;
 }
 
-void MessageLoop::clearPendingIdlers(BrowsingContext* ctx)
+void MessageLoop::clearPendingIdlers(ScriptExecutionContext* ctx)
 {
     STARFISH_ASSERT(_CrtCheckMemory());
     auto iter = m_idlers.begin();

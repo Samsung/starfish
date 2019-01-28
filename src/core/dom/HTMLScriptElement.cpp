@@ -34,6 +34,7 @@
 #include "platform/loader/ElementResourceClient.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/util/Cryptographic.h"
+#include "core/page/BrowsingContext.h"
 
 namespace Starfish {
 

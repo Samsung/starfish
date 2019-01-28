@@ -27,6 +27,7 @@
 #include "core/page/Serializer.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
+#include "core/page/BrowsingContext.h"
 
 namespace Starfish {
 

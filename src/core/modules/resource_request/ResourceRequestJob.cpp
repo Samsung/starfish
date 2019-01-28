@@ -29,6 +29,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/util/URL.h"
 #include "core/page/WebView.h"
+#include "core/page/BrowsingContext.h"
 
 namespace Starfish {
 
