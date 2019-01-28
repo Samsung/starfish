@@ -416,6 +416,55 @@ void WebView::destroy()
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
 }
 
+void WebView::createScriptEngineInstance()
+{
+    if (!m_scriptEngineInstance) {
+        PromiseJobListener listener = [](ExecutionStateRef* state,
+                                         JobRef* job) {
+            // web view on loop
+            Window* window =
+                (Window*)state->context()->globalObject()->extraData();
+
+            window->webView()->messageLoop()->addIdler(
+                window->browsingContext(),
+                [](size_t, void* data, void* data2) {
+                    Window* window = (Window*)data;
+
+                    if (!window->webView()->isActive()) {
+                        return;
+                    }
+
+                    JobRef* job = (JobRef*)data2;
+                    auto sbresult = job->run();
+
+                    if (!sbresult.error->isEmpty()) {
+                        STARFISH_LOG_ERROR(
+                            "Uncaught %s\n",
+                            toBrowserString(window->scriptBindingInstance(),
+                                            ValueRef::create(sbresult.error))
+                                ->toUTF8NonGCString()
+                                .data());
+                    }
+                },
+                window, job);
+        };
+
+        m_scriptEngineInstance = new ScriptEngineInstance(
+            locale().getName(), timezoneID()->toUTF8NonGCString().data(),
+            listener);
+    }
+}
+
+void WebView::removeScriptEngineInstance()
+{
+    if (m_scriptEngineInstance) {
+        m_scriptEngineInstance->dispose();
+
+        delete m_scriptEngineInstance;
+        m_scriptEngineInstance = nullptr;
+    }
+}
+
 void WebView::initStorage()
 {
     // TODO: The name of disk storage file name should be auto-generated

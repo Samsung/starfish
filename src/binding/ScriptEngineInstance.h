@@ -20,19 +20,20 @@
 #ifndef __StarfishScriptEngineInstance__
 #define __StarfishScriptEngineInstance__
 
-#include "binding/WebViewHoldable.h"
-
 namespace Escargot {
 class VMInstanceRef;
+class ExecutionStateRef;
+class JobRef;
 }
 
 namespace Starfish {
 
-typedef Escargot::VMInstanceRef* ScriptEngine;
+using ScriptEngine = Escargot::VMInstanceRef*;
+using PromiseJobListener = void (*)(Escargot::ExecutionStateRef*, Escargot::JobRef*);
 
-class ScriptEngineInstance : public WebViewHoldable, public gc {
+class ScriptEngineInstance : public gc {
 public:
-    ScriptEngineInstance(WebView* wv);
+    ScriptEngineInstance(const char* locale, const char* timezone, PromiseJobListener listener);
 
     ScriptEngine engineInstance()
     {
