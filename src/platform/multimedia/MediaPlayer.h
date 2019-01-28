@@ -27,6 +27,8 @@
 #include "core/dom/HTMLMediaElement.h"
 #include "platform/multimedia/StreamInfo.h"
 
+#define STARFISH_MEDIAPLAYER_DEBUG
+
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
 #include <sys/types.h>
 #include <sys/syscall.h>

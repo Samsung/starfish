@@ -1966,7 +1966,10 @@ bool StackingContext::fillGraphicsBufferContents(
         if (m_owner->hasOwnGraphicsBufferMethod()) {
             CanvasSurface* s = nullptr;
             m_owner->createGraphicsBuffer(&s, bufferWidth, bufferHeight);
-            m_rareData->m_graphicsBufferHolder = new GraphicsBufferHolder(s);
+            if (s) {
+                m_rareData->m_graphicsBufferHolder =
+                    new GraphicsBufferHolder(s);
+            }
         } else {
             bool reuse = false;
             auto iter =
@@ -2471,9 +2474,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     owner()->willCompsiteStackingContext(compositor);
 
     if (owner()->hasOwnGraphicsBufferMethod()) {
-        compositor->drawSurface(
-            m_rareData->m_graphicsBufferHolder->m_surfaces[0],
-            Unit::Rect(minX, minY, bufferWidth, bufferHeight));
+        if (m_rareData->m_graphicsBufferHolder) {
+            compositor->drawSurface(
+                m_rareData->m_graphicsBufferHolder->m_surfaces[0],
+                Unit::Rect(minX, minY, bufferWidth, bufferHeight));
+        }
     } else if (m_rareData->m_graphicsBufferHolder) {
         size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
         size_t hTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataHeight;

@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_TTS)
+#if defined(STARFISH_ENABLE_TTS) && !defined(STARFISH_TIZEN_PROD_TV)
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Element.h"

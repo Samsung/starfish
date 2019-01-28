@@ -44,7 +44,9 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 # STARFISH_ENABLE_TEST : enable features only necessary for TC runs
 # STARFISH_MEDIAPLAYER_DEBUG : enable debugging and messaging for mediaplayer
 # STARFISH_TIZEN_TV : enable features only necessary for TIZEN based TV targets
+# STARFISH_TIZEN_PROD_TV : enable features only necessary for TIZEN based TV targets for product
 # STARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED : enable TIZEN specific GEOLOCATION feature
+# STARFISH_TIZEN_USERAPP_SDK_API_ONLY : enable try to use public tizen api(in userapp sdk) only
 # STARFISH_ENABLE_AVPLAY : enable AVPLAY only necessary for TIZEN based TV targets
 # STARFISH_ENABLE_TRANSPARENT_WINDOW : enable transparent window (transparent background) currently necessary for TIZEN based TV targets
 # STARFISH_ENABLE_BODY_FOCUS_RING : draw focus ring when focus event occurred
@@ -103,6 +105,7 @@ ELSEIF (${CUSTOM} STREQUAL "prod_tv")
     SET (LWE_DEFINES_CUSTOM
         #-DSTARFISH_ENABLE_MULTIMEDIA
         -DSTARFISH_TIZEN_TV
+        -DSTARFISH_TIZEN_PROD_TV
         -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
         #-DSTARFISH_ENABLE_AVPLAY
         #-DSTARFISH_ENABLE_TRANSPARENT_WINDOW
@@ -113,7 +116,8 @@ ELSEIF (${CUSTOM} STREQUAL "prod_tv")
     )
 
     IF (NOT ${BACKEND} STREQUAL "dali")
-        SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DSTARFISH_ENABLE_MULTIMEDIA -DSTARFISH_USE_MOCK_MEDIAPLAYER )
+        SET (LWE_DEFINES_CUSTOM ${LWE_DEFINES_CUSTOM} -DSTARFISH_ENABLE_MULTIMEDIA -DSTARFISH_TIZEN_USERAPP_SDK_API_ONLY )
+
     ENDIF()
 ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
     SET (LWE_DEFINES_CUSTOM
@@ -235,6 +239,7 @@ ELSEIF (${BACKEND} STREQUAL "glfw_cairo_gl" AND ${ARCH} STREQUAL "x64")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu)
 ELSEIF (${BACKEND} STREQUAL "ecore_wayland2_cairo_gl" AND ${HOST} STREQUAL "tizen")
     pkg_check_modules (STARFISH_BACKEND REQUIRED libpng cairo freetype2 fontconfig harfbuzz harfbuzz-icu elementary ecore ecore-imf ecore-wl2 wayland-client egl gles20)
+    pkg_check_modules (STARFISH_BACKEND_EGL REQUIRED wayland-client egl gles20)
     pkg_check_modules (STARFISH_BACKEND_ECORE_IMF_EVAS REQUIRED ecore-imf-evas)
     pkg_check_modules (STARFISH_BACKEND_LIBTBM REQUIRED libtbm)
 ENDIF()

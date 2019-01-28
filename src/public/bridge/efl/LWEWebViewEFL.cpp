@@ -442,8 +442,8 @@ public:
             WebViewEFL* webView = (WebViewEFL*)data;
             Evas_Event_Key_Down* ev = (Evas_Event_Key_Down*)event_info;
             STARFISH_LOG_INFO(
-                "EVAS_CALLBACK_KEY_DOWN for m_nonIMEKeyEventBox [%s]\n",
-                ev->key);
+                "EVAS_CALLBACK_KEY_DOWN for m_nonIMEKeyEventBox [%s,%d]\n",
+                ev->key, (int)ev->keycode);
             if (evas_object_focus_get(webView->m_mainBox) == EINA_TRUE) {
                 STARFISH_LOG_INFO(
                     "EVAS_CALLBACK_KEY_DOWN for m_nonIMEKeyEventBox but "

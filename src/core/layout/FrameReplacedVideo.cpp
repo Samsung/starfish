@@ -77,10 +77,6 @@ void FrameReplacedVideo::createGraphicsBuffer(CanvasSurface** surfaceHolder,
         if (v->activeMediaPlayer()) {
             *surfaceHolder = v->activeMediaPlayer()->createGraphicsBuffer(
                 visibleWidth, visibleHeight);
-        } else {
-            *surfaceHolder = CanvasSurface::create(
-                node()->webView()->platformWindow(), 1, 1);
-            (*surfaceHolder)->clear();
         }
     }
 }
