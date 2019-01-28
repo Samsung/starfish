@@ -25,30 +25,35 @@
 #include "core/modules/threading/Locker.h"
 #endif
 #include "binding/WebViewHoldable.h"
+#include "core/modules/message_loop/MessageLoopInterface.h"
 
 namespace Starfish {
 
-class BrowsingContext;
+class ScriptExecutionContext;
 enum class HistoryManagerAction;
 
-class MessageLoop : public gc, public WebViewHoldable {
+class MessageLoop : public MessageLoopInterface,
+                    public gc,
+                    public WebViewHoldable {
     friend class MessageLoopImpl;
     friend class WebView;
     friend class Window;
 
 public:
     MessageLoop(WebView* wv);
-    size_t addIdler(BrowsingContext* ctx, void (*fn)(size_t handle, void*),
-                    void* data);
-    size_t addIdler(BrowsingContext* ctx,
+    size_t addIdler(ScriptExecutionContext* ctx,
+                    void (*fn)(size_t handle, void*), void* data);
+    size_t addIdler(ScriptExecutionContext* ctx,
                     void (*fn)(size_t handle, void*, void*), void* data,
                     void* data1);
-    size_t addIdler(BrowsingContext* ctx,
+    size_t addIdler(ScriptExecutionContext* ctx,
                     void (*fn)(size_t handle, void*, void*, void*), void* data,
                     void* data1, void* data2);
-    size_t addIdlerWithNoGCRootingInOtherThread(
-        BrowsingContext* ctx, void (*fn)(size_t handle, void*), void* data);
-    size_t addIdlerWithNoGCRootingInOtherThread(BrowsingContext* ctx,
+    size_t addIdlerWithNoGCRootingInOtherThread(ScriptExecutionContext* ctx,
+                                                void (*fn)(size_t handle,
+                                                           void*),
+                                                void* data);
+    size_t addIdlerWithNoGCRootingInOtherThread(ScriptExecutionContext* ctx,
                                                 void (*fn)(size_t handle, void*,
                                                            void*),
                                                 void* data, void* data1);
@@ -57,7 +62,7 @@ public:
     void removeIdlerWithNoGCRooting(size_t handle);
 
     void clearPendingIdlers(
-        BrowsingContext* ctx); // give nullptr to clear every idlers
+        ScriptExecutionContext* ctx); // give nullptr to clear every idlers
 
     void destroy();
     void invokeNavigate(WebView* wv, ResourceURL* url, ReferrerURL* referrerURL,

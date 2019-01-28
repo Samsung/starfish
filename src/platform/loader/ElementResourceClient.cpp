@@ -25,6 +25,7 @@
 #include "platform/loader/ElementResourceClient.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebView.h"
+#include "core/page/BrowsingContext.h"
 
 namespace Starfish {
 

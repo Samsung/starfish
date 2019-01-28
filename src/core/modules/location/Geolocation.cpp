@@ -25,6 +25,7 @@
 #include "core/modules/profiling/Profiling.h"
 #include "core/dom/Document.h"
 #include "core/page/WebView.h"
+#include "core/page/BrowsingContext.h"
 
 namespace Starfish {
 
