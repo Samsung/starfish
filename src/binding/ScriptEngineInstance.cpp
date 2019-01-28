@@ -19,53 +19,20 @@
 
 #include "StarfishConfig.h"
 #include "binding/ScriptEngineInstance.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/WebView.h"
-#include "core/page/Window.h"
-#include "core/modules/message_loop/MessageLoop.h"
-
-#include "Starfish.h"
 
 #include <EscargotPublic.h>
-using namespace Escargot;
 
 namespace Starfish {
 
-ScriptEngineInstance::ScriptEngineInstance(WebView* wv)
-    : WebViewHoldable(wv)
+ScriptEngineInstance::ScriptEngineInstance(const char* locale, const char* timezone, PromiseJobListener listener)
 {
     // Set this flag to process const keyword temporary
     setenv("ESCARGOT_TREAT_CONST_AS_VAR", "1", 1);
 
     Escargot::Globals::initialize();
-    m_engineInstance = VMInstanceRef::create(
-        wv->locale().getName(), wv->timezoneID()->toUTF8NonGCString().data());
-    m_engineInstance->setNewPromiseJobListener([](ExecutionStateRef* state,
-                                                  JobRef* job) {
-        Window* window = (Window*)state->context()->globalObject()->extraData();
-        window->webView()->messageLoop()->addIdler(
-            window->browsingContext(),
-            [](size_t, void* data, void* data2) {
-                Window* window = (Window*)data;
 
-                if (!window->webView()->isActive()) {
-                    return;
-                }
-
-                JobRef* job = (JobRef*)data2;
-                auto sbresult = job->run();
-
-                if (!sbresult.error->isEmpty()) {
-                    STARFISH_LOG_ERROR(
-                        "Uncaught %s\n",
-                        toBrowserString(window->scriptBindingInstance(),
-                                        ValueRef::create(sbresult.error))
-                            ->toUTF8NonGCString()
-                            .data());
-                }
-            },
-            window, job);
-    });
+    m_engineInstance = Escargot::VMInstanceRef::create(locale, timezone);
+    m_engineInstance->setNewPromiseJobListener(listener);
 }
 
 void ScriptEngineInstance::dispose()
