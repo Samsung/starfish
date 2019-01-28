@@ -459,7 +459,7 @@ void WebContainer::AddIdleCallback(void (*callback)(void*), void* data)
 size_t WebContainer::AddTimeout(void (*callback)(void*), void* data,
                                 size_t timeoutInMS)
 {
-    size_t ret;
+    size_t ret = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     struct Data : public gc {
         void (*callback)(void*);
@@ -574,7 +574,7 @@ void WebContainer::GoForward()
 
 bool WebContainer::CanGoBack()
 {
-    bool ret;
+    bool ret = false;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     ret = TO_HISTORY(m_impl)->canGoBack();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -583,7 +583,7 @@ bool WebContainer::CanGoBack()
 
 bool WebContainer::CanGoForward()
 {
-    bool ret;
+    bool ret = false;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     ret = TO_HISTORY(m_impl)->canGoForward();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -986,7 +986,7 @@ void WebContainer::CallHandler(const std::string& handler, void* param)
 
 size_t WebContainer::Width()
 {
-    size_t ret;
+    size_t ret = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     ret = TO_WEBVIEW(m_impl)->platformWindow()->width();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -995,7 +995,7 @@ size_t WebContainer::Width()
 
 size_t WebContainer::Height()
 {
-    size_t ret;
+    size_t ret = 0;
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     ret = TO_WEBVIEW(m_impl)->platformWindow()->height();
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
@@ -1209,7 +1209,7 @@ void WebContainer::SetUserData(const std::string& key, void* data)
 
 void* WebContainer::GetUserData(const std::string& key)
 {
-    void* ret;
+    void* ret = nullptr;
 
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     ret = TO_WEBVIEW(m_impl)->publicLayerUserDataMap()[key];
