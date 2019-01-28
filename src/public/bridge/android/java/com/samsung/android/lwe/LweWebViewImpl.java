@@ -27,6 +27,7 @@ import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
+import android.graphics.Rect;
 import android.os.Handler;
 import android.util.Log;
 import android.view.KeyEvent;
@@ -234,22 +235,49 @@ public class LweWebViewImpl implements LweWebView {
         }
 
         init();
+
+        mWindowWidth = mWindowHeight = 1;
+        if (mScreenBuffer != null) {
+            mScreenBuffer.recycle();
+        }
+        mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
+        mWebViewInternalHandle =
+                create(mScreenBuffer, sDpr,
+                        mUserAgentString, sLocale, sTimezone,
+                        sLocalStoragePath, sCookiePath, sCachePath);
         mLWEView.getHolder().addCallback(
                 new SurfaceHolder.Callback() {
                     @Override
                     public void surfaceCreated(SurfaceHolder holder) {
                         mWindowWidth = mLWEView.getWidth();
                         mWindowHeight = mLWEView.getHeight();
-                        mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
-                        mWebViewInternalHandle =
-                                create(mScreenBuffer, sDpr,
-                                        mUserAgentString, sLocale, sTimezone,
-                                        sLocalStoragePath, sCookiePath, sCachePath);
+                        if (mWebViewInternalHandle != 0) {
+                            Bitmap oldBuffer = mScreenBuffer;
+                            mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
+                            resizeTo(mWebViewInternalHandle, mScreenBuffer);
+                            resume(mWebViewInternalHandle);
+                            oldBuffer.recycle();
+                        }
+
                     }
                     @Override
-                    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {}
+                    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                        mWindowWidth = width;
+                        mWindowHeight = height;
+                        if (mWebViewInternalHandle != 0) {
+                            Bitmap oldBuffer = mScreenBuffer;
+                            mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
+                            resizeTo(mWebViewInternalHandle, mScreenBuffer);
+                            resume(mWebViewInternalHandle);
+                            oldBuffer.recycle();
+                        }
+                    }
                     @Override
-                    public void surfaceDestroyed(SurfaceHolder holder) {}
+                    public void surfaceDestroyed(SurfaceHolder holder) {
+                        if (mWebViewInternalHandle != 0) {
+                            pause(mWebViewInternalHandle);
+                        }
+                    }
                 }
         );
 
@@ -586,12 +614,13 @@ public class LweWebViewImpl implements LweWebView {
         return mWebSettings;
     }
 
-    private void updateBuffer(int x, int y, int width, int height){
+    private void onRendered(int x, int y, int width, int height){
         Canvas canvas = mLWEView.getHolder().lockCanvas();
         if (canvas != null) {
             Paint paint = new Paint();
             paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
-            canvas.drawBitmap(mScreenBuffer, 0, 0, paint);
+            Rect updateArea = new Rect(x, y, width, height);
+            canvas.drawBitmap(mScreenBuffer, updateArea, updateArea, paint);
             mLWEView.getHolder().unlockCanvasAndPost(canvas);
         }
     }
@@ -637,7 +666,7 @@ public class LweWebViewImpl implements LweWebView {
     native public void setDefaultFontSize(long starfish, int size);
 
     static native private void init();
-    static native private void resizeTo(long starfish, int w, int h);
+    static native private void resizeTo(long starfish, Bitmap buffer);
     static native private void dispatchMouseDown(long starfish, float x, float y);
     static native private void dispatchMouseMove(long starfish, float x, float y,
                                                  boolean isLButtonPressed,
