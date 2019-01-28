@@ -523,10 +523,12 @@ ScriptValue XMLHttpRequest::response() const
     } else if (m_responseXML) {
         if (m_responseType == XMLHttpRequestResponseType::Document) {
             result = m_responseXML->scriptValue();
-        } else {
+        } else if (m_responseXML->documentElement()) {
             result = scriptStringToScriptValue(
                 createScriptString(XMLSerializer::serializeToXML(
                     m_responseXML->documentElement(), true)));
+        } else {
+            result = scriptNull();
         }
     } else {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
