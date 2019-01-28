@@ -384,7 +384,8 @@ int main(int argc, char* argv[])
     evas_object_show(bg);
 #else
     Evas_Object* bg = elm_bg_add(wndObj);
-    evas_object_color_set(bg, 0xff, 0xff, 0xff, 0xff);
+    // set background color to transparent for draw video correctly in tizen tv
+    evas_object_color_set(bg, 0x00, 0x00, 0x00, 0x00);
 
     evas_object_size_hint_weight_set(bg, EVAS_HINT_EXPAND, EVAS_HINT_EXPAND);
     elm_win_resize_object_add(wndObj, bg);

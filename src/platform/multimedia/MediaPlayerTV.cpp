@@ -18,7 +18,9 @@
  */
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
-#if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN)
+#if !defined(STARFISH_USE_MOCK_MEDIAPLAYER) && defined(STARFISH_TIZEN) && \
+    !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY) &&                      \
+    defined(STARFISH_TIZEN_PROD_TV)
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
@@ -114,6 +116,14 @@ void MediaPlayerTizen::disposePlayer()
         //      Transparent hole can be exposed by disposal of player.
         m_container->webView()->platformWindow()->rendering();
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
+        if (m_playerDeadFlag) {
+            // give dead flag for killing MSE thread first.
+            // because, when destorying we want to end threads first
+            // but, thread is ended by idler
+            // so if we don't give flag this time, we wait forever for MSE
+            // thread
+            *m_playerDeadFlag = true;
+        }
         PLAYER_LOGI(
             "MediaPlayerTizen::close() - dispose player next idle time\n");
         msgLoop->addIdler(nullptr,

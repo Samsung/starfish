@@ -690,6 +690,11 @@ void MediaPlayerTizen::destroy()
 
     pause();
     disposePlayer();
+
+    if (m_canvasSurface) {
+        m_canvasSurface->detachNativeBuffer();
+        m_canvasSurface = nullptr;
+    }
 }
 
 double MediaPlayerTizen::duration()
@@ -990,10 +995,12 @@ void MediaPlayerTizen::dispose()
     if (m_nativePlayer) {
         pause();
         player_unprepare(m_nativePlayer);
+#if !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
         player_unset_media_stream_buffer_status_cb_ex(m_nativePlayer,
                                                       PLAYER_STREAM_TYPE_AUDIO);
         player_unset_media_stream_buffer_status_cb_ex(m_nativePlayer,
                                                       PLAYER_STREAM_TYPE_VIDEO);
+#endif
         player_unset_completed_cb(m_nativePlayer);
         player_unset_error_cb(m_nativePlayer);
         player_unset_buffering_cb(m_nativePlayer);
@@ -1114,7 +1121,7 @@ void MediaPlayerTizen::didDrawVideo(Compositor* canvas,
 static void* threadFillingBuffer(void* data)
 {
     MediaPlayerTizen* self = (MediaPlayerTizen*)data;
-    bool* playerDeadFlag = self->m_playerDeadFlag;
+    volatile bool* playerDeadFlag = self->m_playerDeadFlag;
     while (!(*playerDeadFlag)) {
         MediaPlayer::PlaybackState state = self->playbackState();
         if (state != MediaPlayer::PLAYBACK_STATE_END) {
@@ -1138,7 +1145,7 @@ static void* threadFillingBuffer(void* data)
         sleep(1);
     }
     PLAYER_LOGI("Close fillingBuffer thread\n");
-    free(playerDeadFlag);
+    free((void*)playerDeadFlag);
     return nullptr;
 }
 #endif
@@ -1311,7 +1318,7 @@ void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
     if (prevState != state) {
         DEBUG_STREAMBUFFER_LOG("Buffer state: %s > %s\n",
                                bufferStateString(prevState),
-                               bufferStateString(state), currentBytes, maxSize);
+                               bufferStateString(state));
         stream->setBufferState(state);
         if (prevState == MediaStream::BUFFERSTATE_UNDER_RUN) {
             exitUnderrunState();
@@ -1546,7 +1553,10 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
 
     player_set_media_stream_buffer_min_threshold(m_nativePlayer,
                                                  PLAYER_STREAM_TYPE_VIDEO, 100);
-    int ret = player_set_media_stream_buffer_status_cb_ex(
+
+    int ret;
+#if !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
+    ret = player_set_media_stream_buffer_status_cb_ex(
         m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
         [](player_media_stream_buffer_status_e status, unsigned long long bytes,
            void* user_data) {
@@ -1556,17 +1566,17 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
         this);
     RETURN_WHEN_PLAYER_ERROR(
         "ERROR: player_set_media_stream_buffer_status_cb_ex\n");
-
+#endif
     ret = player_set_media_stream_info(m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
                                        mediaFormat);
     RETURN_WHEN_PLAYER_ERROR("ERROR: player_set_media_stream_info\n");
-
     // TODO Replace test value to real estimate value
     ret = player_set_media_stream_buffer_max_size(
         m_nativePlayer, PLAYER_STREAM_TYPE_VIDEO,
         m_videoStream->maxBufferSize());
     RETURN_WHEN_PLAYER_ERROR(
         "ERROR: player_set_media_stream_buffer_max_size\n");
+
     m_videoStream->setInitSegmentIndex(initSegmentIndex);
 }
 
@@ -1619,7 +1629,9 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
 
     player_set_media_stream_buffer_min_threshold(m_nativePlayer,
                                                  PLAYER_STREAM_TYPE_AUDIO, 100);
-    int ret = player_set_media_stream_buffer_status_cb_ex(
+    int ret;
+#if !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
+    ret = player_set_media_stream_buffer_status_cb_ex(
         m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO,
         [](player_media_stream_buffer_status_e status, unsigned long long bytes,
            void* user_data) {
@@ -1629,6 +1641,7 @@ void MediaPlayerTizen::initAudioStreamInfo(size_t initSegmentIndex)
         this);
     RETURN_WHEN_PLAYER_ERROR(
         "ERROR: player_set_media_stream_buffer_status_cb_ex\n");
+#endif
 
     ret = player_set_media_stream_info(m_nativePlayer, PLAYER_STREAM_TYPE_AUDIO,
                                        mediaFormat);

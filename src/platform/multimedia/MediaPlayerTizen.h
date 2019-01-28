@@ -27,16 +27,20 @@
 
 #include <media/player.h>
 
+#if !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
 #if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5
 #ifndef EFL_BETA_API_SUPPORT
 #define EFL_BETA_API_SUPPORT
 #endif
 #include <Ecore_Wl2.h>
 #endif
+#endif
 
+#if !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
 #include <media/player_internal.h>
 #if defined(STARFISH_TIZEN_TV)
 #include <media/player_product.h>
+#endif
 #endif
 
 #ifndef MAX_WAITING_SECONDS_FOR_SEEK_OPERATION
@@ -118,7 +122,7 @@ public:
     uint64_t lastBufferBytes();
     void setLastBufferBytes(size_t value);
 
-#if defined(STARFISH_TIZEN_TV)
+#if defined(STARFISH_TIZEN_TV) && !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
     player_media_stream_audio_extra_info_s* audioFormatExtra()
     {
         STARFISH_ASSERT(m_type == StreamTypeAudio);
@@ -137,7 +141,7 @@ protected:
     Mutex* m_mediaStreamMutex;
 
     media_format_h m_mediaFormat;
-#if defined(STARFISH_TIZEN_TV)
+#if defined(STARFISH_TIZEN_TV) && !defined(STARFISH_TIZEN_USERAPP_SDK_API_ONLY)
     union MediaFormatExtra {
         MediaFormatExtra()
             : m_audioFormatExtra()
@@ -239,7 +243,7 @@ public:
     ResourceURL* m_currentURL;
 
     player_h m_nativePlayer;
-    bool* m_playerDeadFlag;
+    volatile bool* m_playerDeadFlag;
     MediaStream* m_audioStream;
     MediaStream* m_videoStream;
 
