@@ -230,7 +230,7 @@ void Scrolling::onAnimationFrameHandler(Window* window, void* data)
                 std::make_pair(currentTime, dy));
         }
         if (self->m_inHorizontalScrolling) {
-            if (dy > 0) {
+            if (dx > 0) {
                 self->m_inHorizontalScrollingLeft = true;
                 self->m_inHorizontalScrollingRight = false;
             } else {
