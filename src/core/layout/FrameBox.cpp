@@ -3307,6 +3307,21 @@ static bool styleHasDrawableContents(ComputedStyle* cs, FrameBox* b)
     return false;
 }
 
+bool FrameBox::isBoxesInvisibleFromHere()
+{
+    ComputedStyle* cs = style();
+
+    if (cs && cs->isAbsolutePositioned() && cs->hasZeroClipRect()) {
+        return true;
+    }
+
+    if (cs && cs->opacity() == 0) {
+        return true;
+    }
+
+    return false;
+}
+
 bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
 {
     if (ctx.sourceStackingContext &&
@@ -3390,7 +3405,7 @@ bool FrameBox::tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx)
         return false;
     }
 
-    if (cs && cs->isAbsolutePositioned() && cs->hasZeroClipRect()) {
+    if (ctx.isVisibleRectCollapsible && isBoxesInvisibleFromHere()) {
         return false;
     }
 

@@ -94,8 +94,8 @@ static void traceRepaintRegionJob(
     bool& gotPaintingDirty)
 {
     // if box is invisible from here, ignore from currentBox
-    if (currentFrame->isAbsolutePositioned() &&
-        currentFrame->style()->hasZeroClipRect()) {
+    if (currentFrame->isFrameBox() &&
+        currentFrame->asFrameBox()->isBoxesInvisibleFromHere()) {
         return;
     }
 

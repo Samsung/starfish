@@ -180,8 +180,7 @@ protected:
 
         StackingContext* sc = frame->stackingContext();
         if (sc) {
-            if (frame->isAbsolutePositioned() &&
-                sc->owner()->style()->hasZeroClipRect()) {
+            if (frame->isBoxesInvisibleFromHere()) {
                 auto iter =
                     m_prevDrawnStackingContextInfoMap.find(frame->node());
                 if (iter != m_prevDrawnStackingContextInfoMap.end()) {

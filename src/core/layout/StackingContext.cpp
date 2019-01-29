@@ -927,8 +927,7 @@ void StackingContext::computeStackingContextProperties(
     bool selfNeedsGraphicsBuffer = m_owner->needsGraphicsBuffer();
 
     // check self visibility
-    if (selfNeedsGraphicsBuffer && m_owner->isAbsolutePositioned() &&
-        m_owner->style()->hasZeroClipRect()) {
+    if (selfNeedsGraphicsBuffer && m_owner->isBoxesInvisibleFromHere()) {
         selfNeedsGraphicsBuffer = false;
     }
     if (selfNeedsGraphicsBuffer &&
@@ -2207,9 +2206,16 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         // canvas->restore();
     }
 
+    float opacity = owner()->style()->opacity();
+
+    if (opacity == 0) {
+        // invisible from here
+        return;
+    }
+
     canvas->save();
 
-    if (owner()->style()->opacity() != 1) {
+    if (opacity != 1) {
         canvas->beginOpacityLayer(owner()->style()->opacity());
     }
 
@@ -2386,7 +2392,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         }
     }
 
-    if (owner()->style()->opacity() != 1) {
+    if (opacity != 1) {
         canvas->endOpacityLayer();
     }
 
