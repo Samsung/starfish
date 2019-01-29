@@ -26,6 +26,9 @@ class ScriptExecutionContext;
 
 class MessageLoopInterface {
 public:
+    virtual ~MessageLoopInterface()
+    {
+    }
     virtual size_t addIdler(ScriptExecutionContext* ctx,
                             void (*fn)(size_t handle, void*), void* data) = 0;
     virtual size_t addIdler(ScriptExecutionContext* ctx,

@@ -27,6 +27,9 @@ class ServiceWorkerJob;
 
 class ServiceWorkerServiceJobClient {
 public:
+    virtual ~ServiceWorkerServiceJobClient()
+    {
+    }
     virtual void resolveJobPromise(ServiceWorkerJob* job) = 0;
 };
 
