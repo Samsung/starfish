@@ -412,11 +412,11 @@ public:
     void load()
     {
         Document* document = m_builder.document();
+        auto mimetype = MimeType::parseFromString(
+            m_resource->resourceRequest()->responseMimeType());
         if (!m_isAllowedResponse) {
             m_htmlSource = String::emptyString;
         } else if (m_htmlSource->isEmpty()) {
-            auto mimetype = MimeType::parseFromString(
-                m_resource->resourceRequest()->responseMimeType());
             if (mimetype.stringWithoutParameter()->startsWith("image/",
                                                               false)) {
                 String* urlString = resource()->url()->urlString();
@@ -449,6 +449,15 @@ public:
             } else {
                 m_htmlSource = createBlankHTMLSource();
             }
+        } else if (mimetype.type()->equals("text") &&
+                   mimetype.subtype()->equals("plain")) {
+            StringBuilder sb;
+            sb.appendString(
+                "<html><head></head><body><pre style=\"word-wrap: break-word; "
+                "white-space: pre-wrap;\">");
+            sb.appendString(m_htmlSource);
+            sb.appendString("</pre></body></html>");
+            m_htmlSource = sb.finalize();
         }
 
         document->m_preloadScanner = new PreloadScanner(document, m_htmlSource);
