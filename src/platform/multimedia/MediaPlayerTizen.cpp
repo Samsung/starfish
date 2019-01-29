@@ -1342,8 +1342,9 @@ void MediaPlayerTizen::handlePlayerBuffer(StreamType type,
     }
     if (!stream->waitingDemuxer() && currentBytes <= lastBytes &&
         currentBytes < (maxSize * 0.1)) {
-        DEBUG_STREAMBUFFER_LOG("Player need data (%llu/%llu)\n", currentBytes,
-                               maxSize);
+        DEBUG_STREAMBUFFER_LOG("Player need data (%llu/%llu)\n",
+                               (long long unsigned int)currentBytes,
+                               (long long unsigned int)maxSize);
         fillBuffer(stream);
     }
 #endif
@@ -1373,7 +1374,8 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
     uint64_t streamIdx = activeStreamIndex(stream->type());
     size_t currentInitIndex = stream->initSegmentIndex();
     uint64_t lastDTS = stream->lastSubmittedDTS();
-    DEBUG_STREAMBUFFER_LOG("fillBuffer start %llums\n", lastDTS);
+    DEBUG_STREAMBUFFER_LOG("fillBuffer start %llums\n",
+                           (long long unsigned int)lastDTS);
 
 #ifdef STARFISH_MEDIAPLAYER_DEBUG
     uint64_t submitMS = 0;
@@ -1415,7 +1417,7 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
             DEBUG_STREAMBUFFER_LOG(
                 "fillBuffer waiting demuxer[2] - requested(%lld) but "
                 "returned(%lld)\n",
-                lastDTS, packet.first->m_dts);
+                (long long int)lastDTS, (long long int)packet.first->m_dts);
             stream->setWaitingDemuxer(true);
             break;
         }
@@ -1452,9 +1454,6 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
                                         packet.first->m_duration * 1e6);
         RETURN_WHEN_MEDIA_PACKET_ERROR("ERROR: media_packet_set_duration\n");
 
-        // DEBUG_STREAMBUFFER_LOG("Submit packet pts:%llu dts:%llu dur:%llu\n",
-        // packet.first->m_pts, packet.first->m_dts, packet.first->m_duration);
-
         ret = player_push_media_stream(m_nativePlayer, mediaPacket);
         media_packet_destroy(mediaPacket);
 
@@ -1477,7 +1476,8 @@ void MediaPlayerTizen::fillBufferWithoutGuard(MediaStream* stream)
     }
     stream->setLastSubmittedDTS(lastDTS);
     DEBUG_STREAMBUFFER_LOG("fillBuffer end %llums (count:%d, size:%d)\n\n",
-                           lastDTS, (int)submitCount, (int)submitBytes);
+                           (long long unsigned int)lastDTS, (int)submitCount,
+                           (int)submitBytes);
 
 #undef DEBUG_STREAMBUFFER_LOG
 #undef RETURN_WHEN_MEDIA_PACKET_ERROR
@@ -1548,7 +1548,8 @@ void MediaPlayerTizen::initVideoStreamInfo(size_t initSegmentIndex)
     PLAYER_LOGI("> codec     : %s\n", info->codecString());
     PLAYER_LOGI("> size      : %dx%d\n", info->videoWidth(),
                 info->videoHeight());
-    PLAYER_LOGI("> max_buffer: %llu\n", m_videoStream->maxBufferSize());
+    PLAYER_LOGI("> max_buffer: %llu\n",
+                (long long unsigned int)m_videoStream->maxBufferSize());
     PLAYER_LOGI("---------------------------------------\n");
 
     player_set_media_stream_buffer_min_threshold(m_nativePlayer,
@@ -1713,7 +1714,8 @@ void MediaPlayerTizen::updateVideoStreamInfo(MediaStream* stream,
     PLAYER_LOGI("New video -----------------------------\n");
     PLAYER_LOGI("> index     : %d\n", (int)newInitIndex);
     PLAYER_LOGI("> size      : %lu x %lu\n", m_videoWidth, m_videoHeight);
-    PLAYER_LOGI("> max_buffer: %llu\n", stream->maxBufferSize());
+    PLAYER_LOGI("> max_buffer: %llu\n",
+                (long long unsigned int)stream->maxBufferSize());
     PLAYER_LOGI(
         "> avg_frame_rate: %d/%d(%f)\n", newInfo->videoFramerate().m_num,
         newInfo->videoFramerate().m_den, newInfo->videoFramerate().toDouble());
