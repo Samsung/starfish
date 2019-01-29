@@ -1,5 +1,11 @@
 P /.git
 P /.github
+P /build/build_escargot.sh
+P /build/build_gc.sh
+P /build/build_zeromq.sh
+P /build/build.gypi
+P build.dep.gyp
+P build.gyp
 - /Makefile
 - /inspector
 - /build/windows
