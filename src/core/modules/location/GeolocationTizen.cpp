@@ -29,6 +29,7 @@
 #include "core/page/WebView.h"
 #include "core/dom/Document.h"
 #include "Starfish.h"
+#include "core/page/BrowsingContext.h"
 
 #include <locations.h>
 #include <Ecore.h>

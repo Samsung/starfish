@@ -27,11 +27,17 @@ struct ServiceWorkerJob;
 
 class ServiceWorkerServiceClientInterface {
 public:
+    virtual ~ServiceWorkerServiceClientInterface()
+    {
+    }
     virtual void resolveJobPromise(ServiceWorkerJob* job) = 0;
 };
 
 class ServiceWorkerServiceHostInterface {
 public:
+    virtual ~ServiceWorkerServiceHostInterface()
+    {
+    }
     virtual void scheduleJob(ServiceWorkerJob* job) = 0;
 };
 }
