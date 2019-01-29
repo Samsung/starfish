@@ -139,6 +139,10 @@ LayoutUnit FrameBlockBox::layoutBlock(LayoutContext& ctx)
     bool clearAffected = false;
     bool floatAffected = false;
 
+    // m_lineBoxes must be initialized, because frame is reusable and it can be
+    // either a block-flow or an inline-flow
+    m_lineBoxes.clear();
+
     MarginInfo* marginInfo = ctx.marginInfo(this);
 
     if (!marginInfo->canCollapseTopWithChildren()) {
