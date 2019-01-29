@@ -1658,6 +1658,11 @@ ComputedStyleDamage compareStyle(ComputedStyle* oldStyle,
 
     if (newOpacity != oldOpacity) {
         damagedKeys[CSSStyleValuePair::KeyKind::Opacity] = true;
+        if ((newOpacity == 0 && oldOpacity != 0) ||
+            (newOpacity != 0 && oldOpacity == 0)) {
+            damage = (ComputedStyleDamage)(
+                ComputedStyleDamage::ComputedStyleDamagePainting | damage);
+        }
         if (newOpacity < 1 && oldOpacity < 1) {
             damage = (ComputedStyleDamage)(
                 ComputedStyleDamage::

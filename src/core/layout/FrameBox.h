@@ -792,6 +792,7 @@ public:
     virtual void establishesStackingContextIfNeedsAndComputingPaintingFlags();
     virtual void computeVisibleRect(Frame::ComputeVisibleRectContext& ctx);
 
+    bool isBoxesInvisibleFromHere();
     bool tryUniteVisibleRect(Frame::ComputeVisibleRectContext& ctx);
 
     void clearStackingContextIfNeeds();
