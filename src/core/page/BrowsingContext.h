@@ -23,7 +23,7 @@
 #include "binding/StarfishHoldable.h"
 #include "binding/WebViewHoldable.h"
 
-#include "core/page/ScriptExecutionContext.h"
+#include "core/page/ScriptContext.h"
 #include "core/layout/LayoutRepaintTracker.h"
 
 namespace Starfish {
@@ -32,7 +32,6 @@ class Document;
 class Node;
 class WebView;
 class ResourceURL;
-class ScriptBindingInstance;
 class Starfish;
 class StackingContext;
 class CanvasSurface;
@@ -58,7 +57,7 @@ enum class HistoryManagerAction;
 
 class BrowsingContext : public gc,
                         public WebViewHoldable,
-                        public ScriptExecutionContext {
+                        public ScriptContext {
     friend class PlatformWindow;
     friend class Window;
     friend class HTMLHtmlElement;
@@ -81,7 +80,6 @@ public:
     }
 
     void initFlags();
-    ScriptBindingInstance* scriptBindingInstance();
 
     Window* window()
     {

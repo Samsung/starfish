@@ -116,31 +116,6 @@ Window implements WindowEventHandlers;
 
 callback FrameRequestCallback = void (DOMHighResTimeStamp time);
 
-// https://html.spec.whatwg.org/#windoworworkerglobalscope
-
-typedef (DOMString or Function) TimerHandler;
-
-[PartialInterface,
- NoInterfaceObject,
- Exposed=(Window,Worker)]
-interface WindowOrWorkerGlobalScope {
-  [Unimplemented, Replaceable] readonly attribute USVString origin;
-
-  // base64 utility methods
-  [Unimplemented] DOMString btoa(DOMString data);
-  [Unimplemented] DOMString atob(DOMString data);
-
-  // timers
-  [Custom] long setTimeout(TimerHandler handler, optional long timeout = 0, any... arguments);
-  void clearTimeout(optional long handle = 0);
-  [Custom] long setInterval(TimerHandler handler, optional long timeout = 0, any... arguments);
-  void clearInterval(optional long handle = 0);
-
-  // ImageBitmap
-  [Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, optional ImageBitmapOptions options);
-  [Unimplemented] Promise<ImageBitmap> createImageBitmap(ImageBitmapSource image, long sx, long sy, long sw, long sh, optional ImageBitmapOptions options);
-};
-
 Window implements WindowOrWorkerGlobalScope;
 // WorkerGlobalScope implements WindowOrWorkerGlobalScope;
 

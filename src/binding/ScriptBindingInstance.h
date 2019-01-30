@@ -44,6 +44,13 @@ typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
 #include "binding/ScriptEngineInstance.h"
 #include "binding/Interfaces.h"
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER_HOST)
+    // TODO: Support ServiceWorkerGlobalScope class
+    #define STARFISH_GLOBAL_BINDING_CLASS ServiceWorkerGlobalScope
+#else
+    #define STARFISH_GLOBAL_BINDING_CLASS Window
+#endif
+
 #ifdef TIZEN_DEVICE_API
 namespace DeviceAPI {
 class ExtensionManagerInstance;

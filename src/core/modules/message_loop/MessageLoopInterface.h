@@ -22,31 +22,30 @@
 
 namespace Starfish {
 
-class ScriptExecutionContext;
+class ScriptContext;
 
 class MessageLoopInterface {
 public:
     virtual ~MessageLoopInterface()
     {
     }
-    virtual size_t addIdler(ScriptExecutionContext* ctx,
+    virtual size_t addIdler(ScriptContext* ctx,
                             void (*fn)(size_t handle, void*), void* data) = 0;
-    virtual size_t addIdler(ScriptExecutionContext* ctx,
+    virtual size_t addIdler(ScriptContext* ctx,
                             void (*fn)(size_t handle, void*, void*), void* data,
                             void* data1) = 0;
-    virtual size_t addIdler(ScriptExecutionContext* ctx,
+    virtual size_t addIdler(ScriptContext* ctx,
                             void (*fn)(size_t handle, void*, void*, void*),
                             void* data, void* data1, void* data2) = 0;
     virtual size_t addIdlerWithNoGCRootingInOtherThread(
-        ScriptExecutionContext* ctx, void (*fn)(size_t handle, void*),
-        void* data) = 0;
+        ScriptContext* ctx, void (*fn)(size_t handle, void*), void* data) = 0;
     virtual size_t addIdlerWithNoGCRootingInOtherThread(
-        ScriptExecutionContext* ctx, void (*fn)(size_t handle, void*, void*),
-        void* data, void* data1) = 0;
+        ScriptContext* ctx, void (*fn)(size_t handle, void*, void*), void* data,
+        void* data1) = 0;
 
     virtual void removeIdler(size_t handle) = 0;
     virtual void removeIdlerWithNoGCRooting(size_t handle) = 0;
-    virtual void clearPendingIdlers(ScriptExecutionContext* ctx = nullptr) = 0;
+    virtual void clearPendingIdlers(ScriptContext* ctx = nullptr) = 0;
     virtual void destroy() = 0;
 };
 

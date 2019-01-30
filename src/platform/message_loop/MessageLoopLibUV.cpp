@@ -26,7 +26,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/page/Window.h"
-#include "core/page/ScriptExecutionContext.h"
+#include "core/page/ScriptContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
@@ -49,7 +49,7 @@ struct IdlerData {
     int m_pararmNum;
     uv_timer_t* m_idler_uv;
     MessageLoop* m_ml;
-    ScriptExecutionContext* m_ctx;
+    ScriptContext* m_ctx;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
 };
@@ -105,8 +105,8 @@ MessageLoop::MessageLoop(WebView* webView)
     ((uv_async_t*)m_idlerThreadAsyncHandle)->data = this;
 }
 
-size_t MessageLoop::addIdler(ScriptExecutionContext* ctx,
-                             void (*fn)(size_t, void*), void* data)
+size_t MessageLoop::addIdler(ScriptContext* ctx, void (*fn)(size_t, void*),
+                             void* data)
 {
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
@@ -134,7 +134,7 @@ size_t MessageLoop::addIdler(ScriptExecutionContext* ctx,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(ScriptExecutionContext* ctx,
+size_t MessageLoop::addIdler(ScriptContext* ctx,
                              void (*fn)(size_t, void*, void*), void* data,
                              void* data1)
 {
@@ -166,7 +166,7 @@ size_t MessageLoop::addIdler(ScriptExecutionContext* ctx,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(ScriptExecutionContext* ctx,
+size_t MessageLoop::addIdler(ScriptContext* ctx,
                              void (*fn)(size_t, void*, void*, void*),
                              void* data, void* data1, void* data2)
 {
@@ -207,7 +207,7 @@ void uv_close_cb(uv_handle_t* handle)
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    ScriptExecutionContext* ctx, void (*fn)(size_t, void*), void* data)
+    ScriptContext* ctx, void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
@@ -228,7 +228,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    ScriptExecutionContext* ctx, void (*fn)(size_t, void*, void*), void* data,
+    ScriptContext* ctx, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
     IdlerData* id = new IdlerData;
@@ -266,7 +266,7 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
     id->m_shouldExecute = false;
 }
 
-void MessageLoop::clearPendingIdlers(ScriptExecutionContext* ctx)
+void MessageLoop::clearPendingIdlers(ScriptContext* ctx)
 {
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {

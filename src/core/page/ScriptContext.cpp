@@ -17,19 +17,33 @@
  *  USA
  */
 
-#include "core/page/ScriptExecutionContext.h"
+#include "core/page/ScriptContext.h"
 
 namespace Starfish {
 
+void ScriptContext::setScriptBindingInstance(
+    ScriptBindingInstance* scriptBindingInstance)
+{
+    m_scriptBindingInstance = scriptBindingInstance;
+}
+ScriptBindingInstance* ScriptContext::scriptBindingInstance() const
+{
+    return m_scriptBindingInstance;
+}
+
+MessageLoop* ScriptContext::messageLoop() const
+{
+    return m_messageLoop;
+}
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
-ServiceWorker* ScriptExecutionContext::activeServiceWorker() const
+ServiceWorker* ScriptContext::activeServiceWorker() const
 {
     return m_activeServiceWorker;
 };
 
-void ScriptExecutionContext::setActiveServiceWorker(
-    ServiceWorker* serviceWorker)
+void ScriptContext::setActiveServiceWorker(ServiceWorker* serviceWorker)
 {
     m_activeServiceWorker = serviceWorker;
 }

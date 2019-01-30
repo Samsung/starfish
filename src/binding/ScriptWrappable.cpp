@@ -28,6 +28,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
+#include "core/page/WindowOrWorkerGlobalScope.h"
 #include "core/style/CSSStyleLookupTrie.h"
 
 #include <EscargotPublic.h>
@@ -228,6 +229,12 @@ static void loggingJSErrorInfo(
     }
 }
 
+template <typename T>
+T* fetchGlobalObject(Escargot::ContextRef* scriptContext)
+{
+    return static_cast<T*>(scriptContext->globalObject()->extraData());
+}
+
 Window* fetchWindow(ContextRef* ctx)
 {
     Window* window = (Window*)ctx->globalObject()->extraData();
@@ -256,6 +263,11 @@ WebView* fetchWebView(ContextRef* ctx)
 StaticStrings* fetchStaticStrings(ContextRef* ctx)
 {
     return fetchWebView(ctx)->starfish()->staticStrings();
+}
+
+ScriptContext* fetchScriptContext(ContextRef* ctx)
+{
+    return fetchGlobalObject(ctx)->windowOrWorkerGlobalScope()->scriptContext();
 }
 
 class EscargotStringView : public String {

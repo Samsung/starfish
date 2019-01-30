@@ -29,7 +29,7 @@
 
 namespace Starfish {
 
-class ScriptExecutionContext;
+class ScriptContext;
 enum class HistoryManagerAction;
 
 class MessageLoop : public MessageLoopInterface,
@@ -41,19 +41,16 @@ class MessageLoop : public MessageLoopInterface,
 
 public:
     MessageLoop(WebView* wv);
-    size_t addIdler(ScriptExecutionContext* ctx,
-                    void (*fn)(size_t handle, void*), void* data);
-    size_t addIdler(ScriptExecutionContext* ctx,
-                    void (*fn)(size_t handle, void*, void*), void* data,
-                    void* data1);
-    size_t addIdler(ScriptExecutionContext* ctx,
+    size_t addIdler(ScriptContext* ctx, void (*fn)(size_t handle, void*),
+                    void* data);
+    size_t addIdler(ScriptContext* ctx, void (*fn)(size_t handle, void*, void*),
+                    void* data, void* data1);
+    size_t addIdler(ScriptContext* ctx,
                     void (*fn)(size_t handle, void*, void*, void*), void* data,
                     void* data1, void* data2);
-    size_t addIdlerWithNoGCRootingInOtherThread(ScriptExecutionContext* ctx,
-                                                void (*fn)(size_t handle,
-                                                           void*),
-                                                void* data);
-    size_t addIdlerWithNoGCRootingInOtherThread(ScriptExecutionContext* ctx,
+    size_t addIdlerWithNoGCRootingInOtherThread(
+        ScriptContext* ctx, void (*fn)(size_t handle, void*), void* data);
+    size_t addIdlerWithNoGCRootingInOtherThread(ScriptContext* ctx,
                                                 void (*fn)(size_t handle, void*,
                                                            void*),
                                                 void* data, void* data1);
@@ -62,7 +59,7 @@ public:
     void removeIdlerWithNoGCRooting(size_t handle);
 
     void clearPendingIdlers(
-        ScriptExecutionContext* ctx); // give nullptr to clear every idlers
+        ScriptContext* ctx); // give nullptr to clear every idlers
 
     void destroy();
     void invokeNavigate(WebView* wv, ResourceURL* url, ReferrerURL* referrerURL,
