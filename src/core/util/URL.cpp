@@ -26,21 +26,21 @@
 #include "core/util/URL.h"
 
 #include "core/page/WebView.h"
-#include "core/page/Window.h"
+#include "core/page/ScriptContext.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace Starfish {
 
-URL::URL(Window* window, String* url)
+URL::URL(ScriptContext* scriptContext, String* url)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(window->scriptBindingInstance())
+    , m_scriptBindingInstance(scriptContext->scriptBindingInstance())
     , m_resourceURL(new ResourceURL(url))
 {
 }
 
-URL::URL(Window* window, String* url, String* baseURL)
+URL::URL(ScriptContext* scriptContext, String* url, String* baseURL)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(window->scriptBindingInstance())
+    , m_scriptBindingInstance(scriptContext->scriptBindingInstance())
     , m_resourceURL(new ResourceURL(url, baseURL))
 {
 }

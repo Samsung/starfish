@@ -17,33 +17,19 @@
  *  USA
  */
 
-#ifndef __StarfishScriptExecutionContext__
-#define __StarfishScriptExecutionContext__
+#include "binding/ScriptContextHoldable.h"
+#include "core/page/ScriptContext.h"
 
 namespace Starfish {
 
-class ServiceWorker;
+ScriptBindingInstance* ScriptContextHoldable::scriptBindingInstance()
+{
+    return m_scriptContext->scriptBindingInstance();
+}
 
-class ScriptExecutionContext {
-    virtual bool isDocument() const
-    {
-        return false;
-    }
-    virtual bool isWorkerGlobalScope() const
-    {
-        return false;
-    }
+MessageLoop* ScriptContextHoldable::messageLoop()
+{
+    return m_scriptContext->messageLoop();
+}
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
-public:
-    ServiceWorker* activeServiceWorker() const;
-    void setActiveServiceWorker(ServiceWorker* serviceWorker);
-
-private:
-    ServiceWorker* m_activeServiceWorker{ nullptr };
-#endif
-};
-
-} // end of namespace Starfish
-
-#endif
+}

@@ -40,6 +40,7 @@ class Screen;
 class ScriptBindingInstance;
 class StorageNamespace;
 class WebView;
+class WindowOrWorkerGlobalScope;
 
 struct ScrollOptions {
 public:
@@ -339,6 +340,11 @@ public:
     Promise* fetch(RequestInfo& input);
     Promise* fetch(RequestInfo& input, RequestInit& init);
 
+    WindowOrWorkerGlobalScope* windowOrWorkerGlobalScope()
+    {
+        return m_windowOrWorkerGlobalScope;
+    }
+
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
     void screenShot(std::string filePath, void (*callback)(void*), void* data);
@@ -459,6 +465,8 @@ private:
 
     Node* m_cssTarget;
     NodeList* m_frames;
+
+    WindowOrWorkerGlobalScope* m_windowOrWorkerGlobalScope;
 };
 }
 

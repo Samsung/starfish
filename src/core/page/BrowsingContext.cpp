@@ -25,7 +25,6 @@
 #include "BrowsingContext.h"
 #include "WebView.h"
 
-#include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/dom/FocusEvent.h"
 #include "browser/history/HistoryManager.h"
@@ -82,6 +81,7 @@ BrowsingContext* BrowsingContext::create(HTMLIFrameElement* sourceElement)
 
 BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source)
     : WebViewHoldable(webView)
+    , ScriptContext(webView->messageLoop())
     , m_webView(webView)
     , m_window(nullptr)
     , m_parentBrowsingContext(source ? source->document()->browsingContext()
@@ -178,11 +178,6 @@ HistoryManager* BrowsingContext::historyManager()
 Document* BrowsingContext::document()
 {
     return window()->document();
-}
-
-ScriptBindingInstance* BrowsingContext::scriptBindingInstance()
-{
-    return window()->scriptBindingInstance();
 }
 
 class WebFontLoadChecker : public ResourceClient {
