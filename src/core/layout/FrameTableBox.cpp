@@ -1206,6 +1206,8 @@ void FrameTableBox::calCellWidthsWithColspans()
                         }
                     }
 
+                    LayoutUnit oldWidth = cell->width();
+
                     if (m_columnWidths[colId]->hasSpecifiedWidth()) {
                         LayoutUnit cellWidth =
                             std::max(sumOfCellWidth,
@@ -1213,6 +1215,10 @@ void FrameTableBox::calCellWidthsWithColspans()
                         cell->setWidth(cellWidth);
                     } else {
                         cell->setWidth(sumOfCellWidth);
+                    }
+                    if (oldWidth != cell->width()) {
+                        cell->markNeedsLayout();
+                        cell->markContentWidthDamaged();
                     }
                 }
             }

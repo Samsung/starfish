@@ -4298,18 +4298,18 @@ PreferredWidthContext::preferredWidthsWithNewContext(Frame* f)
                                  m_remainingWidth - mbpWidth);
     newCtx.computePreferredWidth();
 
+    auto& floatContext = nearestFloatContext();
     if (f->style()->clear() & ClearValue::LeftClearValue) {
-        upperContext().m_floatLeftWidth = 0;
+        floatContext.m_floatLeftWidth = 0;
     }
     if (f->style()->clear() & ClearValue::RightClearValue) {
-        upperContext().m_floatRightWidth = 0;
+        floatContext.m_floatRightWidth = 0;
     }
 
     if (f->style()->floating() & FloatValue::LeftFloatValue) {
-        upperContext().m_floatLeftWidth += (newCtx.preferredWidth() + mbpWidth);
+        floatContext.m_floatLeftWidth += (newCtx.preferredWidth() + mbpWidth);
     } else if (f->style()->floating() & FloatValue::RightFloatValue) {
-        upperContext().m_floatRightWidth +=
-            (newCtx.preferredWidth() + mbpWidth);
+        floatContext.m_floatRightWidth += (newCtx.preferredWidth() + mbpWidth);
     }
 
     return std::make_pair(newCtx.preferredWidth() + mbpWidth,
@@ -4502,6 +4502,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
                         if (f->style()->clear() & ClearValue::RightClearValue) {
                             ctx.floatRightWidth() = 0;
                         }
+
                         w = std::max(w, widths.first + ctx.floatLeftWidth() +
                                             ctx.floatRightWidth());
                     } else {
@@ -4542,7 +4543,7 @@ void FrameBlockBox::computePreferredWidth(PreferredWidthContext& ctx)
     LayoutUnit unused;
     LayoutUnit w = widthAfterApplyingMinMaxWidths(
         ctx.layoutContext(), ctx.preferredWidth(), unused, true);
-    ctx.updatePreferredWidth(w);
+    ctx.updatePreferredWidthConsiderMaxWidth(style(), w);
     w = widthAfterApplyingMinMaxWidths(ctx.layoutContext(),
                                        ctx.preferredMinWidth(), unused, true);
     ctx.updatePreferredMinWidth(w);
@@ -4694,7 +4695,7 @@ void FrameFlexibleBox::computePreferredWidth(PreferredWidthContext& ctx)
     LayoutUnit unused;
     LayoutUnit w = widthAfterApplyingMinMaxWidths(
         ctx.layoutContext(), ctx.preferredWidth(), unused, true);
-    ctx.updatePreferredWidth(w);
+    ctx.updatePreferredWidthConsiderMaxWidth(style(), w);
     w = widthAfterApplyingMinMaxWidths(ctx.layoutContext(),
                                        ctx.preferredMinWidth(), unused, true);
     ctx.updatePreferredMinWidth(w);

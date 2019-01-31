@@ -1503,6 +1503,12 @@ void dump(Frame* frm, unsigned depth)
         frm->node()->dump();
     }
 
+    if (frm->needToEstablishBlockFormattingContext()) {
+        if (frm->needsPainting()) {
+            printf("BlockFormattingContext ");
+        }
+    }
+
     if (frm->needsPainting()) {
         printf("needsPainting ");
     }
