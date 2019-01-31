@@ -24,7 +24,9 @@
 
 namespace Starfish {
 
-ScriptEngineInstance::ScriptEngineInstance(const char* locale, const char* timezone, PromiseJobListener listener)
+ScriptEngineInstance::ScriptEngineInstance(const char* locale,
+                                           const char* timezone,
+                                           PromiseJobListener listener)
 {
     // Set this flag to process const keyword temporary
     setenv("ESCARGOT_TREAT_CONST_AS_VAR", "1", 1);

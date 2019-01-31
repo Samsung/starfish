@@ -742,9 +742,6 @@ public:
         , m_isPendingWrapLine(false)
         , m_hasAppliedTextIndent(false)
     {
-        if (m_upperContext == nullptr) {
-            m_upperContext = this;
-        }
     }
 
     Frame* owner() const
@@ -759,9 +756,11 @@ public:
         return m_layoutContext;
     }
 
-    PreferredWidthContext& upperContext()
+    PreferredWidthContext& nearestFloatContext();
+
+    PreferredWidthContext* upperContext()
     {
-        return *m_upperContext;
+        return m_upperContext;
     }
 
     LayoutUnit& floatLeftWidth()
@@ -777,6 +776,21 @@ public:
     void updatePreferredWidth(LayoutUnit r)
     {
         m_preferredWidthSoFar = std::max(m_preferredWidthSoFar, r);
+    }
+
+    void updatePreferredWidthConsiderMaxWidth(ComputedStyle* cs, LayoutUnit r)
+    {
+        if (cs) {
+            auto maxWidth = cs->maxWidth();
+            if (maxWidth.isSpecified() && maxWidth.isDefinite(false) &&
+                m_preferredWidthSoFar > r) {
+                m_preferredWidthSoFar = r;
+            } else {
+                updatePreferredWidth(r);
+            }
+        } else {
+            updatePreferredWidth(r);
+        }
     }
 
     LayoutUnit preferredWidth() const

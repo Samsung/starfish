@@ -862,6 +862,18 @@ void LayoutContext::pushIntoInlineNonReplacedBoxPool(InlineNonReplacedBox* b)
     m_inlineNonReplacedBoxPool.push_back(b);
 }
 
+PreferredWidthContext& PreferredWidthContext::nearestFloatContext()
+{
+    PreferredWidthContext* c = this;
+    while (c) {
+        if (c->m_frame->needToEstablishBlockFormattingContext()) {
+            return *c;
+        }
+        c = c->m_upperContext;
+    }
+    return *this;
+}
+
 void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
 {
     LayoutRect tmp = computeBoxExtent(r, tranformMatrix);

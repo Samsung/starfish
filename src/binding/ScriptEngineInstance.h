@@ -29,11 +29,13 @@ class JobRef;
 namespace Starfish {
 
 using ScriptEngine = Escargot::VMInstanceRef*;
-using PromiseJobListener = void (*)(Escargot::ExecutionStateRef*, Escargot::JobRef*);
+using PromiseJobListener = void (*)(Escargot::ExecutionStateRef*,
+                                    Escargot::JobRef*);
 
 class ScriptEngineInstance : public gc {
 public:
-    ScriptEngineInstance(const char* locale, const char* timezone, PromiseJobListener listener);
+    ScriptEngineInstance(const char* locale, const char* timezone,
+                         PromiseJobListener listener);
 
     ScriptEngine engineInstance()
     {

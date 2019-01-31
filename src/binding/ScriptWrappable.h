@@ -64,7 +64,6 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
     Escargot::ScriptNativeFunctionPointer setter, bool isEnumerable = true,
     bool isConfigurable = true);
 
-
 template <typename T = STARFISH_GLOBAL_BINDING_CLASS>
 T* fetchGlobalObject(Escargot::ContextRef* scriptContext);
 WebView* fetchWebView(Escargot::ContextRef* context);

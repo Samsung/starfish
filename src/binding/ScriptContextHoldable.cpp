@@ -31,5 +31,4 @@ MessageLoop* ScriptContextHoldable::messageLoop()
 {
     return m_scriptContext->messageLoop();
 }
-
 }

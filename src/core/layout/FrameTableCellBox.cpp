@@ -83,19 +83,19 @@ void FrameTableCellBox::collectCellWidthInfo(
         }
     }
 
+    LayoutUnit oldContentWidth = contentWidth();
     setContentWidth(m_maxCellWidth - borderWidth() - paddingWidth());
+    if (oldContentWidth != contentWidth()) {
+        markNeedsLayout();
+        markContentWidthDamaged();
+    }
 }
 
 void FrameTableCellBox::layoutWidth(LayoutContext& ctx)
 {
-    // layout blockboxes to fit them into the width of this cell.
     // The width of cell has been calculated in calCellWidth()
     // in the first iteration
-    for (Frame* c = firstChild(); c; c = c->next()) {
-        if (c->isFrameBlockBox()) {
-            c->layout(ctx, Frame::LayoutWantToResolve::ResolveWidth);
-        }
-    }
+    // child of this boxes will get its width on FrameTableCellBox::layoutHeight
 }
 
 void FrameTableCellBox::layoutHeight(LayoutContext& ctx)
