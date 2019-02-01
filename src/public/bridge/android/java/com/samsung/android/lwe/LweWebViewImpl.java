@@ -181,7 +181,7 @@ public class LweWebViewImpl implements LweWebView {
 
     public void setCacheMode(int mode) {
         if (mode == SemWebSettings.LOAD_DEFAULT ||
-            mode == SemWebSettings.LOAD_NO_CACHE) {
+                mode == SemWebSettings.LOAD_NO_CACHE) {
             if (mWebViewInternalHandle != 0) {
                 setCacheMode(mWebViewInternalHandle, mode);
             }
@@ -249,27 +249,38 @@ public class LweWebViewImpl implements LweWebView {
                 new SurfaceHolder.Callback() {
                     @Override
                     public void surfaceCreated(SurfaceHolder holder) {
-                        mWindowWidth = mLWEView.getWidth();
-                        mWindowHeight = mLWEView.getHeight();
+                        int width = mLWEView.getWidth();
+                        int height = mLWEView.getHeight();
                         if (mWebViewInternalHandle != 0) {
-                            Bitmap oldBuffer = mScreenBuffer;
-                            mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
-                            resizeTo(mWebViewInternalHandle, mScreenBuffer);
+                            if ((mWindowWidth != width || mWindowHeight != height)) {
+                                if (mScreenBuffer != null) {
+                                    mScreenBuffer.recycle();
+                                }
+                                mScreenBuffer = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+                                resizeTo(mWebViewInternalHandle, mScreenBuffer);
+                            } else {
+                                onRendered(0, 0, width, height);
+                            }
+                            mWindowWidth = width;
+                            mWindowHeight = height;
+
                             resume(mWebViewInternalHandle);
-                            oldBuffer.recycle();
                         }
 
                     }
                     @Override
                     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                        mWindowWidth = width;
-                        mWindowHeight = height;
-                        if (mWebViewInternalHandle != 0) {
-                            Bitmap oldBuffer = mScreenBuffer;
-                            mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
-                            resizeTo(mWebViewInternalHandle, mScreenBuffer);
+                        if (mWebViewInternalHandle != 0){
+                            if ((mWindowWidth != width || mWindowHeight != height)) {
+                                mWindowWidth = width;
+                                mWindowHeight = height;
+                                if (mScreenBuffer != null) {
+                                    mScreenBuffer.recycle();
+                                }
+                                mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
+                                resizeTo(mWebViewInternalHandle, mScreenBuffer);
+                            }
                             resume(mWebViewInternalHandle);
-                            oldBuffer.recycle();
                         }
                     }
                     @Override
@@ -390,11 +401,11 @@ public class LweWebViewImpl implements LweWebView {
                 public void run() {
                     AlertDialog.Builder builder = new AlertDialog.Builder(mLWEView.getContext());
                     builder.setSingleChoiceItems(list, checkedPosition,
-                        new DialogInterface.OnClickListener() {
-                            public void onClick(DialogInterface dialog, int which) {
-                                onDropdownMenuItemSelected(which);
-                            }
-                        });
+                            new DialogInterface.OnClickListener() {
+                                public void onClick(DialogInterface dialog, int which) {
+                                    onDropdownMenuItemSelected(which);
+                                }
+                            });
 
                     builder.show();
                 }
@@ -464,7 +475,7 @@ public class LweWebViewImpl implements LweWebView {
     private boolean shouldOverrideUrlLoading(String request) {
         if (mWebViewClient != null) {
             return mWebViewClient.shouldOverrideUrlLoading(mLWEView,
-                                                           new WebResourceRequestImpl(request));
+                    new WebResourceRequestImpl(request));
         }
         return false;
     }
