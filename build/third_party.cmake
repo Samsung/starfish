@@ -121,7 +121,8 @@ ENDIF()
 #######################################################
 # LIBTUV
 #######################################################
-IF (${ARCH} STREQUAL "x64" AND (${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl"))
+IF (${ARCH} STREQUAL "x64" AND ((${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl")
+        OR (LWE_DEFINES_MODE MATCHES STARFISH_ENABLE_SERVICE_WORKER)))
     SET (TUV_DIR ${THIRD_PARTY_ROOT}/libtuv)
     SET (TUV_TARGET ${TUV_DIR}/build/x86_64-linux/${MODE}/lib/libtuv.a)
 
