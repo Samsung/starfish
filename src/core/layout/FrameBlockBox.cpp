@@ -487,8 +487,8 @@ void FrameBlockBox::quickLayout(LayoutContext& ctx)
 
     if (!needToEstablishBlockFormattingContext()) {
         ctx.layoutRegisteredAbsolutePositionedBoxes(this);
+        ctx.layoutRegisteredRelativePositionedBoxes(this);
     }
-    ctx.layoutRegisteredRelativePositionedBoxes(this);
 }
 
 void FrameBlockBox::layout(LayoutContext& ctx,
