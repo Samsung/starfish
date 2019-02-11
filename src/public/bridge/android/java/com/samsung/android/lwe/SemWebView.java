@@ -37,7 +37,10 @@ import java.lang.reflect.Constructor;
 public class SemWebView extends SurfaceView {
 
     private static PathClassLoader pcl = null;
-    private static final String packageName = "com.samsung.android.lwe";
+    /**
+     * @hide
+     */
+    public static final String PACKAGE_NAME = "com.samsung.android.lwe";
     private static final String LweWebViewImplName = "com.samsung.android.lwe.LweWebViewImpl";
 
     /**
@@ -99,8 +102,8 @@ public class SemWebView extends SurfaceView {
             /*
             try {
                 if (pcl == null) {
-                    String path = getContext().getPackageManager().getPackageInfo(packageName, 0).applicationInfo.nativeLibraryDir;
-                    String dexpath = getContext().getPackageManager().getPackageInfo(packageName, 0).applicationInfo.publicSourceDir;
+                    String path = getContext().getPackageManager().getPackageInfo(PACKAGE_NAME, 0).applicationInfo.nativeLibraryDir;
+                    String dexpath = getContext().getPackageManager().getPackageInfo(PACKAGE_NAME, 0).applicationInfo.publicSourceDir;
                     pcl = new PathClassLoader(dexpath, path, getContext().getClassLoader());
                 }
                 Class<?> cls = pcl.loadClass(LweWebViewImplName);
