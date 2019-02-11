@@ -52,9 +52,9 @@ private:
     void parseLine();
     String* fromUTF8(const char* bytes, size_t);
 
-    GCVector<char> m_line;
+    GCAtomicVector<char> m_line;
     String* m_eventType;
-    GCVector<char> m_data;
+    GCAtomicVector<char> m_data;
 
     String* m_id;
     String* m_lastEventId;

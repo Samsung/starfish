@@ -37,7 +37,7 @@ EventSourceParser::EventSourceParser(String* lastEventId, Client* client)
 {
 }
 
-static void append(GCVector<char>& src, const char* dst, size_t len)
+static void append(GCAtomicVector<char>& src, const char* dst, size_t len)
 {
     for (size_t i = 0; i < len; i++) {
         src.push_back(dst[i]);
@@ -52,7 +52,7 @@ void EventSourceParser::addBytes(const char* bytes, size_t size)
         // As kBOM contains neither CR nor LF, we can think BOM and the line
         // break separately.
         if (m_isRecognizingBOM && m_line.size() + (i - start) == 3) {
-            GCVector<char> line = m_line;
+            GCAtomicVector<char> line = m_line;
             append(line, &bytes[start], i - start);
             STARFISH_ASSERT(line.size() == 3);
             m_isRecognizingBOM = false;

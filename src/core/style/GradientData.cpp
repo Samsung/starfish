@@ -510,7 +510,8 @@ GradientDrawingInfo* LinearGradientData::makeGradientDrawingInfo(
 {
     STARFISH_ASSERT(box);
 
-    GradientDrawingInfo* ret = new GradientDrawingInfo();
+    GradientDrawingInfo* ret =
+        new GradientDrawingInfo(GradientDrawingInfo::Linear);
     computeEndPoints(rect, ret->x1, ret->y1, ret->x2, ret->y2);
     makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
                             ret->y2, ret->r2, box);
@@ -566,7 +567,8 @@ GradientDrawingInfo* RadialGradientData::makeGradientDrawingInfo(
 {
     STARFISH_ASSERT(box);
 
-    GradientDrawingInfo* ret = new GradientDrawingInfo();
+    GradientDrawingInfo* ret =
+        new GradientDrawingInfo(GradientDrawingInfo::Radial);
     computeEndPoints(rect, box, ret->x1, ret->y1, ret->r1, ret->x2, ret->y2,
                      ret->r2, ret->firstRadius, ret->secondRadius);
     makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
@@ -857,5 +859,26 @@ bool RadialGradientData::equals(GradientData* other) const
         return false;
     }
     return true;
+}
+
+bool GradientDrawingInfo::equals(GradientDrawingInfo* src)
+{
+    bool a = type == src->type && x1 == src->x1 && y1 == src->y1 &&
+             x2 == src->x2 && y2 == src->y2 && r1 == src->r1 && r2 == src->r2 &&
+             firstRadius == src->firstRadius &&
+             secondRadius == src->secondRadius;
+    if (a && colorStops.size() == src->colorStops.size()) {
+        size_t len = colorStops.size();
+        for (size_t i = 0; i < len; i++) {
+            if (colorStops[i]->color() != src->colorStops[i]->color() ||
+                colorStops[i]->offset() != src->colorStops[i]->offset() ||
+                colorStops[i]->specified() != src->colorStops[i]->specified()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    return false;
 }
 }

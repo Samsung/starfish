@@ -312,7 +312,7 @@ public:
         m_data.appendChar(character);
     }
 
-    void beginEndTag(const GCVector<char>& characters)
+    void beginEndTag(const GCAtomicVector<char>& characters)
     {
         STARFISH_ASSERT(m_type == Uninitialized);
         m_type = EndTag;

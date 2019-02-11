@@ -105,6 +105,8 @@ private:
 };
 
 struct GradientDrawingInfo : public gc {
+    enum GradientDrawingType { Linear, Radial };
+    GradientDrawingType type;
     float x1;
     float y1;
     float x2;
@@ -115,8 +117,9 @@ struct GradientDrawingInfo : public gc {
     float secondRadius;
     GCVector<ColorStop*> colorStops;
 
-    GradientDrawingInfo()
-        : x1(0.0f)
+    GradientDrawingInfo(GradientDrawingType t)
+        : type(t)
+        , x1(0.0f)
         , y1(0.0f)
         , x2(0.0f)
         , y2(0.0f)
@@ -148,6 +151,8 @@ struct GradientDrawingInfo : public gc {
     }
 
     void* operator new[](size_t size) = delete;
+
+    bool equals(GradientDrawingInfo* src);
 };
 
 class GradientData : public gc {

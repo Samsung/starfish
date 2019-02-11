@@ -44,11 +44,14 @@ public:
     static int nativeImageDataGCKind();
     static std::vector<NativeImageData*>& everyNativeImageInstances();
 
-    static NativeImageData* create(
-        String* localImageSrc); // this is only for EFL backend
     static NativeImageData* create(const char* buf, size_t len,
                                    bool shouldDecodingInstantly = true);
-    static NativeImageData* create(size_t width, size_t height);
+    static NativeImageData* create(size_t actualDeviceWidth,
+                                   size_t actualDeviceHeight);
+    static NativeImageData* create(float devicePixelRatio, size_t width,
+                                   size_t height); // this function will apply
+                                                   // device-pixel-ratio to
+                                                   // width, height
 
     virtual size_t bufferSize() = 0;
     virtual uint8_t* data() = 0;

@@ -312,7 +312,7 @@ private:
     // We occasionally want to emit both a character token and an end tag
     // token (e.g., when lexing script). We buffer the name of the end tag
     // token here so we remember it next time we re-enter the tokenizer.
-    GCVector<char> m_bufferedEndTagName;
+    GCAtomicVector<char> m_bufferedEndTagName;
 };
 }
 

@@ -66,4 +66,13 @@ std::vector<NativeImageData*>& NativeImageData::everyNativeImageInstances()
     static std::vector<NativeImageData*> v;
     return v;
 }
+
+NativeImageData* NativeImageData::create(float devicePixelRatio, size_t width,
+                                         size_t height)
+{
+    size_t deviceImageWidth = ceil(width * devicePixelRatio);
+    size_t deviceImageHeight = ceil(height * devicePixelRatio);
+    return NativeImageData::create(deviceImageWidth, deviceImageHeight);
+}
+
 } // namespace Starfish
