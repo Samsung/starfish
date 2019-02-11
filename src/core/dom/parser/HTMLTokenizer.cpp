@@ -77,7 +77,7 @@ static inline char32_t toLowerCase(char32_t cc)
     return cc + lowerCaseOffset;
 }
 
-static inline bool vectorEqualsString(const GCVector<char>& vector,
+static inline bool vectorEqualsString(const GCAtomicVector<char>& vector,
                                       String* string)
 {
     if (vector.size() != string->length()) {

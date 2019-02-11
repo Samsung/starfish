@@ -55,19 +55,6 @@ public:
                                  NativeImageData::nativeImageDataGCKind());
     }
 
-    NativeImageDataMISC(String* localImageSrc)
-    {
-        m_image = nullptr;
-#if defined(PORT_CANVAS_BACKEND_CAIRO)
-        m_imageSurface = nullptr;
-#endif
-        auto utf8Data = localImageSrc->toUTF8NonGCString();
-        FILE* fp = fopen(utf8Data.data(), "rb");
-        decodeImage(fp, localImageSrc, nullptr, 0);
-        fclose(fp);
-        initInternalSurface();
-    }
-
     NativeImageDataMISC(const char* buf, size_t len,
                         bool shouldDecodingInstantly)
     {
@@ -81,7 +68,7 @@ public:
         m_hasTransparentPixel = true;
 
         if (buf && len != 0) {
-            decodeImage(nullptr, nullptr, buf, len, shouldDecodingInstantly);
+            decodeImage(buf, len, shouldDecodingInstantly);
             if (!shouldDecodingInstantly && m_width && m_height) {
                 m_inputBuffer.insert(m_inputBuffer.end(), buf, &buf[len]);
             }
@@ -109,8 +96,8 @@ public:
     virtual uint8_t* data()
     {
         if (m_inputBuffer.size()) {
-            decodeImage(nullptr, nullptr, (const char*)m_inputBuffer.data(),
-                        m_inputBuffer.size(), true);
+            decodeImage((const char*)m_inputBuffer.data(), m_inputBuffer.size(),
+                        true);
             std::vector<unsigned char>().swap(m_inputBuffer);
             if (!m_image) {
                 // fallback
@@ -233,32 +220,6 @@ private:
         return imageFormat;
     }
 
-    static ImageFormat parseImageFormatFromFile(FILE* fp)
-    {
-        ImageFormat imageFormat = ImageFormat::FORMAT_ERROR;
-
-        if (!fp) {
-            return imageFormat;
-        }
-
-        unsigned char* buf = new unsigned char[11];
-        fgets((char*)buf, 11, fp);
-
-        if (isPNGFormat(buf)) {
-            imageFormat = ImageFormat::PNG;
-        } else if (isJPGFormat(buf)) {
-            imageFormat = ImageFormat::JPG;
-        } else if (isGIFFormat(buf)) {
-            imageFormat = ImageFormat::GIF;
-        } else {
-            // TODO ERROR
-        }
-
-        rewind(fp);
-        delete[] buf;
-        return imageFormat;
-    }
-
     typedef struct {
         const unsigned char* mem;
         unsigned long int size;
@@ -275,8 +236,8 @@ private:
         }
     }
 
-    void readPNGFileOrBufferedInput(FILE* fp, const char* bufferedInput,
-                                    size_t len, bool needsDecoding)
+    void readPNGFileOrBufferedInput(const char* bufferedInput, size_t len,
+                                    bool needsDecoding)
     {
         READ_DATA readData;
         png_byte colorType;
@@ -307,13 +268,9 @@ private:
             return;
         }
 
-        if (!fp) {
-            readData.mem = (unsigned char*)bufferedInput;
-            readData.size = 0;
-            png_set_read_fn(png, &readData, readPNGFromBufferedInput);
-        } else {
-            png_init_io(png, fp);
-        }
+        readData.mem = (unsigned char*)bufferedInput;
+        readData.size = 0;
+        png_set_read_fn(png, &readData, readPNGFromBufferedInput);
 
         png_read_info(png, info);
 
@@ -516,56 +473,6 @@ private:
         }
     }
 
-    void readJPGFile(FILE* fp)
-    {
-        jpeg_decompress_struct dHandle;
-        custom_error_mgr jerr;
-
-        dHandle.err = jpeg_std_error(&jerr.pub);
-        jerr.pub.error_exit = jpeg_error_handle;
-        jerr.pub.emit_message = jpeg_message_handle;
-        if (setjmp(jerr.setjmp_buffer)) {
-            m_width = 0;
-            m_height = 0;
-            m_stride = 0;
-            if (m_image) {
-                free(m_image);
-                m_image = NULL;
-            }
-            jpeg_destroy_decompress(&dHandle);
-            return;
-        }
-
-        unsigned char* srcBuf = nullptr;
-        int jpegSize = 0;
-        size_t readSize = 0;
-
-        fseek(fp, 0, SEEK_END);
-        jpegSize = ftell(fp);
-        rewind(fp);
-        jpeg_create_decompress(&dHandle);
-
-        srcBuf = (unsigned char*)malloc(sizeof(unsigned char) * jpegSize);
-        if (srcBuf == nullptr) {
-            jpeg_destroy_decompress(&dHandle);
-            STARFISH_LOG_ERROR("%s %d\n : srcBuf is NULL", __FUNCTION__,
-                               __LINE__);
-            return;
-        }
-
-        readSize = fread(srcBuf, 1, jpegSize, fp);
-        if (readSize <= 0) {
-            jpeg_destroy_decompress(&dHandle);
-            free(srcBuf);
-            STARFISH_LOG_ERROR("%s %d\n : readSize fail", __FUNCTION__,
-                               __LINE__);
-            return;
-        }
-        decodeJPG(&dHandle, srcBuf, jpegSize, true);
-        jpeg_destroy_decompress(&dHandle);
-        free(srcBuf);
-    }
-
     void readJPGBufferedInput(const char* buf, size_t len, bool needsDecoding)
     {
         jpeg_decompress_struct dHandle;
@@ -706,24 +613,6 @@ private:
     {
         Win32DecodeJpeg(buf, size, needsDecoding);
     }
-    void readJPGFile(FILE* fp)
-    {
-        fseek(fp, 0, SEEK_END);
-        auto jpegSize = ftell(fp);
-        rewind(fp);
-
-        unsigned char* srcBuf =
-            (unsigned char*)malloc(sizeof(unsigned char) * jpegSize);
-        auto readSize = fread(srcBuf, 1, jpegSize, fp);
-        if (readSize <= 0) {
-            STARFISH_LOG_ERROR("%s %d\n : readSize fail", __FUNCTION__,
-                               __LINE__);
-            return;
-        }
-
-        decodeJPG(srcBuf, jpegSize, true);
-    }
-
     void readJPGBufferedInput(const char* buf, size_t len, bool needsDecoding)
     {
         decodeJPG((unsigned char*)buf, len, needsDecoding);
@@ -731,6 +620,7 @@ private:
 #endif
     typedef struct {
         unsigned long long size;
+        unsigned long long pos;
         void* mem;
     } GIF_READ_DATA;
 
@@ -738,9 +628,16 @@ private:
     {
         GIF_READ_DATA* readData = (GIF_READ_DATA*)gft->UserData;
 
-        if (readData->mem && size > 0) {
-            memcpy(data, (GifByteType*)readData->mem + readData->size, size);
-            readData->size += size;
+        if (size > 0) {
+            unsigned uSize = (unsigned)size;
+            if (readData->pos + uSize > readData->size) {
+                size -= readData->pos + uSize - readData->size;
+                if (size < 0) {
+                    size = 0;
+                }
+            }
+            memcpy(data, (GifByteType*)readData->mem + readData->pos, size);
+            readData->pos += size;
         }
         return size;
     }
@@ -766,8 +663,7 @@ private:
 #endif
     }
 
-    void readGIFFileOrBufferedInput(String* localImageSrc,
-                                    const char* bufferedInput,
+    void readGIFFileOrBufferedInput(const char* bufferedInput, size_t len,
                                     bool needsDecoding)
     {
         int row = 0, col = 0;
@@ -785,29 +681,17 @@ private:
 
         GIF_READ_DATA readData;
 
-        if (localImageSrc) {
-            auto utf8Data = localImageSrc->toUTF8NonGCString();
+        readData.mem = (void*)bufferedInput;
+        readData.pos = 0;
+        readData.size = len;
 #ifdef GIF_LIB_VERSION
-            gifFile = DGifOpenFileName(utf8Data.data());
+        gifFile = DGifOpen(&readData, gifRead);
 #else
-            gifFile = DGifOpenFileName(utf8Data.data(), &errorCode);
+        gifFile = DGifOpen(&readData, gifRead, &errorCode);
 #endif
-            if (!gifFile) {
-                STARFISH_LOG_ERROR("Gif Open File Error, %d\n", errorCode);
-                return;
-            }
-        } else {
-            readData.mem = (void*)bufferedInput;
-            readData.size = 0;
-#ifdef GIF_LIB_VERSION
-            gifFile = DGifOpen(&readData, gifRead);
-#else
-            gifFile = DGifOpen(&readData, gifRead, &errorCode);
-#endif
-            if (!gifFile) {
-                STARFISH_LOG_ERROR("Gif Open Error, %d\n", errorCode);
-                return;
-            }
+        if (!gifFile) {
+            STARFISH_LOG_ERROR("Gif Open Error, %d\n", errorCode);
+            return;
         }
 
         m_width = gifFile->SWidth;
@@ -934,34 +818,19 @@ private:
         releaseGIFResource(gifFile, screenBuffer, m_height);
     }
 
-    void decodeImage(FILE* fp, String* localImageSrc, const char* buf,
-                     size_t len, bool needsDecoding = true)
+    void decodeImage(const char* buf, size_t len, bool needsDecoding = true)
     {
         m_hasTransparentPixel = false;
-        ImageFormat imageFormat;
-        if (fp) {
-            imageFormat = parseImageFormatFromFile(fp);
-        } else {
-            imageFormat = parseImageFormatFromBuffer(buf);
-        }
+        ImageFormat imageFormat = parseImageFormatFromBuffer(buf);
         switch (imageFormat) {
         case ImageFormat::PNG:
-            readPNGFileOrBufferedInput(fp, buf, len, needsDecoding);
+            readPNGFileOrBufferedInput(buf, len, needsDecoding);
             break;
         case ImageFormat::JPG:
-            if (fp) {
-                readJPGFile(fp);
-            } else {
-                readJPGBufferedInput(buf, len, needsDecoding);
-            }
+            readJPGBufferedInput(buf, len, needsDecoding);
             break;
         case ImageFormat::GIF:
-            if (localImageSrc) {
-                readGIFFileOrBufferedInput(localImageSrc, nullptr,
-                                           needsDecoding);
-            } else {
-                readGIFFileOrBufferedInput(nullptr, buf, needsDecoding);
-            }
+            readGIFFileOrBufferedInput(buf, len, needsDecoding);
             break;
         default:
             // TODO ERROR
@@ -996,15 +865,6 @@ protected:
     cairo_surface_t* m_imageSurface;
 #endif
 };
-
-NativeImageData* NativeImageData::create(String* localImageSrc)
-{
-    NativeImageData* imageData = new NativeImageDataMISC(localImageSrc);
-    if (imageData->data() == NULL) {
-        return NULL;
-    }
-    return imageData;
-}
 
 NativeImageData* NativeImageData::create(const char* buf, size_t len,
                                          bool shouldDecodingInstantly)

@@ -1402,29 +1402,38 @@ static inline void paintRepeatGradient(
     const float& height, bool repeatX, bool repeatY,
     const ImageRenderingValue& imageRenderingValue)
 {
-    canvas->save();
+    float startX = dst.x();
+    float startY = dst.y();
 
-    NativeImageData* nativeImage =
-        NativeImageData::create(ceil(width), ceil(height));
-    Canvas* cv = Canvas::create(box->node()->webView(), nativeImage);
-    cv->clearColor(Unit::Color(0, 0, 0, 0));
-
-    ImageValue* imageValue = style->backgroundImage(idx);
-    Unit::Rect rect = Unit::Rect(0, 0, width, height).snapSizeToPixel();
-    auto info = imageValue->gradientValue()->makeGradientDrawingInfo(rect, box);
-
-    if (imageValue->gradientValue()->type() == GradientType::LinearGradient) {
-        cv->drawLinearGradient(rect, info);
-    } else if (imageValue->gradientValue()->type() ==
-               GradientType::RadialGradient) {
-        cv->drawRadialGradient(rect, info);
+    if (repeatX) {
+        startX = fmodf(startX, width);
+        if (startX > 0) {
+            startX -= width;
+        }
     }
-    cv->fill();
-    delete cv;
-    canvas->drawRepeatImage(nativeImage, dst, width, height, repeatX, repeatY,
-                            imageRenderingValue);
-    delete nativeImage;
-    canvas->restore();
+    if (repeatY) {
+        startY = fmodf(startY, height);
+        if (startY > 0) {
+            startY -= height;
+        }
+    }
+
+    for (float y = startY; y < dst.maxY(); y += height) {
+        for (float x = startX; x < dst.maxX(); x += width) {
+            ImageValue* imageValue = style->backgroundImage(idx);
+            Unit::Rect rect = Unit::Rect(x, y, width, height).snapSizeToPixel();
+            auto info =
+                imageValue->gradientValue()->makeGradientDrawingInfo(rect, box);
+
+            if (imageValue->gradientValue()->type() ==
+                GradientType::LinearGradient) {
+                canvas->drawLinearGradient(rect, info);
+            } else if (imageValue->gradientValue()->type() ==
+                       GradientType::RadialGradient) {
+                canvas->drawRadialGradient(rect, info);
+            }
+        }
+    }
 }
 
 void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,

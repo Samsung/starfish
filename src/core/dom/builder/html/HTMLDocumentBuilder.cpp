@@ -82,7 +82,7 @@ struct EncodingResult {
     }
 };
 
-static EncodingResult detectAndRemoveBOM(GCVector<char>& buffer)
+static EncodingResult detectAndRemoveBOM(GCAtomicVector<char>& buffer)
 {
     EncodingResult er;
     size_t len = buffer.size();
@@ -469,7 +469,7 @@ public:
     }
 
 protected:
-    GCVector<char> m_buffer;
+    GCAtomicVector<char> m_buffer;
     HTMLDocumentBuilder& m_builder;
     HTMLParser* m_parser;
     String* m_htmlSource;
