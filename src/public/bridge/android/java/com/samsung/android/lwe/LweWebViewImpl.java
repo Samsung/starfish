@@ -22,6 +22,8 @@ package com.samsung.android.lwe;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
+import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -41,7 +43,13 @@ import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
 
 import java.io.File;
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.io.IOException;
 import java.lang.reflect.Method;
+import java.util.regex.Pattern;
+import java.util.regex.PatternSyntaxException;
+import java.util.ArrayList;
 
 public class LweWebViewImpl implements LweWebView {
     private static String sTag = "LweWebViewImpl";
@@ -89,6 +97,8 @@ public class LweWebViewImpl implements LweWebView {
     private String mIMEComposingStr = null;
     private SemWebView mLWEView = null;
     private InputMethodManager mIMM = null;
+
+    private ArrayList<Pattern> mWhitelistedUrls = null;
 
     public long getWebViewInternalHandle() {
         return mWebViewInternalHandle;
@@ -514,12 +524,76 @@ public class LweWebViewImpl implements LweWebView {
         }
     }
 
-
     public void loadUrl(final String url) {
         if (url == null) {
             return;
         }
-        loadUrl(mWebViewInternalHandle, url);
+
+        ArrayList<Pattern> whitelistedUrls = whitelistedUrls();
+        if (mWhitelistedUrls == null) {
+            return;
+        }
+
+        boolean loaded = false;
+        for (Pattern p : whitelistedUrls) {
+            if (p.matcher(url).find()) {
+                loadUrl(mWebViewInternalHandle, url);
+                loaded = true;
+            }
+        }
+
+        if (!loaded) {
+            Log.e(sTag, "url is not permitted");
+        }
+    }
+
+    private ArrayList<Pattern> whitelistedUrls() {
+        if (mWhitelistedUrls != null) {
+            return mWhitelistedUrls;
+        }
+
+        mWhitelistedUrls = new ArrayList<Pattern>();
+        BufferedReader reader = null;
+        String line = null;
+        try {
+            Resources res =
+                mLWEView.getContext().getPackageManager().getResourcesForApplication(SemWebView.PACKAGE_NAME);
+
+            int rid = res.getIdentifier("whitelist", "raw", SemWebView.PACKAGE_NAME);
+            if (rid == 0) {
+                Log.e(sTag, "cannot locate whitelist.txt");
+                return mWhitelistedUrls;
+            }
+
+            reader = new BufferedReader(new InputStreamReader(
+                res.openRawResource(rid)));
+            while ((line = reader.readLine()) != null) {
+                line = line.trim();
+                if (line.isEmpty() || line.startsWith("#")) {
+                    continue;
+                }
+                Pattern p = Pattern.compile(line);
+                mWhitelistedUrls.add(p);
+            }
+        } catch(PackageManager.NameNotFoundException e) {
+            Log.e(sTag, "package not found: " + SemWebView.PACKAGE_NAME);
+            e.printStackTrace();
+        } catch (PatternSyntaxException e) {
+            Log.e(sTag, "invalid regex: " + line);
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.e(sTag, "failed to read whitelist.txt");
+            e.printStackTrace();
+        } finally {
+            try {
+                if (reader != null) {
+                    reader.close();
+                }
+            } catch (Exception e) {
+            }
+        }
+
+        return mWhitelistedUrls;
     }
 
     public String getUrl() {

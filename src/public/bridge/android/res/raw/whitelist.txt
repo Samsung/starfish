@@ -1,0 +1,3 @@
+# Below are whitelisted URLs in regexp
+account\.samsung\.com/mobile/myprofile/settings/
+www\.apache\.org/licenses/

@@ -42,6 +42,7 @@ android {
             java {
                 srcDir '../../../../../src/public/bridge/android/java'
             }
+            res.srcDirs = ['../../../../../src/public/bridge/android/res']
         }
     }
      libraryVariants.all { variant ->
