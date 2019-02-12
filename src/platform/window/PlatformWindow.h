@@ -140,12 +140,9 @@ public:
 #endif
         return nullptr;
     }
-    virtual void updateDrawingBufferAddress(void* buf, uint32_t width,
-                                            uint32_t height, uint32_t stride)
+    virtual void updateDrawingBufferAddress(void* buf, uint32_t stride)
     {
-#if defined(PORT_WINDOW_BACKEND_GB)
-        resizeTo(width, height);
-#else
+#if !defined(PORT_WINDOW_BACKEND_GB)
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
     }
@@ -165,6 +162,12 @@ public:
     virtual void glClearEGLImageUpdated()
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+
+    void registerRenderingPrepareCallback(
+        const std::function<RenderInfo(void)>& cb)
+    {
+        m_renderingPrepareCallback = cb;
     }
 
     void registerRenderingFinishedCallback(
@@ -265,6 +268,7 @@ protected:
     float m_lastMouseMoveY;
 
     std::function<void(PlatformWindow* wnd)> m_setNeedsRenderingCallback;
+    std::function<RenderInfo(void)> m_renderingPrepareCallback;
     std::function<void(const RenderResult& renderResult)>
         m_renderingFinishedCallback;
     std::function<void()> m_showSoftwareKeyboardIfPossibleCallback;

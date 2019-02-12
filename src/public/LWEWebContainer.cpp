@@ -273,8 +273,7 @@ static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
     return webView;
 }
 
-WebContainer* WebContainer::Create(void* buffer, unsigned width,
-                                   unsigned height, unsigned stride,
+WebContainer* WebContainer::Create(unsigned width, unsigned height,
                                    float scaleFactor,
                                    const char* defaultFontName,
                                    const char* locale, const char* timezoneID)
@@ -292,9 +291,6 @@ WebContainer* WebContainer::Create(void* buffer, unsigned width,
                 createWebViewInstance(width, height, scaleFactor,
                                       defaultFontName, locale, timezoneID);
 
-            webView->platformWindow()->updateDrawingBufferAddress(
-                buffer, width, height, stride);
-
             WebContainer* newWebContainer =
                 new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView)))
                     WebContainer(webView);
@@ -304,10 +300,6 @@ WebContainer* WebContainer::Create(void* buffer, unsigned width,
 #else
     auto webView = createWebViewInstance(width, height, scaleFactor,
                                          defaultFontName, locale, timezoneID);
-
-    webView->platformWindow()->updateDrawingBufferAddress(buffer, width, height,
-                                                          stride);
-
     WebContainer* newWebContainer =
         new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(webView);
 
@@ -315,18 +307,24 @@ WebContainer* WebContainer::Create(void* buffer, unsigned width,
 #endif
 }
 
-void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
-                                unsigned stride)
+void WebContainer::RegisterPreRenderingHandler(
+    const std::function<WebContainer::RenderInfo(void)>& cb)
 {
 #if !defined(PORT_WINDOW_BACKEND_GB)
     STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 #endif
-
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->platformWindow()
-        ->updateDrawingBufferAddress(buffer, width, height, stride);
+        ->registerRenderingPrepareCallback([cb](void) -> Starfish::RenderInfo {
+            WebContainer::RenderInfo tmp = cb();
+            Starfish::RenderInfo result;
+            result.updatedBufferAddress = tmp.updatedBufferAddress;
+            result.bufferStride = tmp.bufferStride;
+
+            return result;
+        });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
@@ -420,10 +418,6 @@ WebContainer* WebContainer::CreateGL(
 
 void WebContainer::ResizeTo(size_t width, size_t height)
 {
-#if !defined(PORT_WINDOW_BACKEND_GL)
-    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
-    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-#endif
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)->platformWindow()->resizeTo((int)width, (int)height);
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER

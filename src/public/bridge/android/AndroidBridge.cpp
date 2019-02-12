@@ -48,6 +48,8 @@ struct WindowGlue {
     jmethodID m_showIME;
     jmethodID m_hideIME;
     jmethodID m_onRendered;
+    jmethodID m_createBuffer;
+    jmethodID m_destoryBuffer;
 
     WindowGlue()
     {
@@ -161,7 +163,10 @@ Java_com_samsung_android_lwe_LweWebViewImpl_init(JNIEnv* env, jobject thiz)
     g_WindowGlue.m_hideIME = env->GetMethodID(clazz, "hideSoftKeyboard", "()V");
     g_WindowGlue.m_onRendered =
         env->GetMethodID(clazz, "onRendered", "(IIII)V");
-
+    g_WindowGlue.m_createBuffer =
+        env->GetMethodID(clazz, "createBuffer", "()Landroid/graphics/Bitmap;");
+    g_WindowGlue.m_destoryBuffer =
+        env->GetMethodID(clazz, "destoryBuffer", "()V");
     env->DeleteLocalRef(clazz);
 
     LOGI(
@@ -502,29 +507,6 @@ void hideIME(void* view)
                         g_WindowGlue.m_hideIME);
 }
 
-void renderFinished(void* view, int x, int y, int width, int height)
-{
-    JNIEnv* env = g_WindowGlue.m_env;
-    int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
-    if (getEnvStat == JNI_EDETACHED) {
-        if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
-            LOGE("Failed to attach");
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        }
-    } else if (getEnvStat == JNI_OK) {
-    } else if (getEnvStat == JNI_EVERSION) {
-        LOGE("GetEnv : version not supported");
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
-
-    if (!env || !g_WindowGlue.m_onRendered) {
-        LOGE("renderFinished error");
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
-    env->CallVoidMethod(g_webViews[(LWE::WebContainer*)view],
-                        g_WindowGlue.m_onRendered, x, y, width, height);
-}
-
 void registerWebContainerHandler(LWE::WebContainer* webContainer)
 {
     webContainer->RegisterOnReceivedErrorHandler(
@@ -588,17 +570,102 @@ void registerWebContainerHandler(LWE::WebContainer* webContainer)
         [](LWE::WebContainer* wv) -> void { hideIME(wv); });
 
 #if defined(PORT_WINDOW_BACKEND_GB)
-    webContainer->RegisterOnRenderedHandler(
-        [](LWE::WebContainer* wv, LWE::WebContainer::RenderResult r) {
-            renderFinished(wv, r.updatedX, r.updatedY, r.updatedWidth,
-                           r.updatedHeight);
+    webContainer->RegisterPreRenderingHandler(
+        [webContainer](void) -> LWE::WebContainer::RenderInfo {
+
+            JNIEnv* env = g_WindowGlue.m_env;
+            int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+            if (getEnvStat == JNI_EDETACHED) {
+                if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
+                    LOGE("Failed to attach");
+                    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+                }
+            } else if (getEnvStat == JNI_OK) {
+            } else if (getEnvStat == JNI_EVERSION) {
+                LOGE("GetEnv : version not supported");
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+
+            // Call create Buffer method
+            jobject bitmap = env->CallObjectMethod(g_webViews[webContainer],
+                                                   g_WindowGlue.m_createBuffer);
+            int ret = 0;
+            AndroidBitmapInfo info;
+            if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
+                LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
+            }
+            if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
+                LOGE("Bitmap format is not RGBA_8888 !");
+            }
+            int stride = info.stride;
+
+            void* pixels;
+            if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
+                LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
+            }
+
+            ::LWE::WebContainer::RenderInfo result;
+            result.updatedBufferAddress = pixels;
+            result.bufferStride = stride;
+            return result;
         });
+
+    webContainer->RegisterOnRenderedHandler([](
+        LWE::WebContainer* wv, LWE::WebContainer::RenderResult r) {
+
+        jobject java_webview = g_webViews[wv];
+
+        JNIEnv* env = g_WindowGlue.m_env;
+        int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
+        if (getEnvStat == JNI_EDETACHED) {
+            if (g_jvm->AttachCurrentThread(&env, nullptr) != 0) {
+                LOGE("Failed to attach");
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
+        } else if (getEnvStat == JNI_OK) {
+        } else if (getEnvStat == JNI_EVERSION) {
+            LOGE("GetEnv : version not supported");
+            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        }
+
+        // Call onRendered method
+        env->CallVoidMethod(g_webViews[wv], g_WindowGlue.m_onRendered,
+                            r.updatedX, r.updatedY, r.updatedWidth,
+                            r.updatedHeight);
+
+        jclass clazz = env->GetObjectClass(g_webViews[wv]);
+        if (clazz != NULL) {
+            jfieldID fid = env->GetFieldID(clazz, "mScreenBuffer",
+                                           "Landroid/graphics/Bitmap;");
+            if (fid != NULL) {
+                jobject bitmap = env->GetObjectField(java_webview, fid);
+                if (bitmap != NULL) {
+                    int ret = 0;
+                    if ((ret = AndroidBitmap_unlockPixels(env, bitmap)) < 0) {
+                        LOGE("AndroidBitmap_unlockPixels() failed ! error=%d",
+                             ret);
+                    }
+                }
+            }
+        }
+        // Call destoryBuffer method
+        env->CallVoidMethod(java_webview, g_WindowGlue.m_destoryBuffer);
+    });
 #endif
+}
+
+extern "C" JNIEXPORT void JNICALL
+Java_com_samsung_android_lwe_LweWebViewImpl_resizeTo(JNIEnv* env, jobject thiz,
+                                                     jlong container,
+                                                     jint width, jint height)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)container;
+    webContainer->ResizeTo(width, height);
 }
 
 extern "C" JNIEXPORT jlong JNICALL
 Java_com_samsung_android_lwe_LweWebViewImpl_create(
-    JNIEnv* env, jobject thiz, jobject bitmap, jfloat devicePixelRatio,
+    JNIEnv* env, jobject thiz, jint w, jint h, jfloat devicePixelRatio,
     jstring jua, jstring locale, jstring timezoneID, jstring localstoragePath,
     jstring cookiePath, jstring cachePath)
 {
@@ -614,28 +681,8 @@ Java_com_samsung_android_lwe_LweWebViewImpl_create(
                              cachePathString);
     }
 
-    int ret;
-    AndroidBitmapInfo info;
-    if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
-        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
-    }
-
-    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        LOGE("Bitmap format is not RGBA_8888 !");
-    }
-
-    int w = info.width;
-    int h = info.height;
-    int stride = info.stride;
-
-    void* pixels;
-    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
-        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
-    }
-
-    LWE::WebContainer* webContainer =
-        LWE::WebContainer::Create(pixels, w, h, stride, devicePixelRatio,
-                                  "serif", localeString, timezoneIDString);
+    LWE::WebContainer* webContainer = LWE::WebContainer::Create(
+        w, h, devicePixelRatio, "serif", localeString, timezoneIDString);
 
     env->ReleaseStringUTFChars(locale, localeString);
     env->ReleaseStringUTFChars(timezoneID, timezoneIDString);
@@ -651,73 +698,14 @@ Java_com_samsung_android_lwe_LweWebViewImpl_create(
     return (jlong)webContainer;
 }
 
-jobject findBitmapBufferJObject(JNIEnv* env, LWE::WebContainer* webContainer)
-{
-    jobject java_webview = g_webViews[webContainer];
-    jclass clazz = env->GetObjectClass(java_webview);
-    if (clazz != NULL) {
-        jfieldID fid = env->GetFieldID(clazz, "mScreenBuffer",
-                                       "Landroid/graphics/Bitmap;");
-        if (fid != NULL) {
-            jobject bitmap = env->GetObjectField(java_webview, fid);
-            if (bitmap != NULL) {
-                return bitmap;
-            }
-        }
-    }
-    return NULL;
-}
-
 extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_lwe_LweWebViewImpl_destroy(JNIEnv* env, jobject thiz,
                                                     jlong wv)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->Destroy();
-    jobject bitmap = findBitmapBufferJObject(env, webContainer);
-    int ret = 0;
-    if ((ret = AndroidBitmap_unlockPixels(env, bitmap)) < 0) {
-        LOGE("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
-    }
-
     env->DeleteGlobalRef(g_webViews[webContainer]);
     g_webViews.erase(webContainer);
-}
-
-extern "C" JNIEXPORT void JNICALL
-Java_com_samsung_android_lwe_LweWebViewImpl_resizeTo(JNIEnv* env, jobject thiz,
-                                                     jlong container,
-                                                     jobject bitmap)
-{
-    LWE::WebContainer* webContainer = (LWE::WebContainer*)container;
-    jobject previousBitmap = findBitmapBufferJObject(env, webContainer);
-
-    int ret = 0;
-    AndroidBitmapInfo info;
-    if ((ret = AndroidBitmap_getInfo(env, bitmap, &info)) < 0) {
-        LOGE("AndroidBitmap_getInfo() failed ! error=%d", ret);
-        return;
-    }
-    if (info.format != ANDROID_BITMAP_FORMAT_RGBA_8888) {
-        LOGE("Bitmap format is not RGBA_8888 !");
-        return;
-    }
-
-    int w = info.width;
-    int h = info.height;
-    int stride = info.stride;
-
-    void* pixels;
-    if ((ret = AndroidBitmap_lockPixels(env, bitmap, &pixels)) < 0) {
-        LOGE("AndroidBitmap_lockPixels() failed ! error=%d", ret);
-        return;
-    }
-    webContainer->UpdateBuffer(pixels, w, h, stride);
-    if (previousBitmap != NULL) {
-        if ((ret = AndroidBitmap_unlockPixels(env, previousBitmap)) < 0) {
-            LOGE("AndroidBitmap_unlockPixels() failed ! error=%d", ret);
-        }
-    }
 }
 
 extern "C" JNIEXPORT void JNICALL

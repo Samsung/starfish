@@ -79,13 +79,10 @@ public:
         }
     }
 
-    virtual void updateDrawingBufferAddress(void* buf, uint32_t width,
-                                            uint32_t height,
-                                            uint32_t stride) override
+    virtual void updateDrawingBufferAddress(void* buf, uint32_t stride) override
     {
         if (buf != nullptr) {
-            PlatformWindow::updateDrawingBufferAddress(buf, width, height,
-                                                       stride);
+            PlatformWindow::updateDrawingBufferAddress(buf, stride);
             m_stride = stride;
             m_internalBuffer = buf;
         }
@@ -125,6 +122,9 @@ Canvas* WindowImplGB::preparePainting()
         }
     }
 #endif
+    RenderInfo renderInfo = m_renderingPrepareCallback();
+    updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
+                               renderInfo.bufferStride);
     CanvasSurface* target = CanvasSurface::createCanvasTarget(
         (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
     Canvas* canvas = Canvas::create(webView(), target);
@@ -145,6 +145,9 @@ Compositor* WindowImplGB::prepareCompositor()
         }
     }
 #endif
+    RenderInfo renderInfo = m_renderingPrepareCallback();
+    updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
+                               renderInfo.bufferStride);
     CanvasSurface* target = CanvasSurface::createCanvasTarget(
         (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
     return Compositor::create2D(webView(), m_compostiorContext, target);

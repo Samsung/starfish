@@ -355,7 +355,6 @@ RenderResult PlatformWindow::rendering()
     if (renderResult.didPaintingOrCompositing && m_renderingFinishedCallback) {
         m_renderingFinishedCallback(renderResult);
     }
-
     if (m_setNeedsRenderingCallback) {
         if (webView()->needsContinuousRendering()) {
             webView()->timer()->addAnimator(
