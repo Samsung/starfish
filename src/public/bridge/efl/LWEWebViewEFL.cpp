@@ -246,17 +246,17 @@ public:
                const char* defaultFontName, const char* locale,
                const char* timezoneID)
         : WebView(nullptr)
-        , m_lastMouseX(0)
-        , m_lastMouseY(0)
-        , m_isMouseLbuttonDown(false)
-        , m_isKeyDown(false)
-        , m_lastInputTime(0)
         , m_resizeHandler(nullptr)
         , m_renderingPreHandler(nullptr)
         , m_renderingPostHandler(nullptr)
         , m_keyDownEventHandler(nullptr)
         , m_keyUpEventHandler(nullptr)
+        , m_lastMouseX(0)
+        , m_lastMouseY(0)
+        , m_isMouseLbuttonDown(false)
+        , m_isKeyDown(false)
         , m_lastRenderingTime(0)
+        , m_lastInputTime(0)
     {
         STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
         Evas_Object* win = (Evas_Object*)winArg;
