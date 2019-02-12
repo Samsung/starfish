@@ -1,0 +1,44 @@
+P /.git
+P /.github
+- /CMakeFiles
+- /Makefile
+- /inspector
+- /build
+- /packaging
+- /tool
+- /binding_generator
+
++ third_party/android/prebuilt_armv-7a_8.1.0/lib/arm64-v8a/*.so
++ third_party/android/prebuilt_armv-7a_8.1.0/lib/arm64-v8a/*.a
++ third_party/android/prebuilt_armv-7a_8.1.0/lib/armeabi-v7a/*.so
++ third_party/android/prebuilt_armv-7a_8.1.0/lib/armeabi-v7a/*.a
+
+- third_party/windows
+- third_party/deviceapi
+- third_party/escargot/build/windows
+- third_party/escargot/third_party/windows
+- third_party/escargot/third_party/GCutil/windows
+
+- .git
+- .gitignore
+- .gitmodules
+- .gitattributes
+- .gitlab-ci.yml
+- .gbs.conf
+- *.list
+- .clang-format
+- .circleci
+
+- *debug*.manifest
+- *.tar.gz
+- *.a
+- *.o
+- *.so
+
+- *.pyc
+- lextab.*
+- parsetab.*
+
+- test
+- out
+- out_tizen
