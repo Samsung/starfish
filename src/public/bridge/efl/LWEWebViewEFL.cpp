@@ -251,6 +251,12 @@ public:
         , m_isMouseLbuttonDown(false)
         , m_isKeyDown(false)
         , m_lastInputTime(0)
+        , m_resizeHandler(nullptr)
+        , m_renderingPreHandler(nullptr)
+        , m_renderingPostHandler(nullptr)
+        , m_keyDownEventHandler(nullptr)
+        , m_keyUpEventHandler(nullptr)
+        , m_lastRenderingTime(0)
     {
         STARFISH_LOG_INFO("WebViewEFL::WebViewEFL");
         Evas_Object* win = (Evas_Object*)winArg;
