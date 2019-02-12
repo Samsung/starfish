@@ -25,6 +25,11 @@ namespace Starfish {
 class CanvasSurface;
 class GraphicsBufferHolder;
 
+struct RenderInfo {
+    void* updatedBufferAddress;
+    size_t bufferStride;
+};
+
 struct RenderResult {
     bool didPaintingOrCompositing;
     LayoutRect updateRect;

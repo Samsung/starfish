@@ -1171,7 +1171,6 @@ RenderResult WebView::rendering(bool force)
 {
     RenderResult renderResult;
     renderResult.didPaintingOrCompositing = false;
-
     if (!m_needsRendering || !m_isActive) {
         return renderResult;
     }
@@ -1229,7 +1228,6 @@ RenderResult WebView::rendering(bool force)
     if (m_needsPainting) {
         didPainting = true;
         INSTALL_PROFILE_TIMER("painting");
-
         renderResult.didPaintingOrCompositing = true;
         renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
                                              platformWindow()->height());
@@ -1640,6 +1638,7 @@ RenderResult WebView::rendering(bool force)
 void WebView::setNeedsFullRepainting()
 {
     STARFISH_LOG_INFO("WebView::setNeedsFullRepainting\n");
+    markNeedsPaintingConsiderInRendering();
     m_needsFullPainting = true;
 }
 

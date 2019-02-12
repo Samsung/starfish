@@ -109,11 +109,14 @@ private:
 
 public:
     // Function set for render to buffer
-    static WebContainer* Create(void* buffer, unsigned bufferWidth,
-                                unsigned bufferHeight, unsigned bufferStride,
+    static WebContainer* Create(unsigned width, unsigned height,
                                 float devicePixelRatio,
                                 const char* defaultFontName, const char* locale,
                                 const char* timezoneID);
+    struct RenderInfo {
+        void* updatedBufferAddress;
+        size_t bufferStride;
+    };
 
     struct RenderResult {
         size_t updatedX;
@@ -125,11 +128,10 @@ public:
         size_t bufferImageWidth;
         size_t bufferImageHeight;
     };
+    void RegisterPreRenderingHandler(const std::function<RenderInfo(void)>& cb);
     void RegisterOnRenderedHandler(
         const std::function<void(WebContainer*,
                                  const RenderResult& renderResult)>& cb);
-    void UpdateBuffer(void* buffer, unsigned width, unsigned height,
-                      unsigned stride);
     // <--- end of function set for render to buffer
 
     // Function set for render with OpenGL

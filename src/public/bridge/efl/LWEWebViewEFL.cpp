@@ -584,11 +584,6 @@ public:
             wv->FetchWebContainer()->ResizeTo(w, h);
 #else
             evas_object_image_size_set(wv->m_graphicsAdapter, w, h);
-            auto buf =
-                evas_object_image_data_get(wv->m_graphicsAdapter, EINA_TRUE);
-            evas_object_image_data_set(wv->m_graphicsAdapter, buf);
-            wv->FetchWebContainer()->UpdateBuffer(
-                buf, w, h, evas_object_image_stride_get(wv->m_graphicsAdapter));
 #endif
         };
         evas_object_event_callback_add(m_mainBox, EVAS_CALLBACK_RESIZE,
@@ -865,11 +860,25 @@ public:
             },
             this);
 #else
-        auto buf = evas_object_image_data_get(m_graphicsAdapter, EINA_TRUE);
-        evas_object_image_data_set(m_graphicsAdapter, buf);
-        ::LWE::WebContainer* webContainer = ::LWE::WebContainer::Create(
-            buf, width, height, evas_object_image_stride_get(m_graphicsAdapter),
-            devicePixelRatio, defaultFontName, locale, timezoneID);
+        ::LWE::WebContainer* webContainer =
+            ::LWE::WebContainer::Create(width, height, devicePixelRatio,
+                                        defaultFontName, locale, timezoneID);
+        webContainer->RegisterPreRenderingHandler(
+            [this]() -> ::LWE::WebContainer::RenderInfo {
+                int width, height;
+                evas_object_image_size_get(m_graphicsAdapter, &width, &height);
+                auto buf =
+                    evas_object_image_data_get(m_graphicsAdapter, EINA_TRUE);
+                evas_object_image_data_set(m_graphicsAdapter, buf);
+
+                ::LWE::WebContainer::RenderInfo result;
+                result.updatedBufferAddress = buf;
+                result.bufferStride =
+                    evas_object_image_stride_get(m_graphicsAdapter);
+
+                return result;
+
+            });
         webContainer->RegisterOnRenderedHandler([this](
             ::LWE::WebContainer* c, ::LWE::WebContainer::RenderResult r) {
             evas_object_image_data_update_add(m_graphicsAdapter, r.updatedX,

@@ -216,6 +216,7 @@ public class LweWebViewImpl implements LweWebView {
             if (mWebViewInternalHandle != 0) {
                 destroy(mWebViewInternalHandle);
             }
+            destoryBuffer();
             mWebViewInternalHandle = 0;
             mWebViewClient = null;
         }
@@ -247,12 +248,8 @@ public class LweWebViewImpl implements LweWebView {
         init();
 
         mWindowWidth = mWindowHeight = 1;
-        if (mScreenBuffer != null) {
-            mScreenBuffer.recycle();
-        }
-        mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
         mWebViewInternalHandle =
-                create(mScreenBuffer, sDpr,
+                create(mWindowWidth, mWindowHeight, sDpr,
                         mUserAgentString, sLocale, sTimezone,
                         sLocalStoragePath, sCookiePath, sCachePath);
         mLWEView.getHolder().addCallback(
@@ -263,17 +260,10 @@ public class LweWebViewImpl implements LweWebView {
                         int height = mLWEView.getHeight();
                         if (mWebViewInternalHandle != 0) {
                             if ((mWindowWidth != width || mWindowHeight != height)) {
-                                if (mScreenBuffer != null) {
-                                    mScreenBuffer.recycle();
-                                }
-                                mScreenBuffer = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
-                                resizeTo(mWebViewInternalHandle, mScreenBuffer);
-                            } else {
-                                onRendered(0, 0, width, height);
+                                resizeTo(mWebViewInternalHandle, width, height);
                             }
                             mWindowWidth = width;
                             mWindowHeight = height;
-
                             resume(mWebViewInternalHandle);
                         }
 
@@ -282,13 +272,9 @@ public class LweWebViewImpl implements LweWebView {
                     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
                         if (mWebViewInternalHandle != 0){
                             if ((mWindowWidth != width || mWindowHeight != height)) {
+                                resizeTo(mWebViewInternalHandle, width, height);
                                 mWindowWidth = width;
                                 mWindowHeight = height;
-                                if (mScreenBuffer != null) {
-                                    mScreenBuffer.recycle();
-                                }
-                                mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
-                                resizeTo(mWebViewInternalHandle, mScreenBuffer);
                             }
                             resume(mWebViewInternalHandle);
                         }
@@ -298,6 +284,7 @@ public class LweWebViewImpl implements LweWebView {
                         if (mWebViewInternalHandle != 0) {
                             pause(mWebViewInternalHandle);
                         }
+                        destoryBuffer();
                     }
                 }
         );
@@ -699,6 +686,18 @@ public class LweWebViewImpl implements LweWebView {
         return mWebSettings;
     }
 
+    private Bitmap createBuffer(){
+        mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
+        return mScreenBuffer;
+    }
+
+    private void destoryBuffer(){
+        if (mScreenBuffer != null){
+            mScreenBuffer.recycle();
+            mScreenBuffer = null;
+        }
+    }
+
     private void onRendered(int x, int y, int width, int height){
         Canvas canvas = mLWEView.getHolder().lockCanvas();
         if (canvas != null) {
@@ -723,7 +722,7 @@ public class LweWebViewImpl implements LweWebView {
     // Following methods are internal use only
     native private void loadUrl(long starfish, String url);
     native private void loadData(long starfish, String data);
-    native private long create(Bitmap buffer,
+    native private long create(int width, int height,
                                float devicePixelRatio, String userAgentString, String locale,
                                String timezoneID, String localstoragePath, String cookiePath,
                                String cachePath);
@@ -751,7 +750,7 @@ public class LweWebViewImpl implements LweWebView {
     native public void setDefaultFontSize(long starfish, int size);
 
     static native private void init();
-    static native private void resizeTo(long starfish, Bitmap buffer);
+    static native private void resizeTo(long starfish, int width, int height);
     static native private void dispatchMouseDown(long starfish, float x, float y);
     static native private void dispatchMouseMove(long starfish, float x, float y,
                                                  boolean isLButtonPressed,
