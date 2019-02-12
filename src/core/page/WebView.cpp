@@ -1266,6 +1266,7 @@ RenderResult WebView::rendering(bool force)
         {
             FrameBlockBox* mainFrame =
                 mainBrowsingContext()->document()->frame()->asFrameBlockBox();
+            STARFISH_ASSERT(mainFrame != nullptr);
 
             LayoutUnit scrollX = mainFrame->scrollLeft();
             LayoutUnit scrollY = mainFrame->scrollTop();
