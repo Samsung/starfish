@@ -86,11 +86,13 @@ Starfish::Starfish(const char* localStorageFilePath,
 
         GC_set_on_collection_event([](GC_EventType evtType) {
 
+#if !defined(STARFISH_ANDROID)
             if (GC_EVENT_RECLAIM_END == evtType) {
                 STARFISH_LOG_INFO("Done GC: HeapSize: [%f MB , %f MB]\n",
                                   GC_get_memory_use() / 1024.f / 1024.f,
                                   GC_get_heap_size() / 1024.f / 1024.f);
             }
+#endif
 
             auto iter = g_gcCollectionEventListenterList.begin();
             while (iter != g_gcCollectionEventListenterList.end()) {

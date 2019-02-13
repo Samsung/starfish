@@ -530,7 +530,7 @@ public class LweWebViewImpl implements LweWebView {
         }
 
         if (!loaded) {
-            Log.e(sTag, "url is not permitted");
+            Log.e(sTag, "URL is not permitted. Please contact duddlf.choi@samsung.com to whitelist an URL.");
         }
     }
 
@@ -640,7 +640,7 @@ public class LweWebViewImpl implements LweWebView {
                         addJavascriptInterface(mWebViewInternalHandle, name,
                                 m.getName(), object);
                     } else {
-                        Log.d(sTag, "ERROR: addJavascriptInterface : invalid signature");
+                        Log.e(sTag, "addJavascriptInterface : invalid signature");
                     }
                 }
             }
