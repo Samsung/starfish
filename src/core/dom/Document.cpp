@@ -676,13 +676,16 @@ void Document::notifyDomContentLoaded()
             } else {
                 s = m_documentURI->urlString()->toUTF8NonGCString();
             }
-            STARFISH_LOG_ERROR(
-                "WARNING: No doctype is found or quirks mode is given in %s\n"
-                "WARNING: Please make sure the document starts with "
-                "\"<!DOCTYPE html>\"\n"
-                "WARNING: Quirks mode is not supported. Processing the document"
-                " in no-quirks (i.e., standard) mode.\n",
+
+            STARFISH_LOG_INFO(
+                "No doctype is found or quirks mode is given in "
+                "%s\n",
                 s.data());
+            STARFISH_LOG_INFO(
+                "Please make sure the document starts with "
+                "\"<!DOCTYPE html>\"\n");
+            STARFISH_LOG_INFO("Quirks mode is not supported.\n");
+            STARFISH_LOG_INFO("Processing the document in no-quirks mode.\n");
         }
 
         // if there is a fragment identifier, set cssTarget.
