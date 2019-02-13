@@ -30,8 +30,10 @@
 
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
+#include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/ShadowBlur.h"
+#include "core/style/CSSGradientValue.h"
 #include "core/style/GradientData.h"
 #include "core/style/UnitHelper.h"
 #include "core/page/WebView.h"
@@ -68,6 +70,55 @@ public:
     {
     }
 };
+
+class NativeGradientCairo : public NativeGradient {
+public:
+    NativeGradientCairo(GradientDrawingInfo* info)
+        : m_pattern(nullptr)
+    {
+        init(info);
+    }
+
+    ~NativeGradientCairo()
+    {
+        cairo_pattern_destroy(m_pattern);
+    }
+
+    cairo_pattern_t* pattern()
+    {
+        return m_pattern;
+    }
+
+private:
+    virtual void init(GradientDrawingInfo* info) override
+    {
+        if (info->type == GradientType::LinearGradient) {
+            m_pattern = cairo_pattern_create_linear(info->x1, info->y1,
+                                                    info->x2, info->y2);
+        } else if (info->type == GradientType::RadialGradient) {
+            m_pattern = cairo_pattern_create_radial(
+                info->x1, info->y1, info->r1, info->x2, info->y2, info->r2);
+        } else {
+            STARFISH_BINDING_ASSERT_UNIMPLEMENTED();
+        }
+
+        size_t size = info->colorStops.size();
+        for (size_t i = 0; i < size; ++i) {
+            const auto& color = info->colorStops[i]->color();
+            const auto& offset = info->colorStops[i]->offset().percent();
+            cairo_pattern_add_color_stop_rgba(m_pattern, offset, color.R(),
+                                              color.G(), color.B(), color.A());
+        }
+    }
+
+    cairo_pattern_t* m_pattern;
+};
+
+std::unique_ptr<NativeGradient> NativeGradient::create(
+    GradientDrawingInfo* info)
+{
+    return std::unique_ptr<NativeGradient>(new NativeGradientCairo(info));
+}
 
 class CanvasCairo : public Canvas {
     void initFromBuffer(void* buffer, int width, int height, int stride)
@@ -763,7 +814,8 @@ public:
     }
 
     virtual void drawLinearGradient(const Unit::Rect& dst,
-                                    GradientDrawingInfo* info)
+                                    GradientDrawingInfo* info,
+                                    NativeGradient* gradient)
     {
         STARFISH_ASSERT(m_canvas);
         if (!lastState().m_visible) {
@@ -773,27 +825,15 @@ public:
         INSTALL_PROFILE_TIMER("CanvasImplCairo::drawLinearGradient");
         cairo_save(m_canvas);
 
-        cairo_pattern_t* pt;
-        pt =
-            cairo_pattern_create_linear(info->x1, info->y1, info->x2, info->y2);
-
-        size_t size = info->colorStops.size();
-        for (size_t i = 0; i < size; ++i) {
-            const auto& color = info->colorStops[i]->color();
-            const auto& offset = info->colorStops[i]->offset().percent();
-            cairo_pattern_add_color_stop_rgba(pt, offset, color.R(), color.G(),
-                                              color.B(), color.A());
-        }
-
         cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
-        cairo_set_source(m_canvas, pt);
+        cairo_set_source(m_canvas, ((NativeGradientCairo*)gradient)->pattern());
         cairo_fill(m_canvas);
-        cairo_pattern_destroy(pt);
         cairo_restore(m_canvas);
     }
 
     virtual void drawRadialGradient(const Unit::Rect& dst,
-                                    GradientDrawingInfo* info)
+                                    GradientDrawingInfo* info,
+                                    NativeGradient* gradient)
     {
         STARFISH_ASSERT(m_canvas);
         if (!lastState().m_visible) {
@@ -808,35 +848,17 @@ public:
         cairo_rectangle(m_canvas, dst.x(), dst.y(), dst.width(), dst.height());
 
         if (info->secondRadius && info->firstRadius > info->secondRadius) {
-            info->r2 = info->firstRadius;
-            info->y1 = info->y1 * (info->firstRadius / info->secondRadius);
-            info->y2 = info->y2 * (info->firstRadius / info->secondRadius);
             cairo_scale(m_canvas, 1,
                         1 * (info->secondRadius / info->firstRadius));
         } else if (info->secondRadius &&
                    info->firstRadius < info->secondRadius) {
-            info->r2 = info->secondRadius;
-            info->x1 = info->x1 * (info->secondRadius / info->firstRadius);
-            info->x2 = info->x2 * (info->secondRadius / info->firstRadius);
             cairo_scale(m_canvas, 1 * (info->firstRadius / info->secondRadius),
                         1);
         }
 
-        cairo_pattern_t* pt;
-        pt = cairo_pattern_create_radial(info->x1, info->y1, info->r1, info->x2,
-                                         info->y2, info->r2);
-
-        size_t size = info->colorStops.size();
-        for (size_t i = 0; i < size; ++i) {
-            const auto& color = info->colorStops[i]->color();
-            const auto& offset = info->colorStops[i]->offset().percent();
-            cairo_pattern_add_color_stop_rgba(pt, offset, color.R(), color.G(),
-                                              color.B(), color.A());
-        }
         cairo_arc(m_canvas, info->x2, info->y2, info->r2, 0, 2 * M_PI);
-        cairo_set_source(m_canvas, pt);
+        cairo_set_source(m_canvas, ((NativeGradientCairo*)gradient)->pattern());
         cairo_fill(m_canvas);
-        cairo_pattern_destroy(pt);
         cairo_restore(m_canvas);
     }
 

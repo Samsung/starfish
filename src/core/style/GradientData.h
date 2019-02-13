@@ -105,8 +105,7 @@ private:
 };
 
 struct GradientDrawingInfo : public gc {
-    enum GradientDrawingType { Linear, Radial };
-    GradientDrawingType type;
+    GradientType type;
     float x1;
     float y1;
     float x2;
@@ -117,7 +116,7 @@ struct GradientDrawingInfo : public gc {
     float secondRadius;
     GCVector<ColorStop*> colorStops;
 
-    GradientDrawingInfo(GradientDrawingType t)
+    GradientDrawingInfo(GradientType t)
         : type(t)
         , x1(0.0f)
         , y1(0.0f)
@@ -204,11 +203,6 @@ public:
     virtual void checkComputed(Length curFontSize, Length rootFontSize,
                                Font* font, LayoutSize windowSize,
                                ComputedStyle* cs);
-
-    void makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
-                                 float& y1, float& r1, float& x2, float& y2,
-                                 float& r2, FrameBox* owner);
-
     virtual bool equals(GradientData* other) const;
 
 protected:
@@ -216,6 +210,10 @@ protected:
     {
         GC_set_bit(desc, GC_WORD_OFFSET(GradientData, m_colorStopList));
     }
+
+    void makeSpecifiedColorStops(GCVector<ColorStop*>& out, float& x1,
+                                 float& y1, float& r1, float& x2, float& y2,
+                                 float& r2, FrameBox* owner);
 
     void convertColorStopsToCSSColorStops(GCVector<CSSColorStop*>& out);
 

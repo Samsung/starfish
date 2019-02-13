@@ -24,6 +24,8 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "platform/canvas/font/FontImplSkia.h"
+#include "core/modules/canvas/NativeGradient.h"
+#include "core/style/CSSGradientValue.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/style/GradientData.h"
 #include "core/style/UnitHelper.h"
@@ -57,6 +59,58 @@ public:
     SkPath::FillType m_fillType;
     float m_strokeWidth;
 };
+
+class NativeGradientSkia : public NativeGradient {
+public:
+    NativeGradientSkia(GradientDrawingInfo* info)
+    {
+        init(info);
+    }
+
+    ~NativeGradientSkia()
+    {
+    }
+
+    sk_sp<SkShader> shader()
+    {
+        return m_shader;
+    }
+
+private:
+    virtual void init(GradientDrawingInfo* info) override
+    {
+        size_t colorCount = info->colorStops.size();
+        SkColor colors[colorCount];
+        SkScalar pos[colorCount];
+        for (size_t i = 0; i < colorCount; i++) {
+            Unit::Color clr = info->colorStops[i]->color();
+            colors[i] = SkColorSetARGB(clr.a(), clr.r(), clr.g(), clr.b());
+            pos[i] = info->colorStops[i]->offset().percent();
+        }
+
+        if (info->type == GradientType::LinearGradient) {
+            SkPoint points[] = { { info->x1, info->y1 },
+                                 { info->x2, info->y2 } };
+            m_shader = SkGradientShader::MakeLinear(
+                points, colors, pos, colorCount, SkShader::kClamp_TileMode, 0,
+                nullptr);
+        } else if (info->type == GradientType::RadialGradient) {
+            m_shader = SkGradientShader::MakeRadial(
+                { info->x1, info->y1 }, info->r2, colors, pos, colorCount,
+                SkShader::kClamp_TileMode);
+        } else {
+            STARFISH_BINDING_ASSERT_UNIMPLEMENTED();
+        }
+    }
+
+    sk_sp<SkShader> m_shader;
+};
+
+std::unique_ptr<NativeGradient> NativeGradient::create(
+    GradientDrawingInfo* info)
+{
+    return std::unique_ptr<NativeGradient>(new NativeGradientSkia(info));
+}
 
 class CanvasSkia : public Canvas {
     void initFromBuffer(void* buffer, int width, int height, int stride)
@@ -769,7 +823,8 @@ public:
     }
 
     virtual void drawLinearGradient(const Unit::Rect& dst,
-                                    GradientDrawingInfo* info)
+                                    GradientDrawingInfo* info,
+                                    NativeGradient* gradient)
     {
         if (!lastState().m_visible) {
             return;
@@ -787,16 +842,15 @@ public:
 
         SkPaint p;
         // p.setAntiAlias(true); // Uncomment if performance is not an issue
-        p.setShader(SkGradientShader::MakeLinear(
-            points, colors, pos, colorCount, SkShader::kClamp_TileMode, 0,
-            nullptr));
+        p.setShader(((NativeGradientSkia*)gradient)->shader());
         SkRect rect =
             SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height());
         m_canvas->drawRect(rect, p);
     }
 
     virtual void drawRadialGradient(const Unit::Rect& dst,
-                                    GradientDrawingInfo* info)
+                                    GradientDrawingInfo* info,
+                                    NativeGradient* gradient)
     {
         if (!lastState().m_visible) {
             return;
@@ -815,24 +869,16 @@ public:
 
         if (info->secondRadius && (info->firstRadius > info->secondRadius)) {
             // width > height
-            info->r2 = info->firstRadius;
-            info->y1 = info->y1 * (info->firstRadius / info->secondRadius);
             m_canvas->scale(1, (info->secondRadius / info->firstRadius));
         } else if (info->secondRadius &&
                    (info->firstRadius < info->secondRadius)) {
             // width < height
-            info->r2 = info->secondRadius;
-            info->x1 = info->x1 * (info->secondRadius / info->firstRadius);
             m_canvas->scale((info->firstRadius / info->secondRadius), 1);
         }
 
-        sk_sp<SkShader> s = SkGradientShader::MakeRadial(
-            { info->x1, info->y1 }, info->r2, colors, pos, colorCount,
-            SkShader::kClamp_TileMode);
-
         SkPaint p;
         // p.setAntiAlias(true); // Uncomment if performance is not an issue
-        p.setShader(s);
+        p.setShader(((NativeGradientSkia*)gradient)->shader());
         m_canvas->drawPaint(p);
         m_canvas->restore();
     }
