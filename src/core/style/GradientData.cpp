@@ -510,8 +510,7 @@ GradientDrawingInfo* LinearGradientData::makeGradientDrawingInfo(
 {
     STARFISH_ASSERT(box);
 
-    GradientDrawingInfo* ret =
-        new GradientDrawingInfo(GradientDrawingInfo::Linear);
+    GradientDrawingInfo* ret = new GradientDrawingInfo(m_type);
     computeEndPoints(rect, ret->x1, ret->y1, ret->x2, ret->y2);
     makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
                             ret->y2, ret->r2, box);
@@ -567,12 +566,21 @@ GradientDrawingInfo* RadialGradientData::makeGradientDrawingInfo(
 {
     STARFISH_ASSERT(box);
 
-    GradientDrawingInfo* ret =
-        new GradientDrawingInfo(GradientDrawingInfo::Radial);
+    GradientDrawingInfo* ret = new GradientDrawingInfo(m_type);
     computeEndPoints(rect, box, ret->x1, ret->y1, ret->r1, ret->x2, ret->y2,
                      ret->r2, ret->firstRadius, ret->secondRadius);
     makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
                             ret->y2, ret->r2, box);
+
+    if (ret->secondRadius && ret->firstRadius > ret->secondRadius) {
+        ret->r2 = ret->firstRadius;
+        ret->y1 = ret->y1 * (ret->firstRadius / ret->secondRadius);
+        ret->y2 = ret->y2 * (ret->firstRadius / ret->secondRadius);
+    } else if (ret->secondRadius && ret->firstRadius < ret->secondRadius) {
+        ret->r2 = ret->secondRadius;
+        ret->x1 = ret->x1 * (ret->secondRadius / ret->firstRadius);
+        ret->x2 = ret->x2 * (ret->secondRadius / ret->firstRadius);
+    }
     return ret;
 }
 

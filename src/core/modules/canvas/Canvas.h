@@ -32,6 +32,7 @@ class Frame;
 class NativeImageData;
 class PlatformWindow;
 class GradientDrawingInfo;
+class NativeGradient;
 
 class CanvasState {
 public:
@@ -228,9 +229,11 @@ public:
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
     virtual void drawLinearGradient(const Unit::Rect& dst,
-                                    GradientDrawingInfo* info) = 0;
+                                    GradientDrawingInfo* info,
+                                    NativeGradient* gradient) = 0;
     virtual void drawRadialGradient(const Unit::Rect& dst,
-                                    GradientDrawingInfo* info) = 0;
+                                    GradientDrawingInfo* info,
+                                    NativeGradient* gradient) = 0;
 
     virtual void applyMatrixTo(LayoutLocation& lp) = 0;
     virtual void applyMatrixTo(LayoutRect& lp) = 0;

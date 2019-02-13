@@ -32,6 +32,7 @@
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
@@ -1417,23 +1418,32 @@ static inline void paintRepeatGradient(
             startY -= height;
         }
     }
-
+    ImageValue* imageValue = style->backgroundImage(idx);
+    Unit::Rect rect =
+        Unit::Rect(startX, startY, width, height).snapSizeToPixel();
+    auto info = imageValue->gradientValue()->makeGradientDrawingInfo(rect, box);
+    auto gradient = NativeGradient::create(info);
+    canvas->save();
     for (float y = startY; y < dst.maxY(); y += height) {
+        if (y != startY) {
+            canvas->translate(0, rect.height());
+        }
+        canvas->save();
         for (float x = startX; x < dst.maxX(); x += width) {
-            ImageValue* imageValue = style->backgroundImage(idx);
-            Unit::Rect rect = Unit::Rect(x, y, width, height).snapSizeToPixel();
-            auto info =
-                imageValue->gradientValue()->makeGradientDrawingInfo(rect, box);
-
+            if (x != startX) {
+                canvas->translate(rect.width(), 0);
+            }
             if (imageValue->gradientValue()->type() ==
                 GradientType::LinearGradient) {
-                canvas->drawLinearGradient(rect, info);
+                canvas->drawLinearGradient(rect, info, gradient.get());
             } else if (imageValue->gradientValue()->type() ==
                        GradientType::RadialGradient) {
-                canvas->drawRadialGradient(rect, info);
+                canvas->drawRadialGradient(rect, info, gradient.get());
             }
         }
+        canvas->restore();
     }
+    canvas->restore();
 }
 
 void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
@@ -1654,12 +1664,14 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
                 auto info =
                     imageValue->gradientValue()->makeGradientDrawingInfo(rect,
                                                                          box);
+                auto gradient = NativeGradient::create(info);
+
                 if (imageValue->gradientValue()->type() ==
                     GradientType::LinearGradient) {
-                    canvas->drawLinearGradient(rect, info);
+                    canvas->drawLinearGradient(rect, info, gradient.get());
                 } else if (imageValue->gradientValue()->type() ==
                            GradientType::RadialGradient) {
-                    canvas->drawRadialGradient(rect, info);
+                    canvas->drawRadialGradient(rect, info, gradient.get());
                 }
             }
         }
