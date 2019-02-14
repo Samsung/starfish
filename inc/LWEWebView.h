@@ -221,6 +221,8 @@ public:
     void SetUserAgentString(const std::string& userAgent);
     void SetCacheMode(int mode);
     void SetDefaultFontSize(uint32_t size);
+    uint32_t GetDefaultFontSize();
+
     void DispatchMouseMoveEvent(MouseButtonValue button,
                                 MouseButtonsValue buttons, double x, double y);
     void DispatchMouseDownEvent(MouseButtonValue button,

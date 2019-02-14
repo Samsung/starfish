@@ -945,6 +945,15 @@ Java_com_samsung_android_lwe_LweWebViewImpl_setDefaultFontSize(JNIEnv* env,
     webContainer->SetDefaultFontSize(size);
 }
 
+extern "C" JNIEXPORT jint JNICALL
+Java_com_samsung_android_lwe_LweWebViewImpl_getDefaultFontSize(JNIEnv* env,
+                                                               jobject thiz,
+                                                               jlong wv)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    return webContainer->GetDefaultFontSize();
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_lwe_LweWebViewImpl_clearCache(JNIEnv* env,
                                                        jobject thiz, jlong wv)
