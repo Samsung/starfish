@@ -1041,6 +1041,15 @@ void WebContainer::SetDefaultFontSize(uint32_t size)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
+uint32_t WebContainer::GetDefaultFontSize()
+{
+    uint32_t ret = 0;
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    ret = TO_WEBVIEW(m_impl)->defaultFontSize();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    return ret;
+}
+
 void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
                                           MouseButtonsValue buttons, double x,
                                           double y)

@@ -90,7 +90,6 @@ public class LweWebViewImpl implements LweWebView {
     private SemWebSettings mWebSettings = null;
 
     private int mCacheMode = SemWebSettings.LOAD_DEFAULT;
-    private int mDefaultFontSize;
     private String mDefaultUserAgent = null;
     private String mUserAgentString = null;
     private LweWebViewImpl.ImeComposingStatus mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
@@ -204,7 +203,12 @@ public class LweWebViewImpl implements LweWebView {
         }
     }
 
-    public int getDefaultFontSize() { return mDefaultFontSize; }
+    public int getDefaultFontSize() {
+        if (mWebViewInternalHandle != 0) {
+            return getDefaultFontSize(mWebViewInternalHandle);
+        }
+        return 0;
+    }
 
     class StateChangeListener implements View.OnAttachStateChangeListener {
         @Override
@@ -748,6 +752,8 @@ public class LweWebViewImpl implements LweWebView {
     native public void setUserAgentString(long starfish, String userAgent);
     native public void setCacheMode(long starfish, int mode);
     native public void setDefaultFontSize(long starfish, int size);
+    native public int getDefaultFontSize(long starfish);
+
 
     static native private void init();
     static native private void resizeTo(long starfish, int width, int height);
