@@ -142,11 +142,11 @@ Java_com_samsung_android_lwe_LweWebViewImpl_init(JNIEnv* env, jobject thiz)
     g_WindowGlue.m_onLoadResource =
         env->GetMethodID(clazz, "onLoadResource", "(Ljava/lang/String;)V");
     g_WindowGlue.m_onReceivedError =
-        env->GetMethodID(clazz, "onReceivedError", "(IZZ)V");
+        env->GetMethodID(clazz, "onReceivedError", "(I)V");
     g_WindowGlue.m_onPageParsed =
-        env->GetMethodID(clazz, "onPageFinished", "(Ljava/lang/String;ZZ)V");
+        env->GetMethodID(clazz, "onPageFinished", "(Ljava/lang/String;)V");
     g_WindowGlue.m_onPageStarted =
-        env->GetMethodID(clazz, "onPageStarted", "(Ljava/lang/String;ZZ)V");
+        env->GetMethodID(clazz, "onPageStarted", "(Ljava/lang/String;)V");
     g_WindowGlue.m_shouldOverrideUrlLoading = env->GetMethodID(
         clazz, "shouldOverrideUrlLoading", "(Ljava/lang/String;)Z");
     g_WindowGlue.m_onProgressed =
@@ -198,8 +198,7 @@ void callOnLoadResourceHandler(LWE::WebContainer* view, const char* url)
     env->DeleteLocalRef(jstr);
 }
 
-void callOnReceivedError(LWE::WebContainer* view, int errorCode, bool canGoBack,
-                         bool canGoForward)
+void callOnReceivedError(LWE::WebContainer* view, int errorCode)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -219,14 +218,11 @@ void callOnReceivedError(LWE::WebContainer* view, int errorCode, bool canGoBack,
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     jint jint1 = errorCode;
-    jboolean jboolean1 = canGoBack;
-    jboolean jboolean2 = canGoForward;
-    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onReceivedError, jint1,
-                        jboolean1, jboolean2);
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onReceivedError,
+                        jint1);
 }
 
-void callOnPageParsed(LWE::WebContainer* view, const char* url, bool canGoBack,
-                      bool canGoForward)
+void callOnPageParsed(LWE::WebContainer* view, const char* url)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -246,15 +242,11 @@ void callOnPageParsed(LWE::WebContainer* view, const char* url, bool canGoBack,
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     jstring jstr = env->NewStringUTF(url);
-    jboolean jboolean1 = canGoBack;
-    jboolean jboolean2 = canGoForward;
-    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onPageParsed, jstr,
-                        jboolean1, jboolean2);
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onPageParsed, jstr);
     env->DeleteLocalRef(jstr);
 }
 
-void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
-                       bool canGoForward)
+void callOnPageStarted(LWE::WebContainer* view, const char* url)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -274,11 +266,8 @@ void callOnPageStarted(LWE::WebContainer* view, const char* url, bool canGoBack,
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     jstring jstr = env->NewStringUTF(url);
-    jboolean jboolean1 = canGoBack;
-    jboolean jboolean2 = canGoForward;
 
-    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onPageStarted, jstr,
-                        jboolean1, jboolean2);
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onPageStarted, jstr);
     env->DeleteLocalRef(jstr);
 }
 
@@ -511,20 +500,17 @@ void registerWebContainerHandler(LWE::WebContainer* webContainer)
 {
     webContainer->RegisterOnReceivedErrorHandler(
         [](LWE::WebContainer* view, LWE::ResourceError error) -> void {
-            callOnReceivedError(view, error.GetErrorCode(), view->CanGoBack(),
-                                view->CanGoForward());
+            callOnReceivedError(view, error.GetErrorCode());
         });
 
     webContainer->RegisterOnPageParsedHandler(
         [](LWE::WebContainer* view, const std::string& url) -> void {
-            callOnPageParsed(view, url.c_str(), view->CanGoBack(),
-                             view->CanGoForward());
+            callOnPageParsed(view, url.c_str());
         });
 
     webContainer->RegisterOnPageStartedHandler(
         [](LWE::WebContainer* view, const std::string& url) -> void {
-            callOnPageStarted(view, url.c_str(), view->CanGoBack(),
-                              view->CanGoForward());
+            callOnPageStarted(view, url.c_str());
         });
 
     webContainer->RegisterOnLoadResourceHandler(
@@ -757,6 +743,14 @@ Java_com_samsung_android_lwe_LweWebViewImpl_getDefaultUserAgent(JNIEnv* env,
     return jstr;
 }
 
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_samsung_android_lwe_LweWebViewImpl_getUrl(JNIEnv* env, jobject thiz,
+                                                   jlong wv)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    return env->NewStringUTF(webContainer->GetURL().c_str());
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_lwe_LweWebViewImpl_goBack(JNIEnv* env, jobject thiz,
                                                    jlong data)
@@ -771,6 +765,23 @@ Java_com_samsung_android_lwe_LweWebViewImpl_goForward(JNIEnv* env, jobject thiz,
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
     webContainer->GoForward();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_samsung_android_lwe_LweWebViewImpl_canGoBack(JNIEnv* env, jobject thiz,
+                                                      jlong data)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->CanGoBack();
+}
+
+extern "C" JNIEXPORT jboolean JNICALL
+Java_com_samsung_android_lwe_LweWebViewImpl_canGoForward(JNIEnv* env,
+                                                         jobject thiz,
+                                                         jlong data)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
+    webContainer->CanGoForward();
 }
 
 extern "C" JNIEXPORT void JNICALL

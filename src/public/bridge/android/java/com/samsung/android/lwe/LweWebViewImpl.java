@@ -72,18 +72,11 @@ public class LweWebViewImpl implements LweWebView {
     private static String sTimezone = "Asia/Seoul";
 
     private float sDpr = 1;
-    private String sLocalStoragePath;
-    private String sCookiePath;
-    private String sCachePath;
-
     private long mWebViewInternalHandle;
     private Bitmap mScreenBuffer;
     private int mWindowWidth;
     private int mWindowHeight;
 
-    private boolean mCanGoBack = false;
-    private boolean mCanGoForward = false;
-    private String mCurrentURL = null;
     private SemWebViewClient mWebViewClient = null;
     private SemWebLweClient mWebLweClient = null;
     private SemDownloadListener mDownloadListener = null;
@@ -98,10 +91,6 @@ public class LweWebViewImpl implements LweWebView {
     private InputMethodManager mIMM = null;
 
     private ArrayList<Pattern> mWhitelistedUrls = null;
-
-    public long getWebViewInternalHandle() {
-        return mWebViewInternalHandle;
-    }
 
     public InputConnection getInputConnectionInstance(View view){
         return new ImeInputConnection(view);
@@ -239,23 +228,20 @@ public class LweWebViewImpl implements LweWebView {
 
         mIMM = (InputMethodManager) appContext.getSystemService(Context.INPUT_METHOD_SERVICE);
         sDpr = appContext.getResources().getDisplayMetrics().xdpi / 150;
-        sLocalStoragePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-localStorage";
-        sCookiePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-cookie";
-
+        String localStoragePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-localStorage";
+        String cookiePath = appContext.getDataDir().getAbsolutePath() + "/Starfish-cookie";
+        String cachePath = "/data/local/tmp/Starfish-cache";
         File cachedDir = appContext.getCacheDir();
         if (cachedDir != null) {
-            sCachePath = cachedDir.getAbsolutePath() + "/Starfish-cache";
-        } else {
-            sCachePath = "/data/local/tmp/Starfish-cache";
+            cachePath = cachedDir.getAbsolutePath() + "/Starfish-cache";
         }
-
         init();
 
         mWindowWidth = mWindowHeight = 1;
         mWebViewInternalHandle =
                 create(mWindowWidth, mWindowHeight, sDpr,
                         mUserAgentString, sLocale, sTimezone,
-                        sLocalStoragePath, sCookiePath, sCachePath);
+                        localStoragePath, cookiePath, cachePath);
         mLWEView.getHolder().addCallback(
                 new SurfaceHolder.Callback() {
                     @Override
@@ -445,9 +431,7 @@ public class LweWebViewImpl implements LweWebView {
         }
     }
 
-    private void onReceivedError(int errorCode, boolean canGoBack, boolean canGoForward) {
-        mCanGoBack = canGoBack;
-        mCanGoForward = canGoForward;
+    private void onReceivedError(int errorCode) {
         if (mWebViewClient != null) {
             //TODO
             // mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(""),
@@ -455,19 +439,13 @@ public class LweWebViewImpl implements LweWebView {
         }
     }
 
-    private void onPageFinished(String url, boolean canGoBack, boolean canGoForward) {
-        mCurrentURL = url;
-        mCanGoBack = canGoBack;
-        mCanGoForward = canGoForward;
+    private void onPageFinished(String url) {
         if (mWebViewClient != null) {
             mWebViewClient.onPageFinished(mLWEView, url);
         }
     }
 
-    private void onPageStarted(String url, boolean canGoBack, boolean canGoForward) {
-        mCurrentURL = url;
-        mCanGoBack = canGoBack;
-        mCanGoForward = canGoForward;
+    private void onPageStarted(String url) {
         if (mWebViewClient != null) {
             mWebViewClient.onPageStarted(mLWEView, url, null);
         }
@@ -588,7 +566,10 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     public String getUrl() {
-        return mCurrentURL;
+        if (mWebViewInternalHandle != 0) {
+            getUrl(mWebViewInternalHandle);
+        }
+        return null;
     }
 
     public void loadData(String data, String mimeType, String encoding) {
@@ -623,10 +604,17 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     public boolean canGoBack() {
-        return mCanGoBack;
+        if (mWebViewInternalHandle != 0) {
+            canGoBack(mWebViewInternalHandle);
+        }
+        return false;
     }
+
     public boolean canGoForward() {
-        return mCanGoForward;
+        if (mWebViewInternalHandle != 0) {
+            canGoForward(mWebViewInternalHandle);
+        }
+        return false;
     }
 
 
@@ -733,6 +721,8 @@ public class LweWebViewImpl implements LweWebView {
     native private void destroy(long starfish);
     native private void goBack(long starfish);
     native private void goForward(long starfish);
+    native private boolean canGoBack(long starfish);
+    native private boolean canGoForward(long starfish);
     native private void reload(long starfish);
     native private void stopLoading(long starfish);
     native private void clearHistory(long starfish);
@@ -747,6 +737,8 @@ public class LweWebViewImpl implements LweWebView {
     native private void removeJavascriptInterface(long starfish, String objectName);
     native private String evaluateJavaScript(long starfish, String data);
     native private String getDefaultUserAgent();
+    native public String getUrl(long starfish);
+
 
     // Accessed by SemWebSettings
     native public void setUserAgentString(long starfish, String userAgent);
