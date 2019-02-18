@@ -438,6 +438,13 @@ public:
     QualifiedName m_fontDashFamily;
     QualifiedName m_fontDashSize;
     QualifiedName m_start;
+    // TTS SpeechSynthesisUtterance
+    QualifiedName m_end;
+    QualifiedName m_pause;
+    QualifiedName m_resume;
+    QualifiedName m_mark;
+    QualifiedName m_boundary;
+    QualifiedName m_voiceschanged;
     // xml:base
     QualifiedName m_xmlBase;
     // WAI-ARIA
@@ -547,7 +554,6 @@ public:
     QualifiedName m_durationchange;
     QualifiedName m_timeupdate;
     QualifiedName m_play;
-    QualifiedName m_pause;
     QualifiedName m_ratechange;
     QualifiedName m_volumechange;
 #endif

@@ -472,7 +472,7 @@ public:
     }
 #endif
 #ifdef STARFISH_ENABLE_TTS
-    TTS* tts()
+    TTS* tts() const
     {
         return m_tts;
     }

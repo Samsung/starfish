@@ -667,7 +667,7 @@ bool Element::handleDefaultEvent(Event* event)
     }
 #ifdef STARFISH_ENABLE_TTS
     WebView* wv = document()->window()->webView();
-    if (wv->tts()->isTTSEnabled() ||
+    if (wv->tts()->isAccessibilityMode() ||
         wv->tts()->mode() == LWE::TTSMode::Forced) {
         if (isHTMLElement() && isFocusable() && event->isFocusEvent() &&
             event->type()->equals("focus")) {

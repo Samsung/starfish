@@ -22,6 +22,7 @@
 #include "core/dom/EventTarget.h"
 #include "core/dom/Scrolling.h"
 #include "core/fetch/Fetch.h"
+#include "core/modules/tts/SpeechSynthesis.h"
 
 namespace Starfish {
 
@@ -238,6 +239,11 @@ public:
 
     void alert();
     void alert(String* message);
+
+    SpeechSynthesis* speechSynthesis()
+    {
+        return m_speechSynthesis;
+    }
 
     // Other methods
     BrowsingContext* browsingContext()
@@ -459,6 +465,7 @@ private:
     Location* m_location;
     Screen* m_screen;
     Scrolling* m_scrolling;
+    SpeechSynthesis* m_speechSynthesis;
 
     uint32_t m_width;
     uint32_t m_height;

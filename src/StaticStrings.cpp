@@ -349,6 +349,16 @@ StaticStrings::StaticStrings(Starfish* starfish)
         QualifiedName(AtomicString::createAtomicString(starfish, "font-size"));
     m_start =
         QualifiedName(AtomicString::createAtomicString(starfish, "start"));
+    m_end = QualifiedName(AtomicString::createAtomicString(starfish, "end"));
+    m_pause =
+        QualifiedName(AtomicString::createAtomicString(starfish, "pause"));
+    m_resume =
+        QualifiedName(AtomicString::createAtomicString(starfish, "resume"));
+    m_mark = QualifiedName(AtomicString::createAtomicString(starfish, "mark"));
+    m_boundary =
+        QualifiedName(AtomicString::createAtomicString(starfish, "boundary"));
+    m_voiceschanged = QualifiedName(
+        AtomicString::createAtomicString(starfish, "voiceschanged"));
     m_dirname =
         QualifiedName(AtomicString::createAtomicString(starfish, "dirname"));
     m_readonly =
@@ -567,8 +577,6 @@ StaticStrings::StaticStrings(Starfish* starfish)
     m_timeupdate =
         QualifiedName(AtomicString::createAtomicString(starfish, "timeupdate"));
     m_play = QualifiedName(AtomicString::createAtomicString(starfish, "play"));
-    m_pause =
-        QualifiedName(AtomicString::createAtomicString(starfish, "pause"));
     m_ratechange =
         QualifiedName(AtomicString::createAtomicString(starfish, "ratechange"));
     m_volumechange = QualifiedName(

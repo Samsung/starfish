@@ -102,6 +102,7 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     m_navigator = new Navigator(m_document);
     m_location = new Location(m_document);
     m_scriptBindingInstance->initBinding(m_document);
+    m_speechSynthesis = new SpeechSynthesis(m_document);
 }
 
 Starfish* Window::starfish()
@@ -127,6 +128,7 @@ void Window::dispose()
     m_location->dispose();
     m_navigator->dispose();
     m_document->dispose();
+    m_speechSynthesis->dispose();
 
     if (m_scriptBindingInstance) {
         m_scriptBindingInstance->destroy();
