@@ -933,10 +933,15 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
     }
 
     ComputedStyle* cs = fragmentBox->style();
-    if (ctx.purpose >= Frame::ComputeVisibleRectContext::GraphicsBufferBySelf &&
-        cs && cs->hasTransforms(fragmentBox)) {
-        // transform Frame must own StackingContext
-        SkMatrix m = fragmentBox->stackingContext()->transformMatrix();
+    if (cs && cs->hasTransforms(fragmentBox)) {
+        SkMatrix m;
+        if (ctx.purpose >=
+            Frame::ComputeVisibleRectContext::GraphicsBufferBySelf) {
+            m = fragmentBox->stackingContext()->transformMatrix();
+        } else {
+            m = cs->transformsToMatrix(
+                fragmentBox->width(), fragmentBox->height(), fragmentBox, true);
+        }
         // If Frame has `skew, rotate, 3d-transform`, Frame must own it's
         // graphics buffer.
         // If matrix is not rect, we should ignore child visible rects from here
@@ -946,7 +951,18 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
             return;
         }
 
-        auto to = fragmentBox->stackingContext()->transformOrigin();
+        LayoutLocation to;
+        if (ctx.purpose >=
+            Frame::ComputeVisibleRectContext::GraphicsBufferBySelf) {
+            to = fragmentBox->stackingContext()->transformOrigin();
+        } else {
+            StyleTransformOrigin* origin = cs->transformOrigin();
+            auto od = origin->originValue();
+            to.setX(od->getXAxis().specifiedValue(fragmentBox->width(),
+                                                  fragmentBox));
+            to.setY(od->getYAxis().specifiedValue(fragmentBox->height(),
+                                                  fragmentBox));
+        }
 
         ctx.tranformMatrix.preTranslate((float)fragmentBox->x(),
                                         (float)fragmentBox->y());
