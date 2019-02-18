@@ -1,4 +1,11 @@
 /*
+ * Copyright (C) 2004, 2005, 2006, 2007 Nikolas Zimmermann <zimmermann@kde.org>
+ * Copyright (C) 2004, 2005 Rob Buis <buis@kde.org>
+ * Copyright (C) 2005 Eric Seidel <eric@webkit.org>
+ * Copyright (C) 2009 Dirk Schulze <krit@webkit.org>
+ * Copyright (C) 2010 Igalia, S.L.
+ * Copyright (C) Research In Motion Limited 2010. All rights reserved.
+ * Copyright (C) 2015-2016 Apple, Inc. All rights reserved.
  * Copyright (c) 2017-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
@@ -20,12 +27,7 @@
 #include "StarfishConfig.h"
 #include "ShadowBlur.h"
 
-#define BOUND_CHECK(idx, maxIdx) !((idx) < 0 || (int)(idx) >= (int)(maxIdx))
-
-#define ROUND(v) (int)((v) + 0.5)
-#define READ_ONE(src, idx) (((uint8_t*)src)[idx])
-#define WRITE_ONE(dst, idx, v) (((uint8_t*)dst)[idx] = v)
-#define IDEAL_VALUE 3
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace Starfish {
 
@@ -46,216 +48,198 @@ ShadowBlur::~ShadowBlur()
 {
 }
 
-static void boxBlurH(uint8_t* src, uint8_t* dest, size_t w, size_t h,
-                     size_t stride, int r)
+// the box blur functions belows are import from WebKit project
+// webkit/Source/WebCore/platform/graphics/filters/FEGaussianBlur.cpp(6f9b511a115311b13c06eb58038ddc2c78da5531)
+
+inline void kernelPosition(int blurIteration, unsigned& radius, int& deltaLeft,
+                           int& deltaRight)
 {
-    double iarr = 1.0 / (r + r + 1.0);
-    size_t maxIdx = (stride / 4) * h;
-    uint32_t* u32Src = (uint32_t*)src;
-    uint32_t* u32Dest = (uint32_t*)dest;
-    int u32Stride = (stride / 4);
-
-    for (size_t i = 0; i < h; ++i) {
-        int ti = i * u32Stride;
-        int li = ti;
-        int ri = ti + r;
-
-        const unsigned& fv0 = READ_ONE(&u32Src[ti], 0);
-        const unsigned& lv0 = READ_ONE(&u32Src[ti + w - 1], 0);
-        unsigned val0 = (r + 1) * fv0;
-
-        const unsigned& fv1 = READ_ONE(&u32Src[ti], 1);
-        const unsigned& lv1 = READ_ONE(&u32Src[ti + w - 1], 1);
-        unsigned val1 = (r + 1) * fv1;
-
-        const unsigned& fv2 = READ_ONE(&u32Src[ti], 2);
-        const unsigned& lv2 = READ_ONE(&u32Src[ti + w - 1], 2);
-        unsigned val2 = (r + 1) * fv2;
-
-        const unsigned& fv3 = READ_ONE(&u32Src[ti], 3);
-        const unsigned& lv3 = READ_ONE(&u32Src[ti + w - 1], 3);
-        unsigned val3 = (r + 1) * fv3;
-
-        for (int j = 0; j < r && BOUND_CHECK(ti + j, maxIdx); ++j) {
-            val0 += READ_ONE(&u32Src[ti + j], 0);
-            val1 += READ_ONE(&u32Src[ti + j], 1);
-            val2 += READ_ONE(&u32Src[ti + j], 2);
-            val3 += READ_ONE(&u32Src[ti + j], 3);
+    // Check http://www.w3.org/TR/SVG/filters.html#feGaussianBlurElement for
+    // details.
+    switch (blurIteration) {
+    case 0:
+        if (!(radius % 2)) {
+            deltaLeft = radius / 2 - 1;
+            deltaRight = radius - deltaLeft;
+        } else {
+            deltaLeft = radius / 2;
+            deltaRight = radius - deltaLeft;
         }
-
-        for (int j = 0;
-             j <= r && BOUND_CHECK(ri, maxIdx) && BOUND_CHECK(ti, maxIdx);
-             ++j) {
-            val0 += READ_ONE(&u32Src[ri], 0) - fv0;
-            val1 += READ_ONE(&u32Src[ri], 1) - fv1;
-            val2 += READ_ONE(&u32Src[ri], 2) - fv2;
-            val3 += READ_ONE(&u32Src[ri], 3) - fv3;
-            ++ri;
-
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 0, ROUND(val0 * iarr));
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 1, ROUND(val1 * iarr));
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 2, ROUND(val2 * iarr));
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 3, ROUND(val3 * iarr));
-            ++ti;
+        break;
+    case 1:
+        if (!(radius % 2)) {
+            deltaLeft++;
+            deltaRight--;
         }
-        int limit = (int)(w - r);
-        for (int j = r + 1; j < limit && BOUND_CHECK(ri, maxIdx) &&
-                            BOUND_CHECK(li, maxIdx) && BOUND_CHECK(ti, maxIdx);
-             ++j) {
-            val0 += READ_ONE(&u32Src[ri], 0) - READ_ONE(&u32Src[li], 0);
-            val1 += READ_ONE(&u32Src[ri], 1) - READ_ONE(&u32Src[li], 1);
-            val2 += READ_ONE(&u32Src[ri], 2) - READ_ONE(&u32Src[li], 2);
-            val3 += READ_ONE(&u32Src[ri], 3) - READ_ONE(&u32Src[li], 3);
-            ++ri;
-            ++li;
-
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 0, ROUND(val0 * iarr));
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 1, ROUND(val1 * iarr));
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 2, ROUND(val2 * iarr));
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 3, ROUND(val3 * iarr));
-            ++ti;
+        break;
+    case 2:
+        if (!(radius % 2)) {
+            deltaRight++;
+            radius++;
         }
-        for (int j = w - r;
-             j < (int)w && BOUND_CHECK(li, maxIdx) && BOUND_CHECK(ti, maxIdx);
-             ++j) {
-            val0 += lv0 - READ_ONE(&u32Src[li], 0);
-            val1 += lv1 - READ_ONE(&u32Src[li], 1);
-            val2 += lv2 - READ_ONE(&u32Src[li], 2);
-            val3 += lv3 - READ_ONE(&u32Src[li], 3);
-            ++li;
+        break;
+    }
+}
 
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 0, ROUND(val0 * iarr));
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 1, ROUND(val1 * iarr));
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 2, ROUND(val2 * iarr));
-            WRITE_ONE((uint32_t*)&u32Dest[ti], 3, ROUND(val3 * iarr));
-            ++ti;
+enum EdgeModeType {
+    EDGEMODE_UNKNOWN = 0,
+    EDGEMODE_DUPLICATE = 1,
+    EDGEMODE_WRAP = 2,
+    EDGEMODE_NONE = 3
+};
+
+inline void boxBlur(uint8_t* srcData, uint8_t* dstData, unsigned dx, int dxLeft,
+                    int dxRight, int stride, int strideLine, int effectWidth,
+                    int effectHeight, EdgeModeType edgeMode)
+{
+    const int maxKernelSize = std::min(dxRight, effectWidth);
+
+    // Concerning the array width/length: it is Element size + Margin + Border.
+    // The number of pixels will be
+    // P = width * height * channels.
+    for (int y = 0; y < effectHeight; ++y) {
+        int line = y * strideLine;
+        int sumR = 0, sumG = 0, sumB = 0, sumA = 0;
+
+        if (edgeMode == EDGEMODE_NONE) {
+            // Fill the kernel.
+            for (int i = 0; i < maxKernelSize; ++i) {
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+                sumR += *srcPtr++;
+                sumG += *srcPtr++;
+                sumB += *srcPtr++;
+                sumA += *srcPtr;
+            }
+
+            // Blurring.
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
+                *dstPtr = static_cast<uint8_t>(sumA / dx);
+
+                // Shift kernel.
+                if (x >= dxLeft) {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    sumR -= srcPtr[0];
+                    sumG -= srcPtr[1];
+                    sumB -= srcPtr[2];
+                    sumA -= srcPtr[3];
+                }
+
+                if (x + dxRight < effectWidth) {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    sumR += srcPtr[0];
+                    sumG += srcPtr[1];
+                    sumB += srcPtr[2];
+                    sumA += srcPtr[3];
+                }
+            }
+
+        } else {
+            // FIXME: Add support for 'wrap' here.
+            // Get edge values for edgeMode 'duplicate'.
+            const uint8_t* edgeValueLeft = srcData + line;
+            const uint8_t* edgeValueRight =
+                srcData + (line + (effectWidth - 1) * stride);
+
+            // Fill the kernel.
+            for (int i = dxLeft * -1; i < dxRight; ++i) {
+                // Is this right for negative values of 'i'?
+                unsigned offset = line + i * stride;
+                const uint8_t* srcPtr = srcData + offset;
+
+                if (i < 0) {
+                    sumR += edgeValueLeft[0];
+                    sumG += edgeValueLeft[1];
+                    sumB += edgeValueLeft[2];
+                    sumA += edgeValueLeft[3];
+                } else if (i >= effectWidth) {
+                    sumR += edgeValueRight[0];
+                    sumG += edgeValueRight[1];
+                    sumB += edgeValueRight[2];
+                    sumA += edgeValueRight[3];
+                } else {
+                    sumR += *srcPtr++;
+                    sumG += *srcPtr++;
+                    sumB += *srcPtr++;
+                    sumA += *srcPtr;
+                }
+            }
+
+            // Blurring.
+            for (int x = 0; x < effectWidth; ++x) {
+                unsigned pixelByteOffset = line + x * stride;
+                uint8_t* dstPtr = dstData + pixelByteOffset;
+
+                *dstPtr++ = static_cast<uint8_t>(sumR / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumG / dx);
+                *dstPtr++ = static_cast<uint8_t>(sumB / dx);
+                *dstPtr = static_cast<uint8_t>(sumA / dx);
+
+                // Shift kernel.
+                if (x < dxLeft) {
+                    sumR -= edgeValueLeft[0];
+                    sumG -= edgeValueLeft[1];
+                    sumB -= edgeValueLeft[2];
+                    sumA -= edgeValueLeft[3];
+                } else {
+                    unsigned leftOffset = pixelByteOffset - dxLeft * stride;
+                    const uint8_t* srcPtr = srcData + leftOffset;
+                    sumR -= srcPtr[0];
+                    sumG -= srcPtr[1];
+                    sumB -= srcPtr[2];
+                    sumA -= srcPtr[3];
+                }
+
+                if (x + dxRight >= effectWidth) {
+                    sumR += edgeValueRight[0];
+                    sumG += edgeValueRight[1];
+                    sumB += edgeValueRight[2];
+                    sumA += edgeValueRight[3];
+                } else {
+                    unsigned rightOffset = pixelByteOffset + dxRight * stride;
+                    const uint8_t* srcPtr = srcData + rightOffset;
+                    sumR += srcPtr[0];
+                    sumG += srcPtr[1];
+                    sumB += srcPtr[2];
+                    sumA += srcPtr[3];
+                }
+            }
         }
     }
 }
 
-static void boxBlurT(uint8_t* src, uint8_t* dest, size_t w, size_t h,
-                     size_t stride, int r)
+inline void standardBoxBlur(uint8_t* fromBuffer, uint8_t* toBuffer,
+                            unsigned kernelSizeX, unsigned kernelSizeY,
+                            int stride, int imageWidth, int imageHeight,
+                            EdgeModeType edgeMode)
 {
-    double iarr = 1.0 / (r + r + 1.0);
-    size_t maxIdx = (stride / 4) * h;
-    uint32_t* u32Src = (uint32_t*)src;
-    uint32_t* u32Dest = (uint32_t*)dest;
-    int u32Stride = (stride / 4);
+    int dxLeft = 0;
+    int dxRight = 0;
+    int dyLeft = 0;
+    int dyRight = 0;
 
-    for (int i = 0; i < (int)w; ++i) {
-        int ti = i;
-        int li = ti;
-        int ri = ti + r * (stride / 4);
-
-        const unsigned& fv0 = READ_ONE(&u32Src[ti], 0);
-        const unsigned& lv0 = READ_ONE(&u32Src[ti + u32Stride * (h - 1)], 0);
-        unsigned val0 = (r + 1) * fv0;
-
-        const unsigned& fv1 = READ_ONE(&u32Src[ti], 1);
-        const unsigned& lv1 = READ_ONE(&u32Src[ti + u32Stride * (h - 1)], 1);
-        unsigned val1 = (r + 1) * fv1;
-
-        const unsigned& fv2 = READ_ONE(&u32Src[ti], 2);
-        const unsigned& lv2 = READ_ONE(&u32Src[ti + u32Stride * (h - 1)], 2);
-        unsigned val2 = (r + 1) * fv2;
-
-        const unsigned& fv3 = READ_ONE(&u32Src[ti], 3);
-        const unsigned& lv3 = READ_ONE(&u32Src[ti + u32Stride * (h - 1)], 3);
-        unsigned val3 = (r + 1) * fv3;
-
-        for (int j = 0; j < r && BOUND_CHECK(ti + j * u32Stride, maxIdx); ++j) {
-            val0 += READ_ONE(&u32Src[ti + j * u32Stride], 0);
-            val1 += READ_ONE(&u32Src[ti + j * u32Stride], 1);
-            val2 += READ_ONE(&u32Src[ti + j * u32Stride], 2);
-            val3 += READ_ONE(&u32Src[ti + j * u32Stride], 3);
-        }
-        for (int j = 0;
-             j <= r && BOUND_CHECK(ri, maxIdx) && BOUND_CHECK(ti, maxIdx);
-             ++j) {
-            val0 += READ_ONE(&u32Src[ri], 0) - fv0;
-            val1 += READ_ONE(&u32Src[ri], 1) - fv1;
-            val2 += READ_ONE(&u32Src[ri], 2) - fv2;
-            val3 += READ_ONE(&u32Src[ri], 3) - fv3;
-            WRITE_ONE(&u32Dest[ti], 0, ROUND(val0 * iarr));
-            WRITE_ONE(&u32Dest[ti], 1, ROUND(val1 * iarr));
-            WRITE_ONE(&u32Dest[ti], 2, ROUND(val2 * iarr));
-            WRITE_ONE(&u32Dest[ti], 3, ROUND(val3 * iarr));
-            ri += u32Stride;
-            ti += u32Stride;
-        }
-        int limit = (int)(h - r);
-        for (int j = r + 1;
-             j < limit && BOUND_CHECK(ri, maxIdx) && BOUND_CHECK(li, maxIdx);
-             ++j) {
-            val0 += READ_ONE(&u32Src[ri], 0) - READ_ONE(&u32Src[li], 0);
-            val1 += READ_ONE(&u32Src[ri], 1) - READ_ONE(&u32Src[li], 1);
-            val2 += READ_ONE(&u32Src[ri], 2) - READ_ONE(&u32Src[li], 2);
-            val3 += READ_ONE(&u32Src[ri], 3) - READ_ONE(&u32Src[li], 3);
-
-            WRITE_ONE(&u32Dest[ti], 0, ROUND(val0 * iarr));
-            WRITE_ONE(&u32Dest[ti], 1, ROUND(val1 * iarr));
-            WRITE_ONE(&u32Dest[ti], 2, ROUND(val2 * iarr));
-            WRITE_ONE(&u32Dest[ti], 3, ROUND(val3 * iarr));
-
-            li += u32Stride;
-            ri += u32Stride;
-            ti += u32Stride;
+    for (int i = 0; i < 3; ++i) {
+        if (kernelSizeX) {
+            kernelPosition(i, kernelSizeX, dxLeft, dxRight);
+            boxBlur(fromBuffer, toBuffer, kernelSizeX, dxLeft, dxRight, 4,
+                    stride, imageWidth, imageHeight, edgeMode);
+            std::swap(fromBuffer, toBuffer);
         }
 
-        for (int j = h - r;
-             j < (int)h && BOUND_CHECK(li, maxIdx) && BOUND_CHECK(ti, maxIdx);
-             ++j) {
-            val0 += lv0 - READ_ONE(&u32Src[li], 0);
-            val1 += lv1 - READ_ONE(&u32Src[li], 1);
-            val2 += lv2 - READ_ONE(&u32Src[li], 2);
-            val3 += lv3 - READ_ONE(&u32Src[li], 3);
-
-            WRITE_ONE(&u32Dest[ti], 0, val0 * iarr);
-            WRITE_ONE(&u32Dest[ti], 1, val1 * iarr);
-            WRITE_ONE(&u32Dest[ti], 2, val2 * iarr);
-            WRITE_ONE(&u32Dest[ti], 3, val3 * iarr);
-
-            li += u32Stride;
-            ti += u32Stride;
+        if (kernelSizeY) {
+            kernelPosition(i, kernelSizeY, dyLeft, dyRight);
+            boxBlur(fromBuffer, toBuffer, kernelSizeY, dyLeft, dyRight, stride,
+                    4, imageHeight, imageWidth, edgeMode);
+            std::swap(fromBuffer, toBuffer);
         }
-    }
-}
-
-static void boxBlur(uint8_t* src, uint8_t* dest, size_t w, size_t h,
-                    size_t stride, int r)
-{
-    memcpy(dest, src, stride * h);
-    boxBlurH(dest, src, w, h, stride, r);
-    boxBlurT(src, dest, w, h, stride, r);
-}
-
-static void gaussBlur(uint8_t* src, uint8_t* dest, size_t w, size_t h,
-                      size_t stride, int* bxs)
-{
-    boxBlur(src, dest, w, h, stride, (bxs[0] - 1) / 2);
-    boxBlur(dest, src, w, h, stride, (bxs[1] - 1) / 2);
-    boxBlur(src, dest, w, h, stride, (bxs[2] - 1) / 2);
-}
-
-static void boxesForGauss(int* bxs, int n, int r)
-{
-    double sigma = r * 1.0;
-    double wIdeal = sqrt((IDEAL_VALUE * sigma * sigma / n) + 1);
-
-    int wl = floor(wIdeal);
-    if (wl % 2 == 0) {
-        --wl;
-    }
-    int wu = wl + 2;
-
-    double mIdeal = (double)(IDEAL_VALUE * sigma * sigma - n * wl * wl -
-                             4 * n * wl - 3 * n) /
-                    (-4 * wl - 4);
-
-    int m = floor(mIdeal);
-
-    for (int i = 0; i < n; ++i) {
-        bxs[i] = (i < m) ? wl : wu;
     }
 }
 
@@ -264,15 +248,10 @@ void ShadowBlur::process(float radius)
     if (radius <= 0) {
         return;
     }
-    int r = ceill(radius);
-    r = std::min(r, (int)RADIUS_LIMIT);
-    int bxs[3] = {
-        0,
-    };
 
-    boxesForGauss(bxs, 3, r);
-
-    gaussBlur(m_source, m_workspace.get(), m_width, m_height, m_stride, bxs);
-    memcpy(m_source, m_workspace.get(), m_stride * m_height);
+    LongTaskFinder timer(__PRETTY_FUNCTION__, 1);
+    radius = std::min(radius, RADIUS_LIMIT);
+    standardBoxBlur(m_source, m_workspace.get(), radius, radius, m_stride,
+                    m_width, m_height, EDGEMODE_DUPLICATE);
 }
 }

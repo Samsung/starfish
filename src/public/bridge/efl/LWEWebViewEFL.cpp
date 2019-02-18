@@ -247,8 +247,6 @@ public:
                const char* timezoneID)
         : WebView(nullptr)
         , m_resizeHandler(nullptr)
-        , m_renderingPreHandler(nullptr)
-        , m_renderingPostHandler(nullptr)
         , m_keyDownEventHandler(nullptr)
         , m_keyUpEventHandler(nullptr)
         , m_lastMouseX(0)
@@ -328,7 +326,6 @@ public:
         m_isKeyDown = false;
         m_lastClickedTimestamp = 0;
         m_clickedCount = 0;
-        m_inEvasRendering = false;
         m_imfContext = nullptr;
         m_lastKeyPressedTimestamp = 0;
         m_offsetYDueToSoftwareKeyboard = 0;
@@ -530,40 +527,6 @@ public:
         evas_object_event_callback_add(m_nonIMEKeyEventBox,
                                        EVAS_CALLBACK_KEY_UP,
                                        m_keyUpEventHandler, this);
-
-        evas_object_event_callback_add(
-            m_nonIMEKeyEventBox, EVAS_CALLBACK_FOCUS_IN,
-            [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
-                WebViewEFL* wv = (WebViewEFL*)data;
-            },
-            this);
-
-        evas_object_event_callback_add(
-            m_nonIMEKeyEventBox, EVAS_CALLBACK_FOCUS_OUT,
-            [](void* data, Evas* e, Evas_Object* obj, void* event_info) {
-                WebViewEFL* wv = (WebViewEFL*)data;
-            },
-            this);
-
-        m_renderingPreHandler = [](void* data, Evas* evas,
-                                   void* event_info) -> void {
-            WebViewEFL* wv = (WebViewEFL*)data;
-            wv->m_inEvasRendering = true;
-        };
-
-        m_renderingPostHandler = [](void* data, Evas* evas,
-                                    void* event_info) -> void {
-            WebViewEFL* wv = (WebViewEFL*)data;
-            wv->m_inEvasRendering = false;
-        };
-
-        evas_event_callback_add(evas_object_evas_get(m_graphicsAdapter),
-                                EVAS_CALLBACK_RENDER_PRE, m_renderingPreHandler,
-                                this);
-
-        evas_event_callback_add(evas_object_evas_get(m_graphicsAdapter),
-                                EVAS_CALLBACK_RENDER_POST,
-                                m_renderingPostHandler, this);
 
         m_resizeHandler = [](void* data, Evas* e, Evas_Object* obj,
                              void* event_info) {
@@ -930,14 +893,6 @@ public:
         evas_gl_free(m_glEvasgl);
 #endif
 
-        evas_event_callback_del(evas_object_evas_get(m_graphicsAdapter),
-                                EVAS_CALLBACK_RENDER_POST,
-                                m_renderingPostHandler);
-
-        evas_event_callback_del(evas_object_evas_get(m_graphicsAdapter),
-                                EVAS_CALLBACK_RENDER_PRE,
-                                m_renderingPreHandler);
-
         if (m_resizeHandler) {
             evas_object_event_callback_del(
                 m_graphicsAdapter, EVAS_CALLBACK_RESIZE, m_resizeHandler);
@@ -955,9 +910,9 @@ public:
                                        EVAS_CALLBACK_MOUSE_MOVE,
                                        m_mouseMoveEventHandler);
         evas_object_event_callback_del(
-            m_graphicsAdapter, EVAS_CALLBACK_KEY_DOWN, m_keyDownEventHandler);
-        evas_object_event_callback_del(m_graphicsAdapter, EVAS_CALLBACK_KEY_UP,
-                                       m_keyUpEventHandler);
+            m_nonIMEKeyEventBox, EVAS_CALLBACK_KEY_DOWN, m_keyDownEventHandler);
+        evas_object_event_callback_del(
+            m_nonIMEKeyEventBox, EVAS_CALLBACK_KEY_UP, m_keyUpEventHandler);
 
         if (m_graphicsAdapter) {
             evas_object_del(m_graphicsAdapter);
@@ -1049,8 +1004,6 @@ protected:
 
     void (*m_resizeHandler)(void* data, Evas* evas, Evas_Object* obj,
                             void* event_info);
-    void (*m_renderingPreHandler)(void* data, Evas* evas, void* event_info);
-    void (*m_renderingPostHandler)(void* data, Evas* evas, void* event_info);
     void (*m_mouseDownEventHandler)(void* data, Evas* evas, Evas_Object* obj,
                                     void* event_info);
     void (*m_mouseMoveEventHandler)(void* data, Evas* evas, Evas_Object* obj,
@@ -1079,7 +1032,6 @@ protected:
     float m_lastMouseX, m_lastMouseY;
     bool m_isMouseLbuttonDown;
     bool m_isKeyDown;
-    bool m_inEvasRendering;
     uint32_t m_lastClickedTimestamp;
     uint32_t m_clickedCount;
     uint32_t m_lastKeyPressedTimestamp;

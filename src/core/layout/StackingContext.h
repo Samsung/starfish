@@ -48,7 +48,8 @@ class GraphicsBufferHolder : public gc {
 public:
     GraphicsBufferHolder(CanvasSurface* s);
     GraphicsBufferHolder(size_t bufferWidth, size_t bufferHeight,
-                         size_t screenWidth, size_t screenHeight);
+                         size_t screenWidth, size_t screenHeight,
+                         StackingContext* sc);
 
     size_t bufferWidth() const
     {

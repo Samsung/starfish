@@ -299,6 +299,11 @@ public:
         return m_activeAnimationExecutor.size();
     }
 
+    bool needsComposite()
+    {
+        return m_needsComposite;
+    }
+
     bool needsRendering()
     {
         return m_needsRendering;

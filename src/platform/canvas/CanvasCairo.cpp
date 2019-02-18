@@ -879,6 +879,16 @@ public:
         checkError();
     }
 
+    virtual void setMatrix(const SkMatrix& matrix)
+    {
+        cairo_matrix_t cm;
+        cairo_matrix_init(&cm, matrix.getScaleX(), matrix.getSkewY(),
+                          matrix.getSkewX(), matrix.getScaleY(),
+                          matrix.getTranslateX(), matrix.getTranslateY());
+        cairo_set_matrix(m_canvas, &cm);
+        checkError();
+    }
+
     virtual SkMatrix currentTransformMatrix()
     {
         cairo_matrix_t matrix;

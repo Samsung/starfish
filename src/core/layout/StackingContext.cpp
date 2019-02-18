@@ -123,7 +123,8 @@ GraphicsBufferHolder::GraphicsBufferHolder(CanvasSurface* s)
 GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
                                            size_t bufferHeight,
                                            size_t screenWidth,
-                                           size_t screenHeight)
+                                           size_t screenHeight,
+                                           StackingContext* sc)
     : m_bufferWidth(bufferWidth)
     , m_bufferHeight(bufferHeight)
     , m_tileDataWidth(bufferWidth)
@@ -134,25 +135,41 @@ GraphicsBufferHolder::GraphicsBufferHolder(size_t bufferWidth,
     STARFISH_ASSERT(m_bufferWidth);
     STARFISH_ASSERT(m_bufferHeight);
 
-    size_t wTextureCount = 1;
-    while (m_bufferWidth / wTextureCount >
-           CanvasSurface::g_canvasSurfaceTileSize) {
-        wTextureCount++;
-    }
-    m_tileDataWidth = ceil(m_bufferWidth / (float)wTextureCount);
-    m_horizontalTileCount = wTextureCount;
+    bool dontSplitGraphicsBufferCond = false;
 
-    size_t hTextureCount = 1;
-    while (m_bufferHeight / hTextureCount >
-           CanvasSurface::g_canvasSurfaceTileSize) {
-        hTextureCount++;
+    if (sc->owner()->style()->hasFilter()) {
+        dontSplitGraphicsBufferCond = true;
     }
-    m_tileDataHeight = ceil(m_bufferHeight / (float)hTextureCount);
-    m_verticalTileCount = hTextureCount;
 
-    m_surfaces.resize(wTextureCount * hTextureCount);
-    for (size_t i = 0; i < m_surfaces.size(); i++) {
-        m_surfaces[i] = nullptr;
+    if (dontSplitGraphicsBufferCond) {
+        m_tileDataWidth = m_bufferWidth;
+        m_horizontalTileCount = 1;
+        m_tileDataHeight = m_bufferHeight;
+        m_verticalTileCount = 1;
+
+        m_surfaces.resize(1);
+        m_surfaces[0] = nullptr;
+    } else {
+        size_t wTextureCount = 1;
+        while (m_bufferWidth / wTextureCount >
+               CanvasSurface::g_canvasSurfaceTileSize) {
+            wTextureCount++;
+        }
+        m_tileDataWidth = ceil(m_bufferWidth / (float)wTextureCount);
+        m_horizontalTileCount = wTextureCount;
+
+        size_t hTextureCount = 1;
+        while (m_bufferHeight / hTextureCount >
+               CanvasSurface::g_canvasSurfaceTileSize) {
+            hTextureCount++;
+        }
+        m_tileDataHeight = ceil(m_bufferHeight / (float)hTextureCount);
+        m_verticalTileCount = hTextureCount;
+
+        m_surfaces.resize(wTextureCount * hTextureCount);
+        for (size_t i = 0; i < m_surfaces.size(); i++) {
+            m_surfaces[i] = nullptr;
+        }
     }
 }
 
@@ -1317,7 +1334,8 @@ void StackingContext::applyStackingContextProperties(
 
 class FilterContext : public gc {
 public:
-    FilterContext(Canvas** origin, StackingContext* owner)
+    FilterContext(Canvas** origin, StackingContext* owner,
+                  StackingContext::PaintingStackingContextContext& ctx)
         : m_origin(origin)
         , m_originCanvas(*origin)
         , m_ownerStackingContext(owner)
@@ -1365,6 +1383,12 @@ public:
             size_t bufferWidth = (int)(maxX - minX);
             size_t bufferHeight = (int)(maxY - minY);
 
+            if (owner->owner()->node()->webView()->needsComposite()) {
+                auto& renderTarget = m_originCanvas->renderTargetInfo();
+                bufferWidth = renderTarget.m_width;
+                bufferHeight = renderTarget.m_height;
+            }
+
             m_nativeImageToApplyFilter =
                 NativeImageData::create(bufferWidth + ceil(m_maxRadiusOffset),
                                         bufferHeight + ceil(m_maxRadiusOffset));
@@ -1379,6 +1403,11 @@ public:
             m_canvasToApplyFilter->setColor(style->color());
             m_canvasToApplyFilter->setTextDecorationData(
                 m_originCanvas->textDecorationData());
+
+            if (owner->owner()->node()->webView()->needsComposite()) {
+                m_canvasToApplyFilter->postMatrix(
+                    m_originCanvas->currentTransformMatrix());
+            }
 
             m_canvasToApplyFilter->translate(ceil(m_maxRadiusOffset / 2),
                                              ceil(m_maxRadiusOffset / 2));
@@ -1406,7 +1435,7 @@ public:
         }
     }
 
-    void applyAllFilter()
+    void applyAllFilter(StackingContext::PaintingStackingContextContext& ctx)
     {
         auto webView = m_ownerStackingContext->owner()->node()->webView();
 
@@ -1426,32 +1455,72 @@ public:
             stride = m_nativeImageToApplyFilter->stride();
         }
 
-        auto style = m_ownerStackingContext->owner()->style();
-        if (style->hasAvailableFilter()) {
-            for (auto filter : *style->filter()) {
-                filter->apply(webView, buffer, width, height, stride);
+        size_t imageStartYPosition = height;
+        if (!m_ownerStackingContext->needsGraphicsBuffer()) {
+            delete m_canvasToApplyFilter;
+
+            LongTaskFinder t("testing painting result in FilterContext", 1);
+            uint32_t* ptr = (uint32_t*)m_nativeImageToApplyFilter->data();
+            size_t len = stride * height / 4;
+            for (size_t i = 0; i < len; i++) {
+                if (ptr[i]) {
+                    imageStartYPosition = i * 4 / stride;
+                    break;
+                }
             }
+
+            if (imageStartYPosition != height) {
+                // give a room for blurred image
+                auto offset = ceil(m_maxRadiusOffset / 2);
+                if ((int)imageStartYPosition - offset > 0) {
+                    imageStartYPosition -= offset;
+                } else {
+                    imageStartYPosition = 0;
+                }
+            }
+        } else {
+            // TODO
+            imageStartYPosition = 0;
         }
 
-        for (auto ancestor :
-             m_ownerStackingContext->ancestorsThatHasFilters()) {
-            style = ancestor->owner()->style();
-            for (auto filter : *style->filter()) {
-                filter->apply(webView, buffer, width, height, stride);
+        if (imageStartYPosition != height) {
+            auto style = m_ownerStackingContext->owner()->style();
+            if (style->hasAvailableFilter()) {
+                for (auto filter : *style->filter()) {
+                    filter->apply(webView,
+                                  buffer + imageStartYPosition * stride, width,
+                                  height - imageStartYPosition, stride);
+                }
+            }
+
+            for (auto ancestor :
+                 m_ownerStackingContext->ancestorsThatHasFilters()) {
+                style = ancestor->owner()->style();
+                for (auto filter : *style->filter()) {
+                    filter->apply(webView,
+                                  buffer + imageStartYPosition * stride, width,
+                                  height - imageStartYPosition, stride);
+                }
             }
         }
 
         if (!m_ownerStackingContext->needsGraphicsBuffer()) {
-            Unit::Rect rect(0, 0, m_nativeImageToApplyFilter->width(),
-                            m_nativeImageToApplyFilter->height());
-            float offset = ceil(m_maxRadiusOffset / 2);
-
-            m_originCanvas->translate(-offset, -offset);
-            m_originCanvas->drawImage(m_nativeImageToApplyFilter, rect);
-            m_originCanvas->translate(offset, offset);
-
+            if (imageStartYPosition != height) {
+                Unit::Rect rect(0, 0, m_nativeImageToApplyFilter->width(),
+                                m_nativeImageToApplyFilter->height());
+                float offset = ceil(m_maxRadiusOffset / 2);
+                m_originCanvas->save();
+                if (m_ownerStackingContext->owner()
+                        ->node()
+                        ->webView()
+                        ->needsComposite()) {
+                    m_originCanvas->setMatrix(SkMatrix::I());
+                }
+                m_originCanvas->translate(-offset, -offset);
+                m_originCanvas->drawImage(m_nativeImageToApplyFilter, rect);
+                m_originCanvas->restore();
+            }
             delete m_nativeImageToApplyFilter;
-            delete m_canvasToApplyFilter;
             (*m_origin) = m_originCanvas;
         }
     }
@@ -1571,10 +1640,10 @@ void StackingContext::fillGraphicsBufferContents(
     if (!canRejectPainting) {
         if (owner()->style()->hasAvailableFilter() ||
             m_ancestorsThatHasFilters.size()) {
-            FilterContext filterContext(&canvas, this);
+            FilterContext filterContext(&canvas, this, ctx);
             m_owner->paintStackingContextContent(canvas);
             m_owner->paintOutline(canvas);
-            filterContext.applyAllFilter();
+            filterContext.applyAllFilter(ctx);
         } else {
             m_owner->paintStackingContextContent(canvas);
             m_owner->paintOutline(canvas);
@@ -1996,7 +2065,7 @@ bool StackingContext::fillGraphicsBufferContents(
                 m_rareData->m_graphicsBufferHolder = new GraphicsBufferHolder(
                     bufferWidth, bufferHeight,
                     m_owner->node()->window()->innerWidth(),
-                    m_owner->node()->window()->innerHeight());
+                    m_owner->node()->window()->innerHeight(), this);
             }
         }
     } else {
@@ -2274,9 +2343,9 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     if (!canRejectPainting) {
         if ((owner()->style()->hasAvailableFilter() ||
              m_ancestorsThatHasFilters.size())) {
-            FilterContext filterContext(&canvas, this);
+            FilterContext filterContext(&canvas, this, ctx);
             m_owner->paintBackgroundAndBorders(canvas);
-            filterContext.applyAllFilter();
+            filterContext.applyAllFilter(ctx);
         } else {
             m_owner->paintBackgroundAndBorders(canvas);
         }
@@ -2362,10 +2431,10 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     if (!canRejectPainting) {
         if (owner()->style()->hasAvailableFilter() ||
             m_ancestorsThatHasFilters.size()) {
-            FilterContext filterContext(&canvas, this);
+            FilterContext filterContext(&canvas, this, ctx);
             m_owner->paintStackingContextContent(canvas);
             m_owner->paintOutline(canvas);
-            filterContext.applyAllFilter();
+            filterContext.applyAllFilter(ctx);
         } else {
             m_owner->paintStackingContextContent(canvas);
             m_owner->paintOutline(canvas);
