@@ -31,8 +31,8 @@ namespace Starfish {
 void TTS::initialize()
 {
 #ifdef STARFISH_ENABLE_TEST
-    m_isTTSEnabled = true;
-    if (m_isTTSEnabled) {
+    m_isAccessibilityMode = true;
+    if (m_isAccessibilityMode) {
         String* text = String::createASCIIString("Hi, I am Starfish");
         speech(nullptr, text);
     }
@@ -75,6 +75,34 @@ bool TTS::stopPlay()
 bool TTS::addText(const char* text)
 {
     return false;
+}
+
+void TTS::speak(SpeechSynthesisUtterance* utterance)
+{
+}
+
+void TTS::speakStoredUtterance()
+{
+}
+
+void TTS::pause()
+{
+}
+
+void TTS::resume()
+{
+}
+
+void TTS::cancel()
+{
+}
+
+void TTS::changeDefaultVoice(String* language, const int voiceType)
+{
+}
+
+void TTS::readyState()
+{
 }
 }
 #endif

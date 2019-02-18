@@ -1,0 +1,49 @@
+// https://w3c.github.io/speech-api/#tts-section
+
+[Exposed=Window]
+interface SpeechSynthesis : EventTarget {
+    [Unimplemented] readonly attribute boolean pending;
+    [Unimplemented] readonly attribute boolean speaking;
+    [Unimplemented] readonly attribute boolean paused;
+
+    void speak(SpeechSynthesisUtterance utterance);
+    void cancel();
+    void pause();
+    void resume();
+    sequence<SpeechSynthesisVoice> getVoices();
+
+    attribute EventHandler onvoiceschanged;
+};
+
+partial interface Window {
+    [SameObject] readonly attribute SpeechSynthesis speechSynthesis;
+};
+
+[Constructor(optional DOMString text = null),
+ ConstructorCallWith=Document,
+ RuntimeEnabled=ScriptedSpeech]
+interface SpeechSynthesisUtterance : EventTarget {
+    attribute DOMString text;
+    attribute DOMString lang;
+    [Unimplemented] attribute SpeechSynthesisVoice? voice;
+    [Unimplemented] attribute float volume;
+    attribute float rate;
+    [Unimplemented] attribute float pitch;
+
+    attribute EventHandler onstart;
+    attribute EventHandler onend;
+    attribute EventHandler onerror;
+    attribute EventHandler onpause;
+    attribute EventHandler onresume;
+    [Unimplemented] attribute EventHandler onmark;
+    [Unimplemented] attribute EventHandler onboundary;
+};
+
+[Exposed=Window]
+interface SpeechSynthesisVoice {
+    readonly attribute DOMString voiceURI;
+    readonly attribute DOMString name;
+    readonly attribute DOMString lang;
+    readonly attribute boolean localService;
+    [Rename=isDefault] readonly attribute boolean default;
+};

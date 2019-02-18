@@ -29,14 +29,20 @@
 #endif
 
 namespace Starfish {
+
 class Element;
 class TTS : public gc, public WebViewHoldable {
 public:
     TTS(WebView* webView)
         : WebViewHoldable(webView)
-        , m_isTTSEnabled(false)
+        , m_element(nullptr)
+        , m_isAccessibilityMode(false)
+        , m_isCreatedVoiceList(false)
         , m_state(-1)
         , m_mode(LWE::TTSMode::Default)
+        , m_utterance(nullptr)
+        , m_readyState(false)
+        , m_waitingState(false)
     {
         initialize();
     }
@@ -45,13 +51,13 @@ public:
     {
     }
 
-    bool isTTSEnabled()
+    bool isAccessibilityMode()
     {
-        return m_isTTSEnabled;
+        return m_isAccessibilityMode;
     }
-    void setTTSEnabled(bool value)
+    void setAccessibilityMode(bool value)
     {
-        m_isTTSEnabled = value;
+        m_isAccessibilityMode = value;
     }
 
     void setMode(LWE::TTSMode mode)
@@ -69,9 +75,43 @@ public:
         return m_element;
     }
 
+    SpeechSynthesisUtterance* utterance()
+    {
+        return m_utterance;
+    }
+
+    void setUtterance(SpeechSynthesisUtterance* u)
+    {
+        m_utterance = u;
+    }
+
+    GCUnorderedMap<uint32_t, SpeechSynthesisUtterance*>& utteranceList()
+    {
+        return m_utteranceList;
+    }
+
+    GCUnorderedMap<String*, int>& supportedVoiceList()
+    {
+        return m_supportedVoiceList;
+    }
+
+    String* defaultLanguage() const
+    {
+        return m_defaultLanguage;
+    }
+
     void destroy();
     void speech(Element* element, String* text);
-    const char* state(int s);
+    void speak(SpeechSynthesisUtterance* utterance);
+    void speakStoredUtterance();
+    void pause();
+    void resume();
+    void cancel();
+    // const char* state(tts_state_e s);
+
+    bool addText(const char* text);
+    void changeDefaultVoice(String* language, const int voiceType);
+    void readyState();
 
 private:
     void initialize();
@@ -79,15 +119,22 @@ private:
     bool createHandle();
     bool startPlay(const char* text);
     bool stopPlay();
-    bool addText(const char* text);
 
 #if defined(STARFISH_TIZEN)
     tts_h m_handle;
 #endif
     Element* m_element;
-    bool m_isTTSEnabled;
+    bool m_isAccessibilityMode;
+    bool m_isCreatedVoiceList;
     int m_state;
     LWE::TTSMode m_mode;
+    SpeechSynthesisUtterance* m_utterance;
+    GCUnorderedMap<uint32_t, SpeechSynthesisUtterance*> m_utteranceList;
+    GCUnorderedMap<String*, int> m_supportedVoiceList;
+    String* m_defaultLanguage;
+    int m_defaultVoiceType;
+    bool m_readyState;
+    bool m_waitingState;
 };
 }
 #endif
