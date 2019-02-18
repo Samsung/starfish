@@ -19,7 +19,7 @@ partial interface Window {
     [SameObject] readonly attribute SpeechSynthesis speechSynthesis;
 };
 
-[Constructor(optional DOMString text = null),
+[Constructor(optional DOMString text),
  ConstructorCallWith=Document,
  RuntimeEnabled=ScriptedSpeech]
 interface SpeechSynthesisUtterance : EventTarget {
