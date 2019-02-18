@@ -17,6 +17,7 @@
  *  USA
  */
 
+#ifdef STARFISH_ENABLE_TTS
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
@@ -25,10 +26,8 @@
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 
-#ifdef STARFISH_ENABLE_TTS
 #include "core/modules/tts/TextAlternativeHelper.h"
 #include "core/modules/tts/TTS.h"
-#endif
 
 namespace Starfish {
 
@@ -59,35 +58,26 @@ DEFINE_EVENT_LISTENER(SpeechSynthesis, voiceschanged);
 
 void SpeechSynthesis::speak(SpeechSynthesisUtterance* u)
 {
-#ifdef STARFISH_ENABLE_TTS
     document()->window()->webView()->tts()->speak(u);
-#endif
 }
 
 void SpeechSynthesis::cancel()
 {
-#ifdef STARFISH_ENABLE_TTS
     document()->window()->webView()->tts()->cancel();
-#endif
 }
 
 void SpeechSynthesis::pause()
 {
-#ifdef STARFISH_ENABLE_TTS
     document()->window()->webView()->tts()->pause();
-#endif
 }
 
 void SpeechSynthesis::resume()
 {
-#ifdef STARFISH_ENABLE_TTS
     document()->window()->webView()->tts()->resume();
-#endif
 }
 
 GCVector<SpeechSynthesisVoice*>& SpeechSynthesis::getVoices()
 {
-#ifdef STARFISH_ENABLE_TTS
     auto list = document()->window()->webView()->tts()->supportedVoiceList();
     size_t size = list.size();
     if (!m_isCreatedVoiceList && size > 0) {
@@ -108,6 +98,6 @@ GCVector<SpeechSynthesisVoice*>& SpeechSynthesis::getVoices()
     }
 
     return m_voiceList;
-#endif
 }
 }
+#endif // STARFISH_ENABLE_TTS
