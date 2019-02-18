@@ -163,6 +163,7 @@ public:
     virtual void translate(double x, double y) = 0;
     virtual void translate(LayoutUnit x, LayoutUnit y) = 0;
     virtual void postMatrix(const SkMatrix& matrix) = 0;
+    virtual void setMatrix(const SkMatrix& matrix) = 0;
     virtual SkMatrix currentTransformMatrix() = 0;
 
     virtual void clip(const Unit::Rect& rt) = 0;

@@ -4978,14 +4978,10 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                     radiusOffset *= 2;
                 }
 
-                auto orgWidth = width + ceil(radiusOffset);
-                auto orgHeight = height + ceil(radiusOffset);
-                auto imageWidth = orgWidth;
-                imageWidth *= dp;
-                auto imageHeight = orgHeight;
-                imageHeight *= dp;
+                auto imageWidth = width + ceil(radiusOffset);
+                auto imageHeight = height + ceil(radiusOffset);
                 NativeImageData* nativeImage =
-                    NativeImageData::create(imageWidth, imageHeight);
+                    NativeImageData::create(dp, imageWidth, imageHeight);
                 Canvas* cv = Canvas::create(node()->webView(), nativeImage);
                 cv->clearColor(Unit::Color(0, 0, 0, 0));
                 cv->setFont(s->font());
@@ -5000,14 +4996,15 @@ void InlineTextBox::paintInlineContent(Canvas* canvas,
                 cv->setTextDecorationData(tdc);
                 cv->translate(ceil(radiusOffset / 2), ceil(radiusOffset / 2));
                 cv->drawText(0, 0, contentWidth(), txt);
-
-                ShadowBlur sb(nativeImage->data(), nativeImage->width(),
-                              nativeImage->height(), nativeImage->stride());
-                sb.process(shadow->radius());
-
                 delete cv;
 
-                Unit::Rect rect(0, 0, orgWidth, orgHeight);
+                if (shadow->radius() > 0) {
+                    ShadowBlur sb(nativeImage->data(), nativeImage->width(),
+                                  nativeImage->height(), nativeImage->stride());
+                    sb.process(shadow->radius());
+                }
+
+                Unit::Rect rect(0, 0, imageWidth, imageHeight);
                 float offset = ceil(radiusOffset / 2);
                 canvas->translate(-offset + shadow->offsetX(),
                                   -offset + shadow->offsetY());

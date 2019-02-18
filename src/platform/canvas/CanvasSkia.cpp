@@ -280,6 +280,11 @@ public:
         m_canvas->concat(matrix);
     }
 
+    virtual void setMatrix(const SkMatrix& matrix)
+    {
+        m_canvas->setMatrix(matrix);
+    }
+
     virtual SkMatrix currentTransformMatrix()
     {
         return m_canvas->getTotalMatrix();
