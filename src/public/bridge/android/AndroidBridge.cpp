@@ -935,6 +935,17 @@ Java_com_samsung_android_lwe_LweWebViewImpl_setUserAgentString(
     webContainer->SetUserAgentString(uaString);
 }
 
+extern "C" JNIEXPORT jstring JNICALL
+Java_com_samsung_android_lwe_LweWebViewImpl_getUserAgentString(JNIEnv* env,
+                                                               jobject thiz,
+                                                               jlong wv)
+{
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    std::string result = webContainer->GetUserAgentString();
+    jstring jstr = env->NewStringUTF(result.c_str());
+    return jstr;
+}
+
 extern "C" JNIEXPORT void JNICALL
 Java_com_samsung_android_lwe_LweWebViewImpl_setCacheMode(JNIEnv* env,
                                                          jobject thiz, jlong wv,
@@ -944,6 +955,18 @@ Java_com_samsung_android_lwe_LweWebViewImpl_setCacheMode(JNIEnv* env,
     LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
     webContainer->SetCacheMode(mode);
 #endif
+}
+
+extern "C" JNIEXPORT jint JNICALL
+Java_com_samsung_android_lwe_LweWebViewImpl_getCacheMode(JNIEnv* env,
+                                                         jobject thiz, jlong wv)
+{
+    jint ret = 0;
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    LWE::WebContainer* webContainer = (LWE::WebContainer*)wv;
+    ret = webContainer->GetCacheMode();
+#endif
+    return ret;
 }
 
 extern "C" JNIEXPORT void JNICALL
