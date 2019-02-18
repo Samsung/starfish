@@ -27,6 +27,10 @@
 #include "rapidjson/document.h"
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
+#include "core/modules/threading/Thread.h"
+
+#include <nn.hpp>
+#include <nanomsg/pair.h>
 
 namespace Starfish {
 struct Request {
@@ -36,11 +40,18 @@ struct Request {
 
 Inspector::Inspector(WebView* wv)
     : m_webView(wv)
-    , m_zmqContext(new zmq::context_t(1))
-    , m_zmqSocket(nullptr)
+    , m_nnmSocket(nullptr)
     , m_addr()
     , m_isRunning(false)
 {
+}
+
+Inspector::~Inspector()
+{
+    STARFISH_LOG_INFO("Inspector::~Inspector()\n");
+    if (m_isRunning) {
+        stop();
+    }
 }
 
 void Inspector::sendInfoMessage(String* m)
@@ -66,11 +77,12 @@ void Inspector::sendInfoMessage(String* m)
     document.Accept(writer);
 
     std::string ownShipRadarString = strbuf.GetString();
-    zmq::message_t request(ownShipRadarString.data(),
-                           ownShipRadarString.size());
-    bool result = m_zmqSocket->send(request, ZMQ_NOBLOCK);
-    // STARFISH_LOG_INFO("inspector::sendInfoMessage %d, %d\n", (int)result,
-    // zmq_errno());
+    try {
+        m_nnmSocket->send(ownShipRadarString.data(), ownShipRadarString.size(),
+                          0);
+    } catch (const nn::exception& e) {
+        STARFISH_LOG_INFO("sending is failed due to %s\n", e.what());
+    }
 }
 
 void Inspector::sendErrorMessage(String* m)
@@ -96,11 +108,12 @@ void Inspector::sendErrorMessage(String* m)
     document.Accept(writer);
 
     std::string ownShipRadarString = strbuf.GetString();
-    zmq::message_t request(ownShipRadarString.data(),
-                           ownShipRadarString.size());
-    bool result = m_zmqSocket->send(request, ZMQ_NOBLOCK);
-    // STARFISH_LOG_INFO("inspector::sendErrorMessage %d, %d\n", (int)result,
-    // zmq_errno());
+    try {
+        m_nnmSocket->send(ownShipRadarString.data(), ownShipRadarString.size(),
+                          0);
+    } catch (const nn::exception& e) {
+        STARFISH_LOG_INFO("sending is failed due to %s\n", e.what());
+    }
 }
 
 void Inspector::sendWarnMessage(String* m)
@@ -126,11 +139,12 @@ void Inspector::sendWarnMessage(String* m)
     document.Accept(writer);
 
     std::string ownShipRadarString = strbuf.GetString();
-    zmq::message_t request(ownShipRadarString.data(),
-                           ownShipRadarString.size());
-    bool result = m_zmqSocket->send(request, ZMQ_NOBLOCK);
-    // STARFISH_LOG_INFO("inspector::sendWarnMessage %d, %d\n", (int)result,
-    // zmq_errno());
+    try {
+        m_nnmSocket->send(ownShipRadarString.data(), ownShipRadarString.size(),
+                          0);
+    } catch (const nn::exception& e) {
+        STARFISH_LOG_INFO("sending is failed due to %s\n", e.what());
+    }
 }
 
 void Inspector::sendDebugMessage(String* m)
@@ -156,18 +170,11 @@ void Inspector::sendDebugMessage(String* m)
     document.Accept(writer);
 
     std::string ownShipRadarString = strbuf.GetString();
-    zmq::message_t request(ownShipRadarString.data(),
-                           ownShipRadarString.size());
-    bool result = m_zmqSocket->send(request, ZMQ_NOBLOCK);
-    // STARFISH_LOG_INFO("inspector::sendDebugMessage %d, %d\n", (int)result,
-    // zmq_errno());
-}
-
-Inspector::~Inspector()
-{
-    STARFISH_LOG_INFO("Inspector::~Inspector()\n");
-    if (m_isRunning) {
-        stop();
+    try {
+        m_nnmSocket->send(ownShipRadarString.data(), ownShipRadarString.size(),
+                          0);
+    } catch (const nn::exception& e) {
+        STARFISH_LOG_INFO("sending is failed due to %s\n", e.what());
     }
 }
 
@@ -188,31 +195,27 @@ void* Inspector::worker(void* data)
 {
     Inspector* self = (Inspector*)data;
     self->m_isRunning = true;
-    self->m_zmqSocket = new zmq::socket_t(*(self->m_zmqContext), ZMQ_DEALER);
+    self->m_nnmSocket = new nn::socket(AF_SP, NN_PAIR);
 
     try {
-        self->m_zmqSocket->bind(self->m_addr);
-    } catch (const zmq::error_t& ex) {
+        self->m_nnmSocket->bind(self->m_addr.c_str());
+    } catch (const nn::exception& ex) {
         if (ex.num() == EADDRINUSE) {
             STARFISH_LOG_INFO("The requested address is already in use.\n");
         }
-        self->m_isRunning = false;
-        return nullptr;
+        goto exit;
     }
 
     while (self->m_isRunning) {
-        zmq::message_t request;
+        char* buffer = nullptr;
         try {
-            // STARFISH_LOG_INFO("inspector io thread wait\n");
-            if (!self->m_zmqSocket->recv(&request)) {
-                break;
-            }
-            if (request.size()) {
+            int nbytes = self->m_nnmSocket->recv(&buffer, NN_MSG, NN_DONTWAIT);
+
+            if (nbytes > 0) {
                 Request* r = new Request;
                 r->inspector = self;
-                std::string s((char*)request.data(),
-                              (char*)request.data() + request.size());
-                r->document.Parse(s.data());
+                std::string s(buffer, nbytes);
+                r->document.Parse(s.c_str());
 
                 if (std::string(r->document["command"].GetString()) == "ping") {
                     rapidjson::Document document;
@@ -235,30 +238,26 @@ void* Inspector::worker(void* data)
                     document.Accept(writer);
 
                     std::string ownShipRadarString = strbuf.GetString();
-                    zmq::message_t request(ownShipRadarString.data(),
-                                           ownShipRadarString.size());
-                    self->m_zmqSocket->send(request, ZMQ_NOBLOCK);
-
+                    self->m_nnmSocket->send(ownShipRadarString.data(),
+                                            ownShipRadarString.size(), 0);
                     delete r;
                 } else {
                     self->m_webView->messageLoop()
                         ->addIdlerWithNoGCRootingInOtherThread(
                             nullptr, Inspector::commandEvaluator, r);
                 }
+                nn::freemsg(buffer);
             }
-        } catch (const zmq::error_t& ex) {
-            // recv() throws ETERM when the zmq context is
-            // destroyed,
-            if (ex.num() == ETERM) {
-                STARFISH_LOG_INFO("zmq context was deleted\n");
-            } else {
-                STARFISH_LOG_INFO("inspector io thread error %d\n",
-                                  zmq_errno());
-            }
+        } catch (const nn::exception& e) {
+            STARFISH_LOG_INFO("recv failed due to %s\n", e.what());
             break;
         }
     }
-    delete self->m_zmqSocket;
+
+exit:
+    delete self->m_nnmSocket;
+    self->m_nnmSocket = nullptr;
+    self->m_isRunning = false;
     STARFISH_LOG_INFO("inspector io thread end\n");
     return nullptr;
 }
@@ -266,7 +265,7 @@ void* Inspector::worker(void* data)
 void Inspector::run(uint32_t port)
 {
     m_ioThread = new Thread(m_webView);
-    m_addr = "tcp://0.0.0.0:";
+    m_addr = "ws://0.0.0.0:";
     m_addr += std::to_string(port);
     STARFISH_LOG_INFO("inspector open server %s\n", m_addr.c_str());
     try {
@@ -283,9 +282,6 @@ void Inspector::stop()
 
     if (!m_ioThread) {
         return;
-    }
-    if (m_zmqContext) {
-        delete m_zmqContext;
     }
     m_ioThread->joinIfNeeds();
 }

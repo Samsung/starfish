@@ -20,8 +20,9 @@
 #if defined(STARFISH_ENABLE_INSPECTOR) && !defined(__StarfishInspector__)
 #define __StarfishInspector__
 
-#include <zmq.hpp>
-#include "core/modules/threading/Thread.h"
+namespace nn {
+class socket;
+}
 
 namespace Starfish {
 
@@ -43,8 +44,7 @@ private:
 
 protected:
     WebView* m_webView;
-    zmq::context_t* m_zmqContext;
-    zmq::socket_t* m_zmqSocket;
+    nn::socket* m_nnmSocket;
     Thread* m_ioThread;
     std::string m_addr;
     bool m_isRunning;

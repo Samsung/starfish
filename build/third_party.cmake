@@ -71,49 +71,52 @@ TARGET_COMPILE_OPTIONS (webm PUBLIC ${THIRD_PARTY_CXXFLAGS})
 
 
 #######################################################
-# ZERO MQ
+# NANOMSG
 #######################################################
-# zmq is not used for tizen
+# Nanomsg is not used for tizen
 IF (NOT ${HOST} STREQUAL "tizen")
-    SET (ZMQ_CFLAGS_COMMON "-g3 -fPIC -I${THIRD_PARTY_ROOT}/zeromq/tweetnacl/contrib/randombytes -I${THIRD_PARTY_ROOT}/zeromq/tweetnacl/src")
+    SET (NANOMSG_CFLAGS_COMMON "-g3 -fPIC")
     IF (${CUSTOM} STREQUAL "unified_wearable")
-        SET (ZMQ_CFLAGS_CUSTOM "-Os")
+        SET (NANOMSG_CFLAGS_CUSTOM "-Os")
     ENDIF()
 
     IF (${ARCH} STREQUAL "x86")
-        SET (ZMQ_CFLAGS_ARCH "-m32")
+        SET (NANOMSG_CFLAGS_ARCH "-m32")
     ELSEIF (${ARCH} STREQUAL "arm")
-        SET (ZMQ_CFLAGS_ARCH "-march=armv7-a -mthumb -finline-limit=64")
+        SET (NANOMSG_CFLAGS_ARCH "-march=armv7-a -mthumb -finline-limit=64")
     ENDIF()
 
     IF (${MODE} STREQUAL "debug")
-        SET (ZMQ_CFLAGS_MODE "-O0")
+        SET (NANOMSG_CFLAGS_MODE "-O0")
     ELSE()
-        SET (ZMQ_CFLAGS_MODE "-O2")
+        SET (NANOMSG_CFLAGS_MODE "-O2")
     ENDIF()
 
-    SET (ZMQ_CFLAGS "${ZMQ_CFLAGS_COMMON} ${ZMQ_CFLAGS_CUSTOM} ${ZMQ_CFLAGS_ARCH} ${ZMQ_CFLAGS_MODE}")
+    SET (NANOMSG_CFLAGS "${NANOMSG_CFLAGS_COMMON} ${NANOMSG_CFLAGS_CUSTOM} ${NANOMSG_CFLAGS_ARCH} ${NANOMSG_CFLAGS_MODE}")
+    SET (NANOMSG_CUSTOM -DNN_ENABLE_DOC=OFF -DNN_TESTS=OFF -DNN_TOOLS=OFF -DNN_ENABLE_GETADDRINFO_A=OFF -DCMAKE_INSTALL_PREFIX=/dist)
 
-    SET (ZMQ_BUILDDIR ${THIRD_PARTY_ROOT}/zeromq/out/${HOST}/${ARCH}/${MODE}.shared)
-    SET (ZMQ_LOCAL_TARGET ${ZMQ_BUILDDIR}/.libs/libzmq.so)
-    SET (ZMQ_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libzmq.so)
+    SET (NANOMSG_BUILDDIR ${THIRD_PARTY_ROOT}/nanomsg/out/${HOST}/${ARCH}/${MODE}.shared)
+    SET (NANOMSG_LOCAL_TARGET ${NANOMSG_BUILDDIR}/libnanomsg.so)
+    SET (NANOMSG_TARGET ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libnanomsg.so)
 
-    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_LOCAL_TARGET}
-                        COMMENT "BUILD ZMQ"
-                        COMMAND ${CMAKE_COMMAND} -E make_directory ${ZMQ_BUILDDIR}
-                        COMMAND cd ${ZMQ_BUILDDIR} && ../../../../configure --enable-static CFLAGS=${ZMQ_CFLAGS} LDFLAGS=${ZMQ_CFLAGS} CXXFLAGS=${ZMQ_CFLAGS}
-                        COMMAND cd ${ZMQ_BUILDDIR} && make -j
+    ADD_CUSTOM_COMMAND (OUTPUT ${NANOMSG_LOCAL_TARGET}
+                        COMMENT "BUILD NANOMSG"
+                        COMMAND ${CMAKE_COMMAND} -E make_directory ${NANOMSG_BUILDDIR}
+                        COMMAND cd ${NANOMSG_BUILDDIR} && cmake ../../../../ -DCMAKE_C_FLAGS=${NANOMSG_CFLAGS} -DCMAKE_CXX_FLAGS=${NANOMSG_CFLAGS} ${NANOMSG_CUSTOM}
+                        COMMAND cd ${NANOMSG_BUILDDIR} && make -j
     )
 
-    ADD_CUSTOM_COMMAND (OUTPUT ${ZMQ_TARGET}
-                        DEPENDS ${ZMQ_LOCAL_TARGET}
-                        COMMENT "COPY ZMQ"
-                        COMMAND cp -P ${ZMQ_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+    ADD_CUSTOM_COMMAND (OUTPUT ${NANOMSG_TARGET}
+                        DEPENDS ${NANOMSG_LOCAL_TARGET}
+                        COMMENT "COPY NANOMSG"
+                        COMMAND cp -P ${NANOMSG_LOCAL_TARGET}* ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/.
+                        COMMENT "INSTALL NANOMSG"
+                        COMMAND cd ${NANOMSG_BUILDDIR} && make DESTDIR=${NANOMSG_BUILDDIR}/../../../../ install
     )
 
-    ADD_CUSTOM_TARGET (zmq
-                       DEPENDS ${ZMQ_TARGET}
-                       COMMAND echo "ZMQ TARGET"
+    ADD_CUSTOM_TARGET (nanomsg
+                       DEPENDS ${NANOMSG_TARGET}
+                       COMMAND echo "NANOMSG TARGET"
     )
 ENDIF()
 
@@ -283,7 +286,7 @@ IF (NOT ${BACKEND} STREQUAL "efl_skia")
 ENDIF()
 
 IF (NOT ${HOST} STREQUAL "tizen")
-    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${ZMQ_TARGET})
+    SET (STARFISH_LIBRARIES_THIRD_PARTY ${STARFISH_LIBRARIES_THIRD_PARTY} ${NANOMSG_TARGET})
 ENDIF()
 
 IF (${ARCH} STREQUAL "x64" AND (${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl"))

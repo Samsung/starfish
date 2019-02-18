@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<script src="node_modules/nanomsg-browser/src/nanomsg.js" charset="utf-8"></script>
 <html>
   <head>
     <title>Starfish Inspector</title>
@@ -206,8 +207,7 @@ console = (function(){
 })()
 
 window.onerror = function(e) { console.log(e) }
-var zmq = require('zmq')
-  , sock = zmq.socket('dealer');
+const sock = new nanomsg.Socket(nanomsg.PAIR);
 
 
 /*
@@ -223,15 +223,18 @@ console.log('Start monitoring...');
 sock.monitor(500, 0);
 */
 
-var addr = 'tcp://127.0.0.1:23888'
+var addr = 'ws://127.0.0.1:23888';
+
 if (nw.App.argv[0]) {
     addr = nw.App.argv[0]
 }
-sock.connect(addr);
-console.log('Worker connected to port ' + addr);
+
+sock.connect(addr).then(() => {
+    console.log('Worker connected to port ' + addr);
+});
 
 
-sock.on('message', function(msg){
+sock.on('data', function(msg){
   console.log('recv: %s', msg.toString());
   var obj = JSON.parse(msg.toString());
   if (obj.command == "console-info") {
