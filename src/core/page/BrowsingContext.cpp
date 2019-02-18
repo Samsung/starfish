@@ -81,7 +81,7 @@ BrowsingContext* BrowsingContext::create(HTMLIFrameElement* sourceElement)
 
 BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source)
     : WebViewHoldable(webView)
-    , ScriptContext(webView->messageLoop())
+    , ScriptContext(webView)
     , m_webView(webView)
     , m_window(nullptr)
     , m_parentBrowsingContext(source ? source->document()->browsingContext()
@@ -118,6 +118,11 @@ void BrowsingContext::initFlags()
     m_hasRootElementBackground = false;
     m_hasBodyElementBackground = false;
     m_pendingStyleSheetCount = 0;
+}
+
+ScriptBindingInstance* BrowsingContext::scriptBindingInstance()
+{
+    return window()->scriptBindingInstance();
 }
 
 void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,

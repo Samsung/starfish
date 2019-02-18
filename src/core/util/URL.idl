@@ -2,7 +2,7 @@
 // NOTE Using DOMString instead of USVString
 
 [Constructor(DOMString url, optional DOMString base),
- ConstructorCallWith=ScriptContext,
+ ConstructorCallWith=ScriptBindingInstance,
  Exposed=(Window,Worker)]
 interface URL {
   stringifier attribute DOMString href;

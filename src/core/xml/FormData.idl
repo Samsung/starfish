@@ -4,7 +4,7 @@
 typedef USVString FormDataEntryValue;
 
 [Constructor(optional HTMLFormElement form),
- ConstructorCallWith=ScriptContext,
+ ConstructorCallWith=ScriptBindingInstance,
  Exposed=(Window,Worker)]
 interface FormData {
   void append(USVString name, USVString value);

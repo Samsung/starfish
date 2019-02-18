@@ -65,6 +65,7 @@ class Document;
 class ScriptEngineInstance;
 class ScriptBindingInstance;
 class String;
+class GlobalScope;
 
 #define FOR_EACH_DECLARE_FN(exportName)               \
     Escargot::FunctionObjectRef* binding##exportName( \
@@ -88,6 +89,11 @@ public:
     Window* ownerWindow()
     {
         return m_ownerWindow;
+    }
+
+    GlobalScope* globalScope()
+    {
+        return m_globalScope;
     }
 
 #define FOR_EACH_GETTER_FN(exportName)                                   \
@@ -143,6 +149,7 @@ public:
 
 protected:
     Escargot::ContextRef* m_scriptContext;
+    GlobalScope* m_globalScope;
     Window* m_ownerWindow;
     Document* m_ownerDocument;
 #ifdef TIZEN_DEVICE_API

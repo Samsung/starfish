@@ -46,7 +46,7 @@
 #include "core/page/Location.h"
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
-#include "core/page/WindowOrWorkerGlobalScope.h"
+#include "core/page/GlobalScope.h"
 #include "core/page/Serializer.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
@@ -71,6 +71,7 @@ Window* Window::create(BrowsingContext* browsingContext, ResourceURL* url,
 Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
                uint32_t initialWidth, uint32_t initialHeight)
     : EventTarget(nullptr)
+    , GlobalScope(browsingContext)
     , m_browsingContext(browsingContext)
     , m_history(nullptr)
     , m_navigator(nullptr)
@@ -81,8 +82,6 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     , m_height(initialHeight)
     , m_cssTarget(nullptr)
     , m_frames(nullptr)
-    , m_windowOrWorkerGlobalScope(
-          new WindowOrWorkerGlobalScope(browsingContext))
 {
     /*
         GC_REGISTER_FINALIZER_NO_ORDER(
@@ -92,7 +91,6 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     */
     m_scriptBindingInstance = new ScriptBindingInstance(
         browsingContext->webView()->scriptEngineInstance(), this);
-    m_browsingContext->setScriptBindingInstance(m_scriptBindingInstance);
 
     // TODO: use location to open a new document
     m_document = new HTMLDocument(this, m_scriptBindingInstance, url,

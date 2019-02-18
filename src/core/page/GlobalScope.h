@@ -17,18 +17,37 @@
  *  USA
  */
 
-#include "binding/ScriptContextHoldable.h"
-#include "core/page/ScriptContext.h"
+#ifndef __StarfishGlobalScope__
+#define __StarfishGlobalScope__
 
 namespace Starfish {
 
-ScriptBindingInstance* ScriptContextHoldable::scriptBindingInstance()
-{
-    return m_scriptContext->scriptBindingInstance();
+class ScriptBindingInstance;
+class ScriptContext;
+
+// TODO: Move WindowOrWorkerGlobalScope feature included in Window class
+class GlobalScope {
+public:
+    virtual ~GlobalScope()
+    {
+    }
+
+    virtual ScriptBindingInstance* scriptBindingInstance() = 0;
+
+    ScriptContext* scriptContext()
+    {
+        return m_scriptContext;
+    }
+
+protected:
+    GlobalScope(ScriptContext* scriptContext)
+        : m_scriptContext(scriptContext)
+    {
+    }
+
+private:
+    ScriptContext* m_scriptContext;
+};
 }
 
-MessageLoop* ScriptContextHoldable::messageLoop()
-{
-    return m_scriptContext->messageLoop();
-}
-}
+#endif

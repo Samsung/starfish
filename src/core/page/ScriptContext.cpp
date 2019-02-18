@@ -21,21 +21,6 @@
 
 namespace Starfish {
 
-void ScriptContext::setScriptBindingInstance(
-    ScriptBindingInstance* scriptBindingInstance)
-{
-    m_scriptBindingInstance = scriptBindingInstance;
-}
-ScriptBindingInstance* ScriptContext::scriptBindingInstance() const
-{
-    return m_scriptBindingInstance;
-}
-
-MessageLoop* ScriptContext::messageLoop() const
-{
-    return m_messageLoop;
-}
-
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 ServiceWorker* ScriptContext::activeServiceWorker() const

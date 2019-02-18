@@ -61,6 +61,7 @@ ScriptBindingInstance::ScriptBindingInstance(
             NULL, NULL, NULL);
     */
     m_scriptContext = ContextRef::create(engineInstance->engineInstance());
+    m_globalScope = ownerWindow;
     m_ownerWindow = ownerWindow;
     m_ownerDocument = nullptr;
 #ifdef TIZEN_DEVICE_API
@@ -106,13 +107,13 @@ static ValueRef* _logConsoleFunction(ExecutionStateRef* state,
                                      ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebView(state->context())
+    fetchWebBase(state->context())
         ->console()
         ->log(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchWebView(state->context())
+        fetchWebBase(state->context())
             ->console()
             ->log(toBrowserStringForConsole(state, val));
     }
@@ -125,13 +126,13 @@ static ValueRef* _infoConsoleFunction(ExecutionStateRef* state,
                                       ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebView(state->context())
+    fetchWebBase(state->context())
         ->console()
         ->info(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchWebView(state->context())
+        fetchWebBase(state->context())
             ->console()
             ->info(toBrowserStringForConsole(state, val));
     }
@@ -143,13 +144,13 @@ static ValueRef* _errorConsoleFunction(ExecutionStateRef* state,
                                        ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebView(state->context())
+    fetchWebBase(state->context())
         ->console()
         ->error(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchWebView(state->context())
+        fetchWebBase(state->context())
             ->console()
             ->error(toBrowserStringForConsole(state, val));
     }
@@ -161,13 +162,13 @@ static ValueRef* _warnConsoleFunction(ExecutionStateRef* state,
                                       ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebView(state->context())
+    fetchWebBase(state->context())
         ->console()
         ->warn(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchWebView(state->context())
+        fetchWebBase(state->context())
             ->console()
             ->warn(toBrowserStringForConsole(state, val));
     }
@@ -179,13 +180,13 @@ static ValueRef* _debugConsoleFunction(ExecutionStateRef* state,
                                        ValueRef** argv, bool isNewExpression)
 {
     ValueRef* val = argc >= 1 ? argv[0] : ValueRef::createUndefined();
-    fetchWebView(state->context())
+    fetchWebBase(state->context())
         ->console()
         ->debug(toBrowserStringForConsole(state, val));
 
     for (size_t i = 1; i < argc; i++) {
         ValueRef* val = argv[i];
-        fetchWebView(state->context())
+        fetchWebBase(state->context())
             ->console()
             ->debug(toBrowserStringForConsole(state, val));
     }

@@ -24,13 +24,12 @@ namespace Starfish {
 
 class ServiceWorker;
 class ScriptBindingInstance;
-class MessageLoop;
+class WebBase;
 
 class ScriptContext {
 public:
-    ScriptContext(MessageLoop* messageLoop)
-        : m_messageLoop(messageLoop)
-        , m_scriptBindingInstance(nullptr)
+    ScriptContext(WebBase* webBase)
+        : m_webBase(webBase)
     {
     }
 
@@ -47,13 +46,15 @@ public:
         return false;
     }
 
-    void setScriptBindingInstance(ScriptBindingInstance* scriptBindingInstance);
-    ScriptBindingInstance* scriptBindingInstance() const;
-    MessageLoop* messageLoop() const;
+    virtual ScriptBindingInstance* scriptBindingInstance() = 0;
+
+    WebBase* webBase() const
+    {
+        return m_webBase;
+    }
 
 protected:
-    MessageLoop* m_messageLoop;
-    ScriptBindingInstance* m_scriptBindingInstance;
+    WebBase* m_webBase;
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 public:

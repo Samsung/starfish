@@ -220,7 +220,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
                  String* defaultFontName, const ScreenInfo& info,
                  String* customUserAgentString,
                  String* builtinPolyfillPathString)
-    : StarfishHoldable(starfish)
+    : WebBase(starfish)
     , m_platformWindow(PlatformWindow::create(starfish, w, h))
     , m_topLevelBrowsingContext(nullptr)
     , m_scriptEngineInstance(nullptr)
