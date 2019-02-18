@@ -33,8 +33,8 @@ SET (STARFISH_INCLUDE_DIRS
     ${ESCARGOT_ROOT}/src/api
     ${THIRD_PARTY_ROOT}/skia_matrix
     ${THIRD_PARTY_ROOT}/skia_matrix/include/core
-    ${THIRD_PARTY_ROOT}/zeromq/include
-    ${THIRD_PARTY_ROOT}/cppzmq
+    ${THIRD_PARTY_ROOT}/nanomsg/dist/include
+    ${THIRD_PARTY_ROOT}/nanomsgcpp
     ${THIRD_PARTY_ROOT}/clipper/cpp
     ${THIRD_PARTY_ROOT}/earcut.hpp/include/mapbox
     ${STARFISH_TIZEN_CUSTOM_INCLUDE_DIRS}
@@ -93,7 +93,7 @@ IF (NOT ${BACKEND} STREQUAL "efl_skia")
     SET (STARFISH_DEPENDENCIES_BACKEND skia_matrix)
 ENDIF()
 IF (NOT ${HOST} STREQUAL "tizen")
-    SET (STARFISH_DEPENDENCIES_HOST zmq)
+    SET (STARFISH_DEPENDENCIES_HOST nanomsg)
 ENDIF()
 IF (${ARCH} STREQUAL "x64" AND (${BACKEND} STREQUAL "dali" OR ${BACKEND} STREQUAL "glfw_cairo_gl"))
     SET (STARFISH_DEPENDENCIES_EXTRA tuv)

@@ -53,3 +53,4 @@ core # dump
 autogen_*.html
 third_party/libtuv/build/
 third_party/libtuv/include/tuv__config.h
+third_party/nanomsg/dist
