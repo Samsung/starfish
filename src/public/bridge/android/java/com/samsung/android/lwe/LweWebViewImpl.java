@@ -68,8 +68,10 @@ public class LweWebViewImpl implements LweWebView {
         COMPOSING_END
     }
 
-    private static String sLocale = "ko-KR";
-    private static String sTimezone = "Asia/Seoul";
+    private final static String sLocale = "ko-KR";
+    private final static String sTimezone = "Asia/Seoul";
+    private final static String[] allowedMimetypes = {"text/html", "text/plain"};
+    private final static String[] allowedEncodings = {"UTF-8", "utf8"};
 
     private float sDpr = 1;
     private long mWebViewInternalHandle;
@@ -573,10 +575,9 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     public void loadData(String data, String mimeType, String encoding) {
-        if (data == null) {
-            return;
+        if (mWebViewInternalHandle != 0 && data != null && isSupportedMimeType(mimeType) && isSupportedEncoding(encoding)) {
+            loadData(mWebViewInternalHandle, data);
         }
-        loadData(mWebViewInternalHandle, data);
     }
 
     public void reload() {
@@ -710,6 +711,25 @@ public class LweWebViewImpl implements LweWebView {
     public void setDownloadListener(SemDownloadListener listener) {
         mDownloadListener = listener;
     }
+
+    boolean isSupportedMimeType(String mimeType) {
+        for (String str: allowedMimetypes) {
+            if (mimeType.equalsIgnoreCase(str)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    boolean isSupportedEncoding(String encoding) {
+        for (String str: allowedEncodings) {
+            if (encoding.equalsIgnoreCase(str)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     // Following methods are internal use only
     native private void loadUrl(long starfish, String url);
