@@ -94,7 +94,8 @@ protected:
 
 class SpeechSynthesisUtterance : public EventTarget {
 public:
-    SpeechSynthesisUtterance(Document* document, String* text)
+    SpeechSynthesisUtterance(Document* document,
+                             String* text = String::emptyString)
         : EventTarget(document)
         , m_id(0)
         , m_text(text)
