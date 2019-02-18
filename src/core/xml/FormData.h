@@ -21,7 +21,6 @@
 #define __StarfishFormData__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/ScriptContextHoldable.h"
 #include "binding/IterationSource.h"
 #include "core/dom/HTMLFormElement.h"
 
@@ -29,7 +28,7 @@ namespace Starfish {
 
 typedef String FormDataEntryValue;
 
-class FormData : public ScriptWrappable, public ScriptContextHoldable {
+class FormData : public ScriptWrappable {
 public:
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -37,10 +36,10 @@ public:
     virtual bool isFormData() const override;
     virtual ScriptBindingInstance* scriptBindingInstance() override
     {
-        return ScriptContextHoldable::scriptBindingInstance();
+        return m_scriptBindingInstance;
     }
 
-    FormData(ScriptContext* scriptContext, HTMLFormElement* form = nullptr);
+    FormData(ScriptBindingInstance* instance, HTMLFormElement* form = nullptr);
 
     void set(String* name, String* value);
     void append(String* name, String* value);
@@ -53,6 +52,7 @@ public:
     startIteration(ExecutionStateRef* state);
 
 private:
+    ScriptBindingInstance* m_scriptBindingInstance;
     GCVector<FormDataSetItem*>* m_list;
     GCVector<FormDataSetItem*>::iterator findByName(String* name);
 };

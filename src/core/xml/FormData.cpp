@@ -25,10 +25,10 @@ using namespace Escargot;
 
 namespace Starfish {
 
-FormData::FormData(ScriptContext* scriptContext,
+FormData::FormData(ScriptBindingInstance* instance,
                    HTMLFormElement* form /*= nullptr*/)
     : ScriptWrappable(this)
-    , ScriptContextHoldable(scriptContext)
+    , m_scriptBindingInstance(instance)
 {
     if (form) {
         m_list = form->createFormDataSet(nullptr);

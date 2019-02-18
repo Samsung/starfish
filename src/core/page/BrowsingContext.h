@@ -81,6 +81,8 @@ public:
 
     void initFlags();
 
+    ScriptBindingInstance* scriptBindingInstance();
+
     Window* window()
     {
         return m_window;

@@ -23,6 +23,7 @@
 #include "core/dom/Scrolling.h"
 #include "core/fetch/Fetch.h"
 #include "core/modules/tts/SpeechSynthesis.h"
+#include "core/page/GlobalScope.h"
 
 namespace Starfish {
 
@@ -41,7 +42,6 @@ class Screen;
 class ScriptBindingInstance;
 class StorageNamespace;
 class WebView;
-class WindowOrWorkerGlobalScope;
 
 struct ScrollOptions {
 public:
@@ -168,7 +168,7 @@ private:
 
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
-class Window : public EventTarget {
+class Window : public EventTarget, public GlobalScope {
     friend class MessageLoop;
     friend class Timer;
     friend class Node;
@@ -346,11 +346,6 @@ public:
     Promise* fetch(RequestInfo& input);
     Promise* fetch(RequestInfo& input, RequestInit& init);
 
-    WindowOrWorkerGlobalScope* windowOrWorkerGlobalScope()
-    {
-        return m_windowOrWorkerGlobalScope;
-    }
-
 #ifdef STARFISH_ENABLE_TEST
     void setNetworkState(bool state);
     void screenShot(std::string filePath, void (*callback)(void*), void* data);
@@ -472,8 +467,6 @@ private:
 
     Node* m_cssTarget;
     NodeList* m_frames;
-
-    WindowOrWorkerGlobalScope* m_windowOrWorkerGlobalScope;
 };
 }
 

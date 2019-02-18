@@ -17,28 +17,34 @@
  *  USA
  */
 
-#ifndef __StarfishWindowOrWorkerGlobalScope__
-#define __StarfishWindowOrWorkerGlobalScope__
+#ifndef __StarfishWebBase__
+#define __StarfishWebBase__
+
+#include "binding/StarfishHoldable.h"
 
 namespace Starfish {
 
-class ScriptContext;
+class MessageLoop;
+class Console;
+class Inspector;
 
-// TODO: Move WindowOrWorkerGlobalScope feature included in Window class
-class WindowOrWorkerGlobalScope : public gc {
+class WebBase : public StarfishHoldable {
 public:
-    WindowOrWorkerGlobalScope(ScriptContext* scriptContext)
-        : m_scriptContext(scriptContext)
+    virtual ~WebBase()
     {
     }
+    virtual MessageLoop* messageLoop() const = 0;
+    virtual Console* console() const = 0;
 
-    ScriptContext* scriptContext()
+#if defined(STARFISH_ENABLE_INSPECTOR)
+    virtual Inspector* inspector() const = 0;
+#endif
+
+protected:
+    WebBase(Starfish* starfish)
+        : StarfishHoldable(starfish)
     {
-        return m_scriptContext;
     }
-
-    ScriptContext* m_scriptContext;
 };
 }
-
 #endif

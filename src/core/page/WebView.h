@@ -20,8 +20,8 @@
 #ifndef __StarfishWebView__
 #define __StarfishWebView__
 
-#include "binding/StarfishHoldable.h"
 #include "browser/history/HistoryManager.h"
+#include "core/page/WebBase.h"
 #include "core/page/RenderResult.h"
 #include "platform/public/ScreenInfo.h"
 
@@ -148,7 +148,7 @@ enum class KeyEventKind;
 enum class MouseEventKind;
 enum class CompositionEventKind;
 
-class WebView : public StarfishHoldable, public gc {
+class WebView : public WebBase, public gc {
     friend class BrowsingContext;
     friend class StackingContext;
     friend class PlatformWindow;
@@ -397,7 +397,7 @@ public:
     }
 #endif
 
-    MessageLoop* messageLoop()
+    MessageLoop* messageLoop() const
     {
         return m_messageLoop;
     }
@@ -413,7 +413,7 @@ public:
     }
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
-    Inspector* inspector()
+    Inspector* inspector() const
     {
         return m_inspector;
     }
@@ -460,7 +460,7 @@ public:
         return m_publicLayerUserDataMap;
     }
 
-    Console* console()
+    Console* console() const
     {
         return m_console;
     }

@@ -29,9 +29,8 @@ class MediaSource;
 
 class URL : public ScriptWrappable {
 public:
-    URL(ScriptContext* scriptContext, String* url);
-    URL(ScriptContext* scriptContext, String* url, String* baseURL);
-    URL(ScriptBindingInstance* ins, String* url, String* baseURL);
+    URL(ScriptBindingInstance* instance, String* url);
+    URL(ScriptBindingInstance* instance, String* url, String* baseURL);
 
     static void revokeObjectURL(Document* document, String* blobURLRef);
     static String* createObjectURL(Blob* blob);
