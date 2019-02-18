@@ -82,9 +82,6 @@ public class LweWebViewImpl implements LweWebView {
     private SemDownloadListener mDownloadListener = null;
     private SemWebSettings mWebSettings = null;
 
-    private int mCacheMode = SemWebSettings.LOAD_DEFAULT;
-    private String mDefaultUserAgent = null;
-    private String mUserAgentString = null;
     private LweWebViewImpl.ImeComposingStatus mComposingStatus = LweWebViewImpl.ImeComposingStatus.NORMAL;
     private String mIMEComposingStr = null;
     private SemWebView mLWEView = null;
@@ -160,15 +157,21 @@ public class LweWebViewImpl implements LweWebView {
     }
 
     public String getDefaultUserAgent(Context context) {
-        return mDefaultUserAgent;
+        return getDefaultUserAgent();
     }
 
     public String getUserAgentString() {
-        return mUserAgentString;
+        if (mWebViewInternalHandle != 0) {
+            return getUserAgentString(mWebViewInternalHandle);
+        }
+        return getDefaultUserAgent();
     }
 
     public int getCacheMode() {
-        return mCacheMode;
+        if (mWebViewInternalHandle != 0) {
+            return getCacheMode(mWebViewInternalHandle);
+        }
+        return SemWebSettings.LOAD_DEFAULT;
     }
 
     public void setUserAgentString(String userAgent) {
@@ -237,10 +240,12 @@ public class LweWebViewImpl implements LweWebView {
         }
         init();
 
+        String initialUAString = getDefaultUserAgent();
+
         mWindowWidth = mWindowHeight = 1;
         mWebViewInternalHandle =
                 create(mWindowWidth, mWindowHeight, sDpr,
-                        mUserAgentString, sLocale, sTimezone,
+                        initialUAString, sLocale, sTimezone,
                         localStoragePath, cookiePath, cachePath);
         mLWEView.getHolder().addCallback(
                 new SurfaceHolder.Callback() {
@@ -291,11 +296,6 @@ public class LweWebViewImpl implements LweWebView {
                 }
             }
         });
-
-        mDefaultUserAgent = getDefaultUserAgent();
-        if (mUserAgentString == null) {
-            mUserAgentString = mDefaultUserAgent;
-        }
 
         mLWEView.setOnKeyListener(new View.OnKeyListener() {
             @Override
@@ -742,7 +742,9 @@ public class LweWebViewImpl implements LweWebView {
 
     // Accessed by SemWebSettings
     native public void setUserAgentString(long starfish, String userAgent);
+    native public String getUserAgentString(long starfish);
     native public void setCacheMode(long starfish, int mode);
+    native public int getCacheMode(long starfish);
     native public void setDefaultFontSize(long starfish, int size);
     native public int getDefaultFontSize(long starfish);
 

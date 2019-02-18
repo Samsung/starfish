@@ -1021,6 +1021,15 @@ void WebContainer::SetUserAgentString(const std::string& userAgent)
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 
+std::string WebContainer::GetUserAgentString()
+{
+    std::string ret;
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    ret = TO_WEBVIEW(m_impl)->userAgent()->toUTF8NonGCString();
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    return ret;
+}
+
 void WebContainer::SetCacheMode(int mode)
 {
     START_ASYNC_THREADED_PUBLIC_API_WRAPPER
@@ -1030,6 +1039,19 @@ void WebContainer::SetCacheMode(int mode)
     }
 #endif
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
+}
+
+int WebContainer::GetCacheMode()
+{
+    int ret = 0;
+#ifdef STARFISH_ENABLE_HTTPCACHE
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    if (TO_STARFISH(m_impl)->httpCache() != nullptr) {
+        ret = TO_STARFISH(m_impl)->httpCache()->cacheMode();
+    }
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+#endif
+    return ret;
 }
 
 void WebContainer::SetDefaultFontSize(uint32_t size)

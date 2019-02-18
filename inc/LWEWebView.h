@@ -219,7 +219,9 @@ public:
     void CallHandler(const std::string& handler, void* param);
 
     void SetUserAgentString(const std::string& userAgent);
+    std::string GetUserAgentString();
     void SetCacheMode(int mode);
+    int GetCacheMode();
     void SetDefaultFontSize(uint32_t size);
     uint32_t GetDefaultFontSize();
 
