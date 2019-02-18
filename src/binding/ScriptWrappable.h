@@ -69,7 +69,8 @@ template <typename T = STARFISH_GLOBAL_BINDING_CLASS>
 T* fetchGlobalObject(Escargot::ContextRef* context);
 GlobalScope* fetchGlobalScope(Escargot::ContextRef* context);
 WebBase* fetchWebBase(Escargot::ContextRef* context);
-ScriptBindingInstance* fetchScriptBindingInstance(Escargot::ContextRef* context);
+ScriptBindingInstance* fetchScriptBindingInstance(
+    Escargot::ContextRef* context);
 WebView* fetchWebView(Escargot::ContextRef* context);
 Window* fetchWindow(Escargot::ContextRef* context);
 Document* fetchDocument(Escargot::ContextRef* context);

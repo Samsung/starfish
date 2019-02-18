@@ -1,6 +1,6 @@
 // https://w3c.github.io/speech-api/#tts-section
 
-[Exposed=Window]
+[STARFISH_ENABLE_TTS, Exposed=Window]
 interface SpeechSynthesis : EventTarget {
     [Unimplemented] readonly attribute boolean pending;
     [Unimplemented] readonly attribute boolean speaking;
@@ -16,10 +16,10 @@ interface SpeechSynthesis : EventTarget {
 };
 
 partial interface Window {
-    [SameObject] readonly attribute SpeechSynthesis speechSynthesis;
+    [STARFISH_ENABLE_TTS, SameObject] readonly attribute SpeechSynthesis speechSynthesis;
 };
 
-[Constructor(optional DOMString text),
+[STARFISH_ENABLE_TTS, Constructor(optional DOMString text),
  ConstructorCallWith=Document,
  RuntimeEnabled=ScriptedSpeech]
 interface SpeechSynthesisUtterance : EventTarget {
@@ -39,7 +39,7 @@ interface SpeechSynthesisUtterance : EventTarget {
     [Unimplemented] attribute EventHandler onboundary;
 };
 
-[Exposed=Window]
+[STARFISH_ENABLE_TTS, Exposed=Window]
 interface SpeechSynthesisVoice {
     readonly attribute DOMString voiceURI;
     readonly attribute DOMString name;

@@ -17,6 +17,7 @@
  *  USA
  */
 
+#ifdef STARFISH_ENABLE_TTS
 #ifndef __StarfishSpeechSynthesis__
 #define __StarfishSpeechSynthesis__
 
@@ -247,3 +248,4 @@ private:
 };
 }
 #endif
+#endif // STARFISH_ENABLE_TTS

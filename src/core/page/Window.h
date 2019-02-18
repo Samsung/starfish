@@ -240,10 +240,12 @@ public:
     void alert();
     void alert(String* message);
 
+#if defined(STARFISH_ENABLE_TTS)
     SpeechSynthesis* speechSynthesis()
     {
         return m_speechSynthesis;
     }
+#endif
 
     // Other methods
     BrowsingContext* browsingContext()
@@ -460,7 +462,9 @@ private:
     Location* m_location;
     Screen* m_screen;
     Scrolling* m_scrolling;
+#if defined(STARFISH_ENABLE_TTS)
     SpeechSynthesis* m_speechSynthesis;
+#endif
 
     uint32_t m_width;
     uint32_t m_height;
