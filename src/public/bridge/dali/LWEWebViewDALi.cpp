@@ -471,9 +471,34 @@ public:
             DALiShellController* controller = (DALiShellController*)data;
             STARFISH_LOG_INFO("[DALi Shell] createInstance()\n");
             controller->mWebContainer = LWE::WebContainer::Create(
-                controller->mOutputBuffer, controller->mOutputWidth,
-                controller->mOutputHeight, controller->mOutputStride, 1.0,
+                controller->mOutputWidth, controller->mOutputHeight, 1.0,
                 "SamsungOne", "ko-KR", "Asia/Seoul");
+
+            TO_CONTAINER(data)
+                ->RegisterPreRenderingHandler(
+                    [data]() -> LWE::WebContainer::RenderInfo {
+
+                        DALiShellController* controller =
+                            ((DALiShellController*)data);
+
+                        Locker l(gMutex);
+                        if (controller->mOutputBuffer) {
+                            free(controller->mOutputBuffer);
+                            controller->mOutputBuffer = nullptr;
+                        }
+                        controller->mOutputBuffer = (uint8_t*)malloc(
+                            controller->mOutputWidth *
+                            controller->mOutputHeight * sizeof(uint32_t));
+                        controller->mOutputStride =
+                            controller->mOutputWidth * sizeof(uint32_t);
+                        ::LWE::WebContainer::RenderInfo result;
+                        result.updatedBufferAddress = controller->mOutputBuffer;
+                        result.bufferStride = controller->mOutputStride;
+
+                        return result;
+
+                    });
+
             TO_CONTAINER(data)
                 ->RegisterOnRenderedHandler([controller](
                     LWE::WebContainer* container,
@@ -547,20 +572,8 @@ public:
         STARFISH_ASSERT(mWebContainer);
         auto cb = [](void* data) {
             DALiShellController* controller = ((DALiShellController*)data);
-
-            Locker l(gMutex);
-            if (controller->mOutputBuffer) {
-                free(controller->mOutputBuffer);
-                controller->mOutputBuffer = nullptr;
-            }
-            controller->mOutputBuffer =
-                (uint8_t*)malloc(controller->mOutputWidth *
-                                 controller->mOutputHeight * sizeof(uint32_t));
-            controller->mOutputStride =
-                controller->mOutputWidth * sizeof(uint32_t);
-            controller->mWebContainer->UpdateBuffer(
-                controller->mOutputBuffer, controller->mOutputWidth,
-                controller->mOutputHeight, controller->mOutputStride);
+            controller->mWebContainer->ResizeTo(controller->mOutputWidth,
+                                                controller->mOutputHeight);
         };
         sendAsyncHandle(this, cb);
     }
