@@ -150,6 +150,8 @@ public:
     LayoutRect frameVisibleShadowsRect(ShadowDataList* boxShadow);
     LayoutRect frameVisibleFilterRect(FilterFunctions* filter);
 
+    LayoutRect frameScrollingRect();
+
     LayoutUnit x() const
     {
         return m_frameRect.x();
