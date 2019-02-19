@@ -26,7 +26,6 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/page/ScriptContext.h"
-#include "core/page/Window.h"
 #include "core/page/WebView.h"
 
 #include <Ecore.h>
@@ -37,9 +36,8 @@
 
 namespace Starfish {
 
-MessageLoop::MessageLoop(WebView* wv)
-    : WebViewHoldable(wv)
-    , m_inClosingState(false)
+MessageLoop::MessageLoop()
+    : m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
     , m_navigateInvokeIdler(nullptr)
 #ifdef STARFISH_MESSAGELOOP_DEBUG

@@ -20,16 +20,18 @@
 #include "StarfishConfig.h"
 #include "ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/threading/ThreadClient.h"
 
 namespace Starfish {
 
-ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
+ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml,
+                       ThreadClient* threadClient)
     : m_isClosed(false)
     , m_messageLoop(ml)
 {
     m_workerQueueMutex = new Mutex();
     for (size_t i = 0; i < maxThreadCount; i++) {
-        m_threads.push_back(new Thread(m_messageLoop->webView()));
+        m_threads.push_back(new Thread(threadClient));
     }
 }
 

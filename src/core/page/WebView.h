@@ -24,6 +24,7 @@
 #include "core/page/WebBase.h"
 #include "core/page/RenderResult.h"
 #include "platform/public/ScreenInfo.h"
+#include "core/modules/threading/ThreadClient.h"
 
 namespace LWE {
 enum class WebSecurityMode;
@@ -148,7 +149,7 @@ enum class KeyEventKind;
 enum class MouseEventKind;
 enum class CompositionEventKind;
 
-class WebView : public WebBase, public gc {
+class WebView : public WebBase, public ThreadClient, public gc {
     friend class BrowsingContext;
     friend class StackingContext;
     friend class PlatformWindow;
@@ -421,9 +422,19 @@ public:
     void setupInspector(uint32_t portNumber = 23888);
 #endif
 
+    void onThreadAdded(Thread* thread) override
+    {
+        addActiveThread(thread);
+    };
+
+    void onThreadRemoved(Thread* thread) override
+    {
+        removeActiveThread(thread);
+    };
+
     void addActiveThread(Thread* thread);
     void removeActiveThread(Thread* thread);
-    void joinAllActiveThread();
+
     GCVector<Thread*>& parallelJobExecutorThreadPool()
     {
         return m_parallelJobExecutorThreadPool;

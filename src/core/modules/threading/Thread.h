@@ -54,9 +54,11 @@ struct ThreadData {
     size_t m_joinHandle;
 };
 
-class Thread : public gc, public WebViewHoldable {
+class ThreadClient;
+
+class Thread : public gc {
 public:
-    Thread(WebView* wv);
+    Thread(ThreadClient* client);
     ~Thread()
     {
     }
@@ -71,6 +73,8 @@ public:
 
 private:
     static void cleanupHandler(void* data);
+
+    ThreadClient* m_threadClient;
 
 protected:
     volatile bool m_alive;
