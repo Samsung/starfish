@@ -59,8 +59,8 @@ void CSSKeywordValue::setValue(String* value)
 {
     STARFISH_ASSERT(value);
     if (value->equals(String::emptyString)) {
-        throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR,
-                               "TypeError");
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::SCRIPT_TYPE_ERR, "TypeError");
     }
 
     m_value = value;

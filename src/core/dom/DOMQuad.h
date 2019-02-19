@@ -31,8 +31,8 @@ class DOMRectReadOnly;
 
 class DOMQuad : public ScriptWrappable {
 public:
-    DOMQuad(Document* document, const DOMPointInit&, const DOMPointInit&,
-            const DOMPointInit&, const DOMPointInit&);
+    DOMQuad(ScriptBindingInstance* instance, const DOMPointInit&,
+            const DOMPointInit&, const DOMPointInit&, const DOMPointInit&);
 
     virtual ScriptBindingInstance* scriptBindingInstance() override
     {

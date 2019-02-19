@@ -1813,7 +1813,8 @@ bool CSSStyleDeclaration::defaultNamedSetter(String* name,
         return false;
     }
     if (UNLIKELY(isComputedStyle())) {
-        throw new DOMException(m_node->document(), DOMException::DOM_EXCEPTION,
+        throw new DOMException(m_node->scriptBindingInstance(),
+                               DOMException::DOM_EXCEPTION,
                                "Computed property is read-only");
     }
     // Empty string let setter remove its value

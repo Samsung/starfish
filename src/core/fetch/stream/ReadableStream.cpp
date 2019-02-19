@@ -84,7 +84,8 @@ ReadableStreamDefaultReader* ReadableStream::getReader()
     auto state = m_reader->state();
     if (state == ReadableStreamState::Closed ||
         state == ReadableStreamState::Errored || locked()) {
-        throw new DOMException(document(), DOMException::Code::SCRIPT_TYPE_ERR);
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
     lock();

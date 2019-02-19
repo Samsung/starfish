@@ -19,14 +19,13 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/DOMRectReadOnly.h"
-#include "core/dom/Document.h"
 
 namespace Starfish {
 
-DOMRectReadOnly::DOMRectReadOnly(Document* document, double x, double y,
-                                 double width, double height)
+DOMRectReadOnly::DOMRectReadOnly(ScriptBindingInstance* instance, double x,
+                                 double y, double width, double height)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_scriptBindingInstance(instance)
     , m_x(x)
     , m_y(y)
     , m_width(width)

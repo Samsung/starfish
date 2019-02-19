@@ -498,7 +498,8 @@ void SourceBuffer::abort()
     // parent media source then throw an InvalidStateError exception and abort
     // these steps.
     if (!m_isAttachedToParent) {
-        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INVALID_STATE_ERR,
                                "SourceBuffer has been removed from from parent "
                                "MediaSource, when executing 'abort' of "
                                "SourceBuffer");
@@ -508,7 +509,8 @@ void SourceBuffer::abort()
     // "open" state then throw an InvalidStateError exception and abort these
     // steps.
     if (m_parentMediaSource->readyStateValue() != MediaSource::Open) {
-        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INVALID_STATE_ERR,
                                "readyState of parentMediaSource is not open, "
                                "when executing 'abort' of SourceBuffer");
     }
@@ -592,14 +594,15 @@ void SourceBuffer::prepareAppend(size_t newDataSize)
     // abort these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            document(), DOMException::INVALID_STATE_ERR,
+            scriptBindingInstance(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -619,7 +622,8 @@ void SourceBuffer::prepareAppend(size_t newDataSize)
     if (!codedFrameEviction(newDataSize)) {
         SOURCEBUFFER_LOG(
             this, "Failed to make buffer space: throw QUOTA_EXCEEDED_ERR\n");
-        throw new DOMException(document(), DOMException::QUOTA_EXCEEDED_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::QUOTA_EXCEEDED_ERR,
                                "SourceBuffer is full");
     }
 }
@@ -631,14 +635,15 @@ void SourceBuffer::remove(double start, double end)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            document(), DOMException::INVALID_STATE_ERR,
+            scriptBindingInstance(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -647,14 +652,15 @@ void SourceBuffer::remove(double start, double end)
     double duration = m_parentMediaSource->duration();
     if (std::isnan(duration)) {
         throw new DOMException(
-            document(), DOMException::SCRIPT_TYPE_ERR,
+            scriptBindingInstance(), DOMException::SCRIPT_TYPE_ERR,
             "If Duration is NaN, can not execute remove method");
     }
 
     // If start is negative or greater than duration, then throw a TypeError
     // exception and abort these steps.
     if (start < 0 || start > duration) {
-        throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::SCRIPT_TYPE_ERR,
                                "when executing remove, start must be greater "
                                "than zero and smaller than duration");
     }
@@ -662,7 +668,8 @@ void SourceBuffer::remove(double start, double end)
     // If end is less than or equal to start or end equals NaN, then throw a
     // TypeError exception and abort these steps.
     if (end <= start || std::isnan(end)) {
-        throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::SCRIPT_TYPE_ERR,
                                "when executing remove, end must be greater "
                                "than start and not NaN");
     }
@@ -1209,14 +1216,15 @@ void SourceBuffer::setMode(AppendMode mode)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            document(), DOMException::INVALID_STATE_ERR,
+            scriptBindingInstance(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -1269,14 +1277,15 @@ void SourceBuffer::setTimestampOffset(double timeoffset)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            document(), DOMException::INVALID_STATE_ERR,
+            scriptBindingInstance(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -1313,14 +1322,15 @@ void SourceBuffer::setAppendWindowStart(double timeStamp)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            document(), DOMException::INVALID_STATE_ERR,
+            scriptBindingInstance(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
@@ -1328,7 +1338,7 @@ void SourceBuffer::setAppendWindowStart(double timeStamp)
     // appendWindowEnd then throw a TypeError exception and abort these steps.
     if (timeStamp < 0 || timeStamp >= m_appendWindowEnd) {
         throw new DOMException(
-            document(), DOMException::SCRIPT_TYPE_ERR,
+            scriptBindingInstance(), DOMException::SCRIPT_TYPE_ERR,
             "appendWindowStart should be between 0 and appendWindowEnd");
     }
 
@@ -1343,21 +1353,23 @@ void SourceBuffer::setAppendWindowEnd(double timeStamp)
     // these steps.
     if (!m_isAttachedToParent) {
         throw new DOMException(
-            document(), DOMException::INVALID_STATE_ERR,
+            scriptBindingInstance(), DOMException::INVALID_STATE_ERR,
             "SourceBuffer has been removed from from parernt MediaSource");
     }
 
     // If the updating attribute equals true, then throw an InvalidStateError
     // exception and abort these steps.
     if (m_updating) {
-        throw new DOMException(document(), DOMException::INVALID_STATE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INVALID_STATE_ERR,
                                "SourceBuffer is now updating");
     }
 
     // If the new value equals NaN, then throw a TypeError and abort these
     // steps.
     if (std::isnan(timeStamp)) {
-        throw new DOMException(document(), DOMException::SCRIPT_TYPE_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::SCRIPT_TYPE_ERR,
                                "appendWindowEnd should not be NaN");
     }
 
@@ -1365,7 +1377,7 @@ void SourceBuffer::setAppendWindowEnd(double timeStamp)
     // TypeError exception and abort these steps.
     if (timeStamp <= m_appendWindowStart) {
         throw new DOMException(
-            document(), DOMException::SCRIPT_TYPE_ERR,
+            scriptBindingInstance(), DOMException::SCRIPT_TYPE_ERR,
             "appendWindowEnd should be greater than appendWindowStart");
     }
 
@@ -1391,7 +1403,7 @@ TimeRanges* SourceBuffer::buffered()
     //    then throw an InvalidStateError exception and abort these steps.
     // --> Binding layer would catch that
     if (!parentMediaSource()) {
-        throw new DOMException(document(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::Code::INVALID_STATE_ERR);
     }
 

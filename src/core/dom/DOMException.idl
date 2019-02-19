@@ -1,6 +1,6 @@
 // https://heycam.github.io/webidl/#idl-exceptions
 [
-    ConstructorCallWith=Document,
+    ConstructorCallWith=ScriptBindingInstance,
     ExceptionConstructor(optional DOMString message = "", optional DOMString name = "Error"),
     Exposed=(Window,Worker)
 ] interface DOMException {

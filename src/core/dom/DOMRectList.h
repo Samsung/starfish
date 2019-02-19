@@ -28,15 +28,15 @@ class DOMRect;
 
 class DOMRectList : public ScriptWrappable {
 public:
-    static DOMRectList* create(Document* document)
+    static DOMRectList* create(ScriptBindingInstance* instance)
     {
-        return new DOMRectList(document);
+        return new DOMRectList(instance);
     }
 
-    static DOMRectList* create(Document* document,
+    static DOMRectList* create(ScriptBindingInstance* instance,
                                const GCVector<DOMQuad*>& quads)
     {
-        return new DOMRectList(document, quads);
+        return new DOMRectList(instance, quads);
     }
 
     uint32_t length() const;
@@ -51,8 +51,9 @@ public:
     virtual bool isDOMRectList() const override;
 
 private:
-    DOMRectList(Document* document);
-    explicit DOMRectList(Document* document, const GCVector<DOMQuad*>&);
+    DOMRectList(ScriptBindingInstance* instance);
+    explicit DOMRectList(ScriptBindingInstance* instance,
+                         const GCVector<DOMQuad*>&);
     ScriptBindingInstance* m_scriptBindingInstance;
     GCVector<DOMRect*> m_list;
 };

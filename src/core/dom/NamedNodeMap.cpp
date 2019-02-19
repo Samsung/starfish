@@ -73,7 +73,7 @@ Attr* NamedNodeMap::removeNamedItem(String* name)
 {
     Attr* old = getNamedItem(name);
     if (old == nullptr) {
-        throw new DOMException(element()->document(),
+        throw new DOMException(element()->scriptBindingInstance(),
                                DOMException::Code::NOT_FOUND_ERR, nullptr);
     }
     return m_element->removeAttributeNode(old);
@@ -83,7 +83,7 @@ Attr* NamedNodeMap::removeNamedItemNS(Nullable<String*> ns, String* localName)
 {
     Attr* old = getNamedItemNS(ns, localName);
     if (old == nullptr) {
-        throw new DOMException(element()->document(),
+        throw new DOMException(element()->scriptBindingInstance(),
                                DOMException::Code::NOT_FOUND_ERR, nullptr);
     }
     return m_element->removeAttributeNode(old);

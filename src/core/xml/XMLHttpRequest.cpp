@@ -72,9 +72,9 @@ public:
             if (!m_xhr->m_resourceRequest->url()->isFileURL() &&
                 !m_xhr->m_resourceRequest->url()->isDataURL() &&
                 request->isSync()) {
-                throw new DOMException(
-                    m_xhr->scriptBindingInstance()->ownerDocument(),
-                    DOMException::NETWORK_ERR, "NetworkError");
+                throw new DOMException(m_xhr->scriptBindingInstance(),
+                                       DOMException::NETWORK_ERR,
+                                       "NetworkError");
             }
         } else if (progState == ProgressState::Abort) {
             if (isExplicitAction) {
@@ -300,7 +300,7 @@ void XMLHttpRequest::send(String* body)
     // DOMException.
     if (m_resourceRequest->readyState() != ReadyState::Opened ||
         m_resourceRequest->m_didSend) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
@@ -347,17 +347,17 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
 {
     // FIXME : https://xhr.spec.whatwg.org/#the-open()-method
     if (!HeadersData::isValidHTTPToken(method)) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::SYNTAX_ERR, "SYNTAX_ERR");
     }
 
     if (FetchUtils::isForbiddenMethod(method)) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::SECURITY_ERR, "SECURITY_ERR");
     }
 
     if (!async && m_resourceRequest->timeout() != 0) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
@@ -410,8 +410,7 @@ void XMLHttpRequest::setResponseType(XMLHttpRequestResponseType type)
     if (m_resourceRequest->readyState() == ReadyState::Loading ||
         m_resourceRequest->readyState() == ReadyState::Done) {
         throw new DOMException(
-            scriptBindingInstance()->ownerDocument(),
-            DOMException::INVALID_STATE_ERR,
+            scriptBindingInstance(), DOMException::INVALID_STATE_ERR,
             "The response type cannot be set if the object's state is LOADING "
             "or DONE.");
     }
@@ -420,8 +419,7 @@ void XMLHttpRequest::setResponseType(XMLHttpRequestResponseType type)
     if (m_resourceRequest->readyState() != ReadyState::Unset &&
         m_resourceRequest->isSync()) {
         throw new DOMException(
-            scriptBindingInstance()->ownerDocument(),
-            DOMException::INVALID_ACCESS_ERR,
+            scriptBindingInstance(), DOMException::INVALID_ACCESS_ERR,
             "Failed to set the 'responseType' property on 'XMLHttpRequest': "
             "The response type cannot be changed for synchronous requests made "
             "from a document.");
@@ -545,9 +543,7 @@ String* XMLHttpRequest::responseText() const
     if (!(m_responseType == XMLHttpRequestResponseType::Empty ||
           m_responseType == XMLHttpRequestResponseType::Text)) {
         throw new DOMException(
-            const_cast<XMLHttpRequest*>(this)
-                ->scriptBindingInstance()
-                ->ownerDocument(),
+            const_cast<XMLHttpRequest*>(this)->scriptBindingInstance(),
             DOMException::INVALID_STATE_ERR,
             "Failed to read the 'responseText' property from 'XMLHttpRequest': "
             "The value is only accessible if the object's 'responseType' is '' "
@@ -565,9 +561,7 @@ Document* XMLHttpRequest::responseXML() const
     if (!(m_responseType == XMLHttpRequestResponseType::Empty ||
           m_responseType == XMLHttpRequestResponseType::Document)) {
         throw new DOMException(
-            const_cast<XMLHttpRequest*>(this)
-                ->scriptBindingInstance()
-                ->ownerDocument(),
+            const_cast<XMLHttpRequest*>(this)->scriptBindingInstance(),
             DOMException::INVALID_STATE_ERR,
             "Failed to read the 'responseXML' property from 'XMLHttpRequest': "
             "The value is only accessible if the object's 'responseType' is '' "
@@ -589,7 +583,7 @@ void XMLHttpRequest::setTimeout(uint32_t timeout)
 {
     if (m_resourceRequest->readyState() != ReadyState::Unset &&
         m_resourceRequest->isSync() == true) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
@@ -606,7 +600,7 @@ void XMLHttpRequest::setWithCredentials(bool value)
     auto state = m_resourceRequest->readyState();
 
     if (!(state == ReadyState::Unset || state == ReadyState::Opened)) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
@@ -632,12 +626,12 @@ void XMLHttpRequest::setRequestHeader(String* header, String* value)
     header = header->trim();
     value = value->trim();
     if (m_resourceRequest->readyState() != ReadyState::Opened) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
     if (header->length() == 0) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::SYNTAX_ERR, "InvalidStateError");
     }
 

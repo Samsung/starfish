@@ -117,7 +117,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_styleSheetList(nullptr)
     , m_brokenImage(nullptr)
     , m_animationExecutor(new AnimationExecutor(window))
-    , m_scriptBindingInstance(nullptr)
+    , m_scriptBindingInstance(scriptBindingInstance)
     , m_domVersion(0)
     , m_implementation(nullptr)
     , m_pendingDocumentParsingIdlerHandle(SIZE_MAX)
@@ -225,7 +225,7 @@ BrowsingContext* Document::browsingContext() const
 
 ScriptBindingInstance* Document::scriptBindingInstance()
 {
-    return window()->scriptBindingInstance();
+    return m_scriptBindingInstance;
 }
 
 Location* Document::location()
@@ -273,7 +273,7 @@ String* Document::cookie()
 
     if ((!documentURI()->isFileURL()) && webOrigin()->isOpaque()) {
         throw new DOMException(
-            this, DOMException::Code::SECURITY_ERR,
+            m_scriptBindingInstance, DOMException::Code::SECURITY_ERR,
             "Access is denied for this document, origin is opaque");
     }
 
@@ -286,7 +286,7 @@ void Document::setCookie(String* cookie)
 {
     if ((!documentURI()->isFileURL()) && webOrigin()->isOpaque()) {
         throw new DOMException(
-            this, DOMException::Code::SECURITY_ERR,
+            m_scriptBindingInstance, DOMException::Code::SECURITY_ERR,
             "Access is denied for this document, origin is opaque");
     }
     NetworkSharedResourceManager::getInstance()->setCookies(this, documentURI(),
@@ -322,13 +322,15 @@ Document* Document::open(Document* responsibleDoc, String* type,
     // If document is an XML document, then throw an "InvalidStateError"
     // DOMException exception.
     if (isXMLDocument()) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     STARFISH_ASSERT(isHTMLDocument());
     // If document's throw-on-dynamic-markup-insertion counter is greater than
     // 0, then throw an "InvalidStateError" DOMException.
     if (m_throwOnDynamicMarkupInsertion) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     // TODO (implement WindowProxy) If document is not an active document, then
     // return document.
@@ -336,7 +338,7 @@ Document* Document::open(Document* responsibleDoc, String* type,
     // the origin of the responsible document specified by the entry settings
     // object, then throw a "SecurityError" DOMException.
     if (!responsibleDoc->webOrigin()->isSameOrigin(webOrigin())) {
-        throw new DOMException(responsibleDoc,
+        throw new DOMException(responsibleDoc->scriptBindingInstance(),
                                DOMException::Code::SECURITY_ERR);
     }
     // If document has an active parser whose script nesting level is greater
@@ -502,13 +504,15 @@ void Document::close()
     // If the Document object is an XML document, then throw an
     // "InvalidStateError" DOMException and abort these steps.
     if (isXMLDocument()) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     // If the Document object's throw-on-dynamic-markup-insertion counter is
     // greater than zero, then throw an "InvalidStateError" DOMException and
     // abort these steps.
     if (m_throwOnDynamicMarkupInsertion) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_STATE_ERR);
     }
 
     // If there is no script-created parser associated with the document, then
@@ -539,12 +543,14 @@ void Document::write(Document* responsibleDoc, const GCVector<String*>& str)
     // If document is an XML document, then throw an "InvalidStateError"
     // DOMException.
     if (isXMLDocument()) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     // If document's throw-on-dynamic-markup-insertion counter is greater than
     // 0, then throw an "InvalidStateError" DOMException.
     if (m_throwOnDynamicMarkupInsertion) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     // TODO(implement WindowProxy) If document is not an active document, then
     // return.
@@ -795,7 +801,8 @@ DocumentFragment* Document::createDocumentFragment()
 Element* Document::createElement(String* localName)
 {
     if (!QualifiedName::checkNameProductionRule(localName)) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
 
@@ -830,7 +837,8 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     }
     // Validate qualifiedName.
     if (!QualifiedName::validateQualifiedName(qualifiedName)) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     }
     // Let prefix be null.
     Nullable<AtomicString> prefix;
@@ -842,10 +850,11 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     GCVector<StringView> tokens;
     StringUtils::tokenize(qualifiedName, ":", 1, tokens);
     if (tokens.size() > 2) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     } else if (tokens.size() == 2) {
         if (tokens[0].length() == 0 || tokens[1].length() == 0) {
-            throw new DOMException(this,
+            throw new DOMException(m_scriptBindingInstance,
                                    DOMException::Code::INVALID_CHARACTER_ERR);
         }
         prefix = AtomicString::createAtomicString(starfish(), tokens[0]);
@@ -856,7 +865,8 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
 
     // If prefix is non-null and namespace is null, then throw a NamespaceError.
     if (prefix.hasValue() && !ns.hasValue()) {
-        throw new DOMException(this, DOMException::NAMESPACE_ERR,
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::NAMESPACE_ERR,
                                "Provided namespace is wrong");
     }
 
@@ -870,7 +880,8 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     // NamespaceError.
     if (prefix.hasValue() && prefix.getValue() == strs->m_xml &&
         nsURI != strs->m_xmlNamespaceURI) {
-        throw new DOMException(this, DOMException::NAMESPACE_ERR,
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::NAMESPACE_ERR,
                                "Provided namespace is wrong");
     }
 
@@ -883,7 +894,8 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
         prefix.hasValue() && (prefix.getValue() == strs->m_xmlns);
     bool nsXmlns = (nsURI == strs->m_xmlnsNamespaceURI);
     if ((qnameXmlns || prefixXmlns) ^ nsXmlns) {
-        throw new DOMException(this, DOMException::NAMESPACE_ERR,
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::NAMESPACE_ERR,
                                "Provided namespace is wrong");
     }
 
@@ -922,11 +934,12 @@ CDATASection* Document::createCDATASection(String* data)
 {
     if (isHTMLDocument()) {
         throw new DOMException(
-            this, DOMException::Code::NOT_SUPPORTED_ERR,
+            m_scriptBindingInstance, DOMException::Code::NOT_SUPPORTED_ERR,
             "This operation is not supported for HTML documents.");
     }
     if (data->contains("]]>")) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_CHARACTER_ERR,
                                "String cannot contain ']]>' since that is the "
                                "end delimiter of a CData section.");
     }
@@ -944,11 +957,13 @@ ProcessingInstruction* Document::createProcessingInstruction(String* target,
     // If target does not match the Name production, then throw an
     // InvalidCharacterError.
     if (!QualifiedName::checkNameProductionRule(target)) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     }
     // If data contains the string "?>", then throw an InvalidCharacterError.
     if (data->contains("?>")) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     }
     // Return a new ProcessingInstruction node, with target set to target, data
     // set to data, and node document set to the context object.
@@ -961,8 +976,8 @@ Node* Document::importNode(Node* node, bool deep)
     // throws a "NotSupportedError" DOMException.
     // TODO: check shadow root node
     if (node->isDocument()) {
-        throw new DOMException(this, DOMException::Code::NOT_SUPPORTED_ERR,
-                               nullptr);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::NOT_SUPPORTED_ERR, nullptr);
     }
 
     Node* newNode = node->clone();
@@ -986,8 +1001,8 @@ Node* Document::adoptNode(Node* node)
     // If node is a document, then throw a "NotSupportedError" DOMException.
     // TODO check shadow root node
     if (node->isDocument()) {
-        throw new DOMException(this, DOMException::Code::NOT_SUPPORTED_ERR,
-                               nullptr);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::NOT_SUPPORTED_ERR, nullptr);
     }
 
     Node* oldDocument = node->document();
@@ -1022,7 +1037,8 @@ Attr* Document::createAttribute(String* name)
 Attr* Document::createAttribute(QualifiedName localName)
 {
     if (!QualifiedName::checkNameProductionRule(localName.localName())) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
 
@@ -1104,7 +1120,8 @@ void Document::setBody(HTMLElement* element)
                         "HTMLBodyElement", "HTMLFrameSetElement");
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "body", "Document",
                         reason);
-        throw new DOMException(this, DOMException::HIERARCHY_REQUEST_ERR, msg);
+        throw new DOMException(m_scriptBindingInstance,
+                               DOMException::HIERARCHY_REQUEST_ERR, msg);
     }
 
     HTMLElement* body = this->body();
@@ -1958,8 +1975,8 @@ Event* Document::createEvent(String* type)
         return e;
     }
 
-    throw new DOMException(this, DOMException::Code::NOT_SUPPORTED_ERR,
-                           nullptr);
+    throw new DOMException(m_scriptBindingInstance,
+                           DOMException::Code::NOT_SUPPORTED_ERR, nullptr);
 }
 
 void Document::notifyCountingOutdated()
