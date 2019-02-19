@@ -111,7 +111,7 @@ void MessagePort::postMessage(ScriptValue message,
         if (sw && sw->isMessagePort()) {
             MessagePort* port = sw->asMessagePort();
             if (port == this) {
-                throw new DOMException(document(),
+                throw new DOMException(scriptBindingInstance(),
                                        DOMException::DATA_CLONE_ERR);
             } else if (targetPort && !doomed && port == targetPort) {
                 doomed = true;

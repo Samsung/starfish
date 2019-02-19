@@ -36,8 +36,8 @@ struct DOMRectInit {
 
 class DOMRect : public DOMRectReadOnly {
 public:
-    DOMRect(Document* document, double x = 0, double y = 0, double width = 0,
-            double height = 0);
+    DOMRect(ScriptBindingInstance* instance, double x = 0, double y = 0,
+            double width = 0, double height = 0);
     DOMRect(DOMRectReadOnly*);
 
     void setX(double x)

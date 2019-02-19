@@ -144,7 +144,7 @@ unsigned CSSGroupingRule::insertRule(String* ruleString, unsigned index)
         msg.appendString(
             " must be less than or equal to the length of the rule list.");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::INDEX_SIZE_ERR, s.data());
     }
 
@@ -161,14 +161,13 @@ unsigned CSSGroupingRule::insertRule(String* ruleString, unsigned index)
         msg.appendString(ruleString);
         msg.appendString("' is invalid and cannot be parsed.");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::SYNTAX_ERR, s.data());
     }
 
     if (rules[0]->isImportRule()) {
         throw new DOMException(
-            scriptBindingInstance()->ownerDocument(),
-            DOMException::HIERARCHY_REQUEST_ERR,
+            scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR,
             "'@import' rules cannot be inserted inside a group rule.");
     }
 
@@ -198,7 +197,7 @@ void CSSGroupingRule::deleteRule(unsigned index)
         msg.appendString(String::fromInt(index));
         msg.appendString(" is greater than the length of the rule list.");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(scriptBindingInstance(),
                                DOMException::INDEX_SIZE_ERR, s.data());
     }
 

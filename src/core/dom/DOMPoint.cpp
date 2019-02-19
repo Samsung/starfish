@@ -69,13 +69,14 @@ void DOMPointInit::setW(double w)
     m_w = w;
 }
 
-DOMPoint::DOMPoint(Document* document, double x, double y, double z, double w)
-    : DOMPointReadOnly(document, x, y, z, w)
+DOMPoint::DOMPoint(ScriptBindingInstance* instance, double x, double y,
+                   double z, double w)
+    : DOMPointReadOnly(instance, x, y, z, w)
 {
 }
 
-DOMPoint::DOMPoint(Document* document, const DOMPointInit& pi)
-    : DOMPointReadOnly(document, pi.x(), pi.y(), pi.z(), pi.w())
+DOMPoint::DOMPoint(ScriptBindingInstance* instance, const DOMPointInit& pi)
+    : DOMPointReadOnly(instance, pi.x(), pi.y(), pi.z(), pi.w())
 {
 }
 }

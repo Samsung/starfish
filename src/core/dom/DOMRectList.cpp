@@ -21,19 +21,19 @@
 #include "core/dom/DOMRect.h"
 #include "core/dom/DOMRectList.h"
 #include "core/dom/DOMQuad.h"
-#include "core/dom/Document.h"
 
 namespace Starfish {
 
-DOMRectList::DOMRectList(Document* document)
+DOMRectList::DOMRectList(ScriptBindingInstance* instance)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_scriptBindingInstance(instance)
 {
 }
 
-DOMRectList::DOMRectList(Document* document, const GCVector<DOMQuad*>& quads)
+DOMRectList::DOMRectList(ScriptBindingInstance* instance,
+                         const GCVector<DOMQuad*>& quads)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_scriptBindingInstance(instance)
 {
     m_list.reserve(quads.size());
     for (size_t i = 0; i < quads.size(); ++i) {

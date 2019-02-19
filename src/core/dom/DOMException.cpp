@@ -18,7 +18,6 @@
  */
 
 #include "StarfishConfig.h"
-#include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 
 namespace Starfish {
@@ -72,9 +71,10 @@ const char* DOMException::s_descriptions[] = {
     "The object can not be cloned.",
 };
 
-DOMException::DOMException(Document* document, Code code, const char* message)
+DOMException::DOMException(ScriptBindingInstance* instance, Code code,
+                           const char* message)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_scriptBindingInstance(instance)
     , m_code(code)
     , m_name(String::emptyString)
 {
@@ -112,9 +112,10 @@ DOMException::DOMException(Document* document, Code code, const char* message)
     m_message = String::fromUTF8(message);
 }
 
-DOMException::DOMException(Document* document, String* message, String* name)
+DOMException::DOMException(ScriptBindingInstance* instance, String* message,
+                           String* name)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_scriptBindingInstance(instance)
     , m_code(Code::DOM_EXCEPTION)
     , m_message(message)
     , m_name(name)

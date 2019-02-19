@@ -469,14 +469,16 @@ void HTMLFormControl::setMaxLength(int32_t maxlength)
                         String::fromInt(maxlength)->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "maxLength",
                         "HTMLFormControl", reason);
-        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::DOM_EXCEPTION, msg);
     } else if (minlength >= 0 && maxlength < minlength) {
         COMPOSE_MESSAGE(reason, EXCEED_MIN_BOUNDARY,
                         String::fromInt(maxlength)->toUTF8NonGCString().data(),
                         String::fromInt(minlength)->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "maxLength",
                         "HTMLFormControl", reason);
-        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::DOM_EXCEPTION, msg);
     } else {
         setAttribute(starfish()->staticStrings()->m_maxlength,
                      String::fromInt(maxlength));
@@ -508,14 +510,16 @@ void HTMLFormControl::setMinLength(int32_t minlength)
                         String::fromInt(minlength)->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "minLength",
                         "HTMLFormControl", reason);
-        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::DOM_EXCEPTION, msg);
     } else if (maxlength >= 0 && maxlength < minlength) {
         COMPOSE_MESSAGE(reason, EXCEED_MAX_BOUNDARY,
                         String::fromInt(minlength)->toUTF8NonGCString().data(),
                         String::fromInt(maxlength)->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "minLength",
                         "HTMLFormControl", reason);
-        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::DOM_EXCEPTION, msg);
     } else {
         setAttribute(starfish()->staticStrings()->m_minlength,
                      String::fromInt(minlength));

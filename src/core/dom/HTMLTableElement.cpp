@@ -352,7 +352,8 @@ HTMLTableCaptionElement* HTMLTableElement::caption()
 void HTMLTableElement::setCaption(HTMLTableCaptionElement* caption)
 {
     if (caption && !caption->isHTMLTableCaptionElement()) {
-        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
                                "Failed to set the 'caption' property on "
                                "'HTMLTableElement': The provided value is not "
                                "of type 'HTMLTableCaptionElement'.");
@@ -402,7 +403,8 @@ HTMLTableSectionElement* HTMLTableElement::tHead()
 void HTMLTableElement::setTHead(HTMLTableSectionElement* tHead)
 {
     if (tHead && !tHead->isHTMLTHeadElement()) {
-        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
                                "Failed to set the 'tHead' property on "
                                "'HTMLTableElement': The provided value is not "
                                "of type 'HTMLTHeadElement'.");
@@ -468,7 +470,8 @@ HTMLTableSectionElement* HTMLTableElement::tFoot()
 void HTMLTableElement::setTFoot(HTMLTableSectionElement* tFoot)
 {
     if (tFoot && !tFoot->isHTMLTFootElement()) {
-        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::HIERARCHY_REQUEST_ERR,
                                "Failed to set the 'tFoot' property on "
                                "'HTMLTableElement': The provided value is not "
                                "of type 'HTMLTFootElement'.");
@@ -596,7 +599,8 @@ HTMLTableRowElement* HTMLTableElement::insertRow(int32_t index)
     size_t rowsLength = rows->length();
     if (index < -1 ||
         (index != -1 && static_cast<size_t>(index) > rowsLength)) {
-        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INDEX_SIZE_ERR);
     }
 
     HTMLTableRowElement* row = new HTMLTableRowElement(
@@ -634,7 +638,8 @@ void HTMLTableElement::deleteRow(int32_t index)
             index = rowsLength - 1;
         }
     } else if (index < -1 || static_cast<size_t>(index) >= rowsLength) {
-        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+        throw new DOMException(scriptBindingInstance(),
+                               DOMException::INDEX_SIZE_ERR);
     }
 
     Element* row = rows->item(index);

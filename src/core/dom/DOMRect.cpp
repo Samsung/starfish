@@ -29,15 +29,15 @@ DOMRectInit::DOMRectInit(double inX, double inY, double inWidth,
 {
 }
 
-DOMRect::DOMRect(Document* document, double x, double y, double width,
-                 double height)
-    : DOMRectReadOnly(document, x, y, width, height)
+DOMRect::DOMRect(ScriptBindingInstance* instance, double x, double y,
+                 double width, double height)
+    : DOMRectReadOnly(instance, x, y, width, height)
 {
 }
 
 DOMRect::DOMRect(DOMRectReadOnly* rect)
-    : DOMRect(rect->scriptBindingInstance()->ownerDocument(), rect->x(),
-              rect->y(), rect->width(), rect->height())
+    : DOMRect(rect->scriptBindingInstance(), rect->x(), rect->y(),
+              rect->width(), rect->height())
 {
 }
 
