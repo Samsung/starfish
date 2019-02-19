@@ -21,7 +21,7 @@
 #include "Starfish.h"
 #include "Thread.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/page/WebView.h"
+#include "core/modules/threading/ThreadClient.h"
 #include "Mutex.h"
 #include "Locker.h"
 #if !defined(OS_WINDOWS)
@@ -91,8 +91,8 @@ size_t mainThreadID()
 }
 #endif
 
-Thread::Thread(WebView* wv)
-    : WebViewHoldable(wv)
+Thread::Thread(ThreadClient* client)
+    : m_threadClient(client)
     , m_alive(false)
     , m_mutex(new Mutex())
     , m_currentUnjoined(nullptr)
@@ -118,7 +118,10 @@ void Thread::finishUnjoined()
     void* ret;
     pthread_join(m_currentUnjoined->m_tid, &ret);
 
-    webView()->removeActiveThread(this);
+    if (m_threadClient) {
+        m_threadClient->onThreadRemoved(this);
+    }
+
     GC_FREE(m_currentUnjoined);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     m_currentUnjoined->m_messageLoop->decreaseUnjoinedThreadCount();
@@ -133,7 +136,11 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
 
     finishUnjoined();
     Locker<Mutex> l(*m_mutex);
-    webView()->addActiveThread(this);
+
+    if (m_threadClient) {
+        m_threadClient->onThreadAdded(this);
+    }
+
     m_currentUnjoined = new (GC_MALLOC_UNCOLLECTABLE(sizeof(ThreadData)))
         ThreadData(this, msgLoop, fn, data);
 #ifdef STARFISH_MESSAGELOOP_DEBUG

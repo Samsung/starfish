@@ -243,7 +243,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_didCompositeBefore(false)
     , m_isActive(false)
     , m_rootStackingContext(nullptr)
-    , m_messageLoop(new MessageLoop(this))
+    , m_messageLoop(new MessageLoop())
     , m_timer(new Timer(this))
     , m_console(new Console(this))
 #ifdef STARFISH_ENABLE_TTS
@@ -277,12 +277,13 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     m_startUpFlag = 0;
 #endif
 
-    m_messageLoop = new MessageLoop(this);
+    m_messageLoop = new MessageLoop();
     m_timer = new Timer(this);
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif
-    m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
+    m_threadPool =
+        new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop, this);
     m_historyManager = HistoryManager::create(this);
     initRenderingFlags();
     initStorage();

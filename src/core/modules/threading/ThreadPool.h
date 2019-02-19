@@ -27,10 +27,12 @@
 namespace Starfish {
 
 class BrowsingContext;
+class ThreadClient;
 
 class ThreadPool : public gc {
 public:
-    ThreadPool(size_t maxThreadCount, MessageLoop* ml);
+    ThreadPool(size_t maxThreadCount, MessageLoop* ml,
+               ThreadClient* threadClient);
     ~ThreadPool()
     {
     }

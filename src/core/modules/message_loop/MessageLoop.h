@@ -24,23 +24,20 @@
 #ifdef STARFISH_MESSAGELOOP_DEBUG
 #include "core/modules/threading/Locker.h"
 #endif
-#include "binding/WebViewHoldable.h"
+
 #include "core/modules/message_loop/MessageLoopInterface.h"
 
 namespace Starfish {
 
+class WebView;
 class ScriptContext;
 enum class HistoryManagerAction;
 
-class MessageLoop : public MessageLoopInterface,
-                    public gc,
-                    public WebViewHoldable {
+class MessageLoop : public MessageLoopInterface, public gc {
     friend class MessageLoopImpl;
-    friend class WebView;
-    friend class Window;
 
 public:
-    MessageLoop(WebView* wv);
+    MessageLoop();
     size_t addIdler(ScriptContext* ctx, void (*fn)(size_t handle, void*),
                     void* data);
     size_t addIdler(ScriptContext* ctx, void (*fn)(size_t handle, void*, void*),
