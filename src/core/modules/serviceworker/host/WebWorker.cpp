@@ -21,7 +21,6 @@
 
 #include "StarfishBase.h"
 #include "core/modules/serviceworker/host/WebWorker.h"
-#include <uv.h>
 
 namespace Starfish {
 
@@ -47,23 +46,18 @@ bool WebWorker::start()
 
 bool WebWorker::tick()
 {
-    int more = uv_run(uv_default_loop(), UV_RUN_ONCE);
-    if (more == 0) {
-        more = uv_loop_alive(uv_default_loop());
-    }
-    return more;
+    return false;
 }
 
 bool WebWorker::terminate()
 {
     STARFISH_LOG_INFO("WebWorker::terminate\n");
-    uv_stop(uv_default_loop());
     return true;
 }
 
 bool WebWorker::run()
 {
-    int more = 0;
+    bool more = false;
 
     init();
     start();
