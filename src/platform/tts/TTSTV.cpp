@@ -144,6 +144,7 @@ static void stateChangedCB(tts_h handle, tts_state_e prev, tts_state_e cur,
         SpeechSynthesisUtterance* u = findUtterance(t, id);
         if (u) {
             STARFISH_LOG_INFO("[TTS] TTS_STATE_RESUME !!!!");
+            t->setPaused(false);
             String* eventName =
                 u->webView()->starfish()->staticStrings()->m_resume.localName();
             Event* e = new Event(
@@ -154,6 +155,7 @@ static void stateChangedCB(tts_h handle, tts_state_e prev, tts_state_e cur,
         SpeechSynthesisUtterance* u = findUtterance(t, id);
         if (u) {
             STARFISH_LOG_INFO("[TTS] TTS_STATE_PAUSED !!!!");
+            t->setPaused(true);
             String* eventName =
                 u->webView()->starfish()->staticStrings()->m_pause.localName();
             Event* e = new Event(
@@ -384,11 +386,10 @@ void TTS::readyState()
 {
     m_readyState = true;
     if (m_waitingState) {
-        speakStoredUtterance();
         ecore_main_loop_thread_safe_call_async(
             [](void* data) -> void {
                 STARFISH_LOG_INFO("[TTS] readyState()");
-                ((TTS*)data)->speakStoredUtterance();
+                ((TTS*)data)->speakUtterances();
             },
             this);
     }
@@ -428,37 +429,39 @@ void TTS::speak(SpeechSynthesisUtterance* utterance)
             t->utteranceList().insert(std::make_pair(id, utter));
 
             STARFISH_LOG_INFO("[TTS] speak(SpeechSynthesisUtterance*)");
-            t->speakStoredUtterance();
+            t->setPaused(false);
+            t->speakUtterances();
 
             delete (d);
         },
         d);
 }
 
-void TTS::speakStoredUtterance()
+void TTS::speakUtterances()
 {
-    STARFISH_LOG_INFO("[TTS] speakStoredUtterance()");
-    if (m_utterance->text()->isEmpty()) {
+    STARFISH_LOG_INFO("[TTS] speakUtterances()");
+    String* utterText = m_utterance->text();
+    if (utterText->isEmpty()) {
         return;
     }
 
-    String* curLanguage = m_defaultLanguage;
-    if (!m_utterance->lang()->isEmpty()) {
-        curLanguage = m_utterance->lang()->substring(0, 2);
-        curLanguage = curLanguage->concat("_");
-        curLanguage = curLanguage->concat(m_utterance->lang()->substring(3, 2));
+    String* curLang = m_defaultLanguage;
+    String* lang = m_utterance->lang();
+
+    if (!lang->isEmpty() && lang->charAt(2) == '-') {
+        curLang = lang->substring(0, 2)->concat('_')->concat(
+            lang->substring(3, lang->length() - 3));
     }
 
     int voiceType = m_defaultVoiceType;
-    if (!m_utterance->voice()) {
-        voiceType = stringToVoiceType(m_utterance->voice());
+    if (m_utterance->voice()) {
+        voiceType = stringToVoiceType(m_utterance->voice()->name());
     }
     int textSpeed = voiceSpeed(m_handle, m_utterance->rate());
     int utteranceId = (int)m_utterance->id();
-    int ret =
-        tts_add_text(m_handle, m_utterance->text()->toUTF8NonGCString().data(),
-                     curLanguage->toUTF8NonGCString().data(), voiceType,
-                     textSpeed, &utteranceId);
+
+    int ret = tts_add_text(m_handle, CSTR(utterText), CSTR(curLang), voiceType,
+                           textSpeed, &utteranceId);
     if (ret != TTS_ERROR_NONE) {
         STARFISH_LOG_ERROR("[TTS] tts_add_text failed : %d", ret);
         dispatchErrorEvent(this, m_utterance->id(),
@@ -657,7 +660,7 @@ void TTS::changeDefaultVoice(String* language, const int voiceType)
 
 void TTS::pause()
 {
-    if (!utterance()->id()) {
+    if (!utteranceList().size() || !utterance()->id() || m_isPaused) {
         return;
     }
 
@@ -672,7 +675,7 @@ void TTS::pause()
 
 void TTS::resume()
 {
-    if (!utterance()->id()) {
+    if (!utteranceList().size() || !utterance()->id()) {
         return;
     }
 
@@ -687,7 +690,7 @@ void TTS::resume()
 
 void TTS::cancel()
 {
-    if (!utterance()->id()) {
+    if (!utteranceList().size() || !utterance()->id()) {
         return;
     }
 

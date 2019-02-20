@@ -101,7 +101,7 @@ public:
         , m_id(0)
         , m_text(text)
         , m_lang(String::emptyString)
-        , m_voice(String::emptyString)
+        , m_voice(nullptr)
         , m_volume(1.0)
         , m_rate(1.0)
         , m_pitch(1.0)
@@ -146,12 +146,15 @@ public:
         return m_lang;
     }
 
-    void setVoice(String* voice)
+    void setVoice(SpeechSynthesisVoice* voice)
     {
         m_voice = voice;
+        if (m_voice) {
+            m_lang = m_voice->lang();
+        }
     }
 
-    String* voice()
+    SpeechSynthesisVoice* voice()
     {
         return m_voice;
     }
@@ -202,7 +205,7 @@ private:
     uint32_t m_id;
     String* m_text;
     String* m_lang;
-    String* m_voice;
+    SpeechSynthesisVoice* m_voice;
     float m_volume;
     float m_rate;
     float m_pitch;
@@ -229,6 +232,10 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSpeechSynthesis() const override;
 
+    bool paused();
+    bool speaking();
+    bool pending();
+
     void speak(SpeechSynthesisUtterance* u);
     void cancel();
     void pause();
@@ -241,8 +248,6 @@ public:
 #undef OVERRIDE
 
 private:
-    void makeVoicelist(GCUnorderedMap<String*, int>& list, String* defaultLang);
-
     bool m_isCreatedVoiceList;
     GCVector<SpeechSynthesisVoice*> m_voiceList;
 };

@@ -58,31 +58,45 @@ DEFINE_EVENT_LISTENER(SpeechSynthesis, voiceschanged);
 
 void SpeechSynthesis::speak(SpeechSynthesisUtterance* u)
 {
-    document()->window()->webView()->tts()->speak(u);
+    webView()->tts()->speak(u);
 }
 
 void SpeechSynthesis::cancel()
 {
-    document()->window()->webView()->tts()->cancel();
+    webView()->tts()->cancel();
 }
 
 void SpeechSynthesis::pause()
 {
-    document()->window()->webView()->tts()->pause();
+    webView()->tts()->pause();
 }
 
 void SpeechSynthesis::resume()
 {
-    document()->window()->webView()->tts()->resume();
+    webView()->tts()->resume();
+}
+
+bool SpeechSynthesis::paused()
+{
+    return webView()->tts()->isPaused();
+}
+
+bool SpeechSynthesis::speaking()
+{
+    return (webView()->tts()->utteranceList().size() >= 1);
+}
+
+bool SpeechSynthesis::pending()
+{
+    return (webView()->tts()->utteranceList().size() > 1);
 }
 
 GCVector<SpeechSynthesisVoice*>& SpeechSynthesis::getVoices()
 {
-    auto list = document()->window()->webView()->tts()->supportedVoiceList();
+    auto list = webView()->tts()->supportedVoiceList();
     size_t size = list.size();
     if (!m_isCreatedVoiceList && size > 0) {
-        String* defaultLang =
-            document()->window()->webView()->tts()->defaultLanguage();
+        String* defaultLang = webView()->tts()->defaultLanguage();
         auto iter = list.begin();
         while (iter != list.end()) {
             String* lang = iter->first;
