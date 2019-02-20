@@ -38,6 +38,7 @@ public:
         , m_element(nullptr)
         , m_isAccessibilityMode(false)
         , m_isCreatedVoiceList(false)
+        , m_isPaused(false)
         , m_state(-1)
         , m_mode(LWE::TTSMode::Default)
         , m_utterance(nullptr)
@@ -55,9 +56,20 @@ public:
     {
         return m_isAccessibilityMode;
     }
+
     void setAccessibilityMode(bool value)
     {
         m_isAccessibilityMode = value;
+    }
+
+    bool isPaused()
+    {
+        return m_isPaused;
+    }
+
+    void setPaused(bool b)
+    {
+        m_isPaused = b;
     }
 
     void setMode(LWE::TTSMode mode)
@@ -103,7 +115,7 @@ public:
     void destroy();
     void speech(Element* element, String* text);
     void speak(SpeechSynthesisUtterance* utterance);
-    void speakStoredUtterance();
+    void speakUtterances();
     void pause();
     void resume();
     void cancel();
@@ -126,6 +138,7 @@ private:
     Element* m_element;
     bool m_isAccessibilityMode;
     bool m_isCreatedVoiceList;
+    bool m_isPaused;
     int m_state;
     LWE::TTSMode m_mode;
     SpeechSynthesisUtterance* m_utterance;

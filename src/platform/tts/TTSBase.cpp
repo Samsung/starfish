@@ -81,7 +81,7 @@ void TTS::speak(SpeechSynthesisUtterance* utterance)
 {
 }
 
-void TTS::speakStoredUtterance()
+void TTS::speakUtterances()
 {
 }
 

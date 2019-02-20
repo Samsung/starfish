@@ -2,9 +2,9 @@
 
 [STARFISH_ENABLE_TTS, Exposed=Window]
 interface SpeechSynthesis : EventTarget {
-    [Unimplemented] readonly attribute boolean pending;
-    [Unimplemented] readonly attribute boolean speaking;
-    [Unimplemented] readonly attribute boolean paused;
+    readonly attribute boolean pending;
+    readonly attribute boolean speaking;
+    readonly attribute boolean paused;
 
     void speak(SpeechSynthesisUtterance utterance);
     void cancel();
@@ -25,7 +25,7 @@ partial interface Window {
 interface SpeechSynthesisUtterance : EventTarget {
     attribute DOMString text;
     attribute DOMString lang;
-    [Unimplemented] attribute SpeechSynthesisVoice? voice;
+    attribute SpeechSynthesisVoice? voice;
     [Unimplemented] attribute float volume;
     attribute float rate;
     [Unimplemented] attribute float pitch;
