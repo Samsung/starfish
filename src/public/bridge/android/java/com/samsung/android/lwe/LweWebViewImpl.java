@@ -435,9 +435,8 @@ public class LweWebViewImpl implements LweWebView {
 
     private void onReceivedError(int errorCode) {
         if (mWebViewClient != null) {
-            //TODO
-            // mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(""),
-            //    new SemWebResourceError(errorCode, "NotSupported"));
+            mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(""),
+                new SemWebResourceError(errorCode, ""));
         }
     }
 
@@ -515,6 +514,7 @@ public class LweWebViewImpl implements LweWebView {
 
         if (!loaded) {
             Log.e(sTag, "URL is not permitted. Please contact duddlf.choi@samsung.com to whitelist an URL.");
+            onReceivedError(SemWebViewClient.ERROR_BAD_URL);
         }
     }
 
