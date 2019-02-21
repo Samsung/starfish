@@ -54,7 +54,7 @@ public:
                                        NULL, NULL, NULL);
     }
 
-    virtual void detachNativeBuffer()
+    void detachNativeBuffer() override
     {
         if (m_buffer) {
             g_totalAllocatedCanvasSurfaceSize -=
@@ -68,7 +68,7 @@ public:
         }
     }
 
-    bool attachNativeBuffer(size_t w, size_t h)
+    bool attachNativeBuffer(size_t w, size_t h) override
     {
         if (m_width != w || m_height != h) {
             detachNativeBuffer();
@@ -93,7 +93,7 @@ public:
         return false;
     }
 
-    virtual uint8_t* mapBuffer()
+    virtual uint8_t* mapBuffer() override
     {
         return m_buffer;
     }
