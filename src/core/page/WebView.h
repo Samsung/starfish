@@ -398,7 +398,7 @@ public:
     }
 #endif
 
-    MessageLoop* messageLoop() const
+    MessageLoop* messageLoop() const override
     {
         return m_messageLoop;
     }
@@ -414,7 +414,7 @@ public:
     }
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
-    Inspector* inspector() const
+    Inspector* inspector() const override
     {
         return m_inspector;
     }
@@ -471,7 +471,7 @@ public:
         return m_publicLayerUserDataMap;
     }
 
-    Console* console() const
+    Console* console() const override
     {
         return m_console;
     }

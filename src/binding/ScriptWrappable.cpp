@@ -312,7 +312,7 @@ public:
         return ret;
     }
 
-    virtual bool isStringView()
+    bool isStringView() override
     {
         return true;
     }
