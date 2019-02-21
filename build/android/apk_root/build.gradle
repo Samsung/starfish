@@ -52,7 +52,7 @@ star.version.type = 5
 star.version.major = 1
 star.version.minor = 0
 star.version.patch = 0
-star.version.revision = 10
+star.version.revision = 11
 ext['android.disableResourceValidation'] = true
 
 apply from: 'sec/common.gradle'
