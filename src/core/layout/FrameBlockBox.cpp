@@ -194,15 +194,12 @@ void FrameBlockBox::computeContentHeight(LayoutContext& ctx, FrameBox* cb)
     if (needToEstablishBlockFormattingContext()) {
         if (!shouldLayout(ctx, LayoutWantToResolve::ResolveHeight, cb)) {
             bool isQuickLayout = ctx.isQuickLayout();
-            bool isRelativeBox =
-                style()->position() == PositionValue::RelativePositionValue;
             ctx.setIsQuickLayout(true);
             quickLayout(ctx);
             ctx.setIsQuickLayout(isQuickLayout);
-            if (!isQuickLayout || isRelativeBox) {
-                if (blockContainer(this)->hasBlockFlow() || isRelativeBox) {
-                    addToRelativePositionedBoxesIfNeeded(ctx);
-                }
+            if ((!isQuickLayout && blockContainer(this)->hasBlockFlow()) ||
+                blockContainer(this)->needToEstablishBlockFormattingContext()) {
+                addToRelativePositionedBoxesIfNeeded(ctx);
             }
             addToRelativePositionedBoxes(ctx);
             return;
