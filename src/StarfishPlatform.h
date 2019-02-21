@@ -1,0 +1,99 @@
+/*
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
+ *
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Lesser General Public
+ *  License as published by the Free Software Foundation; either
+ *  version 2 of the License, or (at your option) any later version.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Lesser General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Lesser General Public
+ *  License along with this library; if not, write to the Free Software
+ *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
+ *  USA
+ */
+
+#ifndef __StarfishPlatform__
+#define __StarfishPlatform__
+
+#if defined(STARFISH_EFL_CAIRO)
+#define PORT_WINDOW_BACKEND_GL
+#define PORT_CANVAS_BACKEND_CAIRO
+#define PORT_COMPOSITOR_BACKEND_GL
+#define PORT_EVENTLOOP_BACKEND_EFL
+#define PORT_IMAGEDECODER_BACKEND_MISC
+#define PORT_PIXEL_ORDER_BGRA
+#define PORT_WEBVIEW_BRIDGE_EFL
+#elif defined(STARFISH_ECORE_WAYLAND2_CAIRO_GL)
+#define PORT_WINDOW_BACKEND_GL
+#define PORT_CANVAS_BACKEND_CAIRO
+#define PORT_COMPOSITOR_BACKEND_GL
+#define PORT_EVENTLOOP_BACKEND_EFL
+#define PORT_IMAGEDECODER_BACKEND_MISC
+#define PORT_PIXEL_ORDER_BGRA
+#define PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2
+#elif defined(STARFISH_GLFW_CAIRO_GL)
+#define PORT_WINDOW_BACKEND_GL
+#define PORT_CANVAS_BACKEND_CAIRO
+#define PORT_EVENTLOOP_BACKEND_LIBUV
+#define PORT_IMAGEDECODER_BACKEND_MISC
+#define PORT_COMPOSITOR_BACKEND_GL
+#define PORT_PIXEL_ORDER_BGRA
+#define PORT_WEBVIEW_BRIDGE_GLFW
+#define PORT_NEEDS_THREADED_PUBLIC_API
+#elif defined(STARFISH_EFL_CAIRO_HEADLESS)
+#define PORT_WINDOW_BACKEND_EFL_HEADLESS
+#define PORT_GRAPHIC_BACKEND_MOCK
+#define PORT_CANVAS_BACKEND_MOCK
+#define PORT_COMPOSITOR_BACKEND_MOCK
+#define PORT_EVENTLOOP_BACKEND_EFL
+#define PORT_IMAGEDECODER_BACKEND_MOCK
+#define PORT_PIXEL_ORDER_BGRA
+#elif defined(STARFISH_EFL_SKIA)
+#define PORT_WINDOW_BACKEND_GL
+#define PORT_CANVAS_BACKEND_SKIA
+#define PORT_EVENTLOOP_BACKEND_EFL
+#define PORT_IMAGEDECODER_BACKEND_MISC
+#define PORT_COMPOSITOR_BACKEND_GL
+#define PORT_PIXEL_ORDER_RGBA
+#define PORT_WEBVIEW_BRIDGE_EFL
+#elif defined(STARFISH_DALI)
+#define PORT_WINDOW_BACKEND_GB
+#define PORT_CANVAS_BACKEND_CAIRO
+#define PORT_COMPOSITOR_BACKEND_CAIRO
+#define PORT_EVENTLOOP_BACKEND_LIBUV
+#define PORT_IMAGEDECODER_BACKEND_MISC
+#define PORT_PIXEL_ORDER_BGRA
+#define PORT_WEBVIEW_BRIDGE_DALI
+#define PORT_NEEDS_THREADED_PUBLIC_API
+#elif defined(STARFISH_TIZEN_WEARABLE_WIDGET)
+#define PORT_WINDOW_BACKEND_GB
+#define PORT_CANVAS_BACKEND_CAIRO
+#define PORT_COMPOSITOR_BACKEND_CAIRO
+#define PORT_EVENTLOOP_BACKEND_EFL
+#define PORT_IMAGEDECODER_BACKEND_MISC
+#define PORT_PIXEL_ORDER_BGRA
+#define PORT_WEBVIEW_BRIDGE_EFL
+#elif defined(STARFISH_ANDROID)
+#define PORT_WINDOW_BACKEND_GB
+#define PORT_CANVAS_BACKEND_SKIA
+#define PORT_COMPOSITOR_BACKEND_SKIA
+#define PORT_EVENTLOOP_BACKEND_LIBUV
+#define PORT_IMAGEDECODER_BACKEND_MISC
+#define PORT_PIXEL_ORDER_RGBA
+#define PORT_NEEDS_THREADED_PUBLIC_API
+#elif defined(STARFISH_WINDOWS)
+#define PORT_WINDOW_BACKEND_GL
+#define PORT_GRAPHIC_BACKEND_GL
+#define PORT_CANVAS_BACKEND_CAIRO
+#define PORT_EVENTLOOP_BACKEND_WINDOWS
+#define PORT_IMAGEDECODER_BACKEND_MISC
+#define PORT_COMPOSITOR_BACKEND_GL
+#define PORT_PIXEL_ORDER_BGRA
+#endif
+
+#endif
