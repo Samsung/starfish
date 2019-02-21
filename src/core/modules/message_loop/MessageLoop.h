@@ -25,16 +25,20 @@
 #include "core/modules/threading/Locker.h"
 #endif
 
-#include "core/modules/message_loop/MessageLoopInterface.h"
+#ifdef STARFISH_WEBWORKER_HOST
+#define BASE_CLASS gc
+#else
+#include "core/modules/message_loop/MessageLoopMixin.h"
+#define BASE_CLASS gc, public MessageLoopMixin
+#endif
 
 namespace Starfish {
 
-class WebView;
 class ScriptContext;
-enum class HistoryManagerAction;
 
-class MessageLoop : public MessageLoopInterface, public gc {
+class MessageLoop : public BASE_CLASS {
     friend class MessageLoopImpl;
+    friend class MessageLoopMixin;
 
 public:
     MessageLoop();
@@ -59,10 +63,7 @@ public:
         ScriptContext* ctx); // give nullptr to clear every idlers
 
     void destroy();
-    void invokeNavigate(WebView* wv, ResourceURL* url, ReferrerURL* referrerURL,
-                        HistoryManagerAction action, bool force = false);
 
-    // methods not related with WebView Context
     static void init();
     static void run();
     static void stop();
@@ -74,7 +75,6 @@ protected:
     std::unordered_set<size_t> m_idlers;
     Mutex* m_idlersFromOtherThreadMutex;
     std::unordered_set<size_t> m_idlersFromOtherThread;
-    void* m_navigateInvokeIdler;
 
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
     std::list<size_t> m_idlersFromOtherThreadForUV;
@@ -134,5 +134,7 @@ public:
 #endif
 };
 } // namespace Starfish
+
+#undef BASE_CLASS
 
 #endif

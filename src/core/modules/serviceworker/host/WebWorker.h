@@ -17,7 +17,7 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_WEBWORKER_HOST) && !defined(__StarfishWebWorker__)
+#if defined(STARFISH_WEBWORKER_HOST) && !defined(__StarfishWebWorker__)
 #define __StarfishWebWorker__
 
 namespace Starfish {

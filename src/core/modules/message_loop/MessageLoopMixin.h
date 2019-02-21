@@ -17,18 +17,37 @@
  *  USA
  */
 
-#ifdef STARFISH_WEBWORKER_HOST
+#ifndef __StarfishMessageLoopMixin__
+#define __StarfishMessageLoopMixin__
 
-#include "StarfishBase.h"
-#include "core/modules/serviceworker/host/WebWorker.h"
-#include <functional>
-#include <cstdio>
-#include <iostream>
+#if defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+#include <Windows.h>
+class MessageLoop;
+#endif
 
-int main(int argc, char* argv[])
-{
-    Starfish::WebWorker webWorker;
-    return webWorker.run();
-}
+namespace Starfish {
+
+class WebView;
+class ResourceURL;
+class ReferrerURL;
+class ScriptContext;
+enum class HistoryManagerAction;
+
+class MessageLoopMixin {
+public:
+    void invokeNavigate(WebView* wv, ResourceURL* url, ReferrerURL* referrerURL,
+                        HistoryManagerAction action, bool force = false);
+
+    void onDestroyed();
+
+#if defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
+    static void processMessage(MessageLoop* self, const MSG& message);
+#endif
+
+private:
+    void* m_navigateInvokeIdler{ nullptr };
+};
+
+} // namespace Starfish
 
 #endif

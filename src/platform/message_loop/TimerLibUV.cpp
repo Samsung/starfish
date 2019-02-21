@@ -62,7 +62,7 @@ struct TimeoutData {
     WindowSetTimeoutHandler m_handler;
 };
 
-void on_close_handle(uv_handle_t* handle)
+static void on_close_handle(uv_handle_t* handle)
 {
     free(handle);
 }

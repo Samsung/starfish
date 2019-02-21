@@ -17,23 +17,24 @@
  *  USA
  */
 
-#include "StarfishConfig.h"
+#include "StarfishPlatform.h"
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
-#include "Starfish.h"
+#include "StarfishBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
-#include "core/page/Window.h"
 #include "core/page/ScriptContext.h"
-#include "core/page/WebView.h"
 
 #include <uv.h>
 
 namespace Starfish {
 
-void on_close_handle(uv_handle_t* handle);
+static void on_close_handle(uv_handle_t* handle)
+{
+    free(handle);
+}
 
 static uv_async_t g_idlerThreadSyncHandle;
 static size_t g_uvRunCount;
@@ -56,7 +57,6 @@ struct IdlerData {
 MessageLoop::MessageLoop()
     : m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
-    , m_navigateInvokeIdler(nullptr)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -290,31 +290,13 @@ void MessageLoop::clearPendingIdlers(ScriptContext* ctx)
     }
 }
 
-struct InvokeNavigateData : public gc {
-    WebView* wv;
-    ResourceURL* url;
-    ReferrerURL* referrerURL;
-    uv_timer_t* idler;
-    HistoryManagerAction action;
-    void** extra;
-
-    static void* operator new(size_t s)
-    {
-        return GC_MALLOC_UNCOLLECTABLE(s);
-    }
-};
-
 void MessageLoop::destroy()
 {
     m_inClosingState = true;
-    if (m_navigateInvokeIdler) {
-        uv_timer_stop(((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
-        uv_close(
-            (uv_handle_t*)((InvokeNavigateData*)m_navigateInvokeIdler)->idler,
-            on_close_handle);
-        delete ((InvokeNavigateData*)m_navigateInvokeIdler);
-        m_navigateInvokeIdler = nullptr;
-    }
+
+#ifndef STARFISH_WEBWORKER_HOST
+    onDestroyed();
+#endif
 
     while (true) {
         while (!m_idlersFromOtherThreadForUV.empty()) {
@@ -371,40 +353,6 @@ void MessageLoop::destroy()
     }
 
     uv_close((uv_handle_t*)m_idlerThreadAsyncHandle, on_close_handle);
-}
-
-void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ReferrerURL* referrerURL,
-                                 HistoryManagerAction action, bool force)
-{
-    if (m_navigateInvokeIdler != nullptr) {
-        auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
-        uv_timer_stop(data->idler);
-        uv_close((uv_handle_t*)data->idler, on_close_handle);
-        delete data;
-    }
-
-    InvokeNavigateData* data = new InvokeNavigateData();
-    m_navigateInvokeIdler = data;
-    data->extra = &m_navigateInvokeIdler;
-    data->wv = wv;
-    data->url = url;
-    data->referrerURL = referrerURL;
-    data->action = action;
-    data->idler = (uv_timer_t*)malloc(sizeof(uv_timer_t));
-    uv_timer_init(uv_default_loop(), data->idler);
-    data->idler->data = data;
-    uv_timer_start(
-        data->idler,
-        [](uv_timer_t* handle) {
-            InvokeNavigateData* data = (InvokeNavigateData*)handle->data;
-            data->wv->navigate(data->url, data->action, data->referrerURL);
-            *(data->extra) = nullptr;
-            uv_timer_stop(handle);
-            delete data;
-            uv_close((uv_handle_t*)handle, on_close_handle);
-        },
-        0, 0);
 }
 
 void MessageLoop::init()

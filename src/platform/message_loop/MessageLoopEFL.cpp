@@ -17,16 +17,16 @@
  *  USA
  */
 
-#include "StarfishConfig.h"
+#include "StarfishPlatform.h"
+
 #if defined(PORT_EVENTLOOP_BACKEND_EFL)
 
-#include "Starfish.h"
+#include "StarfishBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/page/ScriptContext.h"
-#include "core/page/WebView.h"
 
 #include <Ecore.h>
 
@@ -39,7 +39,6 @@ namespace Starfish {
 MessageLoop::MessageLoop()
     : m_inClosingState(false)
     , m_idlersFromOtherThreadMutex(new Mutex())
-    , m_navigateInvokeIdler(nullptr)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -50,30 +49,13 @@ MessageLoop::MessageLoop()
     ecore_animator_frametime_set(1 / 120.0);
 }
 
-struct InvokeNavigateData : public gc {
-    WebView* wv;
-    ResourceURL* url;
-    ReferrerURL* referrerURL;
-    Ecore_Animator* idler;
-    HistoryManagerAction action;
-    void** extra;
-
-    static void* operator new(size_t s)
-    {
-        return GC_MALLOC_UNCOLLECTABLE(s);
-    }
-};
-
 void MessageLoop::destroy()
 {
     m_inClosingState = true;
-    if (m_navigateInvokeIdler) {
-        ecore_animator_freeze(
-            ((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
-        ecore_animator_del(((InvokeNavigateData*)m_navigateInvokeIdler)->idler);
-        delete ((InvokeNavigateData*)m_navigateInvokeIdler);
-        m_navigateInvokeIdler = nullptr;
-    }
+
+#ifndef STARFISH_WEBWORKER_HOST
+    onDestroyed();
+#endif
 
     while (true) {
         {
@@ -327,35 +309,6 @@ void MessageLoop::clearPendingIdlers(ScriptContext* ctx)
         iterOther++;
     }
     m_idlersFromOtherThreadMutex->unlock();
-}
-
-void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ReferrerURL* referrerURL,
-                                 HistoryManagerAction action, bool force)
-{
-    if (m_navigateInvokeIdler != nullptr) {
-        auto data = ((InvokeNavigateData*)m_navigateInvokeIdler);
-        ecore_animator_freeze(data->idler);
-        ecore_animator_del(data->idler);
-        delete data;
-    }
-
-    InvokeNavigateData* data = new InvokeNavigateData();
-    m_navigateInvokeIdler = data;
-    data->extra = &m_navigateInvokeIdler;
-    data->wv = wv;
-    data->url = url;
-    data->referrerURL = referrerURL;
-    data->action = action;
-    data->idler = ecore_animator_add(
-        [](void* d) -> Eina_Bool {
-            InvokeNavigateData* data = (InvokeNavigateData*)d;
-            data->wv->navigate(data->url, data->action, data->referrerURL);
-            *(data->extra) = nullptr;
-            delete data;
-            return ECORE_CALLBACK_CANCEL;
-        },
-        data);
 }
 
 void MessageLoop::init()

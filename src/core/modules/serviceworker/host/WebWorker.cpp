@@ -17,7 +17,7 @@
  *  USA
  */
 
-#ifdef STARFISH_ENABLE_WEBWORKER_HOST
+#ifdef STARFISH_WEBWORKER_HOST
 
 #include "StarfishBase.h"
 #include "core/modules/serviceworker/host/WebWorker.h"

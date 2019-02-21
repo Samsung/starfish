@@ -17,16 +17,15 @@
  *  USA
  */
 
-#include "StarfishConfig.h"
+#include "StarfishPlatform.h"
 #if defined(PORT_EVENTLOOP_BACKEND_WINDOWS)
 
-#include "Starfish.h"
+#include "StarfishBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/page/ScriptContext.h"
-#include "core/page/WebView.h"
 
 #include <Windows.h>
 
@@ -34,7 +33,6 @@ namespace Starfish {
 
 #define IDLE_MESSAGE (WM_USER + 20)
 #define IDLE_MESSAGE_FROM_OTHER_THREAD (WM_USER + 21)
-#define IDLE_MESSAGE_INVOKE_NAVIGATE (WM_USER + 22)
 
 struct IdlerData {
     void (*m_fn)(size_t, void*);
@@ -50,7 +48,6 @@ struct IdlerData {
 
 MessageLoop::MessageLoop()
     : m_idlersFromOtherThreadMutex(new Mutex())
-    , m_navigateInvokeIdler(nullptr)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     , m_countingMutex(new Mutex())
     , m_runningThreadCount(0)
@@ -61,16 +58,6 @@ MessageLoop::MessageLoop()
 }
 
 static_assert(sizeof(size_t) == sizeof(WPARAM), "");
-
-struct InvokeNavigateData {
-    WebView* wv;
-    ResourceURL* url;
-    ReferrerURL* referrerURL;
-    UINT_PTR timerID;
-    HistoryManagerAction action;
-};
-
-__declspec(thread) InvokeNavigateData* g_invokeNavigateData;
 
 class MessageLoopImpl {
 public:
@@ -125,22 +112,8 @@ public:
             STARFISH_ASSERT(_CrtCheckMemory());
             delete id;
         } break;
-        case IDLE_MESSAGE_INVOKE_NAVIGATE: {
-            STARFISH_ASSERT(message.message == IDLE_MESSAGE_INVOKE_NAVIGATE);
-            if ((size_t)g_invokeNavigateData == (size_t)message.wParam) {
-                g_invokeNavigateData->wv->navigate(
-                    g_invokeNavigateData->url, g_invokeNavigateData->action,
-                    g_invokeNavigateData->referrerURL);
-                g_invokeNavigateData = nullptr;
-            }
-            GC_FREE((void*)message.wParam);
-
-            if (self->m_inClosingState && self->m_idlers.size() == 0 &&
-                self->m_idlersFromOtherThread.size() == 0) {
-                PostMessage(NULL, WM_QUIT, 0, 0);
-            }
-        } break;
         default:
+            MessageLoopMixin::processMessage(message);
             break;
         }
     }
@@ -154,7 +127,10 @@ void processMessage(MessageLoop* self, const MSG& message)
 void MessageLoop::destroy()
 {
     m_inClosingState = true;
-    g_invokeNavigateData = nullptr;
+
+#ifndef STARFISH_WEBWORKER_HOST
+    onDestroyed();
+#endif
 
     if (m_idlers.size() != 0 || m_idlersFromOtherThread.size() != 0) {
         MSG message;
@@ -302,19 +278,5 @@ void MessageLoop::clearPendingIdlers(ScriptContext* ctx)
     STARFISH_ASSERT(_CrtCheckMemory());
 }
 
-void MessageLoop::invokeNavigate(WebView* wv, ResourceURL* url,
-                                 ReferrerURL* referrerURL,
-                                 HistoryManagerAction action, bool force)
-{
-    InvokeNavigateData* data =
-        new (GC_MALLOC_UNCOLLECTABLE(sizeof(InvokeNavigateData)))
-            InvokeNavigateData();
-    g_invokeNavigateData = data;
-    data->wv = wv;
-    data->url = url;
-    data->referrerURL = referrerURL;
-    data->action = action;
-    PostMessage(NULL, IDLE_MESSAGE_INVOKE_NAVIGATE, (size_t)data, 0);
-}
 } // namespace Starfish
 #endif

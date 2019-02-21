@@ -41,8 +41,10 @@
  *  USA
  */
 
-#ifndef __StarfishCommon__
-#define __StarfishCommon__
+#ifndef __StarfishBase__
+#define __StarfishBase__
+
+#include "StarfishInfo.h"
 
 #if defined(__clang__)
 #define COMPILER_CLANG 1
@@ -594,4 +596,4 @@ inline T2 narrow_cast(T1 v)
         v % (static_cast<T1>(std::numeric_limits<T2>::max()) + 1));
 }
 
-#endif // #ifndef __StarfishCommon__
+#endif
