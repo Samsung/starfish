@@ -26,6 +26,8 @@
 #include "core/modules/threading/ParallelJobExecutor.h"
 #include "core/modules/canvas/ShadowBlur.h"
 
+#define ENABLE_PARALLEL_BLUR 0
+
 namespace Starfish {
 
 FilterFunction* FilterFunction::create(const CSSFilterFunction& from)
@@ -105,20 +107,21 @@ void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
                                size_t height, size_t stride) const
 {
     float radius = m_stdDeviation.numberData() * 2;
-    {
-        // I disabled parallel blur temporarily
-        // because the working time is not stable(~2x slower than single)
-        // I think the reason is worker thread sometimes stall because OS
-        // threading scheduling
-        // and huge memory operation is pretty slow in ARM(parallel needs buffer
-        // copy)
-        // we can enable after resolve the issue above & finding heterogeneous
-        // multi-core CPU in runtime
-        ShadowBlur blur(buffer, width, height, stride);
-        blur.process(radius);
-        return;
-    }
 
+#if ENABLE_PARALLEL_BLUR == 0
+    // I disabled parallel blur temporarily
+    // because the working time is not stable(~2x slower than single)
+    // I think the reason is worker thread sometimes stall because OS
+    // threading scheduling
+    // and huge memory operation is pretty slow in ARM(parallel needs buffer
+    // copy)
+    // we can enable after resolve the issue above & finding heterogeneous
+    // multi-core CPU in runtime
+
+    ShadowBlur blur(buffer, width, height, stride);
+    blur.process(radius);
+
+#else
     size_t extraHeight = 3 * (radius * 0.5);
     size_t numberOfThreadsToRequest =
         (width * height) / (100 * 100 + extraHeight * width);
@@ -200,7 +203,7 @@ void BlurFilterFunction::apply(WebView* webView, uint8_t* buffer, size_t width,
         ShadowBlur blur(buffer, width, height, stride);
         blur.process(radius);
     }
-
+#endif
     return;
 }
 
@@ -263,5 +266,7 @@ bool FilterFunctions::getStandardDeviationOfBlurFilter(Length& out)
     }
     return false;
 }
+
+#undef ENABLE_PARALLEL_BLUR
 
 } // namespace Starfish
