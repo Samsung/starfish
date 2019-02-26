@@ -1,0 +1,55 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/android:api-28-ndk-r17b
+
+    environment:
+      JVM_OPTS: -Xmx3200m
+      http_proxy: http://10.112.1.184:8080
+      https_proxy: http://10.112.1.184:8080
+      no_proxy: 10.252.250.53
+
+    steps:
+      - checkout
+      - run:
+          name:  Setup proxy
+          command: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
+      - run:
+          name: Update cmake
+          # use '/opt/android/sdk/tools/bin/sdkmanager --list | grep cmake' to check compatible cmake version
+          command: yes | /opt/android/sdk/tools/bin/sdkmanager "cmake;3.6.4111459" --proxy=http --proxy_host=${proxyHost} --proxy_port=${proxyPort} || true
+      - run:
+          name: Update SDK
+          command: yes | /opt/android/sdk/tools/bin/sdkmanager --update --proxy=http --proxy_host=${proxyHost} --proxy_port=${proxyPort} || true
+      - run:
+          name: Accept SDK license
+          command: yes | /opt/android/sdk/tools/bin/sdkmanager --licenses --proxy=http --proxy_host=${proxyHost} --proxy_port=${proxyPort} || true
+      - run:
+          name: Setup gradle
+          command: |
+            cat <<EOT >> ~/.gradle/init.gradle
+            allprojects {
+                buildscript.repositories {
+                    maven { url "https://maven.google.com" }
+                    jcenter({ url "http://jcenter.bintray.com" })
+                    maven { url "http://10.252.250.53:8081/lm/content/groups/public/" }
+                }
+                buildscript.configurations.all {
+                    resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+                    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+                }
+                repositories {
+                    maven { url "https://maven.google.com" }
+                    jcenter({ url "http://jcenter.bintray.com" })
+                    maven { url "http://10.252.250.53:8081/lm/content/groups/public/" }
+                }
+                configurations.all {
+                    resolutionStrategy.cacheDynamicVersionsFor 0, 'seconds'
+                    resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
+                }
+            }
+            EOT
+      - run:
+          name: Build Release Apk
+          command: ./gradlew assembleRelease
