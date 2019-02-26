@@ -38,6 +38,30 @@ import dalvik.system.PathClassLoader;
 
 /**
  * This class is a view that displays Web pages.
+ *
+ * <h3>Usage Information</h3>
+ *
+ * <p>SemWebView is a lightweight WebView that is designed to be memory-efficient than
+ * Android WebView. Here are some guidelines on using SemWebView.</p>
+ *
+ * <ol>
+ * <li>Decide when to use SemWebView instead of stock WebView. SemWebView does not
+ *    aim to replace the stock WebView, but aims to reduce runtime memory usage when
+ *    using the supported APIs. Once developers decide to use SemWebView, or
+ *    update existing code already written in WebView, they may need to write
+ *    an separate implementation path, as not all APIs supported by WebView are
+ *    supported by SemWebView.</li>
+ *
+ * <li> SemWebView is an optional component, and hence, some devices could come
+ *    without having SemWebView installed. In the case where SemWebView does not
+ *    come with a device, all operations made on SemWebView will be forwarded to
+ *    the stock WebView, and works as if Android WebView were used.</li>
+ *
+ * <li> Supported Web pages are controlled by a whitelist. To add URLs to the whitelist,
+ *    please contact <code>duddlf.choi@samsung.com</code>.</li>
+ * </ol>
+ *
+ * @since SEP 10.2
  */
 public class SemWebView extends AbsoluteLayout {
 
