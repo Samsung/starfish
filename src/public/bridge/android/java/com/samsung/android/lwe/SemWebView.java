@@ -19,22 +19,27 @@
 
 package com.samsung.android.lwe;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageManager;
+import android.graphics.Bitmap;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.SurfaceView;
 import android.view.View;
-import android.view.inputmethod.EditorInfo;
-import android.view.inputmethod.InputConnection;
+import android.webkit.DownloadListener;
+import android.webkit.JavascriptInterface;
 import android.webkit.ValueCallback;
+import android.webkit.WebChromeClient;
+import android.webkit.WebResourceError;
+import android.webkit.WebResourceRequest;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.AbsoluteLayout;
+
 import dalvik.system.PathClassLoader;
-import java.lang.reflect.Constructor;
 
 /**
  * This class is a view that displays Web pages.
  */
-public class SemWebView extends SurfaceView {
+public class SemWebView extends AbsoluteLayout {
 
     private static PathClassLoader pcl = null;
     /**
@@ -42,62 +47,39 @@ public class SemWebView extends SurfaceView {
      */
     public static final String PACKAGE_NAME = "com.samsung.android.lwe";
     private static final String LweWebViewImplName = "com.samsung.android.lwe.LweWebViewImpl";
+    private static boolean USE_LWE = false;
 
     /**
      * @hide
      */
     protected static final String sTag = "SemWebView";
 
-    private LweWebView delegate = null;
+    private LweWebView mLWEWebView = null;
+    private WebView mAndroidWebView = null;
 
-    /**
-     * Creates a new InputConnection for an InputMethod to interact with the WebView.
-     *
-     * @param outAttrs Fill in with attribute information about the connection.
-     * @return InputConnection
-     * @since Lightweight Web Engine 1.0
-     */
-    @Override
-    public InputConnection onCreateInputConnection(EditorInfo outAttrs) {
-        if (delegate != null)
-            return delegate.getInputConnectionInstance(this);
-        return null;
-    }
-
-    /**
-     * Called when the visibility of the view or an ancestor of the view has changed.
-     *
-     * @param changedView The view whose visibility changed. May be this or an ancestor view.
-     * @param visibility The new visibility, one of View.VISIBLE, View.INVISIBLE or View.GONE.
-     * @since Lightweight Web Engine 1.0
-     */
-    @Override
-    protected void onVisibilityChanged(View changedView, int visibility) {
-        super.onVisibilityChanged(changedView, visibility);
-        if (delegate != null) {
-            delegate.onVisibilityChanged(changedView, visibility);
+    private boolean canUseLWE() {
+        if (USE_LWE && mLWEWebView != null) {
+            return true;
+        } else if (mAndroidWebView == null) {
+            throw new AssertionError("Both LWE and WebView are not available.");
         }
+        return false;
     }
 
-    /**
-     * Called when the window containing has change its visibility (between GONE,
-     * INVISIBLE, and VISIBLE). Note that this tells you whether or not your window is
-     * being made visible to the window manager; this does not tell you whether or
-     * not your window is obscured by other windows on the screen, even if it is
-     * itself visible.
-     *
-     * @param visibility The new visibility of the window.
-     * @since Lightweight Web Engine 1.0
-     */
-    @Override
-    protected void onWindowVisibilityChanged(int visibility) {
-        super.onWindowVisibilityChanged(visibility);
+    private boolean checkLWEInstallation() {
+        /*
+        try{
+            getContext().getPackageManager().getPackageInfo(PACKAGE_NAME, 0);
+            USE_LWE = true;
+        }catch (Exception e){}
+        */
+        USE_LWE = true;
+        return USE_LWE;
     }
 
-    private LweWebView getWebViewInstance() {
-        if (delegate == null) {
+    private LweWebView getLWEWebViewInstance(Context context, AttributeSet attrs, int defStyle) {
+        if (mLWEWebView == null) {
             LweWebView result = null;
-
             // Should uncomment following code for downloadable mode.
             /*
             try {
@@ -118,12 +100,12 @@ public class SemWebView extends SurfaceView {
             }
             */
             if (result == null) {
-                result = new LweWebViewImpl();
+                result = new LweWebViewImpl(context, attrs, defStyle);
             }
             return result;
         }
 
-        return delegate;
+        return mLWEWebView;
     }
 
     /**
@@ -159,10 +141,22 @@ public class SemWebView extends SurfaceView {
      */
     public SemWebView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
+        if (checkLWEInstallation()) {
+            mLWEWebView = getLWEWebViewInstance(context, attrs, defStyle);
+            if (mLWEWebView != null)
+                mLWEWebView.initWebView(this);
 
-        delegate = getWebViewInstance();
-        if (delegate != null)
-            delegate.initWebView(this);
+            addView((View)mLWEWebView);
+        } else {
+            mAndroidWebView = new WebView(context, attrs, defStyle);
+            mAndroidWebView.getSettings().setJavaScriptEnabled(true);
+            mAndroidWebView.setWebViewClient(new WebViewClient() {
+                                             @Override
+                                             public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                                                 return false;
+                                             }});
+            addView(mAndroidWebView);
+        }
     }
 
     /**
@@ -172,8 +166,10 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void loadUrl(String url) {
-        if (delegate != null) {
-            delegate.loadUrl(url);
+        if (canUseLWE()) {
+            mLWEWebView.loadUrl(url);
+        } else {
+            mAndroidWebView.loadUrl(url);
         }
     }
 
@@ -184,9 +180,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public String getUrl() {
-        if (delegate != null)
-            return delegate.getUrl();
-        return null;
+        if (canUseLWE()) {
+            return mLWEWebView.getUrl();
+        } else {
+            return mAndroidWebView.getUrl();
+        }
     }
 
     /**
@@ -200,15 +198,17 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void loadData(String data, String mimeType, String encoding) {
-        if (delegate != null) {
+
+        if (canUseLWE()) {
             if (mimeType == null) {
                 mimeType = "text/html";
             }
             if (encoding == null) {
                 encoding = "UTF-8";
             }
-
-            delegate.loadData(data, mimeType, encoding);
+            mLWEWebView.loadData(data, mimeType, encoding);
+        } else {
+            mAndroidWebView.loadData(data, mimeType, encoding);
         }
     }
 
@@ -218,8 +218,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void reload() {
-        if (delegate != null)
-            delegate.reload();
+        if (canUseLWE()) {
+            mLWEWebView.reload();
+        } else {
+            mAndroidWebView.reload();
+        }
     }
 
     /**
@@ -228,8 +231,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void stopLoading() {
-        if (delegate != null)
-            delegate.stopLoading();
+        if (canUseLWE()) {
+            mLWEWebView.stopLoading();
+        } else {
+            mAndroidWebView.stopLoading();
+        }
     }
 
     /**
@@ -238,8 +244,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void goBack() {
-        if (delegate != null)
-            delegate.goBack();
+        if (canUseLWE()) {
+            mLWEWebView.goBack();
+        } else {
+            mAndroidWebView.goBack();
+        }
     }
 
     /**
@@ -248,8 +257,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void goForward() {
-        if (delegate != null)
-            delegate.goForward();
+        if (canUseLWE()) {
+            mLWEWebView.goForward();
+        } else {
+            mAndroidWebView.goForward();
+        }
     }
 
     /**
@@ -260,9 +272,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public boolean canGoBack() {
-        if (delegate != null)
-            return delegate.canGoBack();
-        return false;
+        if (canUseLWE()) {
+            return mLWEWebView.canGoBack();
+        } else {
+            return mAndroidWebView.canGoBack();
+        }
     }
 
     /**
@@ -273,9 +287,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public boolean canGoForward() {
-        if (delegate != null)
-            return delegate.canGoForward();
-        return false;
+        if (canUseLWE()) {
+            return mLWEWebView.canGoForward();
+        } else {
+            return mAndroidWebView.canGoForward();
+        }
     }
 
     /**
@@ -286,9 +302,13 @@ public class SemWebView extends SurfaceView {
      * @param name The name used to expose the object in JavaScript
      * @since Lightweight Web Engine 1.0
      */
+    @SuppressLint("JavascriptInterface")
     public void addJavascriptInterface(Object object, String name) {
-        if (delegate != null)
-            delegate.addJavascriptInterface(object, name);
+        if (canUseLWE()) {
+            mLWEWebView.addJavascriptInterface(object, name);
+        } else {
+            mAndroidWebView.addJavascriptInterface(object, name);
+        }
     }
 
     /**
@@ -298,8 +318,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void removeJavascriptInterface(String name) {
-        if (delegate != null)
-            delegate.removeJavascriptInterface(name);
+        if (canUseLWE()) {
+            mLWEWebView.removeJavascriptInterface(name);
+        } else {
+            mAndroidWebView.removeJavascriptInterface(name);
+        }
     }
 
     /**
@@ -309,8 +332,10 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void clearCache(boolean includeDiskFiles) {
-        if (delegate != null) {
-            delegate.clearCache(includeDiskFiles);
+        if (canUseLWE()) {
+            mLWEWebView.clearCache(includeDiskFiles);
+        } else {
+            mAndroidWebView.clearCache(includeDiskFiles);
         }
     }
 
@@ -324,8 +349,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void evaluateJavascript(String script, ValueCallback<String> resultCallback) {
-        if (delegate != null)
-            delegate.evaluateJavascript(script, resultCallback);
+        if (canUseLWE()) {
+            mLWEWebView.evaluateJavascript(script, resultCallback);
+        } else {
+            mAndroidWebView.evaluateJavascript(script, resultCallback);
+        }
     }
 
     /**
@@ -334,8 +362,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void clearHistory() {
-        if (delegate != null)
-            delegate.clearHistory();
+        if (canUseLWE()) {
+            mLWEWebView.clearHistory();
+        } else {
+            mAndroidWebView.clearHistory();
+        }
     }
 
     /**
@@ -345,11 +376,11 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public SemWebSettings getSettings() {
-        if (delegate != null) {
-            return delegate.getSettings();
+        if (canUseLWE()) {
+            return mLWEWebView.getSettings();
+        } else {
+            return new SemWebSettings(mAndroidWebView);
         }
-
-        return null;
     }
 
     /**
@@ -360,8 +391,47 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void setWebViewClient(SemWebViewClient client) {
-        if (delegate != null)
-            delegate.setWebViewClient(client);
+        if (canUseLWE()) {
+            mLWEWebView.setWebViewClient(client);
+        } else {
+
+            class WebViewClientWrapper extends WebViewClient {
+                private SemWebView mSemWebview;
+                private SemWebViewClient mSemWebViewClient;
+
+                WebViewClientWrapper(SemWebView webview, SemWebViewClient client){
+                    mSemWebview = webview;
+                    mSemWebViewClient = client;
+                }
+
+                @Override
+                public void onPageStarted(WebView view, String url, Bitmap favicon) {
+                    mSemWebViewClient.onPageStarted(mSemWebview, url, favicon);
+                }
+
+                @Override
+                public void onLoadResource(WebView view, String url) {
+                    mSemWebViewClient.onLoadResource(mSemWebview, url);
+                }
+
+                @Override
+                public void onPageFinished(WebView view, String url) {
+                    mSemWebViewClient.onPageFinished(mSemWebview, url);
+                }
+
+
+                @Override
+                public void onReceivedError(WebView view, WebResourceRequest request, WebResourceError error) {
+                    mSemWebViewClient.onReceivedError(mSemWebview, new WebResourceRequestImpl(request.getUrl().toString()), new SemWebResourceError(error.getErrorCode(), error.getDescription()));
+                }
+
+                @Override
+                public boolean shouldOverrideUrlLoading(WebView view, WebResourceRequest request) {
+                    return false;
+                }
+            }
+            mAndroidWebView.setWebViewClient(new WebViewClientWrapper(this, client));
+        }
     }
 
     /**
@@ -371,8 +441,22 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void setWebLweClient(SemWebLweClient client) {
-        if (delegate != null) {
-            delegate.setWebLweClient(client);
+        if (canUseLWE()) {
+            mLWEWebView.setWebLweClient(client);
+        } else {
+            class WebChromeClientWrapper extends WebChromeClient {
+                private SemWebView mSemWebview;
+                private SemWebLweClient mSemWebLweClient;
+                WebChromeClientWrapper(SemWebView webview, SemWebLweClient client){
+                    mSemWebview = webview;
+                    mSemWebLweClient = client;
+                }
+                @Override
+                public void onProgressChanged(WebView view, int newProgress) {
+                    mSemWebLweClient.onProgressChanged(mSemWebview, newProgress);
+                }
+            }
+            mAndroidWebView.setWebChromeClient(new WebChromeClientWrapper(this, client));
         }
     }
 
@@ -384,7 +468,20 @@ public class SemWebView extends SurfaceView {
      * @since Lightweight Web Engine 1.0
      */
     public void setDownloadListener(SemDownloadListener listener) {
-        if (delegate != null)
-            delegate.setDownloadListener(listener);
+        if (canUseLWE()) {
+            mLWEWebView.setDownloadListener(listener);
+        } else {
+            class DownloadListenerWrapper implements DownloadListener {
+                private SemDownloadListener mSemDownloadListener;
+                DownloadListenerWrapper(SemDownloadListener client){
+                    mSemDownloadListener = client;
+                }
+                public void onDownloadStart(String url, String userAgent, String contentDisposition, String mimetype,
+                                     long contentLength){
+                    mSemDownloadListener.onDownloadStart(url, userAgent, contentDisposition, mimetype, contentLength);
+                }
+            }
+            mAndroidWebView.setDownloadListener(new DownloadListenerWrapper(listener));
+        }
     }
 }

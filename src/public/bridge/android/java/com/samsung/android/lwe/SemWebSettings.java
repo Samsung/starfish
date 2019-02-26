@@ -20,6 +20,7 @@
 package com.samsung.android.lwe;
 
 import android.content.Context;
+import android.webkit.WebView;
 
 /**
  * This class manages settings state for a SemWebView.
@@ -54,17 +55,29 @@ public class SemWebSettings {
      */
     public static final int LOAD_CACHE_ONLY = 3;
 
-    private LweWebView mWebView = null;
+    private LweWebView mLWEWebView = null;
+    private WebView mAndroidWebView = null;
 
     /**
      * Creates a SemWebSettings object
      *
      * @hide Internal use only
-     * @param webView LweWebViewImpl
+     * @param webView LweWebView
      * @since Lightweight Web Engine 1.0
      */
     public SemWebSettings(LweWebView webView) {
-        mWebView = webView;
+        mLWEWebView = webView;
+    }
+
+    /**
+     * Creates a SemWebSettings object
+     *
+     * @hide Internal use only
+     * @param webView WebView
+     * @since Lightweight Web Engine 1.0
+     */
+    public SemWebSettings(WebView webView) {
+        mAndroidWebView = webView;
     }
 
     /**
@@ -76,7 +89,12 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public String getDefaultUserAgent(Context context) {
-        return mWebView.getDefaultUserAgent(context);
+        if (mLWEWebView != null) {
+            return mLWEWebView.getDefaultUserAgent(context);
+        } else if (mAndroidWebView != null) {
+            return mAndroidWebView.getSettings().getDefaultUserAgent(context);
+        }
+        return null;
     }
 
     /**
@@ -86,7 +104,12 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public String getUserAgentString() {
-        return mWebView.getUserAgentString();
+        if (mLWEWebView != null) {
+            return mLWEWebView.getUserAgentString();
+        } else if (mAndroidWebView != null) {
+            return mAndroidWebView.getSettings().getUserAgentString();
+        }
+        return null;
     }
 
     /**
@@ -97,7 +120,12 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public int getCacheMode() {
-        return mWebView.getCacheMode();
+        if (mLWEWebView != null) {
+            return mLWEWebView.getCacheMode();
+        } else if (mAndroidWebView != null) {
+            return mAndroidWebView.getSettings().getCacheMode();
+        }
+        return -1;
     }
 
     /**
@@ -108,7 +136,11 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public void setUserAgentString(String ua) {
-        mWebView.setUserAgentString(ua);
+        if (mLWEWebView != null) {
+            mLWEWebView.setUserAgentString(ua);
+        } else if (mAndroidWebView != null) {
+            mAndroidWebView.getSettings().setUserAgentString(ua);
+        }
     }
 
     /**
@@ -118,7 +150,11 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public void setCacheMode(int mode) {
-        mWebView.setCacheMode(mode);
+        if (mLWEWebView != null) {
+            mLWEWebView.setCacheMode(mode);
+        } else if (mAndroidWebView != null) {
+            mAndroidWebView.getSettings().setCacheMode(mode);
+        }
     }
 
     /**
@@ -128,7 +164,12 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public int getDefaultFontSize() {
-        return mWebView.getDefaultFontSize();
+        if (mLWEWebView != null) {
+            return mLWEWebView.getDefaultFontSize();
+        } else if (mAndroidWebView != null) {
+            mAndroidWebView.getSettings().getDefaultFontSize();
+        }
+        return -1;
     }
 
     /**
@@ -137,6 +178,10 @@ public class SemWebSettings {
      * @since Lightweight Web Engine 1.0
      */
     public void setDefaultFontSize(int size) {
-        mWebView.setDefaultFontSize(size);
+        if (mLWEWebView != null) {
+            mLWEWebView.setDefaultFontSize(size);
+        } else if (mAndroidWebView != null) {
+            mAndroidWebView.getSettings().setDefaultFontSize(size);
+        }
     }
 }
