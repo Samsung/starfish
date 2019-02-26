@@ -16,12 +16,10 @@
  *  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301
  *  USA
  */
-
 package com.samsung.android.lwe;
 
 import android.content.Context;
 import android.view.View;
-import android.view.inputmethod.InputConnection;
 import android.webkit.ValueCallback;
 
 /**
@@ -36,10 +34,6 @@ public interface LweWebView {
     void setCacheMode(int mode);
     int getDefaultFontSize();
     void setDefaultFontSize(int size);
-
-    InputConnection getInputConnectionInstance(View view);
-    void onVisibilityChanged(View changedView, int visibility);
-
     void loadUrl(final String url);
     String getUrl();
     void loadData(String data, String mimeType, String encoding);
@@ -55,7 +49,6 @@ public interface LweWebView {
     void evaluateJavascript(final String script,
                             final ValueCallback<String> resultCallback);
     void clearHistory();
-
     SemWebSettings getSettings();
     void setWebViewClient(SemWebViewClient client);
     void setDownloadListener(SemDownloadListener listener);
