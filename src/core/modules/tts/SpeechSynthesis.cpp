@@ -100,10 +100,11 @@ GCVector<SpeechSynthesisVoice*>& SpeechSynthesis::getVoices()
         auto iter = list.begin();
         while (iter != list.end()) {
             String* lang = iter->first;
-            String* voice = String::fromUTF8(voiceTypeToString(iter->second));
+            String* name = String::fromUTF8(voiceTypeToString(iter->second));
+            String* uri = name->concat('/')->concat(lang);
 
             SpeechSynthesisVoice* speechVoice = new SpeechSynthesisVoice(
-                window(), voice, voice, lang, true, defaultLang->equals(lang));
+                window(), uri, name, lang, true, defaultLang->equals(lang));
             m_voiceList.push_back(speechVoice);
             iter++;
         }
