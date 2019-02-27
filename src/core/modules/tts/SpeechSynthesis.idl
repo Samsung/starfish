@@ -20,8 +20,7 @@ partial interface Window {
 };
 
 [STARFISH_ENABLE_TTS, Constructor(optional DOMString text),
- ConstructorCallWith=Document,
- RuntimeEnabled=ScriptedSpeech]
+ ConstructorCallWith=Document]
 interface SpeechSynthesisUtterance : EventTarget {
     attribute DOMString text;
     attribute DOMString lang;

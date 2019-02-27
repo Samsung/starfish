@@ -105,6 +105,7 @@ public:
         , m_volume(1.0)
         , m_rate(1.0)
         , m_pitch(1.0)
+        , m_startTime(0.0)
     {
     }
 
@@ -189,6 +190,16 @@ public:
         return m_pitch;
     }
 
+    double startTime()
+    {
+        return m_startTime;
+    }
+
+    void setStartTime(double t)
+    {
+        m_startTime = t;
+    }
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(start);
@@ -209,6 +220,7 @@ private:
     float m_volume;
     float m_rate;
     float m_pitch;
+    double m_startTime;
 };
 
 class SpeechSynthesis : public EventTarget {

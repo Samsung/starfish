@@ -24,13 +24,14 @@
 #include "Starfish.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
-#include "core/dom/Event.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/tts/TTS.h"
+#include "core/modules/tts/SpeechSynthesisEvent.h"
+#include "core/modules/profiling/Profiling.h"
 
 #include <Elementary.h>
 #include <vconf/vconf.h>
@@ -147,8 +148,10 @@ static void stateChangedCB(tts_h handle, tts_state_e prev, tts_state_e cur,
             t->setPaused(false);
             String* eventName =
                 u->webView()->starfish()->staticStrings()->m_resume.localName();
-            Event* e = new Event(
-                u->webView()->mainBrowsingContext()->document(), eventName);
+            SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
+                u->document(), eventName,
+                SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
+                                         String::emptyString));
             u->dispatchEventByUA(e);
         }
     } else if (prev == TTS_STATE_PLAYING && cur == TTS_STATE_PAUSED && id) {
@@ -158,8 +161,10 @@ static void stateChangedCB(tts_h handle, tts_state_e prev, tts_state_e cur,
             t->setPaused(true);
             String* eventName =
                 u->webView()->starfish()->staticStrings()->m_pause.localName();
-            Event* e = new Event(
-                u->webView()->mainBrowsingContext()->document(), eventName);
+            SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
+                u->document(), eventName,
+                SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
+                                         String::emptyString));
             u->dispatchEventByUA(e);
         }
     }
@@ -205,8 +210,11 @@ static void dispatchStartEvent(TTS* t, uint32_t id)
             t->setUtterance(u);
             String* eventName =
                 u->webView()->starfish()->staticStrings()->m_start.localName();
-            Event* e = new Event(
-                u->webView()->mainBrowsingContext()->document(), eventName);
+            u->setStartTime(timestamp());
+            SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
+                u->document(), eventName,
+                SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
+                                         String::emptyString));
             u->dispatchEventByUA(e);
         }
     }
@@ -234,8 +242,10 @@ static void dispatchCompleteEvent(TTS* t, uint32_t id)
         if (u) {
             String* eventName =
                 u->webView()->starfish()->staticStrings()->m_end.localName();
-            Event* e = new Event(
-                u->webView()->mainBrowsingContext()->document(), eventName);
+            SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
+                u->document(), eventName,
+                SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
+                                         String::emptyString));
             u->dispatchEventByUA(e);
 
             t->utteranceList().erase(id);
