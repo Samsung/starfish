@@ -1014,11 +1014,11 @@ void WebContainer::RegisterOnProgressChangedHandler(
 
 void WebContainer::SetUserAgentString(const std::string& userAgent)
 {
-    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     TO_WEBVIEW(m_impl)
         ->setCustomUserAgentString(
             Starfish::String::fromUTF8(userAgent.c_str()));
-    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
 std::string WebContainer::GetUserAgentString()
@@ -1032,13 +1032,13 @@ std::string WebContainer::GetUserAgentString()
 
 void WebContainer::SetCacheMode(int mode)
 {
-    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 #ifdef STARFISH_ENABLE_HTTPCACHE
     if (TO_STARFISH(m_impl)->httpCache() != nullptr) {
         TO_STARFISH(m_impl)->httpCache()->setCacheMode(mode);
     }
 #endif
-    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
 int WebContainer::GetCacheMode()
@@ -1056,11 +1056,11 @@ int WebContainer::GetCacheMode()
 
 void WebContainer::SetDefaultFontSize(uint32_t size)
 {
-    START_ASYNC_THREADED_PUBLIC_API_WRAPPER
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     if (LWE_MIN_FONT_SIZE <= size && size <= LWE_MAX_FONT_SIZE) {
         TO_WEBVIEW(m_impl)->setDefaultFontSize(size);
     }
-    END_ASYNC_THREADED_PUBLIC_API_WRAPPER
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
 uint32_t WebContainer::GetDefaultFontSize()
