@@ -1778,7 +1778,9 @@ void WebView::onIdle()
 void WebView::setDefaultFontSize(uint32_t size)
 {
     m_defaultFontSize = size;
-    mainBrowsingContext()->updateDefaultFontSize();
+    if (mainBrowsingContext()) {
+        mainBrowsingContext()->updateDefaultFontSize();
+    }
 }
 
 void WebView::addActiveThread(Thread* thread)

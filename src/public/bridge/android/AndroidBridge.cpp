@@ -772,7 +772,7 @@ Java_com_samsung_android_lwe_LweWebViewImpl_canGoBack(JNIEnv* env, jobject thiz,
                                                       jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
-    webContainer->CanGoBack();
+    return webContainer->CanGoBack();
 }
 
 extern "C" JNIEXPORT jboolean JNICALL
@@ -781,7 +781,7 @@ Java_com_samsung_android_lwe_LweWebViewImpl_canGoForward(JNIEnv* env,
                                                          jlong data)
 {
     LWE::WebContainer* webContainer = (LWE::WebContainer*)data;
-    webContainer->CanGoForward();
+    return webContainer->CanGoForward();
 }
 
 extern "C" JNIEXPORT void JNICALL

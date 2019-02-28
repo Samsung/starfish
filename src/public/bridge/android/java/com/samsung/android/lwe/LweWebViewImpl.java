@@ -593,7 +593,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
 
     public String getUrl() {
         if (mWebViewInternalHandle != 0) {
-            getUrl(mWebViewInternalHandle);
+            return getUrl(mWebViewInternalHandle);
         }
         return null;
     }
@@ -630,14 +630,14 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
 
     public boolean canGoBack() {
         if (mWebViewInternalHandle != 0) {
-            canGoBack(mWebViewInternalHandle);
+            return canGoBack(mWebViewInternalHandle);
         }
         return false;
     }
 
     public boolean canGoForward() {
         if (mWebViewInternalHandle != 0) {
-            canGoForward(mWebViewInternalHandle);
+            return canGoForward(mWebViewInternalHandle);
         }
         return false;
     }
