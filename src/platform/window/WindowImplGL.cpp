@@ -66,7 +66,7 @@ public:
         , m_didPaintingOrCompositing(true)
         , m_isMouseLbuttonDown(true)
         , m_isKeyDown(true)
-        , m_isEGLImageUpdated(true)
+        , m_mayNeedsSync(false)
     {
         m_offsetYDueToSoftwareKeyboard = 0;
 
@@ -127,7 +127,6 @@ public:
                 webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
             }
             glSwapBuffers();
-            glClearEGLImageUpdated();
         }
 
 #if defined(STARFISH_ENABLE_TEST)
@@ -163,17 +162,13 @@ public:
 
     virtual void glSwapBuffers() override
     {
-        m_glSwapBufferCallback(this, m_isEGLImageUpdated);
+        m_glSwapBufferCallback(this, m_mayNeedsSync);
+        m_mayNeedsSync = false;
     }
 
-    virtual void glEGLImageUpdated() override
+    virtual void glMayNeedsSync() override
     {
-        m_isEGLImageUpdated = true;
-    }
-
-    virtual void glClearEGLImageUpdated() override
-    {
-        m_isEGLImageUpdated = false;
+        m_mayNeedsSync = true;
     }
 
     virtual void pause() override
@@ -199,7 +194,7 @@ public:
     bool m_didPaintingOrCompositing;
     bool m_isMouseLbuttonDown;
     bool m_isKeyDown;
-    bool m_isEGLImageUpdated;
+    bool m_mayNeedsSync;
     float m_lastMouseX, m_lastMouseY;
     int m_offsetYDueToSoftwareKeyboard;
 };

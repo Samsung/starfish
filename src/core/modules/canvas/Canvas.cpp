@@ -44,7 +44,7 @@ public:
         m_bufferHeight = m_height = -1;
         m_buffer = nullptr;
 
-        attachNativeBuffer(w, h);
+        attachNativeBuffer(w, h, false);
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            CanvasSurfaceSimple* s =
@@ -54,7 +54,7 @@ public:
                                        NULL, NULL, NULL);
     }
 
-    void detachNativeBuffer() override
+    virtual void detachNativeBuffer() override
     {
         if (m_buffer) {
             g_totalAllocatedCanvasSurfaceSize -=
@@ -68,7 +68,8 @@ public:
         }
     }
 
-    bool attachNativeBuffer(size_t w, size_t h) override
+    virtual bool attachNativeBuffer(size_t w, size_t h,
+                                    bool forFilterEffect) override
     {
         if (m_width != w || m_height != h) {
             detachNativeBuffer();
@@ -139,7 +140,8 @@ protected:
     size_t m_bufferStride;
 };
 
-CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
+CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
+                                     bool forFilterEffect)
 {
     return new CanvasSurfaceSimple(wnd, w, h);
 }
@@ -164,7 +166,7 @@ public:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
-    bool attachNativeBuffer(size_t w, size_t h)
+    bool attachNativeBuffer(size_t w, size_t h, bool forFilterEffect) override
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return false;

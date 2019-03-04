@@ -85,6 +85,12 @@ public:
     virtual void arcNegative(double xc, double yc, double radius, double angle1,
                              double angle2) = 0;
     virtual void clipPath() = 0;
+
+    virtual void enableBlurEffect(float blurRadius)
+    {
+    }
+
+    static bool supportsFilterEffect(size_t textureWidth, size_t textureHeight);
 };
 }
 

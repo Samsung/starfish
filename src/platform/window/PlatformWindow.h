@@ -155,11 +155,7 @@ public:
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
-    virtual void glEGLImageUpdated()
-    {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
-    virtual void glClearEGLImageUpdated()
+    virtual void glMayNeedsSync()
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }

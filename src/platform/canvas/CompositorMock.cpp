@@ -129,6 +129,11 @@ Compositor* Compositor::create3D(Starfish* starfish, CompositorContext* ctx)
 {
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
+
+bool Compositor::supportsFilterEffect(size_t textureWidth, size_t textureHeight)
+{
+    return false;
+}
 }
 
 #endif

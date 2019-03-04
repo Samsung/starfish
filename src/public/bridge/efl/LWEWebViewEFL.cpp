@@ -249,6 +249,9 @@ public:
         , m_resizeHandler(nullptr)
         , m_keyDownEventHandler(nullptr)
         , m_keyUpEventHandler(nullptr)
+#if defined(PORT_WINDOW_BACKEND_GL)
+        , m_glSync(nullptr)
+#endif
         , m_lastMouseX(0)
         , m_lastMouseY(0)
         , m_isMouseLbuttonDown(false)
@@ -787,8 +790,22 @@ public:
             [this](WebContainer* wc) {
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
                 g_evasGLAPI = m_glGlapi;
+                if (m_glSync) {
+                    Starfish::LongTaskFinder t("evasglWaitSync");
+                    g_evasGLAPI->evasglClientWaitSync(
+                        m_glEvasgl, m_glSync,
+                        EVAS_GL_SYNC_PRIOR_COMMANDS_COMPLETE, EVAS_GL_FOREVER);
+                    g_evasGLAPI->evasglDestroySync(m_glEvasgl, m_glSync);
+                    m_glSync = nullptr;
+                }
             },
             [this](WebContainer* wc, bool mayNeedsSync) {
+                if (mayNeedsSync && g_evasGLAPI->evasglCreateSync &&
+                    !m_glSync) {
+                    int attr[] = { EVAS_GL_NONE };
+                    m_glSync = g_evasGLAPI->evasglCreateSync(
+                        m_glEvasgl, EVAS_GL_SYNC_FENCE, attr);
+                }
                 if (m_lastInputTime) {
                     ANNOTATE_SETUP;
                     ANNOTATE_CHANNEL_COLOR(3002, ANNOTATE_GREEN,
@@ -886,6 +903,9 @@ public:
 
         evas_object_hide(m_graphicsAdapter);
 #if defined(PORT_WINDOW_BACKEND_GL)
+        if (m_glSync) {
+            g_evasGLAPI->evasglDestroySync(m_glEvasgl, m_glSync);
+        }
         evas_object_image_native_surface_set(m_graphicsAdapter, NULL);
         evas_gl_surface_destroy(m_glEvasgl, m_glSfc);
         evas_gl_context_destroy(m_glEvasgl, m_glCtx);
@@ -1025,6 +1045,7 @@ protected:
     Evas_GL_Config* m_glCfg;
     Evas_GL* m_glEvasgl;
     Evas_GL_API* m_glGlapi;
+    EvasGLSync m_glSync;
 #endif
 
     Ecore_IMF_Context* m_imfContext;

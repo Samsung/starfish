@@ -235,6 +235,7 @@ StackingContext::StackingContext(FrameBox* owner, StackingContext* parent)
     : m_needsGraphicsBuffer(false)
     , m_hasNon2DRectTransform(false)
     , m_isVisibleRectComputedForNonGraphicsLayer(false)
+    , m_hasFilterEffect(false)
     , m_needsGraphicsBufferReason(
           NeedsGraphicsLayerReason::NeedsGraphicsLayerReasonNone)
     , m_owner(owner)
@@ -934,6 +935,12 @@ void StackingContext::computeStackingContextProperties(
 {
     computeTransformMatrix();
 
+    m_hasFilterEffect = false;
+    if ((owner()->style()->hasAvailableFilter() ||
+         m_ancestorsThatHasFilters.size())) {
+        m_hasFilterEffect = true;
+    }
+
     if (m_owner->isRootElement()) {
         compositingState.documentOwners.push_back(this);
     }
@@ -995,6 +1002,12 @@ void StackingContext::computeStackingContextProperties(
         if (windowRect.maxX() < 0 || windowRect.maxY() < 0) {
             compositedBySelf = true;
         }
+    }
+
+    if (Compositor::supportsFilterEffect(
+            1, 1) /* test whatever compostior supports filter */ &&
+        m_hasFilterEffect) {
+        compositedBySelf = true;
     }
 
     if (compositedBySelf) {
@@ -1638,8 +1651,10 @@ void StackingContext::fillGraphicsBufferContents(
     }
 
     if (!canRejectPainting) {
-        if (owner()->style()->hasAvailableFilter() ||
-            m_ancestorsThatHasFilters.size()) {
+        if (m_hasFilterEffect &&
+            !Compositor::supportsFilterEffect(
+                canvas->renderTargetInfo().m_width,
+                canvas->renderTargetInfo().m_height)) {
             FilterContext filterContext(&canvas, this, ctx);
             m_owner->paintStackingContextContent(canvas);
             m_owner->paintOutline(canvas);
@@ -1924,7 +1939,8 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                         m_owner->document()
                                             ->webView()
                                             ->platformWindow(),
-                                        tileDataWidth, tileDataHeight);
+                                        tileDataWidth, tileDataHeight,
+                                        m_hasFilterEffect);
                                 Canvas* canvas = Canvas::create(
                                     m_owner->node()->webView(), canvasSurface);
 
@@ -2141,7 +2157,7 @@ bool StackingContext::fillGraphicsBufferContents(
                     m_rareData->m_graphicsBufferHolder->m_surfaces[tileIndex] =
                         CanvasSurface::create(
                             m_owner->document()->webView()->platformWindow(),
-                            tileDataWidth, tileDataHeight);
+                            tileDataWidth, tileDataHeight, m_hasFilterEffect);
                     gotNewBuffer = true;
                 }
 
@@ -2341,8 +2357,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     }
 
     if (!canRejectPainting) {
-        if ((owner()->style()->hasAvailableFilter() ||
-             m_ancestorsThatHasFilters.size())) {
+        if (m_hasFilterEffect) {
             FilterContext filterContext(&canvas, this, ctx);
             m_owner->paintBackgroundAndBorders(canvas);
             filterContext.applyAllFilter(ctx);
@@ -2429,8 +2444,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
     }
 
     if (!canRejectPainting) {
-        if (owner()->style()->hasAvailableFilter() ||
-            m_ancestorsThatHasFilters.size()) {
+        if (m_hasFilterEffect) {
             FilterContext filterContext(&canvas, this, ctx);
             m_owner->paintStackingContextContent(canvas);
             m_owner->paintOutline(canvas);
@@ -2548,6 +2562,34 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
     owner()->willCompsiteStackingContext(compositor);
 
+    bool hasFilterEffect = false;
+    if (Compositor::supportsFilterEffect(bufferWidth, bufferHeight) &&
+        m_hasFilterEffect) {
+        hasFilterEffect = true;
+        Length standardDeviation;
+        float maxRadiusOffset = 0;
+        if (ownerStyle->hasAvailableFilter() &&
+            ownerStyle->filter()->getStandardDeviationOfBlurFilter(
+                standardDeviation)) {
+            maxRadiusOffset =
+                std::max(maxRadiusOffset, (standardDeviation.numberData()));
+        }
+
+        for (auto ancestor : ancestorsThatHasFilters()) {
+            auto s = ancestor->owner()->style();
+            if (s->filter()->getStandardDeviationOfBlurFilter(
+                    standardDeviation)) {
+                maxRadiusOffset =
+                    std::max(maxRadiusOffset, (standardDeviation.numberData()));
+            }
+        }
+
+        if (maxRadiusOffset) {
+            compositor->save();
+            compositor->enableBlurEffect(maxRadiusOffset);
+        }
+    }
+
     if (owner()->hasOwnGraphicsBufferMethod()) {
         if (m_rareData->m_graphicsBufferHolder) {
             compositor->drawSurface(
@@ -2641,6 +2683,11 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         }
     }
 #endif
+
+    if (hasFilterEffect) {
+        compositor->restore();
+    }
+
     owner()->didCompsiteStackingContext(compositor);
 
     if (isIFrameStackingContextOwner()) {
