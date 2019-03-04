@@ -29,19 +29,16 @@ class MediaSource;
 
 class URL : public ScriptWrappable {
 public:
-    URL(ScriptBindingInstance* instance, String* url);
-    URL(ScriptBindingInstance* instance, String* url, String* baseURL);
+    URL(ExecutionContext* executionContext, String* url);
+    URL(ExecutionContext* executionContext, String* url, String* baseURL);
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(URL)
 
     static void revokeObjectURL(Document* document, String* blobURLRef);
     static String* createObjectURL(Blob* blob);
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     static String* createObjectURL(MediaSource* mediaSource);
 #endif
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isURL() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     String* origin();
     String* href();

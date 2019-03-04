@@ -137,6 +137,11 @@ void Window::dispose()
     }
 }
 
+ExecutionContext* Window::executionContext()
+{
+    return static_cast<ExecutionContext*>(m_document);
+}
+
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
 Window* Window::parent()
 {

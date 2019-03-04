@@ -20,6 +20,7 @@
 #ifndef __StarfishDocument__
 #define __StarfishDocument__
 
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/Node.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/util/BloomFilter.h"
@@ -81,7 +82,7 @@ enum DocumentReadyState ENSURE_ENUM_UNSIGNED {
 
 typedef HTMLScriptElementOrSVGScriptElement HTMLOrSVGScriptElement;
 
-class Document : public Node {
+class Document : public Node, public ExecutionContext {
     friend class DOMImplementation;
     friend class Window;
     friend class ActiveResourceRequestTracker;
@@ -733,7 +734,6 @@ protected:
     StyleSheetList* m_styleSheetList;
     NativeImageData* m_brokenImage;
     AnimationExecutor* m_animationExecutor;
-    ScriptBindingInstance* m_scriptBindingInstance;
     size_t m_domVersion;
     GCVector<ResourceRequest*> m_activeResourceRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;

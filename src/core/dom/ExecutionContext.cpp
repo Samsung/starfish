@@ -17,53 +17,19 @@
  *  USA
  */
 
-#ifndef __StarfishScriptContext__
-#define __StarfishScriptContext__
+#include "core/page/ScriptContext.h"
+#include "core/page/GlobalScope.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
-class ServiceWorker;
-class ScriptBindingInstance;
-class WebBase;
+ScriptContext* ExecutionContext::scriptContext() const
+{
+    return globalScope()->scriptContext();
+}
 
-class ScriptContext {
-public:
-    ScriptContext(WebBase* webBase)
-        : m_webBase(webBase)
-    {
-    }
-
-    virtual ~ScriptContext()
-    {
-    }
-
-    virtual bool isDocument() const
-    {
-        return false;
-    }
-    virtual bool isWorkerGlobalScope() const
-    {
-        return false;
-    }
-
-    WebBase* webBase() const
-    {
-        return m_webBase;
-    }
-
-protected:
-    WebBase* m_webBase;
-
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
-public:
-    ServiceWorker* activeServiceWorker() const;
-    void setActiveServiceWorker(ServiceWorker* serviceWorker);
-
-private:
-    ServiceWorker* m_activeServiceWorker{ nullptr };
-#endif
-};
-
-} // end of namespace Starfish
-
-#endif
+WebBase* ExecutionContext::webBase() const
+{
+    return scriptContext()->webBase();
+}
+}

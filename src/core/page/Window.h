@@ -188,6 +188,9 @@ public:
     virtual void onGlobalPointingEvent(float x, float y,
                                        GlobalPointingEventKind kind) override;
     virtual bool handleDefaultEvent(Event* event) override;
+
+    ExecutionContext* executionContext();
+
     void dispose();
 
     // IDL methods
@@ -196,7 +199,7 @@ public:
 #ifdef STARFISH_TC_COVERAGE
         STARFISH_LOG_INFO("&&&document\n");
 #endif
-        return DocumentHoldable::document();
+        return m_document;
     }
 
     Starfish* starfish();
