@@ -1,5 +1,8 @@
 /*
- * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ *  Copyright (C) 2011 Google Inc. All rights reserved.
+ *  Copyright (C) 2012 Nokia Corporation and/or its subsidiary(-ies)
+ *  Copyright (C) 2012 Igalia S.L.
+ *  Copyright (c) 2018-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -444,6 +447,8 @@ static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
     GLuint shader;
     GLint compiled;
 
+    LongTaskFinder t("loadShader");
+
     // Create the shader object
     shader = glCreateShader(type);
 
@@ -461,6 +466,20 @@ static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
 
     if (!compiled) {
+        GLint maxLength = 0;
+        glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &maxLength);
+
+        // The maxLength includes the NULL character
+        std::vector<GLchar> errorLog(maxLength);
+        glGetShaderInfoLog(shader, maxLength, &maxLength, &errorLog[0]);
+
+        STARFISH_LOG_ERROR("loadShader error.. shader source -> %s\n",
+                           shaderSrc);
+        STARFISH_LOG_ERROR("loadShader error.. error desc -> %s\n",
+                           errorLog.data());
+        // Provide the infolog in whatever manor you deem best.
+        // Exit with failure.
+        glDeleteShader(shader); // Don't leak the shader.
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     return shader;
@@ -484,6 +503,14 @@ public:
     GLuint m_texVertexShaderEGLImageExternalColorInverted;
     GLuint m_texFragmentShaderEGLImageExternalColorInverted;
 
+    GLuint m_texFragmentBlurShaderW;
+    GLuint m_texFragmentBlurShaderEGLImageExternalW;
+    GLuint m_texFragmentBlurShaderH;
+
+    GLuint m_texBlurShaderProgramW;
+    GLuint m_texBlurShaderProgramEGLImageExternalW;
+    GLuint m_texBlurShaderProgramH;
+
     CompositorContext()
     {
         m_rectVertexShader = m_rectFragmentShader = m_rectShaderProgram =
@@ -494,6 +521,10 @@ public:
         m_texVertexShaderEGLImageExternalColorInverted =
             m_texShaderProgramEGLImageExternalColorInverted =
                 m_texFragmentShaderEGLImageExternalColorInverted = 0;
+        m_texFragmentBlurShaderH = m_texFragmentBlurShaderW =
+            m_texFragmentBlurShaderEGLImageExternalW = 0;
+        m_texBlurShaderProgramW = m_texBlurShaderProgramEGLImageExternalW =
+            m_texBlurShaderProgramH = 0;
     }
 
     GLuint rectProgram()
@@ -728,6 +759,183 @@ public:
         }
         return m_texShaderProgram;
     }
+
+// I take blur shader source from WebKit
+// https://github.com/WebKit/webkit/blob/master/Source/WebCore/platform/graphics/texmap/TextureMapperShaderProgram.cpp(6f9b511a115311b13c06eb58038ddc2c78da5531)
+#define GAUSSIAN_KERNEL_HALF_WIDTH 11
+#define GAUSSIAN_KERNEL_STEP 0.2
+
+    static inline float gauss(float x)
+    {
+        return exp(-(x * x) / 2.);
+    }
+
+    static std::vector<float> computeGaussianKernel()
+    {
+        std::vector<float> kernel;
+        kernel.resize(GAUSSIAN_KERNEL_HALF_WIDTH);
+
+        kernel[0] = gauss(0);
+        float sum = kernel[0];
+        for (unsigned i = 1; i < GAUSSIAN_KERNEL_HALF_WIDTH; ++i) {
+            kernel[i] = gauss(i * GAUSSIAN_KERNEL_STEP);
+            sum += 2 * kernel[i];
+        }
+
+        // Normalize the kernel.
+        float scale = 1 / sum;
+        for (unsigned i = 0; i < GAUSSIAN_KERNEL_HALF_WIDTH; ++i)
+            kernel[i] *= scale;
+
+        return kernel;
+    }
+
+    static std::string generateBlurEffectFragmentShader(
+        bool isEGLImage, bool addColorAlign = false)
+    {
+        std::vector<float> gaussianKernel = computeGaussianKernel();
+        std::stringstream ss;
+
+        if (isEGLImage) {
+            ss << "#extension GL_OES_EGL_image_external : require\n";
+        }
+        ss << "#ifdef GL_ES\n";
+        ss << "  precision mediump float;\n";
+        ss << "#endif\n";
+        if (isEGLImage) {
+            ss << "uniform samplerExternalOES uTexture;\n";
+        } else {
+            ss << "uniform sampler2D uTexture;\n";
+        }
+
+        ss << "uniform float uTextureWidth;\n";
+        ss << "uniform float uTextureHeight;\n";
+        if (addColorAlign) {
+            ss << "uniform vec4 uAlpha;\n";
+        }
+        ss << "uniform vec2 uBlurRadius;\n";
+        ss << "varying vec2 vTexPos;\n";
+        ss << "vec4 sampleColorAtRadius(float radius, vec2 texCoord, float sx, "
+              "float sy) {\n";
+        ss << "  vec2 coord = texCoord + vec2(radius * sx, radius * sy) * "
+              "uBlurRadius;\n";
+        ss << "  return texture2D(uTexture, coord);\n";
+        ss << "}\n";
+        ss << "void main(void) {\n";
+        ss << "  float sy = 1.0;\n";
+        ss << "  sy /= uTextureHeight;\n";
+        ss << "  float sx = 1.0;\n";
+        ss << "  sx /= uTextureWidth;\n";
+
+        ss << "  vec4 total = sampleColorAtRadius(0., vTexPos, sx, sy) * "
+           << gaussianKernel[0] << ";\n";
+        for (int i = 1; i < GAUSSIAN_KERNEL_HALF_WIDTH; i++) {
+            ss << "  total += sampleColorAtRadius(float("
+               << i * GAUSSIAN_KERNEL_STEP << "), vTexPos, sx, sy) * "
+               << gaussianKernel[i] << ";\n";
+            ss << "  total += sampleColorAtRadius(float("
+               << -i * GAUSSIAN_KERNEL_STEP << "), vTexPos, sx, sy) * "
+               << gaussianKernel[i] << ";\n";
+        }
+
+        if (addColorAlign) {
+            ss << "  total = total * uAlpha;\n";
+#if defined(PORT_PIXEL_ORDER_BGRA)
+            ss << "  gl_FragColor.r = total[2];\n";
+            ss << "  gl_FragColor.g = total[1];\n";
+            ss << "  gl_FragColor.b = total[0];\n";
+            ss << "  gl_FragColor.a = total[3];\n";
+#else
+            ss << "  gl_FragColor.r = total[0];\n";
+            ss << "  gl_FragColor.g = total[1];\n";
+            ss << "  gl_FragColor.b = total[2];\n";
+            ss << "  gl_FragColor.a = total[3];\n";
+#endif
+        } else {
+            ss << "  gl_FragColor = total;\n";
+        }
+
+        ss << "}\n";
+        return ss.str();
+    }
+
+    GLuint texFragmentBlurShaderW()
+    {
+        if (m_texFragmentBlurShaderW) {
+            return m_texFragmentBlurShaderW;
+        }
+        m_texFragmentBlurShaderW = loadShader(
+            GL_FRAGMENT_SHADER, generateBlurEffectFragmentShader(false).data());
+        checkError();
+        return m_texFragmentBlurShaderW;
+    }
+
+    GLuint texFragmentBlurShaderEGLImageExternalW()
+    {
+        if (m_texFragmentBlurShaderEGLImageExternalW) {
+            return m_texFragmentBlurShaderEGLImageExternalW;
+        }
+        m_texFragmentBlurShaderEGLImageExternalW = loadShader(
+            GL_FRAGMENT_SHADER, generateBlurEffectFragmentShader(true).data());
+        checkError();
+        return m_texFragmentBlurShaderEGLImageExternalW;
+    }
+
+    GLuint texFragmentBlurShaderH()
+    {
+        if (m_texFragmentBlurShaderH) {
+            return m_texFragmentBlurShaderH;
+        }
+        m_texFragmentBlurShaderH =
+            loadShader(GL_FRAGMENT_SHADER,
+                       generateBlurEffectFragmentShader(false, true).data());
+        checkError();
+        return m_texFragmentBlurShaderH;
+    }
+
+    GLuint texBlurShaderProgramW()
+    {
+        if (m_texBlurShaderProgramW) {
+            return m_texBlurShaderProgramW;
+        }
+        m_texBlurShaderProgramW = glCreateProgram();
+
+        glAttachShader(m_texBlurShaderProgramW, m_texVertexShader);
+        glAttachShader(m_texBlurShaderProgramW, texFragmentBlurShaderW());
+        glLinkProgram(m_texBlurShaderProgramW);
+        checkError();
+        return m_texBlurShaderProgramW;
+    }
+
+    GLuint texBlurShaderProgramEGLImageExternalW()
+    {
+        if (m_texBlurShaderProgramEGLImageExternalW) {
+            return m_texBlurShaderProgramEGLImageExternalW;
+        }
+        m_texBlurShaderProgramEGLImageExternalW = glCreateProgram();
+
+        glAttachShader(m_texBlurShaderProgramEGLImageExternalW,
+                       m_texVertexShader);
+        glAttachShader(m_texBlurShaderProgramEGLImageExternalW,
+                       texFragmentBlurShaderEGLImageExternalW());
+        glLinkProgram(m_texBlurShaderProgramEGLImageExternalW);
+        checkError();
+        return m_texBlurShaderProgramEGLImageExternalW;
+    }
+
+    GLuint texBlurShaderProgramH()
+    {
+        if (m_texBlurShaderProgramH) {
+            return m_texBlurShaderProgramH;
+        }
+        m_texBlurShaderProgramH = glCreateProgram();
+
+        glAttachShader(m_texBlurShaderProgramH, m_texVertexShader);
+        glAttachShader(m_texBlurShaderProgramH, texFragmentBlurShaderH());
+        glLinkProgram(m_texBlurShaderProgramH);
+        checkError();
+        return m_texBlurShaderProgramH;
+    }
 };
 
 void Compositor::destroyCompositorContext(PlatformWindow* wnd,
@@ -735,6 +943,43 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
 {
     if (ctx) {
         glUseProgram(0);
+
+        if (ctx->m_texBlurShaderProgramW) {
+            glDetachShader(ctx->m_texBlurShaderProgramW,
+                           ctx->m_texVertexShader);
+            glDetachShader(ctx->m_texBlurShaderProgramW,
+                           ctx->m_texFragmentBlurShaderW);
+            glDeleteProgram(ctx->m_texBlurShaderProgramW);
+        }
+
+        if (ctx->m_texBlurShaderProgramEGLImageExternalW) {
+            glDetachShader(ctx->m_texBlurShaderProgramEGLImageExternalW,
+                           ctx->m_texVertexShader);
+            glDetachShader(ctx->m_texBlurShaderProgramEGLImageExternalW,
+                           ctx->m_texFragmentBlurShaderEGLImageExternalW);
+            glDeleteProgram(ctx->m_texBlurShaderProgramEGLImageExternalW);
+        }
+
+        if (ctx->m_texBlurShaderProgramH) {
+            glDetachShader(ctx->m_texBlurShaderProgramH,
+                           ctx->m_texVertexShader);
+            glDetachShader(ctx->m_texBlurShaderProgramH,
+                           ctx->m_texFragmentBlurShaderH);
+            glDeleteProgram(ctx->m_texBlurShaderProgramH);
+        }
+
+        if (ctx->m_texFragmentBlurShaderW) {
+            glDeleteShader(ctx->m_texFragmentBlurShaderW);
+        }
+
+        if (ctx->m_texFragmentBlurShaderH) {
+            glDeleteShader(ctx->m_texFragmentBlurShaderH);
+        }
+
+        if (ctx->m_texFragmentBlurShaderEGLImageExternalW) {
+            glDeleteShader(ctx->m_texFragmentBlurShaderEGLImageExternalW);
+        }
+
         if (ctx->m_rectShaderProgram) {
             glDetachShader(ctx->m_rectShaderProgram, ctx->m_rectVertexShader);
             glDetachShader(ctx->m_rectShaderProgram, ctx->m_rectFragmentShader);
@@ -846,7 +1091,8 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
 
 class CanvasSurfaceGL : public CanvasSurface {
 public:
-    CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h)
+    CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h,
+                    bool forFilterEffect)
     {
         m_window = (PlatformWindow*)wnd;
         m_width = w;
@@ -857,6 +1103,7 @@ public:
         m_isEGLImageExternal = false;
         m_isEGLBufferOwner = false;
         m_isEGLImageNeedsFlipRGB = false;
+        m_forFilterEffect = forFilterEffect;
 
 #if defined(STARFISH_TIZEN)
         m_tbmSurface = nullptr;
@@ -866,7 +1113,7 @@ public:
         m_eglImage = nullptr;
 #endif
 
-        attachNativeBuffer(w, h);
+        attachNativeBuffer(w, h, forFilterEffect);
         checkError();
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
@@ -954,12 +1201,13 @@ public:
         }
     }
 
-    bool attachNativeBuffer(size_t w, size_t h) override
+    bool attachNativeBuffer(size_t w, size_t h, bool forFilterEffect) override
     {
         if (m_width != w || m_height != h) {
             detachNativeBuffer();
             m_width = w;
             m_height = h;
+            m_forFilterEffect = forFilterEffect;
 
             float windowDevicePixelRatio =
                 m_window->webView()->screenInfo().devicePixelRatio;
@@ -1134,6 +1382,10 @@ public:
         size_t wTextureCount = ceil((float)m_bufferWidth / g_textureTileSize);
         size_t hTextureCount = ceil((float)m_bufferHeight / g_textureTileSize);
 
+        if (m_forFilterEffect) {
+            wTextureCount = hTextureCount = 1;
+        }
+
         size_t coveredRowsCount = 0;
         for (size_t y = 0; y < hTextureCount; y++) {
             size_t coveredColsCount = 0;
@@ -1148,6 +1400,11 @@ public:
                 size_t texureDataHeight =
                     std::min((size_t)g_textureTileSize,
                              m_bufferHeight - coveredRowsCount);
+
+                if (m_forFilterEffect) {
+                    texureDataWidth = m_bufferWidth;
+                    texureDataHeight = m_bufferHeight;
+                }
 
                 glGenTextures(1, &textureID);
                 glActiveTexture(GL_TEXTURE0);
@@ -1220,7 +1477,6 @@ public:
                                      AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN,
                                  -1, NULL, (void**)&m_buffer);
 #endif
-            m_window->glEGLImageUpdated();
             return m_buffer;
         }
         return m_buffer;
@@ -1290,6 +1546,10 @@ public:
                 ceil((float)m_bufferHeight / g_textureTileSize);
             size_t fragmentIndex = 0;
 
+            if (m_forFilterEffect) {
+                wTextureCount = hTextureCount = 1;
+            }
+
             Unit::Rect dRect(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
 
             size_t coveredRowsCount = 0;
@@ -1306,6 +1566,12 @@ public:
                     size_t textureDataHeight =
                         std::min((size_t)g_textureTileSize,
                                  m_bufferHeight - coveredRowsCount);
+
+                    if (m_forFilterEffect) {
+                        textureDataWidth = m_bufferWidth;
+                        textureDataHeight = m_bufferHeight;
+                    }
+
                     CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment&
                         fragment = m_textureFragments[fragmentIndex];
 
@@ -1419,6 +1685,7 @@ protected:
     bool m_isEGLImageExternal;
     bool m_isEGLBufferOwner;
     bool m_isEGLImageNeedsFlipRGB;
+    bool m_forFilterEffect;
 #if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
     tbm_surface_h m_tbmSurface;
     EvasGLImage m_eglImage;
@@ -1431,15 +1698,17 @@ protected:
 #endif
 };
 
-CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h)
+CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
+                                     bool forFilterEffect)
 {
-    return new CanvasSurfaceGL(wnd, w, h);
+    return new CanvasSurfaceGL(wnd, w, h, forFilterEffect);
 }
 
 struct CompositorImplGLState {
     bool matrixStaysInRect;
     SkMatrix matrix;
     float opacity;
+    float blurRadius;
     Unit::Color color;
     ClipperLib::Paths clipPaths;
 };
@@ -1458,6 +1727,7 @@ public:
         LongTaskFinder t("CompositorImplGL::CompositorImplGL", 1);
         webView->platformWindow()->glMakeCurrent();
 
+        m_seenFilteredTexture = false;
         m_webView = webView;
         m_compositorContext = compositorContext;
         glEnable(GL_BLEND);
@@ -1470,6 +1740,7 @@ public:
         m_state.back().matrixStaysInRect = true;
         m_state.back().matrix = SkMatrix::I();
         m_state.back().opacity = 1;
+        m_state.back().blurRadius = 0;
 
         glUseProgram(m_compositorContext->rectProgram());
         checkError();
@@ -1509,6 +1780,14 @@ public:
     {
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
+
+#if defined(STARFISH_TIZEN)
+        // there is blinking on tizen with FBO
+        // explicit sync fixes blinking
+        if (m_seenFilteredTexture) {
+            m_webView->platformWindow()->glMayNeedsSync();
+        }
+#endif
     }
 
     virtual void clearColor(const Unit::Color& clr)
@@ -1823,9 +2102,284 @@ public:
         return result;
     }
 
-    void drawTexture(CanvasSurface* cs, float dest[4][2], GLuint textureID)
+    void drawFilteredTexture(CanvasSurfaceGL* cs, float dest[4][2],
+                             GLuint textureID, GLenum textureKind,
+                             GLenum textureBindNumber, size_t textureWidth,
+                             size_t textureHeight)
     {
-        INSTALL_PROFILE_TIMER("CompositorGL::drawTexture");
+        m_seenFilteredTexture = true;
+        // Use FBO inorder to 2-pass blur
+        // generate FBO
+        GLuint fboId;
+        glGenFramebuffers(1, &fboId);
+        checkError();
+
+        // generate texture
+        GLuint fboTex;
+        glGenTextures(1, &fboTex);
+        checkError();
+
+        // generate render buffer
+        GLuint renderBufferId;
+        glGenRenderbuffers(1, &renderBufferId);
+        checkError();
+
+        // Bind Frame buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
+        checkError();
+
+        // Bind texture
+        glBindTexture(GL_TEXTURE_2D, fboTex);
+        checkError();
+
+        // Define texture parameters
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0,
+                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        checkError();
+
+        // Bind render buffer and define buffer dimension
+        glBindRenderbuffer(GL_RENDERBUFFER, renderBufferId);
+
+        // Attach texture FBO color attachment
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, fboTex, 0);
+        checkError();
+
+        auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        STARFISH_RELEASE_ASSERT(status == GL_FRAMEBUFFER_COMPLETE);
+
+        // we are done, reset
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        // do render on fbo
+        glViewport(0, 0, textureWidth, textureHeight);
+        bool isScissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
+        bool isStencilEnabled = glIsEnabled(GL_STENCIL_TEST);
+
+        glDisable(GL_SCISSOR_TEST);
+        glDisable(GL_STENCIL_TEST);
+
+        glClearColor(0, 0, 0, 0);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        bool isEGLImage = textureKind != GL_TEXTURE_2D;
+        float blurMainRadius = m_state.back().blurRadius;
+        // original code don't set sub radius but we set magic number
+        // because we don't have antialias yet
+        // setting sub radius reduce glitch
+        float blurSubRadius = m_state.back().blurRadius / 5;
+        if (blurSubRadius == (int)m_state.back().blurRadius) {
+            blurSubRadius *= 0.85;
+        }
+        // blur W
+        {
+            float data[] = { 0.f,
+                             (float)textureHeight, // V4
+                             0.f,
+                             0.f, // Texture coordinate .for V1
+
+                             0.f,
+                             0.f, // V3
+                             0.f,
+                             1.f,
+
+                             (float)textureWidth,
+                             (float)textureHeight, // V2
+                             1.f,
+                             0.f,
+
+                             (float)textureWidth,
+                             0.f, // V1
+                             1.f,
+                             1.f };
+
+            GLuint blurProgramW =
+                isEGLImage
+                    ? m_compositorContext
+                          ->texBlurShaderProgramEGLImageExternalW()
+                    : m_compositorContext->texBlurShaderProgramW();
+
+            glUseProgram(blurProgramW);
+            auto uScreenPos = glGetUniformLocation(blurProgramW, "uScreen");
+            float uScreen[] = { 2.f / textureWidth,
+                                0.f,
+                                0.f,
+                                0.f,
+                                0.f,
+                                -2.f / textureHeight,
+                                0.f,
+                                0.f,
+                                0.f,
+                                0.f,
+                                0.f,
+                                0.f,
+                                -1.f,
+                                1.f,
+                                0.f,
+                                1.f };
+
+            glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
+            checkError();
+            auto aPosition = glGetAttribLocation(blurProgramW, "aPosition");
+            auto aTexPos = glGetAttribLocation(blurProgramW, "aTexPos");
+
+            glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                  &data[0]);
+            glEnableVertexAttribArray(aPosition);
+
+            glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                  &data[2]);
+            glEnableVertexAttribArray(aTexPos);
+
+            if (textureKind == GL_TEXTURE_2D) {
+                glActiveTexture(textureBindNumber);
+            }
+            checkError();
+
+            glBindTexture(textureKind, textureID);
+            auto uTexture = glGetUniformLocation(blurProgramW, "uTexture");
+            glUniform1i(uTexture, 0);
+
+            auto uTextureWidth =
+                glGetUniformLocation(blurProgramW, "uTextureWidth");
+            glUniform1f(uTextureWidth, textureWidth);
+
+            auto uTextureHeight =
+                glGetUniformLocation(blurProgramW, "uTextureHeight");
+            glUniform1f(uTextureHeight, textureHeight);
+
+            auto uBlurRadius =
+                glGetUniformLocation(blurProgramW, "uBlurRadius");
+            glUniform2f(uBlurRadius, blurMainRadius, blurSubRadius);
+
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindTexture(textureKind, 0);
+            checkError();
+            glUseProgram(0);
+        }
+
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        // end of render to buffer
+
+        // reset global properties
+        glViewport(0, 0, m_webView->platformWindow()->width(),
+                   m_webView->platformWindow()->height());
+        if (isScissorEnabled) {
+            glEnable(GL_SCISSOR_TEST);
+        }
+        if (isStencilEnabled) {
+            glEnable(GL_STENCIL_TEST);
+        }
+
+        glDeleteRenderbuffers(1, &renderBufferId);
+        glDeleteFramebuffers(1, &fboId);
+        checkError();
+
+        // blur H
+        {
+            GLuint blurProgramH = m_compositorContext->texBlurShaderProgramH();
+            glUseProgram(blurProgramH);
+
+            float data[] = { dest[0][0], dest[0][1], // V1
+                             0.f,        0.f, // Texture coordinate .for V1
+
+                             dest[1][0], dest[1][1], // V2
+                             0.f,        1.f,
+
+                             dest[2][0], dest[2][1], // V3
+                             1.f,        0.f,
+
+                             dest[3][0], dest[3][1], // V4
+                             1.f,        1.f };
+
+            auto uScreenPos = glGetUniformLocation(blurProgramH, "uScreen");
+
+            float uScreen[] = { 2.f / m_webView->platformWindow()->width(),
+                                0.f,
+                                0.f,
+                                0.f,
+                                0.f,
+                                -2.f / m_webView->platformWindow()->height(),
+                                0.f,
+                                0.f,
+                                0.f,
+                                0.f,
+                                0.f,
+                                0.f,
+                                -1.f,
+                                1.f,
+                                0.f,
+                                1.f };
+
+            glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
+            checkError();
+            auto aPosition = glGetAttribLocation(blurProgramH, "aPosition");
+            auto aTexPos = glGetAttribLocation(blurProgramH, "aTexPos");
+
+            glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                  &data[0]);
+            glEnableVertexAttribArray(aPosition);
+
+            glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
+                                  &data[2]);
+            glEnableVertexAttribArray(aTexPos);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_2D, fboTex);
+            auto uTexture = glGetUniformLocation(blurProgramH, "uTexture");
+
+            auto uTextureWidth =
+                glGetUniformLocation(blurProgramH, "uTextureWidth");
+            glUniform1f(uTextureWidth, textureWidth);
+
+            auto uTextureHeight =
+                glGetUniformLocation(blurProgramH, "uTextureHeight");
+            glUniform1f(uTextureHeight, textureHeight);
+
+            auto uBlurRadius =
+                glGetUniformLocation(blurProgramH, "uBlurRadius");
+            glUniform2f(uBlurRadius, -blurSubRadius, blurMainRadius);
+
+            auto uAlpha = glGetUniformLocation(blurProgramH, "uAlpha");
+
+            float a = m_state.back().opacity;
+            glUniform4f(uAlpha, a, a, a, a);
+            glUniform1i(uTexture, 0);
+
+            glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+            glBindTexture(GL_TEXTURE_2D, 0);
+            checkError();
+            glUseProgram(0);
+
+            glDeleteTextures(1, &fboTex);
+            checkError();
+        }
+    }
+
+    void drawTexture(CanvasSurfaceGL* cs, float dest[4][2], GLuint textureID,
+                     GLenum textureKind, GLenum textureBindNumber,
+                     size_t textureWidth, size_t textureHeight)
+    {
+        if (m_state.back().blurRadius) {
+            drawFilteredTexture(cs, dest, textureID, textureKind,
+                                textureBindNumber, textureWidth, textureHeight);
+            return;
+        }
+        bool isEGLImage = textureKind != GL_TEXTURE_2D;
+        GLuint program = m_compositorContext->texShaderProgram();
+        if (isEGLImage) {
+            program =
+                cs->m_isEGLImageNeedsFlipRGB
+                    ? m_compositorContext
+                          ->texShaderProgramEGLImageExternalColorInverted()
+                    : m_compositorContext->texShaderProgramEGLImageExternal();
+        }
+
         float data[] = { dest[0][0], dest[0][1], // V1
                          0.f,        0.f,        // Texture coordinate .for V1
 
@@ -1838,9 +2392,9 @@ public:
                          dest[3][0], dest[3][1], // V4
                          1.f,        1.f };
         float a = m_state.back().opacity;
-        glUseProgram(m_compositorContext->texShaderProgram());
-        auto uScreenPos = glGetUniformLocation(
-            m_compositorContext->texShaderProgram(), "uScreen");
+        glUseProgram(program);
+        auto uScreenPos = glGetUniformLocation(program, "uScreen");
+        checkError();
 
         float uScreen[] = { 2.f / m_webView->platformWindow()->width(),
                             0.f,
@@ -1861,10 +2415,9 @@ public:
 
         glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
         checkError();
-        auto aPosition = glGetAttribLocation(
-            m_compositorContext->texShaderProgram(), "aPosition");
-        auto aTexPos = glGetAttribLocation(
-            m_compositorContext->texShaderProgram(), "aTexPos");
+        auto aPosition = glGetAttribLocation(program, "aPosition");
+        auto aTexPos = glGetAttribLocation(program, "aTexPos");
+        checkError();
 
         glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
                               &data[0]);
@@ -1874,17 +2427,22 @@ public:
                               &data[2]);
         glEnableVertexAttribArray(aTexPos);
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textureID);
-        auto uTexture = glGetUniformLocation(
-            m_compositorContext->texShaderProgram(), "uTexture");
-        auto uAlpha = glGetUniformLocation(
-            m_compositorContext->texShaderProgram(), "uAlpha");
+        if (textureKind == GL_TEXTURE_2D) {
+            glActiveTexture(textureBindNumber);
+        }
+        checkError();
+
+        glBindTexture(textureKind, textureID);
+        checkError();
+        auto uTexture = glGetUniformLocation(program, "uTexture");
+        auto uAlpha = glGetUniformLocation(program, "uAlpha");
+
         glUniform4f(uAlpha, a, a, a, a);
         glUniform1i(uTexture, 0);
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-        glBindTexture(GL_TEXTURE_2D, 0);
+        checkError();
+        glBindTexture(textureKind, 0);
         checkError();
         glUseProgram(0);
     }
@@ -2046,85 +2604,18 @@ public:
 
         if (!shouldSkipTexturePainting) {
             if (csGL->m_isEGLImageExternal) {
-                float data[] = { dest[0][0], dest[0][1], // V1
-                                 0.f,        0.f, // Texture coordinate .for V1
-
-                                 dest[1][0], dest[1][1], // V2
-                                 0.f,        1.f,
-
-                                 dest[2][0], dest[2][1], // V3
-                                 1.f,        0.f,
-
-                                 dest[3][0], dest[3][1], // V4
-                                 1.f,        1.f };
-                float a = m_state.back().opacity;
-
-                if (csGL->m_isEGLImageNeedsFlipRGB) {
-                    glUseProgram(
-                        m_compositorContext
-                            ->texShaderProgramEGLImageExternalColorInverted());
-                } else {
-                    glUseProgram(m_compositorContext
-                                     ->texShaderProgramEGLImageExternal());
-                }
-
-                float uScreen[] = {
-                    2.f / m_webView->platformWindow()->width(),
-                    0.f,
-                    0.f,
-                    0.f,
-                    0.f,
-                    -2.f / m_webView->platformWindow()->height(),
-                    0.f,
-                    0.f,
-                    0.f,
-                    0.f,
-                    0.f,
-                    0.f,
-                    -1.f,
-                    1.f,
-                    0.f,
-                    1.f
-                };
-
-                auto uScreenPos = glGetUniformLocation(
-                    m_compositorContext->texShaderProgramEGLImageExternal(),
-                    "uScreen");
-
-                glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
-                checkError();
-
-                glBindTexture(GL_TEXTURE_EXTERNAL_OES,
-                              csGL->m_textureFragments[0].textureID);
-                auto aPosition = glGetAttribLocation(
-                    m_compositorContext->texShaderProgramEGLImageExternal(),
-                    "aPosition");
-                auto aTexPos = glGetAttribLocation(
-                    m_compositorContext->texShaderProgramEGLImageExternal(),
-                    "aTexPos");
-
-                glVertexAttribPointer(aPosition, 2, GL_FLOAT, false,
-                                      (2 + 2) * 4, &data[0]);
-                glEnableVertexAttribArray(aPosition);
-
-                glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
-                                      &data[2]);
-                glEnableVertexAttribArray(aTexPos);
-
-                auto uAlpha = glGetUniformLocation(
-                    m_compositorContext->texShaderProgramEGLImageExternal(),
-                    "uAlpha");
-                glUniform4f(uAlpha, a, a, a, a);
-
-                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-                glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
-                checkError();
-                glUseProgram(0);
+                drawTexture(csGL, dest, csGL->m_textureFragments[0].textureID,
+                            GL_TEXTURE_EXTERNAL_OES, -1, csGL->m_bufferWidth,
+                            csGL->m_bufferHeight);
             } else {
                 size_t wTextureCount =
                     ceil((float)cs->bufferWidth() / g_textureTileSize);
                 size_t hTextureCount =
                     ceil((float)cs->bufferHeight() / g_textureTileSize);
+
+                if (csGL->m_forFilterEffect) {
+                    wTextureCount = hTextureCount = 1;
+                }
 
                 size_t coveredRowsCount = 0;
                 size_t i = 0;
@@ -2139,6 +2630,11 @@ public:
                         size_t texureDataHeight =
                             std::min((size_t)g_textureTileSize,
                                      cs->bufferHeight() - coveredRowsCount);
+
+                        if (csGL->m_forFilterEffect) {
+                            texureDataWidth = cs->bufferWidth();
+                            texureDataHeight = cs->bufferHeight();
+                        }
 
                         float newDest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
@@ -2249,9 +2745,10 @@ public:
                                 csGL->unMapBufferAndNotifyUpdateRegion(0, 0, 0,
                                                                        0);
                             }
-                            drawTexture(cs, newDest, tid);
+                            drawTexture(csGL, newDest, tid, GL_TEXTURE_2D,
+                                        GL_TEXTURE0, texureDataWidth,
+                                        texureDataHeight);
                         }
-
                         i++;
                         coveredColsCount += g_textureTileSize;
                     }
@@ -2378,7 +2875,18 @@ public:
         m_path.shrink_to_fit();
     }
 
+    virtual bool supportsBlurEffect()
+    {
+        return true;
+    }
+
+    virtual void enableBlurEffect(float blurRadius)
+    {
+        m_state.back().blurRadius = blurRadius;
+    }
+
 protected:
+    bool m_seenFilteredTexture;
     WebView* m_webView;
     CompositorContext* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;
@@ -2394,6 +2902,14 @@ Compositor* Compositor::create2D(WebView* webView, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+}
+
+bool Compositor::supportsFilterEffect(size_t textureWidth, size_t textureHeight)
+{
+    if (textureWidth > g_maxTextureSize || textureHeight > g_maxTextureSize) {
+        return false;
+    }
+    return true;
 }
 
 #if defined(STARFISH_ENABLE_TEST)

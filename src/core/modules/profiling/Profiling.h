@@ -42,7 +42,7 @@ protected:
 
 class LongTaskFinder {
 public:
-    LongTaskFinder(const char* msg, size_t loggingTimeInMS)
+    LongTaskFinder(const char* msg, size_t loggingTimeInMS = 1)
     {
         m_loggingTime = loggingTimeInMS;
         m_start = longTickCount();

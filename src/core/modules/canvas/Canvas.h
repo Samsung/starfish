@@ -70,11 +70,13 @@ protected:
     }
 
 public:
-    static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h);
+    static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h,
+                                 bool forFilterEffect = false);
     static CanvasSurface* createCanvasTarget(uint8_t* buffer, size_t w,
                                              size_t h, size_t stride);
-    virtual bool attachNativeBuffer(size_t w,
-                                    size_t h) = 0; // returns surface updated
+    virtual bool attachNativeBuffer(
+        size_t w, size_t h,
+        bool forFilterEffect = false) = 0; // returns surface updated
     virtual uint8_t* mapBuffer() = 0;
     virtual void clear() = 0;
     virtual void detachNativeBuffer() = 0;

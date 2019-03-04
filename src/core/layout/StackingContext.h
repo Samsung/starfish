@@ -241,6 +241,7 @@ protected:
     bool m_needsGraphicsBuffer : 1;
     bool m_hasNon2DRectTransform : 1;
     bool m_isVisibleRectComputedForNonGraphicsLayer : 1;
+    bool m_hasFilterEffect : 1;
     NeedsGraphicsLayerReason m_needsGraphicsBufferReason : 3;
     FrameBox* m_owner;
     StackingContext* m_parent;
