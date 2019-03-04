@@ -31,6 +31,7 @@ class StaticStrings;
 class Transferable;
 class ScriptContext;
 class WebBase;
+class ExecutionContext;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
@@ -67,7 +68,7 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
 
 template <typename T = STARFISH_GLOBAL_BINDING_CLASS>
 T* fetchGlobalObject(Escargot::ContextRef* context);
-GlobalScope* fetchGlobalScope(Escargot::ContextRef* context);
+ExecutionContext* fetchExecutionContext(Escargot::ContextRef* context);
 WebBase* fetchWebBase(Escargot::ContextRef* context);
 ScriptBindingInstance* fetchScriptBindingInstance(
     Escargot::ContextRef* context);
@@ -161,6 +162,11 @@ unsigned arrayBufferViewSize(ScriptArrayBufferView buffer);
 void invokeTestStartFunction(ScriptBindingInstance* instance);
 #endif
 
+#define DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(className) \
+    virtual void init(ScriptBindingInstance* instance, \
+                      void* domObjectPointer) override; \
+    virtual bool is##className() const override;
+
 #define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
 STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
 #undef FOR_EACH_FORWARD_DECLARATION
@@ -217,7 +223,7 @@ public:
     STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_CAST_FN);
 #undef FOR_EACH_CAST_FN
 
-    ScriptWrappable(void* extraPointerData);
+    ScriptWrappable(void* extraPointerData, ExecutionContext* executionContext = nullptr);
 
     virtual ~ScriptWrappable()
     {
@@ -241,6 +247,11 @@ public:
         return ((size_t)m_object & (size_t)1);
     }
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
     ScriptObject generateScriptObject();
     ScriptValue scriptValue();
 
@@ -249,7 +260,7 @@ public:
     virtual void postInit(ScriptBindingInstance* instance)
     {
     }
-    virtual ScriptBindingInstance* scriptBindingInstance() = 0;
+    virtual ScriptBindingInstance* scriptBindingInstance();
 
     virtual bool isAttributeEventFunction() const
     {
@@ -287,6 +298,8 @@ protected:
         m_object = obj;
     }
     Escargot::ObjectRef* m_object;
+private:
+    ExecutionContext* m_executionContext;
 };
 
 ScriptWrappable* toScriptWrappable(ScriptValue v);

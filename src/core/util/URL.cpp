@@ -30,23 +30,16 @@
 
 namespace Starfish {
 
-URL::URL(ScriptBindingInstance* instance, String* url)
-    : ScriptWrappable(this)
-    , m_scriptBindingInstance(instance)
+URL::URL(ExecutionContext* executionContext, String* url)
+    : ScriptWrappable(this, executionContext)
     , m_resourceURL(new ResourceURL(url))
 {
 }
 
-URL::URL(ScriptBindingInstance* instance, String* url, String* baseURL)
-    : ScriptWrappable(this)
-    , m_scriptBindingInstance(instance)
+URL::URL(ExecutionContext* executionContext, String* url, String* baseURL)
+    : ScriptWrappable(this, executionContext)
     , m_resourceURL(new ResourceURL(url, baseURL))
 {
-}
-
-ScriptBindingInstance* URL::scriptBindingInstance()
-{
-    return m_scriptBindingInstance;
 }
 
 String* URL::createObjectURL(Blob* blob)

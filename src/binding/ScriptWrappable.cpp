@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "binding/ScriptWrappable.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/ErrorEvent.h"
@@ -236,9 +237,9 @@ T* fetchGlobalObject(ContextRef* ctx)
     return static_cast<T*>(ctx->globalObject()->extraData());
 }
 
-GlobalScope* fetchGlobalScope(ContextRef* ctx)
+ExecutionContext* fetchExecutionContext(ContextRef* ctx)
 {
-    return fetchGlobalObject(ctx);
+    return fetchGlobalObject(ctx)->executionContext();
 }
 
 WebBase* fetchWebBase(ContextRef* ctx)
@@ -434,10 +435,11 @@ ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
     return Escargot::ValueRef::createUndefined();
 }
 
-ScriptWrappable::ScriptWrappable(void* extraPointerData)
+ScriptWrappable::ScriptWrappable(void* extraPointerData, ExecutionContext* executionContext)
 {
     STARFISH_ASSERT(!((size_t)extraPointerData & (size_t)1));
     m_object = (ObjectRef*)((size_t)extraPointerData | (size_t)1);
+    m_executionContext = executionContext;
 }
 
 ScriptObject ScriptWrappable::generateScriptObject()
@@ -458,6 +460,12 @@ ScriptObject ScriptWrappable::generateScriptObject()
 ScriptValue ScriptWrappable::scriptValue()
 {
     return ValueRef::create(scriptObject());
+}
+
+ScriptBindingInstance* ScriptWrappable::scriptBindingInstance()
+{
+    STARFISH_ASSERT(m_executionContext);
+    return m_executionContext->ownerScriptBindingInstance();
 }
 
 ScriptWrappable* toScriptWrappable(ScriptValue v)

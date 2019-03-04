@@ -24,6 +24,7 @@ namespace Starfish {
 
 class ScriptBindingInstance;
 class ScriptContext;
+class ExecutionContext;
 
 // TODO: Move WindowOrWorkerGlobalScope feature included in Window class
 class GlobalScope {
@@ -32,12 +33,12 @@ public:
     {
     }
 
-    virtual ScriptBindingInstance* scriptBindingInstance() = 0;
-
     ScriptContext* scriptContext()
     {
         return m_scriptContext;
     }
+
+    virtual ExecutionContext* executionContext() = 0;
 
 protected:
     GlobalScope(ScriptContext* scriptContext)

@@ -46,8 +46,6 @@ public:
         return false;
     }
 
-    virtual ScriptBindingInstance* scriptBindingInstance() = 0;
-
     WebBase* webBase() const
     {
         return m_webBase;

@@ -30,16 +30,10 @@ typedef String FormDataEntryValue;
 
 class FormData : public ScriptWrappable {
 public:
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
+    FormData(ExecutionContext* executionContext,
+             HTMLFormElement* form = nullptr);
 
-    virtual bool isFormData() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_scriptBindingInstance;
-    }
-
-    FormData(ScriptBindingInstance* instance, HTMLFormElement* form = nullptr);
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(FormData)
 
     void set(String* name, String* value);
     void append(String* name, String* value);
@@ -52,7 +46,6 @@ public:
     startIteration(ExecutionStateRef* state);
 
 private:
-    ScriptBindingInstance* m_scriptBindingInstance;
     GCVector<FormDataSetItem*>* m_list;
     GCVector<FormDataSetItem*>::iterator findByName(String* name);
 };

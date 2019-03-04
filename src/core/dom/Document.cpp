@@ -85,6 +85,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
                    ResourceURL* uri, String* charSet,
                    bool doesParticipateInRendering)
     : Node(this)
+    , ExecutionContext(window, scriptBindingInstance)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
     , m_doesParticipateInRendering(doesParticipateInRendering)
@@ -117,7 +118,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_styleSheetList(nullptr)
     , m_brokenImage(nullptr)
     , m_animationExecutor(new AnimationExecutor(window))
-    , m_scriptBindingInstance(scriptBindingInstance)
     , m_domVersion(0)
     , m_implementation(nullptr)
     , m_pendingDocumentParsingIdlerHandle(SIZE_MAX)
