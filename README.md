@@ -119,6 +119,11 @@ Default values are in **bold**.
 
 
 ## Testing
+### Prerequisite
+```sh
+# install imgdiff tool
+ninja install_pixel_test_dep
+```
 ### Summary
 ``` sh
 # Run all test at once

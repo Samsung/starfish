@@ -14,145 +14,130 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
+from __future__ import print_function
+
 import os
-import fileinput
-import argparse
-
-#from check_license import CheckLicenser
-import os.path as fs
 import subprocess
+import sys
 
-TERM_RED = "\033[1;31m"
-TERM_YELLOW = "\033[1;33m"
-TERM_GREEN = "\033[1;32m"
-TERM_BLUE = "\033[1;34m"
-TERM_EMPTY = "\033[0m"
+from argparse import ArgumentParser
+from difflib import unified_diff
+from os.path import join, relpath, splitext
 
 
-count_suggestion = 0
-count_err = 0
-count_lines = 0
-count_empty_lines = 0
+TERM_RED = '\033[1;31m'
+TERM_GREEN = '\033[1;32m'
+TERM_YELLOW = '\033[1;33m'
+TERM_PURPLE = '\033[35m'
+TERM_EMPTY = '\033[0m'
 
-interesting_exts = ['.cpp', '.h', '.js', '.py', '.sh', '.cmake']
+
 clang_format_exts = ['.cpp', '.h', '.hpp']
 skip_dirs = [
-    './binding_generator',
-    './build',
-    './docs',
-    './packaging',
-    './out',
-    './src/binding',
-    './test',
-    './third_party',
-    './tool',
+    'binding_generator',
+    'build',
+    'docs',
+    'packaging',
+    'out',
+    'src/binding',
+    'test',
+    'third_party',
+    'tool',
+    'CMakeFiles',
     '.git'
 ]
 skip_files = ['Interfaces.h']
 
 
-def report_error_name_line(name, line, msg):
-    global count_err
-    if line is None:
-        print("%s: %s" % (name, msg))
-    else:
-        print("%s:%d: %s" % (name, line, msg))
-    count_err += 1
-
-
-def report_error(msg):
-    report_error_name_line(fileinput.filename(), fileinput.filelineno(), msg)
+class Stats(object):
+    def __init__(self):
+        self.files = 0
+        self.lines = 0
+        self.empty_lines = 0
+        self.errors = 0
 
 
 def is_checked_by_clang(file):
-    _, ext = fs.splitext(file)
+    _, ext = splitext(file)
     return ext in clang_format_exts and file not in skip_files
 
-def check_tidy_at_file(file, update):
-    global count_suggestion
-    if update:
-        formatted = subprocess.check_output(['clang-format-3.8',
-            '-style=file', '-i', file])
-    else:
-        formatted = subprocess.check_output(['clang-format-3.8',
-            '-style=file', file])
-        f = open(file + '.formatted', 'w')
-        f.write(formatted)
-        f.close()
-        if subprocess.call(['diff'] + [file, file + '.formatted']) != 0:
-            print(file + '\n')
-            count_suggestion += 1
-        os.remove(file + '.formatted')
 
-def check_whitespace_error(files):
-    global count_lines
-    global count_empty_lines
-    for line in fileinput.input(files):
-        if '\t' in line:
-            report_error('TAB character')
-        if '\r' in line:
-            report_error('CR character')
-        if line.endswith(' \n') or line.endswith('\t\n'):
-            report_error('trailing whitespace')
-        if not line.endswith('\n'):
-            report_error('line ends without NEW LINE character')
+def check_tidy(src_dir, update, clang_format, stats):
+    print('%sprocessing directory: %s%s' % (TERM_PURPLE, src_dir, TERM_EMPTY))
 
-#            if fileinput.isfirstline():
-#                if not CheckLicenser.check(fileinput.filename()):
-#                    report_error_name_line(fileinput.filename(),
-#                                           None,
-#                                       'incorrect license')
+    for dirpath, _, filenames in os.walk(src_dir):
+        if any(d in relpath(dirpath, src_dir) for d in skip_dirs):
+            continue
 
-        count_lines += 1
-        if not line.strip():
-            count_empty_lines += 1
+        for file in [join(dirpath, name) for name in filenames if is_checked_by_clang(name)]:
 
-def check_tidy(args):
-    print(args.path)
+            def report_error(msg, line=None):
+                print('%s%s:%s %s%s' % (TERM_YELLOW, file, '%d:' % line if line else '', msg, TERM_EMPTY))
+                stats.errors += 1
+
+            with open(file, 'r') as f:
+                original = f.readlines()
+            formatted = subprocess.check_output([clang_format, '-style=file', file])
+
+            if update:
+                with open(file, 'w') as f:
+                    f.write(formatted)
+
+            stats.files += 1
+            stats.lines += len(original)
+
+            for lineno, line in enumerate(original):
+                lineno += 1
+
+                if '\t' in line:
+                    report_error('TAB character', lineno)
+                if '\r' in line:
+                    report_error('CR character', lineno)
+                if line.endswith(' \n') or line.endswith('\t\n'):
+                    report_error('trailing whitespace', lineno)
+                if not line.endswith('\n'):
+                    report_error('line ends without NEW LINE character', lineno)
+
+                if not line.strip():
+                    stats.empty_lines += 1
+
+            diff = list(unified_diff(original, formatted.splitlines(True)))
+            if diff:
+                report_error('format error')
+                for diffline in diff:
+                    print(diffline, end='')
+
+
+
+def main():
+    parser = ArgumentParser(description='Starfish Source Format Checker and Updater')
+    parser.add_argument('--clang-format', metavar='PATH', default='clang-format-3.8',
+                        help='path to clang-format (default: %(default)s)')
+    parser.add_argument('--update', action='store_true',
+                        help='reformat files')
+    parser.add_argument('dir', nargs='*', default=['.'],
+                        help='directory to process (default: .)')
+    args = parser.parse_args()
+
+    stats = Stats()
+
+    for dir in args.dir:
+        check_tidy(dir, args.update, args.clang_format, stats)
+
+    print()
+    print('* Total number of files: %d' % stats.files)
+    print('* Total lines of code: %d' % stats.lines)
+    print('* Total non-empty lines of code: %d' % (stats.lines - stats.empty_lines))
+    print('%s* Total number of errors: %d%s' % (TERM_RED if stats.errors else TERM_GREEN,
+                                                stats.errors,
+                                                TERM_EMPTY))
 
     if args.update:
-        print("Files will be fomatted. Check the change: git diff")
+        print()
+        print('All files reformatted, check for changes with `git diff`.');
 
-    if os.path.isfile(args.path):
-        if is_checked_by_clang(args.path):
-            check_tidy_at_file(args.path, args.update)
+    sys.exit(1 if stats.errors else 0)
 
-        check_whitespace_error([args.path])
-
-    for (dirpath, _, filenames) in os.walk(args.path):
-        if any(d in ''.join(('./', fs.relpath(dirpath, args.path))) for d in skip_dirs):
-            continue
-
-        files = [fs.join(dirpath, name) for name in filenames
-                 if is_checked_by_clang(name)]
-        if not files:
-            continue
-
-        for file in files:
-            if is_checked_by_clang(file):
-                check_tidy_at_file(file, args.update)
-
-        check_whitespace_error(files)
-
-    print("* total lines of code: %d" % count_lines)
-    print("* total non-blank lines of code: %d"
-           % (count_lines - count_empty_lines))
-    print("%s* total suggestion files: %d%s" % (TERM_RED if count_suggestion > 0 else TERM_GREEN,
-                                                count_suggestion,
-                                                TERM_EMPTY))
-    print("%s* total errors: %d%s" % (TERM_RED if count_err > 0 else TERM_GREEN,
-                                      count_err,
-                                      TERM_EMPTY))
-    print()
-
-    return count_err == 0
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser(description='Tidy Checker')
-    parser.add_argument('--update', '-u', dest='update', action='store_true',
-                        help='flag to update')
-    parser.add_argument('--path', '-p', dest='path', default='.', type=str,
-                        help='path to check tidy')
-    args = parser.parse_args()
-    check_tidy(args)
+    main()
