@@ -117,12 +117,12 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSpeechSynthesisUtterance() const override;
 
-    void setId(uint32_t id)
+    void setId(int id)
     {
         m_id = id;
     }
 
-    uint32_t id()
+    int id()
     {
         return m_id;
     }
@@ -213,7 +213,7 @@ public:
 #undef OVERRIDE
 
 private:
-    uint32_t m_id;
+    int m_id;
     String* m_text;
     String* m_lang;
     SpeechSynthesisVoice* m_voice;

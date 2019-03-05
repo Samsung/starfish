@@ -39,6 +39,11 @@ void TTS::initialize()
 #endif
 }
 
+int TTS::createHandle()
+{
+    return 0;
+}
+
 void TTS::destroy()
 {
 }
@@ -57,36 +62,27 @@ void TTS::speech(Element* element, String* text)
     }
 }
 
-bool TTS::createHandle()
+int TTS::speechElementText(const char* text)
 {
-    return false;
+    return 0;
 }
 
-bool TTS::startPlay(const char* text)
-{
-    return false;
-}
-
-bool TTS::stopPlay()
-{
-    return false;
-}
-
-bool TTS::addText(const char* text)
-{
-    return false;
-}
-
-void TTS::speak(SpeechSynthesisUtterance* utterance)
+void TTS::speech(SpeechSynthesisUtterance* utterance)
 {
 }
 
-void TTS::speakUtterances()
+int TTS::speechUtterances()
 {
+    return 0;
 }
 
 void TTS::pause()
 {
+}
+
+bool TTS::isPaused()
+{
+    return false;
 }
 
 void TTS::resume()
@@ -101,8 +97,10 @@ void TTS::changeDefaultVoice(String* language, const int voiceType)
 {
 }
 
-void TTS::readyState()
+int TTS::ttsState()
 {
+    return 0;
 }
 }
+
 #endif

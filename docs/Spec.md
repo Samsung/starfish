@@ -20,6 +20,8 @@ lightweight Web engine (LWE).
     - [Blob](#blob)
     - [Geolocation](#geolocation)
     - [Web Device API](#web-device-api)
+    - [Accessible Rich Internet Applications (WAI-ARIA)](#accessible-rich-internet-applications-wai-aria)
+    - [Web Speech APIs](#web-speech-apis)
 
 ## Encoding Scheme
 All files (i.e., .html, .css, and .js) are to be encoded in UTF-8. This is
@@ -1608,3 +1610,38 @@ The following describes WAI-ARIA supported by lightweight web engine. Please, se
 | | property | [aria-labelledby](https://www.w3.org/TR/wai-aria/#aria-labelledby) | Identifies the element (or elements) that labels the current element. See related aria-describedby. | |
 | | property | [aria-describedby](https://www.w3.org/TR/wai-aria/#aria-describedby)| Identifies the element (or elements) that describes the object. See related aria-labelledby.| |
 | | state | [aria-hidden](https://www.w3.org/TR/wai-aria/#aria-hidden) | Indicates whether the element is exposed to an accessibility API. See related aria-disabled. | |
+
+## Web Speech APIs
+The following describes Web Speech APIs supported by lightweight web engine. Please, see [here](https://w3c.github.io/speech-api/#tts-section) for more information.
+
+| Interface | Type | Name | Description | Note |
+|-----------|------|------|-------------|------|
+| [SpeechSynthesis](https://w3c.github.io/speech-api/#speechsynthesis) | interface | SpeechSynthesis | The controller interface for the speech service. | |
+| | attribute | pending | This attribute is true if the queue for the global SpeechSynthesis instance contains any utterances which have not started speaking.| |
+| | attribute | speaking | This attribute is true if an utterance is being spoken. | |
+| | attribute | paused| This attribute is true when the global SpeechSynthesis instance is in the paused state.| |
+| | method | void speak(SpeechSynthesisUtterance utterance) | This method appends the SpeechSynthesisUtterance object utterance to the end of the queue for the global SpeechSynthesis instance. | |
+| | method | void cancel() | This method removes all utterances from the queue. If an utterance is being spoken, speaking ceases immediately. | |
+| | method | void pause() | This method puts the global SpeechSynthesis instance into the paused state. | |
+| | method | void resume() | This method puts the global SpeechSynthesis instance into the non-paused state. | |
+| | method | sequence<SpeechSynthesisVoice> getVoices() | This method returns the available voices. It is user agent dependent which voices are available. | |
+| [SpeechSynthesisUtterance](https://w3c.github.io/speech-api/#speechsynthesisutterance) | interface | SpeechSynthesisUtterance | Represents a speech request. It contains the content the speech service should read and information about how to read it. | |
+| | attribute | text  | This attribute specifies the text to be synthesized and spoken for this utterance.| |
+| | attribute | lang  | This attribute specifies the language of the speech synthesis for the utterance | |
+| | attribute | voice| This attribute specifies the speech synthesis voice that the web application wishes to use.| |
+| | attribute | rate  | This attribute specifies the speaking rate for the utterance. It is relative to the default rate (1) for this voice. | |
+| | attribute | onstart  | Fired when this utterance has begun to be spoken. | |
+| | attribute | onend| Fired when this utterance has completed being spoken. | |
+| | attribute | onerror  | Fired if there was an error that prevented successful speaking of this utterance. | |
+| | attribute | onpause  | Fired when and if this utterance is paused mid-utterance. | |
+| | attribute | onresume| Fired when and if this utterance is resumed after being paused mid-utterance. | |
+| [SpeechSynthesisEvent](https://w3c.github.io/speech-api/#speechsynthesisevent) | interface | SpeechSynthesisEvent | Contains information about the current state of SpeechSynthesisUtterance objects that have been processed in the speech service. | |
+| | attribute | utterance  | This attribute contains the SpeechSynthesisUtterance that triggered this event.| |
+| | attribute | elapsedTime | This attribute indicates the time, in seconds, that this event triggered, relative to when this utterance has begun to be spoken.| |
+| [SpeechSynthesisVoice](https://w3c.github.io/speech-api/#speechsynthesisvoice) | interface | SpeechSynthesisVoice | Represents a voice that the system supports. | |
+| | attribute | voiceURI  | The voiceURI attribute specifies the speech synthesis voice and the location of the speech synthesis service for this voice.| |
+| | attribute | name | This attribute is a human-readable name that represents the voice.| |
+| | attribute | lang  | This attribute is a BCP 47 language tag indicating the language of the voice.| |
+| | attribute | localService | This attribute is true for voices supplied by a local speech synthesizer, and is false for voices supplied by a remote speech synthesizer service.| |
+| | attribute | default  | This attribute is true for at most one voice per language.| |
+
