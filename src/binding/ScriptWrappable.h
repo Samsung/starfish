@@ -32,6 +32,7 @@ class Transferable;
 class ScriptContext;
 class WebBase;
 class ExecutionContext;
+class EventTarget;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
@@ -106,7 +107,7 @@ ScriptValue createScriptValue(double value);
 ScriptValue createScriptFunction(ScriptBindingInstance* instance,
                                  String** argNames, size_t argc,
                                  String* functionBody, bool& error);
-ScriptValue createAttributeStringEventFunction(Element* target,
+ScriptValue createAttributeStringEventFunction(EventTarget* instance,
                                                String* functionBody,
                                                bool& result);
 ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
@@ -307,10 +308,10 @@ ScriptWrappable* toScriptWrappable(ScriptObject v);
 
 class AttributeEventFunction : public ScriptWrappable {
 public:
-    AttributeEventFunction(Element* element)
-        : ScriptWrappable(element)
+    AttributeEventFunction(EventTarget* target)
+        : ScriptWrappable(target)
     {
-        m_element = element;
+        m_target = target;
     }
 
     virtual void init(ScriptBindingInstance* instance,
@@ -327,12 +328,12 @@ public:
         return true;
     }
 
-    Element* element()
+    EventTarget* target()
     {
-        return m_element;
+        return m_target;
     }
 
-    Element* m_element;
+    EventTarget* m_target;
 };
 
 class Promise : public gc {

@@ -182,20 +182,21 @@ public:
 // Binding interface
 class MouseEvent : public UIEvent {
 public:
-    MouseEvent(Document* document)
-        : UIEvent(document)
+    MouseEvent(ExecutionContext* executionContext)
+        : UIEvent(executionContext)
         , m_mouseData()
     {
     }
 
-    MouseEvent(Document* document, String* eventType)
-        : UIEvent(document, eventType)
+    MouseEvent(ExecutionContext* executionContext, String* eventType)
+        : UIEvent(executionContext, eventType)
         , m_mouseData()
     {
     }
 
-    MouseEvent(Document* document, String* eventType, MouseData& data)
-        : UIEvent(document, eventType)
+    MouseEvent(ExecutionContext* executionContext, String* eventType,
+               MouseData& data)
+        : UIEvent(executionContext, eventType)
         , m_mouseData(data)
     {
         setDetail(data.clickCount());
@@ -204,8 +205,9 @@ public:
         }
     }
 
-    MouseEvent(Document* document, String* eventType, MouseEventInit& init)
-        : UIEvent(document, eventType, init)
+    MouseEvent(ExecutionContext* executionContext, String* eventType,
+               MouseEventInit& init)
+        : UIEvent(executionContext, eventType, init)
         , m_mouseData(init)
     {
     }

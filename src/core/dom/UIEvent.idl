@@ -1,6 +1,9 @@
 // https://w3c.github.io/uievents/#interface-UIEvent
 
-[Constructor(DOMString type, optional UIEventInit eventInitDict), ConstructorCallWith=Document]
+[
+  Constructor(DOMString type, optional UIEventInit eventInitDict),
+  ConstructorCallWith=ExecutionContext
+]
 interface UIEvent : Event {
   readonly attribute Window? view;
   readonly attribute long detail;

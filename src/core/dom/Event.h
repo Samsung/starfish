@@ -58,14 +58,12 @@ public:
         BUBBLING_PHASE = 3
     };
 
-    Event(Document* document);
-    Event(Document* document, String* eventType);
-    Event(Document* document, String* eventType, const EventInit& init);
+    Event(ExecutionContext* executionContext);
+    Event(ExecutionContext* executionContext, String* eventType);
+    Event(ExecutionContext* executionContext, String* eventType,
+          const EventInit& init);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
-    virtual bool isEvent() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Event)
 
     bool isTypeInitialized() const
     {
@@ -214,7 +212,6 @@ protected:
     }
 
 private:
-    ScriptBindingInstance* m_scriptBindingInstance;
     Nullable<String*> m_type;
     EventTarget* m_target;
     EventTarget* m_currentTarget;

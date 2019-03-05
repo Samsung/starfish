@@ -63,19 +63,17 @@ private:
 
 class MediaQueryListEvent : public Event {
 public:
-    MediaQueryListEvent(Document* document,
+    MediaQueryListEvent(ExecutionContext* executionContext,
                         String* eventType = String::emptyString,
                         const MediaQueryListEventInit& init =
                             MediaQueryListEventInit(String::emptyString, false))
-        : Event(document, eventType)
+        : Event(executionContext, eventType)
         , m_media(init.media())
         , m_matches(init.matches())
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isMediaQueryListEvent() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MediaQueryListEvent)
 
     String* media() const
     {

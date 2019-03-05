@@ -73,22 +73,24 @@ private:
 
 class ProgressEvent : public Event {
 public:
-    ProgressEvent(Document* document, String* eventType)
-        : Event(document, eventType)
+    ProgressEvent(ExecutionContext* executionContext, String* eventType)
+        : Event(executionContext, eventType)
         , m_lengthComputable(false)
         , m_loaded(0)
         , m_total(0)
     {
     }
 
-    ProgressEvent(Document* document, String* eventType,
+    ProgressEvent(ExecutionContext* executionContext, String* eventType,
                   ProgressEventInit& init)
-        : Event(document, eventType, init)
+        : Event(executionContext, eventType, init)
         , m_lengthComputable(init.lengthComputable())
         , m_loaded(init.loaded())
         , m_total(init.total())
     {
     }
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ProgressEvent)
 
     bool lengthComputable() const
     {
@@ -119,12 +121,6 @@ public:
     {
         m_total = total;
     }
-
-    /* Other methods (not in ProgressEvent interface) */
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isProgressEvent() const override;
 
 private:
     bool m_lengthComputable;

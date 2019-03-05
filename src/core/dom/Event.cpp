@@ -19,7 +19,6 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/Event.h"
-#include "core/dom/Document.h"
 #include "core/modules/profiling/Profiling.h"
 
 namespace Starfish {
@@ -71,9 +70,8 @@ void EventInit::setComposed(bool composed)
     m_composed = composed;
 }
 
-Event::Event(Document* document)
-    : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+Event::Event(ExecutionContext* executionContext)
+    : ScriptWrappable(this, executionContext)
     , m_target(nullptr)
     , m_currentTarget(nullptr)
     , m_eventPhase(0)
@@ -90,22 +88,18 @@ Event::Event(Document* document)
     uninitializeType();
 }
 
-Event::Event(Document* document, String* eventType)
-    : Event(document)
+Event::Event(ExecutionContext* executionContext, String* eventType)
+    : Event(executionContext)
 {
     m_type = eventType;
 }
 
-Event::Event(Document* document, String* eventType, const EventInit& init)
-    : Event(document, eventType)
+Event::Event(ExecutionContext* executionContext, String* eventType,
+             const EventInit& init)
+    : Event(executionContext, eventType)
 {
     m_bubbles = init.bubbles();
     m_cancelable = init.cancelable();
     m_composed = init.composed();
-}
-
-ScriptBindingInstance* Event::scriptBindingInstance()
-{
-    return m_scriptBindingInstance;
 }
 }

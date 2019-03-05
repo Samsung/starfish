@@ -66,21 +66,21 @@ private:
 
 class CompositionEvent : public UIEvent {
 public:
-    CompositionEvent(Document* document)
-        : UIEvent(document)
+    CompositionEvent(ExecutionContext* executionContext)
+        : UIEvent(executionContext)
         , m_data(String::emptyString)
     {
     }
 
-    CompositionEvent(Document* document, String* eventType)
-        : UIEvent(document, eventType)
+    CompositionEvent(ExecutionContext* executionContext, String* eventType)
+        : UIEvent(executionContext, eventType)
         , m_data(String::emptyString)
     {
     }
 
-    CompositionEvent(Document* document, String* eventType,
+    CompositionEvent(ExecutionContext* executionContext, String* eventType,
                      const CompositionEventInit& init)
-        : UIEvent(document, eventType, init)
+        : UIEvent(executionContext, eventType, init)
         , m_data(init.data())
     {
     }

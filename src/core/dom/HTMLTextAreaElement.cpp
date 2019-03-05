@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "core/dom/Event.h"
 #include "core/dom/HTMLTextAreaElement.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 

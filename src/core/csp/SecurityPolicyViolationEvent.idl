@@ -5,8 +5,9 @@ enum SecurityPolicyViolationEventDisposition {
 };
 
 [
-  ConstructorCallWith=Document,
+  ConstructorCallWith=ExecutionContext,
   Constructor(DOMString type, optional SecurityPolicyViolationEventInit eventInitDict),
+  Exposed=(Window,Worker)
 ] interface SecurityPolicyViolationEvent : Event {
   [Unimplemented] readonly attribute USVString documentURI;
   [Unimplemented] readonly attribute DOMString referrer;

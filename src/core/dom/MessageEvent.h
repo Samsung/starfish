@@ -100,8 +100,8 @@ private:
 
 class MessageEvent : public Event {
 public:
-    MessageEvent(Document* document)
-        : Event(document)
+    MessageEvent(ExecutionContext* executionContext)
+        : Event(executionContext)
         , m_data(scriptNull())
         , m_origin(String::emptyString)
         , m_lastEventId(String::emptyString)
@@ -109,8 +109,8 @@ public:
     {
     }
 
-    MessageEvent(Document* document, String* eventType)
-        : Event(document, eventType)
+    MessageEvent(ExecutionContext* executionContext, String* eventType)
+        : Event(executionContext, eventType)
         , m_data(scriptNull())
         , m_origin(String::emptyString)
         , m_lastEventId(String::emptyString)
@@ -118,9 +118,9 @@ public:
     {
     }
 
-    MessageEvent(Document* document, String* eventType,
+    MessageEvent(ExecutionContext* executionContext, String* eventType,
                  const MessageEventInit& init)
-        : Event(document, eventType, init)
+        : Event(executionContext, eventType, init)
         , m_data(init.data())
         , m_ports(init.ports())
         , m_origin(init.origin())
@@ -129,9 +129,7 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isMessageEvent() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MessageEvent)
 
     ScriptValue data() const
     {

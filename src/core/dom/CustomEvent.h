@@ -48,26 +48,24 @@ protected:
 
 class CustomEvent : public Event {
 public:
-    CustomEvent(Document* document)
-        : Event(document)
+    CustomEvent(ExecutionContext* executionContext)
+        : Event(executionContext)
         , m_detail(scriptNull())
     {
     }
-    CustomEvent(Document* document, String* eventType)
-        : Event(document, eventType)
+    CustomEvent(ExecutionContext* executionContext, String* eventType)
+        : Event(executionContext, eventType)
         , m_detail(scriptNull())
     {
     }
-    CustomEvent(Document* document, String* eventType,
+    CustomEvent(ExecutionContext* executionContext, String* eventType,
                 const CustomEventInit& init)
-        : Event(document, eventType, init)
+        : Event(executionContext, eventType, init)
         , m_detail(init.detail())
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isCustomEvent() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(CustomEvent)
 
     ScriptValue detail() const
     {

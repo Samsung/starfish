@@ -2,7 +2,7 @@
 
 [
     Constructor(DOMString type, optional CustomEventInit eventInitDict),
-    ConstructorCallWith=Document,
+    ConstructorCallWith=ExecutionContext,
     Exposed=(Window,Worker),
 ] interface CustomEvent : Event {
     readonly attribute any detail;

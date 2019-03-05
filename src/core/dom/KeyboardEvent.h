@@ -132,27 +132,25 @@ private:
 
 class KeyboardEvent : public UIEvent {
 public:
-    KeyboardEvent(Document* document)
-        : UIEvent(document)
+    KeyboardEvent(ExecutionContext* executionContext)
+        : UIEvent(executionContext)
     {
     }
 
-    KeyboardEvent(Document* document, String* eventType)
-        : UIEvent(document, eventType)
+    KeyboardEvent(ExecutionContext* executionContext, String* eventType)
+        : UIEvent(executionContext, eventType)
     {
     }
 
-    KeyboardEvent(Document* document, String* eventType,
+    KeyboardEvent(ExecutionContext* executionContext, String* eventType,
                   KeyboardEventInit& init)
-        : UIEvent(document, eventType, init)
+        : UIEvent(executionContext, eventType, init)
     {
         m_eventModifierData = init.m_eventModifierData;
         m_keyboardEventData = init.m_keyboardEventData;
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isKeyboardEvent() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(KeyboardEvent)
 
     String* key() const
     {
