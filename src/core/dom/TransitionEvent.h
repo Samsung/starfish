@@ -77,34 +77,32 @@ public:
 
 class TransitionEvent : public Event {
 public:
-    TransitionEvent(Document* document)
-        : Event(document)
+    TransitionEvent(ExecutionContext* executionContext)
+        : Event(executionContext)
         , m_propertyName(String::emptyString)
         , m_elapsedTime(0)
         , m_pseudoElement(String::emptyString)
     {
     }
 
-    TransitionEvent(Document* document, String* eventType)
-        : Event(document, eventType)
+    TransitionEvent(ExecutionContext* executionContext, String* eventType)
+        : Event(executionContext, eventType)
         , m_propertyName(String::emptyString)
         , m_elapsedTime(0)
         , m_pseudoElement(String::emptyString)
     {
     }
 
-    TransitionEvent(Document* document, String* eventType,
+    TransitionEvent(ExecutionContext* executionContext, String* eventType,
                     const TransitionEventInit& init)
-        : Event(document, eventType, init)
+        : Event(executionContext, eventType, init)
         , m_propertyName(init.m_propertyName)
         , m_elapsedTime(init.m_elapsedTime)
         , m_pseudoElement(init.m_pseudoElement)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isTransitionEvent() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(TransitionEvent)
 
     String* propertyName() const
     {

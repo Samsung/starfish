@@ -1,6 +1,10 @@
 // https://html.spec.whatwg.org/multipage/comms.html#messageevent
 
-[Constructor(DOMString type, optional MessageEventInit eventInitDict), ConstructorCallWith=Document, Exposed=(Window,Worker)]
+[
+  Constructor(DOMString type, optional MessageEventInit eventInitDict),
+  ConstructorCallWith=ExecutionContext,
+  Exposed=(Window,Worker)
+]
 interface MessageEvent : Event {
   readonly attribute any data;
   readonly attribute USVString origin;

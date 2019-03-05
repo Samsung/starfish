@@ -1,7 +1,7 @@
 // https://dev.w3.org/csswg/cssom-view/#mediaquerylistevent
 
 [Constructor(DOMString type, optional MediaQueryListEventInit eventInitDict),
- ConstructorCallWith=Document]
+ ConstructorCallWith=ExecutionContext]
 interface MediaQueryListEvent : Event {
     readonly attribute DOMString media;
     readonly attribute boolean matches;

@@ -62,23 +62,23 @@ private:
 
 class InputEvent : public UIEvent {
 public:
-    InputEvent(Document* document)
-        : UIEvent(document)
+    InputEvent(ExecutionContext* executionContext)
+        : UIEvent(executionContext)
         , m_data(Nullable<String*>())
         , m_inputType(String::emptyString)
     {
     }
 
-    InputEvent(Document* document, String* eventType)
-        : UIEvent(document, eventType)
+    InputEvent(ExecutionContext* executionContext, String* eventType)
+        : UIEvent(executionContext, eventType)
         , m_data(Nullable<String*>())
         , m_inputType(String::emptyString)
     {
     }
 
-    InputEvent(Document* document, String* eventType,
+    InputEvent(ExecutionContext* executionContext, String* eventType,
                const InputEventInit& init)
-        : UIEvent(document, eventType, init)
+        : UIEvent(executionContext, eventType, init)
         , m_data(init.data())
         , m_inputType(init.inputType())
     {

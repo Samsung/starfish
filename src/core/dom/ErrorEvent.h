@@ -99,27 +99,26 @@ public:
 class ErrorEvent : public Event {
 protected:
 public:
-    ErrorEvent(Document* document)
-        : Event(document)
+    ErrorEvent(ExecutionContext* executionContext)
+        : Event(executionContext)
         , m_errorData()
     {
     }
 
-    ErrorEvent(Document* document, String* eventType)
-        : Event(document, eventType)
+    ErrorEvent(ExecutionContext* executionContext, String* eventType)
+        : Event(executionContext, eventType)
         , m_errorData()
     {
     }
 
-    ErrorEvent(Document* document, String* eventType, ErrorEventInit& init)
-        : Event(document, eventType, init)
+    ErrorEvent(ExecutionContext* executionContext, String* eventType,
+               ErrorEventInit& init)
+        : Event(executionContext, eventType, init)
         , m_errorData(init)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isErrorEvent() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ErrorEvent)
 
     // Read-only interface
     String* message()

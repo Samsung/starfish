@@ -96,30 +96,29 @@ private:
 
 class UIEvent : public Event {
 public:
-    UIEvent(Document* document)
-        : Event(document)
+    UIEvent(ExecutionContext* executionContext)
+        : Event(executionContext)
         , m_view(nullptr)
         , m_detail(0)
     {
     }
 
-    UIEvent(Document* document, String* eventType)
-        : Event(document, eventType)
+    UIEvent(ExecutionContext* executionContext, String* eventType)
+        : Event(executionContext, eventType)
         , m_view(nullptr)
         , m_detail(0)
     {
     }
 
-    UIEvent(Document* document, String* eventType, const UIEventInit& init)
-        : Event(document, eventType, init)
+    UIEvent(ExecutionContext* executionContext, String* eventType,
+            const UIEventInit& init)
+        : Event(executionContext, eventType, init)
         , m_view(init.view())
         , m_detail(0)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isUIEvent() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(UIEvent)
 
     Window* view() const
     {

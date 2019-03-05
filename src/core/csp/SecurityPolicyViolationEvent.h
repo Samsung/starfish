@@ -60,29 +60,29 @@ protected:
 
 class SecurityPolicyViolationEvent : public Event {
 public:
-    SecurityPolicyViolationEvent(Document* document)
-        : Event(document)
+    SecurityPolicyViolationEvent(ExecutionContext* executionContext)
+        : Event(executionContext)
     {
         initSecurityPolicyViolationEvent();
     }
-    SecurityPolicyViolationEvent(Document* document, String* eventType)
-        : Event(document, eventType)
+    SecurityPolicyViolationEvent(ExecutionContext* executionContext,
+                                 String* eventType)
+        : Event(executionContext, eventType)
         , m_violatedDirective(String::emptyString)
         , m_blockedURI(String::emptyString)
     {
         initSecurityPolicyViolationEvent();
     }
-    SecurityPolicyViolationEvent(Document* document, String* eventType,
+    SecurityPolicyViolationEvent(ExecutionContext* executionContext,
+                                 String* eventType,
                                  const SecurityPolicyViolationEventInit& init)
-        : Event(document, eventType, init)
+        : Event(executionContext, eventType, init)
         , m_violatedDirective(init.violatedDirective())
         , m_blockedURI(init.blockedURI())
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isSecurityPolicyViolationEvent() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SecurityPolicyViolationEvent)
 
     void initSecurityPolicyViolationEvent(bool bubbles = true,
                                           bool cancelable = false)

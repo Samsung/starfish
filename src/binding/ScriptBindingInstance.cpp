@@ -205,7 +205,7 @@ static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
             ScriptWrappable* w = (ScriptWrappable*)data;
             if (w->isAttributeEventFunction()) {
                 auto elementDOMObject =
-                    ((AttributeEventFunction*)w)->element()->scriptValue();
+                    ((AttributeEventFunction*)w)->target()->scriptValue();
                 if (elementDOMObject->isObject()) {
                     bool exist = elementDOMObject->asObject()->hasOwnProperty(
                         state, key);

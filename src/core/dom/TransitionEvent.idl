@@ -5,7 +5,7 @@ dictionary TransitionEventInit : EventInit {
   CSSOMString pseudoElement = "";
 };
 
-[Constructor(DOMString type, optional TransitionEventInit transitionEventInitDict), ConstructorCallWith=Document]
+[Constructor(DOMString type, optional TransitionEventInit transitionEventInitDict), ConstructorCallWith=ExecutionContext]
 interface TransitionEvent : Event {
   readonly attribute CSSOMString propertyName;
   readonly attribute float elapsedTime;

@@ -55,19 +55,19 @@ private:
 
 class FocusEvent : public UIEvent {
 public:
-    FocusEvent(Document* document)
-        : UIEvent(document)
+    FocusEvent(ExecutionContext* executionContext)
+        : UIEvent(executionContext)
         , m_relatedTarget(nullptr)
     {
     }
-    FocusEvent(Document* document, String* eventType)
-        : UIEvent(document, eventType)
+    FocusEvent(ExecutionContext* executionContext, String* eventType)
+        : UIEvent(executionContext, eventType)
         , m_relatedTarget(nullptr)
     {
     }
-    FocusEvent(Document* document, String* eventType,
+    FocusEvent(ExecutionContext* executionContext, String* eventType,
                const FocusEventInit& init)
-        : UIEvent(document, eventType, init)
+        : UIEvent(executionContext, eventType, init)
         , m_relatedTarget(init.relatedTarget())
     {
     }

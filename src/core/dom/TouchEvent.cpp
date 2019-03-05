@@ -21,6 +21,7 @@
 #include "core/dom/Touch.h"
 #include "core/dom/TouchList.h"
 #include "core/dom/TouchEvent.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 

@@ -91,9 +91,9 @@ private:
 
 class SpeechSynthesisEvent : public Event {
 public:
-    SpeechSynthesisEvent(Document* document, String* eventType,
+    SpeechSynthesisEvent(ExecutionContext* executionContext, String* eventType,
                          const SpeechSynthesisEventInit& init)
-        : Event(document, eventType, init)
+        : Event(executionContext, eventType, init)
         , m_utterance(init.utterance())
         , m_charIndex(init.charIndex())
         , m_elapsedTime(init.elapsedTime())

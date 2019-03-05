@@ -595,7 +595,7 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
     }
 }
 
-ScriptValue createAttributeStringEventFunction(Element* target,
+ScriptValue createAttributeStringEventFunction(EventTarget* target,
                                                String* functionBody,
                                                bool& result)
 {
