@@ -28,14 +28,10 @@ echo "Found: $repo"
 
 # Syncing with the current Starfish repo
 
-git submodule init
-git submodule update
+git submodule update --init binding_generator third_party
 
 cd third_party/escargot
-git submodule init
-git submodule update
-mkdir -p include
-make install_header_to_include
+git submodule update --init third_party
 cd $ROOT
 
 python binding_generator/scripts/starfish_code_generator.py src/ src/binding/

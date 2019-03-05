@@ -1,11 +1,6 @@
 P /.git
 P /.github
-P /build/build_escargot.sh
-P /build/build_gc.sh
-P /build/build.gypi
-P build.dep.gyp
-P build.gyp
-- /Makefile
+
 - /inspector
 - /build/windows
 - .git
@@ -31,10 +26,7 @@ P build.gyp
 - lextab.*
 - parsetab.*
 
-# Include tool/gyp only
-+ tool
-+ tool/gyp
-- tool/*
+- tool
 
 - third_party/android
 - third_party/windows
