@@ -58,7 +58,7 @@ DEFINE_EVENT_LISTENER(SpeechSynthesis, voiceschanged);
 
 void SpeechSynthesis::speak(SpeechSynthesisUtterance* u)
 {
-    webView()->tts()->speak(u);
+    webView()->tts()->speech(u);
 }
 
 void SpeechSynthesis::cancel()

@@ -42,8 +42,7 @@ public:
         , m_state(-1)
         , m_mode(LWE::TTSMode::Default)
         , m_utterance(nullptr)
-        , m_readyState(false)
-        , m_waitingState(false)
+        , m_currentUtterId(0)
     {
         initialize();
     }
@@ -62,15 +61,7 @@ public:
         m_isAccessibilityMode = value;
     }
 
-    bool isPaused()
-    {
-        return m_isPaused;
-    }
-
-    void setPaused(bool b)
-    {
-        m_isPaused = b;
-    }
+    bool isPaused();
 
     void setMode(LWE::TTSMode mode)
     {
@@ -97,7 +88,7 @@ public:
         m_utterance = u;
     }
 
-    GCUnorderedMap<uint32_t, SpeechSynthesisUtterance*>& utteranceList()
+    GCUnorderedMap<int, SpeechSynthesisUtterance*>& utteranceList()
     {
         return m_utteranceList;
     }
@@ -112,25 +103,38 @@ public:
         return m_defaultLanguage;
     }
 
+    void setCurrentUtterId(int id)
+    {
+        m_currentUtterId = id;
+    }
+
+    int currentUtterId()
+    {
+        return m_currentUtterId;
+    }
+
     void destroy();
     void speech(Element* element, String* text);
-    void speak(SpeechSynthesisUtterance* utterance);
-    void speakUtterances();
+    void speech(SpeechSynthesisUtterance* utterance);
     void pause();
     void resume();
     void cancel();
-    // const char* state(tts_state_e s);
-
-    bool addText(const char* text);
     void changeDefaultVoice(String* language, const int voiceType);
-    void readyState();
+
+    int ttsState();
+
+#if defined(STARFISH_TIZEN)
+    tts_h& handle()
+    {
+        return m_handle;
+    }
+#endif
 
 private:
     void initialize();
-
-    bool createHandle();
-    bool startPlay(const char* text);
-    bool stopPlay();
+    int createHandle();
+    int speechElementText(const char* text);
+    int speechUtterances();
 
 #if defined(STARFISH_TIZEN)
     tts_h m_handle;
@@ -142,12 +146,11 @@ private:
     int m_state;
     LWE::TTSMode m_mode;
     SpeechSynthesisUtterance* m_utterance;
-    GCUnorderedMap<uint32_t, SpeechSynthesisUtterance*> m_utteranceList;
+    GCUnorderedMap<int, SpeechSynthesisUtterance*> m_utteranceList;
     GCUnorderedMap<String*, int> m_supportedVoiceList;
     String* m_defaultLanguage;
     int m_defaultVoiceType;
-    bool m_readyState;
-    bool m_waitingState;
+    int m_currentUtterId;
 };
 }
 #endif
