@@ -116,7 +116,7 @@ void MediaList::deleteMedium(String* oldMedium)
         msg.appendString(oldMedium);
         msg.appendString("'.");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(scriptBindingInstance(),
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::NOT_FOUND_ERR, s.data());
     }
     modifyStyleSheet();

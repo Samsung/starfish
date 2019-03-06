@@ -203,8 +203,7 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
 {
     // https://html.spec.whatwg.org/multipage/server-sent-events.html#dom-eventsource
     if (url->isEmpty()) {
-        throw new DOMException(document->scriptBindingInstance(),
-                               DOMException::SYNTAX_ERR,
+        throw new DOMException(document, DOMException::SYNTAX_ERR,
                                "Cannot open an EventSource to an empty URL.");
     }
 
@@ -215,14 +214,12 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
         msg.appendString(url);
         msg.appendString("'. The URL is invalid.");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(document->scriptBindingInstance(),
-                               DOMException::SYNTAX_ERR, s.data());
+        throw new DOMException(document, DOMException::SYNTAX_ERR, s.data());
     }
 
     if (!document->contentSecurityPolicy()->allowSource(
             CSPDirectives::ConnectSrc, fullURL)) {
-        throw new DOMException(document->scriptBindingInstance(),
-                               DOMException::SECURITY_ERR);
+        throw new DOMException(document, DOMException::SECURITY_ERR);
     }
 
     m_resourceRequest->addResourceRequestClient(
@@ -265,7 +262,7 @@ void EventSource::connect()
 void EventSource::start(String* method)
 {
     if (m_resourceRequest->timeout() != 0) {
-        throw new DOMException(scriptBindingInstance(),
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }

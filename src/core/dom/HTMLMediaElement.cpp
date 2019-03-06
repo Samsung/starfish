@@ -216,7 +216,7 @@ void HTMLMediaElement::load()
     // promises in the order the corresponding tasks were queued.
     // Remove each task in pending tasks from its task queue
     abortEveryPendingOperation(new DOMException(
-        scriptBindingInstance(), DOMException::DOM_EXCEPTION,
+        document(), DOMException::DOM_EXCEPTION,
         "The play() request was interrupted by a new load request."));
 
     // If the media element's networkState is set to NETWORK_LOADING or
@@ -255,7 +255,7 @@ void HTMLMediaElement::load()
             auto iter = m_playOperationQueue.begin();
             while (iter != m_playOperationQueue.end()) {
                 DOMException* exception = new DOMException(
-                    scriptBindingInstance(), DOMException::ABORT_ERR,
+                    document(), DOMException::ABORT_ERR,
                     "play request is aborted by load operation");
                 ((MediaOperationQueueDataRequestPlay*)(*iter))
                     ->m_promise->reject(exception->scriptValue());
@@ -342,9 +342,8 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
 
     // Reject pending play promises with promises and a "NotSupportedError"
     // DOMException.
-    abortEveryPendingOperation(new DOMException(scriptBindingInstance(),
-                                                DOMException::NOT_SUPPORTED_ERR,
-                                                "cannot play media"));
+    abortEveryPendingOperation(new DOMException(
+        document(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
 
     // Set the element's delaying-the-load-event flag to false. This stops
     // delaying the load event.
@@ -371,9 +370,8 @@ void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
 
     m_resourceSelectionContext = nullptr;
     // Abort the overall resource selection algorithm
-    abortEveryPendingOperation(new DOMException(scriptBindingInstance(),
-                                                DOMException::NOT_SUPPORTED_ERR,
-                                                "cannot play media"));
+    abortEveryPendingOperation(new DOMException(
+        document(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
 }
 
 Promise* HTMLMediaElement::play()
@@ -901,8 +899,7 @@ void HTMLMediaElement::setControls(bool controls)
 void HTMLMediaElement::setVolume(double volume)
 {
     if (volume < 0.0f || volume > 1.0f) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::INDEX_SIZE_ERR,
+        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR,
                                "volume should be in the range 0.0 to 1.0");
     }
 
@@ -1489,8 +1486,8 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
     auto iter = m_mediaElement->m_playOperationQueue.begin();
     while (iter != m_mediaElement->m_playOperationQueue.end()) {
         DOMException* exception = new DOMException(
-            m_mediaElement->document()->scriptBindingInstance(),
-            DOMException::ABORT_ERR, "play request is aborted by pause()");
+            m_mediaElement->document(), DOMException::ABORT_ERR,
+            "play request is aborted by pause()");
         ((MediaOperationQueueDataRequestPlay*)(*iter))
             ->m_promise->reject(exception->scriptValue());
         iter = m_mediaElement->m_playOperationQueue.erase(iter);
@@ -1535,7 +1532,7 @@ void MediaOperationQueueDataRequestPlay::processOperationQueue()
         m_promise->fulfill(scriptUndefined());
     } else {
         DOMException* exception =
-            new DOMException(m_mediaElement->scriptBindingInstance(),
+            new DOMException(m_mediaElement->document(),
                              DOMException::ABORT_ERR, "Undefined player error");
         m_promise->reject(exception->scriptValue());
     }

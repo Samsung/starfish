@@ -36,8 +36,7 @@ ReadableStreamDefaultController::ReadableStreamDefaultController(
     , m_mimeType(String::emptyString)
 {
     // This constructor cannot be used directly.
-    throw new DOMException(m_scriptBindingInstance,
-                           DOMException::Code::SCRIPT_TYPE_ERR);
+    throw new DOMException(document, DOMException::Code::SCRIPT_TYPE_ERR);
 }
 
 ReadableStreamDefaultController::ReadableStreamDefaultController(

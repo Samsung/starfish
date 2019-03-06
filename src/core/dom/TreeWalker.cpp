@@ -319,7 +319,7 @@ private:
 unsigned TreeWalker::acceptNode(Node* node, bool& error)
 {
     if (m_activeFlag) {
-        throw new DOMException(node->scriptBindingInstance(),
+        throw new DOMException(node->document(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
         return NodeFilter::FILTERREJECT;
@@ -380,7 +380,7 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
         } else if (isNumberScriptValue(ret)) {
             return scriptValueAsNumber(ret);
         } else {
-            throw new DOMException(node->scriptBindingInstance(),
+            throw new DOMException(node->document(),
                                    DOMException::Code::SCRIPT_TYPE_ERR);
             return NodeFilter::FILTERREJECT;
         }

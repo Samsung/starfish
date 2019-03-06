@@ -378,12 +378,12 @@ void DOMTokenList::validateToken(String* token)
 {
     UTF8StringDataNonGCStd stdToken = token->toUTF8NonGCString();
     if (stdToken.length() == 0) {
-        throw new DOMException(m_element->document()->scriptBindingInstance(),
+        throw new DOMException(m_element->document(),
                                DOMException::Code::SYNTAX_ERR);
     }
     auto f = [](char c) { return ::Starfish::isspace(c); };
     if (std::find_if(stdToken.begin(), stdToken.end(), f) != stdToken.end()) {
-        throw new DOMException(m_element->document()->scriptBindingInstance(),
+        throw new DOMException(m_element->document(),
                                DOMException::Code::INVALID_CHARACTER_ERR);
     }
 }
@@ -411,7 +411,7 @@ bool DOMTokenList::validateTokenValue(String* token)
         return supportedTokensOfMedia(lowerToken);
 #endif
     } else {
-        throw new DOMException(m_element->document()->scriptBindingInstance(),
+        throw new DOMException(m_element->document(),
                                DOMException::Code::SCRIPT_TYPE_ERR,
                                "DOMTokenList has no supported tokens.");
     }

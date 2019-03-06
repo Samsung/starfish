@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/dom/Document.h"
 #include "core/dom/CharacterData.h"
 #include "core/dom/DOMException.h"
 #include "core/layout/Frame.h"
@@ -65,8 +66,7 @@ String* CharacterData::substringData(unsigned long offset, unsigned long count)
     size_t length = CharacterData::length();
     // If offset is greater than length, then throw an IndexSizeError.
     if (offset > length) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::Code::INDEX_SIZE_ERR);
+        throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR);
     }
     // If offset plus count is greater than length, return a string whose value
     // is the code units from the offsetth code unit to the end of node’s data,
@@ -118,8 +118,7 @@ void CharacterData::insertData(unsigned long offset, String* newData)
 {
     size_t length = CharacterData::length();
     if (offset > length) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::Code::INDEX_SIZE_ERR);
+        throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR);
     }
 
     // TODO Queue a mutation record of "characterData" for node with oldValue
@@ -151,8 +150,7 @@ void CharacterData::deleteData(unsigned long offset, unsigned long count)
     // node’s data.
     size_t length = CharacterData::length();
     if (offset > length) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::Code::INDEX_SIZE_ERR);
+        throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR);
     }
 
     // If offset plus count is greater than length, then set count to length
@@ -185,8 +183,7 @@ void CharacterData::replaceData(unsigned long offset, unsigned long count,
     // node’s data.
     size_t length = CharacterData::length();
     if (offset > length) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::Code::INDEX_SIZE_ERR);
+        throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR);
     }
 
     // If offset plus count is greater than length, then set count to length

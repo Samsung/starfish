@@ -446,8 +446,7 @@ SerializedTypedData* Serializer::serialize(Document* document,
     } else {
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
                         result.msgStr->toStdUTF8String().data());
-        throw new DOMException(document->scriptBindingInstance(),
-                               DOMException::DATA_CLONE_ERR, reason);
+        throw new DOMException(document, DOMException::DATA_CLONE_ERR, reason);
     }
 }
 
@@ -476,8 +475,7 @@ ScriptValue Serializer::deserialize(Document* document,
     } else {
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
                         result.msgStr->toStdUTF8String().data());
-        throw new DOMException(document->scriptBindingInstance(),
-                               DOMException::DATA_CLONE_ERR, reason);
+        throw new DOMException(document, DOMException::DATA_CLONE_ERR, reason);
     }
 }
 
@@ -509,8 +507,7 @@ void Serializer::serializeWithTransfer(Document* document, ScriptValue value,
             }
 #endif
         }
-        throw new DOMException(document->scriptBindingInstance(),
-                               DOMException::DATA_CLONE_ERR);
+        throw new DOMException(document, DOMException::DATA_CLONE_ERR);
     }
     SerializedTypedData* serialized = serialize(document, value, initialMap);
     STARFISH_ASSERT(transferValues.size() ==
@@ -574,8 +571,7 @@ void Serializer::deserializeWithTransfer(
     if (sandBoxResult.error->isEmpty() && !errorFound) {
         result.m_deserialized = deserialized;
     } else {
-        throw new DOMException(document->scriptBindingInstance(),
-                               DOMException::DATA_CLONE_ERR);
+        throw new DOMException(document, DOMException::DATA_CLONE_ERR);
     }
 }
 }

@@ -1238,36 +1238,34 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
     // 4.2.1 pre-insertion validity
     if (!(isDocument() || isElement() || isDocumentFragment())) {
         throw new DOMException(
-            scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR,
+            document(), DOMException::HIERARCHY_REQUEST_ERR,
             "Parent is not a Document, DocumentFragment, or Element node.");
     }
 
     for (Node* p = this; p != nullptr; p = p->parentNode()) {
         if (p == node) {
             throw new DOMException(
-                scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR,
+                document(), DOMException::HIERARCHY_REQUEST_ERR,
                 "Node is a host-including inclusive ancestor of parent.");
         }
     }
 
     if (child != nullptr && child->parentNode() != this) {
         throw new DOMException(
-            scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR,
+            document(), DOMException::Code::NOT_FOUND_ERR,
             "Child is not null and its parent is not parent.");
     }
     if (!(node->isDocumentType() || node->isElement() || node->isText() ||
           node->isProcessingInstruction() || node->isComment() ||
           node->isDocumentFragment())) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Node is not a DocumentFragment, DocumentType, "
                                "Element, Text, ProcessingInstruction, or "
                                "Comment.");
     }
     if ((node->isText() && isDocument()) ||
         (node->isDocumentType() && !isDocument())) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Either node is a Text node and parent is a "
                                "document, or node is a doctype and parent is "
                                "not a document.");
@@ -1281,8 +1279,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                     childElementCount++;
                 } else if (nodeChild->isText()) {
                     throw new DOMException(
-                        scriptBindingInstance(),
-                        DOMException::HIERARCHY_REQUEST_ERR,
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "If node has more than one element child or has a Text "
                         "node child. Otherwise, if node has one element child "
                         "and "
@@ -1295,8 +1292,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
             }
             if (childElementCount > 1) {
                 throw new DOMException(
-                    scriptBindingInstance(),
-                    DOMException::HIERARCHY_REQUEST_ERR,
+                    document(), DOMException::HIERARCHY_REQUEST_ERR,
                     "If node has more than one element child or has a Text "
                     "node child. Otherwise, if node has one element child and "
                     "either parent has an element child, child is a doctype, "
@@ -1307,8 +1303,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                 while (c) {
                     if (c->isElement()) {
                         throw new DOMException(
-                            scriptBindingInstance(),
-                            DOMException::HIERARCHY_REQUEST_ERR,
+                            document(), DOMException::HIERARCHY_REQUEST_ERR,
                             "If node has more than one element child or has a "
                             "Text "
                             "node child. Otherwise, if node has one element "
@@ -1324,8 +1319,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
                               child->isSpecificTypeNodeFollowing(
                                   NodeType::DOCUMENT_TYPE_NODE))) {
                     throw new DOMException(
-                        scriptBindingInstance(),
-                        DOMException::HIERARCHY_REQUEST_ERR,
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "If node has more than one element child or has a Text "
                         "node child. Otherwise, if node has one element child "
                         "and "
@@ -1340,8 +1334,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
             while (c) {
                 if (c->isElement()) {
                     throw new DOMException(
-                        scriptBindingInstance(),
-                        DOMException::HIERARCHY_REQUEST_ERR,
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "parent has an element child, child is "
                         "a doctype, or child is not null and a "
                         "doctype is following child.");
@@ -1351,7 +1344,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
             if (child && (child->isDocumentType() ||
                           child->isSpecificTypeNodeFollowing(
                               NodeType::DOCUMENT_TYPE_NODE))) {
-                throw new DOMException(scriptBindingInstance(),
+                throw new DOMException(document(),
                                        DOMException::HIERARCHY_REQUEST_ERR,
                                        "parent has an element child, child is "
                                        "a doctype, or child is not null and a "
@@ -1362,8 +1355,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
             while (c) {
                 if (c->isDocumentType() || (!child && c->isElement())) {
                     throw new DOMException(
-                        scriptBindingInstance(),
-                        DOMException::HIERARCHY_REQUEST_ERR,
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "parent has a doctype child, child is "
                         "non-null and an element is preceding "
                         "child, or child is null and parent has "
@@ -1373,7 +1365,7 @@ void Node::validatePreinsert(Node* node, Node* child) // (node, child)
             }
             if (child &&
                 child->isSpecificTypeNodePreceding(NodeType::ELEMENT_NODE)) {
-                throw new DOMException(scriptBindingInstance(),
+                throw new DOMException(document(),
                                        DOMException::HIERARCHY_REQUEST_ERR,
                                        "parent has a doctype child, child is "
                                        "non-null and an element is preceding "
@@ -1460,8 +1452,7 @@ static void didInsertNode(Node* self, Node* child)
 Node* Node::appendChild(Node* child)
 {
     if (!isContainerNode()) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "This node type does not support this method.");
     }
 
@@ -1504,8 +1495,7 @@ Node* Node::insertBefore(Node* child, Node* childRef)
 {
     // Spec does not say what to do when node is null
     if (child == nullptr) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Node is null.");
     }
 
@@ -1558,36 +1548,34 @@ void Node::validateReplace(Node* node, Node* child) // node, child
     // 4.2.1 replace validity
     if (!(isDocument() || isDocumentFragment() || isElement())) {
         throw new DOMException(
-            scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR,
+            document(), DOMException::HIERARCHY_REQUEST_ERR,
             "Parent is not a Document, DocumentFragment, or Element node.");
     }
 
     for (Node* p = this; p != nullptr; p = p->parentNode()) {
         if (p == node) {
             throw new DOMException(
-                scriptBindingInstance(), DOMException::HIERARCHY_REQUEST_ERR,
+                document(), DOMException::HIERARCHY_REQUEST_ERR,
                 "Node is a host-including inclusive ancestor of parent.");
         }
     }
 
     if (child != nullptr && child->parentNode() != this) {
         throw new DOMException(
-            scriptBindingInstance(), DOMException::Code::NOT_FOUND_ERR,
+            document(), DOMException::Code::NOT_FOUND_ERR,
             "Child is not null and its parent is not parent.");
     }
     if (!(node->isDocumentType() || node->isDocumentFragment() ||
           node->isElement() || node->isText() ||
           node->isProcessingInstruction() || node->isComment())) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Node is not a DocumentFragment, DocumentType, "
                                "Element, Text, ProcessingInstruction, or "
                                "Comment.");
     }
     if ((node->isText() && isDocument()) ||
         (node->isDocumentType() && !isDocument())) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::HIERARCHY_REQUEST_ERR,
+        throw new DOMException(document(), DOMException::HIERARCHY_REQUEST_ERR,
                                "Either node is a Text node and parent is a "
                                "document, or node is a doctype and parent is "
                                "not a document.");
@@ -1600,14 +1588,14 @@ void Node::validateReplace(Node* node, Node* child) // node, child
                 if (nodeChild->isElement()) {
                     childElementCount++;
                 } else if (nodeChild->isText()) {
-                    throw new DOMException(scriptBindingInstance(),
+                    throw new DOMException(document(),
                                            DOMException::HIERARCHY_REQUEST_ERR,
                                            "node has a Text node child.");
                 }
                 nodeChild = nodeChild->nextSibling();
             }
             if (childElementCount > 1) {
-                throw new DOMException(scriptBindingInstance(),
+                throw new DOMException(document(),
                                        DOMException::HIERARCHY_REQUEST_ERR,
                                        "node has more than one element child.");
             }
@@ -1616,8 +1604,7 @@ void Node::validateReplace(Node* node, Node* child) // node, child
                 while (c) {
                     if (c->isElement() && c != child) {
                         throw new DOMException(
-                            scriptBindingInstance(),
-                            DOMException::HIERARCHY_REQUEST_ERR,
+                            document(), DOMException::HIERARCHY_REQUEST_ERR,
                             "node has one element child and parent has"
                             "an element child that is not child.");
                     }
@@ -1628,8 +1615,7 @@ void Node::validateReplace(Node* node, Node* child) // node, child
                     child->isSpecificTypeNodeFollowing(
                         NodeType::DOCUMENT_TYPE_NODE)) {
                     throw new DOMException(
-                        scriptBindingInstance(),
-                        DOMException::HIERARCHY_REQUEST_ERR,
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "node has one element child and doctype"
                         "is following child.");
                 }
@@ -1639,8 +1625,7 @@ void Node::validateReplace(Node* node, Node* child) // node, child
             while (c) {
                 if (c->isElement() && c != child) {
                     throw new DOMException(
-                        scriptBindingInstance(),
-                        DOMException::HIERARCHY_REQUEST_ERR,
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "parent has an element child that is "
                         "not child or a doctype is following "
                         "child.");
@@ -1650,7 +1635,7 @@ void Node::validateReplace(Node* node, Node* child) // node, child
             if (child &&
                 child->isSpecificTypeNodeFollowing(
                     NodeType::DOCUMENT_TYPE_NODE)) {
-                throw new DOMException(scriptBindingInstance(),
+                throw new DOMException(document(),
                                        DOMException::HIERARCHY_REQUEST_ERR,
                                        "doctype is following child.");
             }
@@ -1659,8 +1644,7 @@ void Node::validateReplace(Node* node, Node* child) // node, child
             while (c) {
                 if (c->isDocumentType() && c != child) {
                     throw new DOMException(
-                        scriptBindingInstance(),
-                        DOMException::HIERARCHY_REQUEST_ERR,
+                        document(), DOMException::HIERARCHY_REQUEST_ERR,
                         "parent has an element child that is "
                         "not child or a doctype is following "
                         "child.");
@@ -1669,7 +1653,7 @@ void Node::validateReplace(Node* node, Node* child) // node, child
             }
             if (child &&
                 child->isSpecificTypeNodePreceding(NodeType::ELEMENT_NODE)) {
-                throw new DOMException(scriptBindingInstance(),
+                throw new DOMException(document(),
                                        DOMException::HIERARCHY_REQUEST_ERR,
                                        "doctype is following child.");
             }
@@ -1713,8 +1697,7 @@ Node* Node::removeChild(Node* child)
     STARFISH_ASSERT(child);
 
     if (child->parentNode() != this) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::NOT_FOUND_ERR,
+        throw new DOMException(document(), DOMException::NOT_FOUND_ERR,
                                "Child's parent is not parent.");
     }
 
@@ -1990,8 +1973,7 @@ void Node::parseSelector(GCVector<CSSSelectorList*>& selectorListContainer,
                          String* selectors)
 {
     if (selectors->equals(String::emptyString)) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::SYNTAX_ERR,
+        throw new DOMException(document(), DOMException::SYNTAX_ERR,
                                "Failed to execute 'querySelector' on "
                                "'Document': The provided selector is empty.");
     }
@@ -2005,8 +1987,7 @@ void Node::parseSelector(GCVector<CSSSelectorList*>& selectorListContainer,
                           &selectorListContainer, true);
 
     if (selectorListContainer.size() < 1) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::SYNTAX_ERR,
+        throw new DOMException(document(), DOMException::SYNTAX_ERR,
                                "Failed to execute 'querySelector' on "
                                "'Document': The provided selector is invalid.");
     }

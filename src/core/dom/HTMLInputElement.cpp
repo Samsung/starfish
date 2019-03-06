@@ -388,8 +388,8 @@ void HTMLInputElement::setSize(String* sizeStr)
         COMPOSE_MESSAGE(reason, INVALID_SIZE, "0");
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "size", "HTMLInputElement",
                         reason);
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::Code::INDEX_SIZE_ERR, msg);
+        throw new DOMException(document(), DOMException::Code::INDEX_SIZE_ERR,
+                               msg);
     } else if (size < 0) {
         setAttribute(starfish()->staticStrings()->m_size,
                      String::fromInt(DEFAULT_SIZE));

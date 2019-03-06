@@ -71,10 +71,9 @@ const char* DOMException::s_descriptions[] = {
     "The object can not be cloned.",
 };
 
-DOMException::DOMException(ScriptBindingInstance* instance, Code code,
+DOMException::DOMException(ExecutionContext* executionContext, Code code,
                            const char* message)
-    : ScriptWrappable(this)
-    , m_scriptBindingInstance(instance)
+    : ScriptWrappable(this, executionContext)
     , m_code(code)
     , m_name(String::emptyString)
 {
@@ -112,18 +111,12 @@ DOMException::DOMException(ScriptBindingInstance* instance, Code code,
     m_message = String::fromUTF8(message);
 }
 
-DOMException::DOMException(ScriptBindingInstance* instance, String* message,
+DOMException::DOMException(ExecutionContext* executionContext, String* message,
                            String* name)
-    : ScriptWrappable(this)
-    , m_scriptBindingInstance(instance)
+    : ScriptWrappable(this, executionContext)
     , m_code(Code::DOM_EXCEPTION)
     , m_message(message)
     , m_name(name)
 {
-}
-
-ScriptBindingInstance* DOMException::scriptBindingInstance()
-{
-    return m_scriptBindingInstance;
 }
 }
