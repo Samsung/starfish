@@ -183,7 +183,7 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
         p->action = action;
 
         ctx->webView()->messageLoop()->addIdler(
-            ctx,
+            ctx->document(),
             [](size_t handle, void* data) {
                 Param* p = (Param*)data;
                 p->ctx->sourceElement()->navigate(p->url, p->action,

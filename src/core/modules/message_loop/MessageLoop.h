@@ -34,7 +34,7 @@
 
 namespace Starfish {
 
-class ScriptContext;
+class ExecutionContext;
 
 class MessageLoop : public BASE_CLASS {
     friend class MessageLoopImpl;
@@ -42,16 +42,17 @@ class MessageLoop : public BASE_CLASS {
 
 public:
     MessageLoop();
-    size_t addIdler(ScriptContext* ctx, void (*fn)(size_t handle, void*),
+    size_t addIdler(ExecutionContext* ctx, void (*fn)(size_t handle, void*),
                     void* data);
-    size_t addIdler(ScriptContext* ctx, void (*fn)(size_t handle, void*, void*),
-                    void* data, void* data1);
-    size_t addIdler(ScriptContext* ctx,
+    size_t addIdler(ExecutionContext* ctx,
+                    void (*fn)(size_t handle, void*, void*), void* data,
+                    void* data1);
+    size_t addIdler(ExecutionContext* ctx,
                     void (*fn)(size_t handle, void*, void*, void*), void* data,
                     void* data1, void* data2);
     size_t addIdlerWithNoGCRootingInOtherThread(
-        ScriptContext* ctx, void (*fn)(size_t handle, void*), void* data);
-    size_t addIdlerWithNoGCRootingInOtherThread(ScriptContext* ctx,
+        ExecutionContext* ctx, void (*fn)(size_t handle, void*), void* data);
+    size_t addIdlerWithNoGCRootingInOtherThread(ExecutionContext* ctx,
                                                 void (*fn)(size_t handle, void*,
                                                            void*),
                                                 void* data, void* data1);
@@ -60,7 +61,7 @@ public:
     void removeIdlerWithNoGCRooting(size_t handle);
 
     void clearPendingIdlers(
-        ScriptContext* ctx); // give nullptr to clear every idlers
+        ExecutionContext* ctx); // give nullptr to clear every idlers
 
     void destroy();
 

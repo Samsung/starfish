@@ -607,7 +607,7 @@ void Document::resumeDocumentParsing()
     STARFISH_ASSERT(m_pendingDocumentParsingIdlerHandle == SIZE_MAX);
     m_pendingDocumentParsingIdlerHandle =
         window()->webView()->messageLoop()->addIdler(
-            browsingContext(),
+            this,
             [](size_t handle, void* data) {
                 Document* document = (Document*)data;
                 STARFISH_ASSERT(document->m_documentBuilder);

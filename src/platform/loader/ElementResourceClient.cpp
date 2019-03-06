@@ -43,8 +43,8 @@ void ElementResourceClient::didLoadFinished()
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->webView()->messageLoop()->addIdler(
-            m_element->document()->browsingContext(), fn, m_element);
+        m_element->webView()->messageLoop()->addIdler(m_element->document(), fn,
+                                                      m_element);
     }
 }
 
@@ -62,8 +62,8 @@ void ElementResourceClient::didLoadFailed()
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->webView()->messageLoop()->addIdler(
-            m_element->document()->browsingContext(), fn, m_element);
+        m_element->webView()->messageLoop()->addIdler(m_element->document(), fn,
+                                                      m_element);
     }
 }
 }

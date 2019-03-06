@@ -49,7 +49,7 @@ bool Geolocation::getCurrentPositionPreprocessing(
 {
     if (timeout == 0) {
         m_document->webView()->messageLoop()->addIdler(
-            m_document->browsingContext(),
+            m_document,
             [](size_t, void* data, void* data2, void* data3) {
                 Document* document = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
@@ -72,7 +72,7 @@ void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                                         enableHighAccuracy, timeout,
                                         maximumAge)) {
         m_document->webView()->messageLoop()->addIdler(
-            m_document->browsingContext(),
+            m_document,
             [](size_t, void* data, void* data2, void* data3) {
                 Document* document = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;

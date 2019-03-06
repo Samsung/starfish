@@ -1197,7 +1197,7 @@ void HTMLMediaElement::processNextOperationQueue()
         m_operationQueue.pop_front();
 
         m_currentPendingOperationHandle = webView()->messageLoop()->addIdler(
-            document()->browsingContext(),
+            document(),
             [](size_t, void* data) {
                 MediaOperationQueueData* queueData =
                     (MediaOperationQueueData*)data;

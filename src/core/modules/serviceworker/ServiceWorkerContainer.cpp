@@ -214,7 +214,7 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
 void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 {
     window()->webView()->messageLoop()->addIdler(
-        window()->browsingContext(),
+        window()->executionContext(),
         [](size_t handle, void* data) {
             ServiceWorkerJob* job = static_cast<ServiceWorkerJob*>(data);
 
@@ -275,7 +275,7 @@ void ServiceWorkerContainer::resolveJobPromise(ServiceWorkerJob* job)
         params->container = this;
 
         context->window()->webView()->messageLoop()->addIdler(
-            context,
+            context->window()->executionContext(),
             [](size_t handle, void* data) {
                 Params* params = static_cast<Params*>(data);
                 ServiceWorkerJob* job = params->job;

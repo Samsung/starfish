@@ -232,7 +232,7 @@ void Window::postMessage(Window* source, ScriptValue message,
     // NOTE addIder would hold serializedRecord
     if (browsingContext()) {
         webView()->messageLoop()->addIdler(
-            browsingContext(),
+            browsingContext()->document(),
             [](size_t handle, void* data, void* data1, void* data2) {
                 Window* window = (Window*)data;
                 SerializeWithTransferResult* serializedRecord =

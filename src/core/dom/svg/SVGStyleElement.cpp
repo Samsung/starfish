@@ -160,7 +160,7 @@ void SVGStyleElement::removeStyleSheet()
 void SVGStyleElement::dispatchLoadEvent()
 {
     webView()->messageLoop()->addIdler(
-        document()->browsingContext(),
+        document(),
         [](size_t handle, void* data) {
             SVGStyleElement* element = (SVGStyleElement*)data;
             if (!element->hasLoaded()) {

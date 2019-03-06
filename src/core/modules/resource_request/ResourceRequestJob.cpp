@@ -76,7 +76,7 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         worker(m_orgProxy, filePath);
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->document()->browsingContext(),
+            m_orgProxy->document(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -151,7 +151,7 @@ void DataURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->document()->browsingContext(),
+            m_orgProxy->document(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -216,7 +216,7 @@ void AboutURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->document()->browsingContext(),
+            m_orgProxy->document(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -257,7 +257,7 @@ void JavaScriptURLResourceRequestJobDelegate::send(String* body,
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->document()->browsingContext(),
+            m_orgProxy->document(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -291,7 +291,7 @@ void UnknownURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->document()->browsingContext(),
+            m_orgProxy->document(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -327,7 +327,7 @@ void BlobURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
         size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->document()->browsingContext(),
+            m_orgProxy->document(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
