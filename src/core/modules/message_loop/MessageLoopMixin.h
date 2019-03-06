@@ -30,7 +30,6 @@ namespace Starfish {
 class WebView;
 class ResourceURL;
 class ReferrerURL;
-class ScriptContext;
 enum class HistoryManagerAction;
 
 class MessageLoopMixin {

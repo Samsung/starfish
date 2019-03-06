@@ -81,7 +81,6 @@ BrowsingContext* BrowsingContext::create(HTMLIFrameElement* sourceElement)
 
 BrowsingContext::BrowsingContext(WebView* webView, HTMLIFrameElement* source)
     : WebViewHoldable(webView)
-    , ScriptContext(webView)
     , m_webView(webView)
     , m_window(nullptr)
     , m_parentBrowsingContext(source ? source->document()->browsingContext()

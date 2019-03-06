@@ -25,7 +25,6 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
-#include "core/page/ScriptContext.h"
 #include "core/page/WebView.h"
 
 #include <Windows.h>

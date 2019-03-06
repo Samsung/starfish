@@ -26,7 +26,6 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/page/Window.h"
-#include "core/page/ScriptContext.h"
 #include "core/page/WebView.h"
 
 #include <uv.h>

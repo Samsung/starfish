@@ -25,7 +25,7 @@ namespace Starfish {
 class GlobalScope;
 class ScriptBindingInstance;
 class WebBase;
-class ScriptContext;
+class ServiceWorker;
 
 class ExecutionContext {
 public:
@@ -33,6 +33,15 @@ public:
         : m_globalScope(globalScope)
         , m_scriptBindingInstance(instance)
     {
+    }
+
+    virtual bool isDocument() const
+    {
+        return false;
+    }
+    virtual bool isWorkerGlobalScope() const
+    {
+        return false;
     }
 
     GlobalScope* globalScope() const
@@ -46,13 +55,21 @@ public:
     }
 
     WebBase* webBase() const;
-    ScriptContext* scriptContext() const;
 
 private:
     GlobalScope* const m_globalScope;
 
 protected:
     ScriptBindingInstance* const m_scriptBindingInstance;
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+public:
+    ServiceWorker* activeServiceWorker() const;
+    void setActiveServiceWorker(ServiceWorker* serviceWorker);
+
+private:
+    ServiceWorker* m_activeServiceWorker{ nullptr };
+#endif /* STARFISH_ENABLE_SERVICE_WORKER */
 };
 }
 

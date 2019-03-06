@@ -28,7 +28,6 @@
 #include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebView.h"
-#include "core/page/ScriptContext.h"
 #include "core/page/GlobalScope.h"
 #include "core/page/Window.h"
 #include "core/style/CSSStyleLookupTrie.h"
@@ -244,7 +243,7 @@ ExecutionContext* fetchExecutionContext(ContextRef* ctx)
 
 WebBase* fetchWebBase(ContextRef* ctx)
 {
-    return fetchGlobalObject(ctx)->scriptContext()->webBase();
+    return fetchGlobalObject(ctx)->webBase();
 }
 
 ScriptBindingInstance* fetchScriptBindingInstance(ContextRef* ctx)
