@@ -27,7 +27,7 @@ namespace Starfish {
 
 class CompositorMock : public Compositor {
 public:
-    CompositorMock(Starfish* starfish, CanvasSurface* data)
+    CompositorMock(WebView* webview, CanvasSurface* data)
     {
     }
 
@@ -117,15 +117,37 @@ public:
     virtual void applyMatrixTo(LayoutRect& lp)
     {
     }
+
+    virtual void clipPath()
+    {
+    }
+
+    virtual void moveTo(float x, float y)
+    {
+    }
+
+    virtual void lineTo(float x, float y)
+    {
+    }
+
+    virtual void arcNegative(double xc, double yc, double radius, double angle1,
+                             double angle2)
+    {
+    }
+
+    virtual SkMatrix currentTransformMatrix()
+    {
+        return SkMatrix::I();
+    }
 };
 
-Compositor* Compositor::create2D(Starfish* starfish, CompositorContext* ctx,
+Compositor* Compositor::create2D(WebView* webview, CompositorContext* ctx,
                                  CanvasSurface* surface)
 {
-    return new CompositorMock(starfish, surface);
+    return new CompositorMock(webview, surface);
 }
 
-Compositor* Compositor::create3D(Starfish* starfish, CompositorContext* ctx)
+Compositor* Compositor::create3D(WebView* starfish, CompositorContext* ctx)
 {
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }

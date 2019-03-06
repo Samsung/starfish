@@ -466,6 +466,9 @@ int main(int argc, char* argv[])
     LWE::WebView* webView =
         LWE::WebView::Create(wndObj, 0, 0, width, height, scaleFactor, "serif",
                              "ko-KR", "Asia/Seoul");
+#elif defined(STARFISH_EFL_CAIRO_HEADLESS)
+    LWE::WebContainer* webView = LWE::WebContainer::CreateHeadless(
+        width, height, scaleFactor, "serif", "ko-KR", "Asia/Seoul");
 #else
     LWE::WebView* webView =
         LWE::WebView::Create(nullptr, x, y, width, height, scaleFactor, "serif",

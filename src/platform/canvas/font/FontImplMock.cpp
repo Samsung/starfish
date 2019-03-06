@@ -81,8 +81,8 @@ public:
 
 class PlatformFontSelectorImplMock : public PlatformFontSelector {
 public:
-    PlatformFontSelectorImplMock(Starfish* starfish)
-        : PlatformFontSelector(starfish)
+    PlatformFontSelectorImplMock(WebView* wv)
+        : PlatformFontSelector(wv)
     {
         m_face = new FontFaceImplMock();
     }
@@ -110,12 +110,12 @@ class PlatformFontCacheImplMock : public PlatformFontCache {
 public:
 };
 
-PlatformFontSelector* PlatformFontSelector::create(Starfish* starfish)
+PlatformFontSelector* PlatformFontSelector::create(WebView* wv)
 {
-    return new PlatformFontSelectorImplMock(starfish);
+    return new PlatformFontSelectorImplMock(wv);
 }
 
-PlatformFontCache* PlatformFontCache::create(Starfish* starfish)
+PlatformFontCache* PlatformFontCache::create(WebView* wv)
 {
     return new PlatformFontCacheImplMock();
 }
