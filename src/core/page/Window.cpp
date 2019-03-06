@@ -71,7 +71,7 @@ Window* Window::create(BrowsingContext* browsingContext, ResourceURL* url,
 Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
                uint32_t initialWidth, uint32_t initialHeight)
     : EventTarget(nullptr)
-    , GlobalScope(browsingContext)
+    , GlobalScope(browsingContext->webView())
     , m_browsingContext(browsingContext)
     , m_history(nullptr)
     , m_navigator(nullptr)

@@ -244,7 +244,7 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
 ServiceWorker* ServiceWorkerContainer::controller()
 {
     // 1. Let client be the context object’s service worker client.
-    ScriptContext* context = window()->browsingContext();
+    ExecutionContext* context = window()->executionContext();
 
     // 2. Return the ServiceWorker object that represents client’s active
     // service worker.

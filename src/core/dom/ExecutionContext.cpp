@@ -17,19 +17,27 @@
  *  USA
  */
 
-#include "core/page/ScriptContext.h"
 #include "core/page/GlobalScope.h"
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
-ScriptContext* ExecutionContext::scriptContext() const
-{
-    return globalScope()->scriptContext();
-}
-
 WebBase* ExecutionContext::webBase() const
 {
-    return scriptContext()->webBase();
+    return m_globalScope->webBase();
 }
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+
+ServiceWorker* ExecutionContext::activeServiceWorker() const
+{
+    return m_activeServiceWorker;
+};
+
+void ExecutionContext::setActiveServiceWorker(ServiceWorker* serviceWorker)
+{
+    m_activeServiceWorker = serviceWorker;
+}
+
+#endif /* STARFISH_ENABLE_SERVICE_WORKER */
 }

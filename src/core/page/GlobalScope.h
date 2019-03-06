@@ -22,8 +22,8 @@
 
 namespace Starfish {
 
+class WebBase;
 class ScriptBindingInstance;
-class ScriptContext;
 class ExecutionContext;
 
 // TODO: Move WindowOrWorkerGlobalScope feature included in Window class
@@ -33,21 +33,21 @@ public:
     {
     }
 
-    ScriptContext* scriptContext()
-    {
-        return m_scriptContext;
-    }
-
     virtual ExecutionContext* executionContext() = 0;
 
+    WebBase* webBase()
+    {
+        return m_webBase;
+    }
+
 protected:
-    GlobalScope(ScriptContext* scriptContext)
-        : m_scriptContext(scriptContext)
+    GlobalScope(WebBase* webBase)
+        : m_webBase(webBase)
     {
     }
 
 private:
-    ScriptContext* m_scriptContext;
+    WebBase* m_webBase;
 };
 }
 

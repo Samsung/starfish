@@ -23,7 +23,6 @@
 #include "binding/StarfishHoldable.h"
 #include "binding/WebViewHoldable.h"
 
-#include "core/page/ScriptContext.h"
 #include "core/layout/LayoutRepaintTracker.h"
 
 namespace Starfish {
@@ -55,9 +54,7 @@ enum class MouseEventKind;
 enum class CompositionEventKind;
 enum class HistoryManagerAction;
 
-class BrowsingContext : public gc,
-                        public WebViewHoldable,
-                        public ScriptContext {
+class BrowsingContext : public gc, public WebViewHoldable {
     friend class PlatformWindow;
     friend class Window;
     friend class HTMLHtmlElement;
