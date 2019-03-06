@@ -510,7 +510,7 @@ GradientDrawingInfo* LinearGradientData::makeGradientDrawingInfo(
 {
     STARFISH_ASSERT(box);
 
-    GradientDrawingInfo* ret = new GradientDrawingInfo(m_type);
+    GradientDrawingInfo* ret = new GradientDrawingInfo(m_type, rect);
     computeEndPoints(rect, ret->x1, ret->y1, ret->x2, ret->y2);
     makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
                             ret->y2, ret->r2, box);
@@ -566,7 +566,7 @@ GradientDrawingInfo* RadialGradientData::makeGradientDrawingInfo(
 {
     STARFISH_ASSERT(box);
 
-    GradientDrawingInfo* ret = new GradientDrawingInfo(m_type);
+    GradientDrawingInfo* ret = new GradientDrawingInfo(m_type, rect);
     computeEndPoints(rect, box, ret->x1, ret->y1, ret->r1, ret->x2, ret->y2,
                      ret->r2, ret->firstRadius, ret->secondRadius);
     makeSpecifiedColorStops(ret->colorStops, ret->x1, ret->y1, ret->r1, ret->x2,
@@ -869,12 +869,41 @@ bool RadialGradientData::equals(GradientData* other) const
     return true;
 }
 
-bool GradientDrawingInfo::equals(GradientDrawingInfo* src)
+size_t GradientDrawingInfo::hashValue() const
 {
-    bool a = type == src->type && x1 == src->x1 && y1 == src->y1 &&
-             x2 == src->x2 && y2 == src->y2 && r1 == src->r1 && r2 == src->r2 &&
-             firstRadius == src->firstRadius &&
-             secondRadius == src->secondRadius;
+    if (hash == 0) {
+        hash_combine(hash, (int)type);
+        hash_combine(hash, rect.x());
+        hash_combine(hash, rect.y());
+        hash_combine(hash, rect.width());
+        hash_combine(hash, rect.height());
+        hash_combine(hash, x1);
+        hash_combine(hash, y1);
+        hash_combine(hash, x2);
+        hash_combine(hash, y2);
+        hash_combine(hash, r1);
+        hash_combine(hash, r2);
+        hash_combine(hash, firstRadius);
+        hash_combine(hash, secondRadius);
+        for (size_t i = 0; i < colorStops.size(); i++) {
+            hash_combine(hash, colorStops[i]->offset().numberData());
+            auto c = colorStops[i]->color();
+            hash_combine(hash, c.r());
+            hash_combine(hash, c.g());
+            hash_combine(hash, c.b());
+            hash_combine(hash, c.a());
+        }
+    }
+    return hash;
+}
+
+bool GradientDrawingInfo::equals(const GradientDrawingInfo* src) const
+{
+    bool a = (type == src->type) && (rect == src->rect) && (x1 == src->x1) &&
+             (y1 == src->y1) && (x2 == src->x2) && (y2 == src->y2) &&
+             (r1 == src->r1) && (r2 == src->r2) &&
+             (firstRadius == src->firstRadius) &&
+             (secondRadius == src->secondRadius);
     if (a && colorStops.size() == src->colorStops.size()) {
         size_t len = colorStops.size();
         for (size_t i = 0; i < len; i++) {

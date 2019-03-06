@@ -26,8 +26,11 @@
 #include "core/util/BloomFilter.h"
 #include "core/style/Style.h"
 #include "core/style/WebFont.h"
+#include "core/style/GradientData.h"
 #include "core/dom/parser/PreloadScanner.h"
 #include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
+
+#define STARFISH_NATIVEGRADIENT_CACHE_SIZE 1024 * 1024 * 4
 
 namespace Starfish {
 
@@ -43,6 +46,7 @@ class HTMLBodyElement;
 class HTMLHeadElement;
 class HTMLHtmlElement;
 class MediaQueryListMatcher;
+class NativeGradient;
 class NativeImageData;
 class Location;
 class ResourceRequest;
@@ -567,6 +571,10 @@ public:
     void markElementInClickProgress(Element* element);
     void unmarkElementInClickProgress(Element* element);
 
+    NativeGradient* findInNativeGradientCache(GradientDrawingInfo* key);
+    void cacheNativeGradient(GradientDrawingInfo* key, NativeGradient* value);
+    bool pruneNativeGradientCacheIfNeeds(size_t reserve);
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -690,6 +698,9 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentSecurityPolicy));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(Document, m_elementInClickProgressList));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_nativeGradientCache));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(Document, m_nativeGradientCacheLRUList));
     }
 
     // only used in html document builder
@@ -757,6 +768,11 @@ protected:
     uint64_t m_documentCreatedTick;
     ContentSecurityPolicy* m_contentSecurityPolicy;
     GCVector<Element*> m_elementInClickProgressList;
+    GCUnorderedMap<GradientDrawingInfo*, NativeGradient*,
+                   std::hash<GradientDrawingInfo*>,
+                   std::equal_to<GradientDrawingInfo*>>* m_nativeGradientCache;
+    GCVector<GradientDrawingInfo*> m_nativeGradientCacheLRUList;
+    size_t m_nativeGradientCacheToTalSize;
 };
 }
 

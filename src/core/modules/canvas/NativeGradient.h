@@ -24,17 +24,32 @@ namespace Starfish {
 
 class GradientDrawingInfo;
 
-class NativeGradient {
+class NativeGradient : public gc {
 public:
-    static std::unique_ptr<NativeGradient> create(GradientDrawingInfo* info);
+    static NativeGradient* create(GradientDrawingInfo* info);
     virtual ~NativeGradient()
     {
     }
 
+    NativeImageData* gradientImageDataCached()
+    {
+        return m_gradientImageDataCached;
+    }
+
+    void setGradientImageDataCached(NativeImageData* imageData)
+    {
+        m_gradientImageDataCached = imageData;
+    }
+
 protected:
-    NativeGradient()
+    NativeGradient(GradientDrawingInfo* info)
+        : m_gradientDrawingInfo(info)
+        , m_gradientImageDataCached(nullptr)
     {
     }
+
+    GradientDrawingInfo* m_gradientDrawingInfo;
+    NativeImageData* m_gradientImageDataCached;
 
 private:
     virtual void init(GradientDrawingInfo* info) = 0;

@@ -74,7 +74,8 @@ public:
 class NativeGradientCairo : public NativeGradient {
 public:
     NativeGradientCairo(GradientDrawingInfo* info)
-        : m_pattern(nullptr)
+        : NativeGradient(info)
+        , m_pattern(nullptr)
     {
         init(info);
     }
@@ -114,10 +115,9 @@ private:
     cairo_pattern_t* m_pattern;
 };
 
-std::unique_ptr<NativeGradient> NativeGradient::create(
-    GradientDrawingInfo* info)
+NativeGradient* NativeGradient::create(GradientDrawingInfo* info)
 {
-    return std::unique_ptr<NativeGradient>(new NativeGradientCairo(info));
+    return new NativeGradientCairo(info);
 }
 
 class CanvasCairo : public Canvas {

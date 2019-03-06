@@ -1356,9 +1356,6 @@ public:
         , m_nativeImageToApplyFilter(nullptr)
         , m_canvasToApplyFilter(nullptr)
     {
-#ifndef NDEBUG
-        STARFISH_LOG_INFO("Begin FilterContext\n");
-#endif
         auto style = m_ownerStackingContext->owner()->style();
 
         Length standardDeviation;
@@ -1431,9 +1428,6 @@ public:
 
     ~FilterContext()
     {
-#ifndef NDEBUG
-        STARFISH_LOG_INFO("End FilterContext\n");
-#endif
     }
 
     void changeCurrentCanvasToOriginal()

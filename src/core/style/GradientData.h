@@ -17,6 +17,16 @@
  *  USA
  */
 
+#ifndef __StarfishGradientData__
+#define __StarfishGradientData__
+
+#ifdef STARFISH_ENABLE_TEST
+// To enable cache mode in pixel-test, it must be set to 25 * 25.
+#define CACHEABLE_GRADIENT_SIZE (25.0f * 25.0f)
+#else
+#define CACHEABLE_GRADIENT_SIZE (800.0f * 600.0f)
+#endif
+
 namespace Starfish {
 
 class Font;
@@ -106,6 +116,7 @@ private:
 
 struct GradientDrawingInfo : public gc {
     GradientType type;
+    Unit::Rect rect;
     float x1;
     float y1;
     float x2;
@@ -116,8 +127,9 @@ struct GradientDrawingInfo : public gc {
     float secondRadius;
     GCVector<ColorStop*> colorStops;
 
-    GradientDrawingInfo(GradientType t)
+    GradientDrawingInfo(GradientType t, const Unit::Rect& rt)
         : type(t)
+        , rect(rt)
         , x1(0.0f)
         , y1(0.0f)
         , x2(0.0f)
@@ -127,6 +139,7 @@ struct GradientDrawingInfo : public gc {
         , firstRadius(0.0f)
         , secondRadius(0.0f)
         , colorStops()
+        , hash(0)
     {
     }
 
@@ -151,7 +164,11 @@ struct GradientDrawingInfo : public gc {
 
     void* operator new[](size_t size) = delete;
 
-    bool equals(GradientDrawingInfo* src);
+    size_t hashValue() const;
+    bool equals(const GradientDrawingInfo* src) const;
+
+private:
+    mutable size_t hash;
 };
 
 class GradientData : public gc {
@@ -161,6 +178,7 @@ public:
         , m_horizentalSide()
         , m_verticalSide()
         , m_colorStopList()
+        , m_isCacheable(false)
     {
     }
 
@@ -195,6 +213,16 @@ public:
         return m_colorStopList;
     }
 
+    bool isCacheable() const
+    {
+        return m_isCacheable;
+    }
+
+    void setCacheable(bool value)
+    {
+        m_isCacheable = value;
+    }
+
     virtual GradientDrawingInfo* makeGradientDrawingInfo(const Unit::Rect& rect,
                                                          FrameBox* box) = 0;
 
@@ -221,6 +249,7 @@ protected:
     SideValue m_horizentalSide;
     SideValue m_verticalSide;
     GCVector<ColorStop*> m_colorStopList;
+    bool m_isCacheable;
 };
 
 class LinearGradientData : public GradientData {
@@ -400,3 +429,24 @@ private:
     RadialGradientSizeKeyword m_gradientSizeKeyword;
 };
 } // namespace Starfish
+
+namespace std {
+template <>
+struct hash<Starfish::GradientDrawingInfo*> {
+    std::size_t operator()(const Starfish::GradientDrawingInfo* value) const
+    {
+        return value->hashValue();
+    }
+};
+
+template <>
+struct equal_to<Starfish::GradientDrawingInfo*> {
+    bool operator()(const Starfish::GradientDrawingInfo* lhs,
+                    const Starfish::GradientDrawingInfo* rhs) const
+    {
+        return lhs->equals(rhs);
+    }
+};
+}
+
+#endif

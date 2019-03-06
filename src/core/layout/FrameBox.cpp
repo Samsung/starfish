@@ -1419,31 +1419,64 @@ static inline void paintRepeatGradient(
         }
     }
     ImageValue* imageValue = style->backgroundImage(idx);
-    Unit::Rect rect =
-        Unit::Rect(startX, startY, width, height).snapSizeToPixel();
-    auto info = imageValue->gradientValue()->makeGradientDrawingInfo(rect, box);
-    auto gradient = NativeGradient::create(info);
-    canvas->save();
-    for (float y = startY; y < dst.maxY(); y += height) {
-        if (y != startY) {
-            canvas->translate(0, rect.height());
+    auto value = imageValue->gradientValue();
+    bool cacheable = (value->isCacheable() &&
+                      ((width * height) >= CACHEABLE_GRADIENT_SIZE) &&
+                      ((width * height) <= STARFISH_NATIVEGRADIENT_CACHE_SIZE));
+
+    if (cacheable) {
+        Unit::Rect rect = Unit::Rect(0, 0, width, height).snapSizeToPixel();
+        GradientDrawingInfo* info = value->makeGradientDrawingInfo(rect, box);
+        NativeGradient* gradient =
+            box->document()->findInNativeGradientCache(info);
+        if (gradient == nullptr) {
+            gradient = NativeGradient::create(info);
         }
         canvas->save();
-        for (float x = startX; x < dst.maxX(); x += width) {
-            if (x != startX) {
-                canvas->translate(rect.width(), 0);
-            }
+        if (gradient->gradientImageDataCached() == nullptr) {
+            auto imageData = NativeImageData::create(ceil(width), ceil(height));
+            Canvas* cv = Canvas::create(box->node()->webView(), imageData);
+
+            cv->clearColor(Unit::Color(0, 0, 0, 0));
             if (imageValue->gradientValue()->type() ==
                 GradientType::LinearGradient) {
-                canvas->drawLinearGradient(rect, info, gradient.get());
+                cv->drawLinearGradient(rect, info, gradient);
             } else if (imageValue->gradientValue()->type() ==
                        GradientType::RadialGradient) {
-                canvas->drawRadialGradient(rect, info, gradient.get());
+                cv->drawRadialGradient(rect, info, gradient);
             }
+            cv->fill();
+            delete cv;
+
+            gradient->setGradientImageDataCached(imageData);
+            box->document()->cacheNativeGradient(info, gradient);
+        }
+        canvas->drawRepeatImage(gradient->gradientImageDataCached(), dst, width,
+                                height, repeatX, repeatY, imageRenderingValue);
+        canvas->restore();
+    } else {
+        Unit::Rect rect =
+            Unit::Rect(startX, startY, width, height).snapSizeToPixel();
+        GradientDrawingInfo* info = value->makeGradientDrawingInfo(rect, box);
+        NativeGradient* gradient = NativeGradient::create(info);
+        canvas->save();
+        for (float y = startY; y < dst.maxY();
+             y += height, canvas->translate(0, rect.height())) {
+            canvas->save();
+            for (float x = startX; x < dst.maxX();
+                 x += width, canvas->translate(rect.width(), 0)) {
+                if (imageValue->gradientValue()->type() ==
+                    GradientType::LinearGradient) {
+                    canvas->drawLinearGradient(rect, info, gradient);
+                } else if (imageValue->gradientValue()->type() ==
+                           GradientType::RadialGradient) {
+                    canvas->drawRadialGradient(rect, info, gradient);
+                }
+            }
+            canvas->restore();
         }
         canvas->restore();
     }
-    canvas->restore();
 }
 
 void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
@@ -1668,10 +1701,10 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
 
                 if (imageValue->gradientValue()->type() ==
                     GradientType::LinearGradient) {
-                    canvas->drawLinearGradient(rect, info, gradient.get());
+                    canvas->drawLinearGradient(rect, info, gradient);
                 } else if (imageValue->gradientValue()->type() ==
                            GradientType::RadialGradient) {
-                    canvas->drawRadialGradient(rect, info, gradient.get());
+                    canvas->drawRadialGradient(rect, info, gradient);
                 }
             }
         }
