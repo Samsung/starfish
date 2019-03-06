@@ -277,8 +277,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     m_startUpFlag = 0;
 #endif
 
-    m_messageLoop = new MessageLoop();
-    m_timer = new Timer(this);
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif
@@ -427,7 +425,7 @@ void WebView::createScriptEngineInstance()
                 (Window*)state->context()->globalObject()->extraData();
 
             window->webView()->messageLoop()->addIdler(
-                window->browsingContext(),
+                window->executionContext(),
                 [](size_t, void* data, void* data2) {
                     Window* window = (Window*)data;
 

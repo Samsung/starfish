@@ -182,7 +182,7 @@ void HTMLStyleElement::removeStyleSheet()
 void HTMLStyleElement::dispatchLoadEvent()
 {
     webView()->messageLoop()->addIdler(
-        document()->browsingContext(),
+        document(),
         [](size_t handle, void* data) {
             HTMLStyleElement* element = (HTMLStyleElement*)data;
             if (!element->hasLoaded()) {

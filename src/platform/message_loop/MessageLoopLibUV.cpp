@@ -25,7 +25,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
-#include "core/page/ScriptContext.h"
+#include "core/dom/ExecutionContext.h"
 
 #include <uv.h>
 
@@ -49,7 +49,7 @@ struct IdlerData {
     int m_pararmNum;
     uv_timer_t* m_idler_uv;
     MessageLoop* m_ml;
-    ScriptContext* m_ctx;
+    ExecutionContext* m_ctx;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
 };
@@ -103,7 +103,7 @@ MessageLoop::MessageLoop()
     ((uv_async_t*)m_idlerThreadAsyncHandle)->data = this;
 }
 
-size_t MessageLoop::addIdler(ScriptContext* ctx, void (*fn)(size_t, void*),
+size_t MessageLoop::addIdler(ExecutionContext* ctx, void (*fn)(size_t, void*),
                              void* data)
 {
     IdlerData* id = new (NoGC) IdlerData;
@@ -132,7 +132,7 @@ size_t MessageLoop::addIdler(ScriptContext* ctx, void (*fn)(size_t, void*),
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(ScriptContext* ctx,
+size_t MessageLoop::addIdler(ExecutionContext* ctx,
                              void (*fn)(size_t, void*, void*), void* data,
                              void* data1)
 {
@@ -164,7 +164,7 @@ size_t MessageLoop::addIdler(ScriptContext* ctx,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(ScriptContext* ctx,
+size_t MessageLoop::addIdler(ExecutionContext* ctx,
                              void (*fn)(size_t, void*, void*, void*),
                              void* data, void* data1, void* data2)
 {
@@ -205,7 +205,7 @@ void uv_close_cb(uv_handle_t* handle)
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    ScriptContext* ctx, void (*fn)(size_t, void*), void* data)
+    ExecutionContext* ctx, void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
@@ -226,7 +226,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    ScriptContext* ctx, void (*fn)(size_t, void*, void*), void* data,
+    ExecutionContext* ctx, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
     IdlerData* id = new IdlerData;
@@ -264,7 +264,7 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
     id->m_shouldExecute = false;
 }
 
-void MessageLoop::clearPendingIdlers(ScriptContext* ctx)
+void MessageLoop::clearPendingIdlers(ExecutionContext* ctx)
 {
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {

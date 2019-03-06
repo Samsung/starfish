@@ -133,7 +133,7 @@ void MessagePort::postMessage(ScriptValue message,
     }
     // NOTE addIder would hold serializedRecord
     webView()->messageLoop()->addIdler(
-        document()->browsingContext(),
+        document(),
         [](size_t handle, void* data, void* data1) {
             MessagePort* self = (MessagePort*)data;
             SerializeWithTransferResult* serializedRecord =
@@ -251,7 +251,7 @@ void PortMessageQueue::registerTaskToMessageLoop(MessagePort* target,
 {
     STARFISH_ASSERT(m_enabled);
     target->webView()->messageLoop()->addIdler(
-        target->document()->browsingContext(),
+        target->document(),
         [](size_t, void* data, void* data1) {
             MessagePort* target = (MessagePort*)data;
             MessageEvent* event = (MessageEvent*)data1;

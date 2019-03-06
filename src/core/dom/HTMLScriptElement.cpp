@@ -328,7 +328,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                             return true;
                         } else if (res->isFinished()) {
                             webView()->messageLoop()->addIdler(
-                                document()->browsingContext(),
+                                document(),
                                 [](size_t id, void* res, void* self) {
                                     HTMLScriptElement* scriptElement =
                                         (HTMLScriptElement*)self;

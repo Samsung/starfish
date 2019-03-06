@@ -289,7 +289,7 @@ static ValueRef* debugPauseFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->webView()->messageLoop()->addIdler(window->browsingContext(),
+    window->webView()->messageLoop()->addIdler(window->executionContext(),
                                                [](size_t, void* data, void*) {
                                                    PlatformWindow* window =
                                                        (PlatformWindow*)data;
@@ -305,7 +305,7 @@ static ValueRef* debugResumeFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->webView()->messageLoop()->addIdler(window->browsingContext(),
+    window->webView()->messageLoop()->addIdler(window->executionContext(),
                                                [](size_t, void* data, void*) {
                                                    PlatformWindow* window =
                                                        (PlatformWindow*)data;

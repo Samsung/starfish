@@ -331,7 +331,7 @@ void HTMLFormControl::fireSubmitEvent()
             new Event(node->document(), eventType, EventInit(true, true));
         node->EventTarget::dispatchEventByUA(node, e);
     };
-    webView()->messageLoop()->addIdler(document()->browsingContext(), fn, this);
+    webView()->messageLoop()->addIdler(document(), fn, this);
 }
 
 void HTMLFormControl::didAttributeChanged(QualifiedName name, String* old,
@@ -378,7 +378,7 @@ void HTMLFormControl::didNodeInsertedToDocumentTree()
     // https://www.w3.org/TR/html5/editing.html#focusing-steps
     if (isAutofocusable()) {
         webView()->messageLoop()->addIdler(
-            document()->browsingContext(),
+            document(),
             [](size_t handle, void* data) {
                 HTMLFormControl* element = (HTMLFormControl*)data;
                 if (!element->document()->browsingContext()->focusedNode()) {
@@ -622,8 +622,7 @@ void HTMLFormControl::queueEvent(QualifiedName& eventType, bool bubbles,
         Event* e = (Event*)data1;
         element->EventTarget::dispatchEventByUA(element, e);
     };
-    webView()->messageLoop()->addIdler(document()->browsingContext(), fn, this,
-                                       e);
+    webView()->messageLoop()->addIdler(document(), fn, this, e);
 }
 
 void HTMLFormControl::fireEvent(QualifiedName& eventType, bool bubbles,
@@ -834,7 +833,7 @@ void HTMLFormElement::mutateActionUrl(ResourceURL* url,
     auto targetElement = findHTMLIFrameElement(document(), target);
 
     m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
-        document()->browsingContext(), fn, this, urlToOpen, targetElement);
+        document(), fn, this, urlToOpen, targetElement);
 }
 
 void HTMLFormElement::submitAsEntityBody(
@@ -874,7 +873,7 @@ void HTMLFormElement::submitAsEntityBody(
         auto targetElement = findHTMLIFrameElement(document(), target);
 
         m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
-            document()->browsingContext(), fn, this, urlToOpen, targetElement);
+            document(), fn, this, urlToOpen, targetElement);
     } else if (enctype == EncodeType::MultiPartFormData) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     } else if (enctype == EncodeType::TextPlain) {

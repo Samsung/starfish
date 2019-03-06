@@ -216,7 +216,7 @@ bool EventTarget::dispatchEventByUA(EventTarget* origin, Event* event,
 void EventTarget::dispatchEventIdleTimeByUA(Event* event)
 {
     webView()->messageLoop()->addIdler(
-        document()->browsingContext(),
+        document(),
         [](size_t handle, void* data0, void* data1) {
             ((Node*)data0)->dispatchEventByUA((Event*)data1);
         },

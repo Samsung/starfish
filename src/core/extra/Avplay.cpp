@@ -50,7 +50,7 @@ static void _videoPlayerPrepareCB(void* user_data)
     STARFISH_LOG_INFO("avplay::_videoPlayerPrepareCB()\n");
     Avplay* self = (Avplay*)user_data;
     self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-        browsingContext(self),
+        browsingContext(self)->document(),
         [](size_t, void* data) {
             Avplay* self = (Avplay*)data;
             self->callJSCallback(Avplay::prepare_async_CALLBACK);
@@ -63,7 +63,7 @@ static void _videoPlayerCompletedCB(void* user_data)
     STARFISH_LOG_INFO("avplay::_videoPlayerCompletedCB()\n");
     Avplay* self = (Avplay*)user_data;
     self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-        browsingContext(self),
+        browsingContext(self)->document(),
         [](size_t, void* data) {
             Avplay* self = (Avplay*)data;
             self->callJSCallback(Avplay::onstreamcompleted_CALLBACK);
@@ -78,7 +78,7 @@ static void _videoPlayerbufferingCBNative(int percent, void* user_data)
     if (percent < 100) {
         self->setBufferingPercent(percent);
         self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            browsingContext(self),
+            browsingContext(self)->document(),
             [](size_t, void* data) {
                 Avplay* self = (Avplay*)data;
                 self->callJSCallback(Avplay::onbufferingprogress_CALLBACK);
@@ -87,7 +87,7 @@ static void _videoPlayerbufferingCBNative(int percent, void* user_data)
     } else if (percent == 100) {
         self->setBufferingPercent(percent);
         self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            browsingContext(self),
+            browsingContext(self)->document(),
             [](size_t, void* data) {
                 Avplay* self = (Avplay*)data;
                 self->callJSCallback(Avplay::onbufferingcomplete_CALLBACK);
@@ -106,7 +106,7 @@ static void _videoPlayerErrorEventCBNative(int error_code, void* user_data)
     STARFISH_LOG_INFO("avplay::_videoPlayerErrorEventCBNative()\n");
     Avplay* self = (Avplay*)user_data;
     self->webView()->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-        browsingContext(self),
+        browsingContext(self)->document(),
         [](size_t, void* data) {
             Avplay* self = (Avplay*)data;
             self->callJSCallback(Avplay::onerror_CALLBACK);

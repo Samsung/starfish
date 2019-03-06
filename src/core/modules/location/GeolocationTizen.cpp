@@ -132,7 +132,7 @@ static void handleError(int error, LocationRequestInfoTizen* info)
 {
     if (error == TIZEN_ERROR_PERMISSION_DENIED) {
         info->document->webView()->messageLoop()->addIdler(
-            info->document->browsingContext(),
+            info->document,
             [](size_t, void* data, void* data2, void* data3) {
                 Document* d = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
@@ -143,7 +143,7 @@ static void handleError(int error, LocationRequestInfoTizen* info)
             info->document, (void*)info->errorCb, info->errorCbData);
     } else {
         info->document->webView()->messageLoop()->addIdler(
-            info->document->browsingContext(),
+            info->document,
             [](size_t, void* data, void* data2, void* data3) {
                 Document* d = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
@@ -195,7 +195,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
             info->verticalAccuracy = m_cachedLocation.verticalAccuracy;
             info->timestamp = m_cachedLocation.timestamp;
             info->document->webView()->messageLoop()->addIdler(
-                document()->browsingContext(),
+                document(),
                 [](size_t, void* data) {
                     LocationRequestInfoTizen* info =
                         (LocationRequestInfoTizen*)data;
@@ -276,7 +276,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                     info->verticalAccuracy;
 
                 info->document->webView()->messageLoop()->addIdler(
-                    info->document->browsingContext(),
+                    info->document,
                     [](size_t, void* data) {
                         LocationRequestInfoTizen* info =
                             (LocationRequestInfoTizen*)data;
@@ -302,7 +302,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                         (LocationRequestInfoTizen*)data;
                     info->shouldContinueRequest = false;
                     info->document->webView()->messageLoop()->addIdler(
-                        info->document->browsingContext(),
+                        info->document,
                         [](size_t, void* data, void* data2, void* data3) {
                             Document* d = (Document*)data;
                             GeoPositionErrorCallback cb =

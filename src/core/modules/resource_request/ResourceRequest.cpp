@@ -235,7 +235,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
 
     if (m_readyState == ReadyState::Done) {
         webView()->messageLoop()->addIdler(
-            document()->browsingContext(),
+            document(),
             [](size_t, void* data, void* data2) {
                 ResourceRequest* self = (ResourceRequest*)data2;
                 ((BrowsingContext*)data)->removePointerFromRootSet(data2);

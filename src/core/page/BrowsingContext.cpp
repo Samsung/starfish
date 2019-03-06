@@ -702,7 +702,8 @@ void BrowsingContext::dispose()
 
     if (isTopLevelBrowsingContext()) {
         webView()->platformWindow()->clearResources();
-        webView()->messageLoop()->clearPendingIdlers(this);
+        webView()->messageLoop()->clearPendingIdlers(
+            m_window->executionContext());
 
         auto& prevDrawnInfo = webView()->prevDrawnStackingContextInfo();
         auto iter = prevDrawnInfo.begin();
@@ -717,7 +718,8 @@ void BrowsingContext::dispose()
 
         m_webView->initRenderingFlags();
     } else {
-        webView()->messageLoop()->clearPendingIdlers(this);
+        webView()->messageLoop()->clearPendingIdlers(
+            m_window->executionContext());
     }
 
     m_rootMap.clear();
