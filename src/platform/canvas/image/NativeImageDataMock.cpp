@@ -92,16 +92,8 @@ public:
 protected:
 };
 
-NativeImageData* NativeImageData::create(String* localImageSrc)
-{
-    NativeImageData* imageData = new NativeImageDataMock(localImageSrc);
-    if (imageData->data() == NULL) {
-        return NULL;
-    }
-    return imageData;
-}
-
-NativeImageData* NativeImageData::create(const char* buf, size_t len)
+NativeImageData* NativeImageData::create(const char* buf, size_t len,
+                                         bool shouldDecodingInstantly)
 {
     NativeImageData* imageData = new NativeImageDataMock(buf, len);
     if (imageData->data() == NULL) {

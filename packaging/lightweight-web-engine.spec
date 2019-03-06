@@ -38,7 +38,7 @@ Requires(postun): /sbin/ldconfig
 # %define profile undefined
 # %endif
 
-# [ tv | mobile | wearable | all ]
+# [ tv | headless | mobile | wearable | all ]
 # build for all profile
 %if 0%{?build_profile:1}
 %define rpm %{build_profile}
@@ -51,9 +51,13 @@ Requires(postun): /sbin/ldconfig
 %define tizen_version_major 4
 %endif
 
-%if %{?tizen_profile_name:1}%{!?tizen_profile_name:0}
-%if "%{tizen_profile_name}" == "tv"
+%if %{?_vd_cfg_product_type:1}%{!?_vd_cfg_product_type:0}
+%if "%{_vd_cfg_product_type}" == "TV"
 %define rpm prod_tv
+%else
+%if "%{_vd_cfg_product_type}" == "AUDIO"
+%define rpm headless
+%endif
 %endif
 %endif
 
@@ -93,13 +97,16 @@ BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
 BuildRequires: pkgconfig(capi-media-sound-manager)
 BuildRequires: pkgconfig(capi-location-manager)
-BuildRequires: pkgconfig(dali-core)
-BuildRequires: pkgconfig(dali-toolkit)
-BuildRequires: pkgconfig(dali-adaptor)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
 BuildRequires: giflib-devel
+
+%if "%{rpm}" == "tv" || "%{rpm}" == "prod_tv" || "%{rpm}" == "mobile" || "%{rpm}" == "wearable" || "%{rpm}" == "all"
+BuildRequires: pkgconfig(dali-core)
+BuildRequires: pkgconfig(dali-toolkit)
+BuildRequires: pkgconfig(dali-adaptor)
+%endif
 
 %if "%{rpm}" == "prod_tv"
 BuildRequires: pkgconfig(vconf)
@@ -126,10 +133,22 @@ This package provides a Tizen specific implementation of Lightweight Web Engine.
 %package profile_tv
 Summary:     Lightweight Web Engine for tv
 Provides:    %{name}-compat = %{version}-%{release}
+Conflicts:   %{name}-profile_headless = %{version}-%{release}
 Conflicts:   %{name}-profile_mobile = %{version}-%{release}
 Conflicts:   %{name}-profile_wearable = %{version}-%{release}
 %description profile_tv
 Lightweight Web Engine for tv
+%endif
+
+%if "%{rpm}" == "headless"
+%package profile_headless
+Summary:     Lightweight Web Engine for headless
+Provides:    %{name}-compat = %{version}-%{release}
+Conflicts:   %{name}-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-profile_mobile = %{version}-%{release}
+Conflicts:   %{name}-profile_wearable = %{version}-%{release}
+%description profile_headless
+Lightweight Web Engine for headless
 %endif
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
@@ -137,6 +156,7 @@ Lightweight Web Engine for tv
 Summary:     Lightweight Web Engine for mobile
 Provides:    %{name}-compat = %{version}-%{release}
 Conflicts:   %{name}-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-profile_headless = %{version}-%{release}
 Conflicts:   %{name}-profile_wearable = %{version}-%{release}
 %description profile_mobile
 Lightweight Web Engine for mobile
@@ -147,6 +167,7 @@ Lightweight Web Engine for mobile
 Summary:     Lightweight Web Engine for wearable
 Provides:    %{name}-compat = %{version}-%{release}
 Conflicts:   %{name}-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-profile_headless = %{version}-%{release}
 Conflicts:   %{name}-profile_mobile = %{version}-%{release}
 %description profile_wearable
 Lightweight Web Engine for wearable
@@ -164,6 +185,7 @@ headers and package configs.
 %package shell-profile_tv
 Summary:     Development files for Lightweight Web Engine for tv
 Requires:    %{name}-profile_tv
+Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
 %description shell-profile_tv
@@ -171,14 +193,27 @@ Development files for Lightweight Web Engine for tv. This package provides
 an standalone executable binary for tv.
 %endif
 
+%if "%{rpm}" == "headless"
+%package shell-profile_headless
+Summary:     Development files for Lightweight Web Engine for headless
+Requires:    %{name}-profile_headless
+Conflicts:   %{name}-shell-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
+%description shell-profile_headless
+Development files for Lightweight Web Engine for headless. This package provides
+an standalone executable binary for headless.
+%endif
+
 %if "%{rpm}" == "mobile"
 %package shell-profile_mobile
 Summary:     Development files for Lightweight Web Engine for mobile
 Requires:    %{name}-profile_mobile
 Conflicts:   %{name}-shell-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_wearable = %{version}-%{release}
 %description shell-profile_mobile
-Development files for Lightweight Web Engine for tv. This package provides
+Development files for Lightweight Web Engine for mobile. This package provides
 an standalone executable binary for mobile.
 %endif
 
@@ -187,9 +222,10 @@ an standalone executable binary for mobile.
 Summary:     Development files for Lightweight Web Engine for wearable
 Requires:    %{name}-profile_wearable
 Conflicts:   %{name}-shell-profile_tv = %{version}-%{release}
+Conflicts:   %{name}-shell-profile_headless = %{version}-%{release}
 Conflicts:   %{name}-shell-profile_mobile = %{version}-%{release}
 %description shell-profile_wearable
-Development files for Lightweight Web Engine for tv. This package provides
+Development files for Lightweight Web Engine for wearable. This package provides
 an standalone executable binary for wearable.
 %endif
 
@@ -260,6 +296,22 @@ ninja starfish.shared_library
 ninja starfish.executable
 %endif
 
+%if "%{rpm}" == "headless"
+# For Dali
+#rm -f CMakeCache.txt
+#cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=headless -DBACKEND=dali -DTARGETNAME=lightweight-web-engine-dali-plugin.headless -G Ninja
+#ninja starfish.shared_library
+
+# For Cairo
+rm -f CMakeCache.txt
+CFLAGS+=' -marm '
+CXXFLAGS+=' -marm '
+
+cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=headless -DBACKEND=efl_cairo -DTARGETNAME=lightweight-web-engine.headless -G Ninja
+ninja starfish.shared_library
+ninja starfish.executable
+%endif
+
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 # For Dali
@@ -319,6 +371,15 @@ cp -fr out_tizen/prod_tv/release/lib/*.tv.so* %{buildroot}%{_libdir}/lwe/tv
 %endif
 %if "%{rpm}" == "prod_tv"
 cp -fr out_tizen/prod_tv/release/lightweight-web-engine*.tv %{buildroot}%{_bindir}
+%endif
+
+%if "%{rpm}" == "headless"
+mkdir -p %{buildroot}/%{_libdir}/lwe/headless
+cp -fr out_tizen/headless/release/lib/*.so %{buildroot}%{_libdir}/lwe/headless
+cp -fr out_tizen/headless/release/lib/*.headless.so* %{buildroot}%{_libdir}/lwe/headless
+%endif
+%if "%{rpm}" == "headless"
+cp -fr out_tizen/headless/release/lightweight-web-engine.headless %{buildroot}%{_bindir}
 %endif
 
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
@@ -400,6 +461,24 @@ exit 0
 %endif
 
 #############################################
+%if "%{rpm}" == "headless"
+%post profile_headless
+pushd %{_libdir}/lwe
+for FILE in `ls headless/*.so | grep -v 'headless.so'`; do
+   ln -sf "$FILE" .
+done
+ln -sf headless/liblightweight-web-engine.headless.so liblightweight-web-engine.so.1
+popd
+%endif
+%if "%{rpm}" == "headless"
+pushd %{_bindir}
+ln -sf lightweight-web-engine.headless %{bin}
+popd
+/sbin/ldconfig
+exit 0
+%endif
+
+#############################################
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %post profile_mobile
 pushd %{_libdir}/lwe
@@ -458,6 +537,16 @@ exit 0
 %license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
 %endif
 
+%if "%{rpm}" == "headless"
+%files profile_headless
+%manifest %{name}.manifest
+%{_libdir}/*.so
+%{_libdir}/lwe/*.so*
+%{_libdir}/lwe/headless/*.so*
+%{_sysconfdir}/ld.so.conf.d/*.conf
+%license LICENSE.LGPL-2.1+ LICENSE.Apache-2.0 LICENSE.BSD-3-Clause LICENSE.BSL-1.0 LICENSE.LGPL-3.0+ LICENSE.MIT
+%endif
+
 %if "%{rpm}" == "mobile" || "%{rpm}" == "all"
 %files profile_mobile
 %manifest %{name}.manifest
@@ -493,6 +582,12 @@ exit 0
 %files shell-profile_tv
 %manifest %{name}.manifest
 %{_bindir}/*
+%endif
+
+%if "%{rpm}" == "headless"
+%files shell-profile_headless
+%manifest %{name}.manifest
+%{_bindir}/lightweight-web-engine.headless
 %endif
 
 %if "%{rpm}" == "mobile"

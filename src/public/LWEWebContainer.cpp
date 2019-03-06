@@ -416,6 +416,20 @@ WebContainer* WebContainer::CreateGL(
 #endif
 }
 
+WebContainer* WebContainer::CreateHeadless(unsigned width, unsigned height,
+                                           float devicePixelRatio,
+                                           const char* defaultFontName,
+                                           const char* locale,
+                                           const char* timezoneID)
+{
+    auto webView = createWebViewInstance(width, height, devicePixelRatio,
+                                         defaultFontName, locale, timezoneID);
+    WebContainer* newWebContainer =
+        new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(webView);
+
+    return newWebContainer;
+}
+
 void WebContainer::ResizeTo(size_t width, size_t height)
 {
     START_SIMPLE_THREADED_PUBLIC_API_WRAPPER

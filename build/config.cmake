@@ -126,6 +126,15 @@ ELSEIF (${CUSTOM} STREQUAL "unified_wearable")
         #-DSTARFISH_DISABLE_OVERFLOW_SCROLL
         -DSTARFISH_ENABLE_MULTIMEDIA
     )
+ELSEIF (${CUSTOM} STREQUAL "headless")
+    SET (LWE_DEFINES_CUSTOM
+        -DSTARFISH_TIZEN_HEADLESS
+        -DSTARFISH_EFL_CAIRO_HEADLESS
+        -DSTARFISH_TIZEN_CAPI_LOCATION_MANAGER_ENABLED
+        #-DSTARFISH_DISABLE_OVERFLOW_SCROLL
+        -DSTARFISH_ENABLE_MULTIMEDIA
+    )
+
 ENDIF()
 
 IF (${MODE} STREQUAL "debug")
@@ -253,6 +262,8 @@ IF (${HOST} STREQUAL "tizen")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED dlog capi-media-player capi-media-sound-manager)
         pkg_check_modules (STARFISH_TIZEN_CUSTOM_BUNDLE REQUIRED bundle)
     ELSEIF (${CUSTOM} STREQUAL "unified_tv")
+        pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-network-connection capi-media-player)
+    ELSEIF (${CUSTOM} STREQUAL "headless")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED capi-network-connection capi-media-player)
     ELSEIF (${CUSTOM} STREQUAL "prod_tv")
         pkg_check_modules (STARFISH_TIZEN_CUSTOM REQUIRED vconf-internal-keys-tv capi-network-connection capi-media-player tts)

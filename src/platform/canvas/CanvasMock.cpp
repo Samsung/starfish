@@ -23,16 +23,39 @@
 #include "Starfish.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
+#include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/style/UnitHelper.h"
 
 namespace Starfish {
 
+class NativeGradientMock : public NativeGradient {
+public:
+    NativeGradientMock(GradientDrawingInfo* info)
+    {
+    }
+
+    ~NativeGradientMock()
+    {
+    }
+
+private:
+    virtual void init(GradientDrawingInfo* info) override
+    {
+    }
+};
+
+std::unique_ptr<NativeGradient> NativeGradient::create(
+    GradientDrawingInfo* info)
+{
+    return std::unique_ptr<NativeGradient>(new NativeGradientMock(info));
+}
+
 class CanvasMock : public Canvas {
 public:
-    CanvasMock(Starfish* starfish, CanvasSurface* data)
+    CanvasMock(WebView* webView)
     {
-        m_starfish = starfish;
+        m_webView = webView;
     }
 
     virtual ~CanvasMock()
@@ -150,6 +173,25 @@ public:
     {
     }
 
+    virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst,
+                           ImageRenderingValue imageRenderingMode)
+    {
+    }
+
+    virtual void drawImage(NativeImageData* data, const Unit::Rect& src,
+                           const Unit::Rect& dst,
+                           const DrawImageInfo& borderinfo,
+                           ImageRenderingValue imageRenderingMode)
+    {
+    }
+
+    virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
+                                 float imageWidth, float imageHeight,
+                                 bool xRepeat, bool yRepeat,
+                                 ImageRenderingValue imageRenderingMode)
+    {
+    }
+
     virtual void drawRepeatImage(NativeImageData* data, const Unit::Rect& dst,
                                  float imageWidth, float imageHeight,
                                  bool xRepeat, bool yRepeat)
@@ -157,17 +199,14 @@ public:
     }
 
     virtual void drawLinearGradient(const Unit::Rect& dst,
-                                    GradientDrawingInfo* info)
+                                    GradientDrawingInfo* info,
+                                    NativeGradient* gradient)
     {
     }
 
     virtual void drawRadialGradient(const Unit::Rect& dst,
-                                    GradientDrawingInfo* info)
-    {
-    }
-
-    void drawImage(CanvasSurface* data, const Unit::Rect& dst,
-                   ImageRenderingValue imageRenderingMode)
+                                    GradientDrawingInfo* info,
+                                    NativeGradient* gradient)
     {
     }
 
@@ -191,24 +230,37 @@ public:
     {
     }
 
+    virtual void unsetDevicePixelRatio()
+    {
+    }
+
+    virtual void setMatrix(const SkMatrix& matrix)
+    {
+    }
+
+    virtual SkMatrix currentTransformMatrix()
+    {
+        return SkMatrix::I();
+    }
+
 protected:
-    Starfish* m_starfish;
+    WebView* m_webView;
 };
 
-Canvas* Canvas::create(Starfish* starfish, CanvasSurface* data)
+Canvas* Canvas::create(WebView* webView, CanvasSurface* data)
 {
-    return new CanvasMock(starfish, data);
+    return new CanvasMock(webView);
 }
 
-Canvas* Canvas::create(Starfish* starfish, uint8_t* data, size_t w, size_t h,
+Canvas* Canvas::create(WebView* webView, uint8_t* data, size_t w, size_t h,
                        size_t stride)
 {
-    return new CanvasMock(starfish, nullptr);
+    return new CanvasMock(webView);
 }
 
-Canvas* Canvas::create(Starfish* starfish, NativeImageData* data)
+Canvas* Canvas::create(WebView* webView, NativeImageData* data)
 {
-    return new CanvasMock(starfish, nullptr);
+    return new CanvasMock(webView);
 }
 }
 #endif

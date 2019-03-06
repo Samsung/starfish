@@ -142,11 +142,14 @@ public:
             onGLSwapBuffers,
         float devicePixelRatio, const char* defaultFontName, const char* locale,
         const char* timezoneID);
-    void ResizeTo(size_t width, size_t height);
     // <--- end of function set for render with OpenGL
 
     // Function set for headless
-    // TODO
+    static WebContainer* CreateHeadless(unsigned width, unsigned height,
+                                        float devicePixelRatio,
+                                        const char* defaultFontName,
+                                        const char* locale,
+                                        const char* timezoneID);
     // <--- end of function set for headless
 
     void AddIdleCallback(void (*callback)(void*), void* data);
@@ -173,6 +176,8 @@ public:
     void Destroy();
     void Pause();
     void Resume();
+
+    void ResizeTo(size_t width, size_t height);
 
     void Focus();
     void Blur();
