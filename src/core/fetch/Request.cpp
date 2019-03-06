@@ -144,7 +144,7 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         String* method = init->method();
         if (!HeadersData::isValidHTTPToken(method) ||
             FetchUtils::isForbiddenMethod(method)) {
-            throw new DOMException(scriptBindingInstance(),
+            throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                    DOMException::SCRIPT_TYPE_ERR,
                                    "SCRIPT_TYPE_ERR");
         }
@@ -180,7 +180,7 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         if (!body->isUndefinedOrNull()) {
             if (m_data.m_method->equals("GET") ||
                 m_data.m_method->equals("HEAD")) {
-                throw new DOMException(scriptBindingInstance(),
+                throw new DOMException(document(),
                                        DOMException::Code::SCRIPT_TYPE_ERR);
             }
 

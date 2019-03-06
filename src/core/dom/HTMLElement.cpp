@@ -402,8 +402,7 @@ void HTMLElement::setContentEditable(const String* value)
     } else if (value->equalsIgnoreCase("inherit")) {
         removeAttribute(starfish()->staticStrings()->m_contentEditable);
     } else {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::SYNTAX_ERR);
+        throw new DOMException(document(), DOMException::SYNTAX_ERR);
     }
     return;
 }

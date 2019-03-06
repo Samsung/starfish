@@ -30,7 +30,7 @@ using namespace Escargot;
 #define THROW_SCRIPT_TYPE_ERROR_IF_NEEDS()                               \
     do {                                                                 \
         if (error) {                                                     \
-            throw new DOMException(scriptBindingInstance(),              \
+            throw new DOMException(document(),                           \
                                    DOMException::Code::SCRIPT_TYPE_ERR); \
         }                                                                \
     } while (0)
@@ -131,8 +131,7 @@ void Headers::initHeadersFromArrayObject(ScriptObject object)
                         ValueRef::create(StringRef::fromASCII("length")));
                     if (length->asNumber() != 2.0) {
                         throw new DOMException(
-                            scriptBindingInstance(),
-                            DOMException::Code::SCRIPT_TYPE_ERR);
+                            document(), DOMException::Code::SCRIPT_TYPE_ERR);
                     }
                     auto elementKey = element->get(state, ValueRef::create(0));
                     setHeader(elementKey,

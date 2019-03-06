@@ -123,7 +123,7 @@ float SVGLength::value()
 void SVGLength::setValue(float v)
 {
     if (std::isnan(v) || std::isinf(v)) {
-        throw new DOMException(m_sourceElement->scriptBindingInstance(),
+        throw new DOMException(m_sourceElement->document(),
                                DOMException::Code::SCRIPT_TYPE_ERR,
                                "The provided float value is non-finite");
     }

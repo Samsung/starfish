@@ -37,8 +37,7 @@ DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
 {
     // Validate qualifiedName.
     if (!QualifiedName::validateQualifiedName(qualifiedName)) {
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::INVALID_CHARACTER_ERR);
+        throw new DOMException(document(), DOMException::INVALID_CHARACTER_ERR);
     }
 
     // Return a new doctype, with qualifiedName as its name, publicId as its

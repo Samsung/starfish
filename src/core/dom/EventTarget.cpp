@@ -240,7 +240,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // before the method was called, or if the event's type is null or
     // an empty string.
     if (!event->isTypeInitialized()) {
-        throw new DOMException(scriptBindingInstance(),
+        throw new DOMException(document(),
                                DOMException::Code::INVALID_STATE_ERR, nullptr);
     }
 

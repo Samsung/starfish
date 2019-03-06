@@ -211,8 +211,7 @@ void Window::postMessage(Window* source, ScriptValue message,
                         "postMessage");
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         reason);
-        throw new DOMException(scriptBindingInstance(),
-                               DOMException::SYNTAX_ERR, msg);
+        throw new DOMException(document(), DOMException::SYNTAX_ERR, msg);
     } else {
         ResourceURL* url = new ResourceURL(targetOrigin);
         targetOrigin = url->origin();

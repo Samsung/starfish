@@ -482,7 +482,7 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
         msg.appendString(String::fromInt(length()));
         msg.appendString(").");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(scriptBindingInstance(),
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INDEX_SIZE_ERR, s.data());
     }
 
@@ -499,13 +499,13 @@ unsigned CSSStyleSheet::insertRule(String* ruleString, unsigned index)
         msg.appendString(ruleString);
         msg.appendString("'.");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(scriptBindingInstance(),
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::SYNTAX_ERR, s.data());
     }
 
     bool success = wrapperInsertRule(rules[0], index);
     if (!success) {
-        throw new DOMException(scriptBindingInstance(),
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::HIERARCHY_REQUEST_ERR,
                                "Failed to insert the rule.");
     }
@@ -549,13 +549,13 @@ void CSSStyleSheet::deleteRule(unsigned index)
         msg.appendString(String::fromInt(length() - 1));
         msg.appendString(").");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(scriptBindingInstance(),
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INDEX_SIZE_ERR, s.data());
     }
 
     bool success = wrapperDeleteRule(index);
     if (!success) {
-        throw new DOMException(scriptBindingInstance(),
+        throw new DOMException(scriptBindingInstance()->ownerDocument(),
                                DOMException::INVALID_STATE_ERR,
                                "Failed to delete rule");
     }

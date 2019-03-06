@@ -123,7 +123,7 @@ bool DOMStringMap::defaultNamedSetter(String* key, String* value)
 {
     STARFISH_ASSERT(m_element);
     if (!isCustomDataPropertyName(key)) {
-        throw new DOMException(m_element->scriptBindingInstance(),
+        throw new DOMException(m_element->document(),
                                DOMException::Code::SYNTAX_ERR);
     }
     m_element->setAttribute(generateAttributeName(key), value);

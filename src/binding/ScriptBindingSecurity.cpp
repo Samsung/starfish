@@ -53,7 +53,7 @@ bool ScriptBindingSecurity::shouldAllowCrossOriginScriptAPIAccessToWindow(
         return false;
     }
     if (!canAccess(sourceWindow->document(), window->document())) {
-        throw new DOMException(sourceWindow->scriptBindingInstance(),
+        throw new DOMException(sourceWindow->executionContext(),
                                DOMException::Code::SECURITY_ERR);
     }
     return true;
@@ -69,7 +69,7 @@ bool ScriptBindingSecurity::shouldAllowCrossOriginScriptAPIAccessToLocation(
         return false;
     }
     if (!canAccess(sourceWindow->document(), location->document())) {
-        throw new DOMException(sourceWindow->scriptBindingInstance(),
+        throw new DOMException(sourceWindow->executionContext(),
                                DOMException::Code::SECURITY_ERR);
     }
     return true;
