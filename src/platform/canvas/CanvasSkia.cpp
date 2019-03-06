@@ -63,6 +63,7 @@ public:
 class NativeGradientSkia : public NativeGradient {
 public:
     NativeGradientSkia(GradientDrawingInfo* info)
+        : NativeGradient(info)
     {
         init(info);
     }
@@ -106,10 +107,9 @@ private:
     sk_sp<SkShader> m_shader;
 };
 
-std::unique_ptr<NativeGradient> NativeGradient::create(
-    GradientDrawingInfo* info)
+NativeGradient* NativeGradient::create(GradientDrawingInfo* info)
 {
-    return std::unique_ptr<NativeGradient>(new NativeGradientSkia(info));
+    return new NativeGradientSkia(info);
 }
 
 class CanvasSkia : public Canvas {

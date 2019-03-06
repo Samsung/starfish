@@ -557,27 +557,58 @@ template <typename Key, typename Value, typename Hasher = std::hash<Key>,
           typename Predicate = std::equal_to<Key>,
           typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
               std::pair<Key const, Value>>>
-using GCUnorderedMap =
+using GCUnorderedMapT =
     std::unordered_map<Key, Value, Hasher, Predicate, Allocator>;
 
 template <typename Key, typename Value, typename Hasher = std::hash<Key>,
           typename Predicate = std::equal_to<Key>,
           typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
               std::pair<Key const, Value>>>
-using GCUnorderedMultiMap =
+class GCUnorderedMap
+    : public GCUnorderedMapT<Key, Value, Hasher, Predicate, Allocator>,
+      public gc {
+};
+
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Predicate = std::equal_to<Key>,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
+              std::pair<Key const, Value>>>
+using GCUnorderedMultiMapT =
     std::unordered_multimap<Key, Value, Hasher, Predicate, Allocator>;
+
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Predicate = std::equal_to<Key>,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
+              std::pair<Key const, Value>>>
+class GCUnorderedMultiMap
+    : public GCUnorderedMultiMapT<Key, Value, Hasher, Predicate, Allocator>,
+      public gc {
+};
 
 // typedef of GC-aware map
 template <typename Key, typename Value, typename Comparator,
           typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
               std::pair<Key const, Value>>>
-using GCMap = std::map<Key, Value, Comparator, Allocator>;
+using GCMapT = std::map<Key, Value, Comparator, Allocator>;
+
+template <typename Key, typename Value, typename Comparator,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<
+              std::pair<Key const, Value>>>
+class GCMap : public GCMapT<Key, Value, Comparator, Allocator>, public gc {
+};
 
 // typedef of GC-aware unordered_set
 template <typename T, typename Hasher = std::hash<T>,
           typename Predicate = std::equal_to<T>,
           typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
-using GCUnorderedSet = std::unordered_set<T, Hasher, Predicate, Allocator>;
+using GCUnorderedSetT = std::unordered_set<T, Hasher, Predicate, Allocator>;
+
+template <typename T, typename Hasher = std::hash<T>,
+          typename Predicate = std::equal_to<T>,
+          typename Allocator = GCUtil::gc_malloc_ignore_off_page_allocator<T>>
+class GCUnorderedSet : public GCUnorderedSetT<T, Hasher, Predicate, Allocator>,
+                       public gc {
+};
 
 template <class T>
 inline void hash_combine(std::size_t& seed, const T& v)

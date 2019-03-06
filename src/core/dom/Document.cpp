@@ -76,6 +76,8 @@
 #include "core/animation/Animation.h"
 #include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "core/modules/canvas/NativeGradient.h"
+#include "core/modules/canvas/image/NativeImageData.h"
 
 namespace Starfish {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
@@ -129,6 +131,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 #endif
     , m_documentCreatedTick(longTickCount())
     , m_contentSecurityPolicy(new ContentSecurityPolicy(window))
+    , m_nativeGradientCache(nullptr)
+    , m_nativeGradientCacheToTalSize(0)
 {
     // TODO https://html.spec.whatwg.org/multipage/origin.html#concept-origin
     // For Document objects
@@ -204,6 +208,10 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     loadBuiltinPolyfill(webView()->builtinPolyfillPathString());
 
     m_isConnected = true;
+    m_nativeGradientCache =
+        new GCUnorderedMap<GradientDrawingInfo*, NativeGradient*,
+                           std::hash<GradientDrawingInfo*>,
+                           std::equal_to<GradientDrawingInfo*>>();
 }
 
 NodeIterator* Document::createNodeIterator(Node* root, unsigned whatToShow,
@@ -2041,6 +2049,71 @@ void Document::unmarkElementInClickProgress(Element* element)
         std::remove(m_elementInClickProgressList.begin(),
                     m_elementInClickProgressList.end(), element),
         m_elementInClickProgressList.end());
+}
+
+NativeGradient* Document::findInNativeGradientCache(GradientDrawingInfo* key)
+{
+    auto iter = m_nativeGradientCache->find(key);
+    if (iter != m_nativeGradientCache->end()) {
+        auto hash = key->hashValue();
+        auto iter2 = std::find_if(m_nativeGradientCacheLRUList.begin(),
+                                  m_nativeGradientCacheLRUList.end(),
+                                  [hash](const GradientDrawingInfo* key) {
+                                      return key->hashValue() == hash;
+                                  });
+
+        if (iter2 != m_nativeGradientCacheLRUList.end()) {
+            m_nativeGradientCacheLRUList.erase(iter2);
+        }
+        m_nativeGradientCacheLRUList.push_back(iter->first);
+        return iter->second;
+    }
+    return nullptr;
+}
+
+void Document::cacheNativeGradient(GradientDrawingInfo* key,
+                                   NativeGradient* value)
+{
+    STARFISH_ASSERT(key);
+    STARFISH_ASSERT(value);
+    STARFISH_ASSERT(value->gradientImageDataCached());
+
+    size_t bufferSize = value->gradientImageDataCached()->bufferSize();
+    if (pruneNativeGradientCacheIfNeeds(bufferSize)) {
+        (*m_nativeGradientCache)[key] = value;
+        m_nativeGradientCacheLRUList.push_back(key);
+        m_nativeGradientCacheToTalSize += bufferSize;
+    }
+#ifdef STARFISH_ENABLE_TEST
+    STARFISH_LOG_INFO("NativeGradient cache size : %d KB\n",
+                      (int)m_nativeGradientCacheToTalSize / 1024);
+#endif
+}
+
+bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
+{
+    STARFISH_ASSERT(m_nativeGradientCache->size() ==
+                    m_nativeGradientCacheLRUList.size());
+    if (reserve > STARFISH_NATIVEGRADIENT_CACHE_SIZE) {
+        return false;
+    }
+    size_t removedSize = 0;
+    if (m_nativeGradientCacheToTalSize + reserve >
+        STARFISH_NATIVEGRADIENT_CACHE_SIZE) {
+        auto iter = m_nativeGradientCacheLRUList.begin();
+        while (iter != m_nativeGradientCacheLRUList.end() &&
+               removedSize < reserve) {
+            auto iter2 = m_nativeGradientCache->find(*iter);
+            if (iter2 != m_nativeGradientCache->end()) {
+                removedSize +=
+                    iter2->second->gradientImageDataCached()->bufferSize();
+                m_nativeGradientCache->erase(iter2);
+                iter = m_nativeGradientCacheLRUList.erase(iter);
+            }
+        }
+        m_nativeGradientCacheToTalSize -= removedSize;
+    }
+    return true;
 }
 
 DEFINE_EVENT_LISTENER(Document, abort);

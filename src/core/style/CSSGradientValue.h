@@ -86,6 +86,8 @@ public:
         return m_gradientType;
     }
 
+    bool isCacheable() const;
+
     virtual String* toString() = 0;
     virtual GradientData* convertToGradientData() = 0;
 

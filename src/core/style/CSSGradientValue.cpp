@@ -65,6 +65,28 @@ String* CSSGradientValue::colorStopListToString()
     return result.finalize();
 }
 
+bool CSSGradientValue::isCacheable() const
+{
+    for (auto& cssColorStop : m_cssColorStopList) {
+        if (cssColorStop->color().valueKind() ==
+            CSSStyleValuePair::ValueKind::NamedColorValueKind) {
+            if (cssColorStop->color().namedColorValue() ==
+                NamedColor::currentColor) {
+                return false;
+            }
+        }
+        const auto& offset = cssColorStop->offset();
+        if (offset.valueKind() == CSSStyleValuePair::ValueKind::None) {
+            continue;
+        }
+        // offset is length or percent
+        if (offset.toLengthValue().isFontPercent()) {
+            return false;
+        }
+    }
+    return true;
+}
+
 String* CSSLinearGradientValue::toString()
 {
     StringBuilder result;
@@ -119,6 +141,10 @@ GradientData* CSSLinearGradientValue::convertToGradientData()
 
     } else {
         gradient->setAngle(m_angle.toDegreeValue());
+    }
+
+    if (isCacheable()) {
+        gradient->setCacheable(true);
     }
 
     convertCSSColorStopsToColorStops(gradient->colorStopList());
@@ -208,6 +234,10 @@ GradientData* CSSRadialGradientValue::convertToGradientData()
     }
     if (m_size.hasSecondRadius()) {
         gradient->setSecondRadius(m_size.secondRadius().toLengthValue());
+    }
+
+    if (isCacheable()) {
+        gradient->setCacheable(true);
     }
 
     convertCSSColorStopsToColorStops(gradient->colorStopList());
