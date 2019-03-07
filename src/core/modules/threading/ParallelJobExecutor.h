@@ -52,7 +52,7 @@ public:
         auto& threadPool = webView()->parallelJobExecutorThreadPool();
         for (int i = 0; i < requestWorkerSize; ++i) {
             if (threadPool.size() < static_cast<size_t>(i) + 1U) {
-                threadPool.push_back(new Thread(webView()));
+                threadPool.push_back(new Thread(webView()->threadPool()));
             }
             m_threadVector.push_back(threadPool[i]);
             m_paramVector.push_back(ParameterType());

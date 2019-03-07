@@ -23,16 +23,15 @@
 #include "core/modules/threading/Mutex.h"
 #include "core/modules/threading/Semaphore.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/threading/ThreadClient.h"
 
 namespace Starfish {
 
 class ExecutionContext;
-class ThreadClient;
 
-class ThreadPool : public gc {
+class ThreadPool : public ThreadClient, public gc {
 public:
-    ThreadPool(size_t maxThreadCount, MessageLoop* ml,
-               ThreadClient* threadClient);
+    ThreadPool(size_t maxThreadCount, MessageLoop* ml);
     ~ThreadPool()
     {
     }
@@ -40,10 +39,21 @@ public:
     void clearWork(ExecutionContext* ctx); // give nullptr to clear every idlers
     void destroy();
 
-protected:
+    void onThreadStarted(Thread* thread) override;
+    void onThreadFinished(Thread* thread) override;
+
+private:
     bool m_isClosed;
     MessageLoop* m_messageLoop;
-    GCVector<Thread*> m_threads;
+
+    // In Starfish strategy, pooled threads are mainly used for a short-term
+    // task. Long-lived tasks such as media streaming are individually created
+    // using Thread class. Through ThreadClient interface, This class observes
+    // each state of the threads individually created.
+    // TODO: Consider renaming ThreadPool to ThreadManager
+    GCVector<Thread*> m_activePooledThreads;
+    GCVector<Thread*> m_activeUnPooledThreads;
+
     std::list<std::pair<ThreadWorker, void*>> m_workerQueue;
     Mutex* m_workerQueueMutex;
 };

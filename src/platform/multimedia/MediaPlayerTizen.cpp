@@ -1186,7 +1186,7 @@ void MediaPlayerTizen::prepareMediaSource()
         }
 
         *m_playerDeadFlag = false;
-        Thread* t = new Thread(m_container->webView());
+        Thread* t = new Thread(m_container->webView()->threadPool());
         t->run(m_container->webView()->messageLoop(), threadFillingBuffer,
                this);
 #endif

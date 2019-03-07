@@ -280,8 +280,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif
-    m_threadPool =
-        new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop, this);
+    m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
     m_historyManager = HistoryManager::create(this);
     initRenderingFlags();
     initStorage();
@@ -387,13 +386,6 @@ void WebView::destroy()
     removeScriptEngineInstance();
 
     m_threadPool->destroy();
-    STARFISH_ASSERT(isMainThread());
-    // NOTE: Iterate copied list.
-    //       joinIfNeeds() may modify m_activeThreadList.
-    GCVector<Thread*> copies = m_activeThreadList;
-    for (auto th : copies) {
-        th->joinIfNeeds();
-    }
     m_messageLoop->destroy();
 
     m_timer->clear(nullptr);
@@ -1778,22 +1770,6 @@ void WebView::setDefaultFontSize(uint32_t size)
     m_defaultFontSize = size;
     if (mainBrowsingContext()) {
         mainBrowsingContext()->updateDefaultFontSize();
-    }
-}
-
-void WebView::addActiveThread(Thread* thread)
-{
-    STARFISH_ASSERT(isMainThread());
-    m_activeThreadList.push_back(thread);
-}
-
-void WebView::removeActiveThread(Thread* thread)
-{
-    STARFISH_ASSERT(isMainThread());
-    auto it =
-        std::find(m_activeThreadList.begin(), m_activeThreadList.end(), thread);
-    if (it != m_activeThreadList.end()) {
-        m_activeThreadList.erase(it);
     }
 }
 

@@ -149,7 +149,7 @@ enum class KeyEventKind;
 enum class MouseEventKind;
 enum class CompositionEventKind;
 
-class WebView : public WebBase, public ThreadClient, public gc {
+class WebView : public WebBase, public gc {
     friend class BrowsingContext;
     friend class StackingContext;
     friend class PlatformWindow;
@@ -422,19 +422,6 @@ public:
     void setupInspector(uint32_t portNumber = 23888);
 #endif
 
-    void onThreadAdded(Thread* thread) override
-    {
-        addActiveThread(thread);
-    };
-
-    void onThreadRemoved(Thread* thread) override
-    {
-        removeActiveThread(thread);
-    };
-
-    void addActiveThread(Thread* thread);
-    void removeActiveThread(Thread* thread);
-
     GCVector<Thread*>& parallelJobExecutorThreadPool()
     {
         return m_parallelJobExecutorThreadPool;
@@ -617,7 +604,6 @@ private:
     MessageLoop* m_messageLoop;
     Timer* m_timer;
     ThreadPool* m_threadPool;
-    GCVector<Thread*> m_activeThreadList;
     GCVector<Thread*> m_parallelJobExecutorThreadPool;
 
     Console* m_console;

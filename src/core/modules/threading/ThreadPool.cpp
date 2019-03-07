@@ -24,20 +24,43 @@
 
 namespace Starfish {
 
-ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml,
-                       ThreadClient* threadClient)
+ThreadPool::ThreadPool(size_t maxThreadCount, MessageLoop* ml)
     : m_isClosed(false)
     , m_messageLoop(ml)
 {
     m_workerQueueMutex = new Mutex();
     for (size_t i = 0; i < maxThreadCount; i++) {
-        m_threads.push_back(new Thread(threadClient));
+        m_activePooledThreads.push_back(new Thread(this));
     }
 }
 
 void ThreadPool::destroy()
 {
+    STARFISH_ASSERT(isMainThread());
+
     m_isClosed = true;
+
+    // Finish unpooled thread
+    GCVector<Thread*> copies = m_activeUnPooledThreads;
+    for (auto const& thread : copies) {
+        thread->finishUnjoined();
+    }
+}
+
+void ThreadPool::onThreadStarted(Thread* thread)
+{
+    STARFISH_ASSERT(isMainThread());
+    m_activeUnPooledThreads.push_back(thread);
+}
+
+void ThreadPool::onThreadFinished(Thread* thread)
+{
+    STARFISH_ASSERT(isMainThread());
+    auto it = std::find(m_activeUnPooledThreads.begin(),
+                        m_activeUnPooledThreads.end(), thread);
+    if (it != m_activeUnPooledThreads.end()) {
+        m_activeUnPooledThreads.erase(it);
+    }
 }
 
 struct DataRooter {
@@ -58,8 +81,8 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data)
     m_workerQueue.push_back(std::make_pair(fn, r));
     m_workerQueueMutex->unlock();
 
-    for (size_t i = 0; i < m_threads.size(); i++) {
-        if (!m_threads[i]->isAlive()) {
+    for (size_t i = 0; i < m_activePooledThreads.size(); i++) {
+        if (!m_activePooledThreads[i]->isAlive()) {
             struct Rooter {
                 ThreadPool* pool;
             };
@@ -103,7 +126,7 @@ void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data)
 #ifdef STARFISH_MESSAGELOOP_DEBUG
             m_messageLoop->increaseRunningPoolWorkerCount();
 #endif
-            m_threads[i]->run(m_messageLoop, worker, rooter);
+            m_activePooledThreads[i]->run(m_messageLoop, worker, rooter);
             break;
         }
     }
