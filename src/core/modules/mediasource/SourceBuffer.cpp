@@ -1060,7 +1060,7 @@ void SourceBuffer::postBufferAppend(SourceBufferData* inputBuffer)
 void SourceBuffer::bufferAppend(SourceBufferData* inputBuffer)
 {
     webView()->threadPool()->addWork(
-        document()->browsingContext(),
+        document(),
         [](void* data) -> void* {
             SourceBufferData* inputBuffer = (SourceBufferData*)data;
             SOURCEBUFFER_LOG(

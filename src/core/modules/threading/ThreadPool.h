@@ -26,7 +26,7 @@
 
 namespace Starfish {
 
-class BrowsingContext;
+class ExecutionContext;
 class ThreadClient;
 
 class ThreadPool : public gc {
@@ -36,8 +36,8 @@ public:
     ~ThreadPool()
     {
     }
-    void addWork(BrowsingContext* ctx, ThreadWorker fn, void* data);
-    void clearWork(BrowsingContext* ctx); // give nullptr to clear every idlers
+    void addWork(ExecutionContext* ctx, ThreadWorker fn, void* data);
+    void clearWork(ExecutionContext* ctx); // give nullptr to clear every idlers
     void destroy();
 
 protected:

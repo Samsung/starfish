@@ -42,10 +42,10 @@ void ThreadPool::destroy()
 
 struct DataRooter {
     void* data;
-    BrowsingContext* ctx;
+    ExecutionContext* ctx;
 };
 
-void ThreadPool::addWork(BrowsingContext* ctx, ThreadWorker fn, void* data)
+void ThreadPool::addWork(ExecutionContext* ctx, ThreadWorker fn, void* data)
 {
     if (m_isClosed) {
         return;
@@ -65,6 +65,7 @@ void ThreadPool::addWork(BrowsingContext* ctx, ThreadWorker fn, void* data)
             };
             Rooter* rooter = new (NoGC) Rooter;
             rooter->pool = this;
+
             ThreadWorker worker = [](void* data) -> void* {
                 Rooter* rooter = (Rooter*)data;
                 // STARFISH_LOG_INFO("threadPool worker start\n");
@@ -108,7 +109,7 @@ void ThreadPool::addWork(BrowsingContext* ctx, ThreadWorker fn, void* data)
     }
 }
 
-void ThreadPool::clearWork(BrowsingContext* ctx)
+void ThreadPool::clearWork(ExecutionContext* ctx)
 {
     m_workerQueueMutex->lock();
 
