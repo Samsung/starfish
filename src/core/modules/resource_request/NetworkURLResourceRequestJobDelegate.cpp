@@ -442,7 +442,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 
         if (pos != header.end()) {
             nwd->helper = new AsyncNetworkWorkHelper();
-            Thread* t = new Thread(m_orgProxy->webView());
+            Thread* t = new Thread(m_orgProxy->webView()->threadPool());
             t->run(m_orgProxy->webView()->messageLoop(),
                    [](void* data) -> void* {
                        NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;

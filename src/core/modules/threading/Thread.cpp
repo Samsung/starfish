@@ -95,38 +95,38 @@ Thread::Thread(ThreadClient* client)
     : m_threadClient(client)
     , m_alive(false)
     , m_mutex(new Mutex())
-    , m_currentUnjoined(nullptr)
+    , m_threadData(nullptr)
 {
 }
 
 void Thread::finishUnjoined()
 {
     STARFISH_ASSERT(isMainThread());
-    if (!m_currentUnjoined) {
+    if (!m_threadData) {
         return;
     }
 
     {
-        Locker<Mutex> l(*m_currentUnjoined->m_thread->m_mutex);
+        Locker<Mutex> l(*m_threadData->m_thread->m_mutex);
         m_alive = false;
-        if (m_currentUnjoined->m_joinHandle != SIZE_MAX) {
-            m_currentUnjoined->m_messageLoop->removeIdlerWithNoGCRooting(
-                m_currentUnjoined->m_joinHandle);
+        if (m_threadData->m_joinHandle != SIZE_MAX) {
+            m_threadData->m_messageLoop->removeIdlerWithNoGCRooting(
+                m_threadData->m_joinHandle);
         }
     }
 
     void* ret;
-    pthread_join(m_currentUnjoined->m_tid, &ret);
+    pthread_join(m_threadData->m_tid, &ret);
 
     if (m_threadClient) {
-        m_threadClient->onThreadRemoved(this);
+        m_threadClient->onThreadFinished(this);
     }
 
-    GC_FREE(m_currentUnjoined);
+    GC_FREE(m_threadData);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
-    m_currentUnjoined->m_messageLoop->decreaseUnjoinedThreadCount();
+    m_threadData->m_messageLoop->decreaseUnjoinedThreadCount();
 #endif
-    m_currentUnjoined = nullptr;
+    m_threadData = nullptr;
 }
 
 void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
@@ -138,10 +138,10 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
     Locker<Mutex> l(*m_mutex);
 
     if (m_threadClient) {
-        m_threadClient->onThreadAdded(this);
+        m_threadClient->onThreadStarted(this);
     }
 
-    m_currentUnjoined = new (GC_MALLOC_UNCOLLECTABLE(sizeof(ThreadData)))
+    m_threadData = new (GC_MALLOC_UNCOLLECTABLE(sizeof(ThreadData)))
         ThreadData(this, msgLoop, fn, data);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     msgLoop->increaseRunningThreadCount();
@@ -154,7 +154,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
 #endif
 
     int retValue = pthread_create(
-        &m_currentUnjoined->m_tid, NULL,
+        &m_threadData->m_tid, NULL,
         [](void* data) -> void* {
             ThreadData* d = (ThreadData*)data;
             pthread_cleanup_push(Thread::cleanupHandler, data);
@@ -187,7 +187,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
             return nullptr;
 #endif
         },
-        m_currentUnjoined);
+        m_threadData);
     if (retValue == 0) {
         m_alive = true;
     } else {

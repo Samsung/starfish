@@ -26,8 +26,8 @@ class Thread;
 
 class ThreadClient {
 public:
-    virtual void onThreadAdded(Thread* thread) = 0;
-    virtual void onThreadRemoved(Thread* thread) = 0;
+    virtual void onThreadStarted(Thread* thread) = 0;
+    virtual void onThreadFinished(Thread* thread) = 0;
 };
 
 } // namespace Starfish

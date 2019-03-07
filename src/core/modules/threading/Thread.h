@@ -79,7 +79,7 @@ private:
 protected:
     volatile bool m_alive;
     Mutex* m_mutex;
-    ThreadData* m_currentUnjoined;
+    ThreadData* m_threadData;
 };
 } // namespace Starfish
 

@@ -28,6 +28,7 @@
 #include "rapidjson/stringbuffer.h"
 #include "rapidjson/writer.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/threading/ThreadPool.h"
 
 #include <nn.hpp>
 #include <nanomsg/pair.h>
@@ -264,7 +265,7 @@ exit:
 
 void Inspector::run(uint32_t port)
 {
-    m_ioThread = new Thread(m_webView);
+    m_ioThread = new Thread(m_webView->threadPool());
     m_addr = "ws://0.0.0.0:";
     m_addr += std::to_string(port);
     STARFISH_LOG_INFO("inspector open server %s\n", m_addr.c_str());
