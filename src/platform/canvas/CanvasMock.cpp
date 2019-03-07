@@ -32,6 +32,7 @@ namespace Starfish {
 class NativeGradientMock : public NativeGradient {
 public:
     NativeGradientMock(GradientDrawingInfo* info)
+        : NativeGradient(info)
     {
     }
 
@@ -45,10 +46,9 @@ private:
     }
 };
 
-std::unique_ptr<NativeGradient> NativeGradient::create(
-    GradientDrawingInfo* info)
+NativeGradient* NativeGradient::create(GradientDrawingInfo* info)
 {
-    return std::unique_ptr<NativeGradient>(new NativeGradientMock(info));
+    return new NativeGradientMock(info);
 }
 
 class CanvasMock : public Canvas {
