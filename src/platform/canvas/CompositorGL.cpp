@@ -490,51 +490,125 @@ public:
     GLuint m_rectVertexShader;
     GLuint m_rectFragmentShader;
     GLuint m_rectShaderProgram;
+    GLint m_rectShaderProgramPosition;
+    GLint m_rectShaderProgramColor;
 
-    GLuint m_texShaderProgram;
     GLuint m_texVertexShader;
     GLuint m_texFragmentShader;
+    GLuint m_texShaderProgram;
+    GLint m_texShaderProgramTexPos;
+    GLint m_texShaderProgramPosition;
+    GLint m_texShaderProgramTexture;
+    GLint m_texShaderProgramAlpha;
 
-    GLuint m_texShaderProgramEGLImageExternal;
-    GLuint m_texVertexShaderEGLImageExternal;
     GLuint m_texFragmentShaderEGLImageExternal;
+    GLuint m_texShaderProgramEGLImageExternal;
+    GLint m_texShaderProgramEGLImageExternalTexPos;
+    GLint m_texShaderProgramEGLImageExternalPosition;
+    GLint m_texShaderProgramEGLImageExternalTexture;
+    GLint m_texShaderProgramEGLImageExternalAlpha;
 
-    GLuint m_texShaderProgramEGLImageExternalColorInverted;
-    GLuint m_texVertexShaderEGLImageExternalColorInverted;
     GLuint m_texFragmentShaderEGLImageExternalColorInverted;
+    GLuint m_texShaderProgramEGLImageExternalColorInverted;
+    GLint m_texShaderProgramEGLImageExternalColorInvertedTexPos;
+    GLint m_texShaderProgramEGLImageExternalColorInvertedPosition;
+    GLint m_texShaderProgramEGLImageExternalColorInvertedTexture;
+    GLint m_texShaderProgramEGLImageExternalColorInvertedAlpha;
 
     GLuint m_texFragmentBlurShaderW;
     GLuint m_texFragmentBlurShaderEGLImageExternalW;
     GLuint m_texFragmentBlurShaderH;
 
     GLuint m_texBlurShaderProgramW;
+    GLint m_texBlurShaderProgramWTexPos;
+    GLint m_texBlurShaderProgramWPosition;
+    GLint m_texBlurShaderProgramWTexture;
+    GLint m_texBlurShaderProgramWBlurRadius;
+    GLint m_texBlurShaderProgramWTextureWidth;
+    GLint m_texBlurShaderProgramWTextureHeight;
     GLuint m_texBlurShaderProgramEGLImageExternalW;
+    GLint m_texBlurShaderProgramEGLImageExternalWTexPos;
+    GLint m_texBlurShaderProgramEGLImageExternalWPosition;
+    GLint m_texBlurShaderProgramEGLImageExternalWTexture;
+    GLint m_texBlurShaderProgramEGLImageExternalWBlurRadius;
+    GLint m_texBlurShaderProgramEGLImageExternalWTextureWidth;
+    GLint m_texBlurShaderProgramEGLImageExternalWTextureHeight;
+
     GLuint m_texBlurShaderProgramH;
+    GLint m_texBlurShaderProgramHTexPos;
+    GLint m_texBlurShaderProgramHPosition;
+    GLint m_texBlurShaderProgramHTexture;
+    GLint m_texBlurShaderProgramHBlurRadius;
+    GLint m_texBlurShaderProgramHTextureWidth;
+    GLint m_texBlurShaderProgramHTextureHeight;
+    GLint m_texBlurShaderProgramHAlpha;
+
+    GLuint m_texTexPosBuffer;
+
+    GLuint m_lastProgram;
 
     CompositorContext()
     {
         m_rectVertexShader = m_rectFragmentShader = m_rectShaderProgram =
             m_texShaderProgram = 0;
+        m_rectShaderProgramPosition = 0;
+        m_rectShaderProgramColor = 0;
+        m_texShaderProgramPosition = 0;
+        m_texShaderProgramTexture = 0;
+        m_texShaderProgramAlpha = 0;
+        m_texShaderProgramEGLImageExternalPosition = 0;
+        m_texShaderProgramEGLImageExternalTexture = 0;
+        m_texShaderProgramEGLImageExternalAlpha = 0;
+        m_texShaderProgramEGLImageExternalColorInvertedPosition = 0;
+        m_texShaderProgramEGLImageExternalColorInvertedTexture = 0;
+        m_texShaderProgramEGLImageExternalColorInvertedAlpha = 0;
         m_texVertexShader = m_texFragmentShader = 0;
-        m_texVertexShaderEGLImageExternal = m_texShaderProgramEGLImageExternal =
+        m_texShaderProgramEGLImageExternal =
             m_texFragmentShaderEGLImageExternal = 0;
-        m_texVertexShaderEGLImageExternalColorInverted =
-            m_texShaderProgramEGLImageExternalColorInverted =
-                m_texFragmentShaderEGLImageExternalColorInverted = 0;
+        m_texShaderProgramEGLImageExternalColorInverted =
+            m_texFragmentShaderEGLImageExternalColorInverted = 0;
         m_texFragmentBlurShaderH = m_texFragmentBlurShaderW =
             m_texFragmentBlurShaderEGLImageExternalW = 0;
         m_texBlurShaderProgramW = m_texBlurShaderProgramEGLImageExternalW =
             m_texBlurShaderProgramH = 0;
+
+        m_texBlurShaderProgramWPosition = 0;
+        m_texBlurShaderProgramWTexture = 0;
+        m_texBlurShaderProgramWBlurRadius = 0;
+        m_texBlurShaderProgramWTextureWidth = 0;
+        m_texBlurShaderProgramWTextureHeight = 0;
+
+        m_texBlurShaderProgramEGLImageExternalWPosition = 0;
+        m_texBlurShaderProgramEGLImageExternalWTexture = 0;
+        m_texBlurShaderProgramEGLImageExternalWBlurRadius = 0;
+        m_texBlurShaderProgramEGLImageExternalWTextureWidth = 0;
+        m_texBlurShaderProgramEGLImageExternalWTextureHeight = 0;
+
+        m_texBlurShaderProgramHPosition = 0;
+        m_texBlurShaderProgramHTexture = 0;
+        m_texBlurShaderProgramHBlurRadius = 0;
+        m_texBlurShaderProgramHTextureWidth = 0;
+        m_texBlurShaderProgramHTextureHeight = 0;
+        m_texBlurShaderProgramHAlpha = 0;
+
+        m_texTexPosBuffer = 0;
+        m_texShaderProgramTexPos = 0;
+        m_texShaderProgramEGLImageExternalTexPos = 0;
+        m_texShaderProgramEGLImageExternalColorInvertedTexPos = 0;
+        m_texBlurShaderProgramWTexPos = 0;
+        m_texBlurShaderProgramEGLImageExternalWTexPos = 0;
+        m_texBlurShaderProgramHTexPos = 0;
+
+        m_lastProgram = 0;
     }
 
     GLuint rectProgram()
     {
         if (!m_rectShaderProgram) {
             GLchar rectVertexSource[] =
-                "uniform mat4 uScreen;\n"
                 "attribute vec2 aPosition;\n"
                 "void main() {\n"
-                "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
+                "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
                 "}";
 
             GLchar rectFragmentSource[] =
@@ -563,24 +637,45 @@ public:
 
             glLinkProgram(m_rectShaderProgram);
             checkError();
+
+            m_lastProgram = m_rectShaderProgram;
+            glUseProgram(m_rectShaderProgram);
+
+            m_rectShaderProgramPosition =
+                glGetAttribLocation(m_rectShaderProgram, "aPosition");
+            m_rectShaderProgramColor =
+                glGetUniformLocation(m_rectShaderProgram, "uColor");
+
+            glEnableVertexAttribArray(m_rectShaderProgramPosition);
+        } else {
+            if (m_lastProgram != m_rectShaderProgram) {
+                m_lastProgram = m_rectShaderProgram;
+                glUseProgram(m_rectShaderProgram);
+            }
         }
 
         return m_rectShaderProgram;
     }
 
-    GLuint texShaderProgramEGLImageExternal()
+    GLuint texVertexShader()
     {
-        if (!m_texShaderProgramEGLImageExternal) {
+        if (!m_texVertexShader) {
             GLchar texVertexSource[] =
-                "uniform mat4 uScreen;\n"
                 "attribute vec2 aPosition;\n"
                 "attribute vec2 aTexPos;\n"
                 "varying vec2 vTexPos;\n"
                 "void main() {\n"
                 "  vTexPos = aTexPos;\n"
-                "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
+                "  gl_Position = vec4(aPosition.xy, 0.0, 1.0);\n"
                 "}";
+            m_texVertexShader = loadShader(GL_VERTEX_SHADER, texVertexSource);
+        }
+        return m_texVertexShader;
+    }
 
+    GLuint texShaderProgramEGLImageExternal()
+    {
+        if (!m_texShaderProgramEGLImageExternal) {
             GLchar texFragmentSourceEGLImageExternal[] =
                 "#extension GL_OES_EGL_image_external : require\n"
                 "#ifdef GL_ES\n"
@@ -588,7 +683,7 @@ public:
                 "#endif\n"
                 "uniform samplerExternalOES uTexture;\n"
                 "varying vec2 vTexPos;\n"
-                "uniform vec4 uAlpha;\n"
+                "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
                 "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
@@ -604,10 +699,6 @@ public:
                 "  gl_FragColor.a = texData[3];\n"
 #endif
                 "}";
-
-            m_texVertexShaderEGLImageExternal =
-                loadShader(GL_VERTEX_SHADER, texVertexSource);
-            checkError();
 
             m_texFragmentShaderEGLImageExternal = loadShader(
                 GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
@@ -617,7 +708,7 @@ public:
             checkError();
 
             glAttachShader(m_texShaderProgramEGLImageExternal,
-                           m_texVertexShaderEGLImageExternal);
+                           texVertexShader());
             checkError();
             glAttachShader(m_texShaderProgramEGLImageExternal,
                            m_texFragmentShaderEGLImageExternal);
@@ -626,8 +717,40 @@ public:
             glLinkProgram(m_texShaderProgramEGLImageExternal);
             checkError();
 
+            m_lastProgram = m_texShaderProgramEGLImageExternal;
             glUseProgram(m_texShaderProgramEGLImageExternal);
             checkError();
+
+            m_texShaderProgramEGLImageExternalPosition = glGetAttribLocation(
+                m_texShaderProgramEGLImageExternal, "aPosition");
+            m_texShaderProgramEGLImageExternalTexPos = glGetAttribLocation(
+                m_texShaderProgramEGLImageExternal, "aTexPos");
+            m_texShaderProgramEGLImageExternalTexture = glGetUniformLocation(
+                m_texShaderProgramEGLImageExternal, "uTexture");
+            m_texShaderProgramEGLImageExternalAlpha = glGetUniformLocation(
+                m_texShaderProgramEGLImageExternal, "uAlpha");
+
+            glUniform1i(m_texShaderProgramEGLImageExternalTexture, 0);
+            glEnableVertexAttribArray(
+                m_texShaderProgramEGLImageExternalPosition);
+
+            glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            glEnableVertexAttribArray(m_texShaderProgramEGLImageExternalTexPos);
+            glVertexAttribPointer(m_texShaderProgramEGLImageExternalTexPos, 2,
+                                  GL_FLOAT, false, 0, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            glUniform1f(m_texShaderProgramEGLImageExternalAlpha, 1);
+        } else {
+            if (m_lastProgram != m_texShaderProgramEGLImageExternal) {
+                m_lastProgram = m_texShaderProgramEGLImageExternal;
+                glUseProgram(m_texShaderProgramEGLImageExternal);
+
+                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                glVertexAttribPointer(m_texShaderProgramEGLImageExternalTexPos,
+                                      2, GL_FLOAT, false, 0, 0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
         }
 
         return m_texShaderProgramEGLImageExternal;
@@ -636,16 +759,6 @@ public:
     GLuint texShaderProgramEGLImageExternalColorInverted()
     {
         if (!m_texShaderProgramEGLImageExternalColorInverted) {
-            GLchar texVertexSource[] =
-                "uniform mat4 uScreen;\n"
-                "attribute vec2 aPosition;\n"
-                "attribute vec2 aTexPos;\n"
-                "varying vec2 vTexPos;\n"
-                "void main() {\n"
-                "  vTexPos = aTexPos;\n"
-                "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
-                "}";
-
             GLchar texFragmentSourceEGLImageExternal[] =
                 "#extension GL_OES_EGL_image_external : require\n"
                 "#ifdef GL_ES\n"
@@ -653,7 +766,7 @@ public:
                 "#endif\n"
                 "uniform samplerExternalOES uTexture;\n"
                 "varying vec2 vTexPos;\n"
-                "uniform vec4 uAlpha;\n"
+                "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
                 "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
@@ -669,10 +782,6 @@ public:
                 "  gl_FragColor.a = texData[3];\n"
 #endif
                 "}";
-
-            m_texVertexShaderEGLImageExternalColorInverted =
-                loadShader(GL_VERTEX_SHADER, texVertexSource);
-            checkError();
 
             m_texFragmentShaderEGLImageExternalColorInverted = loadShader(
                 GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
@@ -682,7 +791,7 @@ public:
             checkError();
 
             glAttachShader(m_texShaderProgramEGLImageExternalColorInverted,
-                           m_texVertexShaderEGLImageExternalColorInverted);
+                           texVertexShader());
             checkError();
             glAttachShader(m_texShaderProgramEGLImageExternalColorInverted,
                            m_texFragmentShaderEGLImageExternalColorInverted);
@@ -691,8 +800,53 @@ public:
             glLinkProgram(m_texShaderProgramEGLImageExternalColorInverted);
             checkError();
 
+            m_lastProgram =
+                m_texShaderProgramEGLImageExternalColorInvertedAlpha;
             glUseProgram(m_texShaderProgramEGLImageExternalColorInverted);
             checkError();
+
+            m_texShaderProgramEGLImageExternalColorInvertedPosition =
+                glGetAttribLocation(
+                    m_texShaderProgramEGLImageExternalColorInverted,
+                    "aPosition");
+            m_texShaderProgramEGLImageExternalColorInvertedTexPos =
+                glGetAttribLocation(
+                    m_texShaderProgramEGLImageExternalColorInverted, "aTexPos");
+            m_texShaderProgramEGLImageExternalColorInvertedTexture =
+                glGetUniformLocation(
+                    m_texShaderProgramEGLImageExternalColorInverted,
+                    "uTexture");
+            m_texShaderProgramEGLImageExternalColorInvertedAlpha =
+                glGetUniformLocation(
+                    m_texShaderProgramEGLImageExternalColorInverted, "uAlpha");
+
+            glUniform1i(m_texShaderProgramEGLImageExternalColorInvertedTexture,
+                        0);
+            glEnableVertexAttribArray(
+                m_texShaderProgramEGLImageExternalColorInvertedPosition);
+
+            glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            glEnableVertexAttribArray(
+                m_texShaderProgramEGLImageExternalColorInvertedTexPos);
+            glVertexAttribPointer(
+                m_texShaderProgramEGLImageExternalColorInvertedTexPos, 2,
+                GL_FLOAT, false, 0, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            glUniform1f(m_texShaderProgramEGLImageExternalColorInvertedAlpha,
+                        1);
+        } else {
+            if (m_lastProgram !=
+                m_texShaderProgramEGLImageExternalColorInverted) {
+                m_lastProgram = m_texShaderProgramEGLImageExternalColorInverted;
+                glUseProgram(m_texShaderProgramEGLImageExternalColorInverted);
+
+                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                glVertexAttribPointer(
+                    m_texShaderProgramEGLImageExternalColorInvertedTexPos, 2,
+                    GL_FLOAT, false, 0, 0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
         }
 
         return m_texShaderProgramEGLImageExternalColorInverted;
@@ -701,16 +855,6 @@ public:
     GLuint texShaderProgram()
     {
         if (!m_texShaderProgram) {
-            GLchar texVertexSource[] =
-                "uniform mat4 uScreen;\n"
-                "attribute vec2 aPosition;\n"
-                "attribute vec2 aTexPos;\n"
-                "varying vec2 vTexPos;\n"
-                "void main() {\n"
-                "  vTexPos = aTexPos;\n"
-                "  gl_Position = uScreen * vec4(aPosition.xy, 0.0, 1.0);\n"
-                "}";
-
             // We only Support OpenGL ES 2.0+ context
             // but some develoment environment only support desktop context
             // so we add `#ifdef GL_ES` for debug purpose
@@ -720,7 +864,7 @@ public:
                 "#endif\n"
                 "uniform sampler2D uTexture;\n"
                 "varying vec2 vTexPos;\n"
-                "uniform vec4 uAlpha;\n"
+                "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
                 "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
@@ -737,8 +881,6 @@ public:
 #endif
                 "}";
 
-            m_texVertexShader = loadShader(GL_VERTEX_SHADER, texVertexSource);
-            checkError();
             m_texFragmentShader =
                 loadShader(GL_FRAGMENT_SHADER, texFragmentSource);
             checkError();
@@ -746,7 +888,7 @@ public:
             m_texShaderProgram = glCreateProgram();
             checkError();
 
-            glAttachShader(m_texShaderProgram, m_texVertexShader);
+            glAttachShader(m_texShaderProgram, texVertexShader());
             checkError();
             glAttachShader(m_texShaderProgram, m_texFragmentShader);
             checkError();
@@ -756,6 +898,36 @@ public:
 
             glUseProgram(m_texShaderProgram);
             checkError();
+
+            m_texShaderProgramPosition =
+                glGetAttribLocation(m_texShaderProgram, "aPosition");
+            m_texShaderProgramTexPos =
+                glGetAttribLocation(m_texShaderProgram, "aTexPos");
+            m_texShaderProgramTexture =
+                glGetUniformLocation(m_texShaderProgram, "uTexture");
+            m_texShaderProgramAlpha =
+                glGetUniformLocation(m_texShaderProgram, "uAlpha");
+
+            glUniform1i(m_texShaderProgramTexture, 0);
+            glEnableVertexAttribArray(m_texShaderProgramPosition);
+
+            glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            glEnableVertexAttribArray(m_texShaderProgramTexPos);
+            glVertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT, false,
+                                  0, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            glUniform1f(m_texShaderProgramAlpha, 1);
+        } else {
+            if (m_lastProgram != m_texShaderProgram) {
+                m_lastProgram = m_texShaderProgram;
+                glUseProgram(m_texShaderProgram);
+
+                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                glVertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT,
+                                      false, 0, 0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
         }
         return m_texShaderProgram;
     }
@@ -811,7 +983,7 @@ public:
         ss << "uniform float uTextureWidth;\n";
         ss << "uniform float uTextureHeight;\n";
         if (addColorAlign) {
-            ss << "uniform vec4 uAlpha;\n";
+            ss << "uniform float uAlpha;\n";
         }
         ss << "uniform vec2 uBlurRadius;\n";
         ss << "varying vec2 vTexPos;\n";
@@ -896,44 +1068,159 @@ public:
     GLuint texBlurShaderProgramW()
     {
         if (m_texBlurShaderProgramW) {
+            if (m_lastProgram != m_texBlurShaderProgramW) {
+                m_lastProgram = m_texBlurShaderProgramW;
+                glUseProgram(m_texBlurShaderProgramW);
+
+                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                glVertexAttribPointer(m_texBlurShaderProgramWTexPos, 2,
+                                      GL_FLOAT, false, 0, 0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
             return m_texBlurShaderProgramW;
         }
         m_texBlurShaderProgramW = glCreateProgram();
 
-        glAttachShader(m_texBlurShaderProgramW, m_texVertexShader);
+        glAttachShader(m_texBlurShaderProgramW, texVertexShader());
         glAttachShader(m_texBlurShaderProgramW, texFragmentBlurShaderW());
         glLinkProgram(m_texBlurShaderProgramW);
         checkError();
+
+        m_lastProgram = m_texBlurShaderProgramW;
+        glUseProgram(m_texBlurShaderProgramW);
+
+        m_texBlurShaderProgramWPosition =
+            glGetAttribLocation(m_texBlurShaderProgramW, "aPosition");
+        m_texBlurShaderProgramWTexPos =
+            glGetAttribLocation(m_texBlurShaderProgramW, "aTexPos");
+        m_texBlurShaderProgramWTexture =
+            glGetUniformLocation(m_texBlurShaderProgramW, "uTexture");
+        m_texBlurShaderProgramWBlurRadius =
+            glGetUniformLocation(m_texBlurShaderProgramW, "uBlurRadius");
+        m_texBlurShaderProgramWTextureWidth =
+            glGetUniformLocation(m_texBlurShaderProgramW, "uTextureWidth");
+        m_texBlurShaderProgramWTextureHeight =
+            glGetUniformLocation(m_texBlurShaderProgramW, "uTextureHeight");
+
+        glUniform1i(m_texBlurShaderProgramWTexture, 0);
+        glEnableVertexAttribArray(m_texBlurShaderProgramWPosition);
+
+        glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        glEnableVertexAttribArray(m_texBlurShaderProgramWTexPos);
+        glVertexAttribPointer(m_texBlurShaderProgramWTexPos, 2, GL_FLOAT, false,
+                              0, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
         return m_texBlurShaderProgramW;
     }
 
     GLuint texBlurShaderProgramEGLImageExternalW()
     {
         if (m_texBlurShaderProgramEGLImageExternalW) {
+            if (m_lastProgram != m_texBlurShaderProgramEGLImageExternalW) {
+                m_lastProgram = m_texBlurShaderProgramEGLImageExternalW;
+                glUseProgram(m_texBlurShaderProgramEGLImageExternalW);
+
+                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                glVertexAttribPointer(
+                    m_texBlurShaderProgramEGLImageExternalWTexPos, 2, GL_FLOAT,
+                    false, 0, 0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
             return m_texBlurShaderProgramEGLImageExternalW;
         }
         m_texBlurShaderProgramEGLImageExternalW = glCreateProgram();
 
         glAttachShader(m_texBlurShaderProgramEGLImageExternalW,
-                       m_texVertexShader);
+                       texVertexShader());
         glAttachShader(m_texBlurShaderProgramEGLImageExternalW,
                        texFragmentBlurShaderEGLImageExternalW());
         glLinkProgram(m_texBlurShaderProgramEGLImageExternalW);
         checkError();
+
+        m_lastProgram = m_texBlurShaderProgramEGLImageExternalW;
+        glUseProgram(m_texBlurShaderProgramEGLImageExternalW);
+
+        m_texBlurShaderProgramEGLImageExternalWPosition = glGetAttribLocation(
+            m_texBlurShaderProgramEGLImageExternalW, "aPosition");
+        m_texBlurShaderProgramEGLImageExternalWTexPos = glGetAttribLocation(
+            m_texBlurShaderProgramEGLImageExternalW, "aTexPos");
+        m_texBlurShaderProgramEGLImageExternalWTexture = glGetUniformLocation(
+            m_texBlurShaderProgramEGLImageExternalW, "uTexture");
+        m_texBlurShaderProgramEGLImageExternalWBlurRadius =
+            glGetUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                 "uBlurRadius");
+        m_texBlurShaderProgramEGLImageExternalWTextureWidth =
+            glGetUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                 "uTextureWidth");
+        m_texBlurShaderProgramEGLImageExternalWTextureHeight =
+            glGetUniformLocation(m_texBlurShaderProgramEGLImageExternalW,
+                                 "uTextureHeight");
+
+        glUniform1i(m_texBlurShaderProgramEGLImageExternalWTexture, 0);
+        glEnableVertexAttribArray(
+            m_texBlurShaderProgramEGLImageExternalWPosition);
+
+        glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        glEnableVertexAttribArray(
+            m_texBlurShaderProgramEGLImageExternalWTexPos);
+        glVertexAttribPointer(m_texBlurShaderProgramEGLImageExternalWTexPos, 2,
+                              GL_FLOAT, false, 0, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
         return m_texBlurShaderProgramEGLImageExternalW;
     }
 
     GLuint texBlurShaderProgramH()
     {
         if (m_texBlurShaderProgramH) {
+            if (m_lastProgram != m_texBlurShaderProgramH) {
+                m_lastProgram = m_texBlurShaderProgramH;
+                glUseProgram(m_texBlurShaderProgramH);
+
+                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                glVertexAttribPointer(m_texBlurShaderProgramHTexPos, 2,
+                                      GL_FLOAT, false, 0, 0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
             return m_texBlurShaderProgramH;
         }
         m_texBlurShaderProgramH = glCreateProgram();
 
-        glAttachShader(m_texBlurShaderProgramH, m_texVertexShader);
+        glAttachShader(m_texBlurShaderProgramH, texVertexShader());
         glAttachShader(m_texBlurShaderProgramH, texFragmentBlurShaderH());
         glLinkProgram(m_texBlurShaderProgramH);
         checkError();
+
+        m_lastProgram = m_texBlurShaderProgramH;
+        glUseProgram(m_texBlurShaderProgramH);
+
+        m_texBlurShaderProgramHPosition =
+            glGetAttribLocation(m_texBlurShaderProgramH, "aPosition");
+        m_texBlurShaderProgramHTexPos =
+            glGetAttribLocation(m_texBlurShaderProgramH, "aTexPos");
+        m_texBlurShaderProgramHTexture =
+            glGetUniformLocation(m_texBlurShaderProgramH, "uTexture");
+        m_texBlurShaderProgramHBlurRadius =
+            glGetUniformLocation(m_texBlurShaderProgramH, "uBlurRadius");
+        m_texBlurShaderProgramHTextureWidth =
+            glGetUniformLocation(m_texBlurShaderProgramH, "uTextureWidth");
+        m_texBlurShaderProgramHTextureHeight =
+            glGetUniformLocation(m_texBlurShaderProgramH, "uTextureHeight");
+        m_texBlurShaderProgramHAlpha =
+            glGetUniformLocation(m_texBlurShaderProgramH, "uAlpha");
+
+        glUniform1i(m_texBlurShaderProgramHTexture, 0);
+        glEnableVertexAttribArray(m_texBlurShaderProgramHPosition);
+
+        glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+        glEnableVertexAttribArray(m_texBlurShaderProgramHTexPos);
+        glVertexAttribPointer(m_texBlurShaderProgramHTexPos, 2, GL_FLOAT, false,
+                              0, 0);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glUniform1f(m_texBlurShaderProgramHAlpha, 1);
+
         return m_texBlurShaderProgramH;
     }
 };
@@ -990,12 +1277,11 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
 
         if (ctx->m_texShaderProgramEGLImageExternal) {
             glDetachShader(ctx->m_texShaderProgramEGLImageExternal,
-                           ctx->m_texVertexShaderEGLImageExternal);
+                           ctx->m_texVertexShader);
             glDetachShader(ctx->m_texShaderProgramEGLImageExternal,
                            ctx->m_texFragmentShaderEGLImageExternal);
             glDeleteProgram(ctx->m_texShaderProgramEGLImageExternal);
             glDeleteShader(ctx->m_texFragmentShaderEGLImageExternal);
-            glDeleteShader(ctx->m_texVertexShaderEGLImageExternal);
         }
 
         if (ctx->m_texShaderProgram) {
@@ -1011,6 +1297,8 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
         if (ctx->m_texFragmentShader) {
             glDeleteShader(ctx->m_texFragmentShader);
         }
+
+        glDeleteBuffers(1, &ctx->m_texTexPosBuffer);
 
         delete ctx;
     }
@@ -1086,6 +1374,17 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
     }
 
     CompositorContext* compositorContext = new CompositorContext;
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    glActiveTexture(GL_TEXTURE0);
+
+    glGenBuffers(1, &compositorContext->m_texTexPosBuffer);
+    glBindBuffer(GL_ARRAY_BUFFER, compositorContext->m_texTexPosBuffer);
+    float texPos[] = { 0.f, 0.f, 0.f, 1.f, 1.f, 0.f, 1.f, 1.f };
+    glBufferData(GL_ARRAY_BUFFER, sizeof(texPos), texPos, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
     return compositorContext;
 }
 
@@ -1331,7 +1630,6 @@ public:
             {
                 GLuint textureID;
                 glGenTextures(1, &textureID);
-                glActiveTexture(GL_TEXTURE0);
 
                 glBindTexture(GL_TEXTURE_EXTERNAL_OES, textureID);
                 checkError();
@@ -1407,7 +1705,6 @@ public:
                 }
 
                 glGenTextures(1, &textureID);
-                glActiveTexture(GL_TEXTURE0);
                 glBindTexture(GL_TEXTURE_2D, textureID);
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
                 checkError();
@@ -1429,7 +1726,6 @@ public:
                 checkError();
 
                 glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-                glBindTexture(GL_TEXTURE_2D, 0);
                 checkError();
 
                 CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment
@@ -1706,11 +2002,13 @@ CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
 
 struct CompositorImplGLState {
     bool matrixStaysInRect;
+    bool clipPathsWasChanged;
+    bool clipPathsAreSimple; // there are only rect clip
     SkMatrix matrix;
     float opacity;
     float blurRadius;
     Unit::Color color;
-    ClipperLib::Paths clipPaths;
+    std::shared_ptr<ClipperLib::Paths> clipPaths;
 };
 
 class CompositorImplGL : public Compositor {
@@ -1730,45 +2028,20 @@ public:
         m_seenFilteredTexture = false;
         m_webView = webView;
         m_compositorContext = compositorContext;
-        glEnable(GL_BLEND);
-        glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
         glViewport(0, 0, m_webView->platformWindow()->width(),
                    m_webView->platformWindow()->height());
 
         m_state.reserve(32);
         m_state.push_back(CompositorImplGLState());
-        m_state.back().matrixStaysInRect = true;
-        m_state.back().matrix = SkMatrix::I();
-        m_state.back().opacity = 1;
-        m_state.back().blurRadius = 0;
-
-        glUseProgram(m_compositorContext->rectProgram());
-        checkError();
-
-        auto uScreenPos =
-            glGetUniformLocation(m_compositorContext->rectProgram(), "uScreen");
-
-        float uScreen[] = { 2.f / m_webView->platformWindow()->width(),
-                            0.f,
-                            0.f,
-                            0.f,
-                            0.f,
-                            -2.f / m_webView->platformWindow()->height(),
-                            0.f,
-                            0.f,
-                            0.f,
-                            0.f,
-                            0.f,
-                            0.f,
-                            -1.f,
-                            1.f,
-                            0.f,
-                            1.f };
-
-        glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
-        checkError();
-
-        glUseProgram(0);
+        auto& lastState = m_state.back();
+        lastState.clipPathsWasChanged = false;
+        lastState.matrixStaysInRect = true;
+        lastState.clipPathsAreSimple = false;
+        lastState.matrix = SkMatrix::I();
+        lastState.opacity = 1;
+        lastState.blurRadius = 0;
+        lastState.clipPaths.reset(new ClipperLib::Paths());
 
         clip(Unit::Rect(0, 0, m_webView->platformWindow()->width(),
                         m_webView->platformWindow()->height()));
@@ -1781,8 +2054,16 @@ public:
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
 
-#if defined(STARFISH_TIZEN)
-        // there is blinking on tizen with FBO
+        glBindTexture(GL_TEXTURE_2D, 0);
+        if (g_isSupportExtensionEGLImageExternal) {
+            glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
+        }
+
+        glUseProgram(0);
+        m_compositorContext->m_lastProgram = 0;
+
+#if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
+        // there is blinking on EvasGL with FBO
         // explicit sync fixes blinking
         if (m_seenFilteredTexture) {
             m_webView->platformWindow()->glMayNeedsSync();
@@ -1807,6 +2088,8 @@ public:
         newState.matrix = s.matrix;
         newState.opacity = s.opacity;
         newState.clipPaths = s.clipPaths;
+        newState.clipPathsWasChanged = false;
+        newState.clipPathsAreSimple = s.clipPathsAreSimple;
         m_state.push_back(s);
     }
 
@@ -1857,22 +2140,33 @@ public:
         ClipperLib::Path path;
         SkPoint pt;
         pt = SkPoint::Make(rt.x(), rt.y());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        auto& lastState = m_state.back();
+        lastState.matrix.mapPoints(&pt, 1);
         path.emplace_back(floor(pt.x()), floor(pt.y()));
 
         pt = SkPoint::Make(rt.x() + rt.width(), rt.y());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        lastState.matrix.mapPoints(&pt, 1);
         path.emplace_back(ceil(pt.x()), floor(pt.y()));
 
         pt = SkPoint::Make(rt.x() + rt.width(), rt.y() + rt.height());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        lastState.matrix.mapPoints(&pt, 1);
         path.emplace_back(ceil(pt.x()), ceil(pt.y()));
 
         pt = SkPoint::Make(rt.x(), rt.y() + rt.height());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        lastState.matrix.mapPoints(&pt, 1);
         path.emplace_back(floor(pt.x()), ceil(pt.y()));
 
-        m_state.back().clipPaths.push_back(path);
+        if (!lastState.clipPathsWasChanged) {
+            lastState.clipPaths.reset(
+                new ClipperLib::Paths(*lastState.clipPaths.get()));
+            lastState.clipPathsWasChanged = true;
+        }
+
+        if (!lastState.matrixStaysInRect) {
+            lastState.clipPathsAreSimple = false;
+        }
+
+        lastState.clipPaths.get()->push_back(path);
     }
 
     virtual void setColor(const Unit::Color& clr_)
@@ -1897,36 +2191,35 @@ public:
         SkPoint pt;
         pt = SkPoint::Make(rt.x(), rt.y());
 
-        m_state.back().matrix.mapPoints(&pt, 1);
+        auto& lastState = m_state.back();
+
+        lastState.matrix.mapPoints(&pt, 1);
         dest[0][0] = pt.x();
         dest[0][1] = pt.y();
 
         pt = SkPoint::Make(rt.x(), rt.maxY());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        lastState.matrix.mapPoints(&pt, 1);
         dest[1][0] = pt.x();
         dest[1][1] = pt.y();
 
         pt = SkPoint::Make(rt.maxX(), rt.y());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        lastState.matrix.mapPoints(&pt, 1);
         dest[2][0] = pt.x();
         dest[2][1] = pt.y();
 
         pt = SkPoint::Make(rt.maxX(), rt.maxY());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        lastState.matrix.mapPoints(&pt, 1);
         dest[3][0] = pt.x();
         dest[3][1] = pt.y();
 
-        auto currentColor = m_state.back().color;
+        auto currentColor = lastState.color;
 
-        if (m_state.back().clipPaths.size()) {
+        if (lastState.clipPaths.get()->size()) {
             ClipperLib::Paths result = computeClippath(dest);
             if (result.size()) {
-                if (m_state.back().matrixStaysInRect && result.size() == 1 &&
+                if (lastState.matrixStaysInRect && result.size() == 1 &&
                     result[0].size() == 4) {
-                    glUseProgram(m_compositorContext->rectProgram());
-
-                    auto aPosition = glGetAttribLocation(
-                        m_compositorContext->rectProgram(), "aPosition");
+                    m_compositorContext->rectProgram();
 
                     float minX = (float)result[0][0].X,
                           minY = (float)result[0][0].Y,
@@ -1940,25 +2233,27 @@ public:
                         maxY = std::max((float)result[0][i].Y, maxY);
                     }
 
-                    float data[] = { minX, minY, minX, maxY,
-                                     maxX, minY, maxX, maxY };
+                    float hw = 2.f / m_webView->platformWindow()->width();
+                    float hh = -2.f / m_webView->platformWindow()->height();
+                    float position[] = {
+                        minX * hw - 1, minY * hh + 1, // V1
+                        minX * hw - 1, maxY * hh + 1, // V2
+                        maxX * hw - 1, minY * hh + 1, // V3
+                        maxX * hw - 1, maxY * hh + 1, // V4
+                    };
 
-                    glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
-                                          &data[0]);
-                    glEnableVertexAttribArray(aPosition);
+                    glVertexAttribPointer(
+                        m_compositorContext->m_rectShaderProgramPosition, 2,
+                        GL_FLOAT, false, 0, position);
 
-                    auto uColor = glGetUniformLocation(
-                        m_compositorContext->rectProgram(), "uColor");
-                    float a = m_state.back().opacity;
+                    float a = lastState.opacity;
 
-                    glUniform4f(uColor, a * currentColor.R(),
-                                a * currentColor.G(), a * currentColor.B(),
-                                a * currentColor.A());
+                    glUniform4f(m_compositorContext->m_rectShaderProgramColor,
+                                a * currentColor.R(), a * currentColor.G(),
+                                a * currentColor.B(), a * currentColor.A());
 
                     glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
                     checkError();
-
-                    glUseProgram(0);
                 } else {
                     // polygon painting
                     std::vector<std::vector<Point>> polygon;
@@ -1974,6 +2269,7 @@ public:
                         }
                     }
 
+                    m_compositorContext->rectProgram();
                     std::vector<N> indices = mapbox::earcut<N>(polygon);
                     for (size_t i = 0; i < indices.size(); i += 3) {
                         float trianglePoints[6] = {
@@ -1984,57 +2280,55 @@ public:
                             (float)pointPerIndex[indices[i + 2]][0],
                             (float)pointPerIndex[indices[i + 2]][1]
                         };
-                        glUseProgram(m_compositorContext->rectProgram());
-                        auto aPosition = glGetAttribLocation(
-                            m_compositorContext->rectProgram(), "aPosition");
 
-                        glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
-                                              trianglePoints);
-                        glEnableVertexAttribArray(aPosition);
+                        float hw = 2.f / m_webView->platformWindow()->width();
+                        float hh = -2.f / m_webView->platformWindow()->height();
+                        float position[] = {
+                            trianglePoints[0] * hw - 1,
+                            trianglePoints[1] * hh + 1, // V1
+                            trianglePoints[2] * hw - 1,
+                            trianglePoints[3] * hh + 1, // V2
+                            trianglePoints[4] * hw - 1,
+                            trianglePoints[5] * hh + 1, // V3
+                        };
 
-                        auto uColor = glGetUniformLocation(
-                            m_compositorContext->rectProgram(), "uColor");
-                        float a = m_state.back().opacity;
-
-                        glUniform4f(uColor, a * currentColor.R(),
-
-                                    a * currentColor.G(), a * currentColor.B(),
-                                    a * currentColor.A());
+                        glVertexAttribPointer(
+                            m_compositorContext->m_rectShaderProgramPosition, 2,
+                            GL_FLOAT, false, 0, position);
+                        float a = lastState.opacity;
+                        glUniform4f(
+                            m_compositorContext->m_rectShaderProgramColor,
+                            a * currentColor.R(), a * currentColor.G(),
+                            a * currentColor.B(), a * currentColor.A());
 
                         glDrawArrays(GL_TRIANGLES, 0, 3);
                         checkError();
-
-                        glUseProgram(0);
                     }
                 }
             }
         } else {
+            float hw = 2.f / m_webView->platformWindow()->width();
+            float hh = -2.f / m_webView->platformWindow()->height();
             float data[] = {
-                dest[0][0], dest[0][1], // V1
-                dest[1][0], dest[1][1], // V2
-                dest[2][0], dest[2][1], // V3
-                dest[3][0], dest[3][1]  // V4
+                dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
+                dest[1][0] * hw - 1, dest[1][1] * hh + 1, // V2
+                dest[2][0] * hw - 1, dest[2][1] * hh + 1, // V3
+                dest[3][0] * hw - 1, dest[3][1] * hh + 1  // V4
             };
 
-            glUseProgram(m_compositorContext->rectProgram());
+            m_compositorContext->rectProgram();
 
-            auto aPosition = glGetAttribLocation(
-                m_compositorContext->rectProgram(), "aPosition");
+            glVertexAttribPointer(
+                m_compositorContext->m_rectShaderProgramPosition, 2, GL_FLOAT,
+                false, 0, &data[0]);
 
-            glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0, &data[0]);
-            glEnableVertexAttribArray(aPosition);
-
-            auto uColor = glGetUniformLocation(
-                m_compositorContext->rectProgram(), "uColor");
-            float a = m_state.back().opacity;
-
-            glUniform4f(uColor, a * currentColor.R(), a * currentColor.G(),
+            float a = lastState.opacity;
+            glUniform4f(m_compositorContext->m_rectShaderProgramColor,
+                        a * currentColor.R(), a * currentColor.G(),
                         a * currentColor.B(), a * currentColor.A());
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
             checkError();
-
-            glUseProgram(0);
         }
     }
 
@@ -2081,17 +2375,18 @@ public:
         }
         */
 
+        auto& lastState = m_state.back();
         clipper.AddPath(texture, ClipperLib::PolyType::ptSubject, true);
-        clipper.AddPath(m_state.back().clipPaths[0],
+        clipper.AddPath(lastState.clipPaths.get()->at(0),
                         ClipperLib::PolyType::ptClip, true);
 
         ClipperLib::Paths result;
         clipper.Execute(ClipperLib::ClipType::ctIntersection, result);
 
-        for (size_t i = 1; i < m_state.back().clipPaths.size(); i++) {
+        for (size_t i = 1; i < lastState.clipPaths.get()->size(); i++) {
             clipper.Clear();
             clipper.AddPaths(result, ClipperLib::PolyType::ptSubject, true);
-            clipper.AddPath(m_state.back().clipPaths[i],
+            clipper.AddPath(lastState.clipPaths.get()->at(i),
                             ClipperLib::PolyType::ptClip, true);
 
             ClipperLib::Paths newResult;
@@ -2107,8 +2402,9 @@ public:
                              GLenum textureBindNumber, size_t textureWidth,
                              size_t textureHeight)
     {
+        auto& lastState = m_state.back();
         m_seenFilteredTexture = true;
-        // Use FBO inorder to 2-pass blur
+        // Use FBO in order to 2-pass blur
         // generate FBO
         GLuint fboId;
         glGenFramebuffers(1, &fboId);
@@ -2149,302 +2445,194 @@ public:
                                GL_TEXTURE_2D, fboTex, 0);
         checkError();
 
-        auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-        STARFISH_RELEASE_ASSERT(status == GL_FRAMEBUFFER_COMPLETE);
-
-        // we are done, reset
-        glBindTexture(GL_TEXTURE_2D, 0);
-
         // do render on fbo
         glViewport(0, 0, textureWidth, textureHeight);
-        bool isScissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
-        bool isStencilEnabled = glIsEnabled(GL_STENCIL_TEST);
-
-        glDisable(GL_SCISSOR_TEST);
-        glDisable(GL_STENCIL_TEST);
 
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
 
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
-        float blurMainRadius = m_state.back().blurRadius;
+        float blurMainRadius = lastState.blurRadius;
         // original code don't set sub radius but we set magic number
         // because we don't have antialias yet
         // setting sub radius reduce glitch
-        float blurSubRadius = m_state.back().blurRadius / 5;
-        if (blurSubRadius == (int)m_state.back().blurRadius) {
+        float blurSubRadius = lastState.blurRadius / 5;
+        if (blurSubRadius == (int)lastState.blurRadius) {
             blurSubRadius *= 0.85;
         }
         // blur W
         {
-            float data[] = { 0.f,
-                             (float)textureHeight, // V4
-                             0.f,
-                             0.f, // Texture coordinate .for V1
+            float position[] = { -1, -1, -1, 1, 1, -1, 1, 1 };
 
-                             0.f,
-                             0.f, // V3
-                             0.f,
-                             1.f,
-
-                             (float)textureWidth,
-                             (float)textureHeight, // V2
-                             1.f,
-                             0.f,
-
-                             (float)textureWidth,
-                             0.f, // V1
-                             1.f,
-                             1.f };
-
-            GLuint blurProgramW =
-                isEGLImage
-                    ? m_compositorContext
-                          ->texBlurShaderProgramEGLImageExternalW()
-                    : m_compositorContext->texBlurShaderProgramW();
-
-            glUseProgram(blurProgramW);
-            auto uScreenPos = glGetUniformLocation(blurProgramW, "uScreen");
-            float uScreen[] = { 2.f / textureWidth,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                -2.f / textureHeight,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                -1.f,
-                                1.f,
-                                0.f,
-                                1.f };
-
-            glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
-            checkError();
-            auto aPosition = glGetAttribLocation(blurProgramW, "aPosition");
-            auto aTexPos = glGetAttribLocation(blurProgramW, "aTexPos");
-
-            glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
-                                  &data[0]);
-            glEnableVertexAttribArray(aPosition);
-
-            glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
-                                  &data[2]);
-            glEnableVertexAttribArray(aTexPos);
-
-            if (textureKind == GL_TEXTURE_2D) {
-                glActiveTexture(textureBindNumber);
+            if (isEGLImage) {
+                m_compositorContext->texBlurShaderProgramEGLImageExternalW();
+            } else {
+                m_compositorContext->texBlurShaderProgramW();
             }
-            checkError();
 
+            if (isEGLImage) {
+                glVertexAttribPointer(
+                    m_compositorContext
+                        ->m_texBlurShaderProgramEGLImageExternalWPosition,
+                    2, GL_FLOAT, false, 2 * 4, position);
+                glUniform1f(
+                    m_compositorContext
+                        ->m_texBlurShaderProgramEGLImageExternalWTextureWidth,
+                    textureWidth);
+                glUniform1f(
+                    m_compositorContext
+                        ->m_texBlurShaderProgramEGLImageExternalWTextureHeight,
+                    textureHeight);
+                glUniform2f(
+                    m_compositorContext
+                        ->m_texBlurShaderProgramEGLImageExternalWBlurRadius,
+                    blurMainRadius, blurSubRadius);
+            } else {
+                glVertexAttribPointer(
+                    m_compositorContext->m_texBlurShaderProgramWPosition, 2,
+                    GL_FLOAT, false, 2 * 4, position);
+                glUniform1f(
+                    m_compositorContext->m_texBlurShaderProgramWTextureWidth,
+                    textureWidth);
+                glUniform1f(
+                    m_compositorContext->m_texBlurShaderProgramWTextureHeight,
+                    textureHeight);
+                glUniform2f(
+                    m_compositorContext->m_texBlurShaderProgramWBlurRadius,
+                    blurMainRadius, blurSubRadius);
+            }
             glBindTexture(textureKind, textureID);
-            auto uTexture = glGetUniformLocation(blurProgramW, "uTexture");
-            glUniform1i(uTexture, 0);
-
-            auto uTextureWidth =
-                glGetUniformLocation(blurProgramW, "uTextureWidth");
-            glUniform1f(uTextureWidth, textureWidth);
-
-            auto uTextureHeight =
-                glGetUniformLocation(blurProgramW, "uTextureHeight");
-            glUniform1f(uTextureHeight, textureHeight);
-
-            auto uBlurRadius =
-                glGetUniformLocation(blurProgramW, "uBlurRadius");
-            glUniform2f(uBlurRadius, blurMainRadius, blurSubRadius);
-
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-            glBindTexture(textureKind, 0);
-            checkError();
-            glUseProgram(0);
         }
 
+        // end of render to buffer
         glBindRenderbuffer(GL_RENDERBUFFER, 0);
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        // end of render to buffer
-
-        // reset global properties
-        glViewport(0, 0, m_webView->platformWindow()->width(),
-                   m_webView->platformWindow()->height());
-        if (isScissorEnabled) {
-            glEnable(GL_SCISSOR_TEST);
-        }
-        if (isStencilEnabled) {
-            glEnable(GL_STENCIL_TEST);
-        }
-
         glDeleteRenderbuffers(1, &renderBufferId);
         glDeleteFramebuffers(1, &fboId);
         checkError();
 
+        // reset global properties
+        glViewport(0, 0, m_webView->platformWindow()->width(),
+                   m_webView->platformWindow()->height());
+
         // blur H
         {
-            GLuint blurProgramH = m_compositorContext->texBlurShaderProgramH();
-            glUseProgram(blurProgramH);
+            m_compositorContext->texBlurShaderProgramH();
 
-            float data[] = { dest[0][0], dest[0][1], // V1
-                             0.f,        0.f, // Texture coordinate .for V1
+            float hw = 2.f / m_webView->platformWindow()->width();
+            float hh = -2.f / m_webView->platformWindow()->height();
+            float position[] = {
+                dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
+                dest[1][0] * hw - 1, dest[1][1] * hh + 1, // V2
+                dest[2][0] * hw - 1, dest[2][1] * hh + 1, // V3
+                dest[3][0] * hw - 1, dest[3][1] * hh + 1, // V4
+            };
 
-                             dest[1][0], dest[1][1], // V2
-                             0.f,        1.f,
+            glVertexAttribPointer(
+                m_compositorContext->m_texBlurShaderProgramHPosition, 2,
+                GL_FLOAT, false, 2 * 4, position);
 
-                             dest[2][0], dest[2][1], // V3
-                             1.f,        0.f,
-
-                             dest[3][0], dest[3][1], // V4
-                             1.f,        1.f };
-
-            auto uScreenPos = glGetUniformLocation(blurProgramH, "uScreen");
-
-            float uScreen[] = { 2.f / m_webView->platformWindow()->width(),
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                -2.f / m_webView->platformWindow()->height(),
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                0.f,
-                                -1.f,
-                                1.f,
-                                0.f,
-                                1.f };
-
-            glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
-            checkError();
-            auto aPosition = glGetAttribLocation(blurProgramH, "aPosition");
-            auto aTexPos = glGetAttribLocation(blurProgramH, "aTexPos");
-
-            glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
-                                  &data[0]);
-            glEnableVertexAttribArray(aPosition);
-
-            glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
-                                  &data[2]);
-            glEnableVertexAttribArray(aTexPos);
-
-            glActiveTexture(GL_TEXTURE0);
             glBindTexture(GL_TEXTURE_2D, fboTex);
-            auto uTexture = glGetUniformLocation(blurProgramH, "uTexture");
 
-            auto uTextureWidth =
-                glGetUniformLocation(blurProgramH, "uTextureWidth");
-            glUniform1f(uTextureWidth, textureWidth);
+            glUniform1f(
+                m_compositorContext->m_texBlurShaderProgramHTextureWidth,
+                textureWidth);
+            glUniform1f(
+                m_compositorContext->m_texBlurShaderProgramHTextureHeight,
+                textureHeight);
 
-            auto uTextureHeight =
-                glGetUniformLocation(blurProgramH, "uTextureHeight");
-            glUniform1f(uTextureHeight, textureHeight);
-
-            auto uBlurRadius =
-                glGetUniformLocation(blurProgramH, "uBlurRadius");
-            glUniform2f(uBlurRadius, -blurSubRadius, blurMainRadius);
-
-            auto uAlpha = glGetUniformLocation(blurProgramH, "uAlpha");
-
-            float a = m_state.back().opacity;
-            glUniform4f(uAlpha, a, a, a, a);
-            glUniform1i(uTexture, 0);
+            glUniform2f(m_compositorContext->m_texBlurShaderProgramHBlurRadius,
+                        -blurSubRadius, blurMainRadius);
+            float a = lastState.opacity;
+            if (a != 1) {
+                glUniform1f(m_compositorContext->m_texBlurShaderProgramHAlpha,
+                            a);
+            }
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-            glBindTexture(GL_TEXTURE_2D, 0);
-            checkError();
-            glUseProgram(0);
 
-            glDeleteTextures(1, &fboTex);
+            if (a != 1) {
+                glUniform1f(m_compositorContext->m_texBlurShaderProgramHAlpha,
+                            1);
+            }
             checkError();
         }
+
+        glDeleteTextures(1, &fboTex);
+        checkError();
     }
 
     void drawTexture(CanvasSurfaceGL* cs, float dest[4][2], GLuint textureID,
                      GLenum textureKind, GLenum textureBindNumber,
                      size_t textureWidth, size_t textureHeight)
     {
-        if (m_state.back().blurRadius) {
+        auto& lastState = m_state.back();
+        if (lastState.blurRadius) {
             drawFilteredTexture(cs, dest, textureID, textureKind,
                                 textureBindNumber, textureWidth, textureHeight);
             return;
         }
         bool isEGLImage = textureKind != GL_TEXTURE_2D;
-        GLuint program = m_compositorContext->texShaderProgram();
         if (isEGLImage) {
-            program =
-                cs->m_isEGLImageNeedsFlipRGB
-                    ? m_compositorContext
-                          ->texShaderProgramEGLImageExternalColorInverted()
-                    : m_compositorContext->texShaderProgramEGLImageExternal();
+            if (cs->m_isEGLImageNeedsFlipRGB) {
+                m_compositorContext
+                    ->texShaderProgramEGLImageExternalColorInverted();
+            } else {
+                m_compositorContext->texShaderProgramEGLImageExternal();
+            }
+        } else {
+            m_compositorContext->texShaderProgram();
         }
 
-        float data[] = { dest[0][0], dest[0][1], // V1
-                         0.f,        0.f,        // Texture coordinate .for V1
-
-                         dest[1][0], dest[1][1], // V2
-                         0.f,        1.f,
-
-                         dest[2][0], dest[2][1], // V3
-                         1.f,        0.f,
-
-                         dest[3][0], dest[3][1], // V4
-                         1.f,        1.f };
-        float a = m_state.back().opacity;
-        glUseProgram(program);
-        auto uScreenPos = glGetUniformLocation(program, "uScreen");
-        checkError();
-
-        float uScreen[] = { 2.f / m_webView->platformWindow()->width(),
-                            0.f,
-                            0.f,
-                            0.f,
-                            0.f,
-                            -2.f / m_webView->platformWindow()->height(),
-                            0.f,
-                            0.f,
-                            0.f,
-                            0.f,
-                            0.f,
-                            0.f,
-                            -1.f,
-                            1.f,
-                            0.f,
-                            1.f };
-
-        glUniformMatrix4fv(uScreenPos, 1, false, uScreen);
-        checkError();
-        auto aPosition = glGetAttribLocation(program, "aPosition");
-        auto aTexPos = glGetAttribLocation(program, "aTexPos");
-        checkError();
-
-        glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, (2 + 2) * 4,
-                              &data[0]);
-        glEnableVertexAttribArray(aPosition);
-
-        glVertexAttribPointer(aTexPos, 2, GL_FLOAT, false, (2 + 2) * 4,
-                              &data[2]);
-        glEnableVertexAttribArray(aTexPos);
-
-        if (textureKind == GL_TEXTURE_2D) {
-            glActiveTexture(textureBindNumber);
-        }
-        checkError();
+        float hw = 2.f / m_webView->platformWindow()->width();
+        float hh = -2.f / m_webView->platformWindow()->height();
+        float position[] = {
+            dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
+            dest[1][0] * hw - 1, dest[1][1] * hh + 1, // V2
+            dest[2][0] * hw - 1, dest[2][1] * hh + 1, // V3
+            dest[3][0] * hw - 1, dest[3][1] * hh + 1, // V4
+        };
 
         glBindTexture(textureKind, textureID);
-        checkError();
-        auto uTexture = glGetUniformLocation(program, "uTexture");
-        auto uAlpha = glGetUniformLocation(program, "uAlpha");
 
-        glUniform4f(uAlpha, a, a, a, a);
-        glUniform1i(uTexture, 0);
+        GLint* positionPos;
+        GLint* alphaPos;
+
+        float a = lastState.opacity;
+        if (isEGLImage) {
+            if (cs->m_isEGLImageNeedsFlipRGB) {
+                positionPos =
+                    &m_compositorContext
+                         ->m_texShaderProgramEGLImageExternalColorInvertedPosition;
+                alphaPos =
+                    &m_compositorContext
+                         ->m_texShaderProgramEGLImageExternalColorInvertedAlpha;
+            } else {
+                positionPos = &m_compositorContext
+                                   ->m_texShaderProgramEGLImageExternalPosition;
+                alphaPos = &m_compositorContext
+                                ->m_texShaderProgramEGLImageExternalAlpha;
+            }
+        } else {
+            positionPos = &m_compositorContext->m_texShaderProgramPosition;
+            alphaPos = &m_compositorContext->m_texShaderProgramAlpha;
+        }
+
+        glVertexAttribPointer(*positionPos, 2, GL_FLOAT, false, 2 * 4,
+                              position);
+        if (a != 1) {
+            glUniform1f(*alphaPos, a);
+        }
+
+        checkError();
 
         glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         checkError();
-        glBindTexture(textureKind, 0);
-        checkError();
-        glUseProgram(0);
+
+        if (a != 1) {
+            glUniform1f(*alphaPos, 1);
+        }
     }
 
     Unit::Rect boundingRect(const ClipperLib::Path& path)
@@ -2484,22 +2672,23 @@ public:
         SkPoint pt;
         pt = SkPoint::Make(dst.x(), dst.y());
 
-        m_state.back().matrix.mapPoints(&pt, 1);
+        auto& lastState = m_state.back();
+        lastState.matrix.mapPoints(&pt, 1);
         dest[0][0] = pt.x();
         dest[0][1] = pt.y();
 
         pt = SkPoint::Make(dst.x(), dst.maxY());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        lastState.matrix.mapPoints(&pt, 1);
         dest[1][0] = pt.x();
         dest[1][1] = pt.y();
 
         pt = SkPoint::Make(dst.maxX(), dst.y());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        lastState.matrix.mapPoints(&pt, 1);
         dest[2][0] = pt.x();
         dest[2][1] = pt.y();
 
         pt = SkPoint::Make(dst.maxX(), dst.maxY());
-        m_state.back().matrix.mapPoints(&pt, 1);
+        lastState.matrix.mapPoints(&pt, 1);
         dest[3][0] = pt.x();
         dest[3][1] = pt.y();
 
@@ -2510,95 +2699,148 @@ public:
             Unit::Rect(0, 0, m_webView->platformWindow()->width(),
                        m_webView->platformWindow()->height());
 
-        if (m_state.back().clipPaths.size()) {
-            visibleArea = Unit::Rect(0, 0, 0, 0);
-            ClipperLib::Paths result = computeClippath(dest);
-            if (result.size()) {
-                if (m_state.back().matrixStaysInRect && result.size() == 1 &&
-                    result[0].size() == 4) {
-                    scissorClippingEnabled = true;
+        if (lastState.clipPaths.get()->size()) {
+            if (lastState.clipPathsAreSimple) {
+                const ClipperLib::Paths& clipPaths = *lastState.clipPaths.get();
+                for (size_t i = 0; i < clipPaths.size(); i++) {
+                    const Unit::Rect& r1 = visibleArea;
+                    STARFISH_ASSERT(clipPaths[i].size() == 4);
 
-                    float minX = (float)result[0][0].X,
-                          minY = (float)result[0][0].Y,
-                          maxX = (float)result[0][0].X,
-                          maxY = (float)result[0][0].Y;
+                    float minX = (float)clipPaths[i][0].X,
+                          minY = (float)clipPaths[i][0].Y,
+                          maxX = (float)clipPaths[i][0].X,
+                          maxY = (float)clipPaths[i][0].Y;
 
-                    for (size_t i = 1; i < 4; i++) {
-                        minX = std::min((float)result[0][i].X, minX);
-                        minY = std::min((float)result[0][i].Y, minY);
-                        maxX = std::max((float)result[0][i].X, maxX);
-                        maxY = std::max((float)result[0][i].Y, maxY);
+                    for (size_t j = 1; j < 4; j++) {
+                        minX = std::min((float)clipPaths[i][j].X, minX);
+                        minY = std::min((float)clipPaths[i][j].Y, minY);
+                        maxX = std::max((float)clipPaths[i][j].X, maxX);
+                        maxY = std::max((float)clipPaths[i][j].Y, maxY);
                     }
 
-                    visibleArea =
-                        Unit::Rect(minX, minY, maxX - minX, maxY - minY);
-                    glEnable(GL_SCISSOR_TEST);
-                    glScissor(minX,
-                              m_webView->platformWindow()->height() - maxY,
-                              maxX - minX, maxY - minY);
-                } else {
-                    stencilClippingEnabled = true;
+                    Unit::Rect r2(minX, minY, maxX - minX, maxY - minY);
+                    float leftX = std::max(r1.x(), r2.x());
+                    float rightX = std::min(r1.maxX(), r2.maxX());
+                    float topY = std::max(r1.y(), r2.y());
+                    float bottomY = std::min(r1.maxY(), r2.maxY());
 
-                    glEnable(GL_STENCIL_TEST);
-                    glClearStencil(0);
-                    glClear(GL_STENCIL_BUFFER_BIT);
-                    glColorMask(false, false, false, false);
-                    glStencilFunc(GL_ALWAYS, 1, 1);
-                    glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+                    if (leftX < rightX && topY < bottomY) {
+                        visibleArea = Unit::Rect(leftX, topY, rightX - leftX,
+                                                 bottomY - topY);
+                    } else {
+                        // Rectangles do not overlap, or overlap has an area of
+                        // zero (edge/corner overlap)
+                        visibleArea = Unit::Rect(0, 0, 0, 0);
+                        shouldSkipTexturePainting = true;
+                        break;
+                    }
+                }
 
-                    std::vector<std::vector<Point>> polygon;
-                    std::vector<Point> pointPerIndex;
-                    for (size_t i = 0; i < result.size(); i++) {
-                        polygon.push_back(std::vector<Point>());
-                        for (size_t j = 0; j < result[i].size(); j++) {
-                            polygon.back().push_back(
-                                { (double)result[i][j].X,
-                                  (double)result[i][j].Y });
-                            pointPerIndex.push_back({ (double)result[i][j].X,
-                                                      (double)result[i][j].Y });
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(visibleArea.x(),
+                          m_webView->platformWindow()->height() -
+                              visibleArea.maxY(),
+                          visibleArea.width(), visibleArea.height());
+
+                scissorClippingEnabled = true;
+            } else {
+                visibleArea = Unit::Rect(0, 0, 0, 0);
+                ClipperLib::Paths result = computeClippath(dest);
+                if (result.size()) {
+                    if (lastState.matrixStaysInRect && result.size() == 1 &&
+                        result[0].size() == 4) {
+                        scissorClippingEnabled = true;
+
+                        float minX = (float)result[0][0].X,
+                              minY = (float)result[0][0].Y,
+                              maxX = (float)result[0][0].X,
+                              maxY = (float)result[0][0].Y;
+
+                        for (size_t i = 1; i < 4; i++) {
+                            minX = std::min((float)result[0][i].X, minX);
+                            minY = std::min((float)result[0][i].Y, minY);
+                            maxX = std::max((float)result[0][i].X, maxX);
+                            maxY = std::max((float)result[0][i].Y, maxY);
                         }
 
-                        visibleArea.unite(boundingRect(result[i]));
+                        visibleArea =
+                            Unit::Rect(minX, minY, maxX - minX, maxY - minY);
+                        glEnable(GL_SCISSOR_TEST);
+                        glScissor(minX,
+                                  m_webView->platformWindow()->height() - maxY,
+                                  maxX - minX, maxY - minY);
+                    } else {
+                        stencilClippingEnabled = true;
+
+                        glEnable(GL_STENCIL_TEST);
+                        glClearStencil(0);
+                        glClear(GL_STENCIL_BUFFER_BIT);
+                        glColorMask(false, false, false, false);
+                        glStencilFunc(GL_ALWAYS, 1, 1);
+                        glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
+
+                        std::vector<std::vector<Point>> polygon;
+                        std::vector<Point> pointPerIndex;
+                        for (size_t i = 0; i < result.size(); i++) {
+                            polygon.push_back(std::vector<Point>());
+                            for (size_t j = 0; j < result[i].size(); j++) {
+                                polygon.back().push_back(
+                                    { (double)result[i][j].X,
+                                      (double)result[i][j].Y });
+                                pointPerIndex.push_back(
+                                    { (double)result[i][j].X,
+                                      (double)result[i][j].Y });
+                            }
+
+                            visibleArea.unite(boundingRect(result[i]));
+                        }
+
+                        m_compositorContext->rectProgram();
+                        std::vector<N> indices = mapbox::earcut<N>(polygon);
+                        for (size_t i = 0; i < indices.size(); i += 3) {
+                            float trianglePoints[6] = {
+                                (float)pointPerIndex[indices[i]][0],
+                                (float)pointPerIndex[indices[i]][1],
+                                (float)pointPerIndex[indices[i + 1]][0],
+                                (float)pointPerIndex[indices[i + 1]][1],
+                                (float)pointPerIndex[indices[i + 2]][0],
+                                (float)pointPerIndex[indices[i + 2]][1]
+                            };
+
+                            float hw =
+                                2.f / m_webView->platformWindow()->width();
+                            float hh =
+                                -2.f / m_webView->platformWindow()->height();
+                            float position[] = {
+                                trianglePoints[0] * hw - 1,
+                                trianglePoints[1] * hh + 1, // V1
+                                trianglePoints[2] * hw - 1,
+                                trianglePoints[3] * hh + 1, // V2
+                                trianglePoints[4] * hw - 1,
+                                trianglePoints[5] * hh + 1, // V3
+                            };
+
+                            glVertexAttribPointer(
+                                m_compositorContext
+                                    ->m_rectShaderProgramPosition,
+                                2, GL_FLOAT, false, 0, position);
+                            glUniform4f(
+                                m_compositorContext->m_rectShaderProgramColor,
+                                Unit::Color(255, 255, 255, 255).R(),
+                                Unit::Color(255, 255, 255, 255).G(),
+                                Unit::Color(255, 255, 255, 255).B(),
+                                Unit::Color(255, 255, 255, 255).A());
+                            glDrawArrays(GL_TRIANGLES, 0, 3);
+                            checkError();
+                        }
+
+                        glColorMask(true, true, true, true);
+                        glStencilFunc(GL_EQUAL, 1, 1);
+                        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
                     }
-
-                    std::vector<N> indices = mapbox::earcut<N>(polygon);
-                    for (size_t i = 0; i < indices.size(); i += 3) {
-                        float trianglePoints[6] = {
-                            (float)pointPerIndex[indices[i]][0],
-                            (float)pointPerIndex[indices[i]][1],
-                            (float)pointPerIndex[indices[i + 1]][0],
-                            (float)pointPerIndex[indices[i + 1]][1],
-                            (float)pointPerIndex[indices[i + 2]][0],
-                            (float)pointPerIndex[indices[i + 2]][1]
-                        };
-                        glUseProgram(m_compositorContext->rectProgram());
-                        auto aPosition = glGetAttribLocation(
-                            m_compositorContext->rectProgram(), "aPosition");
-
-                        glVertexAttribPointer(aPosition, 2, GL_FLOAT, false, 0,
-                                              trianglePoints);
-                        glEnableVertexAttribArray(aPosition);
-
-                        auto uColor = glGetUniformLocation(
-                            m_compositorContext->rectProgram(), "uColor");
-                        float a = 1;
-                        glUniform4f(uColor,
-                                    a * Unit::Color(255, 255, 255, 255).R(),
-                                    a * Unit::Color(255, 255, 255, 255).G(),
-                                    a * Unit::Color(255, 255, 255, 255).B(),
-                                    a * Unit::Color(255, 255, 255, 255).A());
-                        glDrawArrays(GL_TRIANGLES, 0, 3);
-                        checkError();
-
-                        glUseProgram(0);
-                    }
-
-                    glColorMask(true, true, true, true);
-                    glStencilFunc(GL_EQUAL, 1, 1);
-                    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+                } else {
+                    shouldSkipTexturePainting = true;
                 }
-            } else {
-                shouldSkipTexturePainting = true;
             }
         }
 
@@ -2649,22 +2891,22 @@ public:
                         SkPoint pt;
                         pt = SkPoint::Make(newDst.x(), newDst.y());
 
-                        m_state.back().matrix.mapPoints(&pt, 1);
+                        lastState.matrix.mapPoints(&pt, 1);
                         newDest[0][0] = pt.x();
                         newDest[0][1] = pt.y();
 
                         pt = SkPoint::Make(newDst.x(), newDst.maxY());
-                        m_state.back().matrix.mapPoints(&pt, 1);
+                        lastState.matrix.mapPoints(&pt, 1);
                         newDest[1][0] = pt.x();
                         newDest[1][1] = pt.y();
 
                         pt = SkPoint::Make(newDst.maxX(), newDst.y());
-                        m_state.back().matrix.mapPoints(&pt, 1);
+                        lastState.matrix.mapPoints(&pt, 1);
                         newDest[2][0] = pt.x();
                         newDest[2][1] = pt.y();
 
                         pt = SkPoint::Make(newDst.maxX(), newDst.maxY());
-                        m_state.back().matrix.mapPoints(&pt, 1);
+                        lastState.matrix.mapPoints(&pt, 1);
                         newDest[3][0] = pt.x();
                         newDest[3][1] = pt.y();
 
@@ -2699,7 +2941,6 @@ public:
                                 auto bData = csGL->mapBuffer();
                                 auto bStride = csGL->bufferStride();
 
-                                glActiveTexture(GL_TEXTURE0);
                                 glBindTexture(GL_TEXTURE_2D, tid);
                                 glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
                                 checkError();
@@ -2735,7 +2976,6 @@ public:
                                 }
 
                                 glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-                                glBindTexture(GL_TEXTURE_2D, 0);
                                 checkError();
 
                                 csGL->m_textureFragmentsFlags[i].m_isDirty =
@@ -2762,18 +3002,17 @@ public:
             glDisable(GL_STENCIL_TEST);
         }
         if (scissorClippingEnabled) {
-            glScissor(0, 0, m_webView->platformWindow()->width(),
-                      m_webView->platformWindow()->height());
             glDisable(GL_SCISSOR_TEST);
         }
     }
 
     virtual void postMatrix(const SkMatrix& matrix)
     {
-        m_state.back().matrix.preConcat(matrix);
+        auto& lastState = m_state.back();
+        lastState.matrix.preConcat(matrix);
 
-        if (!m_state.back().matrix.rectStaysRect()) {
-            m_state.back().matrixStaysInRect = false;
+        if (!lastState.matrix.rectStaysRect()) {
+            lastState.matrixStaysInRect = false;
         }
     }
 
@@ -2806,9 +3045,16 @@ public:
 
     virtual void resetMatrixAndClip()
     {
-        m_state.back().matrix = SkMatrix::I();
-        m_state.back().clipPaths.clear();
-        m_state.back().matrixStaysInRect = true;
+        auto& lastState = m_state.back();
+        lastState.matrix = SkMatrix::I();
+        if (!lastState.clipPathsWasChanged) {
+            lastState.clipPaths.reset(new ClipperLib::Paths());
+            lastState.clipPathsWasChanged = true;
+        } else {
+            lastState.clipPaths.get()->clear();
+        }
+        lastState.matrixStaysInRect = true;
+        lastState.clipPathsAreSimple = true;
 
         clip(Unit::Rect(0, 0, m_webView->platformWindow()->width(),
                         m_webView->platformWindow()->height()));
@@ -2817,7 +3063,14 @@ public:
 
     virtual void resetClip()
     {
-        m_state.back().clipPaths.clear();
+        auto& lastState = m_state.back();
+        if (!lastState.clipPathsWasChanged) {
+            lastState.clipPaths.reset(new ClipperLib::Paths());
+            lastState.clipPathsWasChanged = true;
+        } else {
+            lastState.clipPaths.get()->clear();
+        }
+        lastState.clipPathsAreSimple = true;
         clip(Unit::Rect(0, 0, m_webView->platformWindow()->width(),
                         m_webView->platformWindow()->height()));
     }
@@ -2870,7 +3123,14 @@ public:
     }
     virtual void clipPath()
     {
-        m_state.back().clipPaths.push_back(m_path);
+        auto& lastState = m_state.back();
+        if (!lastState.clipPathsWasChanged) {
+            lastState.clipPaths.reset(
+                new ClipperLib::Paths(*lastState.clipPaths.get()));
+            lastState.clipPathsWasChanged = true;
+        }
+        lastState.clipPaths.get()->push_back(m_path);
+        lastState.clipPathsAreSimple = false;
         m_path.clear();
         m_path.shrink_to_fit();
     }

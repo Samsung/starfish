@@ -2601,7 +2601,6 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         size_t tileIndex = 0;
         size_t coveredRowsCount = 0;
 
-        compositor->save();
         compositor->translate(minX, minY);
 
         for (size_t y = 0; y < hTextureCount; y++) {
@@ -2632,7 +2631,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             coveredRowsCount += hTileSize;
         }
 
-        compositor->restore();
+        compositor->translate(-minX, -minY);
     }
 
 #ifdef STARFISH_ENABLE_TEST

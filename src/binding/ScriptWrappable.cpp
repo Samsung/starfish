@@ -434,7 +434,8 @@ ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
     return Escargot::ValueRef::createUndefined();
 }
 
-ScriptWrappable::ScriptWrappable(void* extraPointerData, ExecutionContext* executionContext)
+ScriptWrappable::ScriptWrappable(void* extraPointerData,
+                                 ExecutionContext* executionContext)
 {
     STARFISH_ASSERT(!((size_t)extraPointerData & (size_t)1));
     m_object = (ObjectRef*)((size_t)extraPointerData | (size_t)1);

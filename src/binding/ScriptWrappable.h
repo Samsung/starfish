@@ -163,9 +163,9 @@ unsigned arrayBufferViewSize(ScriptArrayBufferView buffer);
 void invokeTestStartFunction(ScriptBindingInstance* instance);
 #endif
 
-#define DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(className) \
-    virtual void init(ScriptBindingInstance* instance, \
-                      void* domObjectPointer) override; \
+#define DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(className)                   \
+    virtual void init(ScriptBindingInstance* instance, void* domObjectPointer) \
+        override;                                                              \
     virtual bool is##className() const override;
 
 #define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
@@ -224,7 +224,8 @@ public:
     STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_CAST_FN);
 #undef FOR_EACH_CAST_FN
 
-    ScriptWrappable(void* extraPointerData, ExecutionContext* executionContext = nullptr);
+    ScriptWrappable(void* extraPointerData,
+                    ExecutionContext* executionContext = nullptr);
 
     virtual ~ScriptWrappable()
     {
@@ -299,6 +300,7 @@ protected:
         m_object = obj;
     }
     Escargot::ObjectRef* m_object;
+
 private:
     ExecutionContext* m_executionContext;
 };

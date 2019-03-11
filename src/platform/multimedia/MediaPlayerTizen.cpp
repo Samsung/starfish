@@ -33,6 +33,7 @@
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/modules/mediasource/SourceBuffer.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/threading/ThreadPool.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
