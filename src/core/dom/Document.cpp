@@ -2063,7 +2063,12 @@ void Document::cacheNativeGradient(GradientDrawingInfo* key,
 
     size_t bufferSize = value->gradientImageDataCached()->bufferSize();
     if (pruneNativeGradientCacheIfNeeds(bufferSize)) {
-        (*m_nativeGradientCache)[key] = value;
+        auto iter = m_nativeGradientCache->find(key);
+        if (iter == m_nativeGradientCache->end()) {
+            m_nativeGradientCache->insert(std::make_pair(key, value));
+        } else {
+            iter->second = value;
+        }
         m_nativeGradientCacheLRUList.push_back(key);
         m_nativeGradientCacheToTalSize += bufferSize;
     }
