@@ -17,34 +17,41 @@
  *  USA
  */
 
-#ifndef __StarfishProcessHost__
-#define __StarfishProcessHost__
-
-#include "platform/process/base/ProcessType.h"
-#include <mutex>
+#ifndef __StarfishAdaptedThread__
+#define __StarfishAdaptedThread__
 
 namespace Starfish {
 
-enum class ProcessState {
-    INITIALIZED = 0,
-    ERROR,
-    CHILD_PROCESS_STARTED,
-    CHILD_PROCESS_STOPPED
+class Thread;
+class ThreadPool;
+class IRunnable;
+
+class IThread {
+public:
+    virtual ~IThread()
+    {
+    }
+    virtual void start(IRunnable* runnable) = 0;
+    virtual void stop() = 0;
+    virtual void join() = 0;
 };
 
-class ProcessHost {
+class AdaptedThread : public IThread, public gc {
 public:
-    ProcessHost();
-    virtual ~ProcessHost();
+    AdaptedThread(ThreadPool* threadPool);
+    virtual ~AdaptedThread();
 
-    bool launch(std::vector<std::string>& args);
-    bool terminate();
-    void setState(const ProcessState state);
+    void start(IRunnable* runnable) override;
+    void stop() override;
+    void join() override;
 
 private:
-    ProcessState m_processState;
-    PID m_childPid;
-    std::mutex m_stateMutex;
+    void run();
+
+    Thread* m_threadImp;
+    IRunnable* m_runnable;
+    std::atomic_bool m_isAlive;
+    ThreadPool* m_threadPool;
 };
 
 } // namespace Starfish
