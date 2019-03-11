@@ -20,6 +20,7 @@
 #include "Starfish.h"
 #include "binding/StarfishHoldable.h"
 #include "core/modules/threading/Thread.h"
+#include "core/modules/threading/ThreadPool.h"
 #include "core/page/WebView.h"
 
 #ifndef __StarfishParallelJobExecutor__
