@@ -175,6 +175,7 @@ typedef SSIZE_T ssize_t;
 typedef unsigned int uint;
 #endif
 
+#include <atomic>
 #include <cstdlib>
 #include <cstdio>
 #include <cstdint>

@@ -28,6 +28,7 @@
 namespace Starfish {
 
 class ExecutionContext;
+class MessageLoop;
 
 class ThreadPool : public ThreadClient, public gc {
 public:
@@ -41,6 +42,8 @@ public:
 
     void onThreadStarted(Thread* thread) override;
     void onThreadFinished(Thread* thread) override;
+
+    MessageLoop* messageLoop();
 
 private:
     bool m_isClosed;

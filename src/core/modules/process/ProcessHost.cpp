@@ -22,13 +22,18 @@
 #include "StarfishConfig.h"
 
 #include "platform/process/base/Process.h"
-#include "platform/process/ProcessHost.h"
+#include "core/modules/threading/AdaptedThread.h"
+#include "core/modules/threading/IRunnable.h"
+#include "ProcessHostIORunnable.h"
+#include "ProcessHost.h"
 
 namespace Starfish {
 
-ProcessHost::ProcessHost()
+ProcessHost::ProcessHost(ThreadPool* threadPool)
     : m_processState(ProcessState::INITIALIZED)
     , m_childPid(-1)
+    , m_ioThread(nullptr)
+    , m_threadPool(threadPool)
 {
 }
 
@@ -36,21 +41,30 @@ ProcessHost::~ProcessHost()
 {
 }
 
-void ProcessHost::setState(const ProcessState state)
+ProcessHost::ProcessState ProcessHost::getState() const
 {
-    std::unique_lock<std::mutex> lock(m_stateMutex);
-    m_processState = state;
+    return m_processState;
 }
 
 bool ProcessHost::launch(std::vector<std::string>& args)
 {
-    PID pid = -1;
+    std::unique_lock<std::mutex> lock(m_stateMutex);
 
+    if (m_processState == ProcessState::CHILD_PROCESS_STARTED) {
+        return false;
+    }
+
+    STARFISH_ASSERT(m_threadPool);
+
+    m_ioThread = new AdaptedThread(m_threadPool);
+    m_ioThread->start(new ProcessHostIORunnable());
+
+    PID pid = -1;
     ProcessUtil::launchProcess(args, &pid);
 
     if (pid > 0) {
         m_childPid = pid;
-        setState(ProcessState::CHILD_PROCESS_STARTED);
+        m_processState = ProcessState::CHILD_PROCESS_STARTED;
         return true;
     }
 
@@ -61,15 +75,13 @@ bool ProcessHost::terminate()
 {
     bool result = false;
 
-    {
-        std::unique_lock<std::mutex> lock(m_stateMutex);
-        result = ProcessUtil::killProcess(m_childPid, false);
-    }
+    std::unique_lock<std::mutex> lock(m_stateMutex);
+    result = ProcessUtil::killProcess(m_childPid, false);
 
     if (result) {
-        setState(ProcessState::CHILD_PROCESS_STOPPED);
+        m_processState = ProcessState::CHILD_PROCESS_STOPPED;
     } else {
-        setState(ProcessState::ERROR);
+        m_processState = ProcessState::ERROR;
     }
 
     return result;

@@ -20,7 +20,6 @@
 #include "StarfishConfig.h"
 #include "ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/threading/ThreadClient.h"
 
 namespace Starfish {
 
@@ -45,6 +44,11 @@ void ThreadPool::destroy()
     for (auto const& thread : copies) {
         thread->finishUnjoined();
     }
+}
+
+MessageLoop* ThreadPool::messageLoop()
+{
+    return m_messageLoop;
 }
 
 void ThreadPool::onThreadStarted(Thread* thread)
@@ -147,4 +151,5 @@ void ThreadPool::clearWork(ExecutionContext* ctx)
 
     m_workerQueueMutex->unlock();
 }
-}
+
+} // namespace Starfish
