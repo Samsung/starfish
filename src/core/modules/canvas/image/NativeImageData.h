@@ -44,8 +44,7 @@ public:
     static int nativeImageDataGCKind();
     static std::vector<NativeImageData*>& everyNativeImageInstances();
 
-    static NativeImageData* create(const char* buf, size_t len,
-                                   bool shouldDecodingInstantly = true);
+    static NativeImageData* create(const char* buf, size_t len);
     static NativeImageData* create(size_t actualDeviceWidth,
                                    size_t actualDeviceHeight);
     static NativeImageData* create(float devicePixelRatio, size_t width,
@@ -61,6 +60,9 @@ public:
     virtual size_t height() = 0;
     virtual size_t stride() = 0;
     virtual bool hasTransparentPixel() = 0;
+    virtual void pruneInternalDataIfPossible()
+    {
+    }
     virtual void disposeNativeImageData()
     {
 #if !defined(OS_WINDOWS)

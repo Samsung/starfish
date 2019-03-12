@@ -72,6 +72,10 @@
 #include "platform/file/File.h"
 #include "core/modules/serviceworker/ServiceWorkerServiceHost.h"
 
+#if defined(OS_POSIX)
+#include <malloc.h>
+#endif
+
 #ifdef STREAMLINE_PROFILE
 #include "streamline_annotate.h"
 ANNOTATE_DEFINE;
@@ -242,6 +246,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_needsFullPainting(false)
     , m_didCompositeBefore(false)
     , m_isActive(false)
+    , m_inIdleMode(false)
     , m_rootStackingContext(nullptr)
     , m_messageLoop(new MessageLoop())
     , m_timer(new Timer(this))
@@ -305,6 +310,72 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #endif
 
     m_starfish->m_webViewInstanceCount++;
+
+#define STARFISH_IDLE_CHECK_INTERVAL 3000
+    m_timer->addTimer(STARFISH_IDLE_CHECK_INTERVAL, nullptr,
+                      [](Window* window, void* data) {
+                          WebView* wv = (WebView*)data;
+                          uint64_t currentTick = longTickCount();
+                          if (!wv->m_inIdleMode &&
+                              currentTick - wv->m_lastRenderingTick >
+                                  STARFISH_IDLE_CHECK_INTERVAL * 1000) {
+                              wv->enterIdleMode();
+                          }
+                      },
+                      this, true);
+}
+
+void WebView::enterIdleMode()
+{
+    STARFISH_LOG_INFO("enter idle mode\n");
+    m_inIdleMode = true;
+
+    onIdle();
+
+    // drop CanvasSurfaces if possible
+    if (m_didCompositeBefore) {
+        LongTaskFinder f("drop CanvasSurfaces when entering idle mode");
+        auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
+        while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
+            StackingContext* sc = *iter;
+            iter++;
+            if (!sc->owner()->hasOwnGraphicsBufferMethod()) {
+                auto holder = sc->graphicsBufferHolder();
+                if (holder) {
+                    for (size_t i = 0; i < holder->m_surfaces.size(); i++) {
+                        if (holder->m_surfaces[i]) {
+                            holder->m_surfaces[i]->detachNativeBuffer();
+                            holder->m_surfaces[i] = nullptr;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    {
+        LongTaskFinder f("force gc when entering idle mode");
+        GC_gcollect();
+        GC_gcollect();
+        GC_gcollect_and_unmap();
+    }
+
+    {
+        LongTaskFinder f(
+            "drop decoded image datas in NativeImageData when entering idle "
+            "mode");
+        auto& globalImages = NativeImageData::everyNativeImageInstances();
+        for (size_t i = 0; i < globalImages.size(); i++) {
+            globalImages[i]->pruneInternalDataIfPossible();
+        }
+    }
+
+#if defined(OS_POSIX) && !defined(STARFISH_ANDROID)
+    {
+        LongTaskFinder f("calling malloc_trim when entering idle mode");
+        malloc_trim(0);
+    }
+#endif
 }
 
 void WebView::addJavaScriptNativeInterface(
@@ -1165,6 +1236,8 @@ RenderResult WebView::rendering(bool force)
     if (!m_needsRendering || !m_isActive) {
         return renderResult;
     }
+
+    m_inIdleMode = false;
 
     if (!force && mainBrowsingContext()->hasPendingStyleSheet() &&
         mainBrowsingContext()->document() &&

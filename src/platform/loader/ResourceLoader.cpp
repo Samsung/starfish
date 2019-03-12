@@ -72,10 +72,9 @@ TextResource* ResourceLoader::fetchText(ResourceURL* url,
     return res;
 }
 
-ImageResource* ResourceLoader::fetchImage(ResourceURL* url,
-                                          bool shouldDecodingInstantly)
+ImageResource* ResourceLoader::fetchImage(ResourceURL* url)
 {
-    ImageResource* res = new ImageResource(url, this, shouldDecodingInstantly);
+    ImageResource* res = new ImageResource(url, this);
     return res;
 }
 

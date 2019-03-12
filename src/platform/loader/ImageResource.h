@@ -32,10 +32,8 @@ class ImageResource : public Resource {
     friend class ResourceLoader;
     friend class MockHTMLIFrameElement;
 
-    ImageResource(ResourceURL* url, ResourceLoader* loader,
-                  bool shouldDecodingInstantly)
+    ImageResource(ResourceURL* url, ResourceLoader* loader)
         : Resource(url, loader)
-        , m_shouldDecodingInstantly(shouldDecodingInstantly)
     {
         m_imageData = nullptr;
         m_mockFrameForSVGDocument = nullptr;
@@ -79,7 +77,6 @@ public:
     }
 
 protected:
-    bool m_shouldDecodingInstantly;
     NativeImageData* m_imageData;
     MockHTMLIFrameElement* m_mockFrameForSVGDocument;
 };
