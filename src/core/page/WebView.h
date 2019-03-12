@@ -540,6 +540,7 @@ private:
             String* customUserAgentString, String* builtinPolyfillPathString);
 
     void initRenderingFlags();
+    void enterIdleMode();
 
     RenderResult rendering(
         bool force = false); // returns did painting | did compositing
@@ -596,6 +597,7 @@ private:
     bool m_didCompositeBefore; // last state of enabling composite
     bool m_isActive; // false means that is paused, then rendering callbacks
                      // will be skipped.
+    bool m_inIdleMode;
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;
     GCVector<AnimationExecutor*> m_activeAnimationExecutor;

@@ -267,8 +267,7 @@ void HTMLImageElement::loadImage(String* src)
         return;
     }
 
-    m_imageResource = document()->resourceLoader().fetchImage(
-        resourceURL, isInDocumentScopeAndDocumentParticipateInRendering());
+    m_imageResource = document()->resourceLoader().fetchImage(resourceURL);
     m_imageResource->addResourceClient(
         new ImageDownloadClient(this, m_imageResource));
     m_imageResource->addResourceClient(

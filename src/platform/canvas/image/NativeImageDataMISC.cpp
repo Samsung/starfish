@@ -55,8 +55,7 @@ public:
                                  NativeImageData::nativeImageDataGCKind());
     }
 
-    NativeImageDataMISC(const char* buf, size_t len,
-                        bool shouldDecodingInstantly)
+    NativeImageDataMISC(const char* buf, size_t len)
     {
         m_image = nullptr;
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
@@ -68,8 +67,8 @@ public:
         m_hasTransparentPixel = true;
 
         if (buf && len != 0) {
-            decodeImage(buf, len, shouldDecodingInstantly);
-            if (!shouldDecodingInstantly && m_width && m_height) {
+            decodeImage(buf, len, false);
+            if (m_width && m_height) {
                 m_inputBuffer.insert(m_inputBuffer.end(), buf, &buf[len]);
             }
         }
@@ -93,18 +92,33 @@ public:
         disposeNativeImageData();
     }
 
+    virtual void pruneInternalDataIfPossible()
+    {
+        if (m_image && m_inputBuffer.size()) {
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
+            cairo_surface_destroy(m_imageSurface);
+            m_imageSurface = nullptr;
+#endif
+            free(m_image);
+            m_image = nullptr;
+        }
+    }
+
     virtual uint8_t* data()
     {
-        if (m_inputBuffer.size()) {
+        if (!m_image && m_inputBuffer.size()) {
             decodeImage((const char*)m_inputBuffer.data(), m_inputBuffer.size(),
                         true);
-            std::vector<unsigned char>().swap(m_inputBuffer);
             if (!m_image) {
                 // fallback
                 m_image = malloc(m_stride * m_height);
                 memset(m_image, 0x00, m_stride * m_height);
             }
             initInternalSurface();
+
+            if (bufferSize() < m_inputBuffer.size()) {
+                std::vector<unsigned char>().swap(m_inputBuffer);
+            }
         }
         return (uint8_t*)m_image;
     }
@@ -866,11 +880,9 @@ protected:
 #endif
 };
 
-NativeImageData* NativeImageData::create(const char* buf, size_t len,
-                                         bool shouldDecodingInstantly)
+NativeImageData* NativeImageData::create(const char* buf, size_t len)
 {
-    NativeImageData* imageData =
-        new NativeImageDataMISC(buf, len, shouldDecodingInstantly);
+    NativeImageData* imageData = new NativeImageDataMISC(buf, len);
     if (imageData->width() == 0 || imageData->height() == 0) {
         return NULL;
     }

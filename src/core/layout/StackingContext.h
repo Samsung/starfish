@@ -44,6 +44,7 @@ enum NeedsGraphicsLayerReason ENSURE_ENUM_UNSIGNED {
 
 class GraphicsBufferHolder : public gc {
     friend class StackingContext;
+    friend class WebView;
 
 public:
     GraphicsBufferHolder(CanvasSurface* s);
