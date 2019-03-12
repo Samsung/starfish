@@ -33,6 +33,7 @@ class ScriptContext;
 class WebBase;
 class ExecutionContext;
 class EventTarget;
+class WebView;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
