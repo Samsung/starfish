@@ -287,9 +287,20 @@ public:
         m_glCfg->color_format = EVAS_GL_RGBA_8888;
         m_glCfg->depth_bits = EVAS_GL_DEPTH_NONE;
         m_glCfg->stencil_bits = EVAS_GL_STENCIL_BIT_1;
-        m_glCfg->multisample_bits = EVAS_GL_MULTISAMPLE_MED;
-        // m_glCfg->options_bits = EVAS_GL_OPTIONS_DIRECT;
+        m_glCfg->multisample_bits = EVAS_GL_MULTISAMPLE_NONE;
 
+// FIXME remove this cond after resolve tizen 5.0 tv issue
+#if !defined(STARFISH_TIZEN_TV)
+// we need to set these secret flags reducing memory usage
+// see platform/upstream/efl/src/modules/evas/engines/gl_common/evas_gl_core.c
+// in tizen
+// or ./src/modules/evas/engines/gl_common/evas_gl_core.c in efl git
+#define EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE (1 << 12)
+#define EVAS_GL_OPTIONS_DIRECT_OVERRIDE (1 << 13)
+        m_glCfg->options_bits = (Evas_GL_Options_Bits)(
+            EVAS_GL_OPTIONS_DIRECT | EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
+            EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE);
+#endif
         // Create a surface and context
         m_glSfc = evas_gl_surface_create(m_glEvasgl, m_glCfg, width, height);
 #if defined(STARFISH_TIZEN_MAJOR_VERSION) && STARFISH_TIZEN_MAJOR_VERSION >= 5

@@ -220,9 +220,9 @@ int main(int argc, char* argv[])
         engine = defaultEngine;
     }
     const char* defaultConfig = "opengl";
-    const char* config = getenv("STARFISH_ELM_CONFIG");
-    if (!config || strlen(config) == 0) {
-        config = defaultConfig;
+    const char* elmConfig = getenv("STARFISH_ELM_CONFIG");
+    if (!elmConfig || strlen(elmConfig) == 0) {
+        elmConfig = defaultConfig;
     }
 
     // printf("engine-> %s\n", engine);
@@ -235,9 +235,9 @@ int main(int argc, char* argv[])
     elm_init(0, 0);
     elm_policy_set(ELM_POLICY_QUIT, ELM_POLICY_QUIT_LAST_WINDOW_CLOSED);
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
-    elm_config_accel_preference_set("opengl");
+    elm_config_accel_preference_set(elmConfig);
 #else
-    elm_config_accel_preference_set(config);
+    elm_config_accel_preference_set(elmConfig);
 #endif
 #elif defined(PORT_EVENTLOOP_BACKEND_EFL)
     ecore_init();
