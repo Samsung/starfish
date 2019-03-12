@@ -189,7 +189,7 @@ public:
                                        GlobalPointingEventKind kind) override;
     virtual bool handleDefaultEvent(Event* event) override;
 
-    ExecutionContext* executionContext();
+    ExecutionContext* executionContext() override;
 
     void dispose();
 

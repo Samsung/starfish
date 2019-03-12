@@ -161,7 +161,7 @@ public:
         m_buffer = buffer;
     }
 
-    virtual void detachNativeBuffer()
+    void detachNativeBuffer() override
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
@@ -177,27 +177,27 @@ public:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
-    virtual uint8_t* mapBuffer()
+    uint8_t* mapBuffer() override
     {
         return m_buffer;
     }
 
-    virtual size_t width()
+    size_t width() override
     {
         return m_width;
     }
 
-    virtual size_t height()
+    size_t height() override
     {
         return m_height;
     }
 
-    virtual size_t bufferWidth()
+    size_t bufferWidth() override
     {
         return m_bufferWidth;
     }
 
-    virtual size_t bufferHeight()
+    size_t bufferHeight() override
     {
         return m_bufferHeight;
     }
@@ -217,12 +217,12 @@ public:
         return m_pixelRatio;
     }
 
-    virtual size_t bufferStride()
+    size_t bufferStride() override
     {
         return m_bufferStride;
     }
 
-    virtual void clear()
+    void clear() override
     {
         size_t end = m_bufferStride * m_bufferHeight;
         memset(m_buffer, 0x00, end);
