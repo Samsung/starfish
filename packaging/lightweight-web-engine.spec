@@ -250,9 +250,6 @@ echo "Building for: " %{rpm}
 CXXFLAGS+=' -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} '
 CXXFLAGS+=' -DSTARFISH_TIZEN_VERSION_%{tizen_version_major}_%{tizen_version_minor} '
 %if 0%{?build_option:1}
-%if "%{build_option}" == "ecore_elm_window"
-CXXFLAGS+=' -DPORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN '
-%endif
 %if "%{build_option}" == "evas_gl_transparent_window"
 CXXFLAGS+=' -DSTARFISH_ENABLE_TRANSPARENT_WINDOW '
 %endif
@@ -297,10 +294,18 @@ ninja starfish.shared_library
 
 # For Cairo
 rm -f CMakeCache.txt
+%if 0%{?build_option:1}
+%if "%{build_option}" == "ecore_wayland2_backend"
+cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=ecore_wayland2_cairo_gl -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+%else
 cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+%endif # "%{build_option}" == "ecore_wayland2_backend"
+%else # 0%{?build_option:1}
+cmake CMakeLists.txt -DMODE=release -DHOST=tizen -DARCH='%{tizen_arch}' -DCUSTOM=prod_tv -DBACKEND=efl_cairo_gl -DTARGETNAME=lightweight-web-engine.prod.tv -G Ninja
+%endif
 ninja starfish.shared_library
 ninja starfish.executable
-%endif
+%endif # "%{rpm}" == "prod_tv"
 
 %if "%{rpm}" == "headless"
 # For Dali

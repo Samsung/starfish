@@ -109,6 +109,11 @@ public:
             m_compostiorContext = Compositor::initCompositorContext(this);
         }
 
+#if !defined(STARFISH_ENABLE_TEST)
+        // We should draw every frame in GL backend for non-buffer mode
+        m_webView->markNeedsCompositeConsiderInRendering();
+#endif
+
         RenderResult ret = PlatformWindow::rendering();
         if (ret.didPaintingOrCompositing) {
             if (webView()->didCompositeBefore()) {
