@@ -51,6 +51,11 @@ Requires(postun): /sbin/ldconfig
 %define tizen_version_major 4
 %endif
 
+%if 0%{?tizen_version_minor:1}
+%else
+%define tizen_version_minor 0
+%endif
+
 %if %{?_vd_cfg_product_type:1}%{!?_vd_cfg_product_type:0}
 %if "%{_vd_cfg_product_type}" == "TV"
 %define rpm prod_tv
@@ -243,6 +248,7 @@ an standalone executable binary for wearable.
 echo "Building for: " %{rpm}
 
 CXXFLAGS+=' -DSTARFISH_TIZEN_MAJOR_VERSION=%{tizen_version_major} '
+CXXFLAGS+=' -DSTARFISH_TIZEN_VERSION_%{tizen_version_major}_%{tizen_version_minor} '
 %if 0%{?build_option:1}
 %if "%{build_option}" == "ecore_elm_window"
 CXXFLAGS+=' -DPORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2_HANDLE_FROM_ELM_WIN '

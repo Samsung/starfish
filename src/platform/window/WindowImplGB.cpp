@@ -122,9 +122,11 @@ Canvas* WindowImplGB::preparePainting()
         }
     }
 #endif
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
     RenderInfo renderInfo = m_renderingPrepareCallback();
     updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
                                renderInfo.bufferStride);
+#endif
     CanvasSurface* target = CanvasSurface::createCanvasTarget(
         (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
     Canvas* canvas = Canvas::create(webView(), target);
@@ -145,9 +147,11 @@ Compositor* WindowImplGB::prepareCompositor()
         }
     }
 #endif
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
     RenderInfo renderInfo = m_renderingPrepareCallback();
     updateDrawingBufferAddress(renderInfo.updatedBufferAddress,
                                renderInfo.bufferStride);
+#endif
     CanvasSurface* target = CanvasSurface::createCanvasTarget(
         (uint8_t*)m_internalBuffer, m_width, m_height, m_stride);
     return Compositor::create2D(webView(), m_compostiorContext, target);

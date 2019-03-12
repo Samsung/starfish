@@ -2,6 +2,7 @@
 ROOT=`pwd`
 
 repo=$1
+version=${2:-"5.5"}
 
 if [ "$repo" == "lwe_rel" ]; then
     echo "Syncing with: lwe_rel"
@@ -44,6 +45,10 @@ cd ../$repo
 mkdir -p .git
 
 sed -i "s/\(VERSION \".*\"\)/\1 \"$today\_$hash\"/g" src/StarfishInfo.h
+
+if [ "$version" == "5.0" ]; then
+    cp -f compat/tizen_5.0/LWEWebView.h inc/LWEWebView.h
+fi
 
 git add -A
 echo "======================================="

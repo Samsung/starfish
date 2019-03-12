@@ -273,6 +273,48 @@ static Starfish::WebView* createWebViewInstance(unsigned width, unsigned height,
     return webView;
 }
 
+#if defined(STARFISH_TIZEN_VERSION_5_0)
+WebContainer* WebContainer::Create(void* buffer, unsigned width,
+                                   unsigned height, unsigned stride,
+                                   float scaleFactor,
+                                   const char* defaultFontName,
+                                   const char* locale, const char* timezoneID)
+{
+#if defined(STARFISH_DALI)
+#if !defined(PORT_WINDOW_BACKEND_GB)
+    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return nullptr;
+#endif
+
+#if defined(PORT_NEEDS_THREADED_PUBLIC_API)
+    return (WebContainer*)Starfish::MessageLoop::runOnMainThreadSync(
+        [&]() -> size_t {
+            auto webView =
+                createWebViewInstance(width, height, scaleFactor,
+                                      defaultFontName, locale, timezoneID);
+
+            WebContainer* newWebContainer =
+                new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView)))
+                    WebContainer(webView);
+            newWebContainer->UpdateBuffer(buffer, width, height, stride);
+            return (size_t)newWebContainer;
+        });
+#else
+    auto webView = createWebViewInstance(width, height, scaleFactor,
+                                         defaultFontName, locale, timezoneID);
+    WebContainer* newWebContainer =
+        new (GC_MALLOC_UNCOLLECTABLE(sizeof(WebView))) WebContainer(webView);
+    newWebContainer->UpdateBuffer(buffer, width, height, stride);
+    return newWebContainer;
+#endif
+#else
+    STARFISH_LOG_ERROR("Cannot use this set of function within this port!");
+    STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    return nullptr;
+#endif
+}
+#else
 WebContainer* WebContainer::Create(unsigned width, unsigned height,
                                    float scaleFactor,
                                    const char* defaultFontName,
@@ -306,7 +348,22 @@ WebContainer* WebContainer::Create(unsigned width, unsigned height,
     return newWebContainer;
 #endif
 }
+#endif
 
+#if defined(STARFISH_TIZEN_VERSION_5_0)
+void WebContainer::UpdateBuffer(void* buffer, unsigned width, unsigned height,
+                                unsigned stride)
+{
+    START_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+    ResizeTo(width, height);
+    TO_WEBVIEW(m_impl)
+        ->platformWindow()
+        ->updateDrawingBufferAddress(buffer, stride);
+    END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
+}
+#endif
+
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
 void WebContainer::RegisterPreRenderingHandler(
     const std::function<WebContainer::RenderInfo(void)>& cb)
 {
@@ -327,6 +384,7 @@ void WebContainer::RegisterPreRenderingHandler(
         });
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
+#endif
 
 void WebContainer::RegisterOnRenderedHandler(
     const std::function<void(WebContainer*, const WebContainer::RenderResult&)>&
@@ -1035,6 +1093,7 @@ void WebContainer::SetUserAgentString(const std::string& userAgent)
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
 std::string WebContainer::GetUserAgentString()
 {
     std::string ret;
@@ -1043,6 +1102,7 @@ std::string WebContainer::GetUserAgentString()
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return ret;
 }
+#endif
 
 void WebContainer::SetCacheMode(int mode)
 {
@@ -1055,6 +1115,7 @@ void WebContainer::SetCacheMode(int mode)
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
 int WebContainer::GetCacheMode()
 {
     int ret = 0;
@@ -1067,6 +1128,7 @@ int WebContainer::GetCacheMode()
 #endif
     return ret;
 }
+#endif
 
 void WebContainer::SetDefaultFontSize(uint32_t size)
 {
@@ -1077,6 +1139,7 @@ void WebContainer::SetDefaultFontSize(uint32_t size)
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
 }
 
+#if !defined(STARFISH_TIZEN_VERSION_5_0)
 uint32_t WebContainer::GetDefaultFontSize()
 {
     uint32_t ret = 0;
@@ -1085,6 +1148,7 @@ uint32_t WebContainer::GetDefaultFontSize()
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return ret;
 }
+#endif
 
 void WebContainer::DispatchMouseMoveEvent(MouseButtonValue button,
                                           MouseButtonsValue buttons, double x,
