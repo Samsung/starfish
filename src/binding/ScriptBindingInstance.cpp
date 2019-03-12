@@ -17,21 +17,17 @@
  *  USA
  */
 
+#if !defined(STARFISH_ENABLE_SERVICE_WORKER_HOST)
 #include "StarfishConfig.h"
+#include "core/page/Window.h"
+#endif
+
 #include "Starfish.h"
+#include "binding/ScriptEngineInstance.h"
 #include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptWrappable.h"
-#include "core/dom/Document.h"
-#include "core/dom/DOMImplementation.h"
-#include "core/dom/Element.h"
-#include "core/dom/HTMLCollection.h"
 #include "core/extra/Console.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/History.h"
-#include "core/page/Location.h"
-#include "core/page/Navigator.h"
-#include "core/page/WebView.h"
-#include "core/page/Window.h"
+#include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
@@ -49,7 +45,7 @@ namespace Starfish {
 using namespace Escargot;
 
 ScriptBindingInstance::ScriptBindingInstance(
-    ScriptEngineInstance* engineInstance, Window* ownerWindow)
+    ScriptEngineInstance* engineInstance)
 {
     /*
         GC_REGISTER_FINALIZER_NO_ORDER(
@@ -61,9 +57,6 @@ ScriptBindingInstance::ScriptBindingInstance(
             NULL, NULL, NULL);
     */
     m_scriptContext = ContextRef::create(engineInstance->engineInstance());
-    m_globalScope = ownerWindow;
-    m_ownerWindow = ownerWindow;
-    m_ownerDocument = nullptr;
 #ifdef TIZEN_DEVICE_API
     m_deviceAPI = nullptr;
 #endif
@@ -76,11 +69,21 @@ ScriptBindingInstance::ScriptBindingInstance(
     STARFISH_ENUM_BINDING_NAMES(FOR_EACH_SCRIPT_FN)
 #undef FOR_EACH_SCRIPT_FN
 }
+
+void ScriptBindingInstance::initBinding()
+{
+    ContextRef* context = scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(context);
+    initJSBinding(context, state);
+    state->destroy();
+
+#ifdef TIZEN_DEVICE_API
+    m_deviceAPI = DeviceAPI::initialize(m_scriptContext);
+#endif
+}
+
 void ScriptBindingInstance::destroy()
 {
-    if (m_ownerWindow->browsingContext()->isTopLevelBrowsingContext()) {
-        m_scriptContext->vmInstance()->clearCachesRelatedWithContext();
-    }
 #ifdef TIZEN_DEVICE_API
     DeviceAPI::close(m_scriptContext);
 #endif
@@ -193,206 +196,8 @@ static ValueRef* _debugConsoleFunction(ExecutionStateRef* state,
     return ValueRef::createUndefined();
 }
 
-static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
-                                           ValueRef* key)
+void ScriptBindingInstance::initJSBinding(ContextRef* context, ExecutionStateRef* state)
 {
-    Window* self = fetchWindow(state->context());
-
-    auto callee = state->resolveCallee();
-    if (callee) {
-        void* data = callee->asObject()->extraData();
-        if (data) {
-            ScriptWrappable* w = (ScriptWrappable*)data;
-            if (w->isAttributeEventFunction()) {
-                auto elementDOMObject =
-                    ((AttributeEventFunction*)w)->target()->scriptValue();
-                if (elementDOMObject->isObject()) {
-                    bool exist = elementDOMObject->asObject()->hasOwnProperty(
-                        state, key);
-                    if (exist) {
-                        return elementDOMObject->asObject()->getOwnProperty(
-                            state, key);
-                    }
-                    return ValueRef::createEmpty();
-                }
-            }
-        }
-    }
-
-    uint32_t idx = key->toArrayIndex(state);
-    if (idx != ValueRef::InvalidArrayIndexValue) {
-        Window* result = self->defaultIndexedGetter(idx);
-        if (result != nullptr) {
-            return result->scriptValue();
-        }
-    }
-    String* name = toBrowserString(state, key);
-    Nullable<ScriptObject> coll = self->defaultNamedGetter(name);
-    if (coll.hasValue()) {
-        return ValueRef::create(coll.getValue());
-    }
-
-    if (name->equals("self")) {
-        return self->scriptValue();
-    }
-
-    return ValueRef::createEmpty();
-}
-
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-static ValueRef* _openAvplayFunction(ExecutionStateRef* state,
-                                     ValueRef* thisValue, size_t argc,
-                                     ValueRef** argv, bool isNewExpression)
-{
-    fetchWebView(state->context())
-        ->avplay()
-        ->open(toBrowserString(state, argv[0]));
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _prepareAvplayFunction(ExecutionStateRef* state,
-                                        ValueRef* thisValue, size_t argc,
-                                        ValueRef** argv, bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->prepare();
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _setDisplayRectAvplayFunction(ExecutionStateRef* state,
-                                               ValueRef* thisValue, size_t argc,
-                                               ValueRef** argv,
-                                               bool isNewExpression)
-{
-    double arg1 = argv[0]->toNumber(state);
-    double arg2 = argv[1]->toNumber(state);
-    double arg3 = argv[2]->toNumber(state);
-    double arg4 = argv[3]->toNumber(state);
-    fetchWebView(state->context())
-        ->avplay()
-        ->setDisplayRect(arg1, arg2, arg3, arg4);
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _playAvplayFunction(ExecutionStateRef* state,
-                                     ValueRef* thisValue, size_t argc,
-                                     ValueRef** argv, bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->play();
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _closeAvplayFunction(ExecutionStateRef* state,
-                                      ValueRef* thisValue, size_t argc,
-                                      ValueRef** argv, bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->close();
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _pauseAvplayFunction(ExecutionStateRef* state,
-                                      ValueRef* thisValue, size_t argc,
-                                      ValueRef** argv, bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->pause();
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _stopAvplayFunction(ExecutionStateRef* state,
-                                     ValueRef* thisValue, size_t argc,
-                                     ValueRef** argv, bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->stop();
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _suspendAvplayFunction(ExecutionStateRef* state,
-                                        ValueRef* thisValue, size_t argc,
-                                        ValueRef** argv, bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->suspend();
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _restoreAvplayFunction(ExecutionStateRef* state,
-                                        ValueRef* thisValue, size_t argc,
-                                        ValueRef** argv, bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->restore();
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _getStateAvplayFunction(ExecutionStateRef* state,
-                                         ValueRef* thisValue, size_t argc,
-                                         ValueRef** argv, bool isNewExpression)
-{
-    String* ret = fetchWebView(state->context())->avplay()->getState();
-    return ValueRef::create(toJSString(ret));
-}
-
-static ValueRef* _getCurrentTimeAvplayFunction(ExecutionStateRef* state,
-                                               ValueRef* thisValue, size_t argc,
-                                               ValueRef** argv,
-                                               bool isNewExpression)
-{
-    return ValueRef::create(
-        fetchWebView(state->context())->avplay()->getCurrentTime());
-}
-
-static ValueRef* _getDurationAvplayFunction(ExecutionStateRef* state,
-                                            ValueRef* thisValue, size_t argc,
-                                            ValueRef** argv,
-                                            bool isNewExpression)
-{
-    return ValueRef::create(
-        fetchWebView(state->context())->avplay()->getDuration());
-}
-
-static ValueRef* _setStreamingPropertyAvplayFunction(ExecutionStateRef* state,
-                                                     ValueRef* thisValue,
-                                                     size_t argc,
-                                                     ValueRef** argv,
-                                                     bool isNewExpression)
-{
-    String* arg1 = toBrowserString(state, argv[0]);
-    String* arg2 = toBrowserString(state, argv[1]);
-    fetchWebView(state->context())->avplay()->setStreamingProperty(arg1, arg2);
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _prepareAsyncAvplayFunction(ExecutionStateRef* state,
-                                             ValueRef* thisValue, size_t argc,
-                                             ValueRef** argv,
-                                             bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->prepareAsync(argv[0]);
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _setListenerAvplayFunction(ExecutionStateRef* state,
-                                            ValueRef* thisValue, size_t argc,
-                                            ValueRef** argv,
-                                            bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->setListener(argv[0]);
-    return ValueRef::createUndefined();
-}
-
-static ValueRef* _seekToAvplayFunction(ExecutionStateRef* state,
-                                       ValueRef* thisValue, size_t argc,
-                                       ValueRef** argv, bool isNewExpression)
-{
-    fetchWebView(state->context())->avplay()->seekTo(argv[0]->toNumber(state));
-    return ValueRef::createUndefined();
-}
-#endif
-
-void ScriptBindingInstance::initBinding(Document* ownerDocument)
-{
-    m_ownerDocument = ownerDocument;
-
-    ContextRef* context = scriptContext();
-    ExecutionStateRef* state = ExecutionStateRef::create(context);
-
     // binding names first
     GlobalObjectRef* globalObject = context->globalObject();
 #define DECLARE_NAME_FOR_BINDING(exportName)                                   \
@@ -401,26 +206,27 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
             true, false, true,                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data) -> ValueRef* { \
-                Document* document;                                            \
+                ScriptBindingInstance* instance;                               \
                 if (self->isGlobalObject() && self->extraData()) {             \
-                    document = ((Window*)self->extraData())->document();       \
+                    instance = ((STARFISH_GLOBAL_BINDING_CLASS*)self->extraData()) \
+                        ->scriptBindingInstance();                             \
                 } else {                                                       \
-                    document = fetchDocument(state->context());                \
+                    instance = fetchScriptBindingInstance(state->context());   \
                 }                                                              \
-                return document->scriptBindingInstance()->value##exportName(); \
+                return instance->value##exportName();                          \
             },                                                                 \
             [](ExecutionStateRef* state, ObjectRef* self,                      \
                ObjectRef::NativeDataAccessorPropertyData* data,                \
                ValueRef* setterInputData) -> bool {                            \
-                Document* document;                                            \
+                ScriptBindingInstance* instance;                               \
                 if (self->isGlobalObject() && self->extraData()) {             \
-                    document = ((Window*)self->extraData())->document();       \
+                    instance = ((STARFISH_GLOBAL_BINDING_CLASS*)self->extraData()) \
+                        ->scriptBindingInstance();                             \
                 } else {                                                       \
-                    document = fetchDocument(state->context());                \
+                    instance = fetchScriptBindingInstance(state->context());   \
                 }                                                              \
-                document->scriptBindingInstance()->value##exportName();        \
-                document->scriptBindingInstance()->m_value##exportName =       \
-                    setterInputData;                                           \
+                instance->value##exportName();                                 \
+                instance->m_value##exportName = setterInputData;               \
                 return true;                                                   \
             });                                                                \
     globalObject->defineNativeDataAccessorProperty(                            \
@@ -428,6 +234,7 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
         newData##exportName);
     STARFISH_ENUM_GLOBAL_BINDING_NAMES(DECLARE_NAME_FOR_BINDING)
 #undef DECLARE_NAME_FOR_BINDING
+
 #define DECLARE_NAME_FOR_UNIMPL_BINDING(exportName)                            \
     ObjectRef::NativeDataAccessorPropertyData* newData##exportName =           \
         new ObjectRef::NativeDataAccessorPropertyData(                         \
@@ -452,9 +259,6 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
 #undef DECLARE_NAME_FOR_UNIMPL_BINDING
 
     fnEventTarget();
-    fnWindow();
-
-    ownerWindow()->init(this, ownerWindow());
 
     ObjectRef* console = ObjectRef::create(state);
 
@@ -472,43 +276,5 @@ void ScriptBindingInstance::initBinding(Document* ownerDocument)
     globalObject->defineDataProperty(
         state, ValueRef::create(StringRef::fromASCII("console")),
         ValueRef::create(console), true, true, true);
-
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
-    ObjectRef* avplay = ObjectRef::create(state);
-
-#define DECLARE_AVPLAY_APIS(name)                                           \
-    avplay->defineDataProperty(                                             \
-        state, ValueRef::create(StringRef::fromASCII(#name)),               \
-        ValueRef::create(FunctionObjectRef::createBuiltinFunction(          \
-            state, FunctionObjectRef::NativeFunctionInfo(                   \
-                       AtomicStringRef::create(context, #name),             \
-                       _##name##AvplayFunction, 1, nullptr, true, false))), \
-        true, true, true);
-    AVPLAY_APIS(DECLARE_AVPLAY_APIS)
-#undef DECLARE_AVPLAY_APIS
-
-    ObjectRef* webapis = ObjectRef::create(state);
-    globalObject->defineDataProperty(
-        state, ValueRef::create(StringRef::fromASCII("webapis")),
-        ValueRef::create(webapis), true, true, true);
-
-    webapis->defineDataProperty(
-        state, ValueRef::create(StringRef::fromASCII("avplay")),
-        ValueRef::create(avplay), true, true, true);
-#endif
-
-#ifdef TIZEN_DEVICE_API
-    m_deviceAPI = DeviceAPI::initialize(m_scriptContext);
-#endif
-
-    context->setVirtualIdentifierCallback(virtualIdentifierCallback);
-
-    state->destroy();
-#ifdef STARFISH_ENABLE_TEST
-    if (ownerWindow()->webView()->testCompatibleMode() ==
-        StarfishTestCompatibleMode::Normal) {
-        evaluateString(this, String::fromUTF8("delete this.testRunner"));
-    }
-#endif
 }
 }

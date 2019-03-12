@@ -41,7 +41,6 @@ typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
                                                  bool isNewExpression);
 }
 
-#include "binding/ScriptEngineInstance.h"
 #include "binding/Interfaces.h"
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER_HOST)
@@ -65,7 +64,6 @@ class Document;
 class ScriptEngineInstance;
 class ScriptBindingInstance;
 class String;
-class GlobalScope;
 
 #define FOR_EACH_DECLARE_FN(exportName)               \
     Escargot::FunctionObjectRef* binding##exportName( \
@@ -76,25 +74,18 @@ STARFISH_ENUM_BINDING_NAMES(FOR_EACH_DECLARE_FN);
 
 class ScriptBindingInstance : public gc {
 public:
-    ScriptBindingInstance(ScriptEngineInstance* engineInstance,
-                          Window* ownerWindow);
-    void initBinding(Document* ownerDocument);
-    void destroy();
-
-    Document* ownerDocument()
+    ScriptBindingInstance(ScriptEngineInstance* engineInstance);
+    virtual ~ScriptBindingInstance()
     {
-        return m_ownerDocument;
     }
 
-    Window* ownerWindow()
-    {
-        return m_ownerWindow;
-    }
+    void initBinding();
 
-    GlobalScope* globalScope()
-    {
-        return m_globalScope;
-    }
+    virtual void destroy();
+
+    // TODO: Remove ownerDocument and ownerWindow
+    virtual Window* ownerWindow() = 0;
+    virtual Document* ownerDocument() = 0;
 
 #define FOR_EACH_GETTER_FN(exportName)                                   \
     Escargot::FunctionObjectRef* fn##exportName()                        \
@@ -149,12 +140,10 @@ public:
 
 protected:
     Escargot::ContextRef* m_scriptContext;
-    GlobalScope* m_globalScope;
-    Window* m_ownerWindow;
-    Document* m_ownerDocument;
 #ifdef TIZEN_DEVICE_API
     ::DeviceAPI::ExtensionManagerInstance* m_deviceAPI;
 #endif
+    virtual void initJSBinding(Escargot::ContextRef* context, Escargot::ExecutionStateRef* state);
 };
 }
 

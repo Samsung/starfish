@@ -22,7 +22,7 @@
 
 #include "core/page/Window.h"
 
-#include "binding/ScriptBindingInstance.h"
+#include "binding/ScriptBindingWindowInstance.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/ErrorEvent.h"
@@ -89,7 +89,7 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
             [](void* obj, void* cd) { STARFISH_LOG_INFO("Window::~Window\n"); },
             NULL, NULL, NULL);
     */
-    m_scriptBindingInstance = new ScriptBindingInstance(
+    m_scriptBindingInstance = new ScriptBindingWindowInstance(
         browsingContext->webView()->scriptEngineInstance(), this);
 
     // TODO: use location to open a new document
@@ -99,7 +99,7 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     m_history = new History(m_document);
     m_navigator = new Navigator(m_document);
     m_location = new Location(m_document);
-    m_scriptBindingInstance->initBinding(m_document);
+    m_scriptBindingInstance->initBinding();
 #if defined(STARFISH_ENABLE_TTS)
     m_speechSynthesis = new SpeechSynthesis(m_document);
 #endif
