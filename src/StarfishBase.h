@@ -200,6 +200,7 @@ typedef unsigned int uint;
 #include <cwchar>
 #include <numeric>
 #include <stdarg.h>
+#include <future>
 
 #ifndef ESCARGOT
 #define ESCARGOT // for use additional functions in GCutil

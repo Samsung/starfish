@@ -28,6 +28,7 @@ class Mutex;
 class Thread;
 
 typedef void* (*ThreadWorker)(void*);
+typedef void* (*StoppableThreadWorker)(void*, std::future<void>&&);
 
 void registerMainThread();
 bool isMainThread();
@@ -35,10 +36,12 @@ size_t mainThreadID();
 size_t numberOfCores();
 
 struct ThreadData {
-    ThreadData(Thread* t, MessageLoop* m, ThreadWorker w, void* d)
+    ThreadData(Thread* t, MessageLoop* m, ThreadWorker w,
+               StoppableThreadWorker sw, void* d)
         : m_thread(t)
         , m_messageLoop(m)
         , m_fn(w)
+        , m_stoppableFn(sw)
         , m_data(d)
 #if !defined(OS_WINDOWS)
         , m_tid(0)
@@ -49,21 +52,25 @@ struct ThreadData {
     Thread* m_thread;
     MessageLoop* m_messageLoop;
     ThreadWorker m_fn;
+    StoppableThreadWorker m_stoppableFn;
     void* m_data;
     pthread_t m_tid;
     size_t m_joinHandle;
+    std::promise<void> m_stopSignal;
 };
 
 class ThreadClient;
 
 class Thread : public gc {
 public:
-    Thread(ThreadClient* client);
+    Thread(ThreadClient* client, const char* name = "");
     ~Thread()
     {
     }
 
     void run(MessageLoop* msgLoop, ThreadWorker fn, void* data);
+    void run(MessageLoop* msgLoop, StoppableThreadWorker fn, void* data);
+
     void joinIfNeeds();
     bool isAlive()
     {
@@ -72,6 +79,8 @@ public:
     void finishUnjoined();
 
 private:
+    void run(MessageLoop* msgLoop, ThreadWorker fn,
+             StoppableThreadWorker stoppableFn, void* data);
     static void cleanupHandler(void* data);
 
     ThreadClient* m_threadClient;
