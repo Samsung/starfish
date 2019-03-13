@@ -22,8 +22,12 @@
 
 namespace Starfish {
 
-Mutex::Mutex()
+Mutex::Mutex(const char* name)
 {
+#ifndef NDEBUG
+    m_name = name;
+#endif
+
     m_mutex = new pthread_mutex_t;
     pthread_mutex_init(m_mutex, NULL);
 
@@ -41,11 +45,21 @@ Mutex::Mutex()
 
 void Mutex::lock()
 {
+#ifndef NDEBUG
+    if (!m_name.empty()) {
+        STARFISH_LOG_WARN("Lock: %s\n", m_name.c_str());
+    }
+#endif
     pthread_mutex_lock(m_mutex);
 }
 
 void Mutex::unlock()
 {
+#ifndef NDEBUG
+    if (!m_name.empty()) {
+        STARFISH_LOG_WARN("Unlock: %s\n", m_name.c_str());
+    }
+#endif
     pthread_mutex_unlock(m_mutex);
 }
-}
+} // namespace Starfish

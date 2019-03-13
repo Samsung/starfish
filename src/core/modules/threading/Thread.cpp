@@ -91,10 +91,10 @@ size_t mainThreadID()
 }
 #endif
 
-Thread::Thread(ThreadClient* client)
+Thread::Thread(ThreadClient* client, const char* name)
     : m_threadClient(client)
     , m_alive(false)
-    , m_mutex(new Mutex())
+    , m_mutex(new Mutex(name))
     , m_threadData(nullptr)
 {
 }
@@ -104,6 +104,12 @@ void Thread::finishUnjoined()
     STARFISH_ASSERT(isMainThread());
     if (!m_threadData) {
         return;
+    }
+
+    // NOTE: if this thread is still running, we send it a stop signal. A
+    // worker, which possibly lives till here, should use StoppableThreadWorker.
+    if (m_alive) {
+        m_threadData->m_stopSignal.set_value();
     }
 
     {
@@ -129,10 +135,22 @@ void Thread::finishUnjoined()
     m_threadData = nullptr;
 }
 
+void Thread::run(MessageLoop* msgLoop, StoppableThreadWorker fn, void* data)
+{
+    run(msgLoop, nullptr, fn, data);
+}
+
 void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
+{
+    run(msgLoop, fn, nullptr, data);
+}
+
+void Thread::run(MessageLoop* msgLoop, ThreadWorker fn,
+                 StoppableThreadWorker stoppableFn, void* data)
 {
     STARFISH_ASSERT(isMainThread());
     STARFISH_RELEASE_ASSERT(!m_alive);
+    STARFISH_ASSERT(!(fn && stoppableFn));
 
     finishUnjoined();
     Locker<Mutex> l(*m_mutex);
@@ -142,7 +160,7 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
     }
 
     m_threadData = new (GC_MALLOC_UNCOLLECTABLE(sizeof(ThreadData)))
-        ThreadData(this, msgLoop, fn, data);
+        ThreadData(this, msgLoop, fn, stoppableFn, data);
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     msgLoop->increaseRunningThreadCount();
     msgLoop->increaseUnjoinedThreadCount();
@@ -160,7 +178,16 @@ void Thread::run(MessageLoop* msgLoop, ThreadWorker fn, void* data)
             pthread_cleanup_push(Thread::cleanupHandler, data);
             {
                 Locker<Mutex> l(*d->m_thread->m_mutex);
-                void* ret = d->m_fn(d->m_data);
+
+                if (d->m_fn) {
+                    // normal worker
+                    d->m_fn(d->m_data);
+                } else {
+                    // stoppable worker
+                    auto future = d->m_stopSignal.get_future();
+                    d->m_stoppableFn(d->m_data, std::move(future));
+                }
+
 #ifdef STARFISH_MESSAGELOOP_DEBUG
                 d->m_messageLoop->decreaseRunningThreadCount();
 #endif
