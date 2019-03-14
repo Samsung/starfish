@@ -20,8 +20,6 @@
 #ifndef __StarfishProcessType__
 #define __StarfishProcessType__
 
-#include "StarfishBase.h"
-
 namespace Starfish {
 
 #if defined(OS_POSIX)
