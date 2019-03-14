@@ -76,6 +76,25 @@ enum class AbortRequestType {
     AbortWithError,
 };
 
+enum class RequestErrorType {
+    NoError,
+    UnknownError,
+    HostLookupError,
+    UnsupportedAuthSchemeError,
+    AuthenticationError,
+    ProxyAuthenticationError,
+    ConnectError,
+    IOError,
+    TimeoutError,
+    RedirectLoopError,
+    UnsupportedSchemeError,
+    FailedSSLHandshakeError,
+    BadURLError,
+    FileError,
+    FileNotFoundError,
+    TooManyRequestError,
+};
+
 class ResourceRequestClient : public gc {
 public:
     virtual ~ResourceRequestClient()
@@ -273,7 +292,12 @@ public:
 
     bool isError()
     {
-        return m_gotError;
+        return (m_requestError != RequestErrorType::NoError);
+    }
+
+    RequestErrorType errorType()
+    {
+        return m_requestError;
     }
 
     void setRequestHeader(String* name, String* value);
@@ -354,7 +378,7 @@ protected:
     void changeReadyState(ReadyState readyState, bool isExplicitAction);
     void changeProgress(ProgressState progress, bool isExplicitAction);
     void handleResponseEOF();
-    void handleError(ProgressState error);
+    void handleError(ProgressState error, RequestErrorType errorType);
     void handleConnectError();
     void handleResponseEOFwithPreflightRequestRedirected();
 
@@ -370,7 +394,6 @@ protected:
     }
 
     bool m_didSend;
-    bool m_gotError;
     bool m_containsBase64Content;
 
     RequestData* m_requestData;
@@ -402,6 +425,7 @@ protected:
     volatile size_t m_loaded;
     volatile size_t m_total;
     AbortRequestType m_abortRequestState;
+    RequestErrorType m_requestError;
 
     GCVector<ResourceRequestClient*> m_clients;
 };

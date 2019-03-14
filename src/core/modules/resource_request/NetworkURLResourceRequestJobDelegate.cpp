@@ -186,7 +186,8 @@ void NetworkURLWorkerHelper::abortHandeler(size_t handle, void* data)
         Locker<Mutex> locker(*nwd->request->m_mutex);
         if (nwd == nwd->request->m_activeNetworkURLWorkerData) {
             nwd->request->m_responseData->m_status = 0;
-            nwd->request->handleError(ProgressState::InError);
+            nwd->request->handleError(ProgressState::InError,
+                                      RequestErrorType::UnknownError);
             nwd->request->m_activeNetworkURLWorkerData = nullptr;
         }
     }
@@ -250,11 +251,29 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         STARFISH_LOG_INFO(
             "got timeout %s[%d]\n", s.data(),
             (int)nwd->httpTransaction->httpResponse().responseCode());
-        nwd->request->handleError(ProgressState::TimeOut);
+        nwd->request->handleError(ProgressState::TimeOut,
+                                  RequestErrorType::TimeoutError);
     } else {
         auto s = nwd->request->url()->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO("failed to open %s\n", s.data());
-        nwd->request->handleError(ProgressState::InError);
+        RequestErrorType errorType;
+        switch (nwd->httpTransaction->res()) {
+        case CURLE_COULDNT_RESOLVE_HOST:
+            errorType = RequestErrorType::HostLookupError;
+            break;
+
+        case CURLE_COULDNT_CONNECT:
+            errorType = RequestErrorType::ConnectError;
+            break;
+
+        case CURLE_UNSUPPORTED_PROTOCOL:
+            errorType = RequestErrorType::UnsupportedSchemeError;
+            break;
+
+        default:
+            errorType = RequestErrorType::UnknownError;
+        }
+        nwd->request->handleError(ProgressState::InError, errorType);
     }
 
     if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
