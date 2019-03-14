@@ -389,7 +389,7 @@ static void logEglError(const char* name) noexcept
 #define glVertexAttribI4ui g_evasGLAPI->glVertexAttribI4ui
 #define glVertexAttribI4uiv g_evasGLAPI->glVertexAttribI4uiv
 #define glVertexAttribIPointer g_evasGLAPI->glVertexAttribIPointer
-#define glWaitSync g_evasGLAPI->glWaitSyncnclude<GLES2 / gl2ext.h>
+#define glWaitSync g_evasGLAPI->glWaitSync
 
 #endif
 
@@ -423,6 +423,7 @@ static void logEglError(const char* name) noexcept
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 Evas_GL_API* g_evasGLAPI;
+Evas_GL* g_evasGL;
 #endif
 
 namespace Starfish {
@@ -2028,6 +2029,75 @@ public:
             m_webView->screenInfo().devicePixelRatio);
     }
 
+    void setViewport()
+    {
+        size_t w = m_webView->platformWindow()->width();
+        size_t h = m_webView->platformWindow()->height();
+        glViewport(0, 0, w, h);
+    }
+
+    void scissor(float x, float y, float width, float height)
+    {
+        glScissor(x,
+                  (float)m_webView->platformWindow()->height() - (y + height),
+                  width, height);
+    }
+
+    void mapPointsToScreen(float& x, float& y)
+    {
+        SkPoint pt;
+        pt = SkPoint::Make(x, y);
+        auto& lastState = m_state.back();
+        lastState.matrix.mapPoints(&pt, 1);
+        m_screenMatrix.mapPoints(&pt, 1);
+        x = pt.x();
+        y = pt.y();
+    }
+
+    void mapPointsToLogicalScreen(float& x, float& y)
+    {
+        SkPoint pt;
+        pt = SkPoint::Make(x, y);
+        auto& lastState = m_state.back();
+        lastState.matrix.mapPoints(&pt, 1);
+        x = pt.x();
+        y = pt.y();
+    }
+
+    void mapLogicalScreenPointsToScreen(float& x, float& y)
+    {
+        SkPoint pt;
+        pt = SkPoint::Make(x, y);
+        auto& lastState = m_state.back();
+        m_screenMatrix.mapPoints(&pt, 1);
+        x = pt.x();
+        y = pt.y();
+    }
+
+    SkMatrix computeScreenMatrix()
+    {
+        SkMatrix m = SkMatrix::I();
+#if defined(PORT_WEBVIEW_BRIDGE_EFL)
+        size_t w = m_webView->platformWindow()->width();
+        size_t h = m_webView->platformWindow()->height();
+        int deg = evas_gl_rotation_get(g_evasGL);
+        if (deg % 180 == 90) {
+            float tx = w / 2.f;
+            float ty = h / 2.f;
+
+            m.preTranslate(tx, ty);
+
+            SkMatrix t = SkMatrix::I();
+            t.preRotate(360 - deg);
+            t.preScale(h / (float)w, w / (float)h);
+            m.preConcat(t);
+
+            m.preTranslate(-tx, -ty);
+        }
+#endif
+        return m;
+    }
+
     CompositorImplGL(WebView* webView, CompositorContext* compositorContext)
     {
         LongTaskFinder t("CompositorImplGL::CompositorImplGL", 1);
@@ -2036,9 +2106,9 @@ public:
         m_seenFilteredTexture = false;
         m_webView = webView;
         m_compositorContext = compositorContext;
+        m_screenMatrix = computeScreenMatrix();
 
-        glViewport(0, 0, m_webView->platformWindow()->width(),
-                   m_webView->platformWindow()->height());
+        setViewport();
 
         m_state.reserve(32);
         m_state.push_back(CompositorImplGLState());
@@ -2196,29 +2266,22 @@ public:
     {
         float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
 
-        SkPoint pt;
-        pt = SkPoint::Make(rt.x(), rt.y());
-
         auto& lastState = m_state.back();
+        dest[0][0] = rt.x();
+        dest[0][1] = rt.y();
+        mapPointsToLogicalScreen(dest[0][0], dest[0][1]);
 
-        lastState.matrix.mapPoints(&pt, 1);
-        dest[0][0] = pt.x();
-        dest[0][1] = pt.y();
+        dest[1][0] = rt.x();
+        dest[1][1] = rt.maxY();
+        mapPointsToLogicalScreen(dest[1][0], dest[1][1]);
 
-        pt = SkPoint::Make(rt.x(), rt.maxY());
-        lastState.matrix.mapPoints(&pt, 1);
-        dest[1][0] = pt.x();
-        dest[1][1] = pt.y();
+        dest[2][0] = rt.maxX();
+        dest[2][1] = rt.y();
+        mapPointsToLogicalScreen(dest[2][0], dest[2][1]);
 
-        pt = SkPoint::Make(rt.maxX(), rt.y());
-        lastState.matrix.mapPoints(&pt, 1);
-        dest[2][0] = pt.x();
-        dest[2][1] = pt.y();
-
-        pt = SkPoint::Make(rt.maxX(), rt.maxY());
-        lastState.matrix.mapPoints(&pt, 1);
-        dest[3][0] = pt.x();
-        dest[3][1] = pt.y();
+        dest[3][0] = rt.maxX();
+        dest[3][1] = rt.maxY();
+        mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
 
         auto currentColor = lastState.color;
 
@@ -2240,6 +2303,9 @@ public:
                         maxX = std::max((float)result[0][i].X, maxX);
                         maxY = std::max((float)result[0][i].Y, maxY);
                     }
+
+                    mapLogicalScreenPointsToScreen(minX, minY);
+                    mapLogicalScreenPointsToScreen(maxX, maxY);
 
                     float hw = 2.f / m_webView->platformWindow()->width();
                     float hh = -2.f / m_webView->platformWindow()->height();
@@ -2289,6 +2355,13 @@ public:
                             (float)pointPerIndex[indices[i + 2]][1]
                         };
 
+                        mapLogicalScreenPointsToScreen(trianglePoints[0],
+                                                       trianglePoints[1]);
+                        mapLogicalScreenPointsToScreen(trianglePoints[2],
+                                                       trianglePoints[3]);
+                        mapLogicalScreenPointsToScreen(trianglePoints[4],
+                                                       trianglePoints[5]);
+
                         float hw = 2.f / m_webView->platformWindow()->width();
                         float hh = -2.f / m_webView->platformWindow()->height();
                         float position[] = {
@@ -2317,6 +2390,12 @@ public:
         } else {
             float hw = 2.f / m_webView->platformWindow()->width();
             float hh = -2.f / m_webView->platformWindow()->height();
+
+            mapLogicalScreenPointsToScreen(dest[0][0], dest[0][1]);
+            mapLogicalScreenPointsToScreen(dest[1][0], dest[1][1]);
+            mapLogicalScreenPointsToScreen(dest[2][0], dest[2][1]);
+            mapLogicalScreenPointsToScreen(dest[3][0], dest[3][1]);
+
             float data[] = {
                 dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
                 dest[1][0] * hw - 1, dest[1][1] * hh + 1, // V2
@@ -2521,8 +2600,7 @@ public:
         checkError();
 
         // reset global properties
-        glViewport(0, 0, m_webView->platformWindow()->width(),
-                   m_webView->platformWindow()->height());
+        setViewport();
 
         // blur H
         {
@@ -2575,6 +2653,11 @@ public:
                      GLenum textureKind, GLenum textureBindNumber,
                      size_t textureWidth, size_t textureHeight)
     {
+        mapLogicalScreenPointsToScreen(dest[0][0], dest[0][1]);
+        mapLogicalScreenPointsToScreen(dest[1][0], dest[1][1]);
+        mapLogicalScreenPointsToScreen(dest[2][0], dest[2][1]);
+        mapLogicalScreenPointsToScreen(dest[3][0], dest[3][1]);
+
         auto& lastState = m_state.back();
         if (lastState.blurRadius) {
             drawFilteredTexture(cs, dest, textureID, textureKind,
@@ -2677,28 +2760,22 @@ public:
 
         CanvasSurfaceGL* csGL = (CanvasSurfaceGL*)cs;
 
-        SkPoint pt;
-        pt = SkPoint::Make(dst.x(), dst.y());
-
         auto& lastState = m_state.back();
-        lastState.matrix.mapPoints(&pt, 1);
-        dest[0][0] = pt.x();
-        dest[0][1] = pt.y();
+        dest[0][0] = dst.x();
+        dest[0][1] = dst.y();
+        mapPointsToLogicalScreen(dest[0][0], dest[0][1]);
 
-        pt = SkPoint::Make(dst.x(), dst.maxY());
-        lastState.matrix.mapPoints(&pt, 1);
-        dest[1][0] = pt.x();
-        dest[1][1] = pt.y();
+        dest[1][0] = dst.x();
+        dest[1][1] = dst.maxY();
+        mapPointsToLogicalScreen(dest[1][0], dest[1][1]);
 
-        pt = SkPoint::Make(dst.maxX(), dst.y());
-        lastState.matrix.mapPoints(&pt, 1);
-        dest[2][0] = pt.x();
-        dest[2][1] = pt.y();
+        dest[2][0] = dst.maxX();
+        dest[2][1] = dst.y();
+        mapPointsToLogicalScreen(dest[2][0], dest[2][1]);
 
-        pt = SkPoint::Make(dst.maxX(), dst.maxY());
-        lastState.matrix.mapPoints(&pt, 1);
-        dest[3][0] = pt.x();
-        dest[3][1] = pt.y();
+        dest[3][0] = dst.maxX();
+        dest[3][1] = dst.maxY();
+        mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
 
         bool stencilClippingEnabled = false;
         bool scissorClippingEnabled = false;
@@ -2745,11 +2822,8 @@ public:
                 }
 
                 glEnable(GL_SCISSOR_TEST);
-                glScissor(visibleArea.x(),
-                          m_webView->platformWindow()->height() -
-                              visibleArea.maxY(),
-                          visibleArea.width(), visibleArea.height());
-
+                scissor(visibleArea.x(), visibleArea.y(), visibleArea.width(),
+                        visibleArea.height());
                 scissorClippingEnabled = true;
             } else {
                 visibleArea = Unit::Rect(0, 0, 0, 0);
@@ -2774,9 +2848,7 @@ public:
                         visibleArea =
                             Unit::Rect(minX, minY, maxX - minX, maxY - minY);
                         glEnable(GL_SCISSOR_TEST);
-                        glScissor(minX,
-                                  m_webView->platformWindow()->height() - maxY,
-                                  maxX - minX, maxY - minY);
+                        scissor(minX, minY, maxX - minX, maxY - minY);
                     } else {
                         stencilClippingEnabled = true;
 
@@ -2814,6 +2886,13 @@ public:
                                 (float)pointPerIndex[indices[i + 2]][0],
                                 (float)pointPerIndex[indices[i + 2]][1]
                             };
+
+                            mapLogicalScreenPointsToScreen(trianglePoints[0],
+                                                           trianglePoints[1]);
+                            mapLogicalScreenPointsToScreen(trianglePoints[2],
+                                                           trianglePoints[3]);
+                            mapLogicalScreenPointsToScreen(trianglePoints[4],
+                                                           trianglePoints[5]);
 
                             float hw =
                                 2.f / m_webView->platformWindow()->width();
@@ -3152,6 +3231,7 @@ protected:
     CompositorContext* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;
     ClipperLib::Path m_path;
+    SkMatrix m_screenMatrix;
 };
 
 Compositor* Compositor::create3D(WebView* webView, CompositorContext* ctx)

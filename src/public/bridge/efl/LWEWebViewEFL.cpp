@@ -42,6 +42,7 @@
 
 #if defined(PORT_WINDOW_BACKEND_GL)
 extern Evas_GL_API* g_evasGLAPI;
+extern Evas_GL* g_evasGL;
 #endif
 
 namespace LWE {
@@ -290,7 +291,7 @@ public:
         m_glCfg->multisample_bits = EVAS_GL_MULTISAMPLE_NONE;
 
 // FIXME remove this cond after resolve tizen 5.0 tv issue
-#if !defined(STARFISH_TIZEN_TV)
+#if !defined(STARFISH_TIZEN_TV) || !defined(STARFISH_TIZEN_VERSION_5_0)
 // we need to set these secret flags reducing memory usage
 // see platform/upstream/efl/src/modules/evas/engines/gl_common/evas_gl_core.c
 // in tizen
@@ -299,7 +300,8 @@ public:
 #define EVAS_GL_OPTIONS_DIRECT_OVERRIDE (1 << 13)
         m_glCfg->options_bits = (Evas_GL_Options_Bits)(
             EVAS_GL_OPTIONS_DIRECT | EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
-            EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE);
+            EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
+            EVAS_GL_OPTIONS_CLIENT_SIDE_ROTATION);
 #endif
         // Create a surface and context
         m_glSfc = evas_gl_surface_create(m_glEvasgl, m_glCfg, width, height);
@@ -327,7 +329,6 @@ public:
 
                 wv->m_glGlapi->glClearColor(0, 0, 0, 0);
                 wv->m_glGlapi->glClear(GL_COLOR_BUFFER_BIT |
-                                       GL_DEPTH_BUFFER_BIT |
                                        GL_STENCIL_BUFFER_BIT);
                 wv->m_glGlapi->glFlush();
             },
@@ -800,6 +801,7 @@ public:
             width, height,
             [this](WebContainer* wc) {
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
+                g_evasGL = m_glEvasgl;
                 g_evasGLAPI = m_glGlapi;
                 if (m_glSync) {
                     Starfish::LongTaskFinder t("evasglWaitSync");
@@ -842,11 +844,10 @@ public:
         evas_object_image_pixels_get_callback_set(
             m_graphicsAdapter,
             [](void* data, Evas_Object* o) {
+                // We need to draw every time for preventing screen blinking
                 WebViewEFL* s = (WebViewEFL*)data;
-
                 if (s->m_lastDoRenderingFunction) {
                     s->m_lastDoRenderingFunction();
-                    s->m_lastDoRenderingFunction = nullptr;
                 }
             },
             this);
