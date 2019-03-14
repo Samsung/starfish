@@ -101,7 +101,8 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
             auto s = request->url()->urlString()->toUTF8NonGCString();
             STARFISH_LOG_INFO("failed to open %s\n", s.data());
             request->m_responseData->m_status = 0;
-            request->handleError(ProgressState::InError);
+            request->handleError(ProgressState::InError,
+                                 RequestErrorType::FileError);
         }
 
         request->m_responseData->m_status = 200;
@@ -132,7 +133,8 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         auto s = request->url()->urlString()->toUTF8NonGCString();
         STARFISH_LOG_INFO("failed to open %s\n", s.data());
         request->m_responseData->m_status = 0;
-        request->handleError(ProgressState::InError);
+        request->handleError(ProgressState::InError,
+                             RequestErrorType::FileError);
     }
 }
 
@@ -346,12 +348,14 @@ void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* request,
 
     BlobURLStore store;
     if (!WebView::stringToBlobURLString(url, store)) {
-        request->handleError(ProgressState::InError);
+        request->handleError(ProgressState::InError,
+                             RequestErrorType::BadURLError);
         return;
     }
 
     if (!request->document()->webView()->isValidBlobURL(store)) {
-        request->handleError(ProgressState::InError);
+        request->handleError(ProgressState::InError,
+                             RequestErrorType::BadURLError);
         return;
     }
 

@@ -58,13 +58,14 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     private static String sTag = "LweWebViewImpl";
 
     static {
-        try{
+        try {
             System.loadLibrary("lightweightwebengine");
-        } catch(Exception e) {
+        } catch (Exception e) {
             Log.e(sTag, "Cannot load: liblightweightwebengine.so");
             e.printStackTrace();
         }
     }
+
     public enum ImeComposingStatus {
         NORMAL,
         COMPOSING_START,
@@ -94,6 +95,79 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
 
     private ArrayList<Pattern> mWhitelistedUrls = null;
 
+    static class ErrorConverter {
+        public static int covertErrorCode(int lweErrorCode) {
+            switch (lweErrorCode) {
+                case 2:
+                    return SemWebViewClient.ERROR_HOST_LOOKUP;
+                case 3:
+                    return SemWebViewClient.ERROR_UNSUPPORTED_AUTH_SCHEME;
+                case 4:
+                    return SemWebViewClient.ERROR_AUTHENTICATION;
+                case 5:
+                    return SemWebViewClient.ERROR_PROXY_AUTHENTICATION;
+                case 6:
+                    return SemWebViewClient.ERROR_CONNECT;
+                case 7:
+                    return SemWebViewClient.ERROR_IO;
+                case 8:
+                    return SemWebViewClient.ERROR_TIMEOUT;
+                case 9:
+                    return SemWebViewClient.ERROR_REDIRECT_LOOP;
+                case 10:
+                    return SemWebViewClient.ERROR_UNSUPPORTED_SCHEME;
+                case 11:
+                    return SemWebViewClient.ERROR_FAILED_SSL_HANDSHAKE;
+                case 12:
+                    return SemWebViewClient.ERROR_BAD_URL;
+                case 13:
+                    return SemWebViewClient.ERROR_FILE;
+                case 14:
+                    return SemWebViewClient.ERROR_FILE_NOT_FOUND;
+                case 15:
+                    return SemWebViewClient.ERROR_TOO_MANY_REQUESTS;
+                default:
+                    return SemWebViewClient.ERROR_UNKNOWN;
+            }
+        }
+
+        public static String covertErrorDescription(int lweErrorCode) {
+            switch (lweErrorCode) {
+                case 2:
+                    return "ERROR_HOST_LOOKUP";
+                case 3:
+                    return "ERROR_UNSUPPORTED_AUTH_SCHEME";
+                case 4:
+                    return "ERROR_AUTHENTICATION";
+                case 5:
+                    return "ERROR_PROXY_AUTHENTICATION";
+                case 6:
+                    return "ERROR_CONNECT";
+                case 7:
+                    return "ERROR_IO";
+                case 8:
+                    return "ERROR_TIMEOUT";
+                case 9:
+                    return "ERROR_REDIRECT_LOOP";
+                case 10:
+                    return "ERROR_UNSUPPORTED_SCHEME";
+                case 11:
+                    return "ERROR_FAILED_SSL_HANDSHAKE";
+                case 12:
+                    return "ERROR_BAD_URL";
+                case 13:
+                    return "ERROR_FILE";
+                case 14:
+                    return "ERROR_FILE_NOT_FOUND";
+                case 15:
+                    return "ERROR_TOO_MANY_REQUESTS";
+                default:
+                    return "ERROR_UNKNOWN";
+            }
+        }
+
+    }
+
     public long getWebViewInternalHandle() {
         return mWebViewInternalHandle;
     }
@@ -119,6 +193,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
         super(context, attrs, defStyle);
 
     }
+
     public LweWebViewImpl(Context context) {
         super(context);
     }
@@ -248,9 +323,9 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
         }
     }
 
-    public void initWebView(final View appView){
+    public void initWebView(final View appView) {
         if (appView instanceof SemWebView) {
-            mLWEView = (SemWebView)appView;
+            mLWEView = (SemWebView) appView;
         } else {
             return;
         }
@@ -278,40 +353,42 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                         initialUAString, sLocale, sTimezone,
                         localStoragePath, cookiePath, cachePath);
         getHolder().addCallback(
-            new SurfaceHolder.Callback() {
-                @Override
-                public void surfaceCreated(SurfaceHolder holder) {
-                    int width = mLWEView.getWidth();
-                    int height = mLWEView.getHeight();
-                    if (mWebViewInternalHandle != 0) {
-                        if ((mWindowWidth != width || mWindowHeight != height)) {
-                            resizeTo(mWebViewInternalHandle, width, height);
-                        }
-                        mWindowWidth = width;
-                        mWindowHeight = height;
-                        resume(mWebViewInternalHandle);
-                    }
-
-                }
-                @Override
-                public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
-                    if (mWebViewInternalHandle != 0){
-                        if ((mWindowWidth != width || mWindowHeight != height)) {
-                            resizeTo(mWebViewInternalHandle, width, height);
+                new SurfaceHolder.Callback() {
+                    @Override
+                    public void surfaceCreated(SurfaceHolder holder) {
+                        int width = mLWEView.getWidth();
+                        int height = mLWEView.getHeight();
+                        if (mWebViewInternalHandle != 0) {
+                            if ((mWindowWidth != width || mWindowHeight != height)) {
+                                resizeTo(mWebViewInternalHandle, width, height);
+                            }
                             mWindowWidth = width;
                             mWindowHeight = height;
+                            resume(mWebViewInternalHandle);
                         }
-                        resume(mWebViewInternalHandle);
+
+                    }
+
+                    @Override
+                    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height) {
+                        if (mWebViewInternalHandle != 0) {
+                            if ((mWindowWidth != width || mWindowHeight != height)) {
+                                resizeTo(mWebViewInternalHandle, width, height);
+                                mWindowWidth = width;
+                                mWindowHeight = height;
+                            }
+                            resume(mWebViewInternalHandle);
+                        }
+                    }
+
+                    @Override
+                    public void surfaceDestroyed(SurfaceHolder holder) {
+                        if (mWebViewInternalHandle != 0) {
+                            pause(mWebViewInternalHandle);
+                        }
+                        destoryBuffer();
                     }
                 }
-                @Override
-                public void surfaceDestroyed(SurfaceHolder holder) {
-                    if (mWebViewInternalHandle != 0) {
-                        pause(mWebViewInternalHandle);
-                    }
-                    destoryBuffer();
-                }
-            }
         );
 
         setOnFocusChangeListener(new View.OnFocusChangeListener() {
@@ -330,7 +407,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
         setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View v, int keyCode, KeyEvent event) {
-                char keyValue = (char)event.getUnicodeChar();
+                char keyValue = (char) event.getUnicodeChar();
 
                 switch (keyCode) {
                     case KeyEvent.KEYCODE_DPAD_RIGHT:
@@ -460,7 +537,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     private void onReceivedError(int errorCode) {
         if (mWebViewClient != null) {
             mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(""),
-                new SemWebResourceError(errorCode, ""));
+                    new SemWebResourceError(ErrorConverter.covertErrorCode(errorCode), ErrorConverter.covertErrorDescription(errorCode)));
         }
     }
 
@@ -552,7 +629,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
         String line = null;
         try {
             Resources res =
-                mLWEView.getContext().getPackageManager().getResourcesForApplication(SemWebView.PACKAGE_NAME);
+                    mLWEView.getContext().getPackageManager().getResourcesForApplication(SemWebView.PACKAGE_NAME);
 
             int rid = res.getIdentifier("whitelist", "raw", SemWebView.PACKAGE_NAME);
             if (rid == 0) {
@@ -561,7 +638,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
             }
 
             reader = new BufferedReader(new InputStreamReader(
-                res.openRawResource(rid)));
+                    res.openRawResource(rid)));
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("#")) {
@@ -570,7 +647,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                 Pattern p = Pattern.compile(line);
                 mWhitelistedUrls.add(p);
             }
-        } catch(PackageManager.NameNotFoundException e) {
+        } catch (PackageManager.NameNotFoundException e) {
             Log.e(sTag, "package not found: " + SemWebView.PACKAGE_NAME);
             e.printStackTrace();
         } catch (PatternSyntaxException e) {
@@ -703,19 +780,19 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
         return mWebSettings;
     }
 
-    private Bitmap createBuffer(){
+    private Bitmap createBuffer() {
         mScreenBuffer = Bitmap.createBitmap(mWindowWidth, mWindowHeight, Bitmap.Config.ARGB_8888);
         return mScreenBuffer;
     }
 
-    private void destoryBuffer(){
-        if (mScreenBuffer != null){
+    private void destoryBuffer() {
+        if (mScreenBuffer != null) {
             mScreenBuffer.recycle();
             mScreenBuffer = null;
         }
     }
 
-    private void onRendered(int x, int y, int width, int height){
+    private void onRendered(int x, int y, int width, int height) {
         Canvas canvas = getHolder().lockCanvas();
         if (canvas != null) {
             Paint paint = new Paint();
@@ -729,15 +806,17 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     public void setWebViewClient(SemWebViewClient client) {
         mWebViewClient = client;
     }
+
     public void setWebLweClient(SemWebLweClient client) {
         mWebLweClient = client;
     }
+
     public void setDownloadListener(SemDownloadListener listener) {
         mDownloadListener = listener;
     }
 
     boolean isSupportedMimeType(String mimeType) {
-        for (String str: allowedMimetypes) {
+        for (String str : allowedMimetypes) {
             if (mimeType.equalsIgnoreCase(str)) {
                 return true;
             }
@@ -746,7 +825,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     }
 
     boolean isSupportedEncoding(String encoding) {
-        for (String str: allowedEncodings) {
+        for (String str : allowedEncodings) {
             if (encoding.equalsIgnoreCase(str)) {
                 return true;
             }
@@ -775,7 +854,6 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     native private void resume(long starfish);
     native private void focus(long starfish);
     native private void blur(long starfish);
-
     native private void addJavascriptInterface(long starfish, String objectName,
                                                String functionName, Object instance);
     native private void removeJavascriptInterface(long starfish, String objectName);
@@ -792,7 +870,6 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     native public void setDefaultFontSize(long starfish, int size);
     native public int getDefaultFontSize(long starfish);
 
-
     static native private void init();
     static native private void resizeTo(long starfish, int width, int height);
     static native private void dispatchMouseDown(long starfish, float x, float y);
@@ -807,6 +884,5 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     static native private void dispatchCompositionUpdate(long starfish, String Value);
     static native private void dispatchCompositionEnd(long starfish, String Value);
     native private void onDropdownMenuItemSelected(long starfish, int position);
-
 
 }

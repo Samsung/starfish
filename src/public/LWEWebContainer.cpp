@@ -215,6 +215,66 @@ std::string ResourceError::GetDescription()
     return m_description;
 }
 
+static int convertErrorCode(Starfish::RequestErrorType errortype)
+{
+    return static_cast<int>(errortype);
+}
+
+static std::string convertErrorDescriton(Starfish::RequestErrorType errortype)
+{
+    // TODO:
+    switch (errortype) {
+    case Starfish::RequestErrorType::UnknownError:
+        return "UnknownError";
+
+    case Starfish::RequestErrorType::HostLookupError:
+        return "HostLookupError";
+
+    case Starfish::RequestErrorType::UnsupportedAuthSchemeError:
+        return "UnsupportedAuthSchemeError";
+
+    case Starfish::RequestErrorType::AuthenticationError:
+        return "AuthenticationError";
+
+    case Starfish::RequestErrorType::ProxyAuthenticationError:
+        return "ProxyAuthenticationError";
+
+    case Starfish::RequestErrorType::ConnectError:
+        return "ConnectError";
+
+    case Starfish::RequestErrorType::IOError:
+        return "IOError";
+
+    case Starfish::RequestErrorType::TimeoutError:
+        return "TimeoutError";
+
+    case Starfish::RequestErrorType::RedirectLoopError:
+        return "RedirectLoopError";
+
+    case Starfish::RequestErrorType::UnsupportedSchemeError:
+        return "UnsupportedSchemeError";
+
+    case Starfish::RequestErrorType::FailedSSLHandshakeError:
+        return "FailedSSLHandshakeError";
+
+    case Starfish::RequestErrorType::BadURLError:
+        return "BadURLError";
+
+    case Starfish::RequestErrorType::FileError:
+        return "FileError";
+
+    case Starfish::RequestErrorType::FileNotFoundError:
+        return "FileNotFoundError";
+
+    case Starfish::RequestErrorType::TooManyRequestError:
+        return "TooManyRequestError";
+
+    default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+    }
+    return 0;
+}
+
 static Starfish::ScriptValue nativeCallbackFunction(
     Starfish::ScriptExecutionState state, Starfish::ScriptValue thisValue,
     size_t argc, Starfish::ScriptValue* argv, bool isNewExpression)
@@ -850,11 +910,11 @@ void WebContainer::RegisterOnReceivedErrorHandler(
         ->registerPublicWebViewHandler(
             Starfish::OnReceivedError, [this, cb](void* param) -> void {
                 struct Param {
-                    int errorCode;
+                    Starfish::RequestErrorType errorCode;
                 };
                 Param* p = (Param*)param;
-                // make error description
-                cb(this, ResourceError(p->errorCode, std::string()));
+                cb(this, ResourceError(convertErrorCode(p->errorCode),
+                                       convertErrorDescriton(p->errorCode)));
             });
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }

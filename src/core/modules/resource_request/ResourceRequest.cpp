@@ -76,6 +76,7 @@ ResourceRequest::ResourceRequest(Document* document)
     , m_loaded(0)
     , m_total(0)
     , m_abortRequestState(AbortRequestType::NoPendingRequest)
+    , m_requestError(RequestErrorType::NoError)
 {
     GC_REGISTER_FINALIZER_NO_ORDER(
         this,
@@ -92,9 +93,9 @@ ResourceRequest::ResourceRequest(Document* document)
 
 void ResourceRequest::initVariables()
 {
+    m_requestError = RequestErrorType::NoError;
     m_contentLanguage = String::emptyString;
     std::string().swap(m_lastEffectiveURL);
-    m_gotError = false;
     m_containsBase64Content = false;
     m_didSend = false;
     m_total = 0;
@@ -136,9 +137,10 @@ void ResourceRequest::handleResponseEOF()
     changeProgress(ProgressState::LoadEnd, true);
 }
 
-void ResourceRequest::handleError(ProgressState error)
+void ResourceRequest::handleError(ProgressState error,
+                                  RequestErrorType errorType)
 {
-    m_gotError = true;
+    m_requestError = errorType;
     changeReadyState(ReadyState::Done, true);
     changeProgress(ProgressState::Progress, true);
     changeProgress(error, true);
@@ -157,15 +159,15 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
                                        bool isExplicitAction)
 {
     STARFISH_ASSERT(isMainThread());
-    if (!m_gotError && readyState == ReadyState::Loading &&
+    if (!isError() && readyState == ReadyState::Loading &&
         m_readyState == ReadyState::Opened) {
         changeReadyState(ReadyState::HeadersReceived, true);
     }
 
-    if (!m_gotError && readyState == ReadyState::Done &&
+    if (!isError() && readyState == ReadyState::Done &&
         m_readyState == ReadyState::HeadersReceived) {
         changeReadyState(ReadyState::Loading, true);
-    } else if (!m_gotError && readyState == ReadyState::Done &&
+    } else if (!isError() && readyState == ReadyState::Done &&
                m_readyState == ReadyState::Opened) {
         changeReadyState(ReadyState::HeadersReceived, true);
         changeReadyState(ReadyState::Loading, true);
@@ -297,7 +299,7 @@ void ResourceRequest::abort(bool isExplicitAction)
     clearIdlers();
 
     if (m_readyState >= ReadyState::Unset) {
-        m_gotError = true;
+        m_requestError = RequestErrorType::UnknownError;
         auto theStatusWas = m_progressState;
         if (m_readyState == ReadyState::Opened && m_didSend) {
             changeProgress(ProgressState::Abort, false);

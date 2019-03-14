@@ -141,13 +141,13 @@ public:
     {
         ResourceClient::didLoadFailed();
         clearAlive();
-        // TODO
-        int errorCode = 1;
+
         struct Param : public gc {
-            int errorCode;
+            RequestErrorType errorCode;
         };
+
         Param* p = new Param;
-        p->errorCode = errorCode;
+        p->errorCode = resource()->resourceRequest()->errorType();
         resource()->loader()->document()->webView()->callPublicWebViewHandler(
             OnReceivedError, p);
     }

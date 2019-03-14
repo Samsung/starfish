@@ -60,12 +60,9 @@ JavaVM* g_jvm;
 std::map<LWE::WebContainer*, jobject> g_webViews;
 
 void callOnLoadResourceHandler(LWE::WebView* view, const char* url);
-void callOnReceivedError(LWE::WebView* view, int errorCode, bool canGoBack,
-                         bool canGoForward);
-void callOnPageParsed(LWE::WebView* view, const char* url, bool canGoBack,
-                      bool canGoForward);
-void callOnPageStarted(LWE::WebView* view, const char* url, bool canGoBack,
-                       bool canGoForward);
+void callOnReceivedError(LWE::WebView* view, int errorCode);
+void callOnPageParsed(LWE::WebView* view, const char* url);
+void callOnPageStarted(LWE::WebView* view, const char* url);
 bool callShouldOverrideUrlLoading(LWE::WebContainer* view, const char* url);
 void callOnProgressChanged(LWE::WebContainer* view, int newProgress);
 void callOnDownloadStart(LWE::WebContainer* view, const char* url,
