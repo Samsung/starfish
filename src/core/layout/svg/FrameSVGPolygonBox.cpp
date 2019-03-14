@@ -18,8 +18,10 @@
  */
 
 #include "StarfishConfig.h"
-#include "FrameSVGPolygonBox.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
+#include "FrameSVGPolygonBox.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
 #include "core/dom/HTMLHtmlElement.h"

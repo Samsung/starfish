@@ -21,6 +21,9 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/Node.h"
+#include "core/layout/FrameReplaced.h"
+#include "core/modules/canvas/Canvas.h"
+#include "core/dom/Document.h"
 #include "core/layout/FrameReplacedCanvas.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
@@ -60,7 +63,7 @@ void FrameReplacedCanvas::didCompsiteStackingContext(Compositor* c)
 void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
 {
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
-    CanvasSurface* surface = canvasElement->surface();
+    CanvasSurface* surface = canvasElement->renderingContextSurface();
     IntrinsicSize size = intrinsicSize();
     auto contentSize = size.m_intrinsicContentSize;
     size_t width = contentSize.width().toDouble();
@@ -77,7 +80,7 @@ void FrameReplacedCanvas::createGraphicsBuffer(CanvasSurface** surfaceHolder,
                                                size_t visibleHeight)
 {
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
-    CanvasSurface* surface = canvasElement->surface();
+    CanvasSurface* surface = canvasElement->renderingContextSurface();
     if (surface) {
         *surfaceHolder = surface;
     } else {

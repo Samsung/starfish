@@ -23,13 +23,13 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "core/dom/HTMLElement.h"
-#include "core/dom/canvas/RenderingContext.h"
 
 namespace Starfish {
 
 #define STARFISH_CANVAS_DEFAULT_WIDTH 300
 #define STARFISH_CANVAS_DEFAULT_HEIGHT 150
 
+class CanvasSurface;
 class RenderingContext;
 class
     CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContext;
@@ -60,13 +60,7 @@ public:
     uint32_t width();
     void setWidth(uint32_t value);
 
-    CanvasSurface* surface()
-    {
-        if (!m_renderingContext) {
-            return nullptr;
-        }
-        return m_renderingContext->surface();
-    }
+    CanvasSurface* renderingContextSurface();
 
     uint32_t height();
     void setHeight(uint32_t value);

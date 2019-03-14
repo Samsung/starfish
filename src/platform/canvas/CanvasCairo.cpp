@@ -28,6 +28,7 @@
 #error "cairo only supports BGRA order."
 #endif
 
+#include "core/style/Style.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/NativeGradient.h"

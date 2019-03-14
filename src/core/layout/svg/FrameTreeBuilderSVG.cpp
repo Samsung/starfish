@@ -19,10 +19,11 @@
 
 #include "StarfishConfig.h"
 #include "core/layout/FrameTreeBuilder.h"
+#include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "core/dom/svg/SVGElement.h"
 #include "core/dom/Text.h"
-
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/layout/svg/FrameSVGRectBox.h"
 #include "core/layout/svg/FrameSVGPathBox.h"

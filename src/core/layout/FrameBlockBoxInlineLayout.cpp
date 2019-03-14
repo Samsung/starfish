@@ -4349,6 +4349,11 @@ void PreferredWidthContext::computePreferredWidthInline(Frame* parent)
                 updateCurrentLineWidth(f,
                                        pWidth + m_unprocessedStartingMBPWidth);
             }
+        } else if (f->isFrameReplaced()) {
+            f->computePreferredWidth(*this);
+            LayoutUnit mbp = mbpWidth(f);
+            updatePreferredMinWidth(preferredMinWidth() + mbp);
+            updateCurrentLineWidth(f, mbp);
         } else {
             f->computePreferredWidth(*this);
         }
@@ -4441,8 +4446,6 @@ void FrameReplaced::computePreferredWidth(PreferredWidthContext& ctx)
 
     if (boxSizing == BorderBoxBoxSizingValue) {
         w += marginWidth();
-    } else {
-        w += mbpWidth();
     }
 
     if (isFloating()) {

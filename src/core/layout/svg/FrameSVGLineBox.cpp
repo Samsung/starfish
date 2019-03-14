@@ -18,6 +18,9 @@
  */
 
 #include "StarfishConfig.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "FrameSVGLineBox.h"
 
 namespace Starfish {

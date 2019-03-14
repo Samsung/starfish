@@ -27,6 +27,7 @@
 
 #if defined(PORT_COMPOSITOR_BACKEND_GL)
 
+#include "core/style/Style.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
@@ -1403,7 +1404,8 @@ public:
         m_isEGLBufferOwner = false;
         m_isEGLImageNeedsFlipRGB = false;
         m_forFilterEffect = forFilterEffect;
-
+        m_wTextureCount = 0;
+        m_hTextureCount = 0;
 #if defined(STARFISH_TIZEN)
         m_tbmSurface = nullptr;
         m_eglImage = nullptr;
@@ -1677,17 +1679,17 @@ public:
             return;
         }
 
-        size_t wTextureCount = ceil((float)m_bufferWidth / g_textureTileSize);
-        size_t hTextureCount = ceil((float)m_bufferHeight / g_textureTileSize);
+        m_wTextureCount = ceil((float)m_bufferWidth / g_textureTileSize);
+        m_hTextureCount = ceil((float)m_bufferHeight / g_textureTileSize);
 
         if (m_forFilterEffect) {
-            wTextureCount = hTextureCount = 1;
+            m_wTextureCount = m_hTextureCount = 1;
         }
 
         size_t coveredRowsCount = 0;
-        for (size_t y = 0; y < hTextureCount; y++) {
+        for (size_t y = 0; y < m_hTextureCount; y++) {
             size_t coveredColsCount = 0;
-            for (size_t x = 0; x < wTextureCount; x++) {
+            for (size_t x = 0; x < m_wTextureCount; x++) {
                 GLuint textureID;
 
                 size_t texureDataX = coveredColsCount;
@@ -1803,6 +1805,16 @@ public:
         return m_bufferStride;
     }
 
+    size_t wTextureCount()
+    {
+        return m_wTextureCount;
+    }
+
+    size_t hTextureCount()
+    {
+        return m_hTextureCount;
+    }
+
     virtual void clear() override
     {
         if (m_buffer) {
@@ -1816,6 +1828,8 @@ public:
                                                   size_t dirtyWidth,
                                                   size_t dirtyHeight) override
     {
+        STARFISH_ASSERT(m_wTextureCount != 0);
+        STARFISH_ASSERT(m_hTextureCount != 0);
         if (m_textureFragments.size() == 0) {
             return;
         }
@@ -1836,22 +1850,14 @@ public:
 
         if (dirtyWidth && dirtyHeight) {
             m_window->glMakeCurrent();
-            size_t wTextureCount =
-                ceil((float)m_bufferWidth / g_textureTileSize);
-            size_t hTextureCount =
-                ceil((float)m_bufferHeight / g_textureTileSize);
             size_t fragmentIndex = 0;
-
-            if (m_forFilterEffect) {
-                wTextureCount = hTextureCount = 1;
-            }
 
             Unit::Rect dRect(dirtyX, dirtyY, dirtyWidth, dirtyHeight);
 
             size_t coveredRowsCount = 0;
-            for (size_t y = 0; y < hTextureCount; y++) {
+            for (size_t y = 0; y < m_hTextureCount; y++) {
                 size_t coveredColsCount = 0;
-                for (size_t x = 0; x < wTextureCount; x++) {
+                for (size_t x = 0; x < m_wTextureCount; x++) {
                     GLuint textureID;
 
                     size_t textureDataX = coveredColsCount;
@@ -1970,6 +1976,8 @@ protected:
     size_t m_bufferWidth;
     size_t m_bufferHeight;
     size_t m_bufferStride;
+    size_t m_wTextureCount;
+    size_t m_hTextureCount;
     GCAtomicVector<CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>
         m_textureFragments;
     struct FragmentFlags {
@@ -2850,20 +2858,13 @@ public:
                             GL_TEXTURE_EXTERNAL_OES, -1, csGL->m_bufferWidth,
                             csGL->m_bufferHeight);
             } else {
-                size_t wTextureCount =
-                    ceil((float)cs->bufferWidth() / g_textureTileSize);
-                size_t hTextureCount =
-                    ceil((float)cs->bufferHeight() / g_textureTileSize);
-
-                if (csGL->m_forFilterEffect) {
-                    wTextureCount = hTextureCount = 1;
-                }
-
                 size_t coveredRowsCount = 0;
                 size_t i = 0;
-                for (size_t y = 0; y < hTextureCount; y++) {
+                for (size_t y = 0; y < ((CanvasSurfaceGL*)cs)->hTextureCount();
+                     y++) {
                     size_t coveredColsCount = 0;
-                    for (size_t x = 0; x < wTextureCount; x++) {
+                    for (size_t x = 0;
+                         x < ((CanvasSurfaceGL*)cs)->wTextureCount(); x++) {
                         size_t texureDataX = coveredColsCount;
                         size_t texureDataY = coveredRowsCount;
                         size_t texureDataWidth =

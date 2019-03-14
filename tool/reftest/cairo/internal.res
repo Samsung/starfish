@@ -174,6 +174,7 @@ test/cairo/internal-test/css/style/style-tag-remove.html
 test/cairo/internal-test/css/clear/ignore-margin-collapse6.html
 #test/cairo/internal-test/css/percentage/percentage_line_height.html
 test/cairo/internal-test/css/preferred-width/preferred-width-2.html
+test/cairo/internal-test/css/preferred-width/preferred-width-3.html
 test/cairo/internal-test/css/margin/margin_block.html
 test/cairo/internal-test/css/style/script-tag-add-onload.html
 test/cairo/internal-test/css/style/link-tag-add.html

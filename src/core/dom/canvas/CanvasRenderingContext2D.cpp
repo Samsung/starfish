@@ -20,19 +20,17 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "StarfishConfig.h"
-#include "Starfish.h"
 #include "binding/DOMStringOrCanvasGradientOrCanvasPatternUnion.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "core/modules/canvas/Canvas.h"
-#include "core/modules/canvas/Compositor.h"
-
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
-#include "core/style/Style.h"
 #include "core/dom/Document.h"
-#include "core/layout/Frame.h"
-#include "core/layout/FrameBox.h"
-#include "core/layout/FrameReplacedCanvas.h"
-#include "core/layout/StackingContext.h"
+#include "core/page/WebView.h"
+#include "core/style/CSSParser.h"
+#include "core/style/CSSTokenValue.h"
 
 namespace Starfish {
 
@@ -47,66 +45,66 @@ CanvasRenderingContext2D::CanvasRenderingContext2D(
 
 void CanvasRenderingContext2D::initialize()
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-
     if (m_surface) {
         m_surface->detachNativeBuffer();
     }
 
-    if (!canvas) {
+    if (!m_htmlCanvasElement) {
         return;
     }
 
     // Create CanvasSurface.
-    m_surface = CanvasSurface::create(canvas->webView()->platformWindow(),
-                                      canvas->width(), canvas->height());
+    m_surface = CanvasSurface::create(
+        m_htmlCanvasElement->webView()->platformWindow(),
+        m_htmlCanvasElement->width(), m_htmlCanvasElement->height());
 
-    if (m_surfaceCanvas) {
-        delete m_surfaceCanvas;
+    if (m_canvas) {
+        delete m_canvas;
     }
-
+    auto black = Unit::Color(0, 0, 0, 255);
     // Set defualt values such as color, fill color and stroke color.
-    m_surfaceCanvas = Canvas::create(canvas->webView(), m_surface);
+    m_canvas = Canvas::create(m_htmlCanvasElement->webView(), m_surface);
     // Set the defualt color as black.
-    m_surfaceCanvas->setColor(Unit::Color(0, 0, 0, 255));
+    m_canvas->setColor(black);
     // Set the fill color as black.
-    m_fillColor = Unit::Color(0, 0, 0, 255);
+    m_fillColor = black;
     // Set the stroke color as black.
-    m_strokeColor = Unit::Color(0, 0, 0, 255);
+    m_strokeColor = black;
     // Set the line width as 1.0f.
     m_lineWidth = 1.0f;
-    m_surfaceCanvas->setStrokeWidth(m_lineWidth);
+    m_canvas->setStrokeWidth(m_lineWidth);
+    m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
 }
 
 void CanvasRenderingContext2D::setLineWidth(double width)
 {
     m_lineWidth = width;
-    m_surfaceCanvas->setStrokeWidth(m_lineWidth);
+    m_canvas->setStrokeWidth(m_lineWidth);
 }
 
 void CanvasRenderingContext2D::save()
 {
-    m_surfaceCanvas->save();
+    m_canvas->save();
 }
 
 void CanvasRenderingContext2D::restore()
 {
-    m_surfaceCanvas->restore();
+    m_canvas->restore();
 }
 
 void CanvasRenderingContext2D::scale(double x, double y)
 {
-    m_surfaceCanvas->scale(x, y);
+    m_canvas->scale(x, y);
 }
 
 void CanvasRenderingContext2D::rotate(double angle)
 {
-    m_surfaceCanvas->rotate(angle);
+    m_canvas->rotate(angle);
 }
 
 void CanvasRenderingContext2D::translate(double x, double y)
 {
-    m_surfaceCanvas->translate(x, y);
+    m_canvas->translate(x, y);
 }
 
 void CanvasRenderingContext2D::transform(double a, double b, double c, double d,
@@ -120,7 +118,7 @@ void CanvasRenderingContext2D::transform(double a, double b, double c, double d,
     matrix.set(3, b);
     matrix.set(4, d);
     matrix.set(5, f);
-    m_surfaceCanvas->postMatrix(matrix);
+    m_canvas->postMatrix(matrix);
 }
 
 double CanvasRenderingContext2D::globalAlpha()
@@ -157,12 +155,17 @@ void CanvasRenderingContext2D::setFillStyle(
 {
     if (value.isDOMStringValue()) {
         String* v = value.getDOMStringValue();
-        auto s1 = v->toUTF8NonGCString();
-        NamedColor::NamedColorValue ret;
-        if (NamedColor::parseNamedColor(s1.data(), s1.length(), ret)) {
-            Unit::Color c = NamedColor::namedColorToColor(ret);
-            m_fillColor = Unit::Color(c.r(), c.g(), c.b(), c.a());
+        CSSTokenValue token(v->toUTF8NonGCString());
+        CSSStyleValuePair ret;
+        if (CSSPropertyParser::parseNonNamedColor(token, &ret)) {
+            m_fillColor = ret.colorValue();
+            return;
         }
+        if (CSSPropertyParser::parseNamedColor(token, &ret)) {
+            m_fillColor = NamedColor::namedColorToColor(ret.namedColorValue());
+        }
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
 }
 
@@ -205,13 +208,12 @@ void CanvasRenderingContext2D::setFilter(String* value)
 
 void CanvasRenderingContext2D::fillRect(double x, double y, double w, double h)
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    canvas->setNeedsPainting();
+    m_htmlCanvasElement->setNeedsPainting();
     Unit::Color color =
         Unit::Color(m_fillColor.r(), m_fillColor.g(), m_fillColor.b(),
                     m_fillColor.a() * m_globalAlpha);
-    m_surfaceCanvas->setColor(color);
-    m_surfaceCanvas->drawRect(LayoutRect(x, y, w, h));
+    m_canvas->setColor(color);
+    m_canvas->drawRect(LayoutRect(x, y, w, h));
 }
 
 void CanvasRenderingContext2D::strokeRect(double x, double y, double w,
@@ -235,13 +237,12 @@ void CanvasRenderingContext2D::fill(Path2D* path, String* fillRule)
 
 void CanvasRenderingContext2D::stroke()
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    canvas->setNeedsPainting();
+    m_htmlCanvasElement->setNeedsPainting();
     Unit::Color color =
         Unit::Color(m_strokeColor.r(), m_strokeColor.g(), m_strokeColor.b(),
                     m_strokeColor.a() * m_globalAlpha);
-    m_surfaceCanvas->setColor(color);
-    m_surfaceCanvas->stroke();
+    m_canvas->setColor(color);
+    m_canvas->stroke();
 }
 
 void CanvasRenderingContext2D::drawImage(ScriptValue image, double dx,
@@ -273,27 +274,24 @@ void CanvasRenderingContext2D::closePath()
 
 void CanvasRenderingContext2D::moveTo(double x, double y)
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    canvas->setNeedsPainting();
-    m_surfaceCanvas->moveTo(x, y);
+    m_htmlCanvasElement->setNeedsPainting();
+    m_canvas->moveTo(x, y);
 }
 
 void CanvasRenderingContext2D::lineTo(double x, double y)
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    canvas->setNeedsPainting();
-    m_surfaceCanvas->lineTo(x, y);
+    m_htmlCanvasElement->setNeedsPainting();
+    m_canvas->lineTo(x, y);
 }
 
 void CanvasRenderingContext2D::rect(double x, double y, double w, double h)
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    canvas->setNeedsPainting();
-    m_surfaceCanvas->moveTo(x - m_lineWidth / 2, y);
-    m_surfaceCanvas->lineTo(x + w, y);
-    m_surfaceCanvas->lineTo(x + w, y + h);
-    m_surfaceCanvas->lineTo(x, y + h);
-    m_surfaceCanvas->lineTo(x, y);
+    m_htmlCanvasElement->setNeedsPainting();
+    m_canvas->moveTo(x - m_lineWidth / 2, y);
+    m_canvas->lineTo(x + w, y);
+    m_canvas->lineTo(x + w, y + h);
+    m_canvas->lineTo(x, y + h);
+    m_canvas->lineTo(x, y);
 }
 
 void CanvasRenderingContext2D::arc(double x, double y, double radius,
@@ -312,19 +310,17 @@ void CanvasRenderingContext2D::ellipse(double x, double y, double radiusX,
 void CanvasRenderingContext2D::bezierCurveTo(double x1, double y1, double x2,
                                              double y2, double x3, double y3)
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    canvas->setNeedsPainting();
-    m_surfaceCanvas->curveTo(x1, y1, x2, y2, x3, y3);
+    m_htmlCanvasElement->setNeedsPainting();
+    m_canvas->curveTo(x1, y1, x2, y2, x3, y3);
 }
 
 void CanvasRenderingContext2D::clearRect(double x, double y, double w, double h)
 {
-    HTMLCanvasElement* canvas = m_canvasElement;
-    canvas->setNeedsPainting();
-    m_surfaceCanvas->setColor(Unit::Color(255, 255, 255, 255));
-    m_surfaceCanvas->drawRect(LayoutRect(x, y, w, h));
-    m_surfaceCanvas->fill();
-    m_surfaceCanvas->setColor(Unit::Color(0, 0, 0, 255));
+    m_htmlCanvasElement->setNeedsPainting();
+    m_canvas->setColor(Unit::Color(255, 255, 255, 255));
+    m_canvas->drawRect(LayoutRect(x, y, w, h));
+    m_canvas->fill();
+    m_canvas->setColor(Unit::Color(0, 0, 0, 255));
 }
 
 void CanvasGradient::addColorStop(double offset, String* color)

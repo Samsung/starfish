@@ -18,12 +18,14 @@
  *  USA
  */
 #include "StarfishConfig.h"
-#include "core/dom/Node.h"
 #include "core/dom/Document.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/page/Window.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
 #include "core/layout/FrameBlockBox.h"

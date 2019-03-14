@@ -19,7 +19,6 @@
 
 #include "StarfishConfig.h"
 #include "core/modules/canvas/Compositor.h"
-#include "core/modules/canvas/Canvas.h"
 
 #if defined(PORT_COMPOSITOR_BACKEND_MOCK)
 

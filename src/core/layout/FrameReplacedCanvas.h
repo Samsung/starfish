@@ -22,10 +22,6 @@
 #ifndef __StarfishFrameReplacedCanvas__
 #define __StarfishFrameReplacedCanvas__
 
-#include "core/layout/FrameReplaced.h"
-#include "core/modules/canvas/Canvas.h"
-#include "core/dom/Document.h"
-
 namespace Starfish {
 
 class FrameReplacedCanvas final : public FrameReplaced {
@@ -44,7 +40,7 @@ public:
         return "FrameReplacedCanvas";
     }
 
-    virtual bool isFrameCanvas()
+    virtual bool isFrameReplacedCanvas()
     {
         return true;
     }

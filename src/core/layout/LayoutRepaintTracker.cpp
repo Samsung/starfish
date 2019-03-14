@@ -20,8 +20,10 @@
 #include "StarfishConfig.h"
 
 #include "LayoutRepaintTracker.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "FrameDocument.h"
-
 #include "core/dom/Element.h"
 
 namespace Starfish {

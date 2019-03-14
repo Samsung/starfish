@@ -19,6 +19,9 @@
 
 #include "StarfishConfig.h"
 #include "Compositor.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "Canvas.h"
 
 namespace Starfish {

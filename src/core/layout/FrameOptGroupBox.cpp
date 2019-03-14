@@ -18,9 +18,10 @@
  */
 
 #include "StarfishConfig.h"
-
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "FrameOptGroupBox.h"
-
 #include "core/layout/FrameBlockBox.h"
 
 namespace Starfish {

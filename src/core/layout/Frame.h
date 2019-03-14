@@ -20,10 +20,6 @@
 #ifndef __StarfishFrame__
 #define __StarfishFrame__
 
-#include "core/style/Style.h"
-#include "core/style/ComputedStyle.h"
-#include "core/dom/Node.h"
-
 namespace Starfish {
 
 class Canvas;
@@ -1179,7 +1175,7 @@ public:
     }
 
 #ifdef STARFISH_ENABLE_CANVAS
-    virtual bool isFrameCanvas()
+    virtual bool isFrameReplacedCanvas()
     {
         return false;
     }
@@ -1337,7 +1333,7 @@ public:
 #ifdef STARFISH_ENABLE_CANVAS
     FrameReplacedCanvas* asFrameReplacedCanvas()
     {
-        STARFISH_ASSERT(isFrameCanvas());
+        STARFISH_ASSERT(isFrameReplacedCanvas());
         return (FrameReplacedCanvas*)this;
     }
 #endif
