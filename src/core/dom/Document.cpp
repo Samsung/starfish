@@ -122,7 +122,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_animationExecutor(new AnimationExecutor(window))
     , m_domVersion(0)
     , m_implementation(nullptr)
-    , m_pendingDocumentParsingIdlerHandle(SIZE_MAX)
+    , m_pendingDocumentParsingIdlerHandle(MessageLoopInvalidID)
     , m_contentLanguage(String::emptyString)
     , m_mediaQueryListMatcher(nullptr)
     , m_referrerPolicy(ReferrerPolicy::Empty)
@@ -606,14 +606,16 @@ void Document::writeln(Document* responsibleDoc, const GCVector<String*>& str)
 
 void Document::resumeDocumentParsing()
 {
-    STARFISH_ASSERT(m_pendingDocumentParsingIdlerHandle == SIZE_MAX);
+    STARFISH_ASSERT(m_pendingDocumentParsingIdlerHandle ==
+                    MessageLoopInvalidID);
     m_pendingDocumentParsingIdlerHandle =
         window()->webView()->messageLoop()->addIdler(
             this,
             [](size_t handle, void* data) {
                 Document* document = (Document*)data;
                 STARFISH_ASSERT(document->m_documentBuilder);
-                document->m_pendingDocumentParsingIdlerHandle = SIZE_MAX;
+                document->m_pendingDocumentParsingIdlerHandle =
+                    MessageLoopInvalidID;
                 document->m_documentBuilder->resume();
             },
             this);
@@ -625,10 +627,10 @@ void Document::endDocumentParsing()
         m_resourceLoader->setLoadProgressState(
             ResourceLoader::LoadProgressState::ParsingEnd);
     }
-    if (m_pendingDocumentParsingIdlerHandle != SIZE_MAX) {
+    if (m_pendingDocumentParsingIdlerHandle != MessageLoopInvalidID) {
         window()->webView()->messageLoop()->removeIdler(
             m_pendingDocumentParsingIdlerHandle);
-        m_pendingDocumentParsingIdlerHandle = SIZE_MAX;
+        m_pendingDocumentParsingIdlerHandle = MessageLoopInvalidID;
     }
     m_documentBuilder = nullptr;
 }

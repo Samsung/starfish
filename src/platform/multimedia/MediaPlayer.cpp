@@ -27,6 +27,7 @@
 #include "platform/window/PlatformWindow.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/mediasource/MediaSource.h"
+#include "core/modules/message_loop/Timer.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 
@@ -43,7 +44,7 @@ MediaPlayer::MediaPlayer(HTMLMediaElement* element)
     , m_activeMediaSource(nullptr)
     , m_videoWidth(STARFISH_VIDEO_WIDTH_WHEN_VIDEO_NOT_EXISTS)
     , m_videoHeight(STARFISH_VIDEO_HEIGHT_WHEN_VIDEO_NOT_EXISTS)
-    , m_currentTimeUpdateTimer(SIZE_MAX)
+    , m_currentTimeUpdateTimer(TimerInvalidID)
     , m_playerStateMutex(new Mutex())
 {
     m_canvasSurface =

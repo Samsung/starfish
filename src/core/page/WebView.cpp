@@ -275,6 +275,10 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_baseBackgroundColor(Unit::Color(255, 255, 255, 255))
     , m_baseForegroundColor(Unit::Color(0, 0, 0, 255))
     , m_webSecurityMode(WebSecurityMode::Enable)
+    , m_idleModeJob(LWE::IdleModeJob::IdleModeDefault)
+    , m_idleModeCheckIntervalInMS(0)
+    , m_idleCheckTimerID(TimerInvalidID)
+
 {
     m_platformWindow->setWebView(this);
     m_deviceKind = deviceKindUseTouchScreen;
@@ -314,18 +318,27 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 
     m_starfish->m_webViewInstanceCount++;
 
-#define STARFISH_IDLE_CHECK_INTERVAL 3000
-    m_timer->addTimer(STARFISH_IDLE_CHECK_INTERVAL, nullptr,
-                      [](Window* window, void* data) {
-                          WebView* wv = (WebView*)data;
-                          uint64_t currentTick = longTickCount();
-                          if (!wv->m_inIdleMode &&
-                              currentTick - wv->m_lastRenderingTick >
-                                  STARFISH_IDLE_CHECK_INTERVAL * 1000) {
-                              wv->enterIdleMode();
-                          }
-                      },
-                      this, true);
+    setIdleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS);
+}
+
+void WebView::setIdleModeCheckIntervalInMS(uint32_t i)
+{
+    if (m_idleModeCheckIntervalInMS != i) {
+        m_idleModeCheckIntervalInMS = i;
+        m_timer->removeTimer(m_idleModeCheckIntervalInMS);
+        m_idleCheckTimerID = m_timer->addTimer(
+            m_idleModeCheckIntervalInMS, nullptr,
+            [](Window* window, void* data) {
+                WebView* wv = (WebView*)data;
+                uint64_t currentTick = longTickCount();
+                if (!wv->m_inIdleMode &&
+                    currentTick - wv->m_lastRenderingTick >
+                        wv->m_idleModeCheckIntervalInMS * 1000) {
+                    wv->enterIdleMode();
+                }
+            },
+            this, true);
+    }
 }
 
 void WebView::enterIdleMode()
@@ -336,7 +349,8 @@ void WebView::enterIdleMode()
     onIdle();
 
     // drop CanvasSurfaces if possible
-    if (m_didCompositeBefore) {
+    if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ClearDrawnBuffers) &&
+        m_didCompositeBefore) {
         LongTaskFinder f("drop CanvasSurfaces when entering idle mode");
         auto iter = m_stackingContextsNeedsGraphicsBuffer.begin();
         while (iter != m_stackingContextsNeedsGraphicsBuffer.end()) {
@@ -356,14 +370,14 @@ void WebView::enterIdleMode()
         }
     }
 
-    {
+    if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ForceGC)) {
         LongTaskFinder f("force gc when entering idle mode");
         GC_gcollect();
         GC_gcollect();
         GC_gcollect_and_unmap();
     }
 
-    {
+    if (((int)m_idleModeJob & (int)LWE::IdleModeJob::DropDecodedImageBuffer)) {
         LongTaskFinder f(
             "drop decoded image datas in NativeImageData when entering idle "
             "mode");
@@ -374,7 +388,7 @@ void WebView::enterIdleMode()
     }
 
 #if defined(OS_POSIX) && !defined(STARFISH_ANDROID)
-    {
+    if (((int)m_idleModeJob & (int)LWE::IdleModeJob::ForceGC)) {
         LongTaskFinder f("calling malloc_trim when entering idle mode");
         malloc_trim(0);
     }

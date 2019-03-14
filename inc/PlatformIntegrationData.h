@@ -242,6 +242,20 @@ enum TTSMode {
 };
 
 enum class WebSecurityMode { Enable = 0, Disable = 1 };
+
+enum class IdleModeJob {
+    ClearDrawnBuffers = 1,
+    ForceGC = 1 << 1, // it also includes calling malloc_trim(0)
+    DropDecodedImageBuffer = 1 << 2,
+
+    IdleModeFull = ClearDrawnBuffers | ForceGC | DropDecodedImageBuffer,
+    IdleModeMiddle = ForceGC,
+    IdleModeNone = 0,
+
+    IdleModeDefault = IdleModeFull
+};
+
+constexpr int IdleModeCheckDefaultIntervalInMS{ 3000 };
 }
 
 #endif

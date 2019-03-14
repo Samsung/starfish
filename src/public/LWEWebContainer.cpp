@@ -21,6 +21,7 @@
 #include "Starfish.h"
 
 #include "LWEWebView.h"
+
 #include "platform/window/PlatformWindow.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -106,6 +107,8 @@ Settings::Settings(const std::string& default_ua, const std::string& ua)
     , m_fgB(0)
     , m_fgA(255)
     , m_webSecurityMode(WebSecurityMode::Enable)
+    , m_idleModeJob(IdleModeJob::IdleModeDefault)
+    , m_idleModeCheckIntervalInMS(IdleModeCheckDefaultIntervalInMS)
 {
 }
 
@@ -197,6 +200,26 @@ WebSecurityMode Settings::GetWebSecurityMode() const
 void Settings::SetWebSecurityMode(WebSecurityMode value)
 {
     m_webSecurityMode = value;
+}
+
+IdleModeJob Settings::GetIdleModeJob() const
+{
+    return m_idleModeJob;
+}
+
+void Settings::SetIdleModeJob(IdleModeJob j)
+{
+    m_idleModeJob = j;
+}
+
+uint32_t Settings::GetIdleModeCheckIntervalInMS() const
+{
+    return m_idleModeCheckIntervalInMS;
+}
+
+void Settings::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
+{
+    m_idleModeCheckIntervalInMS = intervalInMS;
 }
 
 ResourceError::ResourceError(int code, const std::string& description)
@@ -632,6 +655,9 @@ Settings WebContainer::GetSettings()
     result.SetTTSMode(TO_WEBVIEW(m_impl)->tts()->mode());
 #endif
     result.SetWebSecurityMode(TO_WEBVIEW(m_impl)->getWebSecurityMode());
+    result.SetIdleModeJob(TO_WEBVIEW(m_impl)->idleModeJob());
+    result.SetIdleModeCheckIntervalInMS(
+        TO_WEBVIEW(m_impl)->idleModeCheckIntervalInMS());
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return result;
 }
@@ -867,6 +893,9 @@ void WebContainer::SetSettings(const Settings& settings)
     }
 #endif
     TO_WEBVIEW(m_impl)->setWebSecurityMode(settings.GetWebSecurityMode());
+    TO_WEBVIEW(m_impl)->setIdleModeJob(settings.GetIdleModeJob());
+    TO_WEBVIEW(m_impl)
+        ->setIdleModeCheckIntervalInMS(settings.GetIdleModeCheckIntervalInMS());
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
 

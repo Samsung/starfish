@@ -48,7 +48,7 @@ namespace Starfish {
 PlatformWindow::PlatformWindow(Starfish* starfish)
     : m_starfish(starfish)
     , m_webView(nullptr)
-    , m_renderingAnimator(SIZE_MAX)
+    , m_renderingAnimator(TimerInvalidID)
     , m_compostiorContext(nullptr)
     , m_lastMouseMoveX(std::numeric_limits<float>::max())
     , m_lastMouseMoveY(std::numeric_limits<float>::max())
@@ -300,9 +300,9 @@ void PlatformWindow::dispatchCompositionEvent(CompositionEventKind kind,
 
 void PlatformWindow::clearResources()
 {
-    if (m_renderingAnimator != SIZE_MAX) {
+    if (m_renderingAnimator != TimerInvalidID) {
         webView()->timer()->removeGenericAnimator(m_renderingAnimator);
-        m_renderingAnimator = SIZE_MAX;
+        m_renderingAnimator = TimerInvalidID;
     }
     webView()->clearStackingContext();
 
@@ -319,7 +319,7 @@ void PlatformWindow::setNeedsRendering()
         return;
     }
 
-    if (wnd->m_renderingAnimator != SIZE_MAX) {
+    if (wnd->m_renderingAnimator != TimerInvalidID) {
         return;
     }
 
@@ -328,7 +328,7 @@ void PlatformWindow::setNeedsRendering()
         [](void* data) {
             PlatformWindow* wnd = (PlatformWindow*)data;
             if (!wnd->starfish()) {
-                wnd->m_renderingAnimator = SIZE_MAX;
+                wnd->m_renderingAnimator = TimerInvalidID;
                 return false;
             }
 
@@ -343,7 +343,7 @@ void PlatformWindow::setNeedsRendering()
                 return true;
             }
 
-            wnd->m_renderingAnimator = SIZE_MAX;
+            wnd->m_renderingAnimator = TimerInvalidID;
             return false;
         },
         wnd);

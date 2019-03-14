@@ -24,10 +24,10 @@
 #include "core/page/WebBase.h"
 #include "core/page/RenderResult.h"
 #include "platform/public/ScreenInfo.h"
-#include "core/modules/threading/ThreadClient.h"
 
 namespace LWE {
 enum class WebSecurityMode;
+enum class IdleModeJob;
 }
 
 namespace Starfish {
@@ -533,6 +533,22 @@ public:
         return m_baseForegroundColor;
     }
 
+    void setIdleModeJob(LWE::IdleModeJob job)
+    {
+        m_idleModeJob = job;
+    }
+
+    LWE::IdleModeJob idleModeJob()
+    {
+        return m_idleModeJob;
+    }
+
+    void setIdleModeCheckIntervalInMS(uint32_t i);
+    uint32_t idleModeCheckIntervalInMS()
+    {
+        return m_idleModeCheckIntervalInMS;
+    }
+
 private:
     WebView(Starfish* starfish, const char* locale, const char* timezoneID,
             uint32_t w, uint32_t h, uint32_t defaultFontSize,
@@ -660,6 +676,10 @@ private:
     Unit::Color m_baseBackgroundColor;
     Unit::Color m_baseForegroundColor;
     LWE::WebSecurityMode m_webSecurityMode;
+    LWE::IdleModeJob
+        m_idleModeJob; // default value is IdleModeJob::IdleModeFull
+    uint32_t m_idleModeCheckIntervalInMS; // default value is 3000(ms)
+    size_t m_idleCheckTimerID;
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
 };

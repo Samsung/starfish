@@ -27,6 +27,8 @@ class BrowsingContext;
 typedef bool (*GenericAnimationHandler)(void* data);
 typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
 
+constexpr size_t TimerInvalidID{ SIZE_MAX };
+
 class Timer : public gc {
     friend class Window;
     friend class WebView;

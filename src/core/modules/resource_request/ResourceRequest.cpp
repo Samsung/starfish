@@ -71,8 +71,8 @@ ResourceRequest::ResourceRequest(Document* document)
     , m_mutex(new Mutex())
     , m_lastEffectiveURL("")
     , m_jobDelegate(nullptr)
-    , m_pendingOnHeaderReceivedEventIdlerHandle(SIZE_MAX)
-    , m_pendingOnProgressEventIdlerHandle(SIZE_MAX)
+    , m_pendingOnHeaderReceivedEventIdlerHandle(MessageLoopInvalidID)
+    , m_pendingOnProgressEventIdlerHandle(MessageLoopInvalidID)
     , m_loaded(0)
     , m_total(0)
     , m_abortRequestState(AbortRequestType::NoPendingRequest)
@@ -111,16 +111,16 @@ void ResourceRequest::clearIdlers()
     }
     m_requstedIdlers.clear();
 
-    if (m_pendingOnHeaderReceivedEventIdlerHandle != SIZE_MAX) {
+    if (m_pendingOnHeaderReceivedEventIdlerHandle != MessageLoopInvalidID) {
         webView()->messageLoop()->removeIdlerWithNoGCRooting(
             m_pendingOnHeaderReceivedEventIdlerHandle);
-        m_pendingOnHeaderReceivedEventIdlerHandle = SIZE_MAX;
+        m_pendingOnHeaderReceivedEventIdlerHandle = MessageLoopInvalidID;
     }
 
-    if (m_pendingOnProgressEventIdlerHandle != SIZE_MAX) {
+    if (m_pendingOnProgressEventIdlerHandle != MessageLoopInvalidID) {
         webView()->messageLoop()->removeIdlerWithNoGCRooting(
             m_pendingOnProgressEventIdlerHandle);
-        m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
+        m_pendingOnProgressEventIdlerHandle = MessageLoopInvalidID;
     }
 
     if (m_activeNetworkURLWorkerData) {

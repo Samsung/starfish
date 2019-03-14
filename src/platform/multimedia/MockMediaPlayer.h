@@ -22,8 +22,6 @@
 #ifndef __StarfishMockMediaPlayer__
 #define __StarfishMockMediaPlayer__
 
-#include "platform/multimedia/MediaPlayer.h"
-
 namespace Starfish {
 
 class Canvas;
@@ -198,7 +196,7 @@ protected:
         , m_audioStream(nullptr)
         , m_videoStream(nullptr)
         , m_seeking(false)
-        , m_seekingTimer(SIZE_MAX)
+        , m_seekingTimer(TimerInvalidID)
         , m_mseClient(nullptr)
     {
     }

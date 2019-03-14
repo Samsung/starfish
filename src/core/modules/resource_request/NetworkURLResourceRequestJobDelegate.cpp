@@ -216,7 +216,8 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
         nwd->request->m_responseData->m_status = 0;
         nwd->request->handleResponseEOFwithPreflightRequestRedirected();
     } else if (nwd->httpTransaction->res() == 0) {
-        if (nwd->request->m_pendingOnProgressEventIdlerHandle != SIZE_MAX) {
+        if (nwd->request->m_pendingOnProgressEventIdlerHandle !=
+            MessageLoopInvalidID) {
             ResourceRequest* request = nwd->request;
             if (!request->isSync()) {
                 request->response().insert(request->response().end(),
@@ -229,7 +230,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 
             request->webView()->messageLoop()->removeIdlerWithNoGCRooting(
                 request->m_pendingOnProgressEventIdlerHandle);
-            request->m_pendingOnProgressEventIdlerHandle = SIZE_MAX;
+            request->m_pendingOnProgressEventIdlerHandle = MessageLoopInvalidID;
         }
 #ifdef STARFISH_ENABLE_HTTPCACHE
         HTTPCache* cache = nwd->request->starfish()->httpCache();
@@ -277,7 +278,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
     }
 
     if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
-        SIZE_MAX) {
+        TimerInvalidID) {
         if (nwd->request->webView()->timer()) {
             nwd->request->webView()->timer()->removeTimer(
                 NetworkSharedResourceManager::getInstance()
@@ -292,7 +293,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
                 NetworkSharedResourceManager::getInstance()
                     ->clearAllCurlHandleDataCache();
                 NetworkSharedResourceManager::getInstance()
-                    ->setCacheClearTimerID(SIZE_MAX);
+                    ->setCacheClearTimerID(TimerInvalidID);
             },
             nullptr, false);
 
@@ -696,7 +697,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                         memPtr + realSize);
     }
 
-    if (request->m_pendingOnProgressEventIdlerHandle == SIZE_MAX) {
+    if (request->m_pendingOnProgressEventIdlerHandle == MessageLoopInvalidID) {
         if (request->isSync()) {
             request->changeReadyState(ReadyState::Loading, true);
             request->changeProgress(ProgressState::Progress, true);
@@ -730,7 +731,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
                                     request
                                         ->m_pendingOnProgressEventIdlerHandle);
                                 request->m_pendingOnProgressEventIdlerHandle =
-                                    SIZE_MAX;
+                                    MessageLoopInvalidID;
                             }
                             if (!request->isSync()) {
                                 request->response().insert(
