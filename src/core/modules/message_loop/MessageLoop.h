@@ -20,11 +20,6 @@
 #ifndef __StarfishMessageLoop__
 #define __StarfishMessageLoop__
 
-#include "core/modules/threading/Mutex.h"
-#ifdef STARFISH_MESSAGELOOP_DEBUG
-#include "core/modules/threading/Locker.h"
-#endif
-
 #ifdef STARFISH_WEBWORKER_HOST
 #define BASE_CLASS gc
 #else
@@ -35,6 +30,9 @@
 namespace Starfish {
 
 class ExecutionContext;
+class Mutex;
+
+constexpr size_t MessageLoopInvalidID{ SIZE_MAX };
 
 class MessageLoop : public BASE_CLASS {
     friend class MessageLoopImpl;
@@ -87,51 +85,15 @@ public:
     volatile int m_runningThreadCount;
     volatile int m_unjoinedThreadCount;
     volatile int m_runningPoolWorkerCount;
-    int runningThreadCount()
-    {
-        Locker<Mutex> lock(*m_countingMutex);
-        return (int)m_runningThreadCount;
-    }
-    void increaseRunningThreadCount()
-    {
-        Locker<Mutex> lock(*m_countingMutex);
-        m_runningThreadCount++;
-    }
-    void decreaseRunningThreadCount()
-    {
-        Locker<Mutex> lock(*m_countingMutex);
-        m_runningThreadCount--;
-    }
-    int unjoinedThreadCount()
-    {
-        Locker<Mutex> lock(*m_countingMutex);
-        return (int)m_unjoinedThreadCount;
-    }
-    void increaseUnjoinedThreadCount()
-    {
-        Locker<Mutex> lock(*m_countingMutex);
-        m_unjoinedThreadCount++;
-    }
-    void decreaseUnjoinedThreadCount()
-    {
-        Locker<Mutex> lock(*m_countingMutex);
-        m_unjoinedThreadCount--;
-    }
-    int runningPoolWorkerCount()
-    {
-        Locker<Mutex> lock(*m_countingMutex);
-        return (int)m_runningPoolWorkerCount;
-    }
-    void increaseRunningPoolWorkerCount()
-    {
-        Locker<Mutex> lock(*m_countingMutex);
-        m_runningPoolWorkerCount++;
-    }
-    void decreaseRunningPoolWorkerCount()
-    {
-        Locker<Mutex> lock(*m_countingMutex);
-        m_runningPoolWorkerCount--;
-    }
+    int runningThreadCount();
+    void increaseRunningThreadCount();
+    void decreaseRunningThreadCount();
+    int unjoinedThreadCount();
+    void increaseUnjoinedThreadCount();
+    void decreaseUnjoinedThreadCount();
+    int runningPoolWorkerCount();
+    void increaseRunningPoolWorkerCount();
+    void decreaseRunningPoolWorkerCount();
 #endif
 };
 } // namespace Starfish

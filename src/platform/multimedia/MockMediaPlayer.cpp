@@ -30,7 +30,9 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/message_loop/Timer.h"
 #include "platform/multimedia/Demuxer.h"
+#include "platform/multimedia/MediaPlayer.h"
 #include "platform/multimedia/MockMediaPlayer.h"
 #include "platform/window/PlatformWindow.h"
 #include "core/page/BrowsingContext.h"
@@ -271,7 +273,7 @@ void MockMediaPlayer::pause()
         m_container->document()->browsingContext()->removePointerFromRootSet(
             this);
         window()->clearInterval(m_currentTimeUpdateTimer);
-        m_currentTimeUpdateTimer = SIZE_MAX;
+        m_currentTimeUpdateTimer = TimerInvalidID;
     }
 }
 
@@ -355,7 +357,7 @@ void MockMediaPlayer::seek(double time)
     }
 
     setCurrentTimeInMS(timeInMS);
-    STARFISH_ASSERT(m_seekingTimer == SIZE_MAX);
+    STARFISH_ASSERT(m_seekingTimer == TimerInvalidID);
 
     m_seekingTimer = window()->setInterval(
         [](Window* window, void* data) {
@@ -410,7 +412,7 @@ void MockMediaPlayer::handleSeeked()
 {
     m_seeking = false;
     window()->clearInterval(m_seekingTimer);
-    m_seekingTimer = SIZE_MAX;
+    m_seekingTimer = TimerInvalidID;
     m_container->mediaPlayerNotifySeekedItsContainer(currentTimeInMS() / 1000);
 }
 void MockMediaPlayer::fillBufferIfNeeded(StreamType type)

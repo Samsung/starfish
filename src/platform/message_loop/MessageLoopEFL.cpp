@@ -26,6 +26,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
+#include "core/modules/threading/Mutex.h"
 #include "core/dom/ExecutionContext.h"
 
 #include <Ecore.h>
@@ -263,7 +264,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 void MessageLoop::removeIdler(size_t handle)
 {
     STARFISH_ASSERT(isMainThread());
-    if (handle == SIZE_MAX) {
+    if (handle == MessageLoopInvalidID) {
         return;
     }
     IdlerData* id = (IdlerData*)handle;
@@ -275,7 +276,7 @@ void MessageLoop::removeIdler(size_t handle)
 
 void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
 {
-    if (handle == SIZE_MAX) {
+    if (handle == MessageLoopInvalidID) {
         return;
     }
     IdlerData* id = (IdlerData*)handle;

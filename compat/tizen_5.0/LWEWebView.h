@@ -62,6 +62,8 @@ public:
     int GetCacheMode() const;
     TTSMode GetTTSMode() const;
     WebSecurityMode GetWebSecurityMode() const;
+    IdleModeJob GetIdleModeJob() const;
+    uint32_t GetIdleModeCheckIntervalInMS() const;
     void GetBaseBackgroundColor(unsigned char& r, unsigned char& g,
                                 unsigned char& b, unsigned char& a) const;
     void GetBaseForegroundColor(unsigned char& r, unsigned char& g,
@@ -76,6 +78,8 @@ public:
     void SetBaseForegroundColor(unsigned char r, unsigned char g,
                                 unsigned char b, unsigned char a);
     void SetWebSecurityMode(WebSecurityMode value);
+    void SetIdleModeJob(IdleModeJob j);
+    void SetIdleModeCheckIntervalInMS(uint32_t intervalInMS);
 
 private:
     std::string m_defaultUserAgent;
@@ -87,6 +91,8 @@ private:
     unsigned char m_bgR, m_bgG, m_bgB, m_bgA;
     unsigned char m_fgR, m_fgG, m_fgB, m_fgA;
     WebSecurityMode m_webSecurityMode;
+    IdleModeJob m_idleModeJob; // default value is IdleModeJob::IdleModeFull
+    uint32_t m_idleModeCheckIntervalInMS; // default value is 3000(ms)
 };
 
 class LWE_EXPORT ResourceError {

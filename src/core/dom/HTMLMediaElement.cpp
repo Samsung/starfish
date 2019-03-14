@@ -75,7 +75,7 @@ HTMLMediaElement::HTMLMediaElement(Document* document,
     , m_networkState(NetworkState::NETWORK_EMPTY)
     , m_currentOperation(nullptr)
     , m_currentPendingOperationCount(0)
-    , m_currentPendingOperationHandle(SIZE_MAX)
+    , m_currentPendingOperationHandle(MessageLoopInvalidID)
     , m_resourceSelectionContext(nullptr)
     , m_currentPlayStart(std::numeric_limits<double>::quiet_NaN())
     , m_controlsList(nullptr)
@@ -1167,15 +1167,15 @@ void HTMLMediaElement::abortEveryPendingOperation(
         m_playOperationQueue.pop_front();
     }
 
-    if (m_currentPendingOperationHandle != SIZE_MAX) {
+    if (m_currentPendingOperationHandle != MessageLoopInvalidID) {
         webView()->messageLoop()->removeIdler(m_currentPendingOperationHandle);
-        m_currentPendingOperationHandle = SIZE_MAX;
+        m_currentPendingOperationHandle = MessageLoopInvalidID;
         m_currentPendingOperationCount = 0;
     }
 
     m_pendingSeek = std::numeric_limits<double>::quiet_NaN();
     STARFISH_ASSERT(m_currentPendingOperationCount == 0);
-    STARFISH_ASSERT(m_currentPendingOperationHandle == SIZE_MAX);
+    STARFISH_ASSERT(m_currentPendingOperationHandle == MessageLoopInvalidID);
 }
 
 void HTMLMediaElement::processNextOperationQueue()
@@ -1186,7 +1186,8 @@ void HTMLMediaElement::processNextOperationQueue()
     if (m_operationQueue.size()) {
         STARFISH_ASSERT(m_currentPendingOperationCount == 0);
         STARFISH_ASSERT(m_currentOperation == nullptr);
-        STARFISH_ASSERT(m_currentPendingOperationHandle == SIZE_MAX);
+        STARFISH_ASSERT(m_currentPendingOperationHandle ==
+                        MessageLoopInvalidID);
 
         m_currentPendingOperationCount++;
         MediaOperationQueueData* next = m_operationQueue.front();
@@ -1200,7 +1201,7 @@ void HTMLMediaElement::processNextOperationQueue()
                     (MediaOperationQueueData*)data;
                 // Clear pending data
                 queueData->m_mediaElement->m_currentPendingOperationHandle =
-                    SIZE_MAX;
+                    MessageLoopInvalidID;
                 queueData->m_mediaElement->m_currentPendingOperationCount--;
                 STARFISH_ASSERT(
                     queueData->m_mediaElement->m_currentPendingOperationCount ==

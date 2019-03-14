@@ -302,6 +302,7 @@ public:
             EVAS_GL_OPTIONS_DIRECT | EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
             EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
             EVAS_GL_OPTIONS_CLIENT_SIDE_ROTATION);
+        STARFISH_LOG_INFO("try to use EvasGL direct mode\n");
 #endif
         // Create a surface and context
         m_glSfc = evas_gl_surface_create(m_glEvasgl, m_glCfg, width, height);

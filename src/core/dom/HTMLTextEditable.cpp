@@ -27,6 +27,7 @@
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
+#include "core/modules/message_loop/Timer.h"
 #include "platform/window/PlatformWindow.h"
 
 namespace Starfish {
@@ -43,7 +44,7 @@ HTMLTextEditable::HTMLTextEditable(Document* document,
     : HTMLFormControl(document, qname)
     , m_dirtyValueFlag(false)
     , m_shouldDrawCaret(false)
-    , m_caretBlinkingIntervalId(SIZE_MAX)
+    , m_caretBlinkingIntervalId(TimerInvalidID)
     , m_currentCaretPosition(0)
     , m_currentEditingText(String::emptyString)
     , m_maxlength(INITIAL_MAXLENGTH)

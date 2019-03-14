@@ -382,7 +382,7 @@ MediaPlayerTizen::MediaPlayerTizen(HTMLMediaElement* element)
     , m_inPrepare(false)
     , m_pendingPlay(false)
     , m_underrunMode(false)
-    , m_seekingTimer(SIZE_MAX)
+    , m_seekingTimer(TimerInvalidID)
     , m_mseClient(nullptr)
     , m_fillBufferMutex(new Mutex())
     , m_decodedVideoFrameMutex(new Mutex())
@@ -561,9 +561,9 @@ void MediaPlayerTizen::handleSeeked()
         m_seekState = SEEKSTATE_NO_SEEK;
 
         // Remove timeout timer
-        if (m_seekingTimer != SIZE_MAX) {
+        if (m_seekingTimer != TimerInvalidID) {
             m_container->window()->clearTimeout(m_seekingTimer);
-            m_seekingTimer = SIZE_MAX;
+            m_seekingTimer = TimerInvalidID;
         }
         // Remove rooted pointer
         m_container->document()->browsingContext()->removePointerFromRootSet(
@@ -595,7 +595,7 @@ void MediaPlayerTizen::handleSeekTimeout()
     if (isMainThread()) {
         PLAYER_LOGI("MediaPlayerTizen::handleSeekTimeout\n");
         m_foundError = true;
-        m_seekingTimer = SIZE_MAX;
+        m_seekingTimer = TimerInvalidID;
         handleSeeked();
     } else {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
@@ -760,7 +760,7 @@ void MediaPlayerTizen::pause()
         m_container->window()->clearInterval(m_currentTimeUpdateTimer);
     }
     player_pause(m_nativePlayer);
-    m_currentTimeUpdateTimer = SIZE_MAX;
+    m_currentTimeUpdateTimer = TimerInvalidID;
 }
 
 void MediaPlayerTizen::setNativePlayerDefaultOptions(ResourceURL* url)

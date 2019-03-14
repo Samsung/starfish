@@ -25,6 +25,7 @@
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
+#include "core/modules/threading/Mutex.h"
 #include "core/dom/ExecutionContext.h"
 
 #include <uv.h>
