@@ -26,6 +26,8 @@ class IRunnable {
 public:
     virtual ~IRunnable(){};
     virtual void run() = 0;
+    virtual void stop() = 0;
+    virtual void setStopper(std::future<void>&& stopper) = 0;
 };
 
 } // namespace Starfish

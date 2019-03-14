@@ -20,15 +20,12 @@
 #ifndef __StarfishProcessHost__
 #define __StarfishProcessHost__
 
-#include "platform/process/base/ProcessType.h"
-#include <mutex>
-
 namespace Starfish {
 
 class ThreadPool;
 class IThread;
 
-class ProcessHost : public gc {
+class ProcessHost : public gc, public ProcessHostIORunnable::Client {
 public:
     enum class ProcessState {
         INITIALIZED = 0,
@@ -38,18 +35,23 @@ public:
     };
 
     ProcessHost(ThreadPool* threadPool);
-    virtual ~ProcessHost();
 
-    bool launch(std::vector<std::string>& args);
+    bool launch(std::vector<std::string>& args, const char* endPointAddress);
     bool terminate();
     ProcessHost::ProcessState getState() const;
 
+    bool send(const void* buf, size_t len);
+    void onReceived(int socketfd, const char* data) override;
+    void onStopped() override;
+
 private:
+    Socket* makeConnection(const char* endPointAddress);
     ProcessState m_processState;
     PID m_childPid;
     IThread* m_ioThread;
     ThreadPool* m_threadPool;
     std::mutex m_stateMutex;
+    Socket* m_socket;
 };
 
 } // namespace Starfish

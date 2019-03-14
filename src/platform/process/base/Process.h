@@ -20,8 +20,6 @@
 #ifndef __StarfishProcess__
 #define __StarfishProcess__
 
-#include "platform/process/base/ProcessType.h"
-
 namespace Starfish {
 
 class ProcessUtil {

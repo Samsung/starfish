@@ -21,10 +21,18 @@
 
 #include "StarfishConfig.h"
 
+#include <nanomsg/nn.h>
+#include <nanomsg/pair.h>
+
+#include "platform/process/base/ProcessType.h"
 #include "platform/process/base/Process.h"
+#include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/AdaptedThread.h"
+#include "core/modules/threading/ThreadPool.h"
 #include "core/modules/threading/IRunnable.h"
-#include "ProcessHostIORunnable.h"
+#include "core/modules/process/networking/Socket.h"
+#include "core/modules/process/ProcessHostIORunnable.h"
+
 #include "ProcessHost.h"
 
 namespace Starfish {
@@ -34,10 +42,7 @@ ProcessHost::ProcessHost(ThreadPool* threadPool)
     , m_childPid(-1)
     , m_ioThread(nullptr)
     , m_threadPool(threadPool)
-{
-}
-
-ProcessHost::~ProcessHost()
+    , m_socket(nullptr)
 {
 }
 
@@ -46,7 +51,26 @@ ProcessHost::ProcessState ProcessHost::getState() const
     return m_processState;
 }
 
-bool ProcessHost::launch(std::vector<std::string>& args)
+Socket* ProcessHost::makeConnection(const char* endPointAddress)
+{
+    auto socket = new SocketNN(AF_SP, NN_PAIR);
+
+    try {
+        socket->connect(endPointAddress);
+
+    } catch (const Socket::Exception& e) {
+        if (e.num() == EADDRINUSE) {
+            STARFISH_LOG_ERROR("The requested address is already in use.\n");
+        } else {
+            STARFISH_LOG_INFO("Networking failed due to %s\n", e.what());
+        }
+        return nullptr;
+    }
+    return socket;
+}
+
+bool ProcessHost::launch(std::vector<std::string>& args,
+                         const char* endPointAddress)
 {
     std::unique_lock<std::mutex> lock(m_stateMutex);
 
@@ -56,16 +80,25 @@ bool ProcessHost::launch(std::vector<std::string>& args)
 
     STARFISH_ASSERT(m_threadPool);
 
-    m_ioThread = new AdaptedThread(m_threadPool);
-    m_ioThread->start(new ProcessHostIORunnable());
+    auto socket = makeConnection(endPointAddress);
 
-    PID pid = -1;
-    ProcessUtil::launchProcess(args, &pid);
+    if (socket) {
+        auto runnable =
+            new ProcessHostIORunnable(m_threadPool->messageLoop(), this);
 
-    if (pid > 0) {
-        m_childPid = pid;
-        m_processState = ProcessState::CHILD_PROCESS_STARTED;
-        return true;
+        runnable->addSocket(socket);
+
+        m_ioThread = new AdaptedThread(m_threadPool);
+        m_ioThread->start(runnable);
+
+        PID pid = -1;
+        // ProcessUtil::launchProcess(args, &pid);
+
+        if (pid > 0) {
+            m_childPid = pid;
+            m_processState = ProcessState::CHILD_PROCESS_STARTED;
+            return true;
+        }
     }
 
     return false;
@@ -85,6 +118,16 @@ bool ProcessHost::terminate()
     }
 
     return result;
+}
+
+void ProcessHost::onReceived(int socketfd, const char* data)
+{
+    STARFISH_LOG_WARN("onReceived::data (%d): %s \n", socketfd, data);
+};
+
+void ProcessHost::onStopped()
+{
+    STARFISH_LOG_WARN("onStopped\n");
 }
 
 } // namespace Starfish

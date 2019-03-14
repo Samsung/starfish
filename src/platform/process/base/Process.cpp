@@ -27,6 +27,7 @@
 #include <wait.h>
 #endif
 
+#include "platform/process/base/ProcessType.h"
 #include "platform/process/base/Process.h"
 
 namespace Starfish {

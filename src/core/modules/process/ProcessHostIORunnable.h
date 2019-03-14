@@ -22,13 +22,40 @@
 
 namespace Starfish {
 
+class Sockect;
 class IRunnable;
+class MessageLoop;
 
 class ProcessHostIORunnable : public IRunnable, public gc {
 public:
-    ProcessHostIORunnable();
+    class Client {
+    public:
+        virtual ~Client()
+        {
+        }
+        virtual void onReceived(int socketfd, const char* data) = 0;
+        virtual void onStopped() = 0;
+    };
+
+    ProcessHostIORunnable(MessageLoop* messageLoop, Client* client);
 
     void run() override;
+    void stop() override;
+    void setStopper(std::future<void>&& stopper) override;
+    bool addSocket(Socket* socket);
+
+private:
+    bool stopRequested();
+    void closeSockets();
+
+    MessageLoop* m_messageLoop;
+    GCVector<Socket*> m_sockets;
+
+    std::atomic_bool m_isStopped;
+    std::future<void> m_stopper;
+    std::mutex m_mutex;
+    int m_rcvtimeout;
+    Client* m_client;
 };
 
 } // namespace Starfish

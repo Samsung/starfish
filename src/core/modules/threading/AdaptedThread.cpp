@@ -48,9 +48,11 @@ void AdaptedThread::start(IRunnable* runnable)
 
     m_threadImp = new Thread(m_threadPool);
 
-    auto worker = [](void* data) -> void* {
+    auto worker = [](void* data, std::future<void>&& future) -> void* {
         auto self = static_cast<AdaptedThread*>(data);
+
         if (self) {
+            self->m_runnable->setStopper(std::move(future));
             self->run();
         }
         return nullptr;
@@ -66,7 +68,7 @@ void AdaptedThread::run()
     if (m_runnable && m_isAlive) {
         m_runnable->run();
     }
-    m_runnable = nullptr;
+
     m_isAlive = false;
 }
 
@@ -77,7 +79,7 @@ void AdaptedThread::join()
 
 void AdaptedThread::stop()
 {
-    m_isAlive = false;
+    m_runnable->stop();
 }
 
 } // namespace Starfish
