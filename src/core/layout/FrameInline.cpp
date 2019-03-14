@@ -19,6 +19,9 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "core/layout/FrameInline.h"
 
 namespace Starfish {

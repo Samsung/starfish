@@ -18,6 +18,9 @@
  */
 
 #include "StarfishConfig.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "core/layout/FrameCounterText.h"
 #include "core/style/ContentData.h"
 #include "core/style/CounterStyle.h"

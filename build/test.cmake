@@ -231,6 +231,10 @@ ADD_CUSTOM_TARGET (wpt_others
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/serviceworker.res basic -p${NPROCS}
 )
 
+ADD_CUSTOM_TARGET (wpt_canvas
+    COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/2dcontext.res basic -p${NPROCS}
+)
+
 ADD_CUSTOM_TARGET (wpt_pwa
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/fetch_basic.res basic -p${NPROCS}
 )
@@ -274,6 +278,7 @@ ADD_CUSTOM_TARGET (wpt_all
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/cors.res basic -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/cookies.res basic -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/serviceworker.res basic -p${NPROCS}
+    COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/2dcontext.res basic -p${NPROCS}
 )
 
 ADD_CUSTOM_TARGET (reftest_all
@@ -336,6 +341,7 @@ ADD_CUSTOM_TARGET (reftest_all
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/webstorage.res basic -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/cors.res basic -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/cookies.res basic -p${NPROCS}
+    COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/2dcontext.res basic -p${NPROCS}
 )
 
 ADD_CUSTOM_TARGET (bidi_test

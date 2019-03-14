@@ -18,9 +18,10 @@
  */
 
 #include "StarfishConfig.h"
-
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "FrameInputBox.h"
-
 #include "core/dom/Document.h"
 #include "core/dom/HTMLHtmlElement.h"
 #include "core/dom/HTMLInputElement.h"
@@ -29,7 +30,6 @@
 #include "core/dom/PseudoElement.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
-
 #include "core/layout/Frame.h"
 #include "core/layout/FrameText.h"
 #include "core/layout/FrameTreeBuilder.h"

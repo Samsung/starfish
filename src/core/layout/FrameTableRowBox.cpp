@@ -18,6 +18,9 @@
  */
 
 #include "StarfishConfig.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "core/layout/FrameTableBox.h"
 #include "core/layout/FrameTableCellBox.h"
 #include "core/layout/FrameTableRowBox.h"

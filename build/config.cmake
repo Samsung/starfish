@@ -54,6 +54,7 @@ SET (CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${OUTPUT_DIRECTORY}/lib)
 # STARFISH_TIZEN_WEARABLE_WIDGET : enable features only necessary for TIZEN wearable targets
 # STARFISH_DISABLE_OVERFLOW_SCROLL : disable scroll event for wearable targets
 # STARFISH_ENABLE_SERVICE_WORKER : enable service worker
+# STARFISH_ENABLE_CANVAS : enable HTMLCanvasElement
 # _GLIBCXX_DEBUG : GNU compiler compiles user code using the debug mode
 
 
@@ -68,6 +69,7 @@ IF (${ARCH} STREQUAL "x64")
         -DSTARFISH_ENABLE_INSPECTOR
         -DSTARFISH_ENABLE_TTS
         -DSTARFISH_ENABLE_HTTPCACHE
+        -DSTARFISH_ENABLE_CANVAS
     )
 ENDIF()
 

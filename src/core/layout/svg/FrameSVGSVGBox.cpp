@@ -18,8 +18,11 @@
  */
 
 #include "StarfishConfig.h"
-#include "FrameSVGSVGBox.h"
 #include "Starfish.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
+#include "FrameSVGSVGBox.h"
 #include "core/dom/svg/SVGSVGElement.h"
 
 namespace Starfish {

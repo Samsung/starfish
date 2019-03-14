@@ -18,9 +18,10 @@
  */
 
 #include "StarfishConfig.h"
-
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "FrameSelectBox.h"
-
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/dom/HTMLSelectElement.h"

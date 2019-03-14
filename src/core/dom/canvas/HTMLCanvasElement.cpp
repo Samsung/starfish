@@ -21,6 +21,8 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "binding/ScriptWrappable.h"
+#include "core/dom/canvas/RenderingContext.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "binding/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
 
@@ -45,6 +47,14 @@ void HTMLCanvasElement::setWidth(uint32_t value)
             m_renderingContext->initialize();
         }
     }
+}
+
+CanvasSurface* HTMLCanvasElement::renderingContextSurface()
+{
+    if (!m_renderingContext) {
+        return nullptr;
+    }
+    return m_renderingContext->surface();
 }
 
 uint32_t HTMLCanvasElement::height()

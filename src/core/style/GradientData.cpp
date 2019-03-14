@@ -48,6 +48,9 @@
 #include "core/style/CalcData.h"
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSGradientValue.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "core/layout/FrameBox.h"
 #include "core/style/GradientData.h"
 namespace Starfish {

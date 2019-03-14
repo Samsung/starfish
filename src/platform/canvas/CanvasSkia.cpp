@@ -21,6 +21,7 @@
 
 #if defined(PORT_CANVAS_BACKEND_SKIA)
 #include "Starfish.h"
+#include "core/style/Style.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "platform/canvas/font/FontImplSkia.h"

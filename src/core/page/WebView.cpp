@@ -36,6 +36,9 @@
 #include "PlatformIntegrationData.h"
 
 #include "core/page/Window.h"
+#include "core/style/Style.h"
+#include "core/style/ComputedStyle.h"
+#include "core/dom/Node.h"
 #include "core/layout/Frame.h"
 #include "core/layout/FrameBlockBox.h"
 #include "core/layout/FrameTreeBuilder.h"

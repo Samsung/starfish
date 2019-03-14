@@ -20,7 +20,6 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "StarfishConfig.h"
-#include "Starfish.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/canvas/RenderingContext.h"
 #include "core/dom/Document.h"
@@ -29,7 +28,7 @@ namespace Starfish {
 
 ScriptBindingInstance* RenderingContext::scriptBindingInstance()
 {
-    return m_canvasElement->document()->scriptBindingInstance();
+    return m_htmlCanvasElement->document()->scriptBindingInstance();
 }
 }
 

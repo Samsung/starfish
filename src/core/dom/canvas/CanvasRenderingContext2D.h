@@ -22,16 +22,12 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "binding/DocumentHoldable.h"
 #include "core/dom/canvas/RenderingContext.h"
-#include "core/modules/canvas/Canvas.h"
 #include "core/page/Serializer.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/Window.h"
-#include "core/page/WebView.h"
 
 namespace Starfish {
 
+class Canvas;
 class CanvasGradient;
 class DOMStringOrCanvasGradientOrCanvasPattern;
 
@@ -157,12 +153,11 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         RenderingContext::fillGCDescriptor(desc);
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(CanvasRenderingContext2D, m_surfaceCanvas));
+        GC_set_bit(desc, GC_WORD_OFFSET(CanvasRenderingContext2D, m_canvas));
     }
 
 private:
-    Canvas* m_surfaceCanvas;
+    Canvas* m_canvas;
     Unit::Color m_fillColor;
     Unit::Color m_strokeColor;
     double m_lineWidth;
