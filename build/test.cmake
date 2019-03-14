@@ -77,6 +77,11 @@ ADD_CUSTOM_TARGET (vendor_test_blink_fast_css
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_css_manual.res cairo --font-dep -p${NPROCS}
 )
 
+ADD_CUSTOM_TARGET (vendor_test_blink_fast_canvas
+    #COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_canvas.res cairo -p${NPROCS}
+    COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/blink_fast_canvas_basic.res common -p${NPROCS}
+)
+
 ADD_CUSTOM_TARGET (vendor_test_blink_fast_etc
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc.res cairo -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc_manual.res cairo --font-dep -p${NPROCS}
@@ -134,6 +139,8 @@ ADD_CUSTOM_TARGET (vendor_test_all
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_css_manual.res cairo --font-dep -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_etc.res cairo -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/webkit_fast_etc_manual.res cairo --font-dep -p${NPROCS}
+    #COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_canvas.res cairo -p${NPROCS}
+    COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/blink_fast_canvas_basic.res common -p${NPROCS}
 )
 
 ADD_CUSTOM_TARGET (wpt_css_css21
@@ -293,6 +300,8 @@ ADD_CUSTOM_TARGET (reftest_all
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc.res cairo -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc_manual.res cairo --font-dep -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_table.res cairo -p${NPROCS}
+    #COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_canvas.res cairo -p${NPROCS}
+    COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/blink_fast_canvas_basic.res common -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_css3.res cairo -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_svg.res cairo -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/blink_svg_basic.res common -p${NPROCS}
@@ -360,6 +369,8 @@ ADD_CUSTOM_TARGET (test_all
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc.res cairo -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_etc_manual.res cairo --font-dep -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_table.res cairo -p${NPROCS}
+    #COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_fast_canvas.res cairo -p${NPROCS}
+    COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/blink_fast_canvas_basic.res common -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_css3.res cairo -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py vendor_pixel tool/reftest/cairo/blink_svg.res cairo -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/blink_svg_basic.res common -p${NPROCS}
@@ -408,6 +419,7 @@ ADD_CUSTOM_TARGET (test_all
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/webstorage.res basic -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/cors.res basic -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/cookies.res basic -p${NPROCS}
+    COMMAND ./tool/drivers/run_test.py multi_basic tool/reftest/cairo/wpt/2dcontext.res basic -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py bidi tool/reftest/cairo/bidi.res cairo --font-dep -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py basic tool/reftest/cairo/internal.res common -p${NPROCS}
     COMMAND ./tool/drivers/run_test.py basic tool/reftest/cairo/internal_manual.res common --font-dep -p${NPROCS}
