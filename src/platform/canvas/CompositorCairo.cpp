@@ -22,6 +22,7 @@
 
 #if defined(PORT_COMPOSITOR_BACKEND_CAIRO)
 
+#include "core/style/Style.h"
 #include "core/modules/canvas/Compositor.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/image/NativeImageData.h"
