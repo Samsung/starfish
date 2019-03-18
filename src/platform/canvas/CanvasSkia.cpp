@@ -108,9 +108,10 @@ private:
     sk_sp<SkShader> m_shader;
 };
 
-NativeGradient* NativeGradient::create(GradientDrawingInfo* info)
+std::shared_ptr<NativeGradient> NativeGradient::create(
+    GradientDrawingInfo* info)
 {
-    return new NativeGradientSkia(info);
+    return std::shared_ptr<NativeGradient>(new NativeGradientSkia(info));
 }
 
 class CanvasSkia : public Canvas {
@@ -690,31 +691,6 @@ public:
             bitmap, SkIRect::MakeWH(w, h),
             SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
             &paint);
-    }
-
-    virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst,
-                           ImageRenderingValue imageRenderingMode)
-    {
-        if (!lastState().m_visible) {
-            return;
-        }
-
-        auto pixels = data->mapBuffer();
-        auto w = data->bufferWidth();
-        auto h = data->bufferHeight();
-
-        SkPaint paint;
-        setImageRenderingMode(paint, imageRenderingMode);
-
-        SkBitmap bitmap;
-        bitmap.installPixels(SkImageInfo::MakeN32Premul(w, h), (void*)pixels,
-                             data->bufferStride());
-        m_canvas->drawBitmapRect(
-            bitmap, SkIRect::MakeWH(w, h),
-            SkRect::MakeXYWH(dst.x(), dst.y(), dst.width(), dst.height()),
-            &paint);
-
-        data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,

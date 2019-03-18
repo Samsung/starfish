@@ -42,6 +42,7 @@
 #include "core/event/KeyBoardEventData.h"
 #include "platform/event/PlatformKeyEventData.h"
 #include "platform/loader/ResourceURL.h"
+#include "platform/loader/ResourceLoader.h"
 
 #include <EscargotPublic.h>
 

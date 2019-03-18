@@ -2591,12 +2591,14 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 CanvasSurface* backgroundSurface = CanvasSurface::create(
                     m_owner->document()->webView()->platformWindow(),
                     bufferWidth, bufferHeight, false);
-                backgroundSurface->clear();
                 Canvas* canvas = Canvas::create(m_owner->node()->webView(),
                                                 backgroundSurface);
+                canvas->clearColor(Unit::Color(0, 0, 0, 0));
                 canvas->setTextDecorationData(m_rareData->m_textDecorationData);
                 owner()->asFrameBox()->paintBackgroundAndBorders(canvas);
                 delete canvas;
+                backgroundSurface->unMapBufferAndNotifyUpdateRegion(
+                    0, 0, bufferWidth, bufferHeight);
                 compositor->drawSurface(
                     backgroundSurface,
                     Unit::Rect(minX, minY, bufferWidth, bufferHeight));

@@ -22,12 +22,8 @@
 
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/Node.h"
-#include "platform/loader/ResourceLoader.h"
 #include "core/util/BloomFilter.h"
-#include "core/style/Style.h"
 #include "core/style/WebFont.h"
-#include "core/style/GradientData.h"
-#include "core/dom/parser/PreloadScanner.h"
 #include "binding/HTMLScriptElementOrSVGScriptElementUnion.h"
 
 #define STARFISH_NATIVEGRADIENT_CACHE_SIZE 1024 * 1024 * 4
@@ -62,6 +58,8 @@ class DOMImplementation;
 class DeferredScriptDownloadClient;
 class PreloadScanner;
 class ContentSecurityPolicy;
+
+struct GradientDrawingInfo;
 
 /* VisibilityState */
 enum VisibilityState ENSURE_ENUM_UNSIGNED {
@@ -571,8 +569,10 @@ public:
     void markElementInClickProgress(Element* element);
     void unmarkElementInClickProgress(Element* element);
 
-    NativeGradient* findInNativeGradientCache(GradientDrawingInfo* key);
-    void cacheNativeGradient(GradientDrawingInfo* key, NativeGradient* value);
+    std::shared_ptr<NativeGradient> findInNativeGradientCache(
+        GradientDrawingInfo* key);
+    void cacheNativeGradient(GradientDrawingInfo* key,
+                             std::shared_ptr<NativeGradient> value);
     bool pruneNativeGradientCacheIfNeeds(size_t reserve);
 
 #define VIRTUAL
@@ -768,7 +768,7 @@ protected:
     uint64_t m_documentCreatedTick;
     ContentSecurityPolicy* m_contentSecurityPolicy;
     GCVector<Element*> m_elementInClickProgressList;
-    GCUnorderedMap<GradientDrawingInfo*, NativeGradient*,
+    GCUnorderedMap<GradientDrawingInfo*, std::shared_ptr<NativeGradient>,
                    std::hash<GradientDrawingInfo*>,
                    std::equal_to<GradientDrawingInfo*>>* m_nativeGradientCache;
     GCVector<GradientDrawingInfo*> m_nativeGradientCacheLRUList;

@@ -47,9 +47,10 @@ private:
     }
 };
 
-NativeGradient* NativeGradient::create(GradientDrawingInfo* info)
+std::shared_ptr<NativeGradient> NativeGradient::create(
+    GradientDrawingInfo* info)
 {
-    return new NativeGradientMock(info);
+    return std::shared_ptr<NativeGradient>(new NativeGradientMock(info));
 }
 
 class CanvasMock : public Canvas {
@@ -170,11 +171,6 @@ public:
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& dst,
-                           ImageRenderingValue imageRenderingMode)
-    {
-    }
-
-    virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst,
                            ImageRenderingValue imageRenderingMode)
     {
     }

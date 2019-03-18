@@ -29,6 +29,7 @@
 #include "core/page/Window.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "platform/network/http/HTTPStatus.h"
+#include "platform/loader/ResourceLoader.h"
 #include "core/csp/ContentSecurityPolicy.h"
 
 namespace Starfish {

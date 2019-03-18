@@ -21,8 +21,9 @@
 #include "Starfish.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGImageElement.h"
-#include "platform/loader/ElementResourceClient.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "platform/loader/ElementResourceClient.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 

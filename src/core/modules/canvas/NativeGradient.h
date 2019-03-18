@@ -26,7 +26,7 @@ class GradientDrawingInfo;
 
 class NativeGradient : public gc {
 public:
-    static NativeGradient* create(GradientDrawingInfo* info);
+    static std::shared_ptr<NativeGradient> create(GradientDrawingInfo* info);
     virtual ~NativeGradient()
     {
     }

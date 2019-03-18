@@ -38,6 +38,7 @@
 #include "core/style/WillChangeData.h"
 #include "core/style/ComputedStyle.h"
 #include "platform/window/PlatformWindow.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 

@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "PreloadScanner.h"
 #include "core/dom/Document.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 

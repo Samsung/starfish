@@ -116,9 +116,10 @@ private:
     cairo_pattern_t* m_pattern;
 };
 
-NativeGradient* NativeGradient::create(GradientDrawingInfo* info)
+std::shared_ptr<NativeGradient> NativeGradient::create(
+    GradientDrawingInfo* info)
 {
-    return new NativeGradientCairo(info);
+    return std::shared_ptr<NativeGradient>(new NativeGradientCairo(info));
 }
 
 class CanvasCairo : public Canvas {
@@ -614,23 +615,6 @@ public:
         if (surfaceWasCreated) {
             cairo_surface_destroy(image);
         }
-    }
-
-    virtual void drawImage(CanvasSurface* data, const Unit::Rect& dst,
-                           ImageRenderingValue imageRenderingMode)
-    {
-        if (!lastState().m_visible) {
-            return;
-        }
-        cairo_surface_t* image;
-        image = cairo_image_surface_create_for_data(
-            (unsigned char*)data->mapBuffer(), CAIRO_FORMAT_ARGB32,
-            data->bufferWidth(), data->bufferHeight(), data->bufferStride());
-
-        drawImageCairo(image, dst, data->bufferWidth(), data->bufferHeight(),
-                       imageRenderingMode);
-        cairo_surface_destroy(image);
-        data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
     }
 
     virtual void drawImage(NativeImageData* data, const Unit::Rect& src,

@@ -32,6 +32,7 @@
 #include "core/layout/FrameGridBox.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/CanvasShadowData.h"
 #include "core/util/LineBreakerIteratorPool.h"
 #include "core/modules/canvas/ShadowBlur.h"
 #include "core/modules/canvas/image/NativeImageData.h"

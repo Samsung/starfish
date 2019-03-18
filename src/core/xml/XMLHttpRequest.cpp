@@ -30,7 +30,6 @@
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/dom/WebOrigin.h"
 #include "core/page/Window.h"
-#include "platform/network/http/HTTPStatus.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/FetchUtils.h"
 #include "core/fetch/Headers.h"
@@ -38,6 +37,8 @@
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/csp/SecurityPolicyViolationEvent.h"
 #include "core/dom/xml/XMLSerializer.h"
+#include "platform/network/http/HTTPStatus.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 
