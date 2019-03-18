@@ -506,7 +506,7 @@ void MediaPlayerTizen::seek(double time)
     //        set timer that would help the player to remove rooted pointer
     //        and properly destroyed
     m_seekingTimer = m_container->window()->setTimeout(
-        [](Window* window, void* data) {
+        [](void* data) {
             MediaPlayerTizen* self = (MediaPlayerTizen*)data;
             PLAYER_LOGI("MediaPlayerTizen::seek() : timeout\n");
             self->handleSeekTimeout();
@@ -710,7 +710,7 @@ double MediaPlayerTizen::duration()
     return duration / 1000.0;
 }
 
-static void updateTimeCallback(Window* window, void* data)
+static void updateTimeCallback(void* data)
 {
     MediaPlayerTizen* self = (MediaPlayerTizen*)data;
     if (self->seeking() || !self->alive()) {

@@ -297,7 +297,7 @@ void GeolocationTizen::getCurrentPosition(GeoPositionCallback cb, void* cbData,
             handleError(ret, info);
         } else {
             info->timeoutId = document()->window()->setTimeout(
-                [](Window*, void* data) {
+                [](void* data) {
                     LocationRequestInfoTizen* info =
                         (LocationRequestInfoTizen*)data;
                     info->shouldContinueRequest = false;

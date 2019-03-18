@@ -17,10 +17,21 @@
  *  USA
  */
 
+#include "StarfishBase.h"
+#include "core/modules/profiling/Profiling.h"
 #include "core/page/GlobalScope.h"
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
+
+ExecutionContext::ExecutionContext(GlobalScope* globalScope,
+                                   ScriptBindingInstance* instance)
+    : m_globalScope(globalScope)
+    , m_scriptBindingInstance(instance)
+    , m_createdTick(longTickCount())
+
+{
+}
 
 WebBase* ExecutionContext::webBase() const
 {

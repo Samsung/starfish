@@ -329,7 +329,7 @@ void WebView::setIdleModeCheckIntervalInMS(uint32_t i)
         m_timer->removeTimer(m_idleModeCheckIntervalInMS);
         m_idleCheckTimerID = m_timer->addTimer(
             m_idleModeCheckIntervalInMS, nullptr,
-            [](Window* window, void* data) {
+            [](void* data) {
                 WebView* wv = (WebView*)data;
                 uint64_t currentTick = longTickCount();
                 if (!wv->m_inIdleMode &&
@@ -1295,7 +1295,7 @@ RenderResult WebView::rendering(bool force)
             auto iter = rafHandlers.begin();
             while (iter != rafHandlers.end()) {
                 Timer::RequestAnimationFrameData* data = iter->second;
-                data->m_handler(data->m_window, data->m_data);
+                data->m_handler(data->m_data);
                 iter++;
             }
         }

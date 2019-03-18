@@ -693,7 +693,7 @@ void BrowsingContext::dispose()
 
     m_layoutRepaintTracker.dispose();
 
-    webView()->timer()->clear(this);
+    webView()->timer()->clear(m_window);
 
     if (m_window) {
         m_window->dispose();

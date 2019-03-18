@@ -22,10 +22,11 @@
 
 namespace Starfish {
 
-class BrowsingContext;
+class WebBase;
+class GlobalScope;
 
 typedef bool (*GenericAnimationHandler)(void* data);
-typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
+typedef void (*TimerHandler)(void* data);
 
 constexpr size_t TimerInvalidID{ SIZE_MAX };
 
@@ -34,22 +35,21 @@ class Timer : public gc {
     friend class WebView;
 
 public:
-    Timer(WebView* wv);
+    Timer(WebBase* webBase);
 
-    size_t addTimer(unsigned delay, Window* window,
-                    WindowSetTimeoutHandler handler, void* data,
-                    bool repetitive);
+    size_t addTimer(unsigned delay, GlobalScope* globalScope,
+                    TimerHandler handler, void* data, bool repetitive);
     void removeTimer(size_t reqID);
 
-    size_t addAnimator(Window* window, GenericAnimationHandler handler,
-                       void* data);
+    size_t addAnimator(GlobalScope* globalScope,
+                       GenericAnimationHandler handler, void* data);
     void removeGenericAnimator(size_t reqID);
 
-    uint32_t requestAnimationFrame(Window* window,
-                                   WindowSetTimeoutHandler handler, void* data);
+    uint32_t requestAnimationFrame(GlobalScope* globalScope,
+                                   TimerHandler handler, void* data);
     void cancelAnimationFrame(size_t reqID);
 
-    void clear(BrowsingContext* ctx); // give nullptr to clear every timer
+    void clear(GlobalScope* globalScope); // give nullptr to clear every timer
     void destroy();
 
 protected:
@@ -57,11 +57,11 @@ protected:
         Timer* m_timer;
         uint32_t m_id;
         void* m_data;
-        WindowSetTimeoutHandler m_handler;
-        Window* m_window;
+        TimerHandler m_handler;
+        GlobalScope* m_globalScope;
     };
 
-    WebView* m_webView;
+    WebBase* m_webBase;
     uint32_t m_timeoutCounter;
     GCUnorderedMap<uint32_t, void*> m_timeoutHandler;
     uint32_t m_requestAnimationFrameCounter;

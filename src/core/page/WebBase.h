@@ -40,6 +40,9 @@ public:
     virtual Inspector* inspector() const = 0;
 #endif
 
+    virtual void setNeedsRendering() = 0;
+    virtual uint64_t lastRenderingTick() = 0;
+
 protected:
     WebBase(Starfish* starfish)
         : StarfishHoldable(starfish)

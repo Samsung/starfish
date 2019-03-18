@@ -222,7 +222,7 @@ void MockMediaPlayer::play()
         m_playbackState = PLAYBACK_STATE_PLAYING;
         m_container->document()->browsingContext()->addPointerInRootSet(this);
         m_currentTimeUpdateTimer = window()->setInterval(
-            [](Window* window, void* data) {
+            [](void* data) {
                 MockMediaPlayer* self = (MockMediaPlayer*)data;
                 if (self->seeking()) {
                     return;
@@ -360,7 +360,7 @@ void MockMediaPlayer::seek(double time)
     STARFISH_ASSERT(m_seekingTimer == TimerInvalidID);
 
     m_seekingTimer = window()->setInterval(
-        [](Window* window, void* data) {
+        [](void* data) {
             MockMediaPlayer* self = (MockMediaPlayer*)data;
             if (self->isMSE()) {
                 MockMediaStream* audioStream =

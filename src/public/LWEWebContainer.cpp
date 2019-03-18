@@ -23,6 +23,7 @@
 #include "LWEWebView.h"
 
 #include "platform/window/PlatformWindow.h"
+#include "browser/history/HistoryManager.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
@@ -626,13 +627,12 @@ size_t WebContainer::AddTimeout(void (*callback)(void*), void* data,
     Data* d = new Data();
     d->callback = callback;
     d->data = data;
-    ret = TO_WEBVIEW(m_impl)->timer()->addTimer(
-        timeoutInMS, nullptr,
-        [](::Starfish::Window* window, void* data) {
-            Data* d = (Data*)data;
-            d->callback(d->data);
-        },
-        d, false);
+    ret = TO_WEBVIEW(m_impl)->timer()->addTimer(timeoutInMS, nullptr,
+                                                [](void* data) {
+                                                    Data* d = (Data*)data;
+                                                    d->callback(d->data);
+                                                },
+                                                d, false);
     END_SIMPLE_THREADED_PUBLIC_API_WRAPPER
     return ret;
 }

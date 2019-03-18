@@ -20,7 +20,6 @@
 #define __StarfishWindow__
 
 #include "core/dom/EventTarget.h"
-#include "core/dom/Scrolling.h"
 #include "core/fetch/Fetch.h"
 #include "core/modules/tts/SpeechSynthesis.h"
 #include "core/page/GlobalScope.h"
@@ -42,6 +41,7 @@ class Screen;
 class ScriptBindingInstance;
 class StorageNamespace;
 class WebView;
+class Scrolling;
 
 struct ScrollOptions {
 public:
@@ -166,7 +166,7 @@ private:
     bool m_hasTop;
 };
 
-typedef void (*WindowSetTimeoutHandler)(Window* window, void* data);
+typedef void (*TimerHandler)(void* data);
 
 class Window : public EventTarget, public GlobalScope {
     friend class MessageLoop;
@@ -230,14 +230,12 @@ public:
     Storage* localStorage();
     Storage* sessionStorage();
 
-    uint32_t requestAnimationFrame(WindowSetTimeoutHandler handler, void* data);
+    uint32_t requestAnimationFrame(TimerHandler handler, void* data);
     void cancelAnimationFrame(int32_t reqID);
 
-    uint32_t setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
-                        void* data);
+    uint32_t setTimeout(TimerHandler handler, int32_t delay, void* data);
     void clearTimeout(int32_t id);
-    uint32_t setInterval(WindowSetTimeoutHandler handler, int32_t delay,
-                         void* data);
+    uint32_t setInterval(TimerHandler handler, int32_t delay, void* data);
     void clearInterval(int32_t id);
 
     void alert();
