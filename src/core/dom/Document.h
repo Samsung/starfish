@@ -554,11 +554,6 @@ public:
     MediaQueryListMatcher* mediaQueryListMatcher();
     void evalMediaQueryLists();
 
-    uint64_t documentCreatedTick()
-    {
-        return m_documentCreatedTick;
-    }
-
     ContentSecurityPolicy* contentSecurityPolicy()
     {
         return m_contentSecurityPolicy;
@@ -765,7 +760,6 @@ protected:
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif
-    uint64_t m_documentCreatedTick;
     ContentSecurityPolicy* m_contentSecurityPolicy;
     GCVector<Element*> m_elementInClickProgressList;
     GCUnorderedMap<GradientDrawingInfo*, std::shared_ptr<NativeGradient>,

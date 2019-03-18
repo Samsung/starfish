@@ -20,7 +20,7 @@
 #ifndef __StarfishWebView__
 #define __StarfishWebView__
 
-#include "browser/history/HistoryManager.h"
+#include "binding/ScriptWrappable.h"
 #include "core/page/WebBase.h"
 #include "core/page/RenderResult.h"
 #include "platform/public/ScreenInfo.h"
@@ -136,6 +136,7 @@ class Console;
 class MouseData;
 class TouchData;
 class PlatformKeyEventData;
+class EventTarget;
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class Avplay;
 #endif
@@ -148,6 +149,7 @@ enum class TouchEventKind;
 enum class KeyEventKind;
 enum class MouseEventKind;
 enum class CompositionEventKind;
+enum class HistoryManagerAction;
 
 class WebView : public WebBase, public gc {
     friend class BrowsingContext;
@@ -490,7 +492,7 @@ public:
         return m_initialFontFamilyDatas;
     }
 
-    uint64_t lastRenderingTick()
+    uint64_t lastRenderingTick() override
     {
         return m_lastRenderingTick;
     }
@@ -560,7 +562,7 @@ private:
 
     RenderResult rendering(
         bool force = false); // returns did painting | did compositing
-    void setNeedsRendering();
+    void setNeedsRendering() override;
     void setNeedsPainting()
     {
         if (!m_needsPainting) {

@@ -21,12 +21,6 @@
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
 #include "Starfish.h"
-#include "binding/ScriptBindingInstance.h"
-#include "core/page/Window.h"
-#include "core/dom/Document.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/WebView.h"
-#include "platform/window/PlatformWindow.h"
 
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
@@ -35,8 +29,8 @@
 
 namespace Starfish {
 
-Timer::Timer(WebView* webView)
-    : m_webView(webView)
+Timer::Timer(WebBase* webBase)
+    : m_webBase(webBase)
 {
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;
@@ -50,16 +44,16 @@ struct AnimationTickData {
     uv_timer_t* m_timerID;
     void* m_data;
     GenericAnimationHandler m_handler;
-    Window* m_window;
+    GlobalScope* m_globalScope;
 };
 
 struct TimeoutData {
     Timer* m_timer;
     size_t m_id;
     uv_timer_t* m_timerID;
-    Window* m_window;
+    GlobalScope* m_globalScope;
     void* m_data;
-    WindowSetTimeoutHandler m_handler;
+    TimerHandler m_handler;
 };
 
 static void on_close_handle(uv_handle_t* handle)
@@ -67,9 +61,8 @@ static void on_close_handle(uv_handle_t* handle)
     free(handle);
 }
 
-size_t Timer::addTimer(unsigned delay, Window* window,
-                       WindowSetTimeoutHandler handler, void* data,
-                       bool repetitive)
+size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
+                       TimerHandler handler, void* data, bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -79,7 +72,7 @@ size_t Timer::addTimer(unsigned delay, Window* window,
     td->m_id = id;
     td->m_data = data;
     td->m_handler = handler;
-    td->m_window = window;
+    td->m_globalScope = globalScope;
     td->m_timerID = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     td->m_timerID->data = td;
     td->m_timerID->type = UV_UNKNOWN_HANDLE;
@@ -94,7 +87,7 @@ size_t Timer::addTimer(unsigned delay, Window* window,
             [](uv_timer_t* handle) -> void {
                 TimeoutData* td = (TimeoutData*)handle->data;
                 auto a = td->m_timer->m_timeoutHandler.find(td->m_id);
-                td->m_handler(td->m_window, td->m_data);
+                td->m_handler(td->m_data);
             },
             static_cast<uint64_t>(delay), static_cast<uint64_t>(delay));
     } else {
@@ -105,7 +98,7 @@ size_t Timer::addTimer(unsigned delay, Window* window,
                                td->m_timer->m_timeoutHandler.find(td->m_id);
                            if (iter != td->m_timer->m_timeoutHandler.end()) {
                                td->m_timer->m_timeoutHandler.erase(iter);
-                               td->m_handler(td->m_window, td->m_data);
+                               td->m_handler(td->m_data);
                                GC_FREE(td);
                            }
                            uv_timer_stop(handle);
@@ -136,15 +129,15 @@ void Timer::removeTimer(size_t reqID)
 
 #define MINUMUM_ANIMATOR_WAIT_TIME 3000 // us
 
-size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
-                          void* data)
+size_t Timer::addAnimator(GlobalScope* globalScope,
+                          GenericAnimationHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
     auto id = ++m_animationCounter;
     AnimationTickData* ad = new (NoGC) AnimationTickData;
     ad->m_timer = this;
     ad->m_data = data;
-    ad->m_window = window;
+    ad->m_globalScope = globalScope;
     ad->m_handler = handler;
     ad->m_lastExecutionTick = 0;
     ad->m_timerID = (uv_timer_t*)malloc(sizeof(uv_timer_t));
@@ -194,13 +187,13 @@ void Timer::removeGenericAnimator(size_t reqID)
     }
 }
 
-void Timer::clear(BrowsingContext* ctx)
+void Timer::clear(GlobalScope* globalScope)
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
-        if ((td->m_window && td->m_window->browsingContext() == ctx) ||
-            ctx == nullptr) {
+        if ((td->m_globalScope && td->m_globalScope == globalScope) ||
+            globalScope == nullptr) {
             timerIter = m_timeoutHandler.erase(timerIter);
             uv_handle_t* handle = (uv_handle_t*)td->m_timerID;
             uv_timer_stop(td->m_timerID);
@@ -215,8 +208,8 @@ void Timer::clear(BrowsingContext* ctx)
     while (aniIter != m_requestAnimationFrameHandler.end()) {
         RequestAnimationFrameData* td =
             (RequestAnimationFrameData*)aniIter->second;
-        if ((td->m_window && td->m_window->browsingContext() == ctx) ||
-            ctx == nullptr) {
+        if ((td->m_globalScope && td->m_globalScope == globalScope) ||
+            globalScope == nullptr) {
             aniIter = m_requestAnimationFrameHandler.erase(aniIter);
         } else {
             aniIter++;
@@ -226,8 +219,8 @@ void Timer::clear(BrowsingContext* ctx)
     auto aniIter2 = m_animationHandler.begin();
     while (aniIter2 != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
-        if ((ad->m_window && ad->m_window->browsingContext() == ctx) ||
-            ctx == nullptr) {
+        if ((ad->m_globalScope && ad->m_globalScope == globalScope) ||
+            globalScope == nullptr) {
             aniIter2 = m_animationHandler.erase(aniIter2);
             uv_handle_t* handle = (uv_handle_t*)ad->m_timerID;
             uv_timer_stop(ad->m_timerID);

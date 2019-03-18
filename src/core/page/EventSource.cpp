@@ -336,7 +336,7 @@ void EventSource::connectFired()
 {
     if (!m_stopReconnect) {
         m_time = document()->window()->setTimeout(
-            [](Window* window, void* data) {
+            [](void* data) {
                 EventSource* self = (EventSource*)data;
                 self->connect();
             },

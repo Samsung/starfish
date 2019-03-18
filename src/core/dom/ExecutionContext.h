@@ -29,11 +29,7 @@ class ServiceWorker;
 
 class ExecutionContext {
 public:
-    ExecutionContext(GlobalScope* globalScope, ScriptBindingInstance* instance)
-        : m_globalScope(globalScope)
-        , m_scriptBindingInstance(instance)
-    {
-    }
+    ExecutionContext(GlobalScope* globalScope, ScriptBindingInstance* instance);
 
     virtual bool isDocument() const
     {
@@ -54,6 +50,11 @@ public:
         return m_scriptBindingInstance;
     }
 
+    uint64_t createdTick()
+    {
+        return m_createdTick;
+    }
+
     WebBase* webBase() const;
 
 private:
@@ -61,6 +62,7 @@ private:
 
 protected:
     ScriptBindingInstance* const m_scriptBindingInstance;
+    uint64_t m_createdTick;
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 public:

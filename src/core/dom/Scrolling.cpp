@@ -17,6 +17,7 @@
  *  USA
  */
 #include "StarfishConfig.h"
+#include "core/dom/EventTarget.h"
 #include "core/dom/Scrolling.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
@@ -144,7 +145,7 @@ static float flingInterpolationFunction(float pos)
     return -pow(2, -10 * pos) + 1;
 }
 
-void Scrolling::onAnimationFrameHandler(Window* window, void* data)
+void Scrolling::onAnimationFrameHandler(void* data)
 {
     Scrolling* self = (Scrolling*)data;
 

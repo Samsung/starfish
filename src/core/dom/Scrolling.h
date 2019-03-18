@@ -20,12 +20,12 @@
 #ifndef __StarfishScrolling__
 #define __StarfishScrolling__
 
-#include "core/dom/EventTarget.h"
 #include "core/style/Style.h"
 
 namespace Starfish {
 
 class Event;
+class EventTarget;
 class FrameBlockBox;
 class Canvas;
 class Compositor;
@@ -66,7 +66,7 @@ public:
     void paintScrollbars(T canvas, FrameBlockBox* frame, OverflowValue ox,
                          OverflowValue oy);
 
-    static void onAnimationFrameHandler(Window* window, void* data);
+    static void onAnimationFrameHandler(void* data);
 
     bool inVerticalScrollingUp()
     {

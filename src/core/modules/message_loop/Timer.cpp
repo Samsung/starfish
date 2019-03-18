@@ -25,9 +25,8 @@
 
 namespace Starfish {
 
-uint32_t Timer::requestAnimationFrame(Window* window,
-                                      WindowSetTimeoutHandler handler,
-                                      void* data)
+uint32_t Timer::requestAnimationFrame(GlobalScope* globalScope,
+                                      TimerHandler handler, void* data)
 {
     Timer::RequestAnimationFrameData* ad = new Timer::RequestAnimationFrameData;
     ad->m_timer = this;
@@ -35,10 +34,10 @@ uint32_t Timer::requestAnimationFrame(Window* window,
     ad->m_id = id;
     ad->m_data = data;
     ad->m_handler = handler;
-    ad->m_window = window;
+    ad->m_globalScope = globalScope;
     m_requestAnimationFrameHandler.push_back(std::make_pair(id, ad));
 
-    window->webView()->setNeedsRendering();
+    m_webBase->setNeedsRendering();
 
     return id;
 }

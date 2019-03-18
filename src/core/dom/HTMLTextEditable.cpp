@@ -73,7 +73,7 @@ void HTMLTextEditable::didStateChanged(int oldState, int newState)
                 m_currentCaretPosition = visibleValue()->length();
             }
             m_caretBlinkingIntervalId = window()->setInterval(
-                [](Window* window, void* data) {
+                [](void* data) {
                     HTMLTextEditable* e = (HTMLTextEditable*)data;
                     e->m_shouldDrawCaret = !e->m_shouldDrawCaret;
                     e->setNeedsPainting();

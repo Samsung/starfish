@@ -21,15 +21,8 @@
 #if defined(PORT_EVENTLOOP_BACKEND_ANDROID)
 
 #include "Starfish.h"
-#include "binding/ScriptBindingInstance.h"
-#include "core/dom/Document.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/Window.h"
-#include "core/page/WebView.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/message_loop/Timer.h"
-#include "platform/window/PlatformWindow.h"
 
 typedef bool (*TimerCallback)(int uid, void* data);
 int startTimer(int ms, TimerCallback pointer, void* data);
@@ -37,8 +30,8 @@ void cancelTimer(int uid);
 
 namespace Starfish {
 
-Timer::Timer(WebView* wv)
-    : m_webView(wv)
+Timer::Timer(WebBase* webBase)
+    : m_webBase(webBase)
 {
     m_timeoutCounter = 0;
     m_requestAnimationFrameCounter = 1;
@@ -50,21 +43,20 @@ struct AnimationTickData {
     int m_timerID;
     void* m_data;
     GenericAnimationHandler m_handler;
-    Window* m_window;
+    GlobalScope* m_globalScope;
 };
 
 struct TimeoutData {
     Timer* m_timer;
     int32_t m_id;
     int m_timerID;
-    Window* m_window;
+    GlobalScope* m_globalScope;
     void* m_data;
-    WindowSetTimeoutHandler m_handler;
+    TimerHandler m_handler;
 };
 
-size_t Timer::addTimer(unsigned delay, Window* window,
-                       WindowSetTimeoutHandler handler, void* data,
-                       bool repetitive)
+size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
+                       TimerHandler handler, void* data, bool repetitive)
 {
     STARFISH_ASSERT(isMainThread());
 
@@ -72,7 +64,7 @@ size_t Timer::addTimer(unsigned delay, Window* window,
     td->m_timer = this;
     int32_t id = ++m_timeoutCounter;
     td->m_id = id;
-    td->m_window = window;
+    td->m_globalScope = globalScope;
     td->m_data = data;
     td->m_handler = handler;
 
@@ -83,7 +75,7 @@ size_t Timer::addTimer(unsigned delay, Window* window,
                            TimeoutData* td = (TimeoutData*)data;
                            auto a =
                                td->m_timer->m_timeoutHandler.find(td->m_id);
-                           td->m_handler(td->m_window, td->m_data);
+                           td->m_handler(td->m_data);
                            return true;
                        },
                        td);
@@ -95,7 +87,7 @@ size_t Timer::addTimer(unsigned delay, Window* window,
                            TimeoutData* td = (TimeoutData*)data;
                            Timer* timer = td->m_timer;
                            int32_t id = td->m_id;
-                           td->m_handler(td->m_window, td->m_data);
+                           td->m_handler(td->m_data);
                            auto iter = timer->m_timeoutHandler.find(id);
                            if (iter != timer->m_timeoutHandler.end()) {
                                timer->m_timeoutHandler.erase(iter);
@@ -122,7 +114,7 @@ void Timer::removeTimer(size_t reqID)
     }
 }
 
-size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
+size_t Timer::addAnimator(GlobalScope* globalScope, TimerHandler handler,
                           void* data)
 {
     STARFISH_ASSERT(isMainThread());
@@ -130,7 +122,7 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
     td->m_timer = this;
     int32_t id = ++m_requestAnimationFrameCounter;
     td->m_id = id;
-    td->m_window = window;
+    td->m_globalScope = globalScope;
     td->m_data = data;
     td->m_handler = handler;
     td->m_timerID = startTimer(
@@ -138,7 +130,7 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
         [](int, void* data) -> bool {
             TimeoutData* td = (TimeoutData*)data;
             auto a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
-            td->m_handler(td->m_window, td->m_data);
+            td->m_handler(td->m_data);
             a = td->m_timer->m_requestAnimationFrameHandler.find(td->m_id);
             if (td->m_timer->m_requestAnimationFrameHandler.end() != a) {
                 td->m_timer->m_requestAnimationFrameHandler.erase(a);
@@ -153,8 +145,8 @@ size_t Timer::addAnimator(Window* window, WindowSetTimeoutHandler handler,
     return id;
 }
 
-size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
-                          void* data)
+size_t Timer::addAnimator(GlobalScope* globalScope,
+                          GenericAnimationHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
     AnimationTickData* ad = new (NoGC) AnimationTickData;
@@ -163,7 +155,7 @@ size_t Timer::addAnimator(Window* window, GenericAnimationHandler handler,
     ad->m_id = id;
     ad->m_data = data;
     ad->m_handler = handler;
-    ad->m_window = window;
+    ad->m_globalScope = globalScope;
     ad->m_timerID =
         startTimer(10,
                    [](int, void* data) -> bool {
@@ -212,13 +204,13 @@ void Timer::removeGenericAnimator(size_t reqID)
     }
 }
 
-void Timer::clear(BrowsingContext* ctx)
+void Timer::clear(GlobalScope* globalScope)
 {
     auto timerIter = m_timeoutHandler.begin();
     while (timerIter != m_timeoutHandler.end()) {
         TimeoutData* td = (TimeoutData*)timerIter->second;
-        if ((td->m_window && td->m_window->browsingContext() == ctx) ||
-            ctx == nullptr) {
+        if ((td->m_globalScope && td->m_globalScope == globalScope) ||
+            globalScope == nullptr) {
             cancelTimer(td->m_timerID);
             GC_FREE(td);
             timerIter = m_timeoutHandler.erase(timerIter);
@@ -230,8 +222,8 @@ void Timer::clear(BrowsingContext* ctx)
     auto aniIter = m_requestAnimationFrameHandler.begin();
     while (aniIter != m_requestAnimationFrameHandler.end()) {
         TimeoutData* td = (TimeoutData*)aniIter->second;
-        if ((td->m_window && td->m_window->browsingContext() == ctx) ||
-            ctx == nullptr) {
+        if ((td->m_globalScope && td->m_globalScope == globalScope) ||
+            globalScope == nullptr) {
             cancelTimer(td->m_timerID);
             GC_FREE(td);
             aniIter = m_requestAnimationFrameHandler.erase(aniIter);
@@ -243,8 +235,8 @@ void Timer::clear(BrowsingContext* ctx)
     auto aniIter2 = m_animationHandler.begin();
     while (aniIter2 != m_animationHandler.end()) {
         AnimationTickData* ad = (AnimationTickData*)aniIter2->second;
-        if ((ad->m_window && ad->m_window->browsingContext() == ctx) ||
-            ctx == nullptr) {
+        if ((ad->m_globalScope && ad->m_globalScope == globalScope) ||
+            globalScope == nullptr) {
             cancelTimer(ad->m_timerID);
             GC_FREE(ad);
             aniIter2 = m_animationHandler.erase(aniIter2);

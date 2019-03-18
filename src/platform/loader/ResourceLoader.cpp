@@ -548,8 +548,8 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
             [](size_t, void* data) {
                 Document* doc = (Document*)data;
                 doc->window()->setTimeout(
-                    [](Window* window, void* data) {
-                        Document* doc = window->document();
+                    [](void* data) {
+                        Document* doc = static_cast<Document*>(data);
                         doc->setReadyState(DocumentReadyStateComplete);
                         if (!doc->doesParticipateInRendering()) {
                             return;
@@ -593,16 +593,17 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                             // onload
                             // handler
                             doc->window()->setTimeout(
-                                [](Window* window, void* data) {
+                                [](void* data) {
+                                    Window* window = static_cast<Window*>(data);
                                     g_fireOnloadEvent = true;
                                     window->document()->setNeedsPainting();
                                     window->window()->testStart();
                                 },
-                                250, nullptr);
+                                250, doc->window());
                         }
 #endif
                     },
-                    0, nullptr);
+                    0, doc);
             },
             document());
     }

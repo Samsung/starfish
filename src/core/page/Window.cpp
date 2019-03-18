@@ -554,8 +554,7 @@ void Window::testStart()
 }
 #endif
 
-uint32_t Window::setTimeout(WindowSetTimeoutHandler handler, int32_t delay,
-                            void* data)
+uint32_t Window::setTimeout(TimerHandler handler, int32_t delay, void* data)
 {
     return webView()->timer()->addTimer(delay, this, handler, data, false);
 }
@@ -565,8 +564,7 @@ void Window::clearTimeout(int32_t id)
     webView()->timer()->removeTimer(id);
 }
 
-uint32_t Window::setInterval(WindowSetTimeoutHandler handler, int32_t delay,
-                             void* data)
+uint32_t Window::setInterval(TimerHandler handler, int32_t delay, void* data)
 {
     return webView()->timer()->addTimer(delay, this, handler, data, true);
 }
@@ -810,8 +808,7 @@ void Window::screenShot(std::string filePath, void (*callback)(void*),
 }
 #endif
 
-uint32_t Window::requestAnimationFrame(WindowSetTimeoutHandler handler,
-                                       void* data)
+uint32_t Window::requestAnimationFrame(TimerHandler handler, void* data)
 {
     return webView()->timer()->requestAnimationFrame(this, handler, data);
 }

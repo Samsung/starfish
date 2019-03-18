@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 
+#include "browser/history/HistoryManager.h"
 #include "core/dom/Attr.h"
 #include "core/dom/Attribute.h"
 #include "core/dom/CDATASection.h"
@@ -131,7 +132,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 #ifdef STARFISH_TIZEN
     , m_tizenWidgetTransparentBackground(0)
 #endif
-    , m_documentCreatedTick(longTickCount())
     , m_contentSecurityPolicy(new ContentSecurityPolicy(window))
     , m_nativeGradientCache(nullptr)
     , m_nativeGradientCacheToTalSize(0)

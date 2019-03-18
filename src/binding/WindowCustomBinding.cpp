@@ -45,20 +45,29 @@ void customExit(int returnCode)
 #endif
 
 struct TimeOutData : public gc {
-    TimeOutData()
+    TimeOutData(GlobalScope* globalScope)
         : listener(nullptr)
+        , globalScope(globalScope)
     {
     }
     void* listener;
     GCVector<ScriptValue> argVector;
+    GlobalScope *globalScope;
 };
 
-static void timeoutHandler(Window* wnd, void* data)
+struct ScreenShotTimeOutData : public gc {
+    Window* window;
+    ValueRef* arg;
+};
+
+static void timeoutHandler(void* data)
 {
     TimeOutData* td = (TimeOutData*)data;
     FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
+    ScriptBindingInstance* instance = td->globalScope->executionContext()
+        ->ownerScriptBindingInstance();
 
-    callScriptFunction(wnd->scriptBindingInstance(), ValueRef::create(fn),
+    callScriptFunction(instance, ValueRef::create(fn),
                        td->argVector.data(), td->argVector.size(),
                        scriptUndefined());
 }
@@ -78,7 +87,7 @@ ValueRef* setTimeoutWindowFunction(ExecutionStateRef* state,
     }
     // Declare native value (empty when type is void)
     int32_t result;
-    TimeOutData* td = new TimeOutData();
+    TimeOutData* td = new TimeOutData(window);
     ValueRef* arg1 = (argc > 1) ? argv[1] : ValueRef::createUndefined();
 
     // Handle ellipsis arguments from index2
@@ -127,7 +136,7 @@ ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
     }
     // Declare native value (empty when type is void)
     int32_t result;
-    TimeOutData* td = new TimeOutData();
+    TimeOutData* td = new TimeOutData(window);
     ValueRef* arg1 = (argc > 1) ? argv[1] : ValueRef::createUndefined();
 
     // Handle ellipsis arguments from index2
@@ -160,20 +169,22 @@ ValueRef* setIntervalWindowFunction(ExecutionStateRef* state,
     return ValueRef::create(result);
 }
 
-static void requestAnimationFrameHandler(Window* wnd, void* data)
+static void requestAnimationFrameHandler(void* data)
 {
     TimeOutData* td = (TimeOutData*)data;
     FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
 
-    double DOMHighResTimeStamp = (wnd->webView()->lastRenderingTick() -
-                                  wnd->document()->documentCreatedTick()) /
+    double DOMHighResTimeStamp = (td->globalScope->webBase()->lastRenderingTick() -
+                                  td->globalScope->executionContext()->createdTick()) /
                                  1000.0;
     GCVector<ScriptValue> newArgVector;
     newArgVector.reserve(1 + td->argVector.size());
     newArgVector.push_back(createScriptValue(DOMHighResTimeStamp));
     newArgVector.insert(newArgVector.end(), td->argVector.begin(),
                         td->argVector.end());
-    callScriptFunction(wnd->scriptBindingInstance(), ValueRef::create(fn),
+    ScriptBindingInstance* instance = td->globalScope->executionContext()
+        ->ownerScriptBindingInstance();
+    callScriptFunction(instance, ValueRef::create(fn),
                        newArgVector.data(), newArgVector.size(),
                        scriptUndefined());
 }
@@ -262,7 +273,7 @@ ValueRef* requestAnimationFrameWindowFunction(ExecutionStateRef* state,
     uint32_t result;
     ValueRef* arg0 = argv[0];
 
-    TimeOutData* td = new TimeOutData();
+    TimeOutData* td = new TimeOutData(window);
     // Handle ellipsis arguments from index1
     for (size_t i = 1; i < argCount; i++) {
         td->argVector.push_back(argv[i]);
@@ -348,13 +359,15 @@ static ValueRef* isPixelTestFunction(ExecutionStateRef* state,
     }
 }
 
-static void screenShotTimeoutHandler(Window* wnd, void* data)
+static void screenShotTimeoutHandler(void* data)
 {
-    FunctionObjectRef* p = (FunctionObjectRef*)data;
+    ScreenShotTimeOutData* std = static_cast<ScreenShotTimeOutData*>(data);
+    FunctionObjectRef* p = reinterpret_cast<FunctionObjectRef*>(std->arg);
+    ScriptBindingInstance* instance = std->window->scriptBindingInstance();
     callScriptFunction(
-        wnd->scriptBindingInstance(), ValueRef::create(p), nullptr, 0,
+        instance, ValueRef::create(p), nullptr, 0,
         ValueRef::create(
-            wnd->scriptBindingInstance()->scriptContext()->globalObject()));
+           instance->scriptContext()->globalObject()));
 }
 
 static ValueRef* screenShotFunction(ExecutionStateRef* state,
@@ -368,20 +381,15 @@ static ValueRef* screenShotFunction(ExecutionStateRef* state,
     path = path.substr(strlen("file://"));
     path += argv[0]->toString(state)->toStdUTF8String().data();
 
-    struct Data : public gc {
-        Window* window;
-        ValueRef* arg;
-    };
-
-    Data* d = new Data();
+    ScreenShotTimeOutData* d = new ScreenShotTimeOutData();
     d->window = window;
     d->arg = argv[1];
 
     window->screenShot(path,
                        [](void* data) {
-                           Data* d = (Data*)data;
+                           ScreenShotTimeOutData* d = static_cast<ScreenShotTimeOutData*>(data);
                            d->window->setTimeout(screenShotTimeoutHandler, 1,
-                                                 d->arg);
+                                                 d);
                        },
                        d);
     return ValueRef::createUndefined();
@@ -402,20 +410,15 @@ static ValueRef* screenShotRelativePathFunction(ExecutionStateRef* state,
             ->concat(String::fromUTF8(
                 getenv("SCREEN_SHOT_FILE") ? getenv("SCREEN_SHOT_FILE") : ""));
 
-    struct Data : public gc {
-        Window* window;
-        ValueRef* arg;
-    };
-
-    Data* d = new Data();
+    ScreenShotTimeOutData* d = new ScreenShotTimeOutData();
     d->window = window;
     d->arg = argv[0];
 
     window->screenShot(path->toUTF8NonGCString(),
                        [](void* data) {
-                           Data* d = (Data*)data;
+                           ScreenShotTimeOutData* d = static_cast<ScreenShotTimeOutData*>(data);
                            d->window->setTimeout(screenShotTimeoutHandler, 1,
-                                                 d->arg);
+                                                 d);
                        },
                        d);
 
