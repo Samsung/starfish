@@ -424,6 +424,7 @@ static void logEglError(const char* name) noexcept
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 Evas_GL_API* g_evasGLAPI;
 Evas_GL* g_evasGL;
+bool g_isEvasGLOnDirectMode;
 #endif
 
 namespace Starfish {
@@ -432,6 +433,7 @@ static size_t g_textureTileSize = 512;
 static bool g_needsCheckCompatibility = true;
 static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
 static bool g_isSupportExtensionEGLImageExternal = false;
+static bool g_shouldUseEGLImageOnPlainSurface = false;
 static size_t g_maxTextureSize;
 
 static void checkError()
@@ -1519,7 +1521,8 @@ public:
             m_bufferHeight =
                 std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
 
-            if (g_isSupportExtensionEGLImageExternal &&
+            if (g_shouldUseEGLImageOnPlainSurface &&
+                g_isSupportExtensionEGLImageExternal &&
                 m_bufferWidth <= g_maxTextureSize &&
                 m_bufferHeight <= g_maxTextureSize) {
                 m_isEGLBufferOwner = m_isEGLImageExternal = true;
@@ -1778,6 +1781,7 @@ public:
 #endif
             return m_buffer;
         }
+
         return m_buffer;
     }
 
@@ -2143,7 +2147,7 @@ public:
 #if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
         // there is blinking on EvasGL with FBO
         // explicit sync fixes blinking
-        if (m_seenFilteredTexture) {
+        if (m_seenFilteredTexture && !g_isEvasGLOnDirectMode) {
             m_webView->platformWindow()->glMayNeedsSync();
         }
 #endif

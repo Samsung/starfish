@@ -63,6 +63,7 @@
 
 #include "platform/window/PlatformWindow.h"
 #include "platform/event/PlatformKeyEventData.h"
+#include "platform/loader/ResourceLoader.h"
 #include "core/dom/Document.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"

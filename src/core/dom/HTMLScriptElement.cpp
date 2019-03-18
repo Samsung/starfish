@@ -31,10 +31,12 @@
 #include "core/extra/MimeType.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
-#include "platform/loader/ElementResourceClient.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/util/Cryptographic.h"
 #include "core/page/BrowsingContext.h"
+#include "core/dom/parser/PreloadScanner.h"
+#include "platform/loader/ResourceLoader.h"
+#include "platform/loader/ElementResourceClient.h"
 
 namespace Starfish {
 

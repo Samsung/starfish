@@ -29,6 +29,7 @@
 #include "core/style/MediaQuerySet.h"
 #include "core/style/AncestorSelectorFilter.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 

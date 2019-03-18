@@ -31,11 +31,12 @@
 #include "core/dom/parser/PreloadScanner.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/modules/resource_request/ResourceRequest.h"
-#include "platform/loader/ResourceURL.h"
 #include "core/extra/MimeType.h"
 #include "core/dom/WebOrigin.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/csp/SecurityPolicyViolationEvent.h"
+#include "platform/loader/ResourceURL.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 

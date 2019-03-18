@@ -25,7 +25,7 @@
 #include "core/dom/Document.h"
 #include "core/dom/DOMTokenList.h"
 #include "core/dom/Event.h"
-#include "platform/loader/ElementResourceClient.h"
+#include "core/dom/parser/PreloadScanner.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -33,6 +33,8 @@
 #include "core/style/CSSStyleSheet.h"
 #include "core/style/MediaQueryEvaluator.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "platform/loader/ElementResourceClient.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 

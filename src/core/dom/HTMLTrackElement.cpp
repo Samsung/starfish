@@ -28,6 +28,7 @@
 #include "core/dom/VTTCue.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "platform/loader/ElementResourceClient.h"
+#include "platform/loader/ResourceLoader.h"
 #include "webvttparser.h"
 
 namespace Starfish {

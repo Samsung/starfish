@@ -23,7 +23,6 @@
 #define STARFISH_CANVAS_LENGTH_MAX 65535
 
 #include "core/modules/canvas/TextDecorationData.h"
-#include "core/modules/canvas/CanvasShadowData.h"
 
 namespace Starfish {
 
@@ -214,10 +213,6 @@ public:
 
     virtual void drawImage(
         NativeImageData* data, const Unit::Rect& dst,
-        ImageRenderingValue imageRenderingMode =
-            ImageRenderingValue::ImageRenderingAutoValue) = 0;
-    virtual void drawImage(
-        CanvasSurface* data, const Unit::Rect& dst,
         ImageRenderingValue imageRenderingMode =
             ImageRenderingValue::ImageRenderingAutoValue) = 0;
     virtual void drawImage(

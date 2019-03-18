@@ -31,6 +31,7 @@
 #include "core/layout/FrameDocument.h"
 #include "core/layout/StackingContext.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/modules/canvas/CanvasShadowData.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/Compositor.h"
@@ -1427,9 +1428,9 @@ static inline void paintRepeatGradient(
     if (cacheable) {
         Unit::Rect rect = Unit::Rect(0, 0, width, height).snapSizeToPixel();
         GradientDrawingInfo* info = value->makeGradientDrawingInfo(rect, box);
-        NativeGradient* gradient =
+        std::shared_ptr<NativeGradient> gradient =
             box->document()->findInNativeGradientCache(info);
-        if (gradient == nullptr) {
+        if (gradient.get() == nullptr) {
             gradient = NativeGradient::create(info);
         }
         canvas->save();
@@ -1440,10 +1441,10 @@ static inline void paintRepeatGradient(
             cv->clearColor(Unit::Color(0, 0, 0, 0));
             if (imageValue->gradientValue()->type() ==
                 GradientType::LinearGradient) {
-                cv->drawLinearGradient(rect, info, gradient);
+                cv->drawLinearGradient(rect, info, gradient.get());
             } else if (imageValue->gradientValue()->type() ==
                        GradientType::RadialGradient) {
-                cv->drawRadialGradient(rect, info, gradient);
+                cv->drawRadialGradient(rect, info, gradient.get());
             }
             cv->fill();
             delete cv;
@@ -1458,7 +1459,7 @@ static inline void paintRepeatGradient(
         Unit::Rect rect =
             Unit::Rect(startX, startY, width, height).snapSizeToPixel();
         GradientDrawingInfo* info = value->makeGradientDrawingInfo(rect, box);
-        NativeGradient* gradient = NativeGradient::create(info);
+        std::shared_ptr<NativeGradient> gradient = NativeGradient::create(info);
         canvas->save();
         for (float y = startY; y < dst.maxY();
              y += height, canvas->translate(0, rect.height())) {
@@ -1467,10 +1468,10 @@ static inline void paintRepeatGradient(
                  x += width, canvas->translate(rect.width(), 0)) {
                 if (imageValue->gradientValue()->type() ==
                     GradientType::LinearGradient) {
-                    canvas->drawLinearGradient(rect, info, gradient);
+                    canvas->drawLinearGradient(rect, info, gradient.get());
                 } else if (imageValue->gradientValue()->type() ==
                            GradientType::RadialGradient) {
-                    canvas->drawRadialGradient(rect, info, gradient);
+                    canvas->drawRadialGradient(rect, info, gradient.get());
                 }
             }
             canvas->restore();
@@ -1701,10 +1702,10 @@ void FrameBox::paintBackgroundLayers(Canvas* canvas, FrameBox* box,
 
                 if (imageValue->gradientValue()->type() ==
                     GradientType::LinearGradient) {
-                    canvas->drawLinearGradient(rect, info, gradient);
+                    canvas->drawLinearGradient(rect, info, gradient.get());
                 } else if (imageValue->gradientValue()->type() ==
                            GradientType::RadialGradient) {
-                    canvas->drawRadialGradient(rect, info, gradient);
+                    canvas->drawRadialGradient(rect, info, gradient.get());
                 }
             }
         }

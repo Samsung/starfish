@@ -23,9 +23,10 @@
 #include "core/dom/Event.h"
 #include "core/dom/HTMLImageElement.h"
 #include "core/layout/FrameReplacedImage.h"
-#include "platform/loader/ElementResourceClient.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "platform/loader/ElementResourceClient.h"
+#include "platform/loader/ResourceLoader.h"
 
 namespace Starfish {
 

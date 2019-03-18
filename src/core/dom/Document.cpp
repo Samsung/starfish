@@ -61,7 +61,6 @@
 #include "core/dom/NodeFilter.h"
 #include "core/extra/Console.h"
 #include "core/layout/FrameDocument.h"
-#include "platform/loader/ImageResource.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/Window.h"
@@ -71,13 +70,16 @@
 #include "core/style/MediaQueryListMatcher.h"
 #include "core/style/StyleSheetList.h"
 #include "core/style/StyleRule.h"
-#include "platform/file/File.h"
-#include "platform/loader/ImageResource.h"
+#include "core/style/GradientData.h"
 #include "core/animation/Animation.h"
-#include "platform/network/curl/NetworkSharedResourceManager.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/modules/canvas/NativeGradient.h"
 #include "core/modules/canvas/image/NativeImageData.h"
+#include "platform/loader/ResourceLoader.h"
+#include "platform/loader/ImageResource.h"
+#include "platform/file/File.h"
+#include "platform/loader/ImageResource.h"
+#include "platform/network/curl/NetworkSharedResourceManager.h"
 
 namespace Starfish {
 #ifdef STARFISH_ENABLE_NETWORK_PROFILING
@@ -208,10 +210,9 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     loadBuiltinPolyfill(webView()->builtinPolyfillPathString());
 
     m_isConnected = true;
-    m_nativeGradientCache =
-        new GCUnorderedMap<GradientDrawingInfo*, NativeGradient*,
-                           std::hash<GradientDrawingInfo*>,
-                           std::equal_to<GradientDrawingInfo*>>();
+    m_nativeGradientCache = new GCUnorderedMap<
+        GradientDrawingInfo*, std::shared_ptr<NativeGradient>,
+        std::hash<GradientDrawingInfo*>, std::equal_to<GradientDrawingInfo*>>();
 }
 
 NodeIterator* Document::createNodeIterator(Node* root, unsigned whatToShow,
@@ -738,6 +739,12 @@ void Document::dispose()
         m_activeResourceRequests.back()->abort();
     }
     m_fontSelector->clearWholeCache();
+
+    if (m_nativeGradientCache) {
+        m_nativeGradientCache->clear();
+        m_nativeGradientCacheLRUList.clear();
+        m_nativeGradientCache = nullptr;
+    }
 }
 
 String* Document::nodeName()
@@ -2036,7 +2043,8 @@ void Document::unmarkElementInClickProgress(Element* element)
         m_elementInClickProgressList.end());
 }
 
-NativeGradient* Document::findInNativeGradientCache(GradientDrawingInfo* key)
+std::shared_ptr<NativeGradient> Document::findInNativeGradientCache(
+    GradientDrawingInfo* key)
 {
     auto iter = m_nativeGradientCache->find(key);
     if (iter != m_nativeGradientCache->end()) {
@@ -2057,7 +2065,7 @@ NativeGradient* Document::findInNativeGradientCache(GradientDrawingInfo* key)
 }
 
 void Document::cacheNativeGradient(GradientDrawingInfo* key,
-                                   NativeGradient* value)
+                                   std::shared_ptr<NativeGradient> value)
 {
     STARFISH_ASSERT(key);
     STARFISH_ASSERT(value);

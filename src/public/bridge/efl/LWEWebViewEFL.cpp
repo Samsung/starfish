@@ -43,6 +43,7 @@
 #if defined(PORT_WINDOW_BACKEND_GL)
 extern Evas_GL_API* g_evasGLAPI;
 extern Evas_GL* g_evasGL;
+extern bool g_isEvasGLOnDirectMode;
 #endif
 
 namespace LWE {
@@ -282,7 +283,7 @@ public:
 #if defined(PORT_WINDOW_BACKEND_GL)
         m_glEvasgl = evas_gl_new(evas_object_evas_get(win));
         m_glGlapi = evas_gl_api_get(m_glEvasgl);
-
+        m_isEvasGLOnDirectMode = false;
         // Set a surface config
         m_glCfg = evas_gl_config_new();
         m_glCfg->color_format = EVAS_GL_RGBA_8888;
@@ -298,6 +299,7 @@ public:
 // or ./src/modules/evas/engines/gl_common/evas_gl_core.c in efl git
 #define EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE (1 << 12)
 #define EVAS_GL_OPTIONS_DIRECT_OVERRIDE (1 << 13)
+        m_isEvasGLOnDirectMode = true;
         m_glCfg->options_bits = (Evas_GL_Options_Bits)(
             EVAS_GL_OPTIONS_DIRECT | EVAS_GL_OPTIONS_DIRECT_OVERRIDE |
             EVAS_GL_OPTIONS_DIRECT_MEMORY_OPTIMIZE |
@@ -804,6 +806,7 @@ public:
                 evas_gl_make_current(m_glEvasgl, m_glSfc, m_glCtx);
                 g_evasGL = m_glEvasgl;
                 g_evasGLAPI = m_glGlapi;
+                g_isEvasGLOnDirectMode = m_isEvasGLOnDirectMode;
                 if (m_glSync) {
                     Starfish::LongTaskFinder t("evasglWaitSync");
                     g_evasGLAPI->evasglClientWaitSync(
@@ -1059,6 +1062,7 @@ protected:
     Evas_GL* m_glEvasgl;
     Evas_GL_API* m_glGlapi;
     EvasGLSync m_glSync;
+    bool m_isEvasGLOnDirectMode;
 #endif
 
     Ecore_IMF_Context* m_imfContext;
