@@ -139,7 +139,7 @@ Java_com_samsung_android_lwe_LweWebViewImpl_init(JNIEnv* env, jobject thiz)
     g_WindowGlue.m_onLoadResource =
         env->GetMethodID(clazz, "onLoadResource", "(Ljava/lang/String;)V");
     g_WindowGlue.m_onReceivedError =
-        env->GetMethodID(clazz, "onReceivedError", "(I)V");
+        env->GetMethodID(clazz, "onReceivedError", "(ILjava/lang/String;)V");
     g_WindowGlue.m_onPageParsed =
         env->GetMethodID(clazz, "onPageFinished", "(Ljava/lang/String;)V");
     g_WindowGlue.m_onPageStarted =
@@ -195,7 +195,8 @@ void callOnLoadResourceHandler(LWE::WebContainer* view, const char* url)
     env->DeleteLocalRef(jstr);
 }
 
-void callOnReceivedError(LWE::WebContainer* view, int errorCode)
+void callOnReceivedError(LWE::WebContainer* view, int errorCode,
+                         const char* url)
 {
     JNIEnv* env = g_WindowGlue.m_env;
     int getEnvStat = g_jvm->GetEnv((void**)&env, JNI_VERSION_1_6);
@@ -215,8 +216,10 @@ void callOnReceivedError(LWE::WebContainer* view, int errorCode)
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
     jint jint1 = errorCode;
-    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onReceivedError,
-                        jint1);
+    jstring jstr = env->NewStringUTF(url);
+    env->CallVoidMethod(g_webViews[view], g_WindowGlue.m_onReceivedError, jint1,
+                        jstr);
+    env->DeleteLocalRef(jstr);
 }
 
 void callOnPageParsed(LWE::WebContainer* view, const char* url)
@@ -497,7 +500,8 @@ void registerWebContainerHandler(LWE::WebContainer* webContainer)
 {
     webContainer->RegisterOnReceivedErrorHandler(
         [](LWE::WebContainer* view, LWE::ResourceError error) -> void {
-            callOnReceivedError(view, error.GetErrorCode());
+            callOnReceivedError(view, error.GetErrorCode(),
+                                error.GetUrl().c_str());
         });
 
     webContainer->RegisterOnPageParsedHandler(

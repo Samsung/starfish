@@ -97,13 +97,16 @@ private:
 
 class LWE_EXPORT ResourceError {
 public:
-    ResourceError(int code, const std::string& description);
+    ResourceError(int code, const std::string& description,
+                  const std::string& url);
     int GetErrorCode();
     std::string GetDescription();
+    std::string GetUrl();
 
 private:
     int m_errorCode;
     std::string m_description;
+    std::string m_url;
 };
 
 class LWE_EXPORT WebContainer {

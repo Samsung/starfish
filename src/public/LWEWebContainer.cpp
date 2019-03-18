@@ -223,9 +223,11 @@ void Settings::SetIdleModeCheckIntervalInMS(uint32_t intervalInMS)
     m_idleModeCheckIntervalInMS = intervalInMS;
 }
 
-ResourceError::ResourceError(int code, const std::string& description)
+ResourceError::ResourceError(int code, const std::string& description,
+                             const std::string& url)
     : m_errorCode(code)
     , m_description(description)
+    , m_url(url)
 {
 }
 
@@ -237,6 +239,11 @@ int ResourceError::GetErrorCode()
 std::string ResourceError::GetDescription()
 {
     return m_description;
+}
+
+std::string ResourceError::GetUrl()
+{
+    return m_url;
 }
 
 static int convertErrorCode(Starfish::RequestErrorType errortype)
@@ -941,10 +948,12 @@ void WebContainer::RegisterOnReceivedErrorHandler(
             Starfish::OnReceivedError, [this, cb](void* param) -> void {
                 struct Param {
                     Starfish::RequestErrorType errorCode;
+                    Starfish::String* url;
                 };
                 Param* p = (Param*)param;
                 cb(this, ResourceError(convertErrorCode(p->errorCode),
-                                       convertErrorDescriton(p->errorCode)));
+                                       convertErrorDescriton(p->errorCode),
+                                       p->url->toUTF8NonGCString()));
             });
     END_ASYNC_THREADED_PUBLIC_API_WRAPPER
 }
