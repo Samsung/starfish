@@ -82,6 +82,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     private Bitmap mScreenBuffer;
     private int mWindowWidth;
     private int mWindowHeight;
+    private boolean mSurfaceIsReady;
 
     private SemWebViewClient mWebViewClient = null;
     private SemWebLweClient mWebLweClient = null;
@@ -324,6 +325,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     }
 
     public void initWebView(final View appView) {
+        mSurfaceIsReady = false;
         if (appView instanceof SemWebView) {
             mLWEView = (SemWebView) appView;
         } else {
@@ -356,6 +358,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                 new SurfaceHolder.Callback() {
                     @Override
                     public void surfaceCreated(SurfaceHolder holder) {
+                        mSurfaceIsReady = true;
                         int width = mLWEView.getWidth();
                         int height = mLWEView.getHeight();
                         if (mWebViewInternalHandle != 0) {
@@ -366,7 +369,6 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
                             mWindowHeight = height;
                             resume(mWebViewInternalHandle);
                         }
-
                     }
 
                     @Override
@@ -383,6 +385,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
 
                     @Override
                     public void surfaceDestroyed(SurfaceHolder holder) {
+                        mSurfaceIsReady = false;
                         if (mWebViewInternalHandle != 0) {
                             pause(mWebViewInternalHandle);
                         }
@@ -793,13 +796,15 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
     }
 
     private void onRendered(int x, int y, int width, int height) {
-        Canvas canvas = getHolder().lockCanvas();
-        if (canvas != null) {
-            Paint paint = new Paint();
-            paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
-            Rect updateArea = new Rect(x, y, width, height);
-            canvas.drawBitmap(mScreenBuffer, updateArea, updateArea, paint);
-            getHolder().unlockCanvasAndPost(canvas);
+        if (mSurfaceIsReady) {
+            Canvas canvas = getHolder().lockCanvas();
+            if (canvas != null) {
+                Paint paint = new Paint();
+                paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
+                Rect updateArea = new Rect(x, y, width, height);
+                canvas.drawBitmap(mScreenBuffer, updateArea, updateArea, paint);
+                getHolder().unlockCanvasAndPost(canvas);
+            }
         }
     }
 
