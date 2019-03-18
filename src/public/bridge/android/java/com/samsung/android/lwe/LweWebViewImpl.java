@@ -534,9 +534,9 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
         }
     }
 
-    private void onReceivedError(int errorCode) {
+    private void onReceivedError(int errorCode, String url) {
         if (mWebViewClient != null) {
-            mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(""),
+            mWebViewClient.onReceivedError(mLWEView, new WebResourceRequestImpl(url),
                     new SemWebResourceError(ErrorConverter.covertErrorCode(errorCode), ErrorConverter.covertErrorDescription(errorCode)));
         }
     }
@@ -615,7 +615,7 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
 
         if (!loaded) {
             Log.e(sTag, "URL is not permitted. Please contact duddlf.choi@samsung.com to whitelist an URL.");
-            onReceivedError(SemWebViewClient.ERROR_BAD_URL);
+            onReceivedError(SemWebViewClient.ERROR_BAD_URL, url);
         }
     }
 
