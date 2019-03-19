@@ -32,12 +32,14 @@ namespace Starfish {
 
 URL::URL(ExecutionContext* executionContext, String* url)
     : ScriptWrappable(this, executionContext)
+    , m_scriptBindingInstance(nullptr)
     , m_resourceURL(new ResourceURL(url))
 {
 }
 
 URL::URL(ExecutionContext* executionContext, String* url, String* baseURL)
     : ScriptWrappable(this, executionContext)
+    , m_scriptBindingInstance(nullptr)
     , m_resourceURL(new ResourceURL(url, baseURL))
 {
 }
