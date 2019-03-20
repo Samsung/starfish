@@ -21,7 +21,7 @@
 #include <EscargotPublic.h>
 using namespace Escargot;
 #include "core/dom/DOMException.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/page/Serializer.h"
 
 namespace Starfish {
@@ -101,16 +101,15 @@ void* SerializedTypedData::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-static SerializedTypedData* serializeInternal(Document* document,
-                                              ExecutionStateRef* state,
-                                              ScriptValue value,
-                                              SerializingMap& memory);
-static ScriptValue deserializeInternal(Document* document,
+static SerializedTypedData* serializeInternal(
+    ExecutionContext* executionContext, ExecutionStateRef* state,
+    ScriptValue value, SerializingMap& memory);
+static ScriptValue deserializeInternal(ExecutionContext* executionContext,
                                        Escargot::ExecutionStateRef* state,
                                        SerializedTypedData* value,
                                        DeserializingMap& memory);
 
-static bool deserializingDeep(Document* document,
+static bool deserializingDeep(ExecutionContext* executionContext,
                               Escargot::ExecutionStateRef* state,
                               ScriptValue dst, SerializedTypedData* src,
                               DeserializingMap& memory)
@@ -122,8 +121,8 @@ static bool deserializingDeep(Document* document,
         size_t len = serializedArray->length();
         for (size_t i = 0; i < len; i++) {
             SerializedTypedData* serialized = (*serializedArray)[i];
-            ScriptValue deserialized =
-                deserializeInternal(document, state, serialized, memory);
+            ScriptValue deserialized = deserializeInternal(
+                executionContext, state, serialized, memory);
             if (!deserialized) {
                 return false;
             }
@@ -139,7 +138,7 @@ static bool deserializingDeep(Document* document,
         for (size_t i = 0; i < len; i++) {
             auto& propertyAndValue = serializedObject->keyAndValue(i);
             ScriptValue deserialized = deserializeInternal(
-                document, state, propertyAndValue.second, memory);
+                executionContext, state, propertyAndValue.second, memory);
             if (!deserialized) {
                 return false;
             }
@@ -156,7 +155,7 @@ static bool deserializingDeep(Document* document,
     return true;
 }
 
-static bool serializingDeep(Document* document,
+static bool serializingDeep(ExecutionContext* executionContext,
                             Escargot::ExecutionStateRef* state,
                             SerializedTypedData* dst, ScriptValue src,
                             SerializingMap& memory)
@@ -169,7 +168,7 @@ static bool serializingDeep(Document* document,
             ValueRef* key = ValueRef::create(i);
             if (arrayobj->hasOwnProperty(state, key)) {
                 SerializedTypedData* serialized = serializeInternal(
-                    document, state, arrayobj->get(state, key), memory);
+                    executionContext, state, arrayobj->get(state, key), memory);
                 if (!serialized) {
                     return false;
                 }
@@ -185,7 +184,7 @@ static bool serializingDeep(Document* document,
             ValueRef* key = values->at(i);
             if (key->isString() && obj->hasOwnProperty(state, key)) {
                 SerializedTypedData* serialized = serializeInternal(
-                    document, state, obj->get(state, key), memory);
+                    executionContext, state, obj->get(state, key), memory);
                 if (!serialized) {
                     return false;
                 }
@@ -203,10 +202,9 @@ static bool serializingDeep(Document* document,
     return true;
 }
 
-static SerializedTypedData* serializeInternal(Document* document,
-                                              ExecutionStateRef* state,
-                                              ScriptValue value,
-                                              SerializingMap& memory)
+static SerializedTypedData* serializeInternal(
+    ExecutionContext* executionContext, ExecutionStateRef* state,
+    ScriptValue value, SerializingMap& memory)
 {
     auto checkCycle = memory.find(value);
     if (checkCycle != memory.end()) {
@@ -305,13 +303,14 @@ static SerializedTypedData* serializeInternal(Document* document,
     if (!primitive) {
         memory.insert(std::make_pair(value, serialized));
     }
-    if (deep && !serializingDeep(document, state, serialized, value, memory)) {
+    if (deep &&
+        !serializingDeep(executionContext, state, serialized, value, memory)) {
         return nullptr;
     }
     return serialized;
 }
 
-static ScriptValue deserializeInternal(Document* document,
+static ScriptValue deserializeInternal(ExecutionContext* executionContext,
                                        Escargot::ExecutionStateRef* state,
                                        SerializedTypedData* value,
                                        DeserializingMap& memory)
@@ -334,7 +333,7 @@ static ScriptValue deserializeInternal(Document* document,
             STARFISH_ASSERT(data->isTransferedPlatformObjectData());
             ScriptWrappable* sw =
                 data->asTransferedPlatformObjectData()
-                    ->createTransferReceivingInstance(document);
+                    ->createTransferReceivingInstance(executionContext);
             STARFISH_ASSERT(sw->isTransferable());
             sw->toTransferable()->transferReceive(data);
             result = sw->scriptValue();
@@ -407,7 +406,7 @@ static ScriptValue deserializeInternal(Document* document,
     } else if (value->isPlatformObject()) {
         result = value->data()
                      ->asSerializedPlatformObjectData()
-                     ->createDeserializingInstance(document)
+                     ->createDeserializingInstance(executionContext)
                      ->scriptValue();
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -415,28 +414,29 @@ static ScriptValue deserializeInternal(Document* document,
     if (result) {
         memory.insert(std::make_pair(value, result));
     }
-    if (deep && !deserializingDeep(document, state, result, value, memory)) {
+    if (deep &&
+        !deserializingDeep(executionContext, state, result, value, memory)) {
         return nullptr;
     }
     return result;
 }
 
-SerializedTypedData* Serializer::serialize(Document* document,
+SerializedTypedData* Serializer::serialize(ExecutionContext* executionContext,
                                            ScriptValue value)
 {
     SerializingMap initialMap;
-    return serialize(document, value, initialMap);
+    return serialize(executionContext, value, initialMap);
 }
 
-SerializedTypedData* Serializer::serialize(Document* document,
+SerializedTypedData* Serializer::serialize(ExecutionContext* executionContext,
                                            ScriptValue value,
                                            SerializingMap& memory)
 {
-    SandBoxRef* sandBox =
-        SandBoxRef::create(document->scriptBindingInstance()->scriptContext());
+    SandBoxRef* sandBox = SandBoxRef::create(
+        executionContext->ownerScriptBindingInstance()->scriptContext());
     SerializedTypedData* data = nullptr;
     auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
-        data = serializeInternal(document, state, value, memory);
+        data = serializeInternal(executionContext, state, value, memory);
         return ValueRef::createNull();
     });
     sandBox->destroy();
@@ -446,26 +446,27 @@ SerializedTypedData* Serializer::serialize(Document* document,
     } else {
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
                         result.msgStr->toStdUTF8String().data());
-        throw new DOMException(document, DOMException::DATA_CLONE_ERR, reason);
+        throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
+                               reason);
     }
 }
 
-ScriptValue Serializer::deserialize(Document* document,
+ScriptValue Serializer::deserialize(ExecutionContext* executionContext,
                                     SerializedTypedData* value)
 {
     DeserializingMap initialMap;
-    return deserialize(document, value, initialMap);
+    return deserialize(executionContext, value, initialMap);
 }
 
-ScriptValue Serializer::deserialize(Document* document,
+ScriptValue Serializer::deserialize(ExecutionContext* executionContext,
                                     SerializedTypedData* value,
                                     DeserializingMap& memory)
 {
-    SandBoxRef* sandBox =
-        SandBoxRef::create(document->scriptBindingInstance()->scriptContext());
+    SandBoxRef* sandBox = SandBoxRef::create(
+        executionContext->ownerScriptBindingInstance()->scriptContext());
     ScriptValue data = ValueRef::createUndefined();
     auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
-        data = deserializeInternal(document, state, value, memory);
+        data = deserializeInternal(executionContext, state, value, memory);
         return ValueRef::createNull();
     });
     sandBox->destroy();
@@ -475,11 +476,13 @@ ScriptValue Serializer::deserialize(Document* document,
     } else {
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
                         result.msgStr->toStdUTF8String().data());
-        throw new DOMException(document, DOMException::DATA_CLONE_ERR, reason);
+        throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR,
+                               reason);
     }
 }
 
-void Serializer::serializeWithTransfer(Document* document, ScriptValue value,
+void Serializer::serializeWithTransfer(ExecutionContext* executionContext,
+                                       ScriptValue value,
                                        GCVector<ScriptValue>& transferValues,
                                        SerializeWithTransferResult& result)
 {
@@ -507,9 +510,10 @@ void Serializer::serializeWithTransfer(Document* document, ScriptValue value,
             }
 #endif
         }
-        throw new DOMException(document, DOMException::DATA_CLONE_ERR);
+        throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR);
     }
-    SerializedTypedData* serialized = serialize(document, value, initialMap);
+    SerializedTypedData* serialized =
+        serialize(executionContext, value, initialMap);
     STARFISH_ASSERT(transferValues.size() ==
                     result.m_serializedTransfer.size());
     for (size_t i = 0; i < transferValues.size(); i++) {
@@ -535,25 +539,25 @@ void Serializer::serializeWithTransfer(Document* document, ScriptValue value,
 }
 
 void Serializer::deserializeWithTransfer(
-    Document* document, SerializeWithTransferResult& serialized,
+    ExecutionContext* executionContext, SerializeWithTransferResult& serialized,
     DeserializeWithTransferResult& result)
 {
     STARFISH_ASSERT(result.m_deserializedTransfer.size() == 0);
     DeserializingMap initialMap;
     ScriptValue deserialized = nullptr;
-    SandBoxRef* sandBox =
-        SandBoxRef::create(document->scriptBindingInstance()->scriptContext());
+    SandBoxRef* sandBox = SandBoxRef::create(
+        executionContext->ownerScriptBindingInstance()->scriptContext());
     bool errorFound = false;
     auto sandBoxResult =
         sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
             deserialized = deserializeInternal(
-                document, state, serialized.m_serialized, initialMap);
+                executionContext, state, serialized.m_serialized, initialMap);
             if (deserialized) {
                 for (size_t i = 0; i < serialized.m_serializedTransfer.size();
                      i++) {
                     ScriptValue v = deserializeInternal(
-                        document, state, serialized.m_serializedTransfer[i],
-                        initialMap);
+                        executionContext, state,
+                        serialized.m_serializedTransfer[i], initialMap);
                     if (v) {
                         result.m_deserializedTransfer.push_back(v);
                     } else {
@@ -571,7 +575,7 @@ void Serializer::deserializeWithTransfer(
     if (!sandBoxResult.error.hasValue() && !errorFound) {
         result.m_deserialized = deserialized;
     } else {
-        throw new DOMException(document, DOMException::DATA_CLONE_ERR);
+        throw new DOMException(executionContext, DOMException::DATA_CLONE_ERR);
     }
 }
 }

@@ -90,7 +90,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
                    ResourceURL* uri, String* charSet,
                    bool doesParticipateInRendering)
     : Node(this)
-    , ExecutionContext(window, scriptBindingInstance)
+    , ExecutionContext(window, scriptBindingInstance, uri)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
     , m_doesParticipateInRendering(doesParticipateInRendering)
@@ -105,7 +105,7 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_onLoadFired(false)
     , m_isFocusRingCacheValid(false)
     , m_window(window)
-    , m_documentURI(uri)
+
     , m_baseURL(fallbackBaseURL())
     , m_baseElementURL(nullptr)
     , m_baseTarget(String::emptyString)
@@ -1262,11 +1262,6 @@ Element* Document::scrollingElement()
         return nullptr;
     }
     return documentElement();
-}
-
-String* Document::urlString()
-{
-    return m_documentURI->urlString();
 }
 
 Document* Document::parentDocument() const

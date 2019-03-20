@@ -34,9 +34,10 @@ public:
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(URL)
 
-    static void revokeObjectURL(Document* document, String* blobURLRef);
+    static void revokeObjectURL(ExecutionContext* executionContext,
+                                String* blobURLRef);
     static String* createObjectURL(Blob* blob);
-#ifdef STARFISH_ENABLE_MULTIMEDIA
+#if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_WEBWORKER_HOST)
     static String* createObjectURL(MediaSource* mediaSource);
 #endif
 
@@ -63,7 +64,6 @@ public:
     void setHash(String* newHash);
 
 protected:
-    ScriptBindingInstance* m_scriptBindingInstance;
     ResourceURL* m_resourceURL;
 };
 }

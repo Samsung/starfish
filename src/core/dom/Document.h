@@ -359,17 +359,6 @@ public:
     String* domain();
     void setDomain(String* domain);
 
-    String* urlString();
-
-    ResourceURL* documentURI() const
-    {
-        return m_documentURI;
-    }
-    void setDocumentURI(ResourceURL* newURL)
-    {
-        m_documentURI = newURL;
-    }
-
     Document* parentDocument() const;
 
     ResourceURL* fallbackBaseURL() const;
@@ -722,7 +711,6 @@ protected:
     bool m_isFocusRingCacheValid : 1;
 
     Window* m_window;
-    ResourceURL* m_documentURI;
     ResourceURL* m_baseURL;
     ResourceURL* m_baseElementURL;
     String* m_baseTarget;

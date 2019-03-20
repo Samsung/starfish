@@ -236,7 +236,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_localStorageNamespace(nullptr)
     , m_sessionStorageNamespace(nullptr)
     , m_historyManager(nullptr)
-    , m_seed((unsigned int)time(NULL))
     , m_lastRenderingTick(0)
     , m_navigateStartingTime(0)
     , m_currentActiveAnimatorCount(0)
@@ -593,6 +592,7 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
                        ReferrerURL* referrerURL)
 {
     clearBlobURLStore();
+    clearMediaSourceBlobURLStore();
     initRenderingFlags();
 
     clearStack<ELABORATE_CLEAR_STACK_SIZE>();
@@ -664,242 +664,6 @@ void WebView::evaluateJavaScript(String* s, std::function<void(std::string)> cb)
             evaluateString(mainBrowsingContext()->scriptBindingInstance(), s));
     }
     cb(ret->toUTF8NonGCString());
-}
-
-bool WebView::stringToBlobURLString(String* url, BlobURLStore& store)
-{
-    size_t idx = url->lastIndexOf('/');
-    if (idx == SIZE_MAX) {
-        return false;
-    }
-
-    idx++;
-    if (idx >= url->length()) {
-        return false;
-    }
-    String* uuid = url->substring(idx, url->length() - idx);
-
-    auto utf8Data = uuid->toUTF8NonGCString();
-    const char* str = utf8Data.data();
-    if (strlen(str) != 36) {
-        return false;
-    }
-
-    unsigned int a0, a1, a2, a3, a4, a5, a6, a7;
-    sscanf(str, "%04X%04X-%04X-%04X-%04X-%04X%04X%04X", &a0, &a1, &a2, &a3, &a4,
-           &a5, &a6, &a7);
-
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-        } tiny;
-        uint32_t big;
-    } spliter;
-
-#ifdef STARFISH_64
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-            uint16_t c;
-            uint16_t d;
-        } tiny;
-        uint64_t big;
-    } spliter64;
-#endif
-
-#ifdef STARFISH_64
-    spliter.tiny.a = a0;
-    spliter.tiny.b = a1;
-    store.m_a = spliter.big;
-
-    spliter.tiny.a = a2;
-    spliter.tiny.b = a3;
-    store.m_b = spliter.big;
-
-    spliter64.tiny.a = a4;
-    spliter64.tiny.b = a5;
-    spliter64.tiny.c = a6;
-    spliter64.tiny.d = a7;
-    store.m_blob = (void*)spliter64.big;
-#else
-    spliter.tiny.a = a0;
-    spliter.tiny.b = a1;
-    store.m_a = spliter.big;
-
-    spliter.tiny.a = a2;
-    spliter.tiny.b = a3;
-    store.m_b = spliter.big;
-
-    spliter.tiny.a = a4;
-    spliter.tiny.b = a5;
-    store.m_c = spliter.big;
-
-    spliter.tiny.a = a6;
-    spliter.tiny.b = a7;
-    store.m_blob = (void*)spliter.big;
-#endif
-
-    return true;
-}
-
-String* WebView::blobURLStoreToString(BlobURLStore store, String* origin)
-{
-    UTF8StringDataNonGCStd url = "blob:";
-    url += origin->toUTF8NonGCString();
-    url += "/";
-
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-        } tiny;
-        uint32_t big;
-    } spliter;
-
-#ifdef STARFISH_64
-    union {
-        struct {
-            uint16_t a;
-            uint16_t b;
-            uint16_t c;
-            uint16_t d;
-        } tiny;
-        uint64_t big;
-    } spliter64;
-#endif
-
-    char buf[32];
-#ifdef STARFISH_64
-    spliter.big = store.m_a;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-    url += "-";
-
-    spliter.big = store.m_b;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-    url += "-";
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-    url += "-";
-
-    spliter64.big = (uint64_t)store.m_blob;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.a);
-    url += buf;
-    url += "-";
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.b);
-    url += buf;
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.c);
-    url += buf;
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter64.tiny.d);
-    url += buf;
-#else
-    spliter.big = store.m_a;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-    url += "-";
-
-    spliter.big = store.m_b;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-    url += "-";
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-    url += "-";
-
-    spliter.big = store.m_c;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-    url += "-";
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-
-    spliter.big = (uint32_t)store.m_blob;
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.a);
-    url += buf;
-
-    snprintf(buf, sizeof(buf), "%04X", (unsigned)spliter.tiny.b);
-    url += buf;
-#endif
-    return String::createASCIIString(url.data());
-}
-
-BlobURLStore WebView::addBlobInBlobURLStore(Blob* ptr)
-{
-#ifndef NDEBUG
-    {
-        BlobURLStore s;
-        s.m_blob = ptr;
-        STARFISH_ASSERT(m_urlBlobStore.find(s) == m_urlBlobStore.end());
-    }
-#endif
-    BlobURLStore a;
-    a.m_blob = ptr;
-
-#ifdef STARFISH_32
-    a.m_a = rand_r(&m_seed);
-    a.m_b = rand_r(&m_seed);
-    a.m_c = rand_r(&m_seed);
-#else
-    a.m_a = rand_r(&m_seed);
-    a.m_b = rand_r(&m_seed);
-#endif
-
-    m_urlBlobStore.insert(a);
-
-    return a;
-}
-
-void WebView::removeBlobFromBlobURLStore(Blob* ptr)
-{
-#ifndef NDEBUG
-    {
-        BlobURLStore s;
-        s.m_blob = ptr;
-        STARFISH_ASSERT(m_urlBlobStore.find(s) != m_urlBlobStore.end());
-    }
-#endif
-    BlobURLStore s;
-    s.m_blob = ptr;
-    m_urlBlobStore.erase(s);
-}
-
-bool WebView::isValidBlobURL(BlobURLStore ptr)
-{
-    auto iter = m_urlBlobStore.find(ptr);
-#ifdef STARFISH_32
-    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a &&
-           ptr.m_b == iter->m_b && ptr.m_c == iter->m_c;
-#else
-    return iter != m_urlBlobStore.end() && ptr.m_a == iter->m_a &&
-           ptr.m_b == iter->m_b;
-#endif
-}
-
-bool WebView::isValidBlobURL(Blob* ptr)
-{
-    BlobURLStore s;
-    s.m_blob = ptr;
-    auto iter = m_urlBlobStore.find(s);
-    return iter != m_urlBlobStore.end();
-}
-
-BlobURLStore WebView::findBlobURL(Blob* ptr)
-{
-    BlobURLStore s;
-    s.m_blob = ptr;
-    auto iter = m_urlBlobStore.find(s);
-    return *iter;
 }
 
 BlobURLStore WebView::addMediaSourceInBlobURLStore(MediaSource* ptr)
@@ -974,12 +738,10 @@ BlobURLStore WebView::findMediaSourceBlobURL(MediaSource* ptr)
     return *iter;
 }
 
-void WebView::clearBlobURLStore()
+void WebView::clearMediaSourceBlobURLStore()
 {
     m_urlMediaSourceBlobStore.clear();
-    m_urlBlobStore.clear();
     GCUnorderedSet<BlobURLStore>().swap(m_urlMediaSourceBlobStore);
-    GCUnorderedSet<BlobURLStore>().swap(m_urlBlobStore);
 }
 
 void WebView::layoutIfNeeded(bool shouldCareStackingContextNow)

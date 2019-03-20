@@ -23,12 +23,59 @@
 #include "binding/StarfishHoldable.h"
 
 namespace Starfish {
+struct BlobURLStore {
+#ifdef STARFISH_32
+    void* m_blob;
+    uint32_t m_a;
+    uint32_t m_b;
+    uint32_t m_c;
+#else
+    void* m_blob;
+    uint32_t m_a;
+    uint32_t m_b;
+#endif
+};
+
+enum StarfishPubicWebViewHandlerKind {
+    OnPageStarted,
+    OnPageLoaded,
+    OnPageParsed,
+    OnLoadResource,
+    OnReceivedError,
+    OnProgressChanged,
+    OnDownloadStart,
+    ShouldOverrideUrlLoading,
+};
+}
+
+namespace std {
+template <>
+struct hash<Starfish::BlobURLStore> {
+    size_t operator()(Starfish::BlobURLStore const& x) const
+    {
+        return (size_t)x.m_blob;
+    }
+};
+
+template <>
+struct equal_to<Starfish::BlobURLStore> {
+    bool operator()(Starfish::BlobURLStore const& a,
+                    Starfish::BlobURLStore const& b) const
+    {
+        return a.m_blob == b.m_blob;
+    }
+};
+}
+
+namespace Starfish {
 
 class MessageLoop;
 class Console;
 class Inspector;
+class Blob;
+class WebView;
 
-class WebBase : public StarfishHoldable {
+class WebBase : public StarfishHoldable, public gc {
 public:
     virtual ~WebBase()
     {
@@ -36,18 +83,42 @@ public:
     virtual MessageLoop* messageLoop() const = 0;
     virtual Console* console() const = 0;
 
+    virtual bool isWebView() const
+    {
+        return false;
+    }
+    virtual bool isWebWorker() const
+    {
+        return false;
+    }
+
+    WebView* asWebView()
+    {
+        return reinterpret_cast<WebView*>(this);
+    }
+
 #if defined(STARFISH_ENABLE_INSPECTOR)
     virtual Inspector* inspector() const = 0;
 #endif
 
     virtual void setNeedsRendering() = 0;
     virtual uint64_t lastRenderingTick() = 0;
+    static bool stringToBlobURLString(String* url, BlobURLStore& result);
+    static String* blobURLStoreToString(BlobURLStore store, String* origin);
+
+    BlobURLStore addBlobInBlobURLStore(Blob* ptr);
+    void removeBlobFromBlobURLStore(Blob* ptr);
+    bool isValidBlobURL(BlobURLStore ptr);
+    bool isValidBlobURL(Blob* ptr);
+    BlobURLStore findBlobURL(Blob* ptr);
+    void clearBlobURLStore();
 
 protected:
-    WebBase(Starfish* starfish)
-        : StarfishHoldable(starfish)
-    {
-    }
+    WebBase(Starfish* starfish);
+
+    unsigned int m_seed;
+    GCUnorderedSet<BlobURLStore> m_urlBlobStore;
 };
 }
+
 #endif

@@ -204,16 +204,11 @@ private:
     RenderingContext* m_renderingContext;
 };
 
-class ImageData : public ScriptWrappable,
-                  public DocumentHoldable,
-                  public Serializable {
+class ImageData : public ScriptWrappable, public Serializable {
 public:
-    ImageData(Document* document);
+    ImageData(ExecutionContext* executionContext);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isImageData() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance();
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ImageData)
 
     virtual bool isSerializable() const override;
     virtual Serializable* toSerializable() const override;
@@ -241,7 +236,7 @@ public:
     }
 
     ScriptWrappable* createDeserializingInstance(
-        Document* document) const override;
+        ExecutionContext* executionContext) const override;
 };
 
 class Path2D : public ScriptWrappable {

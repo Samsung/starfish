@@ -30,48 +30,7 @@ enum class WebSecurityMode;
 enum class IdleModeJob;
 }
 
-namespace Starfish {
-struct BlobURLStore {
-#ifdef STARFISH_32
-    void* m_blob;
-    uint32_t m_a;
-    uint32_t m_b;
-    uint32_t m_c;
-#else
-    void* m_blob;
-    uint32_t m_a;
-    uint32_t m_b;
-#endif
-};
-enum StarfishPubicWebViewHandlerKind {
-    OnPageStarted,
-    OnPageLoaded,
-    OnPageParsed,
-    OnLoadResource,
-    OnReceivedError,
-    OnProgressChanged,
-    OnDownloadStart,
-    ShouldOverrideUrlLoading,
-};
-}
-
 namespace std {
-template <>
-struct hash<Starfish::BlobURLStore> {
-    size_t operator()(Starfish::BlobURLStore const& x) const
-    {
-        return (size_t)x.m_blob;
-    }
-};
-
-template <>
-struct equal_to<Starfish::BlobURLStore> {
-    bool operator()(Starfish::BlobURLStore const& a,
-                    Starfish::BlobURLStore const& b) const
-    {
-        return a.m_blob == b.m_blob;
-    }
-};
 template <>
 struct hash<Starfish::StarfishPubicWebViewHandlerKind> {
     size_t operator()(Starfish::StarfishPubicWebViewHandlerKind const& x) const
@@ -151,7 +110,7 @@ enum class MouseEventKind;
 enum class CompositionEventKind;
 enum class HistoryManagerAction;
 
-class WebView : public WebBase, public gc {
+class WebView : public WebBase {
     friend class BrowsingContext;
     friend class StackingContext;
     friend class PlatformWindow;
@@ -168,6 +127,11 @@ public:
         String* customUserAgentString = String::emptyString,
         String* builtinPolyfillPathString = String::emptyString);
     void destroy();
+
+    bool isWebView() const override
+    {
+        return true;
+    }
 
     PlatformWindow* platformWindow()
     {
@@ -213,21 +177,12 @@ public:
                                          String* jsFunctionName);
     void applyJavaScriptNativeInterface(ScriptBindingInstance* instance);
 
-    static bool stringToBlobURLString(String* url, BlobURLStore& result);
-    static String* blobURLStoreToString(BlobURLStore store, String* origin);
-
-    BlobURLStore addBlobInBlobURLStore(Blob* ptr);
-    void removeBlobFromBlobURLStore(Blob* ptr);
-    bool isValidBlobURL(BlobURLStore ptr);
-    bool isValidBlobURL(Blob* ptr);
-    BlobURLStore findBlobURL(Blob* ptr);
-
     BlobURLStore addMediaSourceInBlobURLStore(MediaSource* ptr);
     void removeMediaSourceFromBlobURLStore(MediaSource* ptr);
     bool isValidMediaSourceBlobURL(BlobURLStore ptr);
     bool isValidMediaSourceBlobURL(MediaSource* ptr);
     BlobURLStore findMediaSourceBlobURL(MediaSource* ptr);
-    void clearBlobURLStore();
+    void clearMediaSourceBlobURLStore();
 
     void layoutIfNeeded(bool shouldCareStackingContextNow = true);
     void clearStackingContext();
@@ -592,9 +547,7 @@ private:
     StorageNamespace* m_sessionStorageNamespace;
 
     HistoryManager* m_historyManager;
-    unsigned int m_seed;
 
-    GCUnorderedSet<BlobURLStore> m_urlBlobStore;
     GCUnorderedSet<BlobURLStore> m_urlMediaSourceBlobStore;
 
     PrevDrawnStackingContextInfoMap m_prevDrawnStackingContextInfo;

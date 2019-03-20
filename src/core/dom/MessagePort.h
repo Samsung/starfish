@@ -130,10 +130,8 @@ public:
     }
 
     ScriptWrappable* createTransferReceivingInstance(
-        Document* document) const override
-    {
-        return new MessagePort(document);
-    }
+        ExecutionContext* executionContext) const override;
+
     MessagePort* remotePort()
     {
         return m_remotePort;
