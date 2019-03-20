@@ -36,9 +36,11 @@ struct DOMRectInit {
 
 class DOMRect : public DOMRectReadOnly {
 public:
-    DOMRect(ScriptBindingInstance* instance, double x = 0, double y = 0,
+    DOMRect(ExecutionContext* executionContext, double x = 0, double y = 0,
             double width = 0, double height = 0);
     DOMRect(DOMRectReadOnly*);
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMRect)
 
     void setX(double x)
     {
@@ -61,10 +63,6 @@ public:
     }
 
     void unite(const DOMRect*);
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isDOMRect() const override;
 };
 }
 

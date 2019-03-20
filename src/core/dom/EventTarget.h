@@ -124,11 +124,7 @@ private:
 
 class EventTarget : public ScriptWrappable, public DocumentHoldable {
 protected:
-    EventTarget(Document* document)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-    {
-    }
+    EventTarget(Document* document);
 
 public:
     virtual void init(ScriptBindingInstance* instance,

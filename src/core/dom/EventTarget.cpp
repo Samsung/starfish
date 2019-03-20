@@ -103,6 +103,12 @@ ScriptValue EventListener::call(Event* event)
     return listenerFunc;
 }
 
+EventTarget::EventTarget(Document* document)
+    : ScriptWrappable(this, document)
+    , DocumentHoldable(document)
+{
+}
+
 ScriptBindingInstance* EventTarget::scriptBindingInstance()
 {
     return document()->scriptBindingInstance();

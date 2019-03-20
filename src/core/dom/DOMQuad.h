@@ -20,8 +20,6 @@
 #ifndef __StarfishDOMQuad__
 #define __StarfishDOMQuad__
 
-#include "binding/ScriptWrappable.h"
-
 namespace Starfish {
 
 struct DOMRectInit;
@@ -31,16 +29,10 @@ class DOMRectReadOnly;
 
 class DOMQuad : public ScriptWrappable {
 public:
-    DOMQuad(ScriptBindingInstance* instance, const DOMPointInit&,
+    DOMQuad(ExecutionContext* executionContext, const DOMPointInit&,
             const DOMPointInit&, const DOMPointInit&, const DOMPointInit&);
 
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_scriptBindingInstance;
-    }
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isDOMQuad() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMQuad)
 
     DOMPoint* p1() const
     {
@@ -65,7 +57,6 @@ public:
     DOMRect* getBounds() const;
 
 protected:
-    ScriptBindingInstance* m_scriptBindingInstance;
     DOMPoint* m_p1;
     DOMPoint* m_p2;
     DOMPoint* m_p3;

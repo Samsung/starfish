@@ -251,7 +251,7 @@ public:
         return ((size_t)m_object & (size_t)1);
     }
 
-    ExecutionContext* executionContext()
+    ExecutionContext* executionContext() const
     {
         return m_executionContext;
     }

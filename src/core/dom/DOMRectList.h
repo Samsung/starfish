@@ -20,41 +20,32 @@
 #ifndef __StarfishDOMRectList__
 #define __StarfishDOMRectList__
 
-#include "binding/ScriptWrappable.h"
-
 namespace Starfish {
 
 class DOMRect;
 
 class DOMRectList : public ScriptWrappable {
 public:
-    static DOMRectList* create(ScriptBindingInstance* instance)
+    static DOMRectList* create(ExecutionContext* executionContext)
     {
-        return new DOMRectList(instance);
+        return new DOMRectList(executionContext);
     }
 
-    static DOMRectList* create(ScriptBindingInstance* instance,
+    static DOMRectList* create(ExecutionContext* executionContext,
                                const GCVector<DOMQuad*>& quads)
     {
-        return new DOMRectList(instance, quads);
+        return new DOMRectList(executionContext, quads);
     }
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMRectList)
 
     uint32_t length() const;
     DOMRect* item(uint32_t index);
 
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_scriptBindingInstance;
-    }
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isDOMRectList() const override;
-
 private:
-    DOMRectList(ScriptBindingInstance* instance);
-    explicit DOMRectList(ScriptBindingInstance* instance,
+    DOMRectList(ExecutionContext* executionContext);
+    explicit DOMRectList(ExecutionContext* executionContext,
                          const GCVector<DOMQuad*>&);
-    ScriptBindingInstance* m_scriptBindingInstance;
     GCVector<DOMRect*> m_list;
 };
 }

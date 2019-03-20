@@ -24,16 +24,14 @@
 
 namespace Starfish {
 
-DOMRectList::DOMRectList(ScriptBindingInstance* instance)
-    : ScriptWrappable(this)
-    , m_scriptBindingInstance(instance)
+DOMRectList::DOMRectList(ExecutionContext* executionContext)
+    : ScriptWrappable(this, executionContext)
 {
 }
 
-DOMRectList::DOMRectList(ScriptBindingInstance* instance,
+DOMRectList::DOMRectList(ExecutionContext* executionContext,
                          const GCVector<DOMQuad*>& quads)
-    : ScriptWrappable(this)
-    , m_scriptBindingInstance(instance)
+    : ScriptWrappable(this, executionContext)
 {
     m_list.reserve(quads.size());
     for (size_t i = 0; i < quads.size(); ++i) {

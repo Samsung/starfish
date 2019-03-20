@@ -5,7 +5,7 @@
 //      Constructor(optional DOMPointInit p1, optional DOMPointInit p2, optional DOMPointInit p3, optional DOMPointInit p4)
 [
   Constructor(DOMPointInit p1, DOMPointInit p2, DOMPointInit p3, DOMPointInit p4),
-  ConstructorCallWith=ScriptBindingInstance,
+  ConstructorCallWith=ExecutionContext,
   Exposed=(Window,Worker)]
 interface DOMQuad {
   [Unimplemented, NewObject] static DOMQuad fromRect(optional DOMRectInit other);
