@@ -7907,7 +7907,15 @@ bool CSSStyleValuePair::updateValueDisplay(Document* document,
         m_value.m_display = DisplayValue::FlexDisplayValue;
     } else if (STRING_VALUE_IS_STRING("inline-flex")) {
         m_value.m_display = DisplayValue::InlineFlexDisplayValue;
-    } else if (STRING_VALUE_IS_STRING("grid")) {
+    }
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+    else if (STRING_VALUE_IS_STRING("-webkit-flex")) {
+        m_value.m_display = DisplayValue::FlexDisplayValue;
+    } else if (STRING_VALUE_IS_STRING("-webkit-inline-flex")) {
+        m_value.m_display = DisplayValue::InlineFlexDisplayValue;
+    }
+#endif
+    else if (STRING_VALUE_IS_STRING("grid")) {
         m_value.m_display = DisplayValue::GridDisplayValue;
     } else if (STRING_VALUE_IS_STRING("inline-grid")) {
         m_value.m_display = DisplayValue::InlineGridDisplayValue;
