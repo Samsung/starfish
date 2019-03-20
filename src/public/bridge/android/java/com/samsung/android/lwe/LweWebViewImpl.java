@@ -797,13 +797,21 @@ public class LweWebViewImpl extends SurfaceView implements LweWebView {
 
     private void onRendered(int x, int y, int width, int height) {
         if (mSurfaceIsReady) {
-            Canvas canvas = getHolder().lockCanvas();
-            if (canvas != null) {
-                Paint paint = new Paint();
-                paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
-                Rect updateArea = new Rect(x, y, width, height);
-                canvas.drawBitmap(mScreenBuffer, updateArea, updateArea, paint);
-                getHolder().unlockCanvasAndPost(canvas);
+            Canvas canvas = null;
+            try {
+                canvas = getHolder().lockCanvas();
+                if (canvas != null) {
+                    Paint paint = new Paint();
+                    paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OVER));
+                    Rect updateArea = new Rect(x, y, width, height);
+                    canvas.drawBitmap(mScreenBuffer, updateArea, updateArea, paint);
+                }
+            } catch (Exception e) {
+                Log.e(sTag, "failed to onRendered");
+                e.printStackTrace();
+            } finally {
+                if (canvas != null)
+                    getHolder().unlockCanvasAndPost(canvas);
             }
         }
     }
