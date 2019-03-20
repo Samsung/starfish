@@ -21,20 +21,15 @@
 #include "Starfish.h"
 #include "core/fileapi/Blob.h"
 #include "core/page/Serializer.h"
-#include "core/page/WebView.h"
-#include "core/dom/Document.h"
+#include "core/page/WebBase.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
-Blob::Blob(Document* document, Blob::BlobData blobData)
-    : Blob(document, blobData.m_size, blobData.m_type, blobData.m_data,
+Blob::Blob(ExecutionContext* executionContext, Blob::BlobData blobData)
+    : Blob(executionContext, blobData.m_size, blobData.m_type, blobData.m_data,
            blobData.m_isClosed, blobData.m_isEntryOfBlobURLStore)
 {
-}
-
-ScriptBindingInstance* Blob::scriptBindingInstance()
-{
-    return document()->scriptBindingInstance();
 }
 
 SerializedData* Blob::serialize(SerializingMap& memory)
@@ -46,14 +41,14 @@ void Blob::addBlobToBlobURLStore()
 {
     STARFISH_ASSERT(!m_blobData.m_isEntryOfBlobURLStore);
     m_blobData.m_isEntryOfBlobURLStore = true;
-    STARFISH_ASSERT(!document()->webView()->isValidBlobURL(this));
-    document()->webView()->addBlobInBlobURLStore(this);
+    STARFISH_ASSERT(!executionContext()->webBase()->isValidBlobURL(this));
+    executionContext()->webBase()->addBlobInBlobURLStore(this);
 }
 
 void Blob::removeBlobFromBlobURLStore()
 {
-    STARFISH_ASSERT(document()->webView()->isValidBlobURL(this));
-    document()->webView()->removeBlobFromBlobURLStore(this);
+    STARFISH_ASSERT(executionContext()->webBase()->isValidBlobURL(this));
+    executionContext()->webBase()->removeBlobFromBlobURLStore(this);
 }
 
 Blob* Blob::slice(int64_t start)
@@ -91,7 +86,7 @@ Blob* Blob::slice(int64_t start, int64_t end, String* contentType)
     size_t span = (size_t)std::max(relativeEnd - relativeStart, (int64_t)0);
     STARFISH_ASSERT(relativeStart >= 0);
     void* newStart = ((char*)m_blobData.m_data) + relativeStart;
-    return new Blob(document(), span, newType, newStart, m_blobData.m_isClosed,
-                    false);
+    return new Blob(executionContext(), span, newType, newStart,
+                    m_blobData.m_isClosed, false);
 }
 }

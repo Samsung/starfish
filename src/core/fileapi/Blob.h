@@ -21,16 +21,13 @@
 #define __StarfishBlob__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/DocumentHoldable.h"
 #include "core/page/Serializer.h"
 
 namespace Starfish {
 
-class Document;
+class ExecutionContext;
 
-class Blob : public ScriptWrappable,
-             public DocumentHoldable,
-             public Serializable {
+class Blob : public ScriptWrappable, public Serializable {
 public:
     struct BlobData {
         uint64_t m_size;
@@ -50,10 +47,9 @@ public:
         }
     };
 
-    Blob(Document* document, uint64_t size, String* type, void* data,
-         bool isClosed, bool isEntryOfBlobURLStore)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
+    Blob(ExecutionContext* executionContext, uint64_t size, String* type,
+         void* data, bool isClosed, bool isEntryOfBlobURLStore)
+        : ScriptWrappable(this, executionContext)
         , m_blobData(size, type, data, isClosed, isEntryOfBlobURLStore)
     {
         if (m_blobData.m_isEntryOfBlobURLStore) {
@@ -61,14 +57,12 @@ public:
         }
     }
 
-    Blob(Document* document, BlobData blobData);
+    Blob(ExecutionContext* executionContext, BlobData blobData);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isBlob() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Blob)
+
     virtual bool isSerializable() const override;
     virtual Serializable* toSerializable() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
     virtual SerializedData* serialize(SerializingMap& memory) override;
     virtual void deserialize(SerializedData* serialized,
@@ -133,9 +127,9 @@ public:
     }
 
     ScriptWrappable* createDeserializingInstance(
-        Document* document) const override
+        ExecutionContext* executionContext) const override
     {
-        return new Blob(document, m_data);
+        return new Blob(executionContext, m_data);
     }
 
 private:

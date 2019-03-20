@@ -23,6 +23,7 @@
 #include "core/fileapi/Blob.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/fetch/Body.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 

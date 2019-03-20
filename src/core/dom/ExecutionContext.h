@@ -26,10 +26,14 @@ class GlobalScope;
 class ScriptBindingInstance;
 class WebBase;
 class ServiceWorker;
+class ResourceURL;
+class String;
+class Document;
 
 class ExecutionContext {
 public:
-    ExecutionContext(GlobalScope* globalScope, ScriptBindingInstance* instance);
+    ExecutionContext(GlobalScope* globalScope, ScriptBindingInstance* instance,
+                     ResourceURL* uri);
 
     virtual bool isDocument() const
     {
@@ -39,6 +43,8 @@ public:
     {
         return false;
     }
+
+    Document* asDocument();
 
     GlobalScope* globalScope() const
     {
@@ -57,12 +63,23 @@ public:
 
     WebBase* webBase() const;
 
+    ResourceURL* documentURI() const
+    {
+        return m_documentURI;
+    }
+    void setDocumentURI(ResourceURL* newURL)
+    {
+        m_documentURI = newURL;
+    }
+    String* urlString();
+
 private:
     GlobalScope* const m_globalScope;
 
 protected:
     ScriptBindingInstance* const m_scriptBindingInstance;
     uint64_t m_createdTick;
+    ResourceURL* m_documentURI;
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 public:

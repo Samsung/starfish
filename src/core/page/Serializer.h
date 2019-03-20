@@ -20,8 +20,6 @@
 #ifndef __StarfishSerializer__
 #define __StarfishSerializer__
 
-#include "binding/ScriptWrappable.h"
-
 // https://html.spec.whatwg.org/multipage/structured-data.html#safe-passing-of-structured-data
 
 namespace Starfish {
@@ -29,7 +27,7 @@ namespace Starfish {
 using namespace Escargot;
 
 class Blob;
-class Document;
+class ExecutionContext;
 class SerializedData;
 class SerializedPrimitiveValueData;
 class SerializedStringData;
@@ -279,7 +277,7 @@ public:
     }
 
     virtual ScriptWrappable* createDeserializingInstance(
-        Document* document) const = 0;
+        ExecutionContext* executionContext) const = 0;
 };
 
 class SerializedObjectData : public SerializedData {
@@ -521,7 +519,7 @@ public:
     }
 
     virtual ScriptWrappable* createTransferReceivingInstance(
-        Document* document) const = 0;
+        ExecutionContext* executionContext) const = 0;
 };
 
 class TransferedTypedData : public SerializedTypedData {
@@ -574,19 +572,21 @@ public:
 
 class Serializer {
 public:
-    static SerializedTypedData* serialize(Document* document, ScriptValue value,
+    static SerializedTypedData* serialize(ExecutionContext* executionContext,
+                                          ScriptValue value,
                                           SerializingMap& memory);
-    static SerializedTypedData* serialize(Document* document,
+    static SerializedTypedData* serialize(ExecutionContext* executionContext,
                                           ScriptValue value);
-    static ScriptValue deserialize(Document* document,
+    static ScriptValue deserialize(ExecutionContext* executionContext,
                                    SerializedTypedData* value,
                                    DeserializingMap& memory);
-    static ScriptValue deserialize(Document* document,
+    static ScriptValue deserialize(ExecutionContext* executionContext,
                                    SerializedTypedData* value);
-    static void serializeWithTransfer(Document* document, ScriptValue value,
+    static void serializeWithTransfer(ExecutionContext* executionContext,
+                                      ScriptValue value,
                                       GCVector<ScriptValue>& transferValues,
                                       SerializeWithTransferResult& result);
-    static void deserializeWithTransfer(Document* document,
+    static void deserializeWithTransfer(ExecutionContext* executionContext,
                                         SerializeWithTransferResult& serialized,
                                         DeserializeWithTransferResult& result);
 };

@@ -281,7 +281,7 @@ void MockMediaPlayer::prepare(ResourceURL* url)
 {
     if (url->isBlobURL()) {
         BlobURLStore store;
-        if (!WebView::stringToBlobURLString(url->urlString(), store)) {
+        if (!WebBase::stringToBlobURLString(url->urlString(), store)) {
             return;
         }
         if (m_container->webView()->isValidMediaSourceBlobURL(store)) {

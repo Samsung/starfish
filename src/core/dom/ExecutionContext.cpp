@@ -19,23 +19,37 @@
 
 #include "StarfishBase.h"
 #include "core/modules/profiling/Profiling.h"
+#include "core/util/String.h"
 #include "core/page/GlobalScope.h"
 #include "core/dom/ExecutionContext.h"
+#include "platform/loader/ResourceURL.h"
 
 namespace Starfish {
 
 ExecutionContext::ExecutionContext(GlobalScope* globalScope,
-                                   ScriptBindingInstance* instance)
+                                   ScriptBindingInstance* instance,
+                                   ResourceURL* uri)
     : m_globalScope(globalScope)
     , m_scriptBindingInstance(instance)
     , m_createdTick(longTickCount())
-
+    , m_documentURI(uri)
 {
+}
+
+Document* ExecutionContext::asDocument()
+{
+    STARFISH_ASSERT(isDocument());
+    return reinterpret_cast<Document*>(this);
 }
 
 WebBase* ExecutionContext::webBase() const
 {
     return m_globalScope->webBase();
+}
+
+String* ExecutionContext::urlString()
+{
+    return m_documentURI->urlString();
 }
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

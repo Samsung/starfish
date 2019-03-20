@@ -853,7 +853,7 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
     setNativePlayerDefaultOptions(url);
     if (url->isBlobURL()) {
         BlobURLStore store;
-        if (!WebView::stringToBlobURLString(url->urlString(), store)) {
+        if (!WebBase::stringToBlobURLString(url->urlString(), store)) {
             PLAYER_LOGE(
                 "MediaPlayerTizen::prepare, seturl, FAIL - INVALID BLOB URL\n");
             processNextOperationQueueInContainer();
@@ -865,7 +865,7 @@ void MediaPlayerTizen::prepare(ResourceURL* url)
                                      ((Blob*)store.m_blob)->size());
         } else if (m_container->webView()->isValidMediaSourceBlobURL(store)) {
             BlobURLStore store;
-            WebView::stringToBlobURLString(url->urlString(), store);
+            WebBase::stringToBlobURLString(url->urlString(), store);
             MediaSource* ms = (MediaSource*)store.m_blob;
             m_activeMediaSource = ms;
             m_mseClient = new MediaPlayerTizenMediaSourceClient(this);

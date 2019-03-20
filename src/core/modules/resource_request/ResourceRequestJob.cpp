@@ -347,7 +347,7 @@ void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* request,
     request->m_responseData->m_status = 200;
 
     BlobURLStore store;
-    if (!WebView::stringToBlobURLString(url, store)) {
+    if (!WebBase::stringToBlobURLString(url, store)) {
         request->handleError(ProgressState::InError,
                              RequestErrorType::BadURLError);
         return;

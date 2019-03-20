@@ -20,14 +20,14 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/DOMException.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/MessageEvent.h"
 #include "core/dom/MessagePort.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Serializer.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
-#include "core/page/BrowsingContext.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
@@ -258,5 +258,12 @@ void PortMessageQueue::registerTaskToMessageLoop(MessagePort* target,
             target->dispatchEventByUA(event);
         },
         target, event);
+}
+
+ScriptWrappable* TransferedMessagePort::createTransferReceivingInstance(
+    ExecutionContext* executionContext) const
+{
+    // TODO: Do not downcasting
+    return new MessagePort(executionContext->asDocument());
 }
 }

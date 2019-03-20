@@ -37,6 +37,7 @@ namespace Starfish {
 CanvasRenderingContext2D::CanvasRenderingContext2D(
     HTMLCanvasElement* canvasElement)
     : RenderingContext(canvasElement)
+    , m_canvas(nullptr)
     , m_lineWidth(1)
     , m_globalAlpha(1.0)
 {
@@ -327,16 +328,11 @@ void CanvasGradient::addColorStop(double offset, String* color)
 {
 }
 
-ImageData::ImageData(Document* document)
-    : ScriptWrappable(this)
-    , DocumentHoldable(document)
-    , m_data(createEmptyUint8ClampedArray(document->scriptBindingInstance()))
+ImageData::ImageData(ExecutionContext* executionContext)
+    : ScriptWrappable(this, executionContext)
+    , m_data(createEmptyUint8ClampedArray(
+          executionContext->ownerScriptBindingInstance()))
 {
-}
-
-ScriptBindingInstance* ImageData::scriptBindingInstance()
-{
-    return document()->scriptBindingInstance();
 }
 
 SerializedData* ImageData::serialize(SerializingMap& memory)
@@ -378,9 +374,9 @@ void ImageData::setData(ScriptUint8ClampedArray value)
 }
 
 ScriptWrappable* SerializedImageData::createDeserializingInstance(
-    Document* document) const
+    ExecutionContext* executionContext) const
 {
-    return new ImageData(document);
+    return new ImageData(executionContext);
 }
 
 void Path2D::closePath()
