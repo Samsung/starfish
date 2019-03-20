@@ -517,11 +517,12 @@ void WebView::createScriptEngineInstance()
                     JobRef* job = (JobRef*)data2;
                     auto sbresult = job->run();
 
-                    if (!sbresult.error->isEmpty()) {
+                    if (sbresult.error.hasValue()) {
                         STARFISH_LOG_ERROR(
                             "Uncaught %s\n",
-                            toBrowserString(window->scriptBindingInstance(),
-                                            ValueRef::create(sbresult.error))
+                            toBrowserString(
+                                window->scriptBindingInstance(),
+                                ValueRef::create(sbresult.error.getValue()))
                                 ->toUTF8NonGCString()
                                 .data());
                     }

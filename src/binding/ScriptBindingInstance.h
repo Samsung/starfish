@@ -35,6 +35,7 @@ class ExecutionStateRef;
 class ArrayBufferObjectRef;
 class ArrayBufferViewRef;
 class Uint8ClampedArrayObjectRef;
+template <typename T> struct NullablePtr;
 typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
                                                  ValueRef* thisValue,
                                                  size_t argc, ValueRef** argv,

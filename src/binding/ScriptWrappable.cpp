@@ -139,7 +139,7 @@ void defineNativeAccessorPropertyButNeedToGenerateJSFunction(
         false);
     ValueRef* getterValue =
         ValueRef::create(FunctionObjectRef::create(state, nativeFunctionInfo));
-    ValueRef* setterValue = ValueRef::createEmpty();
+    NullablePtr<ValueRef> setterValue = ValueRef::createEmpty();
     if (setter) {
         FunctionObjectRef::NativeFunctionInfo nativeFunctionInfo(
             AtomicStringRef::emptyAtomicString(),
@@ -390,7 +390,7 @@ String* toBrowserString(ScriptBindingInstance* instance, Escargot::ValueRef* v,
         return ValueRef::create(v->toString(state));
     });
     sb->destroy();
-    if (!sbresult.error->isEmpty()) {
+    if (sbresult.error.hasValue()) {
         if (result) {
             *result = false;
         }
@@ -572,11 +572,12 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
             state, ValueRef::createUndefined(), argc + 1, argv);
     });
     sb->destroy();
-    if (!result.error->isEmpty()) {
+    if (result.error.hasValue()) {
+        ScriptValue errorValue = result.error.getValue();
         error = true;
         // Dispatch error event to window
         ErrorEventInit errorInfo;
-        errorInfo.setMessage(toBrowserString(instance, result.error));
+        errorInfo.setMessage(toBrowserString(instance, errorValue));
         if (result.stackTraceData.size() > 0) {
             size_t lastIndex = result.stackTraceData.size() - 1;
             errorInfo.setFilename(toBrowserString(
@@ -585,11 +586,11 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
             errorInfo.setLineno(result.stackTraceData[lastIndex].loc.line);
             errorInfo.setColno(result.stackTraceData[lastIndex].loc.column);
         }
-        errorInfo.setError(result.error);
+        errorInfo.setError(errorValue);
         instance->ownerWindow()->dispatchErrorEvent(errorInfo);
 
         loggingJSErrorInfo(instance, result);
-        return result.error;
+        return errorValue;
     } else {
         return result.result;
     }
@@ -623,10 +624,11 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
             return fn->asFunction()->call(state, thisValue, argc, argv);
         });
         sb->destroy();
-        if (!sbresult.error->isEmpty()) {
+        if (sbresult.error.hasValue()) {
             // Dispatch error event to window
+            ScriptValue errorValue = sbresult.error.getValue();
             ErrorEventInit errorInfo;
-            errorInfo.setMessage(toBrowserString(instance, sbresult.error));
+            errorInfo.setMessage(toBrowserString(instance, errorValue));
             if (sbresult.stackTraceData.size() > 0) {
                 size_t lastIndex = sbresult.stackTraceData.size() - 1;
                 errorInfo.setFilename(toBrowserString(
@@ -638,7 +640,7 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
                 errorInfo.setColno(
                     sbresult.stackTraceData[lastIndex].loc.column);
             }
-            errorInfo.setError(sbresult.error);
+            errorInfo.setError(errorValue);
             instance->ownerWindow()->dispatchErrorEvent(errorInfo);
             loggingJSErrorInfo(instance, sbresult);
         } else {
@@ -664,10 +666,11 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
             return fn->asFunction()->call(state, thisValue, argc, argv);
         });
         sb->destroy();
-        if (!sbresult.error->isEmpty()) {
+        if (sbresult.error.hasValue()) {
             // Dispatch error event to window
+            ScriptValue errorValue = sbresult.error.getValue();
             ErrorEventInit errorInfo;
-            errorInfo.setMessage(toBrowserString(instance, sbresult.error));
+            errorInfo.setMessage(toBrowserString(instance, errorValue));
             if (sbresult.stackTraceData.size() > 0) {
                 size_t lastIndex = sbresult.stackTraceData.size() - 1;
                 errorInfo.setFilename(toBrowserString(
@@ -679,12 +682,12 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
                 errorInfo.setColno(
                     sbresult.stackTraceData[lastIndex].loc.column);
             }
-            errorInfo.setError(sbresult.error);
+            errorInfo.setError(errorValue);
             instance->ownerWindow()->dispatchErrorEvent(errorInfo);
             loggingJSErrorInfo(instance, sbresult);
             error = true;
             ExecutionStateRef* state = ExecutionStateRef::create(ctx);
-            state->throwException(ValueRef::create(sbresult.error));
+            state->throwException(ValueRef::create(errorValue));
             state->destroy();
         } else {
             result = sbresult.result;
@@ -710,7 +713,7 @@ ScriptValue callHandleEventFunction(ScriptBindingInstance* instance,
     });
     sb->destroy();
 
-    if (!sbresult.error->isEmpty()) {
+    if (sbresult.error.hasValue()) {
         loggingJSErrorInfo(instance, sbresult);
     } else {
         return callScriptFunction(instance, sbresult.result, argv, argc,
@@ -735,7 +738,7 @@ ScriptValue callHandleNodeFilterFunction(ScriptBindingInstance* instance,
     });
     sb->destroy();
 
-    if (!sbresult.error->isEmpty()) {
+    if (sbresult.error.hasValue()) {
         loggingJSErrorInfo(instance, sbresult);
         error = true;
     } else {
@@ -772,10 +775,11 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
     clearStack<DEFAULT_CLEAR_STACK_SIZE>();
 
     sb->destroy();
-    if (!sbresult.error->isEmpty()) {
+    if (sbresult.error.hasValue()) {
         // Dispatch error event to window
+        ScriptValue errorValue = sbresult.error.getValue();
         ErrorEventInit errorInfo;
-        errorInfo.setMessage(toBrowserString(instance, sbresult.error));
+        errorInfo.setMessage(toBrowserString(instance, errorValue));
         if (sbresult.stackTraceData.size() > 0) {
             size_t lastIndex = sbresult.stackTraceData.size() - 1;
             errorInfo.setFilename(toBrowserString(
@@ -784,12 +788,12 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
             errorInfo.setLineno(sbresult.stackTraceData[lastIndex].loc.line);
             errorInfo.setColno(sbresult.stackTraceData[lastIndex].loc.column);
         }
-        errorInfo.setError(sbresult.error);
+        errorInfo.setError(errorValue);
         instance->ownerWindow()->dispatchErrorEvent(errorInfo);
         loggingJSErrorInfo(instance, sbresult);
         if (result)
             *result = true;
-        return sbresult.error;
+        return errorValue;
     } else {
         if (result)
             *result = true;

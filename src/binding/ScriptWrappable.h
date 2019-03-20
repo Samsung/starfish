@@ -46,6 +46,7 @@ typedef Escargot::ArrayBufferObjectRef* ScriptArrayBuffer;
 typedef Escargot::ArrayBufferViewRef* ScriptArrayBufferView;
 typedef Escargot::Uint8ClampedArrayObjectRef* ScriptUint8ClampedArray;
 typedef Escargot::ExecutionStateRef* ScriptExecutionState;
+typedef Escargot::NullablePtr<Escargot::ValueRef> ScriptNullableValue;
 
 ScriptValue scriptNull();
 ScriptValue scriptUndefined();

@@ -87,8 +87,8 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicy, m_policies));
     }
 
-    static ScriptValue checkUnsafeEvalCallback(ScriptExecutionState state,
-                                               bool isEval);
+    static ScriptNullableValue checkUnsafeEvalCallback(
+        ScriptExecutionState state, bool isEval);
 };
 }
 

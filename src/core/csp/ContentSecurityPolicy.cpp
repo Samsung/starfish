@@ -203,7 +203,7 @@ void ContentSecurityPolicy::dispatchViolationEvent(
     }
 }
 
-ScriptValue ContentSecurityPolicy::checkUnsafeEvalCallback(
+ScriptNullableValue ContentSecurityPolicy::checkUnsafeEvalCallback(
     ScriptExecutionState state, bool isEval)
 {
     Document* document = fetchDocument(state->context());

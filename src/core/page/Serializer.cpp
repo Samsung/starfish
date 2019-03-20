@@ -441,7 +441,7 @@ SerializedTypedData* Serializer::serialize(Document* document,
     });
     sandBox->destroy();
 
-    if (result.error->isEmpty() && data) {
+    if (!result.error.hasValue() && data) {
         return data;
     } else {
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
@@ -470,7 +470,7 @@ ScriptValue Serializer::deserialize(Document* document,
     });
     sandBox->destroy();
 
-    if (result.error->isEmpty() && data) {
+    if (!result.error.hasValue() && data) {
         return data;
     } else {
         COMPOSE_MESSAGE(reason, INVALID_DATA_CLONE,
@@ -568,7 +568,7 @@ void Serializer::deserializeWithTransfer(
         });
     sandBox->destroy();
 
-    if (sandBoxResult.error->isEmpty() && !errorFound) {
+    if (!sandBoxResult.error.hasValue() && !errorFound) {
         result.m_deserialized = deserialized;
     } else {
         throw new DOMException(document, DOMException::DATA_CLONE_ERR);
