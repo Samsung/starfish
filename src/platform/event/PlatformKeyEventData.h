@@ -17,8 +17,8 @@
  *  USA
  */
 
+#include "core/dom/KeyboardEvent.h"
 #include "core/event/EventModifierData.h"
-#include "core/event/KeyBoardEventData.h"
 
 namespace Starfish {
 class PlatformKeyEventData {

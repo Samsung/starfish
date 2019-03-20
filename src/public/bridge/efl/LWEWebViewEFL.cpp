@@ -495,7 +495,7 @@ public:
                                   ev->modifiers, "Shift_R") == EINA_TRUE));
 
             if (keyValue >= ArrowDownKey && keyValue <= ArrowRightKey) {
-                int currentTimestamp = ev->timestamp;
+                unsigned int currentTimestamp = ev->timestamp;
                 if (currentTimestamp -
                         g_arrowKeyDownTimestamp[keyValue - ArrowDownKey] <
                     g_arrowKeyDownMinimumDelayInMS) {
