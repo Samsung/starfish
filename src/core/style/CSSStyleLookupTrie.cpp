@@ -607,6 +607,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::GridRowGap;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "-webkit-flex", 12) == 0) {
+                return CSSStyleValuePair::KeyKind::Flex;
+            }
+            break;
+#endif
         }
         break;
     case 13:
@@ -862,6 +869,20 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::GridColumnStart;
             }
             break;
+
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "-webkit-flex-flow", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexFlow;
+            }
+            if (memcmp(data, "-webkit-flex-grow", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexGrow;
+            }
+            if (memcmp(data, "-webkit-flex-wrap", 17) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexWrap;
+            }
+            break;
+#endif
         }
         break;
     case 18:
@@ -894,6 +915,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::GridTemplateRows;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "-webkit-flex-basis", 18) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexBasis;
+            }
+            break;
+#endif
         }
         break;
     case 19:
@@ -956,6 +984,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::GridTemplateAreas;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "-webkit-flex-shrink", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexShrink;
+            }
+            break;
+#endif
         }
         break;
 
@@ -1017,6 +1052,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyle(const char* data, unsigned length)
                 return CSSStyleValuePair::KeyKind::BorderTopLeftRadius;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case '-':
+            if (memcmp(data, "-webkit-flex-direction", 22) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexDirection;
+            }
+            break;
+#endif
         }
         break;
     case 23:
@@ -1458,6 +1500,11 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
             if (memcmp(data, "whiteSpace", 10) == 0) {
                 return CSSStyleValuePair::KeyKind::WhiteSpace;
             }
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+            if (memcmp(data, "webkitFlex", 10) == 0) {
+                return CSSStyleValuePair::KeyKind::Flex;
+            }
+#endif
             break;
         }
         break;
@@ -1681,6 +1728,19 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::ImageRendering;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case 'w':
+            if (memcmp(data, "webkitFlexFlow", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexFlow;
+            }
+            if (memcmp(data, "webkitFlexGrow", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexGrow;
+            }
+            if (memcmp(data, "webkitFlexWrap", 14) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexWrap;
+            }
+            break;
+#endif
         }
         break;
     case 15:
@@ -1715,6 +1775,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::GridColumnStart;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case 'w':
+            if (memcmp(data, "webkitFlexBasis", 15) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexBasis;
+            }
+            break;
+#endif
         }
         break;
     case 16:
@@ -1752,6 +1819,13 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
                 return CSSStyleValuePair::KeyKind::GridTemplateRows;
             }
             break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case 'w':
+            if (memcmp(data, "webkitFlexShrink", 16) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexShrink;
+            }
+            break;
+#endif
         }
         break;
     case 17:
@@ -1842,6 +1916,14 @@ CSSStyleValuePair::KeyKind lookupCSSStyleCamelCase(const char* data,
             if (memcmp(data, "gridTemplateColumns", 19) == 0) {
                 return CSSStyleValuePair::KeyKind::GridTemplateColumns;
             }
+            break;
+#if defined(STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX)
+        case 'w':
+            if (memcmp(data, "webkitFlexDirection", 19) == 0) {
+                return CSSStyleValuePair::KeyKind::FlexDirection;
+            }
+            break;
+#endif
         }
         break;
     case 20:
