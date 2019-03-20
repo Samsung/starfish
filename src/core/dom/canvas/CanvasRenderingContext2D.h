@@ -23,13 +23,13 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "core/dom/canvas/RenderingContext.h"
-#include "core/page/Serializer.h"
 
 namespace Starfish {
 
 class Canvas;
 class CanvasGradient;
 class DOMStringOrCanvasGradientOrCanvasPattern;
+class ImageData;
 
 class CanvasRenderingContext2D : public RenderingContext {
 public:
@@ -46,6 +46,7 @@ public:
     virtual bool isCanvasRenderingContext2D() const override;
 
     virtual void initialize() override;
+    virtual void flush() override;
 
     // CanvasState
     void save();
@@ -105,7 +106,7 @@ public:
                    double sh, double dx, double dy, double dw, double dh);
 
     // CanvasImageData
-    ImageData* getImageData(long sx, long sy, long sw, long sh);
+    ImageData* getImageData(int32_t sx, int32_t sy, int32_t sw, int32_t sh);
 
     // CanvasPathDrawingStyles
 
@@ -202,41 +203,6 @@ public:
 
 private:
     RenderingContext* m_renderingContext;
-};
-
-class ImageData : public ScriptWrappable, public Serializable {
-public:
-    ImageData(ExecutionContext* executionContext);
-
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ImageData)
-
-    virtual bool isSerializable() const override;
-    virtual Serializable* toSerializable() const override;
-    virtual SerializedData* serialize(SerializingMap& memory) override;
-    virtual void deserialize(SerializedData* serialized,
-                             DeserializingMap& memory) const override;
-
-    uint32_t width();
-    void setWidth(uint32_t value);
-
-    uint32_t height();
-    void setHeight(uint32_t value);
-
-    ScriptUint8ClampedArray data();
-    void setData(ScriptUint8ClampedArray value);
-
-private:
-    ScriptUint8ClampedArray m_data;
-};
-
-class SerializedImageData : public SerializedPlatformObjectData {
-public:
-    SerializedImageData()
-    {
-    }
-
-    ScriptWrappable* createDeserializingInstance(
-        ExecutionContext* executionContext) const override;
 };
 
 class Path2D : public ScriptWrappable {

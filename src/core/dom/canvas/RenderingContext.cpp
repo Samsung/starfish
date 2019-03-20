@@ -28,7 +28,7 @@ namespace Starfish {
 
 ScriptBindingInstance* RenderingContext::scriptBindingInstance()
 {
-    return m_htmlCanvasElement->document()->scriptBindingInstance();
+    return m_ownerHTMLCanvasElement->document()->scriptBindingInstance();
 }
 }
 

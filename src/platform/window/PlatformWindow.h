@@ -147,9 +147,10 @@ public:
 #endif
     }
 
-    virtual void glMakeCurrent()
+    virtual bool glMakeCurrent()
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+        return true;
     }
     virtual void glSwapBuffers()
     {
@@ -262,6 +263,7 @@ protected:
     EventModifierData m_eventModifierData;
     float m_lastMouseMoveX;
     float m_lastMouseMoveY;
+    bool m_isDestroyed;
 
     std::function<void(PlatformWindow* wnd)> m_setNeedsRenderingCallback;
     std::function<RenderInfo(void)> m_renderingPrepareCallback;

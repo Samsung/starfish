@@ -1,0 +1,12 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasimagedata
+
+[STARFISH_ENABLE_CANVAS,
+ UnimplementedConstructor(unsigned long sw, unsigned long sh),
+ UnimplementedConstructor(Uint8ClampedArray data, unsigned long sw, optional unsigned long sh),
+ Exposed=(Window,Worker),
+ Serializable]
+interface ImageData {
+  readonly attribute unsigned long width;
+  readonly attribute unsigned long height;
+  readonly attribute Uint8ClampedArray data;
+};

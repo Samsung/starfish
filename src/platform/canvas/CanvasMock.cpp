@@ -68,6 +68,10 @@ public:
     {
     }
 
+    virtual void flush()
+    {
+    }
+
     // state
     virtual void save()
     {

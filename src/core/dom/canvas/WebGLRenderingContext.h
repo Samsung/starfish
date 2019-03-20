@@ -38,6 +38,9 @@ public:
     virtual void initialize() override
     {
     }
+    virtual void flush() override
+    {
+    }
 };
 }
 

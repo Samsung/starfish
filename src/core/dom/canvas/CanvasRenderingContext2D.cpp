@@ -25,12 +25,14 @@
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
 #include "core/modules/canvas/Canvas.h"
+#include "core/dom/canvas/ImageData.h"
 #include "core/dom/canvas/CanvasRenderingContext2D.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/Document.h"
 #include "core/page/WebView.h"
 #include "core/style/CSSParser.h"
 #include "core/style/CSSTokenValue.h"
+#include "EscargotPublic.h"
 
 namespace Starfish {
 
@@ -50,21 +52,21 @@ void CanvasRenderingContext2D::initialize()
         m_surface->detachNativeBuffer();
     }
 
-    if (!m_htmlCanvasElement) {
+    if (!m_ownerHTMLCanvasElement) {
         return;
     }
 
     // Create CanvasSurface.
     m_surface = CanvasSurface::create(
-        m_htmlCanvasElement->webView()->platformWindow(),
-        m_htmlCanvasElement->width(), m_htmlCanvasElement->height());
+        m_ownerHTMLCanvasElement->webView()->platformWindow(),
+        m_ownerHTMLCanvasElement->width(), m_ownerHTMLCanvasElement->height());
 
     if (m_canvas) {
         delete m_canvas;
     }
     auto black = Unit::Color(0, 0, 0, 255);
     // Set defualt values such as color, fill color and stroke color.
-    m_canvas = Canvas::create(m_htmlCanvasElement->webView(), m_surface);
+    m_canvas = Canvas::create(m_ownerHTMLCanvasElement->webView(), m_surface);
     // Set the defualt color as black.
     m_canvas->setColor(black);
     // Set the fill color as black.
@@ -75,6 +77,11 @@ void CanvasRenderingContext2D::initialize()
     m_lineWidth = 1.0f;
     m_canvas->setStrokeWidth(m_lineWidth);
     m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
+}
+
+void CanvasRenderingContext2D::flush()
+{
+    m_canvas->flush();
 }
 
 void CanvasRenderingContext2D::setLineWidth(double width)
@@ -209,7 +216,17 @@ void CanvasRenderingContext2D::setFilter(String* value)
 
 void CanvasRenderingContext2D::fillRect(double x, double y, double w, double h)
 {
-    m_htmlCanvasElement->setNeedsPainting();
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-fillrect
+    if (std::isnan(x) || std::isnan(y) || std::isnan(w) || std::isnan(h) ||
+        std::isinf(x) || std::isinf(y) || std::isinf(w) || std::isinf(h)) {
+        return;
+    }
+
+    if (!w || !h) {
+        return;
+    }
+
+    m_ownerHTMLCanvasElement->setNeedsPainting();
     Unit::Color color =
         Unit::Color(m_fillColor.r(), m_fillColor.g(), m_fillColor.b(),
                     m_fillColor.a() * m_globalAlpha);
@@ -238,7 +255,7 @@ void CanvasRenderingContext2D::fill(Path2D* path, String* fillRule)
 
 void CanvasRenderingContext2D::stroke()
 {
-    m_htmlCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsPainting();
     Unit::Color color =
         Unit::Color(m_strokeColor.r(), m_strokeColor.g(), m_strokeColor.b(),
                     m_strokeColor.a() * m_globalAlpha);
@@ -263,10 +280,74 @@ void CanvasRenderingContext2D::drawImage(ScriptValue image, double sx,
 {
 }
 
-ImageData* CanvasRenderingContext2D::getImageData(long sx, long sy, long sw,
-                                                  long sh)
+ImageData* CanvasRenderingContext2D::getImageData(int32_t sx, int32_t sy,
+                                                  int32_t sw, int32_t sh)
 {
-    return new ImageData(canvas()->document());
+    if (!sw || !sh) {
+        throw new DOMException(canvas()->document(),
+                               DOMException::Code::INDEX_SIZE_ERR,
+                               "sw and sh are must not zero");
+    }
+
+    if (!originCleanFlag()) {
+        throw new DOMException(canvas()->document(),
+                               DOMException::Code::SECURITY_ERR);
+    }
+
+    flush();
+
+    size_t stride = 0;
+    if (m_surface->width() && m_surface->bufferStride()) {
+        stride = m_surface->bufferStride() / m_surface->width();
+    } else {
+        stride = 4;
+    }
+
+    size_t destSize = sw * stride * sh;
+
+    // TODO : If the Canvas Pixel ArrayBuffer cannot be allocated, then rethrow
+    // the RangeError thrown by JavaScript, and return.
+    auto canvasPixelArrayBuffer =
+        createArrayBuffer(canvas()->scriptBindingInstance(), destSize);
+    ContextRef* ctx = canvas()->scriptBindingInstance()->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    uint8_t* dest = canvasPixelArrayBuffer->toObject(state)
+                        ->asArrayBufferObject()
+                        ->rawBuffer();
+
+    auto width = m_surface->width();
+    auto height = m_surface->height();
+
+    uint8_t* src = m_surface->mapBuffer();
+    for (size_t y = 0; y < (size_t)sh && (y + sy) < height; ++y) {
+        for (size_t x = 0; x < (size_t)sw && (x + sx) < width; ++x) {
+            uint8_t* destPixel = dest + (y * sw * stride) + (x * stride);
+            uint8_t* srcPixel =
+                src + ((y + sy) * width * stride) + ((x + sx) * stride);
+            // R
+            destPixel[0] = srcPixel[2];
+            // G
+            destPixel[1] = srcPixel[1];
+            // B
+            destPixel[2] = srcPixel[0];
+            // A
+            destPixel[3] = srcPixel[3];
+        }
+    }
+    auto uint8ClampedArray =
+        createEmptyUint8ClampedArray(canvas()->scriptBindingInstance());
+
+    uint8ClampedArray->setBuffer(
+        canvasPixelArrayBuffer->toObject(state)->asArrayBufferObject(), 0,
+        destSize, destSize);
+
+    auto ret = new ImageData(canvas()->document(), uint8ClampedArray);
+    ret->setWidth(sw);
+    ret->setHeight(sh);
+
+    state->destroy();
+
+    return ret;
 }
 
 void CanvasRenderingContext2D::closePath()
@@ -275,19 +356,19 @@ void CanvasRenderingContext2D::closePath()
 
 void CanvasRenderingContext2D::moveTo(double x, double y)
 {
-    m_htmlCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsPainting();
     m_canvas->moveTo(x, y);
 }
 
 void CanvasRenderingContext2D::lineTo(double x, double y)
 {
-    m_htmlCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsPainting();
     m_canvas->lineTo(x, y);
 }
 
 void CanvasRenderingContext2D::rect(double x, double y, double w, double h)
 {
-    m_htmlCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsPainting();
     m_canvas->moveTo(x - m_lineWidth / 2, y);
     m_canvas->lineTo(x + w, y);
     m_canvas->lineTo(x + w, y + h);
@@ -311,72 +392,27 @@ void CanvasRenderingContext2D::ellipse(double x, double y, double radiusX,
 void CanvasRenderingContext2D::bezierCurveTo(double x1, double y1, double x2,
                                              double y2, double x3, double y3)
 {
-    m_htmlCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsPainting();
     m_canvas->curveTo(x1, y1, x2, y2, x3, y3);
 }
 
 void CanvasRenderingContext2D::clearRect(double x, double y, double w, double h)
 {
-    m_htmlCanvasElement->setNeedsPainting();
-    m_canvas->setColor(Unit::Color(255, 255, 255, 255));
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-clearrect
+    if (std::isnan(x) || std::isnan(y) || std::isnan(w) || std::isnan(h) ||
+        std::isinf(x) || std::isinf(y) || std::isinf(w) || std::isinf(h)) {
+        return;
+    }
+    m_ownerHTMLCanvasElement->setNeedsPainting();
+    m_canvas->save();
+    m_canvas->setColor(Unit::Color(0, 0, 0, 0));
     m_canvas->drawRect(LayoutRect(x, y, w, h));
     m_canvas->fill();
-    m_canvas->setColor(Unit::Color(0, 0, 0, 255));
+    m_canvas->restore();
 }
 
 void CanvasGradient::addColorStop(double offset, String* color)
 {
-}
-
-ImageData::ImageData(ExecutionContext* executionContext)
-    : ScriptWrappable(this, executionContext)
-    , m_data(createEmptyUint8ClampedArray(
-          executionContext->ownerScriptBindingInstance()))
-{
-}
-
-SerializedData* ImageData::serialize(SerializingMap& memory)
-{
-    return new SerializedImageData();
-}
-
-void ImageData::deserialize(SerializedData* serialized,
-                            DeserializingMap& memory) const
-{
-}
-
-uint32_t ImageData::width()
-{
-    return 1;
-}
-
-void ImageData::setWidth(uint32_t value)
-{
-}
-
-uint32_t ImageData::height()
-{
-    return 1;
-}
-
-void ImageData::setHeight(uint32_t value)
-{
-}
-
-ScriptUint8ClampedArray ImageData::data()
-{
-    return m_data;
-}
-
-void ImageData::setData(ScriptUint8ClampedArray value)
-{
-    m_data = value;
-}
-
-ScriptWrappable* SerializedImageData::createDeserializingInstance(
-    ExecutionContext* executionContext) const
-{
-    return new ImageData(executionContext);
 }
 
 void Path2D::closePath()

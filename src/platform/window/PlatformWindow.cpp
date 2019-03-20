@@ -52,6 +52,7 @@ PlatformWindow::PlatformWindow(Starfish* starfish)
     , m_compostiorContext(nullptr)
     , m_lastMouseMoveX(std::numeric_limits<float>::max())
     , m_lastMouseMoveY(std::numeric_limits<float>::max())
+    , m_isDestroyed(false)
 #ifdef STARFISH_ENABLE_VIRTUAL_CURSOR
     , m_isButtonOfVirtualCursorClicked(false)
     , m_virtualCursorX(-1)
@@ -98,6 +99,7 @@ void PlatformWindow::clearNativeHandlers()
 void PlatformWindow::destroy()
 {
     STARFISH_LOG_INFO("PlatformWindow::destroy()\n");
+    m_isDestroyed = true;
     clearResources();
 }
 

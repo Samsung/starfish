@@ -160,9 +160,13 @@ public:
 
     virtual Compositor* prepareCompositor() override;
 
-    virtual void glMakeCurrent() override
+    virtual bool glMakeCurrent() override
     {
+        if (m_isDestroyed) {
+            return false;
+        }
         m_glMakeCurrentCallback(this);
+        return true;
     }
 
     virtual void glSwapBuffers() override
