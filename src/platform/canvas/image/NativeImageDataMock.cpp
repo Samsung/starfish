@@ -45,6 +45,11 @@ public:
     {
     }
 
+    virtual ~NativeImageDataMock()
+    {
+        disposeNativeImageData();
+    }
+
     virtual uint8_t* data()
     {
         return nullptr;
@@ -94,11 +99,7 @@ protected:
 
 NativeImageData* NativeImageData::create(const char* buf, size_t len)
 {
-    NativeImageData* imageData = new NativeImageDataMock(buf, len);
-    if (imageData->data() == NULL) {
-        return NULL;
-    }
-    return imageData;
+    return new NativeImageDataMock(buf, len);
 }
 
 NativeImageData* NativeImageData::create(size_t width, size_t height)
