@@ -128,7 +128,9 @@ void Thread::finishUnjoined()
         m_threadClient->onThreadFinished(this);
     }
 
+    m_threadData->~ThreadData();
     GC_FREE(m_threadData);
+
 #ifdef STARFISH_MESSAGELOOP_DEBUG
     m_threadData->m_messageLoop->decreaseUnjoinedThreadCount();
 #endif
