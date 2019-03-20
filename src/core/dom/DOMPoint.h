@@ -50,9 +50,11 @@ private:
 
 class DOMPoint : public DOMPointReadOnly {
 public:
-    DOMPoint(ScriptBindingInstance* instance, double x = 0, double y = 0,
+    DOMPoint(ExecutionContext* executionContext, double x = 0, double y = 0,
              double z = 0, double w = 1);
-    DOMPoint(ScriptBindingInstance* instance, const DOMPointInit&);
+    DOMPoint(ExecutionContext* executionContext, const DOMPointInit&);
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMPoint)
 
     void setX(double x)
     {
@@ -73,10 +75,6 @@ public:
     {
         m_w = w;
     }
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isDOMPoint() const override;
 };
 }
 

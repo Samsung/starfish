@@ -56,22 +56,21 @@ DOMRect* DOMQuad::getBounds() const
         double bottom =
             saturateInf(max4(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y()));
 
-        m_bounds = new DOMRect(m_scriptBindingInstance, left, top, right - left,
+        m_bounds = new DOMRect(executionContext(), left, top, right - left,
                                bottom - top);
     }
     return m_bounds;
 }
 
-DOMQuad::DOMQuad(ScriptBindingInstance* instance, const DOMPointInit& p1,
+DOMQuad::DOMQuad(ExecutionContext* executionContext, const DOMPointInit& p1,
                  const DOMPointInit& p2, const DOMPointInit& p3,
                  const DOMPointInit& p4)
-    : ScriptWrappable(this)
-    , m_scriptBindingInstance(instance)
-    , m_p1(new DOMPoint(instance, p1))
-    , m_p2(new DOMPoint(instance, p2))
-    , m_p3(new DOMPoint(instance, p3))
-    , m_p4(new DOMPoint(instance, p4))
+    : ScriptWrappable(this, executionContext)
+    , m_p1(new DOMPoint(executionContext, p1))
+    , m_p2(new DOMPoint(executionContext, p2))
+    , m_p3(new DOMPoint(executionContext, p3))
+    , m_p4(new DOMPoint(executionContext, p4))
+    , m_bounds(nullptr)
 {
-    m_bounds = nullptr;
 }
 }

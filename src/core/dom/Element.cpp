@@ -1175,7 +1175,7 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
         rect = computeBoxExtent(rect, m);
 
         DOMQuad* q = new DOMQuad(
-            scriptBindingInstance(),
+            executionContext(),
             DOMPointInit(rect.location().x(), rect.location().y()),
             DOMPointInit(rect.location().x() + rect.size().width(),
                          rect.location().y()),
@@ -1205,7 +1205,7 @@ void Element::getClientQuads(GCVector<DOMQuad*>& quads, bool layoutIfNeeds)
                         rect = computeBoxExtent(rect, m);
 
                         DOMQuad* q = new DOMQuad(
-                            scriptBindingInstance(),
+                            executionContext(),
                             DOMPointInit(rect.location().x(),
                                          rect.location().y()),
                             DOMPointInit(rect.location().x() +
@@ -1232,10 +1232,10 @@ DOMRectList* Element::getClientRects()
     getClientQuads(quads);
 
     if (quads.empty()) {
-        return DOMRectList::create(scriptBindingInstance());
+        return DOMRectList::create(executionContext());
     }
 
-    return DOMRectList::create(scriptBindingInstance(), quads);
+    return DOMRectList::create(executionContext(), quads);
 }
 
 DOMRect* Element::getBoundingClientRect(bool layoutIfNeeds)
@@ -1243,7 +1243,7 @@ DOMRect* Element::getBoundingClientRect(bool layoutIfNeeds)
     GCVector<DOMQuad*> quads;
     getClientQuads(quads, layoutIfNeeds);
     if (quads.empty()) {
-        return new DOMRect(scriptBindingInstance());
+        return new DOMRect(executionContext());
     }
 
     DOMRect* rect = quads[0]->getBounds();

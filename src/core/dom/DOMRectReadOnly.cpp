@@ -22,10 +22,9 @@
 
 namespace Starfish {
 
-DOMRectReadOnly::DOMRectReadOnly(ScriptBindingInstance* instance, double x,
+DOMRectReadOnly::DOMRectReadOnly(ExecutionContext* executionContext, double x,
                                  double y, double width, double height)
-    : ScriptWrappable(this)
-    , m_scriptBindingInstance(instance)
+    : ScriptWrappable(this, executionContext)
     , m_x(x)
     , m_y(y)
     , m_width(width)
