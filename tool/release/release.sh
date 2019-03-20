@@ -47,7 +47,7 @@ mkdir -p .git
 sed -i "s/\(VERSION \".*\"\)/\1 \"$today\_$hash\"/g" src/StarfishInfo.h
 
 if [ "$version" == "5.0" ]; then
-    cp -f compat/tizen_5.0/LWEWebView.h inc/LWEWebView.h
+    cp -f $ROOT/compat/tizen_5.0/inc/LWEWebView.h inc/LWEWebView.h
 fi
 
 git add -A

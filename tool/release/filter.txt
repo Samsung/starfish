@@ -3,6 +3,7 @@ P /.github
 
 - /inspector
 - /build/windows
+- /compat
 - .git
 - .gitignore
 - .gitmodules
