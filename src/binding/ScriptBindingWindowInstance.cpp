@@ -33,7 +33,7 @@
 
 namespace Starfish {
 
-static ValueRef* virtualIdentifierCallback(ExecutionStateRef* state,
+static NullablePtr<ValueRef> virtualIdentifierCallback(ExecutionStateRef* state,
                                            ValueRef* key)
 {
     Window* self = fetchWindow(state->context());
