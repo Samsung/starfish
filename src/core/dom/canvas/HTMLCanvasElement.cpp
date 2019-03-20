@@ -85,6 +85,7 @@ Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
         if (m_contextMode == CanvasContextModeNone) {
             m_contextMode = CanvasContextMode2D;
             m_renderingContext = new CanvasRenderingContext2D(this);
+            m_renderingContext->setOriginCleanFlag(true);
         }
         if (m_contextMode == CanvasContextMode2D) {
             return RenderingContextBindindingUnion::
@@ -95,6 +96,7 @@ Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
         if (m_contextMode == CanvasContextModeNone) {
             m_contextMode = CanvasContextModeBitmapRenderer;
             m_renderingContext = new ImageBitmapRenderingContext(this);
+            m_renderingContext->setOriginCleanFlag(true);
         }
         if (m_contextMode == CanvasContextModeBitmapRenderer) {
             return RenderingContextBindindingUnion::

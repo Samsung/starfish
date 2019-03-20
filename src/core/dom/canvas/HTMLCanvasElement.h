@@ -61,6 +61,10 @@ public:
     void setWidth(uint32_t value);
 
     CanvasSurface* renderingContextSurface();
+    RenderingContext* renderingContext()
+    {
+        return m_renderingContext;
+    }
 
     uint32_t height();
     void setHeight(uint32_t value);

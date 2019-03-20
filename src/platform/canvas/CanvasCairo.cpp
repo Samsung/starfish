@@ -244,6 +244,11 @@ public:
         cairo_restore(m_canvas);
     }
 
+    virtual void flush()
+    {
+        cairo_surface_flush(m_surface);
+    }
+
     // state
     virtual void save()
     {

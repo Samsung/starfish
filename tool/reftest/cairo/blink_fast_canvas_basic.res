@@ -44,7 +44,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/2d.composite.globalAlpha.fi
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-text.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-transforms.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blend-solid.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clearRect.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clearRect.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clip-rule.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-closePath-single-point.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-composite.html
@@ -91,7 +91,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/2d.composite.globalAlpha.fi
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillPath-gradient-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillPath-pattern-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillPath-shadow.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect-gradient-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect-zeroSizeGradient.html
@@ -207,7 +207,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/CanvasRendering2D-prototype
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-shadow-source-in.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-skia-excessive-size.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-state-intact-after-putImageData.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-stroke-empty-fill.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-stroke-empty-fill.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-alpha-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-cap-join.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-gradient-shadow.html

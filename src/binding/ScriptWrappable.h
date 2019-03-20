@@ -131,6 +131,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
                            bool* result = nullptr);
 ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
                               size_t len);
+ScriptValue createArrayBuffer(ScriptBindingInstance* instance, size_t len);
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ScriptBindingInstance* instance);
 

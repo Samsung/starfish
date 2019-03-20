@@ -812,6 +812,16 @@ ScriptValue createArrayBuffer(ScriptBindingInstance* instance, void* bufferSrc,
     return ValueRef::create(obj);
 }
 
+ScriptValue createArrayBuffer(ScriptBindingInstance* instance, size_t len)
+{
+    ContextRef* ctx = instance->scriptContext();
+    ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+    ArrayBufferObjectRef* obj = ArrayBufferObjectRef::create(state);
+    obj->allocateBuffer(len);
+    state->destroy();
+    return ValueRef::create(obj);
+}
+
 ScriptUint8ClampedArray createEmptyUint8ClampedArray(
     ScriptBindingInstance* instance)
 {

@@ -153,7 +153,7 @@ public:
     }
 
     virtual void clearColor(const Unit::Color& clr) = 0;
-
+    virtual void flush() = 0;
     // state
     virtual void save() = 0;    // push state on state stack
     virtual void restore() = 0; // pop state stack and restore state

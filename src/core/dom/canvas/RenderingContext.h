@@ -33,14 +33,15 @@ class RenderingContext : public ScriptWrappable {
 public:
     RenderingContext(HTMLCanvasElement* canvasElement)
         : ScriptWrappable(this)
-        , m_htmlCanvasElement(canvasElement)
+        , m_ownerHTMLCanvasElement(canvasElement)
         , m_surface(nullptr)
+        , m_originCleanFlag(false)
     {
     }
 
     HTMLCanvasElement* canvas()
     {
-        return m_htmlCanvasElement;
+        return m_ownerHTMLCanvasElement;
     }
 
     CanvasSurface* surface()
@@ -48,18 +49,31 @@ public:
         return m_surface;
     }
 
+    bool originCleanFlag()
+    {
+        return m_originCleanFlag;
+    }
+
+    void setOriginCleanFlag(bool value)
+    {
+        m_originCleanFlag = value;
+    }
+
     virtual ScriptBindingInstance* scriptBindingInstance();
     virtual void initialize() = 0;
+    virtual void flush() = 0;
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
-        GC_set_bit(desc, GC_WORD_OFFSET(RenderingContext, m_htmlCanvasElement));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(RenderingContext, m_ownerHTMLCanvasElement));
         GC_set_bit(desc, GC_WORD_OFFSET(RenderingContext, m_surface));
     }
 
-    HTMLCanvasElement* m_htmlCanvasElement;
+    HTMLCanvasElement* m_ownerHTMLCanvasElement;
     CanvasSurface* m_surface;
+    bool m_originCleanFlag;
 };
 }
 

@@ -221,6 +221,11 @@ public:
         m_canvas->restore();
     }
 
+    virtual void flush()
+    {
+        m_canvas->flush();
+    }
+
     // state
     virtual void save() // push state on state stack
     {

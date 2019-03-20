@@ -1449,7 +1449,7 @@ public:
                     m_bufferWidth * m_bufferHeight * sizeof(uint32_t);
             }
 
-            m_window->glMakeCurrent();
+            bool ret = m_window->glMakeCurrent();
             if (m_isEGLImageExternal) {
 #if defined(STARFISH_TIZEN) && !defined(PORT_WEBVIEW_BRIDGE_EFL)
                 EGLDisplay display = eglGetCurrentDisplay();
@@ -1485,9 +1485,11 @@ public:
                 free(m_buffer);
             }
 
-            for (size_t i = 0; i < m_textureFragments.size(); i++) {
-                GLuint id = m_textureFragments[i].textureID;
-                glDeleteTextures(1, &id);
+            if (ret) {
+                for (size_t i = 0; i < m_textureFragments.size(); i++) {
+                    GLuint id = m_textureFragments[i].textureID;
+                    glDeleteTextures(1, &id);
+                }
             }
 
             m_textureFragments.clear();

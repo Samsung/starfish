@@ -27,6 +27,7 @@
 #include "core/layout/FrameReplacedCanvas.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/Compositor.h"
+#include "binding/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/page/WebView.h"
 
@@ -63,6 +64,11 @@ void FrameReplacedCanvas::didCompsiteStackingContext(Compositor* c)
 void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
 {
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
+    auto context = canvasElement->renderingContext();
+    if (context) {
+        context->flush();
+    }
+
     CanvasSurface* surface = canvasElement->renderingContextSurface();
     IntrinsicSize size = intrinsicSize();
     auto contentSize = size.m_intrinsicContentSize;
