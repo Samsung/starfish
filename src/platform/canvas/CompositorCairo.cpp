@@ -302,7 +302,7 @@ public:
                        true);
 
         cairo_surface_destroy(image);
-        data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
+        data->unmapBufferAndNotifyUpdatedRegion(0, 0, 0, 0);
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

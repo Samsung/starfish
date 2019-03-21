@@ -335,11 +335,37 @@ public:
         double maxX = std::max(xSoFar, maxXSoFar);
         double maxY = std::max(ySoFar, maxYSoFar);
 
-        x = floor(x) - 1;
-        y = floor(y) - 1;
+        x = floor(x);
+        y = floor(y);
+        maxX = ceil(maxX);
+        maxY = ceil(maxY);
 
-        maxX = ceil(maxX) + 1;
-        maxY = ceil(maxY) + 1;
+        if (x < 0) {
+            x = 0;
+        } else if (x > (int)m_renderTargetInfo.m_width) {
+            maxX = x = m_renderTargetInfo.m_width;
+        }
+        if (y < 0) {
+            y = 0;
+        } else if (y > (int)m_renderTargetInfo.m_height) {
+            maxY = y = m_renderTargetInfo.m_height;
+        }
+
+        if (maxX < 0) {
+            maxX = 0;
+        } else if (maxX > (int)m_renderTargetInfo.m_width) {
+            maxX = m_renderTargetInfo.m_width;
+        }
+        if (maxY < 0) {
+            maxY = 0;
+        } else if (maxY > (int)m_renderTargetInfo.m_height) {
+            maxY = m_renderTargetInfo.m_height;
+        }
+
+        deviceRect.setX(x);
+        deviceRect.setY(y);
+        deviceRect.setWidth(maxX - x);
+        deviceRect.setHeight(maxY - y);
 
         SkPath path;
         path.reset();
@@ -353,10 +379,6 @@ public:
         m_canvas->clipPath(path);
         m_canvas->setMatrix(m);
 
-        deviceRect.setX(std::min(x, maxX));
-        deviceRect.setY(std::min(y, maxY));
-        deviceRect.setWidth(std::abs(maxX - x));
-        deviceRect.setHeight(std::abs(maxY - y));
         return deviceRect;
     }
 

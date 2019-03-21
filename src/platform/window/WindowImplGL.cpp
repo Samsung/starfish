@@ -109,16 +109,11 @@ public:
             m_compostiorContext = Compositor::initCompositorContext(this);
         }
 
-#if !defined(STARFISH_ENABLE_TEST)
-        // We should draw every frame in GL backend for non-buffer mode
-        m_webView->markNeedsCompositeConsiderInRendering();
-#endif
-
         RenderResult ret = PlatformWindow::rendering();
         if (ret.didPaintingOrCompositing) {
             if (webView()->didCompositeBefore()) {
             } else {
-                m_glPaintingSurface->unMapBufferAndNotifyUpdateRegion(
+                m_glPaintingSurface->unmapBufferAndNotifyUpdatedRegion(
                     (int)ret.updateRect.x(), (int)ret.updateRect.y(),
                     (int)ret.updateRect.width(), (int)ret.updateRect.height());
                 float oldDPR = webView()->screenInfo().devicePixelRatio;
@@ -132,6 +127,25 @@ public:
                 webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
             }
             glSwapBuffers();
+        } else {
+#if !defined(STARFISH_ENABLE_TEST)
+            // We should draw every frame in GL backend for non-buffer mode
+            if (webView()->didCompositeBefore()) {
+                m_webView->markNeedsCompositeConsiderInRendering();
+                PlatformWindow::rendering();
+            } else {
+                float oldDPR = webView()->screenInfo().devicePixelRatio;
+                webView()->mutableScreenInfo().devicePixelRatio = 1;
+                Compositor* c =
+                    Compositor::create3D(webView(), m_compostiorContext);
+                c->clearColor(Unit::Color(0, 0, 0, 0));
+                c->drawSurface(m_glPaintingSurface,
+                               Unit::Rect(0, 0, width(), height()));
+                delete c;
+                webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
+            }
+            glSwapBuffers();
+#endif
         }
 
 #if defined(STARFISH_ENABLE_TEST)

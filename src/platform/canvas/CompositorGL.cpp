@@ -451,14 +451,11 @@ static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
     GLuint shader;
     GLint compiled;
 
+    checkError();
     LongTaskFinder t("loadShader");
 
     // Create the shader object
     shader = glCreateShader(type);
-
-    if (glGetError()) {
-        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-    }
 
     // Load the shader source
     glShaderSource(shader, 1, &shaderSrc, NULL);
@@ -468,6 +465,7 @@ static GLuint loadShader(GLenum type, const GLchar* shaderSrc)
 
     // Check the compile status
     glGetShaderiv(shader, GL_COMPILE_STATUS, &compiled);
+    checkError();
 
     if (!compiled) {
         GLint maxLength = 0;
@@ -1357,6 +1355,11 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
         g_isSupportExtensionEGLImageExternal = false;
 #endif
 
+#if defined(STARFISH_TIZEN)
+        if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
+            g_shouldUseEGLImageOnPlainSurface = true;
+        }
+#endif
         if (g_isSupportExtensionEGLImageExternal) {
             STARFISH_LOG_INFO("use EGLImageExternal!\n");
         }
@@ -1395,7 +1398,7 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
 class CanvasSurfaceGL : public CanvasSurface {
 public:
     CanvasSurfaceGL(PlatformWindow* wnd, size_t w, size_t h,
-                    bool forFilterEffect)
+                    CanvasSurfaceFlag flag)
     {
         m_window = (PlatformWindow*)wnd;
         m_width = w;
@@ -1406,7 +1409,7 @@ public:
         m_isEGLImageExternal = false;
         m_isEGLBufferOwner = false;
         m_isEGLImageNeedsFlipRGB = false;
-        m_forFilterEffect = forFilterEffect;
+        m_flag = flag;
         m_wTextureCount = 0;
         m_hTextureCount = 0;
 #if defined(STARFISH_TIZEN)
@@ -1417,7 +1420,7 @@ public:
         m_eglImage = nullptr;
 #endif
 
-        attachNativeBuffer(w, h, forFilterEffect);
+        attachNativeBuffer(w, h, flag);
         checkError();
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
@@ -1493,8 +1496,6 @@ public:
             }
 
             m_textureFragments.clear();
-            m_textureFragmentsFlags.clear();
-            m_dirtyAreaTextureFragments.clear();
 
             m_buffer = nullptr;
             m_width = 0;
@@ -1507,13 +1508,13 @@ public:
         }
     }
 
-    bool attachNativeBuffer(size_t w, size_t h, bool forFilterEffect) override
+    bool attachNativeBuffer(size_t w, size_t h, CanvasSurfaceFlag flag) override
     {
         if (m_width != w || m_height != h) {
             detachNativeBuffer();
             m_width = w;
             m_height = h;
-            m_forFilterEffect = forFilterEffect;
+            m_flag = flag;
 
             float windowDevicePixelRatio =
                 m_window->webView()->screenInfo().devicePixelRatio;
@@ -1523,7 +1524,7 @@ public:
             m_bufferHeight =
                 std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
 
-            if (g_shouldUseEGLImageOnPlainSurface &&
+            if (!g_shouldUseEGLImageOnPlainSurface &&
                 g_isSupportExtensionEGLImageExternal &&
                 m_bufferWidth <= g_maxTextureSize &&
                 m_bufferHeight <= g_maxTextureSize) {
@@ -1562,8 +1563,7 @@ public:
                 m_isEGLImageExternal = false;
                 m_isEGLBufferOwner = false;
                 m_bufferStride = m_bufferWidth * sizeof(uint32_t);
-                m_buffer =
-                    (unsigned char*)malloc(m_bufferStride * m_bufferHeight);
+                m_buffer = nullptr;
             }
 
             g_totalAllocatedCanvasSurfaceSize +=
@@ -1675,11 +1675,6 @@ public:
                 fragment.srcHeight = 1;
 
                 m_textureFragments.push_back(fragment);
-                FragmentFlags flags;
-                flags.m_isDirty = true;
-                m_textureFragmentsFlags.push_back(flags);
-                m_dirtyAreaTextureFragments.push_back(
-                    Unit::Rect(0, 0, m_bufferWidth, m_bufferHeight));
             }
 #endif
             return;
@@ -1688,7 +1683,7 @@ public:
         m_wTextureCount = ceil((float)m_bufferWidth / g_textureTileSize);
         m_hTextureCount = ceil((float)m_bufferHeight / g_textureTileSize);
 
-        if (m_forFilterEffect) {
+        if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
             m_wTextureCount = m_hTextureCount = 1;
         }
 
@@ -1707,7 +1702,7 @@ public:
                     std::min((size_t)g_textureTileSize,
                              m_bufferHeight - coveredRowsCount);
 
-                if (m_forFilterEffect) {
+                if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
                     texureDataWidth = m_bufferWidth;
                     texureDataHeight = m_bufferHeight;
                 }
@@ -1745,12 +1740,6 @@ public:
                 fragment.srcHeight = texureDataHeight / (float)m_bufferHeight;
 
                 m_textureFragments.push_back(fragment);
-                FragmentFlags flags;
-                flags.m_isDirty = true;
-                m_textureFragmentsFlags.push_back(flags);
-                m_dirtyAreaTextureFragments.push_back(
-                    Unit::Rect(0, 0, texureDataWidth, texureDataHeight));
-
                 coveredColsCount += g_textureTileSize;
             }
 
@@ -1758,33 +1747,45 @@ public:
         }
     }
 
-    virtual uint8_t* mapBuffer() override
+    virtual MappedNativeBuffer mapBuffer(size_t bufferX, size_t bufferY,
+                                         size_t bufferWidth,
+                                         size_t bufferHeight) override
     {
         if (m_isEGLImageExternal) {
-            if (m_buffer) {
-                return m_buffer;
-            }
+            if (!m_buffer) {
 #if defined(STARFISH_TIZEN)
-            tbm_surface_info_s surfaceInfo;
-            {
-                LongTaskFinder t("tbm_surface_map", 1);
-                tbm_surface_map(m_tbmSurface, TBM_SURF_OPTION_WRITE,
-                                &surfaceInfo);
-            }
-            STARFISH_RELEASE_ASSERT(surfaceInfo.num_planes == 1);
-            STARFISH_RELEASE_ASSERT(surfaceInfo.planes[0].stride ==
-                                    m_bufferStride);
-            m_buffer = surfaceInfo.planes[0].ptr;
+                tbm_surface_info_s surfaceInfo;
+                {
+                    LongTaskFinder t("tbm_surface_map", 1);
+                    tbm_surface_map(m_tbmSurface, TBM_SURF_OPTION_WRITE,
+                                    &surfaceInfo);
+                }
+                STARFISH_RELEASE_ASSERT(surfaceInfo.num_planes == 1);
+                STARFISH_RELEASE_ASSERT(surfaceInfo.planes[0].stride ==
+                                        m_bufferStride);
+                m_buffer = surfaceInfo.planes[0].ptr;
 #elif defined(STARFISH_ANDROID) && defined(USE_EGLIMAGE_EXT_ANDROID)
-            AHardwareBuffer_lock(m_aHardwareBuffer,
-                                 AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN |
-                                     AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN,
-                                 -1, NULL, (void**)&m_buffer);
+                AHardwareBuffer_lock(m_aHardwareBuffer,
+                                     AHARDWAREBUFFER_USAGE_CPU_READ_OFTEN |
+                                         AHARDWAREBUFFER_USAGE_CPU_WRITE_OFTEN,
+                                     -1, NULL, (void**)&m_buffer);
 #endif
-            return m_buffer;
+            }
+        } else {
+            if (!m_buffer) {
+                m_buffer =
+                    (unsigned char*)malloc(m_bufferStride * m_bufferHeight);
+            }
         }
 
-        return m_buffer;
+        CanvasSurface::MappedNativeBuffer b;
+        b.m_bufferAddress = m_buffer;
+        b.m_mappedBufferX = 0;
+        b.m_mappedBufferY = 0;
+        b.m_mappedBufferWidth = m_bufferWidth;
+        b.m_mappedBufferHeight = m_bufferHeight;
+        b.m_mappedBufferStride = m_bufferStride;
+        return b;
     }
 
     virtual size_t width() override
@@ -1822,18 +1823,9 @@ public:
         return m_hTextureCount;
     }
 
-    virtual void clear() override
-    {
-        if (m_buffer) {
-            LongTaskFinder t("CanvasSurfaceGL::clear", 1);
-            size_t end = m_bufferStride * m_bufferHeight;
-            memset(m_buffer, 0x00, end);
-        }
-    }
-
-    virtual void unMapBufferAndNotifyUpdateRegion(size_t dirtyX, size_t dirtyY,
-                                                  size_t dirtyWidth,
-                                                  size_t dirtyHeight) override
+    virtual void unmapBufferAndNotifyUpdatedRegion(size_t dirtyX, size_t dirtyY,
+                                                   size_t dirtyWidth,
+                                                   size_t dirtyHeight) override
     {
         STARFISH_ASSERT(m_wTextureCount != 0);
         STARFISH_ASSERT(m_hTextureCount != 0);
@@ -1854,6 +1846,8 @@ public:
             m_buffer = nullptr;
             return;
         }
+
+        STARFISH_RELEASE_ASSERT(m_buffer);
 
         if (dirtyWidth && dirtyHeight) {
             m_window->glMakeCurrent();
@@ -1876,7 +1870,7 @@ public:
                         std::min((size_t)g_textureTileSize,
                                  m_bufferHeight - coveredRowsCount);
 
-                    if (m_forFilterEffect) {
+                    if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
                         textureDataWidth = m_bufferWidth;
                         textureDataHeight = m_bufferHeight;
                     }
@@ -1888,11 +1882,9 @@ public:
                                      textureDataWidth, textureDataHeight);
 
                     if (tRect.intersects(dRect)) {
-                        m_textureFragmentsFlags[fragmentIndex].m_isDirty = true;
-
                         auto left = std::max(tRect.x(), dRect.x());
-                        auto right = std::min(tRect.maxX(), dRect.maxX() + 1);
-                        auto bottom = std::min(tRect.maxY(), dRect.maxY() + 1);
+                        auto right = std::min(tRect.maxX(), dRect.maxX());
+                        auto bottom = std::min(tRect.maxY(), dRect.maxY());
                         auto top = std::max(tRect.y(), dRect.y());
 
                         left -= textureDataX;
@@ -1900,8 +1892,54 @@ public:
                         bottom -= textureDataY;
                         top -= textureDataY;
 
-                        m_dirtyAreaTextureFragments[fragmentIndex].unite(
-                            Unit::Rect(left, top, right - left, bottom - top));
+                        size_t xx = left;
+                        size_t xxEnd = right;
+                        size_t yy = top;
+                        size_t yyEnd = bottom;
+
+                        if (((xxEnd - xx) > 0) && ((yyEnd - yy) > 0)) {
+                            GLuint tid =
+                                (GLuint)m_textureFragments[fragmentIndex]
+                                    .textureID;
+                            LongTaskFinder t("update texture tile..", 1);
+                            auto bData = m_buffer;
+                            auto bStride = bufferStride();
+
+                            glBindTexture(GL_TEXTURE_2D, tid);
+                            glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                            checkError();
+
+                            if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
+                                glPixelStorei(GL_UNPACK_ROW_LENGTH,
+                                              bufferWidth());
+                                glPixelStorei(GL_UNPACK_SKIP_PIXELS, xx);
+                                glPixelStorei(GL_UNPACK_SKIP_ROWS, yy);
+
+                                auto data = bData;
+                                data += textureDataY * bStride;
+                                data += textureDataX * 4;
+                                glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
+                                                xxEnd - xx, yyEnd - yy, GL_RGBA,
+                                                GL_UNSIGNED_BYTE, data);
+
+                                glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+                                glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+                                glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
+                            } else {
+                                for (; yy < yyEnd; yy++) {
+                                    auto data = bData;
+                                    data += ((yy + textureDataY) * bStride);
+                                    data += ((textureDataX + xx) * 4);
+                                    glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
+                                                    xxEnd - xx, 1, GL_RGBA,
+                                                    GL_UNSIGNED_BYTE, data);
+                                    checkError();
+                                }
+                            }
+
+                            glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+                            checkError();
+                        }
                     }
 
                     fragmentIndex++;
@@ -1910,6 +1948,11 @@ public:
 
                 coveredRowsCount += g_textureTileSize;
             }
+        }
+
+        if (!(m_flag & CanvasSurface::CanvasElement)) {
+            free(m_buffer);
+            m_buffer = nullptr;
         }
     }
 
@@ -1987,16 +2030,11 @@ protected:
     size_t m_hTextureCount;
     GCAtomicVector<CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>
         m_textureFragments;
-    struct FragmentFlags {
-        bool m_isDirty;
-    };
-    GCAtomicVector<FragmentFlags> m_textureFragmentsFlags;
-    GCAtomicVector<Unit::Rect> m_dirtyAreaTextureFragments;
 
     bool m_isEGLImageExternal;
     bool m_isEGLBufferOwner;
     bool m_isEGLImageNeedsFlipRGB;
-    bool m_forFilterEffect;
+    CanvasSurfaceFlag m_flag;
 #if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
     tbm_surface_h m_tbmSurface;
     EvasGLImage m_eglImage;
@@ -2010,9 +2048,9 @@ protected:
 };
 
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
-                                     bool forFilterEffect)
+                                     CanvasSurfaceFlag flag)
 {
-    return new CanvasSurfaceGL(wnd, w, h, forFilterEffect);
+    return new CanvasSurfaceGL(wnd, w, h, flag);
 }
 
 struct CompositorImplGLState {
@@ -2945,11 +2983,9 @@ public:
             } else {
                 size_t coveredRowsCount = 0;
                 size_t i = 0;
-                for (size_t y = 0; y < ((CanvasSurfaceGL*)cs)->hTextureCount();
-                     y++) {
+                for (size_t y = 0; y < csGL->hTextureCount(); y++) {
                     size_t coveredColsCount = 0;
-                    for (size_t x = 0;
-                         x < ((CanvasSurfaceGL*)cs)->wTextureCount(); x++) {
+                    for (size_t x = 0; x < csGL->wTextureCount(); x++) {
                         size_t texureDataX = coveredColsCount;
                         size_t texureDataY = coveredRowsCount;
                         size_t texureDataWidth =
@@ -2959,7 +2995,8 @@ public:
                             std::min((size_t)g_textureTileSize,
                                      cs->bufferHeight() - coveredRowsCount);
 
-                        if (csGL->m_forFilterEffect) {
+                        if (csGL->m_flag &
+                            CanvasSurface::ElementHasFilterEffect) {
                             texureDataWidth = cs->bufferWidth();
                             texureDataHeight = cs->bufferHeight();
                         }
@@ -3012,65 +3049,6 @@ public:
 
                         if (screenBoundingRect.intersects(visibleArea)) {
                             GLuint tid = (GLuint)fragment.textureID;
-
-                            if (csGL->m_textureFragmentsFlags[i].m_isDirty) {
-                                LongTaskFinder t("update texture tile..", 1);
-                                size_t xx =
-                                    csGL->m_dirtyAreaTextureFragments[i].x();
-                                size_t xxEnd =
-                                    csGL->m_dirtyAreaTextureFragments[i].maxX();
-                                size_t yy =
-                                    csGL->m_dirtyAreaTextureFragments[i].y();
-                                size_t yyEnd =
-                                    csGL->m_dirtyAreaTextureFragments[i].maxY();
-
-                                auto bData = csGL->mapBuffer();
-                                auto bStride = csGL->bufferStride();
-
-                                glBindTexture(GL_TEXTURE_2D, tid);
-                                glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-                                checkError();
-
-                                if (g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory) {
-                                    glPixelStorei(GL_UNPACK_ROW_LENGTH,
-                                                  csGL->bufferWidth());
-                                    glPixelStorei(GL_UNPACK_SKIP_PIXELS, xx);
-                                    glPixelStorei(GL_UNPACK_SKIP_ROWS, yy);
-
-                                    auto data = bData;
-                                    data += (texureDataY * bStride);
-                                    data += (texureDataX * 4);
-                                    glTexSubImage2D(GL_TEXTURE_2D, 0, xx, yy,
-                                                    xxEnd - xx, yyEnd - yy,
-                                                    GL_RGBA, GL_UNSIGNED_BYTE,
-                                                    data);
-
-                                    glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-                                    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
-                                    glPixelStorei(GL_UNPACK_SKIP_ROWS, 0);
-                                } else {
-                                    for (; yy < yyEnd; yy++) {
-                                        auto data = bData;
-                                        data += ((yy + texureDataY) * bStride);
-                                        data += ((texureDataX + xx) * 4);
-                                        glTexSubImage2D(GL_TEXTURE_2D, 0, xx,
-                                                        yy, xxEnd - xx, 1,
-                                                        GL_RGBA,
-                                                        GL_UNSIGNED_BYTE, data);
-                                        checkError();
-                                    }
-                                }
-
-                                glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
-                                checkError();
-
-                                csGL->m_textureFragmentsFlags[i].m_isDirty =
-                                    false;
-                                csGL->m_dirtyAreaTextureFragments[i] =
-                                    Unit::Rect(0, 0, 0, 0);
-                                csGL->unMapBufferAndNotifyUpdateRegion(0, 0, 0,
-                                                                       0);
-                            }
                             drawTexture(csGL, newDest, tid, GL_TEXTURE_2D,
                                         GL_TEXTURE0, texureDataWidth,
                                         texureDataHeight);

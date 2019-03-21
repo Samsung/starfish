@@ -41,7 +41,11 @@ FrameReplacedCanvas::FrameReplacedCanvas(Node* node)
     // This case is just that a empty element is defined.
     m_emptySurface =
         CanvasSurface::create(node->webView()->platformWindow(), 1, 1);
-    m_emptySurface->clear();
+
+    auto buf = m_emptySurface->mapBuffer();
+    memset(buf, 0,
+           m_emptySurface->bufferStride() * m_emptySurface->bufferHeight());
+    m_emptySurface->unmapBufferAndNotifyUpdatedRegion(0, 0, 1, 1);
 }
 
 IntrinsicSize FrameReplacedCanvas::intrinsicSize()
@@ -58,7 +62,6 @@ IntrinsicSize FrameReplacedCanvas::intrinsicSize()
 
 void FrameReplacedCanvas::didCompsiteStackingContext(Compositor* c)
 {
-    m_emptySurface->detachNativeBuffer();
 }
 
 void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
@@ -70,14 +73,9 @@ void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
     }
 
     CanvasSurface* surface = canvasElement->renderingContextSurface();
-    IntrinsicSize size = intrinsicSize();
-    auto contentSize = size.m_intrinsicContentSize;
-    size_t width = contentSize.width().toDouble();
-    size_t height = contentSize.height().toDouble();
     if (surface) {
-        surface->unMapBufferAndNotifyUpdateRegion(0, 0, width, height);
-    } else {
-        m_emptySurface->unMapBufferAndNotifyUpdateRegion(0, 0, 1, 1);
+        surface->unmapBufferAndNotifyUpdatedRegion(0, 0, surface->bufferWidth(),
+                                                   surface->bufferHeight());
     }
 }
 

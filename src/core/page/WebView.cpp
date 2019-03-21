@@ -1202,7 +1202,7 @@ RenderResult WebView::rendering(bool force)
             if (!m_needsComposite) {
                 canvas = platformWindow()->preparePainting();
                 canvas->save();
-                canvas->pixelSnappedClip(repaintRect);
+                renderResult.updateRect = canvas->pixelSnappedClip(repaintRect);
                 canvas->translate(-scrollX, -scrollY);
                 canvas->translate(-additionalX, -additionalY);
 
@@ -1224,13 +1224,6 @@ RenderResult WebView::rendering(bool force)
 
                 canvas->restore();
                 m_didCompositeBefore = false;
-                repaintRect.setX(repaintRect.x() - scrollX);
-                repaintRect.setY(repaintRect.y() - scrollY);
-
-                float d = screenInfo().devicePixelRatio;
-                renderResult.updateRect = LayoutRect(
-                    repaintRect.x() * d, repaintRect.y() * d,
-                    repaintRect.width() * d, repaintRect.height() * d);
             } else {
                 platformWindow()->willCompositing();
                 STARFISH_ASSERT(
@@ -1243,45 +1236,6 @@ RenderResult WebView::rendering(bool force)
                     iter++;
                 }
             }
-
-            LayoutRect screen(0, 0, platformWindow()->width(),
-                              platformWindow()->height());
-            LayoutRect rt = renderResult.updateRect;
-            if (rt.x() < 0) {
-                if (rt.width() + rt.x() > 0) {
-                    rt.setWidth(rt.width() + rt.x());
-                } else {
-                    rt.setWidth(0);
-                }
-                rt.setX(0);
-            }
-            if (rt.x() >= screen.width()) {
-                rt.setX(0);
-                rt.setWidth(0);
-            }
-            if (rt.y() < 0) {
-                if (rt.height() + rt.y() > 0) {
-                    rt.setHeight(rt.height() + rt.y());
-                } else {
-                    rt.setHeight(0);
-                }
-                rt.setY(0);
-            }
-            if (rt.y() >= screen.height()) {
-                rt.setY(0);
-                rt.setHeight(0);
-            }
-            STARFISH_RELEASE_ASSERT(rt.width() >= 0);
-            STARFISH_RELEASE_ASSERT(rt.height() >= 0);
-            if (rt.maxX() > screen.maxX()) {
-                LayoutUnit widthWillBe = screen.maxX() - rt.x();
-                rt.setWidth(widthWillBe);
-            }
-            if (rt.maxY() > screen.maxY()) {
-                LayoutUnit heightWillBe = screen.maxY() - rt.y();
-                rt.setHeight(heightWillBe);
-            }
-            renderResult.updateRect = rt;
 
             /*
             STARFISH_LOG_INFO("repaint region(device) %f %f %f %f\n",

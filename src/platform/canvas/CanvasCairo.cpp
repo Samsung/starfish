@@ -350,15 +350,37 @@ public:
         double maxY = std::max(ySoFar, maxYSoFar);
 
         int ix, iy, iMaxX, iMaxY;
-        ix = floor(x) - 1;
-        iy = floor(y) - 1;
-        iMaxX = ceil(maxX) + 1;
-        iMaxY = ceil(maxY) + 1;
+        ix = floor(x);
+        iy = floor(y);
+        iMaxX = ceil(maxX);
+        iMaxY = ceil(maxY);
 
-        deviceRect.setX(std::min(ix, iMaxX));
-        deviceRect.setY(std::min(iy, iMaxY));
-        deviceRect.setWidth(std::abs(iMaxX - ix));
-        deviceRect.setHeight(std::abs(iMaxY - iy));
+        if (ix < 0) {
+            ix = 0;
+        } else if (ix > (int)m_renderTargetInfo.m_width) {
+            iMaxX = ix = m_renderTargetInfo.m_width;
+        }
+        if (iy < 0) {
+            iy = 0;
+        } else if (iy > (int)m_renderTargetInfo.m_height) {
+            iMaxY = iy = m_renderTargetInfo.m_height;
+        }
+
+        if (iMaxX < 0) {
+            iMaxX = 0;
+        } else if (iMaxX > (int)m_renderTargetInfo.m_width) {
+            iMaxX = m_renderTargetInfo.m_width;
+        }
+        if (iMaxY < 0) {
+            iMaxY = 0;
+        } else if (iMaxY > (int)m_renderTargetInfo.m_height) {
+            iMaxY = m_renderTargetInfo.m_height;
+        }
+
+        deviceRect.setX(ix);
+        deviceRect.setY(iy);
+        deviceRect.setWidth(iMaxX - ix);
+        deviceRect.setHeight(iMaxY - iy);
 
         cairo_matrix_t m2;
         cairo_matrix_init_identity(&m2);
