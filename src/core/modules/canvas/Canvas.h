@@ -68,21 +68,52 @@ protected:
     }
 
 public:
-    static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h,
-                                 bool forFilterEffect = false);
-    static CanvasSurface* createCanvasTarget(uint8_t* buffer, size_t w,
-                                             size_t h, size_t stride);
-    virtual bool attachNativeBuffer(
-        size_t w, size_t h,
-        bool forFilterEffect = false) = 0; // returns surface updated
-    virtual uint8_t* mapBuffer() = 0;
-    virtual void clear() = 0;
-    virtual void detachNativeBuffer() = 0;
-    virtual void unMapBufferAndNotifyUpdateRegion(size_t x, size_t y, size_t w,
-                                                  size_t h)
+    virtual ~CanvasSurface()
     {
     }
-    virtual ~CanvasSurface()
+
+    enum CanvasSurfaceFlag {
+        PlainElement = 0,
+        ElementHasFilterEffect = 1,
+        CanvasElement = 1 << 1
+    };
+    static CanvasSurface* create(PlatformWindow* window, size_t w, size_t h,
+                                 CanvasSurfaceFlag flag = PlainElement);
+    static CanvasSurface* createCanvasTarget(uint8_t* buffer, size_t w,
+                                             size_t h, size_t stride);
+
+    virtual bool attachNativeBuffer(
+        size_t w, size_t h,
+        CanvasSurfaceFlag flag = PlainElement) = 0; // returns surface updated
+    virtual void detachNativeBuffer() = 0;
+
+    struct MappedNativeBuffer {
+        uint8_t* m_bufferAddress;
+        size_t m_mappedBufferX;
+        size_t m_mappedBufferY;
+        size_t m_mappedBufferWidth;
+        size_t m_mappedBufferHeight;
+        size_t m_mappedBufferStride;
+    };
+
+    // this function try to map area you specified. but not every port can map
+    // area you specified.
+    // so you should look {x, y, width, height} of return value
+    virtual MappedNativeBuffer mapBuffer(size_t bufferX, size_t bufferY,
+                                         size_t bufferWidth,
+                                         size_t bufferHeight) = 0;
+    uint8_t* mapBuffer() // maps whole area
+    {
+        MappedNativeBuffer m = mapBuffer(0, 0, bufferWidth(), bufferHeight());
+        STARFISH_ASSERT(m.m_mappedBufferStride == bufferStride());
+        STARFISH_ASSERT(m.m_mappedBufferWidth == bufferWidth());
+        STARFISH_ASSERT(m.m_mappedBufferHeight == bufferHeight());
+        STARFISH_ASSERT(m.m_mappedBufferX == 0);
+        STARFISH_ASSERT(m.m_mappedBufferY == 0);
+        return m.m_bufferAddress;
+    }
+    virtual void unmapBufferAndNotifyUpdatedRegion(size_t x, size_t y, size_t w,
+                                                   size_t h)
     {
     }
 

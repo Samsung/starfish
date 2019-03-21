@@ -233,7 +233,7 @@ public:
                                                         data->bufferHeight()),
                              data->mapBuffer(), data->bufferStride());
         drawImageSkia(&bitmap, dst, data->bufferWidth(), data->bufferHeight());
-        data->unMapBufferAndNotifyUpdateRegion(0, 0, 0, 0);
+        data->unmapBufferAndNotifyUpdatedRegion(0, 0, 0, 0);
     }
 
     virtual void postMatrix(const SkMatrix& matrix)

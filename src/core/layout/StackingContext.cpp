@@ -1934,7 +1934,10 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                             ->webView()
                                             ->platformWindow(),
                                         tileDataWidth, tileDataHeight,
-                                        m_hasFilterEffect);
+                                        m_hasFilterEffect
+                                            ? CanvasSurface::
+                                                  ElementHasFilterEffect
+                                            : CanvasSurface::PlainElement);
                                 Canvas* canvas = Canvas::create(
                                     m_owner->node()->webView(), canvasSurface);
 
@@ -1964,15 +1967,18 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                 canvas->translate(-ctx.layerBaseX,
                                                   -ctx.layerBaseY);
 
-                                canvasSurface->clear();
+                                memset(canvas->renderTargetInfo().m_buffer, 0,
+                                       canvas->renderTargetInfo().m_stride *
+                                           canvas->renderTargetInfo().m_height);
 
                                 fillGraphicsBufferContents(canvas, ctx);
 
                                 delete canvas;
 
-                                canvasSurface->unMapBufferAndNotifyUpdateRegion(
-                                    0, 0, canvasSurface->bufferWidth(),
-                                    canvasSurface->bufferHeight());
+                                canvasSurface
+                                    ->unmapBufferAndNotifyUpdatedRegion(
+                                        0, 0, canvasSurface->bufferWidth(),
+                                        canvasSurface->bufferHeight());
 
                                 m_rareData->m_graphicsBufferHolder
                                     ->m_surfaces[tileIndex] = canvasSurface;
@@ -2151,7 +2157,10 @@ bool StackingContext::fillGraphicsBufferContents(
                     m_rareData->m_graphicsBufferHolder->m_surfaces[tileIndex] =
                         CanvasSurface::create(
                             m_owner->document()->webView()->platformWindow(),
-                            tileDataWidth, tileDataHeight, m_hasFilterEffect);
+                            tileDataWidth, tileDataHeight,
+                            m_hasFilterEffect
+                                ? CanvasSurface::ElementHasFilterEffect
+                                : CanvasSurface::PlainElement);
                     gotNewBuffer = true;
                 }
 
@@ -2216,43 +2225,45 @@ bool StackingContext::fillGraphicsBufferContents(
                     if (needsInitialClip) {
                         canvas->clearColor(Unit::Color(0, 0, 0, 0));
                     } else {
-                        canvasSurface->clear();
+                        memset(canvas->renderTargetInfo().m_buffer, 0,
+                               canvas->renderTargetInfo().m_stride *
+                                   canvas->renderTargetInfo().m_height);
                     }
 
                     fillGraphicsBufferContents(canvas, ctx);
 
                     delete canvas;
 
-                    if (deviceLayerClipRect.x() < 0) {
-                        deviceLayerClipRect.setX(0);
+                    LayoutUnit leftX =
+                        std::max(deviceLayerClipRect.x(), LayoutUnit(0));
+                    LayoutUnit rightX =
+                        std::min(deviceLayerClipRect.maxX(),
+                                 (LayoutUnit)canvasSurface->bufferWidth());
+                    LayoutUnit topY =
+                        std::max(deviceLayerClipRect.y(), LayoutUnit(0));
+                    LayoutUnit bottomY =
+                        std::min(deviceLayerClipRect.maxY(),
+                                 (LayoutUnit)canvasSurface->bufferHeight());
+
+                    if (leftX < rightX && topY < bottomY) {
+                        deviceLayerClipRect = LayoutRect(
+                            leftX, topY, rightX - leftX, bottomY - topY);
+                    } else {
+                        // Rectangles do not overlap
+                        deviceLayerClipRect.setWidth(0);
+                        deviceLayerClipRect.setHeight(0);
                     }
-                    if (deviceLayerClipRect.y() < 0) {
-                        deviceLayerClipRect.setY(0);
-                    }
-                    if ((int)deviceLayerClipRect.maxX() >
-                        (int)canvasSurface->bufferWidth()) {
-                        deviceLayerClipRect.setWidth(
-                            deviceLayerClipRect.width() -
-                            ((int)deviceLayerClipRect.maxX() -
-                             (int)canvasSurface->bufferWidth()));
-                    }
-                    if ((int)deviceLayerClipRect.maxY() >
-                        (int)canvasSurface->bufferHeight()) {
-                        deviceLayerClipRect.setHeight(
-                            deviceLayerClipRect.height() -
-                            ((int)deviceLayerClipRect.maxY() -
-                             (int)canvasSurface->bufferHeight()));
-                    }
+
                     if ((bool)deviceLayerClipRect.width() ||
                         (bool)deviceLayerClipRect.height()) {
-                        canvasSurface->unMapBufferAndNotifyUpdateRegion(
+                        canvasSurface->unmapBufferAndNotifyUpdatedRegion(
                             (int)deviceLayerClipRect.x(),
                             (int)deviceLayerClipRect.y(),
                             (int)deviceLayerClipRect.width(),
                             (int)deviceLayerClipRect.height());
                     } else {
-                        canvasSurface->unMapBufferAndNotifyUpdateRegion(0, 0, 0,
-                                                                        0);
+                        canvasSurface->unmapBufferAndNotifyUpdatedRegion(0, 0,
+                                                                         0, 0);
                     }
 
                     drawnSomething = true;
@@ -2590,14 +2601,14 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             if (owner()->isFrameReplacedCanvas()) {
                 CanvasSurface* backgroundSurface = CanvasSurface::create(
                     m_owner->document()->webView()->platformWindow(),
-                    bufferWidth, bufferHeight, false);
+                    bufferWidth, bufferHeight, CanvasSurface::CanvasElement);
                 Canvas* canvas = Canvas::create(m_owner->node()->webView(),
                                                 backgroundSurface);
                 canvas->clearColor(Unit::Color(0, 0, 0, 0));
                 canvas->setTextDecorationData(m_rareData->m_textDecorationData);
                 owner()->asFrameBox()->paintBackgroundAndBorders(canvas);
                 delete canvas;
-                backgroundSurface->unMapBufferAndNotifyUpdateRegion(
+                backgroundSurface->unmapBufferAndNotifyUpdatedRegion(
                     0, 0, bufferWidth, bufferHeight);
                 compositor->drawSurface(
                     backgroundSurface,

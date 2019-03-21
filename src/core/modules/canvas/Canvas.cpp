@@ -19,8 +19,6 @@
 
 #include "StarfishConfig.h"
 #include "core/style/Style.h"
-#include "core/style/ComputedStyle.h"
-#include "core/dom/Node.h"
 #include "Canvas.h"
 #include "Starfish.h"
 #include "core/page/WebView.h"
@@ -47,7 +45,7 @@ public:
         m_bufferHeight = m_height = -1;
         m_buffer = nullptr;
 
-        attachNativeBuffer(w, h, false);
+        attachNativeBuffer(w, h, CanvasSurface::PlainElement);
         GC_REGISTER_FINALIZER_NO_ORDER(this,
                                        [](void* obj, void* cd) {
                                            CanvasSurfaceSimple* s =
@@ -72,7 +70,7 @@ public:
     }
 
     virtual bool attachNativeBuffer(size_t w, size_t h,
-                                    bool forFilterEffect) override
+                                    CanvasSurfaceFlag flag) override
     {
         if (m_width != w || m_height != h) {
             detachNativeBuffer();
@@ -97,9 +95,19 @@ public:
         return false;
     }
 
-    virtual uint8_t* mapBuffer() override
+    virtual MappedNativeBuffer mapBuffer(size_t bufferX, size_t bufferY,
+                                         size_t bufferWidth,
+                                         size_t bufferHeight) override
     {
-        return m_buffer;
+        CanvasSurface::MappedNativeBuffer b;
+        b.m_bufferAddress = m_buffer;
+        b.m_mappedBufferX = 0;
+        b.m_mappedBufferY = 0;
+        b.m_mappedBufferWidth = m_bufferWidth;
+        b.m_mappedBufferHeight = m_bufferHeight;
+        b.m_mappedBufferStride = m_bufferStride;
+
+        return b;
     }
 
     virtual size_t width() override
@@ -127,12 +135,6 @@ public:
         return m_bufferStride;
     }
 
-    virtual void clear() override
-    {
-        size_t end = m_bufferStride * m_bufferHeight;
-        memset(m_buffer, 0x00, end);
-    }
-
 protected:
     PlatformWindow* m_window;
     unsigned char* m_buffer;
@@ -144,7 +146,7 @@ protected:
 };
 
 CanvasSurface* CanvasSurface::create(PlatformWindow* wnd, size_t w, size_t h,
-                                     bool forFilterEffect)
+                                     CanvasSurfaceFlag flag)
 {
     return new CanvasSurfaceSimple(wnd, w, h);
 }
@@ -169,7 +171,7 @@ public:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
-    bool attachNativeBuffer(size_t w, size_t h, bool forFilterEffect) override
+    bool attachNativeBuffer(size_t w, size_t h, CanvasSurfaceFlag flag) override
     {
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         return false;
@@ -180,9 +182,19 @@ public:
         STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
     }
 
-    uint8_t* mapBuffer() override
+    virtual MappedNativeBuffer mapBuffer(size_t bufferX, size_t bufferY,
+                                         size_t bufferWidth,
+                                         size_t bufferHeight) override
     {
-        return m_buffer;
+        CanvasSurface::MappedNativeBuffer b;
+        b.m_bufferAddress = m_buffer;
+        b.m_mappedBufferX = 0;
+        b.m_mappedBufferY = 0;
+        b.m_mappedBufferWidth = m_bufferWidth;
+        b.m_mappedBufferHeight = m_bufferHeight;
+        b.m_mappedBufferStride = m_bufferStride;
+
+        return b;
     }
 
     size_t width() override
@@ -223,12 +235,6 @@ public:
     size_t bufferStride() override
     {
         return m_bufferStride;
-    }
-
-    void clear() override
-    {
-        size_t end = m_bufferStride * m_bufferHeight;
-        memset(m_buffer, 0x00, end);
     }
 
 protected:
