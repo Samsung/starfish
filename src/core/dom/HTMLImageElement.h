@@ -32,31 +32,11 @@ class HTMLImageElement : public HTMLElement {
     friend class ImageDownloadClient;
 
 public:
-    HTMLImageElement(Document* document)
-        : HTMLImageElement(document,
-                           document->starfish()->staticStrings()->m_imgTagName)
-    {
-    }
-
-    HTMLImageElement(Document* document, const QualifiedName& qname)
-        : HTMLElement(document, qname)
-        , m_imageResource(nullptr)
-        , m_imageData(nullptr)
-    {
-    }
-
-    HTMLImageElement(Document* document, unsigned long width)
-        : HTMLImageElement(document)
-    {
-        setWidth(width);
-    }
-
+    HTMLImageElement(Document* document);
+    HTMLImageElement(Document* document, const QualifiedName& qname);
+    HTMLImageElement(Document* document, unsigned long width);
     HTMLImageElement(Document* document, unsigned long width,
-                     unsigned long height)
-        : HTMLImageElement(document, width)
-    {
-        setHeight(height);
-    }
+                     unsigned long height);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;

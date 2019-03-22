@@ -22,6 +22,7 @@
 #include "SVGElement.h"
 #include "core/style/ComputedStyle.h"
 #include "core/style/CalcData.h"
+#include "core/style/CSSParser.h"
 #include "core/layout/FrameBox.h"
 #include "core/layout/svg/FrameSVGSVGBox.h"
 #include "core/page/BrowsingContext.h"

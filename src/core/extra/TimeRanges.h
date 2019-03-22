@@ -21,41 +21,31 @@
 
 #include "binding/ScriptWrappable.h"
 #include "core/extra/TimeRange.h"
-#include "binding/DocumentHoldable.h"
 
 namespace Starfish {
 
-class TimeRanges : public ScriptWrappable,
-                   public GCAtomicVector<TimeRange>,
-                   public DocumentHoldable {
+class TimeRanges : public ScriptWrappable, public GCAtomicVector<TimeRange> {
 public:
-    TimeRanges(Document* document)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
+    TimeRanges(ExecutionContext* executionContext)
+        : ScriptWrappable(this, executionContext)
     {
     }
 
-    TimeRanges(Document* document, const GCAtomicVector<TimeRange>& other)
-        : ScriptWrappable(this)
+    TimeRanges(ExecutionContext* executionContext,
+               const GCAtomicVector<TimeRange>& other)
+        : ScriptWrappable(this, executionContext)
         , GCAtomicVector<TimeRange>(other)
-        , DocumentHoldable(document)
     {
     }
 
-    TimeRanges(Document* document, GCAtomicVector<TimeRange>&& other)
-        : ScriptWrappable(this)
+    TimeRanges(ExecutionContext* executionContext,
+               GCAtomicVector<TimeRange>&& other)
+        : ScriptWrappable(this, executionContext)
         , GCAtomicVector<TimeRange>(other)
-        , DocumentHoldable(document)
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isTimeRanges() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(TimeRanges)
 
     double start(uint32_t idx)
     {

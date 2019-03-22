@@ -18,6 +18,8 @@
  */
 
 #include "StarfishConfig.h"
+#include "binding/ScriptWrappable.h"
+#include "binding/DocumentHoldable.h"
 #include "core/dom/Document.h"
 #include "core/dom/DocumentType.h"
 #include "core/dom/DOMImplementation.h"
@@ -30,6 +32,12 @@
 #include "core/dom/Text.h"
 
 namespace Starfish {
+
+DOMImplementation::DOMImplementation(Document* document)
+    : ScriptWrappable(this, document)
+    , DocumentHoldable(document)
+{
+}
 
 DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
                                                     String* publicId,
@@ -108,12 +116,12 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
                          String::emptyString, String::emptyString);
     doc->appendChild(docType);
 
-    HTMLHtmlElement* html = new HTMLHtmlElement(
-        doc, doc->starfish()->staticStrings()->m_htmlTagName);
+    HTMLHtmlElement* html =
+        new HTMLHtmlElement(doc, doc->staticStrings()->m_htmlTagName);
     doc->appendChild(html);
 
-    HTMLHeadElement* head = new HTMLHeadElement(
-        doc, doc->starfish()->staticStrings()->m_headTagName);
+    HTMLHeadElement* head =
+        new HTMLHeadElement(doc, doc->staticStrings()->m_headTagName);
     html->appendChild(head);
 
     if (title.hasValue()) {
@@ -123,8 +131,8 @@ Document* DOMImplementation::createHTMLDocument(Nullable<String*> title)
         head->appendChild(titleElement);
     }
 
-    html->appendChild(new HTMLBodyElement(
-        doc, doc->starfish()->staticStrings()->m_bodyTagName));
+    html->appendChild(
+        new HTMLBodyElement(doc, doc->staticStrings()->m_bodyTagName));
 
     // doc’s origin is context object’s associated document’s origin.
     doc->setWebOrigin(m_document->webOrigin());

@@ -201,6 +201,8 @@ public:
         m_eventListeners.clear();
     }
 
+    StaticStrings* staticStrings() const;
+
     enum GlobalPointingEventKind {
         GlobalPointingEventKindDown,
         GlobalPointingEventKindUp,
@@ -225,7 +227,7 @@ private:
 
 #define GENERATE_ATTR(EVENT)                \
     Window* window = EventTarget::window(); \
-    QualifiedName attr = window->starfish()->staticStrings()->m_##EVENT;
+    QualifiedName attr = staticStrings()->m_##EVENT;
 
 #define DEFINE_GLOBAL_EVENT_LISTENER(EVENT_TARGET, EVENT)       \
     EventListener* EVENT_TARGET::on##EVENT()                    \

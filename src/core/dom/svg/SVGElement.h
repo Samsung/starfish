@@ -20,40 +20,35 @@
 #ifndef __StarfishSVGElement__
 #define __StarfishSVGElement__
 
-#include "Starfish.h"
 #include "core/dom/Element.h"
-#include "core/util/AttributeName.h"
 #include "core/dom/svg/SVGAnimatedLength.h"
 #include "core/style/Style.h"
-#include "core/style/CSSParser.h"
-#include "core/style/CSSStyleDeclaration.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 
 // TODO implement animVal
-#define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)                       \
-    SVGAnimatedLength* attrName()                                           \
-    {                                                                       \
-        SVGLength* baseVal =                                                \
-            new SVGLength(this, starfish()->staticStrings()->m_##attrName); \
-        return new SVGAnimatedLength(document(), baseVal, nullptr);         \
+#define STARFISH_SVG_ANIMATED_LENGTH_GETTER(attrName)               \
+    SVGAnimatedLength* attrName()                                   \
+    {                                                               \
+        SVGLength* baseVal =                                        \
+            new SVGLength(this, staticStrings()->m_##attrName);     \
+        return new SVGAnimatedLength(document(), baseVal, nullptr); \
     }
 
-#define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2)         \
-    {                                                                   \
-        CSSStyleValuePair pair;                                         \
-        String* name =                                                  \
-            getAttributeOrEmpty(starfish()->staticStrings()->m_##name); \
-        if (name->length()) {                                           \
-            pair.setKeyKind(CSSStyleValuePair::KeyKind::name2);         \
-            pair.setValueKind(CSSStyleValuePair::ValueKind::Length);    \
-            auto s = name->toUTF8NonGCString();                         \
-            if (CSSPropertyParser::parseLength(                         \
-                    s.data(), CSSPropertyParser::AllowPercent |         \
-                                  CSSPropertyParser::AllowWithoutUnit,  \
-                    &pair)) {                                           \
-                cssValues.push_back(pair);                              \
-            }                                                           \
-        }                                                               \
+#define STARFISH_SVG_PRESENTATION_ATTRIBUTE_LENGTH(name, name2)        \
+    {                                                                  \
+        CSSStyleValuePair pair;                                        \
+        String* name = getAttributeOrEmpty(staticStrings()->m_##name); \
+        if (name->length()) {                                          \
+            pair.setKeyKind(CSSStyleValuePair::KeyKind::name2);        \
+            pair.setValueKind(CSSStyleValuePair::ValueKind::Length);   \
+            auto s = name->toUTF8NonGCString();                        \
+            if (CSSPropertyParser::parseLength(                        \
+                    s.data(), CSSPropertyParser::AllowPercent |        \
+                                  CSSPropertyParser::AllowWithoutUnit, \
+                    &pair)) {                                          \
+                cssValues.push_back(pair);                             \
+            }                                                          \
+        }                                                              \
     }
 
 namespace Starfish {

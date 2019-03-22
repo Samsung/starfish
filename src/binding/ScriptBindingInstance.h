@@ -44,7 +44,7 @@ typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
 
 #include "binding/Interfaces.h"
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER_HOST)
+#if defined(STARFISH_WEBWORKER_HOST)
 // TODO: Support ServiceWorkerGlobalScope class
 #define STARFISH_GLOBAL_BINDING_CLASS ServiceWorkerGlobalScope
 #else

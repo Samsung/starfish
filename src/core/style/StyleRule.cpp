@@ -25,6 +25,7 @@
 #include "core/style/CSSStyleDeclaration.h"
 #include "core/style/CSSStyleRule.h"
 #include "core/style/CSSStyleSheet.h"
+#include "core/style/CSSParser.h"
 #include "core/style/StyleRule.h"
 #include "core/style/MediaQuerySet.h"
 #include "core/style/AncestorSelectorFilter.h"

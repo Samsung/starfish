@@ -40,13 +40,7 @@ class History : public ScriptWrappable, public DocumentHoldable {
 public:
     History(Document* doc);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isHistory() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(History)
 
     uint32_t length();
     ScriptValue state();

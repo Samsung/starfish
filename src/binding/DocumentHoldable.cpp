@@ -36,11 +36,6 @@ Starfish* DocumentHoldable::starfish() const
     return window()->starfish();
 }
 
-ScriptBindingInstance* DocumentHoldable::scriptBindingInstance() const
-{
-    return document()->scriptBindingInstance();
-}
-
 WebView* DocumentHoldable::webView() const
 {
     return document()->window()->browsingContext()->webView();

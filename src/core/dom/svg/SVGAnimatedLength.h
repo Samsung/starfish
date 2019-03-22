@@ -20,24 +20,17 @@
 #ifndef __StarfishSVGAnimatedLength__
 #define __StarfishSVGAnimatedLength__
 
-#include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/svg/SVGLength.h"
 
 namespace Starfish {
 
-class SVGAnimatedLength : public ScriptWrappable, public DocumentHoldable {
+class SVGAnimatedLength : public ScriptWrappable {
 public:
     SVGAnimatedLength(Document* document, SVGLength* baseVal,
                       SVGLength* animVal);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isSVGAnimatedLength() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SVGAnimatedLength)
 
     SVGLength* baseVal() const
     {

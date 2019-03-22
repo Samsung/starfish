@@ -25,12 +25,12 @@
 
 namespace Starfish {
 
-class BrowsingContext;
+class ExecutionContext;
 class Promise;
 class String;
 class ServiceWorkerServiceHostJobQueue;
 
-using ServiceWorkerClient = BrowsingContext;
+using ServiceWorkerClient = ExecutionContext;
 using ServiceWorkerRegistrationKey = String*;
 
 struct ServiceWorkerJob : public gc {

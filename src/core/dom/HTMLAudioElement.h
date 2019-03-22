@@ -29,15 +29,13 @@ namespace Starfish {
 class HTMLAudioElement : public HTMLMediaElement {
 public:
     HTMLAudioElement(Document* document)
-        : HTMLAudioElement(
-              document, document->starfish()->staticStrings()->m_audioTagName)
+        : HTMLAudioElement(document, document->staticStrings()->m_audioTagName)
     {
     }
 
     HTMLAudioElement(Document* document, String* src)
-        : HTMLAudioElement(
-              document, document->starfish()->staticStrings()->m_audioTagName,
-              src)
+        : HTMLAudioElement(document, document->staticStrings()->m_audioTagName,
+                           src)
     {
     }
 

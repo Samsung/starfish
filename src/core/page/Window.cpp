@@ -105,9 +105,14 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
 #endif
 }
 
-Starfish* Window::starfish()
+Starfish* Window::starfish() const
 {
     return browsingContext()->webView()->starfish();
+}
+
+StaticStrings* Window::staticStrings() const
+{
+    return starfish()->staticStrings();
 }
 
 void Window::dispose()
@@ -248,9 +253,7 @@ void Window::postMessage(Window* source, ScriptValue message,
                 MessageEvent* e;
                 String* eventType;
                 if (fail == false) {
-                    eventType = window->starfish()
-                                    ->staticStrings()
-                                    ->m_message.localName();
+                    eventType = window->staticStrings()->m_message.localName();
                     e = new MessageEvent(window->document(), eventType);
                     e->setData(deserializedRecord.m_deserialized);
 
@@ -269,9 +272,8 @@ void Window::postMessage(Window* source, ScriptValue message,
                     e->setPorts(newPorts);
 
                 } else {
-                    eventType = window->starfish()
-                                    ->staticStrings()
-                                    ->m_messageerror.localName();
+                    eventType =
+                        window->staticStrings()->m_messageerror.localName();
                     e = new MessageEvent(window->document(), eventType);
                 }
                 Window* source = (Window*)data2;
@@ -331,7 +333,7 @@ void Window::resize(uint32_t w, uint32_t h)
     if (m_width != w || m_height != h) {
         m_width = w;
         m_height = h;
-        String* eventType = starfish()->staticStrings()->m_resize.localName();
+        String* eventType = staticStrings()->m_resize.localName();
         UIEvent* e = new UIEvent(document(), eventType);
         e->setView(this);
         if (browsingContext()->isTopLevelBrowsingContext()) {
@@ -440,8 +442,7 @@ bool Window::scrollToWithoutLayout(double x, double y)
                 }
             }
 
-            String* eventType =
-                starfish()->staticStrings()->m_scroll.localName();
+            String* eventType = staticStrings()->m_scroll.localName();
             UIEvent* e = new UIEvent(document(), eventType);
             e->setView(this);
             e->setTarget(document());
@@ -636,8 +637,7 @@ void Window::releaseCSSTarget()
 void Window::dispatchErrorEvent(ErrorEventInit& errorInfo)
 {
     Event* errorEvent = new ErrorEvent(
-        document(), starfish()->staticStrings()->m_error.localName(),
-        errorInfo);
+        document(), staticStrings()->m_error.localName(), errorInfo);
     dispatchEventByUA(errorEvent);
 }
 
@@ -793,8 +793,8 @@ static bool gatherFrames(Node* node, void* data, GCVector<Node*>* collection)
 NodeList* Window::ensureFrames()
 {
     if (!m_frames) {
-        m_frames = new NodeList(document(), gatherFrames,
-                                starfish()->staticStrings(), true);
+        m_frames =
+            new NodeList(document(), gatherFrames, staticStrings(), true);
     }
     return m_frames;
 }

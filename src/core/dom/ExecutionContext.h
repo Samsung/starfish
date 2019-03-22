@@ -72,6 +72,8 @@ public:
         m_documentURI = newURL;
     }
     String* urlString();
+    virtual ResourceURL* baseURL() const = 0;
+    virtual String* referrer() = 0;
 
 private:
     GlobalScope* const m_globalScope;

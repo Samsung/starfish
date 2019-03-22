@@ -19,13 +19,13 @@
 
 #include "StarfishConfig.h"
 #include "SVGAnimatedLength.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
 SVGAnimatedLength::SVGAnimatedLength(Document* document, SVGLength* baseVal,
                                      SVGLength* animVal)
-    : ScriptWrappable(this)
-    , DocumentHoldable(document)
+    : ScriptWrappable(this, document)
     , m_baseVal(baseVal)
     , m_animVal(animVal)
 {

@@ -97,6 +97,32 @@ protected:
     HTMLImageElement* m_element;
 };
 
+HTMLImageElement::HTMLImageElement(Document* document)
+    : HTMLImageElement(document, document->staticStrings()->m_imgTagName)
+{
+}
+
+HTMLImageElement::HTMLImageElement(Document* document,
+                                   const QualifiedName& qname)
+    : HTMLElement(document, qname)
+    , m_imageResource(nullptr)
+    , m_imageData(nullptr)
+{
+}
+
+HTMLImageElement::HTMLImageElement(Document* document, unsigned long width)
+    : HTMLImageElement(document)
+{
+    setWidth(width);
+}
+
+HTMLImageElement::HTMLImageElement(Document* document, unsigned long width,
+                                   unsigned long height)
+    : HTMLImageElement(document, width)
+{
+    setHeight(height);
+}
+
 void HTMLImageElement::setSrc(String* src)
 {
     setAttribute(starfish()->staticStrings()->m_src, src);
