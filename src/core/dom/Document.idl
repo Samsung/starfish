@@ -155,6 +155,9 @@ interface Document : Node {
   void releaseEvents();
 
   [Unimplemented, SameObject] readonly attribute HTMLAllCollection all;
+
+  readonly attribute long width;
+  readonly attribute long height;
 };
 
 
