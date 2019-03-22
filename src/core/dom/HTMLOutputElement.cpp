@@ -51,8 +51,7 @@ void* HTMLOutputElement::operator new(size_t size)
 DOMTokenList* HTMLOutputElement::htmlFor()
 {
     if (!m_htmlForList) {
-        m_htmlForList =
-            new DOMTokenList(this, starfish()->staticStrings()->m_for);
+        m_htmlForList = new DOMTokenList(this, staticStrings()->m_for);
     }
     return m_htmlForList;
 }

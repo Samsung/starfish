@@ -31,7 +31,7 @@
 namespace Starfish {
 
 History::History(Document* doc)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, doc)
     , DocumentHoldable(doc)
 {
 }

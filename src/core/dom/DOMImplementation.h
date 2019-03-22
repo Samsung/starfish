@@ -20,9 +20,6 @@
 #ifndef __StarfishDOMImplementation__
 #define __StarfishDOMImplementation__
 
-#include "binding/ScriptWrappable.h"
-#include "binding/DocumentHoldable.h"
-
 namespace Starfish {
 
 class DocumentType;
@@ -31,20 +28,9 @@ class Window;
 
 class DOMImplementation : public ScriptWrappable, public DocumentHoldable {
 public:
-    DOMImplementation(Document* document, ScriptBindingInstance* instance)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-        , m_instance(instance)
-    {
-    }
+    DOMImplementation(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isDOMImplementation() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMImplementation)
 
     DocumentType* createDocumentType(String* qualifiedName, String* publicId,
                                      String* systemId);
@@ -57,9 +43,6 @@ public:
     {
         return true;
     }
-
-private:
-    ScriptBindingInstance* m_instance;
 };
 }
 

@@ -27,19 +27,9 @@ namespace Starfish {
 
 class Screen : public ScriptWrappable, public DocumentHoldable {
 public:
-    Screen(Document* document)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-    {
-    }
+    Screen(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isScreen() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Screen)
 
     int32_t availWidth() const;
     int32_t availHeight() const;

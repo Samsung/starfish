@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "core/style/CSSParser.h"
 #include "core/dom/svg/SVGDocument.h"
 #include "core/dom/svg/SVGTextElement.h"
 

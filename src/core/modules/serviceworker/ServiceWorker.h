@@ -58,13 +58,7 @@ public:
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isServiceWorker() const;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ServiceWorker)
 
     String* scriptURL() const
     {

@@ -34,6 +34,12 @@
 
 namespace Starfish {
 
+Location::Location(Document* document)
+    : ScriptWrappable(this, document)
+    , DocumentHoldable(document)
+{
+}
+
 ResourceURL* Location::url()
 {
     return document()->documentURI();

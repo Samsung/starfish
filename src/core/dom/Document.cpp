@@ -105,7 +105,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_onLoadFired(false)
     , m_isFocusRingCacheValid(false)
     , m_window(window)
-
     , m_baseURL(fallbackBaseURL())
     , m_baseElementURL(nullptr)
     , m_baseTarget(String::emptyString)
@@ -1674,7 +1673,7 @@ Range* Document::createRange()
 DOMImplementation* Document::implementation()
 {
     if (m_implementation == nullptr) {
-        m_implementation = new DOMImplementation(this, scriptBindingInstance());
+        m_implementation = new DOMImplementation(this);
     }
     return m_implementation;
 }

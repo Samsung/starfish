@@ -21,9 +21,16 @@
 #include "Starfish.h"
 #include "core/page/Screen.h"
 #include "core/page/WebView.h"
+#include "core/dom/Document.h"
 #include "platform/public/ScreenInfo.h"
 
 namespace Starfish {
+
+Screen::Screen(Document* document)
+    : ScriptWrappable(this, document)
+    , DocumentHoldable(document)
+{
+}
 
 int32_t Screen::availWidth() const
 {

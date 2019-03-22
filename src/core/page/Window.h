@@ -202,7 +202,8 @@ public:
         return m_document;
     }
 
-    Starfish* starfish();
+    Starfish* starfish() const;
+    StaticStrings* staticStrings() const;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
     Window* parent();
@@ -249,7 +250,7 @@ public:
 #endif
 
     // Other methods
-    BrowsingContext* browsingContext()
+    BrowsingContext* browsingContext() const
     {
         return m_browsingContext;
     }

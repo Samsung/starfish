@@ -60,7 +60,7 @@ void MediaQueryList::addListener(EventListener* listener)
         return;
     }
 
-    String* changeEvent = starfish()->staticStrings()->m_change.localName();
+    String* changeEvent = staticStrings()->m_change.localName();
     addEventListener(changeEvent, listener, false);
 }
 
@@ -71,7 +71,7 @@ void MediaQueryList::removeListener(EventListener* listener)
         return;
     }
 
-    String* changeEvent = starfish()->staticStrings()->m_change.localName();
+    String* changeEvent = staticStrings()->m_change.localName();
     removeEventListener(changeEvent, listener, false);
 }
 

@@ -405,9 +405,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             document()->browsingContext()->setKeydownEventDefaultPrevented(
                 true);
         } else if (event->type() ==
-                   starfish()
-                       ->staticStrings()
-                       ->m_compositionstart.localName()) {
+                   staticStrings()->m_compositionstart.localName()) {
             document()
                 ->browsingContext()
                 ->setCompositionStartEventDefeaultPrevented(true);
@@ -530,5 +528,10 @@ bool EventTarget::clearAttributeEventListener(const String* eventType)
 {
     auto listener = getAttributeEventListener(eventType);
     return removeEventListener(eventType, listener, false);
+}
+
+StaticStrings* EventTarget::staticStrings() const
+{
+    return executionContext()->webBase()->starfish()->staticStrings();
 }
 }

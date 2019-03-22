@@ -21,29 +21,22 @@
 #ifndef __StarfishTextTrackCueList__
 #define __StarfishTextTrackCueList__
 
-#include "TextTrackCue.h"
-#include "binding/DocumentHoldable.h"
+#include "binding/ScriptWrappable.h"
 
 namespace Starfish {
 
+class TextTrackCue;
+
 class TextTrackCueList : public ScriptWrappable,
-                         public DocumentHoldable,
                          public GCVector<TextTrackCue*> {
 public:
-    TextTrackCueList(Document* document)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
+    TextTrackCueList(ExecutionContext* executionContext)
+        : ScriptWrappable(this, executionContext)
         , GCVector<TextTrackCue*>()
     {
     }
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isTextTrackCueList() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(TextTrackCueList)
 
     uint32_t length()
     {

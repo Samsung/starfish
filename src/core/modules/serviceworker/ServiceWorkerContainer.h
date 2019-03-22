@@ -24,14 +24,14 @@
 #include "core/dom/EventTarget.h"
 #include "core/modules/serviceworker/ServiceWorkerServiceJobClient.h"
 #include "core/modules/serviceworker/ServiceWorkerEnums.h"
-#include "core/modules/serviceworker/RegistrationOptions.h"
 
 namespace Starfish {
 
 class ServiceWorker;
 class Promise;
 class ServiceWorkerJob;
-class BrowsingContext;
+class ExecutionContext;
+class RegistrationOptions;
 
 class ServiceWorkerContainer : public EventTarget,
                                public ServiceWorkerServiceJobClient {
@@ -39,13 +39,7 @@ public:
     ServiceWorkerContainer(Document* document);
     virtual ~ServiceWorkerContainer();
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isServiceWorkerContainer() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ServiceWorkerContainer)
 
     ServiceWorker* controller();
 
@@ -55,11 +49,11 @@ public:
     Promise* getRegistration(String* scriptURL = nullptr);
 
     void startRegister(ResourceURL* scopeURL, ResourceURL* scriptURL,
-                       Promise* p, BrowsingContext* client);
+                       Promise* p, ExecutionContext* client);
 
     ServiceWorkerJob* createJob(ServiceWorkerJobType type, String* scopeURL,
                                 String* scriptURL, Promise* p,
-                                BrowsingContext* client);
+                                ExecutionContext* client);
     void scheduleJob(ServiceWorkerJob* job);
 
     virtual void resolveJobPromise(ServiceWorkerJob* job) override;

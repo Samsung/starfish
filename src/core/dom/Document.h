@@ -189,8 +189,7 @@ public:
     {                                                                   \
         auto b = body();                                                \
         if (b != nullptr) {                                             \
-            auto nullable =                                             \
-                b->getAttribute(starfish()->staticStrings()->m_##ATTR); \
+            auto nullable = b->getAttribute(staticStrings()->m_##ATTR); \
             if (nullable.hasValue()) {                                  \
                 return nullable.getValue();                             \
             }                                                           \
@@ -198,13 +197,13 @@ public:
         return String::emptyString;                                     \
     }
 
-#define REFLECT_ATTR_SETTER_TO_BODY(NAME, ATTR)                            \
-    void set##NAME(String* value)                                          \
-    {                                                                      \
-        auto b = body();                                                   \
-        if (b != nullptr) {                                                \
-            b->setAttribute(starfish()->staticStrings()->m_##ATTR, value); \
-        }                                                                  \
+#define REFLECT_ATTR_SETTER_TO_BODY(NAME, ATTR)                \
+    void set##NAME(String* value)                              \
+    {                                                          \
+        auto b = body();                                       \
+        if (b != nullptr) {                                    \
+            b->setAttribute(staticStrings()->m_##ATTR, value); \
+        }                                                      \
     }
 
     REFLECT_ATTR_GETTER_FROM_BODY(fgColor, text)

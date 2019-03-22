@@ -20,9 +20,9 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
-#include "core/page/Window.h"
+#include "core/page/WebBase.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/Document.h"
-#include "core/page/WebView.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
@@ -31,7 +31,6 @@
 #include "core/modules/serviceworker/RegistrationOptions.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
 #include "core/dom/Event.h"
-#include "core/page/BrowsingContext.h"
 
 #include "core/modules/serviceworker/ServiceWorkerServiceHost.h"
 
@@ -76,14 +75,14 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
     Promise* p = new (NoGC) Promise(scriptBindingInstance());
 
     // 2. Let client be the context object’s service worker client.
-    BrowsingContext* client = window()->browsingContext();
+    ExecutionContext* client = executionContext();
 
     // 3. Let scriptURL be the result of parsing scriptURL with the context
     // object’s relevant settings object’s API base URL.
     // TODO: consider extracting parsing parts from ResourceURL, or else, using
     // ResourceURL
     auto scriptURL =
-        new ResourceURL(rawScriptURL, client->document()->baseURL()->baseURI());
+        new ResourceURL(rawScriptURL, client->baseURL()->baseURI());
 
     // 4. Let scopeURL be null
     ResourceURL* scopeURL = nullptr;
@@ -102,7 +101,7 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
 void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
                                            ResourceURL* scriptURL,
                                            Promise* promise,
-                                           BrowsingContext* client)
+                                           ExecutionContext* client)
 {
     // https://w3c.github.io/ServiceWorker/#start-register
 
@@ -187,7 +186,7 @@ void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
     // 12. Set job’s update via cache mode to updateViaCache.
 
     // 13. Set job’s referrer to referrer.
-    job->referrerURL = job->client ? client->document()->referrer() : nullptr;
+    job->referrerURL = job->client ? client->referrer() : nullptr;
 
     // 14. Invoke Schedule Job with job.
     scheduleJob(job);
@@ -197,7 +196,7 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
                                                     String* scopeURL,
                                                     String* scriptURL,
                                                     Promise* promise,
-                                                    BrowsingContext* client)
+                                                    ExecutionContext* client)
 {
     // https://w3c.github.io/ServiceWorker/#create-job
 
@@ -213,8 +212,8 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
 
 void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 {
-    window()->webView()->messageLoop()->addIdler(
-        window()->executionContext(),
+    executionContext()->webBase()->messageLoop()->addIdler(
+        executionContext(),
         [](size_t handle, void* data) {
             ServiceWorkerJob* job = static_cast<ServiceWorkerJob*>(data);
 
@@ -244,7 +243,7 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
 ServiceWorker* ServiceWorkerContainer::controller()
 {
     // 1. Let client be the context object’s service worker client.
-    ExecutionContext* context = window()->executionContext();
+    ExecutionContext* context = executionContext();
 
     // 2. Return the ServiceWorker object that represents client’s active
     // service worker.
@@ -274,8 +273,8 @@ void ServiceWorkerContainer::resolveJobPromise(ServiceWorkerJob* job)
         params->job = job;
         params->container = this;
 
-        context->window()->webView()->messageLoop()->addIdler(
-            context->window()->executionContext(),
+        context->webBase()->messageLoop()->addIdler(
+            context,
             [](size_t handle, void* data) {
                 Params* params = static_cast<Params*>(data);
                 ServiceWorkerJob* job = params->job;

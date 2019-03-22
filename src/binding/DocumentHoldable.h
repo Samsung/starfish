@@ -42,7 +42,6 @@ public:
 
     Window* window() const;
     Starfish* starfish() const;
-    ScriptBindingInstance* scriptBindingInstance() const;
     WebView* webView() const;
 
 protected:

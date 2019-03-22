@@ -32,19 +32,9 @@ class Location : public ScriptWrappable, public DocumentHoldable {
     friend class HTMLFormElement;
 
 public:
-    Location(Document* document)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-    {
-    }
+    Location(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isLocation() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Location)
 
     ResourceURL* url();
     String* href();

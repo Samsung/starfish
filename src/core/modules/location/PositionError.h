@@ -21,20 +21,20 @@
 #define __StarfishPositionError__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/DocumentHoldable.h"
 
 namespace Starfish {
 
-class PositionError : public ScriptWrappable, public DocumentHoldable {
+class PositionError : public ScriptWrappable {
 public:
     enum Error { PERMISSION_DENIED = 1, POSITION_UNAVAILABLE = 2, TIMEOUT = 3 };
 
-    PositionError(Document* document, Error code)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
+    PositionError(ExecutionContext* executionContext, Error code)
+        : ScriptWrappable(this, executionContext)
         , m_code(code)
     {
     }
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(PositionError)
 
     Error code() const
     {
@@ -54,14 +54,6 @@ public:
 
         STARFISH_ASSERT_NOT_REACHED();
         return String::emptyString;
-    }
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isPositionError() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
     }
 
 protected:

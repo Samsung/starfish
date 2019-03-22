@@ -54,6 +54,9 @@ void ServiceWorkerRegistrationData::updateRegistrationState(
 
 ServiceWorkerRegistration::ServiceWorkerRegistration(Document* document)
     : EventTarget(document)
+    , m_installingWorker(nullptr)
+    , m_waitingWorker(nullptr)
+    , m_activeWorker(nullptr)
     , m_data(new ServiceWorkerRegistrationData)
 {
 }

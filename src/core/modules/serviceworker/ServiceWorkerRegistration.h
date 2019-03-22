@@ -63,13 +63,7 @@ class ServiceWorkerRegistration : public EventTarget {
 public:
     ServiceWorkerRegistration(Document* document);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isServiceWorkerRegistration() const;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return DocumentHoldable::scriptBindingInstance();
-    }
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ServiceWorkerRegistration)
 
     String* scope() const;
     String* updateViaCache() const;
