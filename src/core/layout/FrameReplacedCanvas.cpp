@@ -67,15 +67,14 @@ void FrameReplacedCanvas::didCompsiteStackingContext(Compositor* c)
 void FrameReplacedCanvas::willCompsiteStackingContext(Compositor* c)
 {
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
-    auto context = canvasElement->renderingContext();
+    auto context = canvasElement->canvasRenderingContext();
     if (context) {
         context->flush();
-    }
-
-    CanvasSurface* surface = canvasElement->renderingContextSurface();
-    if (surface) {
-        surface->unmapBufferAndNotifyUpdatedRegion(0, 0, surface->bufferWidth(),
-                                                   surface->bufferHeight());
+        CanvasSurface* surface = context->surface();
+        if (surface) {
+            surface->unmapBufferAndNotifyUpdatedRegion(
+                0, 0, surface->bufferWidth(), surface->bufferHeight());
+        }
     }
 }
 
@@ -84,9 +83,9 @@ void FrameReplacedCanvas::createGraphicsBuffer(CanvasSurface** surfaceHolder,
                                                size_t visibleHeight)
 {
     HTMLCanvasElement* canvasElement = node()->asHTMLCanvasElement();
-    CanvasSurface* surface = canvasElement->renderingContextSurface();
-    if (surface) {
-        *surfaceHolder = surface;
+    if (canvasElement->canvasRenderingContext() &&
+        canvasElement->canvasRenderingContext()->surface()) {
+        *surfaceHolder = canvasElement->canvasRenderingContext()->surface();
     } else {
         *surfaceHolder = m_emptySurface;
     }

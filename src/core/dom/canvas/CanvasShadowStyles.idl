@@ -1,0 +1,13 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasshadowstyles
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasShadowStyles {
+  // shadows
+  [Unimplemented] attribute unrestricted double shadowOffsetX; // (default 0)
+  [Unimplemented] attribute unrestricted double shadowOffsetY; // (default 0)
+  [Unimplemented] attribute unrestricted double shadowBlur; // (default 0)
+  [Unimplemented] attribute DOMString shadowColor; // (default transparent black)
+};

@@ -1,0 +1,11 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasstate
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasState {
+  // state
+  void save(); // push state on state stack
+  void restore(); // pop state stack and restore state
+};

@@ -1,0 +1,18 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvastransform
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasTransform {
+  // transformations (default transform is the identity matrix)
+  void scale(unrestricted double x, unrestricted double y);
+  void rotate(unrestricted double angle);
+  void translate(unrestricted double x, unrestricted double y);
+  void transform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
+
+  [Unimplemented, NewObject] DOMMatrix getTransform();
+  [Unimplemented] void setTransform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f);
+  [Unimplemented] void setTransform(optional DOMMatrix2DInit transform);
+  [Unimplemented] void resetTransform();
+};

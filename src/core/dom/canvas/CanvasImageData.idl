@@ -1,0 +1,14 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasimagedata
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasImageData {
+  // pixel manipulation
+  [Unimplemented] ImageData createImageData(long sw, long sh);
+  [Unimplemented] ImageData createImageData(ImageData imagedata);
+  [RaisesException] ImageData getImageData(long sx, long sy, long sw, long sh);
+  [Unimplemented] void putImageData(ImageData imagedata, long dx, long dy);
+  [Unimplemented] void putImageData(ImageData imagedata, long dx, long dy, long dirtyX, long dirtyY, long dirtyWidth, long dirtyHeight);
+};

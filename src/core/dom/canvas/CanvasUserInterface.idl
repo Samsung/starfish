@@ -1,0 +1,12 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasuserinterface
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasUserInterface {
+  [Unimplemented] void drawFocusIfNeeded(Element element);
+  [Unimplemented] void drawFocusIfNeeded(Path2D path, Element element);
+  [Unimplemented] void scrollPathIntoView();
+  [Unimplemented] void scrollPathIntoView(Path2D path);
+};

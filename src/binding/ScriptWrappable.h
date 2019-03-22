@@ -254,6 +254,7 @@ public:
 
     ExecutionContext* executionContext() const
     {
+        STARFISH_ASSERT(m_executionContext);
         return m_executionContext;
     }
 

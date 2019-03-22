@@ -1,0 +1,12 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasrect
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasRect {
+  // rects
+  void clearRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
+  void fillRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
+  void strokeRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h);
+};
