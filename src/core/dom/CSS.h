@@ -25,6 +25,7 @@
 namespace Starfish {
 
 class Document;
+class ExecutionContext;
 
 class CSS : public ScriptWrappable {
 public:
@@ -32,8 +33,10 @@ public:
     static bool supports(Document* document, String* conditionText);
 
 protected:
-    CSS()
-        : ScriptWrappable(this){};
+    CSS(ExecutionContext* executionContext)
+        : ScriptWrappable(this, executionContext)
+    {
+    }
 };
 }
 

@@ -78,17 +78,8 @@ public:
     enum Stage { resolveStyle, frameTreeBuild, layout };
     static CSSStyleValuePair lengthToCSSStyleValue(Length len);
 
-    CSSStyleDeclaration(Element* element)
-        : ScriptWrappable(this)
-    {
-        m_node = (Node*)element;
-    }
-
-    CSSStyleDeclaration(Document* document)
-        : ScriptWrappable(this)
-    {
-        m_node = (Node*)document;
-    }
+    CSSStyleDeclaration(Element* element);
+    CSSStyleDeclaration(Document* document);
 
     void addValuePair(CSSStyleValuePair p);
 

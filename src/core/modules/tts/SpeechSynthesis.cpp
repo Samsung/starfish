@@ -56,6 +56,30 @@ DEFINE_EVENT_LISTENER(SpeechSynthesisUtterance, resume);
 
 DEFINE_EVENT_LISTENER(SpeechSynthesis, voiceschanged);
 
+SpeechSynthesisVoice::SpeechSynthesisVoice(Window* window)
+    : ScriptWrappable(this, window->executionContext())
+    , WindowHoldable(window)
+    , m_voiceURI(String::emptyString)
+    , m_name(String::emptyString)
+    , m_lang(String::emptyString)
+    , m_localService(true)
+    , m_isDefault(false)
+{
+}
+
+SpeechSynthesisVoice::SpeechSynthesisVoice(Window* window, String* voiceURI,
+                                           String* name, String* lang,
+                                           bool localService, bool isDefault)
+    : ScriptWrappable(this, window->executionContext())
+    , WindowHoldable(window)
+    , m_voiceURI(voiceURI)
+    , m_name(name)
+    , m_lang(lang)
+    , m_localService(localService)
+    , m_isDefault(isDefault)
+{
+}
+
 void SpeechSynthesis::speak(SpeechSynthesisUtterance* u)
 {
     webView()->tts()->speech(u);

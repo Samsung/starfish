@@ -70,7 +70,7 @@ private:
 };
 
 CSSStyleSheet::CSSStyleSheet(Node* origin, String* str)
-    : StyleSheet()
+    : StyleSheet(origin->executionContext())
     , m_sourceString(str)
     , m_origin(origin)
     , m_ownerRule(nullptr)

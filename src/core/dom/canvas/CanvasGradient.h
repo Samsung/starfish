@@ -29,11 +29,7 @@ class CanvasRenderingContext;
 
 class CanvasGradient : public ScriptWrappable {
 public:
-    CanvasGradient(CanvasRenderingContext* context)
-        : ScriptWrappable(this)
-        , m_canvasRenderingContext(context)
-    {
-    }
+    CanvasGradient(CanvasRenderingContext* context);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCanvasGradient() const override;

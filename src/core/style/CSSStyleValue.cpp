@@ -24,6 +24,12 @@
 
 namespace Starfish {
 
+CSSStyleValue::CSSStyleValue(Document* document)
+    : ScriptWrappable(this, document->executionContext())
+    , DocumentHoldable(document)
+{
+}
+
 void* CSSStyleValue::operator new(size_t size)
 {
     STARFISH_ASSERT(size == sizeof(CSSStyleValue));

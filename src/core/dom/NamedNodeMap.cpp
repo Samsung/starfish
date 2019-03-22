@@ -29,6 +29,12 @@
 
 namespace Starfish {
 
+NamedNodeMap::NamedNodeMap(Element* element)
+    : ScriptWrappable(this, element->executionContext())
+    , m_element(element)
+{
+}
+
 ScriptBindingInstance* NamedNodeMap::scriptBindingInstance()
 {
     return m_element->document()->scriptBindingInstance();

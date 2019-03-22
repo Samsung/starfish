@@ -30,12 +30,7 @@ class Element;
 // https://dom.spec.whatwg.org/#interface-domtokenlist
 class DOMTokenList : public ScriptWrappable {
 public:
-    DOMTokenList(Element* element, QualifiedName localName)
-        : ScriptWrappable(this)
-        , m_element(element)
-        , m_localName(localName)
-    {
-    }
+    DOMTokenList(Element* element, QualifiedName localName);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;

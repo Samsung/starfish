@@ -30,11 +30,7 @@ class TouchList : public ScriptWrappable,
                   public GCVector<Touch*>,
                   public DocumentHoldable {
 public:
-    TouchList(Document* document)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-    {
-    }
+    TouchList(Document* document);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;

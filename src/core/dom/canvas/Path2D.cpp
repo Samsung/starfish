@@ -24,6 +24,12 @@
 
 namespace Starfish {
 
+Path2D::Path2D(CanvasRenderingContext* context)
+    : ScriptWrappable(this, context->executionContext())
+    , m_canvasRenderingContext(context)
+{
+}
+
 ScriptBindingInstance* Path2D::scriptBindingInstance()
 {
     return m_canvasRenderingContext->scriptBindingInstance();

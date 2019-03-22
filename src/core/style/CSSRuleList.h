@@ -46,7 +46,7 @@ public:
 
 protected:
     CSSRuleList()
-        : ScriptWrappable(this)
+        : ScriptWrappable(this, nullptr)
     {
     }
 };

@@ -29,5 +29,11 @@ ScriptBindingInstance* CanvasPattern::scriptBindingInstance()
 {
     return m_canvasRenderingContext->scriptBindingInstance();
 }
+
+CanvasPattern::CanvasPattern(CanvasRenderingContext* context)
+    : ScriptWrappable(this, context->executionContext())
+    , m_canvasRenderingContext(context)
+{
+}
 }
 #endif

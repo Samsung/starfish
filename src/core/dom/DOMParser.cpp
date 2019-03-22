@@ -37,6 +37,12 @@
 
 namespace Starfish {
 
+DOMParser::DOMParser(Document* document)
+    : ScriptWrappable(this, document->executionContext())
+    , DocumentHoldable(document)
+{
+}
+
 ScriptBindingInstance* DOMParser::scriptBindingInstance()
 {
     return document()->scriptBindingInstance();

@@ -1026,4 +1026,11 @@ void Promise::reject(ScriptValue v)
     m_scriptValue->asObject()->asPromiseObject()->reject(state, v);
     state->destroy();
 }
+
+AttributeEventFunction::AttributeEventFunction(EventTarget* target)
+    : ScriptWrappable(target, target->executionContext())
+{
+    m_target = target;
+}
+
 }

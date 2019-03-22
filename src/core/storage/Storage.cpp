@@ -22,11 +22,12 @@
 #include "Storage.h"
 
 #include "browser/storage/StorageImpl.h"
+#include "core/page/Window.h"
 
 namespace Starfish {
 
 Storage::Storage(Window* window, StorageImpl* storageImpl)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, window->executionContext())
     , WindowHoldable(window)
     , m_storageImpl(storageImpl)
 {

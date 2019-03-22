@@ -28,11 +28,7 @@ class Element;
 class Attr;
 class NamedNodeMap : public ScriptWrappable {
 public:
-    NamedNodeMap(Element* element)
-        : ScriptWrappable(this)
-        , m_element(element)
-    {
-    }
+    NamedNodeMap(Element* element);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;

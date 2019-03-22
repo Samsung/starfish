@@ -66,15 +66,7 @@ public:
         END_TO_START,
     };
 
-    Range(Document* document)
-        : ScriptWrappable(this)
-        , m_document(document)
-        , m_start(document)
-        , m_end(document)
-    {
-        m_document->appendRange(this);
-    }
-
+    Range(Document* document);
     Range(Document* document, Node* startNode, unsigned startOffset,
           Node* endNode, unsigned endOffset);
 

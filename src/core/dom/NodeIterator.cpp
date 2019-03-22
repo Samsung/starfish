@@ -86,7 +86,7 @@ bool NodeIterator::NodePointer::moveToPrevious(Node* root)
 
 NodeIterator::NodeIterator(Document* document, Node* root, unsigned whatToShow,
                            ScriptValue filter)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, document->executionContext())
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_root(root)
     , m_referenceNode(root, true)

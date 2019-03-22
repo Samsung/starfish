@@ -22,6 +22,13 @@
 #include "core/dom/Document.h"
 
 namespace Starfish {
+
+TouchList::TouchList(Document* document)
+    : ScriptWrappable(this, document->executionContext())
+    , DocumentHoldable(document)
+{
+}
+
 ScriptBindingInstance* TouchList::scriptBindingInstance()
 {
     return document()->scriptBindingInstance();

@@ -29,16 +29,7 @@ namespace Starfish {
 class TreeWalker final : public ScriptWrappable {
 public:
     TreeWalker(Document* document, Node* root, unsigned whatToShow,
-               ScriptValue filter)
-        : ScriptWrappable(this)
-        , m_scriptBindingInstance(document->scriptBindingInstance())
-        , m_root(root)
-        , m_current(root)
-        , m_whatToShow(whatToShow)
-        , m_filter(filter)
-        , m_activeFlag(false)
-    {
-    }
+               ScriptValue filter);
 
     Node* parentNode();
 

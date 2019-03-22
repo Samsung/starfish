@@ -25,10 +25,12 @@
 namespace Starfish {
 
 class MediaList;
+class ExecutionContext;
+
 class StyleSheet : public ScriptWrappable {
 public:
-    StyleSheet()
-        : ScriptWrappable(this)
+    StyleSheet(ExecutionContext* executionContext)
+        : ScriptWrappable(this, executionContext)
     {
     }
 

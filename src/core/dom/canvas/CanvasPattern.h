@@ -29,11 +29,7 @@ class CanvasRenderingContext;
 
 class CanvasPattern : public ScriptWrappable {
 public:
-    CanvasPattern(CanvasRenderingContext* context)
-        : ScriptWrappable(this)
-        , m_canvasRenderingContext(context)
-    {
-    }
+    CanvasPattern(CanvasRenderingContext* context);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCanvasPattern() const override;

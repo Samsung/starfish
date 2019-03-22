@@ -27,7 +27,7 @@ namespace Starfish {
 class testRunner : public ScriptWrappable {
 protected:
     testRunner()
-        : ScriptWrappable(this)
+        : ScriptWrappable(this, nullptr)
     {
     }
 
