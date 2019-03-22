@@ -421,6 +421,14 @@ static void logEglError(const char* name) noexcept
 #define GL_UNPACK_SKIP_PIXELS 0x0CF4
 #endif
 
+#ifndef GL_DEPTH_STENCIL
+#define GL_DEPTH_STENCIL 0x84F9
+#endif
+
+#ifndef GL_UNSIGNED_INT_24_8
+#define GL_UNSIGNED_INT_24_8 0x84FA
+#endif
+
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
 Evas_GL_API* g_evasGLAPI;
 Evas_GL* g_evasGL;
@@ -434,6 +442,7 @@ static bool g_needsCheckCompatibility = true;
 static bool g_isSupportPixelStoreiUnpackingOfPixelDataFromMemory = false;
 static bool g_isSupportExtensionEGLImageExternal = false;
 static bool g_shouldUseEGLImageOnPlainSurface = false;
+static bool g_useStencilBufferOnFBO = false;
 static size_t g_maxTextureSize;
 
 static void checkError()
@@ -502,6 +511,8 @@ public:
     GLint m_texShaderProgramPosition;
     GLint m_texShaderProgramTexture;
     GLint m_texShaderProgramAlpha;
+    GLuint m_texFragmentShaderWithOriginalColor;
+    GLuint m_texShaderProgramWithOriginalColor;
 
     GLuint m_texFragmentShaderEGLImageExternal;
     GLuint m_texShaderProgramEGLImageExternal;
@@ -510,12 +521,12 @@ public:
     GLint m_texShaderProgramEGLImageExternalTexture;
     GLint m_texShaderProgramEGLImageExternalAlpha;
 
-    GLuint m_texFragmentShaderEGLImageExternalColorInverted;
-    GLuint m_texShaderProgramEGLImageExternalColorInverted;
-    GLint m_texShaderProgramEGLImageExternalColorInvertedTexPos;
-    GLint m_texShaderProgramEGLImageExternalColorInvertedPosition;
-    GLint m_texShaderProgramEGLImageExternalColorInvertedTexture;
-    GLint m_texShaderProgramEGLImageExternalColorInvertedAlpha;
+    GLuint m_texFragmentShaderEGLImageExternalWithOriginalColor;
+    GLuint m_texShaderProgramEGLImageExternalWithOriginalColor;
+    GLint m_texShaderProgramEGLImageExternalWithOriginalColorTexPos;
+    GLint m_texShaderProgramEGLImageExternalWithOriginalColorPosition;
+    GLint m_texShaderProgramEGLImageExternalWithOriginalColorTexture;
+    GLint m_texShaderProgramEGLImageExternalWithOriginalColorAlpha;
 
     GLuint m_texFragmentBlurShaderW;
     GLuint m_texFragmentBlurShaderEGLImageExternalW;
@@ -561,18 +572,20 @@ public:
         m_texShaderProgramEGLImageExternalPosition = 0;
         m_texShaderProgramEGLImageExternalTexture = 0;
         m_texShaderProgramEGLImageExternalAlpha = 0;
-        m_texShaderProgramEGLImageExternalColorInvertedPosition = 0;
-        m_texShaderProgramEGLImageExternalColorInvertedTexture = 0;
-        m_texShaderProgramEGLImageExternalColorInvertedAlpha = 0;
+        m_texShaderProgramEGLImageExternalWithOriginalColorPosition = 0;
+        m_texShaderProgramEGLImageExternalWithOriginalColorTexture = 0;
+        m_texShaderProgramEGLImageExternalWithOriginalColorAlpha = 0;
         m_texVertexShader = m_texFragmentShader = 0;
         m_texShaderProgramEGLImageExternal =
             m_texFragmentShaderEGLImageExternal = 0;
-        m_texShaderProgramEGLImageExternalColorInverted =
-            m_texFragmentShaderEGLImageExternalColorInverted = 0;
+        m_texShaderProgramEGLImageExternalWithOriginalColor =
+            m_texFragmentShaderEGLImageExternalWithOriginalColor = 0;
         m_texFragmentBlurShaderH = m_texFragmentBlurShaderW =
             m_texFragmentBlurShaderEGLImageExternalW = 0;
         m_texBlurShaderProgramW = m_texBlurShaderProgramEGLImageExternalW =
             m_texBlurShaderProgramH = 0;
+        m_texFragmentShaderWithOriginalColor = 0;
+        m_texShaderProgramWithOriginalColor = 0;
 
         m_texBlurShaderProgramWPosition = 0;
         m_texBlurShaderProgramWTexture = 0;
@@ -596,7 +609,7 @@ public:
         m_texTexPosBuffer = 0;
         m_texShaderProgramTexPos = 0;
         m_texShaderProgramEGLImageExternalTexPos = 0;
-        m_texShaderProgramEGLImageExternalColorInvertedTexPos = 0;
+        m_texShaderProgramEGLImageExternalWithOriginalColorTexPos = 0;
         m_texBlurShaderProgramWTexPos = 0;
         m_texBlurShaderProgramEGLImageExternalWTexPos = 0;
         m_texBlurShaderProgramHTexPos = 0;
@@ -758,9 +771,9 @@ public:
         return m_texShaderProgramEGLImageExternal;
     }
 
-    GLuint texShaderProgramEGLImageExternalColorInverted()
+    GLuint texShaderProgramEGLImageExternalWithOriginalColor()
     {
-        if (!m_texShaderProgramEGLImageExternalColorInverted) {
+        if (!m_texShaderProgramEGLImageExternalWithOriginalColor) {
             GLchar texFragmentSourceEGLImageExternal[] =
                 "#extension GL_OES_EGL_image_external : require\n"
                 "#ifdef GL_ES\n"
@@ -771,87 +784,82 @@ public:
                 "uniform float uAlpha;\n"
                 "void main(void)\n"
                 "{\n"
-                "  vec4 texData = texture2D(uTexture, vTexPos) * uAlpha;\n"
-#if defined(PORT_PIXEL_ORDER_BGRA)
-                "  gl_FragColor.r = texData[0];\n"
-                "  gl_FragColor.g = texData[1];\n"
-                "  gl_FragColor.b = texData[2];\n"
-                "  gl_FragColor.a = texData[3];\n"
-#else
-                "  gl_FragColor.r = texData[2];\n"
-                "  gl_FragColor.g = texData[1];\n"
-                "  gl_FragColor.b = texData[0];\n"
-                "  gl_FragColor.a = texData[3];\n"
-#endif
+                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
                 "}";
 
-            m_texFragmentShaderEGLImageExternalColorInverted = loadShader(
+            m_texFragmentShaderEGLImageExternalWithOriginalColor = loadShader(
                 GL_FRAGMENT_SHADER, texFragmentSourceEGLImageExternal);
             checkError();
 
-            m_texShaderProgramEGLImageExternalColorInverted = glCreateProgram();
+            m_texShaderProgramEGLImageExternalWithOriginalColor =
+                glCreateProgram();
             checkError();
 
-            glAttachShader(m_texShaderProgramEGLImageExternalColorInverted,
+            glAttachShader(m_texShaderProgramEGLImageExternalWithOriginalColor,
                            texVertexShader());
             checkError();
-            glAttachShader(m_texShaderProgramEGLImageExternalColorInverted,
-                           m_texFragmentShaderEGLImageExternalColorInverted);
+            glAttachShader(
+                m_texShaderProgramEGLImageExternalWithOriginalColor,
+                m_texFragmentShaderEGLImageExternalWithOriginalColor);
             checkError();
 
-            glLinkProgram(m_texShaderProgramEGLImageExternalColorInverted);
+            glLinkProgram(m_texShaderProgramEGLImageExternalWithOriginalColor);
             checkError();
 
             m_lastProgram =
-                m_texShaderProgramEGLImageExternalColorInvertedAlpha;
-            glUseProgram(m_texShaderProgramEGLImageExternalColorInverted);
+                m_texShaderProgramEGLImageExternalWithOriginalColorAlpha;
+            glUseProgram(m_texShaderProgramEGLImageExternalWithOriginalColor);
             checkError();
 
-            m_texShaderProgramEGLImageExternalColorInvertedPosition =
+            m_texShaderProgramEGLImageExternalWithOriginalColorPosition =
                 glGetAttribLocation(
-                    m_texShaderProgramEGLImageExternalColorInverted,
+                    m_texShaderProgramEGLImageExternalWithOriginalColor,
                     "aPosition");
-            m_texShaderProgramEGLImageExternalColorInvertedTexPos =
+            m_texShaderProgramEGLImageExternalWithOriginalColorTexPos =
                 glGetAttribLocation(
-                    m_texShaderProgramEGLImageExternalColorInverted, "aTexPos");
-            m_texShaderProgramEGLImageExternalColorInvertedTexture =
+                    m_texShaderProgramEGLImageExternalWithOriginalColor,
+                    "aTexPos");
+            m_texShaderProgramEGLImageExternalWithOriginalColorTexture =
                 glGetUniformLocation(
-                    m_texShaderProgramEGLImageExternalColorInverted,
+                    m_texShaderProgramEGLImageExternalWithOriginalColor,
                     "uTexture");
-            m_texShaderProgramEGLImageExternalColorInvertedAlpha =
+            m_texShaderProgramEGLImageExternalWithOriginalColorAlpha =
                 glGetUniformLocation(
-                    m_texShaderProgramEGLImageExternalColorInverted, "uAlpha");
+                    m_texShaderProgramEGLImageExternalWithOriginalColor,
+                    "uAlpha");
 
-            glUniform1i(m_texShaderProgramEGLImageExternalColorInvertedTexture,
-                        0);
+            glUniform1i(
+                m_texShaderProgramEGLImageExternalWithOriginalColorTexture, 0);
             glEnableVertexAttribArray(
-                m_texShaderProgramEGLImageExternalColorInvertedPosition);
+                m_texShaderProgramEGLImageExternalWithOriginalColorPosition);
 
             glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
             glEnableVertexAttribArray(
-                m_texShaderProgramEGLImageExternalColorInvertedTexPos);
+                m_texShaderProgramEGLImageExternalWithOriginalColorTexPos);
             glVertexAttribPointer(
-                m_texShaderProgramEGLImageExternalColorInvertedTexPos, 2,
+                m_texShaderProgramEGLImageExternalWithOriginalColorTexPos, 2,
                 GL_FLOAT, false, 0, 0);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-            glUniform1f(m_texShaderProgramEGLImageExternalColorInvertedAlpha,
-                        1);
+            glUniform1f(
+                m_texShaderProgramEGLImageExternalWithOriginalColorAlpha, 1);
         } else {
             if (m_lastProgram !=
-                m_texShaderProgramEGLImageExternalColorInverted) {
-                m_lastProgram = m_texShaderProgramEGLImageExternalColorInverted;
-                glUseProgram(m_texShaderProgramEGLImageExternalColorInverted);
+                m_texShaderProgramEGLImageExternalWithOriginalColor) {
+                m_lastProgram =
+                    m_texShaderProgramEGLImageExternalWithOriginalColor;
+                glUseProgram(
+                    m_texShaderProgramEGLImageExternalWithOriginalColor);
 
                 glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
                 glVertexAttribPointer(
-                    m_texShaderProgramEGLImageExternalColorInvertedTexPos, 2,
-                    GL_FLOAT, false, 0, 0);
+                    m_texShaderProgramEGLImageExternalWithOriginalColorTexPos,
+                    2, GL_FLOAT, false, 0, 0);
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
             }
         }
 
-        return m_texShaderProgramEGLImageExternalColorInverted;
+        return m_texShaderProgramEGLImageExternalWithOriginalColor;
     }
 
     GLuint texShaderProgram()
@@ -932,6 +940,67 @@ public:
             }
         }
         return m_texShaderProgram;
+    }
+
+    GLuint texShaderProgramWithOriginalColor()
+    {
+        // this program MUST use same code except color conversion with
+        // texShaderProgram
+        if (!m_texShaderProgramWithOriginalColor) {
+            GLchar texFragmentSource[] =
+                "#ifdef GL_ES\n"
+                "  precision mediump float;\n"
+                "#endif\n"
+                "uniform sampler2D uTexture;\n"
+                "varying vec2 vTexPos;\n"
+                "uniform float uAlpha;\n"
+                "void main(void)\n"
+                "{\n"
+                "  gl_FragColor = texture2D(uTexture, vTexPos) * uAlpha;\n"
+                "}";
+
+            m_texFragmentShaderWithOriginalColor =
+                loadShader(GL_FRAGMENT_SHADER, texFragmentSource);
+            checkError();
+
+            m_texShaderProgramWithOriginalColor = glCreateProgram();
+            checkError();
+
+            glAttachShader(m_texShaderProgramWithOriginalColor,
+                           texVertexShader());
+            checkError();
+            glAttachShader(m_texShaderProgramWithOriginalColor,
+                           m_texFragmentShaderWithOriginalColor);
+            checkError();
+
+            glLinkProgram(m_texShaderProgramWithOriginalColor);
+            checkError();
+
+            glUseProgram(m_texShaderProgramWithOriginalColor);
+            checkError();
+
+            glUniform1i(m_texShaderProgramTexture, 0);
+            glEnableVertexAttribArray(m_texShaderProgramPosition);
+
+            glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+            glEnableVertexAttribArray(m_texShaderProgramTexPos);
+            glVertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT, false,
+                                  0, 0);
+            glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+            glUniform1f(m_texShaderProgramAlpha, 1);
+        } else {
+            if (m_lastProgram != m_texShaderProgramWithOriginalColor) {
+                m_lastProgram = m_texShaderProgramWithOriginalColor;
+                glUseProgram(m_texShaderProgramWithOriginalColor);
+
+                glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
+                glVertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT,
+                                      false, 0, 0);
+                glBindBuffer(GL_ARRAY_BUFFER, 0);
+            }
+        }
+        return m_texShaderProgramWithOriginalColor;
     }
 
 // I take blur shader source from WebKit
@@ -1286,6 +1355,14 @@ void Compositor::destroyCompositorContext(PlatformWindow* wnd,
             glDeleteShader(ctx->m_texFragmentShaderEGLImageExternal);
         }
 
+        if (ctx->m_texShaderProgramWithOriginalColor) {
+            glDetachShader(ctx->m_texShaderProgramWithOriginalColor,
+                           ctx->m_texVertexShader);
+            glDetachShader(ctx->m_texShaderProgramWithOriginalColor,
+                           ctx->m_texFragmentShaderWithOriginalColor);
+            glDeleteProgram(ctx->m_texShaderProgramWithOriginalColor);
+        }
+
         if (ctx->m_texShaderProgram) {
             glDetachShader(ctx->m_texShaderProgram, ctx->m_texVertexShader);
             glDetachShader(ctx->m_texShaderProgram, ctx->m_texFragmentShader);
@@ -1376,6 +1453,10 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
                 eglGetProcAddress("glEGLImageTargetTexture2DOES"));
 #endif
 
+#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_TIZEN_VERSION_5_0) && \
+    defined(PORT_WEBVIEW_BRIDGE_EFL)
+        g_useStencilBufferOnFBO = true;
+#endif
         g_needsCheckCompatibility = false;
         checkError();
     }
@@ -2147,7 +2228,7 @@ public:
         LongTaskFinder t("CompositorImplGL::CompositorImplGL", 1);
         webView->platformWindow()->glMakeCurrent();
 
-        m_seenFilteredTexture = false;
+        m_seenFBOUsage = false;
         m_webView = webView;
         m_compositorContext = compositorContext;
         m_screenMatrix = computeScreenMatrix();
@@ -2175,6 +2256,7 @@ public:
     {
         restore();
         STARFISH_ASSERT(m_state.size() == 0);
+        STARFISH_ASSERT(m_fboState.size() == 0);
 
         glBindTexture(GL_TEXTURE_2D, 0);
         if (g_isSupportExtensionEGLImageExternal) {
@@ -2187,7 +2269,7 @@ public:
 #if defined(STARFISH_TIZEN) && defined(PORT_WEBVIEW_BRIDGE_EFL)
         // there is blinking on EvasGL with FBO
         // explicit sync fixes blinking
-        if (m_seenFilteredTexture && !g_isEvasGLOnDirectMode) {
+        if (m_seenFBOUsage && !g_isEvasGLOnDirectMode) {
             m_webView->platformWindow()->glMayNeedsSync();
         }
 #endif
@@ -2534,50 +2616,20 @@ public:
                              size_t textureHeight)
     {
         auto& lastState = m_state.back();
-        m_seenFilteredTexture = true;
+
         // Use FBO in order to 2-pass blur
-        // generate FBO
-        GLuint fboId;
-        glGenFramebuffers(1, &fboId);
-        checkError();
+        pushFBOContext(textureWidth, textureHeight, false,
+                       LayoutRect(0, 0, textureWidth, textureHeight));
 
-        // generate texture
-        GLuint fboTex;
-        glGenTextures(1, &fboTex);
-        checkError();
+        bool isStencilEnabled = glIsEnabled(GL_STENCIL_TEST);
+        bool isScissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
 
-        // generate render buffer
-        GLuint renderBufferId;
-        glGenRenderbuffers(1, &renderBufferId);
-        checkError();
-
-        // Bind Frame buffer
-        glBindFramebuffer(GL_FRAMEBUFFER, fboId);
-        checkError();
-
-        // Bind texture
-        glBindTexture(GL_TEXTURE_2D, fboTex);
-        checkError();
-
-        // Define texture parameters
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, textureWidth, textureHeight, 0,
-                     GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-        checkError();
-
-        // Bind render buffer and define buffer dimension
-        glBindRenderbuffer(GL_RENDERBUFFER, renderBufferId);
-
-        // Attach texture FBO color attachment
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
-                               GL_TEXTURE_2D, fboTex, 0);
-        checkError();
-
-        // do render on fbo
-        glViewport(0, 0, textureWidth, textureHeight);
+        if (isStencilEnabled) {
+            glDisable(GL_STENCIL_TEST);
+        }
+        if (isScissorEnabled) {
+            glDisable(GL_SCISSOR_TEST);
+        }
 
         glClearColor(0, 0, 0, 0);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -2636,15 +2688,15 @@ public:
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
         }
 
-        // end of render to buffer
-        glBindRenderbuffer(GL_RENDERBUFFER, 0);
-        glBindFramebuffer(GL_FRAMEBUFFER, 0);
-        glDeleteRenderbuffers(1, &renderBufferId);
-        glDeleteFramebuffers(1, &fboId);
+        GLuint fboTex = popFBOContext();
         checkError();
 
-        // reset global properties
-        setViewport();
+        if (isStencilEnabled) {
+            glEnable(GL_STENCIL_TEST);
+        }
+        if (isScissorEnabled) {
+            glEnable(GL_SCISSOR_TEST);
+        }
 
         // blur H
         {
@@ -2682,6 +2734,9 @@ public:
 
             glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
+            if (glGetError() == 1286) {
+                STARFISH_LOG_ERROR("drawFilteredTexture got error 1286\n");
+            }
             if (a != 1) {
                 glUniform1f(m_compositorContext->m_texBlurShaderProgramHAlpha,
                             1);
@@ -2712,7 +2767,7 @@ public:
         if (isEGLImage) {
             if (cs->m_isEGLImageNeedsFlipRGB) {
                 m_compositorContext
-                    ->texShaderProgramEGLImageExternalColorInverted();
+                    ->texShaderProgramEGLImageExternalWithOriginalColor();
             } else {
                 m_compositorContext->texShaderProgramEGLImageExternal();
             }
@@ -2739,10 +2794,10 @@ public:
             if (cs->m_isEGLImageNeedsFlipRGB) {
                 positionPos =
                     &m_compositorContext
-                         ->m_texShaderProgramEGLImageExternalColorInvertedPosition;
+                         ->m_texShaderProgramEGLImageExternalWithOriginalColorPosition;
                 alphaPos =
                     &m_compositorContext
-                         ->m_texShaderProgramEGLImageExternalColorInvertedAlpha;
+                         ->m_texShaderProgramEGLImageExternalWithOriginalColorAlpha;
             } else {
                 positionPos = &m_compositorContext
                                    ->m_texShaderProgramEGLImageExternalPosition;
@@ -2821,6 +2876,7 @@ public:
         dest[3][1] = dst.maxY();
         mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
 
+        bool fboStencilClippingEnabled = false;
         bool stencilClippingEnabled = false;
         bool scissorClippingEnabled = false;
         bool shouldSkipTexturePainting = false;
@@ -2894,15 +2950,6 @@ public:
                         glEnable(GL_SCISSOR_TEST);
                         scissor(minX, minY, maxX - minX, maxY - minY);
                     } else {
-                        stencilClippingEnabled = true;
-
-                        glEnable(GL_STENCIL_TEST);
-                        glClearStencil(0);
-                        glClear(GL_STENCIL_BUFFER_BIT);
-                        glColorMask(false, false, false, false);
-                        glStencilFunc(GL_ALWAYS, 1, 1);
-                        glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
-
                         std::vector<std::vector<Point>> polygon;
                         std::vector<Point> pointPerIndex;
                         for (size_t i = 0; i < result.size(); i++) {
@@ -2918,6 +2965,27 @@ public:
 
                             visibleArea.unite(boundingRect(result[i]));
                         }
+
+                        if (g_useStencilBufferOnFBO) {
+                            fboStencilClippingEnabled = true;
+                            size_t w = m_webView->platformWindow()->width();
+                            size_t h = m_webView->platformWindow()->height();
+                            pushFBOContext(w, h, true, LayoutRect(0, 0, w, h));
+                        }
+
+                        // do render on fbo
+                        glClearColor(0, 0, 0, 0);
+                        glClear(GL_COLOR_BUFFER_BIT);
+                        checkError();
+
+                        stencilClippingEnabled = true;
+
+                        glEnable(GL_STENCIL_TEST);
+                        glClearStencil(0);
+                        glClear(GL_STENCIL_BUFFER_BIT);
+                        glColorMask(false, false, false, false);
+                        glStencilFunc(GL_ALWAYS, 1, 1);
+                        glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
                         m_compositorContext->rectProgram();
                         std::vector<N> indices = mapbox::earcut<N>(polygon);
@@ -3064,6 +3132,30 @@ public:
 
         if (stencilClippingEnabled) {
             glDisable(GL_STENCIL_TEST);
+            if (fboStencilClippingEnabled) {
+                GLuint fboTex = popFBOContext();
+                checkError();
+
+                m_compositorContext->texShaderProgramWithOriginalColor();
+
+                float position[] = { -1, -1, -1, 1, 1, -1, 1, 1 };
+
+                glBindTexture(GL_TEXTURE_2D, fboTex);
+                checkError();
+
+                glVertexAttribPointer(
+                    m_compositorContext->m_texShaderProgramPosition, 2,
+                    GL_FLOAT, false, 2 * 4, position);
+                checkError();
+
+                glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+                auto errChk = glGetError();
+                if (errChk == 1286) {
+                    STARFISH_LOG_ERROR("fbo stencil clipping got error 1286\n");
+                }
+                glDeleteTextures(1, &fboTex);
+            }
         }
         if (scissorClippingEnabled) {
             glDisable(GL_SCISSOR_TEST);
@@ -3209,11 +3301,124 @@ public:
         m_state.back().blurRadius = blurRadius;
     }
 
+    struct FBOState {
+        GLuint fboId;
+        GLuint fboTex;
+        GLuint fboSupportTex;
+        GLuint renderBufferId;
+        LayoutRect viewport;
+    };
+
+    void pushFBOContext(size_t width, size_t height, bool needsStencilDepth,
+                        LayoutRect viewport)
+    {
+        m_seenFBOUsage = true;
+
+        FBOState newFBOState;
+
+        // generate FBO
+        glGenFramebuffers(1, &newFBOState.fboId);
+        checkError();
+
+        // generate texture
+        glGenTextures(1, &newFBOState.fboTex);
+        checkError();
+
+        // generate render buffer
+        glGenRenderbuffers(1, &newFBOState.renderBufferId);
+        checkError();
+
+        // Bind Frame buffer
+        glBindFramebuffer(GL_FRAMEBUFFER, newFBOState.fboId);
+        checkError();
+
+        // Bind texture
+        glBindTexture(GL_TEXTURE_2D, newFBOState.fboTex);
+        checkError();
+
+        // Define texture parameters
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
+                     GL_UNSIGNED_BYTE, nullptr);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+        checkError();
+
+        // Bind render buffer and define buffer dimension
+        glBindRenderbuffer(GL_RENDERBUFFER, newFBOState.renderBufferId);
+
+        // Attach texture FBO color attachment
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+                               GL_TEXTURE_2D, newFBOState.fboTex, 0);
+        checkError();
+
+        if (needsStencilDepth) {
+            glGenTextures(1, &newFBOState.fboSupportTex);
+            glBindTexture(GL_TEXTURE_2D, newFBOState.fboSupportTex);
+            glTexImage2D(GL_TEXTURE_2D, 0, // target and mipmap level
+                         GL_DEPTH_STENCIL, width, height, // size of texture
+                         0,                               // border size
+                         GL_DEPTH_STENCIL, // format of of data we are uploading
+                                           // to to the texture (ignored)
+                         GL_UNSIGNED_INT_24_8, // type of of data we are
+                                               // uploading to to the texture
+                                               // (ignored)
+                         NULL                  // no data uploaded
+                         );
+            checkError();
+            // attatch the depth/stencil texture to both the stencil and depth
+            // render objects.
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT,
+                                   GL_TEXTURE_2D, newFBOState.fboSupportTex, 0);
+            glFramebufferTexture2D(GL_FRAMEBUFFER, GL_STENCIL_ATTACHMENT,
+                                   GL_TEXTURE_2D, newFBOState.fboSupportTex, 0);
+            checkError();
+        } else {
+            newFBOState.fboSupportTex = 0;
+        }
+
+        newFBOState.viewport = viewport;
+        glViewport(viewport.x(), viewport.y(), viewport.width(),
+                   viewport.height());
+
+        m_fboState.push_back(newFBOState);
+    }
+
+    GLuint popFBOContext() // returns texture
+    {
+        FBOState lastState = m_fboState.back();
+        m_fboState.pop_back();
+
+        if (m_fboState.size()) {
+            auto& s = m_fboState.back();
+            glBindRenderbuffer(GL_RENDERBUFFER, s.renderBufferId);
+            glBindFramebuffer(GL_FRAMEBUFFER, s.fboId);
+
+            glViewport(s.viewport.x(), s.viewport.y(), s.viewport.width(),
+                       s.viewport.height());
+        } else {
+            glBindRenderbuffer(GL_RENDERBUFFER, 0);
+            glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+            setViewport();
+        }
+
+        glDeleteRenderbuffers(1, &lastState.renderBufferId);
+        glDeleteFramebuffers(1, &lastState.fboId);
+        if (lastState.fboSupportTex) {
+            glDeleteTextures(1, &lastState.fboSupportTex);
+        }
+        return lastState.fboTex;
+    }
+
 protected:
-    bool m_seenFilteredTexture;
+    bool m_seenFBOUsage;
     WebView* m_webView;
     CompositorContext* m_compositorContext;
     std::vector<CompositorImplGLState> m_state;
+    std::vector<FBOState> m_fboState;
+
     ClipperLib::Path m_path;
     SkMatrix m_screenMatrix;
 };
