@@ -48,7 +48,7 @@
 namespace Starfish {
 
 MediaList::MediaList(MediaQuerySet* mediaQuerySet)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, mediaQuerySet->document()->executionContext())
     , m_mediaQuerySet(mediaQuerySet)
 {
 }

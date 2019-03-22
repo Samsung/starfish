@@ -28,7 +28,7 @@
 namespace Starfish {
 
 Response::Response(Document* document)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, document->executionContext())
     , Body(document->window())
     , m_instance(document->scriptBindingInstance())
     , m_headers(Headers(document))
@@ -38,7 +38,7 @@ Response::Response(Document* document)
 }
 
 Response::Response(Document* document, Nullable<BodyInit>& body)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, document->executionContext())
     , Body(document->window(), body)
     , m_instance(document->scriptBindingInstance())
     , m_headers(Headers(document))

@@ -29,12 +29,7 @@ class StyleSheet;
 
 class StyleSheetList : public ScriptWrappable {
 public:
-    StyleSheetList(Document* document)
-        : ScriptWrappable(this)
-        , m_document(document)
-    {
-    }
-
+    StyleSheetList(Document* document);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isStyleSheetList() const override;

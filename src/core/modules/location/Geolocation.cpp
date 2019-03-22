@@ -37,7 +37,7 @@ Geolocation* Geolocation::create(Document* document)
 #endif
 
 Geolocation::Geolocation(Document* document)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, document->executionContext())
     , DocumentHoldable(document)
 {
 }

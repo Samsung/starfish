@@ -1193,6 +1193,18 @@ static bool parseTransitionShorthand(const CSSTokenVector& tokens,
     return true;
 }
 
+CSSStyleDeclaration::CSSStyleDeclaration(Element* element)
+    : ScriptWrappable(this, element->executionContext())
+{
+    m_node = (Node*)element;
+}
+
+CSSStyleDeclaration::CSSStyleDeclaration(Document* document)
+    : ScriptWrappable(this, document->executionContext())
+{
+    m_node = (Node*)document;
+}
+
 // helper function to convert Length to CSSStyleValuePair format
 CSSStyleValuePair CSSStyleDeclaration::lengthToCSSStyleValue(Length len)
 {

@@ -32,7 +32,7 @@
 namespace Starfish {
 
 SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, sourceElement->executionContext())
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
 {

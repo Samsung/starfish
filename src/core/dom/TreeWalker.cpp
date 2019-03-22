@@ -27,6 +27,18 @@
 
 namespace Starfish {
 
+TreeWalker::TreeWalker(Document* document, Node* root, unsigned whatToShow,
+                       ScriptValue filter)
+    : ScriptWrappable(this, document->executionContext())
+    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_root(root)
+    , m_current(root)
+    , m_whatToShow(whatToShow)
+    , m_filter(filter)
+    , m_activeFlag(false)
+{
+}
+
 ScriptValue TreeWalker::filter()
 {
     if (!m_filter) {

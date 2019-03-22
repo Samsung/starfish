@@ -24,6 +24,12 @@
 
 namespace Starfish {
 
+StyleSheetList::StyleSheetList(Document* document)
+    : ScriptWrappable(this, document->executionContext())
+    , m_document(document)
+{
+}
+
 ScriptBindingInstance* StyleSheetList::scriptBindingInstance()
 {
     return m_document->scriptBindingInstance();

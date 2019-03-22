@@ -27,7 +27,7 @@ using namespace Escargot;
 namespace Starfish {
 
 ReadableStream::ReadableStream(Document* document, ReadableStreamBuffer* buffer)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, document->executionContext())
     , DocumentHoldable(document)
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_controller(new ReadableStreamDefaultController(document, this))

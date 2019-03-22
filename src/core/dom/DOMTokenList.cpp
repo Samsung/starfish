@@ -25,6 +25,13 @@
 
 namespace Starfish {
 
+DOMTokenList::DOMTokenList(Element* element, QualifiedName localName)
+    : ScriptWrappable(this, element->executionContext())
+    , m_element(element)
+    , m_localName(localName)
+{
+}
+
 ScriptBindingInstance* DOMTokenList::scriptBindingInstance()
 {
     return m_element->document()->scriptBindingInstance();

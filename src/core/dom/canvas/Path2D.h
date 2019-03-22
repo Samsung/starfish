@@ -30,11 +30,7 @@ class CanvasRenderingContext;
 
 class Path2D : public ScriptWrappable {
 public:
-    Path2D(CanvasRenderingContext* context)
-        : ScriptWrappable(this)
-        , m_canvasRenderingContext(context)
-    {
-    }
+    Path2D(CanvasRenderingContext* context);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isPath2D() const override;

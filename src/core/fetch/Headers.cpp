@@ -74,7 +74,7 @@ private:
 };
 
 Headers::Headers(Document* document)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, document->executionContext())
     , DocumentHoldable(document)
     , m_instance(document->scriptBindingInstance())
     , m_headersData(new HeadersData())

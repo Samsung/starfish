@@ -39,7 +39,7 @@
 namespace Starfish {
 
 CSSRule::CSSRule(CSSStyleSheet* parent)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, parent->executionContext())
     , m_parentIsRule(false)
     , m_parentStyleSheet(parent)
 {

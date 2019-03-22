@@ -114,26 +114,9 @@ public:
 // https://w3c.github.io/touch-events/#idl-def-touch
 class Touch : public ScriptWrappable, public DocumentHoldable {
 public:
-    Touch(Document* document)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-        , m_touchData()
-    {
-    }
-
-    Touch(Document* document, TouchInit& init)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-        , m_touchData(init)
-    {
-    }
-
-    Touch(Document* document, TouchData& data)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-        , m_touchData(data)
-    {
-    }
+    Touch(Document* document);
+    Touch(Document* document, TouchInit& init);
+    Touch(Document* document, TouchData& data);
 
     EventTarget* target() const
     {

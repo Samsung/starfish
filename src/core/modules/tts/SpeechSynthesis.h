@@ -35,28 +35,9 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSpeechSynthesisVoice() const override;
 
-    SpeechSynthesisVoice(Window* window)
-        : ScriptWrappable(this)
-        , WindowHoldable(window)
-        , m_voiceURI(String::emptyString)
-        , m_name(String::emptyString)
-        , m_lang(String::emptyString)
-        , m_localService(true)
-        , m_isDefault(false)
-    {
-    }
-
+    SpeechSynthesisVoice(Window* window);
     SpeechSynthesisVoice(Window* window, String* voiceURI, String* name,
-                         String* lang, bool localService, bool isDefault)
-        : ScriptWrappable(this)
-        , WindowHoldable(window)
-        , m_voiceURI(voiceURI)
-        , m_name(name)
-        , m_lang(lang)
-        , m_localService(localService)
-        , m_isDefault(isDefault)
-    {
-    }
+                         String* lang, bool localService, bool isDefault);
 
     virtual ScriptBindingInstance* scriptBindingInstance() override
     {

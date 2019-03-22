@@ -28,12 +28,7 @@ class Document;
 
 class DOMParser : public ScriptWrappable, public DocumentHoldable {
 public:
-    DOMParser(Document* document)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-    {
-    }
-
+    DOMParser(Document* document);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isDOMParser() const override;

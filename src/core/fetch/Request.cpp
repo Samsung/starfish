@@ -51,7 +51,7 @@ static BodyInit toBodyInitFromValueRef(ContextRef* ctx, ValueRef* from)
 }
 
 Request::Request(Window* window, RequestInfo& input)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, window->executionContext())
     , Body(window)
     , m_headers(Headers(window->document()))
 {
@@ -59,7 +59,7 @@ Request::Request(Window* window, RequestInfo& input)
 }
 
 Request::Request(Window* window, RequestInfo& input, RequestInit& init)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, window->executionContext())
     , Body(window)
     , m_headers(Headers(window->document()))
 {

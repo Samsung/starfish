@@ -24,6 +24,12 @@
 #include "core/dom/canvas/CanvasGradient.h"
 namespace Starfish {
 
+CanvasGradient::CanvasGradient(CanvasRenderingContext* context)
+    : ScriptWrappable(this, context->executionContext())
+    , m_canvasRenderingContext(context)
+{
+}
+
 ScriptBindingInstance* CanvasGradient::scriptBindingInstance()
 {
     return m_canvasRenderingContext->scriptBindingInstance();

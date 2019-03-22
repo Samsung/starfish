@@ -28,11 +28,7 @@ class Element;
 
 class DOMStringMap : public ScriptWrappable {
 public:
-    DOMStringMap(Element* element)
-        : ScriptWrappable(this)
-        , m_element(element)
-    {
-    }
+    DOMStringMap(Element* element);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;

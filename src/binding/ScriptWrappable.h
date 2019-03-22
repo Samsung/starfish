@@ -228,8 +228,7 @@ public:
 #undef FOR_EACH_CAST_FN
 
     ScriptWrappable(void* extraPointerData,
-                    ExecutionContext* executionContext = nullptr);
-
+                    ExecutionContext* executionContext);
     virtual ~ScriptWrappable()
     {
     }
@@ -312,12 +311,7 @@ ScriptWrappable* toScriptWrappable(ScriptObject v);
 
 class AttributeEventFunction : public ScriptWrappable {
 public:
-    AttributeEventFunction(EventTarget* target)
-        : ScriptWrappable(target)
-    {
-        m_target = target;
-    }
-
+    AttributeEventFunction(EventTarget* target);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override
     {

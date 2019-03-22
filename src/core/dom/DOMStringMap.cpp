@@ -25,6 +25,12 @@
 
 namespace Starfish {
 
+DOMStringMap::DOMStringMap(Element* element)
+    : ScriptWrappable(this, element->executionContext())
+    , m_element(element)
+{
+}
+
 static bool isCustomDataAtributeName(String* attributeName)
 {
     return attributeName->startsWith("data-");

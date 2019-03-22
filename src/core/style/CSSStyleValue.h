@@ -36,12 +36,7 @@ public:
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    CSSStyleValue(Document* document)
-        : ScriptWrappable(this)
-        , DocumentHoldable(document)
-    {
-    }
-
+    CSSStyleValue(Document* document);
     static CSSStyleValue* parse(String* property, String* cssText);
     static GCVector<CSSStyleValue*> parseAll(String* property, String* cssText);
 
@@ -52,7 +47,7 @@ protected:
 
 private:
     CSSStyleValue()
-        : ScriptWrappable(this)
+        : ScriptWrappable(this, nullptr)
         , DocumentHoldable(nullptr)
     {
     }

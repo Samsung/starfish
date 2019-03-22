@@ -27,9 +27,18 @@
 
 namespace Starfish {
 
+Range::Range(Document* document)
+    : ScriptWrappable(this, document->executionContext())
+    , m_document(document)
+    , m_start(document)
+    , m_end(document)
+{
+    m_document->appendRange(this);
+}
+
 Range::Range(Document* document, Node* startContainer, unsigned startOffset,
              Node* endContainer, unsigned endOffset)
-    : ScriptWrappable(this)
+    : ScriptWrappable(this, document->executionContext())
     , m_document(document)
     , m_start(document)
     , m_end(document)
