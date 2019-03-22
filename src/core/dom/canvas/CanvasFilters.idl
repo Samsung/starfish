@@ -1,0 +1,10 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasfilters
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasFilters {
+  // filters
+  [Unimplemented] attribute DOMString filter; // (default "none")
+};

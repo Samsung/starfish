@@ -1,0 +1,17 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvastextdrawingstyles
+
+enum CanvasTextAlign { "start", "end", "left", "right", "center" };
+enum CanvasTextBaseline { "top", "hanging", "middle", "alphabetic", "ideographic", "bottom" };
+enum CanvasDirection { "ltr", "rtl", "inherit" };
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasTextDrawingStyles {
+  // text
+  [Unimplemented] attribute DOMString font; // (default 10px sans-serif)
+  [Unimplemented] attribute CanvasTextAlign textAlign; // (default: "start")
+  [Unimplemented] attribute CanvasTextBaseline textBaseline; // (default: "alphabetic")
+  [Unimplemented] attribute CanvasDirection direction; // (default: "inherit")
+};

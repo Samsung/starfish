@@ -1,0 +1,11 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#path2d
+
+[STARFISH_ENABLE_CANVAS,
+ UnimplementedConstructor(optional (Path2D or DOMString) path),
+ Exposed=(Window,Worker)]
+interface Path2D {
+  [Unimplemented] void addPath(Path2D path, optional DOMMatrix2DInit transform);
+
+};
+// includes -> implements
+Path2D implements CanvasPath;

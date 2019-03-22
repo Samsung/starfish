@@ -17,8 +17,8 @@
  *  USA
  */
 
-#ifndef __StarfishRenderingContext__
-#define __StarfishRenderingContext__
+#ifndef __StarfishCanvasRenderingContext__
+#define __StarfishCanvasRenderingContext__
 
 #ifdef STARFISH_ENABLE_CANVAS
 
@@ -27,21 +27,18 @@
 namespace Starfish {
 
 class CanvasSurface;
-class HTMLCanvasElement;
 
-class RenderingContext : public ScriptWrappable {
+class CanvasRenderingContext : public ScriptWrappable {
 public:
-    RenderingContext(HTMLCanvasElement* canvasElement)
-        : ScriptWrappable(this)
-        , m_ownerHTMLCanvasElement(canvasElement)
+    CanvasRenderingContext(ExecutionContext* ownerExecutionContext)
+        : ScriptWrappable(this, ownerExecutionContext)
         , m_surface(nullptr)
         , m_originCleanFlag(false)
     {
     }
 
-    HTMLCanvasElement* canvas()
+    virtual ~CanvasRenderingContext()
     {
-        return m_ownerHTMLCanvasElement;
     }
 
     CanvasSurface* surface()
@@ -66,12 +63,9 @@ public:
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(RenderingContext, m_ownerHTMLCanvasElement));
-        GC_set_bit(desc, GC_WORD_OFFSET(RenderingContext, m_surface));
+        GC_set_bit(desc, GC_WORD_OFFSET(CanvasRenderingContext, m_surface));
     }
 
-    HTMLCanvasElement* m_ownerHTMLCanvasElement;
     CanvasSurface* m_surface;
     bool m_originCleanFlag;
 };

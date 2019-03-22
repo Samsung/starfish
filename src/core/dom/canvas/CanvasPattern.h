@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -17,16 +17,32 @@
  *  USA
  */
 
+#ifndef __StarfishCanvasPattern__
+#define __StarfishCanvasPattern__
+
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "StarfishConfig.h"
-#include "core/dom/canvas/CanvasRenderingContext2D.h"
+#include "binding/ScriptWrappable.h"
+
 namespace Starfish {
-CanvasRenderingContext2D::CanvasRenderingContext2D(
-    HTMLCanvasElement* canvasElement)
-    : CanvasRenderingContext2DMixIn(canvasElement)
-{
-}
+class CanvasRenderingContext;
+
+class CanvasPattern : public ScriptWrappable {
+public:
+    CanvasPattern(CanvasRenderingContext* context)
+        : ScriptWrappable(this)
+        , m_canvasRenderingContext(context)
+    {
+    }
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isCanvasPattern() const override;
+    virtual ScriptBindingInstance* scriptBindingInstance() override;
+
+private:
+    CanvasRenderingContext* m_canvasRenderingContext;
+};
 }
 
+#endif
 #endif

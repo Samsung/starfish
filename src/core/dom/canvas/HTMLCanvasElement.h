@@ -30,7 +30,7 @@ namespace Starfish {
 #define STARFISH_CANVAS_DEFAULT_HEIGHT 150
 
 class CanvasSurface;
-class RenderingContext;
+class CanvasRenderingContext;
 class
     CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContext;
 typedef CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContext
@@ -48,7 +48,7 @@ public:
 
     HTMLCanvasElement(Document* document, const QualifiedName& qname)
         : HTMLElement(document, qname)
-        , m_renderingContext(nullptr)
+        , m_canvasRenderingContext(nullptr)
         , m_contextMode(CanvasContextModeNone)
     {
     }
@@ -60,10 +60,9 @@ public:
     uint32_t width();
     void setWidth(uint32_t value);
 
-    CanvasSurface* renderingContextSurface();
-    RenderingContext* renderingContext()
+    CanvasRenderingContext* canvasRenderingContext()
     {
-        return m_renderingContext;
+        return m_canvasRenderingContext;
     }
 
     uint32_t height();
@@ -90,11 +89,12 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         HTMLElement::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(HTMLCanvasElement, m_renderingContext));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(HTMLCanvasElement, m_canvasRenderingContext));
     }
 
 private:
-    RenderingContext* m_renderingContext;
+    CanvasRenderingContext* m_canvasRenderingContext;
     CanvasContextMode m_contextMode;
 };
 }

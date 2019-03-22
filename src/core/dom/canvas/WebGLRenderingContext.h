@@ -22,14 +22,15 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "core/dom/canvas/RenderingContext.h"
+#include "core/dom/canvas/CanvasRenderingContext.h"
 
 namespace Starfish {
 
-class WebGLRenderingContext : public RenderingContext {
+class WebGLRenderingContext : public CanvasRenderingContext {
 public:
     WebGLRenderingContext(HTMLCanvasElement* canvasElement)
-        : RenderingContext(canvasElement)
+        : CanvasRenderingContext(
+              ((ScriptWrappable*)canvasElement)->executionContext())
     {
     }
     virtual void init(ScriptBindingInstance* instance,

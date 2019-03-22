@@ -22,7 +22,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "binding/ScriptWrappable.h"
-#include "core/dom/canvas/RenderingContext.h"
+#include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "binding/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
 
@@ -43,18 +43,10 @@ void HTMLCanvasElement::setWidth(uint32_t value)
     if (value >= 0) {
         setAttribute(starfish()->staticStrings()->m_width,
                      String::fromInt(value));
-        if (m_renderingContext) {
-            m_renderingContext->initialize();
+        if (m_canvasRenderingContext) {
+            m_canvasRenderingContext->initialize();
         }
     }
-}
-
-CanvasSurface* HTMLCanvasElement::renderingContextSurface()
-{
-    if (!m_renderingContext) {
-        return nullptr;
-    }
-    return m_renderingContext->surface();
 }
 
 uint32_t HTMLCanvasElement::height()
@@ -72,8 +64,8 @@ void HTMLCanvasElement::setHeight(uint32_t value)
     if (value >= 0) {
         setAttribute(starfish()->staticStrings()->m_height,
                      String::fromInt(value));
-        if (m_renderingContext) {
-            m_renderingContext->initialize();
+        if (m_canvasRenderingContext) {
+            m_canvasRenderingContext->initialize();
         }
     }
 }
@@ -84,24 +76,24 @@ Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
     if (contextId->equals("2d")) {
         if (m_contextMode == CanvasContextModeNone) {
             m_contextMode = CanvasContextMode2D;
-            m_renderingContext = new CanvasRenderingContext2D(this);
-            m_renderingContext->setOriginCleanFlag(true);
+            m_canvasRenderingContext = new CanvasRenderingContext2D(this);
+            m_canvasRenderingContext->setOriginCleanFlag(true);
         }
         if (m_contextMode == CanvasContextMode2D) {
             return RenderingContextBindindingUnion::
                 createCanvasRenderingContext2D(
-                    (CanvasRenderingContext2D*)m_renderingContext);
+                    (CanvasRenderingContext2D*)m_canvasRenderingContext);
         }
     } else if (contextId->equals("bitmaprenderer")) {
         if (m_contextMode == CanvasContextModeNone) {
             m_contextMode = CanvasContextModeBitmapRenderer;
-            m_renderingContext = new ImageBitmapRenderingContext(this);
-            m_renderingContext->setOriginCleanFlag(true);
+            m_canvasRenderingContext = new ImageBitmapRenderingContext(this);
+            m_canvasRenderingContext->setOriginCleanFlag(true);
         }
         if (m_contextMode == CanvasContextModeBitmapRenderer) {
             return RenderingContextBindindingUnion::
                 createImageBitmapRenderingContext(
-                    (ImageBitmapRenderingContext*)m_renderingContext);
+                    (ImageBitmapRenderingContext*)m_canvasRenderingContext);
         }
     } else if (contextId->equals("webgl")) {
         // NOT SUPPORT

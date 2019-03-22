@@ -1,0 +1,11 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvascompositing
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasCompositing {
+  // compositing
+  attribute unrestricted double globalAlpha; // (default 1.0)
+  attribute DOMString globalCompositeOperation; // (default source-over)
+};

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -20,13 +20,18 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "StarfishConfig.h"
-#include "core/dom/canvas/CanvasRenderingContext2D.h"
+#include "core/dom/canvas/CanvasRenderingContext.h"
+#include "core/dom/canvas/CanvasGradient.h"
 namespace Starfish {
-CanvasRenderingContext2D::CanvasRenderingContext2D(
-    HTMLCanvasElement* canvasElement)
-    : CanvasRenderingContext2DMixIn(canvasElement)
+
+ScriptBindingInstance* CanvasGradient::scriptBindingInstance()
 {
-}
+    return m_canvasRenderingContext->scriptBindingInstance();
 }
 
+void CanvasGradient::addColorStop(double offset, String* color)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+}
 #endif

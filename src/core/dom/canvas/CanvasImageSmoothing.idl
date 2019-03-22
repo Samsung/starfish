@@ -1,0 +1,14 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvasimagesmoothing
+
+enum ImageSmoothingQuality { "low", "medium", "high" };
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasImageSmoothing {
+  // image smoothing
+  [Unimplemented] attribute boolean imageSmoothingEnabled; // (default true)
+  [Unimplemented] attribute ImageSmoothingQuality imageSmoothingQuality; // (default low)
+
+};

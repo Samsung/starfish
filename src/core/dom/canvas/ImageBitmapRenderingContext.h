@@ -22,16 +22,15 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "core/dom/canvas/RenderingContext.h"
+#include "core/dom/canvas/CanvasRenderingContext.h"
 
 namespace Starfish {
 
-class ImageBitmapRenderingContext : public RenderingContext {
+class HTMLCanvasElement;
+class ImageBitmapRenderingContext : public CanvasRenderingContext {
 public:
-    ImageBitmapRenderingContext(HTMLCanvasElement* canvasElement)
-        : RenderingContext(canvasElement)
-    {
-    }
+    ImageBitmapRenderingContext(HTMLCanvasElement* canvasElement);
+
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isImageBitmapRenderingContext() const override;
@@ -41,6 +40,37 @@ public:
     virtual void flush() override
     {
     }
+
+    HTMLCanvasElement* canvas()
+    {
+        return m_ownerHTMLCanvasElement;
+    }
+
+    void* operator new(size_t size)
+    {
+        static bool typeInited = false;
+        static GC_descr descr;
+        if (!typeInited) {
+            GC_word desc[GC_BITMAP_SIZE(ImageBitmapRenderingContext)] = { 0 };
+            ImageBitmapRenderingContext::fillGCDescriptor(desc);
+            descr = GC_make_descriptor(
+                desc, GC_WORD_LEN(ImageBitmapRenderingContext));
+            typeInited = true;
+        }
+        return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+    }
+    void* operator new[](size_t size) = delete;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        CanvasRenderingContext::fillGCDescriptor(desc);
+        GC_set_bit(desc, GC_WORD_OFFSET(ImageBitmapRenderingContext,
+                                        m_ownerHTMLCanvasElement));
+    }
+
+private:
+    HTMLCanvasElement* m_ownerHTMLCanvasElement;
 };
 }
 

@@ -22,118 +22,21 @@
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "core/dom/canvas/RenderingContext.h"
+#include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
 
 namespace Starfish {
 
-class Canvas;
-class CanvasGradient;
-class DOMStringOrCanvasGradientOrCanvasPattern;
-class ImageData;
-
-class CanvasRenderingContext2D : public RenderingContext {
+class CanvasRenderingContext2D : public CanvasRenderingContext2DMixIn {
 public:
-    enum CanvasFillRule {
-        CanvasFillRuleInvalid,
-        CanvasFillRuleNonZero,
-        CanvasFillRuleEvenOdd
-    };
-
     CanvasRenderingContext2D(HTMLCanvasElement* canvasElement);
-
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isCanvasRenderingContext2D() const override;
 
-    virtual void initialize() override;
-    virtual void flush() override;
-
-    // CanvasState
-    void save();
-    void restore();
-
-    // CanvasTransform
-    void scale(double x, double y);
-    void rotate(double angle);
-    void translate(double x, double y);
-    void transform(double a, double b, double c, double d, double e, double f);
-
-    // CanvasCompositing
-    double globalAlpha();
-    void setGlobalAlpha(double value);
-    String* globalCompositeOperation();
-    void setGlobalCompositeOperation(String* value);
-
-    // CanvasImageSmoothing
-
-    // CanvasFillStrokeStyles
-    DOMStringOrCanvasGradientOrCanvasPattern fillStyle();
-    void setFillStyle(DOMStringOrCanvasGradientOrCanvasPattern value);
-
-    DOMStringOrCanvasGradientOrCanvasPattern strokeStyle();
-    void setStrokeStyle(DOMStringOrCanvasGradientOrCanvasPattern value);
-    CanvasGradient* createLinearGradient(double x0, double y0, double x1,
-                                         double y1);
-
-    // CanvasShadowStyles
-
-    // CanvasFilters
-    String* filter();
-    void setFilter(String* value);
-
-    // CanvasRect
-    void fillRect(double x, double y, double w, double h);
-    void strokeRect(double x, double y, double w, double h);
-
-    // CanvasDrawPath
-    void beginPath();
-    void fill(String* fillRule);
-    void fill(Path2D* path, String* fillRule);
-    void stroke();
-
-    // CanvasUserInterface
-
-    // CanvasText
-
-    // CanvasDrawImage
-    // NOTE Replace first argument's type of "drawImage" temporarily to
-    // implement mock
-    // CanvasImageSource -> ScriptValue
-    void drawImage(ScriptValue image, double dx, double dy);
-    void drawImage(ScriptValue image, double dx, double dy, double dw,
-                   double dh);
-    void drawImage(ScriptValue image, double sx, double sy, double sw,
-                   double sh, double dx, double dy, double dw, double dh);
-
-    // CanvasImageData
-    ImageData* getImageData(int32_t sx, int32_t sy, int32_t sw, int32_t sh);
-
-    // CanvasPathDrawingStyles
-
-    // CanvasTextDrawingStyles
-
-    // CanvasPath
-    void closePath();
-    void moveTo(double x, double y);
-    void lineTo(double x, double y);
-    void rect(double x, double y, double w, double h);
-    void arc(double x, double y, double radius, double startAngle,
-             double endAngle, bool anticlockwise = false);
-    void ellipse(double x, double y, double radiusX, double radiusY,
-                 double rotation, double startAngle, double endAngle,
-                 bool anticlockwise = false);
-
-    void bezierCurveTo(double x1, double y1, double x2, double y2, double x3,
-                       double y3);
-
-    void clearRect(double x, double y, double w, double h);
-
-    double lineWidth()
+    HTMLCanvasElement* canvas()
     {
-        return m_lineWidth;
+        return m_ownerHTMLCanvasElement;
     }
-
-    void setLineWidth(double width);
 
     void* operator new(size_t size)
     {
@@ -153,86 +56,10 @@ public:
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
-        RenderingContext::fillGCDescriptor(desc);
-        GC_set_bit(desc, GC_WORD_OFFSET(CanvasRenderingContext2D, m_canvas));
+        CanvasRenderingContext2DMixIn::fillGCDescriptor(desc);
     }
 
 private:
-    Canvas* m_canvas;
-    Unit::Color m_fillColor;
-    Unit::Color m_strokeColor;
-    double m_lineWidth;
-    double m_globalAlpha;
-};
-
-class CanvasGradient : public ScriptWrappable {
-public:
-    CanvasGradient(RenderingContext* context)
-        : ScriptWrappable(this)
-        , m_renderingContext(context)
-    {
-    }
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isCanvasGradient() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance()
-    {
-        return m_renderingContext->scriptBindingInstance();
-    }
-
-    void addColorStop(double offset, String* color);
-
-private:
-    RenderingContext* m_renderingContext;
-};
-
-class CanvasPattern : public ScriptWrappable {
-public:
-    CanvasPattern(RenderingContext* context)
-        : ScriptWrappable(this)
-        , m_renderingContext(context)
-    {
-    }
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isCanvasPattern() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance()
-    {
-        return m_renderingContext->scriptBindingInstance();
-    }
-
-private:
-    RenderingContext* m_renderingContext;
-};
-
-class Path2D : public ScriptWrappable {
-public:
-    Path2D(RenderingContext* context)
-        : ScriptWrappable(this)
-        , m_renderingContext(context)
-    {
-    }
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isPath2D() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance()
-    {
-        return m_renderingContext->scriptBindingInstance();
-    }
-
-    // CanvasPath
-    void closePath();
-    void moveTo(double x, double y);
-    void lineTo(double x, double y);
-    void rect(double x, double y, double w, double h);
-    void arc(double x, double y, double radius, double startAngle,
-             double endAngle, bool anticlockwise = false);
-    void ellipse(double x, double y, double radiusX, double radiusY,
-                 double rotation, double startAngle, double endAngle,
-                 bool anticlockwise = false);
-
-private:
-    RenderingContext* m_renderingContext;
 };
 }
 

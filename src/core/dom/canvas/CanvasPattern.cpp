@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-present Samsung Electronics Co., Ltd
+ * Copyright (c) 2019-present Samsung Electronics Co., Ltd
  *
  *  This library is free software; you can redistribute it and/or
  *  modify it under the terms of the GNU Lesser General Public
@@ -20,13 +20,14 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "StarfishConfig.h"
-#include "core/dom/canvas/CanvasRenderingContext2D.h"
-namespace Starfish {
-CanvasRenderingContext2D::CanvasRenderingContext2D(
-    HTMLCanvasElement* canvasElement)
-    : CanvasRenderingContext2DMixIn(canvasElement)
-{
-}
-}
+#include "core/dom/canvas/CanvasRenderingContext.h"
+#include "core/dom/canvas/CanvasPattern.h"
 
+namespace Starfish {
+
+ScriptBindingInstance* CanvasPattern::scriptBindingInstance()
+{
+    return m_canvasRenderingContext->scriptBindingInstance();
+}
+}
 #endif

@@ -20,12 +20,15 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "StarfishConfig.h"
-#include "core/dom/canvas/CanvasRenderingContext2D.h"
+#include "core/dom/canvas/HTMLCanvasElement.h"
+#include "core/dom/canvas/CanvasRenderingContext.h"
+#include "core/dom/Document.h"
+
 namespace Starfish {
-CanvasRenderingContext2D::CanvasRenderingContext2D(
-    HTMLCanvasElement* canvasElement)
-    : CanvasRenderingContext2DMixIn(canvasElement)
+
+ScriptBindingInstance* CanvasRenderingContext::scriptBindingInstance()
 {
+    return executionContext()->ownerScriptBindingInstance();
 }
 }
 

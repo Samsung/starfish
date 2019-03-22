@@ -1,0 +1,12 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvastext
+
+// mixin
+[STARFISH_ENABLE_CANVAS, 
+ PartialInterface,
+ NoInterfaceObject]
+interface CanvasText {
+  // text (see also the CanvasPathDrawingStyles and CanvasTextDrawingStyles interfaces)
+  [Unimplemented]void fillText(DOMString text, unrestricted double x, unrestricted double y, optional unrestricted double maxWidth);
+  [Unimplemented]void strokeText(DOMString text, unrestricted double x, unrestricted double y, optional unrestricted double maxWidth);
+  [Unimplemented]TextMetrics measureText(DOMString text);
+};
