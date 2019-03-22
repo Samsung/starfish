@@ -304,8 +304,6 @@ protected:
         m_object = obj;
     }
     Escargot::ObjectRef* m_object;
-
-private:
     ExecutionContext* m_executionContext;
 };
 

@@ -95,7 +95,7 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     // TODO: use location to open a new document
     m_document = new HTMLDocument(this, m_scriptBindingInstance, url,
                                   String::createASCIIString("UTF-8"), true);
-
+    m_executionContext = m_document;
     m_history = new History(m_document);
     m_navigator = new Navigator(m_document);
     m_location = new Location(m_document);
