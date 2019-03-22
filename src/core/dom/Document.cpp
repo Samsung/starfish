@@ -64,6 +64,7 @@
 #include "core/layout/FrameDocument.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/Screen.h"
 #include "core/page/Window.h"
 #include "core/page/WebView.h"
 #include "core/style/CSSStyleDeclaration.h"
@@ -1028,6 +1029,16 @@ Node* Document::adoptNode(Node* node)
     }
 
     return node;
+}
+
+uint32_t Document::width()
+{
+    return window()->screen()->width();
+}
+
+uint32_t Document::height()
+{
+    return window()->screen()->height();
 }
 
 Attr* Document::createAttribute(String* name)

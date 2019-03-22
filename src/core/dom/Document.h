@@ -224,6 +224,9 @@ public:
 #undef REFLECT_ATTR_GETTER_FROM_BODY
 #undef REFLECT_ATTR_SETTER_TO_BODY
 
+    uint32_t width();
+    uint32_t height();
+
     Attr* createAttribute(QualifiedName localName);
     Attr* createAttribute(String* name);
     Attr* createAttributeNS(Nullable<String*> ns, String* name);
