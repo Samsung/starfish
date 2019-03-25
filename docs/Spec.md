@@ -72,6 +72,8 @@ explicitly specified.
 |  [table](https://www.w3.org/TR/html5/tabular-data.html#the-table-element)  | width | pixels &#124; &lt;percentage&gt; |  |
 |  | bgcolor | &lt;color&gt; |  |
 |  | cellspacing | pixels |  |
+|  [canvas](https://www.w3.org/TR/html5/semantics-scripting.html#elementdef-canvas) | width | pixels |  |
+|  | height | pixels |  |
 |  [caption](https://www.w3.org/TR/html5/tabular-data.html#the-caption-element) |  |  |  |
 |  [colgroup](https://www.w3.org/TR/html5/tabular-data.html#the-colgroup-element)  |  |  |  |
 |  [tbody](https://www.w3.org/TR/html5/tabular-data.html#the-tbody-element)  |  |  |  |
@@ -126,6 +128,15 @@ section are supported.
 |  | attribute | value | Return the value. |
 |  | attribute | ownerElement | Return context object’s element. |
 |  | attribute | specified | Return true. |
+| [CanvasRenderingContext2D](https://html.spec.whatwg.org/multipage/canvas.html#canvasrenderingcontext2dsettings) | interface | CanvasRenderingContext2D |  |
+|  | attribute | canvas | Return associated \<canvas\> element |
+| [CanvasState](https://html.spec.whatwg.org/multipage/canvas.html#canvasstate) | interface mixin | CanvasState |  |
+|  | method | void save() | Push state on state stack |
+|  | method | void restore() | Pop state stack and restore state |
+| [CanvasRect](https://html.spec.whatwg.org/multipage/canvas.html#canvasrect) | interface mixin | CanvasRect |  |
+|  | method | void clearRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Erases the pixels in a rectangular area by setting them to transparent black. |
+|  | method | void fillRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Draws a rectangle that is filled according to the current fillStyle. |
+|  | method | void strokeRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Draws a rectangle that is stroked (outlined) according to the current strokeStyle and other context settings |
 | [CDATASection](https://dom.spec.whatwg.org/#interface-cdatasection) | interface | CDATASection |  |
 | [CharacterData](https://dom.spec.whatwg.org/#interface-characterdata) | interface | CharacterData | CharacterData is an abstract interface and does not exist as node. It is used by Text, ProcessingInstruction, and Comment nodes. |
 |  | attribute | data | Getter must return context object’s data. Its setter must replace data with node context object, offset 0, count context object’s length, and data new value. |
@@ -438,6 +449,10 @@ section are supported.
 |  | attribute | value | Returns the value of the input element. |
 |  | attribute | labels | Is a NodeList that represents a list of label elements that are labels for this button. |
 | [HTMLBRElement](https://html.spec.whatwg.org/multipage/semantics.html#the-br-element) | interface | HTMLBRElement | The br element represents a line break. |
+| [HTMLCanvasElement](https://html.spec.whatwg.org/#the-canvas-element) | interface | HTMLCanvasElement | The canvas element provides scripts with a resolution-dependent bitmap canvas, which can be used for rendering graphs, game graphics, art, or other visual images on the fly. |
+|  | attribute | width | Reflects the width HTML attribute. |
+|  | attribute | height | Reflects the height HTML attribute. |
+|  | method | getContext | Returns a drawing context on the canvas, or null if the context identifier is not supported. |
 |  [HTMLCollection](https://dom.spec.whatwg.org/#htmlcollection)  |  attribute  |  length  |  Returns the number of elements in the collection.  |
 |    |  method  |  Element? item(unsigned long index) (or collection[index])  |  Returns the element with index index number from the collection. The elements are sorted in tree order.  |
 | [HTMLDivElement](https://www.w3.org/TR/html5/grouping-content.html#the-div-element) | interface | HTMLDivElement | Offers a generic mechanism for adding structure to documents |

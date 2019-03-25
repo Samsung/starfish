@@ -1493,6 +1493,7 @@ public:
         m_flag = flag;
         m_wTextureCount = 0;
         m_hTextureCount = 0;
+        m_textureTileSize = 0;
 #if defined(STARFISH_TIZEN)
         m_tbmSurface = nullptr;
         m_eglImage = nullptr;
@@ -1600,10 +1601,15 @@ public:
             float windowDevicePixelRatio =
                 m_window->webView()->screenInfo().devicePixelRatio;
 
-            m_bufferWidth =
-                std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
-            m_bufferHeight =
-                std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
+            if (!(m_flag & CanvasSurfaceFlag::CanvasElement)) {
+                m_bufferWidth =
+                    std::max((size_t)1, (size_t)(w * windowDevicePixelRatio));
+                m_bufferHeight =
+                    std::max((size_t)1, (size_t)(h * windowDevicePixelRatio));
+            } else {
+                m_bufferWidth = w;
+                m_bufferHeight = h;
+            }
 
             if (!g_shouldUseEGLImageOnPlainSurface &&
                 g_isSupportExtensionEGLImageExternal &&
@@ -1761,8 +1767,9 @@ public:
             return;
         }
 
-        m_wTextureCount = ceil((float)m_bufferWidth / g_textureTileSize);
-        m_hTextureCount = ceil((float)m_bufferHeight / g_textureTileSize);
+        m_textureTileSize = g_textureTileSize;
+        m_wTextureCount = ceil((float)m_bufferWidth / m_textureTileSize);
+        m_hTextureCount = ceil((float)m_bufferHeight / m_textureTileSize);
 
         if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
             m_wTextureCount = m_hTextureCount = 1;
@@ -1777,10 +1784,10 @@ public:
                 size_t texureDataX = coveredColsCount;
                 size_t texureDataY = coveredRowsCount;
                 size_t texureDataWidth =
-                    std::min((size_t)g_textureTileSize,
+                    std::min((size_t)m_textureTileSize,
                              m_bufferWidth - coveredColsCount);
                 size_t texureDataHeight =
-                    std::min((size_t)g_textureTileSize,
+                    std::min((size_t)m_textureTileSize,
                              m_bufferHeight - coveredRowsCount);
 
                 if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
@@ -1821,10 +1828,10 @@ public:
                 fragment.srcHeight = texureDataHeight / (float)m_bufferHeight;
 
                 m_textureFragments.push_back(fragment);
-                coveredColsCount += g_textureTileSize;
+                coveredColsCount += m_textureTileSize;
             }
 
-            coveredRowsCount += g_textureTileSize;
+            coveredRowsCount += m_textureTileSize;
         }
     }
 
@@ -1904,12 +1911,17 @@ public:
         return m_hTextureCount;
     }
 
+    size_t textureTileSize()
+    {
+        return m_textureTileSize;
+    }
     virtual void unmapBufferAndNotifyUpdatedRegion(size_t dirtyX, size_t dirtyY,
                                                    size_t dirtyWidth,
                                                    size_t dirtyHeight) override
     {
         STARFISH_ASSERT(m_wTextureCount != 0);
         STARFISH_ASSERT(m_hTextureCount != 0);
+        STARFISH_ASSERT(m_textureTileSize != 0);
         if (m_textureFragments.size() == 0) {
             return;
         }
@@ -1945,10 +1957,10 @@ public:
                     size_t textureDataX = coveredColsCount;
                     size_t textureDataY = coveredRowsCount;
                     size_t textureDataWidth =
-                        std::min((size_t)g_textureTileSize,
+                        std::min((size_t)m_textureTileSize,
                                  m_bufferWidth - coveredColsCount);
                     size_t textureDataHeight =
-                        std::min((size_t)g_textureTileSize,
+                        std::min((size_t)m_textureTileSize,
                                  m_bufferHeight - coveredRowsCount);
 
                     if (m_flag & CanvasSurfaceFlag::ElementHasFilterEffect) {
@@ -2024,10 +2036,10 @@ public:
                     }
 
                     fragmentIndex++;
-                    coveredColsCount += g_textureTileSize;
+                    coveredColsCount += m_textureTileSize;
                 }
 
-                coveredRowsCount += g_textureTileSize;
+                coveredRowsCount += m_textureTileSize;
             }
         }
 
@@ -2109,6 +2121,7 @@ protected:
     size_t m_bufferStride;
     size_t m_wTextureCount;
     size_t m_hTextureCount;
+    size_t m_textureTileSize;
     GCAtomicVector<CanvasSurfaceTextureInfo::CanvasSurfaceTextureInfoFragment>
         m_textureFragments;
 
@@ -3057,10 +3070,10 @@ public:
                         size_t texureDataX = coveredColsCount;
                         size_t texureDataY = coveredRowsCount;
                         size_t texureDataWidth =
-                            std::min((size_t)g_textureTileSize,
+                            std::min((size_t)csGL->textureTileSize(),
                                      cs->bufferWidth() - coveredColsCount);
                         size_t texureDataHeight =
-                            std::min((size_t)g_textureTileSize,
+                            std::min((size_t)csGL->textureTileSize(),
                                      cs->bufferHeight() - coveredRowsCount);
 
                         if (csGL->m_flag &
@@ -3122,10 +3135,10 @@ public:
                                         texureDataHeight);
                         }
                         i++;
-                        coveredColsCount += g_textureTileSize;
+                        coveredColsCount += csGL->textureTileSize();
                     }
 
-                    coveredRowsCount += g_textureTileSize;
+                    coveredRowsCount += csGL->textureTileSize();
                 }
             }
         }
@@ -3364,8 +3377,7 @@ public:
                          GL_UNSIGNED_INT_24_8, // type of of data we are
                                                // uploading to to the texture
                                                // (ignored)
-                         NULL                  // no data uploaded
-                         );
+                         NULL /* no data uploaded */);
             checkError();
             // attatch the depth/stencil texture to both the stencil and depth
             // render objects.
