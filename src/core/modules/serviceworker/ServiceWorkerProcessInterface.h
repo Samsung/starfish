@@ -18,20 +18,27 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerServiceJobClient__)
-#define __StarfishServiceWorkerServiceJobClient__
+    !defined(__ServiceWorkerProcessInterface__)
+#define __ServiceWorkerProcessInterface__
 
 namespace Starfish {
 
-class ServiceWorkerJob;
+struct ServiceWorkerJob;
 
-class ServiceWorkerServiceJobClient {
+class IServiceWorkerClientProcess {
 public:
-    virtual ~ServiceWorkerServiceJobClient()
+    virtual ~IServiceWorkerClientProcess()
     {
     }
     virtual void resolveJobPromise(ServiceWorkerJob* job) = 0;
 };
 
-} // namespace Starfish
+class IServiceWorkerHostProcess {
+public:
+    virtual ~IServiceWorkerHostProcess()
+    {
+    }
+    virtual void scheduleJob(ServiceWorkerJob* job) = 0;
+};
+}
 #endif

@@ -18,8 +18,8 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerServiceHostJobQueue__)
-#define __StarfishServiceWorkerServiceHostJobQueue__
+    !defined(__StarfishServiceWorkerHostJobQueue__)
+#define __StarfishServiceWorkerHostJobQueue__
 
 namespace Starfish {
 
@@ -29,9 +29,9 @@ class ServiceWorkerRegistrationData;
 class ServiceWorker;
 class ServiceWorkerData;
 
-class ServiceWorkerServiceHostJobQueue {
+class ServiceWorkerHostJobQueue {
 public:
-    ServiceWorkerServiceHostJobQueue(MessageLoop* messageLoop);
+    ServiceWorkerHostJobQueue(MessageLoop* messageLoop);
 
     void enqueueJob(ServiceWorkerJob* job);
     size_t size() const;

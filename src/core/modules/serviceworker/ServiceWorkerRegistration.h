@@ -22,7 +22,7 @@
 #define __StarfishServiceWorkerRegistration__
 
 #include "core/dom/EventTarget.h"
-#include "core/modules/serviceworker/ServiceWorkerEnums.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/fetch/GetSet.h" // TODO: move this to where common macros exist after renaming them in a more clear sense.
 
 namespace Starfish {

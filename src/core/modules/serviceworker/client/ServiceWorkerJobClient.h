@@ -18,27 +18,20 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerEnums__)
-#define __StarfishServiceWorkerEnums__
+    !defined(__StarfishServiceWorkerJobClient__)
+#define __StarfishServiceWorkerJobClient__
 
 namespace Starfish {
 
-enum class ServiceWorkerUpdateViaCache {
-    Imports,
-    All,
-    None,
+class ServiceWorkerJob;
+
+class ServiceWorkerJobClient {
+public:
+    virtual ~ServiceWorkerJobClient()
+    {
+    }
+    virtual void resolveJobPromise(ServiceWorkerJob* job) = 0;
 };
 
-enum class ServiceWorkerJobType {
-    Register,
-    Unregister,
-    Update,
-};
-
-enum class WorkerType {
-    Classic,
-    Module,
-};
-}
-
+} // namespace Starfish
 #endif

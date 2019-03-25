@@ -20,54 +20,61 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
-#include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceHost.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceClient.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceJobClient.h"
 
 #include <EscargotPublic.h>
 
+#include "core/dom/ExecutionContext.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
+
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/client/ServiceWorkerJobClient.h"
+
+#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/dom/ExecutionContext.h"
+
 namespace Starfish {
 
-ServiceWorkerServiceClient* ServiceWorkerServiceClient::m_instance = nullptr;
+ServiceWorkerClientProcess* ServiceWorkerClientProcess::m_instance = nullptr;
 
-ServiceWorkerServiceClient* ServiceWorkerServiceClient::getInstance()
+ServiceWorkerClientProcess* ServiceWorkerClientProcess::getInstance()
 {
     if (!m_instance) {
-        m_instance = new ServiceWorkerServiceClient();
+        m_instance = new ServiceWorkerClientProcess();
     }
     return m_instance;
 }
 
-void ServiceWorkerServiceClient::destroy()
+void ServiceWorkerClientProcess::destroy()
 {
     delete m_instance;
     m_instance = nullptr;
     // NOTE: temporary destroy the host instance here
-    ServiceWorkerServiceHost::getInstance()->destroy();
+    ServiceWorkerHostProcess::getInstance()->destroy();
 }
 
-ServiceWorkerServiceClient::ServiceWorkerServiceClient()
+ServiceWorkerClientProcess::ServiceWorkerClientProcess()
     : m_jobClient(nullptr)
 {
 }
 
-ServiceWorkerServiceClient::~ServiceWorkerServiceClient()
+ServiceWorkerClientProcess::~ServiceWorkerClientProcess()
 {
 }
 
-void ServiceWorkerServiceClient::init(ServiceWorkerServiceJobClient* jobClient)
+void ServiceWorkerClientProcess::init(ServiceWorkerJobClient* jobClient)
 {
     m_jobClient = jobClient;
 }
 
-ServiceWorkerServiceHostInterface* ServiceWorkerServiceClient::host()
+IServiceWorkerHostProcess* ServiceWorkerClientProcess::host()
 {
-    return ServiceWorkerServiceHost::getInstance();
+    return ServiceWorkerHostProcess::getInstance();
 }
 
-void ServiceWorkerServiceClient::resolveJobPromise(ServiceWorkerJob* job)
+void ServiceWorkerClientProcess::resolveJobPromise(ServiceWorkerJob* job)
 {
     m_jobClient->resolveJobPromise(job);
 }

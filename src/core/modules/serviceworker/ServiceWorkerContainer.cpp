@@ -20,19 +20,24 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
-#include "core/page/WebBase.h"
-#include "core/dom/ExecutionContext.h"
-#include "core/dom/Document.h"
-#include "core/modules/message_loop/MessageLoop.h"
+
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
+
+#include "core/dom/ExecutionContext.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
+
+#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceClient.h"
 #include "core/modules/serviceworker/RegistrationOptions.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
-#include "core/dom/Event.h"
 
-#include "core/modules/serviceworker/ServiceWorkerServiceHost.h"
+#include "core/dom/Event.h"
+#include "core/page/WebBase.h"
+#include "core/modules/message_loop/MessageLoop.h"
+
+#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
 #include <EscargotPublic.h>
 
@@ -55,13 +60,14 @@ ScriptValue createException(ScriptBindingInstance* scriptBindingInstance,
 
 ServiceWorkerContainer::ServiceWorkerContainer(Document* document)
     : EventTarget(document)
+    , m_refValueToMakeServiceWorkerJobId(0)
 {
-    ServiceWorkerServiceClient::getInstance()->init(this);
+    ServiceWorkerClientProcess::getInstance()->init(this);
 }
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
 {
-    ServiceWorkerServiceClient::getInstance()->destroy();
+    ServiceWorkerClientProcess::getInstance()->destroy();
 }
 
 Promise* ServiceWorkerContainer::registerServiceWorker(
@@ -70,9 +76,7 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
     // https://w3c.github.io/ServiceWorker/#navigator-service-worker-register
 
     // 1. Let p be a promise.
-    // TODO: allocate with (NoGC) and manage it. (let promise be a new promise
-    // and append promise to the list of pending.)
-    Promise* p = new (NoGC) Promise(scriptBindingInstance());
+    Promise* p = new Promise(scriptBindingInstance());
 
     // 2. Let client be the context object’s service worker client.
     ExecutionContext* client = executionContext();
@@ -201,11 +205,14 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
     // https://w3c.github.io/ServiceWorker/#create-job
 
     auto job = new ServiceWorkerJob();
+    job->id = m_refValueToMakeServiceWorkerJobId;
     job->type = type;
     job->scopeURL = scopeURL;
     job->scriptURL = scriptURL;
     job->promise = promise;
     job->client = client;
+
+    m_refValueToMakeServiceWorkerJobId++;
 
     return job;
 }
@@ -219,9 +226,11 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 
             // TODO: this should be called via in/out process communication
             // method
-            ServiceWorkerServiceClient::getInstance()->host()->scheduleJob(job);
+            ServiceWorkerClientProcess::getInstance()->host()->scheduleJob(job);
         },
         job);
+
+    m_jobMap.insert(std::make_pair(job->id, job));
 }
 
 Promise* ServiceWorkerContainer::getRegistration(
@@ -299,9 +308,6 @@ void ServiceWorkerContainer::resolveJobPromise(ServiceWorkerJob* job)
 
                     convertedValue = registeration->scriptValue();
                     job->promise->fulfill(convertedValue);
-
-                    GC_FREE(job->promise);
-                    job->promise = nullptr;
                 }
             },
             params);

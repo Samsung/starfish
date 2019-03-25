@@ -22,19 +22,21 @@
 #define __StarfishServiceWorkerContainer__
 
 #include "core/dom/EventTarget.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceJobClient.h"
-#include "core/modules/serviceworker/ServiceWorkerEnums.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/RegistrationOptions.h"
+#include "core/modules/serviceworker/client/ServiceWorkerJobClient.h"
 
 namespace Starfish {
 
-class ServiceWorker;
 class Promise;
-class ServiceWorkerJob;
+class Document;
 class ExecutionContext;
-class RegistrationOptions;
+class ServiceWorker;
+class ServiceWorkerJob;
 
 class ServiceWorkerContainer : public EventTarget,
-                               public ServiceWorkerServiceJobClient {
+                               public ServiceWorkerJobClient {
 public:
     ServiceWorkerContainer(Document* document);
     virtual ~ServiceWorkerContainer();
@@ -57,6 +59,10 @@ public:
     void scheduleJob(ServiceWorkerJob* job);
 
     virtual void resolveJobPromise(ServiceWorkerJob* job) override;
+
+private:
+    GCUnorderedMap<ServiceWorkerJobId, ServiceWorkerJob*> m_jobMap;
+    ServiceWorkerJobId m_refValueToMakeServiceWorkerJobId;
 };
 }
 

@@ -18,11 +18,8 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerServiceHost__)
-#define __StarfishServiceWorkerServiceHost__
-
-#include "core/modules/serviceworker/ServiceWorkerEnums.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceInterface.h"
+    !defined(__StarfishServiceWorkerHostProcess__)
+#define __StarfishServiceWorkerHostProcess__
 
 namespace Starfish {
 
@@ -39,10 +36,10 @@ struct RegistrationIdentifier : public gc {
 };
 
 class ServiceWorkerJob;
-class ServiceWorkerServiceHostJobQueue;
+class ServiceWorkerHostJobQueue;
 class MessageLoop;
 class ServiceWorkerRegistrationData;
-class ServiceWorkerServiceClientInterface;
+class IServiceWorkerClientProcess;
 
 struct ServiceWorkerRegistrationKeyComparator {
     bool operator()(const ServiceWorkerRegistrationKey& lhs,
@@ -52,12 +49,12 @@ struct ServiceWorkerRegistrationKeyComparator {
     }
 };
 
-class ServiceWorkerServiceHost : public ServiceWorkerServiceHostInterface {
+class ServiceWorkerHostProcess : public IServiceWorkerHostProcess {
 public:
-    static ServiceWorkerServiceHost* getInstance();
+    static ServiceWorkerHostProcess* getInstance();
     static void destroy();
-    ServiceWorkerServiceHost(ServiceWorkerServiceHost const&) = delete;
-    void operator=(ServiceWorkerServiceHost const&) = delete;
+    ServiceWorkerHostProcess(ServiceWorkerHostProcess const&) = delete;
+    void operator=(ServiceWorkerHostProcess const&) = delete;
 
     void init(MessageLoop* messageLoop);
 
@@ -67,16 +64,15 @@ public:
     void setRegistration(String* scope,
                          ServiceWorkerUpdateViaCache updateViaCacheMode);
 
-    ServiceWorkerServiceClientInterface* client();
+    IServiceWorkerClientProcess* client();
 
 private:
-    static ServiceWorkerServiceHost* m_instance;
-    ServiceWorkerServiceHost();
-    virtual ~ServiceWorkerServiceHost();
+    static ServiceWorkerHostProcess* m_instance;
+    ServiceWorkerHostProcess();
+    virtual ~ServiceWorkerHostProcess();
 
     MessageLoop* m_messageLoop;
-    GCUnorderedMap<ServiceWorkerRegistrationKey,
-                   ServiceWorkerServiceHostJobQueue*>
+    GCUnorderedMap<ServiceWorkerRegistrationKey, ServiceWorkerHostJobQueue*>
         m_jobQueueMap;
     GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
           ServiceWorkerRegistrationKeyComparator>

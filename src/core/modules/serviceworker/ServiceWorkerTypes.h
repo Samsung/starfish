@@ -18,27 +18,33 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__ServiceWorkerServiceClientInterface__)
-#define __ServiceWorkerServiceClientInterface__
+    !defined(__StarfishServiceWorkerTypes__)
+#define __StarfishServiceWorkerTypes__
 
 namespace Starfish {
 
-struct ServiceWorkerJob;
+class ExecutionContext;
 
-class ServiceWorkerServiceClientInterface {
-public:
-    virtual ~ServiceWorkerServiceClientInterface()
-    {
-    }
-    virtual void resolveJobPromise(ServiceWorkerJob* job) = 0;
+enum class ServiceWorkerUpdateViaCache {
+    Imports,
+    All,
+    None,
 };
 
-class ServiceWorkerServiceHostInterface {
-public:
-    virtual ~ServiceWorkerServiceHostInterface()
-    {
-    }
-    virtual void scheduleJob(ServiceWorkerJob* job) = 0;
+enum class ServiceWorkerJobType {
+    Register,
+    Unregister,
+    Update,
 };
+
+enum class WorkerType {
+    Classic,
+    Module,
+};
+
+using ServiceWorkerClient = ExecutionContext;
+using ServiceWorkerRegistrationKey = String*;
+using ServiceWorkerJobId = uint64_t;
 }
+
 #endif
