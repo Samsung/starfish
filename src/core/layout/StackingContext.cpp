@@ -2597,6 +2597,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
     if (owner()->hasOwnGraphicsBufferMethod()) {
         if (m_rareData->m_graphicsBufferHolder) {
+            compositor->save();
+            compositor->translate(minX, minY);
 #ifdef STARFISH_ENABLE_CANVAS
             if (owner()->isFrameReplacedCanvas()) {
                 CanvasSurface* backgroundSurface = CanvasSurface::create(
@@ -2609,16 +2611,22 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 owner()->asFrameBox()->paintBackgroundAndBorders(canvas);
                 delete canvas;
                 backgroundSurface->unmapBufferAndNotifyUpdatedRegion(
-                    0, 0, bufferWidth, bufferHeight);
+                    0, 0, backgroundSurface->bufferWidth(), backgroundSurface->bufferHeight());
                 compositor->drawSurface(
                     backgroundSurface,
-                    Unit::Rect(minX, minY, bufferWidth, bufferHeight));
+                    Unit::Rect(0, 0, backgroundSurface->bufferWidth(),
+                               backgroundSurface->bufferHeight()));
                 backgroundSurface->detachNativeBuffer();
+                auto dx = owner()->borderLeft() + owner()->paddingLeft();
+                auto dy = owner()->borderTop() + owner()->paddingTop();
+                compositor->translate(dx, dy);
             }
 #endif
+            auto surface = m_rareData->m_graphicsBufferHolder->m_surfaces[0];
             compositor->drawSurface(
-                m_rareData->m_graphicsBufferHolder->m_surfaces[0],
-                Unit::Rect(minX, minY, bufferWidth, bufferHeight));
+                surface, Unit::Rect(0, 0, surface->bufferWidth(),
+                                    surface->bufferHeight()));
+            compositor->restore();
         }
     } else if (m_rareData->m_graphicsBufferHolder) {
         size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;

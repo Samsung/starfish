@@ -304,8 +304,8 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
     flush();
 
     size_t stride = 0;
-    if (m_surface->width() && m_surface->bufferStride()) {
-        stride = m_surface->bufferStride() / m_surface->width();
+    if (m_surface->bufferWidth() && m_surface->bufferStride()) {
+        stride = m_surface->bufferStride() / m_surface->bufferWidth();
     } else {
         stride = 4;
     }
@@ -323,8 +323,8 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
                         ->asArrayBufferObject()
                         ->rawBuffer();
 
-    auto width = m_surface->width();
-    auto height = m_surface->height();
+    auto width = m_surface->bufferWidth();
+    auto height = m_surface->bufferHeight();
 
     uint8_t* src = m_surface->mapBuffer();
     for (size_t y = 0; y < (size_t)sh && (y + sy) < height; ++y) {
