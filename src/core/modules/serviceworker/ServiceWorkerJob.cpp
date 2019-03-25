@@ -18,6 +18,9 @@
  */
 
 #include "StarfishConfig.h"
+
+#include "core/dom/ExecutionContext.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

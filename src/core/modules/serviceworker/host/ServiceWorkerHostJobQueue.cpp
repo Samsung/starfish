@@ -20,44 +20,51 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
+
+#include "core/dom/ExecutionContext.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostJobQueue.h"
+
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
+
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceHostJobQueue.h"
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceHost.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceClient.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
 
 namespace Starfish {
 
-ServiceWorkerServiceHostJobQueue::ServiceWorkerServiceHostJobQueue(
-    MessageLoop* messageLoop)
+ServiceWorkerHostJobQueue::ServiceWorkerHostJobQueue(MessageLoop* messageLoop)
     : m_jobQueue()
     , m_messageLoop(messageLoop)
 {
 }
 
-void ServiceWorkerServiceHostJobQueue::enqueueJob(ServiceWorkerJob* job)
+void ServiceWorkerHostJobQueue::enqueueJob(ServiceWorkerJob* job)
 {
     m_jobQueue.push_back(job);
 }
 
-size_t ServiceWorkerServiceHostJobQueue::size() const
+size_t ServiceWorkerHostJobQueue::size() const
 {
     return m_jobQueue.size();
 }
 
-const ServiceWorkerJob* ServiceWorkerServiceHostJobQueue::firstJob() const
+const ServiceWorkerJob* ServiceWorkerHostJobQueue::firstJob() const
 {
     return m_jobQueue.front();
 }
 
-const ServiceWorkerJob* ServiceWorkerServiceHostJobQueue::lastJob() const
+const ServiceWorkerJob* ServiceWorkerHostJobQueue::lastJob() const
 {
     return m_jobQueue.back();
 }
 
-void ServiceWorkerServiceHostJobQueue::runJob()
+void ServiceWorkerHostJobQueue::runJob()
 {
     // https://w3c.github.io/ServiceWorker/#run-job-algorithm
 
@@ -66,7 +73,7 @@ void ServiceWorkerServiceHostJobQueue::runJob()
 
     // 2. Queue a task to run these steps in parallel.
     struct Params : public gc {
-        ServiceWorkerServiceHostJobQueue* queue;
+        ServiceWorkerHostJobQueue* queue;
         ServiceWorkerJob* job;
     };
 
@@ -79,7 +86,7 @@ void ServiceWorkerServiceHostJobQueue::runJob()
     queueTask(
         [](size_t handle, void* data) {
             Params* params = static_cast<Params*>(data);
-            ServiceWorkerServiceHostJobQueue* queue = params->queue;
+            ServiceWorkerHostJobQueue* queue = params->queue;
             ServiceWorkerJob* job = params->job;
 
             // 2.2, 2.3, 2.4
@@ -100,19 +107,18 @@ void ServiceWorkerServiceHostJobQueue::runJob()
         params);
 }
 
-void ServiceWorkerServiceHostJobQueue::queueTask(void (*fn)(size_t, void*),
-                                                 void* data)
+void ServiceWorkerHostJobQueue::queueTask(void (*fn)(size_t, void*), void* data)
 {
     m_messageLoop->addIdler(nullptr, fn, data);
 }
 
-void ServiceWorkerServiceHostJobQueue::runRegisterJob(ServiceWorkerJob* job)
+void ServiceWorkerHostJobQueue::runRegisterJob(ServiceWorkerJob* job)
 {
     // https://w3c.github.io/ServiceWorker/#register-algorithm
 
     // 4. Let registration be the result of running the Get Registration
     // algorithm passing job’s scope url as the argument.
-    auto host = ServiceWorkerServiceHost::getInstance();
+    auto host = ServiceWorkerHostProcess::getInstance();
     auto registration = host->getRegistration(job->scopeURL);
 
     if (registration) {
@@ -127,10 +133,10 @@ void ServiceWorkerServiceHostJobQueue::runRegisterJob(ServiceWorkerJob* job)
     runUpdateJob(job);
 }
 
-void ServiceWorkerServiceHostJobQueue::runUpdateJob(ServiceWorkerJob* job)
+void ServiceWorkerHostJobQueue::runUpdateJob(ServiceWorkerJob* job)
 {
     // https://w3c.github.io/ServiceWorker/#update-algorithm
-    auto host = ServiceWorkerServiceHost::getInstance();
+    auto host = ServiceWorkerHostProcess::getInstance();
 
     // 1. Let registration be the result of running the Get Registration
     // algorithm passing job’s scope url as the argument.
@@ -171,13 +177,13 @@ void ServiceWorkerServiceHostJobQueue::runUpdateJob(ServiceWorkerJob* job)
     runInstallJob(job, worker, registration);
 }
 
-void ServiceWorkerServiceHostJobQueue::runServiceWorker(
+void ServiceWorkerHostJobQueue::runServiceWorker(
     ServiceWorkerData* serviceWorker)
 {
     // https://w3c.github.io/ServiceWorker/#run-service-worker
 }
 
-void ServiceWorkerServiceHostJobQueue::runInstallJob(
+void ServiceWorkerHostJobQueue::runInstallJob(
     ServiceWorkerJob* job, ServiceWorkerData* worker,
     ServiceWorkerRegistrationData* registration)
 {
@@ -202,15 +208,14 @@ void ServiceWorkerServiceHostJobQueue::runInstallJob(
     // 20. Invoke Try Activate with registration.
 }
 
-void ServiceWorkerServiceHostJobQueue::runResolveJobPromise(
-    ServiceWorkerJob* job)
+void ServiceWorkerHostJobQueue::runResolveJobPromise(ServiceWorkerJob* job)
 {
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
     // NOTE: a job should end where it started, swervice worker client.
-    ServiceWorkerServiceHost::getInstance()->client()->resolveJobPromise(job);
+    ServiceWorkerHostProcess::getInstance()->client()->resolveJobPromise(job);
 }
 
-void ServiceWorkerServiceHostJobQueue::runUpdateRegistrationState(
+void ServiceWorkerHostJobQueue::runUpdateRegistrationState(
     ServiceWorkerRegistrationData* registration, const char* target,
     ServiceWorkerData* source)
 {
@@ -233,12 +238,12 @@ void ServiceWorkerServiceHostJobQueue::runUpdateRegistrationState(
     }
 }
 
-void ServiceWorkerServiceHostJobQueue::runUnregisterJob(ServiceWorkerJob* job)
+void ServiceWorkerHostJobQueue::runUnregisterJob(ServiceWorkerJob* job)
 {
     // TODO: meet https://w3c.github.io/ServiceWorker/#unregister-algorithm
 }
 
-void ServiceWorkerServiceHostJobQueue::finishJob()
+void ServiceWorkerHostJobQueue::finishJob()
 {
     // TODO: meet https://w3c.github.io/ServiceWorker/#finish-job-algorithm
     m_jobQueue.pop_front();

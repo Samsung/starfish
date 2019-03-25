@@ -20,52 +20,58 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceHost.h"
+
+#include "core/dom/ExecutionContext.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceHostJobQueue.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
-#include "core/modules/serviceworker/ServiceWorkerServiceClient.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostJobQueue.h"
+
+#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 
 namespace Starfish {
 
-ServiceWorkerServiceHost* ServiceWorkerServiceHost::m_instance = nullptr;
+ServiceWorkerHostProcess* ServiceWorkerHostProcess::m_instance = nullptr;
 
-ServiceWorkerServiceHost* ServiceWorkerServiceHost::getInstance()
+ServiceWorkerHostProcess* ServiceWorkerHostProcess::getInstance()
 {
     if (!m_instance) {
-        m_instance = new ServiceWorkerServiceHost();
+        m_instance = new ServiceWorkerHostProcess();
     }
     return m_instance;
 }
 
-void ServiceWorkerServiceHost::destroy()
+void ServiceWorkerHostProcess::destroy()
 {
     delete m_instance;
     m_instance = nullptr;
 }
 
-ServiceWorkerServiceHost::ServiceWorkerServiceHost()
+ServiceWorkerHostProcess::ServiceWorkerHostProcess()
     : m_messageLoop(nullptr)
     , m_jobQueueMap()
 {
 }
 
-ServiceWorkerServiceHost::~ServiceWorkerServiceHost()
+ServiceWorkerHostProcess::~ServiceWorkerHostProcess()
 {
 }
 
-ServiceWorkerServiceClientInterface* ServiceWorkerServiceHost::client()
+IServiceWorkerClientProcess* ServiceWorkerHostProcess::client()
 {
     // TODO: return a communication-interface
-    return ServiceWorkerServiceClient::getInstance();
+    return ServiceWorkerClientProcess::getInstance();
 }
 
-void ServiceWorkerServiceHost::init(MessageLoop* messageLoop)
+void ServiceWorkerHostProcess::init(MessageLoop* messageLoop)
 {
     m_messageLoop = messageLoop;
 }
 
-ServiceWorkerRegistrationData* ServiceWorkerServiceHost::getRegistration(
+ServiceWorkerRegistrationData* ServiceWorkerHostProcess::getRegistration(
     String* scope)
 {
     // https://w3c.github.io/ServiceWorker/#get-registration-algorithm
@@ -76,7 +82,7 @@ ServiceWorkerRegistrationData* ServiceWorkerServiceHost::getRegistration(
     return registration;
 }
 
-void ServiceWorkerServiceHost::setRegistration(
+void ServiceWorkerHostProcess::setRegistration(
     String* scope, ServiceWorkerUpdateViaCache updateViaCacheMode)
 {
     // https://w3c.github.io/ServiceWorker/#set-registration-algorithm
@@ -85,13 +91,13 @@ void ServiceWorkerServiceHost::setRegistration(
     m_registrationMap[scope] = registration;
 }
 
-void ServiceWorkerServiceHost::scheduleJob(ServiceWorkerJob* job)
+void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
 {
     // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
     STARFISH_ASSERT(m_messageLoop);
 
     // 1. Let jobQueue be null.
-    ServiceWorkerServiceHostJobQueue* jobQueue = nullptr;
+    ServiceWorkerHostJobQueue* jobQueue = nullptr;
 
     // 2. Let jobScope be job’s scope url, serialized.
     auto jobScope = job->scopeURL;
@@ -101,7 +107,7 @@ void ServiceWorkerServiceHost::scheduleJob(ServiceWorkerJob* job)
     // 4. Set jobQueue to scope to job queue map[jobScope].
     auto scope = m_jobQueueMap.find(jobScope);
     if (scope == m_jobQueueMap.end()) {
-        jobQueue = new ServiceWorkerServiceHostJobQueue(m_messageLoop);
+        jobQueue = new ServiceWorkerHostJobQueue(m_messageLoop);
         m_jobQueueMap.insert(std::make_pair(jobScope, jobQueue));
     } else {
         jobQueue = scope->second;

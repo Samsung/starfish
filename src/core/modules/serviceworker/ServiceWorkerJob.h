@@ -21,19 +21,15 @@
     !defined(__StarfishServiceWorkerJob__)
 #define __StarfishServiceWorkerJob__
 
-#include "core/modules/serviceworker/ServiceWorkerEnums.h"
-
 namespace Starfish {
 
 class ExecutionContext;
 class Promise;
 class String;
-class ServiceWorkerServiceHostJobQueue;
-
-using ServiceWorkerClient = ExecutionContext;
-using ServiceWorkerRegistrationKey = String*;
+class ServiceWorkerHostJobQueue;
 
 struct ServiceWorkerJob : public gc {
+    ServiceWorkerJobId id;
     ServiceWorkerJobType type;
     String* scopeURL;
     String* scriptURL;
@@ -42,12 +38,13 @@ struct ServiceWorkerJob : public gc {
     String* referrerURL;
     WorkerType workerType;
     ServiceWorkerUpdateViaCache updateViaCacheMode;
-    ServiceWorkerServiceHostJobQueue* containingJobQueue;
+    ServiceWorkerHostJobQueue* containingJobQueue;
 
     ServiceWorkerRegistrationKey registrationKey();
 
     ServiceWorkerJob()
-        : type(ServiceWorkerJobType::Register)
+        : id(0)
+        , type(ServiceWorkerJobType::Register)
         , scopeURL(nullptr)
         , scriptURL(nullptr)
         , promise(nullptr)

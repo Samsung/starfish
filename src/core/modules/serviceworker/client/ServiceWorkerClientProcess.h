@@ -18,38 +18,34 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerServiceClient__)
-#define __StarfishServiceWorkerServiceClient__
-
-#include "core/modules/serviceworker/ServiceWorkerServiceInterface.h"
+    !defined(__StarfishServiceWorkerClientProcess__)
+#define __StarfishServiceWorkerClientProcess__
 
 namespace Starfish {
 
 struct ServiceWorkerJob;
+class ServiceWorkerJobClient;
 
-class MessageLoop;
-class ServiceWorkerServiceJobClient;
-
-class ServiceWorkerServiceClient : public ServiceWorkerServiceClientInterface {
+class ServiceWorkerClientProcess : public IServiceWorkerClientProcess {
 public:
-    static ServiceWorkerServiceClient* getInstance();
+    static ServiceWorkerClientProcess* getInstance();
     static void destroy();
 
-    ServiceWorkerServiceClient(ServiceWorkerServiceClient const&) = delete;
-    void operator=(ServiceWorkerServiceClient const&) = delete;
+    ServiceWorkerClientProcess(ServiceWorkerClientProcess const&) = delete;
+    void operator=(ServiceWorkerClientProcess const&) = delete;
 
-    void init(ServiceWorkerServiceJobClient* jobClient);
-    ServiceWorkerServiceHostInterface* host();
+    void init(ServiceWorkerJobClient* jobClient);
+    IServiceWorkerHostProcess* host();
 
     // Inteface overrided
     virtual void resolveJobPromise(ServiceWorkerJob* job) override;
 
 private:
-    static ServiceWorkerServiceClient* m_instance;
-    ServiceWorkerServiceClient();
-    virtual ~ServiceWorkerServiceClient();
+    static ServiceWorkerClientProcess* m_instance;
+    ServiceWorkerClientProcess();
+    virtual ~ServiceWorkerClientProcess();
 
-    ServiceWorkerServiceJobClient* m_jobClient;
+    ServiceWorkerJobClient* m_jobClient;
 };
 
 } // namespace Starfish
