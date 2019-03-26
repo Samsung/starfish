@@ -57,7 +57,7 @@ Requires(postun): /sbin/ldconfig
 %endif
 
 %if %{?_vd_cfg_product_type:1}%{!?_vd_cfg_product_type:0}
-%if "%{_vd_cfg_product_type}" == "TV"
+%if "%{_vd_cfg_product_type}" == "TV" || "%{_vd_cfg_product_type}" == "LFD" || "%{_vd_cfg_product_type}" == "IWB"
 %define rpm prod_tv
 %else
 %if "%{_vd_cfg_product_type}" == "AUDIO"
