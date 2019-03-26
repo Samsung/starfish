@@ -288,7 +288,7 @@ public:
                                     EGL_DEPTH_SIZE,
                                     0,
                                     EGL_STENCIL_SIZE,
-                                    8,
+                                    0,
                                     EGL_RENDERABLE_TYPE,
                                     EGL_OPENGL_ES2_BIT,
                                     EGL_NONE };

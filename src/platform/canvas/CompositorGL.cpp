@@ -513,6 +513,10 @@ public:
     GLint m_texShaderProgramAlpha;
     GLuint m_texFragmentShaderWithOriginalColor;
     GLuint m_texShaderProgramWithOriginalColor;
+    GLint m_texShaderProgramWithOriginalColorTexPos;
+    GLint m_texShaderProgramWithOriginalColorPosition;
+    GLint m_texShaderProgramWithOriginalColorTexture;
+    GLint m_texShaderProgramWithOriginalColorAlpha;
 
     GLuint m_texFragmentShaderEGLImageExternal;
     GLuint m_texShaderProgramEGLImageExternal;
@@ -586,6 +590,10 @@ public:
             m_texBlurShaderProgramH = 0;
         m_texFragmentShaderWithOriginalColor = 0;
         m_texShaderProgramWithOriginalColor = 0;
+        m_texShaderProgramWithOriginalColorTexPos = 0;
+        m_texShaderProgramWithOriginalColorPosition = 0;
+        m_texShaderProgramWithOriginalColorTexture = 0;
+        m_texShaderProgramWithOriginalColorAlpha = 0;
 
         m_texBlurShaderProgramWPosition = 0;
         m_texBlurShaderProgramWTexture = 0;
@@ -806,8 +814,7 @@ public:
             glLinkProgram(m_texShaderProgramEGLImageExternalWithOriginalColor);
             checkError();
 
-            m_lastProgram =
-                m_texShaderProgramEGLImageExternalWithOriginalColorAlpha;
+            m_lastProgram = m_texShaderProgramEGLImageExternalWithOriginalColor;
             glUseProgram(m_texShaderProgramEGLImageExternalWithOriginalColor);
             checkError();
 
@@ -906,6 +913,7 @@ public:
             glLinkProgram(m_texShaderProgram);
             checkError();
 
+            m_lastProgram = m_texShaderProgram;
             glUseProgram(m_texShaderProgram);
             checkError();
 
@@ -944,8 +952,6 @@ public:
 
     GLuint texShaderProgramWithOriginalColor()
     {
-        // this program MUST use same code except color conversion with
-        // texShaderProgram
         if (!m_texShaderProgramWithOriginalColor) {
             GLchar texFragmentSource[] =
                 "#ifdef GL_ES\n"
@@ -976,27 +982,40 @@ public:
             glLinkProgram(m_texShaderProgramWithOriginalColor);
             checkError();
 
+            m_lastProgram = m_texShaderProgramWithOriginalColor;
             glUseProgram(m_texShaderProgramWithOriginalColor);
             checkError();
 
-            glUniform1i(m_texShaderProgramTexture, 0);
-            glEnableVertexAttribArray(m_texShaderProgramPosition);
+            m_texShaderProgramWithOriginalColorPosition = glGetAttribLocation(
+                m_texShaderProgramWithOriginalColor, "aPosition");
+            m_texShaderProgramWithOriginalColorTexPos = glGetAttribLocation(
+                m_texShaderProgramWithOriginalColor, "aTexPos");
+            m_texShaderProgramWithOriginalColorTexture = glGetUniformLocation(
+                m_texShaderProgramWithOriginalColor, "uTexture");
+            m_texShaderProgramWithOriginalColorAlpha = glGetUniformLocation(
+                m_texShaderProgramWithOriginalColor, "uAlpha");
+
+            glUniform1i(m_texShaderProgramWithOriginalColorTexture, 0);
+            glEnableVertexAttribArray(
+                m_texShaderProgramWithOriginalColorPosition);
 
             glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-            glEnableVertexAttribArray(m_texShaderProgramTexPos);
-            glVertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT, false,
-                                  0, 0);
+            glEnableVertexAttribArray(
+                m_texShaderProgramWithOriginalColorTexPos);
+            glVertexAttribPointer(m_texShaderProgramWithOriginalColorTexPos, 2,
+                                  GL_FLOAT, false, 0, 0);
             glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-            glUniform1f(m_texShaderProgramAlpha, 1);
+            glUniform1f(m_texShaderProgramWithOriginalColorAlpha, 1);
+
         } else {
             if (m_lastProgram != m_texShaderProgramWithOriginalColor) {
                 m_lastProgram = m_texShaderProgramWithOriginalColor;
                 glUseProgram(m_texShaderProgramWithOriginalColor);
 
                 glBindBuffer(GL_ARRAY_BUFFER, m_texTexPosBuffer);
-                glVertexAttribPointer(m_texShaderProgramTexPos, 2, GL_FLOAT,
-                                      false, 0, 0);
+                glVertexAttribPointer(m_texShaderProgramWithOriginalColorTexPos,
+                                      2, GL_FLOAT, false, 0, 0);
                 glBindBuffer(GL_ARRAY_BUFFER, 0);
             }
         }
@@ -1453,8 +1472,7 @@ CompositorContext* Compositor::initCompositorContext(PlatformWindow* wnd)
                 eglGetProcAddress("glEGLImageTargetTexture2DOES"));
 #endif
 
-#if defined(STARFISH_TIZEN_TV) && defined(STARFISH_TIZEN_VERSION_5_0) && \
-    defined(PORT_WEBVIEW_BRIDGE_EFL)
+#if defined(STARFISH_TIZEN)
         g_useStencilBufferOnFBO = true;
 #endif
         g_needsCheckCompatibility = false;
@@ -2181,35 +2199,32 @@ public:
                   width, height);
     }
 
-    void mapPointsToScreen(float& x, float& y)
+    void mapPointsByMatrix(float& x, float& y, const SkMatrix& m)
     {
         SkPoint pt;
         pt = SkPoint::Make(x, y);
-        auto& lastState = m_state.back();
-        lastState.matrix.mapPoints(&pt, 1);
-        m_screenMatrix.mapPoints(&pt, 1);
+        m.mapPoints(&pt, 1);
         x = pt.x();
         y = pt.y();
+    }
+
+    void mapPointsToScreen(float& x, float& y)
+    {
+        auto& lastState = m_state.back();
+        mapPointsByMatrix(x, y, lastState.matrix);
+        mapPointsByMatrix(x, y, m_screenMatrix);
     }
 
     void mapPointsToLogicalScreen(float& x, float& y)
     {
-        SkPoint pt;
-        pt = SkPoint::Make(x, y);
         auto& lastState = m_state.back();
-        lastState.matrix.mapPoints(&pt, 1);
-        x = pt.x();
-        y = pt.y();
+        mapPointsByMatrix(x, y, lastState.matrix);
     }
 
     void mapLogicalScreenPointsToScreen(float& x, float& y)
     {
-        SkPoint pt;
-        pt = SkPoint::Make(x, y);
         auto& lastState = m_state.back();
-        m_screenMatrix.mapPoints(&pt, 1);
-        x = pt.x();
-        y = pt.y();
+        mapPointsByMatrix(x, y, m_screenMatrix);
     }
 
     SkMatrix computeScreenMatrix()
@@ -2623,7 +2638,7 @@ public:
         return result;
     }
 
-    void drawFilteredTexture(CanvasSurfaceGL* cs, float dest[4][2],
+    void drawFilteredTexture(CanvasSurfaceGL* cs, float position[8],
                              GLuint textureID, GLenum textureKind,
                              GLenum textureBindNumber, size_t textureWidth,
                              size_t textureHeight)
@@ -2714,16 +2729,6 @@ public:
         // blur H
         {
             m_compositorContext->texBlurShaderProgramH();
-
-            float hw = 2.f / m_webView->platformWindow()->width();
-            float hh = -2.f / m_webView->platformWindow()->height();
-            float position[] = {
-                dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
-                dest[1][0] * hw - 1, dest[1][1] * hh + 1, // V2
-                dest[2][0] * hw - 1, dest[2][1] * hh + 1, // V3
-                dest[3][0] * hw - 1, dest[3][1] * hh + 1, // V4
-            };
-
             glVertexAttribPointer(
                 m_compositorContext->m_texBlurShaderProgramHPosition, 2,
                 GL_FLOAT, false, 2 * 4, position);
@@ -2761,18 +2766,13 @@ public:
         checkError();
     }
 
-    void drawTexture(CanvasSurfaceGL* cs, float dest[4][2], GLuint textureID,
+    void drawTexture(CanvasSurfaceGL* cs, float position[8], GLuint textureID,
                      GLenum textureKind, GLenum textureBindNumber,
                      size_t textureWidth, size_t textureHeight)
     {
-        mapLogicalScreenPointsToScreen(dest[0][0], dest[0][1]);
-        mapLogicalScreenPointsToScreen(dest[1][0], dest[1][1]);
-        mapLogicalScreenPointsToScreen(dest[2][0], dest[2][1]);
-        mapLogicalScreenPointsToScreen(dest[3][0], dest[3][1]);
-
         auto& lastState = m_state.back();
         if (lastState.blurRadius) {
-            drawFilteredTexture(cs, dest, textureID, textureKind,
+            drawFilteredTexture(cs, position, textureID, textureKind,
                                 textureBindNumber, textureWidth, textureHeight);
             return;
         }
@@ -2787,15 +2787,6 @@ public:
         } else {
             m_compositorContext->texShaderProgram();
         }
-
-        float hw = 2.f / m_webView->platformWindow()->width();
-        float hh = -2.f / m_webView->platformWindow()->height();
-        float position[] = {
-            dest[0][0] * hw - 1, dest[0][1] * hh + 1, // V1
-            dest[1][0] * hw - 1, dest[1][1] * hh + 1, // V2
-            dest[2][0] * hw - 1, dest[2][1] * hh + 1, // V3
-            dest[3][0] * hw - 1, dest[3][1] * hh + 1, // V4
-        };
 
         glBindTexture(textureKind, textureID);
 
@@ -2860,6 +2851,47 @@ public:
                           std::abs(maxY - minY));
     }
 
+    void computeTexturePosition(const Unit::Rect& dst, const SkMatrix& ctm,
+                                const SkMatrix& screenMatrix,
+                                size_t screenWidth, size_t screenHeight,
+                                float (&position)[8])
+    {
+        float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
+        dest[0][0] = dst.x();
+        dest[0][1] = dst.y();
+        dest[1][0] = dst.x();
+        dest[1][1] = dst.maxY();
+        dest[2][0] = dst.maxX();
+        dest[2][1] = dst.y();
+        dest[3][0] = dst.maxX();
+        dest[3][1] = dst.maxY();
+
+        mapPointsByMatrix(dest[0][0], dest[0][1], ctm);
+        mapPointsByMatrix(dest[1][0], dest[1][1], ctm);
+        mapPointsByMatrix(dest[2][0], dest[2][1], ctm);
+        mapPointsByMatrix(dest[3][0], dest[3][1], ctm);
+
+        mapPointsByMatrix(dest[0][0], dest[0][1], screenMatrix);
+        mapPointsByMatrix(dest[1][0], dest[1][1], screenMatrix);
+        mapPointsByMatrix(dest[2][0], dest[2][1], screenMatrix);
+        mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
+
+        float hw = 2.f / screenWidth;
+        float hh = -2.f / screenHeight;
+
+        position[0] = dest[0][0] * hw - 1;
+        position[1] = dest[0][1] * hh + 1;
+
+        position[2] = dest[1][0] * hw - 1;
+        position[3] = dest[1][1] * hh + 1;
+
+        position[4] = dest[2][0] * hw - 1;
+        position[5] = dest[2][1] * hh + 1;
+
+        position[6] = dest[3][0] * hw - 1;
+        position[7] = dest[3][1] * hh + 1;
+    }
+
     virtual void drawSurface(CanvasSurface* cs, const Unit::Rect& dst)
     {
         INSTALL_PROFILE_TIMER("CompositorGL::drawSurface");
@@ -2868,11 +2900,24 @@ public:
             return;
         }
 
-        float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
-
         CanvasSurfaceGL* csGL = (CanvasSurfaceGL*)cs;
 
         auto& lastState = m_state.back();
+
+        bool fboStencilClippingEnabled = false;
+        bool stencilClippingEnabled = false;
+        bool scissorClippingEnabled = false;
+        bool shouldSkipTexturePainting = false;
+        Unit::Rect visibleArea =
+            Unit::Rect(0, 0, m_webView->platformWindow()->width(),
+                       m_webView->platformWindow()->height());
+
+        SkMatrix screenMatrix = m_screenMatrix;
+        SkMatrix ctm = lastState.matrix;
+        size_t screenWidth = m_webView->platformWindow()->width();
+        size_t screenHeight = m_webView->platformWindow()->height();
+
+        float dest[4][2]; // 0(LT) 1(LB) 2(RT) 3(RB)
         dest[0][0] = dst.x();
         dest[0][1] = dst.y();
         mapPointsToLogicalScreen(dest[0][0], dest[0][1]);
@@ -2888,14 +2933,6 @@ public:
         dest[3][0] = dst.maxX();
         dest[3][1] = dst.maxY();
         mapPointsToLogicalScreen(dest[3][0], dest[3][1]);
-
-        bool fboStencilClippingEnabled = false;
-        bool stencilClippingEnabled = false;
-        bool scissorClippingEnabled = false;
-        bool shouldSkipTexturePainting = false;
-        Unit::Rect visibleArea =
-            Unit::Rect(0, 0, m_webView->platformWindow()->width(),
-                       m_webView->platformWindow()->height());
 
         if (lastState.clipPaths.get()->size()) {
             if (lastState.clipPathsAreSimple) {
@@ -2979,17 +3016,30 @@ public:
                             visibleArea.unite(boundingRect(result[i]));
                         }
 
+                        float diffXDueToFBOClipping = 0;
+                        float diffYDueToFBOClipping = 0;
                         if (g_useStencilBufferOnFBO) {
                             fboStencilClippingEnabled = true;
-                            size_t w = m_webView->platformWindow()->width();
-                            size_t h = m_webView->platformWindow()->height();
-                            pushFBOContext(w, h, true, LayoutRect(0, 0, w, h));
-                        }
+                            pushFBOContext(visibleArea.width(),
+                                           visibleArea.height(), true,
+                                           LayoutRect(0, 0, visibleArea.width(),
+                                                      visibleArea.height()));
 
-                        // do render on fbo
-                        glClearColor(0, 0, 0, 0);
-                        glClear(GL_COLOR_BUFFER_BIT);
-                        checkError();
+                            ctm.postTranslate(-visibleArea.x(),
+                                              -visibleArea.y());
+                            screenMatrix = SkMatrix::I();
+
+                            screenWidth = visibleArea.width();
+                            screenHeight = visibleArea.height();
+
+                            diffXDueToFBOClipping = -visibleArea.x();
+                            diffYDueToFBOClipping = -visibleArea.y();
+
+                            // start rendering on fbo
+                            glClearColor(0, 0, 0, 0);
+                            glClear(GL_COLOR_BUFFER_BIT);
+                            checkError();
+                        }
 
                         stencilClippingEnabled = true;
 
@@ -3000,51 +3050,56 @@ public:
                         glStencilFunc(GL_ALWAYS, 1, 1);
                         glStencilOp(GL_REPLACE, GL_REPLACE, GL_REPLACE);
 
+                        std::vector<float> position;
                         m_compositorContext->rectProgram();
                         std::vector<N> indices = mapbox::earcut<N>(polygon);
+
+                        position.reserve((indices.size() / 3) * 6);
+                        float hw = 2.f / screenWidth;
+                        float hh = -2.f / screenHeight;
+
                         for (size_t i = 0; i < indices.size(); i += 3) {
                             float trianglePoints[6] = {
-                                (float)pointPerIndex[indices[i]][0],
-                                (float)pointPerIndex[indices[i]][1],
-                                (float)pointPerIndex[indices[i + 1]][0],
-                                (float)pointPerIndex[indices[i + 1]][1],
-                                (float)pointPerIndex[indices[i + 2]][0],
-                                (float)pointPerIndex[indices[i + 2]][1]
+                                (float)pointPerIndex[indices[i]][0] +
+                                    diffXDueToFBOClipping,
+                                (float)pointPerIndex[indices[i]][1] +
+                                    diffYDueToFBOClipping,
+                                (float)pointPerIndex[indices[i + 1]][0] +
+                                    diffXDueToFBOClipping,
+                                (float)pointPerIndex[indices[i + 1]][1] +
+                                    diffYDueToFBOClipping,
+                                (float)pointPerIndex[indices[i + 2]][0] +
+                                    diffXDueToFBOClipping,
+                                (float)pointPerIndex[indices[i + 2]][1] +
+                                    diffYDueToFBOClipping
                             };
 
-                            mapLogicalScreenPointsToScreen(trianglePoints[0],
-                                                           trianglePoints[1]);
-                            mapLogicalScreenPointsToScreen(trianglePoints[2],
-                                                           trianglePoints[3]);
-                            mapLogicalScreenPointsToScreen(trianglePoints[4],
-                                                           trianglePoints[5]);
+                            mapPointsByMatrix(trianglePoints[0],
+                                              trianglePoints[1], screenMatrix);
+                            mapPointsByMatrix(trianglePoints[2],
+                                              trianglePoints[3], screenMatrix);
+                            mapPointsByMatrix(trianglePoints[4],
+                                              trianglePoints[5], screenMatrix);
 
-                            float hw =
-                                2.f / m_webView->platformWindow()->width();
-                            float hh =
-                                -2.f / m_webView->platformWindow()->height();
-                            float position[] = {
-                                trianglePoints[0] * hw - 1,
-                                trianglePoints[1] * hh + 1, // V1
-                                trianglePoints[2] * hw - 1,
-                                trianglePoints[3] * hh + 1, // V2
-                                trianglePoints[4] * hw - 1,
-                                trianglePoints[5] * hh + 1, // V3
-                            };
-
-                            glVertexAttribPointer(
-                                m_compositorContext
-                                    ->m_rectShaderProgramPosition,
-                                2, GL_FLOAT, false, 0, position);
-                            glUniform4f(
-                                m_compositorContext->m_rectShaderProgramColor,
-                                Unit::Color(255, 255, 255, 255).R(),
-                                Unit::Color(255, 255, 255, 255).G(),
-                                Unit::Color(255, 255, 255, 255).B(),
-                                Unit::Color(255, 255, 255, 255).A());
-                            glDrawArrays(GL_TRIANGLES, 0, 3);
-                            checkError();
+                            position.push_back(trianglePoints[0] * hw - 1);
+                            position.push_back(trianglePoints[1] * hh + 1);
+                            position.push_back(trianglePoints[2] * hw - 1);
+                            position.push_back(trianglePoints[3] * hh + 1);
+                            position.push_back(trianglePoints[4] * hw - 1);
+                            position.push_back(trianglePoints[5] * hh + 1);
                         }
+
+                        glVertexAttribPointer(
+                            m_compositorContext->m_rectShaderProgramPosition, 2,
+                            GL_FLOAT, false, 0, position.data());
+                        glUniform4f(
+                            m_compositorContext->m_rectShaderProgramColor,
+                            Unit::Color(255, 255, 255, 255).R(),
+                            Unit::Color(255, 255, 255, 255).G(),
+                            Unit::Color(255, 255, 255, 255).B(),
+                            Unit::Color(255, 255, 255, 255).A());
+                        glDrawArrays(GL_TRIANGLES, 0, position.size() / 2);
+                        checkError();
 
                         glColorMask(true, true, true, true);
                         glStencilFunc(GL_EQUAL, 1, 1);
@@ -3058,9 +3113,28 @@ public:
 
         if (!shouldSkipTexturePainting) {
             if (csGL->m_isEGLImageExternal) {
-                drawTexture(csGL, dest, csGL->m_textureFragments[0].textureID,
-                            GL_TEXTURE_EXTERNAL_OES, -1, csGL->m_bufferWidth,
-                            csGL->m_bufferHeight);
+                float minX = dest[0][0], minY = dest[0][1], maxX = dest[0][0],
+                      maxY = dest[0][1];
+
+                for (size_t i = 1; i < 4; i++) {
+                    minX = std::min(dest[i][0], minX);
+                    minY = std::min(dest[i][1], minY);
+                    maxX = std::max(dest[i][0], maxX);
+                    maxY = std::max(dest[i][1], maxY);
+                }
+
+                Unit::Rect screenBoundingRect(minX, minY, std::abs(maxX - minX),
+                                              std::abs(maxY - minY));
+                if (screenBoundingRect.intersects(visibleArea)) {
+                    float texPosition[8];
+                    computeTexturePosition(dst, ctm, screenMatrix, screenWidth,
+                                           screenHeight, texPosition);
+                    drawTexture(csGL, texPosition,
+                                csGL->m_textureFragments[0].textureID,
+                                GL_TEXTURE_EXTERNAL_OES, -1,
+                                csGL->m_bufferWidth, csGL->m_bufferHeight);
+                }
+
             } else {
                 size_t coveredRowsCount = 0;
                 size_t i = 0;
@@ -3130,7 +3204,11 @@ public:
 
                         if (screenBoundingRect.intersects(visibleArea)) {
                             GLuint tid = (GLuint)fragment.textureID;
-                            drawTexture(csGL, newDest, tid, GL_TEXTURE_2D,
+                            float texPosition[8];
+                            computeTexturePosition(newDst, ctm, screenMatrix,
+                                                   screenWidth, screenHeight,
+                                                   texPosition);
+                            drawTexture(csGL, texPosition, tid, GL_TEXTURE_2D,
                                         GL_TEXTURE0, texureDataWidth,
                                         texureDataHeight);
                         }
@@ -3151,14 +3229,52 @@ public:
 
                 m_compositorContext->texShaderProgramWithOriginalColor();
 
-                float position[] = { -1, -1, -1, 1, 1, -1, 1, 1 };
+                float dest[4][2]; // order is LB, LT, RB, RT
+                dest[0][0] = visibleArea.x();
+                dest[0][1] = visibleArea.maxY();
+                dest[1][0] = visibleArea.x();
+                dest[1][1] = visibleArea.y();
+                dest[2][0] = visibleArea.maxX();
+                dest[2][1] = visibleArea.maxY();
+                dest[3][0] = visibleArea.maxX();
+                dest[3][1] = visibleArea.y();
+
+                mapPointsByMatrix(dest[0][0], dest[0][1],
+                                  screenMatrix); // using screenMatrix because
+                                                 // screenMatrix is always
+                                                 // SkMatrix::I in this path
+                mapPointsByMatrix(dest[1][0], dest[1][1], screenMatrix);
+                mapPointsByMatrix(dest[2][0], dest[2][1], screenMatrix);
+                mapPointsByMatrix(dest[3][0], dest[3][1], screenMatrix);
+
+                mapPointsByMatrix(dest[0][0], dest[0][1], m_screenMatrix);
+                mapPointsByMatrix(dest[1][0], dest[1][1], m_screenMatrix);
+                mapPointsByMatrix(dest[2][0], dest[2][1], m_screenMatrix);
+                mapPointsByMatrix(dest[3][0], dest[3][1], m_screenMatrix);
+
+                float hw = 2.f / m_webView->platformWindow()->width();
+                float hh = -2.f / m_webView->platformWindow()->height();
+
+                float position[8];
+                position[0] = dest[0][0] * hw - 1;
+                position[1] = dest[0][1] * hh + 1;
+
+                position[2] = dest[1][0] * hw - 1;
+                position[3] = dest[1][1] * hh + 1;
+
+                position[4] = dest[2][0] * hw - 1;
+                position[5] = dest[2][1] * hh + 1;
+
+                position[6] = dest[3][0] * hw - 1;
+                position[7] = dest[3][1] * hh + 1;
 
                 glBindTexture(GL_TEXTURE_2D, fboTex);
                 checkError();
 
                 glVertexAttribPointer(
-                    m_compositorContext->m_texShaderProgramPosition, 2,
-                    GL_FLOAT, false, 2 * 4, position);
+                    m_compositorContext
+                        ->m_texShaderProgramWithOriginalColorPosition,
+                    2, GL_FLOAT, false, 2 * 4, position);
                 checkError();
 
                 glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
