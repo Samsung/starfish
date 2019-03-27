@@ -75,9 +75,10 @@
 #include "core/style/ComputedStyle.h"
 #include "platform/file/File.h"
 
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#include "platform/process/base/ProcessType.h"
+#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+#endif
 
 #if defined(OS_POSIX)
 #include <malloc.h>
@@ -315,8 +316,8 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
         this;
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
-    // TODO: creating host from a certain host manager
-    ServiceWorkerHostProcess::getInstance()->init(m_messageLoop);
+    m_serviceWorkerProcessManager = ServiceWorkerProcessManager::getInstance();
+    m_serviceWorkerProcessManager->init(m_threadPool);
 #endif
 
     m_starfish->m_webViewInstanceCount++;
@@ -475,6 +476,10 @@ void WebView::destroy()
     }
 
     removeScriptEngineInstance();
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    m_serviceWorkerProcessManager->destroy();
+#endif
 
     m_threadPool->destroy();
     m_messageLoop->destroy();

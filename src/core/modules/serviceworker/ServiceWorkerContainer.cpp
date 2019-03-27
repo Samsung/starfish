@@ -22,10 +22,14 @@
 #include "StarfishConfig.h"
 
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
-
 #include "core/dom/ExecutionContext.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
+
+#include "platform/process/base/ProcessType.h"
+#include "core/modules/threading/IRunnable.h"
+#include "core/modules/serviceworker/IORunnable.h"
+#include "core/modules/serviceworker/Connection.h"
 
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
@@ -33,10 +37,14 @@
 #include "core/modules/serviceworker/RegistrationOptions.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
 
+#include "core/dom/WebOrigin.h"
+#include "core/dom/Document.h"
 #include "core/dom/Event.h"
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
+#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
+#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
 #include <EscargotPublic.h>
@@ -83,8 +91,6 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
 
     // 3. Let scriptURL be the result of parsing scriptURL with the context
     // object’s relevant settings object’s API base URL.
-    // TODO: consider extracting parsing parts from ResourceURL, or else, using
-    // ResourceURL
     auto scriptURL =
         new ResourceURL(rawScriptURL, client->baseURL()->baseURI());
 
@@ -221,14 +227,17 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 {
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext(),
-        [](size_t handle, void* data) {
-            ServiceWorkerJob* job = static_cast<ServiceWorkerJob*>(data);
+        [](size_t handle, void* data1, void* data2) {
+            ServiceWorkerJob* job = static_cast<ServiceWorkerJob*>(data1);
+            WebOrigin* webOrigin = static_cast<WebOrigin*>(data2);
 
-            // TODO: this should be called via in/out process communication
-            // method
-            ServiceWorkerClientProcess::getInstance()->host()->scheduleJob(job);
+            auto swConnection =
+                ServiceWorkerProcessManager::getInstance()->getConnection(
+                    CSTR(webOrigin->serialize()));
+
+            swConnection->scheduleJob(job);
         },
-        job);
+        job, document()->webOrigin());
 
     m_jobMap.insert(std::make_pair(job->id, job));
 }
@@ -313,6 +322,6 @@ void ServiceWorkerContainer::resolveJobPromise(ServiceWorkerJob* job)
             params);
     }
 }
-}
+} // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

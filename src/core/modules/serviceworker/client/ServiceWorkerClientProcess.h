@@ -26,7 +26,8 @@ namespace Starfish {
 struct ServiceWorkerJob;
 class ServiceWorkerJobClient;
 
-class ServiceWorkerClientProcess : public IServiceWorkerClientProcess {
+class ServiceWorkerClientProcess : public IServiceWorkerClientProcess,
+                                   public gc {
 public:
     static ServiceWorkerClientProcess* getInstance();
     static void destroy();
