@@ -9,6 +9,7 @@ lightweight Web engine (LWE).
 - [DOM](#dom)
 - [Events](#events)
 - [CSS](#css)
+- [Obsolete CSS](#obsolete-css)
 - [Selectors](#selectors)
 - [Cross-origin script API accessSection](#cross-origin-script-api-accesssection)
 - [HTTP](#http)
@@ -1342,6 +1343,23 @@ section are supported.
 | | counter-reset | [ &lt;custom-ident&gt; &lt;integer&gt;? ]+ &#124; none | Resets a CSS counter to a given value. |
 | [Box-shadow](https://www.w3.org/TR/css-backgrounds-3/#the-box-shadow) | box-shadow | none &#124; &lt;shadow&gt;# | Attaches one or more drop-shadows to the box. The property accepts either the none value, which indicates no shadows, or a comma-separated list of shadows, ordered front to back. | &lt;shadow&gt; = inset? && &lt;length&gt;{2,4} && &lt;color&gt;? |
 | [Will Change](https://drafts.csswg.org/css-will-change/#will-change) | will-change | scroll-position &#124; contents &#124; &lt;custom-ident&gt; | Provide a way for authors to hint browsers about the kind of changes to be expected on an element, so that the browser can set up appropriate optimizations ahead of time before the element is actually changed. | |
+
+
+## Obsolete CSS
+
+This section describes the list of obsolete CSS properties.
+To use these features, you need to define specific string when compile. the string is described below.
+
+| String you need to define to use property | Property | Note |
+|-------------------------------------------|----------|------|
+| STARFISH_ENABLE_CSS_WEBKIT_FLEX_PREFIX | display | -webkit-flex &#124; -webkit-inline-flex are supported |
+| | -webkit-flex | alias of flex |
+| | -webkit-flex-direction | alias of flex-direction |
+| | -webkit-flex-wrap | alias of flex-wrap |
+| | -webkit-flex-flow | alias of flex-flow |
+| | -webkit-flex-grow | alias of flex-grow |
+| | -webkit-flex-shrink | alias of flex-shrink |
+| | -webkit-flex-basis | alias of flex-basis |
 
 ## Selectors
 
