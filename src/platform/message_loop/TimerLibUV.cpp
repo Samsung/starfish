@@ -67,7 +67,10 @@ size_t Timer::addTimer(unsigned delay, GlobalScope* globalScope,
     STARFISH_ASSERT(isMainThread());
 
     auto id = ++m_timeoutCounter;
+
     TimeoutData* td = new (NoGC) TimeoutData;
+    STARFISH_ASSERT(td != nullptr);
+
     td->m_timer = this;
     td->m_id = id;
     td->m_data = data;
@@ -133,8 +136,12 @@ size_t Timer::addAnimator(GlobalScope* globalScope,
                           GenericAnimationHandler handler, void* data)
 {
     STARFISH_ASSERT(isMainThread());
+
     auto id = ++m_animationCounter;
+
     AnimationTickData* ad = new (NoGC) AnimationTickData;
+    STARFISH_ASSERT(ad != nullptr);
+
     ad->m_timer = this;
     ad->m_data = data;
     ad->m_globalScope = globalScope;
