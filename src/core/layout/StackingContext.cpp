@@ -1051,7 +1051,12 @@ void StackingContext::computeStackingContextProperties(
              parentExtent.containsInVisual(selfExtent.maxX(), selfExtent.y()) &&
              parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) &&
              parentExtent.containsInVisual(selfExtent.maxX(),
-                                           selfExtent.maxY()))) {
+                                           selfExtent.maxY())) ||
+                                           (compositedAncestor->owner()->shouldApplyOverflow()
+                                           && compositedAncestor->owner()->style()->overflowX() > OverflowValue::VisibleOverflow
+                                           && compositedAncestor->owner()->style()->overflowY() > OverflowValue::VisibleOverflow
+                                           )
+                                           ) {
             canConveredByParentCompositedLayer = true;
         } else {
             reason = NeedsGraphicsLayerReason::
