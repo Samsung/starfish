@@ -22,7 +22,6 @@
 
 #include "binding/ScriptWrappable.h"
 #include "binding/WindowHoldable.h"
-#include "core/fetch/GetSet.h"
 #include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/fetch/stream/ReadableStream.h"

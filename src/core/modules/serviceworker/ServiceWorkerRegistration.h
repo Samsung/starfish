@@ -23,7 +23,6 @@
 
 #include "core/dom/EventTarget.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/fetch/GetSet.h" // TODO: move this to where common macros exist after renaming them in a more clear sense.
 
 namespace Starfish {
 
@@ -41,12 +40,15 @@ class ServiceWorkerRegistrationData : public gc {
 public:
     ServiceWorkerRegistrationData();
 
-    GETTER_SETTER(String*, scope, Scope);
-    GETTER_SETTER(ServiceWorkerUpdateViaCache, updateViaCache, UpdateViaCache);
-    GETTER_SETTER(ServiceWorkerData*, installingWorkerData,
-                  InstallingWorkerData);
-    GETTER_SETTER(ServiceWorkerData*, waitingWorkerData, WaitingWorkerData);
-    GETTER_SETTER(ServiceWorkerData*, activeWorkerData, ActiveWorkerData);
+    DEFINE_GETTER_SETTER(String*, scope, Scope);
+    DEFINE_GETTER_SETTER(ServiceWorkerUpdateViaCache, updateViaCache,
+                         UpdateViaCache);
+    DEFINE_GETTER_SETTER(ServiceWorkerData*, installingWorkerData,
+                         InstallingWorkerData);
+    DEFINE_GETTER_SETTER(ServiceWorkerData*, waitingWorkerData,
+                         WaitingWorkerData);
+    DEFINE_GETTER_SETTER(ServiceWorkerData*, activeWorkerData,
+                         ActiveWorkerData);
 
     void updateRegistrationState(ServiceWorkerRegistrationState state,
                                  ServiceWorkerData* serviceWorkerData);
@@ -74,7 +76,7 @@ public:
     void updateRegistrationState(ServiceWorkerRegistrationState state,
                                  ServiceWorker* serviceWorker);
 
-    GETTER_SETTER(ServiceWorkerRegistrationData*, data, Data);
+    DEFINE_GETTER_SETTER(ServiceWorkerRegistrationData*, data, Data);
 
 private:
     ServiceWorker* m_installingWorker;

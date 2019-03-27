@@ -22,7 +22,6 @@
 
 #include "binding/ScriptWrappable.h"
 #include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
-#include "core/fetch/GetSet.h"
 #include "core/fetch/Headers.h"
 
 namespace Starfish {
@@ -57,17 +56,17 @@ struct RequestInit : public gc {
     HeadersInit m_headers;
     ScriptValue m_body;
 
-    GETTER_SETTER(String*, method, Method);
-    GETTER_SETTER(String*, referrer, Referrer);
-    GETTER_SETTER(String*, referrerPolicy, ReferrerPolicy);
-    GETTER_SETTER(String*, mode, Mode);
-    GETTER_SETTER(String*, credentials, Credentials);
-    GETTER_SETTER(String*, cache, Cache);
-    GETTER_SETTER(String*, redirect, Redirect);
-    GETTER_SETTER(String*, integrity, Integrity);
-    GETTER_SETTER(bool, keepalive, Keepalive);
-    GETTER_SETTER(ScriptValue, body, Body);
-    GETTER_SETTER(HeadersInit, headers, Headers);
+    DEFINE_GETTER_SETTER(String*, method, Method);
+    DEFINE_GETTER_SETTER(String*, referrer, Referrer);
+    DEFINE_GETTER_SETTER(String*, referrerPolicy, ReferrerPolicy);
+    DEFINE_GETTER_SETTER(String*, mode, Mode);
+    DEFINE_GETTER_SETTER(String*, credentials, Credentials);
+    DEFINE_GETTER_SETTER(String*, cache, Cache);
+    DEFINE_GETTER_SETTER(String*, redirect, Redirect);
+    DEFINE_GETTER_SETTER(String*, integrity, Integrity);
+    DEFINE_GETTER_SETTER(bool, keepalive, Keepalive);
+    DEFINE_GETTER_SETTER(ScriptValue, body, Body);
+    DEFINE_GETTER_SETTER(HeadersInit, headers, Headers);
 };
 }
 #endif
