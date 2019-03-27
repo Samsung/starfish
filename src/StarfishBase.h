@@ -415,6 +415,22 @@ const char* getWindowsTempDir();
 #define STARFISH_BINDING_ASSERT_UNIMPLEMENTED(...)
 #endif
 
+#define DEFINE_GETTER(Type, MemberName) \
+    Type MemberName() const             \
+    {                                   \
+        return m_##MemberName;          \
+    }
+
+#define DEFINE_SETTER(Type, MemberName, FaceName) \
+    void set##FaceName(Type value)                \
+    {                                             \
+        m_##MemberName = value;                   \
+    }
+
+#define DEFINE_GETTER_SETTER(Type, MemberName, FaceName) \
+    DEFINE_GETTER(Type, MemberName)                      \
+    DEFINE_SETTER(Type, MemberName, FaceName)
+
 #define STARFISH_MAKE_STACK_ALLOCATED()              \
     inline void* operator new(size_t size) = delete; \
     inline void* operator new(size_t size, void* p) = delete;

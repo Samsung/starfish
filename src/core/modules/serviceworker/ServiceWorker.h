@@ -22,7 +22,6 @@
 #define __StarfishServiceWorker__
 
 #include "core/dom/EventTarget.h"
-#include "core/fetch/GetSet.h"
 
 namespace Starfish {
 
@@ -42,8 +41,8 @@ public:
     {
     }
 
-    GETTER_SETTER(String*, scriptURL, ScriptURL);
-    GETTER_SETTER(ServiceWorkerState, state, State);
+    DEFINE_GETTER_SETTER(String*, scriptURL, ScriptURL);
+    DEFINE_GETTER_SETTER(ServiceWorkerState, state, State);
 
 protected:
     String* m_scriptURL;

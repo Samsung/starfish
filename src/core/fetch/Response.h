@@ -22,7 +22,6 @@
 
 #include "core/fetch/Body.h"
 #include "core/fetch/Headers.h"
-#include "core/fetch/GetSet.h"
 #include "core/fetch/ResponseData.h"
 
 namespace Starfish {
@@ -38,9 +37,9 @@ public:
     {
     }
 
-    GETTER_SETTER(uint32_t, status, Status);
-    GETTER_SETTER(String*, statusText, StatusText);
-    GETTER_SETTER(HeadersInit, headers, Headers);
+    DEFINE_GETTER_SETTER(uint32_t, status, Status);
+    DEFINE_GETTER_SETTER(String*, statusText, StatusText);
+    DEFINE_GETTER_SETTER(HeadersInit, headers, Headers);
 
 private:
     uint32_t m_status;
