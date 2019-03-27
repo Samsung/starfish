@@ -34,6 +34,7 @@ class Document;
 class ExecutionContext;
 class ServiceWorker;
 class ServiceWorkerJob;
+class ServiceWorkerClientConnection;
 
 class ServiceWorkerContainer : public EventTarget,
                                public ServiceWorkerJobClient {

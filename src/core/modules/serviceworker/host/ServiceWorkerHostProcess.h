@@ -49,7 +49,7 @@ struct ServiceWorkerRegistrationKeyComparator {
     }
 };
 
-class ServiceWorkerHostProcess : public IServiceWorkerHostProcess {
+class ServiceWorkerHostProcess : public gc, public IServiceWorkerHostProcess {
 public:
     static ServiceWorkerHostProcess* getInstance();
     static void destroy();

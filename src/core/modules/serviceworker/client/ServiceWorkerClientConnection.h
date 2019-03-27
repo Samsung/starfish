@@ -18,36 +18,22 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerClientProcess__)
-#define __StarfishServiceWorkerClientProcess__
+    !defined(__StarfishServiceWorkerClientConnection__)
+#define __StarfishServiceWorkerClientConnection__
 
 namespace Starfish {
 
-struct ServiceWorkerJob;
-class ServiceWorkerJobClient;
+class Socket;
 
-class ServiceWorkerClientProcess : public IServiceWorkerClientProcess,
-                                   public gc {
+class ServiceWorkerClientConnection final : public Connection,
+                                            public IServiceWorkerHostProcess,
+                                            public IServiceWorkerClientProcess {
 public:
-    static ServiceWorkerClientProcess* getInstance();
-    static void destroy();
-
-    ServiceWorkerClientProcess(ServiceWorkerClientProcess const&) = delete;
-    void operator=(ServiceWorkerClientProcess const&) = delete;
-
-    void init(ServiceWorkerJobClient* jobClient);
-    IServiceWorkerHostProcess* host();
-
-    // Inteface overrided
-    virtual void resolveJobPromise(ServiceWorkerJob* job) override;
-
-private:
-    static ServiceWorkerClientProcess* m_instance;
-    ServiceWorkerClientProcess();
-    virtual ~ServiceWorkerClientProcess();
-
-    ServiceWorkerJobClient* m_jobClient;
+    ServiceWorkerClientConnection();
+    void onReceived(Socket* socket, const char* data) override;
+    void scheduleJob(ServiceWorkerJob* job) override;
+    void resolveJobPromise(ServiceWorkerJob* job) override;
 };
-
 } // namespace Starfish
+
 #endif

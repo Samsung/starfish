@@ -29,7 +29,7 @@ class ServiceWorkerRegistrationData;
 class ServiceWorker;
 class ServiceWorkerData;
 
-class ServiceWorkerHostJobQueue {
+class ServiceWorkerHostJobQueue : public gc {
 public:
     ServiceWorkerHostJobQueue(MessageLoop* messageLoop);
 

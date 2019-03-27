@@ -96,6 +96,11 @@ class MouseData;
 class TouchData;
 class PlatformKeyEventData;
 class EventTarget;
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+class ServiceWorkerProcessManager;
+#endif
+
 #if defined(STARFISH_TIZEN_TV) && defined(STARFISH_ENABLE_AVPLAY)
 class Avplay;
 #endif
@@ -637,6 +642,9 @@ private:
     size_t m_idleCheckTimerID;
 
     static size_t g_fillingGraphicsBufferTileFrameTimeLimitInMS;
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    ServiceWorkerProcessManager* m_serviceWorkerProcessManager;
+#endif
 };
 }
 
