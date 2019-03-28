@@ -902,6 +902,41 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                 hh = snapSizeToPixel(borderRect.height() + sd * 2, ry);
                 Unit::Rect shadowRect(xx, yy, ww, hh);
 
+                if (shadow->radius() == 0) {
+                    // fast path
+                    // we can draw just rect only
+                    canvas->save();
+
+                    auto shadowColor =
+                        shadow->hasColor() ? shadow->color() : s->color();
+                    canvas->setColor(shadowColor);
+
+                    xx = rx.floor();
+                    yy = ry.floor();
+                    ww = snapSizeToPixel(borderRect.width() + sd * 2, rx);
+                    hh = snapSizeToPixel(borderRect.height() + sd * 2, ry);
+
+                    Unit::Rect simpleShadowRect(
+                        shadow->offsetX() - sd, shadow->offsetY() - sd,
+                        shadowRect.width(), shadowRect.height());
+
+                    const LayoutRect clipRect(
+                        shadow->offsetX() - sd, shadow->offsetY() - sd,
+                        shadowRect.width(), shadowRect.height());
+                    applyBorderRadiusClippingIfNeeds(canvas, clipRect, sd);
+
+                    Unit::Rect borderShapeClipRect(
+                        shadow->offsetX() - sd, shadow->offsetY() - sd,
+                        shadowRect.width(), shadowRect.height());
+                    applyBorderShapeClippingUsedInPaintingBoxShadow(
+                        shadowRect, borderRect, borderShapeClipRect, canvas);
+
+                    canvas->drawRect(simpleShadowRect);
+
+                    canvas->restore();
+                    continue;
+                }
+
                 float radiusOffset = 0.0f;
                 if (shadow->radius()) {
                     radiusOffset = shadow->radius();
@@ -910,7 +945,6 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     radiusOffset *= 2;
                 }
 
-                // fast path
                 float shortSide =
                     std::min(shadowRect.width(), shadowRect.height());
                 bool canUseFastPath =

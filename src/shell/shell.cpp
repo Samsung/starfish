@@ -369,6 +369,12 @@ int main(int argc, char* argv[])
     evas_object_resize(wndObj, width, height);
     evas_object_move(wndObj, x, y);
     evas_object_show(wndObj);
+
+#if defined(STARFISH_TIZEN)
+    int rots[4] = { 0, 90, 180, 270 };
+    elm_win_wm_rotation_available_rotations_set(wndObj, (const int*)(&rots), 4);
+#endif
+
 #ifdef STARFISH_TIZEN
 #ifdef STARFISH_ENABLE_TRANSPARENT_WINDOW
     // Set efl configuration for resizing window (Without this, Window'll be
