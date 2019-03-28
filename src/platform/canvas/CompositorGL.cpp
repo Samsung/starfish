@@ -2246,6 +2246,16 @@ public:
             m.preConcat(t);
 
             m.preTranslate(-tx, -ty);
+        } else if (deg == 180) {
+            float tx = w / 2.f;
+            float ty = h / 2.f;
+            m.preTranslate(tx, ty);
+
+            SkMatrix t = SkMatrix::I();
+            t.preRotate(360 - deg);
+            m.preConcat(t);
+
+            m.preTranslate(-tx, -ty);
         }
 #endif
         return m;

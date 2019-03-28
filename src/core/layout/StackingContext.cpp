@@ -1052,11 +1052,11 @@ void StackingContext::computeStackingContextProperties(
              parentExtent.containsInVisual(selfExtent.x(), selfExtent.maxY()) &&
              parentExtent.containsInVisual(selfExtent.maxX(),
                                            selfExtent.maxY())) ||
-                                           (compositedAncestor->owner()->shouldApplyOverflow()
-                                           && compositedAncestor->owner()->style()->overflowX() > OverflowValue::VisibleOverflow
-                                           && compositedAncestor->owner()->style()->overflowY() > OverflowValue::VisibleOverflow
-                                           )
-                                           ) {
+            (compositedAncestor->owner()->shouldApplyOverflow() &&
+             compositedAncestor->owner()->style()->overflowX() >
+                 OverflowValue::VisibleOverflow &&
+             compositedAncestor->owner()->style()->overflowY() >
+                 OverflowValue::VisibleOverflow)) {
             canConveredByParentCompositedLayer = true;
         } else {
             reason = NeedsGraphicsLayerReason::
@@ -2616,7 +2616,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                 owner()->asFrameBox()->paintBackgroundAndBorders(canvas);
                 delete canvas;
                 backgroundSurface->unmapBufferAndNotifyUpdatedRegion(
-                    0, 0, backgroundSurface->bufferWidth(), backgroundSurface->bufferHeight());
+                    0, 0, backgroundSurface->bufferWidth(),
+                    backgroundSurface->bufferHeight());
                 compositor->drawSurface(
                     backgroundSurface,
                     Unit::Rect(0, 0, backgroundSurface->bufferWidth(),
@@ -2628,9 +2629,9 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
             }
 #endif
             auto surface = m_rareData->m_graphicsBufferHolder->m_surfaces[0];
-            compositor->drawSurface(
-                surface, Unit::Rect(0, 0, surface->bufferWidth(),
-                                    surface->bufferHeight()));
+            compositor->drawSurface(surface,
+                                    Unit::Rect(0, 0, surface->bufferWidth(),
+                                               surface->bufferHeight()));
             compositor->restore();
         }
     } else if (m_rareData->m_graphicsBufferHolder) {
