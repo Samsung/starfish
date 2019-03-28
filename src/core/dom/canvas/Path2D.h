@@ -23,34 +23,36 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "binding/ScriptWrappable.h"
+#include "core/dom/canvas/CanvasPath.h"
 
 namespace Starfish {
 
-class CanvasRenderingContext;
-
-class Path2D : public ScriptWrappable {
+class Path2D : public ScriptWrappable, public CanvasPathInterfaceMixIn {
 public:
-    Path2D(CanvasRenderingContext* context);
+    Path2D(ExecutionContext* executionContext);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isPath2D() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override;
 
-    // CanvasPath
-    void closePath();
-    void moveTo(double x, double y);
-    void lineTo(double x, double y);
-    void bezierCurveTo(double x1, double y1, double x2, double y2, double x3,
-                       double y3);
-    void rect(double x, double y, double w, double h);
-    void arc(double x, double y, double radius, double startAngle,
-             double endAngle, bool anticlockwise = false);
-    void ellipse(double x, double y, double radiusX, double radiusY,
-                 double rotation, double startAngle, double endAngle,
-                 bool anticlockwise = false);
+    // CanvasPathInterfaceMixIn methods
+    virtual void closePath() override;
+    virtual void moveTo(double x, double y) override;
+    virtual void lineTo(double x, double y) override;
+    virtual void quadraticCurveTo(double cpx, double cpy, double x,
+                                  double y) override;
+    virtual void bezierCurveTo(double cp1x, double cp1y, double cp2x,
+                               double cp2y, double x, double y) override;
+    virtual void arcTo(double x1, double y1, double x2, double y2,
+                       double radius) override;
+    virtual void rect(double x, double y, double w, double h) override;
+    virtual void arc(double x, double y, double radius, double startAngle,
+                     double endAngle, bool anticlockwise = false) override;
+    virtual void ellipse(double x, double y, double radiusX, double radiusY,
+                         double rotation, double startAngle, double endAngle,
+                         bool anticlockwise = false) override;
 
 private:
-    CanvasRenderingContext* m_canvasRenderingContext;
+    CanvasPath* m_canvasPath;
 };
 }
 

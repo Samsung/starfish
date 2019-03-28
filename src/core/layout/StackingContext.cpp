@@ -2604,8 +2604,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         if (m_rareData->m_graphicsBufferHolder) {
             compositor->save();
             compositor->translate(minX, minY);
-#ifdef STARFISH_ENABLE_CANVAS
-            if (owner()->isFrameReplacedCanvas()) {
+
+            if (owner()->needsToPaintBackgroundOrBorderOrBoxShadow()) {
                 CanvasSurface* backgroundSurface = CanvasSurface::create(
                     m_owner->document()->webView()->platformWindow(),
                     bufferWidth, bufferHeight, CanvasSurface::CanvasElement);
@@ -2623,11 +2623,12 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                     Unit::Rect(0, 0, backgroundSurface->bufferWidth(),
                                backgroundSurface->bufferHeight()));
                 backgroundSurface->detachNativeBuffer();
-                auto dx = owner()->borderLeft() + owner()->paddingLeft();
-                auto dy = owner()->borderTop() + owner()->paddingTop();
-                compositor->translate(dx, dy);
             }
-#endif
+
+            auto dx = owner()->borderLeft() + owner()->paddingLeft();
+            auto dy = owner()->borderTop() + owner()->paddingTop();
+            compositor->translate(dx, dy);
+
             auto surface = m_rareData->m_graphicsBufferHolder->m_surfaces[0];
             compositor->drawSurface(surface,
                                     Unit::Rect(0, 0, surface->bufferWidth(),

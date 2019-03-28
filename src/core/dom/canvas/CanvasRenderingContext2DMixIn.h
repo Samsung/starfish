@@ -23,11 +23,14 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "core/dom/canvas/CanvasRenderingContext.h"
+#include "core/dom/canvas/CanvasPath.h"
 
 namespace Starfish {
 
 class Canvas;
+class CanvasSurface;
 class CanvasGradient;
+class CanvasPath;
 class DOMStringOrCanvasGradientOrCanvasPattern;
 class ImageData;
 class ExecutionContext;
@@ -39,15 +42,24 @@ enum class CanvasFillRule {
     CanvasFillRuleEvenOdd
 };
 
-class CanvasRenderingContext2DMixIn : public CanvasRenderingContext {
+class CanvasRenderingContext2DMixIn : public CanvasRenderingContext,
+                                      public CanvasPathInterfaceMixIn {
 public:
     CanvasRenderingContext2DMixIn(HTMLCanvasElement* ownerHTMLCanvasElement);
-    ~CanvasRenderingContext2DMixIn()
+    virtual ~CanvasRenderingContext2DMixIn()
     {
     }
 
     virtual void initialize() override;
     virtual void flush() override;
+    virtual void onResize() override;
+
+    virtual CanvasSurface* surface() override
+    {
+        return m_canvasSurface;
+    }
+
+    void finalize();
 
     // CanvasState
     void save();
@@ -83,6 +95,7 @@ public:
     void setFilter(String* value);
 
     // CanvasRect
+    void clearRect(double x, double y, double w, double h);
     void fillRect(double x, double y, double w, double h);
     void strokeRect(double x, double y, double w, double h);
 
@@ -92,9 +105,25 @@ public:
     void fill(Path2D* path, String* fillRule);
     void stroke();
 
-    // CanvasUserInterface
+    // CanvasPathInterfaceMixIn methods
+    virtual void closePath() override;
+    virtual void moveTo(double x, double y) override;
+    virtual void lineTo(double x, double y) override;
+    virtual void quadraticCurveTo(double cpx, double cpy, double x,
+                                  double y) override;
+    virtual void bezierCurveTo(double cp1x, double cp1y, double cp2x,
+                               double cp2y, double x, double y) override;
+    virtual void arcTo(double x1, double y1, double x2, double y2,
+                       double radius) override;
+    virtual void rect(double x, double y, double w, double h) override;
+    virtual void arc(double x, double y, double radius, double startAngle,
+                     double endAngle, bool anticlockwise = false) override;
+    virtual void ellipse(double x, double y, double radiusX, double radiusY,
+                         double rotation, double startAngle, double endAngle,
+                         bool anticlockwise = false) override;
 
-    // CanvasText
+    // TODO : CanvasUserInterface
+    // TODO :CanvasText
 
     // CanvasDrawImage
     // NOTE Replace first argument's type of "drawImage" temporarily to
@@ -110,31 +139,14 @@ public:
     ImageData* getImageData(int32_t sx, int32_t sy, int32_t sw, int32_t sh);
 
     // CanvasPathDrawingStyles
-
-    // CanvasTextDrawingStyles
-
-    // CanvasPath
-    void closePath();
-    void moveTo(double x, double y);
-    void lineTo(double x, double y);
-    void rect(double x, double y, double w, double h);
-    void arc(double x, double y, double radius, double startAngle,
-             double endAngle, bool anticlockwise = false);
-    void ellipse(double x, double y, double radiusX, double radiusY,
-                 double rotation, double startAngle, double endAngle,
-                 bool anticlockwise = false);
-
-    void bezierCurveTo(double x1, double y1, double x2, double y2, double x3,
-                       double y3);
-
-    void clearRect(double x, double y, double w, double h);
-
     double lineWidth()
     {
         return m_lineWidth;
     }
 
     void setLineWidth(double width);
+
+    // TODO : CanvasTextDrawingStyles
 
     void* operator new(size_t size)
     {
@@ -155,15 +167,25 @@ protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         CanvasRenderingContext::fillGCDescriptor(desc);
-        GC_set_bit(desc,
-                   GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_canvas));
         GC_set_bit(desc, GC_WORD_OFFSET(CanvasRenderingContext2DMixIn,
                                         m_ownerHTMLCanvasElement));
+        GC_set_bit(desc, GC_WORD_OFFSET(CanvasRenderingContext2DMixIn,
+                                        m_canvasSurface));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_canvas));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(CanvasRenderingContext2DMixIn, m_canvasPath));
     }
     HTMLCanvasElement* m_ownerHTMLCanvasElement;
 
 private:
+    void fill(Path* path, String* fillRule);
+    void stroke(Path* path);
+
+    CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;
+
+    CanvasPath* m_canvasPath;
     Unit::Color m_fillColor;
     Unit::Color m_strokeColor;
     double m_lineWidth;

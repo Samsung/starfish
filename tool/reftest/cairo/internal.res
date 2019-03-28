@@ -341,3 +341,6 @@ test/cairo/internal-test/css/flex/flex-webkit-prefix.html
 test/cairo/internal-test/canvas/basicFillRect.html
 test/cairo/internal-test/canvas/borderPadding.html
 test/cairo/internal-test/css/box-shadow/box-shadow-fast-path-test-if-radius-is-zero.html
+test/cairo/internal-test/canvas/basicFillPath.html
+test/cairo/internal-test/canvas/basicStrokePath.html
+

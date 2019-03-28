@@ -27,6 +27,7 @@
 #include "core/dom/Node.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/ImageData.h"
+#include "core/modules/canvas/Path.h"
 #include "core/dom/canvas/Path2D.h"
 #include "core/dom/canvas/CanvasGradient.h"
 #include "core/dom/canvas/CanvasPattern.h"
@@ -41,37 +42,55 @@
 
 namespace Starfish {
 
+static CanvasFillRule StringToCanvasFillRule(String* rule)
+{
+    if (rule) {
+        if (rule->equals("nonzero")) {
+            return CanvasFillRule::CanvasFillRuleNonZero;
+        } else if (rule->equals("evenodd")) {
+            return CanvasFillRule::CanvasFillRuleEvenOdd;
+        }
+    }
+    return CanvasFillRule::CanvasFillRuleInvalid;
+}
+
 CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     HTMLCanvasElement* ownerHTMLCanvasElement)
     : CanvasRenderingContext(ownerHTMLCanvasElement->executionContext())
     , m_ownerHTMLCanvasElement(ownerHTMLCanvasElement)
+    , m_canvasSurface(nullptr)
     , m_canvas(nullptr)
+    , m_canvasPath(nullptr)
     , m_fillColor()
     , m_strokeColor()
     , m_lineWidth(1)
     , m_globalAlpha(1.0)
 {
     initialize();
+    GC_REGISTER_FINALIZER_NO_ORDER(this,
+                                   [](void* obj, void* cd) {
+                                       CanvasRenderingContext2DMixIn* c =
+                                           (CanvasRenderingContext2DMixIn*)obj;
+                                       c->finalize();
+                                   },
+                                   NULL, NULL, NULL);
 }
 
 void CanvasRenderingContext2DMixIn::initialize()
 {
-    if (m_surface) {
-        m_surface->detachNativeBuffer();
-    }
+    STARFISH_ASSERT(m_canvasSurface == nullptr);
+    STARFISH_ASSERT(m_canvas == nullptr);
 
     // Create CanvasSurface.
-    m_surface = CanvasSurface::create(
+    m_canvasSurface = CanvasSurface::create(
         m_ownerHTMLCanvasElement->webView()->platformWindow(),
         m_ownerHTMLCanvasElement->width(), m_ownerHTMLCanvasElement->height(),
         CanvasSurface::CanvasElement);
 
-    if (m_canvas) {
-        delete m_canvas;
-    }
     auto black = Unit::Color(0, 0, 0, 255);
     // Set defualt values such as color, fill color and stroke color.
-    m_canvas = Canvas::create(m_ownerHTMLCanvasElement->webView(), m_surface);
+    m_canvas =
+        Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface);
     // Set the defualt color as black.
     m_canvas->setColor(black);
     // Set the fill color as black.
@@ -82,10 +101,33 @@ void CanvasRenderingContext2DMixIn::initialize()
     m_lineWidth = 1.0f;
     m_canvas->setStrokeWidth(m_lineWidth);
     m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
+
+    m_canvasPath = new CanvasPath();
 }
+
+void CanvasRenderingContext2DMixIn::finalize()
+{
+    STARFISH_ASSERT(m_canvasSurface);
+    STARFISH_ASSERT(m_canvas);
+    // Do not call m_canvasSurface's detachNativeBuffer, it will be called in
+    // GC_REGISTER_FINALIZER_NO_ORDER registered by CanvasSurface
+    m_canvasSurface = nullptr;
+
+    delete m_canvas;
+    m_canvas = nullptr;
+}
+
 void CanvasRenderingContext2DMixIn::flush()
 {
     m_canvas->flush();
+}
+
+void CanvasRenderingContext2DMixIn::onResize()
+{
+    finalize();
+    initialize();
+
+    m_ownerHTMLCanvasElement->setNeedsPainting();
 }
 
 void CanvasRenderingContext2DMixIn::setLineWidth(double width)
@@ -250,10 +292,12 @@ void CanvasRenderingContext2DMixIn::strokeRect(double x, double y, double w,
 
 void CanvasRenderingContext2DMixIn::beginPath()
 {
+    m_canvasPath->path()->clear();
 }
 
 void CanvasRenderingContext2DMixIn::fill(String* fillRule)
 {
+    fill(m_canvasPath->path(), fillRule);
 }
 
 void CanvasRenderingContext2DMixIn::fill(Path2D* path, String* fillRule)
@@ -262,12 +306,62 @@ void CanvasRenderingContext2DMixIn::fill(Path2D* path, String* fillRule)
 
 void CanvasRenderingContext2DMixIn::stroke()
 {
-    m_ownerHTMLCanvasElement->setNeedsPainting();
-    Unit::Color color =
-        Unit::Color(m_strokeColor.r(), m_strokeColor.g(), m_strokeColor.b(),
-                    m_strokeColor.a() * m_globalAlpha);
-    m_canvas->setColor(color);
-    m_canvas->stroke();
+    stroke(m_canvasPath->path());
+}
+
+void CanvasRenderingContext2DMixIn::closePath()
+{
+    m_canvasPath->closePath();
+}
+
+void CanvasRenderingContext2DMixIn::moveTo(double x, double y)
+{
+    m_canvasPath->moveTo(x, y);
+}
+
+void CanvasRenderingContext2DMixIn::lineTo(double x, double y)
+{
+    m_canvasPath->lineTo(x, y);
+}
+
+void CanvasRenderingContext2DMixIn::quadraticCurveTo(double cpx, double cpy,
+                                                     double x, double y)
+{
+    m_canvasPath->quadraticCurveTo(cpx, cpy, x, y);
+}
+
+void CanvasRenderingContext2DMixIn::bezierCurveTo(double cp1x, double cp1y,
+                                                  double cp2x, double cp2y,
+                                                  double x, double y)
+{
+    m_canvasPath->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
+}
+
+void CanvasRenderingContext2DMixIn::arcTo(double x1, double y1, double x2,
+                                          double y2, double radius)
+{
+    m_canvasPath->arcTo(x1, y1, x2, y2, radius);
+}
+
+void CanvasRenderingContext2DMixIn::rect(double x, double y, double w, double h)
+{
+    m_canvasPath->rect(x, y, w, h);
+}
+
+void CanvasRenderingContext2DMixIn::arc(double x, double y, double radius,
+                                        double startAngle, double endAngle,
+                                        bool anticlockwise /*=false*/)
+{
+    m_canvasPath->arc(x, y, radius, startAngle, endAngle, anticlockwise);
+}
+
+void CanvasRenderingContext2DMixIn::ellipse(double x, double y, double radiusX,
+                                            double radiusY, double rotation,
+                                            double startAngle, double endAngle,
+                                            bool anticlockwise /*=false*/)
+{
+    m_canvasPath->ellipse(x, y, radiusX, radiusY, rotation, startAngle,
+                          endAngle, anticlockwise);
 }
 
 void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, double dx,
@@ -304,8 +398,9 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
     flush();
 
     size_t stride = 0;
-    if (m_surface->bufferWidth() && m_surface->bufferStride()) {
-        stride = m_surface->bufferStride() / m_surface->bufferWidth();
+    if (m_canvasSurface->bufferWidth() && m_canvasSurface->bufferStride()) {
+        stride =
+            m_canvasSurface->bufferStride() / m_canvasSurface->bufferWidth();
     } else {
         stride = 4;
     }
@@ -323,10 +418,10 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
                         ->asArrayBufferObject()
                         ->rawBuffer();
 
-    auto width = m_surface->bufferWidth();
-    auto height = m_surface->bufferHeight();
+    auto width = m_canvasSurface->bufferWidth();
+    auto height = m_canvasSurface->bufferHeight();
 
-    uint8_t* src = m_surface->mapBuffer();
+    uint8_t* src = m_canvasSurface->mapBuffer();
     for (size_t y = 0; y < (size_t)sh && (y + sy) < height; ++y) {
         for (size_t x = 0; x < (size_t)sw && (x + sx) < width; ++x) {
             uint8_t* destPixel = dest + (y * sw * stride) + (x * stride);
@@ -358,53 +453,6 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
     return ret;
 }
 
-void CanvasRenderingContext2DMixIn::closePath()
-{
-}
-
-void CanvasRenderingContext2DMixIn::moveTo(double x, double y)
-{
-    m_ownerHTMLCanvasElement->setNeedsPainting();
-    m_canvas->moveTo(x, y);
-}
-
-void CanvasRenderingContext2DMixIn::lineTo(double x, double y)
-{
-    m_ownerHTMLCanvasElement->setNeedsPainting();
-    m_canvas->lineTo(x, y);
-}
-
-void CanvasRenderingContext2DMixIn::rect(double x, double y, double w, double h)
-{
-    m_ownerHTMLCanvasElement->setNeedsPainting();
-    m_canvas->moveTo(x - m_lineWidth / 2, y);
-    m_canvas->lineTo(x + w, y);
-    m_canvas->lineTo(x + w, y + h);
-    m_canvas->lineTo(x, y + h);
-    m_canvas->lineTo(x, y);
-}
-
-void CanvasRenderingContext2DMixIn::arc(double x, double y, double radius,
-                                        double startAngle, double endAngle,
-                                        bool anticlockwise)
-{
-}
-
-void CanvasRenderingContext2DMixIn::ellipse(double x, double y, double radiusX,
-                                            double radiusY, double rotation,
-                                            double startAngle, double endAngle,
-                                            bool anticlockwise)
-{
-}
-
-void CanvasRenderingContext2DMixIn::bezierCurveTo(double x1, double y1,
-                                                  double x2, double y2,
-                                                  double x3, double y3)
-{
-    m_ownerHTMLCanvasElement->setNeedsPainting();
-    m_canvas->curveTo(x1, y1, x2, y2, x3, y3);
-}
-
 void CanvasRenderingContext2DMixIn::clearRect(double x, double y, double w,
                                               double h)
 {
@@ -419,6 +467,37 @@ void CanvasRenderingContext2DMixIn::clearRect(double x, double y, double w,
     m_canvas->drawRect(LayoutRect(x, y, w, h));
     m_canvas->fill();
     m_canvas->restore();
+}
+
+void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
+{
+    m_ownerHTMLCanvasElement->setNeedsPainting();
+
+    auto rule = StringToCanvasFillRule(fillRule);
+
+    if (!path->isEmpty()) {
+        m_canvas->save();
+        if (rule == CanvasFillRule::CanvasFillRuleNonZero) {
+            m_canvas->setFillRule(true);
+        } else if (rule == CanvasFillRule::CanvasFillRuleEvenOdd) {
+            m_canvas->setFillRule(false);
+        }
+        m_canvas->fillPath(path);
+        m_canvas->restore();
+    }
+}
+void CanvasRenderingContext2DMixIn::stroke(Path* path)
+{
+    m_ownerHTMLCanvasElement->setNeedsPainting();
+    if (!path->isEmpty()) {
+        m_canvas->save();
+        Unit::Color color =
+            Unit::Color(m_strokeColor.r(), m_strokeColor.g(), m_strokeColor.b(),
+                        m_strokeColor.a() * m_globalAlpha);
+        m_canvas->setColor(color);
+        m_canvas->strokePath(path);
+        m_canvas->restore();
+    }
 }
 }
 

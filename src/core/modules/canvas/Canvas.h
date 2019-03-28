@@ -31,6 +31,7 @@ class NativeImageData;
 class PlatformWindow;
 class GradientDrawingInfo;
 class NativeGradient;
+class Path;
 
 class CanvasState {
 public:
@@ -318,6 +319,10 @@ public:
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
+    virtual void strokePath(Path* path)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
     virtual void setFillRule(bool shouldUseNonZeroFillRule = true)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -330,6 +335,11 @@ public:
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
+    virtual void fillPath(Path* path)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void clipPath()
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
