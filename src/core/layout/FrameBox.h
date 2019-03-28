@@ -665,7 +665,7 @@ public:
         }
         return false;
     }
-
+    bool needsToPaintBackgroundOrBorderOrBoxShadow();
     virtual void paintContent(PaintingContext& ctx);
     virtual void paintInlineContent(Canvas* canvas, PaintingInlineStage stage,
                                     LayoutUnit dx, LayoutUnit dy)

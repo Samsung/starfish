@@ -44,8 +44,10 @@
 #include <vector>
 #include <SkMatrix.h>
 #include <clipper.hpp>
-
 #include <cairo.h>
+
+#include "core/modules/canvas/Path.h"
+#include "platform/canvas/PathCairo.h"
 
 #if defined(STARFISH_ANDROID) || defined(STARFISH_WINDOWS) || \
     defined(STARFISH_TIZEN)
@@ -996,6 +998,14 @@ public:
         }
         cairo_stroke_preserve(m_canvas);
     }
+    virtual void strokePath(Path* path)
+    {
+        if (!lastState().m_visible) {
+            return;
+        }
+        setPathAsNewPathOnCurrentContext(path);
+        stroke();
+    }
     virtual void fill()
     {
         if (!lastState().m_visible) {
@@ -1010,6 +1020,14 @@ public:
             return;
         }
         cairo_fill_preserve(m_canvas);
+    }
+    virtual void fillPath(Path* path)
+    {
+        if (!lastState().m_visible) {
+            return;
+        }
+        setPathAsNewPathOnCurrentContext(path);
+        fill();
     }
     virtual void clipPath()
     {
@@ -1367,6 +1385,16 @@ private:
     virtual void setNeedsGoodQualityAntialias()
     {
         cairo_set_antialias(m_canvas, CAIRO_ANTIALIAS_GOOD);
+    }
+
+    void setPathAsNewPathOnCurrentContext(Path* path)
+    {
+        cairo_new_path(m_canvas);
+        PathCairo* pathCairo = (PathCairo*)path;
+
+        auto p = cairo_copy_path(pathCairo->context());
+        cairo_append_path(m_canvas, p);
+        cairo_path_destroy(p);
     }
 
 protected:

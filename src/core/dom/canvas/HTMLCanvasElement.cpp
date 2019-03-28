@@ -44,8 +44,9 @@ void HTMLCanvasElement::setWidth(uint32_t value)
         setAttribute(starfish()->staticStrings()->m_width,
                      String::fromInt(value));
         if (m_canvasRenderingContext) {
-            m_canvasRenderingContext->initialize();
+            m_canvasRenderingContext->onResize();
         }
+        setNeedsLayout();
     }
 }
 
@@ -65,8 +66,9 @@ void HTMLCanvasElement::setHeight(uint32_t value)
         setAttribute(starfish()->staticStrings()->m_height,
                      String::fromInt(value));
         if (m_canvasRenderingContext) {
-            m_canvasRenderingContext->initialize();
+            m_canvasRenderingContext->onResize();
         }
+        setNeedsLayout();
     }
 }
 

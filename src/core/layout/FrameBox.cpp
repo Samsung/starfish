@@ -3048,6 +3048,18 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
     canvas->restore();
 }
 
+bool FrameBox::needsToPaintBackgroundOrBorderOrBoxShadow()
+{
+    auto s = style();
+    if (s->visibility() != VisibilityValue::VisibleVisibilityValue) {
+        return false;
+    }
+    auto border = s->border();
+    return s->boxShadow() || !s->backgroundColor().isTransparent() ||
+           s->backgroundLayerSize() || border.hasBorderImageData() ||
+           border.hasBorderStyle();
+}
+
 void FrameBox::paintContent(PaintingContext& ctx)
 {
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

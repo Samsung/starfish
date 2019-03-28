@@ -2,6 +2,7 @@
 
 [STARFISH_ENABLE_CANVAS,
  UnimplementedConstructor(optional (Path2D or DOMString) path),
+ ConstructorCallWith=ExecutionContext,
  Exposed=(Window,Worker)]
 interface Path2D {
   [Unimplemented] void addPath(Path2D path, optional DOMMatrix2DInit transform);

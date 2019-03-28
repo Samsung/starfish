@@ -25,25 +25,17 @@
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {
-
 class CanvasSurface;
-
 class CanvasRenderingContext : public ScriptWrappable {
 public:
     CanvasRenderingContext(ExecutionContext* ownerExecutionContext)
         : ScriptWrappable(this, ownerExecutionContext)
-        , m_surface(nullptr)
         , m_originCleanFlag(false)
     {
     }
 
     virtual ~CanvasRenderingContext()
     {
-    }
-
-    CanvasSurface* surface()
-    {
-        return m_surface;
     }
 
     bool originCleanFlag()
@@ -58,15 +50,15 @@ public:
 
     virtual ScriptBindingInstance* scriptBindingInstance();
     virtual void initialize() = 0;
+    virtual CanvasSurface* surface() = 0;
     virtual void flush() = 0;
+    virtual void onResize() = 0;
 
 protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
-        GC_set_bit(desc, GC_WORD_OFFSET(CanvasRenderingContext, m_surface));
     }
 
-    CanvasSurface* m_surface;
     bool m_originCleanFlag;
 };
 }

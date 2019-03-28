@@ -17,24 +17,44 @@
  *  USA
  */
 
-#ifndef __StarfishPath2D__
-#define __StarfishPath2D__
+#ifndef __StarfishCanvasPath__
+#define __StarfishCanvasPath__
 
 #ifdef STARFISH_ENABLE_CANVAS
 
-#include "binding/ScriptWrappable.h"
-#include "core/dom/canvas/CanvasPath.h"
-
 namespace Starfish {
 
-class Path2D : public ScriptWrappable, public CanvasPathInterfaceMixIn {
-public:
-    Path2D(ExecutionContext* executionContext);
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isPath2D() const override;
+class Path;
 
-    // CanvasPathInterfaceMixIn methods
+class CanvasPathInterfaceMixIn {
+    // Shared path API methods
+public:
+    CanvasPathInterfaceMixIn() = default;
+    virtual ~CanvasPathInterfaceMixIn() = default;
+    virtual void closePath() = 0;
+    virtual void moveTo(double x, double y) = 0;
+    virtual void lineTo(double x, double y) = 0;
+    virtual void quadraticCurveTo(double cpx, double cpy, double x,
+                                  double y) = 0;
+    virtual void bezierCurveTo(double cp1x, double cp1y, double cp2x,
+                               double cp2y, double x, double y) = 0;
+    virtual void arcTo(double x1, double y1, double x2, double y2,
+                       double radius) = 0;
+    virtual void rect(double x, double y, double w, double h) = 0;
+    virtual void arc(double x, double y, double radius, double startAngle,
+                     double endAngle, bool anticlockwise = false) = 0;
+    virtual void ellipse(double x, double y, double radiusX, double radiusY,
+                         double rotation, double startAngle, double endAngle,
+                         bool anticlockwise = false) = 0;
+};
+
+class CanvasPath : public CanvasPathInterfaceMixIn, public gc {
+public:
+    CanvasPath();
+    virtual ~CanvasPath()
+    {
+    }
+    // CanvasPathInterfaceMixIn
     virtual void closePath() override;
     virtual void moveTo(double x, double y) override;
     virtual void lineTo(double x, double y) override;
@@ -51,8 +71,14 @@ public:
                          double rotation, double startAngle, double endAngle,
                          bool anticlockwise = false) override;
 
+    Path* path()
+    {
+        return m_path;
+    }
+
 private:
-    CanvasPath* m_canvasPath;
+    void init();
+    Path* m_path;
 };
 }
 

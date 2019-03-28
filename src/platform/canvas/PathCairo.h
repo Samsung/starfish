@@ -17,24 +17,29 @@
  *  USA
  */
 
-#ifndef __StarfishPath2D__
-#define __StarfishPath2D__
-
-#ifdef STARFISH_ENABLE_CANVAS
-
-#include "binding/ScriptWrappable.h"
-#include "core/dom/canvas/CanvasPath.h"
+#ifndef __StarfishPathCairo__
+#define __StarfishPathCairo__
 
 namespace Starfish {
 
-class Path2D : public ScriptWrappable, public CanvasPathInterfaceMixIn {
-public:
-    Path2D(ExecutionContext* executionContext);
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isPath2D() const override;
+class Path;
 
-    // CanvasPathInterfaceMixIn methods
+class PathCairo : public Path {
+public:
+    PathCairo();
+    ~PathCairo();
+
+    cairo_t* context()
+    {
+        return m_cairoContext;
+    }
+    void finalize();
+
+    virtual void init() override;
+    virtual void clear() override;
+    virtual bool isEmpty() override;
+
+    // For CanvasPath
     virtual void closePath() override;
     virtual void moveTo(double x, double y) override;
     virtual void lineTo(double x, double y) override;
@@ -52,9 +57,8 @@ public:
                          bool anticlockwise = false) override;
 
 private:
-    CanvasPath* m_canvasPath;
+    cairo_t* m_cairoContext;
+    cairo_surface_t* m_dumyCairoSurface;
 };
 }
-
-#endif
 #endif

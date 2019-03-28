@@ -17,44 +17,63 @@
  *  USA
  */
 
-#ifndef __StarfishPath2D__
-#define __StarfishPath2D__
-
-#ifdef STARFISH_ENABLE_CANVAS
-
-#include "binding/ScriptWrappable.h"
-#include "core/dom/canvas/CanvasPath.h"
+#ifndef __StarfishPath__
+#define __StarfishPath__
 
 namespace Starfish {
 
-class Path2D : public ScriptWrappable, public CanvasPathInterfaceMixIn {
-public:
-    Path2D(ExecutionContext* executionContext);
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isPath2D() const override;
+class NativPath;
 
-    // CanvasPathInterfaceMixIn methods
-    virtual void closePath() override;
-    virtual void moveTo(double x, double y) override;
-    virtual void lineTo(double x, double y) override;
+class Path : public gc {
+public:
+    static Path* create();
+
+    virtual ~Path()
+    {
+    }
+
+    virtual void init() = 0;
+    virtual void clear() = 0;
+    virtual bool isEmpty() = 0;
+
+    // For CanvasPath
+    virtual void closePath() = 0;
+    virtual void moveTo(double x, double y) = 0;
+    virtual void lineTo(double x, double y) = 0;
     virtual void quadraticCurveTo(double cpx, double cpy, double x,
-                                  double y) override;
+                                  double y) = 0;
     virtual void bezierCurveTo(double cp1x, double cp1y, double cp2x,
-                               double cp2y, double x, double y) override;
+                               double cp2y, double x, double y) = 0;
     virtual void arcTo(double x1, double y1, double x2, double y2,
-                       double radius) override;
-    virtual void rect(double x, double y, double w, double h) override;
+                       double radius) = 0;
+    virtual void rect(double x, double y, double w, double h) = 0;
     virtual void arc(double x, double y, double radius, double startAngle,
-                     double endAngle, bool anticlockwise = false) override;
+                     double endAngle, bool anticlockwise = false) = 0;
     virtual void ellipse(double x, double y, double radiusX, double radiusY,
                          double rotation, double startAngle, double endAngle,
-                         bool anticlockwise = false) override;
+                         bool anticlockwise = false) = 0;
 
-private:
-    CanvasPath* m_canvasPath;
+    bool needNewSubPath()
+    {
+        return m_needNewSubPath;
+    }
+
+    void ensureSubPath(double x, double y)
+    {
+        // https://html.spec.whatwg.org/multipage/canvas.html#ensure-there-is-a-subpath
+        if (isEmpty() || needNewSubPath()) {
+            moveTo(x, y);
+        }
+    }
+
+protected:
+    Path()
+        : m_needNewSubPath(true)
+    {
+    }
+
+    bool m_needNewSubPath;
 };
 }
 
-#endif
 #endif
