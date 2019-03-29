@@ -950,7 +950,7 @@ void ComputedStyleCSSStyleDeclaration::updateValue(
     case CSSStyleValuePair::KeyKind::Transform: {
         CSSStyleValuePair p;
         p.setKeyKind(CSSStyleValuePair::KeyKind::Transform);
-        if (!style->hasTransforms()) {
+        if (!style->hasTransforms() || !frame) {
             p.setValueKind(CSSStyleValuePair::ValueKind::None);
         } else {
             p.setValueKind(CSSStyleValuePair::ValueKind::TransformFunctions);
