@@ -1667,19 +1667,7 @@ public:
 
         ComputeVisibleRectContext(ComputePurpose purpose,
                                   StackingContext* sourceStackingContext,
-                                  SkMatrix& tranformMatrix, LayoutRect& result)
-            : purpose(purpose)
-            , ignoreTransformOnce(purpose >= GraphicsBufferBySelf ? true
-                                                                  : false)
-            , isForSpecialValueForTableCell(false)
-            , isVisibleRectCollapsible(purpose >= GraphicsBufferBySelf)
-            , sourceStackingContext(sourceStackingContext)
-            , sourceFrameBox(nullptr)
-            , tranformMatrix(tranformMatrix)
-            , result(result)
-        {
-        }
-
+                                  SkMatrix& tranformMatrix, LayoutRect& result);
         ComputeVisibleRectContext(ComputePurpose purpose,
                                   FrameBox* sourceFrameBox,
                                   SkMatrix& tranformMatrix, LayoutRect& result)

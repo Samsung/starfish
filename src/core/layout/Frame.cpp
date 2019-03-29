@@ -876,6 +876,35 @@ PreferredWidthContext& PreferredWidthContext::nearestFloatContext()
     return *this;
 }
 
+Frame::ComputeVisibleRectContext::ComputeVisibleRectContext(
+    ComputePurpose purpose, StackingContext* sourceStackingContext,
+    SkMatrix& tranformMatrix, LayoutRect& result)
+    : purpose(purpose)
+    , ignoreTransformOnce(purpose >= GraphicsBufferBySelf ? true : false)
+    , isForSpecialValueForTableCell(false)
+    , isVisibleRectCollapsible(purpose >= GraphicsBufferBySelf)
+    , sourceStackingContext(sourceStackingContext)
+    , sourceFrameBox(nullptr)
+    , tranformMatrix(tranformMatrix)
+    , result(result)
+{
+    if (sourceStackingContext->owner()->shouldApplyOverflow()) {
+        ComputedStyle* cs = sourceStackingContext->owner()->style();
+        bool overflowXWasApplyed =
+            cs->overflowX() != OverflowValue::VisibleOverflow;
+        bool overflowYWasApplyed =
+            cs->overflowY() != OverflowValue::VisibleOverflow;
+
+        if (overflowXWasApplyed || overflowYWasApplyed) {
+            LayoutRect rt = sourceStackingContext->owner()->frameVisibleRect();
+
+            boundMaxExtentDueToOverflow.push_back(
+                std::make_tuple(computeBoxExtent(rt, SkMatrix::I()),
+                                overflowXWasApplyed, overflowYWasApplyed));
+        }
+    }
+}
+
 void Frame::ComputeVisibleRectContext::uniteRect(const LayoutRect& r)
 {
     LayoutRect tmp = computeBoxExtent(r, tranformMatrix);
