@@ -17,23 +17,47 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerJobClient__)
-#define __StarfishServiceWorkerJobClient__
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+
+#include "StarfishConfig.h"
+
+#include "core/modules/serviceworker/JobQueue.h"
 
 namespace Starfish {
 
-class ServiceWorkerJob;
-class ServiceWorkerRegistrationData;
+JobQueue::JobQueue()
+{
+}
 
-class ServiceWorkerJobClient {
-public:
-    virtual ~ServiceWorkerJobClient()
-    {
-    }
-    virtual void resolveJobPromise(
-        ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
-};
+void JobQueue::enqueueJob(ServiceWorkerJob* job)
+{
+    m_jobQueue.push_back(job);
+}
 
-} // namespace Starfish
-#endif
+void JobQueue::dequeueJob()
+{
+    return m_jobQueue.pop_front();
+}
+
+bool JobQueue::empty() const
+{
+    return m_jobQueue.empty();
+}
+
+size_t JobQueue::size() const
+{
+    return m_jobQueue.size();
+}
+
+ServiceWorkerJob* JobQueue::firstJob() const
+{
+    return m_jobQueue.front();
+}
+
+ServiceWorkerJob* JobQueue::lastJob() const
+{
+    return m_jobQueue.back();
+}
+}
+
+#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

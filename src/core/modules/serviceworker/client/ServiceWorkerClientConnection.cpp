@@ -25,7 +25,7 @@
 #include "core/modules/serviceworker/Connection.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
-#include "core/modules/process/networking/Socket.h"
+#include "core/modules/networking/Socket.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
@@ -49,7 +49,8 @@ void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
     ServiceWorkerHostProcess::getInstance()->scheduleJob(job);
 }
 
-void ServiceWorkerClientConnection::resolveJobPromise(ServiceWorkerJob* job)
+void ServiceWorkerClientConnection::resolveJobPromise(
+    ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
 }
 

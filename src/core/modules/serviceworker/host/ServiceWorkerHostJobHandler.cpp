@@ -21,84 +21,62 @@
 
 #include "StarfishConfig.h"
 
-#include "core/dom/ExecutionContext.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostJobQueue.h"
-
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
-
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
+#include "core/modules/serviceworker/JobQueue.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
+
 #include "core/modules/serviceworker/ServiceWorker.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
-
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
 namespace Starfish {
 
-ServiceWorkerHostJobQueue::ServiceWorkerHostJobQueue(MessageLoop* messageLoop)
-    : m_jobQueue()
-    , m_messageLoop(messageLoop)
+ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
+    MessageLoop* messageLoop)
+    : m_messageLoop(messageLoop)
 {
 }
 
-void ServiceWorkerHostJobQueue::enqueueJob(ServiceWorkerJob* job)
-{
-    m_jobQueue.push_back(job);
-}
-
-size_t ServiceWorkerHostJobQueue::size() const
-{
-    return m_jobQueue.size();
-}
-
-const ServiceWorkerJob* ServiceWorkerHostJobQueue::firstJob() const
-{
-    return m_jobQueue.front();
-}
-
-const ServiceWorkerJob* ServiceWorkerHostJobQueue::lastJob() const
-{
-    return m_jobQueue.back();
-}
-
-void ServiceWorkerHostJobQueue::runJob()
+void ServiceWorkerHostJobHandler::runJob(JobQueue* jobQueue)
 {
     // https://w3c.github.io/ServiceWorker/#run-job-algorithm
 
     // 1. Assert: jobQueue is not empty.
-    STARFISH_ASSERT(size() != 0);
+    STARFISH_ASSERT(jobQueue->size() != 0);
 
     // 2. Queue a task to run these steps in parallel.
+    // TODO: remove params. use another function instead
     struct Params : public gc {
-        ServiceWorkerHostJobQueue* queue;
+        ServiceWorkerHostJobHandler* self;
         ServiceWorkerJob* job;
     };
 
     auto params = new Params();
-    params->queue = this;
+    params->self = this;
 
     // 2.1 Let job be the first item in jobQueue.
-    params->job = m_jobQueue.front();
+    params->job = jobQueue->firstJob();
 
     queueTask(
         [](size_t handle, void* data) {
             Params* params = static_cast<Params*>(data);
-            ServiceWorkerHostJobQueue* queue = params->queue;
+            ServiceWorkerHostJobHandler* self = params->self;
             ServiceWorkerJob* job = params->job;
 
             // 2.2, 2.3, 2.4
-            switch (job->type) {
+            switch (job->data()->type) {
             case ServiceWorkerJobType::Register:
-                queue->runRegisterJob(job);
+                self->registerServiceWorker(job);
                 break;
             case ServiceWorkerJobType::Update:
-                queue->runUpdateJob(job);
+                self->update(job);
                 break;
             case ServiceWorkerJobType::Unregister:
-                queue->runUnregisterJob(job);
+                self->unregisterServiceWorker(job);
                 break;
             default:
                 break;
@@ -107,46 +85,48 @@ void ServiceWorkerHostJobQueue::runJob()
         params);
 }
 
-void ServiceWorkerHostJobQueue::queueTask(void (*fn)(size_t, void*), void* data)
+void ServiceWorkerHostJobHandler::queueTask(void (*fn)(size_t, void*),
+                                            void* data)
 {
     m_messageLoop->addIdler(nullptr, fn, data);
 }
 
-void ServiceWorkerHostJobQueue::runRegisterJob(ServiceWorkerJob* job)
+void ServiceWorkerHostJobHandler::registerServiceWorker(ServiceWorkerJob* job)
 {
     // https://w3c.github.io/ServiceWorker/#register-algorithm
 
     // 4. Let registration be the result of running the Get Registration
     // algorithm passing job’s scope url as the argument.
     auto host = ServiceWorkerHostProcess::getInstance();
-    auto registration = host->getRegistration(job->scopeURL);
+    auto registration = host->getRegistration(job->data()->scopeURL);
 
     if (registration) {
         // 5. If registration is not null, then:
     } else {
         // 6. Invoke Set Registration algorithm with job’s scope url and job’s
         // update via cache mode.
-        host->setRegistration(job->scopeURL, job->updateViaCacheMode);
+        host->setRegistration(job->data()->scopeURL,
+                              job->data()->updateViaCacheMode);
     }
 
     // 7. Invoke Update algorithm passing job as the argument
-    runUpdateJob(job);
+    update(job);
 }
 
-void ServiceWorkerHostJobQueue::runUpdateJob(ServiceWorkerJob* job)
+void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
 {
     // https://w3c.github.io/ServiceWorker/#update-algorithm
     auto host = ServiceWorkerHostProcess::getInstance();
 
     // 1. Let registration be the result of running the Get Registration
     // algorithm passing job’s scope url as the argument.
-    auto registration = host->getRegistration(job->scopeURL);
+    auto registration = host->getRegistration(job->data()->scopeURL);
 
     // 7. Let hasUpdatedResources be false.
     bool hasUpdatedResources = false;
 
     // 12. Let scopeURL be registration’s scope url.
-    String* scopeURL = job->scopeURL;
+    String* scopeURL = job->data()->scopeURL;
 
     // FIXME: simulate resource update for now.
     hasUpdatedResources = true;
@@ -154,10 +134,10 @@ void ServiceWorkerHostJobQueue::runUpdateJob(ServiceWorkerJob* job)
     // 10. If hasUpdatedResources is false, then:
     if (!hasUpdatedResources) {
         // 10.1. Invoke Resolve Job Promise with job and registration.
-        runResolveJobPromise(job);
+        resolveJobPromise(job, registration);
 
         // 10.2. Invoke Finish Job with job and abort these steps.
-        finishJob();
+        finishJob(job);
         return;
     }
 
@@ -167,23 +147,23 @@ void ServiceWorkerHostJobQueue::runUpdateJob(ServiceWorkerJob* job)
     // 12. Set worker’s script url to job’s script url,
     // TODO: worker’s script resource to script, and worker’s type to job’s
     // worker type.
-    worker->setScriptURL(job->scriptURL);
+    worker->setScriptURL(job->data()->scriptURL);
 
     // 16. Invoke Run Service Worker algorithm given worker
     runServiceWorker(worker);
 
     // 16.2 Else, invoke Install algorithm with job, worker, and registration as
     // its arguments.
-    runInstallJob(job, worker, registration);
+    install(job, worker, registration);
 }
 
-void ServiceWorkerHostJobQueue::runServiceWorker(
+void ServiceWorkerHostJobHandler::runServiceWorker(
     ServiceWorkerData* serviceWorker)
 {
     // https://w3c.github.io/ServiceWorker/#run-service-worker
 }
 
-void ServiceWorkerHostJobQueue::runInstallJob(
+void ServiceWorkerHostJobHandler::install(
     ServiceWorkerJob* job, ServiceWorkerData* worker,
     ServiceWorkerRegistrationData* registration)
 {
@@ -194,10 +174,10 @@ void ServiceWorkerHostJobQueue::runInstallJob(
 
     // 3. Run the Update Registration State algorithm passing registration,
     // "installing" and worker as the arguments.
-    runUpdateRegistrationState(registration, "installing", worker);
+    updateRegistrationState(registration, "installing", worker);
 
     // 6. Invoke Resolve Job Promise with job and registration.
-    runResolveJobPromise(job);
+    resolveJobPromise(job, registration);
 
     // 7. Queue a task to fire an event named updatefound at all the
     // ServiceWorkerRegistration objects for all
@@ -208,14 +188,16 @@ void ServiceWorkerHostJobQueue::runInstallJob(
     // 20. Invoke Try Activate with registration.
 }
 
-void ServiceWorkerHostJobQueue::runResolveJobPromise(ServiceWorkerJob* job)
+void ServiceWorkerHostJobHandler::resolveJobPromise(
+    ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
     // NOTE: a job should end where it started, swervice worker client.
-    ServiceWorkerHostProcess::getInstance()->client()->resolveJobPromise(job);
+    ServiceWorkerHostProcess::getInstance()->client()->resolveJobPromise(
+        job, registration);
 }
 
-void ServiceWorkerHostJobQueue::runUpdateRegistrationState(
+void ServiceWorkerHostJobHandler::updateRegistrationState(
     ServiceWorkerRegistrationData* registration, const char* target,
     ServiceWorkerData* source)
 {
@@ -238,17 +220,26 @@ void ServiceWorkerHostJobQueue::runUpdateRegistrationState(
     }
 }
 
-void ServiceWorkerHostJobQueue::runUnregisterJob(ServiceWorkerJob* job)
+void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
 {
     // TODO: meet https://w3c.github.io/ServiceWorker/#unregister-algorithm
 }
 
-void ServiceWorkerHostJobQueue::finishJob()
+void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
 {
-    // TODO: meet https://w3c.github.io/ServiceWorker/#finish-job-algorithm
-    m_jobQueue.pop_front();
-    if (!m_jobQueue.empty()) {
-        runJob();
+    // https://w3c.github.io/ServiceWorker/#finish-job-algorithm
+
+    // 1. Let jobQueue be job’s containing job queue.
+    auto jobQueue = job->containingJobQueue();
+
+    // 2. Assert: the first item in jobQueue is job.
+    STARFISH_ASSERT(jobQueue->firstJob() == job);
+
+    // 3. Dequeue from jobQueue.
+    // 4. If jobQueue is not empty, invoke Run Job with jobQueue.
+    jobQueue->dequeueJob();
+    if (!jobQueue->empty()) {
+        runJob(jobQueue);
     }
 }
 }

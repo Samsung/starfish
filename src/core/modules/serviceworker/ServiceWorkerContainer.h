@@ -35,6 +35,7 @@ class ExecutionContext;
 class ServiceWorker;
 class ServiceWorkerJob;
 class ServiceWorkerClientConnection;
+class ServiceWorkerRegistrationData;
 
 class ServiceWorkerContainer : public EventTarget,
                                public ServiceWorkerJobClient {
@@ -59,7 +60,9 @@ public:
                                 ExecutionContext* client);
     void scheduleJob(ServiceWorkerJob* job);
 
-    virtual void resolveJobPromise(ServiceWorkerJob* job) override;
+    void resolveJobPromise(
+        ServiceWorkerJob* job,
+        ServiceWorkerRegistrationData* registration) override;
 
 private:
     GCUnorderedMap<ServiceWorkerJobId, ServiceWorkerJob*> m_jobMap;

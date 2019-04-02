@@ -28,9 +28,11 @@
 
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
-#include "core/modules/serviceworker/host/ServiceWorkerHostJobQueue.h"
-
+#include "core/modules/serviceworker/JobQueue.h"
+#include "core/modules/serviceworker/ServiceWorker.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
 namespace Starfish {
 
@@ -52,7 +54,7 @@ void ServiceWorkerHostProcess::destroy()
 
 ServiceWorkerHostProcess::ServiceWorkerHostProcess()
     : m_messageLoop(nullptr)
-    , m_jobQueueMap()
+    , m_jobHandler(nullptr)
 {
 }
 
@@ -60,7 +62,7 @@ ServiceWorkerHostProcess::~ServiceWorkerHostProcess()
 {
 }
 
-IServiceWorkerClientProcess* ServiceWorkerHostProcess::client()
+ServiceWorkerClientProcessInterface* ServiceWorkerHostProcess::client()
 {
     // TODO: return a communication-interface
     return ServiceWorkerClientProcess::getInstance();
@@ -69,6 +71,7 @@ IServiceWorkerClientProcess* ServiceWorkerHostProcess::client()
 void ServiceWorkerHostProcess::init(MessageLoop* messageLoop)
 {
     m_messageLoop = messageLoop;
+    m_jobHandler = new ServiceWorkerHostJobHandler(messageLoop);
 }
 
 ServiceWorkerRegistrationData* ServiceWorkerHostProcess::getRegistration(
@@ -94,20 +97,20 @@ void ServiceWorkerHostProcess::setRegistration(
 void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
 {
     // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
-    STARFISH_ASSERT(m_messageLoop);
+    STARFISH_ASSERT(m_jobHandler);
 
     // 1. Let jobQueue be null.
-    ServiceWorkerHostJobQueue* jobQueue = nullptr;
+    JobQueue* jobQueue = nullptr;
 
     // 2. Let jobScope be job’s scope url, serialized.
-    auto jobScope = job->scopeURL;
+    auto jobScope = job->data()->scopeURL;
 
     // 3. If scope to job queue map[jobScope] does not exist, set scope to job
     // queue map[jobScope] to a new job queue.
     // 4. Set jobQueue to scope to job queue map[jobScope].
     auto scope = m_jobQueueMap.find(jobScope);
     if (scope == m_jobQueueMap.end()) {
-        jobQueue = new ServiceWorkerHostJobQueue(m_messageLoop);
+        jobQueue = new JobQueue();
         m_jobQueueMap.insert(std::make_pair(jobScope, jobQueue));
     } else {
         jobQueue = scope->second;
@@ -119,11 +122,11 @@ void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
         // jobQueue.
         // TODO: containingJobQueue should be a certain identifier which can be
         // shared and unique b/t host and client.
-        job->containingJobQueue = jobQueue;
+        job->setContainingJobQueue(jobQueue);
         jobQueue->enqueueJob(job);
 
         // 5.2. Invoke Run Job with jobQueue.
-        jobQueue->runJob();
+        m_jobHandler->runJob(jobQueue);
     } else {
         // 6. Else:
     }

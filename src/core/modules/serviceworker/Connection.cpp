@@ -31,7 +31,7 @@
 #include <nanomsg/pubsub.h>
 #include <nanomsg/reqrep.h>
 
-#include "core/modules/process/networking/Socket.h"
+#include "core/modules/networking/Socket.h"
 
 namespace Starfish {
 

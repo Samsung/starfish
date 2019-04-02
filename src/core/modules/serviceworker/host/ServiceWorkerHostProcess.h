@@ -36,10 +36,11 @@ struct RegistrationIdentifier : public gc {
 };
 
 class ServiceWorkerJob;
-class ServiceWorkerHostJobQueue;
+class JobQueue;
 class MessageLoop;
 class ServiceWorkerRegistrationData;
-class IServiceWorkerClientProcess;
+class ServiceWorkerClientProcessInterface;
+class ServiceWorkerHostJobHandler;
 
 struct ServiceWorkerRegistrationKeyComparator {
     bool operator()(const ServiceWorkerRegistrationKey& lhs,
@@ -49,7 +50,8 @@ struct ServiceWorkerRegistrationKeyComparator {
     }
 };
 
-class ServiceWorkerHostProcess : public gc, public IServiceWorkerHostProcess {
+class ServiceWorkerHostProcess : public gc,
+                                 public ServiceWorkerHostProcessInterface {
 public:
     static ServiceWorkerHostProcess* getInstance();
     static void destroy();
@@ -64,7 +66,7 @@ public:
     void setRegistration(String* scope,
                          ServiceWorkerUpdateViaCache updateViaCacheMode);
 
-    IServiceWorkerClientProcess* client();
+    ServiceWorkerClientProcessInterface* client();
 
 private:
     static ServiceWorkerHostProcess* m_instance;
@@ -72,8 +74,8 @@ private:
     virtual ~ServiceWorkerHostProcess();
 
     MessageLoop* m_messageLoop;
-    GCUnorderedMap<ServiceWorkerRegistrationKey, ServiceWorkerHostJobQueue*>
-        m_jobQueueMap;
+    ServiceWorkerHostJobHandler* m_jobHandler;
+    GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*> m_jobQueueMap;
     GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
           ServiceWorkerRegistrationKeyComparator>
         m_registrationMap;

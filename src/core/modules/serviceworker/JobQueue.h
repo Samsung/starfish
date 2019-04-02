@@ -17,47 +17,33 @@
  *  USA
  */
 
-#ifndef __StarfishProcessIORunnable__
-#define __StarfishProcessIORunnable__
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    !defined(__StarfishServiceWorkerHostJobQueue__)
+#define __StarfishServiceWorkerHostJobQueue__
 
 namespace Starfish {
 
-class Sockect;
-class IRunnable;
+class ServiceWorkerJob;
 class MessageLoop;
+class ServiceWorkerRegistrationData;
+class ServiceWorker;
+class ServiceWorkerData;
 
-class ProcessHostIORunnable : public IRunnable, public gc {
+class JobQueue : public gc {
 public:
-    class Client {
-    public:
-        virtual ~Client()
-        {
-        }
-        virtual void onReceived(int socketfd, const char* data) = 0;
-        virtual void onStopped() = 0;
-    };
+    JobQueue();
 
-    ProcessHostIORunnable(MessageLoop* messageLoop, Client* client);
-
-    void run() override;
-    void stop() override;
-    void setStopper(std::future<void>&& stopper) override;
-    bool addSocket(Socket* socket);
+    void enqueueJob(ServiceWorkerJob* job);
+    void dequeueJob();
+    size_t size() const;
+    bool empty() const;
+    ServiceWorkerJob* firstJob() const;
+    ServiceWorkerJob* lastJob() const;
 
 private:
-    bool stopRequested();
-    void closeSockets();
-
-    MessageLoop* m_messageLoop;
-    GCVector<Socket*> m_sockets;
-
-    std::atomic_bool m_isStopped;
-    std::future<void> m_stopper;
-    std::mutex m_mutex;
-    int m_rcvtimeout;
-    Client* m_client;
+    // TODO: this should have an identifier.
+    GCDeque<ServiceWorkerJob*> m_jobQueue;
 };
-
-} // namespace Starfish
+}
 
 #endif
