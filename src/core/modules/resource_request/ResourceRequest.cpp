@@ -53,6 +53,22 @@ public:
             }
         }
     }
+
+    virtual void onReadyStateChange(ResourceRequest* request,
+                                    bool isExplicitAction)
+    {
+        if (request->isError()) {
+            struct Param : public gc {
+                RequestErrorType errorCode;
+                String* url;
+            };
+            Param* p = new Param;
+            p->errorCode = request->errorType();
+            p->url = request->url()->urlString();
+            request->document()->webView()->callPublicWebViewHandler(
+                OnReceivedError, p);
+        }
+    }
 };
 
 ResourceRequest::ResourceRequest(Document* document)

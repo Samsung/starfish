@@ -292,7 +292,7 @@ public:
 
     bool isError()
     {
-        return (m_requestError != RequestErrorType::NoError);
+        return (m_requestData && m_requestError != RequestErrorType::NoError);
     }
 
     RequestErrorType errorType()

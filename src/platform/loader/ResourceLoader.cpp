@@ -141,16 +141,6 @@ public:
     {
         ResourceClient::didLoadFailed();
         clearAlive();
-
-        struct Param : public gc {
-            RequestErrorType errorCode;
-            String* url;
-        };
-        Param* p = new Param;
-        p->errorCode = resource()->resourceRequest()->errorType();
-        p->url = resource()->resourceRequest()->url()->urlString();
-        resource()->loader()->document()->webView()->callPublicWebViewHandler(
-            OnReceivedError, p);
     }
 
     virtual void didLoadFinished()
