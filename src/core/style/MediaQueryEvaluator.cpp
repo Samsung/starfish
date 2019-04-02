@@ -146,25 +146,25 @@ double conversionToCanonicalUnitsScaleFactor(UnitType unitType)
     case UnitType::Hertz:
         break;
     case UnitType::Centimeters:
-        factor = unitPxPerCm;
+        factor = UnitHelper::UNIT_PX_PER_CM;
         break;
     case UnitType::DotsPerCentimeter:
-        factor = 1 / unitPxPerCm;
+        factor = 1 / UnitHelper::UNIT_PX_PER_CM;
         break;
     case UnitType::Millimeters:
-        factor = unitPxPerMm;
+        factor = UnitHelper::UNIT_PX_PER_MM;
         break;
     case UnitType::Inches:
-        factor = unitPxPerIn;
+        factor = UnitHelper::UNIT_PX_PER_IN;
         break;
     case UnitType::DotsPerInch:
-        factor = 1 / unitPxPerIn;
+        factor = 1 / UnitHelper::UNIT_PX_PER_IN;
         break;
     case UnitType::Points:
-        factor = unitPxPerPt;
+        factor = UnitHelper::UNIT_PX_PER_PT;
         break;
     case UnitType::Picas:
-        factor = unitPxPerPc;
+        factor = UnitHelper::UNIT_PX_PER_PC;
         break;
     case UnitType::Radians:
         factor = 180 / M_PI;

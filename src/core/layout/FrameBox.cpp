@@ -1062,7 +1062,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     dst.setX(0);
                     dst.setY(0);
                     canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
-                    canvas->rotate(convertFromDegToRad(90));
+                    canvas->rotate(UnitHelper::convertFromDegToRad(90));
                     canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
                     canvas->drawImage(nativeImage, src, dst, drawImageInfo);
                     canvas->restore();
@@ -1077,7 +1077,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     dst.setX(0);
                     dst.setY(0);
                     canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
-                    canvas->rotate(convertFromDegToRad(180));
+                    canvas->rotate(UnitHelper::convertFromDegToRad(180));
                     canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
                     canvas->drawImage(nativeImage, src, dst, drawImageInfo);
                     canvas->restore();
@@ -1092,7 +1092,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     dst.setX(0);
                     dst.setY(0);
                     canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
-                    canvas->rotate(convertFromDegToRad(180));
+                    canvas->rotate(UnitHelper::convertFromDegToRad(180));
                     canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
                     canvas->drawImage(nativeImage, src, dst, drawImageInfo);
                     canvas->restore();
@@ -1107,7 +1107,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     dst.setX(0);
                     dst.setY(0);
                     canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
-                    canvas->rotate(convertFromDegToRad(180));
+                    canvas->rotate(UnitHelper::convertFromDegToRad(180));
                     canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
                     canvas->drawImage(nativeImage, src, dst, drawImageInfo);
                     canvas->restore();
@@ -1122,7 +1122,7 @@ void FrameBox::paintBoxShadows(Canvas* canvas)
                     dst.setX(0);
                     dst.setY(0);
                     canvas->translate(dst.width() / 2.f, dst.height() / 2.f);
-                    canvas->rotate(convertFromDegToRad(270));
+                    canvas->rotate(UnitHelper::convertFromDegToRad(270));
                     canvas->translate(-dst.width() / 2.f, -dst.height() / 2.f);
                     canvas->drawImage(nativeImage, src, dst, drawImageInfo);
                     canvas->restore();

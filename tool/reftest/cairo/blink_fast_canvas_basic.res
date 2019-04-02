@@ -15,10 +15,10 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/2d.composite.globalAlpha.fi
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-after-destroy-iframe.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-after-detachment.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-alphaImageData-behavior.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-360-winding.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-360-winding.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-connecting-line.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-negative-radius.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-zero-lineto.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-zero-lineto.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-bezier-same-endpoint.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blend-image.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blending-clipping.html
@@ -46,7 +46,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/2d.composite.globalAlpha.fi
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blend-solid.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clearRect.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-clip-rule.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-closePath-single-point.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-closePath-single-point.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-composite.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-composite-canvas.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-composite-fill-repaint.html

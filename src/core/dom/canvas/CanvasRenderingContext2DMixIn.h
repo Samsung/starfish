@@ -65,15 +65,21 @@ public:
     void save();
     void restore();
 
+    // Note :
+    // Use a float instead of double for operations related to Canvas.
+    // Canvas-related calculation with double type cause a bug in cairo
+    // occasionally. So we use float like other major browsers although idl is
+    // specified as double
+
     // CanvasTransform
-    void scale(double x, double y);
-    void rotate(double angle);
-    void translate(double x, double y);
-    void transform(double a, double b, double c, double d, double e, double f);
+    void scale(float x, float y);
+    void rotate(float angle);
+    void translate(float x, float y);
+    void transform(float a, float b, float c, float d, float e, float f);
 
     // CanvasCompositing
-    double globalAlpha();
-    void setGlobalAlpha(double value);
+    float globalAlpha();
+    void setGlobalAlpha(float value);
     String* globalCompositeOperation();
     void setGlobalCompositeOperation(String* value);
 
@@ -85,8 +91,8 @@ public:
 
     DOMStringOrCanvasGradientOrCanvasPattern strokeStyle();
     void setStrokeStyle(DOMStringOrCanvasGradientOrCanvasPattern value);
-    CanvasGradient* createLinearGradient(double x0, double y0, double x1,
-                                         double y1);
+    CanvasGradient* createLinearGradient(float x0, float y0, float x1,
+                                         float y1);
 
     // CanvasShadowStyles
 
@@ -95,9 +101,9 @@ public:
     void setFilter(String* value);
 
     // CanvasRect
-    void clearRect(double x, double y, double w, double h);
-    void fillRect(double x, double y, double w, double h);
-    void strokeRect(double x, double y, double w, double h);
+    void clearRect(float x, float y, float w, float h);
+    void fillRect(float x, float y, float w, float h);
+    void strokeRect(float x, float y, float w, float h);
 
     // CanvasDrawPath
     void beginPath();
@@ -107,19 +113,19 @@ public:
 
     // CanvasPathInterfaceMixIn methods
     virtual void closePath() override;
-    virtual void moveTo(double x, double y) override;
-    virtual void lineTo(double x, double y) override;
-    virtual void quadraticCurveTo(double cpx, double cpy, double x,
-                                  double y) override;
-    virtual void bezierCurveTo(double cp1x, double cp1y, double cp2x,
-                               double cp2y, double x, double y) override;
-    virtual void arcTo(double x1, double y1, double x2, double y2,
-                       double radius) override;
-    virtual void rect(double x, double y, double w, double h) override;
-    virtual void arc(double x, double y, double radius, double startAngle,
-                     double endAngle, bool anticlockwise = false) override;
-    virtual void ellipse(double x, double y, double radiusX, double radiusY,
-                         double rotation, double startAngle, double endAngle,
+    virtual void moveTo(float x, float y) override;
+    virtual void lineTo(float x, float y) override;
+    virtual void quadraticCurveTo(float cpx, float cpy, float x,
+                                  float y) override;
+    virtual void bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
+                               float x, float y) override;
+    virtual void arcTo(float x1, float y1, float x2, float y2,
+                       float radius) override;
+    virtual void rect(float x, float y, float w, float h) override;
+    virtual void arc(float x, float y, float radius, float startAngle,
+                     float endAngle, bool anticlockwise = false) override;
+    virtual void ellipse(float x, float y, float radiusX, float radiusY,
+                         float rotation, float startAngle, float endAngle,
                          bool anticlockwise = false) override;
 
     // TODO : CanvasUserInterface
@@ -129,22 +135,21 @@ public:
     // NOTE Replace first argument's type of "drawImage" temporarily to
     // implement mock
     // CanvasImageSource -> ScriptValue
-    void drawImage(ScriptValue image, double dx, double dy);
-    void drawImage(ScriptValue image, double dx, double dy, double dw,
-                   double dh);
-    void drawImage(ScriptValue image, double sx, double sy, double sw,
-                   double sh, double dx, double dy, double dw, double dh);
+    void drawImage(ScriptValue image, float dx, float dy);
+    void drawImage(ScriptValue image, float dx, float dy, float dw, float dh);
+    void drawImage(ScriptValue image, float sx, float sy, float sw, float sh,
+                   float dx, float dy, float dw, float dh);
 
     // CanvasImageData
     ImageData* getImageData(int32_t sx, int32_t sy, int32_t sw, int32_t sh);
 
     // CanvasPathDrawingStyles
-    double lineWidth()
+    float lineWidth()
     {
         return m_lineWidth;
     }
 
-    void setLineWidth(double width);
+    void setLineWidth(float width);
 
     // TODO : CanvasTextDrawingStyles
 
@@ -188,8 +193,8 @@ private:
     CanvasPath* m_canvasPath;
     Unit::Color m_fillColor;
     Unit::Color m_strokeColor;
-    double m_lineWidth;
-    double m_globalAlpha;
+    float m_lineWidth;
+    float m_globalAlpha;
 };
 }
 #endif

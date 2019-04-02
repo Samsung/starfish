@@ -135,15 +135,15 @@ Length CSSLength::toLength() const
     if (m_kind == PX) { // absolute length
         return Length(Length::Fixed, m_value);
     } else if (m_kind == CM) {
-        return Length(Length::Fixed, convertFromCmToPx(m_value));
+        return Length(Length::Fixed, UnitHelper::convertFromCmToPx(m_value));
     } else if (m_kind == MM) {
-        return Length(Length::Fixed, convertFromMmToPx(m_value));
+        return Length(Length::Fixed, UnitHelper::convertFromMmToPx(m_value));
     } else if (m_kind == INCH) {
-        return Length(Length::Fixed, convertFromInToPx(m_value));
+        return Length(Length::Fixed, UnitHelper::convertFromInToPx(m_value));
     } else if (m_kind == PC) {
-        return Length(Length::Fixed, convertFromPcToPx(m_value));
+        return Length(Length::Fixed, UnitHelper::convertFromPcToPx(m_value));
     } else if (m_kind == PT) {
-        return Length(Length::Fixed, convertFromPtToPx(m_value));
+        return Length(Length::Fixed, UnitHelper::convertFromPtToPx(m_value));
     } else if (m_kind == EM) { // font-relative length
         return Length(Length::Em, m_value);
     } else if (m_kind == EX) { // font-relative length

@@ -264,7 +264,7 @@ public:
 
     virtual void rotate(double angle)
     {
-        m_canvas->rotate(convertFromRadToDeg(angle));
+        m_canvas->rotate(UnitHelper::convertFromRadToDeg(angle));
     }
 
     virtual void rotate(double angle, double ox, double oy)

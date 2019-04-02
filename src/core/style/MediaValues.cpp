@@ -65,19 +65,19 @@ bool computeLengthImpl(double value, UnitType type, uint32_t defaultFontSize,
         result = (value * std::max(viewportWidth, viewportHeight)) / 100.0;
         return true;
     case UnitType::Centimeters:
-        result = value * unitPxPerCm;
+        result = value * UnitHelper::UNIT_PX_PER_CM;
         return true;
     case UnitType::Millimeters:
-        result = value * unitPxPerMm;
+        result = value * UnitHelper::UNIT_PX_PER_MM;
         return true;
     case UnitType::Inches:
-        result = value * unitPxPerIn;
+        result = value * UnitHelper::UNIT_PX_PER_IN;
         return true;
     case UnitType::Points:
-        result = value * unitPxPerPt;
+        result = value * UnitHelper::UNIT_PX_PER_PT;
         return true;
     case UnitType::Picas:
-        result = value * unitPxPerPc;
+        result = value * UnitHelper::UNIT_PX_PER_PC;
         return true;
     default:
         return false;

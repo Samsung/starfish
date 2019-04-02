@@ -411,7 +411,7 @@ bool LinearGradientData::computeEndPointsFromAngle(const Unit::Rect& rect,
         return true;
     }
 
-    float slope = tan(convertFromDegToRad(90 - angle));
+    float slope = tan(UnitHelper::convertFromDegToRad(90 - angle));
 
     float perpendicularSlope = -1 / slope;
 
@@ -465,7 +465,8 @@ bool LinearGradientData::computeEndPoints(const Unit::Rect& rect, float& x1,
             if (m_verticalSide == SideValue::BottomSideValue) {
                 rise *= -1;
             }
-            float angleDeg = 90 - convertFromRadToDeg(atan2(rise, run));
+            float angleDeg =
+                90 - UnitHelper::convertFromRadToDeg(atan2(rise, run));
 
             return computeEndPointsFromAngle(rect, angleDeg, x1, y1, x2, y2);
 

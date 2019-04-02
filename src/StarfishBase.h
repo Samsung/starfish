@@ -645,4 +645,10 @@ inline T2 narrow_cast(T1 v)
         v % (static_cast<T1>(std::numeric_limits<T2>::max()) + 1));
 }
 
+template <typename Type>
+inline bool isInfOrNan(Type value)
+{
+    return std::isinf(value) || std::isnan(value);
+}
+
 #endif
