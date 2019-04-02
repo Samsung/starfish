@@ -21,16 +21,15 @@
 #define __StarfishFetchBody__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/WindowHoldable.h"
 #include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
 #include "core/modules/resource_request/ResourceRequest.h"
-#include "core/fetch/stream/ReadableStream.h"
 
 namespace Starfish {
 
 typedef BlobOrBufferSourceOrUSVStringOrReadableStream BodyInit;
 
 class DOMException;
+class ReadableStream;
 
 enum class BodyType {
     Empty,
@@ -41,7 +40,7 @@ enum class BodyType {
     Text,
 };
 
-class Body : public ResourceRequestClient, public WindowHoldable {
+class Body : public ResourceRequestClient {
 public:
     Promise* arrayBuffer();
     Promise* blob();
@@ -71,11 +70,17 @@ public:
         return m_readableStream;
     }
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
 private:
 protected:
-    Body(Window* window);
-    Body(Window* window, Nullable<BodyInit>& bodyInitValue);
+    Body(ExecutionContext* executionContext);
+    Body(ExecutionContext* executionContext, Nullable<BodyInit>& bodyInitValue);
 
+    ExecutionContext* m_executionContext;
     Nullable<BodyInit> m_bodyInit;
     String* m_contentType;
     ResourceRequest* m_resourceRequest;

@@ -24,21 +24,16 @@
 
 namespace Starfish {
 
-class Document;
+class ExecutionContext;
 class ReadableStream;
 
 class ReadableStreamDefaultController : public ScriptWrappable {
 public:
-    ReadableStreamDefaultController(Document* document);
-    ReadableStreamDefaultController(Document* document, ReadableStream* stream);
+    ReadableStreamDefaultController(ExecutionContext* executionContext);
+    ReadableStreamDefaultController(ExecutionContext* executionContext,
+                                    ReadableStream* stream);
 
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_scriptBindingInstance;
-    }
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isReadableStreamDefaultController() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ReadableStreamDefaultController)
 
     void enqueue(ScriptValue chunk);
     void close();

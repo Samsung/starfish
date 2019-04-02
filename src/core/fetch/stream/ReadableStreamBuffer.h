@@ -26,8 +26,9 @@ namespace Starfish {
 
 enum class BodyType;
 class Promise;
+class ExecutionContext;
 
-class ReadableStreamBuffer {
+class ReadableStreamBuffer : public gc {
 public:
     ReadableStreamBuffer();
     size_t size()
@@ -58,8 +59,8 @@ public:
     void push(const char* buffer, size_t length);
     void clear();
 
-    void resolveWithType(Promise* promise, ScriptBindingInstance* instance,
-                         BodyType type);
+    void resolveWithType(Promise* promise, ExecutionContext* executionContext,
+                         BodyType fetchtype);
 
 private:
     ReadableStreamChunk m_buffer;

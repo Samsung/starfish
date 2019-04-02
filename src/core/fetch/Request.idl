@@ -19,7 +19,7 @@ enum ReferrerPolicy {
 };
 
 [
-  ConstructorCallWith=Window,
+  ConstructorCallWith=ExecutionContext,
   Constructor(RequestInfo input, optional RequestInit init),
   Exposed=(Window,Worker),
   RaisesException=Constructor

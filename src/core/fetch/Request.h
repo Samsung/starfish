@@ -32,17 +32,11 @@ typedef RequestOrUSVString RequestInfo;
 
 class Request : public ScriptWrappable, public Body {
 public:
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
+    Request(ExecutionContext* executionContext, RequestInfo& input);
+    Request(ExecutionContext* executionContext, RequestInfo& input,
+            RequestInit& init);
 
-    virtual bool isRequest() const override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return WindowHoldable::scriptBindingInstance();
-    }
-
-    Request(Window* window, RequestInfo& input);
-    Request(Window* window, RequestInfo& input, RequestInit& init);
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Request)
 
     String* method();
     String* url();

@@ -20,27 +20,29 @@
 #include "StarfishConfig.h"
 #include "core/fetch/stream/ReadableStream.h"
 #include "core/dom/DOMException.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/fetch/stream/ReadableStreamDefaultController.h"
+#include "core/fetch/stream/ReadableStreamDefaultReader.h"
+#include "core/fetch/stream/ReadableStreamBuffer.h"
 #include <EscargotPublic.h>
 using namespace Escargot;
 
 namespace Starfish {
 
-ReadableStream::ReadableStream(Document* document, ReadableStreamBuffer* buffer)
+ReadableStream::ReadableStream(ExecutionContext* executionContext)
     : ScriptWrappable(this)
-    , DocumentHoldable(document)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
-    , m_controller(new ReadableStreamDefaultController(document, this))
-    , m_reader(new ReadableStreamDefaultReader(document, this))
-    , m_streamBuffer(buffer)
+    , m_controller(new ReadableStreamDefaultController(executionContext, this))
+    , m_reader(new ReadableStreamDefaultReader(executionContext, this))
+    , m_streamBuffer(new ReadableStreamBuffer())
 {
 }
 
-ReadableStream::ReadableStream(Document* document,
+ReadableStream::ReadableStream(ExecutionContext* executionContext,
                                ScriptObject underlyingSource)
-    : ReadableStream(document)
+    : ReadableStream(executionContext)
 {
-    ContextRef* context = m_scriptBindingInstance->scriptContext();
+    ContextRef* context =
+        executionContext->scriptBindingInstance()->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(context);
 
     auto object = underlyingSource->asObject();
@@ -51,16 +53,16 @@ ReadableStream::ReadableStream(Document* document,
         if (startFunction->isFunction()) {
             ScriptValue argv[] = { m_controller->scriptValue() };
 
-            callScriptFunction(m_scriptBindingInstance, startFunction, argv, 1,
-                               scriptUndefined());
+            callScriptFunction(executionContext->scriptBindingInstance(),
+                               startFunction, argv, 1, scriptUndefined());
         }
     }
 }
 
-ReadableStream::ReadableStream(Document* document,
+ReadableStream::ReadableStream(ExecutionContext* executionContext,
                                ScriptObject underlyingSource,
                                ScriptValue options)
-    : ReadableStream(document, underlyingSource)
+    : ReadableStream(executionContext, underlyingSource)
 {
     // TODO: handle options
 }
@@ -79,12 +81,22 @@ void* ReadableStream::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
+ScriptBindingInstance* ReadableStream::scriptBindingInstance()
+{
+    return executionContext()->scriptBindingInstance();
+}
+
+ExecutionContext* ReadableStream::executionContext()
+{
+    return m_reader->executionContext();
+}
+
 ReadableStreamDefaultReader* ReadableStream::getReader()
 {
     auto state = m_reader->state();
     if (state == ReadableStreamState::Closed ||
         state == ReadableStreamState::Errored || locked()) {
-        throw new DOMException(document()->executionContext(),
+        throw new DOMException(executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
@@ -128,10 +140,11 @@ void ReadableStream::close()
 }
 
 void ReadableStream::resolveData(Promise* promise,
-                                 ScriptBindingInstance* instance, BodyType type)
+                                 ExecutionContext* executionContext,
+                                 BodyType type)
 {
     if (m_streamBuffer->size() > 0) {
-        m_streamBuffer->resolveWithType(promise, instance, type);
+        m_streamBuffer->resolveWithType(promise, executionContext, type);
         m_streamBuffer->clear();
     } else {
         promise->fulfill(createScriptValue(String::emptyString));

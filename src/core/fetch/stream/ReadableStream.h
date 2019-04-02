@@ -21,30 +21,28 @@
 #define __StarfishReadableStream__
 
 #include "binding/ScriptWrappable.h"
-#include "core/fetch/stream/ReadableStreamDefaultController.h"
-#include "core/fetch/stream/ReadableStreamDefaultReader.h"
-#include "core/fetch/stream/ReadableStreamBuffer.h"
 
 namespace Starfish {
 
-class ReadableStream : public ScriptWrappable, public DocumentHoldable {
+class ReadableStreamDefaultController;
+class ReadableStreamDefaultReader;
+class ReadableStreamBuffer;
+enum class BodyType;
+
+class ReadableStream : public ScriptWrappable {
 public:
-    ReadableStream(Document* document,
-                   ReadableStreamBuffer* buffer = new ReadableStreamBuffer());
-    ReadableStream(Document* document, ScriptObject underlyingSource);
-    ReadableStream(Document* document, ScriptObject underlyingSource,
-                   ScriptValue options);
+    ReadableStream(ExecutionContext* executionContext);
+    ReadableStream(ExecutionContext* executionContext,
+                   ScriptObject underlyingSource);
+    ReadableStream(ExecutionContext* executionContext,
+                   ScriptObject underlyingSource, ScriptValue options);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
 
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_scriptBindingInstance;
-    }
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isReadableStream() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ReadableStream)
+
+    ExecutionContext* executionContext();
 
     ReadableStreamDefaultReader* getReader();
     ReadableStreamDefaultReader* reader()
@@ -69,12 +67,11 @@ public:
     bool isDisturbedOrLocked();
     Promise* cancel();
     void close();
-    void resolveData(Promise* promise, ScriptBindingInstance* instance,
+    void resolveData(Promise* promise, ExecutionContext* executionContext,
                      BodyType type);
 
 protected:
 private:
-    ScriptBindingInstance* m_scriptBindingInstance;
     ReadableStreamDefaultController* m_controller;
     ReadableStreamDefaultReader* m_reader;
     ReadableStreamBuffer* m_streamBuffer;

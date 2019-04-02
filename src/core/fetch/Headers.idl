@@ -6,7 +6,7 @@ typedef any HeadersInit;
 
 [
   Constructor(optional any init),
-  ConstructorCallWith=Document,
+  ConstructorCallWith=ExecutionContext,
   Exposed=(Window,Worker),
   RaisesException=Constructor
 ] interface Headers {

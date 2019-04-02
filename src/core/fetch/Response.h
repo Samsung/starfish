@@ -22,11 +22,11 @@
 
 #include "core/fetch/Body.h"
 #include "core/fetch/Headers.h"
-#include "core/fetch/ResponseData.h"
 
 namespace Starfish {
 
-class Document;
+class ExecutionContext;
+class ResponseData;
 
 struct ResponseInit {
 public:
@@ -51,27 +51,20 @@ class ScriptWrappable;
 
 class Response final : public ScriptWrappable, public Body {
 public:
-    Response(Document* document);
-    Response(Document* document, Nullable<BodyInit>& body);
-    Response(Document* document, Nullable<BodyInit>& body, ResponseInit& init);
+    Response(ExecutionContext* executionContext);
+    Response(ExecutionContext* executionContext, Nullable<BodyInit>& body);
+    Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
+             ResponseInit& init);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_instance;
-    }
-
-    virtual bool isResponse() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Response)
 
     static bool isValidReasonPhrase(String* text);
     static bool isValidRedirectStatus(uint32_t status);
 
-    static Response* error(Document* document);
+    static Response* error(ExecutionContext* executionContext);
 
-    static Response* redirect(Document* document, String* url);
-    static Response* redirect(Document* document, String* url,
+    static Response* redirect(ExecutionContext* executionContext, String* url);
+    static Response* redirect(ExecutionContext* executionContext, String* url,
                               unsigned short status);
 
     String* url();
@@ -106,7 +99,7 @@ public:
     void setBody(String* string);
 
 private:
-    ScriptBindingInstance* m_instance;
+    ExecutionContext* m_executionContext;
     Headers m_headers;
     ResponseData* m_responseData;
 

@@ -1,7 +1,7 @@
 [
   Constructor(optional object underlyingSource, optional any options),
   Exposed=(Window,Worker),
-  ConstructorCallWith=Document
+  ConstructorCallWith=ExecutionContext
 ] interface ReadableStream {
   Promise<any> cancel();
   [RaisesException] ReadableStreamDefaultReader getReader();

@@ -23,7 +23,7 @@
 #include "core/fileapi/Blob.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/fetch/Body.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
@@ -46,7 +46,7 @@ void ReadableStreamBuffer::clear()
 }
 
 void ReadableStreamBuffer::resolveWithType(Promise* promise,
-                                           ScriptBindingInstance* instance,
+                                           ExecutionContext* executionContext,
                                            BodyType type)
 {
     size_t size = m_buffer.size();
@@ -60,8 +60,8 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
     } else if (type == BodyType::Blob) {
         void* buffer = calloc(1, size);
         memcpy(buffer, m_buffer.data(), size);
-        auto blob = new Blob(instance->ownerDocument()->executionContext(),
-                             size, m_mimeType, buffer, false, false);
+        auto blob =
+            new Blob(executionContext, size, m_mimeType, buffer, false, false);
         promise->fulfill(blob->scriptValue());
         free(buffer);
     } else if (type == BodyType::Json) {
@@ -69,12 +69,14 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
                                     m_buffer.data(), size);
         String* responseText =
             textConverter.convert(m_buffer.data(), size, true);
-        auto json = parseJSON(instance, responseText);
+        auto json =
+            parseJSON(executionContext->scriptBindingInstance(), responseText);
         promise->fulfill(json);
     } else if (type == BodyType::ArrayBuffer) {
         void* buffer = calloc(1, size);
         memcpy(buffer, m_buffer.data(), size);
-        auto arrayBuffer = createArrayBuffer(instance, buffer, size);
+        auto arrayBuffer = createArrayBuffer(
+            executionContext->scriptBindingInstance(), buffer, size);
         promise->fulfill(arrayBuffer);
         free(buffer);
     } else {

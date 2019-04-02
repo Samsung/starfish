@@ -21,29 +21,22 @@
 #define __StarfishHeaders__
 
 #include "binding/ScriptWrappable.h"
-#include "binding/DocumentHoldable.h"
 #include "binding/IterationSource.h"
-#include "core/fetch/HeadersData.h"
 
 namespace Starfish {
 
-class Document;
+class ExecutionContext;
 class HeadersData;
+enum class Guard;
 
 typedef ScriptValue HeadersInit;
 
-class Headers : public ScriptWrappable, public DocumentHoldable {
+class Headers : public ScriptWrappable {
 public:
-    Headers(Document* document);
-    Headers(Document* document, HeadersInit headerInit);
+    Headers(ExecutionContext* executionContext);
+    Headers(ExecutionContext* executionContext, HeadersInit headerInit);
 
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual ScriptBindingInstance* scriptBindingInstance() override
-    {
-        return m_instance;
-    }
-    virtual bool isHeaders() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Headers)
 
     void fill(HeadersInit headersInit);
     Nullable<String*> get(String* name);
@@ -64,8 +57,13 @@ public:
     IterationSource<Nullable<String*>, Nullable<String*>>* startIteration(
         ExecutionStateRef* state);
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
 private:
-    ScriptBindingInstance* m_instance;
+    ExecutionContext* m_executionContext;
     HeadersData* m_headersData;
 
     void initHeadersFromHeaders(Headers* headers);

@@ -19,8 +19,9 @@
 
 #include "StarfishConfig.h"
 #include "binding/ScriptWrappable.h"
-#include "core/page/Window.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/fetch/Fetch.h"
+#include "core/fetch/Request.h"
 #include "core/fetch/Response.h"
 #include "platform/network/http/HTTPStatus.h"
 
@@ -60,11 +61,12 @@ private:
     Fetch* m_fetch;
 };
 
-Fetch::Fetch(Window* window, Request* request, Promise* promise)
-    : WindowHoldable(window)
+Fetch::Fetch(ExecutionContext* executionContext, Request* request,
+             Promise* promise)
+    : m_executionContext(executionContext)
     , m_request(request)
     , m_response(nullptr)
-    , m_resourceRequest(new ResourceRequest(window->document()))
+    , m_resourceRequest(new ResourceRequest(executionContext->document()))
     , m_promise(promise)
 {
     m_resourceRequest->addResourceRequestClient(
@@ -87,7 +89,7 @@ void* Fetch::operator new(size_t size)
 
 void Fetch::start()
 {
-    m_response = new Response(window()->document());
+    m_response = new Response(executionContext());
     m_resourceRequest->open(m_request->requestData());
     m_resourceRequest->send();
 }
@@ -109,24 +111,27 @@ void Fetch::success(ResourceRequest* request)
 
 void Fetch::fail()
 {
-    auto error =
-        scriptError(scriptBindingInstance(), String::fromUTF8("NetworkError"));
+    auto error = scriptError(executionContext()->scriptBindingInstance(),
+                             String::fromUTF8("NetworkError"));
     m_promise->reject(createScriptValue(error));
 }
 
-Promise* Fetch::fetch(Window* window, RequestInfo& info)
+Promise* Fetch::fetch(ExecutionContext* executionContext, RequestInfo& info)
 {
-    Promise* promise = new Promise(window->scriptBindingInstance());
-    Fetch* f = new Fetch(window, new Request(window, info), promise);
+    Promise* promise = new Promise(executionContext->scriptBindingInstance());
+    Fetch* f = new Fetch(executionContext, new Request(executionContext, info),
+                         promise);
     f->start();
 
     return promise;
 }
 
-Promise* Fetch::fetch(Window* window, RequestInfo& info, RequestInit& init)
+Promise* Fetch::fetch(ExecutionContext* executionContext, RequestInfo& info,
+                      RequestInit& init)
 {
-    Promise* promise = new Promise(window->scriptBindingInstance());
-    Fetch* f = new Fetch(window, new Request(window, info, init), promise);
+    Promise* promise = new Promise(executionContext->scriptBindingInstance());
+    Fetch* f = new Fetch(executionContext,
+                         new Request(executionContext, info, init), promise);
     f->start();
 
     return promise;
