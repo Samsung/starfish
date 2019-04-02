@@ -59,11 +59,11 @@ float CSSAngle::toDegreeValue() const
     if (m_kind == DEG) {
         return m_value;
     } else if (m_kind == RAD) {
-        return convertFromRadToDeg(m_value);
+        return UnitHelper::convertFromRadToDeg(m_value);
     } else if (m_kind == GRAD) {
-        return convertFromGradToDeg(m_value);
+        return UnitHelper::convertFromGradToDeg(m_value);
     } else if (m_kind == TURN) {
-        return convertFromTurnToDeg(m_value);
+        return UnitHelper::convertFromTurnToDeg(m_value);
     }
 
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();

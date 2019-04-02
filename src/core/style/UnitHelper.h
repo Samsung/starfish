@@ -21,28 +21,29 @@
 #define __StarfishUnitHelper__
 
 namespace Starfish {
+namespace UnitHelper {
+    // https://www.w3.org/TR/CSS2/syndata.html#value-def-length
+    const float UNIT_PX_PER_CM = 96 / 2.54;
+    const float UNIT_PX_PER_MM = UNIT_PX_PER_CM / 10;
+    const float UNIT_PX_PER_IN = 96;
+    const float UNIT_PX_PER_PC = UNIT_PX_PER_IN / 6;
+    const float UNIT_PX_PER_PT = UNIT_PX_PER_IN / 72;
 
-// https://www.w3.org/TR/CSS2/syndata.html#value-def-length
-const float unitPxPerCm = 96 / 2.54;
-const float unitPxPerMm = unitPxPerCm / 10;
-const float unitPxPerIn = 96;
-const float unitPxPerPc = unitPxPerIn / 6;
-const float unitPxPerPt = unitPxPerIn / 72;
+    float convertFromCmToPx(float value);
+    float convertFromMmToPx(float value);
+    float convertFromInToPx(float value);
+    float convertFromPcToPx(float value);
+    float convertFromPtToPx(float value);
+    float convertFromPxToPt(float value);
 
-float convertFromCmToPx(float value);
-float convertFromMmToPx(float value);
-float convertFromInToPx(float value);
-float convertFromPcToPx(float value);
-float convertFromPtToPx(float value);
-float convertFromPxToPt(float value);
+    // https://www.w3.org/TR/css3-values/#angle-value
+    const float PI = static_cast<float>(M_PI);
 
-// https://www.w3.org/TR/css3-values/#angle-value
-const float pi = static_cast<float>(M_PI);
-
-float convertFromGradToDeg(float value);
-float convertFromRadToDeg(float value);
-float convertFromTurnToDeg(float value);
-float convertFromDegToRad(float value);
+    float convertFromGradToDeg(float value);
+    float convertFromRadToDeg(float value);
+    float convertFromTurnToDeg(float value);
+    float convertFromDegToRad(float value);
+}
 }
 
 #endif

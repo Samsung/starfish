@@ -38,19 +38,18 @@ public:
 
     // For CanvasPath
     virtual void closePath() = 0;
-    virtual void moveTo(double x, double y) = 0;
-    virtual void lineTo(double x, double y) = 0;
-    virtual void quadraticCurveTo(double cpx, double cpy, double x,
-                                  double y) = 0;
-    virtual void bezierCurveTo(double cp1x, double cp1y, double cp2x,
-                               double cp2y, double x, double y) = 0;
-    virtual void arcTo(double x1, double y1, double x2, double y2,
-                       double radius) = 0;
-    virtual void rect(double x, double y, double w, double h) = 0;
-    virtual void arc(double x, double y, double radius, double startAngle,
-                     double endAngle, bool anticlockwise = false) = 0;
-    virtual void ellipse(double x, double y, double radiusX, double radiusY,
-                         double rotation, double startAngle, double endAngle,
+    virtual void moveTo(float x, float y) = 0;
+    virtual void lineTo(float x, float y) = 0;
+    virtual void quadraticCurveTo(float cpx, float cpy, float x, float y) = 0;
+    virtual void bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
+                               float x, float y) = 0;
+    virtual void arcTo(float x1, float y1, float x2, float y2,
+                       float radius) = 0;
+    virtual void rect(float x, float y, float w, float h) = 0;
+    virtual void arc(float x, float y, float radius, float startAngle,
+                     float endAngle, bool anticlockwise = false) = 0;
+    virtual void ellipse(float x, float y, float radiusX, float radiusY,
+                         float rotation, float startAngle, float endAngle,
                          bool anticlockwise = false) = 0;
 
     bool needNewSubPath()
@@ -58,7 +57,7 @@ public:
         return m_needNewSubPath;
     }
 
-    void ensureSubPath(double x, double y)
+    void ensureSubPath(float x, float y)
     {
         // https://html.spec.whatwg.org/multipage/canvas.html#ensure-there-is-a-subpath
         if (isEmpty() || needNewSubPath()) {

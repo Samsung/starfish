@@ -28,7 +28,9 @@ namespace Starfish {
 Path2D::Path2D(ExecutionContext* executionContext)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
+    , m_canvasPath(nullptr)
 {
+    m_canvasPath = new CanvasPath(executionContext);
 }
 
 ScriptBindingInstance* Path2D::scriptBindingInstance()
@@ -41,45 +43,45 @@ void Path2D::closePath()
     m_canvasPath->closePath();
 }
 
-void Path2D::moveTo(double x, double y)
+void Path2D::moveTo(float x, float y)
 {
     m_canvasPath->moveTo(x, y);
 }
 
-void Path2D::lineTo(double x, double y)
+void Path2D::lineTo(float x, float y)
 {
     m_canvasPath->lineTo(x, y);
 }
 
-void Path2D::quadraticCurveTo(double cpx, double cpy, double x, double y)
+void Path2D::quadraticCurveTo(float cpx, float cpy, float x, float y)
 {
     m_canvasPath->quadraticCurveTo(cpx, cpy, x, y);
 }
 
-void Path2D::bezierCurveTo(double cp1x, double cp1y, double cp2x, double cp2y,
-                           double x, double y)
+void Path2D::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
+                           float x, float y)
 {
     m_canvasPath->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
 }
 
-void Path2D::arcTo(double x1, double y1, double x2, double y2, double radius)
+void Path2D::arcTo(float x1, float y1, float x2, float y2, float radius)
 {
     m_canvasPath->arcTo(x1, y1, x2, y2, radius);
 }
 
-void Path2D::rect(double x, double y, double w, double h)
+void Path2D::rect(float x, float y, float w, float h)
 {
     m_canvasPath->rect(x, y, w, h);
 }
 
-void Path2D::arc(double x, double y, double radius, double startAngle,
-                 double endAngle, bool anticlockwise /*=false*/)
+void Path2D::arc(float x, float y, float radius, float startAngle,
+                 float endAngle, bool anticlockwise /*=false*/)
 {
     m_canvasPath->arc(x, y, radius, startAngle, endAngle, anticlockwise);
 }
 
-void Path2D::ellipse(double x, double y, double radiusX, double radiusY,
-                     double rotation, double startAngle, double endAngle,
+void Path2D::ellipse(float x, float y, float radiusX, float radiusY,
+                     float rotation, float startAngle, float endAngle,
                      bool anticlockwise /*=false*/)
 {
     m_canvasPath->ellipse(x, y, radiusX, radiusY, rotation, startAngle,

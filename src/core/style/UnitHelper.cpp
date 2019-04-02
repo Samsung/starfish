@@ -21,54 +21,55 @@
 #include "UnitHelper.h"
 
 namespace Starfish {
+namespace UnitHelper {
+    float convertFromCmToPx(float value)
+    {
+        return value * UNIT_PX_PER_CM;
+    }
 
-float convertFromCmToPx(float value)
-{
-    return value * unitPxPerCm;
-}
+    float convertFromMmToPx(float value)
+    {
+        return value * UNIT_PX_PER_MM;
+    }
 
-float convertFromMmToPx(float value)
-{
-    return value * unitPxPerMm;
-}
+    float convertFromInToPx(float value)
+    {
+        return value * UNIT_PX_PER_IN;
+    }
 
-float convertFromInToPx(float value)
-{
-    return value * unitPxPerIn;
-}
+    float convertFromPcToPx(float value)
+    {
+        return value * UNIT_PX_PER_PC;
+    }
 
-float convertFromPcToPx(float value)
-{
-    return value * unitPxPerPc;
-}
+    float convertFromPtToPx(float value)
+    {
+        return value * UNIT_PX_PER_PT;
+    }
 
-float convertFromPtToPx(float value)
-{
-    return value * unitPxPerPt;
-}
+    float convertFromPxToPt(float value)
+    {
+        return value / UNIT_PX_PER_PT;
+    }
 
-float convertFromPxToPt(float value)
-{
-    return value / unitPxPerPt;
-}
+    float convertFromGradToDeg(float value)
+    {
+        return value * 360 / 400;
+    }
 
-float convertFromGradToDeg(float value)
-{
-    return value * 360 / 400;
-}
+    float convertFromRadToDeg(float value)
+    {
+        return value * 180 / PI;
+    }
 
-float convertFromRadToDeg(float value)
-{
-    return value * 180 / pi;
-}
+    float convertFromTurnToDeg(float value)
+    {
+        return value * 360;
+    }
 
-float convertFromTurnToDeg(float value)
-{
-    return value * 360;
-}
-
-float convertFromDegToRad(float value)
-{
-    return value * static_cast<float>(M_PI) / 180.0f;
+    float convertFromDegToRad(float value)
+    {
+        return value * static_cast<float>(M_PI) / 180.0f;
+    }
 }
 }
