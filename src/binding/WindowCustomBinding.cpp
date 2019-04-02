@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "PlatformIntegrationData.h"
 #include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
@@ -347,6 +348,26 @@ static ValueRef* networkDisableFunction(ExecutionStateRef* state,
     return scriptUndefined();
 }
 
+static ValueRef* webSecurityEnableFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
+{
+    GENERATE_WINDOW();
+
+    window->webView()->setWebSecurityMode(LWE::WebSecurityMode::Enable);
+    return scriptUndefined();
+}
+
+static ValueRef* webSecurityDisableFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
+{
+    GENERATE_WINDOW();
+
+    window->webView()->setWebSecurityMode(LWE::WebSecurityMode::Disable);
+    return scriptUndefined();
+}
+
 static ValueRef* isPixelTestFunction(ExecutionStateRef* state,
                                      ValueRef* thisValue, size_t argc,
                                      ValueRef** argv, bool isNewExpression)
@@ -487,6 +508,36 @@ static ValueRef* simulateClickFunction(ExecutionStateRef* state,
     double value1 = arg1->toNumber(state);
 
     window->simulateClick(value0, value1);
+    return scriptUndefined();
+}
+
+static ValueRef* simulateMouseDownFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
+{
+    GENERATE_WINDOW();
+
+    ValueRef* arg0 = argv[0];
+    ValueRef* arg1 = argv[1];
+    double value0 = arg0->toNumber(state);
+    double value1 = arg1->toNumber(state);
+
+    window->simulateMouseDown(value0, value1);
+    return scriptUndefined();
+}
+
+static ValueRef* simulateMouseUpFunction(ExecutionStateRef* state,
+                                       ValueRef* thisValue, size_t argc,
+                                       ValueRef** argv, bool isNewExpression)
+{
+    GENERATE_WINDOW();
+
+    ValueRef* arg0 = argv[0];
+    ValueRef* arg1 = argv[1];
+    double value0 = arg0->toNumber(state);
+    double value1 = arg1->toNumber(state);
+
+    window->simulateMouseUp(value0, value1);
     return scriptUndefined();
 }
 
@@ -673,12 +724,16 @@ void Window::postInit(ScriptBindingInstance* instance)
     DEFINE_TEST_FUNCTION(debugResume, 0);
     DEFINE_TEST_FUNCTION(networkEnable, 0);
     DEFINE_TEST_FUNCTION(networkDisable, 0);
+    DEFINE_TEST_FUNCTION(webSecurityEnable, 0);
+    DEFINE_TEST_FUNCTION(webSecurityDisable, 0);
     DEFINE_TEST_FUNCTION(isPixelTest, 0);
     DEFINE_TEST_FUNCTION(screenShot, 2);
     DEFINE_TEST_FUNCTION(screenShotRelativePath, 2);
     DEFINE_TEST_FUNCTION(forceDisableOnloadCapture, 0);
     DEFINE_TEST_FUNCTION(getXYWH, 1);
     DEFINE_TEST_FUNCTION(simulateClick, 2);
+    DEFINE_TEST_FUNCTION(simulateMouseDown, 2);
+    DEFINE_TEST_FUNCTION(simulateMouseUp, 2);
     DEFINE_TEST_FUNCTION(simulateVisibilitychange, 1);
     DEFINE_TEST_FUNCTION(testAssert, 1);
     DEFINE_TEST_FUNCTION(testEnd, 0);

@@ -31,6 +31,7 @@
 #include "core/dom/HTMLIFrameElement.h"
 #include "core/dom/HTMLCollection.h"
 #include "core/dom/MessageEvent.h"
+#include "core/dom/MouseEvent.h"
 #include "core/dom/NodeList.h"
 #include "core/dom/Traverse.h"
 #include "core/dom/TouchEvent.h"
@@ -540,6 +541,25 @@ void Window::simulateClick(float x, float y)
         TouchEventKind::TouchEventStart, &data, 1);
     webView()->platformWindow()->dispatchTouchEvent(
         TouchEventKind::TouchEventEnd, &data, 1);
+}
+
+void Window::simulateMouseDown(float x, float y)
+{
+    MouseData data(MouseButtonValue::LeftButton,
+                   MouseButtonsValue::LeftButtonDown,
+                   x * webView()->screenInfo().devicePixelRatio,
+                   y * webView()->screenInfo().devicePixelRatio, 0);
+    webView()->platformWindow()->dispatchMouseEvent(
+        MouseEventKind::MouseEventDown, data);
+}
+
+void Window::simulateMouseUp(float x, float y)
+{
+    MouseData data(MouseButtonValue::NoButton, MouseButtonsValue::NoButtonDown,
+                   x * webView()->screenInfo().devicePixelRatio,
+                   y * webView()->screenInfo().devicePixelRatio, 0);
+    webView()->platformWindow()->dispatchMouseEvent(
+        MouseEventKind::MouseEventUp, data);
 }
 
 void Window::simulateVisibilitychange(bool show)

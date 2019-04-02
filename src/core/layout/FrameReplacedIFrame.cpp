@@ -130,28 +130,6 @@ Frame* FrameReplacedIFrame::hitTest(LayoutUnit x, LayoutUnit y,
           y < m_frameRect.height())) {
         return result;
     }
-
-    if (v->browsingContext()) {
-        if (v->browsingContext()->window()) {
-            auto documentFrame =
-                v->browsingContext()->window()->document()->frame();
-            if (documentFrame->asFrameBox()) {
-                if (!documentFrame->firstChild() ||
-                    !documentFrame->firstChild()
-                         ->asFrameBox()
-                         ->stackingContext()) {
-                    return nullptr;
-                }
-                result =
-                    documentFrame->firstChild()
-                        ->asFrameBox()
-                        ->stackingContext()
-                        ->hitTestStackingContext(x, y, documentFrame->node()
-                                                           ->asDocument()
-                                                           ->browsingContext());
-            }
-        }
-    }
     return result;
 }
 }
