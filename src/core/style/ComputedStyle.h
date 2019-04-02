@@ -171,7 +171,7 @@ public:
         ShadowDataList* m_boxShadowDataList;
         RectData* m_clip;
         UserSelectValue m_userSelect;
-        GCVector<GridLength>* m_gridTemplateUnits;
+        GCVector<GridTrackSize>* m_gridTemplateUnits;
         Unit::Color m_color;
         HyphensValue m_hyphens;
         LineBreakValue m_lineBreak;
@@ -317,7 +317,7 @@ public:
         {
         }
 
-        RareComputedStyleValue(GCVector<GridLength>* gridTemplate)
+        RareComputedStyleValue(GCVector<GridTrackSize>* gridTemplate)
             : m_gridTemplateUnits(gridTemplate)
         {
         }
@@ -562,9 +562,9 @@ public:
     GETTER_PTR(ObjectSizingData, objectSizing, objectSizing, ObjectSizing);
     GETTER_PTR(ShadowDataList, boxShadowDataList, boxShadow, BoxShadow);
     GETTER_PTR(RectData, clip, clip, Clip);
-    GETTER_PTR(GCVector<GridLength>, gridTemplateUnits, gridTemplateColumns,
+    GETTER_PTR(GCVector<GridTrackSize>, gridTemplateUnits, gridTemplateColumns,
                GridTemplateColumns);
-    GETTER_PTR(GCVector<GridLength>, gridTemplateUnits, gridTemplateRows,
+    GETTER_PTR(GCVector<GridTrackSize>, gridTemplateUnits, gridTemplateRows,
                GridTemplateRows);
     GETTER_PTR(TextOverflowData, textOverflow, textOverflow, TextOverflow);
     GETTER_PTR(CounterBaseList, counterBaseList, counterReset, CounterReset);
@@ -847,12 +847,12 @@ public:
         }
     }
 
-    void setGridTemplateColumns(GCVector<GridLength>* gridTemplate)
+    void setGridTemplateColumns(GCVector<GridTrackSize>* gridTemplate)
     {
         *m_rareComputedStyleData.ensureGridTemplateColumns() = *gridTemplate;
     }
 
-    void setGridTemplateRows(GCVector<GridLength>* gridTemplate)
+    void setGridTemplateRows(GCVector<GridTrackSize>* gridTemplate)
     {
         *m_rareComputedStyleData.ensureGridTemplateRows() = *gridTemplate;
     }
@@ -2844,16 +2844,16 @@ public:
         return false;
     }
 
-    GCVector<GridLength>* gridTemplateColumns()
+    GCVector<GridTrackSize>* gridTemplateColumns()
     {
-        GCVector<GridLength>* gridTemplate =
+        GCVector<GridTrackSize>* gridTemplate =
             m_rareComputedStyleData.gridTemplateColumns();
         return gridTemplate;
     }
 
-    GCVector<GridLength>* gridTemplateRows()
+    GCVector<GridTrackSize>* gridTemplateRows()
     {
-        GCVector<GridLength>* gridTemplate =
+        GCVector<GridTrackSize>* gridTemplate =
             m_rareComputedStyleData.gridTemplateRows();
         return gridTemplate;
     }

@@ -611,7 +611,7 @@ static ValueRef* testImgDiffFunction(ExecutionStateRef* state,
     STARFISH_LOG_INFO("%s", output.c_str());
 
     if (output.find("[imgdiff-fail]") != std::string::npos) {
-        cmd = "test/tool/image_diff --diff ";
+        cmd = "test/tools/image_diff/image_diff --diff ";
         cmd += path;
         cmd += argv[0]->toString(state)->toStdUTF8String().data();
         cmd += " ";

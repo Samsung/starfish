@@ -24,8 +24,13 @@
 
 namespace Starfish {
 
-class GridLength : public gc {
+class GridLength {
 public:
+    enum GridLengthType {
+        LengthType,
+        FrType,
+    };
+
     GridLength()
         : m_length(Length())
         , m_fr(0)
@@ -78,12 +83,26 @@ public:
 
     bool operator==(const GridLength& o) const
     {
-        return m_length == o.m_length && m_fr == o.m_fr && m_type == o.m_type;
+        if (m_type != o.m_type) {
+            return false;
+        }
+
+        if (m_type == LengthType) {
+            return m_length == o.length();
+        } else if (m_type == FrType) {
+            return m_fr == o.fr();
+        }
+        return false;
     }
 
     bool isAuto() const
     {
         return m_type == LengthType && m_length.isAuto();
+    }
+
+    GridLengthType type() const
+    {
+        return m_type;
     }
 
     String* toString()
@@ -93,7 +112,7 @@ public:
             String* value = m_length.dumpString();
             builder.appendString(value);
             builder.appendString("px");
-        } else {
+        } else if (m_type == FrType) {
             char temp[100];
             snprintf(temp, sizeof(temp), "%.1f", m_fr);
             String* value = String::fromUTF8(temp);
@@ -103,7 +122,128 @@ public:
         return builder.finalize();
     }
 
-    static String* toStringWithGridLengths(GCVector<GridLength>* v)
+private:
+    Length m_length;
+    double m_fr;
+    GridLengthType m_type;
+};
+
+class GridTrackSize : public gc {
+public:
+    enum GridTrackType {
+        LengthType,
+        FrType,
+        MinMaxType,
+    };
+
+    GridTrackSize()
+        : m_data1(Length())
+        , m_data2(Length())
+        , m_type(LengthType)
+    {
+    }
+
+    GridTrackSize(const GridLength& length, GridTrackType type)
+        : m_data1(length)
+        , m_data2(length)
+        , m_type(type)
+    {
+    }
+
+    GridTrackSize(const GridLength& min, const GridLength& max,
+                  GridTrackType type = MinMaxType)
+        : m_data1(min)
+        , m_data2(max)
+        , m_type(type)
+    {
+    }
+
+    bool isLength() const
+    {
+        return m_type == LengthType;
+    }
+
+    bool isFr() const
+    {
+        return m_type == FrType;
+    }
+
+    bool isMinMax() const
+    {
+        return m_type == MinMaxType;
+    }
+
+    const Length& length() const
+    {
+        return m_data1.length();
+    }
+
+    Length& mutableLength()
+    {
+        return m_data1.mutableLength();
+    }
+
+    double fr() const
+    {
+        return m_data1.fr();
+    }
+
+    const GridLength& min() const
+    {
+        return m_data1;
+    }
+
+    const GridLength& max() const
+    {
+        return m_data2;
+    }
+
+    bool isPercentage() const
+    {
+        return m_type == LengthType && m_data1.length().isPercent();
+    }
+
+    bool operator==(const GridTrackSize& o) const
+    {
+        if (m_type != o.m_type) {
+            return false;
+        }
+
+        if (m_type == LengthType) {
+            return m_data1 == o.min();
+        } else if (m_type == FrType) {
+            return m_data1 == o.min();
+        } else if (m_type == MinMaxType) {
+            return m_data1 == o.min() && m_data2 == o.max();
+        }
+        return false;
+    }
+
+    bool isAuto() const
+    {
+        return m_type == LengthType && m_data1.length().isAuto();
+    }
+
+    String* toString()
+    {
+        StringBuilder builder;
+        if (m_type == LengthType) {
+            builder.appendString(m_data1.toString());
+            builder.appendString("px");
+        } else if (m_type == FrType) {
+            builder.appendString(m_data1.toString());
+            builder.appendString("fr");
+        } else if (m_type == MinMaxType) {
+            builder.appendString("minmax(");
+            builder.appendString(m_data1.toString());
+            builder.appendString(", ");
+            builder.appendString(m_data2.toString());
+            builder.appendString(")");
+        }
+        return builder.finalize();
+    }
+
+    static String* toStringWithGridLengths(GCVector<GridTrackSize>* v)
     {
         StringBuilder builder;
 
@@ -118,13 +258,9 @@ public:
     }
 
 private:
-    Length m_length;
-    double m_fr;
-    enum GridLengthType {
-        LengthType,
-        FrType,
-    };
-    GridLengthType m_type;
+    GridLength m_data1;
+    GridLength m_data2;
+    GridTrackType m_type;
 };
 }
 

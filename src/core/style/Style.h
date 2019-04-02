@@ -1578,7 +1578,7 @@ public:
         return m_value.m_resize;
     }
 
-    GCVector<GridLength>* gridTemplateUnits() const
+    GCVector<GridTrackSize>* gridTemplateUnits() const
     {
         STARFISH_ASSERT(m_valueKind == GridTemplateUnits);
         return m_value.m_gridTemplateUnits;
@@ -1713,7 +1713,7 @@ public:
         WordBreakValue m_wordBreak;
         AppearanceValue m_appearance;
         RectData* m_rect;
-        GCVector<GridLength>* m_gridTemplateUnits;
+        GCVector<GridTrackSize>* m_gridTemplateUnits;
         CSSCounterFunction* m_counterFunctionValue;
         TextOverflowData* m_textOverflowData;
         CSSGradientValue* m_gradientValue;
@@ -2003,7 +2003,7 @@ public:
         {
         }
 
-        ValueData(GCVector<GridLength>* v)
+        ValueData(GCVector<GridTrackSize>* v)
             : m_gridTemplateUnits(v)
         {
         }
@@ -2242,7 +2242,7 @@ public:
         m_value.m_rect = val;
     }
 
-    void setGridTemplateUnits(GCVector<GridLength>* val)
+    void setGridTemplateUnits(GCVector<GridTrackSize>* val)
     {
         m_valueKind = CSSStyleValuePair::ValueKind::GridTemplateUnits;
         m_value.m_gridTemplateUnits = val;

@@ -361,7 +361,7 @@ function doTest {
                 DIFFIMG=`echo $DIFFIMG | sed 's/reftest\//regression\/reftest\//'`
                 DIFFIMG=`echo $DIFFIMG | sed 's/html-css/html-css\/x64/'`
                 DIFFIMG=`echo $DIFFIMG | sed 's/\.html/-diff\.png/'`
-                IMGDIFF="./test/tool/image_diff"
+                IMGDIFF="./test/tools/image_diff/image_diff"
                 DIFF=`$IMGDIFF $RESIMG $EXPIMG`
                 if [[ "$DIFF" = *"0.00% passed" ]]; then
                     PASSTC=`expr $PASSTC + 1`
@@ -392,7 +392,7 @@ function doTest {
                 EXPIMG=`echo $EXPIMG | sed 's/_converted/_result\/font_dependent\/x64/'`
                 EXPIMG=`echo $EXPIMG | sed 's/\.html/-expected\.png/'`
                 EXPIMG=`echo $EXPIMG | sed 's/\.htm/-expected\.png/'`
-                IMGDIFF="./test/tool/image_diff"
+                IMGDIFF="./test/tools/image_diff/image_diff"
                 if [[ -f ${EXPIMG} ]]; then
                     DIFF=`$IMGDIFF $NEWRESIMG $EXPIMG`
                 else
