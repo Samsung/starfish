@@ -1040,7 +1040,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         }
     }
 
-    GCVector<GridLength>* columns =
+    GCVector<GridTrackSize>* columns =
         m_rareComputedStyleData.gridTemplateColumns();
 
     if (columns) {
@@ -1054,7 +1054,7 @@ void ComputedStyle::changeFontPercentToFixedIfNeeded(Length curFontSize,
         }
     }
 
-    GCVector<GridLength>* rows = m_rareComputedStyleData.gridTemplateRows();
+    GCVector<GridTrackSize>* rows = m_rareComputedStyleData.gridTemplateRows();
 
     if (rows) {
         for (size_t i = 0; i < rows->size(); i++) {

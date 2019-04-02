@@ -61,6 +61,16 @@ public:
         return m_fr;
     }
 
+    LayoutUnit min()
+    {
+        return m_min;
+    }
+
+    LayoutUnit max()
+    {
+        return m_max;
+    }
+
     void setOffset(LayoutUnit offset, bool computed)
     {
         m_computed = computed;
@@ -75,6 +85,12 @@ public:
     void setFr(LayoutUnit fr)
     {
         m_fr = fr;
+    }
+
+    void setMinMax(LayoutUnit min, LayoutUnit max)
+    {
+        m_min = min;
+        m_max = max;
     }
 
     void setComputed(bool computed)
@@ -117,6 +133,11 @@ public:
         return m_state == Fr;
     }
 
+    bool isMinMax()
+    {
+        return m_state == MinMax;
+    }
+
     bool isAuto()
     {
         return m_isAuto;
@@ -131,6 +152,8 @@ public:
     GridLine(LayoutUnit fr, bool computed)
         : m_offset(0)
         , m_fr(fr)
+        , m_min(0)
+        , m_max(0)
         , m_computed(computed)
         , m_isAuto(false)
         , m_fixed(true)
@@ -143,6 +166,8 @@ public:
     GridLine(LayoutUnit offset)
         : m_offset(offset)
         , m_fr(0)
+        , m_min(0)
+        , m_max(0)
         , m_computed(true)
         , m_isAuto(false)
         , m_fixed(true)
@@ -152,9 +177,25 @@ public:
     {
     }
 
+    GridLine(LayoutUnit min, LayoutUnit max)
+        : m_offset(0)
+        , m_fr(0)
+        , m_min(min)
+        , m_max(max)
+        , m_computed(true)
+        , m_isAuto(false)
+        , m_fixed(false)
+        , m_newLine(false)
+        , m_state(MinMax)
+        , m_containing(false)
+    {
+    }
+
 private:
     LayoutUnit m_offset;
     LayoutUnit m_fr;
+    LayoutUnit m_min;
+    LayoutUnit m_max;
     bool m_computed;
     bool m_isAuto;
     bool m_fixed;
@@ -162,6 +203,7 @@ private:
     enum GridLineState {
         Fixed,
         Fr,
+        MinMax,
     };
     GridLineState m_state;
     bool m_containing;
@@ -215,7 +257,7 @@ public:
     void layoutGridItems();
     void alignGridLinesForColumns(GridArea&, LayoutUnit&, LayoutUnit&, bool);
     void alignGridLinesForRows(GridArea&);
-    void arrangeGridLinesWithGridAreas(bool);
+    void arrangeGridLinesWithGridAreas(bool, bool);
 
     bool fixGridAreaWithDefine(GridArea*, size_t);
     bool fixGridAreaWithUndefine(GridArea**, GridArea*, size_t);

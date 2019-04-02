@@ -63,7 +63,7 @@ LayoutUnit GridFormattingContext::preferredWidth()
 
 bool GridFormattingContext::existColumnTemplate()
 {
-    const GCVector<GridLength>* columns =
+    const GCVector<GridTrackSize>* columns =
         m_container->style()->gridTemplateColumns();
 
     if (columns) {
@@ -75,7 +75,7 @@ bool GridFormattingContext::existColumnTemplate()
 
 bool GridFormattingContext::existRowTemplate()
 {
-    const GCVector<GridLength>* rows = m_container->style()->gridTemplateRows();
+    const GCVector<GridTrackSize>* rows = m_container->style()->gridTemplateRows();
 
     if (rows) {
         return true;
@@ -163,7 +163,7 @@ void GridFormattingContext::applyFrUnitsWithColumns()
 {
     LayoutUnit computedSum(0);
     LayoutUnit frOfSum(0);
-    for (size_t i = 0; i < m_gridLineColumns.size(); i++) {
+    for (size_t i = 1; i < m_gridLineColumns.size(); i++) {
         GridLine line = m_gridLineColumns[i];
         if (!line.isFr()) {
             computedSum += line.offset();
@@ -984,7 +984,7 @@ void GridFormattingContext::parsingGridTemplateAreasAndStoreInformation()
 
 void GridFormattingContext::buildGridLineTemplate()
 {
-    const GCVector<GridLength>* columns =
+    const GCVector<GridTrackSize>* columns =
         m_container->style()->gridTemplateColumns();
 
     m_gridLineColumns.push_back(GridLine(0));
@@ -992,21 +992,48 @@ void GridFormattingContext::buildGridLineTemplate()
 
     if (columns) {
         for (size_t i = 0; i < columns->size(); i++) {
-            GridLength gridLength = (*columns)[i];
+            GridTrackSize trackSize = (*columns)[i];
+            GridLength gridLength = trackSize.min();
 
-            if (gridLength.isLength() && gridLength.length().isFixed()) {
-                Length length = gridLength.length();
-                GridLine line = GridLine(length.numberData());
-                m_gridLineColumns.push_back(line);
-            } else if (gridLength.isAuto()) {
-                GridLine line = GridLine(0);
-                line.setAuto(true);
-                m_gridLineColumns.push_back(line);
-            } else if (gridLength.isFr()) {
+            if (trackSize.isLength()) {
+                if (gridLength.isLength() && gridLength.length().isFixed()) {
+                    Length length = gridLength.length();
+                    GridLine line = GridLine(length.numberData());
+                    m_gridLineColumns.push_back(line);
+                } else if (gridLength.isAuto()) {
+                    GridLine line = GridLine(0);
+                    line.setAuto(true);
+                    m_gridLineColumns.push_back(line);
+                }
+            } else if (trackSize.isFr()) {
                 double value = gridLength.fr();
-
                 GridLine line = GridLine(value, false);
                 m_gridLineColumns.push_back(line);
+            } else if (trackSize.isMinMax()) {
+                GridLength min = trackSize.min();
+                if (min.isLength() && min.length().isFixed()) {
+                    Length length = min.length();
+                    GridLine line = GridLine(length.numberData());
+                    m_gridLineColumns.push_back(line);
+                } else if (min.isFr()) {
+                    double value = min.fr();
+                    GridLine line = GridLine(value, false);
+                    m_gridLineColumns.push_back(line);
+                }
+
+                GridLength max = trackSize.max();
+                /*if (max.isLength() && max.length().isFixed()) {
+                    Length length = max.length();
+                    GridLine line = GridLine(length.numberData());
+                    m_gridLineColumns.push_back(line);
+                } else if (max.isFr()) {
+                    double value = max.fr();
+                    GridLine line = GridLine(value, false);
+                    m_gridLineColumns.push_back(line);
+                }
+                */
+
+                // TODO: consider max length;
             }
         }
     }
@@ -1017,17 +1044,20 @@ void GridFormattingContext::buildGridLineTemplate()
         m_gridLineColumns.push_back(line);
     }
 
-    const GCVector<GridLength>* rows = m_container->style()->gridTemplateRows();
+    const GCVector<GridTrackSize>* rows = m_container->style()->gridTemplateRows();
 
     if (rows) {
         for (size_t i = 0; i < rows->size(); i++) {
-            GridLength gridLength = (*rows)[i];
+            GridTrackSize trackSize = (*rows)[i];
+            GridLength gridLength = trackSize.min();
 
-            if (gridLength.isLength() && gridLength.length().isFixed()) {
-                Length length = gridLength.length();
-                GridLine line = GridLine(length.numberData());
-                m_gridLineRows.push_back(line);
-            } else if (gridLength.isFr()) {
+            if (trackSize.isLength()) {
+                if (gridLength.isLength() && gridLength.length().isFixed()) {
+                    Length length = gridLength.length();
+                    GridLine line = GridLine(length.numberData());
+                    m_gridLineRows.push_back(line);
+                }
+            } else if (trackSize.isFr()) {
                 double value = gridLength.fr();
 
                 GridLine line = GridLine(value, false);
@@ -1044,7 +1074,7 @@ void GridFormattingContext::buildGridLineTemplate()
 
     applyFrUnitsWithColumns();
 
-    arrangeGridLinesWithGridAreas(true);
+    arrangeGridLinesWithGridAreas(true, false);
 
     // Distribute 'auto' size;
     LayoutUnit sumOfColumn = 0;
@@ -1076,7 +1106,7 @@ void GridFormattingContext::buildGridLineTemplate()
 
     applyFrUnitsWithRows();
 
-    arrangeGridLinesWithGridAreas(false);
+    arrangeGridLinesWithGridAreas(true, true);
 }
 
 static GridArea* getBiggestAreaWithColumn(GCVector<GridArea>& list,
@@ -1711,7 +1741,7 @@ void GridFormattingContext::alignGridLinesForRows(GridArea& area)
     }
 }
 
-void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
+void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines, bool nonFixedHeight)
 {
     for (auto area : m_orderedGridArea) {
         FrameBox* gridItem = area.m_box;
@@ -1733,7 +1763,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
             PreferredWidthContext p(m_layoutContext, nullptr, gridItem,
                                     gridItem, 0);
             p.computePreferredWidth();
-            contentWidth = p.preferredWidth();
+            contentWidth = p.preferredWidth() + gridItem->mbpWidth();
             isFixed = false;
         }
 
@@ -1761,7 +1791,7 @@ void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines)
             style->setWidth(Length(Length::Fixed, width));
         }
 
-        if (!layoutLines) {
+        if (nonFixedHeight) {
             if (!style->height().isFixed()) {
                 LayoutUnit height;
                 for (size_t i = area.m_rowStart; i <= area.m_rowEnd - 1; i++) {
