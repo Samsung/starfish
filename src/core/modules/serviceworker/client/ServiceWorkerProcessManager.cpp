@@ -22,7 +22,7 @@
 #include "platform/process/base/ProcessType.h"
 
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/process/networking/Socket.h"
+#include "core/modules/networking/Socket.h"
 #include "core/modules/threading/IRunnable.h"
 #include "core/modules/serviceworker/IORunnable.h"
 #include "core/modules/serviceworker/Connection.h"
@@ -36,7 +36,7 @@
 #include "core/modules/threading/ThreadPool.h"
 
 #include "core/modules/threading/IRunnable.h"
-#include "core/modules/process/networking/Socket.h"
+#include "core/modules/networking/Socket.h"
 #include "core/modules/serviceworker/IORunnable.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"

@@ -23,10 +23,11 @@
 
 namespace Starfish {
 
-struct ServiceWorkerJob;
+class ServiceWorkerJob;
 class ServiceWorkerJobClient;
+class ServiceWorkerRegistrationData;
 
-class ServiceWorkerClientProcess : public IServiceWorkerClientProcess,
+class ServiceWorkerClientProcess : public ServiceWorkerClientProcessInterface,
                                    public gc {
 public:
     static ServiceWorkerClientProcess* getInstance();
@@ -36,10 +37,12 @@ public:
     void operator=(ServiceWorkerClientProcess const&) = delete;
 
     void init(ServiceWorkerJobClient* jobClient);
-    IServiceWorkerHostProcess* host();
+    ServiceWorkerHostProcessInterface* host();
 
     // Inteface overrided
-    virtual void resolveJobPromise(ServiceWorkerJob* job) override;
+    void resolveJobPromise(
+        ServiceWorkerJob* job,
+        ServiceWorkerRegistrationData* registration) override;
 
 private:
     static ServiceWorkerClientProcess* m_instance;

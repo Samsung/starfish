@@ -196,12 +196,14 @@ void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
     // 12. Set job’s update via cache mode to updateViaCache.
 
     // 13. Set job’s referrer to referrer.
-    job->referrerURL = job->client ? client->referrer() : nullptr;
+    job->data()->referrerURL =
+        job->client() ? job->client()->referrer() : nullptr;
 
     // 14. Invoke Schedule Job with job.
     scheduleJob(job);
 }
 
+// TODO: consider movig this to job handler
 ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
                                                     String* scopeURL,
                                                     String* scriptURL,
@@ -211,12 +213,16 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
     // https://w3c.github.io/ServiceWorker/#create-job
 
     auto job = new ServiceWorkerJob();
-    job->id = m_refValueToMakeServiceWorkerJobId;
-    job->type = type;
-    job->scopeURL = scopeURL;
-    job->scriptURL = scriptURL;
-    job->promise = promise;
-    job->client = client;
+    auto data = new ServiceWorkerJobData();
+
+    data->id = m_refValueToMakeServiceWorkerJobId;
+    data->type = type;
+    data->scopeURL = scopeURL;
+    data->scriptURL = scriptURL;
+
+    job->setData(data);
+    job->setPromise(promise);
+    job->setClient(client);
 
     m_refValueToMakeServiceWorkerJobId++;
 
@@ -239,7 +245,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
         },
         job, document()->webOrigin());
 
-    m_jobMap.insert(std::make_pair(job->id, job));
+    m_jobMap.insert(std::make_pair(job->data()->id, job));
 }
 
 Promise* ServiceWorkerContainer::getRegistration(
@@ -269,7 +275,8 @@ ServiceWorker* ServiceWorkerContainer::controller()
     return client;
 }
 
-void ServiceWorkerContainer::resolveJobPromise(ServiceWorkerJob* job)
+void ServiceWorkerContainer::resolveJobPromise(
+    ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
     // TODO: meet
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
@@ -279,7 +286,7 @@ void ServiceWorkerContainer::resolveJobPromise(ServiceWorkerJob* job)
     // 2. If job’s client is not null, queue a task, on job’s client's
     // responsible event loop using the DOM manipulation task source, to run the
     // following substeps:
-    auto context = job->client;
+    auto context = job->client();
 
     if (context) {
         struct Params : public gc {
@@ -301,8 +308,8 @@ void ServiceWorkerContainer::resolveJobPromise(ServiceWorkerJob* job)
                 // 1. Let convertedValue be null.
                 auto convertedValue = Escargot::ValueRef::createNull();
 
-                if (job->type == ServiceWorkerJobType::Register ||
-                    job->type == ServiceWorkerJobType::Update) {
+                if (job->data()->type == ServiceWorkerJobType::Register ||
+                    job->data()->type == ServiceWorkerJobType::Update) {
                     // TODO: 2. If job’s job type is either register or update,
                     // set convertedValue to the ServiceWorkerRegistration
                     // object that represents value, in job’s client's Realm.
@@ -310,13 +317,13 @@ void ServiceWorkerContainer::resolveJobPromise(ServiceWorkerJob* job)
                         new ServiceWorkerRegistration(container->document());
                     auto serviceWorker =
                         new ServiceWorker(container->document());
-                    serviceWorker->data()->setScriptURL(job->scriptURL);
+                    serviceWorker->data()->setScriptURL(job->data()->scriptURL);
                     registeration->updateRegistrationState(
                         ServiceWorkerRegistrationState::Installing,
                         serviceWorker);
 
                     convertedValue = registeration->scriptValue();
-                    job->promise->fulfill(convertedValue);
+                    job->promise()->fulfill(convertedValue);
                 }
             },
             params);

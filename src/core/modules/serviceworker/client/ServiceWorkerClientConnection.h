@@ -24,15 +24,20 @@
 namespace Starfish {
 
 class Socket;
+class ServiceWorkerJob;
+class ServiceWorkerRegistrationData;
 
-class ServiceWorkerClientConnection final : public Connection,
-                                            public IServiceWorkerHostProcess,
-                                            public IServiceWorkerClientProcess {
+class ServiceWorkerClientConnection final
+    : public Connection,
+      public ServiceWorkerHostProcessInterface,
+      public ServiceWorkerClientProcessInterface {
 public:
     ServiceWorkerClientConnection();
     void onReceived(Socket* socket, const char* data) override;
     void scheduleJob(ServiceWorkerJob* job) override;
-    void resolveJobPromise(ServiceWorkerJob* job) override;
+    void resolveJobPromise(
+        ServiceWorkerJob* job,
+        ServiceWorkerRegistrationData* registration) override;
 };
 } // namespace Starfish
 

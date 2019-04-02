@@ -69,14 +69,15 @@ void ServiceWorkerClientProcess::init(ServiceWorkerJobClient* jobClient)
     m_jobClient = jobClient;
 }
 
-IServiceWorkerHostProcess* ServiceWorkerClientProcess::host()
+ServiceWorkerHostProcessInterface* ServiceWorkerClientProcess::host()
 {
     return ServiceWorkerHostProcess::getInstance();
 }
 
-void ServiceWorkerClientProcess::resolveJobPromise(ServiceWorkerJob* job)
+void ServiceWorkerClientProcess::resolveJobPromise(
+    ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
-    m_jobClient->resolveJobPromise(job);
+    m_jobClient->resolveJobPromise(job, registration);
 }
 
 } // namespace Starfish

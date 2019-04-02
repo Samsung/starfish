@@ -30,7 +30,7 @@ namespace Starfish {
 ServiceWorkerRegistrationKey ServiceWorkerJob::registrationKey()
 {
     // TODO: generate an unique key using data attributes
-    auto key = scopeURL->concat(scriptURL);
+    auto key = m_data->scopeURL->concat(m_data->scriptURL);
     return key;
 }
 }

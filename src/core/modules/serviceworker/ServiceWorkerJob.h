@@ -26,35 +26,37 @@ namespace Starfish {
 class ExecutionContext;
 class Promise;
 class String;
-class ServiceWorkerHostJobQueue;
+class JobQueue;
 
-struct ServiceWorkerJob : public gc {
-    ServiceWorkerJobId id;
-    ServiceWorkerJobType type;
-    String* scopeURL;
-    String* scriptURL;
-    Promise* promise;
-    ServiceWorkerClient* client;
-    String* referrerURL;
-    WorkerType workerType;
-    ServiceWorkerUpdateViaCache updateViaCacheMode;
-    ServiceWorkerHostJobQueue* containingJobQueue;
+struct ServiceWorkerJobData : public gc {
+    ServiceWorkerJobId id{ 0 };
+    ServiceWorkerJobType type{ ServiceWorkerJobType::Register };
+    String* scopeURL{ nullptr };
+    String* scriptURL{ nullptr };
+    String* referrerURL{ nullptr };
+    WorkerType workerType{ WorkerType::Classic };
+    ServiceWorkerUpdateViaCache updateViaCacheMode{
+        ServiceWorkerUpdateViaCache::None
+    };
+};
 
+class Job : public gc {
+};
+
+class ServiceWorkerJob : public Job {
+public:
     ServiceWorkerRegistrationKey registrationKey();
 
-    ServiceWorkerJob()
-        : id(0)
-        , type(ServiceWorkerJobType::Register)
-        , scopeURL(nullptr)
-        , scriptURL(nullptr)
-        , promise(nullptr)
-        , client(nullptr)
-        , referrerURL(nullptr)
-        , workerType(WorkerType::Classic)
-        , updateViaCacheMode(ServiceWorkerUpdateViaCache::None)
-        , containingJobQueue(nullptr)
-    {
-    }
+    DEFINE_GETTER_SETTER(Promise*, promise, Promise);
+    DEFINE_GETTER_SETTER(ServiceWorkerJobData*, data, Data);
+    DEFINE_GETTER_SETTER(ServiceWorkerClient*, client, Client);
+    DEFINE_GETTER_SETTER(JobQueue*, containingJobQueue, ContainingJobQueue);
+
+private:
+    Promise* m_promise{ nullptr };
+    ServiceWorkerJobData* m_data{ nullptr };
+    ServiceWorkerClient* m_client{ nullptr };
+    JobQueue* m_containingJobQueue{ nullptr };
 };
 
 } // namespace Starfish

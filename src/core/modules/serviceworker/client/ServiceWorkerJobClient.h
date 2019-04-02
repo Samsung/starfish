@@ -24,13 +24,15 @@
 namespace Starfish {
 
 class ServiceWorkerJob;
+class ServiceWorkerRegistrationData;
 
 class ServiceWorkerJobClient {
 public:
     virtual ~ServiceWorkerJobClient()
     {
     }
-    virtual void resolveJobPromise(ServiceWorkerJob* job) = 0;
+    virtual void resolveJobPromise(
+        ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
 };
 
 } // namespace Starfish

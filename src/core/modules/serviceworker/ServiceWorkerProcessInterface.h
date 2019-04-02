@@ -24,18 +24,20 @@
 namespace Starfish {
 
 struct ServiceWorkerJob;
+class ServiceWorkerRegistrationData;
 
-class IServiceWorkerClientProcess {
+class ServiceWorkerClientProcessInterface {
 public:
-    virtual ~IServiceWorkerClientProcess()
+    virtual ~ServiceWorkerClientProcessInterface()
     {
     }
-    virtual void resolveJobPromise(ServiceWorkerJob* job) = 0;
+    virtual void resolveJobPromise(
+        ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
 };
 
-class IServiceWorkerHostProcess {
+class ServiceWorkerHostProcessInterface {
 public:
-    virtual ~IServiceWorkerHostProcess()
+    virtual ~ServiceWorkerHostProcessInterface()
     {
     }
     virtual void scheduleJob(ServiceWorkerJob* job) = 0;
