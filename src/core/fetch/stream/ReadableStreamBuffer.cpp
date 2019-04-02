@@ -60,8 +60,8 @@ void ReadableStreamBuffer::resolveWithType(Promise* promise,
     } else if (type == BodyType::Blob) {
         void* buffer = calloc(1, size);
         memcpy(buffer, m_buffer.data(), size);
-        auto blob = new Blob(instance->ownerDocument(), size, m_mimeType,
-                             buffer, false, false);
+        auto blob = new Blob(instance->ownerDocument()->executionContext(),
+                             size, m_mimeType, buffer, false, false);
         promise->fulfill(blob->scriptValue());
         free(buffer);
     } else if (type == BodyType::Json) {

@@ -216,7 +216,7 @@ void HTMLMediaElement::load()
     // promises in the order the corresponding tasks were queued.
     // Remove each task in pending tasks from its task queue
     abortEveryPendingOperation(new DOMException(
-        document(), DOMException::DOM_EXCEPTION,
+        executionContext(), DOMException::DOM_EXCEPTION,
         "The play() request was interrupted by a new load request."));
 
     // If the media element's networkState is set to NETWORK_LOADING or
@@ -255,7 +255,7 @@ void HTMLMediaElement::load()
             auto iter = m_playOperationQueue.begin();
             while (iter != m_playOperationQueue.end()) {
                 DOMException* exception = new DOMException(
-                    document(), DOMException::ABORT_ERR,
+                    executionContext(), DOMException::ABORT_ERR,
                     "play request is aborted by load operation");
                 ((MediaOperationQueueDataRequestPlay*)(*iter))
                     ->m_promise->reject(exception->scriptValue());
@@ -342,8 +342,9 @@ void HTMLMediaElement::dedicatedMediaSourceFailure()
 
     // Reject pending play promises with promises and a "NotSupportedError"
     // DOMException.
-    abortEveryPendingOperation(new DOMException(
-        document(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
+    abortEveryPendingOperation(new DOMException(executionContext(),
+                                                DOMException::NOT_SUPPORTED_ERR,
+                                                "cannot play media"));
 
     // Set the element's delaying-the-load-event flag to false. This stops
     // delaying the load event.
@@ -370,8 +371,9 @@ void HTMLMediaElement::giveupFetchingResource(bool shouldSetError)
 
     m_resourceSelectionContext = nullptr;
     // Abort the overall resource selection algorithm
-    abortEveryPendingOperation(new DOMException(
-        document(), DOMException::NOT_SUPPORTED_ERR, "cannot play media"));
+    abortEveryPendingOperation(new DOMException(executionContext(),
+                                                DOMException::NOT_SUPPORTED_ERR,
+                                                "cannot play media"));
 }
 
 Promise* HTMLMediaElement::play()
@@ -640,7 +642,7 @@ double HTMLMediaElement::playbackRate()
 TimeRanges* HTMLMediaElement::played()
 {
     // This attribute must return a new static normalized TimeRanges object
-    TimeRanges* result = new TimeRanges(document(), m_pastPlayed);
+    TimeRanges* result = new TimeRanges(executionContext(), m_pastPlayed);
     if (!paused()) {
         double current = currentTime();
         if (!std::isnan(m_currentPlayStart) && m_currentPlayStart < current) {
@@ -655,7 +657,7 @@ TimeRanges* HTMLMediaElement::seekable()
 {
     MediaPlayer* player = activeMediaPlayer();
     if (!player) {
-        return new TimeRanges(document());
+        return new TimeRanges(executionContext());
     }
     if (player->activeMediaSource()) {
         SourceBufferList* bufferList =
@@ -664,7 +666,7 @@ TimeRanges* HTMLMediaElement::seekable()
         unsigned nbuffer = bufferList->length();
 
         if (nbuffer == 0) {
-            return new TimeRanges(document());
+            return new TimeRanges(executionContext());
         }
 
         TimeRanges* result = (*bufferList)[0]->buffered();
@@ -672,7 +674,7 @@ TimeRanges* HTMLMediaElement::seekable()
             TimeRanges* buffered = (*bufferList)[i]->buffered();
             unsigned bufferedSize = buffered->size();
             unsigned resultSize = result->size();
-            TimeRanges* newResult = new TimeRanges(document());
+            TimeRanges* newResult = new TimeRanges(executionContext());
 
             unsigned t = 0, j = 0;
             while (t != bufferedSize && j != resultSize) {
@@ -701,7 +703,7 @@ TimeRanges* HTMLMediaElement::seekable()
         }
         return result;
     } else {
-        TimeRanges* r = new TimeRanges(document());
+        TimeRanges* r = new TimeRanges(executionContext());
         r->emplace_back(0, player->duration());
         return r;
     }
@@ -899,7 +901,7 @@ void HTMLMediaElement::setControls(bool controls)
 void HTMLMediaElement::setVolume(double volume)
 {
     if (volume < 0.0f || volume > 1.0f) {
-        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR,
+        throw new DOMException(executionContext(), DOMException::INDEX_SIZE_ERR,
                                "volume should be in the range 0.0 to 1.0");
     }
 
@@ -1113,13 +1115,15 @@ void HTMLMediaElement::addEventToOperationQueue(EventTarget* t, Event* e)
     void HTMLMediaElement::dispatch##Name##EventNow()                          \
     {                                                                          \
         String* eventType = starfish()->staticStrings()->m_##name.localName(); \
-        Event* e = new Event(document(), eventType, EventInit(false, false));  \
+        Event* e =                                                             \
+            new Event(executionContext(), eventType, EventInit(false, false)); \
         dispatchEventByUA(e);                                                  \
     }                                                                          \
     void HTMLMediaElement::dispatch##Name##Event()                             \
     {                                                                          \
         String* eventType = starfish()->staticStrings()->m_##name.localName(); \
-        Event* e = new Event(document(), eventType, EventInit(false, false));  \
+        Event* e =                                                             \
+            new Event(executionContext(), eventType, EventInit(false, false)); \
         addEventToOperationQueue(this, e);                                     \
     }
 
@@ -1195,7 +1199,7 @@ void HTMLMediaElement::processNextOperationQueue()
         m_operationQueue.pop_front();
 
         m_currentPendingOperationHandle = webView()->messageLoop()->addIdler(
-            document(),
+            window(),
             [](size_t, void* data) {
                 MediaOperationQueueData* queueData =
                     (MediaOperationQueueData*)data;
@@ -1271,8 +1275,8 @@ void ResourceSelectionContext::failedWithElements(Element* candidate)
     // Queue a task to fire an event named error at the candidate element.
     String* eventType =
         m_mediaElement->starfish()->staticStrings()->m_error.localName();
-    Event* e =
-        new Event(candidate->document(), eventType, EventInit(false, false));
+    Event* e = new Event(candidate->executionContext(), eventType,
+                         EventInit(false, false));
     m_mediaElement->addEventToOperationQueue(candidate, e);
 }
 
@@ -1487,7 +1491,7 @@ void MediaOperationQueueDataRequestPause::processOperationQueue()
     auto iter = m_mediaElement->m_playOperationQueue.begin();
     while (iter != m_mediaElement->m_playOperationQueue.end()) {
         DOMException* exception = new DOMException(
-            m_mediaElement->document(), DOMException::ABORT_ERR,
+            m_mediaElement->executionContext(), DOMException::ABORT_ERR,
             "play request is aborted by pause()");
         ((MediaOperationQueueDataRequestPlay*)(*iter))
             ->m_promise->reject(exception->scriptValue());
@@ -1533,7 +1537,7 @@ void MediaOperationQueueDataRequestPlay::processOperationQueue()
         m_promise->fulfill(scriptUndefined());
     } else {
         DOMException* exception =
-            new DOMException(m_mediaElement->document(),
+            new DOMException(m_mediaElement->executionContext(),
                              DOMException::ABORT_ERR, "Undefined player error");
         m_promise->reject(exception->scriptValue());
     }

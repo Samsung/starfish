@@ -26,24 +26,13 @@ namespace Starfish {
 
 class TimeRanges : public ScriptWrappable, public GCAtomicVector<TimeRange> {
 public:
-    TimeRanges(ExecutionContext* executionContext)
-        : ScriptWrappable(this, executionContext)
-    {
-    }
+    TimeRanges(ExecutionContext* executionContext);
 
     TimeRanges(ExecutionContext* executionContext,
-               const GCAtomicVector<TimeRange>& other)
-        : ScriptWrappable(this, executionContext)
-        , GCAtomicVector<TimeRange>(other)
-    {
-    }
+               const GCAtomicVector<TimeRange>& other);
 
     TimeRanges(ExecutionContext* executionContext,
-               GCAtomicVector<TimeRange>&& other)
-        : ScriptWrappable(this, executionContext)
-        , GCAtomicVector<TimeRange>(other)
-    {
-    }
+               GCAtomicVector<TimeRange>&& other);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(TimeRanges)
 
@@ -67,6 +56,9 @@ public:
     {
         return size();
     }
+
+private:
+    ScriptBindingInstance* m_scriptBindingInstance;
 };
 }
 

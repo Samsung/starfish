@@ -34,9 +34,14 @@
 namespace Starfish {
 
 DOMImplementation::DOMImplementation(Document* document)
-    : ScriptWrappable(this, document)
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
 {
+}
+
+ScriptBindingInstance* DOMImplementation::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
 }
 
 DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
@@ -45,7 +50,8 @@ DocumentType* DOMImplementation::createDocumentType(String* qualifiedName,
 {
     // Validate qualifiedName.
     if (!QualifiedName::validateQualifiedName(qualifiedName)) {
-        throw new DOMException(document(), DOMException::INVALID_CHARACTER_ERR);
+        throw new DOMException(document()->executionContext(),
+                               DOMException::INVALID_CHARACTER_ERR);
     }
 
     // Return a new doctype, with qualifiedName as its name, publicId as its

@@ -38,6 +38,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isMediaQueryList() const override;
 
+    virtual ExecutionContext* executionContext() override;
+
     /* DOM APIs */
     String* media() const;
     bool matches();

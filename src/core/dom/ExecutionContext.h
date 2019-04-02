@@ -30,28 +30,32 @@ class ResourceURL;
 class String;
 class Document;
 
-class ExecutionContext {
+class ExecutionContext : public gc {
 public:
     ExecutionContext(GlobalScope* globalScope, ScriptBindingInstance* instance,
-                     ResourceURL* uri);
+                     ResourceURL* uri, void* documentOrWorkerGlobalScope,
+                     bool hasDocument);
 
-    virtual bool isDocument() const
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    bool hasDocument() const
     {
-        return false;
+        return m_hasDocument;
     }
-    virtual bool isWorkerGlobalScope() const
+    bool hasWorkerGlobalScope() const
     {
-        return false;
+        return !m_hasDocument;
     }
 
-    Document* asDocument();
+    Document* document();
 
     GlobalScope* globalScope() const
     {
         return m_globalScope;
     }
 
-    ScriptBindingInstance* ownerScriptBindingInstance() const
+    ScriptBindingInstance* scriptBindingInstance() const
     {
         return m_scriptBindingInstance;
     }
@@ -72,16 +76,35 @@ public:
         m_documentURI = newURL;
     }
     String* urlString();
-    virtual ResourceURL* baseURL() const = 0;
-    virtual String* referrer() = 0;
+
+    String* referrer();
+    DEFINE_SETTER(ResourceURL*, referrer, Referrer)
+
+    ResourceURL* baseURL() const;
+    DEFINE_SETTER(ResourceURL*, baseURL, BaseURL)
 
 private:
     GlobalScope* const m_globalScope;
-
-protected:
+    void* m_documentOrWorkerGlobalScope;
+    bool m_hasDocument;
     ScriptBindingInstance* const m_scriptBindingInstance;
     uint64_t m_createdTick;
     ResourceURL* m_documentURI;
+    ResourceURL* m_referrer;
+    ResourceURL* m_baseURL;
+
+protected:
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_globalScope));
+        GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext,
+                                        m_documentOrWorkerGlobalScope));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(ExecutionContext, m_scriptBindingInstance));
+        GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_documentURI));
+        GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_referrer));
+        GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_baseURL));
+    }
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 public:

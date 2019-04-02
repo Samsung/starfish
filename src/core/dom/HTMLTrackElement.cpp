@@ -221,7 +221,7 @@ void HTMLTrackElement::load(String* srcURL)
         String* eventName =
             document()->starfish()->staticStrings()->m_error.localName();
         Event* event =
-            new Event(document(), eventName, EventInit(false, false));
+            new Event(executionContext(), eventName, EventInit(false, false));
         dispatchEventIdleTimeByUA(event);
         return;
     }

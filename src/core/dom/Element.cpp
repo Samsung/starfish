@@ -276,7 +276,7 @@ void Element::setAttribute(const QualifiedName& name, String* value)
 void Element::setAttribute(String* name, String* value)
 {
     if (!QualifiedName::checkNameProductionRule(name)) {
-        throw new DOMException(document(),
+        throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_CHARACTER_ERR);
     }
     setAttribute(properAttributeName(this, name), value);
@@ -308,7 +308,8 @@ Attr* Element::setAttributeNode(Attr* newAttr)
     }
 
     if (newAttr->ownerElement()) {
-        throw new DOMException(document(), DOMException::INUSE_ATTRIBUTE_ERR,
+        throw new DOMException(executionContext(),
+                               DOMException::INUSE_ATTRIBUTE_ERR,
                                "The node provided is an attribute node that is "
                                "already an attribute of another Element; "
                                "attribute nodes must be explicitly cloned.");
@@ -394,7 +395,7 @@ Attr* Element::removeAttributeNode(Attr* attr)
     STARFISH_ASSERT(attr);
     if (attr->ownerElement() != this) {
         throw new DOMException(
-            document(), DOMException::NOT_FOUND_ERR,
+            executionContext(), DOMException::NOT_FOUND_ERR,
             "The node provided is owned by another element.");
     }
     AttributeName attrName(attr->qname(), AttributeName::MatchAll);
@@ -505,8 +506,8 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
                 CSPDirectives::StyleSrc, value)) {
             String* eventType =
                 starfish()->staticStrings()->m_error.localName();
-            Event* e =
-                new Event(document(), eventType, EventInit(false, false));
+            Event* e = new Event(executionContext(), eventType,
+                                 EventInit(false, false));
             dispatchEventIdleTimeByUA(e);
             return;
         }
@@ -859,7 +860,7 @@ static void elementScrollPropertyChanged(Element* element)
 
     String* eventType =
         element->starfish()->staticStrings()->m_scroll.localName();
-    UIEvent* e = new UIEvent(element->document(), eventType);
+    UIEvent* e = new UIEvent(element->executionContext(), eventType);
     e->setTarget(element);
     e->setView(element->window());
     if (element->document()->browsingContext()->isTopLevelBrowsingContext()) {
@@ -1300,7 +1301,7 @@ void Element::setOuterHTML(String* text)
     // If parent is a Document, throw a "NoModificationAllowedError"
     // DOMException.
     if (parent == document()) {
-        throw new DOMException(document(),
+        throw new DOMException(executionContext(),
                                DOMException::NO_MODIFICATION_ALLOWED_ERR,
                                "Parent can not be document");
     }
@@ -1331,7 +1332,7 @@ void Element::insertAdjacentHTML(String* position, String* text)
         // If context is null or a Document, throw a
         // "NoModificationAllowedError" DOMException.
         if (context == nullptr || context->isDocument()) {
-            throw new DOMException(document(),
+            throw new DOMException(executionContext(),
                                    DOMException::NO_MODIFICATION_ALLOWED_ERR,
                                    "Can not execute `insertAdjacentHTML`.");
         }
@@ -1339,7 +1340,7 @@ void Element::insertAdjacentHTML(String* position, String* text)
                position->equalsIgnoreCase("beforeend")) {
         context = this;
     } else {
-        throw new DOMException(document(), DOMException::SYNTAX_ERR,
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "The first parameter is not one of "
                                "'beforeBegin', 'afterBegin', 'beforeEnd', or "
                                "'afterEnd'.");
@@ -1421,7 +1422,8 @@ static Node* insertAdjacent(Element* element, String* where, Node* node)
         return element->parentNode()->insertBefore(node,
                                                    element->nextSibling());
     } else {
-        throw new DOMException(element->document(), DOMException::SYNTAX_ERR,
+        throw new DOMException(element->executionContext(),
+                               DOMException::SYNTAX_ERR,
                                "The first parameter is not one of "
                                "'beforeBegin', 'afterBegin', 'beforeEnd', or "
                                "'afterEnd'.");

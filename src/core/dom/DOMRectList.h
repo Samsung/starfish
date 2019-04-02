@@ -46,6 +46,7 @@ private:
     DOMRectList(ExecutionContext* executionContext);
     explicit DOMRectList(ExecutionContext* executionContext,
                          const GCVector<DOMQuad*>&);
+    ExecutionContext* m_executionContext;
     GCVector<DOMRect*> m_list;
 };
 }

@@ -32,7 +32,7 @@
 namespace Starfish {
 
 SVGLength::SVGLength(SVGElement* sourceElement, QualifiedName targetAttribute)
-    : ScriptWrappable(this, sourceElement->executionContext())
+    : ScriptWrappable(this)
     , m_sourceElement(sourceElement)
     , m_targetAttribute(targetAttribute)
 {
@@ -124,7 +124,7 @@ float SVGLength::value()
 void SVGLength::setValue(float v)
 {
     if (std::isnan(v) || std::isinf(v)) {
-        throw new DOMException(m_sourceElement->document(),
+        throw new DOMException(m_sourceElement->executionContext(),
                                DOMException::Code::SCRIPT_TYPE_ERR,
                                "The provided float value is non-finite");
     }

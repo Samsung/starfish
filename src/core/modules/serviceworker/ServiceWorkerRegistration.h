@@ -65,7 +65,11 @@ class ServiceWorkerRegistration : public EventTarget {
 public:
     ServiceWorkerRegistration(Document* document);
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ServiceWorkerRegistration)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isServiceWorkerRegistration() const override;
+
+    virtual ExecutionContext* executionContext() override;
 
     String* scope() const;
     String* updateViaCache() const;

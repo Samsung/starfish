@@ -31,9 +31,14 @@
 namespace Starfish {
 
 History::History(Document* doc)
-    : ScriptWrappable(this, doc)
+    : ScriptWrappable(this)
     , DocumentHoldable(doc)
 {
+}
+
+ScriptBindingInstance* History::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
 }
 
 HistoryManager* History::historyManager()

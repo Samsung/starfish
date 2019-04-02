@@ -28,7 +28,7 @@ namespace Starfish {
 HTMLCollection::HTMLCollection(Node* root,
                                NodeListImpl::FilterFunctionType filterType,
                                void* data, bool canCache, bool includeRoot)
-    : ScriptWrappable(this, root->executionContext())
+    : ScriptWrappable(this)
     , m_nodeListImpl(root, filterType, data, canCache, includeRoot)
 {
 }

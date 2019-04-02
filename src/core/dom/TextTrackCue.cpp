@@ -32,6 +32,11 @@
 
 namespace Starfish {
 
+ExecutionContext* TextTrackCue::executionContext()
+{
+    return document()->executionContext();
+}
+
 void TextTrackCue::dispatchEnterEvent()
 {
     String* eventType = String::emptyString;
@@ -43,7 +48,8 @@ void TextTrackCue::dispatchEnterEvent()
     } else {
         eventType = String::fromUTF8("enter");
     }
-    Event* e = new Event(document(), eventType, EventInit(false, false));
+    Event* e =
+        new Event(executionContext(), eventType, EventInit(false, false));
     dispatchEventByUA(e);
 }
 
@@ -58,7 +64,8 @@ void TextTrackCue::dispatchExitEvent()
     } else {
         eventType = String::fromUTF8("exit");
     }
-    Event* e = new Event(document(), eventType, EventInit(false, false));
+    Event* e =
+        new Event(executionContext(), eventType, EventInit(false, false));
     dispatchEventByUA(e);
 }
 

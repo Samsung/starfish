@@ -21,22 +21,30 @@
 #include "core/dom/DOMRect.h"
 #include "core/dom/DOMRectList.h"
 #include "core/dom/DOMQuad.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
 DOMRectList::DOMRectList(ExecutionContext* executionContext)
-    : ScriptWrappable(this, executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
 {
 }
 
 DOMRectList::DOMRectList(ExecutionContext* executionContext,
                          const GCVector<DOMQuad*>& quads)
-    : ScriptWrappable(this, executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
 {
     m_list.reserve(quads.size());
     for (size_t i = 0; i < quads.size(); ++i) {
         m_list.push_back(quads[i]->getBounds());
     }
+}
+
+ScriptBindingInstance* DOMRectList::scriptBindingInstance()
+{
+    return m_executionContext->scriptBindingInstance();
 }
 
 uint32_t DOMRectList::length() const

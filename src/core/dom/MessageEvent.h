@@ -129,7 +129,9 @@ public:
     {
     }
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(MessageEvent)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isMessageEvent() const;
 
     ScriptValue data() const
     {

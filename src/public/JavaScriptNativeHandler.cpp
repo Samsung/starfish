@@ -27,7 +27,7 @@ namespace Starfish {
 
 JavaScriptNativeHandler::JavaScriptNativeHandler(
     WebView* wv, String* functionName, NativeFunctionPtr nativeCallback)
-    : ScriptWrappable(this, nullptr)
+    : ScriptWrappable(this)
     , WebViewHoldable(wv)
     , m_name(functionName)
     , m_callback(nativeCallback)

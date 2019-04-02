@@ -34,7 +34,7 @@ public:
 
 protected:
     CSS(ExecutionContext* executionContext)
-        : ScriptWrappable(this, executionContext)
+        : ScriptWrappable(this)
     {
     }
 };

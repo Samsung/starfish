@@ -191,8 +191,8 @@ void ContentSecurityPolicy::dispatchViolationEvent(
                             ->starfish()
                             ->staticStrings()
                             ->m_securitypolicyviolation.localName();
-    auto event =
-        new SecurityPolicyViolationEvent(window()->document(), eventType);
+    auto event = new SecurityPolicyViolationEvent(
+        window()->document()->executionContext(), eventType);
     event->setViolatedDirective(name);
     event->setBlockedURI(blockedURI);
 

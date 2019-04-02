@@ -46,6 +46,7 @@ public:
     startIteration(ExecutionStateRef* state);
 
 private:
+    ExecutionContext* m_executionContext;
     GCVector<FormDataSetItem*>* m_list;
     GCVector<FormDataSetItem*>::iterator findByName(String* name);
 };

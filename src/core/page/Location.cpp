@@ -35,9 +35,14 @@
 namespace Starfish {
 
 Location::Location(Document* document)
-    : ScriptWrappable(this, document)
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
 {
+}
+
+ScriptBindingInstance* Location::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
 }
 
 ResourceURL* Location::url()
@@ -190,7 +195,7 @@ static void navigateImpl(BrowsingContext* ctx, ResourceURL* url,
         p->action = action;
 
         ctx->webView()->messageLoop()->addIdler(
-            ctx->document(),
+            ctx->window(),
             [](size_t handle, void* data) {
                 Param* p = (Param*)data;
                 p->ctx->sourceElement()->navigate(p->url, p->action,

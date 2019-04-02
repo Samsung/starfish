@@ -98,6 +98,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSpeechSynthesisUtterance() const override;
 
+    virtual ExecutionContext* executionContext() override;
+
     void setId(int id)
     {
         m_id = id;
@@ -215,6 +217,8 @@ public:
     virtual ~SpeechSynthesis()
     {
     }
+
+    virtual ExecutionContext* executionContext() override;
 
     void dispose()
     {

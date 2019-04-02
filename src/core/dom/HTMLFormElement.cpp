@@ -327,11 +327,11 @@ void HTMLFormControl::fireSubmitEvent()
         Node* node = (Node*)data;
         String* eventType =
             node->starfish()->staticStrings()->m_submit.localName();
-        Event* e =
-            new Event(node->document(), eventType, EventInit(true, true));
+        Event* e = new Event(node->executionContext(), eventType,
+                             EventInit(true, true));
         node->EventTarget::dispatchEventByUA(node, e);
     };
-    webView()->messageLoop()->addIdler(document(), fn, this);
+    webView()->messageLoop()->addIdler(window(), fn, this);
 }
 
 void HTMLFormControl::didAttributeChanged(QualifiedName name, String* old,
@@ -378,7 +378,7 @@ void HTMLFormControl::didNodeInsertedToDocumentTree()
     // https://www.w3.org/TR/html5/editing.html#focusing-steps
     if (isAutofocusable()) {
         webView()->messageLoop()->addIdler(
-            document(),
+            window(),
             [](size_t handle, void* data) {
                 HTMLFormControl* element = (HTMLFormControl*)data;
                 if (!element->document()->browsingContext()->focusedNode()) {
@@ -469,14 +469,16 @@ void HTMLFormControl::setMaxLength(int32_t maxlength)
                         String::fromInt(maxlength)->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "maxLength",
                         "HTMLFormControl", reason);
-        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+        throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
+                               msg);
     } else if (minlength >= 0 && maxlength < minlength) {
         COMPOSE_MESSAGE(reason, EXCEED_MIN_BOUNDARY,
                         String::fromInt(maxlength)->toUTF8NonGCString().data(),
                         String::fromInt(minlength)->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "maxLength",
                         "HTMLFormControl", reason);
-        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+        throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
+                               msg);
     } else {
         setAttribute(starfish()->staticStrings()->m_maxlength,
                      String::fromInt(maxlength));
@@ -508,14 +510,16 @@ void HTMLFormControl::setMinLength(int32_t minlength)
                         String::fromInt(minlength)->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "minLength",
                         "HTMLFormControl", reason);
-        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+        throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
+                               msg);
     } else if (maxlength >= 0 && maxlength < minlength) {
         COMPOSE_MESSAGE(reason, EXCEED_MAX_BOUNDARY,
                         String::fromInt(minlength)->toUTF8NonGCString().data(),
                         String::fromInt(maxlength)->toUTF8NonGCString().data());
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "minLength",
                         "HTMLFormControl", reason);
-        throw new DOMException(document(), DOMException::DOM_EXCEPTION, msg);
+        throw new DOMException(executionContext(), DOMException::DOM_EXCEPTION,
+                               msg);
     } else {
         setAttribute(starfish()->staticStrings()->m_minlength,
                      String::fromInt(minlength));
@@ -610,7 +614,7 @@ void HTMLFormElement::setAction(String* action)
 void HTMLFormControl::queueEvent(QualifiedName& eventType, bool bubbles,
                                  bool cancelable)
 {
-    Event* e = new Event(document(), eventType.localName(),
+    Event* e = new Event(executionContext(), eventType.localName(),
                          EventInit(bubbles, cancelable));
 
     auto fn = [](size_t handle, void* data, void* data1) {
@@ -618,13 +622,13 @@ void HTMLFormControl::queueEvent(QualifiedName& eventType, bool bubbles,
         Event* e = (Event*)data1;
         element->EventTarget::dispatchEventByUA(element, e);
     };
-    webView()->messageLoop()->addIdler(document(), fn, this, e);
+    webView()->messageLoop()->addIdler(window(), fn, this, e);
 }
 
 void HTMLFormControl::fireEvent(QualifiedName& eventType, bool bubbles,
                                 bool cancelable)
 {
-    Event* e = new Event(document(), eventType.localName(),
+    Event* e = new Event(executionContext(), eventType.localName(),
                          EventInit(bubbles, cancelable));
     EventTarget::dispatchEventByUA(this, e);
 }
@@ -657,7 +661,7 @@ void HTMLFormElement::reset()
     m_isLockedForReset = true;
 
     String* eventType = starfish()->staticStrings()->m_reset.localName();
-    Event* e = new Event(document(), eventType, EventInit(true, true));
+    Event* e = new Event(executionContext(), eventType, EventInit(true, true));
 
     if (dispatchEventByUA(this, e, true)) {
         auto elms = elements();
@@ -749,7 +753,8 @@ void HTMLFormElement::submit(HTMLElement* submitter)
     if (!document()->contentSecurityPolicy()->allowSource(
             CSPDirectives::FormAction, url)) {
         String* eventType = starfish()->staticStrings()->m_error.localName();
-        Event* e = new Event(document(), eventType, EventInit(false, false));
+        Event* e =
+            new Event(executionContext(), eventType, EventInit(false, false));
         dispatchEventIdleTimeByUA(e);
         return;
     } else {
@@ -829,7 +834,7 @@ void HTMLFormElement::mutateActionUrl(ResourceURL* url,
     auto targetElement = findHTMLIFrameElement(document(), target);
 
     m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
-        document(), fn, this, urlToOpen, targetElement);
+        window(), fn, this, urlToOpen, targetElement);
 }
 
 void HTMLFormElement::submitAsEntityBody(
@@ -869,7 +874,7 @@ void HTMLFormElement::submitAsEntityBody(
         auto targetElement = findHTMLIFrameElement(document(), target);
 
         m_plannedNavigationTaskId = webView()->messageLoop()->addIdler(
-            document(), fn, this, urlToOpen, targetElement);
+            window(), fn, this, urlToOpen, targetElement);
     } else if (enctype == EncodeType::MultiPartFormData) {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     } else if (enctype == EncodeType::TextPlain) {

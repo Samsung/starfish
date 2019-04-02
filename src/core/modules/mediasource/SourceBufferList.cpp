@@ -35,6 +35,11 @@ SourceBufferList::SourceBufferList(Document* document, MediaSource* sb)
 {
 }
 
+ExecutionContext* SourceBufferList::executionContext()
+{
+    return document()->executionContext();
+}
+
 void SourceBufferList::add(SourceBuffer* buffer, MediaSource* ms)
 {
     m_list.push_back(buffer);
@@ -77,7 +82,7 @@ void SourceBufferList::scheduleEvent(String* eventName)
 {
     if (m_parentMediaSource) {
         m_parentMediaSource->attachedMediaElement()->addEventToOperationQueue(
-            this, new Event(document(), eventName));
+            this, new Event(executionContext(), eventName));
     }
 }
 }

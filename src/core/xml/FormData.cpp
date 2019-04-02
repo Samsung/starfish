@@ -22,18 +22,25 @@ using namespace Escargot;
 
 #include "StarfishConfig.h"
 #include "core/xml/FormData.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
 FormData::FormData(ExecutionContext* executionContext,
                    HTMLFormElement* form /*= nullptr*/)
-    : ScriptWrappable(this, executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
 {
     if (form) {
         m_list = form->createFormDataSet(nullptr);
     } else {
         m_list = new (GC) GCVector<FormDataSetItem*>();
     }
+}
+
+ScriptBindingInstance* FormData::scriptBindingInstance()
+{
+    return m_executionContext->scriptBindingInstance();
 }
 
 void FormData::append(String* name, String* value)

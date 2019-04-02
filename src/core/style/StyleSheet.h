@@ -29,14 +29,7 @@ class ExecutionContext;
 
 class StyleSheet : public ScriptWrappable {
 public:
-    StyleSheet(ExecutionContext* executionContext)
-        : ScriptWrappable(this, executionContext)
-    {
-    }
-
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isStyleSheet() const override;
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(StyleSheet)
 
     /* DOM APIs */
     virtual String* type() const = 0;
@@ -50,6 +43,10 @@ public:
     virtual MediaList* media() = 0;
     virtual bool disabled() = 0;
     virtual void setDisabled(bool disabled) = 0;
+
+protected:
+    StyleSheet(ExecutionContext* executionContext);
+    ScriptBindingInstance* m_scriptBindingInstance;
 };
 
 } /* namespace Starfish */

@@ -416,7 +416,7 @@ void MediaPlayerTizen::handlePlayerError()
     if (!isMainThread()) {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->document(),
+            m_container->window(),
             [](size_t, void* data) {
                 MediaPlayerTizen* player = (MediaPlayerTizen*)data;
                 player->handlePlayerError();
@@ -582,7 +582,7 @@ void MediaPlayerTizen::handleSeeked()
     } else {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->document(),
+            m_container->window(),
             [](size_t, void* data) {
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
                 self->handleSeeked();
@@ -601,7 +601,7 @@ void MediaPlayerTizen::handleSeekTimeout()
     } else {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->document(),
+            m_container->window(),
             [](size_t, void* data) {
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
                 self->handleSeekTimeout();
@@ -656,7 +656,7 @@ void MediaPlayerTizen::handleEnded()
     } else {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->document(),
+            m_container->window(),
             [](size_t, void* data) {
                 MediaPlayerTizen* self = (MediaPlayerTizen*)data;
                 self->handleEnded();
@@ -795,7 +795,7 @@ void MediaPlayerTizen::setNativePlayerDisplayModeWithGL()
                 ->webView()
                 ->messageLoop()
                 ->addIdlerWithNoGCRootingInOtherThread(
-                    player->window()->executionContext(),
+                    player->window(),
                     [](size_t, void* data) {
                         BrowsingContext* b = (BrowsingContext*)data;
                         b->setNeedsComposite();
@@ -903,7 +903,7 @@ void MediaPlayerTizen::handlePrepared()
         PLAYER_LOGI("MediaPlayerTizen::handlePrepared in non-MainThread\n");
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->document(),
+            m_container->window(),
             [](size_t, void* user_data) {
                 MediaPlayerTizen* self = (MediaPlayerTizen*)user_data;
                 self->handlePrepared();
@@ -1218,7 +1218,7 @@ void MediaPlayerTizen::enterUnderrunState()
     if (!isMainThread()) {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->document(),
+            m_container->window(),
             [](size_t, void* data) {
                 MediaPlayerTizen* player = (MediaPlayerTizen*)data;
                 player->enterUnderrunState();
@@ -1268,7 +1268,7 @@ void MediaPlayerTizen::exitUnderrunState()
     if (!isMainThread()) {
         MessageLoop* msgLoop = m_container->webView()->messageLoop();
         msgLoop->addIdlerWithNoGCRootingInOtherThread(
-            m_container->document(),
+            m_container->window(),
             [](size_t, void* data) {
                 MediaPlayerTizen* player = (MediaPlayerTizen*)data;
                 player->exitUnderrunState();

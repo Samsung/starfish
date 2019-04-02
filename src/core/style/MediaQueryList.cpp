@@ -38,6 +38,11 @@ MediaQueryList::MediaQueryList(Document* document,
     m_matcher->addMediaQueryList(this);
 }
 
+ExecutionContext* MediaQueryList::executionContext()
+{
+    return document()->executionContext();
+}
+
 String* MediaQueryList::media() const
 {
     return m_media->mediaText();

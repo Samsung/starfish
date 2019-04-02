@@ -24,7 +24,7 @@
 namespace Starfish {
 
 TouchList::TouchList(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
 {
 }

@@ -118,7 +118,9 @@ public:
     {
     }
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(UIEvent)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isUIEvent() const;
 
     Window* view() const
     {

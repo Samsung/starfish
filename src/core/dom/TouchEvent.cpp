@@ -26,13 +26,13 @@
 namespace Starfish {
 
 TouchEvent::TouchEvent(Document* document)
-    : UIEvent(document)
+    : UIEvent(document->executionContext())
     , m_touches(new TouchList(document))
 {
 }
 
 TouchEvent::TouchEvent(Document* document, String* eventType)
-    : UIEvent(document, eventType)
+    : UIEvent(document->executionContext(), eventType)
     , m_touches(new TouchList(document))
 {
 }

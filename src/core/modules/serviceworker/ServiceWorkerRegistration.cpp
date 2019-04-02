@@ -22,6 +22,7 @@
 #include "StarfishConfig.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
@@ -59,6 +60,11 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(Document* document)
     , m_activeWorker(nullptr)
     , m_data(new ServiceWorkerRegistrationData)
 {
+}
+
+ExecutionContext* ServiceWorkerRegistration::executionContext()
+{
+    return document()->executionContext();
 }
 
 void ServiceWorkerRegistration::updateRegistrationState(

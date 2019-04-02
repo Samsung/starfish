@@ -434,12 +434,10 @@ ScriptValue errorOnConstructorFunction(Escargot::ExecutionStateRef* state,
     return Escargot::ValueRef::createUndefined();
 }
 
-ScriptWrappable::ScriptWrappable(void* extraPointerData,
-                                 ExecutionContext* executionContext)
+ScriptWrappable::ScriptWrappable(void* extraPointerData)
 {
     STARFISH_ASSERT(!((size_t)extraPointerData & (size_t)1));
     m_object = (ObjectRef*)((size_t)extraPointerData | (size_t)1);
-    m_executionContext = executionContext;
 }
 
 ScriptObject ScriptWrappable::generateScriptObject()
@@ -460,12 +458,6 @@ ScriptObject ScriptWrappable::generateScriptObject()
 ScriptValue ScriptWrappable::scriptValue()
 {
     return ValueRef::create(scriptObject());
-}
-
-ScriptBindingInstance* ScriptWrappable::scriptBindingInstance()
-{
-    STARFISH_ASSERT(m_executionContext);
-    return m_executionContext->ownerScriptBindingInstance();
 }
 
 ScriptWrappable* toScriptWrappable(ScriptValue v)
@@ -1028,7 +1020,7 @@ void Promise::reject(ScriptValue v)
 }
 
 AttributeEventFunction::AttributeEventFunction(EventTarget* target)
-    : ScriptWrappable(target, target->executionContext())
+    : ScriptWrappable(target)
 {
     m_target = target;
 }

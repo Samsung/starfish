@@ -27,20 +27,20 @@ namespace Starfish {
 
 NodeList::NodeList(Node* root, NodeListImpl::FilterFunctionType filterType,
                    void* data, bool canCache)
-    : ScriptWrappable(this, root->executionContext())
+    : ScriptWrappable(this)
     , m_nodeListImpl(root, filterType, data, canCache)
 {
 }
 
 NodeList::NodeList(Node* root, bool canCache)
-    : ScriptWrappable(this, root->executionContext())
+    : ScriptWrappable(this)
     , m_nodeListImpl(root, canCache)
 {
 }
 
 NodeList::NodeList(Node* root, NodeListFilterFunction filter, void* data,
                    bool canCache)
-    : ScriptWrappable(this, root->executionContext())
+    : ScriptWrappable(this)
     , m_nodeListImpl(root, filter, data, canCache)
 {
 }

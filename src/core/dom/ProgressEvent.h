@@ -90,7 +90,9 @@ public:
     {
     }
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ProgressEvent)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isProgressEvent() const;
 
     bool lengthComputable() const
     {

@@ -92,6 +92,7 @@ public:
     }
 
 private:
+    ExecutionContext* m_executionContext;
     uint16_t m_code;
     String* m_message;
     String* m_name;

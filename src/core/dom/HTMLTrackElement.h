@@ -22,11 +22,11 @@
 #define __StarfishHTMLTrackElement__
 
 #include "core/dom/HTMLElement.h"
-#include "platform/loader/Resource.h"
 
 namespace Starfish {
 
 class TextTrack;
+class Resource;
 
 class HTMLTrackElement : public HTMLElement {
     friend class VTTFileDownloadClient;

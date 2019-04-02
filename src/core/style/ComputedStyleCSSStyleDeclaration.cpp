@@ -69,7 +69,7 @@ void ComputedStyleCSSStyleDeclaration::setCssText(String* text)
 {
     STARFISH_ASSERT(m_node->isElement());
     throw new DOMException(
-        m_node->asElement()->document(),
+        m_node->asElement()->executionContext(),
         DOMException::NO_MODIFICATION_ALLOWED_ERR,
         "These styles are computed, and therefore read-only.");
 }

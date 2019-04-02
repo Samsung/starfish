@@ -49,7 +49,8 @@ public:
 
     Blob(ExecutionContext* executionContext, uint64_t size, String* type,
          void* data, bool isClosed, bool isEntryOfBlobURLStore)
-        : ScriptWrappable(this, executionContext)
+        : ScriptWrappable(this)
+        , m_executionContext(executionContext)
         , m_blobData(size, type, data, isClosed, isEntryOfBlobURLStore)
     {
         if (m_blobData.m_isEntryOfBlobURLStore) {
@@ -112,10 +113,16 @@ public:
     Blob* slice(int64_t start, int64_t end,
                 String* contentType = String::emptyString);
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
 protected:
     void addBlobToBlobURLStore();
     void removeBlobFromBlobURLStore();
 
+    ExecutionContext* m_executionContext;
     BlobData m_blobData;
 };
 

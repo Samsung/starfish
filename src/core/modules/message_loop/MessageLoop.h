@@ -29,7 +29,7 @@
 
 namespace Starfish {
 
-class ExecutionContext;
+class GlobalScope;
 class Mutex;
 
 constexpr size_t MessageLoopInvalidID{ SIZE_MAX };
@@ -40,17 +40,17 @@ class MessageLoop : public BASE_CLASS {
 
 public:
     MessageLoop();
-    size_t addIdler(ExecutionContext* ctx, void (*fn)(size_t handle, void*),
+    size_t addIdler(GlobalScope* globalScope, void (*fn)(size_t handle, void*),
                     void* data);
-    size_t addIdler(ExecutionContext* ctx,
+    size_t addIdler(GlobalScope* globalScope,
                     void (*fn)(size_t handle, void*, void*), void* data,
                     void* data1);
-    size_t addIdler(ExecutionContext* ctx,
+    size_t addIdler(GlobalScope* globalScope,
                     void (*fn)(size_t handle, void*, void*, void*), void* data,
                     void* data1, void* data2);
     size_t addIdlerWithNoGCRootingInOtherThread(
-        ExecutionContext* ctx, void (*fn)(size_t handle, void*), void* data);
-    size_t addIdlerWithNoGCRootingInOtherThread(ExecutionContext* ctx,
+        GlobalScope* globalScope, void (*fn)(size_t handle, void*), void* data);
+    size_t addIdlerWithNoGCRootingInOtherThread(GlobalScope* globalScope,
                                                 void (*fn)(size_t handle, void*,
                                                            void*),
                                                 void* data, void* data1);
@@ -59,7 +59,7 @@ public:
     void removeIdlerWithNoGCRooting(size_t handle);
 
     void clearPendingIdlers(
-        ExecutionContext* ctx); // give nullptr to clear every idlers
+        GlobalScope* globalScope); // give nullptr to clear every idlers
 
     void destroy();
 

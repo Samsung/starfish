@@ -105,11 +105,12 @@ void ActiveAnimationTask::fireStartEvent()
     init.setBubbles(true);
     init.setCancelable(false);
     // TODO add more information to init
-    TransitionEvent* event = new TransitionEvent(
-        m_targetElement->document(), m_targetElement->starfish()
-                                         ->staticStrings()
-                                         ->m_transitionstart.localName(),
-        init);
+    TransitionEvent* event =
+        new TransitionEvent(m_targetElement->executionContext(),
+                            m_targetElement->starfish()
+                                ->staticStrings()
+                                ->m_transitionstart.localName(),
+                            init);
     m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 
@@ -123,9 +124,9 @@ void ActiveAnimationTask::fireEndEvent()
     init.setCancelable(true);
     // TODO add more information to init
     TransitionEvent* event = new TransitionEvent(
-        m_targetElement->document(), m_targetElement->starfish()
-                                         ->staticStrings()
-                                         ->m_transitionend.localName(),
+        m_targetElement->executionContext(), m_targetElement->starfish()
+                                                 ->staticStrings()
+                                                 ->m_transitionend.localName(),
         init);
     m_targetElement->dispatchEventIdleTimeByUA(event);
 }
@@ -139,11 +140,12 @@ void ActiveAnimationTask::fireCancelEvent()
     init.setBubbles(true);
     init.setCancelable(false);
     // TODO add more information to init
-    TransitionEvent* event = new TransitionEvent(
-        m_targetElement->document(), m_targetElement->starfish()
-                                         ->staticStrings()
-                                         ->m_transitioncancel.localName(),
-        init);
+    TransitionEvent* event =
+        new TransitionEvent(m_targetElement->executionContext(),
+                            m_targetElement->starfish()
+                                ->staticStrings()
+                                ->m_transitioncancel.localName(),
+                            init);
     m_targetElement->dispatchEventIdleTimeByUA(event);
 }
 

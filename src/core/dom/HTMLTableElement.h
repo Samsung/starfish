@@ -21,11 +21,11 @@
 #define __StarfishHTMLTableElement__
 
 #include "core/dom/HTMLElement.h"
-#include "core/dom/HTMLTableCaptionElement.h"
 
 namespace Starfish {
 
 class HTMLCollection;
+class HTMLTableCaptionElement;
 
 class HTMLTableElement : public HTMLElement {
 public:

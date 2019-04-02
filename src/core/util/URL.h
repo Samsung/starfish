@@ -64,6 +64,7 @@ public:
     void setHash(String* newHash);
 
 protected:
+    ExecutionContext* m_executionContext;
     ResourceURL* m_resourceURL;
 };
 }

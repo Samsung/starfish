@@ -22,13 +22,13 @@
 #include "StarfishConfig.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
 ScriptBindingInstance* CanvasRenderingContext::scriptBindingInstance()
 {
-    return executionContext()->ownerScriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
 }
 }
 

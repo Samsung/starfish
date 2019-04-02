@@ -26,7 +26,7 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
-#include "core/dom/ExecutionContext.h"
+#include "core/page/GlobalScope.h"
 
 #include <uv.h>
 
@@ -50,7 +50,7 @@ struct IdlerData {
     int m_pararmNum;
     uv_timer_t* m_idler_uv;
     MessageLoop* m_ml;
-    ExecutionContext* m_ctx;
+    GlobalScope* m_globalScope;
     volatile bool m_shouldExecute;
     bool m_isMainThreadData;
 };
@@ -104,8 +104,8 @@ MessageLoop::MessageLoop()
     ((uv_async_t*)m_idlerThreadAsyncHandle)->data = this;
 }
 
-size_t MessageLoop::addIdler(ExecutionContext* ctx, void (*fn)(size_t, void*),
-                             void* data)
+size_t MessageLoop::addIdler(GlobalScope* globalScope,
+                             void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new (NoGC) IdlerData;
     m_idlers.insert((size_t)id);
@@ -114,7 +114,7 @@ size_t MessageLoop::addIdler(ExecutionContext* ctx, void (*fn)(size_t, void*),
     id->m_data = data;
     id->m_pararmNum = 1;
     id->m_ml = this;
-    id->m_ctx = ctx;
+    id->m_globalScope = globalScope;
     id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     uv_timer_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
@@ -133,7 +133,7 @@ size_t MessageLoop::addIdler(ExecutionContext* ctx, void (*fn)(size_t, void*),
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(ExecutionContext* ctx,
+size_t MessageLoop::addIdler(GlobalScope* globalScope,
                              void (*fn)(size_t, void*, void*), void* data,
                              void* data1)
 {
@@ -145,7 +145,7 @@ size_t MessageLoop::addIdler(ExecutionContext* ctx,
     id->m_data1 = data1;
     id->m_pararmNum = 2;
     id->m_ml = this;
-    id->m_ctx = ctx;
+    id->m_globalScope = globalScope;
     id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     uv_timer_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
@@ -165,7 +165,7 @@ size_t MessageLoop::addIdler(ExecutionContext* ctx,
     return (size_t)id;
 }
 
-size_t MessageLoop::addIdler(ExecutionContext* ctx,
+size_t MessageLoop::addIdler(GlobalScope* globalScope,
                              void (*fn)(size_t, void*, void*, void*),
                              void* data, void* data1, void* data2)
 {
@@ -179,7 +179,7 @@ size_t MessageLoop::addIdler(ExecutionContext* ctx,
     id->m_data2 = data2;
     id->m_pararmNum = 3;
     id->m_ml = this;
-    id->m_ctx = ctx;
+    id->m_globalScope = globalScope;
     id->m_idler_uv = (uv_timer_t*)malloc(sizeof(uv_timer_t));
     uv_timer_init(uv_default_loop(), id->m_idler_uv);
     id->m_idler_uv->data = id;
@@ -206,7 +206,7 @@ void uv_close_cb(uv_handle_t* handle)
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    ExecutionContext* ctx, void (*fn)(size_t, void*), void* data)
+    GlobalScope* globalScope, void (*fn)(size_t, void*), void* data)
 {
     IdlerData* id = new IdlerData;
     id->m_isMainThreadData = false;
@@ -215,7 +215,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     id->m_data = data;
     id->m_pararmNum = 1;
     id->m_ml = this;
-    id->m_ctx = ctx;
+    id->m_globalScope = globalScope;
 
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
@@ -227,7 +227,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
 }
 
 size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
-    ExecutionContext* ctx, void (*fn)(size_t, void*, void*), void* data,
+    GlobalScope* globalScope, void (*fn)(size_t, void*, void*), void* data,
     void* data1)
 {
     IdlerData* id = new IdlerData;
@@ -238,7 +238,7 @@ size_t MessageLoop::addIdlerWithNoGCRootingInOtherThread(
     id->m_data1 = data1;
     id->m_pararmNum = 2;
     id->m_ml = this;
-    id->m_ctx = ctx;
+    id->m_globalScope = globalScope;
 
     {
         Locker<Mutex> l(*m_idlersFromOtherThreadMutex);
@@ -265,12 +265,12 @@ void MessageLoop::removeIdlerWithNoGCRooting(size_t handle)
     id->m_shouldExecute = false;
 }
 
-void MessageLoop::clearPendingIdlers(ExecutionContext* ctx)
+void MessageLoop::clearPendingIdlers(GlobalScope* globalScope)
 {
     auto iter = m_idlers.begin();
     while (iter != m_idlers.end()) {
         IdlerData* id = (IdlerData*)*iter;
-        if (id->m_ctx == ctx || ctx == nullptr) {
+        if (id->m_globalScope == globalScope || globalScope == nullptr) {
             iter = m_idlers.erase(iter);
             uv_timer_stop(id->m_idler_uv);
             uv_close((uv_handle_t*)id->m_idler_uv, on_close_handle);
@@ -284,7 +284,7 @@ void MessageLoop::clearPendingIdlers(ExecutionContext* ctx)
     auto iter2 = m_idlersFromOtherThreadForUV.begin();
     while (iter2 != m_idlersFromOtherThreadForUV.end()) {
         IdlerData* id = (IdlerData*)*iter2;
-        if (id->m_ctx == ctx || ctx == nullptr) {
+        if (id->m_globalScope == globalScope || globalScope == nullptr) {
             id->m_shouldExecute = false;
         }
         iter2++;

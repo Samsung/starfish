@@ -410,9 +410,9 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
     // TODO : If the Canvas Pixel ArrayBuffer cannot be allocated, then rethrow
     // the RangeError thrown by JavaScript, and return.
     auto canvasPixelArrayBuffer = createArrayBuffer(
-        executionContext()->ownerScriptBindingInstance(), destSize);
+        executionContext()->scriptBindingInstance(), destSize);
     ContextRef* ctx =
-        executionContext()->ownerScriptBindingInstance()->scriptContext();
+        executionContext()->scriptBindingInstance()->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(ctx);
     uint8_t* dest = canvasPixelArrayBuffer->toObject(state)
                         ->asArrayBufferObject()
@@ -438,7 +438,7 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
         }
     }
     auto uint8ClampedArray = createEmptyUint8ClampedArray(
-        executionContext()->ownerScriptBindingInstance());
+        executionContext()->scriptBindingInstance());
 
     uint8ClampedArray->setBuffer(
         canvasPixelArrayBuffer->toObject(state)->asArrayBufferObject(), 0,

@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "core/dom/Event.h"
 #include "core/modules/profiling/Profiling.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
@@ -71,7 +72,8 @@ void EventInit::setComposed(bool composed)
 }
 
 Event::Event(ExecutionContext* executionContext)
-    : ScriptWrappable(this, executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
     , m_target(nullptr)
     , m_currentTarget(nullptr)
     , m_eventPhase(0)
@@ -101,5 +103,10 @@ Event::Event(ExecutionContext* executionContext, String* eventType,
     m_bubbles = init.bubbles();
     m_cancelable = init.cancelable();
     m_composed = init.composed();
+}
+
+ScriptBindingInstance* Event::scriptBindingInstance()
+{
+    return executionContext()->scriptBindingInstance();
 }
 }

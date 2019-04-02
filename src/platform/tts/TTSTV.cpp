@@ -143,7 +143,7 @@ static void stateChangedCB(tts_h handle, tts_state_e prev, tts_state_e cur,
             String* eventName =
                 u->webView()->starfish()->staticStrings()->m_resume.localName();
             SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
-                u->document(), eventName,
+                u->executionContext(), eventName,
                 SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
                                          String::emptyString));
             u->dispatchEventByUA(e);
@@ -156,7 +156,7 @@ static void stateChangedCB(tts_h handle, tts_state_e prev, tts_state_e cur,
             String* eventName =
                 u->webView()->starfish()->staticStrings()->m_pause.localName();
             SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
-                u->document(), eventName,
+                u->executionContext(), eventName,
                 SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
                                          String::emptyString));
             u->dispatchEventByUA(e);
@@ -176,7 +176,7 @@ static void dispatchErrorEvent(TTS* t, int id, const char* errorCode,
             errorInfo.setError(
                 ValueRef::create(StringRef::fromASCII(errorCode)));
             Event* errorEvent = new ErrorEvent(
-                u->document(),
+                u->executionContext(),
                 u->webView()->starfish()->staticStrings()->m_error.localName(),
                 errorInfo);
             u->dispatchEventByUA(errorEvent);
@@ -213,7 +213,7 @@ static void dispatchStartEvent(TTS* t, int id)
                 u->webView()->starfish()->staticStrings()->m_start.localName();
             u->setStartTime(timestamp());
             SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
-                u->document(), eventName,
+                u->executionContext(), eventName,
                 SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
                                          String::emptyString));
             u->dispatchEventByUA(e);
@@ -224,7 +224,7 @@ static void dispatchStartEvent(TTS* t, int id)
         if (!u && element) {
             String* eventName =
                 element->starfish()->staticStrings()->m_ttsstart.localName();
-            Event* e = new Event(element->document(), eventName);
+            Event* e = new Event(element->executionContext(), eventName);
             element->window()->dispatchEventByUA(e);
         }
     }
@@ -245,7 +245,7 @@ static void dispatchCompleteEvent(TTS* t, int id)
             String* eventName =
                 u->webView()->starfish()->staticStrings()->m_end.localName();
             SpeechSynthesisEvent* e = new SpeechSynthesisEvent(
-                u->document(), eventName,
+                u->executionContext(), eventName,
                 SpeechSynthesisEventInit(u, 0, timestamp() - u->startTime(),
                                          String::emptyString));
             u->dispatchEventByUA(e);
@@ -258,7 +258,7 @@ static void dispatchCompleteEvent(TTS* t, int id)
         if (!u && element) {
             String* eventName =
                 element->starfish()->staticStrings()->m_ttsend.localName();
-            Event* e = new Event(element->document(), eventName);
+            Event* e = new Event(element->executionContext(), eventName);
             element->window()->dispatchEventByUA(e);
         }
     }

@@ -305,7 +305,7 @@ void MockMediaPlayer::prepare(ResourceURL* url)
 
     MessageLoop* msgLoop = m_container->webView()->messageLoop();
     msgLoop->addIdler(
-        m_container->document(),
+        m_container->window(),
         [](size_t, void* data) {
             MockMediaPlayer* self = (MockMediaPlayer*)data;
             self->processNextOperationQueueInContainer();

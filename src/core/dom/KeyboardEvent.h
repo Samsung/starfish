@@ -265,7 +265,9 @@ public:
     {
     }
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(KeyboardEvent)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isKeyboardEvent() const;
 
     String* key() const
     {

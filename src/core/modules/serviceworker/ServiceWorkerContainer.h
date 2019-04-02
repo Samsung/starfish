@@ -43,7 +43,11 @@ public:
     ServiceWorkerContainer(Document* document);
     virtual ~ServiceWorkerContainer();
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ServiceWorkerContainer)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isServiceWorkerContainer() const override;
+
+    virtual ExecutionContext* executionContext() override;
 
     ServiceWorker* controller();
 

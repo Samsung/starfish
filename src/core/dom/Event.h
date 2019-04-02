@@ -205,6 +205,11 @@ public:
         m_isTrusted = false;
     }
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
 protected:
     void setType(String* type)
     {
@@ -212,6 +217,7 @@ protected:
     }
 
 private:
+    ExecutionContext* m_executionContext;
     Nullable<String*> m_type;
     EventTarget* m_target;
     EventTarget* m_currentTarget;

@@ -57,6 +57,7 @@ public:
     DOMRect* getBounds() const;
 
 protected:
+    ExecutionContext* m_executionContext;
     DOMPoint* m_p1;
     DOMPoint* m_p2;
     DOMPoint* m_p3;

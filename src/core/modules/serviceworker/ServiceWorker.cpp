@@ -23,6 +23,7 @@
 #include "Starfish.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
 #include "core/page/Window.h"
+#include "core/dom/Document.h"
 
 namespace Starfish {
 
@@ -43,6 +44,11 @@ String* ServiceWorker::state() const
         return String::createASCIIString("redundant");
     }
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+}
+
+ExecutionContext* ServiceWorker::executionContext()
+{
+    return document()->executionContext();
 }
 }
 

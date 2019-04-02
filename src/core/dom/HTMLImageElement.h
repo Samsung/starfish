@@ -20,13 +20,13 @@
 #ifndef __StarfishHTMLImageElement__
 #define __StarfishHTMLImageElement__
 
-#include "core/dom/Document.h"
 #include "core/dom/HTMLElement.h"
 
 namespace Starfish {
 
 class NativeImageData;
 class ImageResource;
+class Document;
 
 class HTMLImageElement : public HTMLElement {
     friend class ImageDownloadClient;

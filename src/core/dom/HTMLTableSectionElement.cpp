@@ -83,7 +83,8 @@ HTMLElement* HTMLTableSectionElement::insertRow(long index)
     HTMLCollection* rows = this->rows();
     if (index < -1 ||
         (index != -1 && static_cast<size_t>(index) > rows->length())) {
-        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::INDEX_SIZE_ERR);
     }
 
     HTMLTableRowElement* row = new HTMLTableRowElement(
@@ -106,7 +107,8 @@ void HTMLTableSectionElement::deleteRow(long index)
             index = rows->length() - 1;
         }
     } else if (index < -1 || static_cast<size_t>(index) >= rows->length()) {
-        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::INDEX_SIZE_ERR);
     }
 
     removeChild(rows->item(index));

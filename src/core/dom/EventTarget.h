@@ -132,6 +132,8 @@ public:
     virtual ScriptBindingInstance* scriptBindingInstance() override;
     virtual bool isEventTarget() const override;
 
+    virtual ExecutionContext* executionContext() = 0;
+
     GCVector<EventListener*>* getEventListeners(const String* eventType);
 
     bool addEventListener(const String* eventType, EventListener* listener,
@@ -201,7 +203,7 @@ public:
         m_eventListeners.clear();
     }
 
-    StaticStrings* staticStrings() const;
+    StaticStrings* staticStrings();
 
     enum GlobalPointingEventKind {
         GlobalPointingEventKindDown,

@@ -28,18 +28,38 @@ namespace Starfish {
 
 ExecutionContext::ExecutionContext(GlobalScope* globalScope,
                                    ScriptBindingInstance* instance,
-                                   ResourceURL* uri)
+                                   ResourceURL* uri,
+                                   void* documentOrWorkerGlobalScope,
+                                   bool hasDocument)
     : m_globalScope(globalScope)
+    , m_documentOrWorkerGlobalScope(documentOrWorkerGlobalScope)
+    , m_hasDocument(hasDocument)
     , m_scriptBindingInstance(instance)
     , m_createdTick(longTickCount())
     , m_documentURI(uri)
+    , m_referrer(nullptr)
+    , m_baseURL(nullptr)
 {
 }
 
-Document* ExecutionContext::asDocument()
+void* ExecutionContext::operator new(size_t size)
 {
-    STARFISH_ASSERT(isDocument());
-    return reinterpret_cast<Document*>(this);
+    STARFISH_ASSERT(size == sizeof(ExecutionContext));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(ExecutionContext)] = { 0 };
+        ExecutionContext::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(ExecutionContext));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+Document* ExecutionContext::document()
+{
+    STARFISH_ASSERT(hasDocument());
+    return static_cast<Document*>(m_documentOrWorkerGlobalScope);
 }
 
 WebBase* ExecutionContext::webBase() const
@@ -52,8 +72,25 @@ String* ExecutionContext::urlString()
     return m_documentURI->urlString();
 }
 
-#ifdef STARFISH_ENABLE_SERVICE_WORKER
+String* ExecutionContext::referrer()
+{
+    if (!m_referrer) {
+        return String::emptyString;
+    }
+    return m_referrer->urlString();
+}
 
+ResourceURL* ExecutionContext::baseURL() const
+{
+    // If there is no base element that has an href attribute in the Document,
+    // then return the Document's fallback base URL.
+    if (m_baseURL) {
+        return m_baseURL;
+    }
+    return ResourceURL::aboutBlankURL();
+}
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
 ServiceWorker* ExecutionContext::activeServiceWorker() const
 {
     return m_activeServiceWorker;
@@ -63,6 +100,5 @@ void ExecutionContext::setActiveServiceWorker(ServiceWorker* serviceWorker)
 {
     m_activeServiceWorker = serviceWorker;
 }
-
 #endif /* STARFISH_ENABLE_SERVICE_WORKER */
 }

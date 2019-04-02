@@ -25,7 +25,7 @@
 namespace Starfish {
 
 CSSStyleValue::CSSStyleValue(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
 {
 }

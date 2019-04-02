@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
 #include "core/dom/EventTarget.h"
@@ -104,7 +105,7 @@ ScriptValue EventListener::call(Event* event)
 }
 
 EventTarget::EventTarget(Document* document)
-    : ScriptWrappable(this, document)
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
 {
 }
@@ -222,7 +223,7 @@ bool EventTarget::dispatchEventByUA(EventTarget* origin, Event* event,
 void EventTarget::dispatchEventIdleTimeByUA(Event* event)
 {
     webView()->messageLoop()->addIdler(
-        document(),
+        window(),
         [](size_t handle, void* data0, void* data1) {
             ((Node*)data0)->dispatchEventByUA((Event*)data1);
         },
@@ -246,7 +247,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // before the method was called, or if the event's type is null or
     // an empty string.
     if (!event->isTypeInitialized()) {
-        throw new DOMException(document(),
+        throw new DOMException(executionContext(),
                                DOMException::Code::INVALID_STATE_ERR, nullptr);
     }
 
@@ -530,7 +531,7 @@ bool EventTarget::clearAttributeEventListener(const String* eventType)
     return removeEventListener(eventType, listener, false);
 }
 
-StaticStrings* EventTarget::staticStrings() const
+StaticStrings* EventTarget::staticStrings()
 {
     return executionContext()->webBase()->starfish()->staticStrings();
 }

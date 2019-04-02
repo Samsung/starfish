@@ -169,7 +169,8 @@ void invokeTestStartFunction(ScriptBindingInstance* instance);
 #define DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(className)                   \
     virtual void init(ScriptBindingInstance* instance, void* domObjectPointer) \
         override;                                                              \
-    virtual bool is##className() const override;
+    virtual bool is##className() const override;                               \
+    virtual ScriptBindingInstance* scriptBindingInstance() override; 
 
 #define FOR_EACH_FORWARD_DECLARATION(exportName) class exportName;
 STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_FORWARD_DECLARATION)
@@ -227,8 +228,7 @@ public:
     STARFISH_ENUM_BINDING_CLASSES(FOR_EACH_CAST_FN);
 #undef FOR_EACH_CAST_FN
 
-    ScriptWrappable(void* extraPointerData,
-                    ExecutionContext* executionContext);
+    ScriptWrappable(void* extraPointerData);
     virtual ~ScriptWrappable()
     {
     }
@@ -251,12 +251,6 @@ public:
         return ((size_t)m_object & (size_t)1);
     }
 
-    ExecutionContext* executionContext() const
-    {
-        STARFISH_ASSERT(m_executionContext);
-        return m_executionContext;
-    }
-
     ScriptObject generateScriptObject();
     ScriptValue scriptValue();
 
@@ -265,7 +259,7 @@ public:
     virtual void postInit(ScriptBindingInstance* instance)
     {
     }
-    virtual ScriptBindingInstance* scriptBindingInstance();
+    virtual ScriptBindingInstance* scriptBindingInstance() = 0;
 
     virtual bool isAttributeEventFunction() const
     {
@@ -303,7 +297,6 @@ protected:
         m_object = obj;
     }
     Escargot::ObjectRef* m_object;
-    ExecutionContext* m_executionContext;
 };
 
 ScriptWrappable* toScriptWrappable(ScriptValue v);

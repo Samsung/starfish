@@ -24,7 +24,7 @@
 namespace Starfish {
 
 DOMStringList::DOMStringList(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
 {
 }

@@ -74,6 +74,8 @@ public:
     virtual TransferedData* transfer() override;
     virtual void transferReceive(TransferedData* transfered) override;
 
+    virtual ExecutionContext* executionContext() override;
+
     void postMessage(ScriptValue message);
     void postMessage(ScriptValue message, GCVector<ScriptValue>& transfer);
     void start();

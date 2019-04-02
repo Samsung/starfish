@@ -30,11 +30,7 @@ class TextTrackCue;
 class TextTrackCueList : public ScriptWrappable,
                          public GCVector<TextTrackCue*> {
 public:
-    TextTrackCueList(ExecutionContext* executionContext)
-        : ScriptWrappable(this, executionContext)
-        , GCVector<TextTrackCue*>()
-    {
-    }
+    TextTrackCueList(ExecutionContext* executionContext);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(TextTrackCueList)
 
@@ -47,6 +43,9 @@ public:
     {
         return (*this)[idx];
     }
+
+private:
+    ScriptBindingInstance* m_scriptBindingInstance;
 };
 }
 

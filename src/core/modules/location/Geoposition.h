@@ -28,13 +28,7 @@ class Coordinates;
 
 class Geoposition : public ScriptWrappable {
 public:
-    Geoposition(ExecutionContext* executionContext, Coordinates* c,
-                DOMTimeStamp timestamp)
-        : ScriptWrappable(this, executionContext)
-        , m_coords(c)
-        , m_timestamp(timestamp)
-    {
-    }
+    Geoposition(Document* document, Coordinates* c, DOMTimeStamp timestamp);
 
     Coordinates* coords()
     {
@@ -49,6 +43,7 @@ public:
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Geoposition)
 
 protected:
+    ScriptBindingInstance* m_scriptBindingInstance;
     Coordinates* m_coords;
     DOMTimeStamp m_timestamp;
 };

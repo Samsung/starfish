@@ -43,6 +43,7 @@ public:
     }
 
 protected:
+    ScriptBindingInstance* m_scriptBindingInstance;
     SVGLength* m_baseVal;
     SVGLength* m_animVal;
 };

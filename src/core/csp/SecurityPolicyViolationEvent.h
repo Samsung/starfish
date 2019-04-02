@@ -82,7 +82,9 @@ public:
     {
     }
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(SecurityPolicyViolationEvent)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isSecurityPolicyViolationEvent() const;
 
     void initSecurityPolicyViolationEvent(bool bubbles = true,
                                           bool cancelable = false)

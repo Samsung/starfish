@@ -25,7 +25,7 @@
 namespace Starfish {
 
 StyleSheetList::StyleSheetList(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , m_document(document)
 {
 }
