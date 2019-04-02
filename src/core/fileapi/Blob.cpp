@@ -32,6 +32,11 @@ Blob::Blob(ExecutionContext* executionContext, Blob::BlobData blobData)
 {
 }
 
+ScriptBindingInstance* Blob::scriptBindingInstance()
+{
+    return executionContext()->scriptBindingInstance();
+}
+
 SerializedData* Blob::serialize(SerializingMap& memory)
 {
     return new SerializedBlobData(m_blobData);

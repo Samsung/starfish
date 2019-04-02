@@ -57,7 +57,11 @@ public:
     {
     }
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ServiceWorker)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isServiceWorker() const override;
+
+    virtual ExecutionContext* executionContext() override;
 
     String* scriptURL() const
     {

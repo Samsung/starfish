@@ -53,7 +53,13 @@ public:
     // to do : doesn't appear to be supported anywhere yet.
     // DOMPoint matrixTransform(DOMMatrixReadOnly matrix);
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
 protected:
+    ExecutionContext* m_executionContext;
     double m_x;
     double m_y;
     double m_z;

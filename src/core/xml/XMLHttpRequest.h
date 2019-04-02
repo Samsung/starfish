@@ -40,6 +40,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isXMLHttpRequestEventTarget() const override;
 
+    virtual ExecutionContext* executionContext() override;
+
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(loadstart);

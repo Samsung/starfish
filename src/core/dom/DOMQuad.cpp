@@ -22,6 +22,7 @@
 #include "core/dom/DOMRectReadOnly.h"
 #include "core/dom/DOMPoint.h"
 #include "core/dom/DOMQuad.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
@@ -56,7 +57,7 @@ DOMRect* DOMQuad::getBounds() const
         double bottom =
             saturateInf(max4(m_p1->y(), m_p2->y(), m_p3->y(), m_p4->y()));
 
-        m_bounds = new DOMRect(executionContext(), left, top, right - left,
+        m_bounds = new DOMRect(m_executionContext, left, top, right - left,
                                bottom - top);
     }
     return m_bounds;
@@ -65,12 +66,18 @@ DOMRect* DOMQuad::getBounds() const
 DOMQuad::DOMQuad(ExecutionContext* executionContext, const DOMPointInit& p1,
                  const DOMPointInit& p2, const DOMPointInit& p3,
                  const DOMPointInit& p4)
-    : ScriptWrappable(this, executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
     , m_p1(new DOMPoint(executionContext, p1))
     , m_p2(new DOMPoint(executionContext, p2))
     , m_p3(new DOMPoint(executionContext, p3))
     , m_p4(new DOMPoint(executionContext, p4))
     , m_bounds(nullptr)
 {
+}
+
+ScriptBindingInstance* DOMQuad::scriptBindingInstance()
+{
+    return m_executionContext->scriptBindingInstance();
 }
 }

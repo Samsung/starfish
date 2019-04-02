@@ -95,7 +95,6 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
     // TODO: use location to open a new document
     m_document = new HTMLDocument(this, m_scriptBindingInstance, url,
                                   String::createASCIIString("UTF-8"), true);
-    m_executionContext = m_document;
     m_history = new History(m_document);
     m_navigator = new Navigator(m_document);
     m_location = new Location(m_document);
@@ -144,7 +143,7 @@ void Window::dispose()
 
 ExecutionContext* Window::executionContext()
 {
-    return static_cast<ExecutionContext*>(m_document);
+    return document()->executionContext();
 }
 
 // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
@@ -216,7 +215,8 @@ void Window::postMessage(Window* source, ScriptValue message,
                         "postMessage");
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         reason);
-        throw new DOMException(document(), DOMException::SYNTAX_ERR, msg);
+        throw new DOMException(document()->executionContext(),
+                               DOMException::SYNTAX_ERR, msg);
     } else {
         ResourceURL* url = new ResourceURL(targetOrigin);
         targetOrigin = url->origin();
@@ -224,8 +224,8 @@ void Window::postMessage(Window* source, ScriptValue message,
     SerializeWithTransferResult* serializedRecord =
         new (GC) SerializeWithTransferResult();
     try {
-        Serializer::serializeWithTransfer(document(), message, transfer,
-                                          *serializedRecord);
+        Serializer::serializeWithTransfer(document()->executionContext(),
+                                          message, transfer, *serializedRecord);
     } catch (DOMException* e) {
         COMPOSE_MESSAGE(msg, FAILED_TO_EXECUTE, "postMessage", "Window",
                         e->message()->toUTF8NonGCString().data());
@@ -236,7 +236,7 @@ void Window::postMessage(Window* source, ScriptValue message,
     // NOTE addIder would hold serializedRecord
     if (browsingContext()) {
         webView()->messageLoop()->addIdler(
-            browsingContext()->document(),
+            browsingContext()->window(),
             [](size_t handle, void* data, void* data1, void* data2) {
                 Window* window = (Window*)data;
                 SerializeWithTransferResult* serializedRecord =
@@ -244,9 +244,9 @@ void Window::postMessage(Window* source, ScriptValue message,
                 DeserializeWithTransferResult deserializedRecord;
                 bool fail = false;
                 try {
-                    Serializer::deserializeWithTransfer(window->document(),
-                                                        *serializedRecord,
-                                                        deserializedRecord);
+                    Serializer::deserializeWithTransfer(
+                        window->document()->executionContext(),
+                        *serializedRecord, deserializedRecord);
                 } catch (DOMException* e) {
                     fail = true;
                 }
@@ -254,7 +254,8 @@ void Window::postMessage(Window* source, ScriptValue message,
                 String* eventType;
                 if (fail == false) {
                     eventType = window->staticStrings()->m_message.localName();
-                    e = new MessageEvent(window->document(), eventType);
+                    e = new MessageEvent(window->document()->executionContext(),
+                                         eventType);
                     e->setData(deserializedRecord.m_deserialized);
 
                     GCVector<MessagePort*> newPorts;
@@ -274,7 +275,8 @@ void Window::postMessage(Window* source, ScriptValue message,
                 } else {
                     eventType =
                         window->staticStrings()->m_messageerror.localName();
-                    e = new MessageEvent(window->document(), eventType);
+                    e = new MessageEvent(window->document()->executionContext(),
+                                         eventType);
                 }
                 Window* source = (Window*)data2;
 
@@ -334,7 +336,7 @@ void Window::resize(uint32_t w, uint32_t h)
         m_width = w;
         m_height = h;
         String* eventType = staticStrings()->m_resize.localName();
-        UIEvent* e = new UIEvent(document(), eventType);
+        UIEvent* e = new UIEvent(document()->executionContext(), eventType);
         e->setView(this);
         if (browsingContext()->isTopLevelBrowsingContext()) {
             dispatchEventByUA(e);
@@ -443,7 +445,7 @@ bool Window::scrollToWithoutLayout(double x, double y)
             }
 
             String* eventType = staticStrings()->m_scroll.localName();
-            UIEvent* e = new UIEvent(document(), eventType);
+            UIEvent* e = new UIEvent(document()->executionContext(), eventType);
             e->setView(this);
             e->setTarget(document());
             if (document()->browsingContext()->isTopLevelBrowsingContext()) {
@@ -636,8 +638,9 @@ void Window::releaseCSSTarget()
 
 void Window::dispatchErrorEvent(ErrorEventInit& errorInfo)
 {
-    Event* errorEvent = new ErrorEvent(
-        document(), staticStrings()->m_error.localName(), errorInfo);
+    Event* errorEvent =
+        new ErrorEvent(document()->executionContext(),
+                       staticStrings()->m_error.localName(), errorInfo);
     dispatchEventByUA(errorEvent);
 }
 

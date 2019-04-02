@@ -26,6 +26,7 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/WebView.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace Starfish {
 
@@ -36,14 +37,14 @@ void ElementResourceClient::didLoadFinished()
         Element* element = (Element*)data;
         String* eventType =
             element->starfish()->staticStrings()->m_load.localName();
-        Event* e =
-            new Event(element->document(), eventType, EventInit(false, false));
+        Event* e = new Event(element->executionContext(), eventType,
+                             EventInit(false, false));
         element->EventTarget::dispatchEventByUA(element, e, true);
     };
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->webView()->messageLoop()->addIdler(m_element->document(), fn,
+        m_element->webView()->messageLoop()->addIdler(m_element->window(), fn,
                                                       m_element);
     }
 }
@@ -55,14 +56,14 @@ void ElementResourceClient::didLoadFailed()
         Element* element = (Element*)data;
         String* eventType =
             element->starfish()->staticStrings()->m_error.localName();
-        Event* e =
-            new Event(element->document(), eventType, EventInit(false, false));
+        Event* e = new Event(element->executionContext(), eventType,
+                             EventInit(false, false));
         element->EventTarget::dispatchEventByUA(element, e, true);
     };
     if (m_needsSyncEventDispatch) {
         fn(SIZE_MAX, m_element);
     } else {
-        m_element->webView()->messageLoop()->addIdler(m_element->document(), fn,
+        m_element->webView()->messageLoop()->addIdler(m_element->window(), fn,
                                                       m_element);
     }
 }

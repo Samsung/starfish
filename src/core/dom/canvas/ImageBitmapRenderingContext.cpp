@@ -21,12 +21,13 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/canvas/ImageBitmapRenderingContext.h"
+#include "core/dom/canvas/HTMLCanvasElement.h"
+
 namespace Starfish {
 
 ImageBitmapRenderingContext::ImageBitmapRenderingContext(
     HTMLCanvasElement* canvasElement)
-    : CanvasRenderingContext(
-          ((ScriptWrappable*)canvasElement)->executionContext())
+    : CanvasRenderingContext(canvasElement->executionContext())
     , m_ownerHTMLCanvasElement(canvasElement)
 {
 }

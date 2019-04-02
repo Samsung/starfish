@@ -30,7 +30,7 @@ public:
     enum { FILTERACCEPT = 1, FILTERREJECT = 2, FILTERSKIP = 3 };
 
     NodeFilter(Document* document)
-        : ScriptWrappable(this, document->executionContext())
+        : ScriptWrappable(this)
         , m_scriptBindingInstance(document->scriptBindingInstance())
     {
     }

@@ -30,9 +30,8 @@ namespace Starfish {
 class Path2D : public ScriptWrappable, public CanvasPathInterfaceMixIn {
 public:
     Path2D(ExecutionContext* executionContext);
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isPath2D() const override;
+
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Path2D)
 
     // CanvasPathInterfaceMixIn methods
     virtual void closePath() override;
@@ -52,6 +51,7 @@ public:
                          bool anticlockwise = false) override;
 
 private:
+    ExecutionContext* m_executionContext;
     CanvasPath* m_canvasPath;
 };
 }

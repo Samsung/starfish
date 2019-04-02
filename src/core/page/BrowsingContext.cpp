@@ -701,8 +701,7 @@ void BrowsingContext::dispose()
 
     if (isTopLevelBrowsingContext()) {
         webView()->platformWindow()->clearResources();
-        webView()->messageLoop()->clearPendingIdlers(
-            m_window->executionContext());
+        webView()->messageLoop()->clearPendingIdlers(m_window);
 
         auto& prevDrawnInfo = webView()->prevDrawnStackingContextInfo();
         auto iter = prevDrawnInfo.begin();
@@ -717,8 +716,7 @@ void BrowsingContext::dispose()
 
         m_webView->initRenderingFlags();
     } else {
-        webView()->messageLoop()->clearPendingIdlers(
-            m_window->executionContext());
+        webView()->messageLoop()->clearPendingIdlers(m_window);
     }
 
     m_rootMap.clear();
@@ -862,13 +860,13 @@ void BrowsingContext::setFocusedNode(Node* n, bool byMouseEvent)
 
     // focus event
     String* eventType = starfish()->staticStrings()->m_focus.localName();
-    Event* event = new FocusEvent(document(), eventType,
+    Event* event = new FocusEvent(document()->executionContext(), eventType,
                                   FocusEventInit(false, false, relatedTarget));
     document()->dispatchEventByUA(e->asNode(), event);
 
     // focusin event
     eventType = starfish()->staticStrings()->m_focusin.localName();
-    event = new FocusEvent(document(), eventType,
+    event = new FocusEvent(document()->executionContext(), eventType,
                            FocusEventInit(true, false, relatedTarget));
     document()->dispatchEventByUA(e->asNode(), event);
 }
@@ -901,13 +899,14 @@ void BrowsingContext::releaseFocusedNode(Node* n, bool resetActiveElement)
 
         // blur event
         String* eventType = starfish()->staticStrings()->m_blur.localName();
-        Event* event = new FocusEvent(
-            document(), eventType, FocusEventInit(false, false, relatedTarget));
+        Event* event =
+            new FocusEvent(document()->executionContext(), eventType,
+                           FocusEventInit(false, false, relatedTarget));
         document()->dispatchEventByUA(m_focusedNode, event);
 
         // focusout event
         eventType = starfish()->staticStrings()->m_focusout.localName();
-        event = new FocusEvent(document(), eventType,
+        event = new FocusEvent(document()->executionContext(), eventType,
                                FocusEventInit(true, false, relatedTarget));
         document()->dispatchEventByUA(m_focusedNode, event);
 
@@ -1023,7 +1022,8 @@ static TouchEvent* createTouchEvent(Document* document, String* name,
 static MouseEvent* createMouseEvent(Document* document, String* name,
                                     MouseData& data)
 {
-    MouseEvent* event = new MouseEvent(document, name, data);
+    MouseEvent* event =
+        new MouseEvent(document->executionContext(), name, data);
     event->setBubbles(true);
     event->setCancelable(true);
     event->setView(document->window());
@@ -1480,7 +1480,8 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
         webView()->platformWindow()->eventModifierData());
 
     KeyboardEventInit kinitData(pkdata);
-    KeyboardEvent* e = new KeyboardEvent(document(), eventType, kinitData);
+    KeyboardEvent* e =
+        new KeyboardEvent(document()->executionContext(), eventType, kinitData);
     e->setBubbles(true);
     e->setCancelable(true);
     e->setView(document()->window());
@@ -1502,8 +1503,9 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
                 Node* t = webView()->focusedNode();
                 if (t) {
                     t = t->nearestParentElement();
-                    t->dispatchEventByUA(new Event(t->document(), eventType,
-                                                   EventInit(true, true)));
+                    t->dispatchEventByUA(
+                        new Event(t->document()->executionContext(), eventType,
+                                  EventInit(true, true)));
                     e->defaultPrevented();
                 }
             } else if (e->keyValue() >= KeyValue::ArrowDownKey &&
@@ -1539,8 +1541,8 @@ void BrowsingContext::dispatchKeyEvent(KeyEventKind kind,
 
     // After editing, this 'oninput' event is called.
     if (target->isHTMLInputElement()) {
-        InputEvent* event =
-            new InputEvent(document(), String::createASCIIString("input"));
+        InputEvent* event = new InputEvent(document()->executionContext(),
+                                           String::createASCIIString("input"));
         event->setCancelable(false);
         event->setBubbles(true);
         event->setComposed(true);
@@ -1756,7 +1758,8 @@ void BrowsingContext::dispatchCompositionEvent(CompositionEventKind kind,
         eventType = starfish()->staticStrings()->m_compositionend.localName();
         setCompositionStartEventDefeaultPrevented(false);
     }
-    CompositionEvent* e = new CompositionEvent(document(), eventType, data);
+    CompositionEvent* e =
+        new CompositionEvent(document()->executionContext(), eventType, data);
     e->setBubbles(true);
     if (kind == CompositionEventKind::CompositionEventStart) {
         e->setCancelable(true);

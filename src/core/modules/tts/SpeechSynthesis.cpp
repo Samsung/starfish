@@ -46,6 +46,11 @@ const char* voiceTypeToString(int type)
     return "Auto";
 }
 
+ExecutionContext* SpeechSynthesisUtterance::executionContext()
+{
+    return document()->executionContext();
+}
+
 DEFINE_EVENT_LISTENER(SpeechSynthesisUtterance, start);
 DEFINE_EVENT_LISTENER(SpeechSynthesisUtterance, end);
 DEFINE_EVENT_LISTENER(SpeechSynthesisUtterance, error);
@@ -57,7 +62,7 @@ DEFINE_EVENT_LISTENER(SpeechSynthesisUtterance, resume);
 DEFINE_EVENT_LISTENER(SpeechSynthesis, voiceschanged);
 
 SpeechSynthesisVoice::SpeechSynthesisVoice(Window* window)
-    : ScriptWrappable(this, window->executionContext())
+    : ScriptWrappable(this)
     , WindowHoldable(window)
     , m_voiceURI(String::emptyString)
     , m_name(String::emptyString)
@@ -70,7 +75,7 @@ SpeechSynthesisVoice::SpeechSynthesisVoice(Window* window)
 SpeechSynthesisVoice::SpeechSynthesisVoice(Window* window, String* voiceURI,
                                            String* name, String* lang,
                                            bool localService, bool isDefault)
-    : ScriptWrappable(this, window->executionContext())
+    : ScriptWrappable(this)
     , WindowHoldable(window)
     , m_voiceURI(voiceURI)
     , m_name(name)
@@ -78,6 +83,11 @@ SpeechSynthesisVoice::SpeechSynthesisVoice(Window* window, String* voiceURI,
     , m_localService(localService)
     , m_isDefault(isDefault)
 {
+}
+
+ExecutionContext* SpeechSynthesis::executionContext()
+{
+    return document()->executionContext();
 }
 
 void SpeechSynthesis::speak(SpeechSynthesisUtterance* u)

@@ -289,7 +289,8 @@ void HTMLImageElement::loadImage(String* src)
     if (!document()->contentSecurityPolicy()->allowSource(CSPDirectives::ImgSrc,
                                                           resourceURL)) {
         String* eventType = starfish()->staticStrings()->m_error.localName();
-        Event* e = new Event(document(), eventType, EventInit(false, false));
+        Event* e =
+            new Event(executionContext(), eventType, EventInit(false, false));
         dispatchEventIdleTimeByUA(e);
         return;
     }

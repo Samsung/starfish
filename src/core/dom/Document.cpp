@@ -28,6 +28,7 @@
 #include "core/dom/CustomEvent.h"
 #include "core/dom/ProcessingInstruction.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/DocumentFragment.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMImplementation.h"
@@ -91,7 +92,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
                    ResourceURL* uri, String* charSet,
                    bool doesParticipateInRendering)
     : Node(this)
-    , ExecutionContext(window, scriptBindingInstance, uri)
     , m_inParsing(false)
     , m_didLoadBrokenImage(false)
     , m_doesParticipateInRendering(doesParticipateInRendering)
@@ -105,11 +105,11 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_domContentLoadedFired(false)
     , m_onLoadFired(false)
     , m_isFocusRingCacheValid(false)
+    , m_executionContext(
+          new ExecutionContext(window, scriptBindingInstance, uri, this, true))
     , m_window(window)
-    , m_baseURL(fallbackBaseURL())
     , m_baseElementURL(nullptr)
     , m_baseTarget(String::emptyString)
-    , m_referrer(nullptr)
     , m_webOrigin(WebOrigin::createDocumentOrigin(uri))
     , m_characterSet(charSet)
     , m_contentType(String::createASCIIString("application/xml"))
@@ -136,6 +136,8 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_nativeGradientCache(nullptr)
     , m_nativeGradientCacheToTalSize(0)
 {
+    setBaseURL(fallbackBaseURL());
+
     // TODO https://html.spec.whatwg.org/multipage/origin.html#concept-origin
     // For Document objects
     // If the Document's active sandboxing flag set has its sandboxed origin
@@ -234,7 +236,7 @@ BrowsingContext* Document::browsingContext() const
 
 ScriptBindingInstance* Document::scriptBindingInstance()
 {
-    return m_scriptBindingInstance;
+    return executionContext()->scriptBindingInstance();
 }
 
 Location* Document::location()
@@ -247,10 +249,7 @@ Location* Document::location()
 
 String* Document::referrer()
 {
-    if (!m_referrer) {
-        return String::emptyString;
-    }
-    return m_referrer->urlString();
+    return executionContext()->referrer();
 }
 
 ReferrerPolicy Document::referrerPolicy()
@@ -282,7 +281,7 @@ String* Document::cookie()
 
     if ((!documentURI()->isFileURL()) && webOrigin()->isOpaque()) {
         throw new DOMException(
-            this, DOMException::Code::SECURITY_ERR,
+            executionContext(), DOMException::Code::SECURITY_ERR,
             "Access is denied for this document, origin is opaque");
     }
 
@@ -295,7 +294,7 @@ void Document::setCookie(String* cookie)
 {
     if ((!documentURI()->isFileURL()) && webOrigin()->isOpaque()) {
         throw new DOMException(
-            this, DOMException::Code::SECURITY_ERR,
+            executionContext(), DOMException::Code::SECURITY_ERR,
             "Access is denied for this document, origin is opaque");
     }
     NetworkSharedResourceManager::getInstance()->setCookies(this, documentURI(),
@@ -331,13 +330,15 @@ Document* Document::open(Document* responsibleDoc, String* type,
     // If document is an XML document, then throw an "InvalidStateError"
     // DOMException exception.
     if (isXMLDocument()) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     STARFISH_ASSERT(isHTMLDocument());
     // If document's throw-on-dynamic-markup-insertion counter is greater than
     // 0, then throw an "InvalidStateError" DOMException.
     if (m_throwOnDynamicMarkupInsertion) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     // TODO (implement WindowProxy) If document is not an active document, then
     // return document.
@@ -345,7 +346,7 @@ Document* Document::open(Document* responsibleDoc, String* type,
     // the origin of the responsible document specified by the entry settings
     // object, then throw a "SecurityError" DOMException.
     if (!responsibleDoc->webOrigin()->isSameOrigin(webOrigin())) {
-        throw new DOMException(responsibleDoc,
+        throw new DOMException(responsibleDoc->executionContext(),
                                DOMException::Code::SECURITY_ERR);
     }
     // If document has an active parser whose script nesting level is greater
@@ -511,13 +512,15 @@ void Document::close()
     // If the Document object is an XML document, then throw an
     // "InvalidStateError" DOMException and abort these steps.
     if (isXMLDocument()) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     // If the Document object's throw-on-dynamic-markup-insertion counter is
     // greater than zero, then throw an "InvalidStateError" DOMException and
     // abort these steps.
     if (m_throwOnDynamicMarkupInsertion) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_STATE_ERR);
     }
 
     // If there is no script-created parser associated with the document, then
@@ -548,12 +551,14 @@ void Document::write(Document* responsibleDoc, const GCVector<String*>& str)
     // If document is an XML document, then throw an "InvalidStateError"
     // DOMException.
     if (isXMLDocument()) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     // If document's throw-on-dynamic-markup-insertion counter is greater than
     // 0, then throw an "InvalidStateError" DOMException.
     if (m_throwOnDynamicMarkupInsertion) {
-        throw new DOMException(this, DOMException::Code::INVALID_STATE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_STATE_ERR);
     }
     // TODO(implement WindowProxy) If document is not an active document, then
     // return.
@@ -611,7 +616,7 @@ void Document::resumeDocumentParsing()
                     MessageLoopInvalidID);
     m_pendingDocumentParsingIdlerHandle =
         window()->webView()->messageLoop()->addIdler(
-            this,
+            window(),
             [](size_t handle, void* data) {
                 Document* document = (Document*)data;
                 STARFISH_ASSERT(document->m_documentBuilder);
@@ -650,7 +655,8 @@ void Document::notifyDomContentLoaded()
                                 ->starfish()
                                 ->staticStrings()
                                 ->m_DOMContentLoaded.localName();
-        Event* e = new Event(this, eventType, EventInit(true, true));
+        Event* e =
+            new Event(executionContext(), eventType, EventInit(true, true));
         EventTarget::dispatchEventByUA(e);
 
 #ifdef STARFISH_ENABLE_MULTIMEDIA
@@ -679,13 +685,14 @@ void Document::notifyDomContentLoaded()
 
         if (m_compatibilityMode != NoQuirksMode) {
             std::string s;
-            if (m_documentURI->urlString()->length() > 128) {
-                s = m_documentURI->urlString()
+            if (documentURI()->urlString()->length() > 128) {
+                s = documentURI()
+                        ->urlString()
                         ->substring(0, 128)
                         ->toUTF8NonGCString();
                 s += "...";
             } else {
-                s = m_documentURI->urlString()->toUTF8NonGCString();
+                s = documentURI()->urlString()->toUTF8NonGCString();
             }
 
             STARFISH_LOG_INFO(
@@ -729,7 +736,7 @@ void Document::dispose()
     if (body) {
         String* eventType =
             window()->starfish()->staticStrings()->m_unload.localName();
-        Event* e = new Event(this, eventType);
+        Event* e = new Event(executionContext(), eventType);
         EventTarget::dispatchEventByUA(body, e);
     }
 
@@ -812,7 +819,8 @@ DocumentFragment* Document::createDocumentFragment()
 Element* Document::createElement(String* localName)
 {
     if (!QualifiedName::checkNameProductionRule(localName)) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
 
@@ -847,7 +855,8 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     }
     // Validate qualifiedName.
     if (!QualifiedName::validateQualifiedName(qualifiedName)) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     }
     // Let prefix be null.
     Nullable<AtomicString> prefix;
@@ -859,10 +868,11 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     GCVector<StringView> tokens;
     StringUtils::tokenize(qualifiedName, ":", 1, tokens);
     if (tokens.size() > 2) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     } else if (tokens.size() == 2) {
         if (tokens[0].length() == 0 || tokens[1].length() == 0) {
-            throw new DOMException(this,
+            throw new DOMException(executionContext(),
                                    DOMException::Code::INVALID_CHARACTER_ERR);
         }
         prefix = AtomicString::createAtomicString(starfish(), tokens[0]);
@@ -873,7 +883,7 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
 
     // If prefix is non-null and namespace is null, then throw a NamespaceError.
     if (prefix.hasValue() && !ns.hasValue()) {
-        throw new DOMException(this, DOMException::NAMESPACE_ERR,
+        throw new DOMException(executionContext(), DOMException::NAMESPACE_ERR,
                                "Provided namespace is wrong");
     }
 
@@ -887,7 +897,7 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
     // NamespaceError.
     if (prefix.hasValue() && prefix.getValue() == strs->m_xml &&
         nsURI != strs->m_xmlNamespaceURI) {
-        throw new DOMException(this, DOMException::NAMESPACE_ERR,
+        throw new DOMException(executionContext(), DOMException::NAMESPACE_ERR,
                                "Provided namespace is wrong");
     }
 
@@ -900,7 +910,7 @@ QualifiedName Document::validateAndExtractQualifiedName(Nullable<String*> ns,
         prefix.hasValue() && (prefix.getValue() == strs->m_xmlns);
     bool nsXmlns = (nsURI == strs->m_xmlnsNamespaceURI);
     if ((qnameXmlns || prefixXmlns) ^ nsXmlns) {
-        throw new DOMException(this, DOMException::NAMESPACE_ERR,
+        throw new DOMException(executionContext(), DOMException::NAMESPACE_ERR,
                                "Provided namespace is wrong");
     }
 
@@ -939,11 +949,12 @@ CDATASection* Document::createCDATASection(String* data)
 {
     if (isHTMLDocument()) {
         throw new DOMException(
-            this, DOMException::Code::NOT_SUPPORTED_ERR,
+            executionContext(), DOMException::Code::NOT_SUPPORTED_ERR,
             "This operation is not supported for HTML documents.");
     }
     if (data->contains("]]>")) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_CHARACTER_ERR,
                                "String cannot contain ']]>' since that is the "
                                "end delimiter of a CData section.");
     }
@@ -961,11 +972,13 @@ ProcessingInstruction* Document::createProcessingInstruction(String* target,
     // If target does not match the Name production, then throw an
     // InvalidCharacterError.
     if (!QualifiedName::checkNameProductionRule(target)) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     }
     // If data contains the string "?>", then throw an InvalidCharacterError.
     if (data->contains("?>")) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_CHARACTER_ERR);
     }
     // Return a new ProcessingInstruction node, with target set to target, data
     // set to data, and node document set to the context object.
@@ -978,8 +991,8 @@ Node* Document::importNode(Node* node, bool deep)
     // throws a "NotSupportedError" DOMException.
     // TODO: check shadow root node
     if (node->isDocument()) {
-        throw new DOMException(this, DOMException::Code::NOT_SUPPORTED_ERR,
-                               nullptr);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::NOT_SUPPORTED_ERR, nullptr);
     }
 
     Node* newNode = node->clone();
@@ -1003,8 +1016,8 @@ Node* Document::adoptNode(Node* node)
     // If node is a document, then throw a "NotSupportedError" DOMException.
     // TODO check shadow root node
     if (node->isDocument()) {
-        throw new DOMException(this, DOMException::Code::NOT_SUPPORTED_ERR,
-                               nullptr);
+        throw new DOMException(executionContext(),
+                               DOMException::Code::NOT_SUPPORTED_ERR, nullptr);
     }
 
     Node* oldDocument = node->document();
@@ -1049,7 +1062,8 @@ Attr* Document::createAttribute(String* name)
 Attr* Document::createAttribute(QualifiedName localName)
 {
     if (!QualifiedName::checkNameProductionRule(localName.localName())) {
-        throw new DOMException(this, DOMException::Code::INVALID_CHARACTER_ERR,
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_CHARACTER_ERR,
                                nullptr);
     }
 
@@ -1131,7 +1145,8 @@ void Document::setBody(HTMLElement* element)
                         "HTMLBodyElement", "HTMLFrameSetElement");
         COMPOSE_MESSAGE(msg, FAILED_TO_SET_PROPERTY, "body", "Document",
                         reason);
-        throw new DOMException(this, DOMException::HIERARCHY_REQUEST_ERR, msg);
+        throw new DOMException(executionContext(),
+                               DOMException::HIERARCHY_REQUEST_ERR, msg);
     }
 
     HTMLElement* body = this->body();
@@ -1244,7 +1259,7 @@ void Document::setVisibilityState(VisibilityState visibilityState)
         m_pageVisibilityState = visibilityState;
         String* eventType =
             starfish()->staticStrings()->m_visibilitychange.localName();
-        Event* e = new Event(this, eventType, EventInit(true));
+        Event* e = new Event(executionContext(), eventType, EventInit(true));
         EventTarget::dispatchEventByUA(this->asNode(), e);
     }
 }
@@ -1256,7 +1271,8 @@ void Document::setReadyState(DocumentReadyState newState)
     if (old != newState) {
         String* eventType =
             starfish()->staticStrings()->m_readystatechange.localName();
-        Event* e = new Event(this, eventType, EventInit(false, false));
+        Event* e =
+            new Event(executionContext(), eventType, EventInit(false, false));
         dispatchEventByUA(e);
     }
 }
@@ -1272,6 +1288,11 @@ Element* Document::scrollingElement()
         return nullptr;
     }
     return documentElement();
+}
+
+ResourceURL* Document::documentURI() const
+{
+    return executionContext()->documentURI();
 }
 
 Document* Document::parentDocument() const
@@ -1308,29 +1329,24 @@ void Document::updateBaseURL()
     // computed using the value of the href attribute of the first BASE element,
     // otherwise the value of the documentURI attribute is used.
     if (m_baseElementURL) {
-        m_baseURL = m_baseElementURL;
+        setBaseURL(m_baseElementURL);
     } else {
-        m_baseURL = fallbackBaseURL();
+        setBaseURL(fallbackBaseURL());
     }
 
-    if (!m_baseURL->isValid()) {
-        m_baseURL = ResourceURL::aboutBlankURL();
+    if (!executionContext()->baseURL()->isValid()) {
+        setBaseURL(ResourceURL::aboutBlankURL());
     }
-}
-
-ResourceURL* Document::baseURL() const
-{
-    // If there is no base element that has an href attribute in the Document,
-    // then return the Document's fallback base URL.
-    if (m_baseURL) {
-        return m_baseURL;
-    }
-    return ResourceURL::aboutBlankURL();
 }
 
 void Document::setBaseURL(ResourceURL* newURL)
 {
-    m_baseURL = newURL;
+    executionContext()->setBaseURL(newURL);
+}
+
+ResourceURL* Document::baseURL() const
+{
+    return executionContext()->baseURL();
 }
 
 Element* Document::nextBaseElement(Node* node, Node* root)
@@ -1817,34 +1833,34 @@ Event* Document::createEvent(String* type)
     switch (len) {
     case 5:
         if (type->equals("event")) {
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 6:
         if (type->equals("events")) {
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 7:
         if (type->equals("uievent")) {
-            e = new UIEvent(this);
+            e = new UIEvent(executionContext());
         }
         break;
     case 8:
         if (type->equals("uievents")) {
-            e = new UIEvent(this);
+            e = new UIEvent(executionContext());
         }
         break;
     case 9:
         if (type->equals("dragevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         } else if (type->equals("svgevents")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         } else if (type->equals("textevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 10:
@@ -1852,29 +1868,29 @@ Event* Document::createEvent(String* type)
         case 'c':
             if (type->equals("closeevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                e = new Event(this);
+                e = new Event(executionContext());
             }
             break;
         case 'e':
             if (type->equals("errorevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                e = new Event(this);
+                e = new Event(executionContext());
             }
             break;
         case 'f':
             if (type->equals("focusevent")) {
-                e = new FocusEvent(this);
+                e = new FocusEvent(executionContext());
             }
             break;
         case 'h':
             if (type->equals("htmlevents")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                e = new Event(this);
+                e = new Event(executionContext());
             }
             break;
         case 'm':
             if (type->equals("mouseevent")) {
-                e = new MouseEvent(this);
+                e = new MouseEvent(executionContext());
             }
             break;
         case 't':
@@ -1882,13 +1898,13 @@ Event* Document::createEvent(String* type)
                 e = new TouchEvent(this);
             } else if (type->equals("trackevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                e = new Event(this);
+                e = new Event(executionContext());
             }
             break;
         case 'w':
             if (type->equals("wheelevent")) {
                 STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-                e = new Event(this);
+                e = new Event(executionContext());
             }
             break;
         default:
@@ -1897,77 +1913,77 @@ Event* Document::createEvent(String* type)
         break;
     case 11:
         if (type->equals("customevent")) {
-            e = new CustomEvent(this);
+            e = new CustomEvent(executionContext());
         } else if (type->equals("mouseevents")) {
-            e = new MouseEvent(this);
+            e = new MouseEvent(executionContext());
         }
         break;
     case 12:
         if (type->equals("messageevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         } else if (type->equals("storageevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 13:
         if (type->equals("keyboardevent")) {
-            e = new KeyboardEvent(this);
+            e = new KeyboardEvent(executionContext());
         } else if (type->equals("popstateevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         } else if (type->equals("mutationevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 14:
         if (type->equals("animationevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         } else if (type->equals("mutationevents")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 15:
         if (type->equals("hashchangeevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         } else if (type->equals("transitionevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 17:
         if (type->equals("beforeunloadevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         } else if (type->equals("devicemotionevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         } else if (type->equals("webglcontextevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 19:
         if (type->equals("pagetransitionevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 21:
         if (type->equals("idbversionchangeevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     case 22:
         if (type->equals("deviceorientationevent")) {
             STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
-            e = new Event(this);
+            e = new Event(executionContext());
         }
         break;
     default:
@@ -1980,8 +1996,8 @@ Event* Document::createEvent(String* type)
         return e;
     }
 
-    throw new DOMException(this, DOMException::Code::NOT_SUPPORTED_ERR,
-                           nullptr);
+    throw new DOMException(executionContext(),
+                           DOMException::Code::NOT_SUPPORTED_ERR, nullptr);
 }
 
 void Document::notifyCountingOutdated()
@@ -2022,7 +2038,8 @@ Event* Document::createSimulatedMouseClickEvent()
     auto eventType = starfish()->staticStrings()->m_click.localName();
     MouseData clickData(MouseButtonValue::LeftButton,
                         MouseButtonsValue::LeftButtonDown, 0, 0, 1);
-    MouseEvent* event = new MouseEvent(this, eventType, clickData);
+    MouseEvent* event =
+        new MouseEvent(executionContext(), eventType, clickData);
     event->setBubbles(true);
     event->setCancelable(true);
     event->setView(this->window());
@@ -2117,6 +2134,26 @@ bool Document::pruneNativeGradientCacheIfNeeds(size_t reserve)
         m_nativeGradientCacheToTalSize -= removedSize;
     }
     return true;
+}
+
+void Document::setReferrer(ResourceURL* referrer)
+{
+    executionContext()->setReferrer(referrer);
+}
+
+void Document::setDocumentURI(ResourceURL* newURL)
+{
+    executionContext()->setDocumentURI(newURL);
+}
+
+String* Document::urlString()
+{
+    return executionContext()->urlString();
+}
+
+uint64_t Document::createdTick()
+{
+    return executionContext()->createdTick();
 }
 
 DEFINE_EVENT_LISTENER(Document, abort);

@@ -47,7 +47,7 @@ protected:
 
 private:
     CSSStyleValue()
-        : ScriptWrappable(this, nullptr)
+        : ScriptWrappable(this)
         , DocumentHoldable(nullptr)
     {
     }

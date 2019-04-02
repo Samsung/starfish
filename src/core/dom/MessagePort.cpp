@@ -58,6 +58,11 @@ void MessagePort::transferReceive(TransferedData* transfered)
     entangle(this, holder->remotePort());
 }
 
+ExecutionContext* MessagePort::executionContext()
+{
+    return document()->executionContext();
+}
+
 void MessagePort::entangle(MessagePort* port1, MessagePort* port2)
 {
     STARFISH_ASSERT(port1 != port2);
@@ -111,7 +116,7 @@ void MessagePort::postMessage(ScriptValue message,
         if (sw && sw->isMessagePort()) {
             MessagePort* port = sw->asMessagePort();
             if (port == this) {
-                throw new DOMException(document(),
+                throw new DOMException(executionContext(),
                                        DOMException::DATA_CLONE_ERR);
             } else if (targetPort && !doomed && port == targetPort) {
                 doomed = true;
@@ -124,7 +129,7 @@ void MessagePort::postMessage(ScriptValue message,
     SerializeWithTransferResult* serializedRecord =
         new (GC) SerializeWithTransferResult();
     // TODO use memoryMap to check targetPort has been transfered
-    Serializer::serializeWithTransfer(document(), message, transfer,
+    Serializer::serializeWithTransfer(executionContext(), message, transfer,
                                       *serializedRecord);
     // If there is no targetPort (i.e. if this MessagePort is not entangled),
     // or if doomed is true, then return.
@@ -133,20 +138,21 @@ void MessagePort::postMessage(ScriptValue message,
     }
     // NOTE addIder would hold serializedRecord
     webView()->messageLoop()->addIdler(
-        document(),
+        window(),
         [](size_t handle, void* data, void* data1) {
             MessagePort* self = (MessagePort*)data;
             SerializeWithTransferResult* serializedRecord =
                 (SerializeWithTransferResult*)data1;
             DeserializeWithTransferResult deserializedRecord;
             try {
-                Serializer::deserializeWithTransfer(
-                    self->document(), *serializedRecord, deserializedRecord);
+                Serializer::deserializeWithTransfer(self->executionContext(),
+                                                    *serializedRecord,
+                                                    deserializedRecord);
             } catch (DOMException* exc) {
                 MessageEvent* e = new MessageEvent(
-                    self->document(), self->starfish()
-                                          ->staticStrings()
-                                          ->m_messageerror.localName());
+                    self->executionContext(), self->starfish()
+                                                  ->staticStrings()
+                                                  ->m_messageerror.localName());
                 self->entangledPort()->dispatchMessageEvent(e);
                 return;
             }
@@ -161,7 +167,7 @@ void MessagePort::postMessage(ScriptValue message,
                 }
             }
             MessageEvent* e = new MessageEvent(
-                self->document(),
+                self->executionContext(),
                 self->starfish()->staticStrings()->m_message.localName());
             e->setData(deserializedRecord.m_deserialized);
             e->setPorts(newPorts);
@@ -251,7 +257,7 @@ void PortMessageQueue::registerTaskToMessageLoop(MessagePort* target,
 {
     STARFISH_ASSERT(m_enabled);
     target->webView()->messageLoop()->addIdler(
-        target->document(),
+        target->window(),
         [](size_t, void* data, void* data1) {
             MessagePort* target = (MessagePort*)data;
             MessageEvent* event = (MessageEvent*)data1;
@@ -263,7 +269,6 @@ void PortMessageQueue::registerTaskToMessageLoop(MessagePort* target,
 ScriptWrappable* TransferedMessagePort::createTransferReceivingInstance(
     ExecutionContext* executionContext) const
 {
-    // TODO: Do not downcasting
-    return new MessagePort(executionContext->asDocument());
+    return new MessagePort(executionContext->document());
 }
 }

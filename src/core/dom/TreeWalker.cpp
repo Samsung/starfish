@@ -29,7 +29,7 @@ namespace Starfish {
 
 TreeWalker::TreeWalker(Document* document, Node* root, unsigned whatToShow,
                        ScriptValue filter)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_root(root)
     , m_current(root)
@@ -331,7 +331,7 @@ private:
 unsigned TreeWalker::acceptNode(Node* node, bool& error)
 {
     if (m_activeFlag) {
-        throw new DOMException(node->document(),
+        throw new DOMException(node->executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
         return NodeFilter::FILTERREJECT;
@@ -392,7 +392,7 @@ unsigned TreeWalker::acceptNode(Node* node, bool& error)
         } else if (isNumberScriptValue(ret)) {
             return scriptValueAsNumber(ret);
         } else {
-            throw new DOMException(node->document(),
+            throw new DOMException(node->executionContext(),
                                    DOMException::Code::SCRIPT_TYPE_ERR);
             return NodeFilter::FILTERREJECT;
         }

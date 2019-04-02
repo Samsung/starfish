@@ -24,21 +24,21 @@
 namespace Starfish {
 
 Touch::Touch(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
     , m_touchData()
 {
 }
 
 Touch::Touch(Document* document, TouchInit& init)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
     , m_touchData(init)
 {
 }
 
 Touch::Touch(Document* document, TouchData& data)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
     , m_touchData(data)
 {

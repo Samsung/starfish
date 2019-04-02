@@ -52,7 +52,13 @@ public:
     ScriptUint8ClampedArray data();
     void setData(ScriptUint8ClampedArray value);
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
 private:
+    ExecutionContext* m_executionContext;
     ScriptUint8ClampedArray m_data;
     uint32_t m_width;
     uint32_t m_height;

@@ -29,7 +29,8 @@ class CanvasSurface;
 class CanvasRenderingContext : public ScriptWrappable {
 public:
     CanvasRenderingContext(ExecutionContext* ownerExecutionContext)
-        : ScriptWrappable(this, ownerExecutionContext)
+        : ScriptWrappable(this)
+        , m_executionContext(ownerExecutionContext)
         , m_originCleanFlag(false)
     {
     }
@@ -48,6 +49,11 @@ public:
         m_originCleanFlag = value;
     }
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
     virtual ScriptBindingInstance* scriptBindingInstance();
     virtual void initialize() = 0;
     virtual CanvasSurface* surface() = 0;
@@ -59,6 +65,7 @@ protected:
     {
     }
 
+    ExecutionContext* m_executionContext;
     bool m_originCleanFlag;
 };
 }

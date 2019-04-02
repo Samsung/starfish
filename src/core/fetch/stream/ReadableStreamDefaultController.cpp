@@ -29,19 +29,20 @@ namespace Starfish {
 
 ReadableStreamDefaultController::ReadableStreamDefaultController(
     Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_stream(new ReadableStream(document))
     , m_readPromiseQueue()
     , m_mimeType(String::emptyString)
 {
     // This constructor cannot be used directly.
-    throw new DOMException(document, DOMException::Code::SCRIPT_TYPE_ERR);
+    throw new DOMException(document->executionContext(),
+                           DOMException::Code::SCRIPT_TYPE_ERR);
 }
 
 ReadableStreamDefaultController::ReadableStreamDefaultController(
     Document* document, ReadableStream* stream)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_stream(stream)
     , m_readPromiseQueue()

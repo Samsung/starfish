@@ -40,7 +40,9 @@ public:
             double width = 0, double height = 0);
     DOMRect(DOMRectReadOnly*);
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMRect)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isDOMRect() const override;
 
     void setX(double x)
     {

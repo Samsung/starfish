@@ -147,7 +147,8 @@ void HTMLStyleElement::generateStyleSheet()
         !document()->contentSecurityPolicy()->allowInline(
             CSPDirectives::StyleSrc, str, nonce())) {
         String* eventType = starfish()->staticStrings()->m_error.localName();
-        Event* e = new Event(document(), eventType, EventInit(false, false));
+        Event* e = new Event(document()->executionContext(), eventType,
+                             EventInit(false, false));
         dispatchEventIdleTimeByUA(e);
         return;
     }
@@ -182,14 +183,14 @@ void HTMLStyleElement::removeStyleSheet()
 void HTMLStyleElement::dispatchLoadEvent()
 {
     webView()->messageLoop()->addIdler(
-        document(),
+        window(),
         [](size_t handle, void* data) {
             HTMLStyleElement* element = (HTMLStyleElement*)data;
             if (!element->hasLoaded()) {
                 String* eventType =
                     element->starfish()->staticStrings()->m_load.localName();
-                Event* e = new Event(element->document(), eventType,
-                                     EventInit(false, false));
+                Event* e = new Event(element->document()->executionContext(),
+                                     eventType, EventInit(false, false));
                 element->dispatchEventByUA(e);
                 element->setLoaded();
             }

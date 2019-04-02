@@ -48,7 +48,7 @@
 namespace Starfish {
 
 MediaList::MediaList(MediaQuerySet* mediaQuerySet)
-    : ScriptWrappable(this, mediaQuerySet->document()->executionContext())
+    : ScriptWrappable(this)
     , m_mediaQuerySet(mediaQuerySet)
 {
 }
@@ -116,8 +116,9 @@ void MediaList::deleteMedium(String* oldMedium)
         msg.appendString(oldMedium);
         msg.appendString("'.");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                               DOMException::NOT_FOUND_ERR, s.data());
+        throw new DOMException(
+            scriptBindingInstance()->ownerDocument()->executionContext(),
+            DOMException::NOT_FOUND_ERR, s.data());
     }
     modifyStyleSheet();
 }

@@ -513,7 +513,7 @@ void WebView::createScriptEngineInstance()
                 (Window*)state->context()->globalObject()->extraData();
 
             window->webView()->messageLoop()->addIdler(
-                window->executionContext(),
+                window,
                 [](size_t, void* data, void* data2) {
                     Window* window = (Window*)data;
 

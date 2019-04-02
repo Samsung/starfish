@@ -25,7 +25,7 @@
 namespace Starfish {
 
 MessageChannel::MessageChannel(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_port1(new MessagePort(document))
     , m_port2(new MessagePort(document))

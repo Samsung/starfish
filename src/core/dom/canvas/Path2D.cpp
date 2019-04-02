@@ -21,12 +21,19 @@
 #include "StarfishConfig.h"
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/Path2D.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
 Path2D::Path2D(ExecutionContext* executionContext)
-    : ScriptWrappable(this, executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
 {
+}
+
+ScriptBindingInstance* Path2D::scriptBindingInstance()
+{
+    return m_executionContext->scriptBindingInstance();
 }
 
 void Path2D::closePath()

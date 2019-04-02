@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "core/dom/DOMException.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
@@ -73,7 +74,8 @@ const char* DOMException::s_descriptions[] = {
 
 DOMException::DOMException(ExecutionContext* executionContext, Code code,
                            const char* message)
-    : ScriptWrappable(this, executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
     , m_code(code)
     , m_name(String::emptyString)
 {
@@ -113,10 +115,16 @@ DOMException::DOMException(ExecutionContext* executionContext, Code code,
 
 DOMException::DOMException(ExecutionContext* executionContext, String* message,
                            String* name)
-    : ScriptWrappable(this, executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
     , m_code(Code::DOM_EXCEPTION)
     , m_message(message)
     , m_name(name)
 {
+}
+
+ScriptBindingInstance* DOMException::scriptBindingInstance()
+{
+    return m_executionContext->scriptBindingInstance();
 }
 }

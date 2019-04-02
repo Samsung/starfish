@@ -73,6 +73,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isEventSource() const override;
 
+    virtual ExecutionContext* executionContext() override;
+
     enum ReadyState { CONNECTING, OPEN, CLOSED };
     ResourceRequest* resourceRequest()
     {

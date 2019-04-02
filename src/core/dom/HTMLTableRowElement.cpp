@@ -170,7 +170,8 @@ HTMLTableCellElement* HTMLTableRowElement::insertCell(int32_t index)
     HTMLCollection* cells = this->cells();
     if (index < -1 ||
         (index != -1 && static_cast<size_t>(index) > cells->length())) {
-        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::INDEX_SIZE_ERR);
     }
 
     HTMLTDElement* cell =
@@ -193,7 +194,8 @@ void HTMLTableRowElement::deleteCell(long index)
             index = cells->length() - 1;
         }
     } else if (index < -1 || static_cast<size_t>(index) >= cells->length()) {
-        throw new DOMException(document(), DOMException::INDEX_SIZE_ERR);
+        throw new DOMException(executionContext(),
+                               DOMException::INDEX_SIZE_ERR);
     }
 
     removeChild(cells->item(index));

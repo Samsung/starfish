@@ -35,7 +35,7 @@
 namespace Starfish {
 
 Navigator::Navigator(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
     , m_geolocation(nullptr)
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

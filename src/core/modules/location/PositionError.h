@@ -28,11 +28,7 @@ class PositionError : public ScriptWrappable {
 public:
     enum Error { PERMISSION_DENIED = 1, POSITION_UNAVAILABLE = 2, TIMEOUT = 3 };
 
-    PositionError(ExecutionContext* executionContext, Error code)
-        : ScriptWrappable(this, executionContext)
-        , m_code(code)
-    {
-    }
+    PositionError(ExecutionContext* executionContext, Error code);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(PositionError)
 
@@ -57,6 +53,7 @@ public:
     }
 
 protected:
+    ScriptBindingInstance* m_scriptBindingInstance;
     Error m_code;
 };
 }

@@ -400,8 +400,8 @@ public:
                 ->replace(m_builder.document(), newURL);
         }
         if (m_resource->resourceRequest()->referrer()) {
-            m_builder.document()->m_referrer =
-                m_resource->resourceRequest()->referrer();
+            m_builder.document()->setReferrer(
+                m_resource->resourceRequest()->referrer());
         }
         if (m && !m->isEmpty() && !m->contains("charset", false)) {
             m_builder.document()->setContentType(m);

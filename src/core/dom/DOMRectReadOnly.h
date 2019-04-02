@@ -71,7 +71,13 @@ public:
         return std::min(m_x, m_x + m_width);
     }
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
 protected:
+    ExecutionContext* m_executionContext;
     double m_x;
     double m_y;
     double m_width;

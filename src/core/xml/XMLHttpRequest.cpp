@@ -50,6 +50,11 @@ DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, load);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, timeout);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadend);
 
+ExecutionContext* XMLHttpRequestEventTarget::executionContext()
+{
+    return document()->executionContext();
+}
+
 class XMLHttpRequestResourceRequestClient : public ResourceRequestClient {
 public:
     XMLHttpRequestResourceRequestClient(XMLHttpRequest* xhr)
@@ -73,9 +78,9 @@ public:
             if (!m_xhr->m_resourceRequest->url()->isFileURL() &&
                 !m_xhr->m_resourceRequest->url()->isDataURL() &&
                 request->isSync()) {
-                throw new DOMException(
-                    m_xhr->scriptBindingInstance()->ownerDocument(),
-                    DOMException::NETWORK_ERR, "NetworkError");
+                throw new DOMException(m_xhr->executionContext(),
+                                       DOMException::NETWORK_ERR,
+                                       "NetworkError");
             }
         } else if (progState == ProgressState::Abort) {
             if (isExplicitAction) {
@@ -103,8 +108,8 @@ public:
             STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         }
 
-        ProgressEvent* pe = new ProgressEvent(
-            m_xhr->scriptBindingInstance()->ownerDocument(), eventName);
+        ProgressEvent* pe =
+            new ProgressEvent(m_xhr->executionContext(), eventName);
         pe->setLengthComputable(request->total() > 0);
         pe->setLoaded(request->loaded());
         pe->setTotal(request->total());
@@ -197,7 +202,7 @@ public:
                                m_xhr->m_resourceRequest->response().data(),
                                m_xhr->m_resourceRequest->response().size());
                         m_xhr->m_responseBlob = new ::Starfish::Blob(
-                            m_xhr->scriptBindingInstance()->ownerDocument(),
+                            m_xhr->executionContext(),
                             m_xhr->m_resourceRequest->response().size(),
                             m_xhr->m_resourceRequest->responseMimeType(),
                             buffer, false, false);
@@ -224,9 +229,8 @@ public:
             String* eventType = request->starfish()
                                     ->staticStrings()
                                     ->m_readystatechange.localName();
-            Event* e =
-                new Event(m_xhr->scriptBindingInstance()->ownerDocument(),
-                          eventType, EventInit(true, true));
+            Event* e = new Event(m_xhr->executionContext(), eventType,
+                                 EventInit(true, true));
             m_xhr->EventTarget::dispatchEventByUA(m_xhr, e);
         }
     }
@@ -301,7 +305,7 @@ void XMLHttpRequest::send(String* body)
     // DOMException.
     if (m_resourceRequest->readyState() != ReadyState::Opened ||
         m_resourceRequest->m_didSend) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
@@ -316,7 +320,7 @@ void XMLHttpRequest::send(String* body)
     if (!document()->contentSecurityPolicy()->allowSource(
             CSPDirectives::ConnectSrc, m_resourceRequest->url())) {
         ProgressEvent* pe =
-            new ProgressEvent(scriptBindingInstance()->ownerDocument(),
+            new ProgressEvent(executionContext(),
                               starfish()->staticStrings()->m_error.localName());
         dispatchEventIdleTimeByUA(pe);
         return;
@@ -348,17 +352,17 @@ void XMLHttpRequest::open(String* method, String* url, bool async,
 {
     // FIXME : https://xhr.spec.whatwg.org/#the-open()-method
     if (!HeadersData::isValidHTTPToken(method)) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                               DOMException::SYNTAX_ERR, "SYNTAX_ERR");
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                               "SYNTAX_ERR");
     }
 
     if (FetchUtils::isForbiddenMethod(method)) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                               DOMException::SECURITY_ERR, "SECURITY_ERR");
+        throw new DOMException(executionContext(), DOMException::SECURITY_ERR,
+                               "SECURITY_ERR");
     }
 
     if (!async && m_resourceRequest->timeout() != 0) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(executionContext(),
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
@@ -411,8 +415,7 @@ void XMLHttpRequest::setResponseType(XMLHttpRequestResponseType type)
     if (m_resourceRequest->readyState() == ReadyState::Loading ||
         m_resourceRequest->readyState() == ReadyState::Done) {
         throw new DOMException(
-            scriptBindingInstance()->ownerDocument(),
-            DOMException::INVALID_STATE_ERR,
+            executionContext(), DOMException::INVALID_STATE_ERR,
             "The response type cannot be set if the object's state is LOADING "
             "or DONE.");
     }
@@ -421,8 +424,7 @@ void XMLHttpRequest::setResponseType(XMLHttpRequestResponseType type)
     if (m_resourceRequest->readyState() != ReadyState::Unset &&
         m_resourceRequest->isSync()) {
         throw new DOMException(
-            scriptBindingInstance()->ownerDocument(),
-            DOMException::INVALID_ACCESS_ERR,
+            executionContext(), DOMException::INVALID_ACCESS_ERR,
             "Failed to set the 'responseType' property on 'XMLHttpRequest': "
             "The response type cannot be changed for synchronous requests made "
             "from a document.");
@@ -546,10 +548,7 @@ String* XMLHttpRequest::responseText() const
     if (!(m_responseType == XMLHttpRequestResponseType::Empty ||
           m_responseType == XMLHttpRequestResponseType::Text)) {
         throw new DOMException(
-            const_cast<XMLHttpRequest*>(this)
-                ->scriptBindingInstance()
-                ->ownerDocument(),
-            DOMException::INVALID_STATE_ERR,
+            document()->executionContext(), DOMException::INVALID_STATE_ERR,
             "Failed to read the 'responseText' property from 'XMLHttpRequest': "
             "The value is only accessible if the object's 'responseType' is '' "
             "or 'text'");
@@ -566,10 +565,7 @@ Document* XMLHttpRequest::responseXML() const
     if (!(m_responseType == XMLHttpRequestResponseType::Empty ||
           m_responseType == XMLHttpRequestResponseType::Document)) {
         throw new DOMException(
-            const_cast<XMLHttpRequest*>(this)
-                ->scriptBindingInstance()
-                ->ownerDocument(),
-            DOMException::INVALID_STATE_ERR,
+            document()->executionContext(), DOMException::INVALID_STATE_ERR,
             "Failed to read the 'responseXML' property from 'XMLHttpRequest': "
             "The value is only accessible if the object's 'responseType' is '' "
             "or 'document'");
@@ -590,7 +586,7 @@ void XMLHttpRequest::setTimeout(uint32_t timeout)
 {
     if (m_resourceRequest->readyState() != ReadyState::Unset &&
         m_resourceRequest->isSync() == true) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(executionContext(),
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
@@ -607,7 +603,7 @@ void XMLHttpRequest::setWithCredentials(bool value)
     auto state = m_resourceRequest->readyState();
 
     if (!(state == ReadyState::Unset || state == ReadyState::Opened)) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
@@ -633,13 +629,13 @@ void XMLHttpRequest::setRequestHeader(String* header, String* value)
     header = header->trim();
     value = value->trim();
     if (m_resourceRequest->readyState() != ReadyState::Opened) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(executionContext(),
                                DOMException::INVALID_STATE_ERR,
                                "InvalidStateError");
     }
     if (header->length() == 0) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                               DOMException::SYNTAX_ERR, "InvalidStateError");
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                               "InvalidStateError");
     }
 
     if (FetchUtils::isForbiddenHeaderName(header)) {

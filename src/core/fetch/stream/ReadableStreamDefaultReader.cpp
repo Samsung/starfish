@@ -26,7 +26,7 @@ namespace Starfish {
 
 ReadableStreamDefaultReader::ReadableStreamDefaultReader(Document* document,
                                                          ReadableStream* stream)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_stream(stream)
     , m_pendingCount(0)

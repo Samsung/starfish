@@ -56,7 +56,8 @@ HistoryManager* HistoryManager::create(HTMLIFrameElement* iframe)
 
 void HistoryManager::push(Document* document, ResourceURL* url)
 {
-    auto serializedState = Serializer::serialize(document, scriptNull());
+    auto serializedState =
+        Serializer::serialize(document->executionContext(), scriptNull());
     ScriptValue state = scriptNull();
     if (!m_historyEntries.empty()) {
         m_historyEntries.erase(std::next(m_curEntry, 1),
@@ -70,7 +71,8 @@ void HistoryManager::replace(Document* document, ResourceURL* url)
 {
     HistoryEntry* entry = currentEntry();
     if (entry) {
-        auto serializedState = Serializer::serialize(document, scriptNull());
+        auto serializedState =
+            Serializer::serialize(document->executionContext(), scriptNull());
         entry->init(serializedState, String::emptyString, url);
     }
 }
@@ -161,7 +163,8 @@ ScriptValue HistoryManager::state(Document* document)
 {
     HistoryEntry* entry = currentEntry();
     if (entry) {
-        return Serializer::deserialize(document, currentEntry()->state());
+        return Serializer::deserialize(document->executionContext(),
+                                       currentEntry()->state());
     } else {
         return scriptNull();
     }
@@ -170,7 +173,8 @@ ScriptValue HistoryManager::state(Document* document)
 void HistoryManager::pushState(Document* document, ScriptValue state,
                                String* title, Nullable<String*> url)
 {
-    auto serializedState = Serializer::serialize(document, state);
+    auto serializedState =
+        Serializer::serialize(document->executionContext(), state);
     ResourceURL* newURL = nullptr;
     if (url.hasValue()) {
         newURL =
@@ -186,7 +190,8 @@ void HistoryManager::pushState(Document* document, ScriptValue state,
 void HistoryManager::replaceState(Document* document, ScriptValue state,
                                   String* title, Nullable<String*> url)
 {
-    auto serializedState = Serializer::serialize(document, state);
+    auto serializedState =
+        Serializer::serialize(document->executionContext(), state);
 
     ResourceURL* newURL;
     if (url.hasValue()) {

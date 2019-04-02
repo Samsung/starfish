@@ -94,7 +94,7 @@ void HTMLTextAreaElement::didAttributeChanged(QualifiedName name, String* old,
     HTMLTextEditable::didAttributeChanged(name, old, val, attributeCreated,
                                           attributeRemoved);
     if (name == starfish()->staticStrings()->m_dir) {
-        Event* e = new Event(document(),
+        Event* e = new Event(executionContext(),
                              starfish()->staticStrings()->m_input.localName());
         e->setBubbles(true);
         dispatchEventIdleTimeByUA(e);

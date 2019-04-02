@@ -805,7 +805,7 @@ void WebContainer::EvaluateJavaScript(
 
     if (Starfish::isMainThread()) {
         p->webview->messageLoop()->addIdler(
-            p->webview->mainBrowsingContext()->document(),
+            p->webview->mainBrowsingContext()->window(),
             [](size_t handle, void* data) {
                 Params* p = (Params*)data;
                 p->webview->evaluateJavaScript(
@@ -815,7 +815,7 @@ void WebContainer::EvaluateJavaScript(
             p);
     } else {
         p->webview->messageLoop()->addIdlerWithNoGCRootingInOtherThread(
-            p->webview->mainBrowsingContext()->document(),
+            p->webview->mainBrowsingContext()->window(),
             [](size_t handle, void* data) {
                 Params* p = (Params*)data;
 

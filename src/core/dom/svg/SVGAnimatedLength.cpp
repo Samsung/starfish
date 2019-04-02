@@ -25,9 +25,15 @@ namespace Starfish {
 
 SVGAnimatedLength::SVGAnimatedLength(Document* document, SVGLength* baseVal,
                                      SVGLength* animVal)
-    : ScriptWrappable(this, document)
+    : ScriptWrappable(this)
+    , m_scriptBindingInstance(document->scriptBindingInstance())
     , m_baseVal(baseVal)
     , m_animVal(animVal)
 {
+}
+
+ScriptBindingInstance* SVGAnimatedLength::scriptBindingInstance()
+{
+    return m_scriptBindingInstance;
 }
 }

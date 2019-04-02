@@ -25,7 +25,7 @@
 namespace Starfish {
 
 CanvasGradient::CanvasGradient(CanvasRenderingContext* context)
-    : ScriptWrappable(this, context->executionContext())
+    : ScriptWrappable(this)
     , m_canvasRenderingContext(context)
 {
 }

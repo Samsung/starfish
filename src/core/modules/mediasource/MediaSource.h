@@ -61,6 +61,8 @@ public:
                       void* domObjectPointer) override;
     virtual bool isMediaSource() const override;
 
+    virtual ExecutionContext* executionContext() override;
+
     SourceBuffer* addSourceBuffer(String* type);
     void removeSourceBuffer(SourceBuffer* sourceBuffer);
     void endOfStream();
@@ -170,7 +172,6 @@ protected:
     void didSourceBufferUpdated(SourceBuffer* src);
     ReadyState m_readyState;
     bool m_isActiveBufferComputed;
-    ScriptBindingInstance* m_scriptBindingInstance;
     HTMLMediaElement* m_attachedMediaElement;
     SourceBuffer* m_activeVideoSourceBuffer;
     size_t m_activeVideoStreamIndex;

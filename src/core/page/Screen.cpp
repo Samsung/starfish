@@ -27,9 +27,14 @@
 namespace Starfish {
 
 Screen::Screen(Document* document)
-    : ScriptWrappable(this, document)
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
 {
+}
+
+ScriptBindingInstance* Screen::scriptBindingInstance()
+{
+    return document()->scriptBindingInstance();
 }
 
 int32_t Screen::availWidth() const

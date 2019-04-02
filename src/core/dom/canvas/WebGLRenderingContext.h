@@ -28,11 +28,7 @@ namespace Starfish {
 
 class WebGLRenderingContext : public CanvasRenderingContext {
 public:
-    WebGLRenderingContext(HTMLCanvasElement* canvasElement)
-        : CanvasRenderingContext(
-              ((ScriptWrappable*)canvasElement)->executionContext())
-    {
-    }
+    WebGLRenderingContext(HTMLCanvasElement* canvasElement);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual bool isWebGLRenderingContext() const override;

@@ -257,7 +257,8 @@ void HTMLIFrameElement::navigate(ResourceURL* url, HistoryManagerAction type,
 void HTMLIFrameElement::childBrowsingContextLoaded()
 {
     String* eventType = starfish()->staticStrings()->m_load.localName();
-    Event* e = new Event(document(), eventType, EventInit(false, false));
+    Event* e =
+        new Event(executionContext(), eventType, EventInit(false, false));
     dispatchEventByUA(this, e, true);
 }
 

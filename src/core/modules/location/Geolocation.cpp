@@ -26,6 +26,7 @@
 #include "core/dom/Document.h"
 #include "core/page/WebView.h"
 #include "core/page/BrowsingContext.h"
+#include "core/page/Window.h"
 
 namespace Starfish {
 
@@ -37,7 +38,7 @@ Geolocation* Geolocation::create(Document* document)
 #endif
 
 Geolocation::Geolocation(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , DocumentHoldable(document)
 {
 }
@@ -49,12 +50,12 @@ bool Geolocation::getCurrentPositionPreprocessing(
 {
     if (timeout == 0) {
         m_document->webView()->messageLoop()->addIdler(
-            m_document,
+            window(),
             [](size_t, void* data, void* data2, void* data3) {
                 Document* document = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(document,
-                   new PositionError(document, PositionError::Error::TIMEOUT),
+                cb(document, new PositionError(document->executionContext(),
+                                               PositionError::Error::TIMEOUT),
                    data3);
             },
             m_document, (void*)errorCb, errorCbData);
@@ -72,13 +73,13 @@ void Geolocation::getCurrentPosition(GeoPositionCallback cb, void* cbData,
                                         enableHighAccuracy, timeout,
                                         maximumAge)) {
         m_document->webView()->messageLoop()->addIdler(
-            m_document,
+            window(),
             [](size_t, void* data, void* data2, void* data3) {
                 Document* document = (Document*)data;
                 GeoPositionErrorCallback cb = (GeoPositionErrorCallback)data2;
-                cb(document,
-                   new PositionError(
-                       document, PositionError::Error::POSITION_UNAVAILABLE),
+                cb(document, new PositionError(
+                                 document->executionContext(),
+                                 PositionError::Error::POSITION_UNAVAILABLE),
                    data3);
             },
             m_document, (void*)errorCb, errorCbData);

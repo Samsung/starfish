@@ -278,8 +278,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                     CSPDirectives::ScriptSrc, script, nonce())) {
                 String* eventType =
                     starfish()->staticStrings()->m_error.localName();
-                Event* e =
-                    new Event(document(), eventType, EventInit(false, false));
+                Event* e = new Event(executionContext(), eventType,
+                                     EventInit(false, false));
                 dispatchEventIdleTimeByUA(e);
                 return false;
             }
@@ -309,8 +309,8 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                     CSPDirectives::ScriptSrc, nonce(), rurl)) {
                 String* eventType =
                     starfish()->staticStrings()->m_error.localName();
-                Event* e =
-                    new Event(document(), eventType, EventInit(false, false));
+                Event* e = new Event(executionContext(), eventType,
+                                     EventInit(false, false));
                 dispatchEventIdleTimeByUA(e);
                 return false;
             }
@@ -330,7 +330,7 @@ bool HTMLScriptElement::executeScriptImpl(bool forceSync, bool inParser)
                             return true;
                         } else if (res->isFinished()) {
                             webView()->messageLoop()->addIdler(
-                                document(),
+                                window(),
                                 [](size_t id, void* res, void* self) {
                                     HTMLScriptElement* scriptElement =
                                         (HTMLScriptElement*)self;

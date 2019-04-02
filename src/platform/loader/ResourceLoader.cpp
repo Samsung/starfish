@@ -507,7 +507,7 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
         } else {
             STARFISH_ASSERT(syncLevel == RequestSyncLevel::NeverSync);
             webView()->messageLoop()->addIdler(
-                document(),
+                window(),
                 [](size_t, void* data, void* data2) {
                     Resource* org = (Resource*)data;
                     Resource* now = (Resource*)data2;
@@ -516,7 +516,7 @@ void ResourceLoader::cacheHit(Resource* org, Resource* now,
                 org, now);
         }
     } else if (s == Resource::State::Failed) {
-        webView()->messageLoop()->addIdler(document(),
+        webView()->messageLoop()->addIdler(window(),
                                            [](size_t, void* data) {
                                                Resource* now = (Resource*)data;
                                                now->didLoadFailed();
@@ -534,7 +534,7 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
         m_isDocumentInOpenState = false;
         m_document->m_onLoadFired = true;
         webView()->messageLoop()->addIdler(
-            document(),
+            window(),
             [](size_t, void* data) {
                 Document* doc = (Document*)data;
                 doc->window()->setTimeout(
@@ -557,8 +557,8 @@ void ResourceLoader::fireDocumentOnLoadEventIfNeeded()
                         String* eventType = doc->starfish()
                                                 ->staticStrings()
                                                 ->m_load.localName();
-                        Event* e =
-                            new Event(doc, eventType, EventInit(false, false));
+                        Event* e = new Event(doc->executionContext(), eventType,
+                                             EventInit(false, false));
                         doc->window()->dispatchEventByUA(e);
                         if (!doc->browsingContext()
                                  ->isTopLevelBrowsingContext()) {

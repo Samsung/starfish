@@ -433,7 +433,7 @@ SerializedTypedData* Serializer::serialize(ExecutionContext* executionContext,
                                            SerializingMap& memory)
 {
     SandBoxRef* sandBox = SandBoxRef::create(
-        executionContext->ownerScriptBindingInstance()->scriptContext());
+        executionContext->scriptBindingInstance()->scriptContext());
     SerializedTypedData* data = nullptr;
     auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
         data = serializeInternal(executionContext, state, value, memory);
@@ -463,7 +463,7 @@ ScriptValue Serializer::deserialize(ExecutionContext* executionContext,
                                     DeserializingMap& memory)
 {
     SandBoxRef* sandBox = SandBoxRef::create(
-        executionContext->ownerScriptBindingInstance()->scriptContext());
+        executionContext->scriptBindingInstance()->scriptContext());
     ScriptValue data = ValueRef::createUndefined();
     auto result = sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {
         data = deserializeInternal(executionContext, state, value, memory);
@@ -546,7 +546,7 @@ void Serializer::deserializeWithTransfer(
     DeserializingMap initialMap;
     ScriptValue deserialized = nullptr;
     SandBoxRef* sandBox = SandBoxRef::create(
-        executionContext->ownerScriptBindingInstance()->scriptContext());
+        executionContext->scriptBindingInstance()->scriptContext());
     bool errorFound = false;
     auto sandBoxResult =
         sandBox->run([&](ExecutionStateRef* state) -> ValueRef* {

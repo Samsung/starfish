@@ -24,22 +24,14 @@
 
 namespace Starfish {
 
+class Document;
+
 class Coordinates : public ScriptWrappable {
 public:
-    Coordinates(ExecutionContext* executionContext, double latitude,
-                double longitude, Nullable<double> altitude, double accuracy,
+    Coordinates(Document* document, double latitude, double longitude,
+                Nullable<double> altitude, double accuracy,
                 Nullable<double> altitudeAccuracy, Nullable<double> heading,
-                Nullable<double> speed)
-        : ScriptWrappable(this, executionContext)
-        , m_latitude(latitude)
-        , m_longitude(longitude)
-        , m_altitude(altitude)
-        , m_accuracy(accuracy)
-        , m_altitudeAccuracy(altitudeAccuracy)
-        , m_heading(heading)
-        , m_speed(speed)
-    {
-    }
+                Nullable<double> speed);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Coordinates)
 
@@ -82,6 +74,7 @@ public:
     }
 
 protected:
+    ScriptBindingInstance* m_scriptBindingInstance;
     double m_latitude;
     double m_longitude;
     Nullable<double> m_altitude;

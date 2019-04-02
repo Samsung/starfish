@@ -54,7 +54,9 @@ public:
              double z = 0, double w = 1);
     DOMPoint(ExecutionContext* executionContext, const DOMPointInit&);
 
-    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(DOMPoint)
+    virtual void init(ScriptBindingInstance* instance,
+                      void* domObjectPointer) override;
+    virtual bool isDOMPoint() const override;
 
     void setX(double x)
     {

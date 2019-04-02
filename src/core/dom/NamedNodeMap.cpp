@@ -30,7 +30,7 @@
 namespace Starfish {
 
 NamedNodeMap::NamedNodeMap(Element* element)
-    : ScriptWrappable(this, element->executionContext())
+    : ScriptWrappable(this)
     , m_element(element)
 {
 }
@@ -79,7 +79,7 @@ Attr* NamedNodeMap::removeNamedItem(String* name)
 {
     Attr* old = getNamedItem(name);
     if (old == nullptr) {
-        throw new DOMException(element()->document(),
+        throw new DOMException(element()->executionContext(),
                                DOMException::Code::NOT_FOUND_ERR, nullptr);
     }
     return m_element->removeAttributeNode(old);
@@ -89,7 +89,7 @@ Attr* NamedNodeMap::removeNamedItemNS(Nullable<String*> ns, String* localName)
 {
     Attr* old = getNamedItemNS(ns, localName);
     if (old == nullptr) {
-        throw new DOMException(element()->document(),
+        throw new DOMException(element()->executionContext(),
                                DOMException::Code::NOT_FOUND_ERR, nullptr);
     }
     return m_element->removeAttributeNode(old);

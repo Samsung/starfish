@@ -38,12 +38,17 @@ TextTrack::TextTrack(Document* document, Kind kind, String* label,
     , m_kind(kind)
     , m_label(label)
     , m_language(language)
-    , m_cues(new TextTrackCueList(document))
-    , m_activeCues(new TextTrackCueList(document))
+    , m_cues(new TextTrackCueList(document->executionContext()))
+    , m_activeCues(new TextTrackCueList(document->executionContext()))
     , m_trackElement(nullptr)
     , m_cachedTime(TEXTTRACK_INVALID_TIMEVALUE)
     , m_cachedIdx(0)
 {
+}
+
+ExecutionContext* TextTrack::executionContext()
+{
+    return document()->executionContext();
 }
 
 DEFINE_EVENT_LISTENER(TextTrack, cuechange);
@@ -58,7 +63,8 @@ void TextTrack::dispatchCueChangeEvent()
     } else {
         eventType = String::fromUTF8("cuechange");
     }
-    Event* e = new Event(document(), eventType, EventInit(false, false));
+    Event* e =
+        new Event(executionContext(), eventType, EventInit(false, false));
     dispatchEventByUA(e);
 }
 

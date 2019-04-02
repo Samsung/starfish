@@ -27,7 +27,7 @@
 namespace Starfish {
 
 Storage::Storage(Window* window, StorageImpl* storageImpl)
-    : ScriptWrappable(this, window->executionContext())
+    : ScriptWrappable(this)
     , WindowHoldable(window)
     , m_storageImpl(storageImpl)
 {

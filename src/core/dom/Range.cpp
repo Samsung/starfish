@@ -28,7 +28,7 @@
 namespace Starfish {
 
 Range::Range(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , m_document(document)
     , m_start(document)
     , m_end(document)
@@ -38,7 +38,7 @@ Range::Range(Document* document)
 
 Range::Range(Document* document, Node* startContainer, unsigned startOffset,
              Node* endContainer, unsigned endOffset)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , m_document(document)
     , m_start(document)
     , m_end(document)
@@ -140,7 +140,7 @@ void Range::setStartBefore(Node* node)
 {
     Node* parent = node->parentNode();
     if (!parent) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::INVALID_NODE_TYPE_ERR);
         return;
     }
@@ -152,7 +152,7 @@ void Range::setStartAfter(Node* node)
 {
     Node* parent = node->parentNode();
     if (!parent) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::INVALID_NODE_TYPE_ERR);
         return;
     }
@@ -164,7 +164,7 @@ void Range::setEndBefore(Node* node)
 {
     Node* parent = node->parentNode();
     if (!parent) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::INVALID_NODE_TYPE_ERR);
         return;
     }
@@ -176,7 +176,7 @@ void Range::setEndAfter(Node* node)
 {
     Node* parent = node->parentNode();
     if (!parent) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::INVALID_NODE_TYPE_ERR);
         return;
     }
@@ -197,7 +197,7 @@ void Range::selectNode(Node* node)
 {
     Node* parent = node->parentNode();
     if (!parent) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::INVALID_NODE_TYPE_ERR);
         return;
     }
@@ -210,7 +210,7 @@ void Range::selectNode(Node* node)
 void Range::selectNodeContents(Node* node)
 {
     if (node->nodeType() == Node::DOCUMENT_TYPE_NODE) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::INVALID_NODE_TYPE_ERR);
         return;
     }
@@ -234,13 +234,13 @@ short Range::compareBoundaryPoints(unsigned how, Range* sourceRange)
 {
     if (how != START_TO_START && how != START_TO_END && how != END_TO_END &&
         how != END_TO_START) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::NOT_SUPPORTED_ERR);
         return 0;
     }
 
     if (root() != sourceRange->root()) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::WRONG_DOCUMENT_ERR);
         return 0;
     }
@@ -264,14 +264,17 @@ void Range::insertNode(Node* node)
 {
     Node* startNode = startContainer();
     if (startNode->isProcessingInstruction() || startNode->isComment()) {
-        throw new DOMException(m_document, DOMException::HIERARCHY_REQUEST_ERR);
+        throw new DOMException(m_document->executionContext(),
+                               DOMException::HIERARCHY_REQUEST_ERR);
     }
     bool isStartText = startNode->isText();
     if (isStartText && !startNode->parentNode()) {
-        throw new DOMException(m_document, DOMException::HIERARCHY_REQUEST_ERR);
+        throw new DOMException(m_document->executionContext(),
+                               DOMException::HIERARCHY_REQUEST_ERR);
     }
     if (startNode == node) {
-        throw new DOMException(m_document, DOMException::HIERARCHY_REQUEST_ERR);
+        throw new DOMException(m_document->executionContext(),
+                               DOMException::HIERARCHY_REQUEST_ERR);
     }
 
     Node* referenceNode =
@@ -336,7 +339,7 @@ short Range::comparePoint(Node* node, unsigned offset)
 {
     BoundaryPoint newPoint(node, offset);
     if (!compareRoots(m_start, newPoint)) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::WRONG_DOCUMENT_ERR);
         return 0;
     }
@@ -440,14 +443,15 @@ String* Range::toString()
 bool Range::isValidOffset(Node* node, unsigned offset)
 {
     if (node->nodeType() == Node::DOCUMENT_TYPE_NODE) {
-        throw new DOMException(m_document,
+        throw new DOMException(m_document->executionContext(),
                                DOMException::Code::INVALID_NODE_TYPE_ERR);
         return false;
     }
 
     if (offset > node->nodeLength() ||
         offset > static_cast<unsigned>(std::numeric_limits<int>::max())) {
-        throw new DOMException(m_document, DOMException::Code::INDEX_SIZE_ERR);
+        throw new DOMException(m_document->executionContext(),
+                               DOMException::Code::INDEX_SIZE_ERR);
         return false;
     }
 

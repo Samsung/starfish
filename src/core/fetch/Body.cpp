@@ -131,7 +131,9 @@ Promise* Body::blob()
                 void* buffer = calloc(1, str.length());
                 memcpy(buffer, str.data(), str.length());
 
-                auto blob = new Blob(scriptBindingInstance()->ownerDocument(),
+                auto blob = new Blob(scriptBindingInstance()
+                                         ->ownerDocument()
+                                         ->executionContext(),
                                      value->length(), contentType(), buffer,
                                      false, false);
 

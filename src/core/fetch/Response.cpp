@@ -28,7 +28,7 @@
 namespace Starfish {
 
 Response::Response(Document* document)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , Body(document->window())
     , m_instance(document->scriptBindingInstance())
     , m_headers(Headers(document))
@@ -38,7 +38,7 @@ Response::Response(Document* document)
 }
 
 Response::Response(Document* document, Nullable<BodyInit>& body)
-    : ScriptWrappable(this, document->executionContext())
+    : ScriptWrappable(this)
     , Body(document->window(), body)
     , m_instance(document->scriptBindingInstance())
     , m_headers(Headers(document))
@@ -54,12 +54,14 @@ Response::Response(Document* document, Nullable<BodyInit>& body,
     : Response(document, body)
 {
     if (init.status() < 200 || init.status() > 599) {
-        throw new DOMException(document, DOMException::Code::SCRIPT_RANGE_ERR);
+        throw new DOMException(document->executionContext(),
+                               DOMException::Code::SCRIPT_RANGE_ERR);
     }
     setStatus(init.status());
 
     if (!isValidReasonPhrase(init.statusText())) {
-        throw new DOMException(document, DOMException::Code::SCRIPT_TYPE_ERR);
+        throw new DOMException(document->executionContext(),
+                               DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
     setStatusText(init.statusText());
@@ -78,7 +80,7 @@ void Response::handleBodyInit(Nullable<BodyInit>& body)
     const auto st = status();
     if (body.hasValue()) {
         if (st == 101 || st == 204 || st == 205 || st == 304) {
-            throw new DOMException(document(),
+            throw new DOMException(document()->executionContext(),
                                    DOMException::Code::SCRIPT_TYPE_ERR);
         }
 
@@ -125,7 +127,8 @@ Response* Response::redirect(Document* document, String* url)
     ResourceURL parsedUrl = ResourceURL(url);
 
     if (!parsedUrl.isValid()) {
-        throw new DOMException(document, DOMException::Code::SCRIPT_TYPE_ERR);
+        throw new DOMException(document->executionContext(),
+                               DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
     Response* response = new Response(document);
@@ -144,7 +147,8 @@ Response* Response::redirect(Document* document, String* url,
                              unsigned short status)
 {
     if (!isValidRedirectStatus(status)) {
-        throw new DOMException(document, DOMException::Code::SCRIPT_RANGE_ERR);
+        throw new DOMException(document->executionContext(),
+                               DOMException::Code::SCRIPT_RANGE_ERR);
     }
 
     Response* response = redirect(document, url);

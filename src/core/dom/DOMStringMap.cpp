@@ -26,7 +26,7 @@
 namespace Starfish {
 
 DOMStringMap::DOMStringMap(Element* element)
-    : ScriptWrappable(this, element->executionContext())
+    : ScriptWrappable(this)
     , m_element(element)
 {
 }
@@ -129,7 +129,7 @@ bool DOMStringMap::defaultNamedSetter(String* key, String* value)
 {
     STARFISH_ASSERT(m_element);
     if (!isCustomDataPropertyName(key)) {
-        throw new DOMException(m_element->document(),
+        throw new DOMException(m_element->executionContext(),
                                DOMException::Code::SYNTAX_ERR);
     }
     m_element->setAttribute(generateAttributeName(key), value);

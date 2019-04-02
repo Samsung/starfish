@@ -78,6 +78,11 @@ ServiceWorkerContainer::~ServiceWorkerContainer()
     ServiceWorkerClientProcess::getInstance()->destroy();
 }
 
+ExecutionContext* ServiceWorkerContainer::executionContext()
+{
+    return document()->executionContext();
+}
+
 Promise* ServiceWorkerContainer::registerServiceWorker(
     String* rawScriptURL, RegistrationOptions* options /*= nullptr*/)
 {
@@ -232,7 +237,7 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
 void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 {
     executionContext()->webBase()->messageLoop()->addIdler(
-        executionContext(),
+        executionContext()->globalScope(),
         [](size_t handle, void* data1, void* data2) {
             ServiceWorkerJob* job = static_cast<ServiceWorkerJob*>(data1);
             WebOrigin* webOrigin = static_cast<WebOrigin*>(data2);
@@ -299,7 +304,7 @@ void ServiceWorkerContainer::resolveJobPromise(
         params->container = this;
 
         context->webBase()->messageLoop()->addIdler(
-            context,
+            context->globalScope(),
             [](size_t handle, void* data) {
                 Params* params = static_cast<Params*>(data);
                 ServiceWorkerJob* job = params->job;

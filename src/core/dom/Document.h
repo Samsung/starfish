@@ -20,7 +20,6 @@
 #ifndef __StarfishDocument__
 #define __StarfishDocument__
 
-#include "core/dom/ExecutionContext.h"
 #include "core/dom/Node.h"
 #include "core/util/BloomFilter.h"
 #include "core/style/WebFont.h"
@@ -58,6 +57,7 @@ class DOMImplementation;
 class DeferredScriptDownloadClient;
 class PreloadScanner;
 class ContentSecurityPolicy;
+class ExecutionContext;
 
 struct GradientDrawingInfo;
 
@@ -84,7 +84,7 @@ enum DocumentReadyState ENSURE_ENUM_UNSIGNED {
 
 typedef HTMLScriptElementOrSVGScriptElement HTMLOrSVGScriptElement;
 
-class Document : public Node, public ExecutionContext {
+class Document : public Node {
     friend class DOMImplementation;
     friend class Window;
     friend class ActiveResourceRequestTracker;
@@ -264,6 +264,11 @@ public:
     }
 
     BrowsingContext* browsingContext() const;
+
+    ExecutionContext* executionContext() const
+    {
+        return m_executionContext;
+    }
 
     ResourceLoader& resourceLoader()
     {
@@ -561,6 +566,14 @@ public:
                              std::shared_ptr<NativeGradient> value);
     bool pruneNativeGradientCacheIfNeeds(size_t reserve);
 
+    void setReferrer(ResourceURL* m_referrer);
+
+    void setDocumentURI(ResourceURL* newURL);
+    ResourceURL* documentURI() const;
+    String* urlString();
+
+    uint64_t createdTick();
+
 #define VIRTUAL
 #define OVERRIDE
     // https://html.spec.whatwg.org/multipage/webappapis.html#globaleventhandlers
@@ -651,11 +664,9 @@ protected:
     {
         Node::fillGCDescriptor(desc);
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_window));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_documentURI));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseURL));
+        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_executionContext));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseElementURL));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseTarget));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_referrer));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webOrigin));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_characterSet));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentType));
@@ -669,7 +680,6 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleSheetList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_brokenImage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_animationExecutor));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_scriptBindingInstance));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_activeResourceRequests));
         GC_set_bit(desc, GC_WORD_OFFSET(Document,
                                         m_namedAccessActiveHTMLCollectionList));
@@ -712,11 +722,10 @@ protected:
     bool m_onLoadFired : 1;
     bool m_isFocusRingCacheValid : 1;
 
+    ExecutionContext* m_executionContext;
     Window* m_window;
-    ResourceURL* m_baseURL;
     ResourceURL* m_baseElementURL;
     String* m_baseTarget;
-    ResourceURL* m_referrer;
     WebOrigin* m_webOrigin;
     String* m_characterSet;
     String* m_contentType;

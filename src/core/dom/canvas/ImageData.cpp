@@ -26,22 +26,24 @@
 
 namespace Starfish {
 ImageData::ImageData(ExecutionContext* ownerExecutionContext)
-    : ScriptWrappable(this, ownerExecutionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(ownerExecutionContext)
     , m_data(createEmptyUint8ClampedArray(
-          executionContext()->ownerScriptBindingInstance()))
+          executionContext()->scriptBindingInstance()))
 {
 }
 
 ImageData::ImageData(ExecutionContext* ownerExecutionContext,
                      ScriptUint8ClampedArray array)
-    : ScriptWrappable(this, ownerExecutionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(ownerExecutionContext)
     , m_data(array)
 {
 }
 
 ScriptBindingInstance* ImageData::scriptBindingInstance()
 {
-    return executionContext()->ownerScriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
 }
 
 SerializedData* ImageData::serialize(SerializingMap& memory)

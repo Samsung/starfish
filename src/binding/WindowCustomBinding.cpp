@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
 #include "core/dom/HTMLCollection.h"
@@ -65,7 +66,7 @@ static void timeoutHandler(void* data)
     TimeOutData* td = (TimeOutData*)data;
     FunctionObjectRef* fn = (FunctionObjectRef*)td->listener;
     ScriptBindingInstance* instance = td->globalScope->executionContext()
-        ->ownerScriptBindingInstance();
+        ->scriptBindingInstance();
 
     callScriptFunction(instance, ValueRef::create(fn),
                        td->argVector.data(), td->argVector.size(),
@@ -183,7 +184,7 @@ static void requestAnimationFrameHandler(void* data)
     newArgVector.insert(newArgVector.end(), td->argVector.begin(),
                         td->argVector.end());
     ScriptBindingInstance* instance = td->globalScope->executionContext()
-        ->ownerScriptBindingInstance();
+        ->scriptBindingInstance();
     callScriptFunction(instance, ValueRef::create(fn),
                        newArgVector.data(), newArgVector.size(),
                        scriptUndefined());
@@ -300,7 +301,7 @@ static ValueRef* debugPauseFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->webView()->messageLoop()->addIdler(window->executionContext(),
+    window->webView()->messageLoop()->addIdler(window,
                                                [](size_t, void* data, void*) {
                                                    PlatformWindow* window =
                                                        (PlatformWindow*)data;
@@ -316,7 +317,7 @@ static ValueRef* debugResumeFunction(ExecutionStateRef* state,
 {
     GENERATE_WINDOW();
 
-    window->webView()->messageLoop()->addIdler(window->executionContext(),
+    window->webView()->messageLoop()->addIdler(window,
                                                [](size_t, void* data, void*) {
                                                    PlatformWindow* window =
                                                        (PlatformWindow*)data;

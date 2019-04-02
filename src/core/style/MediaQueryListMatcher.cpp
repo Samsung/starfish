@@ -52,7 +52,7 @@ void MediaQueryListMatcher::mediaFeaturesChanged()
                 MediaQueryListEventInit(list.first->media(),
                                         list.first->matches());
             auto mediaQueryListEvent = new MediaQueryListEvent(
-                document(),
+                document()->executionContext(),
                 document()->starfish()->staticStrings()->m_change.localName(),
                 mediaQueryListEventInit);
             document()->dispatchEventByUA(list.first, mediaQueryListEvent,

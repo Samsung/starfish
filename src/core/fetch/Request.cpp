@@ -51,7 +51,7 @@ static BodyInit toBodyInitFromValueRef(ContextRef* ctx, ValueRef* from)
 }
 
 Request::Request(Window* window, RequestInfo& input)
-    : ScriptWrappable(this, window->executionContext())
+    : ScriptWrappable(this)
     , Body(window)
     , m_headers(Headers(window->document()))
 {
@@ -59,7 +59,7 @@ Request::Request(Window* window, RequestInfo& input)
 }
 
 Request::Request(Window* window, RequestInfo& input, RequestInit& init)
-    : ScriptWrappable(this, window->executionContext())
+    : ScriptWrappable(this)
     , Body(window)
     , m_headers(Headers(window->document()))
 {
@@ -144,9 +144,9 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         String* method = init->method();
         if (!HeadersData::isValidHTTPToken(method) ||
             FetchUtils::isForbiddenMethod(method)) {
-            throw new DOMException(scriptBindingInstance()->ownerDocument(),
-                                   DOMException::SCRIPT_TYPE_ERR,
-                                   "SCRIPT_TYPE_ERR");
+            throw new DOMException(
+                scriptBindingInstance()->ownerDocument()->executionContext(),
+                DOMException::SCRIPT_TYPE_ERR, "SCRIPT_TYPE_ERR");
         }
 
         m_data.m_method = FetchUtils::normalizeMethod(method);
@@ -180,7 +180,7 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         if (!body->isUndefinedOrNull()) {
             if (m_data.m_method->equals("GET") ||
                 m_data.m_method->equals("HEAD")) {
-                throw new DOMException(document(),
+                throw new DOMException(document()->executionContext(),
                                        DOMException::Code::SCRIPT_TYPE_ERR);
             }
 

@@ -124,7 +124,8 @@ public:
 
                 String* eventName =
                     request->starfish()->staticStrings()->m_open.localName();
-                Event* e = new Event(m_eventSource->document(), eventName);
+                Event* e =
+                    new Event(m_eventSource->executionContext(), eventName);
                 e->setBubbles(false);
                 e->setCancelable(false);
                 e->setComposed(false);
@@ -158,8 +159,8 @@ public:
 
                 String* eventName =
                     request->starfish()->staticStrings()->m_error.localName();
-                Event* e = new Event(m_eventSource->document(), eventName,
-                                     EventInit(false, false));
+                Event* e = new Event(m_eventSource->executionContext(),
+                                     eventName, EventInit(false, false));
                 m_eventSource->dispatchEventByUA(m_eventSource, e);
             }
         } else if (request->readyState() == ReadyState::Loading) {
@@ -169,8 +170,8 @@ public:
 
                 String* eventName =
                     request->starfish()->staticStrings()->m_error.localName();
-                Event* e = new Event(m_eventSource->document(), eventName,
-                                     EventInit(false, false));
+                Event* e = new Event(m_eventSource->executionContext(),
+                                     eventName, EventInit(false, false));
                 m_eventSource->dispatchEventByUA(m_eventSource, e);
             }
 
@@ -204,7 +205,7 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
 {
     // https://html.spec.whatwg.org/multipage/server-sent-events.html#dom-eventsource
     if (url->isEmpty()) {
-        throw new DOMException(document, DOMException::SYNTAX_ERR,
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
                                "Cannot open an EventSource to an empty URL.");
     }
 
@@ -215,12 +216,13 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
         msg.appendString(url);
         msg.appendString("'. The URL is invalid.");
         auto s = msg.finalize()->toUTF8NonGCString();
-        throw new DOMException(document, DOMException::SYNTAX_ERR, s.data());
+        throw new DOMException(executionContext(), DOMException::SYNTAX_ERR,
+                               s.data());
     }
 
     if (!document->contentSecurityPolicy()->allowSource(
             CSPDirectives::ConnectSrc, fullURL)) {
-        throw new DOMException(document, DOMException::SECURITY_ERR);
+        throw new DOMException(executionContext(), DOMException::SECURITY_ERR);
     }
 
     m_resourceRequest->addResourceRequestClient(
@@ -230,6 +232,11 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
     connectFired();
 
     document->browsingContext()->addPointerInRootSet(this);
+}
+
+ExecutionContext* EventSource::executionContext()
+{
+    return document()->executionContext();
 }
 
 void EventSource::connect()
@@ -263,7 +270,7 @@ void EventSource::connect()
 void EventSource::start(String* method)
 {
     if (m_resourceRequest->timeout() != 0) {
-        throw new DOMException(scriptBindingInstance()->ownerDocument(),
+        throw new DOMException(executionContext(),
                                DOMException::INVALID_ACCESS_ERR,
                                "InvalidAccessError");
     }
@@ -312,7 +319,7 @@ void EventSource::didHeaderReceived(const HeaderMap& headrs)
 void EventSource::onMessageEvent(String* eventType, String* data,
                                  String* lastEventId)
 {
-    MessageEvent* e = new MessageEvent(document(), eventType);
+    MessageEvent* e = new MessageEvent(executionContext(), eventType);
     e->setBubbles(false);
     e->setCancelable(false);
     e->setComposed(false);

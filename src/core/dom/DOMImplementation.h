@@ -20,6 +20,8 @@
 #ifndef __StarfishDOMImplementation__
 #define __StarfishDOMImplementation__
 
+#include "binding/ScriptWrappable.h"
+
 namespace Starfish {
 
 class DocumentType;
