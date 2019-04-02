@@ -355,6 +355,8 @@ public:
     void screenShot(std::string filePath, void (*callback)(void*), void* data);
     void forceDisableOnloadCapture();
     void simulateClick(float x, float y);
+    void simulateMouseDown(float x, float y);
+    void simulateMouseUp(float x, float y);
     void simulateVisibilitychange(bool show);
     void testStart();
 #endif

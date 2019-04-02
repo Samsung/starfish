@@ -288,7 +288,7 @@ public:
         m_glCfg = evas_gl_config_new();
         m_glCfg->color_format = EVAS_GL_RGBA_8888;
         m_glCfg->depth_bits = EVAS_GL_DEPTH_NONE;
-        m_glCfg->stencil_bits = EVAS_GL_STENCIL_BIT_1;
+        m_glCfg->stencil_bits = EVAS_GL_STENCIL_NONE;
         m_glCfg->multisample_bits = EVAS_GL_MULTISAMPLE_NONE;
 
 // we need to set these secret flags reducing memory usage

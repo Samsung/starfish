@@ -368,11 +368,12 @@ protected:
                                              ->document()
                                              ->frame();
                     SkMatrix s = currentMatrix;
-                    s.preTranslate(frame->borderLeft() + frame->paddingLeft(),
-                                   frame->borderTop() + frame->paddingTop());
+                    s.postTranslate(frame->borderLeft() + frame->paddingLeft(),
+                                    frame->borderTop() + frame->paddingTop());
                     trackRepaintRegion(documentFrame->asFrameBox(), s);
                 }
             }
+            return;
         }
 
         auto iter = frame->childFrameBoxiterator();

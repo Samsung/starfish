@@ -345,3 +345,5 @@ test/cairo/internal-test/css/box-shadow/box-shadow-fast-path-test-if-radius-is-z
 test/cairo/internal-test/canvas/basicFillPath.html
 test/cairo/internal-test/canvas/basicStrokePath.html
 test/cairo/internal-test/canvas/arc.html
+test/cairo/internal-test/css/overflow/overflow-pseudo-element.html
+test/cairo/internal-test/iframe/iframe-hittest.html
