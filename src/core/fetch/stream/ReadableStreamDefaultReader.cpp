@@ -19,27 +19,33 @@
 
 #include "StarfishConfig.h"
 #include "core/fetch/stream/ReadableStreamDefaultReader.h"
+#include "core/fetch/stream/ReadableStreamDefaultController.h"
 #include "core/fetch/stream/ReadableStream.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
-ReadableStreamDefaultReader::ReadableStreamDefaultReader(Document* document,
-                                                         ReadableStream* stream)
+ReadableStreamDefaultReader::ReadableStreamDefaultReader(
+    ExecutionContext* executionContext, ReadableStream* stream)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_executionContext(executionContext)
     , m_stream(stream)
     , m_pendingCount(0)
     , m_locked(false)
     , m_disturbed(false)
     , m_state(ReadableStreamState::Readable)
-    , m_closedPromise(new Promise(m_scriptBindingInstance))
+    , m_closedPromise(new Promise(executionContext->scriptBindingInstance()))
 {
+}
+
+ScriptBindingInstance* ReadableStreamDefaultReader::scriptBindingInstance()
+{
+    return m_executionContext->scriptBindingInstance();
 }
 
 Promise* ReadableStreamDefaultReader::read()
 {
-    Promise* promise = new Promise(m_scriptBindingInstance);
+    Promise* promise = new Promise(scriptBindingInstance());
     m_disturbed = true;
 
     if (m_state == ReadableStreamState::Closed ||
@@ -54,7 +60,7 @@ Promise* ReadableStreamDefaultReader::read()
 
 Promise* ReadableStreamDefaultReader::cancel()
 {
-    Promise* promise = new Promise(m_scriptBindingInstance);
+    Promise* promise = new Promise(scriptBindingInstance());
     m_state = ReadableStreamState::Closed;
     m_disturbed = true;
 

@@ -22,8 +22,7 @@
 #include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/fetch/Request.h"
-#include "core/page/Window.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 #include "core/fetch/FetchUtils.h"
 
@@ -50,23 +49,25 @@ static BodyInit toBodyInitFromValueRef(ContextRef* ctx, ValueRef* from)
     return body;
 }
 
-Request::Request(Window* window, RequestInfo& input)
+Request::Request(ExecutionContext* executionContext, RequestInfo& input)
     : ScriptWrappable(this)
-    , Body(window)
-    , m_headers(Headers(window->document()))
+    , Body(executionContext)
+    , m_headers(Headers(executionContext))
 {
     initialize(&input);
 }
 
-Request::Request(Window* window, RequestInfo& input, RequestInit& init)
+Request::Request(ExecutionContext* executionContext, RequestInfo& input,
+                 RequestInit& init)
     : ScriptWrappable(this)
-    , Body(window)
-    , m_headers(Headers(window->document()))
+    , Body(executionContext)
+    , m_headers(Headers(executionContext))
 {
     initialize(&input, &init);
 }
 
-static String* computeReferrer(String* referrer, Document* document)
+static String* computeReferrer(String* referrer,
+                               ExecutionContext* executionContext)
 {
     // TODO: remove checking 'undefined' and 'about:blank'
     if (referrer->equals("about:blank") || referrer->isEmpty() ||
@@ -74,7 +75,7 @@ static String* computeReferrer(String* referrer, Document* document)
         return String::emptyString;
     }
 
-    String* contextOrigin = document->baseURL()->origin();
+    String* contextOrigin = executionContext->baseURL()->origin();
 
     ResourceURL url(referrer, contextOrigin);
 
@@ -131,8 +132,9 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
 
     } else {
         if (input->isUSVStringValue()) {
-            m_data.m_url = new ResourceURL(input->getUSVStringValue(),
-                                           document()->baseURL()->baseURI());
+            m_data.m_url =
+                new ResourceURL(input->getUSVStringValue(),
+                                executionContext()->baseURL()->baseURI());
             fallbackMode = String::createASCIIString("cors");
             fallbackCredentials = String::createASCIIString("same-origin");
         } else {
@@ -144,9 +146,9 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         String* method = init->method();
         if (!HeadersData::isValidHTTPToken(method) ||
             FetchUtils::isForbiddenMethod(method)) {
-            throw new DOMException(
-                scriptBindingInstance()->ownerDocument()->executionContext(),
-                DOMException::SCRIPT_TYPE_ERR, "SCRIPT_TYPE_ERR");
+            throw new DOMException(executionContext(),
+                                   DOMException::SCRIPT_TYPE_ERR,
+                                   "SCRIPT_TYPE_ERR");
         }
 
         m_data.m_method = FetchUtils::normalizeMethod(method);
@@ -156,7 +158,8 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
                 new ResourceURL(init->referrer()), init->m_referrerPolicy);
         } else {
             m_data.m_referrer = new ReferrerURL(
-                new ResourceURL(init->referrer(), document()->baseURI()),
+                new ResourceURL(init->referrer(),
+                                executionContext()->baseURL()->baseURI()),
                 init->m_referrerPolicy);
         }
 
@@ -180,7 +183,7 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
         if (!body->isUndefinedOrNull()) {
             if (m_data.m_method->equals("GET") ||
                 m_data.m_method->equals("HEAD")) {
-                throw new DOMException(document()->executionContext(),
+                throw new DOMException(executionContext(),
                                        DOMException::Code::SCRIPT_TYPE_ERR);
             }
 
@@ -208,10 +211,15 @@ void Request::initialize(RequestInfo* input, RequestInit* init)
     }
 }
 
+ScriptBindingInstance* Request::scriptBindingInstance()
+{
+    return executionContext()->scriptBindingInstance();
+}
+
 Request* Request::clone()
 {
     RequestInfo requestInfo = RequestOrUSVString::createRequest(this);
-    return new Request(this->window(), requestInfo);
+    return new Request(executionContext(), requestInfo);
 }
 
 Headers* Request::headers()
@@ -236,7 +244,7 @@ String* Request::destination()
 
 String* Request::referrer()
 {
-    return computeReferrer(m_data.m_referrer->urlString(), document());
+    return computeReferrer(m_data.m_referrer->urlString(), executionContext());
 }
 
 String* Request::referrerPolicy()

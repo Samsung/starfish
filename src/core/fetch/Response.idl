@@ -4,12 +4,12 @@
   Constructor(optional BodyInit? body = null,
   optional ResponseInit init),
   Exposed=(Window,Worker),
-  ConstructorCallWith=Document,
+  ConstructorCallWith=ExecutionContext,
   RaisesException=Constructor
 ]
 interface Response {
-  [NewObject, CallWith=Document] static Response error();
-  [NewObject, CallWith=Document, RaisesException] static Response redirect(DOMString url, optional unsigned short status = 302);
+  [NewObject, CallWith=ExecutionContext] static Response error();
+  [NewObject, CallWith=ExecutionContext, RaisesException] static Response redirect(DOMString url, optional unsigned short status = 302);
 
   readonly attribute ResponseType type;
 

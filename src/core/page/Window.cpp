@@ -652,12 +652,12 @@ bool Window::checkSecurityPolicy()
 
 Promise* Window::fetch(RequestInfo& input)
 {
-    return Fetch::fetch(this, input);
+    return Fetch::fetch(executionContext(), input);
 }
 
 Promise* Window::fetch(RequestInfo& input, RequestInit& init)
 {
-    return Fetch::fetch(this, input, init);
+    return Fetch::fetch(executionContext(), input, init);
 }
 
 DEFINE_EVENT_LISTENER(Window, abort);

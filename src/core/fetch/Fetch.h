@@ -20,7 +20,6 @@
 #ifndef __StarfishFetch__
 #define __StarfishFetch__
 
-#include "core/fetch/Request.h"
 #include "binding/RequestOrUSVStringUnion.h"
 
 namespace Starfish {
@@ -28,19 +27,28 @@ namespace Starfish {
 extern RequestOrUSVString toRequestOrUSVStringFromValueRef(
     ExecutionStateRef* state, ValueRef* from);
 
-class Fetch : public WindowHoldable {
-    Fetch(Window* window, Request* request, Promise* promise);
+class Request;
+
+class Fetch {
+    Fetch(ExecutionContext* executionContext, Request* request,
+          Promise* promise);
 
 public:
-    static Promise* fetch(Window* window, RequestInfo& input);
-    static Promise* fetch(Window* window, RequestInfo& input,
-                          RequestInit& init);
+    static Promise* fetch(ExecutionContext* executionContext,
+                          RequestInfo& input);
+    static Promise* fetch(ExecutionContext* executionContext,
+                          RequestInfo& input, RequestInit& init);
 
     void start();
     void success(ResourceRequest* request);
     void fail();
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
 
 private:
+    ExecutionContext* m_executionContext;
     Request* m_request;
     Response* m_response;
     ResourceRequest* m_resourceRequest;

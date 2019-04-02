@@ -1,7 +1,7 @@
 [
   Constructor(ReadableStream stream),
   Exposed=(Window,Worker),
-  ConstructorCallWith=Document
+  ConstructorCallWith=ExecutionContext
 ] interface ReadableStreamDefaultReader {
   Promise<any> read();
   Promise<any> cancel();

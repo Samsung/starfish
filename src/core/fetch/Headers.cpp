@@ -25,12 +25,13 @@ using namespace Escargot;
 #include "core/dom/DOMException.h"
 #include "platform/network/http/HTTPUtil.h"
 #include "core/fetch/Headers.h"
-#include "core/dom/Document.h"
+#include "core/fetch/HeadersData.h"
+#include "core/dom/ExecutionContext.h"
 
 #define THROW_SCRIPT_TYPE_ERROR_IF_NEEDS()                               \
     do {                                                                 \
         if (error) {                                                     \
-            throw new DOMException(document()->executionContext(),       \
+            throw new DOMException(executionContext(),                   \
                                    DOMException::Code::SCRIPT_TYPE_ERR); \
         }                                                                \
     } while (0)
@@ -73,18 +74,22 @@ private:
     std::map<std::string, std::string>::iterator m_iterator;
 };
 
-Headers::Headers(Document* document)
+Headers::Headers(ExecutionContext* executionContext)
     : ScriptWrappable(this)
-    , DocumentHoldable(document)
-    , m_instance(document->scriptBindingInstance())
+    , m_executionContext(executionContext)
     , m_headersData(new HeadersData())
 {
 }
 
-Headers::Headers(Document* document, HeadersInit headersInit)
-    : Headers(document)
+Headers::Headers(ExecutionContext* executionContext, HeadersInit headersInit)
+    : Headers(executionContext)
 {
     fill(headersInit);
+}
+
+ScriptBindingInstance* Headers::scriptBindingInstance()
+{
+    return executionContext()->scriptBindingInstance();
 }
 
 void Headers::fill(HeadersInit headersInit)
@@ -115,7 +120,7 @@ void Headers::initHeadersFromHeaders(Headers* headers)
 
 void Headers::initHeadersFromArrayObject(ScriptObject object)
 {
-    ContextRef* ctx = m_instance->scriptContext();
+    ContextRef* ctx = scriptBindingInstance()->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(ctx);
     ValueVectorRef* values = object->getOwnPropertyKeys(state);
 
@@ -131,7 +136,7 @@ void Headers::initHeadersFromArrayObject(ScriptObject object)
                         ValueRef::create(StringRef::fromASCII("length")));
                     if (length->asNumber() != 2.0) {
                         throw new DOMException(
-                            document()->executionContext(),
+                            executionContext(),
                             DOMException::Code::SCRIPT_TYPE_ERR);
                     }
                     auto elementKey = element->get(state, ValueRef::create(0));
@@ -145,7 +150,7 @@ void Headers::initHeadersFromArrayObject(ScriptObject object)
 
 void Headers::initHeadersFromObject(ScriptObject object)
 {
-    ContextRef* ctx = m_instance->scriptContext();
+    ContextRef* ctx = scriptBindingInstance()->scriptContext();
     ExecutionStateRef* state = ExecutionStateRef::create(ctx);
     ValueVectorRef* values = object->getOwnPropertyKeys(state);
 

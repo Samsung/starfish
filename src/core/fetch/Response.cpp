@@ -18,7 +18,7 @@
  */
 
 #include "StarfishConfig.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 #include "platform/network/http/HTTPHeaderMap.h"
 #include "core/fetch/Headers.h"
@@ -27,21 +27,21 @@
 
 namespace Starfish {
 
-Response::Response(Document* document)
+Response::Response(ExecutionContext* executionContext)
     : ScriptWrappable(this)
-    , Body(document->window())
-    , m_instance(document->scriptBindingInstance())
-    , m_headers(Headers(document))
+    , Body(executionContext)
+    , m_executionContext(executionContext)
+    , m_headers(Headers(executionContext))
     , m_responseData(new ResponseData())
 {
     m_headers.setGuard(Guard::Response);
 }
 
-Response::Response(Document* document, Nullable<BodyInit>& body)
+Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body)
     : ScriptWrappable(this)
-    , Body(document->window(), body)
-    , m_instance(document->scriptBindingInstance())
-    , m_headers(Headers(document))
+    , Body(executionContext, body)
+    , m_executionContext(executionContext)
+    , m_headers(Headers(executionContext))
     , m_responseData(new ResponseData())
 {
     m_headers.setGuard(Guard::Response);
@@ -49,18 +49,18 @@ Response::Response(Document* document, Nullable<BodyInit>& body)
     setStatusText(String::createASCIIString("OK"));
 }
 
-Response::Response(Document* document, Nullable<BodyInit>& body,
+Response::Response(ExecutionContext* executionContext, Nullable<BodyInit>& body,
                    ResponseInit& init)
-    : Response(document, body)
+    : Response(executionContext, body)
 {
     if (init.status() < 200 || init.status() > 599) {
-        throw new DOMException(document->executionContext(),
+        throw new DOMException(executionContext,
                                DOMException::Code::SCRIPT_RANGE_ERR);
     }
     setStatus(init.status());
 
     if (!isValidReasonPhrase(init.statusText())) {
-        throw new DOMException(document->executionContext(),
+        throw new DOMException(executionContext,
                                DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
@@ -75,12 +75,17 @@ Response::Response(Document* document, Nullable<BodyInit>& body,
     setMimeType(m_headers.extractMIMEType());
 }
 
+ScriptBindingInstance* Response::scriptBindingInstance()
+{
+    return executionContext()->scriptBindingInstance();
+}
+
 void Response::handleBodyInit(Nullable<BodyInit>& body)
 {
     const auto st = status();
     if (body.hasValue()) {
         if (st == 101 || st == 204 || st == 205 || st == 304) {
-            throw new DOMException(document()->executionContext(),
+            throw new DOMException(executionContext(),
                                    DOMException::Code::SCRIPT_TYPE_ERR);
         }
 
@@ -110,9 +115,9 @@ bool Response::isValidRedirectStatus(uint32_t status)
             status == 308);
 }
 
-Response* Response::error(Document* document)
+Response* Response::error(ExecutionContext* executionContext)
 {
-    Response* response = new Response(document);
+    Response* response = new Response(executionContext);
     response->setStatus(0);
     response->setStatusText(String::emptyString);
     response->setType(ResponseType::Error);
@@ -122,16 +127,16 @@ Response* Response::error(Document* document)
     return response;
 }
 
-Response* Response::redirect(Document* document, String* url)
+Response* Response::redirect(ExecutionContext* executionContext, String* url)
 {
     ResourceURL parsedUrl = ResourceURL(url);
 
     if (!parsedUrl.isValid()) {
-        throw new DOMException(document->executionContext(),
+        throw new DOMException(executionContext,
                                DOMException::Code::SCRIPT_TYPE_ERR);
     }
 
-    Response* response = new Response(document);
+    Response* response = new Response(executionContext);
     response->setStatus(302);
     response->setStatusText(String::emptyString);
     response->setType(ResponseType::Default);
@@ -143,22 +148,22 @@ Response* Response::redirect(Document* document, String* url)
     return response;
 }
 
-Response* Response::redirect(Document* document, String* url,
+Response* Response::redirect(ExecutionContext* executionContext, String* url,
                              unsigned short status)
 {
     if (!isValidRedirectStatus(status)) {
-        throw new DOMException(document->executionContext(),
+        throw new DOMException(executionContext,
                                DOMException::Code::SCRIPT_RANGE_ERR);
     }
 
-    Response* response = redirect(document, url);
+    Response* response = redirect(executionContext, url);
     response->setStatus(status);
     return response;
 }
 
 Response* Response::clone()
 {
-    Response* clonedResponse = new Response(document());
+    Response* clonedResponse = new Response(executionContext());
     clonedResponse->copyResponseData(this);
     clonedResponse->m_headers.copyHeaders(&m_headers);
     clonedResponse->copyBody(this);

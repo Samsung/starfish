@@ -21,33 +21,40 @@
 #include "core/dom/DOMException.h"
 #include "core/fetch/stream/ReadableStream.h"
 #include "core/fetch/stream/ReadableStreamDefaultController.h"
-#include "core/dom/Document.h"
+#include "core/fetch/stream/ReadableStreamDefaultReader.h"
+#include "core/fetch/stream/ReadableStreamBuffer.h"
+#include "core/dom/ExecutionContext.h"
 #include <EscargotPublic.h>
 using namespace Escargot;
 
 namespace Starfish {
 
 ReadableStreamDefaultController::ReadableStreamDefaultController(
-    Document* document)
+    ExecutionContext* executionContext)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
-    , m_stream(new ReadableStream(document))
+    , m_scriptBindingInstance(executionContext->scriptBindingInstance())
+    , m_stream(new ReadableStream(executionContext))
     , m_readPromiseQueue()
     , m_mimeType(String::emptyString)
 {
     // This constructor cannot be used directly.
-    throw new DOMException(document->executionContext(),
+    throw new DOMException(executionContext,
                            DOMException::Code::SCRIPT_TYPE_ERR);
 }
 
 ReadableStreamDefaultController::ReadableStreamDefaultController(
-    Document* document, ReadableStream* stream)
+    ExecutionContext* executionContext, ReadableStream* stream)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
+    , m_scriptBindingInstance(executionContext->scriptBindingInstance())
     , m_stream(stream)
     , m_readPromiseQueue()
     , m_mimeType(String::emptyString)
 {
+}
+
+ScriptBindingInstance* ReadableStreamDefaultController::scriptBindingInstance()
+{
+    return m_scriptBindingInstance;
 }
 
 void ReadableStreamDefaultController::enqueue(ScriptValue chunk)

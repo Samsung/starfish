@@ -28,15 +28,15 @@ enum class ReadableStreamState { Readable, Closed, Errored };
 
 class ReadableStreamDefaultReader : public ScriptWrappable {
 public:
-    ReadableStreamDefaultReader(Document* document, ReadableStream* stream);
+    ReadableStreamDefaultReader(ExecutionContext* executionContext,
+                                ReadableStream* stream);
 
-    virtual ScriptBindingInstance* scriptBindingInstance() override
+    DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(ReadableStreamDefaultReader)
+
+    ExecutionContext* executionContext()
     {
-        return m_scriptBindingInstance;
+        return m_executionContext;
     }
-    virtual void init(ScriptBindingInstance* instance,
-                      void* domObjectPointer) override;
-    virtual bool isReadableStreamDefaultReader() const override;
 
     Promise* read();
     Promise* cancel();
@@ -75,7 +75,7 @@ public:
     }
 
 private:
-    ScriptBindingInstance* m_scriptBindingInstance;
+    ExecutionContext* m_executionContext;
     ReadableStream* m_stream;
     size_t m_pendingCount;
     bool m_locked;
