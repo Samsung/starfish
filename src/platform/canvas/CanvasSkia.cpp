@@ -44,6 +44,9 @@
 #include "SkTypeface.h"
 #include "SkGradientShader.h"
 
+#include "core/modules/canvas/Path.h"
+#include "platform/canvas/PathSkia.h"
+
 #define CLAMP(value, min, max) \
     (((value) > (max)) ? (max) : (((value) < (min)) ? (min) : (value)))
 
@@ -1019,6 +1022,24 @@ public:
         }
         fillPreserve();
         m_path.reset();
+    }
+
+    virtual void strokePath(Path* path)
+    {
+        if (!lastState().m_visible) {
+            return;
+        }
+        m_path.addPath(*(((PathSkia*)path)->skiaPath()));
+        stroke();
+    }
+
+    virtual void fillPath(Path* path)
+    {
+        if (!lastState().m_visible) {
+            return;
+        }
+        m_path.addPath(*(((PathSkia*)path)->skiaPath()));
+        fill();
     }
 
     virtual void fillPreserve()
