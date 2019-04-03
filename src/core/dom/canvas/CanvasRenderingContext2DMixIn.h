@@ -35,12 +35,10 @@ class DOMStringOrCanvasGradientOrCanvasPattern;
 class ImageData;
 class ExecutionContext;
 class HTMLCanvasElement;
+enum class CanvasLineCap;
+enum class CanvasLineJoin;
 
-enum class CanvasFillRule {
-    CanvasFillRuleInvalid,
-    CanvasFillRuleNonZero,
-    CanvasFillRuleEvenOdd
-};
+enum class CanvasFillRule { Invalid, NonZero, EvenOdd };
 
 class CanvasRenderingContext2DMixIn : public CanvasRenderingContext,
                                       public CanvasPathInterfaceMixIn {
@@ -144,12 +142,17 @@ public:
     ImageData* getImageData(int32_t sx, int32_t sy, int32_t sw, int32_t sh);
 
     // CanvasPathDrawingStyles
-    float lineWidth()
-    {
-        return m_lineWidth;
-    }
-
+    float lineWidth();
     void setLineWidth(float width);
+
+    String* lineCap();
+    void setLineCap(String* value);
+
+    String* lineJoin();
+    void setLineJoin(String* value);
+
+    float miterLimit();
+    void setMiterLimit(float limit);
 
     // TODO : CanvasTextDrawingStyles
 
@@ -186,14 +189,15 @@ protected:
 private:
     void fill(Path* path, String* fillRule);
     void stroke(Path* path);
+    void setLineCap(CanvasLineCap lineCap);
+    void setLineJoin(CanvasLineJoin lineJoin);
 
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;
-
     CanvasPath* m_canvasPath;
+
     Unit::Color m_fillColor;
     Unit::Color m_strokeColor;
-    float m_lineWidth;
     float m_globalAlpha;
 };
 }

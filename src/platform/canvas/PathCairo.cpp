@@ -133,7 +133,7 @@ void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
 
 void PathCairo::rect(float x, float y, float w, float h)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    cairo_rectangle(m_cairoContext, x, y, w, h);
 }
 
 // the arc functions belows are import from WebKit project

@@ -1,8 +1,5 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#canvaspathdrawingstyles
 
-enum CanvasLineCap { "butt", "round", "square" };
-enum CanvasLineJoin { "round", "bevel", "miter" };
-
 // mixin
 [STARFISH_ENABLE_CANVAS, 
  PartialInterface,
@@ -10,9 +7,9 @@ enum CanvasLineJoin { "round", "bevel", "miter" };
 interface CanvasPathDrawingStyles {
   // line caps/joins
   attribute unrestricted double lineWidth; // (default 1)
-  [Unimplemented] attribute CanvasLineCap lineCap; // (default "butt")
-  [Unimplemented] attribute CanvasLineJoin lineJoin; // (default "miter")
-  [Unimplemented] attribute unrestricted double miterLimit; // (default 10)
+  attribute CanvasLineCap lineCap; // (default "butt")
+  attribute CanvasLineJoin lineJoin; // (default "miter")
+  attribute unrestricted double miterLimit; // (default 10)
 
   // dashed lines
   [Unimplemented] void setLineDash(sequence<unrestricted double> segments); // default empty
