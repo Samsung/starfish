@@ -116,6 +116,7 @@ static inline SkFontStyle::Weight fontWeightToSkFontStyleWeight(char weight)
         break;
     case 10:
         ret = SkFontStyle::Weight::kExtraBlack_Weight;
+        break;
     default:
         STARFISH_ASSERT_NOT_REACHED();
     }
@@ -158,6 +159,7 @@ static inline char skFontStyleWeightToChar(int w)
         break;
     case SkFontStyle::Weight::kExtraBlack_Weight:
         ret = 'K';
+        break;
     default:
         STARFISH_ASSERT_NOT_REACHED();
     }
@@ -178,8 +180,12 @@ FontFace* FontFace::create(const uint8_t* data, size_t dataLen)
 {
     sk_sp<SkFontMgr> fm(SkFontMgr::RefDefault());
     sk_sp<SkData> skData = SkData::MakeWithCopy(data, dataLen);
-    sk_sp<SkTypeface> skTypeface(fm->makeFromData(skData));
 
+#if defined(STARFISH_ANDROID)
+    sk_sp<SkTypeface> skTypeface(fm->makeFromData(skData));
+#else
+    sk_sp<SkTypeface> skTypeface(fm->createFromData(skData.get()));
+#endif
     if (skTypeface == nullptr) {
         return nullptr;
     }
