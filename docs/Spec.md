@@ -134,11 +134,19 @@ section are supported.
 | [CanvasState](https://html.spec.whatwg.org/multipage/canvas.html#canvasstate) | interface mixin | CanvasState |  |
 |  | method | void save() | Push state on state stack |
 |  | method | void restore() | Pop state stack and restore state |
+| [CanvasLineCap](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinecap) | enum | CanvasLineCap | "butt", "round", "square" |
+| [CanvasLineJoin](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinejoin) | enum | CanvasLineJoin | "round", "bevel", "miter" |
 | [CanvasPath ](https://html.spec.whatwg.org/multipage/canvas.html#canvaspath) | interface mixin | CanvasPath |  |
 |  | method | void closePath() | Attempts to add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing. |
 |  | method | void moveTo(unrestricted double x, unrestricted double y) | Begins a new sub-path at the point specified by the given (x, y) coordinates. |
 |  | method | void lineTo(unrestricted double x, unrestricted double y) | Adds a straight line to the current sub-path by connecting the sub-path's last point to the specified (x, y) coordinates. |
 |  | method | void arc(unrestricted double x, unrestricted double y, unrestricted double radius, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false) | Adds a circular arc to the current sub-path. |
+|  | method | void rect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Adds a rectangle to the current path. |
+| [CanvasPathDrawingStyles](https://html.spec.whatwg.org/multipage/canvas.html#canvaspathdrawingstyles) | interface mixin | CanvasPathDrawingStyles |  |
+|  | attribute | lineWidth | Sets/Gets the thickness of lines. |
+|  | attribute | lineCap | Determines the shape used to draw the end points of lines. |
+|  | attribute | lineJoin | Determines the shape used to join two line segments where they meet. |
+|  | attribute | miterLimit | Sets/Gets the miter limit ratio. |
 | [CanvasRect](https://html.spec.whatwg.org/multipage/canvas.html#canvasrect) | interface mixin | CanvasRect |  |
 |  | method | void clearRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Erases the pixels in a rectangular area by setting them to transparent black. |
 |  | method | void fillRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Draws a rectangle that is filled according to the current fillStyle. |

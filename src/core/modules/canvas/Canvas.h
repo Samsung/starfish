@@ -32,6 +32,8 @@ class PlatformWindow;
 class GradientDrawingInfo;
 class NativeGradient;
 class Path;
+enum class CanvasLineCap;
+enum class CanvasLineJoin;
 
 class CanvasState {
 public:
@@ -198,6 +200,13 @@ public:
     virtual void setMatrix(const SkMatrix& matrix) = 0;
     virtual SkMatrix currentTransformMatrix() = 0;
 
+    virtual CanvasLineCap lineCap() = 0;
+    virtual void setLineCap(CanvasLineCap lineCap) = 0;
+    virtual CanvasLineJoin lineJoine() = 0;
+    virtual void setLineJoin(CanvasLineJoin lineJoin) = 0;
+    virtual double miterLimit() = 0;
+    virtual void setMiterLimit(double limit) = 0;
+
     virtual void clip(const Unit::Rect& rt) = 0;
     virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)
     {
@@ -348,7 +357,12 @@ public:
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
-    virtual void setStrokeWidth(float width)
+    virtual float lineWidth()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return 1.0f;
+    }
+    virtual void setLineWidth(float width)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }

@@ -145,7 +145,11 @@ void CanvasPath::arcTo(float x1, float y1, float x2, float y2, float radius)
 
 void CanvasPath::rect(float x, float y, float w, float h)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(w) || isInfOrNan(h)) {
+        return;
+    }
+
+    m_path->rect(x, y, w, h);
 }
 
 void CanvasPath::arc(float x, float y, float radius, float startAngle,

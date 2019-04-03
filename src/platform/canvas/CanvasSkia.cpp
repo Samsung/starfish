@@ -22,6 +22,8 @@
 #if defined(PORT_CANVAS_BACKEND_SKIA)
 #include "Starfish.h"
 #include "core/style/Style.h"
+#include "core/dom/canvas/CanvasLineCap.h"
+#include "core/dom/canvas/CanvasLineJoin.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "platform/canvas/font/FontImplSkia.h"
@@ -919,6 +921,39 @@ public:
         lp.setY(point.y());
     }
 
+    virtual CanvasLineCap lineCap()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasLineCap::Butt;
+    }
+
+    virtual void setLineCap(CanvasLineCap lineCap)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasLineJoin lineJoine()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return CanvasLineJoin::Miter;
+    }
+
+    virtual void setLineJoin(CanvasLineJoin lineJoin)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual double miterLimit()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+        return 10.0f;
+    }
+
+    virtual void setMiterLimit(double limit)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
     virtual void setVisible(bool visible)
     {
         lastState().m_visible = visible;
@@ -1086,7 +1121,7 @@ public:
         }
     }
 
-    virtual void setStrokeWidth(float width)
+    virtual void setLineWidth(float width)
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_strokeWidth = width;

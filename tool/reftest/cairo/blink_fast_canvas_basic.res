@@ -16,7 +16,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/2d.composite.globalAlpha.fi
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-after-detachment.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-alphaImageData-behavior.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-360-winding.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-connecting-line.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-connecting-line.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-negative-radius.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-zero-lineto.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-bezier-same-endpoint.html
@@ -95,7 +95,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect-gradient-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillRect-zeroSizeGradient.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fill-rule.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fill-rule.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillStyle-no-quirks-parsing.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillStyle-strokeStyle-stringification.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fillText-invalid-maxWidth.html
@@ -160,7 +160,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getContext-invalid.h
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineDash-input-sequence.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineDash-invalid.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineWidth.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineWidth-intact-after-strokeRect.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lineWidth-intact-after-strokeRect.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-longlived-context.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lose-restore-googol-size.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-lose-restore-max-int-size.html
@@ -209,7 +209,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/CanvasRendering2D-prototype
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-state-intact-after-putImageData.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-stroke-empty-fill.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-alpha-shadow.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-cap-join.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-cap-join.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-gradient-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokeRect.html

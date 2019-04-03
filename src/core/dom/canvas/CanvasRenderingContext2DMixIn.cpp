@@ -25,6 +25,8 @@
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
+#include "core/dom/canvas/CanvasLineCap.h"
+#include "core/dom/canvas/CanvasLineJoin.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/dom/canvas/ImageData.h"
 #include "core/modules/canvas/Path.h"
@@ -42,16 +44,56 @@
 
 namespace Starfish {
 
-static CanvasFillRule StringToCanvasFillRule(String* rule)
+static inline CanvasFillRule stringToCanvasFillRule(String* rule)
 {
-    if (rule) {
-        if (rule->equals("nonzero")) {
-            return CanvasFillRule::CanvasFillRuleNonZero;
-        } else if (rule->equals("evenodd")) {
-            return CanvasFillRule::CanvasFillRuleEvenOdd;
+    if (rule && rule->equals("evenodd")) {
+        return CanvasFillRule::EvenOdd;
+    }
+    return CanvasFillRule::NonZero;
+}
+
+static inline String* canvasLineCapToString(CanvasLineCap lineCap)
+{
+    if (lineCap == CanvasLineCap::Round) {
+        return String::createASCIIString("round");
+    } else if (lineCap == CanvasLineCap::Square) {
+        return String::createASCIIString("square");
+    }
+    return String::createASCIIString("butt");
+}
+
+static inline CanvasLineCap stringToCanvasLineCap(String* lineCap)
+{
+    if (lineCap) {
+        if (lineCap->equals("round")) {
+            return CanvasLineCap::Round;
+        } else if (lineCap->equals("square")) {
+            return CanvasLineCap::Square;
         }
     }
-    return CanvasFillRule::CanvasFillRuleInvalid;
+    return CanvasLineCap::Butt;
+}
+
+static inline String* canvasLineJoinToString(CanvasLineJoin lineJoin)
+{
+    if (lineJoin == CanvasLineJoin::Round) {
+        return String::createASCIIString("round");
+    } else if (lineJoin == CanvasLineJoin::Bevel) {
+        return String::createASCIIString("bevel");
+    }
+    return String::createASCIIString("miter");
+}
+
+static inline CanvasLineJoin stringToCanvasLineJoin(String* lineJoin)
+{
+    if (lineJoin) {
+        if (lineJoin->equals("round")) {
+            return CanvasLineJoin::Round;
+        } else if (lineJoin->equals("bevel")) {
+            return CanvasLineJoin::Bevel;
+        }
+    }
+    return CanvasLineJoin::Miter;
 }
 
 CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
@@ -63,7 +105,6 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     , m_canvasPath(nullptr)
     , m_fillColor()
     , m_strokeColor()
-    , m_lineWidth(1)
     , m_globalAlpha(1.0)
 {
     initialize();
@@ -81,28 +122,23 @@ void CanvasRenderingContext2DMixIn::initialize()
     STARFISH_ASSERT(m_canvasSurface == nullptr);
     STARFISH_ASSERT(m_canvas == nullptr);
 
-    // Create CanvasSurface.
     m_canvasSurface = CanvasSurface::create(
         m_ownerHTMLCanvasElement->webView()->platformWindow(),
         m_ownerHTMLCanvasElement->width(), m_ownerHTMLCanvasElement->height(),
         CanvasSurface::CanvasElement);
-
-    auto black = Unit::Color(0, 0, 0, 255);
-    // Set defualt values such as color, fill color and stroke color.
     m_canvas =
         Canvas::create(m_ownerHTMLCanvasElement->webView(), m_canvasSurface);
-    // Set the defualt color as black.
-    m_canvas->setColor(black);
-    // Set the fill color as black.
-    m_fillColor = black;
-    // Set the stroke color as black.
-    m_strokeColor = black;
-    // Set the line width as 1.0f.
-    m_lineWidth = 1.0f;
-    m_canvas->setStrokeWidth(m_lineWidth);
     m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
-
     m_canvasPath = new CanvasPath(executionContext());
+
+    auto black = Unit::Color(0, 0, 0, 255);
+    m_fillColor = black;                // default black
+    m_strokeColor = black;              // default black
+    setLineWidth(1.0f);                 // default 1.0
+    m_globalAlpha = 1.0f;               // default 1.0
+    setLineCap(CanvasLineCap::Butt);    // default "butt"
+    setLineJoin(CanvasLineJoin::Miter); // default "miter"
+    setMiterLimit(10.0f);               // default 10
 }
 
 void CanvasRenderingContext2DMixIn::finalize()
@@ -130,10 +166,58 @@ void CanvasRenderingContext2DMixIn::onResize()
     m_ownerHTMLCanvasElement->setNeedsPainting();
 }
 
+float CanvasRenderingContext2DMixIn::lineWidth()
+{
+    return m_canvas->lineWidth();
+}
+
 void CanvasRenderingContext2DMixIn::setLineWidth(float width)
 {
-    m_lineWidth = width;
-    m_canvas->setStrokeWidth(m_lineWidth);
+    m_canvas->setLineWidth(width);
+}
+
+String* CanvasRenderingContext2DMixIn::lineCap()
+{
+    auto cap = m_canvas->lineCap();
+    return canvasLineCapToString(cap);
+}
+
+void CanvasRenderingContext2DMixIn::setLineCap(String* value)
+{
+    auto cap = stringToCanvasLineCap(value);
+    setLineCap(cap);
+}
+
+void CanvasRenderingContext2DMixIn::setLineCap(CanvasLineCap lineCap)
+{
+    m_canvas->setLineCap(lineCap);
+}
+
+String* CanvasRenderingContext2DMixIn::lineJoin()
+{
+    auto join = m_canvas->lineJoine();
+    return canvasLineJoinToString(join);
+}
+
+void CanvasRenderingContext2DMixIn::setLineJoin(String* value)
+{
+    auto join = stringToCanvasLineJoin(value);
+    setLineJoin(join);
+}
+
+void CanvasRenderingContext2DMixIn::setLineJoin(CanvasLineJoin lineJoin)
+{
+    m_canvas->setLineJoin(lineJoin);
+}
+
+float CanvasRenderingContext2DMixIn::miterLimit()
+{
+    return m_canvas->miterLimit();
+}
+
+void CanvasRenderingContext2DMixIn::setMiterLimit(float limit)
+{
+    m_canvas->setMiterLimit(limit);
 }
 
 void CanvasRenderingContext2DMixIn::save()
@@ -196,13 +280,14 @@ String* CanvasRenderingContext2DMixIn::globalCompositeOperation()
 
 void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 DOMStringOrCanvasGradientOrCanvasPattern
 CanvasRenderingContext2DMixIn::fillStyle()
 {
     return DOMStringOrCanvasGradientOrCanvasPattern::createDOMString(
-        String::fromUTF8("black"));
+        m_fillColor.toHTMLColorCodeString());
 }
 
 void CanvasRenderingContext2DMixIn::setFillStyle(
@@ -266,11 +351,13 @@ CanvasGradient* CanvasRenderingContext2DMixIn::createLinearGradient(float x0,
 
 String* CanvasRenderingContext2DMixIn::filter()
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return String::fromUTF8("none");
 }
 
 void CanvasRenderingContext2DMixIn::setFilter(String* value)
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
@@ -312,6 +399,7 @@ void CanvasRenderingContext2DMixIn::fill(String* fillRule)
 
 void CanvasRenderingContext2DMixIn::fill(Path2D* path, String* fillRule)
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void CanvasRenderingContext2DMixIn::stroke()
@@ -377,11 +465,13 @@ void CanvasRenderingContext2DMixIn::ellipse(float x, float y, float radiusX,
 void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float dx,
                                               float dy)
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float dx,
                                               float dy, float dw, float dh)
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float sx,
@@ -389,6 +479,7 @@ void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float sx,
                                               float dx, float dy, float dw,
                                               float dh)
 {
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
@@ -483,12 +574,12 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
 {
     m_ownerHTMLCanvasElement->setNeedsPainting();
 
-    auto rule = StringToCanvasFillRule(fillRule);
+    auto rule = stringToCanvasFillRule(fillRule);
     if (!path->isEmpty()) {
         m_canvas->save();
-        if (rule == CanvasFillRule::CanvasFillRuleNonZero) {
+        if (rule == CanvasFillRule::NonZero) {
             m_canvas->setFillRule(true);
-        } else if (rule == CanvasFillRule::CanvasFillRuleEvenOdd) {
+        } else if (rule == CanvasFillRule::EvenOdd) {
             m_canvas->setFillRule(false);
         }
         Unit::Color color =

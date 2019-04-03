@@ -349,6 +349,7 @@ namespace Unit {
         }
 
         String* toString() const;
+        String* toHTMLColorCodeString() const;
 
         unsigned char r() const
         {

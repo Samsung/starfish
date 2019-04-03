@@ -29,6 +29,8 @@
 #endif
 
 #include "core/style/Style.h"
+#include "core/dom/canvas/CanvasLineCap.h"
+#include "core/dom/canvas/CanvasLineJoin.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/NativeGradient.h"
@@ -943,6 +945,80 @@ public:
         lp.setY(y);
     }
 
+    virtual CanvasLineCap lineCap()
+    {
+        auto cap = cairo_get_line_cap(m_canvas);
+        if (cap == CAIRO_LINE_CAP_BUTT) {
+            return CanvasLineCap::Butt;
+        } else if (cap == CAIRO_LINE_CAP_ROUND) {
+            return CanvasLineCap::Round;
+        } else if (cap == CAIRO_LINE_CAP_SQUARE) {
+            return CanvasLineCap::Square;
+        }
+
+        STARFISH_ASSERT_NOT_REACHED();
+        return CanvasLineCap::Butt;
+    }
+
+    virtual void setLineCap(CanvasLineCap lineCap)
+    {
+        cairo_line_cap_t cap;
+
+        if (lineCap == CanvasLineCap::Butt) {
+            cap = CAIRO_LINE_CAP_BUTT;
+        } else if (lineCap == CanvasLineCap::Round) {
+            cap = CAIRO_LINE_CAP_ROUND;
+        } else if (lineCap == CanvasLineCap::Square) {
+            cap = CAIRO_LINE_CAP_SQUARE;
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+            cap = CAIRO_LINE_CAP_BUTT;
+        }
+        cairo_set_line_cap(m_canvas, cap);
+    }
+
+    virtual CanvasLineJoin lineJoine()
+    {
+        auto join = cairo_get_line_join(m_canvas);
+        if (join == CAIRO_LINE_JOIN_MITER) {
+            return CanvasLineJoin::Miter;
+        } else if (join == CAIRO_LINE_JOIN_ROUND) {
+            return CanvasLineJoin::Round;
+        } else if (join == CAIRO_LINE_JOIN_BEVEL) {
+            return CanvasLineJoin::Bevel;
+        }
+
+        STARFISH_ASSERT_NOT_REACHED();
+        return CanvasLineJoin::Miter;
+    }
+
+    virtual void setLineJoin(CanvasLineJoin lineJoin)
+    {
+        cairo_line_join_t join;
+
+        if (lineJoin == CanvasLineJoin::Miter) {
+            join = CAIRO_LINE_JOIN_MITER;
+        } else if (lineJoin == CanvasLineJoin::Round) {
+            join = CAIRO_LINE_JOIN_ROUND;
+        } else if (lineJoin == CanvasLineJoin::Bevel) {
+            join = CAIRO_LINE_JOIN_BEVEL;
+        } else {
+            STARFISH_ASSERT_NOT_REACHED();
+            join = CAIRO_LINE_JOIN_MITER;
+        }
+        cairo_set_line_join(m_canvas, join);
+    }
+
+    virtual double miterLimit()
+    {
+        return cairo_get_miter_limit(m_canvas);
+    }
+
+    virtual void setMiterLimit(double limit)
+    {
+        cairo_set_miter_limit(m_canvas, limit);
+    }
+
     virtual void beginPath()
     {
         cairo_new_path(m_canvas);
@@ -1049,7 +1125,12 @@ public:
         }
     }
 
-    virtual void setStrokeWidth(float width)
+    virtual float lineWidth()
+    {
+        return cairo_get_line_width(m_canvas);
+    }
+
+    virtual void setLineWidth(float width)
     {
         cairo_set_line_width(m_canvas, width);
     }

@@ -1,0 +1,3 @@
+// https://html.spec.whatwg.org/multipage/canvas.html#canvaspathdrawingstyles
+
+enum CanvasLineCap { "butt", "round", "square" };

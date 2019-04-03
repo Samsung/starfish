@@ -64,5 +64,12 @@ namespace Unit {
         String* toStr = String::createASCIIString(buf);
         return toStr;
     }
+
+    String* Color::toHTMLColorCodeString() const
+    {
+        char buf[256];
+        snprintf(buf, sizeof(buf), "#%02x%02x%02x", m_r, m_g, m_b);
+        return String::createASCIIString(buf);
+    }
 }
 }

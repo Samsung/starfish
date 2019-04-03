@@ -1858,7 +1858,7 @@ void FrameBox::paintDashedLine(Canvas* canvas, const LayoutLocation& p1,
     canvas->drawRect(p1, p2, p3, p3);
     canvas->save();
     canvas->setDash(dashes, ndash, offset);
-    canvas->setStrokeWidth(width.toFloat());
+    canvas->setLineWidth(width.toFloat());
     canvas->moveTo(x1.toDouble(), y1.toDouble());
     canvas->lineTo(x2.toDouble(), y2.toDouble());
     canvas->stroke();
