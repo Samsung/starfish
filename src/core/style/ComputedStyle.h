@@ -3079,10 +3079,10 @@ public:
 
     bool hasQuote()
     {
-        ComputedStyle* before = cachedPseudoStyle(
-            StyleResolver::PseudoElementType::PseudoElementBefore);
-        ComputedStyle* after = cachedPseudoStyle(
-            StyleResolver::PseudoElementType::PseudoElementAfter);
+        ComputedStyle* before =
+            cachedPseudoStyle(PseudoElementType::PseudoElementBefore);
+        ComputedStyle* after =
+            cachedPseudoStyle(PseudoElementType::PseudoElementAfter);
 
         if (before != nullptr && hasQuote(before)) {
             return true;
@@ -3121,12 +3121,12 @@ public:
         m_rareComputedStyleData.setWillChange(v);
     }
 
-    void setPseudoType(StyleResolver::PseudoElementType id)
+    void setPseudoType(PseudoElementType id)
     {
         m_pseudoId = id;
     }
 
-    StyleResolver::PseudoElementType pseudoType()
+    PseudoElementType pseudoType()
     {
         return m_pseudoId;
     }
@@ -3179,33 +3179,29 @@ public:
         return nullptr;
     }
 
-    ComputedStyle* pseudoStyle(Element* containerElement,
-                               StyleResolver::PseudoElementType pid,
+    ComputedStyle* pseudoStyle(Element* containerElement, PseudoElementType pid,
                                ComputedStyle* stickyInheritFrom = nullptr,
                                ComputedStyle* oldPseudoStyleIfHas = nullptr);
-    bool seenPseudoElement(StyleResolver::PseudoElementType pseudoId)
+    bool seenPseudoElement(PseudoElementType pseudoId)
     {
-        if (pseudoId == StyleResolver::PseudoElementType::PseudoElementBefore) {
+        if (pseudoId == PseudoElementType::PseudoElementBefore) {
             if (seenPseudoElementBefore()) {
                 return true;
             }
-        } else if (pseudoId ==
-                   StyleResolver::PseudoElementType::PseudoElementAfter) {
+        } else if (pseudoId == PseudoElementType::PseudoElementAfter) {
             if (seenPseudoElementAfter()) {
                 return true;
             }
-        } else if (pseudoId ==
-                   StyleResolver::PseudoElementType::PseudoElementFirstLetter) {
+        } else if (pseudoId == PseudoElementType::PseudoElementFirstLetter) {
             if (seenPseudoElementFirstLetter()) {
                 return true;
             }
-        } else if (pseudoId ==
-                   StyleResolver::PseudoElementType::PseudoElementFirstLine) {
+        } else if (pseudoId == PseudoElementType::PseudoElementFirstLine) {
             if (seenPseudoElementFirstLine()) {
                 return true;
             }
-        } else if (pseudoId == StyleResolver::PseudoElementType::
-                                   PseudoElementFirstLineInherited) {
+        } else if (pseudoId ==
+                   PseudoElementType::PseudoElementFirstLineInherited) {
             if (seenPseudoElementFirstLine()) {
                 return true;
             }
@@ -3606,9 +3602,9 @@ public:
     void* operator new[](size_t size) = delete;
 
 protected:
-    ComputedStyle* cachedPseudoStyle(StyleResolver::PseudoElementType pid);
+    ComputedStyle* cachedPseudoStyle(PseudoElementType pid);
     ComputedStyle* addCachedPseudoStyle(ComputedStyle* pseudoStyle);
-    void removeCachedPseudoStyle(StyleResolver::PseudoElementType pid);
+    void removeCachedPseudoStyle(PseudoElementType pid);
 
     InheritedStylesRareData* ensureInheritedRareData()
     {
@@ -3645,7 +3641,7 @@ protected:
         m_alignSelf = AlignItemValue::StretchAlignItemValue;
         m_alignSelfSpecifiedByUser = false;
         m_alignContent = AlignContentValue::StretchAlignContentValue;
-        m_pseudoId = StyleResolver::PseudoElementType::PseudoElementNone;
+        m_pseudoId = PseudoElementType::PseudoElementNone;
         m_styleDamageSource = StyleResolver::StyleDamageSource::NoDamage;
         m_styleDamageSourceNodeStateMap = 0;
         m_styleDamageSourceNodeStateDOMTreeMap = 0;
@@ -3700,7 +3696,7 @@ protected:
     bool m_alignSelfSpecifiedByUser : 1;
     AlignItemValue m_alignSelf : 3;
     AlignContentValue m_alignContent : 3;
-    StyleResolver::PseudoElementType m_pseudoId : 3;
+    PseudoElementType m_pseudoId : 3;
     StyleResolver::StyleDamageSource m_styleDamageSource : 6;
     int m_styleDamageSourceNodeStateMap : 5;
     int m_styleDamageSourceNodeStateDOMTreeMap : 5;

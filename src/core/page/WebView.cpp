@@ -55,6 +55,7 @@
 #include "core/dom/MouseEvent.h"
 #include "core/dom/KeyboardEvent.h"
 #include "core/dom/Touch.h"
+#include "core/dom/PseudoElement.h"
 #include "core/dom/HTMLDocument.h"
 #include "core/dom/HTMLBodyElement.h"
 #include "core/dom/HTMLCollection.h"
@@ -1415,7 +1416,17 @@ RenderResult WebView::rendering(bool force)
         for (size_t i = 0; i < m_activeAnimationExecutor.size(); i++) {
             auto& a = m_activeAnimationExecutor[i]->activeAnimations();
             for (size_t j = 0; j < a.size(); j++) {
-                a[j]->targetElement()->setNeedsStyleRecalcForAnimation();
+                if (a[j]->targetElement()->isPseudoElement()) {
+                    // we should give damage on parent element
+                    // because style of pseudo element is computed by
+                    // its parent element
+                    a[j]->targetElement()
+                        ->asPseudoElement()
+                        ->originElement()
+                        ->setNeedsStyleRecalcForAnimation();
+                } else {
+                    a[j]->targetElement()->setNeedsStyleRecalcForAnimation();
+                }
             }
         }
         needsContinuousRendering = true;

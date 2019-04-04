@@ -2599,7 +2599,7 @@ void LineFormattingContext::insertWord(Frame* next)
     } else {
         if (isFirstLineBox() && m_block->node() &&
             m_block->node()->style()->seenPseudoElement(
-                StyleResolver::PseudoElementFirstLine)) {
+                PseudoElementType::PseudoElementFirstLine)) {
             m_word.unmarkFirstLine();
         }
 

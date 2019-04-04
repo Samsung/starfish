@@ -42,6 +42,7 @@ class NodeList;
 class RareNodeMembers;
 class RareElementMembers;
 class NodeOrDOMString;
+class PseudoElement;
 
 typedef GCVector<std::pair<String*, HTMLCollection*>> ActiveHTMLCollectionList;
 typedef GCVector<std::pair<std::pair<String*, String*>, HTMLCollection*>>
@@ -648,37 +649,32 @@ public:
 
     bool isPseudoElement() const
     {
-        return getPseudoId() !=
-               StyleResolver::PseudoElementType::PseudoElementNone;
+        return getPseudoId() != PseudoElementType::PseudoElementNone;
     }
 
     bool isBeforePseudoElement() const
     {
-        return getPseudoId() ==
-               StyleResolver::PseudoElementType::PseudoElementBefore;
+        return getPseudoId() == PseudoElementType::PseudoElementBefore;
     }
 
     bool isAfterPseudoElement() const
     {
-        return getPseudoId() ==
-               StyleResolver::PseudoElementType::PseudoElementAfter;
+        return getPseudoId() == PseudoElementType::PseudoElementAfter;
     }
 
     bool isFirstLetterPseudoElement() const
     {
-        return getPseudoId() ==
-               StyleResolver::PseudoElementType::PseudoElementFirstLetter;
+        return getPseudoId() == PseudoElementType::PseudoElementFirstLetter;
     }
 
     bool isCounterPseudoElement() const
     {
-        return getPseudoId() ==
-               StyleResolver::PseudoElementType::PseudoElementCounter;
+        return getPseudoId() == PseudoElementType::PseudoElementCounter;
     }
 
-    virtual StyleResolver::PseudoElementType getPseudoId() const
+    virtual PseudoElementType getPseudoId() const
     {
-        return StyleResolver::PseudoElementType::PseudoElementNone;
+        return PseudoElementType::PseudoElementNone;
     }
 
     virtual bool isContainerNode()
@@ -742,6 +738,12 @@ public:
     {
         STARFISH_ASSERT(isHTMLListContainer());
         return (HTMLListContainer*)this;
+    }
+
+    PseudoElement* asPseudoElement()
+    {
+        STARFISH_ASSERT(isPseudoElement());
+        return reinterpret_cast<PseudoElement*>(this);
     }
 
     bool isRunningOpacityAnimation()

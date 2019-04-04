@@ -75,7 +75,8 @@ bool GridFormattingContext::existColumnTemplate()
 
 bool GridFormattingContext::existRowTemplate()
 {
-    const GCVector<GridTrackSize>* rows = m_container->style()->gridTemplateRows();
+    const GCVector<GridTrackSize>* rows =
+        m_container->style()->gridTemplateRows();
 
     if (rows) {
         return true;
@@ -1044,7 +1045,8 @@ void GridFormattingContext::buildGridLineTemplate()
         m_gridLineColumns.push_back(line);
     }
 
-    const GCVector<GridTrackSize>* rows = m_container->style()->gridTemplateRows();
+    const GCVector<GridTrackSize>* rows =
+        m_container->style()->gridTemplateRows();
 
     if (rows) {
         for (size_t i = 0; i < rows->size(); i++) {
@@ -1741,7 +1743,8 @@ void GridFormattingContext::alignGridLinesForRows(GridArea& area)
     }
 }
 
-void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines, bool nonFixedHeight)
+void GridFormattingContext::arrangeGridLinesWithGridAreas(bool layoutLines,
+                                                          bool nonFixedHeight)
 {
     for (auto area : m_orderedGridArea) {
         FrameBox* gridItem = area.m_box;

@@ -2945,6 +2945,21 @@ public:
 #endif
 };
 
+enum PseudoElementType ENSURE_ENUM_UNSIGNED {
+    PseudoElementNone,
+    PseudoElementFirstLine,
+    PseudoElementFirstLetter,
+    PseudoElementBefore,
+    PseudoElementAfter,
+    PseudoElementFirstLineInherited,
+    PseudoElementFormOnly,
+    PseudoElementCounter,
+    PseudoElementGeneralTypeStart = PseudoElementFirstLine,
+    PseudoElementGeneralTypeEnd = PseudoElementAfter,
+    PseudoElementMappedTypeStart = PseudoElementBefore,
+    PseudoElementMappedTypeEnd = PseudoElementAfter,
+};
+
 class StyleResolver : public DocumentHoldable, public gc {
     friend void computeCSSCombinatorSelectorCache(
         StyleResolver* resolver, Element* element,
@@ -2952,19 +2967,6 @@ class StyleResolver : public DocumentHoldable, public gc {
         const GCVector<std::pair<StyleRule*, ResourceURL*>>::iterator& end);
     friend class BrowsingContext; // for updating m_mediumFontSize
 public:
-    enum PseudoElementType ENSURE_ENUM_UNSIGNED {
-        PseudoElementNone,
-        PseudoElementFirstLine,
-        PseudoElementFirstLetter,
-        PseudoElementBefore,
-        PseudoElementAfter,
-        PseudoElementFirstLineInherited,
-        PseudoElementFormOnly,
-        PseudoElementCounter,
-        PseudoElementGeneralTypeStart = PseudoElementFirstLine,
-        PseudoElementGeneralTypeEnd = PseudoElementFirstLineInherited,
-    };
-
     enum Match ENSURE_ENUM_UNSIGNED {
         SelectorMatches,          // The selector matches the element
         SelectorFailsLocally,     // The selector fails for the element.
@@ -3133,6 +3135,7 @@ protected:
     RuleSet* m_ruleSet;
     GCAtomicVector<AtomicString> m_ruleSetAttrFilter;
 };
+
 } // namespace Starfish
 
 #endif

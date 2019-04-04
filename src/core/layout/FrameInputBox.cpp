@@ -51,8 +51,7 @@ static FrameText* createFrameText(HTMLTextEditable* from)
 {
     // Generate pseudo element
     PseudoElement* textElement = new PseudoElement(
-        from->document(),
-        StyleResolver::PseudoElementType::PseudoElementFormOnly);
+        from->document(), nullptr, PseudoElementType::PseudoElementFormOnly);
     textElement->setParentNode(from);
 
     // Set style

@@ -1369,9 +1369,9 @@ public:
     }
 
     Frame* enclosingFirstLineStyle();
-    ComputedStyle* pseudoStyleForFirstLine(
-        StyleResolver::PseudoElementType pseudoId, ComputedStyle* parentStyle);
-    ComputedStyle* cachedPseudoStyle(StyleResolver::PseudoElementType pseudo,
+    ComputedStyle* pseudoStyleForFirstLine(PseudoElementType pseudoId,
+                                           ComputedStyle* parentStyle);
+    ComputedStyle* cachedPseudoStyle(PseudoElementType pseudo,
                                      ComputedStyle* parentStyle);
     ComputedStyle* firstLineStyle(Frame* frame, ComputedStyle* frameStyle);
     OverflowValue appliedOverflowX();
