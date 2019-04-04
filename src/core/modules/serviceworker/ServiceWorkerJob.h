@@ -27,9 +27,13 @@ class ExecutionContext;
 class Promise;
 class String;
 class JobQueue;
+class ServiceWorkerJob;
+class ServiceWorkerHostProcessInterface;
+class ServiceWorkerClientProcessInterface;
 
 struct ServiceWorkerJobData : public gc {
-    ServiceWorkerJobId id{ 0 };
+    ServiceWorkerJobId id;
+    ServiceWorkerContextId contextId;
     ServiceWorkerJobType type{ ServiceWorkerJobType::Register };
     String* scopeURL{ nullptr };
     String* scriptURL{ nullptr };
@@ -45,18 +49,25 @@ class Job : public gc {
 
 class ServiceWorkerJob : public Job {
 public:
+    ServiceWorkerJob();
     ServiceWorkerRegistrationKey registrationKey();
 
     DEFINE_GETTER_SETTER(Promise*, promise, Promise);
     DEFINE_GETTER_SETTER(ServiceWorkerJobData*, data, Data);
     DEFINE_GETTER_SETTER(ServiceWorkerClient*, client, Client);
     DEFINE_GETTER_SETTER(JobQueue*, containingJobQueue, ContainingJobQueue);
+    DEFINE_GETTER_SETTER(ServiceWorkerClientProcessInterface*, hostConnection,
+                         HostConnection);
+    DEFINE_GETTER_SETTER(ServiceWorkerHostProcessInterface*, clientConnection,
+                         ClientConnection);
 
 private:
     Promise* m_promise{ nullptr };
     ServiceWorkerJobData* m_data{ nullptr };
     ServiceWorkerClient* m_client{ nullptr };
     JobQueue* m_containingJobQueue{ nullptr };
+    ServiceWorkerClientProcessInterface* m_hostConnection{ nullptr };
+    ServiceWorkerHostProcessInterface* m_clientConnection{ nullptr };
 };
 
 } // namespace Starfish

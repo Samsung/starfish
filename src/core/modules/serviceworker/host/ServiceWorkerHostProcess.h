@@ -35,12 +35,16 @@ struct RegistrationIdentifier : public gc {
     String* m_origin;
 };
 
-class ServiceWorkerJob;
 class JobQueue;
+class IThread;
+class ThreadPool;
+class IORunnable;
 class MessageLoop;
+class ServiceWorkerJob;
+class ServiceWorkerHostJobHandler;
+class ServiceWorkerHostConnection;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerClientProcessInterface;
-class ServiceWorkerHostJobHandler;
 
 struct ServiceWorkerRegistrationKeyComparator {
     bool operator()(const ServiceWorkerRegistrationKey& lhs,
@@ -55,26 +59,29 @@ class ServiceWorkerHostProcess : public gc,
 public:
     static ServiceWorkerHostProcess* getInstance();
     static void destroy();
+
     ServiceWorkerHostProcess(ServiceWorkerHostProcess const&) = delete;
     void operator=(ServiceWorkerHostProcess const&) = delete;
 
-    void init(MessageLoop* messageLoop);
-
     virtual void scheduleJob(ServiceWorkerJob* job) override;
 
+    void init(ThreadPool* threadPool);
     ServiceWorkerRegistrationData* getRegistration(String* scope);
     void setRegistration(String* scope,
                          ServiceWorkerUpdateViaCache updateViaCacheMode);
 
-    ServiceWorkerClientProcessInterface* client();
-
 private:
     static ServiceWorkerHostProcess* m_instance;
+
     ServiceWorkerHostProcess();
     virtual ~ServiceWorkerHostProcess();
 
-    MessageLoop* m_messageLoop;
-    ServiceWorkerHostJobHandler* m_jobHandler;
+    MessageLoop* m_messageLoop{ nullptr };
+    IThread* m_ioThread{ nullptr };
+    ThreadPool* m_threadPool{ nullptr };
+    IORunnable* m_ioRunnable{ nullptr };
+    ServiceWorkerHostJobHandler* m_jobHandler{ nullptr };
+    ServiceWorkerHostConnection* m_connection{ nullptr };
     GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*> m_jobQueueMap;
     GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
           ServiceWorkerRegistrationKeyComparator>

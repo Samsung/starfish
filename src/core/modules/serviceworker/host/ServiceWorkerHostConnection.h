@@ -18,45 +18,33 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerTypes__)
-#define __StarfishServiceWorkerTypes__
+    !defined(__StarfishServiceWorkerHostConnection__)
+#define __StarfishServiceWorkerHostConnection__
 
 namespace Starfish {
 
-class GlobalScope;
+class Socket;
 class ServiceWorkerJob;
-class ExecutionContext;
+class ServiceWorkerRegistrationData;
+class ServiceWorkerHostProcessInterface;
 
-enum class ServiceWorkerUpdateViaCache {
-    Imports,
-    All,
-    None,
+class ServiceWorkerHostConnection final
+    : public Connection,
+      public ServiceWorkerClientProcessInterface {
+public:
+    ServiceWorkerHostConnection(ServiceWorkerHostProcessInterface* client);
+
+    // send
+    void resolveJobPromise(
+        ServiceWorkerJob* job,
+        ServiceWorkerRegistrationData* registration) override;
+
+    // receive
+    void onReceived(Socket* socket, const char* data) override;
+
+private:
+    ServiceWorkerHostProcessInterface* m_client{ nullptr };
 };
-
-enum class ServiceWorkerJobType {
-    Register,
-    Unregister,
-    Update,
-};
-
-enum class WorkerType {
-    Classic,
-    Module,
-};
-
-using ServiceWorkerClient = ExecutionContext;
-using ServiceWorkerRegistrationKey = String*;
-
-using ServiceWorkerJobId = Id<ServiceWorkerJob>;
-using ServiceWorkerContextId = Id<GlobalScope>;
-
-#ifdef SERVICE_WORKER_USE_MULTI_PROCESS
-#define IPC_PROTOCOL "ipc://"
-#define IPC_ADDRESS_PREFIX ".ipc/"
-#else
-#define IPC_PROTOCOL "inproc://"
-#define IPC_ADDRESS_PREFIX "sw"
-#endif
-}
+} // namespace Starfish
 
 #endif

@@ -318,7 +318,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
     m_serviceWorkerProcessManager = ServiceWorkerProcessManager::getInstance();
-    m_serviceWorkerProcessManager->init(m_threadPool);
+    m_serviceWorkerProcessManager->init(this);
 #endif
 
     m_starfish->m_webViewInstanceCount++;

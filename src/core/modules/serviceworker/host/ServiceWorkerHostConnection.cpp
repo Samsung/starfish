@@ -19,26 +19,39 @@
 
 #include "StarfishConfig.h"
 
-#include "core/dom/ExecutionContext.h"
+#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/threading/IRunnable.h"
+#include "core/modules/serviceworker/IORunnable.h"
+#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
+
+#include "core/modules/networking/Socket.h"
 #include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
 
-ServiceWorkerJob::ServiceWorkerJob()
+ServiceWorkerHostConnection::ServiceWorkerHostConnection(
+    ServiceWorkerHostProcessInterface* client)
+    : m_client(client)
 {
-    m_data = new ServiceWorkerJobData();
 }
 
-ServiceWorkerRegistrationKey ServiceWorkerJob::registrationKey()
+void ServiceWorkerHostConnection::resolveJobPromise(
+    ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
-    // TODO: generate an unique key using data attributes
-    auto key = m_data->scopeURL->concat(m_data->scriptURL);
-    return key;
-}
+    // TODO: use socket to communicate with the client.
+    ServiceWorkerClientProcess::getInstance()->resolveJobPromise(job,
+                                                                 registration);
 }
 
+void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
+{
+}
+
+} // namespace Starfish
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

@@ -22,10 +22,12 @@
 #include "StarfishConfig.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
+#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
 #include "core/modules/serviceworker/JobQueue.h"
@@ -33,6 +35,13 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 #include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/threading/AdaptedThread.h"
+#include "core/modules/threading/ThreadPool.h"
+#include "core/modules/threading/IRunnable.h"
+#include "core/modules/networking/Socket.h"
+#include "core/modules/serviceworker/IORunnable.h"
+#include "core/modules/serviceworker/Connection.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
 namespace Starfish {
 
@@ -62,16 +71,28 @@ ServiceWorkerHostProcess::~ServiceWorkerHostProcess()
 {
 }
 
-ServiceWorkerClientProcessInterface* ServiceWorkerHostProcess::client()
+void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
 {
-    // TODO: return a communication-interface
-    return ServiceWorkerClientProcess::getInstance();
-}
+    m_threadPool = threadPool;
+    m_messageLoop = m_threadPool->messageLoop();
 
-void ServiceWorkerHostProcess::init(MessageLoop* messageLoop)
-{
-    m_messageLoop = messageLoop;
-    m_jobHandler = new ServiceWorkerHostJobHandler(messageLoop);
+    m_jobHandler = new ServiceWorkerHostJobHandler(m_messageLoop);
+    m_ioRunnable = new IORunnable(m_messageLoop);
+    m_ioThread = new AdaptedThread(m_threadPool);
+
+    // create a connection
+    m_connection = new ServiceWorkerHostConnection(this);
+
+    std::string address = IPC_PROTOCOL;
+    address.append(IPC_ADDRESS_PREFIX);
+#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
+// TODO: make the address with the given argument from the process host
+#endif
+    m_connection->socket()->bind(address.c_str());
+    m_ioRunnable->addClient(m_connection);
+
+    // start I/O runner
+    m_ioThread->start(m_ioRunnable);
 }
 
 ServiceWorkerRegistrationData* ServiceWorkerHostProcess::getRegistration(
@@ -99,6 +120,9 @@ void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
     // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
     STARFISH_ASSERT(m_jobHandler);
 
+    // TODO: move this into connection.
+    job->setHostConnection(m_connection);
+
     // 1. Let jobQueue be null.
     JobQueue* jobQueue = nullptr;
 
@@ -120,8 +144,6 @@ void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
     if (jobQueue->size() == 0) {
         // 5.1. Set job’s containing job queue to jobQueue, and enqueue job to
         // jobQueue.
-        // TODO: containingJobQueue should be a certain identifier which can be
-        // shared and unique b/t host and client.
         job->setContainingJobQueue(jobQueue);
         jobQueue->enqueueJob(job);
 

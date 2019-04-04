@@ -29,6 +29,7 @@ class ServiceWorkerClientConnection;
 class ServiceWorkerHostProcess;
 class ServiceWorkerClientProcess;
 
+class WebView;
 class ThreadPool;
 class IThread;
 class IORunnable;
@@ -42,7 +43,7 @@ struct ProcessData {
     PID pid;
     std::string origin;
     std::string connectionAddress;
-    ServiceWorkerClientConnection* connection;
+    ServiceWorkerClientConnection* connection{ nullptr };
 };
 
 class ServiceWorkerProcessManager : public gc {
@@ -50,7 +51,7 @@ public:
     static ServiceWorkerProcessManager* getInstance();
     static void destroy();
 
-    void init(ThreadPool* threadPool);
+    void init(WebView* webView);
     ServiceWorkerClientConnection* getConnection(std::string origin);
 
 private:
@@ -58,12 +59,12 @@ private:
     virtual ~ServiceWorkerProcessManager();
     static ServiceWorkerProcessManager* m_instance;
 
-    IThread* m_ioThread;
-    ThreadPool* m_threadPool;
-    IORunnable* m_ioRunnable;
+    IThread* m_ioThread{ nullptr };
+    ThreadPool* m_threadPool{ nullptr };
+    IORunnable* m_ioRunnable{ nullptr };
 
-    ServiceWorkerHostProcess* m_serviceWorkerHostProcess;
-    ServiceWorkerClientProcess* m_serviceWorkerClientProcess;
+    ServiceWorkerHostProcess* m_serviceWorkerHostProcess{ nullptr };
+    ServiceWorkerClientProcess* m_serviceWorkerClientProcess{ nullptr };
 
     std::unordered_map<std::string, std::shared_ptr<ProcessData>>
         m_mapOriginToProcessData;

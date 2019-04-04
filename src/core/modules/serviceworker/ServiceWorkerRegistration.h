@@ -22,6 +22,7 @@
 #define __StarfishServiceWorkerRegistration__
 
 #include "core/dom/EventTarget.h"
+#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 
 namespace Starfish {

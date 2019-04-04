@@ -33,6 +33,8 @@ public:
     }
     virtual void resolveJobPromise(
         ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
+
+    virtual void scheduleJob(ServiceWorkerJob* job) = 0;
 };
 
 } // namespace Starfish

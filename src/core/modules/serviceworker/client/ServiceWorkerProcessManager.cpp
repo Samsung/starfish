@@ -21,6 +21,7 @@
 
 #include "platform/process/base/ProcessType.h"
 
+#include "core/page/WebView.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/networking/Socket.h"
 #include "core/modules/threading/IRunnable.h"
@@ -39,14 +40,13 @@
 #include "core/modules/networking/Socket.h"
 #include "core/modules/serviceworker/IORunnable.h"
 
+#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
-
-#define IPC_ADDRESS_PREFIX "ipc://.ipc/"
 
 namespace Starfish {
 
@@ -60,17 +60,18 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::getInstance()
     return m_instance;
 }
 
-void ServiceWorkerProcessManager::init(ThreadPool* threadPool)
+void ServiceWorkerProcessManager::init(WebView* webView)
 {
-    m_threadPool = threadPool;
+    m_threadPool = webView->threadPool();
 
+    // start I/O runner
     m_ioRunnable = new IORunnable(m_threadPool->messageLoop());
     m_ioThread = new AdaptedThread(m_threadPool);
     m_ioThread->start(m_ioRunnable);
 
     // create mock instances
     m_serviceWorkerHostProcess = ServiceWorkerHostProcess::getInstance();
-    m_serviceWorkerHostProcess->init(m_threadPool->messageLoop());
+    m_serviceWorkerHostProcess->init(m_threadPool);
     m_serviceWorkerClientProcess = ServiceWorkerClientProcess::getInstance();
 }
 
@@ -120,10 +121,13 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     if (processData->connection == nullptr) {
         processData->connection = new ServiceWorkerClientConnection();
 
-        std::string address = IPC_ADDRESS_PREFIX;
+        std::string address = IPC_PROTOCOL;
+        address.append(IPC_ADDRESS_PREFIX);
+
+#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
         // TODO: change the origin string to fd string
         address.append(origin);
-
+#endif
         processData->connection->socket()->connect(address.c_str());
         m_ioRunnable->addClient(processData->connection);
     }

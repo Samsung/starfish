@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 
+#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -192,9 +193,7 @@ void ServiceWorkerHostJobHandler::resolveJobPromise(
     ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
-    // NOTE: a job should end where it started, swervice worker client.
-    ServiceWorkerHostProcess::getInstance()->client()->resolveJobPromise(
-        job, registration);
+    job->hostConnection()->resolveJobPromise(job, registration);
 }
 
 void ServiceWorkerHostJobHandler::updateRegistrationState(

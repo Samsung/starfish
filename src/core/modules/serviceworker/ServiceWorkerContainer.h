@@ -22,6 +22,7 @@
 #define __StarfishServiceWorkerContainer__
 
 #include "core/dom/EventTarget.h"
+#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/RegistrationOptions.h"
@@ -69,8 +70,7 @@ public:
         ServiceWorkerRegistrationData* registration) override;
 
 private:
-    GCUnorderedMap<ServiceWorkerJobId, ServiceWorkerJob*> m_jobMap;
-    ServiceWorkerJobId m_refValueToMakeServiceWorkerJobId;
+    GCUnorderedMap<Id<ServiceWorkerJob>, ServiceWorkerJob*, IdHash> m_jobMap;
 };
 }
 

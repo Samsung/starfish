@@ -17,6 +17,7 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
 #ifndef __StarfishIORunnable__
 #define __StarfishIORunnable__
 
@@ -65,3 +66,4 @@ private:
 } // namespace Starfish
 
 #endif
+#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

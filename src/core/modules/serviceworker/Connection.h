@@ -17,6 +17,7 @@
  *  USA
  */
 
+#if defined(STARFISH_ENABLE_SERVICE_WORKER)
 #ifndef __StarfishConnection__
 #define __StarfishConnection__
 
@@ -42,3 +43,4 @@ protected:
 } // namespace Starfish
 
 #endif
+#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER
