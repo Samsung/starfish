@@ -31,6 +31,13 @@
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 
+#include "platform/process/base/ProcessType.h"
+#include "core/modules/threading/IRunnable.h"
+#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
@@ -45,8 +52,9 @@ void ServiceWorkerHostConnection::resolveJobPromise(
     ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
     // TODO: use socket to communicate with the client.
-    ServiceWorkerClientProcess::getInstance()->resolveJobPromise(job,
-                                                                 registration);
+    auto swpm = ServiceWorkerProcessManager::getInstance();
+    auto connection = swpm->getConnection(CSTR(job->data()->origin));
+    connection->resolveJobPromise(job, registration);
 }
 
 void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)

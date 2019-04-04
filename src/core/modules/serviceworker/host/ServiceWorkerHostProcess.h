@@ -70,6 +70,8 @@ public:
     void setRegistration(String* scope,
                          ServiceWorkerUpdateViaCache updateViaCacheMode);
 
+    DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
+
 private:
     static ServiceWorkerHostProcess* m_instance;
 

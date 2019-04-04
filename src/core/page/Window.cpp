@@ -56,6 +56,11 @@
 #include "core/style/MediaQueryListMatcher.h"
 #include "platform/window/PlatformWindow.h"
 
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+#include "platform/process/base/ProcessType.h"
+#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+#endif
+
 #ifdef STARFISH_ENABLE_TEST
 #include <sys/ioctl.h>
 #include <net/if.h>
@@ -103,6 +108,10 @@ Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
 #if defined(STARFISH_ENABLE_TTS)
     m_speechSynthesis = new SpeechSynthesis(m_document);
 #endif
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    ServiceWorkerProcessManager::getInstance()->registerActiveGlobalScope(uid(),
+                                                                          this);
+#endif
 }
 
 Starfish* Window::starfish() const
@@ -140,6 +149,10 @@ void Window::dispose()
     if (m_scriptBindingInstance) {
         m_scriptBindingInstance->destroy();
     }
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+    ServiceWorkerProcessManager::getInstance()->deregisterActiveGlobalScope(
+        uid());
+#endif
 }
 
 ExecutionContext* Window::executionContext()
@@ -850,4 +863,4 @@ void Window::setName(String* name)
 {
     m_browsingContext->setName(name);
 }
-}
+} // namespace Starfish
