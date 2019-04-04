@@ -35,6 +35,8 @@ public:
     virtual void init() = 0;
     virtual void clear() = 0;
     virtual bool isEmpty() = 0;
+    virtual void currentPoint(float& x, float& y) = 0;
+    virtual void copy(Path* src) = 0;
 
     // For CanvasPath
     virtual void closePath() = 0;

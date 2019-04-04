@@ -141,8 +141,9 @@ section are supported.
 |  | method | void closePath() | Attempts to add a straight line from the current point to the start of the current sub-path. If the shape has already been closed or has only one point, this function does nothing. |
 |  | method | void moveTo(unrestricted double x, unrestricted double y) | Begins a new sub-path at the point specified by the given (x, y) coordinates. |
 |  | method | void lineTo(unrestricted double x, unrestricted double y) | Adds a straight line to the current sub-path by connecting the sub-path's last point to the specified (x, y) coordinates. |
-|  | method | void arc(unrestricted double x, unrestricted double y, unrestricted double radius, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false) | Adds a circular arc to the current sub-path. |
+|  | method | void arcTo(unrestricted double x1, unrestricted double y1, unrestricted double x2, unrestricted double y2, unrestricted double radius) | Adds a circular arc to the current sub-path, using the given control points and radius |
 |  | method | void rect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Adds a rectangle to the current path. |
+|  | method | void arc(unrestricted double x, unrestricted double y, unrestricted double radius, unrestricted double startAngle, unrestricted double endAngle, optional boolean anticlockwise = false) | Adds a circular arc to the current sub-path. |
 | [CanvasPathDrawingStyles](https://html.spec.whatwg.org/multipage/canvas.html#canvaspathdrawingstyles) | interface mixin | CanvasPathDrawingStyles |  |
 |  | attribute | lineWidth | Sets/Gets the thickness of lines. |
 |  | attribute | lineCap | Determines the shape used to draw the end points of lines. |

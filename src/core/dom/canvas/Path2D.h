@@ -26,10 +26,12 @@
 #include "core/dom/canvas/CanvasPath.h"
 
 namespace Starfish {
+class Path2DOrDOMString;
 
 class Path2D : public ScriptWrappable, public CanvasPathInterfaceMixIn {
 public:
     Path2D(ExecutionContext* executionContext);
+    Path2D(ExecutionContext* executionContext, Path2DOrDOMString& path);
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(Path2D)
 
@@ -51,6 +53,8 @@ public:
                          bool anticlockwise = false) override;
 
 private:
+    void initFromPath2DOrDOMString(Path2DOrDOMString& path);
+
     ExecutionContext* m_executionContext;
     CanvasPath* m_canvasPath;
 };

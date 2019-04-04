@@ -140,7 +140,26 @@ void CanvasPath::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
 
 void CanvasPath::arcTo(float x1, float y1, float x2, float y2, float radius)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-arcto
+    if (isInfOrNan(x1) || isInfOrNan(y1) || isInfOrNan(x2) || isInfOrNan(y2) ||
+        isInfOrNan(radius)) {
+        return;
+    }
+    m_path->ensureSubPath(x1, y1);
+
+    if (radius < 0) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::INDEX_SIZE_ERR,
+                               "Radius must not be negative.");
+    }
+    float x0, y0;
+    m_path->currentPoint(x0, y0);
+
+    if ((x0 == x1 && y0 == y1) || (x1 == x2 && y1 == y2) || radius == 0.0f) {
+        m_path->lineTo(x1, y1);
+    } else {
+        m_path->arcTo(x1, y1, x2, y2, radius);
+    }
 }
 
 void CanvasPath::rect(float x, float y, float w, float h)

@@ -19,7 +19,8 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "StarfishConfig.h"
-#include "core/dom/canvas/CanvasRenderingContext.h"
+#include "binding/Path2DOrDOMStringUnion.h"
+#include "core/modules/canvas/Path.h"
 #include "core/dom/canvas/Path2D.h"
 #include "core/dom/ExecutionContext.h"
 
@@ -31,6 +32,21 @@ Path2D::Path2D(ExecutionContext* executionContext)
     , m_canvasPath(nullptr)
 {
     m_canvasPath = new CanvasPath(executionContext);
+}
+
+Path2D::Path2D(ExecutionContext* executionContext, Path2DOrDOMString& path)
+    : Path2D(executionContext)
+{
+    initFromPath2DOrDOMString(path);
+}
+
+void Path2D::initFromPath2DOrDOMString(Path2DOrDOMString& path)
+{
+    if (path.isPath2DValue()) {
+        m_canvasPath->path()->copy(path.getPath2DValue()->m_canvasPath->path());
+    } else if (path.isDOMStringValue()) {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
 }
 
 ScriptBindingInstance* Path2D::scriptBindingInstance()

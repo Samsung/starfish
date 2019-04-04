@@ -989,7 +989,7 @@ http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element
 #http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/initial.reset.2dstate.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/initial.colour.html
 #http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/imagedata.html
-http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/historical.html
+#http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/historical.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/fallback.nested.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/fallback.multiple.html
 http://web-platform.test:8000/html/semantics/embedded-content/the-canvas-element/fallback.basic.html
