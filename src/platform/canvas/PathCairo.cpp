@@ -99,6 +99,22 @@ bool PathCairo::isEmpty()
     return !cairo_has_current_point(m_cairoContext);
 }
 
+void PathCairo::currentPoint(float& x, float& y)
+{
+    double xx, yy;
+    cairo_get_current_point(m_cairoContext, &xx, &yy);
+    x = static_cast<float>(xx);
+    y = static_cast<float>(yy);
+}
+
+void PathCairo::copy(Path* src)
+{
+    clear();
+    auto p = cairo_copy_path(((PathCairo*)src)->context());
+    cairo_append_path(m_cairoContext, p);
+    cairo_path_destroy(p);
+}
+
 void PathCairo::closePath()
 {
     cairo_close_path(m_cairoContext);
@@ -128,7 +144,96 @@ void PathCairo::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
 
 void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    m_needNewSubPath = false;
+
+    double x0, y0;
+    cairo_get_current_point(m_cairoContext, &x0, &y0);
+
+    // import from WebKit project
+    // WebKit/Source/WebCore/platform/graphics/cairo/PathCairo.cpp(4c17da14daaa3afc2a968eeb227bba5d7a58ba32)
+    float p1p0_x = x0 - x1;
+    float p1p0_y = y0 - y1;
+    float p1p2_x = x2 - x1;
+    float p1p2_y = y2 - y1;
+    float p1p0_length = sqrtf(p1p0_x * p1p0_x + p1p0_y * p1p0_y);
+    float p1p2_length = sqrtf(p1p2_x * p1p2_x + p1p2_y * p1p2_y);
+
+    double cos_phi =
+        (p1p0_x * p1p2_x + p1p0_y * p1p2_y) / (p1p0_length * p1p2_length);
+    // all points on a line logic
+    if (cos_phi == -1) {
+        cairo_line_to(m_cairoContext, x1, y1);
+        return;
+    }
+    if (cos_phi == 1) {
+        // add infinite far away point
+        unsigned int max_length = 65535;
+        double factor_max = max_length / p1p0_length;
+        float ex = x0 + factor_max * p1p0_x;
+        float ey = y0 + factor_max * p1p0_y;
+        cairo_line_to(m_cairoContext, ex, ey);
+        return;
+    }
+
+    float tangent = radius / tan(acos(cos_phi) / 2);
+    float factor_p1p0 = tangent / p1p0_length;
+    float t_p1p0_x = x1 + factor_p1p0 * p1p0_x;
+    float t_p1p0_y = y1 + factor_p1p0 * p1p0_y;
+
+    float orth_p1p0_x = p1p0_y;
+    float orth_p1p0_y = -p1p0_x;
+
+    float orth_p1p0_length =
+        sqrt(orth_p1p0_x * orth_p1p0_x + orth_p1p0_y * orth_p1p0_y);
+    float factor_ra = radius / orth_p1p0_length;
+
+    // angle between orth_p1p0 and p1p2 to get the right vector orthographic to
+    // p1p0
+    double cos_alpha = (orth_p1p0_x * p1p2_x + orth_p1p0_y * p1p2_y) /
+                       (orth_p1p0_length * p1p2_length);
+    if (cos_alpha < 0.f) {
+        orth_p1p0_x = -orth_p1p0_x;
+        orth_p1p0_y = -orth_p1p0_y;
+    }
+    float x = t_p1p0_x + factor_ra * orth_p1p0_x;
+    float y = t_p1p0_y + factor_ra * orth_p1p0_y;
+
+    // calculate angles for addArc
+    orth_p1p0_x = -orth_p1p0_x;
+    orth_p1p0_y = -orth_p1p0_y;
+    float sa = acos(orth_p1p0_x / orth_p1p0_length);
+
+    if (orth_p1p0_y < 0.f) {
+        sa = 2 * M_PI - sa;
+    }
+
+    // anticlockwise logic
+    bool anticlockwise = false;
+
+    float factor_p1p2 = tangent / p1p2_length;
+
+    float t_p1p2_x = x1 + factor_p1p2 * p1p2_x;
+    float t_p1p2_y = y1 + factor_p1p2 * p1p2_y;
+
+    float orth_p1p2_x = t_p1p2_x - x;
+    float orth_p1p2_y = t_p1p2_y - y;
+
+    float orth_p1p2_length =
+        sqrtf(orth_p1p2_x * orth_p1p2_x + orth_p1p2_y * orth_p1p2_y);
+    float ea = acos(orth_p1p2_x / orth_p1p2_length);
+    if (orth_p1p2_y < 0) {
+        ea = 2 * M_PI - ea;
+    }
+    if ((sa > ea) && ((sa - ea) < M_PI)) {
+        anticlockwise = true;
+    }
+    if ((sa < ea) && ((ea - sa) > M_PI)) {
+        anticlockwise = true;
+    }
+
+    cairo_line_to(m_cairoContext, t_p1p0_x, t_p1p0_y);
+
+    arc(x, y, radius, sa, ea, anticlockwise);
 }
 
 void PathCairo::rect(float x, float y, float w, float h)

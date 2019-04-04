@@ -17,7 +17,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/2d.composite.globalAlpha.fi
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-alphaImageData-behavior.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-360-winding.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-connecting-line.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-negative-radius.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-negative-radius.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-arc-zero-lineto.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-bezier-same-endpoint.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-blend-image.html

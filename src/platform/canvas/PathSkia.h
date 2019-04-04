@@ -38,6 +38,8 @@ public:
     virtual void init() override;
     virtual void clear() override;
     virtual bool isEmpty() override;
+    virtual void currentPoint(float& x, float& y) override;
+    virtual void copy(Path* src) override;
 
     // For CanvasPath
     virtual void closePath() override;

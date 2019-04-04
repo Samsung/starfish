@@ -55,6 +55,7 @@
 #if defined(PORT_CANVAS_BACKEND_SKIA)
 
 #include "Starfish.h"
+#include "SkPoint.h"
 #include "SkPath.h"
 #include "core/modules/canvas/Path.h"
 #include "platform/canvas/PathSkia.h"
@@ -103,6 +104,22 @@ bool PathSkia::isEmpty()
 {
     STARFISH_RELEASE_ASSERT(m_skiaPath != nullptr)
     return m_skiaPath->isEmpty();
+}
+
+void PathSkia::currentPoint(float& x, float& y)
+{
+    SkPoint last;
+    m_skiaPath->getLastPt(&last);
+    SkScalar sx = last.x();
+    SkScalar sy = last.y();
+    x = SkScalarToFloat(sx);
+    y = SkScalarToFloat(sy);
+}
+
+void PathSkia::copy(Path* src)
+{
+    clear();
+    *m_skiaPath = *(((PathSkia*)src)->skiaPath());
 }
 
 void PathSkia::closePath()

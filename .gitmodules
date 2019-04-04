@@ -101,7 +101,7 @@
 [submodule "test"]
 	path = test
 	url = git@github.sec.samsung.net:lws-test/web_tc_new.git
-	ignore = all
+	ignore = dirty
 [submodule "third_party/nanomsg"]
 	path = third_party/nanomsg
 	url = https://github.com/nanomsg/nanomsg.git
