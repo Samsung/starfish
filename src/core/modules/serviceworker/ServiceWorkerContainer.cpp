@@ -222,6 +222,7 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
     data->type = type;
     data->scopeURL = scopeURL;
     data->scriptURL = scriptURL;
+    data->origin = document()->webOrigin()->serialize();
 
     job->setPromise(promise);
     job->setClient(client);
@@ -280,7 +281,6 @@ void ServiceWorkerContainer::resolveJobPromise(
 {
     // TODO: meet
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
-
     // TODO: get matched registration
 
     // 2. If job’s client is not null, queue a task, on job’s client's
@@ -289,21 +289,12 @@ void ServiceWorkerContainer::resolveJobPromise(
     auto context = job->client();
 
     if (context) {
-        struct Params : public gc {
-            ServiceWorkerJob* job;
-            ServiceWorkerContainer* container;
-        };
-
-        auto params = new Params();
-        params->job = job;
-        params->container = this;
-
         context->webBase()->messageLoop()->addIdler(
             context->globalScope(),
-            [](size_t handle, void* data) {
-                Params* params = static_cast<Params*>(data);
-                ServiceWorkerJob* job = params->job;
-                ServiceWorkerContainer* container = params->container;
+            [](size_t handle, void* data, void* data1) {
+                ServiceWorkerJob* job = static_cast<ServiceWorkerJob*>(data);
+                ServiceWorkerContainer* container =
+                    static_cast<ServiceWorkerContainer*>(data1);
 
                 // 1. Let convertedValue be null.
                 auto convertedValue = Escargot::ValueRef::createNull();
@@ -325,10 +316,28 @@ void ServiceWorkerContainer::resolveJobPromise(
                     convertedValue = registeration->scriptValue();
                     job->promise()->fulfill(convertedValue);
                 }
+                container->finishJob(job);
             },
-            params);
+            job, this);
+    } else {
+        finishJob(job);
     }
 }
+
+void ServiceWorkerContainer::finishJob(ServiceWorkerJob* job)
+{
+    m_jobMap.erase(job->data()->id);
+}
+
+ServiceWorkerJob* ServiceWorkerContainer::findJob(Id<ServiceWorkerJob> id)
+{
+    auto it = m_jobMap.find(id);
+    if (it == m_jobMap.end()) {
+        return nullptr;
+    }
+    return it->second;
+}
+
 } // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

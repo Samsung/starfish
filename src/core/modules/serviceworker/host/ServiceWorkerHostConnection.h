@@ -42,6 +42,8 @@ public:
     // receive
     void onReceived(Socket* socket, const char* data) override;
 
+    DEFINE_GETTER(ServiceWorkerHostProcessInterface*, client);
+
 private:
     ServiceWorkerHostProcessInterface* m_client{ nullptr };
 };

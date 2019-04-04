@@ -60,10 +60,12 @@ public:
     void startRegister(ResourceURL* scopeURL, ResourceURL* scriptURL,
                        Promise* p, ExecutionContext* client);
 
+    ServiceWorkerJob* findJob(Id<ServiceWorkerJob> id);
     ServiceWorkerJob* createJob(ServiceWorkerJobType type, String* scopeURL,
                                 String* scriptURL, Promise* p,
                                 ExecutionContext* client);
     void scheduleJob(ServiceWorkerJob* job);
+    void finishJob(ServiceWorkerJob* job);
 
     void resolveJobPromise(
         ServiceWorkerJob* job,

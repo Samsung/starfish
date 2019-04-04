@@ -33,6 +33,7 @@ class WebView;
 class ThreadPool;
 class IThread;
 class IORunnable;
+class GlobalScope;
 
 struct ProcessData {
     ProcessData()
@@ -54,6 +55,11 @@ public:
     void init(WebView* webView);
     ServiceWorkerClientConnection* getConnection(std::string origin);
 
+    void registerActiveGlobalScope(Id<GlobalScope> id,
+                                   GlobalScope* globalScope);
+    void deregisterActiveGlobalScope(Id<GlobalScope> id);
+    GlobalScope* find(Id<GlobalScope> id);
+
 private:
     ServiceWorkerProcessManager();
     virtual ~ServiceWorkerProcessManager();
@@ -68,6 +74,9 @@ private:
 
     std::unordered_map<std::string, std::shared_ptr<ProcessData>>
         m_mapOriginToProcessData;
+
+    GCUnorderedMap<Id<GlobalScope>, GlobalScope*, IdHash>
+        m_mapIdToActiveGlobalScope;
 };
 } // namespace Starfish
 

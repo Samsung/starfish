@@ -38,6 +38,7 @@ struct ServiceWorkerJobData : public gc {
     String* scopeURL{ nullptr };
     String* scriptURL{ nullptr };
     String* referrerURL{ nullptr };
+    String* origin{ nullptr };
     WorkerType workerType{ WorkerType::Classic };
     ServiceWorkerUpdateViaCache updateViaCacheMode{
         ServiceWorkerUpdateViaCache::None

@@ -19,6 +19,7 @@
 
 #include "StarfishConfig.h"
 
+#include "core/page/GlobalScope.h"
 #include "platform/process/base/ProcessType.h"
 
 #include "core/page/WebView.h"
@@ -133,6 +134,27 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     }
 
     return processData->connection;
+}
+
+void ServiceWorkerProcessManager::registerActiveGlobalScope(
+    Id<GlobalScope> id, GlobalScope* globalScope)
+{
+    m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
+}
+
+void ServiceWorkerProcessManager::deregisterActiveGlobalScope(
+    Id<GlobalScope> id)
+{
+    m_mapIdToActiveGlobalScope.erase(id);
+}
+
+GlobalScope* ServiceWorkerProcessManager::find(Id<GlobalScope> id)
+{
+    auto it = m_mapIdToActiveGlobalScope.find(id);
+    if (it == m_mapIdToActiveGlobalScope.end()) {
+        return nullptr;
+    }
+    return it->second;
 }
 
 } // namespace Starfish

@@ -35,6 +35,17 @@
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 
+#include "platform/process/base/ProcessType.h"
+#include "core/modules/threading/IRunnable.h"
+#include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
+
+#include "core/page/Navigator.h"
+#include "core/page/Window.h"
+#include "core/dom/ExecutionContext.h"
+#include "core/dom/Document.h"
+#include "core/modules/serviceworker/ServiceWorkerContainer.h"
+#include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
@@ -45,9 +56,14 @@ ServiceWorkerClientConnection::ServiceWorkerClientConnection()
 
 void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
 {
-    // TODO: use socket to communicate with the host.
     job->setClientConnection(this);
-    ServiceWorkerHostProcess::getInstance()->scheduleJob(job);
+
+    // TODO:
+    // 1. marshalling job and pass it through `Connection::onReceived`
+    // 2. unmarshalling job
+    // 3. replace calling the function with real sockets communication
+    auto hostConnection = ServiceWorkerHostProcess::getInstance()->connection();
+    hostConnection->client()->scheduleJob(job);
 }
 
 void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
@@ -57,6 +73,24 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
 void ServiceWorkerClientConnection::resolveJobPromise(
     ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
+    // find if this job owner context is still active.
+    auto swpm = ServiceWorkerProcessManager::getInstance();
+    auto globalScope = swpm->find(job->data()->contextId);
+
+    if (globalScope) {
+        auto executionContext = globalScope->executionContext();
+        if (executionContext->hasDocument()) {
+            auto window = executionContext->document()->window();
+            // TODO: use serviceworker bindings on window
+            auto serviceWorkerContainer = window->navigator()->serviceWorker();
+            // TODO: consider passing job data and move findjob into container
+            auto jobMatched = serviceWorkerContainer->findJob(job->data()->id);
+            if (jobMatched) {
+                serviceWorkerContainer->resolveJobPromise(jobMatched,
+                                                          registration);
+            }
+        }
+    }
 }
 
 } // namespace Starfish
