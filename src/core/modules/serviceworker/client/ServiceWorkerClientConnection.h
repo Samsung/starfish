@@ -33,8 +33,12 @@ class ServiceWorkerClientConnection final
       public ServiceWorkerClientProcessInterface {
 public:
     ServiceWorkerClientConnection();
-    void onReceived(Socket* socket, const char* data) override;
+
+    // send
     void scheduleJob(ServiceWorkerJob* job) override;
+
+    // receive
+    void onReceived(Socket* socket, const char* data) override;
     void resolveJobPromise(
         ServiceWorkerJob* job,
         ServiceWorkerRegistrationData* registration) override;

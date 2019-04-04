@@ -23,6 +23,8 @@
 
 namespace Starfish {
 
+class GlobalScope;
+class ServiceWorkerJob;
 class ExecutionContext;
 
 enum class ServiceWorkerUpdateViaCache {
@@ -44,7 +46,17 @@ enum class WorkerType {
 
 using ServiceWorkerClient = ExecutionContext;
 using ServiceWorkerRegistrationKey = String*;
-using ServiceWorkerJobId = uint64_t;
+
+using ServiceWorkerJobId = Id<ServiceWorkerJob>;
+using ServiceWorkerContextId = Id<GlobalScope>;
+
+#ifdef SERVICE_WORKER_USE_MULTI_PROCESS
+#define IPC_PROTOCOL "ipc://"
+#define IPC_ADDRESS_PREFIX ".ipc/"
+#else
+#define IPC_PROTOCOL "inproc://"
+#define IPC_ADDRESS_PREFIX "sw"
+#endif
 }
 
 #endif

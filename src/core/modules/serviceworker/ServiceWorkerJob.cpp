@@ -20,12 +20,18 @@
 #include "StarfishConfig.h"
 
 #include "core/dom/ExecutionContext.h"
+#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
+
+ServiceWorkerJob::ServiceWorkerJob()
+{
+    m_data = new ServiceWorkerJobData();
+}
 
 ServiceWorkerRegistrationKey ServiceWorkerJob::registrationKey()
 {

@@ -23,8 +23,6 @@
 
 #include "core/modules/serviceworker/ServiceWorkerContainer.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
 
 #include "platform/process/base/ProcessType.h"
 #include "core/modules/threading/IRunnable.h"
@@ -34,12 +32,12 @@
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistration.h"
-#include "core/modules/serviceworker/RegistrationOptions.h"
 #include "core/modules/serviceworker/ServiceWorker.h"
 
+#include "core/page/GlobalScope.h"
+#include "core/page/Window.h"
 #include "core/dom/WebOrigin.h"
 #include "core/dom/Document.h"
-#include "core/dom/Event.h"
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 
@@ -68,7 +66,6 @@ ScriptValue createException(ScriptBindingInstance* scriptBindingInstance,
 
 ServiceWorkerContainer::ServiceWorkerContainer(Document* document)
     : EventTarget(document)
-    , m_refValueToMakeServiceWorkerJobId(0)
 {
     ServiceWorkerClientProcess::getInstance()->init(this);
 }
@@ -218,18 +215,16 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
     // https://w3c.github.io/ServiceWorker/#create-job
 
     auto job = new ServiceWorkerJob();
-    auto data = new ServiceWorkerJobData();
+    auto data = job->data();
 
-    data->id = m_refValueToMakeServiceWorkerJobId;
+    data->id = ServiceWorkerJobId::generate();
+    data->contextId = window()->uid();
     data->type = type;
     data->scopeURL = scopeURL;
     data->scriptURL = scriptURL;
 
-    job->setData(data);
     job->setPromise(promise);
     job->setClient(client);
-
-    m_refValueToMakeServiceWorkerJobId++;
 
     return job;
 }

@@ -24,6 +24,7 @@
 #include <EscargotPublic.h>
 
 #include "core/dom/ExecutionContext.h"
+#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
@@ -77,6 +78,9 @@ ServiceWorkerHostProcessInterface* ServiceWorkerClientProcess::host()
 void ServiceWorkerClientProcess::resolveJobPromise(
     ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
+    // TODO:
+    // 1) find a window using job->contextId
+    // 2) if the window valid, pass job to its ServiceWorkerContainer
     m_jobClient->resolveJobPromise(job, registration);
 }
 

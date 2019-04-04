@@ -20,6 +20,8 @@
 #ifndef __StarfishGlobalScope__
 #define __StarfishGlobalScope__
 
+#include "core/util/Id.h"
+
 namespace Starfish {
 
 class WebBase;
@@ -35,19 +37,19 @@ public:
 
     virtual ExecutionContext* executionContext() = 0;
 
-    WebBase* webBase()
-    {
-        return m_webBase;
-    }
+    DEFINE_GETTER(WebBase*, webBase);
+    DEFINE_GETTER(Id<GlobalScope>, uid);
 
 protected:
     GlobalScope(WebBase* webBase)
         : m_webBase(webBase)
     {
+        m_uid = Id<GlobalScope>::generate();
     }
 
 private:
     WebBase* m_webBase;
+    Id<GlobalScope> m_uid;
 };
 }
 

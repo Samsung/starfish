@@ -26,18 +26,18 @@
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
 #include "core/modules/networking/Socket.h"
-
+#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
+#include "core/util/Id.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerJob.h"
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
-
-void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
-{
-}
 
 ServiceWorkerClientConnection::ServiceWorkerClientConnection()
 {
@@ -46,7 +46,12 @@ ServiceWorkerClientConnection::ServiceWorkerClientConnection()
 void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
 {
     // TODO: use socket to communicate with the host.
+    job->setClientConnection(this);
     ServiceWorkerHostProcess::getInstance()->scheduleJob(job);
+}
+
+void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
+{
 }
 
 void ServiceWorkerClientConnection::resolveJobPromise(
