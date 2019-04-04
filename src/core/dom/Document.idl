@@ -156,8 +156,8 @@ interface Document : Node {
 
   [Unimplemented, SameObject] readonly attribute HTMLAllCollection all;
 
-  readonly attribute long width;
-  readonly attribute long height;
+  [STARFISH_ENABLE_OBSOLETE_SPEC] readonly attribute long width;
+  [STARFISH_ENABLE_OBSOLETE_SPEC] readonly attribute long height;
 };
 
 

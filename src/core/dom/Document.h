@@ -224,8 +224,10 @@ public:
 #undef REFLECT_ATTR_GETTER_FROM_BODY
 #undef REFLECT_ATTR_SETTER_TO_BODY
 
+#ifdef STARFISH_ENABLE_OBSOLETE_SPEC
     uint32_t width();
     uint32_t height();
+#endif
 
     Attr* createAttribute(QualifiedName localName);
     Attr* createAttribute(String* name);

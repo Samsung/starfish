@@ -8,6 +8,7 @@ lightweight Web engine (LWE).
 - [HTML](#html)
 - [DOM](#dom)
 - [Events](#events)
+- [Obsolete](#obsolete)
 - [CSS](#css)
 - [Obsolete CSS](#obsolete-css)
 - [Selectors](#selectors)
@@ -1184,6 +1185,16 @@ supported.
 | [SecurityPolicyViolationEventInit](https://www.w3.org/TR/CSP2/#securitypolicyviolationeventinit-interface) | dictionary | SecurityPolicyViolationEventInit | Dictionary that is used to create SecurityPolicyViolationEvent. |
 | | attribute | blockedURI | Returns the requested URL of the resource that was prevented from loading. |
 | | attribute | violatedDirective | Returns the policy directive that was violated. |
+
+## Obsolete
+
+This section describes the list of Obsolete interfaces.
+To use these features, you need to define STARFISH_ENABLE_OBSOLETE_SPEC.
+
+| Interface            | Type   | Name                      | Description |
+|----------------------|--------|---------------------------|-------------|
+| Document  | attribute | width | Returns the width of the &lt;body&gt; element of the current document in pixels. |
+|  | attribute | height | Returns the height of the &lt;body&gt; element of the current document in pixels.  |
 
 ## CSS
 

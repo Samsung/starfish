@@ -41,6 +41,10 @@ ADD_CUSTOM_TARGET (internal_test_manual
     COMMAND ./tool/drivers/run_test.py basic tool/reftest/cairo/internal_manual.res common --font-dep -p${NPROCS}
 )
 
+ADD_CUSTOM_TARGET (internal_obsolete
+    COMMAND ./tool/drivers/run_test.py basic tool/reftest/cairo/internal_obsolete.res common -p${NPROCS}
+)
+
 ADD_CUSTOM_TARGET (dom_conformance_test
     COMMAND ./tool/drivers/run_test.py dom_conformance tool/reftest/cairo/dom_conformance_test.res common -p${NPROCS}
 )
