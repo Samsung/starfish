@@ -36,6 +36,7 @@
 #include "core/dom/NamedNodeMap.h"
 #include "core/dom/SelectorQuery.h"
 #include "core/dom/Text.h"
+#include "core/dom/PseudoElement.h"
 #include "core/dom/parser/HTMLParser.h"
 #include "core/dom/parser/HTMLParserIdioms.h"
 #include "core/dom/xml/XMLSerializer.h"
@@ -561,41 +562,132 @@ void Element::didAttributeChanged(QualifiedName name, String* old,
     }
 }
 
+void computeTransition(Element* element, ComputedStyle* oldStyle,
+                       Frame* oldFrame, ComputedStyle* style,
+                       ComputedStyleDamage& damage,
+                       bool (&damagedKeys)[CSSStyleValuePair::KeyKindSize]);
+
 void Element::didComputedStyleChanged(ComputedStyle* oldStyle,
                                       ComputedStyle* newStyle)
 {
     Node::didComputedStyleChanged(oldStyle, newStyle);
 
     Frame* frame = Element::frame();
-    if (frame && newStyle) {
-        if (!needsFrameTreeBuild()) {
-            for (int i = StyleResolver::PseudoElementFirstLine;
-                 i <= StyleResolver::PseudoElementAfter; i++) {
-                bool o = oldStyle->seenPseudoElement(
-                    (StyleResolver::PseudoElementType)i);
-                bool n = newStyle->seenPseudoElement(
-                    (StyleResolver::PseudoElementType)i);
-                if (o != n) {
-                    setNeedsFrameTreeBuild();
+    if (newStyle == nullptr) {
+        if (hasRareMembers()) {
+            if (rareMembers()->m_pseudoElementMap) {
+                rareMembers()->m_pseudoElementMap->clear();
+            }
+        }
+    } else if (!isPseudoElement()) {
+        // ensure pseudo elements
+        for (int i = PseudoElementType::PseudoElementGeneralTypeStart;
+             i <= PseudoElementType::PseudoElementGeneralTypeEnd; i++) {
+            PseudoElementType type = (PseudoElementType)i;
+            bool o = oldStyle ? oldStyle->seenPseudoElement(type) : false;
+            bool n = newStyle->seenPseudoElement(type);
+
+            if (o != n) {
+                setNeedsFrameTreeBuild();
+            }
+
+            if (type == PseudoElementBefore || type == PseudoElementAfter) {
+                PseudoElementMap* pseudoElementMap =
+                    ensureRareElementMembers()->ensurePseudoElementMap();
+                ComputedStyle* ocs =
+                    oldStyle ? oldStyle->pseudoStyle(this, type) : nullptr;
+                o = ocs && pseudoElementFrameIsNeeded(ocs) && ocs->content();
+                ComputedStyle* ncs =
+                    n ? newStyle->pseudoStyle(this, type) : nullptr;
+                n = ncs && pseudoElementFrameIsNeeded(ncs) && ncs->content();
+
+                if (n) {
+                    if (pseudoElementMap->pseudoElement(type) == nullptr) {
+                        PseudoElement* pseudoElement =
+                            new PseudoElement(document(), this, type);
+                        pseudoElementMap->setPseudoElement(type, pseudoElement);
+                        pseudoElement->setParentNode(this);
+                        pseudoElement->setStyle(ncs);
+                    } else {
+                        pseudoElementMap->pseudoElement(type)->setStyle(ncs);
+                    }
+                } else {
+                    pseudoElementMap->setPseudoElement(type, nullptr);
                 }
+
                 if (o && n) {
-                    ComputedStyle* ocs = oldStyle->pseudoStyle(
-                        this, (StyleResolver::PseudoElementType)i);
-                    ComputedStyle* ncs = newStyle->pseudoStyle(
-                        this, (StyleResolver::PseudoElementType)i, nullptr,
-                        ocs);
+                    Element* pseudoNode = pseudoElementMap->pseudoElement(type);
+
                     bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
                         false,
                     };
-                    if (compareStyle(ocs, ncs, damagedKeys) !=
-                        ComputedStyleDamageNone) {
-                        setNeedsFrameTreeBuild();
+
+                    auto damage = compareStyle(ocs, ncs, damagedKeys);
+
+                    if (damage !=
+                        ComputedStyleDamage::ComputedStyleDamageNone) {
+                        computeTransition(pseudoNode, ocs, pseudoNode->frame(),
+                                          ncs, damage, damagedKeys);
+
+                        if (damage & ComputedStyleDamage::
+                                         ComputedStyleDamageRebuildFrame) {
+                            setNeedsFrameTreeBuild();
+                        }
+
+                        if (damage &
+                            ComputedStyleDamage::ComputedStyleDamageLayout) {
+                            if (pseudoNode) {
+                                pseudoNode->setNeedsLayout();
+                            }
+                        }
+
+                        if (damage &
+                            ComputedStyleDamage::
+                                ComputedStyleDamageEstablishesStackingContext) {
+                            webView()->setNeedsEstablishesStackingContext();
+                        }
+
+                        if (damage &
+                            ComputedStyleDamage::
+                                ComputedStyleDamageComputeStackingContextProperties) {
+                            webView()
+                                ->setNeedsComputeStackingContextProperties();
+                        }
+
+                        if (damage &
+                            ComputedStyleDamage::ComputedStyleDamagePainting) {
+                            if (pseudoNode) {
+                                pseudoNode->setNeedsPainting();
+                            }
+                        }
+
+                        if (damage &
+                            ComputedStyleDamage::ComputedStyleDamageComposite) {
+                            setNeedsComposite();
+                        }
+                    }
+                }
+            } else {
+                if (!needsFrameTreeBuild() && frame) {
+                    if (o && n) {
+                        ComputedStyle* ocs = oldStyle->pseudoStyle(this, type);
+                        ComputedStyle* ncs =
+                            newStyle->pseudoStyle(this, type, nullptr, ocs);
+                        bool damagedKeys[CSSStyleValuePair::KeyKindSize] = {
+                            false,
+                        };
+                        if (compareStyle(ocs, ncs, damagedKeys) !=
+                            ComputedStyleDamageNone) {
+                            setNeedsFrameTreeBuild();
+                        }
                     }
                 }
             }
         }
+    }
 
-        if (frame->isFrameBlockBox()) {
+    if (newStyle) {
+        if (frame && frame->isFrameBlockBox()) {
             frame = frame->firstChild();
             while (frame) {
                 if (frame->isAnonymous()) {

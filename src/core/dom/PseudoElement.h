@@ -28,14 +28,19 @@ namespace Starfish {
 
 class PseudoElement : public Element {
 public:
-    QualifiedName pseudoElementTagName(
-        Document* document, StyleResolver::PseudoElementType pseudoId);
+    QualifiedName pseudoElementTagName(Document* document,
+                                       PseudoElementType pseudoId);
 
-    PseudoElement(Document* document, StyleResolver::PseudoElementType pseudoId)
+    PseudoElement(Document* document, Element* originElement,
+                  PseudoElementType pseudoId)
         : Element(document, pseudoElementTagName(document, pseudoId))
+        , m_originElement(originElement)
         , m_pseudoId(pseudoId)
     {
     }
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
 
     virtual QualifiedName name()
     {
@@ -52,13 +57,24 @@ public:
         return name().localName();
     }
 
-    StyleResolver::PseudoElementType getPseudoId() const
+    Element* originElement() const
+    {
+        return m_originElement;
+    }
+
+    PseudoElementType getPseudoId() const
     {
         return m_pseudoId;
     }
 
 protected:
-    StyleResolver::PseudoElementType m_pseudoId;
+    Element* m_originElement;
+    PseudoElementType m_pseudoId;
+
+    static inline void fillGCDescriptor(GC_word* desc)
+    {
+        Element::fillGCDescriptor(desc);
+    }
 };
 
 inline bool pseudoElementFrameIsNeeded(ComputedStyle* style)
@@ -71,9 +87,9 @@ inline bool pseudoElementFrameIsNeeded(ComputedStyle* style)
 
 class FirstLetterPseudoElement : public PseudoElement {
 public:
-    FirstLetterPseudoElement(Document* document,
-                             StyleResolver::PseudoElementType pseudoId)
-        : PseudoElement(document, pseudoId)
+    FirstLetterPseudoElement(Document* document, Element* originElement,
+                             PseudoElementType pseudoId)
+        : PseudoElement(document, originElement, pseudoId)
     {
     }
 

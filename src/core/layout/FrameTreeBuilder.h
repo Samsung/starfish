@@ -159,12 +159,11 @@ public:
     static Frame* findNearestBlockStartPositionOfFrameTreeBuildCandidate(
         Frame* f);
 
-    static void createPseudoElement(Node* parent,
-                                    StyleResolver::PseudoElementType pseudoId,
+    static void createPseudoElement(Node* parent, PseudoElementType pseudoId,
                                     FrameTreeBuilderContext& ctx);
     static ComputedStyle* pseudoStyleForElementInternal(
-        Node* node, StyleResolver::PseudoElementType pseudoId,
-        ComputedStyle* parentStyle, ComputedStyle* oldPseudoStyleIfHas);
+        Node* node, PseudoElementType pseudoId, ComputedStyle* parentStyle,
+        ComputedStyle* oldPseudoStyleIfHas);
 
     static Frame* buildSVGFrameTree(SVGElement* svgElement);
 #ifdef STARFISH_ENABLE_TEST

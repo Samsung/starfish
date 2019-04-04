@@ -35,6 +35,37 @@ class NamedNodeMap;
 class PseudoElement;
 class DOMStringMap;
 
+class PseudoElementMap : public gc {
+public:
+    PseudoElementMap()
+    {
+        memset(m_pseudoElements, 0, sizeof(m_pseudoElements));
+    }
+
+    void setPseudoElement(PseudoElementType type, PseudoElement* e)
+    {
+        STARFISH_ASSERT(type >= PseudoElementGeneralTypeStart &&
+                        type <= PseudoElementGeneralTypeEnd);
+        m_pseudoElements[type - PseudoElementGeneralTypeStart] = e;
+    }
+
+    PseudoElement* pseudoElement(PseudoElementType type)
+    {
+        STARFISH_ASSERT(type >= PseudoElementGeneralTypeStart &&
+                        type <= PseudoElementGeneralTypeEnd);
+        return m_pseudoElements[type - PseudoElementGeneralTypeStart];
+    }
+
+    void clear()
+    {
+        memset(m_pseudoElements, 0, sizeof(m_pseudoElements));
+    }
+
+protected:
+    PseudoElement* m_pseudoElements[PseudoElementGeneralTypeEnd -
+                                    PseudoElementGeneralTypeStart + 1];
+};
+
 class RareElementMembers : public RareNodeMembers {
 public:
     RareElementMembers()
@@ -43,6 +74,7 @@ public:
         , m_attrList(nullptr)
         , m_scrolling(nullptr)
         , m_dataset(nullptr)
+        , m_pseudoElementMap(nullptr)
     {
     }
 
@@ -51,12 +83,21 @@ public:
         return true;
     }
 
+    PseudoElementMap* ensurePseudoElementMap()
+    {
+        if (m_pseudoElementMap == nullptr) {
+            m_pseudoElementMap = new PseudoElementMap();
+        }
+        return m_pseudoElementMap;
+    }
+
     NamedNodeMap* m_namedNodeMap;
     GCVector<Attr*>* m_attrList;
     LayoutUnit m_scrollTop;
     LayoutUnit m_scrollLeft;
     Scrolling* m_scrolling;
     DOMStringMap* m_dataset;
+    PseudoElementMap* m_pseudoElementMap;
 };
 
 class Element : public Node {

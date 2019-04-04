@@ -531,11 +531,10 @@ void FrameTreeBuilder::insertChild(FrameBlockBox* blockContainer,
 }
 
 ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
-    Node* parent, StyleResolver::PseudoElementType pseudoId,
-    ComputedStyle* parentStyle, ComputedStyle* oldPseudoStyleIfHas)
+    Node* parent, PseudoElementType pseudoId, ComputedStyle* parentStyle,
+    ComputedStyle* oldPseudoStyleIfHas)
 {
-    STARFISH_ASSERT(pseudoId !=
-                    StyleResolver::PseudoElementType::PseudoElementNone);
+    STARFISH_ASSERT(pseudoId != PseudoElementType::PseudoElementNone);
     STARFISH_ASSERT(parentStyle);
 
     ComputedStyle* style = new ComputedStyle(parentStyle);
@@ -551,8 +550,7 @@ ComputedStyle* FrameTreeBuilder::pseudoStyleForElementInternal(
     style->setFontSize(fontSize);
 
     // TODO: Set the proper style according to the type of pseudo-elements
-    if (pseudoId ==
-        StyleResolver::PseudoElementType::PseudoElementFirstLetter) {
+    if (pseudoId == PseudoElementType::PseudoElementFirstLetter) {
         style->setDisplay(DisplayValue::InlineDisplayValue);
         style->setPosition(PositionValue::StaticPositionValue);
     }
@@ -586,8 +584,7 @@ static PseudoElement* buildListCounter(Node* parent,
 
     // Generate pseudo element
     PseudoElement* pseudoElement = new PseudoElement(
-        parent->document(),
-        StyleResolver::PseudoElementType::PseudoElementCounter);
+        parent->document(), nullptr, PseudoElementType::PseudoElementCounter);
     pseudoElement->setStyle(pseudoStyle);
     pseudoElement->setParentNode(parent);
     pseudoElement->setFrame(new FrameBlockBox(pseudoElement, nullptr));
@@ -695,10 +692,12 @@ void FrameTreeBuilder::buildListCounterOutsideIfNeeds(
     }
 }
 
-void FrameTreeBuilder::createPseudoElement(
-    Node* parent, StyleResolver::PseudoElementType pseudoId,
-    FrameTreeBuilderContext& ctx)
+void FrameTreeBuilder::createPseudoElement(Node* parent,
+                                           PseudoElementType pseudoId,
+                                           FrameTreeBuilderContext& ctx)
 {
+    STARFISH_ASSERT(pseudoId >= PseudoElementGeneralTypeStart &&
+                    pseudoId <= PseudoElementGeneralTypeEnd);
     if (!parent->isElement() || parent->isPseudoElement()) {
         return;
     }
@@ -706,14 +705,27 @@ void FrameTreeBuilder::createPseudoElement(
         return;
     }
 
-    PseudoElement* pseudoElement =
-        new PseudoElement(parent->document(), pseudoId);
-    pseudoElement->setParentNode(parent);
+    PseudoElement* pseudoElement = nullptr;
+    if (pseudoId >= PseudoElementMappedTypeStart &&
+        pseudoId <= PseudoElementMappedTypeEnd) {
+        pseudoElement = parent->asElement()
+                            ->rareMembers()
+                            ->asRareElementMembers()
+                            ->m_pseudoElementMap->pseudoElement(pseudoId);
+        if (!pseudoElement) {
+            // null means !pseudoElementFrameIsNeeded(pseudoStyle) or content is
+            // null
+            return;
+        }
+    } else {
+        pseudoElement = new PseudoElement(parent->document(),
+                                          parent->asElement(), pseudoId);
+        pseudoElement->setParentNode(parent);
+    }
 
     Frame* pseudoParentFrame = nullptr;
     ComputedStyle* parentStyle = parent->style();
-    if (pseudoId ==
-        StyleResolver::PseudoElementType::PseudoElementFirstLetter) {
+    if (pseudoId == PseudoElementType::PseudoElementFirstLetter) {
         if (Frame* nextFrame =
                 FirstLetterPseudoElement::firstLetterFrameText(pseudoElement)) {
             pseudoParentFrame = nextFrame->parent();
@@ -732,12 +744,16 @@ void FrameTreeBuilder::createPseudoElement(
     if (!pseudoElementFrameIsNeeded(pseudoStyle)) {
         return;
     }
-    if ((pseudoId == StyleResolver::PseudoElementBefore ||
-         pseudoId == StyleResolver::PseudoElementAfter) &&
+    if ((pseudoId == PseudoElementType::PseudoElementBefore ||
+         pseudoId == PseudoElementType::PseudoElementAfter) &&
         !pseudoStyle->content()) {
         return;
     }
-    pseudoElement->setStyle(pseudoStyle);
+
+    if (pseudoId < PseudoElementMappedTypeStart ||
+        pseudoId > PseudoElementMappedTypeEnd) {
+        pseudoElement->setStyle(pseudoStyle);
+    }
 
     if (pseudoElement->isFirstLetterPseudoElement()) {
         Frame* pseudoFrame;
@@ -1090,9 +1106,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
 
     if (needsCreatePseudoElement) {
         buildListCounterInsideIfNeeds(ctx, current);
-        createPseudoElement(
-            current, StyleResolver::PseudoElementType::PseudoElementBefore,
-            ctx);
+        createPseudoElement(current, PseudoElementType::PseudoElementBefore,
+                            ctx);
     }
 
     if (!shouldSkipChildren && (current->childNeedsFrameTreeBuild() || force)) {
@@ -1130,8 +1145,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     }
 
     if (needsCreatePseudoElement) {
-        createPseudoElement(
-            current, StyleResolver::PseudoElementType::PseudoElementAfter, ctx);
+        createPseudoElement(current, PseudoElementType::PseudoElementAfter,
+                            ctx);
     }
 
     if (lastAnonymousTableObject) {
@@ -1167,9 +1182,8 @@ Frame* FrameTreeBuilder::buildTree(Node* current, FrameTreeBuilderContext& ctx,
     ctx.setIsInFrameInlineFlow(prevIsInFrameInlineFlow);
 
     if (needsCreatePseudoElement) {
-        createPseudoElement(
-            current, StyleResolver::PseudoElementType::PseudoElementFirstLetter,
-            ctx);
+        createPseudoElement(current,
+                            PseudoElementType::PseudoElementFirstLetter, ctx);
         buildListCounterOutsideIfNeeds(ctx, current);
     }
 

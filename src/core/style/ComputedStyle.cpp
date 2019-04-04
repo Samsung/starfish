@@ -2179,8 +2179,7 @@ SkMatrix ComputedStyle::transformsToMatrix(LayoutUnit containerWidth,
     return matrix;
 }
 
-ComputedStyle* ComputedStyle::cachedPseudoStyle(
-    StyleResolver::PseudoElementType pseudoType)
+ComputedStyle* ComputedStyle::cachedPseudoStyle(PseudoElementType pseudoType)
 {
     GCVector<ComputedStyle*>* styles = cachedPseudoStyles();
     if (!styles) {
@@ -2206,14 +2205,13 @@ ComputedStyle* ComputedStyle::addCachedPseudoStyle(ComputedStyle* pseudoStyle)
     }
 
     STARFISH_ASSERT(pseudoStyle->pseudoType() >
-                    StyleResolver::PseudoElementType::PseudoElementNone);
+                    PseudoElementType::PseudoElementNone);
 
     m_rareComputedStyleData.ensureCachedPsuedoStyles()->push_back(pseudoStyle);
     return pseudoStyle;
 }
 
-void ComputedStyle::removeCachedPseudoStyle(
-    StyleResolver::PseudoElementType pid)
+void ComputedStyle::removeCachedPseudoStyle(PseudoElementType pid)
 {
     GCVector<ComputedStyle*>* styles = cachedPseudoStyles();
     if (!styles) {
@@ -2227,9 +2225,10 @@ void ComputedStyle::removeCachedPseudoStyle(
                   styles->end());
 }
 
-ComputedStyle* ComputedStyle::pseudoStyle(
-    Element* containerElement, StyleResolver::PseudoElementType pseudoType,
-    ComputedStyle* stickyInheritFrom, ComputedStyle* oldPseudoStyleIfHas)
+ComputedStyle* ComputedStyle::pseudoStyle(Element* containerElement,
+                                          PseudoElementType pseudoType,
+                                          ComputedStyle* stickyInheritFrom,
+                                          ComputedStyle* oldPseudoStyleIfHas)
 {
     if (!seenPseudoElement(pseudoType)) {
         return nullptr;

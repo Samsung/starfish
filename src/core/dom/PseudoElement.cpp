@@ -33,18 +33,32 @@ static inline bool isSpaceForFirstLetter(char32_t c)
     return String::isSpaceOrNewline(c) || c == NonBreakingSpace;
 }
 
-QualifiedName PseudoElement::pseudoElementTagName(
-    Document* document, StyleResolver::PseudoElementType pseudoId)
+void* PseudoElement::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(PseudoElement));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(HTMLElement)] = { 0 };
+        PseudoElement::fillGCDescriptor(desc);
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(HTMLElement));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+QualifiedName PseudoElement::pseudoElementTagName(Document* document,
+                                                  PseudoElementType pseudoId)
 {
     Starfish* starfish = document->starfish();
     switch (pseudoId) {
-    case StyleResolver::PseudoElementType::PseudoElementAfter:
+    case PseudoElementType::PseudoElementAfter:
         return QualifiedName(AtomicString(), AtomicString::createAtomicString(
                                                  starfish, "pseudo:after"));
-    case StyleResolver::PseudoElementType::PseudoElementBefore:
+    case PseudoElementType::PseudoElementBefore:
         return QualifiedName(AtomicString(), AtomicString::createAtomicString(
                                                  starfish, "pseudo:before"));
-    case StyleResolver::PseudoElementType::PseudoElementFirstLetter:
+    case PseudoElementType::PseudoElementFirstLetter:
         return QualifiedName(
             AtomicString(),
             AtomicString::createAtomicString(starfish, "pseudo:first-letter"));
@@ -115,7 +129,7 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
     if (!parentFrame || parentFrame->isAnonymous() ||
         !(parentFrame->node()->isElement() &&
           parentFrame->node()->style()->seenPseudoElement(
-              StyleResolver::PseudoElementType::PseudoElementFirstLetter)) ||
+              PseudoElementType::PseudoElementFirstLetter)) ||
         !parentFrame->canHaveFirstLineOrFirstLetterStyle()) {
         return nullptr;
     }
@@ -146,8 +160,7 @@ Frame* FirstLetterPseudoElement::firstLetterFrameText(Node* n)
         } else if (!firstLetterFrame->isNormalFlow()) { // float or out-of-flow
             if (firstLetterFrame->node()->isElement() &&
                 firstLetterFrame->node()->style()->seenPseudoElement(
-                    StyleResolver::PseudoElementType::
-                        PseudoElementFirstLetter)) {
+                    PseudoElementType::PseudoElementFirstLetter)) {
                 firstLetterFrame = firstLetterFrame->firstChild();
                 break;
             }
