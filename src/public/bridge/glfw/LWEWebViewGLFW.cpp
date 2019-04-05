@@ -121,6 +121,8 @@ public:
 
     virtual void Destroy() override
     {
+        FetchWebContainer()->Blur();
+
         FetchWebContainer()->ClearTimeout(m_pollTimer);
 
         FetchWebContainer()->Destroy();
