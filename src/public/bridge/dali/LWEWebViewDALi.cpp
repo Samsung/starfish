@@ -1088,6 +1088,8 @@ public:
 
     void Destroy() override
     {
+        FetchWebContainer()->Blur();
+
         FetchWebContainer()->Destroy();
 
         // FIXME memory of <this> pointer is leaking now

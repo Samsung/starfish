@@ -871,6 +871,8 @@ public:
 
     virtual void Destroy() override
     {
+        Blur();
+
         FetchWebContainer()->Destroy();
 
         if (m_IMFContext) {
