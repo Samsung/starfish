@@ -147,11 +147,11 @@ public:
             SkRect::MakeXYWH(rt.x(), rt.y(), rt.width(), rt.height()));
     }
 
-    virtual void setColor(const Unit::Color& clr_)
+    virtual void setColor(const Unit::Color& clr)
     {
-        Unit::Color clr = clr_;
-        clr.m_a = clr.m_a * m_opacityVector.back();
-        m_paint.setColor(SkColorSetARGB(clr.a(), clr.r(), clr.g(), clr.b()));
+        Unit::Color c = clr;
+        c.m_a = c.m_a * m_opacityVector.back();
+        m_paint.setColor(SkColorSetARGB(c.a(), c.r(), c.g(), c.b()));
     }
 
     virtual void punchHole(const Unit::Rect& rt)

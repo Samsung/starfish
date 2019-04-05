@@ -238,11 +238,14 @@ public:
         if (m_state.size()) {
             auto& lastState = m_state.back();
             state.m_color = lastState.m_color;
+            state.m_strokeColor = lastState.m_strokeColor;
             state.m_opacity = lastState.m_opacity;
             state.m_font = lastState.m_font;
             state.m_visible = lastState.m_visible;
             state.m_textDecorationData = lastState.m_textDecorationData;
             state.m_fillType = lastState.m_fillType;
+            state.m_hasNonInvertableCTM = lastState.m_hasNonInvertableCTM;
+            state.m_pathTM = lastState.m_pathTM;
         }
         m_state.push_back(state);
         m_canvas->save();
@@ -397,6 +400,12 @@ public:
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_color = clr;
+    }
+
+    virtual void setStrokeColor(const Unit::Color& clr)
+    {
+        STARFISH_ASSERT(m_canvas);
+        lastState().m_strokeColor = clr;
     }
 
     virtual void beginOpacityLayer(float c)
@@ -959,6 +968,26 @@ public:
         lastState().m_visible = visible;
     }
 
+    virtual void setNonInvertableCTM(bool validation)
+    {
+        lastState().m_hasNonInvertableCTM = validation;
+    }
+
+    virtual bool hasNonInvertableCTM()
+    {
+        return lastState().m_hasNonInvertableCTM;
+    }
+
+    virtual void setPathTransformMatrix(const SkMatrix& matrix)
+    {
+        lastState().m_pathTM = matrix;
+    }
+
+    virtual SkMatrix pathTransformMatrix()
+    {
+        return lastState().m_pathTM;
+    }
+
     virtual void beginPath()
     {
         m_path.reset();
@@ -1064,6 +1093,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
+        (((PathSkia*)path)->skiaPath())->dump();
         m_path.addPath(*(((PathSkia*)path)->skiaPath()));
         stroke();
     }

@@ -202,7 +202,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/CanvasRendering2D-prototype
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-scroll-path-into-view.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-set-font-with-updated-style.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-set-properties-with-non-invertible-ctm.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-setTransform.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-setTransform.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-shadow-source-in.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-skia-excessive-size.html

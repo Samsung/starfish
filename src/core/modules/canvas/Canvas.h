@@ -41,14 +41,19 @@ public:
     float m_opacity;
     Font* m_font;
     TextDecorationData m_textDecorationData;
+    Unit::Color m_strokeColor;
+    SkMatrix m_pathTM;
 
     bool m_visible;
+    bool m_hasNonInvertableCTM;
 
     CanvasState()
     {
         m_opacity = 1;
         m_font = nullptr;
         m_visible = true;
+        m_hasNonInvertableCTM = false;
+        m_pathTM.reset();
     }
 };
 
@@ -222,6 +227,7 @@ public:
     virtual void resetClip() = 0;
 
     virtual void setColor(const Unit::Color& clr) = 0;
+    virtual void setStrokeColor(const Unit::Color& clr) = 0;
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;
@@ -277,6 +283,10 @@ public:
     virtual void applyMatrixTo(LayoutRect& lp) = 0;
 
     virtual void setVisible(bool visible) = 0;
+    virtual void setNonInvertableCTM(bool validation) = 0;
+    virtual bool hasNonInvertableCTM() = 0;
+    virtual void setPathTransformMatrix(const SkMatrix& marix) = 0;
+    virtual SkMatrix pathTransformMatrix() = 0;
 
     virtual bool canRejectPainting(const LayoutRect& rect)
     {

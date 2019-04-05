@@ -69,16 +69,21 @@ public:
     virtual void ellipse(float x, float y, float radiusX, float radiusY,
                          float rotation, float startAngle, float endAngle,
                          bool anticlockwise = false) override;
-
     Path* path()
     {
         return m_path;
+    }
+
+    void setShouldDisable(bool flag)
+    {
+        m_shouldDisable = flag;
     }
 
 private:
     void init();
     Path* m_path;
     ExecutionContext* m_executionContext;
+    bool m_shouldDisable;
 };
 }
 

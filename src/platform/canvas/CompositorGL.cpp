@@ -2411,9 +2411,9 @@ public:
         lastState.clipPaths.get()->push_back(path);
     }
 
-    virtual void setColor(const Unit::Color& clr_)
+    virtual void setColor(const Unit::Color& clr)
     {
-        m_state.back().color = clr_;
+        m_state.back().color = clr;
     }
 
     virtual void punchHole(const Unit::Rect& rt)

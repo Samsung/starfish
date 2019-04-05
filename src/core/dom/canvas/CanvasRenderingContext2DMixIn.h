@@ -74,6 +74,8 @@ public:
     void rotate(float angle);
     void translate(float x, float y);
     void transform(float a, float b, float c, float d, float e, float f);
+    void setTransform(float a, float b, float c, float d, float e, float f);
+    void resetTransform();
 
     // CanvasCompositing
     float globalAlpha();
@@ -191,6 +193,8 @@ private:
     void stroke(Path* path);
     void setLineCap(CanvasLineCap lineCap);
     void setLineJoin(CanvasLineJoin lineJoin);
+    void transform(float a, float b, float c, float d, float e, float f,
+                   bool needResetMatrix);
 
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;

@@ -53,6 +53,21 @@ public:
     virtual void ellipse(float x, float y, float radiusX, float radiusY,
                          float rotation, float startAngle, float endAngle,
                          bool anticlockwise = false) = 0;
+    virtual void postMatrix(const SkMatrix& matrix)
+    {
+        m_matrix.postConcat(matrix);
+    }
+
+    virtual SkMatrix getCTM()
+    {
+        return m_matrix;
+    }
+
+    virtual void setCTM(const SkMatrix& matrix)
+    {
+        m_matrix = matrix;
+        postMatrix(m_matrix);
+    }
 
     bool needNewSubPath()
     {
@@ -72,7 +87,7 @@ protected:
         : m_needNewSubPath(true)
     {
     }
-
+    SkMatrix m_matrix;
     bool m_needNewSubPath;
 };
 }

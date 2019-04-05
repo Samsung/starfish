@@ -222,33 +222,55 @@ void CanvasRenderingContext2DMixIn::setMiterLimit(float limit)
 
 void CanvasRenderingContext2DMixIn::save()
 {
+    m_canvas->setPathTransformMatrix(m_canvasPath->path()->getCTM());
     m_canvas->save();
 }
 
 void CanvasRenderingContext2DMixIn::restore()
 {
     m_canvas->restore();
+    m_canvasPath->path()->setCTM(m_canvas->pathTransformMatrix());
 }
 
 void CanvasRenderingContext2DMixIn::scale(float x, float y)
 {
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
     m_canvas->scale(x, y);
 }
 
 void CanvasRenderingContext2DMixIn::rotate(float angle)
 {
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
     m_canvas->rotate(angle);
 }
 
 void CanvasRenderingContext2DMixIn::translate(float x, float y)
 {
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
     m_canvas->translate(x, y);
 }
 
 void CanvasRenderingContext2DMixIn::transform(float a, float b, float c,
-                                              float d, float e, float f)
+                                              float d, float e, float f,
+                                              bool needResetMatrix)
 {
+    if (isInfOrNan(a) || isInfOrNan(b) || isInfOrNan(c) || isInfOrNan(d) ||
+        isInfOrNan(e) || isInfOrNan(f)) {
+        return;
+    }
+
+    if (needResetMatrix) {
+        resetTransform();
+    }
+
     SkMatrix matrix;
+    SkMatrix invertMatrix;
     matrix.reset();
     matrix.set(0, a);
     matrix.set(1, c);
@@ -256,7 +278,34 @@ void CanvasRenderingContext2DMixIn::transform(float a, float b, float c,
     matrix.set(3, b);
     matrix.set(4, d);
     matrix.set(5, f);
-    m_canvas->postMatrix(matrix);
+    if (matrix.invert(&invertMatrix)) {
+        m_canvasPath->setShouldDisable(false);
+        m_canvasPath->path()->postMatrix(matrix);
+
+        m_canvas->postMatrix(matrix);
+        m_canvas->setNonInvertableCTM(false);
+        return;
+    }
+    m_canvas->setNonInvertableCTM(true);
+    m_canvasPath->setShouldDisable(true);
+}
+
+void CanvasRenderingContext2DMixIn::transform(float a, float b, float c,
+                                              float d, float e, float f)
+{
+    transform(a, b, c, d, e, f, false);
+}
+
+void CanvasRenderingContext2DMixIn::setTransform(float a, float b, float c,
+                                                 float d, float e, float f)
+{
+    transform(a, b, c, d, e, f, true);
+}
+
+void CanvasRenderingContext2DMixIn::resetTransform()
+{
+    m_canvas->setNonInvertableCTM(false);
+    m_canvas->resetMatrixAndClip();
 }
 
 float CanvasRenderingContext2DMixIn::globalAlpha()
@@ -306,6 +355,9 @@ void CanvasRenderingContext2DMixIn::setFillStyle(
                 m_fillColor =
                     NamedColor::namedColorToColor(pair.namedColorValue());
             }
+            m_canvas->setColor(Unit::Color(m_fillColor.r(), m_fillColor.g(),
+                                           m_fillColor.b(),
+                                           m_fillColor.a() * m_globalAlpha));
         }
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -335,6 +387,9 @@ void CanvasRenderingContext2DMixIn::setStrokeStyle(
                 m_strokeColor =
                     NamedColor::namedColorToColor(pair.namedColorValue());
             }
+            m_canvas->setStrokeColor(Unit::Color(
+                m_strokeColor.r(), m_strokeColor.g(), m_strokeColor.b(),
+                m_strokeColor.a() * m_globalAlpha));
         }
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -362,9 +417,12 @@ void CanvasRenderingContext2DMixIn::setFilter(String* value)
 
 void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
 {
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
+
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-fillrect
-    if (std::isnan(x) || std::isnan(y) || std::isnan(w) || std::isnan(h) ||
-        std::isinf(x) || std::isinf(y) || std::isinf(w) || std::isinf(h)) {
+    if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(w) || isInfOrNan(h)) {
         return;
     }
 
@@ -373,10 +431,6 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
     }
 
     m_ownerHTMLCanvasElement->setNeedsPainting();
-    Unit::Color color =
-        Unit::Color(m_fillColor.r(), m_fillColor.g(), m_fillColor.b(),
-                    m_fillColor.a() * m_globalAlpha);
-    m_canvas->setColor(color);
     m_canvas->drawRect(LayoutRect(x, y, w, h));
 }
 
@@ -465,12 +519,18 @@ void CanvasRenderingContext2DMixIn::ellipse(float x, float y, float radiusX,
 void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float dx,
                                               float dy)
 {
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float dx,
                                               float dy, float dw, float dh)
 {
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
@@ -479,6 +539,9 @@ void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float sx,
                                               float dx, float dy, float dw,
                                               float dh)
 {
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
@@ -528,6 +591,16 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
             uint8_t* destPixel = dest + (y * sw * stride) + (x * stride);
             uint8_t* srcPixel =
                 src + ((y + sy) * width * stride) + ((x + sx) * stride);
+#if defined(PORT_PIXEL_ORDER_RGBA)
+            // R
+            destPixel[0] = srcPixel[0];
+            // G
+            destPixel[1] = srcPixel[1];
+            // B
+            destPixel[2] = srcPixel[2];
+            // A
+            destPixel[3] = srcPixel[3];
+#else
             // R
             destPixel[0] = srcPixel[2];
             // G
@@ -536,6 +609,7 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
             destPixel[2] = srcPixel[0];
             // A
             destPixel[3] = srcPixel[3];
+#endif
         }
     }
     auto uint8ClampedArray = createEmptyUint8ClampedArray(
@@ -557,11 +631,16 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
 void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
                                               float h)
 {
-    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-clearrect
-    if (std::isnan(x) || std::isnan(y) || std::isnan(w) || std::isnan(h) ||
-        std::isinf(x) || std::isinf(y) || std::isinf(w) || std::isinf(h)) {
+    if (m_canvas->hasNonInvertableCTM()) {
         return;
     }
+
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-clearrect
+
+    if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(w) || isInfOrNan(h)) {
+        return;
+    }
+
     m_ownerHTMLCanvasElement->setNeedsPainting();
     m_canvas->save();
     m_canvas->setColor(Unit::Color(0, 0, 0, 0));
@@ -572,6 +651,10 @@ void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
 
 void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
 {
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
+
     m_ownerHTMLCanvasElement->setNeedsPainting();
 
     auto rule = stringToCanvasFillRule(fillRule);
@@ -592,6 +675,10 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
 }
 void CanvasRenderingContext2DMixIn::stroke(Path* path)
 {
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
+
     m_ownerHTMLCanvasElement->setNeedsPainting();
 
     if (!path->isEmpty()) {

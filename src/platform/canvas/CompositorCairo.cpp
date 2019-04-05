@@ -159,11 +159,11 @@ public:
         cairo_clip(m_canvas);
     }
 
-    virtual void setColor(const Unit::Color& clr_)
+    virtual void setColor(const Unit::Color& clr)
     {
-        Unit::Color clr = clr_;
-        clr.m_a = clr.m_a * m_opacityVector.back();
-        cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
+        Unit::Color c = clr;
+        c.m_a = c.m_a * m_opacityVector.back();
+        cairo_set_source_rgba(m_canvas, c.R(), c.G(), c.B(), c.A());
     }
 
     virtual void punchHole(const Unit::Rect& rt)
