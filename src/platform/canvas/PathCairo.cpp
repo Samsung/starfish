@@ -84,12 +84,14 @@ void PathCairo::finalize()
 
 void PathCairo::init()
 {
+    m_matrix.reset();
     m_dumyCairoSurface = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, 1, 1);
     m_cairoContext = cairo_create(m_dumyCairoSurface);
 }
 
 void PathCairo::clear()
 {
+    m_matrix.reset();
     cairo_identity_matrix(m_cairoContext);
     cairo_new_path(m_cairoContext);
 }
@@ -278,6 +280,40 @@ void PathCairo::ellipse(float x, float y, float radiusX, float radiusY,
                         bool anticlockwise /*=false*/)
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+}
+
+void PathCairo::postMatrix(const SkMatrix& matrix)
+{
+    Path::postMatrix(matrix);
+
+    cairo_matrix_t result_matrix;
+    cairo_matrix_init_identity(&result_matrix);
+
+    cairo_matrix_t a_matrix;
+    cairo_matrix_t b_matrix;
+    cairo_get_matrix(m_cairoContext, &a_matrix);
+    cairo_matrix_init(&b_matrix, matrix.getScaleX(), matrix.getSkewY(),
+                      matrix.getSkewX(), matrix.getScaleY(),
+                      matrix.getTranslateX(), matrix.getTranslateY());
+    cairo_matrix_multiply(&result_matrix, &b_matrix, &a_matrix);
+    cairo_set_matrix(m_cairoContext, &result_matrix);
+}
+
+void PathCairo::setCTM(const SkMatrix& matrix)
+{
+    m_matrix = matrix;
+
+    cairo_matrix_t result_matrix;
+    cairo_matrix_t a_matrix;
+    cairo_matrix_t b_matrix;
+
+    cairo_matrix_init_identity(&result_matrix);
+    cairo_matrix_init_identity(&a_matrix);
+    cairo_matrix_init(&b_matrix, matrix.getScaleX(), matrix.getSkewY(),
+                      matrix.getSkewX(), matrix.getScaleY(),
+                      matrix.getTranslateX(), matrix.getTranslateY());
+    cairo_matrix_multiply(&result_matrix, &a_matrix, &b_matrix);
+    cairo_set_matrix(m_cairoContext, &result_matrix);
 }
 }
 #endif

@@ -200,5 +200,10 @@ void PathSkia::ellipse(float x, float y, float radiusX, float radiusY,
 {
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
+
+void PathSkia::postMatrix(const SkMatrix& matrix)
+{
+    m_skiaPath->transform(matrix);
+}
 }
 #endif

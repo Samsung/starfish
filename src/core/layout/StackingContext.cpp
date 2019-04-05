@@ -2631,8 +2631,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
 
             auto surface = m_rareData->m_graphicsBufferHolder->m_surfaces[0];
             compositor->drawSurface(surface,
-                                    Unit::Rect(0, 0, surface->bufferWidth(),
-                                               surface->bufferHeight()));
+                                    Unit::Rect(0, 0, owner()->contentWidth(),
+                                               owner()->contentHeight()));
             compositor->restore();
         }
     } else if (m_rareData->m_graphicsBufferHolder) {

@@ -110,6 +110,10 @@ void CanvasPath::closePath()
 
 void CanvasPath::moveTo(float x, float y)
 {
+    if (m_shouldDisable) {
+        return;
+    }
+
     if (isInfOrNan(x) || isInfOrNan(y)) {
         return;
     }
@@ -119,6 +123,10 @@ void CanvasPath::moveTo(float x, float y)
 
 void CanvasPath::lineTo(float x, float y)
 {
+    if (m_shouldDisable) {
+        return;
+    }
+
     if (isInfOrNan(x) || isInfOrNan(y)) {
         return;
     }
@@ -164,6 +172,10 @@ void CanvasPath::arcTo(float x1, float y1, float x2, float y2, float radius)
 
 void CanvasPath::rect(float x, float y, float w, float h)
 {
+    if (m_shouldDisable) {
+        return;
+    }
+
     if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(w) || isInfOrNan(h)) {
         return;
     }
@@ -174,6 +186,10 @@ void CanvasPath::rect(float x, float y, float w, float h)
 void CanvasPath::arc(float x, float y, float radius, float startAngle,
                      float endAngle, bool anticlockwise /*=false*/)
 {
+    if (m_shouldDisable) {
+        return;
+    }
+
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-arc
     if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(radius) ||
         isInfOrNan(startAngle) || isInfOrNan(endAngle) ||

@@ -57,6 +57,8 @@ public:
     virtual void ellipse(float x, float y, float radiusX, float radiusY,
                          float rotation, float startAngle, float endAngle,
                          bool anticlockwise = false) override;
+    virtual void postMatrix(const SkMatrix& matrix) override;
+    virtual void setCTM(const SkMatrix& matrix) override;
 
 private:
     cairo_t* m_cairoContext;

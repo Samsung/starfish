@@ -261,10 +261,13 @@ public:
         if (m_state.size()) {
             auto& lastState = m_state.back();
             state.m_color = lastState.m_color;
+            state.m_strokeColor = lastState.m_strokeColor;
             state.m_opacity = lastState.m_opacity;
             state.m_font = lastState.m_font;
             state.m_visible = lastState.m_visible;
             state.m_textDecorationData = lastState.m_textDecorationData;
+            state.m_hasNonInvertableCTM = lastState.m_hasNonInvertableCTM;
+            state.m_pathTM = lastState.m_pathTM;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
@@ -412,16 +415,42 @@ public:
               m_webView->screenInfo().devicePixelRatio);
     }
 
-    virtual void setColor(const Unit::Color& clr_)
+    virtual void setColor(const Unit::Color& clr)
     {
         STARFISH_ASSERT(m_canvas);
-        lastState().m_color = clr_;
-        cairo_set_source_rgba(m_canvas, clr_.R(), clr_.G(), clr_.B(), clr_.A());
+        lastState().m_color = clr;
+        cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
+    }
+
+    virtual void setStrokeColor(const Unit::Color& clr)
+    {
+        STARFISH_ASSERT(m_canvas);
+        lastState().m_strokeColor = clr;
     }
 
     virtual void setVisible(bool visible)
     {
         lastState().m_visible = visible;
+    }
+
+    virtual void setNonInvertableCTM(bool validation)
+    {
+        lastState().m_hasNonInvertableCTM = validation;
+    }
+
+    virtual bool hasNonInvertableCTM()
+    {
+        return lastState().m_hasNonInvertableCTM;
+    }
+
+    virtual void setPathTransformMatrix(const SkMatrix& matrix)
+    {
+        lastState().m_pathTM = matrix;
+    }
+
+    virtual SkMatrix pathTransformMatrix()
+    {
+        return lastState().m_pathTM;
     }
 
     virtual void setFont(Font* font)

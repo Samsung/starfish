@@ -119,7 +119,7 @@ public:
     {
     }
 
-    virtual void setColor(const Unit::Color& clr_)
+    virtual void setColor(const Unit::Color& clr)
     {
     }
 
