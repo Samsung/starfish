@@ -189,7 +189,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-quadratic-same-endpo
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-radial-gradient-spreadMethod.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/CanvasRendering2D-prototype-chain.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-render-layer.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-resetTransform.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-resetTransform.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-resize-after-paint.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-resize-after-paint-without-layout.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-save-restore.html
