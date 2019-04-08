@@ -137,13 +137,53 @@ void CanvasPath::lineTo(float x, float y)
 
 void CanvasPath::quadraticCurveTo(float cpx, float cpy, float x, float y)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (isInfOrNan(cpx) || isInfOrNan(cpy) || isInfOrNan(x) || isInfOrNan(y)) {
+        return;
+    }
+    m_path->ensureSubPath(cpx, cpy);
+
+    float x0, y0;
+    m_path->currentPoint(x0, y0);
+
+    if (x0 == x && y0 == y) {
+        // https://en.wikipedia.org/wiki/B%C3%A9zier_curve
+        // P(t)=((1-t)^2)A+2t(1-t)B+(t^2)C,(0 <= t <= 1)
+        const float t = 0.015625; // 2^-6
+        float ex =
+            (pow((1 - t), 2) * x0) + (2 * t * (1 - t) * cpx) + pow(t, 2) * x;
+        float ey =
+            (pow((1 - t), 2) * y0) + (2 * t * (1 - t) * cpy) + pow(t, 2) * y;
+        lineTo(ex, ey);
+    }
+
+    m_path->quadraticCurveTo(cpx, cpy, x, y);
 }
 
 void CanvasPath::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
                                float x, float y)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (isInfOrNan(cp1x) || isInfOrNan(cp1y),
+        isInfOrNan(cp2x) || isInfOrNan(cp2y) || isInfOrNan(x) ||
+            isInfOrNan(y)) {
+        return;
+    }
+    m_path->ensureSubPath(cp1x, cp1y);
+
+    float x0, y0;
+    m_path->currentPoint(x0, y0);
+    if (x0 == x && y0 == y) {
+        // https://en.wikipedia.org/wiki/B%C3%A9zier_curve
+        // P(t)=((1-t)^3*A)+(3(1-t)^2*t*B)+((3*(1-t)*(t^2)*C)+((t^3)*D),(0<=t<=1)
+        const float t = 0.015625; // 2^-6
+        float ex = (pow((1 - t), 3) * x0) + (3 * pow((1 - t), 2) * t * cp1x) +
+                   (3 * (1 - t) * (pow(t, 2) * cp2x)) + (pow(t, 3) * x);
+
+        float ey = (pow((1 - t), 3) * y0) + (3 * pow((1 - t), 2) * t * cp1y) +
+                   (3 * (1 - t) * (pow(t, 2) * cp2y)) + (pow(t, 3) * y);
+        lineTo(ex, ey);
+    }
+
+    m_path->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
 }
 
 void CanvasPath::arcTo(float x1, float y1, float x2, float y2, float radius)
@@ -192,8 +232,7 @@ void CanvasPath::arc(float x, float y, float radius, float startAngle,
 
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-arc
     if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(radius) ||
-        isInfOrNan(startAngle) || isInfOrNan(endAngle) ||
-        isInfOrNan(anticlockwise)) {
+        isInfOrNan(startAngle) || isInfOrNan(endAngle)) {
         return;
     }
     if (radius < 0) {
@@ -211,11 +250,78 @@ void CanvasPath::arc(float x, float y, float radius, float startAngle,
     m_path->arc(x, y, radius, startAngle, endAngle, anticlockwise);
 }
 
+SkMatrix CanvasPath::transfromMatrixInEllipseMethodSteps(float dx, float dy,
+                                                         float rotation)
+{
+    SkMatrix transform = SkMatrix::I();
+    SkScalar sx = SkFloatToScalar(dx);
+    SkScalar sy = SkFloatToScalar(dy);
+    transform.preTranslate(sx, sy);
+    transform.preRotate(
+        SkFloatToScalar(UnitHelper::convertFromRadToDeg(rotation)));
+    return transform;
+}
+
+void CanvasPath::fallbackLineToInEllipseMethodSteps(float radius1, float angle1,
+                                                    float radius2, float angle2,
+                                                    const SkMatrix& matrix)
+{
+    SkPoint src[1];
+    src[0].set(radius1 * cosf(angle1), radius2 * sinf(angle2));
+    matrix.mapPoints(src, 1);
+    float x = SkScalarToFloat(src[0].x());
+    float y = SkScalarToFloat(src[0].y());
+    lineTo(x, y);
+}
+
 void CanvasPath::ellipse(float x, float y, float radiusX, float radiusY,
                          float rotation, float startAngle, float endAngle,
                          bool anticlockwise /*=false*/)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    if (isInfOrNan(x) || isInfOrNan(y) || isInfOrNan(radiusX) ||
+        isInfOrNan(radiusY) || isInfOrNan(rotation) || isInfOrNan(startAngle) ||
+        isInfOrNan(endAngle)) {
+        return;
+    }
+    if (radiusX < 0 || radiusY < 0) {
+        throw new DOMException(m_executionContext,
+                               DOMException::Code::INDEX_SIZE_ERR,
+                               "Radius must not be negative.");
+    }
+
+    normalizeAngles(startAngle, endAngle, anticlockwise);
+
+    if ((!radiusX && !radiusY) || startAngle == endAngle) {
+        auto matrix = transfromMatrixInEllipseMethodSteps(x, y, rotation);
+        fallbackLineToInEllipseMethodSteps(radiusX, startAngle, radiusY,
+                                           startAngle, matrix);
+        return;
+    } else if (!radiusX || !radiusY) {
+        auto matrix = transfromMatrixInEllipseMethodSteps(x, y, rotation);
+        fallbackLineToInEllipseMethodSteps(radiusX, startAngle, radiusY,
+                                           startAngle, matrix);
+        float piOverTwoFloat = static_cast<float>(M_PI_2);
+        if (!anticlockwise) {
+            for (float angle = startAngle - fmodf(startAngle, piOverTwoFloat) +
+                               piOverTwoFloat;
+                 angle < endAngle; angle += piOverTwoFloat) {
+                fallbackLineToInEllipseMethodSteps(radiusX, angle, radiusY,
+                                                   angle, matrix);
+            }
+        } else {
+            for (float angle = startAngle - fmodf(startAngle, piOverTwoFloat);
+                 angle > endAngle; angle -= piOverTwoFloat) {
+                fallbackLineToInEllipseMethodSteps(radiusX, angle, radiusY,
+                                                   angle, matrix);
+            }
+        }
+        fallbackLineToInEllipseMethodSteps(radiusX, endAngle, radiusY, endAngle,
+                                           matrix);
+        return;
+    }
+
+    m_path->ellipse(x, y, radiusX, radiusY, rotation, startAngle, endAngle,
+                    anticlockwise);
 }
 }
 #endif

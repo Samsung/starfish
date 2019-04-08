@@ -135,13 +135,18 @@ void PathCairo::lineTo(float x, float y)
 
 void PathCairo::quadraticCurveTo(float cpx, float cpy, float x, float y)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    double x0, y0;
+    cairo_get_current_point(m_cairoContext, &x0, &y0);
+    cairo_curve_to(m_cairoContext, 2.0 / 3.0 * cpx + 1.0 / 3.0 * x0,
+                   2.0 / 3.0 * cpy + 1.0 / 3.0 * y0,
+                   2.0 / 3.0 * cpx + 1.0 / 3.0 * x,
+                   2.0 / 3.0 * cpy + 1.0 / 3.0 * y, x, y);
 }
 
 void PathCairo::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
                               float x, float y)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    cairo_curve_to(m_cairoContext, cp1x, cp1y, cp2x, cp2y, x, y);
 }
 
 void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
@@ -279,7 +284,17 @@ void PathCairo::ellipse(float x, float y, float radiusX, float radiusY,
                         float rotation, float startAngle, float endAngle,
                         bool anticlockwise /*=false*/)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    cairo_save(m_cairoContext);
+    cairo_translate(m_cairoContext, x, y);
+    cairo_rotate(m_cairoContext, rotation);
+    cairo_scale(m_cairoContext, radiusX, radiusY);
+
+    if (anticlockwise) {
+        cairo_arc_negative(m_cairoContext, 0, 0, 1, startAngle, endAngle);
+    } else {
+        cairo_arc(m_cairoContext, 0, 0, 1, startAngle, endAngle);
+    }
+    cairo_restore(m_cairoContext);
 }
 
 void PathCairo::postMatrix(const SkMatrix& matrix)

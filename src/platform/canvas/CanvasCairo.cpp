@@ -212,7 +212,9 @@ public:
 
     ~CanvasCairo()
     {
-        restore();
+        while (m_state.size()) {
+            restore();
+        }
         STARFISH_ASSERT(m_state.size() == 0);
         if (m_shouldDestroyCairo) {
             cairo_destroy(m_canvas);

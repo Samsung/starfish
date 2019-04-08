@@ -81,6 +81,11 @@ public:
 
 private:
     void init();
+    SkMatrix transfromMatrixInEllipseMethodSteps(float dx, float dy,
+                                                 float rotation);
+    void fallbackLineToInEllipseMethodSteps(float radius1, float angle1,
+                                            float radius2, float angle2,
+                                            const SkMatrix& matrix);
     Path* m_path;
     ExecutionContext* m_executionContext;
     bool m_shouldDisable;
