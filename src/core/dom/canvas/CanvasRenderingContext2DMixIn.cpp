@@ -237,7 +237,7 @@ void CanvasRenderingContext2DMixIn::scale(float x, float y)
     if (m_canvas->hasNonInvertableCTM()) {
         return;
     }
-    m_canvas->scale(x, y);
+    transform(x, 0, 0, y, 0, 0, false);
 }
 
 void CanvasRenderingContext2DMixIn::rotate(float angle)
@@ -245,7 +245,9 @@ void CanvasRenderingContext2DMixIn::rotate(float angle)
     if (m_canvas->hasNonInvertableCTM()) {
         return;
     }
-    m_canvas->rotate(angle);
+    float cosValue = cosf(angle);
+    float sinValue = sinf(angle);
+    transform(cosValue, sinValue, -sinValue, cosValue, 0, 0, false);
 }
 
 void CanvasRenderingContext2DMixIn::translate(float x, float y)
@@ -253,7 +255,7 @@ void CanvasRenderingContext2DMixIn::translate(float x, float y)
     if (m_canvas->hasNonInvertableCTM()) {
         return;
     }
-    m_canvas->translate(x, y);
+    transform(1, 0, 0, 1, x, y, false);
 }
 
 void CanvasRenderingContext2DMixIn::transform(float a, float b, float c,
@@ -306,6 +308,7 @@ void CanvasRenderingContext2DMixIn::resetTransform()
 {
     m_canvas->setNonInvertableCTM(false);
     m_canvas->resetMatrixAndClip();
+    m_canvasPath->setShouldDisable(false);
     m_canvasPath->path()->resetCTM();
 }
 
@@ -432,7 +435,7 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
     }
 
     m_ownerHTMLCanvasElement->setNeedsPainting();
-    m_canvas->drawRect(LayoutRect(x, y, w, h));
+    m_canvas->drawRect(Unit::Rect(x, y, w, h));
 }
 
 void CanvasRenderingContext2DMixIn::strokeRect(float x, float y, float w,
@@ -645,7 +648,7 @@ void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
     m_ownerHTMLCanvasElement->setNeedsPainting();
     m_canvas->save();
     m_canvas->setColor(Unit::Color(0, 0, 0, 0));
-    m_canvas->drawRect(LayoutRect(x, y, w, h));
+    m_canvas->drawRect(Unit::Rect(x, y, w, h));
     m_canvas->fill();
     m_canvas->restore();
 }
