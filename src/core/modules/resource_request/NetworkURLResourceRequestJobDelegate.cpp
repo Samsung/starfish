@@ -19,7 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/fetch/FetchUtils.h"
 #if defined(STARFISH_ENABLE_HTTPCACHE)
 #include "platform/network/http/HTTPCache.h"
@@ -38,7 +38,9 @@
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
-#include "core/page/WebView.h"
+#include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Locker.h"
+#include "core/page/WebBase.h"
 #include "core/dom/WebOrigin.h"
 
 #ifndef STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS
@@ -228,7 +230,7 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
             request->changeReadyState(ReadyState::Loading, true);
             request->changeProgress(ProgressState::Progress, true);
 
-            request->webView()->messageLoop()->removeIdlerWithNoGCRooting(
+            request->webBase()->messageLoop()->removeIdlerWithNoGCRooting(
                 request->m_pendingOnProgressEventIdlerHandle);
             request->m_pendingOnProgressEventIdlerHandle = MessageLoopInvalidID;
         }
@@ -279,15 +281,15 @@ void NetworkURLWorkerHelper::responseHandler(size_t handle, void* data)
 
     if (NetworkSharedResourceManager::getInstance()->cacheClearTimerID() !=
         TimerInvalidID) {
-        if (nwd->request->webView()->timer()) {
-            nwd->request->webView()->timer()->removeTimer(
+        if (nwd->request->webBase()->timer()) {
+            nwd->request->webBase()->timer()->removeTimer(
                 NetworkSharedResourceManager::getInstance()
                     ->cacheClearTimerID());
         }
     }
 
-    if (nwd->request->webView()->timer()) {
-        size_t timerID = nwd->request->webView()->timer()->addTimer(
+    if (nwd->request->webBase()->timer()) {
+        size_t timerID = nwd->request->webBase()->timer()->addTimer(
             STARFISH_CURL_HANDLE_CACHE_CLEAR_TIMEOUT_IN_MS, nullptr,
             [](void* data) {
                 NetworkSharedResourceManager::getInstance()
@@ -334,7 +336,7 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(NetworkURLWorkerData* nwd)
                   NetworkURLWorkerData::reqCnt
             : 0);
 #endif
-    nwd->request->webView()
+    nwd->request->webBase()
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(nullptr, this->responseHandler,
                                                nwd);
@@ -343,7 +345,7 @@ void AsyncNetworkWorkHelper::responseHandlerWrapper(NetworkURLWorkerData* nwd)
 void AsyncNetworkWorkHelper::abortHandlerWrapper(NetworkURLWorkerData* nwd)
 {
     Locker<Mutex> locker(*nwd->request->m_mutex);
-    nwd->request->webView()
+    nwd->request->webBase()
         ->messageLoop()
         ->addIdlerWithNoGCRootingInOtherThread(nullptr, this->abortHandeler,
                                                nwd);
@@ -435,7 +437,7 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
         unsafeHeaders);
     nwd->httpTransaction->setTimeout(
         static_cast<unsigned long>(m_orgProxy->m_timeout));
-    nwd->httpTransaction->setProxyURL(m_orgProxy->webView()->proxyURL());
+    nwd->httpTransaction->setProxyURL(m_orgProxy->webBase()->proxyURL());
     nwd->httpTransaction->setProgressCallbackAndData(curlProgressCallback, nwd);
     nwd->httpTransaction->setWriteHeaderCallbackAndData(curlWriteHeaderCallback,
                                                         nwd);
@@ -462,8 +464,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
 
         if (pos != header.end()) {
             nwd->helper = new AsyncNetworkWorkHelper();
-            Thread* t = new Thread(m_orgProxy->webView()->threadPool());
-            t->run(m_orgProxy->webView()->messageLoop(),
+            Thread* t = new Thread(m_orgProxy->webBase()->threadPool());
+            t->run(m_orgProxy->webBase()->messageLoop(),
                    [](void* data) -> void* {
                        NetworkURLWorkerData* d = (NetworkURLWorkerData*)data;
                        NetworkURLResourceRequestJobDelegate::worker(d);
@@ -472,8 +474,8 @@ void NetworkURLResourceRequestJobDelegate::send(String* body, bool allowCache)
                    nwd);
         } else {
             nwd->helper = new AsyncNetworkWorkHelper();
-            m_orgProxy->webView()->threadPool()->addWork(
-                m_orgProxy->document()->executionContext(),
+            m_orgProxy->webBase()->threadPool()->addWork(
+                m_orgProxy->executionContext(),
                 NetworkURLResourceRequestJobDelegate::worker, nwd);
         }
     }
@@ -509,20 +511,20 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithClientHeaders(
 
     if (!hasAcceptLanguage) {
         std::string value;
-        value = m_orgProxy->webView()->locale().getName();
+        value = m_orgProxy->webBase()->locale().getName();
         std::replace(value.begin(), value.end(), '_', '-');
         value = value + " , en-US , en";
         headers.headerMap()[HTTPHeaderMap::kAcceptLanguage] = value;
     }
 
     headers.append(HTTPHeaderMap::kUserAgent,
-                   m_orgProxy->webView()->userAgent()->toUTF8NonGCString());
+                   m_orgProxy->webBase()->userAgent()->toUTF8NonGCString());
 
     headers.append(HTTPHeaderMap::kHost,
                    m_orgProxy->url()->host()->toUTF8NonGCString());
 
     if (!m_orgProxy->isSameOriginRequest()) {
-        headers.append(HTTPHeaderMap::kOrigin, m_orgProxy->document()
+        headers.append(HTTPHeaderMap::kOrigin, m_orgProxy->executionContext()
                                                    ->webOrigin()
                                                    ->serialize()
                                                    ->toUTF8NonGCString());
@@ -571,14 +573,16 @@ void NetworkURLResourceRequestJobDelegate::fillHeadersWithCachedEntry(
 
     if (info.lastModified) {
         std::string value =
-            timeToUTCString(m_orgProxy->document()->scriptBindingInstance(),
-                            info.lastModified * 1000)
+            timeToUTCString(
+                m_orgProxy->executionContext()->scriptBindingInstance(),
+                info.lastModified * 1000)
                 ->toUTF8NonGCString();
         headers.append(HTTPHeaderMap::kIfModifiedSince, value);
     } else if (info.date) {
         std::string value =
-            timeToUTCString(m_orgProxy->document()->scriptBindingInstance(),
-                            info.date * 1000)
+            timeToUTCString(
+                m_orgProxy->executionContext()->scriptBindingInstance(),
+                info.date * 1000)
                 ->toUTF8NonGCString();
         headers.append(HTTPHeaderMap::kIfModifiedSince, value);
     }
@@ -716,7 +720,7 @@ size_t NetworkURLResourceRequestJobDelegate::curlWriteCallback(void* ptr,
             }
         } else {
             request->m_pendingOnProgressEventIdlerHandle =
-                request->webView()
+                request->webBase()
                     ->messageLoop()
                     ->addIdlerWithNoGCRootingInOtherThread(
                         nullptr,

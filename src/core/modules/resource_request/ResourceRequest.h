@@ -20,14 +20,7 @@
 #ifndef __StarfishResourceRequest__
 #define __StarfishResourceRequest__
 
-#include "binding/DocumentHoldable.h"
-#include "platform/network/http/HTTPUtil.h"
-#include "core/util/URL.h"
-#include "core/modules/threading/Mutex.h"
-#include "core/modules/threading/Semaphore.h"
-#include "core/modules/threading/Locker.h"
 #include "core/modules/resource_request/ResourceRequestJob.h"
-#include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/fetch/RequestData.h"
 #include "core/fetch/ResponseData.h"
 #include "core/fetch/HeadersData.h"
@@ -38,8 +31,13 @@ class Document;
 class ResourceRequest;
 class FormDataSetItem;
 class WebOrigin;
-class HeadersData;
 class Resource;
+class WebBase;
+class GlobalScope;
+class ExecutionContext;
+class Mutex;
+
+struct NetworkURLWorkerData;
 
 enum class BodyType;
 enum class ResponseType;
@@ -110,9 +108,7 @@ public:
     }
 };
 
-class ResourceRequest : public gc,
-                        public DocumentHoldable,
-                        public ResourceRequestJobInterface {
+class ResourceRequest : public gc, public ResourceRequestJobInterface {
     friend class XMLHttpRequest;
     friend class NetworkURLWorkerHelper;
     friend class AsyncNetworkWorkHelper;
@@ -131,7 +127,7 @@ public:
     {
     }
 
-    ResourceRequest(Document* document);
+    ResourceRequest(ExecutionContext* executionContext);
     void open(RequestData* reqData);
     void abort(bool isExplicitAction = true);
     virtual void send(String* body = String::emptyString,
@@ -367,6 +363,15 @@ public:
         m_abortRequestState = type;
     }
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
+    WebBase* webBase();
+    GlobalScope* globalScope();
+    Starfish* starfish();
+
 protected:
     void pareseHeader(const char* header, size_t len);
     void initVariables();
@@ -396,6 +401,7 @@ protected:
     bool m_didSend;
     bool m_containsBase64Content;
 
+    ExecutionContext* m_executionContext;
     RequestData* m_requestData;
     RequestData* m_preflightRequestData;
     WebOrigin* m_requestWebOrigin;

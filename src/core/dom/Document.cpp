@@ -107,13 +107,11 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
     , m_domContentLoadedFired(false)
     , m_onLoadFired(false)
     , m_isFocusRingCacheValid(false)
-    , m_executionContext(
-          new ExecutionContext(window, scriptBindingInstance, uri, this, true))
+    , m_executionContext(new ExecutionContext(window, scriptBindingInstance,
+                                              uri, charSet, this, true))
     , m_window(window)
     , m_baseElementURL(nullptr)
     , m_baseTarget(String::emptyString)
-    , m_webOrigin(WebOrigin::createDocumentOrigin(uri))
-    , m_characterSet(charSet)
     , m_contentType(String::createASCIIString("application/xml"))
     , m_resourceLoader(new ResourceLoader(this))
     , m_fontSelector(FontSelector::create(this,
@@ -423,7 +421,7 @@ Document* Document::open(Document* responsibleDoc, String* type,
     // all the Web IDL prototypes in the JavaScript binding, including
     // document's prototype.)
     // Change document's character encoding to UTF-8.
-    m_characterSet = String::fromUTF8("UTF-8");
+    setCharacterSet(String::fromUTF8("UTF-8"));
 
     // TODO If document is ready for post-load tasks, then set document's reload
     // override flag and set document's reload override buffer to the empty
@@ -744,9 +742,9 @@ void Document::dispose()
 
     resourceLoader().clear();
 
-    while (m_activeResourceRequests.size()) {
-        m_activeResourceRequests.back()->abort();
-    }
+    executionContext()->disposeActiveResourceRequests();
+    executionContext()->clearPointerRootMap();
+
     m_fontSelector->clearWholeCache();
 
     if (m_nativeGradientCache) {
@@ -754,6 +752,16 @@ void Document::dispose()
         m_nativeGradientCacheLRUList.clear();
         m_nativeGradientCache = nullptr;
     }
+}
+
+String* Document::characterSet()
+{
+    return executionContext()->characterSet();
+}
+
+void Document::setCharacterSet(String* s)
+{
+    executionContext()->setCharacterSet(s);
 }
 
 String* Document::nodeName()
@@ -1765,19 +1773,29 @@ void Document::setContentLanguage(String* value)
 
 String* Document::origin()
 {
-    STARFISH_ASSERT(m_webOrigin != nullptr);
-    return m_webOrigin->serialize();
+    STARFISH_ASSERT(webOrigin() != nullptr);
+    return webOrigin()->serialize();
+}
+
+WebOrigin* Document::webOrigin()
+{
+    return executionContext()->webOrigin();
+}
+
+void Document::setWebOrigin(WebOrigin* webOrigin)
+{
+    executionContext()->setWebOrigin(webOrigin);
 }
 
 // https://html.spec.whatwg.org/multipage/origin.html#dom-document-domain
 String* Document::domain()
 {
-    STARFISH_ASSERT(m_webOrigin != nullptr);
+    STARFISH_ASSERT(webOrigin() != nullptr);
     if (!browsingContext()) {
         return String::emptyString;
     }
 
-    Nullable<String*> effectiveDomain = m_webOrigin->domain();
+    Nullable<String*> effectiveDomain = webOrigin()->domain();
     if (effectiveDomain.hasValue()) {
         return effectiveDomain.getValue();
     }

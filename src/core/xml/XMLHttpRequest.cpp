@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/DOMParser.h"
@@ -238,7 +239,9 @@ public:
     bool checkContentSecurityPolicy(ResourceRequest* request)
     {
         if (request->isRedirected()) {
-            auto csp = request->document()->contentSecurityPolicy();
+            auto csp = request->executionContext()
+                           ->document()
+                           ->contentSecurityPolicy();
             auto resourceURL =
                 new ResourceURL(request->lastEffectiveURL().c_str());
             auto f = [](SecurityPolicyViolationEvent* event, Window* window) {
@@ -262,7 +265,7 @@ bool XMLHttpRequestUpload::hasEventListeners() const
 
 XMLHttpRequest::XMLHttpRequest(::Starfish::Document* document)
     : XMLHttpRequestEventTarget(document)
-    , m_resourceRequest(new ResourceRequest(document))
+    , m_resourceRequest(new ResourceRequest(document->executionContext()))
     , m_withCredentials(false)
     , m_upload(new XMLHttpRequestUpload(document))
 {

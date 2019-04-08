@@ -41,7 +41,8 @@ void Resource::request(RequestData* requestData, bool allowCache)
     m_isRequested = true;
     if (!loader()->requestResourcePreprocess(this, syncLevel)) {
         // cache miss
-        m_resourceRequest = new ResourceRequest(loader()->document());
+        m_resourceRequest =
+            new ResourceRequest(loader()->document()->executionContext());
         m_resourceRequest->open(requestData);
         String* entityBody = String::emptyString;
 

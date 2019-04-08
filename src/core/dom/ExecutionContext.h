@@ -29,12 +29,15 @@ class ServiceWorker;
 class ResourceURL;
 class String;
 class Document;
+class WebOrigin;
+class ResourceRequest;
+class ContentSecurityPolicy;
 
 class ExecutionContext : public gc {
 public:
     ExecutionContext(GlobalScope* globalScope, ScriptBindingInstance* instance,
-                     ResourceURL* uri, void* documentOrWorkerGlobalScope,
-                     bool hasDocument);
+                     ResourceURL* uri, String* charSet,
+                     void* documentOrWorkerGlobalScope, bool hasDocument);
 
     void* operator new(size_t size);
     void* operator new[](size_t size) = delete;
@@ -83,6 +86,20 @@ public:
     ResourceURL* baseURL() const;
     DEFINE_SETTER(ResourceURL*, baseURL, BaseURL)
 
+    DEFINE_GETTER_SETTER(String*, characterSet, CharacterSet)
+    DEFINE_GETTER_SETTER(WebOrigin*, webOrigin, WebOrigin)
+
+    void addActiveResourceRequests(ResourceRequest* request);
+    void removeActiveResourceRequests(ResourceRequest* request);
+    void disposeActiveResourceRequests();
+
+    void addPointerInRootSet(void* ptr);
+    void removePointerFromRootSet(void* ptr);
+    void clearPointerRootMap();
+#ifndef NDEBUG
+    size_t countPointersInRootSet(void* ptr);
+#endif
+
 private:
     GlobalScope* const m_globalScope;
     void* m_documentOrWorkerGlobalScope;
@@ -92,8 +109,11 @@ private:
     ResourceURL* m_documentURI;
     ResourceURL* m_referrer;
     ResourceURL* m_baseURL;
+    GCVector<ResourceRequest*> m_activeResourceRequests;
+    GCUnorderedMap<void*, size_t> m_rootMap;
+    String* m_characterSet;
+    WebOrigin* m_webOrigin;
 
-protected:
     static inline void fillGCDescriptor(GC_word* desc)
     {
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_globalScope));
@@ -104,6 +124,8 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_documentURI));
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_referrer));
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_baseURL));
+        GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_characterSet));
+        GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_webOrigin));
     }
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

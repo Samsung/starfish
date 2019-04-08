@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "platform/loader/TextResource.h"
 #include "core/page/Window.h"
 
@@ -31,7 +32,8 @@ void TextResource::didDataReceived(const char* buffer, size_t length)
         if (m_preferredEncoding->equals(String::emptyString)) {
             m_converter = new TextConverter(
                 m_resourceRequest->responseMimeType(),
-                m_resourceRequest->document()->characterSet(), buffer, length);
+                m_resourceRequest->executionContext()->characterSet(), buffer,
+                length);
         } else {
             m_converter = new TextConverter(m_preferredEncoding);
         }

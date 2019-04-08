@@ -233,7 +233,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
                  String* defaultFontName, const ScreenInfo& info,
                  String* customUserAgentString,
                  String* builtinPolyfillPathString)
-    : WebBase(starfish)
+    : WebBase(starfish, locale, timezoneID, customUserAgentString)
     , m_platformWindow(PlatformWindow::create(starfish, w, h))
     , m_topLevelBrowsingContext(nullptr)
     , m_scriptEngineInstance(nullptr)
@@ -257,8 +257,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_inIdleMode(false)
     , m_didFirstRenderingAfterWakeup(true)
     , m_rootStackingContext(nullptr)
-    , m_messageLoop(new MessageLoop())
-    , m_timer(new Timer(this))
     , m_console(new Console(this))
 #ifdef STARFISH_ENABLE_TTS
     , m_tts(new TTS(this))
@@ -269,11 +267,8 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #if defined(STARFISH_ENABLE_INSPECTOR)
     , m_inspector(nullptr)
 #endif
-    , m_locale(icu::Locale::createFromName(locale))
-    , m_timezoneID(String::fromUTF8(timezoneID))
     , m_defaultFontSize(defaultFontSize)
     , m_screenInfo(info)
-    , m_customUserAgentString(customUserAgentString)
     , m_builtinPolyfillPathString(builtinPolyfillPathString)
 #ifdef STARFISH_ENABLE_TEST
     , m_testCompatibleMode(StarfishTestCompatibleMode::Normal)
@@ -298,7 +293,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
 #endif
-    m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
     m_historyManager = HistoryManager::create(this);
     initRenderingFlags();
     initStorage();
@@ -627,15 +621,6 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     Param* p = new Param;
     p->url = url->urlString();
     callPublicWebViewHandler(OnPageStarted, p);
-}
-
-String* WebView::userAgent()
-{
-    String* custom = customUserAgentString();
-    if (custom->length()) {
-        return custom;
-    }
-    return String::createASCIIString(USER_AGENT(STARFISH_NAME, VERSION));
 }
 
 LWE::WebSecurityMode WebView::getWebSecurityMode() const
@@ -1761,57 +1746,4 @@ void WebView::setupInspector(uint32_t portNumber)
     m_inspector->run(portNumber);
 }
 #endif
-
-void WebView::registerPublicWebViewHandler(
-    StarfishPubicWebViewHandlerKind handlerKind,
-    std::function<void(void*)> handler)
-{
-    auto it = m_publicWebViewHandlers.find(handlerKind);
-    if (it == m_publicWebViewHandlers.end()) {
-        m_publicWebViewHandlers.insert(std::make_pair(handlerKind, handler));
-    } else {
-        it->second = handler;
-    }
-}
-
-bool WebView::containsPublicWebViewHandler(
-    StarfishPubicWebViewHandlerKind handlerKind)
-{
-    auto it = m_publicWebViewHandlers.find(handlerKind);
-    if (it != m_publicWebViewHandlers.end()) {
-        return true;
-    }
-
-    return false;
-}
-
-void WebView::callPublicWebViewHandler(
-    StarfishPubicWebViewHandlerKind handlerKind, void* param)
-{
-    auto it = m_publicWebViewHandlers.find(handlerKind);
-    if (it == m_publicWebViewHandlers.end()) {
-        return;
-    }
-
-    struct Env : public gc {
-        WebView* webView;
-        StarfishPubicWebViewHandlerKind handlerKind;
-        void* param;
-    };
-    Env* env = new Env();
-    env->webView = this;
-    env->handlerKind = handlerKind;
-    env->param = param;
-
-    messageLoop()->addIdler(
-        nullptr,
-        [](size_t, void* env) {
-            Env* e = (Env*)env;
-            auto it = e->webView->m_publicWebViewHandlers.find(e->handlerKind);
-            if (it != e->webView->m_publicWebViewHandlers.end()) {
-                (it->second)(e->param);
-            }
-        },
-        env);
-}
 }

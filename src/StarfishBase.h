@@ -45,6 +45,7 @@
 #define __StarfishBase__
 
 #include "StarfishInfo.h"
+#include "StarfishPlatform.h"
 
 #if defined(__clang__)
 #define COMPILER_CLANG 1

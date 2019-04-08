@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "platform/loader/ImageResource.h"
 #include "platform/loader/ResourceLoader.h"
 #include "platform/file/File.h"
@@ -121,11 +122,11 @@ void ImageResource::didLoadFinished()
     }
 
     if (isSVG) {
-        TextConverter* converter =
-            new TextConverter(m_resourceRequest->responseMimeType(),
-                              m_resourceRequest->document()->characterSet(),
-                              m_resourceRequest->response().data(),
-                              m_resourceRequest->response().size());
+        TextConverter* converter = new TextConverter(
+            m_resourceRequest->responseMimeType(),
+            m_resourceRequest->executionContext()->characterSet(),
+            m_resourceRequest->response().data(),
+            m_resourceRequest->response().size());
         String* resposeText =
             converter->convert(m_resourceRequest->response().data(),
                                m_resourceRequest->response().size(), true);

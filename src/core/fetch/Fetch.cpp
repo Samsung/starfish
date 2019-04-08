@@ -66,7 +66,7 @@ Fetch::Fetch(ExecutionContext* executionContext, Request* request,
     : m_executionContext(executionContext)
     , m_request(request)
     , m_response(nullptr)
-    , m_resourceRequest(new ResourceRequest(executionContext->document()))
+    , m_resourceRequest(new ResourceRequest(executionContext))
     , m_promise(promise)
 {
     m_resourceRequest->addResourceRequestClient(

@@ -34,6 +34,7 @@
 #include "core/modules/profiling/Profiling.h"
 #include "binding/ScriptWrappable.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 
 #include <linux/fs.h>
 #include <sys/file.h>
@@ -424,7 +425,7 @@ void HTTPCache::extractHTTPCacheEntryProperty(NetworkURLWorkerData* nwd,
     cinfo = HTTPUtil::getHTTPContentInfoFromHeaders(headerMap);
 
     finfo = HTTPUtil::getHTTPFreshnessInfoFromHeaders(
-        nwd->request->document()->scriptBindingInstance(), headerMap);
+        nwd->request->executionContext()->scriptBindingInstance(), headerMap);
 
     finfo.requestTime = nwd->httpTransaction->httpRequest().requestTime();
     finfo.responseTime = nwd->httpTransaction->httpResponse().responseTime();

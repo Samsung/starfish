@@ -26,6 +26,7 @@
 #include "WebView.h"
 
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/FocusEvent.h"
 #include "browser/history/HistoryManager.h"
 #include "core/dom/HTMLDocument.h"
@@ -728,8 +729,6 @@ void BrowsingContext::dispose()
     } else {
         webView()->messageLoop()->clearPendingIdlers(m_window);
     }
-
-    m_rootMap.clear();
     unRegisterNeedsLayoutInWebView();
 }
 
@@ -1834,32 +1833,6 @@ void BrowsingContext::unRegisterNeedsLayoutInWebView()
     }
 }
 
-void BrowsingContext::addPointerInRootSet(void* ptr)
-{
-    STARFISH_ASSERT(isMainThread());
-
-    auto iter = m_rootMap.find(ptr);
-    if (iter == m_rootMap.end()) {
-        m_rootMap.insert(std::make_pair(ptr, 1));
-    } else {
-        iter->second++;
-    }
-}
-
-void BrowsingContext::removePointerFromRootSet(void* ptr)
-{
-    STARFISH_ASSERT(isMainThread());
-
-    auto iter = m_rootMap.find(ptr);
-    if (iter != m_rootMap.end()) {
-        if (iter->second == 1) {
-            m_rootMap.erase(iter);
-        } else {
-            iter->second--;
-        }
-    }
-}
-
 bool BrowsingContext::isDescendantOf(BrowsingContext* ancester)
 {
     if (ancester) {
@@ -1873,16 +1846,4 @@ bool BrowsingContext::isDescendantOf(BrowsingContext* ancester)
     }
     return false;
 }
-
-#ifndef NDEBUG
-size_t BrowsingContext::countPointersInRootSet(void* ptr)
-{
-    auto iter = m_rootMap.find(ptr);
-    if (iter != m_rootMap.end()) {
-        return iter->second;
-    } else {
-        return 0;
-    }
-}
-#endif
 }

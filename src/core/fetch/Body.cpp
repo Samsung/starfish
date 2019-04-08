@@ -243,9 +243,7 @@ Promise* Body::text()
             } else if (body.isBlobValue()) {
                 String* url = URL::createObjectURL(body.getBlobValue());
                 if (!m_resourceRequest) {
-                    // TODO: Remove Document dependency
-                    m_resourceRequest =
-                        new ResourceRequest(executionContext()->document());
+                    m_resourceRequest = new ResourceRequest(executionContext());
                 }
                 m_resourceRequest->addResourceRequestClient(this);
 
