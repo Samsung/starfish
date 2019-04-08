@@ -205,5 +205,9 @@ void PathSkia::postMatrix(const SkMatrix& matrix)
 {
     m_skiaPath->transform(matrix);
 }
+
+void PathSkia::setCTM(const SkMatrix& matrix)
+{
+}
 }
 #endif
