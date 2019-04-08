@@ -135,6 +135,12 @@ section are supported.
 | [CanvasState](https://html.spec.whatwg.org/multipage/canvas.html#canvasstate) | interface mixin | CanvasState |  |
 |  | method | void save() | Push state on state stack |
 |  | method | void restore() | Pop state stack and restore state |
+| [CanvasDrawPath](https://html.spec.whatwg.org/multipage/canvas.html#canvasdrawpath) | interface mixin | CanvasDrawPath |  |
+|  | method | void beginPath() | Starts a new path by emptying the list of sub-paths |
+|  | method | void fill(optional CanvasFillRule fillRule = "nonzero") | Fills the current or given path with the current fillStyle. |
+|  | method | void fill(Path2D path, optional CanvasFillRule fillRule = "nonzero") | Fills the current or given path with the current fillStyle. |
+|  | method | void stroke() | Strokes (outlines) the current or given path with the current stroke style. |
+|  | method | void stroke(Path2D path) | Strokes (outlines) the current or given path with the current stroke style. |
 | [CanvasLineCap](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinecap) | enum | CanvasLineCap | "butt", "round", "square" |
 | [CanvasLineJoin](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinejoin) | enum | CanvasLineJoin | "round", "bevel", "miter" |
 | [CanvasPath ](https://html.spec.whatwg.org/multipage/canvas.html#canvaspath) | interface mixin | CanvasPath |  |

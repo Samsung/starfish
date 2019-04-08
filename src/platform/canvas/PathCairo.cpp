@@ -130,11 +130,14 @@ void PathCairo::moveTo(float x, float y)
 
 void PathCairo::lineTo(float x, float y)
 {
+    m_needNewSubPath = false;
     cairo_line_to(m_cairoContext, x, y);
 }
 
 void PathCairo::quadraticCurveTo(float cpx, float cpy, float x, float y)
 {
+    m_needNewSubPath = false;
+
     double x0, y0;
     cairo_get_current_point(m_cairoContext, &x0, &y0);
     cairo_curve_to(m_cairoContext, 2.0 / 3.0 * cpx + 1.0 / 3.0 * x0,
@@ -146,6 +149,7 @@ void PathCairo::quadraticCurveTo(float cpx, float cpy, float x, float y)
 void PathCairo::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
                               float x, float y)
 {
+    m_needNewSubPath = false;
     cairo_curve_to(m_cairoContext, cp1x, cp1y, cp2x, cp2y, x, y);
 }
 
@@ -245,6 +249,7 @@ void PathCairo::arcTo(float x1, float y1, float x2, float y2, float radius)
 
 void PathCairo::rect(float x, float y, float w, float h)
 {
+    m_needNewSubPath = false;
     cairo_rectangle(m_cairoContext, x, y, w, h);
 }
 
@@ -284,6 +289,8 @@ void PathCairo::ellipse(float x, float y, float radiusX, float radiusY,
                         float rotation, float startAngle, float endAngle,
                         bool anticlockwise /*=false*/)
 {
+    m_needNewSubPath = false;
+
     cairo_save(m_cairoContext);
     cairo_translate(m_cairoContext, x, y);
     cairo_rotate(m_cairoContext, rotation);

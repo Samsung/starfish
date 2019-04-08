@@ -110,6 +110,7 @@ public:
     void fill(String* fillRule);
     void fill(Path2D* path, String* fillRule);
     void stroke();
+    void stroke(Path2D* path);
 
     // CanvasPathInterfaceMixIn methods
     virtual void closePath() override;

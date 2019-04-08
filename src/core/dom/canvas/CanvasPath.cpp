@@ -162,9 +162,8 @@ void CanvasPath::quadraticCurveTo(float cpx, float cpy, float x, float y)
 void CanvasPath::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
                                float x, float y)
 {
-    if (isInfOrNan(cp1x) || isInfOrNan(cp1y),
-        isInfOrNan(cp2x) || isInfOrNan(cp2y) || isInfOrNan(x) ||
-            isInfOrNan(y)) {
+    if (isInfOrNan(cp1x) || isInfOrNan(cp1y) || isInfOrNan(cp2x) ||
+        isInfOrNan(cp2y) || isInfOrNan(x) || isInfOrNan(y)) {
         return;
     }
     m_path->ensureSubPath(cp1x, cp1y);
@@ -186,6 +185,12 @@ void CanvasPath::bezierCurveTo(float cp1x, float cp1y, float cp2x, float cp2y,
     m_path->bezierCurveTo(cp1x, cp1y, cp2x, cp2y, x, y);
 }
 
+static inline float areaOfTriangleFormedByPoints(float x0, float y0, float x1,
+                                                 float y1, float x2, float y2)
+{
+    return x0 * (y1 - y2) + x1 * (y2 - y0) + x2 * (y0 - y1);
+}
+
 void CanvasPath::arcTo(float x1, float y1, float x2, float y2, float radius)
 {
     // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-arcto
@@ -203,7 +208,8 @@ void CanvasPath::arcTo(float x1, float y1, float x2, float y2, float radius)
     float x0, y0;
     m_path->currentPoint(x0, y0);
 
-    if ((x0 == x1 && y0 == y1) || (x1 == x2 && y1 == y2) || radius == 0.0f) {
+    if ((x0 == x1 && y0 == y1) || (x1 == x2 && y1 == y2) || radius == 0.0f ||
+        !areaOfTriangleFormedByPoints(x0, y0, x1, y1, x2, y2)) {
         m_path->lineTo(x1, y1);
     } else {
         m_path->arcTo(x1, y1, x2, y2, radius);
