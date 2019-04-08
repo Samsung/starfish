@@ -485,6 +485,9 @@ void TTS::destroy()
     } else {
         STARFISH_LOG_INFO("[TTS] handle is null in destroyTTSHandle()");
     }
+
+    vconf_ignore_key_changed(VCONFKEY_SETAPPL_ACCESSIBILITY_TTS,
+                             accessibilityChangedCB);
 }
 
 void TTS::speech(SpeechSynthesisUtterance* utterance)
