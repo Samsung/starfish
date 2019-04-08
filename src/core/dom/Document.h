@@ -378,15 +378,8 @@ public:
 
     String* origin();
 
-    WebOrigin* webOrigin()
-    {
-        return m_webOrigin;
-    }
-
-    void setWebOrigin(WebOrigin* webOrigin)
-    {
-        m_webOrigin = webOrigin;
-    }
+    WebOrigin* webOrigin();
+    void setWebOrigin(WebOrigin* webOrigin);
 
     Location* location();
     String* referrer();
@@ -457,10 +450,9 @@ public:
         return m_fontSelector;
     }
 
-    String* characterSet()
-    {
-        return m_characterSet;
-    }
+    String* characterSet();
+    // only used in html document builder
+    void setCharacterSet(String* s);
 
     String* contentType()
     {
@@ -669,8 +661,6 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_executionContext));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseElementURL));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_baseTarget));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_webOrigin));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_characterSet));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentType));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_resourceLoader));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_fontSelector));
@@ -682,7 +672,6 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_styleSheetList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_brokenImage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_animationExecutor));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_activeResourceRequests));
         GC_set_bit(desc, GC_WORD_OFFSET(Document,
                                         m_namedAccessActiveHTMLCollectionList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_implementation));
@@ -701,11 +690,6 @@ protected:
                    GC_WORD_OFFSET(Document, m_nativeGradientCacheLRUList));
     }
 
-    // only used in html document builder
-    void setCharacterSet(String* s)
-    {
-        m_characterSet = s;
-    }
     bool m_inParsing : 1;
     bool m_didLoadBrokenImage : 1;
     bool m_isXMLDocument : 1;
@@ -728,8 +712,6 @@ protected:
     Window* m_window;
     ResourceURL* m_baseElementURL;
     String* m_baseTarget;
-    WebOrigin* m_webOrigin;
-    String* m_characterSet;
     String* m_contentType;
     ResourceLoader* m_resourceLoader;
     FontSelector* m_fontSelector;
@@ -742,7 +724,6 @@ protected:
     NativeImageData* m_brokenImage;
     AnimationExecutor* m_animationExecutor;
     size_t m_domVersion;
-    GCVector<ResourceRequest*> m_activeResourceRequests;
     ActiveHTMLCollectionList m_namedAccessActiveHTMLCollectionList;
     DOMImplementation* m_implementation;
     GCVector<Element*> m_currentScripts;

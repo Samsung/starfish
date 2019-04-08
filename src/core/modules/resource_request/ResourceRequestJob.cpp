@@ -19,8 +19,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/page/WebView.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/fileapi/Blob.h"
 #include "platform/file/File.h"
 #include "core/modules/resource_request/ResourceRequest.h"
@@ -28,9 +27,7 @@
 #include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/util/URL.h"
-#include "core/page/WebView.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/Window.h"
+#include "core/page/WebBase.h"
 
 namespace Starfish {
 
@@ -76,8 +73,8 @@ void FileURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->isSync()) {
         worker(m_orgProxy, filePath);
     } else {
-        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->window(),
+        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
+            m_orgProxy->globalScope(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -93,11 +90,11 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
                                                String* filePath)
 {
     std::string u8Path = filePath->toUTF8NonGCString();
-    if (request->webView()->m_resolveFilePathCallback) {
+    if (request->webBase()->m_resolveFilePathCallback) {
         // custom I/O path
-        u8Path = request->webView()->m_resolveFilePathCallback(u8Path.data());
+        u8Path = request->webBase()->m_resolveFilePathCallback(u8Path.data());
 
-        auto handle = request->webView()->m_fileOpenCallback(u8Path.data());
+        auto handle = request->webBase()->m_fileOpenCallback(u8Path.data());
         if (!handle) {
             auto s = request->url()->urlString()->toUTF8NonGCString();
             STARFISH_LOG_INFO("failed to open %s\n", s.data());
@@ -110,12 +107,12 @@ void FileURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         request->changeReadyState(ReadyState::HeadersReceived, true);
         request->changeReadyState(ReadyState::Loading, true);
         size_t responseLength =
-            request->webView()->m_fileLengthCallback(handle);
+            request->webBase()->m_fileLengthCallback(handle);
         request->response().resize(responseLength);
-        request->webView()->m_fileReadCallback(
+        request->webBase()->m_fileReadCallback(
             (uint8_t*)request->response().data(), request->response().size(),
             handle);
-        request->webView()->m_fileCloseCallback(handle);
+        request->webBase()->m_fileCloseCallback(handle);
         request->handleResponseEOF();
         return;
     }
@@ -153,8 +150,8 @@ void DataURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->isSync()) {
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
-        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->window(),
+        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
+            m_orgProxy->globalScope(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -218,8 +215,8 @@ void AboutURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->isSync()) {
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
-        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->window(),
+        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
+            m_orgProxy->globalScope(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -259,8 +256,8 @@ void JavaScriptURLResourceRequestJobDelegate::send(String* body,
     if (m_orgProxy->isSync()) {
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
-        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->window(),
+        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
+            m_orgProxy->globalScope(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -293,8 +290,8 @@ void UnknownURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->isSync()) {
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
-        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->window(),
+        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
+            m_orgProxy->globalScope(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -329,8 +326,8 @@ void BlobURLResourceRequestJobDelegate::send(String* body, bool allowCache)
     if (m_orgProxy->isSync()) {
         worker(m_orgProxy, m_orgProxy->url()->urlString());
     } else {
-        size_t handle = m_orgProxy->webView()->messageLoop()->addIdler(
-            m_orgProxy->window(),
+        size_t handle = m_orgProxy->webBase()->messageLoop()->addIdler(
+            m_orgProxy->globalScope(),
             [](size_t handle, void* data, void* data1) {
                 ResourceRequest* request = (ResourceRequest*)data;
                 request->removeIdlerHandle(handle);
@@ -354,7 +351,7 @@ void BlobURLResourceRequestJobDelegate::worker(ResourceRequest* request,
         return;
     }
 
-    if (!request->document()->webView()->isValidBlobURL(store)) {
+    if (!request->executionContext()->webBase()->isValidBlobURL(store)) {
         request->handleError(ProgressState::InError,
                              RequestErrorType::BadURLError);
         return;

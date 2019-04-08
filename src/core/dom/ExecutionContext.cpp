@@ -18,17 +18,27 @@
  */
 
 #include "StarfishBase.h"
+#include <curl/curl.h>
+#include "core/util/String.h"
+#include "core/util/AtomicString.h"
+#include "core/util/QualifiedName.h"
+#include "Starfish.h"
 #include "core/modules/profiling/Profiling.h"
+#include "core/modules/threading/ThreadPool.h"
 #include "core/util/String.h"
 #include "core/page/GlobalScope.h"
 #include "core/dom/ExecutionContext.h"
 #include "platform/loader/ResourceURL.h"
+#include "core/modules/resource_request/ResourceRequest.h"
+#include "core/csp/ContentSecurityPolicy.h"
+#include "platform/loader/ResourceURL.h"
+#include "core/dom/WebOrigin.h"
 
 namespace Starfish {
 
 ExecutionContext::ExecutionContext(GlobalScope* globalScope,
                                    ScriptBindingInstance* instance,
-                                   ResourceURL* uri,
+                                   ResourceURL* uri, String* charSet,
                                    void* documentOrWorkerGlobalScope,
                                    bool hasDocument)
     : m_globalScope(globalScope)
@@ -39,6 +49,8 @@ ExecutionContext::ExecutionContext(GlobalScope* globalScope,
     , m_documentURI(uri)
     , m_referrer(nullptr)
     , m_baseURL(nullptr)
+    , m_characterSet(charSet)
+    , m_webOrigin(WebOrigin::createDocumentOrigin(uri))
 {
 }
 
@@ -88,6 +100,70 @@ ResourceURL* ExecutionContext::baseURL() const
         return m_baseURL;
     }
     return ResourceURL::aboutBlankURL();
+}
+
+void ExecutionContext::addPointerInRootSet(void* ptr)
+{
+    STARFISH_ASSERT(isMainThread());
+
+    auto iter = m_rootMap.find(ptr);
+    if (iter == m_rootMap.end()) {
+        m_rootMap.insert(std::make_pair(ptr, 1));
+    } else {
+        iter->second++;
+    }
+}
+
+void ExecutionContext::removePointerFromRootSet(void* ptr)
+{
+    STARFISH_ASSERT(isMainThread());
+
+    auto iter = m_rootMap.find(ptr);
+    if (iter != m_rootMap.end()) {
+        if (iter->second == 1) {
+            m_rootMap.erase(iter);
+        } else {
+            iter->second--;
+        }
+    }
+}
+
+void ExecutionContext::clearPointerRootMap()
+{
+    m_rootMap.clear();
+}
+
+#ifndef NDEBUG
+size_t ExecutionContext::countPointersInRootSet(void* ptr)
+{
+    auto iter = m_rootMap.find(ptr);
+    if (iter != m_rootMap.end()) {
+        return iter->second;
+    } else {
+        return 0;
+    }
+}
+#endif
+
+void ExecutionContext::addActiveResourceRequests(ResourceRequest* request)
+{
+    m_activeResourceRequests.push_back(request);
+}
+
+void ExecutionContext::removeActiveResourceRequests(ResourceRequest* request)
+{
+    auto iter = std::find(m_activeResourceRequests.begin(),
+                          m_activeResourceRequests.end(), request);
+    if (iter != m_activeResourceRequests.end()) {
+        m_activeResourceRequests.erase(iter);
+    }
+}
+
+void ExecutionContext::disposeActiveResourceRequests()
+{
+    while (m_activeResourceRequests.size()) {
+        m_activeResourceRequests.back()->abort();
+    }
 }
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

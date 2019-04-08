@@ -50,6 +50,23 @@ enum StarfishPubicWebViewHandlerKind {
 
 namespace std {
 template <>
+struct hash<Starfish::StarfishPubicWebViewHandlerKind> {
+    size_t operator()(Starfish::StarfishPubicWebViewHandlerKind const& x) const
+    {
+        return std::hash<uint32_t>()((uint32_t)x);
+    }
+};
+
+template <>
+struct equal_to<Starfish::StarfishPubicWebViewHandlerKind> {
+    bool operator()(Starfish::StarfishPubicWebViewHandlerKind const& a,
+                    Starfish::StarfishPubicWebViewHandlerKind const& b) const
+    {
+        return a == b;
+    }
+};
+
+template <>
 struct hash<Starfish::BlobURLStore> {
     size_t operator()(Starfish::BlobURLStore const& x) const
     {
@@ -74,13 +91,15 @@ class Console;
 class Inspector;
 class Blob;
 class WebView;
+class ThreadPool;
+class Timer;
 
 class WebBase : public StarfishHoldable, public gc {
 public:
     virtual ~WebBase()
     {
     }
-    virtual MessageLoop* messageLoop() const = 0;
+
     virtual Console* console() const = 0;
 
     virtual bool isWebView() const
@@ -103,6 +122,7 @@ public:
 
     virtual void setNeedsRendering() = 0;
     virtual uint64_t lastRenderingTick() = 0;
+
     static bool stringToBlobURLString(String* url, BlobURLStore& result);
     static String* blobURLStoreToString(BlobURLStore store, String* origin);
 
@@ -113,11 +133,105 @@ public:
     BlobURLStore findBlobURL(Blob* ptr);
     void clearBlobURLStore();
 
+    const icu::Locale& locale()
+    {
+        return m_locale;
+    }
+
+    String* timezoneID()
+    {
+        return m_timezoneID;
+    }
+
+    String* customUserAgentString()
+    {
+        return m_customUserAgentString;
+    }
+
+    void setCustomUserAgentString(String* customUserAgentString)
+    {
+        m_customUserAgentString = customUserAgentString;
+    }
+
+    void setProxyURL(const std::string& url)
+    {
+        m_proxyURL = url;
+    }
+
+    const std::string& proxyURL() const
+    {
+        return m_proxyURL;
+    }
+
+    String* userAgent();
+
+    void registerPublicWebViewHandler(
+        StarfishPubicWebViewHandlerKind handlerKind,
+        std::function<void(void*)> handler);
+    bool containsPublicWebViewHandler(
+        StarfishPubicWebViewHandlerKind handlerKind);
+    void callPublicWebViewHandler(StarfishPubicWebViewHandlerKind handlerKind,
+                                  void* data);
+
+    void registerCustomFileResourceRequestCallbacks(
+        std::function<const char*(const char* path)> resolveFilePathCallback,
+        std::function<void*(const char* path)> fileOpenCallback,
+        std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+            fileReadCallback,
+        std::function<long int(void* handle)> fileLengthCallback,
+        std::function<void(void* handle)> fileCloseCallback)
+    {
+        m_resolveFilePathCallback = resolveFilePathCallback;
+        m_fileOpenCallback = fileOpenCallback;
+        m_fileReadCallback = fileReadCallback;
+        m_fileLengthCallback = fileLengthCallback;
+        m_fileCloseCallback = fileCloseCallback;
+    }
+
+    MessageLoop* messageLoop()
+    {
+        return m_messageLoop;
+    }
+
+    Timer* timer()
+    {
+        return m_timer;
+    }
+
+    ThreadPool* threadPool()
+    {
+        return m_threadPool;
+    }
+
 protected:
-    WebBase(Starfish* starfish);
+    WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
+            String* customUserAgentString);
 
     unsigned int m_seed;
     GCUnorderedSet<BlobURLStore> m_urlBlobStore;
+
+    // options
+    icu::Locale m_locale;
+    String* m_timezoneID;
+    String* m_customUserAgentString;
+    std::string m_proxyURL;
+    std::unordered_map<StarfishPubicWebViewHandlerKind,
+                       std::function<void(void*)>>
+        m_publicWebViewHandlers;
+
+    MessageLoop* m_messageLoop;
+    Timer* m_timer;
+    ThreadPool* m_threadPool;
+
+public:
+    // function sets for implementing custom file IO for resource request
+    std::function<const char*(const char* path)> m_resolveFilePathCallback;
+    std::function<void*(const char* path)> m_fileOpenCallback;
+    std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
+        m_fileReadCallback;
+    std::function<long int(void* handle)> m_fileLengthCallback;
+    std::function<void(void* handle)> m_fileCloseCallback;
+    // <----
 };
 }
 

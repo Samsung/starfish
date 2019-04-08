@@ -23,6 +23,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "core/page/BrowsingContext.h"
 #include "core/modules/mediasource/MediaSource.h"
@@ -220,7 +221,7 @@ void MockMediaPlayer::play()
 {
     if (m_playbackState != PLAYBACK_STATE_PLAYING) {
         m_playbackState = PLAYBACK_STATE_PLAYING;
-        m_container->document()->browsingContext()->addPointerInRootSet(this);
+        m_container->executionContext()->addPointerInRootSet(this);
         m_currentTimeUpdateTimer = window()->setInterval(
             [](void* data) {
                 MockMediaPlayer* self = (MockMediaPlayer*)data;
@@ -270,8 +271,7 @@ void MockMediaPlayer::pause()
 {
     if (m_playbackState == PLAYBACK_STATE_PLAYING) {
         m_playbackState = PLAYBACK_STATE_PAUSED;
-        m_container->document()->browsingContext()->removePointerFromRootSet(
-            this);
+        m_container->executionContext()->removePointerFromRootSet(this);
         window()->clearInterval(m_currentTimeUpdateTimer);
         m_currentTimeUpdateTimer = TimerInvalidID;
     }

@@ -30,25 +30,6 @@ enum class WebSecurityMode;
 enum class IdleModeJob;
 }
 
-namespace std {
-template <>
-struct hash<Starfish::StarfishPubicWebViewHandlerKind> {
-    size_t operator()(Starfish::StarfishPubicWebViewHandlerKind const& x) const
-    {
-        return std::hash<uint32_t>()((uint32_t)x);
-    }
-};
-
-template <>
-struct equal_to<Starfish::StarfishPubicWebViewHandlerKind> {
-    bool operator()(Starfish::StarfishPubicWebViewHandlerKind const& a,
-                    Starfish::StarfishPubicWebViewHandlerKind const& b) const
-    {
-        return a == b;
-    }
-};
-}
-
 namespace Starfish {
 
 enum StarfishStartUpFlag {
@@ -283,11 +264,6 @@ public:
         return m_prevDrawnStackingContextInfo;
     }
 
-    const icu::Locale& locale()
-    {
-        return m_locale;
-    }
-
     StarfishStartUpFlag startUpFlag()
     {
         return (StarfishStartUpFlag)m_startUpFlag;
@@ -296,21 +272,6 @@ public:
     StarfishDeviceKind deviceKind()
     {
         return m_deviceKind;
-    }
-
-    String* timezoneID()
-    {
-        return m_timezoneID;
-    }
-
-    void setProxyURL(const std::string& url)
-    {
-        m_proxyURL = url;
-    }
-
-    const std::string& proxyURL() const
-    {
-        return m_proxyURL;
     }
 
     LWE::WebSecurityMode getWebSecurityMode() const;
@@ -332,22 +293,10 @@ public:
         return m_screenInfo;
     }
 
-    String* customUserAgentString()
-    {
-        return m_customUserAgentString;
-    }
-
-    void setCustomUserAgentString(String* customUserAgentString)
-    {
-        m_customUserAgentString = customUserAgentString;
-    }
-
     String* builtinPolyfillPathString()
     {
         return m_builtinPolyfillPathString;
     }
-
-    String* userAgent();
 
 #ifdef STARFISH_ENABLE_TEST
     void setTestCompatibleMode(StarfishTestCompatibleMode mode)
@@ -360,21 +309,6 @@ public:
         return (StarfishTestCompatibleMode)m_testCompatibleMode;
     }
 #endif
-
-    MessageLoop* messageLoop() const override
-    {
-        return m_messageLoop;
-    }
-
-    Timer* timer()
-    {
-        return m_timer;
-    }
-
-    ThreadPool* threadPool()
-    {
-        return m_threadPool;
-    }
 
 #if defined(STARFISH_ENABLE_INSPECTOR)
     Inspector* inspector() const override
@@ -392,29 +326,6 @@ public:
 
     String* evaluateJavaScript(String* s);
     void evaluateJavaScript(String* s, std::function<void(std::string)> cb);
-
-    void registerPublicWebViewHandler(
-        StarfishPubicWebViewHandlerKind handlerKind,
-        std::function<void(void*)> handler);
-    bool containsPublicWebViewHandler(
-        StarfishPubicWebViewHandlerKind handlerKind);
-    void callPublicWebViewHandler(StarfishPubicWebViewHandlerKind handlerKind,
-                                  void* data);
-
-    void registerCustomFileResourceRequestCallbacks(
-        std::function<const char*(const char* path)> resolveFilePathCallback,
-        std::function<void*(const char* path)> fileOpenCallback,
-        std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
-            fileReadCallback,
-        std::function<long int(void* handle)> fileLengthCallback,
-        std::function<void(void* handle)> fileCloseCallback)
-    {
-        m_resolveFilePathCallback = resolveFilePathCallback;
-        m_fileOpenCallback = fileOpenCallback;
-        m_fileReadCallback = fileReadCallback;
-        m_fileLengthCallback = fileLengthCallback;
-        m_fileCloseCallback = fileCloseCallback;
-    }
 
     std::unordered_map<std::string, void*>& publicLayerUserDataMap()
     {
@@ -591,10 +502,6 @@ private:
     StackingContext* m_rootStackingContext;
     GCVector<AnimationExecutor*> m_activeAnimationExecutor;
 
-    // message loop contexts
-    MessageLoop* m_messageLoop;
-    Timer* m_timer;
-    ThreadPool* m_threadPool;
     GCVector<Thread*> m_parallelJobExecutorThreadPool;
 
     Console* m_console;
@@ -616,27 +523,11 @@ private:
     Unit::Location m_lastMouseMovePoint;
 
     // options
-    icu::Locale m_locale;
-    String* m_timezoneID;
     uint32_t m_defaultFontSize;
     ScreenInfo m_screenInfo;
-    String* m_customUserAgentString;
     String* m_builtinPolyfillPathString;
-    std::string m_proxyURL;
     unsigned int m_startUpFlag;
     StarfishDeviceKind m_deviceKind;
-    std::unordered_map<StarfishPubicWebViewHandlerKind,
-                       std::function<void(void*)>>
-        m_publicWebViewHandlers;
-
-    // function sets for implementing custom file IO for resource request
-    std::function<const char*(const char* path)> m_resolveFilePathCallback;
-    std::function<void*(const char* path)> m_fileOpenCallback;
-    std::function<size_t(uint8_t* destBuffer, size_t size, void* handle)>
-        m_fileReadCallback;
-    std::function<long int(void* handle)> m_fileLengthCallback;
-    std::function<void(void* handle)> m_fileCloseCallback;
-    // <----
 
     std::unordered_map<std::string, void*> m_publicLayerUserDataMap;
 

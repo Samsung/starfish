@@ -38,7 +38,7 @@ public:
 
     XMLDocument(XMLDocument& doc)
         : Document(doc.m_window, doc.scriptBindingInstance(), doc.documentURI(),
-                   doc.m_characterSet, false)
+                   doc.characterSet(), false)
     {
         m_contentType = String::createASCIIString("text/html");
     }

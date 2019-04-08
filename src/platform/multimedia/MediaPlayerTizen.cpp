@@ -25,6 +25,7 @@
 #include "Starfish.h"
 #include "core/util/URL.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/HTMLVideoElement.h"
 #include "core/fileapi/Blob.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -35,6 +36,8 @@
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Locker.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
@@ -499,7 +502,7 @@ void MediaPlayerTizen::seek(double time)
     }
 
     m_seekState = SEEKSTATE_SEEKING;
-    m_container->document()->browsingContext()->addPointerInRootSet(this);
+    m_container->executionContext()->addPointerInRootSet(this);
 
     // Set timer
     // Note : To avoid too much waiting 'seek' callback,
@@ -567,8 +570,7 @@ void MediaPlayerTizen::handleSeeked()
             m_seekingTimer = TimerInvalidID;
         }
         // Remove rooted pointer
-        m_container->document()->browsingContext()->removePointerFromRootSet(
-            this);
+        m_container->executionContext()->removePointerFromRootSet(this);
 
         if (!m_foundError) {
             // Success
@@ -743,7 +745,7 @@ void MediaPlayerTizen::play()
     m_pendingPlay = false;
     setPlaybackState(PLAYBACK_STATE_PLAYING);
     player_start(m_nativePlayer);
-    m_container->document()->browsingContext()->addPointerInRootSet(this);
+    m_container->executionContext()->addPointerInRootSet(this);
     m_currentTimeUpdateTimer =
         m_container->window()->setInterval(updateTimeCallback, 250, this);
 }
@@ -756,8 +758,7 @@ void MediaPlayerTizen::pause()
     PLAYER_LOGI("pause()\n");
     setPlaybackState(PLAYBACK_STATE_PAUSED);
     if (m_container) {
-        m_container->document()->browsingContext()->removePointerFromRootSet(
-            this);
+        m_container->executionContext()->removePointerFromRootSet(this);
         m_container->window()->clearInterval(m_currentTimeUpdateTimer);
     }
     player_pause(m_nativePlayer);
@@ -812,14 +813,13 @@ void MediaPlayerTizen::openPreparingMode()
 {
     STARFISH_ASSERT(!m_inPrepare);
     m_inPrepare = true;
-    m_container->document()->browsingContext()->addPointerInRootSet(this);
+    m_container->executionContext()->addPointerInRootSet(this);
 }
 
 void MediaPlayerTizen::closePreparingMode()
 {
     if (m_inPrepare) {
-        m_container->document()->browsingContext()->removePointerFromRootSet(
-            this);
+        m_container->executionContext()->removePointerFromRootSet(this);
         m_inPrepare = false;
     }
 }

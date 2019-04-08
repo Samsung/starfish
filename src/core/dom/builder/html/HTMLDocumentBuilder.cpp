@@ -198,7 +198,7 @@ public:
 
         auto request = m_resource->resourceRequest();
         if (request->isRedirected()) {
-            auto csp = request->document()->contentSecurityPolicy();
+            auto csp = browsingContext->document()->contentSecurityPolicy();
             auto resourceURL =
                 new ResourceURL(request->lastEffectiveURL().c_str());
             auto f = [](SecurityPolicyViolationEvent* event, Window* window) {

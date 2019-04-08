@@ -44,8 +44,6 @@
 #ifndef __StarfishConfig__
 #define __StarfishConfig__
 
-#include "StarfishPlatform.h"
-
 #include "StarfishBase.h"
 
 #include <SkMatrix.h>

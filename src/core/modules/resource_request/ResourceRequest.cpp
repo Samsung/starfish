@@ -19,16 +19,15 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/HTMLFormElement.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/resource_request/ResourceRequestJob.h"
+#include "core/modules/resource_request/NetworkURLResourceRequestJobDelegate.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/util/URL.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/WebView.h"
-#include "core/page/Window.h"
+#include "core/page/WebBase.h"
 #include "core/dom/WebOrigin.h"
 #include "core/fetch/Body.h"
 #include "core/fetch/Response.h"
@@ -44,13 +43,9 @@ public:
                                  bool isExplicitAction) override
     {
         if (request->progressState() == ProgressState::LoadStart) {
-            request->document()->m_activeResourceRequests.push_back(request);
+            request->executionContext()->addActiveResourceRequests(request);
         } else if (request->progressState() == ProgressState::LoadEnd) {
-            auto& v = request->document()->m_activeResourceRequests;
-            auto iter = std::find(v.begin(), v.end(), request);
-            if (iter != v.end()) {
-                v.erase(iter);
-            }
+            request->executionContext()->removeActiveResourceRequests(request);
         }
     }
 
@@ -65,14 +60,13 @@ public:
             Param* p = new Param;
             p->errorCode = request->errorType();
             p->url = request->url()->urlString();
-            request->document()->webView()->callPublicWebViewHandler(
-                OnReceivedError, p);
+            request->webBase()->callPublicWebViewHandler(OnReceivedError, p);
         }
     }
 };
 
-ResourceRequest::ResourceRequest(Document* document)
-    : DocumentHoldable(document)
+ResourceRequest::ResourceRequest(ExecutionContext* executionContext)
+    : m_executionContext(executionContext)
     , m_requestData(nullptr)
     , m_preflightRequestData(nullptr)
     , m_requestWebOrigin(nullptr)
@@ -121,20 +115,21 @@ void ResourceRequest::initVariables()
 void ResourceRequest::clearIdlers()
 {
     auto iter2 = m_requstedIdlers.begin();
+    auto messageLoop = webBase()->messageLoop();
     while (iter2 != m_requstedIdlers.end()) {
-        webView()->messageLoop()->removeIdler(*iter2);
+        messageLoop->removeIdler(*iter2);
         iter2++;
     }
     m_requstedIdlers.clear();
 
     if (m_pendingOnHeaderReceivedEventIdlerHandle != MessageLoopInvalidID) {
-        webView()->messageLoop()->removeIdlerWithNoGCRooting(
+        messageLoop->removeIdlerWithNoGCRooting(
             m_pendingOnHeaderReceivedEventIdlerHandle);
         m_pendingOnHeaderReceivedEventIdlerHandle = MessageLoopInvalidID;
     }
 
     if (m_pendingOnProgressEventIdlerHandle != MessageLoopInvalidID) {
-        webView()->messageLoop()->removeIdlerWithNoGCRooting(
+        messageLoop->removeIdlerWithNoGCRooting(
             m_pendingOnProgressEventIdlerHandle);
         m_pendingOnProgressEventIdlerHandle = MessageLoopInvalidID;
     }
@@ -229,7 +224,7 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
             String::createASCIIString(m_lastEffectiveURL.data()));
 
         auto resWebOrigin = WebOrigin::createDocumentOrigin(resURL);
-        if (!document()->webOrigin()->isSameOrigin(resWebOrigin) &&
+        if (!executionContext()->webOrigin()->isSameOrigin(resWebOrigin) &&
             !resWebOrigin->isOpaque()) {
             m_responseData->m_type = ResponseType::Cors;
         } else {
@@ -252,13 +247,13 @@ void ResourceRequest::changeReadyState(ReadyState readyState,
     }
 
     if (m_readyState == ReadyState::Done) {
-        webView()->messageLoop()->addIdler(
-            window(),
+        webBase()->messageLoop()->addIdler(
+            globalScope(),
             [](size_t, void* data, void* data2) {
                 ResourceRequest* self = (ResourceRequest*)data2;
-                ((BrowsingContext*)data)->removePointerFromRootSet(data2);
+                ((ExecutionContext*)data)->removePointerFromRootSet(data2);
             },
-            document()->browsingContext(), this);
+            executionContext(), this);
         if (m_jobDelegate) {
             m_jobDelegate = nullptr;
         }
@@ -335,7 +330,7 @@ void ResourceRequest::abort(bool isExplicitAction)
 
 void ResourceRequest::send(String* body, bool allowCache)
 {
-    document()->browsingContext()->addPointerInRootSet(this);
+    executionContext()->addPointerInRootSet(this);
     m_didSend = true;
 
     STARFISH_ASSERT(m_jobDelegate);
@@ -347,7 +342,7 @@ void ResourceRequest::send(String* body, bool allowCache)
 bool ResourceRequest::isSameOriginRequest()
 {
     STARFISH_ASSERT(m_requestWebOrigin);
-    return document()->webOrigin()->isSameOrigin(m_requestWebOrigin);
+    return executionContext()->webOrigin()->isSameOrigin(m_requestWebOrigin);
 }
 
 void ResourceRequest::setRequestHeader(String* name, String* value)
@@ -656,5 +651,20 @@ ResponseBody ResourceRequest::parseBase64String(const StrType& str,
     }
 
     return result;
+}
+
+WebBase* ResourceRequest::webBase()
+{
+    return m_executionContext->webBase();
+}
+
+GlobalScope* ResourceRequest::globalScope()
+{
+    return m_executionContext->globalScope();
+}
+
+Starfish* ResourceRequest::starfish()
+{
+    return m_executionContext->webBase()->starfish();
 }
 }

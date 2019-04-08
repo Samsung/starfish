@@ -28,6 +28,8 @@
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/modules/message_loop/Timer.h"
+#include "core/modules/threading/Mutex.h"
+#include "core/modules/threading/Locker.h"
 #include "core/page/WebView.h"
 #include "core/page/Window.h"
 

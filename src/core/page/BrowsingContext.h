@@ -20,9 +20,7 @@
 #ifndef __StarfishBrowsingContext__
 #define __StarfishBrowsingContext__
 
-#include "binding/StarfishHoldable.h"
 #include "binding/WebViewHoldable.h"
-
 #include "core/layout/LayoutRepaintTracker.h"
 
 namespace Starfish {
@@ -247,11 +245,6 @@ public:
 
     HistoryManager* historyManager();
 
-    void addPointerInRootSet(void* ptr);
-    void removePointerFromRootSet(void* ptr);
-#ifndef NDEBUG
-    size_t countPointersInRootSet(void* ptr);
-#endif
     void resolveStyleIfNeeds();
     void buildFrameTreeIfNeeds();
     // return did layout
@@ -336,7 +329,6 @@ private:
     bool m_hasRootElementBackground;
     bool m_hasBodyElementBackground;
 
-    GCUnorderedMap<void*, size_t> m_rootMap;
 #ifdef STARFISH_ENABLE_MULTIMEDIA
     GCVector<HTMLMediaElement*> m_existingMediaElements;
 #endif

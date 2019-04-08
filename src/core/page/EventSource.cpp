@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/MessageEvent.h"
 #include "core/extra/Console.h"
@@ -197,7 +198,7 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
     , m_readyState(CONNECTING)
     , m_delay(10)
     , m_reconnectDelay(defaultReconnectDelay)
-    , m_resourceRequest(new ResourceRequest(document))
+    , m_resourceRequest(new ResourceRequest(document->executionContext()))
     , m_parser(nullptr)
     , m_stopReconnect(false)
     , m_withCredentials(init.withCredentials())
@@ -231,7 +232,7 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
     m_url = fullURL;
     connectFired();
 
-    document->browsingContext()->addPointerInRootSet(this);
+    executionContext()->addPointerInRootSet(this);
 }
 
 ExecutionContext* EventSource::executionContext()
@@ -379,7 +380,7 @@ void EventSource::failedAccessControlCheck()
     m_readyState = CLOSED;
     m_resourceRequest->abort(true);
     document()->window()->clearTimeout(m_time);
-    document()->browsingContext()->removePointerFromRootSet(this);
+    executionContext()->removePointerFromRootSet(this);
 }
 
 void EventSource::cancel()
@@ -387,7 +388,7 @@ void EventSource::cancel()
     m_readyState = CLOSED;
     m_resourceRequest->abort(true);
     document()->window()->clearTimeout(m_time);
-    document()->browsingContext()->removePointerFromRootSet(this);
+    executionContext()->removePointerFromRootSet(this);
 }
 
 void EventSource::close()
@@ -405,6 +406,6 @@ void EventSource::close()
         m_stopReconnect = true;
     }
     document()->window()->clearTimeout(m_time);
-    document()->browsingContext()->removePointerFromRootSet(this);
+    executionContext()->removePointerFromRootSet(this);
 }
 }

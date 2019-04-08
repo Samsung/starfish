@@ -21,13 +21,27 @@
 #include "core/util/String.h"
 #include "core/page/WebBase.h"
 #include "core/fileapi/Blob.h"
+#include "core/modules/message_loop/Timer.h"
+#include "core/modules/message_loop/MessageLoop.h"
+#include "core/modules/threading/Thread.h"
+#include "core/modules/threading/ThreadPool.h"
 
 namespace Starfish {
 
-WebBase::WebBase(Starfish* starfish)
+WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
+                 String* customUserAgentString)
     : StarfishHoldable(starfish)
     , m_seed((unsigned int)time(NULL))
+    , m_locale(icu::Locale::createFromName(locale))
+    , m_timezoneID(String::fromUTF8(timezoneID))
+    , m_customUserAgentString(customUserAgentString)
+    , m_messageLoop(new MessageLoop())
+    , m_timer(new Timer(this))
 {
+#ifndef STARFISH_THREAD_POOL_SIZE
+#define STARFISH_THREAD_POOL_SIZE 6
+#endif
+    m_threadPool = new ThreadPool(STARFISH_THREAD_POOL_SIZE, m_messageLoop);
 }
 
 bool WebBase::stringToBlobURLString(String* url, BlobURLStore& store)
@@ -270,5 +284,67 @@ void WebBase::clearBlobURLStore()
 {
     m_urlBlobStore.clear();
     GCUnorderedSet<BlobURLStore>().swap(m_urlBlobStore);
+}
+
+String* WebBase::userAgent()
+{
+    String* custom = customUserAgentString();
+    if (custom->length()) {
+        return custom;
+    }
+    return String::createASCIIString(USER_AGENT(STARFISH_NAME, VERSION));
+}
+
+void WebBase::registerPublicWebViewHandler(
+    StarfishPubicWebViewHandlerKind handlerKind,
+    std::function<void(void*)> handler)
+{
+    auto it = m_publicWebViewHandlers.find(handlerKind);
+    if (it == m_publicWebViewHandlers.end()) {
+        m_publicWebViewHandlers.insert(std::make_pair(handlerKind, handler));
+    } else {
+        it->second = handler;
+    }
+}
+
+bool WebBase::containsPublicWebViewHandler(
+    StarfishPubicWebViewHandlerKind handlerKind)
+{
+    auto it = m_publicWebViewHandlers.find(handlerKind);
+    if (it != m_publicWebViewHandlers.end()) {
+        return true;
+    }
+
+    return false;
+}
+
+void WebBase::callPublicWebViewHandler(
+    StarfishPubicWebViewHandlerKind handlerKind, void* param)
+{
+    auto it = m_publicWebViewHandlers.find(handlerKind);
+    if (it == m_publicWebViewHandlers.end()) {
+        return;
+    }
+
+    struct Env : public gc {
+        WebBase* webBase;
+        StarfishPubicWebViewHandlerKind handlerKind;
+        void* param;
+    };
+    Env* env = new Env();
+    env->webBase = this;
+    env->handlerKind = handlerKind;
+    env->param = param;
+
+    messageLoop()->addIdler(
+        nullptr,
+        [](size_t, void* env) {
+            Env* e = (Env*)env;
+            auto it = e->webBase->m_publicWebViewHandlers.find(e->handlerKind);
+            if (it != e->webBase->m_publicWebViewHandlers.end()) {
+                (it->second)(e->param);
+            }
+        },
+        env);
 }
 }
