@@ -22,6 +22,8 @@
 #if defined(PORT_CANVAS_BACKEND_MOCK)
 #include "Starfish.h"
 #include "core/style/Style.h"
+#include "core/dom/canvas/CanvasLineCap.h"
+#include "core/dom/canvas/CanvasLineJoin.h"
 #include "core/modules/canvas/Canvas.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/canvas/NativeGradient.h"
@@ -240,6 +242,55 @@ public:
     }
 
     virtual SkMatrix currentTransformMatrix()
+    {
+        return SkMatrix::I();
+    }
+
+    virtual CanvasLineCap lineCap()
+    {
+        return CanvasLineCap::Butt;
+    }
+
+    virtual void setLineCap(CanvasLineCap lineCap)
+    {
+    }
+
+    virtual CanvasLineJoin lineJoine()
+    {
+        return CanvasLineJoin::Miter;
+    }
+
+    virtual void setLineJoin(CanvasLineJoin lineJoin)
+    {
+    }
+
+    virtual double miterLimit()
+    {
+        return 0.0;
+    }
+
+    virtual void setMiterLimit(double limit)
+    {
+    }
+
+    virtual void setStrokeColor(const Unit::Color& clr)
+    {
+    }
+
+    virtual void setNonInvertableCTM(bool validation)
+    {
+    }
+
+    virtual bool hasNonInvertableCTM()
+    {
+        return false;
+    }
+
+    virtual void setPathTransformMatrix(const SkMatrix& marix)
+    {
+    }
+
+    virtual SkMatrix pathTransformMatrix()
     {
         return SkMatrix::I();
     }
