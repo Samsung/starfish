@@ -19,7 +19,7 @@
 
 #include "core/csp/ContentSecurityPolicyDirectiveList.h"
 #include "core/csp/ContentSecurityPolicy.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
@@ -27,7 +27,7 @@ ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(
     ContentSecurityPolicyHeaderType type,
     ContentSecurityPolicyHeaderSource source)
     : m_contentSecurityPolicy(contentSecurityPolicy)
-    , m_contextURL(contentSecurityPolicy->document()->documentURI())
+    , m_contextURL(contentSecurityPolicy->executionContext()->documentURI())
     , m_baseURI(nullptr)
     , m_connectSrc(nullptr)
     , m_childSrc(nullptr)

@@ -275,7 +275,6 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
 #endif
     , m_baseBackgroundColor(Unit::Color(255, 255, 255, 255))
     , m_baseForegroundColor(Unit::Color(0, 0, 0, 255))
-    , m_webSecurityMode(WebSecurityMode::Enable)
     , m_idleModeJob(LWE::IdleModeJob::IdleModeDefault)
     , m_idleModeCheckIntervalInMS(0)
     , m_idleCheckTimerID(TimerInvalidID)
@@ -621,16 +620,6 @@ void WebView::navigate(ResourceURL* url, HistoryManagerAction type,
     Param* p = new Param;
     p->url = url->urlString();
     callPublicWebViewHandler(OnPageStarted, p);
-}
-
-LWE::WebSecurityMode WebView::getWebSecurityMode() const
-{
-    return m_webSecurityMode;
-}
-
-void WebView::setWebSecurityMode(LWE::WebSecurityMode value)
-{
-    m_webSecurityMode = value;
 }
 
 String* WebView::evaluateJavaScript(String* s)

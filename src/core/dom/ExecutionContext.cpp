@@ -26,13 +26,16 @@
 #include "core/modules/profiling/Profiling.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/util/String.h"
+#include "core/page/WebBase.h"
 #include "core/page/GlobalScope.h"
 #include "core/dom/ExecutionContext.h"
+#include "core/dom/EventTarget.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/modules/resource_request/ResourceRequest.h"
-#include "core/csp/ContentSecurityPolicy.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/dom/WebOrigin.h"
+#include "core/csp/ContentSecurityPolicy.h"
+#include "core/modules/message_loop/MessageLoop.h"
 
 namespace Starfish {
 
@@ -51,6 +54,7 @@ ExecutionContext::ExecutionContext(GlobalScope* globalScope,
     , m_baseURL(nullptr)
     , m_characterSet(charSet)
     , m_webOrigin(WebOrigin::createDocumentOrigin(uri))
+    , m_contentSecurityPolicy(new ContentSecurityPolicy(this))
 {
 }
 
@@ -72,6 +76,11 @@ Document* ExecutionContext::document()
 {
     STARFISH_ASSERT(hasDocument());
     return static_cast<Document*>(m_documentOrWorkerGlobalScope);
+}
+
+Starfish* ExecutionContext::starfish() const
+{
+    return m_globalScope->webBase()->starfish();
 }
 
 WebBase* ExecutionContext::webBase() const
@@ -164,6 +173,22 @@ void ExecutionContext::disposeActiveResourceRequests()
     while (m_activeResourceRequests.size()) {
         m_activeResourceRequests.back()->abort();
     }
+}
+
+void ExecutionContext::initContentSecurityPolicy(
+    ContentSecurityPolicy* inheritedPolicy)
+{
+    m_contentSecurityPolicy->copyFrom(inheritedPolicy);
+}
+
+void ExecutionContext::dispatchEventIdleTimeByUA(Event* event)
+{
+    webBase()->messageLoop()->addIdler(
+        globalScope(),
+        [](size_t handle, void* data0, void* data1) {
+            ((EventTarget*)data0)->dispatchEventByUA((Event*)data1);
+        },
+        m_documentOrWorkerGlobalScope, event);
 }
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

@@ -132,7 +132,6 @@ Document::Document(Window* window, ScriptBindingInstance* scriptBindingInstance,
 #ifdef STARFISH_TIZEN
     , m_tizenWidgetTransparentBackground(0)
 #endif
-    , m_contentSecurityPolicy(new ContentSecurityPolicy(window))
     , m_nativeGradientCache(nullptr)
     , m_nativeGradientCacheToTalSize(0)
 {
@@ -307,11 +306,6 @@ void Document::init(ReferrerURL* referrerURL)
 
     m_documentBuilder = new HTMLDocumentBuilder(this);
     m_documentBuilder->build(documentURI(), referrerURL);
-}
-
-void Document::initContentSecurityPolicy(ContentSecurityPolicy* inheritedPolicy)
-{
-    m_contentSecurityPolicy->copyFrom(inheritedPolicy);
 }
 
 Window* Document::open(String* url, String* name, String* features)
@@ -2176,6 +2170,11 @@ String* Document::urlString()
 uint64_t Document::createdTick()
 {
     return executionContext()->createdTick();
+}
+
+ContentSecurityPolicy* Document::contentSecurityPolicy()
+{
+    return executionContext()->contentSecurityPolicy();
 }
 
 DEFINE_EVENT_LISTENER(Document, abort);

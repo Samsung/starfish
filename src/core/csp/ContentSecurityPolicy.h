@@ -20,7 +20,6 @@
 #ifndef __StarfishContentSecurityPolicy__
 #define __StarfishContentSecurityPolicy__
 
-#include "binding/WindowHoldable.h"
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {
@@ -50,15 +49,12 @@ enum class CSPDirectives {
 class ContentSecurityPolicyDirectiveList;
 class ContentSecurityPolicySourceListDirective;
 
-using SecurityPolicyViolationEventDelegator =
-    void (*)(SecurityPolicyViolationEvent* event, Window* window);
+using SecurityPolicyViolationEventDelegator = void (*)(
+    SecurityPolicyViolationEvent* event, ExecutionContext* executionContext);
 
-class ContentSecurityPolicy : public WindowHoldable {
+class ContentSecurityPolicy : public gc {
 public:
-    ContentSecurityPolicy(Window* window);
-
-    void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
+    ContentSecurityPolicy(ExecutionContext* executionContext);
 
     void didReceiveHeader(String* header, ContentSecurityPolicyHeaderType type,
                           ContentSecurityPolicyHeaderSource source);
@@ -79,13 +75,14 @@ public:
 
     void copyFrom(ContentSecurityPolicy* policy);
 
+    ExecutionContext* executionContext()
+    {
+        return m_executionContext;
+    }
+
 private:
     GCVector<ContentSecurityPolicyDirectiveList*> m_policies;
-
-    static inline void fillGCDescriptor(GC_word* desc)
-    {
-        GC_set_bit(desc, GC_WORD_OFFSET(ContentSecurityPolicy, m_policies));
-    }
+    ExecutionContext* m_executionContext;
 
     static ScriptNullableValue checkUnsafeEvalCallback(
         ScriptExecutionState state, bool isEval);

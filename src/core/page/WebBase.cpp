@@ -18,6 +18,7 @@
  */
 
 #include "StarfishBase.h"
+#include "PlatformIntegrationData.h"
 #include "core/util/String.h"
 #include "core/page/WebBase.h"
 #include "core/fileapi/Blob.h"
@@ -37,6 +38,7 @@ WebBase::WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_customUserAgentString(customUserAgentString)
     , m_messageLoop(new MessageLoop())
     , m_timer(new Timer(this))
+    , m_webSecurityMode(LWE::WebSecurityMode::Enable)
 {
 #ifndef STARFISH_THREAD_POOL_SIZE
 #define STARFISH_THREAD_POOL_SIZE 6
@@ -346,5 +348,15 @@ void WebBase::callPublicWebViewHandler(
             }
         },
         env);
+}
+
+LWE::WebSecurityMode WebBase::getWebSecurityMode() const
+{
+    return m_webSecurityMode;
+}
+
+void WebBase::setWebSecurityMode(LWE::WebSecurityMode value)
+{
+    m_webSecurityMode = value;
 }
 }

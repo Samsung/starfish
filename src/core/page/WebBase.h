@@ -22,6 +22,10 @@
 
 #include "binding/StarfishHoldable.h"
 
+namespace LWE {
+enum class WebSecurityMode;
+}
+
 namespace Starfish {
 struct BlobURLStore {
 #ifdef STARFISH_32
@@ -203,6 +207,9 @@ public:
         return m_threadPool;
     }
 
+    LWE::WebSecurityMode getWebSecurityMode() const;
+    void setWebSecurityMode(LWE::WebSecurityMode value);
+
 protected:
     WebBase(Starfish* starfish, const char* locale, const char* timezoneID,
             String* customUserAgentString);
@@ -222,6 +229,8 @@ protected:
     MessageLoop* m_messageLoop;
     Timer* m_timer;
     ThreadPool* m_threadPool;
+
+    LWE::WebSecurityMode m_webSecurityMode;
 
 public:
     // function sets for implementing custom file IO for resource request

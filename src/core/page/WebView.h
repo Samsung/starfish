@@ -26,7 +26,6 @@
 #include "platform/public/ScreenInfo.h"
 
 namespace LWE {
-enum class WebSecurityMode;
 enum class IdleModeJob;
 }
 
@@ -273,9 +272,6 @@ public:
     {
         return m_deviceKind;
     }
-
-    LWE::WebSecurityMode getWebSecurityMode() const;
-    void setWebSecurityMode(LWE::WebSecurityMode value);
 
     uint32_t defaultFontSize() const
     {
@@ -540,7 +536,6 @@ private:
 #endif
     Unit::Color m_baseBackgroundColor;
     Unit::Color m_baseForegroundColor;
-    LWE::WebSecurityMode m_webSecurityMode;
     LWE::IdleModeJob
         m_idleModeJob; // default value is IdleModeJob::IdleModeFull
     uint32_t m_idleModeCheckIntervalInMS; // default value is 3000(ms)
