@@ -62,16 +62,21 @@ static inline String* canvasLineCapToString(CanvasLineCap lineCap)
     return String::createASCIIString("butt");
 }
 
-static inline CanvasLineCap stringToCanvasLineCap(String* lineCap)
+static inline bool stringToCanvasLineCap(String* lineCap, CanvasLineCap& out)
 {
     if (lineCap) {
         if (lineCap->equals("round")) {
-            return CanvasLineCap::Round;
+            out = CanvasLineCap::Round;
+            return true;
         } else if (lineCap->equals("square")) {
-            return CanvasLineCap::Square;
+            out = CanvasLineCap::Square;
+            return true;
+        } else if (lineCap->equals("butt")) {
+            out = CanvasLineCap::Butt;
+            return true;
         }
     }
-    return CanvasLineCap::Butt;
+    return false;
 }
 
 static inline String* canvasLineJoinToString(CanvasLineJoin lineJoin)
@@ -84,16 +89,21 @@ static inline String* canvasLineJoinToString(CanvasLineJoin lineJoin)
     return String::createASCIIString("miter");
 }
 
-static inline CanvasLineJoin stringToCanvasLineJoin(String* lineJoin)
+static inline bool stringToCanvasLineJoin(String* lineJoin, CanvasLineJoin& out)
 {
     if (lineJoin) {
         if (lineJoin->equals("round")) {
-            return CanvasLineJoin::Round;
+            out = CanvasLineJoin::Round;
+            return true;
         } else if (lineJoin->equals("bevel")) {
-            return CanvasLineJoin::Bevel;
+            out = CanvasLineJoin::Bevel;
+            return true;
+        } else if (lineJoin->equals("miter")) {
+            out = CanvasLineJoin::Miter;
+            return true;
         }
     }
-    return CanvasLineJoin::Miter;
+    return false;
 }
 
 CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
@@ -173,6 +183,10 @@ float CanvasRenderingContext2DMixIn::lineWidth()
 
 void CanvasRenderingContext2DMixIn::setLineWidth(float width)
 {
+    if (width <= 0 || isInfOrNan(width)) {
+        return;
+    }
+
     m_canvas->setLineWidth(width);
 }
 
@@ -184,8 +198,10 @@ String* CanvasRenderingContext2DMixIn::lineCap()
 
 void CanvasRenderingContext2DMixIn::setLineCap(String* value)
 {
-    auto cap = stringToCanvasLineCap(value);
-    setLineCap(cap);
+    CanvasLineCap cap;
+    if (stringToCanvasLineCap(value, cap)) {
+        setLineCap(cap);
+    }
 }
 
 void CanvasRenderingContext2DMixIn::setLineCap(CanvasLineCap lineCap)
@@ -201,8 +217,10 @@ String* CanvasRenderingContext2DMixIn::lineJoin()
 
 void CanvasRenderingContext2DMixIn::setLineJoin(String* value)
 {
-    auto join = stringToCanvasLineJoin(value);
-    setLineJoin(join);
+    CanvasLineJoin join;
+    if (stringToCanvasLineJoin(value, join)) {
+        setLineJoin(join);
+    }
 }
 
 void CanvasRenderingContext2DMixIn::setLineJoin(CanvasLineJoin lineJoin)
@@ -217,6 +235,9 @@ float CanvasRenderingContext2DMixIn::miterLimit()
 
 void CanvasRenderingContext2DMixIn::setMiterLimit(float limit)
 {
+    if (limit <= 0 || isInfOrNan(limit)) {
+        return;
+    }
     m_canvas->setMiterLimit(limit);
 }
 
@@ -470,6 +491,16 @@ void CanvasRenderingContext2DMixIn::stroke(Path2D* path)
     stroke(path->canvasPath()->path());
 }
 
+void CanvasRenderingContext2DMixIn::clip(String* fillRule)
+{
+    clip(m_canvasPath->path(), fillRule);
+}
+
+void CanvasRenderingContext2DMixIn::clip(Path2D* path, String* fillRule)
+{
+    clip(path->canvasPath()->path(), fillRule);
+}
+
 void CanvasRenderingContext2DMixIn::closePath()
 {
     m_canvasPath->closePath();
@@ -698,6 +729,24 @@ void CanvasRenderingContext2DMixIn::stroke(Path* path)
         m_canvas->setColor(color);
         m_canvas->strokePath(path);
         m_canvas->restore();
+    }
+}
+
+void CanvasRenderingContext2DMixIn::clip(Path* path, String* fillRule)
+{
+    if (m_canvas->hasNonInvertableCTM()) {
+        return;
+    }
+
+    auto rule = stringToCanvasFillRule(fillRule);
+
+    if (!path->isEmpty()) {
+        if (rule == CanvasFillRule::NonZero) {
+            m_canvas->setFillRule(true);
+        } else if (rule == CanvasFillRule::EvenOdd) {
+            m_canvas->setFillRule(false);
+        }
+        m_canvas->clipPath(path);
     }
 }
 }

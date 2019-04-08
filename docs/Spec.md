@@ -137,10 +137,12 @@ section are supported.
 |  | method | void restore() | Pop state stack and restore state |
 | [CanvasDrawPath](https://html.spec.whatwg.org/multipage/canvas.html#canvasdrawpath) | interface mixin | CanvasDrawPath |  |
 |  | method | void beginPath() | Starts a new path by emptying the list of sub-paths |
-|  | method | void fill(optional CanvasFillRule fillRule = "nonzero") | Fills the current or given path with the current fillStyle. |
-|  | method | void fill(Path2D path, optional CanvasFillRule fillRule = "nonzero") | Fills the current or given path with the current fillStyle. |
-|  | method | void stroke() | Strokes (outlines) the current or given path with the current stroke style. |
-|  | method | void stroke(Path2D path) | Strokes (outlines) the current or given path with the current stroke style. |
+|  | method | void fill(optional CanvasFillRule fillRule = "nonzero") | Fills the current path with the current fillStyle. |
+|  | method | void fill(Path2D path, optional CanvasFillRule fillRule = "nonzero") | Fills the given path with the current fillStyle. |
+|  | method | void stroke() | Strokes (outlines) the current path with the current stroke style. |
+|  | method | void stroke(Path2D path) | Strokes (outlines) the given path with the current stroke style. |
+|  | method | void clip(optional CanvasFillRule fillRule = "nonzero") |  Turns the current path into the current clipping region |
+|  | method | void clip(Path2D path, optional CanvasFillRule fillRule = "nonzero") | Turns the given path into the current clipping region |
 | [CanvasLineCap](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinecap) | enum | CanvasLineCap | "butt", "round", "square" |
 | [CanvasLineJoin](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinejoin) | enum | CanvasLineJoin | "round", "bevel", "miter" |
 | [CanvasPath ](https://html.spec.whatwg.org/multipage/canvas.html#canvaspath) | interface mixin | CanvasPath |  |

@@ -111,6 +111,8 @@ public:
     void fill(Path2D* path, String* fillRule);
     void stroke();
     void stroke(Path2D* path);
+    void clip(String* fillRule);
+    void clip(Path2D* path, String* fillRule);
 
     // CanvasPathInterfaceMixIn methods
     virtual void closePath() override;
@@ -192,6 +194,7 @@ protected:
 private:
     void fill(Path* path, String* fillRule);
     void stroke(Path* path);
+    void clip(Path* path, String* fillRule);
     void setLineCap(CanvasLineCap lineCap);
     void setLineJoin(CanvasLineJoin lineJoin);
     void transform(float a, float b, float c, float d, float e, float f,

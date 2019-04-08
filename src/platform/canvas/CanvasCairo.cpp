@@ -335,7 +335,11 @@ public:
         cairo_rectangle(m_canvas, rt.x(), rt.y(), rt.width(), rt.height());
         cairo_clip(m_canvas);
     }
-
+    virtual void clipPath(Path* path)
+    {
+        setPathAsNewPathOnCurrentContext(path);
+        clipPath();
+    }
     virtual LayoutRect pixelSnappedClip(const LayoutRect& rt)
     {
         if (rt.width() == 0 || rt.height() == 0) {
