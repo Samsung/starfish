@@ -91,6 +91,11 @@ public:
     void stopScrolling();
     void stopFling();
 
+    EventTarget* target()
+    {
+        return m_target;
+    }
+
 protected:
     bool m_gotPointingDownEvent : 1;
     bool m_isScrollTarget : 1;

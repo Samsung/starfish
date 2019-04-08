@@ -96,6 +96,7 @@ class MouseData;
 class TouchData;
 class PlatformKeyEventData;
 class EventTarget;
+class Scrolling;
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 class ServiceWorkerProcessManager;
@@ -462,6 +463,11 @@ public:
         return m_repaintRegionInRendering;
     }
 
+    GCUnorderedSet<Scrolling*>& activeScrollingSet()
+    {
+        return m_activeScrollingSet;
+    }
+
     void dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
                             size_t touchCount);
     void dispatchMouseEvent(MouseEventKind kind, MouseData data);
@@ -509,6 +515,11 @@ public:
     uint32_t idleModeCheckIntervalInMS()
     {
         return m_idleModeCheckIntervalInMS;
+    }
+
+    bool didFirstRenderingAfterWakeup()
+    {
+        return m_didFirstRenderingAfterWakeup;
     }
 
 private:
@@ -574,6 +585,8 @@ private:
     bool m_isActive; // false means that is paused, then rendering callbacks
                      // will be skipped.
     bool m_inIdleMode;
+    bool m_didFirstRenderingAfterWakeup;
+
     GCVector<BrowsingContext*> m_browsingContextsNeedsLayout;
     StackingContext* m_rootStackingContext;
     GCVector<AnimationExecutor*> m_activeAnimationExecutor;
@@ -599,6 +612,7 @@ private:
     FontFamilyData* m_initialFontFamilyDatas;
 
     GCVector<EventTarget*> m_globalPointingEventListener;
+    GCUnorderedSet<Scrolling*> m_activeScrollingSet;
     Unit::Location m_lastMouseMovePoint;
 
     // options
