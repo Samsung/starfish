@@ -20,38 +20,11 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
-#include "core/modules/serviceworker/ServiceWorker.h"
+#include "core/modules/serviceworker/client/ServiceWorkerRegistration.h"
+#include "core/modules/serviceworker/client/ServiceWorker.h"
 #include "core/dom/Document.h"
 
 namespace Starfish {
-
-ServiceWorkerRegistrationData::ServiceWorkerRegistrationData()
-    : m_scope(String::emptyString)
-    , m_updateViaCache(ServiceWorkerUpdateViaCache::None)
-    , m_installingWorkerData(nullptr)
-    , m_waitingWorkerData(nullptr)
-    , m_activeWorkerData(nullptr)
-{
-}
-
-void ServiceWorkerRegistrationData::updateRegistrationState(
-    ServiceWorkerRegistrationState state, ServiceWorkerData* serviceWorkerData)
-{
-    switch (state) {
-    case ServiceWorkerRegistrationState::Installing:
-        m_installingWorkerData = serviceWorkerData;
-        break;
-    case ServiceWorkerRegistrationState::Waiting:
-        m_waitingWorkerData = serviceWorkerData;
-        break;
-    case ServiceWorkerRegistrationState::Active:
-        m_activeWorkerData = serviceWorkerData;
-        break;
-    default:
-        break;
-    }
-}
 
 ServiceWorkerRegistration::ServiceWorkerRegistration(Document* document)
     : EventTarget(document)
@@ -70,8 +43,6 @@ ExecutionContext* ServiceWorkerRegistration::executionContext()
 void ServiceWorkerRegistration::updateRegistrationState(
     ServiceWorkerRegistrationState state, ServiceWorker* serviceWorker)
 {
-    data()->updateRegistrationState(state, serviceWorker->data());
-
     switch (state) {
     case ServiceWorkerRegistrationState::Installing:
         m_installingWorker = serviceWorker;
@@ -83,18 +54,19 @@ void ServiceWorkerRegistration::updateRegistrationState(
         m_activeWorker = serviceWorker;
         break;
     default:
+        STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
         break;
     }
 }
 
 String* ServiceWorkerRegistration::scope() const
 {
-    return m_data->scope();
+    return m_data->scope;
 }
 
 String* ServiceWorkerRegistration::updateViaCache() const
 {
-    switch (m_data->updateViaCache()) {
+    switch (m_data->updateViaCache) {
     case ServiceWorkerUpdateViaCache::Imports:
         return String::createASCIIString("imports");
     case ServiceWorkerUpdateViaCache::All:

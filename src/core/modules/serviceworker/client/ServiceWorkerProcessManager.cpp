@@ -45,7 +45,6 @@
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -73,7 +72,6 @@ void ServiceWorkerProcessManager::init(WebView* webView)
     // create mock instances
     m_serviceWorkerHostProcess = ServiceWorkerHostProcess::getInstance();
     m_serviceWorkerHostProcess->init(m_threadPool);
-    m_serviceWorkerClientProcess = ServiceWorkerClientProcess::getInstance();
 }
 
 void ServiceWorkerProcessManager::destroy()

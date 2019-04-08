@@ -24,43 +24,13 @@
 #include "core/dom/EventTarget.h"
 #include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 
 namespace Starfish {
 
 class ServiceWorker;
 class ServiceWorkerData;
 class String;
-
-enum class ServiceWorkerRegistrationState {
-    Installing = 0,
-    Waiting,
-    Active,
-};
-
-class ServiceWorkerRegistrationData : public gc {
-public:
-    ServiceWorkerRegistrationData();
-
-    DEFINE_GETTER_SETTER(String*, scope, Scope);
-    DEFINE_GETTER_SETTER(ServiceWorkerUpdateViaCache, updateViaCache,
-                         UpdateViaCache);
-    DEFINE_GETTER_SETTER(ServiceWorkerData*, installingWorkerData,
-                         InstallingWorkerData);
-    DEFINE_GETTER_SETTER(ServiceWorkerData*, waitingWorkerData,
-                         WaitingWorkerData);
-    DEFINE_GETTER_SETTER(ServiceWorkerData*, activeWorkerData,
-                         ActiveWorkerData);
-
-    void updateRegistrationState(ServiceWorkerRegistrationState state,
-                                 ServiceWorkerData* serviceWorkerData);
-
-private:
-    String* m_scope;
-    ServiceWorkerUpdateViaCache m_updateViaCache;
-    ServiceWorkerData* m_installingWorkerData;
-    ServiceWorkerData* m_waitingWorkerData;
-    ServiceWorkerData* m_activeWorkerData;
-};
 
 class ServiceWorkerRegistration : public EventTarget {
 public:
@@ -72,11 +42,11 @@ public:
 
     virtual ExecutionContext* executionContext() override;
 
-    String* scope() const;
-    String* updateViaCache() const;
-    ServiceWorker* installing() const;
-    ServiceWorker* waiting() const;
-    ServiceWorker* active() const;
+    String* scope() const;             // binding interface
+    String* updateViaCache() const;    // binding interface
+    ServiceWorker* installing() const; // binding interface
+    ServiceWorker* waiting() const;    // binding interface
+    ServiceWorker* active() const;     // binding interface
 
     void updateRegistrationState(ServiceWorkerRegistrationState state,
                                  ServiceWorker* serviceWorker);
@@ -90,6 +60,6 @@ private:
 
     ServiceWorkerRegistrationData* m_data;
 };
-}
+} // namespace Starfish
 
 #endif
