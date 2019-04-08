@@ -58,15 +58,17 @@ public:
         m_matrix.postConcat(matrix);
     }
 
+    virtual void setCTM(const SkMatrix& matrix) = 0;
+    virtual void resetCTM()
+    {
+        SkMatrix matrix;
+        matrix.reset();
+        setCTM(matrix);
+    }
+
     virtual SkMatrix getCTM()
     {
         return m_matrix;
-    }
-
-    virtual void setCTM(const SkMatrix& matrix)
-    {
-        m_matrix = matrix;
-        postMatrix(m_matrix);
     }
 
     bool needNewSubPath()

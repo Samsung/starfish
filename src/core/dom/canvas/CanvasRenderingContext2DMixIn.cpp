@@ -306,6 +306,7 @@ void CanvasRenderingContext2DMixIn::resetTransform()
 {
     m_canvas->setNonInvertableCTM(false);
     m_canvas->resetMatrixAndClip();
+    m_canvasPath->path()->resetCTM();
 }
 
 float CanvasRenderingContext2DMixIn::globalAlpha()

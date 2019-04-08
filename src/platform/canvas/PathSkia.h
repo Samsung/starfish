@@ -58,6 +58,7 @@ public:
                          float rotation, float startAngle, float endAngle,
                          bool anticlockwise = false) override;
     virtual void postMatrix(const SkMatrix& matrix) override;
+    virtual void setCTM(const SkMatrix& matrix) override;
 
 private:
     SkPath* m_skiaPath;
