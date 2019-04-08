@@ -693,6 +693,16 @@ void BrowsingContext::dispose()
 
     m_layoutRepaintTracker.dispose();
 
+    auto& activeScrollingSet = webView()->activeScrollingSet();
+    auto iter = activeScrollingSet.begin();
+    while (iter != activeScrollingSet.end()) {
+        if ((*iter)->target()->document() == document()) {
+            iter = activeScrollingSet.erase(iter);
+        } else {
+            iter++;
+        }
+    }
+
     webView()->timer()->clear(m_window);
 
     if (m_window) {

@@ -255,6 +255,7 @@ WebView::WebView(Starfish* starfish, const char* locale, const char* timezoneID,
     , m_didCompositeBefore(false)
     , m_isActive(false)
     , m_inIdleMode(false)
+    , m_didFirstRenderingAfterWakeup(true)
     , m_rootStackingContext(nullptr)
     , m_messageLoop(new MessageLoop())
     , m_timer(new Timer(this))
@@ -350,6 +351,7 @@ void WebView::enterIdleMode()
 {
     STARFISH_LOG_INFO("enter idle mode\n");
     m_inIdleMode = true;
+    m_didFirstRenderingAfterWakeup = false;
 
     onIdle();
 
@@ -1048,6 +1050,7 @@ RenderResult WebView::rendering(bool force)
         renderResult.updateRect = LayoutRect(0, 0, platformWindow()->width(),
                                              platformWindow()->height());
         delete canvas;
+        m_didFirstRenderingAfterWakeup = true;
         return renderResult;
     }
 
@@ -1450,6 +1453,7 @@ RenderResult WebView::rendering(bool force)
     }
 
     ANNOTATE_CHANNEL_END(3001);
+    m_didFirstRenderingAfterWakeup = true;
     return renderResult;
 }
 

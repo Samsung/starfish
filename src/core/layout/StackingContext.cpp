@@ -1988,18 +1988,27 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
                                 m_rareData->m_graphicsBufferHolder
                                     ->m_surfaces[tileIndex] = canvasSurface;
 
-                                auto tick = longTickCount();
-                                if (tick -
-                                        m_owner->node()
+                                if (m_owner->document()
+                                        ->webView()
+                                        ->didFirstRenderingAfterWakeup() &&
+                                    m_owner->document()
                                             ->webView()
-                                            ->lastRenderingTick() >
-                                    WebView::
-                                            g_fillingGraphicsBufferTileFrameTimeLimitInMS *
-                                        1000) {
-                                    STARFISH_LOG_INFO(
-                                        "drop filling graphics buffer contents "
-                                        "because time over\n");
-                                    return true;
+                                            ->activeScrollingSet()
+                                            .size() != 0) {
+                                    auto tick = longTickCount();
+                                    if (tick -
+                                            m_owner->node()
+                                                ->webView()
+                                                ->lastRenderingTick() >
+                                        WebView::
+                                                g_fillingGraphicsBufferTileFrameTimeLimitInMS *
+                                            1000) {
+                                        STARFISH_LOG_INFO(
+                                            "drop filling graphics buffer "
+                                            "contents while scrolling"
+                                            "because time over\n");
+                                        return true;
+                                    }
                                 }
                             }
                         } else {

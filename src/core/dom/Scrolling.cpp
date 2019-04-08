@@ -123,7 +123,8 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                     m_inHorizontalScrolling = true;
                 }
 
-                if (m_inVerticalScrolling || m_inHorizontalScrolling) {
+                if (!m_isScrollTarget &&
+                    (m_inVerticalScrolling || m_inHorizontalScrolling)) {
                     window->browsingContext()
                         ->webView()
                         ->addGlobalPointingEventInterceptListener(m_target);
@@ -132,6 +133,8 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                     m_pointingEventY = m_lastPointingEventY = y;
                     m_target->webView()->timer()->requestAnimationFrame(
                         m_target->window(), onAnimationFrameHandler, this);
+
+                    m_target->webView()->activeScrollingSet().insert(this);
                 }
                 return true;
             }
@@ -353,6 +356,8 @@ void Scrolling::stopScrolling()
         ->browsingContext()
         ->webView()
         ->removeGlobalPointingEventInterceptListener(m_target);
+
+    m_target->webView()->activeScrollingSet().erase(this);
 }
 
 void Scrolling::stopFling()
