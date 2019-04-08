@@ -28,12 +28,6 @@ namespace Starfish {
     an ordered map where the keys are scope urls, serialized,
     and the values are service worker registrations.
 */
-using ServiceWorkerRegistrationKey = String*;
-
-struct RegistrationIdentifier : public gc {
-    String* m_scope;
-    String* m_origin;
-};
 
 class JobQueue;
 class IThread;
@@ -46,14 +40,6 @@ class ServiceWorkerHostConnection;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerClientProcessInterface;
 
-struct ServiceWorkerRegistrationKeyComparator {
-    bool operator()(const ServiceWorkerRegistrationKey& lhs,
-                    const ServiceWorkerRegistrationKey& rhs) const
-    {
-        return lhs < rhs;
-    }
-};
-
 class ServiceWorkerHostProcess : public gc,
                                  public ServiceWorkerHostProcessInterface {
 public:
@@ -63,14 +49,10 @@ public:
     ServiceWorkerHostProcess(ServiceWorkerHostProcess const&) = delete;
     void operator=(ServiceWorkerHostProcess const&) = delete;
 
-    virtual void scheduleJob(ServiceWorkerJob* job) override;
-
     void init(ThreadPool* threadPool);
-    ServiceWorkerRegistrationData* getRegistration(String* scope);
-    void setRegistration(String* scope,
-                         ServiceWorkerUpdateViaCache updateViaCacheMode);
-
     DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
+
+    void scheduleJob(ServiceWorkerJob* job) override;
 
 private:
     static ServiceWorkerHostProcess* m_instance;
@@ -84,10 +66,6 @@ private:
     IORunnable* m_ioRunnable{ nullptr };
     ServiceWorkerHostJobHandler* m_jobHandler{ nullptr };
     ServiceWorkerHostConnection* m_connection{ nullptr };
-    GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*> m_jobQueueMap;
-    GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
-          ServiceWorkerRegistrationKeyComparator>
-        m_registrationMap;
 };
 
 } // namespace Starfish

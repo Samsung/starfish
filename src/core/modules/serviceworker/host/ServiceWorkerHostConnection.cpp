@@ -29,7 +29,6 @@
 #include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 
 #include "platform/process/base/ProcessType.h"
 #include "core/modules/threading/IRunnable.h"

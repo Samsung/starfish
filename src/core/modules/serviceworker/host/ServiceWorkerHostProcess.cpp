@@ -27,13 +27,11 @@
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
-#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 #include "core/modules/serviceworker/JobQueue.h"
-#include "core/modules/serviceworker/ServiceWorker.h"
+#include "core/modules/serviceworker/client/ServiceWorker.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostJobHandler.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/threading/AdaptedThread.h"
 #include "core/modules/threading/ThreadPool.h"
@@ -95,26 +93,6 @@ void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
     m_ioThread->start(m_ioRunnable);
 }
 
-ServiceWorkerRegistrationData* ServiceWorkerHostProcess::getRegistration(
-    String* scope)
-{
-    // https://w3c.github.io/ServiceWorker/#get-registration-algorithm
-
-    // 4. 5.
-    ServiceWorkerRegistrationData* registration = m_registrationMap[scope];
-
-    return registration;
-}
-
-void ServiceWorkerHostProcess::setRegistration(
-    String* scope, ServiceWorkerUpdateViaCache updateViaCacheMode)
-{
-    // https://w3c.github.io/ServiceWorker/#set-registration-algorithm
-
-    auto registration = new ServiceWorkerRegistrationData();
-    m_registrationMap[scope] = registration;
-}
-
 void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
 {
     // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
@@ -122,36 +100,7 @@ void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
 
     // TODO: move this into connection.
     job->setHostConnection(m_connection);
-
-    // 1. Let jobQueue be null.
-    JobQueue* jobQueue = nullptr;
-
-    // 2. Let jobScope be job’s scope url, serialized.
-    auto jobScope = job->data()->scopeURL;
-
-    // 3. If scope to job queue map[jobScope] does not exist, set scope to job
-    // queue map[jobScope] to a new job queue.
-    // 4. Set jobQueue to scope to job queue map[jobScope].
-    auto scope = m_jobQueueMap.find(jobScope);
-    if (scope == m_jobQueueMap.end()) {
-        jobQueue = new JobQueue();
-        m_jobQueueMap.insert(std::make_pair(jobScope, jobQueue));
-    } else {
-        jobQueue = scope->second;
-    }
-
-    // 5. If jobQueue is empty, then:
-    if (jobQueue->size() == 0) {
-        // 5.1. Set job’s containing job queue to jobQueue, and enqueue job to
-        // jobQueue.
-        job->setContainingJobQueue(jobQueue);
-        jobQueue->enqueueJob(job);
-
-        // 5.2. Invoke Run Job with jobQueue.
-        m_jobHandler->runJob(jobQueue);
-    } else {
-        // 6. Else:
-    }
+    m_jobHandler->scheduleJob(job);
 }
 
 } // namespace Starfish

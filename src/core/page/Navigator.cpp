@@ -24,7 +24,7 @@
 #include "core/modules/location/Geolocation.h"
 #include "core/page/WebView.h"
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
-#include "core/modules/serviceworker/ServiceWorkerContainer.h"
+#include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
 #endif
 #if defined(OS_WINDOWS)
 #include <Windows.h>

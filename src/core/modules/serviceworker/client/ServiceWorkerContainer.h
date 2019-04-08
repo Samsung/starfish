@@ -25,8 +25,7 @@
 #include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
-#include "core/modules/serviceworker/RegistrationOptions.h"
-#include "core/modules/serviceworker/client/ServiceWorkerJobClient.h"
+#include "core/modules/serviceworker/client/RegistrationOptions.h"
 
 namespace Starfish {
 
@@ -38,8 +37,7 @@ class ServiceWorkerJob;
 class ServiceWorkerClientConnection;
 class ServiceWorkerRegistrationData;
 
-class ServiceWorkerContainer : public EventTarget,
-                               public ServiceWorkerJobClient {
+class ServiceWorkerContainer : public EventTarget {
 public:
     ServiceWorkerContainer(Document* document);
     virtual ~ServiceWorkerContainer();
@@ -50,12 +48,13 @@ public:
 
     virtual ExecutionContext* executionContext() override;
 
-    ServiceWorker* controller();
-
-    Promise* registerServiceWorker(String* scriptURL,
-                                   RegistrationOptions* options = nullptr);
-    Promise* registerServiceWorker(String* url, RegistrationOptions& options);
-    Promise* getRegistration(String* scriptURL = nullptr);
+    Promise* registerServiceWorker(
+        String* scriptURL,
+        RegistrationOptions* options = nullptr); // binding interface
+    Promise* registerServiceWorker(
+        String* url, RegistrationOptions& options);        // binding interface
+    Promise* getRegistration(String* scriptURL = nullptr); // binding interface
+    ServiceWorker* controller();                           // binding interface
 
     void startRegister(ResourceURL* scopeURL, ResourceURL* scriptURL,
                        Promise* p, ExecutionContext* client);
@@ -67,13 +66,12 @@ public:
     void scheduleJob(ServiceWorkerJob* job);
     void finishJob(ServiceWorkerJob* job);
 
-    void resolveJobPromise(
-        ServiceWorkerJob* job,
-        ServiceWorkerRegistrationData* registration) override;
+    void resolveJobPromise(ServiceWorkerJob* job,
+                           ServiceWorkerRegistrationData* registration);
 
 private:
     GCUnorderedMap<Id<ServiceWorkerJob>, ServiceWorkerJob*, IdHash> m_jobMap;
 };
-}
+} // namespace Starfish
 
 #endif

@@ -43,7 +43,7 @@
 #include "core/page/Window.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/Document.h"
-#include "core/modules/serviceworker/ServiceWorkerContainer.h"
+#include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

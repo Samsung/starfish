@@ -21,7 +21,7 @@
 
 #include "StarfishConfig.h"
 
-#include "core/modules/serviceworker/ServiceWorkerContainer.h"
+#include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
 #include "core/dom/ExecutionContext.h"
 
 #include "platform/process/base/ProcessType.h"
@@ -30,9 +30,8 @@
 #include "core/modules/serviceworker/Connection.h"
 
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
-#include "core/modules/serviceworker/client/ServiceWorkerClientProcess.h"
-#include "core/modules/serviceworker/ServiceWorkerRegistration.h"
-#include "core/modules/serviceworker/ServiceWorker.h"
+#include "core/modules/serviceworker/client/ServiceWorkerRegistration.h"
+#include "core/modules/serviceworker/client/ServiceWorker.h"
 
 #include "core/page/GlobalScope.h"
 #include "core/page/Window.h"
@@ -67,12 +66,10 @@ ScriptValue createException(ScriptBindingInstance* scriptBindingInstance,
 ServiceWorkerContainer::ServiceWorkerContainer(Document* document)
     : EventTarget(document)
 {
-    ServiceWorkerClientProcess::getInstance()->init(this);
 }
 
 ServiceWorkerContainer::~ServiceWorkerContainer()
 {
-    ServiceWorkerClientProcess::getInstance()->destroy();
 }
 
 ExecutionContext* ServiceWorkerContainer::executionContext()
@@ -308,7 +305,7 @@ void ServiceWorkerContainer::resolveJobPromise(
                         new ServiceWorkerRegistration(container->document());
                     auto serviceWorker =
                         new ServiceWorker(container->document());
-                    serviceWorker->data()->setScriptURL(job->data()->scriptURL);
+                    serviceWorker->data()->scriptURL = job->data()->scriptURL;
                     registeration->updateRegistrationState(
                         ServiceWorkerRegistrationState::Installing,
                         serviceWorker);

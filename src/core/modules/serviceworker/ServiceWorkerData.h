@@ -17,29 +17,25 @@
  *  USA
  */
 
-// FIXME: The type of dictionary needs to supports STARFISH_ENABLE** flag
-// RegistrationOptions is also built on release now.
-// #ifdef STARFISH_ENABLE_SERVICE_WORKER
-
-#include "StarfishConfig.h"
-#include "core/modules/serviceworker/RegistrationOptions.h"
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
+    !defined(__StarfishServiceWorkerData__)
+#define __StarfishServiceWorkerData__
 
 namespace Starfish {
 
-RegistrationOptions::RegistrationOptions()
-    : m_scope(String::emptyString)
-{
-}
+enum class ServiceWorkerState {
+    Installing,
+    Installed,
+    Activating,
+    Activated,
+    Redundant,
+};
 
-String* RegistrationOptions::scope() const
-{
-    return m_scope;
-}
+struct ServiceWorkerData : gc {
+    String* scriptURL{ String::emptyString };
+    ServiceWorkerState state{ ServiceWorkerState::Installing };
+};
 
-void RegistrationOptions::setScope(String* scope)
-{
-    m_scope = scope;
-}
-}
+} // namespace Starfish
 
-// #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER
+#endif

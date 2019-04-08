@@ -22,38 +22,15 @@
 #define __StarfishServiceWorker__
 
 #include "core/dom/EventTarget.h"
+#include "core/modules/serviceworker/ServiceWorkerData.h"
 
 namespace Starfish {
-
-enum class ServiceWorkerState {
-    Installing,
-    Installed,
-    Activating,
-    Activated,
-    Redundant,
-};
-
-class ServiceWorkerData : public gc {
-public:
-    ServiceWorkerData()
-        : m_scriptURL(String::emptyString)
-        , m_state(ServiceWorkerState::Installing)
-    {
-    }
-
-    DEFINE_GETTER_SETTER(String*, scriptURL, ScriptURL);
-    DEFINE_GETTER_SETTER(ServiceWorkerState, state, State);
-
-protected:
-    String* m_scriptURL;
-    ServiceWorkerState m_state;
-};
 
 class ServiceWorker : public EventTarget {
 public:
     ServiceWorker(Document* document)
         : EventTarget(document)
-        , m_serviceWorkerData(new ServiceWorkerData())
+        , m_data(new ServiceWorkerData())
     {
     }
 
@@ -63,27 +40,20 @@ public:
 
     virtual ExecutionContext* executionContext() override;
 
-    String* scriptURL() const
-    {
-        return m_serviceWorkerData->scriptURL();
-    }
-
-    String* state() const;
-
-    ServiceWorkerData* data()
-    {
-        return m_serviceWorkerData;
-    }
-
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(statechange);
 #undef VIRTUAL
 #undef OVERRIDE
 
+    DEFINE_GETTER_SETTER(ServiceWorkerData*, data, Data);
+
+    String* scriptURL() const; // binding interface
+    String* state() const;     // binding interface
+
 private:
-    ServiceWorkerData* m_serviceWorkerData;
+    ServiceWorkerData* m_data;
 };
-}
+} // namespace Starfish
 
 #endif

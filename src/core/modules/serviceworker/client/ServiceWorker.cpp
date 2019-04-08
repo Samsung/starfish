@@ -21,7 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/modules/serviceworker/ServiceWorker.h"
+#include "core/modules/serviceworker/client/ServiceWorker.h"
 #include "core/page/Window.h"
 #include "core/dom/Document.h"
 
@@ -29,9 +29,14 @@ namespace Starfish {
 
 DEFINE_EVENT_LISTENER(ServiceWorker, statechange);
 
+String* ServiceWorker::scriptURL() const
+{
+    return m_data->scriptURL;
+}
+
 String* ServiceWorker::state() const
 {
-    switch (m_serviceWorkerData->state()) {
+    switch (m_data->state) {
     case ServiceWorkerState::Installing:
         return String::createASCIIString("installing");
     case ServiceWorkerState::Installed:
@@ -50,6 +55,6 @@ ExecutionContext* ServiceWorker::executionContext()
 {
     return document()->executionContext();
 }
-}
+} // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

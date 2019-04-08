@@ -17,25 +17,29 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerJobClient__)
-#define __StarfishServiceWorkerJobClient__
+// FIXME: The type of dictionary needs to supports STARFISH_ENABLE** flag
+// RegistrationOptions is also built on release now.
+// #ifdef STARFISH_ENABLE_SERVICE_WORKER
+
+#include "StarfishConfig.h"
+#include "core/modules/serviceworker/client/RegistrationOptions.h"
 
 namespace Starfish {
 
-class ServiceWorkerJob;
-class ServiceWorkerRegistrationData;
+RegistrationOptions::RegistrationOptions()
+    : m_scope(String::emptyString)
+{
+}
 
-class ServiceWorkerJobClient {
-public:
-    virtual ~ServiceWorkerJobClient()
-    {
-    }
-    virtual void resolveJobPromise(
-        ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration) = 0;
+String* RegistrationOptions::scope() const
+{
+    return m_scope;
+}
 
-    virtual void scheduleJob(ServiceWorkerJob* job) = 0;
-};
+void RegistrationOptions::setScope(String* scope)
+{
+    m_scope = scope;
+}
+}
 
-} // namespace Starfish
-#endif
+// #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

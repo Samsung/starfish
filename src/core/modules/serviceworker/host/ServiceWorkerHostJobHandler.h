@@ -30,10 +30,26 @@ class ServiceWorkerData;
 class JobQueue;
 class ServiceWorkerRegistrationData;
 
+using ServiceWorkerRegistrationKey = String*;
+
+struct RegistrationIdentifier : public gc {
+    String* m_scope;
+    String* m_origin;
+};
+
+struct ServiceWorkerRegistrationKeyComparator {
+    bool operator()(const ServiceWorkerRegistrationKey& lhs,
+                    const ServiceWorkerRegistrationKey& rhs) const
+    {
+        return lhs < rhs;
+    }
+};
+
 class ServiceWorkerHostJobHandler : public gc {
 public:
     ServiceWorkerHostJobHandler(MessageLoop* messageLoop);
 
+    void scheduleJob(ServiceWorkerJob* job);
     void runJob(JobQueue* jobQueue);
     void finishJob(ServiceWorkerJob* job);
     void registerServiceWorker(ServiceWorkerJob* job);
@@ -46,10 +62,17 @@ public:
                                  const char* target, ServiceWorkerData* source);
     void resolveJobPromise(ServiceWorkerJob* job,
                            ServiceWorkerRegistrationData* registration);
+    ServiceWorkerRegistrationData* getRegistration(String* scope);
+    void setRegistration(String* scope,
+                         ServiceWorkerUpdateViaCache updateViaCacheMode);
 
 private:
     void queueTask(void (*fn)(size_t, void*), void* data);
     MessageLoop* m_messageLoop;
+    GCUnorderedMap<ServiceWorkerRegistrationKey, JobQueue*> m_jobQueueMap;
+    GCMap<ServiceWorkerRegistrationKey, ServiceWorkerRegistrationData*,
+          ServiceWorkerRegistrationKeyComparator>
+        m_registrationMap;
 };
 }
 
