@@ -244,8 +244,9 @@ public:
                            ->contentSecurityPolicy();
             auto resourceURL =
                 new ResourceURL(request->lastEffectiveURL().c_str());
-            auto f = [](SecurityPolicyViolationEvent* event, Window* window) {
-                window->document()->dispatchEventByUA(event);
+            auto f = [](SecurityPolicyViolationEvent* event,
+                        ExecutionContext* executionContext) {
+                executionContext->document()->dispatchEventByUA(event);
             };
 
             if (!csp->allowSource(CSPDirectives::ConnectSrc, resourceURL, f)) {

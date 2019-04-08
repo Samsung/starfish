@@ -20,41 +20,29 @@
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-#include "StarfishConfig.h"
+#include "StarfishBase.h"
+#include "core/util/String.h"
+#include "core/util/AtomicString.h"
+#include "core/util/QualifiedName.h"
 #include "Starfish.h"
 #include "PlatformIntegrationData.h"
-#include "core/page/Window.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/csp/ContentSecurityPolicyDirectiveList.h"
 #include "core/csp/ContentSecurityPolicySourceListDirective.h"
 #include "core/csp/SecurityPolicyViolationEvent.h"
 #include "core/util/Cryptographic.h"
-#include "core/page/WebView.h"
+#include "core/page/WebBase.h"
 
 namespace Starfish {
 
-ContentSecurityPolicy::ContentSecurityPolicy(Window* window)
-    : WindowHoldable(window)
+ContentSecurityPolicy::ContentSecurityPolicy(ExecutionContext* executionContext)
+    : m_executionContext(executionContext)
 {
-    window->scriptBindingInstance()
+    executionContext->scriptBindingInstance()
         ->scriptContext()
         ->setSecurityPolicyCheckCallback(
             ContentSecurityPolicy::checkUnsafeEvalCallback);
-}
-
-void* ContentSecurityPolicy::operator new(size_t size)
-{
-    STARFISH_ASSERT(size == sizeof(ContentSecurityPolicy));
-    static bool typeInited = false;
-    static GC_descr descr;
-    if (!typeInited) {
-        GC_word desc[GC_BITMAP_SIZE(ContentSecurityPolicy)] = { 0 };
-        ContentSecurityPolicy::fillGCDescriptor(desc);
-        descr = GC_make_descriptor(desc, GC_WORD_LEN(ContentSecurityPolicy));
-        typeInited = true;
-    }
-    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
 void ContentSecurityPolicy::copyFrom(ContentSecurityPolicy* source)
@@ -70,7 +58,7 @@ void ContentSecurityPolicy::didReceiveHeader(
     String* header, ContentSecurityPolicyHeaderType type,
     ContentSecurityPolicyHeaderSource source)
 {
-    if (window()->document()->webView()->getWebSecurityMode() ==
+    if (executionContext()->webBase()->getWebSecurityMode() ==
         LWE::WebSecurityMode::Disable) {
         return;
     }
@@ -187,27 +175,28 @@ void ContentSecurityPolicy::dispatchViolationEvent(
     String* name, String* blockedURI,
     SecurityPolicyViolationEventDelegator eventDelegator)
 {
-    String* eventType = window()
+    String* eventType = executionContext()
                             ->starfish()
                             ->staticStrings()
                             ->m_securitypolicyviolation.localName();
-    auto event = new SecurityPolicyViolationEvent(
-        window()->document()->executionContext(), eventType);
+    auto event =
+        new SecurityPolicyViolationEvent(executionContext(), eventType);
     event->setViolatedDirective(name);
     event->setBlockedURI(blockedURI);
 
     if (eventDelegator) {
-        eventDelegator(event, window());
+        eventDelegator(event, executionContext());
     } else {
-        window()->document()->dispatchEventIdleTimeByUA(event);
+        executionContext()->dispatchEventIdleTimeByUA(event);
     }
 }
 
 ScriptNullableValue ContentSecurityPolicy::checkUnsafeEvalCallback(
     ScriptExecutionState state, bool isEval)
 {
-    Document* document = fetchDocument(state->context());
-    ContentSecurityPolicy* csp = document->contentSecurityPolicy();
+    ExecutionContext* executionContext =
+        fetchExecutionContext(state->context());
+    ContentSecurityPolicy* csp = executionContext->contentSecurityPolicy();
     if (!csp->allowEval(CSPDirectives::ScriptSrc)) {
         if (isEval) {
             return ValueRef::create(

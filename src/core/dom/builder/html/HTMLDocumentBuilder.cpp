@@ -21,6 +21,7 @@
 #include "Starfish.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/page/BrowsingContext.h"
 #include "core/page/History.h"
 #include "core/page/Window.h"
@@ -195,20 +196,20 @@ public:
             STARFISH_LOG_WARN(
                 "Refused to display in iframe according to X-Frame-Options\n");
         }
-
+#if !defined(STARFISH_WEBWORKER_HOST)
         auto request = m_resource->resourceRequest();
         if (request->isRedirected()) {
             auto csp = browsingContext->document()->contentSecurityPolicy();
             auto resourceURL =
                 new ResourceURL(request->lastEffectiveURL().c_str());
-            auto f = [](SecurityPolicyViolationEvent* event, Window* window) {
-                auto parentBrowsingContext = window->document()
+            auto f = [](SecurityPolicyViolationEvent* event, ExecutionContext* executionContext) {
+                auto parentBrowsingContext = executionContext->document()
                                                  ->browsingContext()
                                                  ->parentBrowsingContext();
                 if (parentBrowsingContext) {
                     parentBrowsingContext->document()->dispatchEventByUA(event);
                 } else {
-                    window->document()->dispatchEventByUA(event);
+                    executionContext->document()->dispatchEventByUA(event);
                 }
             };
 
@@ -218,6 +219,7 @@ public:
                 browsingContext->sourceElement()->markContentDocumentDisabled();
             }
         }
+#endif
     }
 
     virtual void didLoadFailed()

@@ -32,6 +32,7 @@ class Document;
 class WebOrigin;
 class ResourceRequest;
 class ContentSecurityPolicy;
+class Event;
 
 class ExecutionContext : public gc {
 public:
@@ -68,6 +69,7 @@ public:
         return m_createdTick;
     }
 
+    Starfish* starfish() const;
     WebBase* webBase() const;
 
     ResourceURL* documentURI() const
@@ -100,6 +102,13 @@ public:
     size_t countPointersInRootSet(void* ptr);
 #endif
 
+    DEFINE_GETTER_SETTER(ContentSecurityPolicy*, contentSecurityPolicy,
+                         ContentSecurityPolicy)
+
+    void initContentSecurityPolicy(ContentSecurityPolicy* inheritedPolicy);
+
+    void dispatchEventIdleTimeByUA(Event* event);
+
 private:
     GlobalScope* const m_globalScope;
     void* m_documentOrWorkerGlobalScope;
@@ -113,6 +122,7 @@ private:
     GCUnorderedMap<void*, size_t> m_rootMap;
     String* m_characterSet;
     WebOrigin* m_webOrigin;
+    ContentSecurityPolicy* m_contentSecurityPolicy;
 
     static inline void fillGCDescriptor(GC_word* desc)
     {
@@ -126,6 +136,8 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_baseURL));
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_characterSet));
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_webOrigin));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(ExecutionContext, m_contentSecurityPolicy));
     }
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER

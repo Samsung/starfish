@@ -149,7 +149,7 @@ void BrowsingContext::open(ResourceURL* url, HistoryManagerAction type,
             m_window = Window::create(this, url, STARFISH_DEFAULT_IFRAME_WIDTH,
                                       STARFISH_DEFAULT_IFRAME_HEIGHT);
         }
-        m_window->document()->initContentSecurityPolicy(
+        m_window->document()->executionContext()->initContentSecurityPolicy(
             m_sourceElement->document()->contentSecurityPolicy());
     }
 

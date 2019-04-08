@@ -396,8 +396,6 @@ public:
     void init(ReferrerURL* referrerURL);
     void dispose();
 
-    void initContentSecurityPolicy(ContentSecurityPolicy* inheritedPolicy);
-
     Document* open(Document* responsibleDoc, String* type, String* replace);
     Window* open(String* url, String* name, String* features);
     bool openFunctionExplicitCalled()
@@ -544,10 +542,7 @@ public:
     MediaQueryListMatcher* mediaQueryListMatcher();
     void evalMediaQueryLists();
 
-    ContentSecurityPolicy* contentSecurityPolicy()
-    {
-        return m_contentSecurityPolicy;
-    }
+    ContentSecurityPolicy* contentSecurityPolicy();
 
     Event* createSimulatedMouseClickEvent();
     bool isElementInClickProgress(const Element* element) const;
@@ -682,7 +677,6 @@ protected:
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentLanguage));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_mediaQueryListMatcher));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_deferredScriptElements));
-        GC_set_bit(desc, GC_WORD_OFFSET(Document, m_contentSecurityPolicy));
         GC_set_bit(desc,
                    GC_WORD_OFFSET(Document, m_elementInClickProgressList));
         GC_set_bit(desc, GC_WORD_OFFSET(Document, m_nativeGradientCache));
@@ -742,7 +736,6 @@ protected:
 #ifdef STARFISH_TIZEN
     size_t m_tizenWidgetTransparentBackground;
 #endif
-    ContentSecurityPolicy* m_contentSecurityPolicy;
     GCVector<Element*> m_elementInClickProgressList;
     GCUnorderedMap<GradientDrawingInfo*, std::shared_ptr<NativeGradient>,
                    std::hash<GradientDrawingInfo*>,
