@@ -52,6 +52,11 @@ public:
                          float rotation, float startAngle, float endAngle,
                          bool anticlockwise = false) override;
 
+    CanvasPath* canvasPath()
+    {
+        return m_canvasPath;
+    }
+
 private:
     void initFromPath2DOrDOMString(Path2DOrDOMString& path);
 

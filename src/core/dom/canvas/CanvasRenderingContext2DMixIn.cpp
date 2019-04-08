@@ -457,12 +457,17 @@ void CanvasRenderingContext2DMixIn::fill(String* fillRule)
 
 void CanvasRenderingContext2DMixIn::fill(Path2D* path, String* fillRule)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    fill(path->canvasPath()->path(), fillRule);
 }
 
 void CanvasRenderingContext2DMixIn::stroke()
 {
     stroke(m_canvasPath->path());
+}
+
+void CanvasRenderingContext2DMixIn::stroke(Path2D* path)
+{
+    stroke(path->canvasPath()->path());
 }
 
 void CanvasRenderingContext2DMixIn::closePath()
