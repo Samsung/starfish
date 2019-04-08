@@ -358,8 +358,11 @@ public:
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
-
     virtual void clipPath()
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    virtual void clipPath(Path* path)
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
