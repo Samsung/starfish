@@ -44,6 +44,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <malloc.h>
+#include <signal.h>
 
 #ifdef STARFISH_ENABLE_TEST
 extern int g_testCompatibleMode;
@@ -269,6 +270,7 @@ int main(int argc, char* argv[])
     int x = 0, y = 0;
     float scaleFactor = 1;
     bool enableSecurity = true;
+    bool crashTest = false;
     LWE::TTSMode ttsMode = LWE::TTSMode::Default;
 
     for (int i = 2; i < argc; i++) {
@@ -334,6 +336,8 @@ int main(int argc, char* argv[])
             enableSecurity = false;
         } else if (strcmp(argv[i], "--tts-forced") == 0) {
             ttsMode = LWE::TTSMode::Forced;
+        } else if (strcmp(argv[i], "--crash-test") == 0) {
+            crashTest = true;
         }
     }
 
@@ -569,6 +573,23 @@ int main(int argc, char* argv[])
         },
         webView);
 #endif
+
+    if (crashTest) {
+        pthread_t t;
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        pthread_create(&t, &attr,
+                       [](void* data) -> void* {
+                           sleep(5);
+                           puts("raise SIGINT for crash test");
+                           puts(
+                               "if there is no crash until process exit, there "
+                               "is no problem");
+                           raise(SIGINT);
+                           return NULL;
+                       },
+                       nullptr);
+    }
 
 #if defined(PORT_WEBVIEW_BRIDGE_EFL)
     elm_run();
