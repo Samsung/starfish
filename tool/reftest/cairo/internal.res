@@ -352,3 +352,6 @@ test/cairo/internal-test/canvas/quadraticCurveTo.html
 test/cairo/internal-test/css/overflow/overflow-pseudo-element.html
 test/cairo/internal-test/iframe/iframe-hittest.html
 test/cairo/internal-test/canvas/transform.html
+test/cairo/internal-test/css/overflow/scroll-test.html
+test/cairo/internal-test/css/overflow/scroll-test-2.html
+test/cairo/internal-test/css/overflow/scroll-test-3.html

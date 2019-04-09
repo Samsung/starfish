@@ -121,6 +121,12 @@ LayoutLocation FrameBox::absolutePointIncludingScroll(FrameBox* top)
         }
         p = p->layoutParent();
     }
+
+    if (top->isFrameBlockBox()) {
+        l.setX(l.x() - top->asFrameBlockBox()->scrollLeft());
+        l.setY(l.y() - top->asFrameBlockBox()->scrollTop());
+    }
+
     return l;
 }
 

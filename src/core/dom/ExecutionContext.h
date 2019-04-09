@@ -134,6 +134,17 @@ private:
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_documentURI));
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_referrer));
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_baseURL));
+        GC_set_bit(desc,
+                   GC_WORD_OFFSET(ExecutionContext, m_activeResourceRequests));
+
+        // we should mark every word of m_rootMap
+        // because, we don't know that
+        // where pointer of std:pair<Key,Value>* is located in GCUnodrderedMap
+        // it depends on how std::unordered_map is implementated
+        for (size_t i = 0; i < sizeof(m_rootMap); i += sizeof(size_t)) {
+            GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_rootMap) +
+                                 (i / sizeof(size_t)));
+        }
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_characterSet));
         GC_set_bit(desc, GC_WORD_OFFSET(ExecutionContext, m_webOrigin));
         GC_set_bit(desc,

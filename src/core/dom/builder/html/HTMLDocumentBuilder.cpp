@@ -202,7 +202,8 @@ public:
             auto csp = browsingContext->document()->contentSecurityPolicy();
             auto resourceURL =
                 new ResourceURL(request->lastEffectiveURL().c_str());
-            auto f = [](SecurityPolicyViolationEvent* event, ExecutionContext* executionContext) {
+            auto f = [](SecurityPolicyViolationEvent* event,
+                        ExecutionContext* executionContext) {
                 auto parentBrowsingContext = executionContext->document()
                                                  ->browsingContext()
                                                  ->parentBrowsingContext();

@@ -349,7 +349,7 @@ protected:
 
             if (frame->isRootElement() && sc && sc->needsGraphicsBuffer()) {
                 LayoutRect r(0, 0, frame->node()->window()->scrollWidth(false),
-                             frame->node()->window()->scrollWidth(false));
+                             frame->node()->window()->scrollHeight(false));
 
                 notifyDirty(frame, sc, currentMatrix, r);
             }
@@ -388,6 +388,7 @@ protected:
                 auto pos = box->absolutePointIncludingScroll(frame);
                 childMatrix.preTranslate((float)pos.x(), (float)pos.y());
             }
+
             trackRepaintRegion(box, childMatrix);
         }
 
