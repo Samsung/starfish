@@ -174,7 +174,7 @@ size_t Timer::addAnimator(GlobalScope* globalScope,
                            uv_close((uv_handle_t*)handle, on_close_handle);
                        }
                    },
-                   0, 1);
+                   1, 1);
     m_animationHandler.insert(std::make_pair(id, ad));
     return id;
 }
