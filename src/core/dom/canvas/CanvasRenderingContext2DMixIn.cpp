@@ -148,7 +148,10 @@ void CanvasRenderingContext2DMixIn::initialize()
     m_globalAlpha = 1.0f;               // default 1.0
     setLineCap(CanvasLineCap::Butt);    // default "butt"
     setLineJoin(CanvasLineJoin::Miter); // default "miter"
-    setMiterLimit(10.0f);               // default 10
+    setMiterLimit(10.0f);
+
+    m_canvas->setColor(m_fillColor);
+    m_canvas->setStrokeColor(m_strokeColor);
 }
 
 void CanvasRenderingContext2DMixIn::finalize()
@@ -250,6 +253,8 @@ void CanvasRenderingContext2DMixIn::save()
 void CanvasRenderingContext2DMixIn::restore()
 {
     m_canvas->restore();
+    m_fillColor = m_canvas->color();
+    m_strokeColor = m_canvas->strokeColor();
     m_canvasPath->path()->setCTM(m_canvas->pathTransformMatrix());
 }
 

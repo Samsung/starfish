@@ -228,6 +228,8 @@ public:
 
     virtual void setColor(const Unit::Color& clr) = 0;
     virtual void setStrokeColor(const Unit::Color& clr) = 0;
+    virtual Unit::Color color() = 0;
+    virtual Unit::Color strokeColor() = 0;
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;

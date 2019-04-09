@@ -434,6 +434,16 @@ public:
         lastState().m_strokeColor = clr;
     }
 
+    virtual Unit::Color color()
+    {
+        return lastState().m_color;
+    }
+
+    virtual Unit::Color strokeColor()
+    {
+        return lastState().m_strokeColor;
+    }
+
     virtual void setVisible(bool visible)
     {
         lastState().m_visible = visible;
