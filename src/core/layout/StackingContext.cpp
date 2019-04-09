@@ -1703,14 +1703,9 @@ void StackingContext::fillGraphicsBufferContents(
             FrameBlockBox* document =
                 m_owner->layoutParent()->asFrameBlockBox();
             if (!needsGraphicsBuffer()) {
-                m_owner->node()
-                    ->document()
-                    ->browsingContext()
-                    ->window()
-                    ->scrolling()
-                    ->paintScrollbars(canvas, document,
-                                      document->appliedOverflowX(),
-                                      document->appliedOverflowY());
+                Scrolling::paintScrollbars<Canvas*>(
+                    canvas, document, document->appliedOverflowX(),
+                    document->appliedOverflowY());
             }
             canvas->restore();
         }
@@ -2516,14 +2511,9 @@ void StackingContext::paintStackingContext(Canvas* canvas,
             FrameBlockBox* document =
                 m_owner->layoutParent()->asFrameBlockBox();
             if (!needsGraphicsBuffer()) {
-                m_owner->node()
-                    ->document()
-                    ->browsingContext()
-                    ->window()
-                    ->scrolling()
-                    ->paintScrollbars(canvas, document,
-                                      document->appliedOverflowX(),
-                                      document->appliedOverflowY());
+                Scrolling::paintScrollbars<Canvas*>(
+                    canvas, document, document->appliedOverflowX(),
+                    document->appliedOverflowY());
             }
             canvas->restore();
         }
@@ -2753,7 +2743,7 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
                         m_owner->borderTop() + m_owner->paddingTop());
                     FrameBlockBox* mainFrame =
                         bc->document()->frame()->asFrameBlockBox();
-                    bc->window()->scrolling()->paintScrollbars(
+                    Scrolling::paintScrollbars<Compositor*>(
                         compositor, mainFrame, mainFrame->appliedOverflowX(),
                         mainFrame->appliedOverflowY());
                 }

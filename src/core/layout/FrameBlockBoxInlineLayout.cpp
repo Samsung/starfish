@@ -1674,19 +1674,10 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                 if (overflowApplied) {
                     canvas->restore();
                     if (childBox->node() && childBox->node()->isElement()) {
-                        if (childBox->node()->asElement()->hasRareMembers() &&
-                            childBox->node()
-                                ->asElement()
-                                ->rareMembers()
-                                ->m_scrolling) {
-                            childBox->node()
-                                ->asElement()
-                                ->rareMembers()
-                                ->m_scrolling->paintScrollbars(
-                                    canvas, childBox->asFrameBlockBox(),
-                                    childBox->appliedOverflowX(),
-                                    childBox->appliedOverflowY());
-                        }
+                        Scrolling::paintScrollbars<Canvas*>(
+                            canvas, childBox->asFrameBlockBox(),
+                            childBox->appliedOverflowX(),
+                            childBox->appliedOverflowY());
                     }
                 }
 
@@ -4882,15 +4873,8 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
 
     if (overflowApplied && ctx.m_paintingStage == PaintingNormalFlowInline) {
         if (node() && node()->isElement()) {
-            if (node()->asElement()->hasRareMembers() &&
-                node()->asElement()->rareMembers()->m_scrolling) {
-                node()
-                    ->asElement()
-                    ->rareMembers()
-                    ->m_scrolling->paintScrollbars(ctx.m_canvas, this,
-                                                   appliedOverflowX(),
-                                                   appliedOverflowY());
-            }
+            Scrolling::paintScrollbars<Canvas*>(
+                ctx.m_canvas, this, appliedOverflowX(), appliedOverflowY());
         }
     }
 

@@ -696,10 +696,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (overflowX >= HiddenOverflow) {
         LayoutUnit* u;
         if (node()->isElement()) {
-            if (!node()->asElement()->ensureRareElementMembers()->m_scrolling) {
-                node()->asElement()->ensureRareElementMembers()->m_scrolling =
-                    new Scrolling(node()->asElement());
-            }
             u = &node()->asElement()->ensureRareElementMembers()->m_scrollLeft;
         } else {
             STARFISH_ASSERT(node()->isDocument());
@@ -721,10 +717,6 @@ void FrameBlockBox::layout(LayoutContext& ctx,
     if (overflowY >= HiddenOverflow) {
         LayoutUnit* u;
         if (node()->isElement()) {
-            if (!node()->asElement()->ensureRareElementMembers()->m_scrolling) {
-                node()->asElement()->ensureRareElementMembers()->m_scrolling =
-                    new Scrolling(node()->asElement());
-            }
             u = &node()->asElement()->ensureRareElementMembers()->m_scrollTop;
         } else {
             STARFISH_ASSERT(node()->isDocument());
