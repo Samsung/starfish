@@ -27,19 +27,19 @@ class GlobalScope;
 class ServiceWorkerJob;
 class ExecutionContext;
 
-enum class ServiceWorkerUpdateViaCache {
+enum class ServiceWorkerUpdateViaCache : unsigned {
     Imports,
     All,
     None,
 };
 
-enum class ServiceWorkerJobType {
+enum class ServiceWorkerJobType : unsigned {
     Register,
     Unregister,
     Update,
 };
 
-enum class WorkerType {
+enum class WorkerType : unsigned {
     Classic,
     Module,
 };
@@ -57,6 +57,6 @@ using ServiceWorkerContextId = Id<GlobalScope>;
 #define IPC_PROTOCOL "inproc://"
 #define IPC_ADDRESS_PREFIX "sw"
 #endif
-}
+} // namespace Starfish
 
 #endif

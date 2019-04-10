@@ -21,16 +21,23 @@
 
 #include "core/dom/ExecutionContext.h"
 #include "core/util/Id.h"
+#include "core/util/Archiver.h"
+#include "core/modules/serviceworker/MessageParam.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
 
-ServiceWorkerJob::ServiceWorkerJob()
+ServiceWorkerJob::ServiceWorkerJob(ServiceWorkerJobData* data)
 {
-    m_data = new ServiceWorkerJobData();
+    if (data) {
+        m_data = data;
+    } else {
+        m_data = new ServiceWorkerJobData();
+    }
 }
 
 ServiceWorkerRegistrationKey ServiceWorkerJob::registrationKey()
@@ -39,6 +46,6 @@ ServiceWorkerRegistrationKey ServiceWorkerJob::registrationKey()
     auto key = m_data->scopeURL->concat(m_data->scriptURL);
     return key;
 }
-}
+} // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

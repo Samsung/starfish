@@ -31,11 +31,16 @@
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 
 #include "platform/process/base/ProcessType.h"
-#include "core/modules/threading/IRunnable.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
+#include "core/modules/serviceworker/MessageParam.h"
+#include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
+
+#include "core/util/Archiver.h"
+#include "core/modules/serviceworker/MessageParam.h"
+#include "core/modules/serviceworker/Message.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -58,6 +63,18 @@ void ServiceWorkerHostConnection::resolveJobPromise(
 
 void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
 {
+    STARFISH_ASSERT(m_client);
+
+    // unmarshalling
+    JsonReader reader(data);
+    Message msg;
+    msg.archive(reader);
+
+    if (msg.name == "scheduleJob") {
+        auto jobData = static_cast<ServiceWorkerJobData*>(msg.params[0]);
+        auto job = new ServiceWorkerJob(jobData);
+        m_client->scheduleJob(job);
+    }
 }
 
 } // namespace Starfish

@@ -31,26 +31,12 @@ class ServiceWorkerJob;
 class ServiceWorkerHostProcessInterface;
 class ServiceWorkerClientProcessInterface;
 
-struct ServiceWorkerJobData : public gc {
-    ServiceWorkerJobId id;
-    ServiceWorkerContextId contextId;
-    ServiceWorkerJobType type{ ServiceWorkerJobType::Register };
-    String* scopeURL{ nullptr };
-    String* scriptURL{ nullptr };
-    String* referrerURL{ nullptr };
-    String* origin{ nullptr };
-    WorkerType workerType{ WorkerType::Classic };
-    ServiceWorkerUpdateViaCache updateViaCacheMode{
-        ServiceWorkerUpdateViaCache::None
-    };
-};
-
 class Job : public gc {
 };
 
 class ServiceWorkerJob : public Job {
 public:
-    ServiceWorkerJob();
+    ServiceWorkerJob(ServiceWorkerJobData* data = nullptr);
     ServiceWorkerRegistrationKey registrationKey();
 
     DEFINE_GETTER_SETTER(Promise*, promise, Promise);

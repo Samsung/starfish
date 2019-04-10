@@ -31,12 +31,12 @@
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
-#include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/MessageParam.h"
+#include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 
 #include "platform/process/base/ProcessType.h"
-#include "core/modules/threading/IRunnable.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
 #include "core/page/Navigator.h"
@@ -45,6 +45,10 @@
 #include "core/dom/Document.h"
 #include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
+
+#include "core/util/Archiver.h"
+#include "core/modules/serviceworker/MessageParam.h"
+#include "core/modules/serviceworker/Message.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -58,12 +62,16 @@ void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
 {
     job->setClientConnection(this);
 
+    // marshalling
+    JsonWriter writer;
+    Message msg("scheduleJob");
+    msg.addParam(job->data());
+    msg.archive(writer);
+
     // TODO:
-    // 1. marshalling job and pass it through `Connection::onReceived`
-    // 2. unmarshalling job
     // 3. replace calling the function with real sockets communication
     auto hostConnection = ServiceWorkerHostProcess::getInstance()->connection();
-    hostConnection->client()->scheduleJob(job);
+    hostConnection->onReceived(nullptr, writer.GetString());
 }
 
 void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
