@@ -165,12 +165,12 @@ section are supported.
 |  | attribute | lineJoin | Determines the shape used to join two line segments where they meet. |
 |  | attribute | miterLimit | Sets/Gets the miter limit ratio. |
 | [CanvasTransform](https://html.spec.whatwg.org/multipage/canvas.html#canvastransform) | interface mixin | CanvasTransform |  |
-|  | attribute | scale | Add the scaling transformation to the current transformation matrix. |
-|  | attribute | rotate | Add the rotation transformation to the current transformation matrix. |
-|  | attribute | translate | Add the translation transformation to the current transformation matrix. |
-|  | attribute | transform | Replace the current transformation matrix with the result of multiplying the current transformation matrix and paramter. |
-|  | attribute | setTransform | Replace the current transformation matrix with parameter. |
-|  | attribute | resetTransform | Reset the current transformation matrix to the identity matrix. |
+|  | method | void scale(unrestricted double x, unrestricted double y) | Add the scaling transformation to the current transformation matrix. |
+|  | method | void rotate(unrestricted double angle) | Add the rotation transformation to the current transformation matrix. |
+|  | method | void translate(unrestricted double x, unrestricted double y) | Add the translation transformation to the current transformation matrix. |
+|  | method | void transform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f) | Replace the current transformation matrix with the result of multiplying the current transformation matrix and paramter. |
+|  | method | void setTransform(unrestricted double a, unrestricted double b, unrestricted double c, unrestricted double d, unrestricted double e, unrestricted double f) | Replace the current transformation matrix with parameter. |
+|  | method | void resetTransform() | Reset the current transformation matrix to the identity matrix. |
 | [CanvasRect](https://html.spec.whatwg.org/multipage/canvas.html#canvasrect) | interface mixin | CanvasRect |  |
 |  | method | void clearRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Erases the pixels in a rectangular area by setting them to transparent black. |
 |  | method | void fillRect(unrestricted double x, unrestricted double y, unrestricted double w, unrestricted double h) | Draws a rectangle that is filled according to the current fillStyle. |
