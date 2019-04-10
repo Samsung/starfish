@@ -1,7 +1,5 @@
 // https://html.spec.whatwg.org/multipage/canvas.html#canvasdrawpath
 
-enum CanvasFillRule { "nonzero", "evenodd" };
-
 // mixin
 [STARFISH_ENABLE_CANVAS, 
  PartialInterface,
@@ -15,8 +13,8 @@ interface CanvasDrawPath {
   void stroke(Path2D path);
   void clip(optional CanvasFillRule fillRule = "nonzero");
   void clip(Path2D path, optional CanvasFillRule fillRule = "nonzero");
-  [Unimplemented] boolean isPointInPath(unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero");
-  [Unimplemented] boolean isPointInPath(Path2D path, unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero");
-  [Unimplemented] boolean isPointInStroke(unrestricted double x, unrestricted double y);
-  [Unimplemented] boolean isPointInStroke(Path2D path, unrestricted double x, unrestricted double y);
+  boolean isPointInPath(unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero");
+  boolean isPointInPath(Path2D path, unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero");
+  boolean isPointInStroke(unrestricted double x, unrestricted double y);
+  boolean isPointInStroke(Path2D path, unrestricted double x, unrestricted double y);
 };

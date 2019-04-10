@@ -57,6 +57,7 @@
 #include "Starfish.h"
 #include "SkPoint.h"
 #include "SkPath.h"
+#include "core/dom/canvas/CanvasFillRule.h"
 #include "core/modules/canvas/Path.h"
 #include "platform/canvas/PathSkia.h"
 
@@ -120,6 +121,23 @@ void PathSkia::copy(Path* src)
 {
     clear();
     *m_skiaPath = *(((PathSkia*)src)->skiaPath());
+}
+
+bool PathSkia::isPointInPath(float x, float y, CanvasFillRule fillRule)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return false;
+}
+
+bool PathSkia::isPointInStroke(float x, float y)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    return false;
+}
+
+void PathSkia::applyPathDrawingStyles(Canvas* canvas)
+{
+    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
 void PathSkia::closePath()

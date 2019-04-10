@@ -32,8 +32,8 @@ class PlatformWindow;
 class GradientDrawingInfo;
 class NativeGradient;
 class Path;
-enum class CanvasLineCap;
-enum class CanvasLineJoin;
+enum class CanvasLineCap : int;
+enum class CanvasLineJoin : int;
 
 class CanvasState {
 public:

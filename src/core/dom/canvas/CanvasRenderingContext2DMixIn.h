@@ -35,10 +35,9 @@ class DOMStringOrCanvasGradientOrCanvasPattern;
 class ImageData;
 class ExecutionContext;
 class HTMLCanvasElement;
-enum class CanvasLineCap;
-enum class CanvasLineJoin;
 
-enum class CanvasFillRule { Invalid, NonZero, EvenOdd };
+enum class CanvasLineCap : int;
+enum class CanvasLineJoin : int;
 
 class CanvasRenderingContext2DMixIn : public CanvasRenderingContext,
                                       public CanvasPathInterfaceMixIn {
@@ -113,6 +112,10 @@ public:
     void stroke(Path2D* path);
     void clip(String* fillRule);
     void clip(Path2D* path, String* fillRule);
+    bool isPointInPath(float x, float y, String* fillRule);
+    bool isPointInPath(Path2D* path, float x, float y, String* fillRule);
+    bool isPointInStroke(float x, float y);
+    bool isPointInStroke(Path2D* path, float x, float y);
 
     // CanvasPathInterfaceMixIn methods
     virtual void closePath() override;
@@ -195,6 +198,11 @@ private:
     void fill(Path* path, String* fillRule);
     void stroke(Path* path);
     void clip(Path* path, String* fillRule);
+    bool isPointInPath(Path* path, float x, float y, String* fillRule);
+    bool isPointInStroke(Path* path, float x, float y);
+    void getPointsUnaffectedByCurrentTransformation(const float& x,
+                                                    const float& y, float& ux,
+                                                    float& uy);
     void setLineCap(CanvasLineCap lineCap);
     void setLineJoin(CanvasLineJoin lineJoin);
     void transform(float a, float b, float c, float d, float e, float f,

@@ -17,10 +17,21 @@
  *  USA
  */
 
-#ifndef __StarfishCanvasLineCap__
-#define __StarfishCanvasLineCap__
+#if defined(PORT_CANVAS_BACKEND_CAIRO)
+#ifndef __StarfishCanvasCairoUtils__
+#define __StarfishCanvasCairoUtils__
 
 namespace Starfish {
-enum class CanvasLineCap : int { Butt, Round, Square };
+enum class CanvasLineCap : int;
+enum class CanvasLineJoin : int;
+
+namespace CanvasCairoUtils {
+    CanvasLineCap cairoLineCapToCavansLineCap(const cairo_line_cap_t& cap);
+    cairo_line_cap_t cavansLineCapToCairoLineCap(const CanvasLineCap& cap);
+    CanvasLineJoin cairoLineJoinToCanvasLineJoin(const cairo_line_join_t& join);
+    cairo_line_join_t canvasLineJoinToCairoLineJoin(const CanvasLineJoin& join);
 }
+}
+
+#endif
 #endif

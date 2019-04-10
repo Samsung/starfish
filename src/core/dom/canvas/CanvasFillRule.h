@@ -17,10 +17,10 @@
  *  USA
  */
 
-#ifndef __StarfishCanvasLineCap__
-#define __StarfishCanvasLineCap__
+#ifndef __StarfishCanvasFillRule__
+#define __StarfishCanvasFillRule__
 
 namespace Starfish {
-enum class CanvasLineCap : int { Butt, Round, Square };
+enum class CanvasFillRule { NonZero, EvenOdd };
 }
 #endif

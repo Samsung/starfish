@@ -48,8 +48,14 @@
 #if defined(PORT_CANVAS_BACKEND_CAIRO)
 
 #include "Starfish.h"
+#include "core/dom/canvas/CanvasFillRule.h"
 #include "core/modules/canvas/Path.h"
+
+#include "core/style/Style.h"
+#include "core/modules/canvas/Canvas.h"
+
 #include <cairo.h>
+#include "platform/canvas/CanvasCairoUtils.h"
 #include "platform/canvas/PathCairo.h"
 
 namespace Starfish {
@@ -115,6 +121,41 @@ void PathCairo::copy(Path* src)
     auto p = cairo_copy_path(((PathCairo*)src)->context());
     cairo_append_path(m_cairoContext, p);
     cairo_path_destroy(p);
+}
+
+bool PathCairo::isPointInPath(float x, float y, CanvasFillRule fillRule)
+{
+    cairo_fill_rule_t backup = cairo_get_fill_rule(m_cairoContext);
+    cairo_fill_rule_t rule;
+
+    if (fillRule == CanvasFillRule::EvenOdd) {
+        rule = cairo_fill_rule_t::CAIRO_FILL_RULE_EVEN_ODD;
+    } else {
+        rule = cairo_fill_rule_t::CAIRO_FILL_RULE_WINDING;
+    }
+
+    cairo_set_fill_rule(m_cairoContext, rule);
+    bool ret = cairo_in_fill(m_cairoContext, x, y);
+    cairo_set_fill_rule(m_cairoContext, backup);
+
+    return ret;
+}
+
+bool PathCairo::isPointInStroke(float x, float y)
+{
+    return cairo_in_stroke(m_cairoContext, x, y);
+}
+
+void PathCairo::applyPathDrawingStyles(Canvas* canvas)
+{
+    cairo_set_line_width(m_cairoContext, canvas->lineWidth());
+    cairo_set_line_cap(
+        m_cairoContext,
+        CanvasCairoUtils::cavansLineCapToCairoLineCap(canvas->lineCap()));
+    cairo_set_line_join(
+        m_cairoContext,
+        CanvasCairoUtils::canvasLineJoinToCairoLineJoin(canvas->lineJoine()));
+    cairo_set_miter_limit(m_cairoContext, canvas->miterLimit());
 }
 
 void PathCairo::closePath()

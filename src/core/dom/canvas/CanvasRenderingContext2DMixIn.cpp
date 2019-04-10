@@ -25,6 +25,7 @@
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"
+#include "core/dom/canvas/CanvasFillRule.h"
 #include "core/dom/canvas/CanvasLineCap.h"
 #include "core/dom/canvas/CanvasLineJoin.h"
 #include "core/modules/canvas/Canvas.h"
@@ -506,6 +507,29 @@ void CanvasRenderingContext2DMixIn::clip(Path2D* path, String* fillRule)
     clip(path->canvasPath()->path(), fillRule);
 }
 
+bool CanvasRenderingContext2DMixIn::isPointInPath(float x, float y,
+                                                  String* fillRule)
+{
+    return isPointInPath(m_canvasPath->path(), x, y, fillRule);
+}
+
+bool CanvasRenderingContext2DMixIn::isPointInPath(Path2D* path, float x,
+                                                  float y, String* fillRule)
+{
+    return isPointInPath(path->canvasPath()->path(), x, y, fillRule);
+}
+
+bool CanvasRenderingContext2DMixIn::isPointInStroke(float x, float y)
+{
+    return isPointInStroke(m_canvasPath->path(), x, y);
+}
+
+bool CanvasRenderingContext2DMixIn::isPointInStroke(Path2D* path, float x,
+                                                    float y)
+{
+    return isPointInStroke(path->canvasPath()->path(), x, y);
+}
+
 void CanvasRenderingContext2DMixIn::closePath()
 {
     m_canvasPath->closePath();
@@ -753,6 +777,45 @@ void CanvasRenderingContext2DMixIn::clip(Path* path, String* fillRule)
         }
         m_canvas->clipPath(path);
     }
+}
+
+void CanvasRenderingContext2DMixIn::getPointsUnaffectedByCurrentTransformation(
+    const float& x, const float& y, float& ux, float& uy)
+{
+    SkMatrix matrix;
+    m_canvas->currentTransformMatrix().invert(&matrix);
+
+    SkPoint src;
+    src.set(SkFloatToScalar(x), SkFloatToScalar(y));
+    matrix.mapPoints(&src, 1);
+    ux = SkScalarToFloat(src.x());
+    uy = SkScalarToFloat(src.y());
+}
+
+bool CanvasRenderingContext2DMixIn::isPointInPath(Path* path, float x, float y,
+                                                  String* fillRule)
+{
+    if (isInfOrNan(x) || isInfOrNan(y)) {
+        return false;
+    }
+
+    auto rule = stringToCanvasFillRule(fillRule);
+    float xx, yy;
+    getPointsUnaffectedByCurrentTransformation(x, y, xx, yy);
+    return path->isPointInPath(xx, yy, rule);
+}
+
+bool CanvasRenderingContext2DMixIn::isPointInStroke(Path* path, float x,
+                                                    float y)
+{
+    if (isInfOrNan(x) || isInfOrNan(y)) {
+        return false;
+    }
+
+    float xx, yy;
+    getPointsUnaffectedByCurrentTransformation(x, y, xx, yy);
+    path->applyPathDrawingStyles(m_canvas);
+    return path->isPointInStroke(xx, yy);
 }
 }
 

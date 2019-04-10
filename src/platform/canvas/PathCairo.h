@@ -23,6 +23,7 @@
 namespace Starfish {
 
 class Path;
+enum class CanvasFillRule;
 
 class PathCairo : public Path {
 public:
@@ -40,6 +41,10 @@ public:
     virtual bool isEmpty() override;
     virtual void currentPoint(float& x, float& y) override;
     virtual void copy(Path* src) override;
+    virtual bool isPointInPath(float x, float y,
+                               CanvasFillRule fillRule) override;
+    virtual bool isPointInStroke(float x, float y) override;
+    virtual void applyPathDrawingStyles(Canvas* canvas) override;
 
     // For CanvasPath
     virtual void closePath() override;
