@@ -153,6 +153,7 @@ void CanvasRenderingContext2DMixIn::initialize()
 
     m_canvas->setColor(m_fillColor);
     m_canvas->setStrokeColor(m_strokeColor);
+    m_canvas->setGlobalAlpha(m_globalAlpha);
 }
 
 void CanvasRenderingContext2DMixIn::finalize()
@@ -256,6 +257,7 @@ void CanvasRenderingContext2DMixIn::restore()
     m_canvas->restore();
     m_fillColor = m_canvas->color();
     m_strokeColor = m_canvas->strokeColor();
+    m_globalAlpha = m_canvas->globalAlpha();
     m_canvasPath->path()->setCTM(m_canvas->pathTransformMatrix());
 }
 
@@ -346,11 +348,12 @@ float CanvasRenderingContext2DMixIn::globalAlpha()
 
 void CanvasRenderingContext2DMixIn::setGlobalAlpha(float value)
 {
-    if (value < .0f || value > 1.f) {
+    if (isInfOrNan(value) || value < .0f || value > 1.f) {
         return;
     }
 
     m_globalAlpha = value;
+    m_canvas->setGlobalAlpha(m_globalAlpha);
 }
 
 String* CanvasRenderingContext2DMixIn::globalCompositeOperation()
@@ -387,8 +390,7 @@ void CanvasRenderingContext2DMixIn::setFillStyle(
                     NamedColor::namedColorToColor(pair.namedColorValue());
             }
             m_canvas->setColor(Unit::Color(m_fillColor.r(), m_fillColor.g(),
-                                           m_fillColor.b(),
-                                           m_fillColor.a() * m_globalAlpha));
+                                           m_fillColor.b(), m_fillColor.a()));
         }
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -418,9 +420,9 @@ void CanvasRenderingContext2DMixIn::setStrokeStyle(
                 m_strokeColor =
                     NamedColor::namedColorToColor(pair.namedColorValue());
             }
-            m_canvas->setStrokeColor(Unit::Color(
-                m_strokeColor.r(), m_strokeColor.g(), m_strokeColor.b(),
-                m_strokeColor.a() * m_globalAlpha));
+            m_canvas->setStrokeColor(
+                Unit::Color(m_strokeColor.r(), m_strokeColor.g(),
+                            m_strokeColor.b(), m_strokeColor.a()));
         }
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -462,6 +464,10 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
     }
 
     m_ownerHTMLCanvasElement->setNeedsPainting();
+    Unit::Color color =
+        Unit::Color(m_fillColor.r(), m_fillColor.g(), m_fillColor.b(),
+                    m_fillColor.a() * m_globalAlpha);
+    m_canvas->setColor(color);
     m_canvas->drawRect(Unit::Rect(x, y, w, h));
 }
 

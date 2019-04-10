@@ -38,22 +38,24 @@ enum class CanvasLineJoin : int;
 class CanvasState {
 public:
     Unit::Color m_color;
-    float m_opacity;
+    float m_layerOpacity;
     Font* m_font;
     TextDecorationData m_textDecorationData;
     Unit::Color m_strokeColor;
     SkMatrix m_pathTM;
+    float m_globalAlpha;
 
     bool m_visible;
     bool m_hasNonInvertableCTM;
 
     CanvasState()
     {
-        m_opacity = 1;
+        m_layerOpacity = 1;
         m_font = nullptr;
         m_visible = true;
         m_hasNonInvertableCTM = false;
         m_pathTM.reset();
+        m_globalAlpha = 1;
     }
 };
 
@@ -228,8 +230,10 @@ public:
 
     virtual void setColor(const Unit::Color& clr) = 0;
     virtual void setStrokeColor(const Unit::Color& clr) = 0;
+    virtual void setGlobalAlpha(float c) = 0;
     virtual Unit::Color color() = 0;
     virtual Unit::Color strokeColor() = 0;
+    virtual float globalAlpha() = 0;
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;

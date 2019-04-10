@@ -239,13 +239,14 @@ public:
             auto& lastState = m_state.back();
             state.m_color = lastState.m_color;
             state.m_strokeColor = lastState.m_strokeColor;
-            state.m_opacity = lastState.m_opacity;
+            state.m_layerOpacity = lastState.m_layerOpacity;
             state.m_font = lastState.m_font;
             state.m_visible = lastState.m_visible;
             state.m_textDecorationData = lastState.m_textDecorationData;
             state.m_fillType = lastState.m_fillType;
             state.m_hasNonInvertableCTM = lastState.m_hasNonInvertableCTM;
             state.m_pathTM = lastState.m_pathTM;
+            state.m_globalAlpha = lastState.m_globalAlpha;
         }
         m_state.push_back(state);
         m_canvas->save();
@@ -408,6 +409,11 @@ public:
         lastState().m_strokeColor = clr;
     }
 
+    virtual void setGlobalAlpha(float c)
+    {
+        lastState().m_globalAlpha = c;
+    }
+
     virtual Unit::Color color()
     {
         return lastState().m_color;
@@ -418,11 +424,16 @@ public:
         return lastState().m_strokeColor;
     }
 
+    virtual float globalAlpha()
+    {
+        return lastState().m_globalAlpha;
+    }
+
     virtual void beginOpacityLayer(float c)
     {
         INSTALL_PROFILE_TIMER("CanvasSkia::beginOpacityLayer");
         save();
-        lastState().m_opacity = c;
+        lastState().m_layerOpacity = c;
         m_canvas->saveLayerAlpha(nullptr,
                                  ((uint8_t)(255.0f * CLAMP(c, 0.0, 1.0))));
     }

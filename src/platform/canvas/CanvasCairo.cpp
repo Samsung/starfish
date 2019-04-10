@@ -265,12 +265,13 @@ public:
             auto& lastState = m_state.back();
             state.m_color = lastState.m_color;
             state.m_strokeColor = lastState.m_strokeColor;
-            state.m_opacity = lastState.m_opacity;
+            state.m_layerOpacity = lastState.m_layerOpacity;
             state.m_font = lastState.m_font;
             state.m_visible = lastState.m_visible;
             state.m_textDecorationData = lastState.m_textDecorationData;
             state.m_hasNonInvertableCTM = lastState.m_hasNonInvertableCTM;
             state.m_pathTM = lastState.m_pathTM;
+            state.m_globalAlpha = lastState.m_globalAlpha;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
@@ -319,7 +320,7 @@ public:
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::beginOpacityLayer");
         save();
-        lastState().m_opacity = c;
+        lastState().m_layerOpacity = c;
         cairo_push_group(m_canvas);
     }
 
@@ -327,7 +328,7 @@ public:
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::endOpacityLayer");
         cairo_pop_group_to_source(m_canvas);
-        cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
+        cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
         restore();
     }
 
@@ -435,6 +436,11 @@ public:
         lastState().m_strokeColor = clr;
     }
 
+    virtual void setGlobalAlpha(float c)
+    {
+        lastState().m_globalAlpha = c;
+    }
+
     virtual Unit::Color color()
     {
         return lastState().m_color;
@@ -443,6 +449,11 @@ public:
     virtual Unit::Color strokeColor()
     {
         return lastState().m_strokeColor;
+    }
+
+    virtual float globalAlpha()
+    {
+        return lastState().m_globalAlpha;
     }
 
     virtual void setVisible(bool visible)
@@ -645,9 +656,9 @@ public:
 
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
 
-        if (lastState().m_opacity < 1) {
+        if (lastState().m_layerOpacity < 1) {
             cairo_clip(m_canvas);
-            cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
+            cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
         } else {
             cairo_fill(m_canvas);
         }
@@ -788,9 +799,9 @@ public:
 
             cairo_rectangle(m_canvas, 0.0, 0.0, ww, hh);
 
-            if (lastState().m_opacity < 1) {
+            if (lastState().m_layerOpacity < 1) {
                 cairo_clip(m_canvas);
-                cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
+                cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
             } else {
                 cairo_fill(m_canvas);
             }
@@ -859,9 +870,9 @@ public:
 
             cairo_rectangle(m_canvas, 0, 0, ww, hh);
 
-            if (lastState().m_opacity < 1) {
+            if (lastState().m_layerOpacity < 1) {
                 cairo_clip(m_canvas);
-                cairo_paint_with_alpha(m_canvas, lastState().m_opacity);
+                cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
             } else {
                 cairo_fill(m_canvas);
             }
