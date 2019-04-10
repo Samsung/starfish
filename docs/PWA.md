@@ -54,3 +54,7 @@ AAA:AAA(ExecutionContext* executionContext)
 {
 }
 ```
+
+## Class diagram related to ServiceWorker Client
+
+![](./resources/pwa_sw_client_classdiagram.png)
