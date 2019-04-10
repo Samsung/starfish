@@ -66,6 +66,7 @@
 #include "platform/event/PlatformKeyEventData.h"
 #include "platform/loader/ResourceLoader.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/storage/Storage.h"
 #include "core/storage/StorageNamespace.h"
 #include "browser/storage/WebStorageNamespaceProvider.h"
@@ -1614,6 +1615,7 @@ void WebView::dispatchTouchEvent(TouchEventKind kind, TouchData* touches,
         if (kind == TouchEventKind::TouchEventEnd) {
             for (size_t i = 0; i < m_globalPointingEventListener.size(); i++) {
                 m_globalPointingEventListener[i]
+                    ->executionContext()
                     ->document()
                     ->browsingContext()
                     ->releaseActiveNode();
@@ -1661,6 +1663,7 @@ void WebView::dispatchMouseEvent(MouseEventKind kind, MouseData data)
         if (kind == MouseEventKind::MouseEventUp) {
             for (size_t i = 0; i < m_globalPointingEventListener.size(); i++) {
                 m_globalPointingEventListener[i]
+                    ->executionContext()
                     ->document()
                     ->browsingContext()
                     ->releaseActiveNode();
@@ -1706,8 +1709,10 @@ void WebView::addGlobalPointingEventInterceptListener(EventTarget* node)
                         m_lastMouseMovePoint.x(), m_lastMouseMovePoint.y(), 0);
         mdata.setDefaultPrevented();
 
-        node->document()->browsingContext()->dispatchMouseEvent(
-            MouseEventKind::MouseEventUp, mdata);
+        node->executionContext()
+            ->document()
+            ->browsingContext()
+            ->dispatchMouseEvent(MouseEventKind::MouseEventUp, mdata);
     }
 
     auto iter = std::find(m_globalPointingEventListener.begin(),

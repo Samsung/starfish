@@ -204,6 +204,7 @@ public:
 
     Starfish* starfish() const;
     StaticStrings* staticStrings() const;
+    WebView* webView() const;
 
     // https://html.spec.whatwg.org/multipage/browsers.html#dom-parent
     Window* parent();
@@ -461,6 +462,7 @@ private:
 
     BrowsingContext* m_browsingContext;
     ScriptBindingInstance* m_scriptBindingInstance;
+    Document* m_document;
     History* m_history;
     Navigator* m_navigator;
     Location* m_location;

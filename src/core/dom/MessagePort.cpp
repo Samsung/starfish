@@ -26,13 +26,13 @@
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Serializer.h"
 #include "core/page/WebView.h"
-#include "core/page/Window.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 
 namespace Starfish {
 
-MessagePort::MessagePort(Document* document)
-    : EventTarget(document)
+MessagePort::MessagePort(ExecutionContext* executionContext)
+    : EventTarget()
+    , m_executionContext(executionContext)
     , m_entangledPort(nullptr)
     , m_hasBeenShipped(false)
     , m_portMessageQueue(new PortMessageQueue())
@@ -60,7 +60,7 @@ void MessagePort::transferReceive(TransferedData* transfered)
 
 ExecutionContext* MessagePort::executionContext()
 {
-    return document()->executionContext();
+    return m_executionContext;
 }
 
 void MessagePort::entangle(MessagePort* port1, MessagePort* port2)
@@ -137,8 +137,8 @@ void MessagePort::postMessage(ScriptValue message,
         return;
     }
     // NOTE addIder would hold serializedRecord
-    webView()->messageLoop()->addIdler(
-        window(),
+    executionContext()->webBase()->messageLoop()->addIdler(
+        executionContext()->globalScope(),
         [](size_t handle, void* data, void* data1) {
             MessagePort* self = (MessagePort*)data;
             SerializeWithTransferResult* serializedRecord =
@@ -150,9 +150,8 @@ void MessagePort::postMessage(ScriptValue message,
                                                     deserializedRecord);
             } catch (DOMException* exc) {
                 MessageEvent* e = new MessageEvent(
-                    self->executionContext(), self->starfish()
-                                                  ->staticStrings()
-                                                  ->m_messageerror.localName());
+                    self->executionContext(),
+                    self->staticStrings()->m_messageerror.localName());
                 self->entangledPort()->dispatchMessageEvent(e);
                 return;
             }
@@ -166,9 +165,9 @@ void MessagePort::postMessage(ScriptValue message,
                     newPorts.push_back(sw->asMessagePort());
                 }
             }
-            MessageEvent* e = new MessageEvent(
-                self->executionContext(),
-                self->starfish()->staticStrings()->m_message.localName());
+            MessageEvent* e =
+                new MessageEvent(self->executionContext(),
+                                 self->staticStrings()->m_message.localName());
             e->setData(deserializedRecord.m_deserialized);
             e->setPorts(newPorts);
             self->entangledPort()->dispatchMessageEvent(e);
@@ -189,13 +188,13 @@ void MessagePort::close()
 
 EventListener* MessagePort::onmessage()
 {
-    QualifiedName attr = window()->starfish()->staticStrings()->m_message;
+    QualifiedName attr = staticStrings()->m_message;
     return attributeEventListener(attr);
 }
 
 void MessagePort::setOnmessage(EventListener* listener)
 {
-    QualifiedName attr = window()->starfish()->staticStrings()->m_message;
+    QualifiedName attr = staticStrings()->m_message;
     if (listener) {
         setAttributeEventListener(attr, listener);
     } else {
@@ -209,13 +208,13 @@ void MessagePort::setOnmessage(EventListener* listener)
 
 EventListener* MessagePort::onmessageerror()
 {
-    QualifiedName attr = window()->starfish()->staticStrings()->m_messageerror;
+    QualifiedName attr = staticStrings()->m_messageerror;
     return attributeEventListener(attr);
 }
 
 void MessagePort::setOnmessageerror(EventListener* listener)
 {
-    QualifiedName attr = window()->starfish()->staticStrings()->m_messageerror;
+    QualifiedName attr = staticStrings()->m_messageerror;
     if (listener) {
         setAttributeEventListener(attr, listener);
     } else {
@@ -256,8 +255,8 @@ void PortMessageQueue::registerTaskToMessageLoop(MessagePort* target,
                                                  MessageEvent* event)
 {
     STARFISH_ASSERT(m_enabled);
-    target->webView()->messageLoop()->addIdler(
-        target->window(),
+    target->executionContext()->webBase()->messageLoop()->addIdler(
+        target->executionContext()->globalScope(),
         [](size_t, void* data, void* data1) {
             MessagePort* target = (MessagePort*)data;
             MessageEvent* event = (MessageEvent*)data1;
@@ -269,6 +268,6 @@ void PortMessageQueue::registerTaskToMessageLoop(MessagePort* target,
 ScriptWrappable* TransferedMessagePort::createTransferReceivingInstance(
     ExecutionContext* executionContext) const
 {
-    return new MessagePort(executionContext->document());
+    return new MessagePort(executionContext);
 }
 }

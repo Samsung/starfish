@@ -394,7 +394,8 @@ DemuxerClientSourceBuffer* SourceBufferData::currentDemuxerClient()
 }
 
 SourceBuffer::SourceBuffer(Document* document, String* type)
-    : EventTarget(document)
+    : EventTarget()
+    , DocumentHoldable(document)
     , m_mode(AppendMode::Segments)
     , m_isAttachedToParent(false)
     , m_updating(false)

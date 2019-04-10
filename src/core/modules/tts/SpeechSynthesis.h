@@ -74,11 +74,12 @@ protected:
     bool m_isDefault;
 };
 
-class SpeechSynthesisUtterance : public EventTarget {
+class SpeechSynthesisUtterance : public EventTarget, public DocumentHoldable {
 public:
     SpeechSynthesisUtterance(Document* document,
                              String* text = String::emptyString)
-        : EventTarget(document)
+        : EventTarget()
+        , DocumentHoldable(document)
         , m_id(0)
         , m_text(text)
         , m_lang(String::emptyString)
@@ -206,10 +207,11 @@ private:
     double m_startTime;
 };
 
-class SpeechSynthesis : public EventTarget {
+class SpeechSynthesis : public EventTarget, public DocumentHoldable {
 public:
     SpeechSynthesis(Document* document)
-        : EventTarget(document)
+        : EventTarget()
+        , DocumentHoldable(document)
         , m_isCreatedVoiceList(false)
     {
     }

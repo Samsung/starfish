@@ -31,7 +31,7 @@ class TextTrackCueList;
 
 #define TEXTTRACK_INVALID_TIMEVALUE -1
 
-class TextTrack : public EventTarget {
+class TextTrack : public EventTarget, public DocumentHoldable {
 public:
     enum Mode {
         InvalidMode,

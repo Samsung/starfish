@@ -28,8 +28,9 @@ namespace Starfish {
 
 class ServiceWorker : public EventTarget {
 public:
-    ServiceWorker(Document* document)
-        : EventTarget(document)
+    ServiceWorker(ExecutionContext* executionContext)
+        : EventTarget()
+        , m_executionContext(executionContext)
         , m_data(new ServiceWorkerData())
     {
     }
@@ -52,6 +53,7 @@ public:
     String* state() const;     // binding interface
 
 private:
+    ExecutionContext* m_executionContext;
     ServiceWorkerData* m_data;
 };
 } // namespace Starfish

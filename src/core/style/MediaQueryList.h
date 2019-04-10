@@ -29,7 +29,7 @@ class MediaQueryEvaluator;
 class MediaQueryListMatcher;
 class MediaQuerySet;
 
-class MediaQueryList : public EventTarget {
+class MediaQueryList : public EventTarget, public DocumentHoldable {
 public:
     MediaQueryList(Document* document, MediaQueryListMatcher* matcher,
                    MediaQuerySet* media);

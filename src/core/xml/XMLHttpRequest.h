@@ -29,10 +29,11 @@ enum class MethodType;
 class ResourceRequest;
 using XMLHttpRequestResponseType = BodyType;
 
-class XMLHttpRequestEventTarget : public EventTarget {
+class XMLHttpRequestEventTarget : public EventTarget, public DocumentHoldable {
 public:
     XMLHttpRequestEventTarget(Document* document)
-        : EventTarget(document)
+        : EventTarget()
+        , DocumentHoldable(document)
     {
     }
 

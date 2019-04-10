@@ -19,17 +19,20 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/dom/Document.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/Element.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/ErrorEvent.h"
 #include "core/page/BrowsingContext.h"
-#include "core/page/WebView.h"
-#include "core/page/Window.h"
+#include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/csp/ContentSecurityPolicy.h"
+
+#if !defined(STARFISH_WEBWORKER_HOST)
+#include "core/dom/Document.h"
+#include "core/page/Window.h"
+#endif
 
 namespace Starfish {
 
@@ -104,15 +107,14 @@ ScriptValue EventListener::call(Event* event)
     return listenerFunc;
 }
 
-EventTarget::EventTarget(Document* document)
+EventTarget::EventTarget()
     : ScriptWrappable(this)
-    , DocumentHoldable(document)
 {
 }
 
 ScriptBindingInstance* EventTarget::scriptBindingInstance()
 {
-    return document()->scriptBindingInstance();
+    return executionContext()->scriptBindingInstance();
 }
 
 GCVector<EventListener*>* EventTarget::getEventListeners(
@@ -222,10 +224,10 @@ bool EventTarget::dispatchEventByUA(EventTarget* origin, Event* event,
 
 void EventTarget::dispatchEventIdleTimeByUA(Event* event)
 {
-    webView()->messageLoop()->addIdler(
-        window(),
+    executionContext()->webBase()->messageLoop()->addIdler(
+        executionContext()->globalScope(),
         [](size_t handle, void* data0, void* data1) {
-            ((Node*)data0)->dispatchEventByUA((Event*)data1);
+            ((EventTarget*)data0)->dispatchEventByUA((Event*)data1);
         },
         this, event);
 }
@@ -400,19 +402,22 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             }
         }
     }
-
+#if !defined(STARFISH_WEBWORKER_HOST)
     if (event->defaultPrevented()) {
         if (event->type()->equals("keydown")) {
-            document()->browsingContext()->setKeydownEventDefaultPrevented(
-                true);
+            executionContext()
+                ->document()
+                ->browsingContext()
+                ->setKeydownEventDefaultPrevented(true);
         } else if (event->type() ==
                    staticStrings()->m_compositionstart.localName()) {
-            document()
+            executionContext()
+                ->document()
                 ->browsingContext()
                 ->setCompositionStartEventDefeaultPrevented(true);
         }
     }
-
+#endif
     // dispatch default event
     if (!event->defaultPrevented()) {
         for (size_t i = 0; i < eventPath.size(); i++) {
@@ -484,7 +489,9 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
 void EventTarget::setAttributeEventListener(const QualifiedName& eventTypeName,
                                             String* str, Element* target)
 {
-    if (!document()->contentSecurityPolicy()->allowInlineEventHandler()) {
+    if (!executionContext()
+             ->contentSecurityPolicy()
+             ->allowInlineEventHandler()) {
         return;
     }
 

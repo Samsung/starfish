@@ -59,7 +59,9 @@ private:
     Nullable<bool> m_withCredentials;
 };
 
-class EventSource : public EventTarget, public EventSourceParser::Client {
+class EventSource : public EventTarget,
+                    public DocumentHoldable,
+                    public EventSourceParser::Client {
     friend class EventSourceResourceRequestClient;
 
 public:

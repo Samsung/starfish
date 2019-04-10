@@ -76,9 +76,10 @@ Window* Window::create(BrowsingContext* browsingContext, ResourceURL* url,
 
 Window::Window(BrowsingContext* browsingContext, ResourceURL* url,
                uint32_t initialWidth, uint32_t initialHeight)
-    : EventTarget(nullptr)
+    : EventTarget()
     , GlobalScope(browsingContext->webView())
     , m_browsingContext(browsingContext)
+    , m_document(nullptr)
     , m_history(nullptr)
     , m_navigator(nullptr)
     , m_location(nullptr)
@@ -122,6 +123,11 @@ Starfish* Window::starfish() const
 StaticStrings* Window::staticStrings() const
 {
     return starfish()->staticStrings();
+}
+
+WebView* Window::webView() const
+{
+    return browsingContext()->webView();
 }
 
 void Window::dispose()

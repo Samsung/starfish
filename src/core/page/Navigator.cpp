@@ -56,7 +56,8 @@ Geolocation* Navigator::geolocation()
 ServiceWorkerContainer* Navigator::serviceWorker()
 {
     if (m_serviceWorker == nullptr) {
-        m_serviceWorker = new ServiceWorkerContainer(document());
+        m_serviceWorker =
+            new ServiceWorkerContainer(document()->executionContext());
     }
     return m_serviceWorker;
 }

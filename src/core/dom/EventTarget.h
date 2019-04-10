@@ -20,7 +20,6 @@
 #ifndef __StarfishEventTarget__
 #define __StarfishEventTarget__
 
-#include "binding/DocumentHoldable.h"
 #include "binding/ScriptWrappable.h"
 
 namespace Starfish {
@@ -122,9 +121,9 @@ private:
     }
 };
 
-class EventTarget : public ScriptWrappable, public DocumentHoldable {
+class EventTarget : public ScriptWrappable {
 protected:
-    EventTarget(Document* document);
+    EventTarget();
 
 public:
     virtual void init(ScriptBindingInstance* instance,
@@ -227,8 +226,8 @@ private:
     VIRTUAL EventListener* on##EVENT() OVERRIDE; \
     VIRTUAL void setOn##EVENT(EventListener* on##EVENT) OVERRIDE;
 
-#define GENERATE_ATTR(EVENT)                \
-    Window* window = EventTarget::window(); \
+#define GENERATE_ATTR(EVENT)         \
+    Window* window = this->window(); \
     QualifiedName attr = staticStrings()->m_##EVENT;
 
 #define DEFINE_GLOBAL_EVENT_LISTENER(EVENT_TARGET, EVENT)       \
@@ -253,14 +252,14 @@ private:
 #define DEFINE_EVENT_LISTENER(EVENT_TARGET, EVENT)            \
     EventListener* EVENT_TARGET::on##EVENT()                  \
     {                                                         \
-        GENERATE_ATTR(EVENT);                                 \
+        QualifiedName attr = staticStrings()->m_##EVENT;      \
                                                               \
         return attributeEventListener(attr);                  \
     }                                                         \
                                                               \
     void EVENT_TARGET::setOn##EVENT(EventListener* on##EVENT) \
     {                                                         \
-        GENERATE_ATTR(EVENT);                                 \
+        QualifiedName attr = staticStrings()->m_##EVENT;      \
                                                               \
         if (on##EVENT) {                                      \
             setAttributeEventListener(attr, on##EVENT);       \

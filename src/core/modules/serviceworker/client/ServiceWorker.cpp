@@ -53,7 +53,7 @@ String* ServiceWorker::state() const
 
 ExecutionContext* ServiceWorker::executionContext()
 {
-    return document()->executionContext();
+    return m_executionContext;
 }
 } // namespace Starfish
 

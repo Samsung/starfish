@@ -21,6 +21,7 @@
 #include "core/dom/Scrolling.h"
 #include "core/dom/Element.h"
 #include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/MouseEvent.h"
 #include "core/dom/TouchEvent.h"
 #include "core/dom/TouchList.h"
@@ -131,10 +132,10 @@ bool Scrolling::handleDefaultEvent(Event* event, Window* window,
                     m_isScrollTarget = true;
                     m_pointingEventX = m_lastPointingEventX = x;
                     m_pointingEventY = m_lastPointingEventY = y;
-                    m_target->webView()->timer()->requestAnimationFrame(
-                        m_target->window(), onAnimationFrameHandler, this);
+                    window->webView()->timer()->requestAnimationFrame(
+                        window, onAnimationFrameHandler, this);
 
-                    m_target->webView()->activeScrollingSet().insert(this);
+                    window->webView()->activeScrollingSet().insert(this);
                 }
                 return true;
             }
@@ -280,8 +281,9 @@ void Scrolling::onAnimationFrameHandler(void* data)
         self->m_lastPointingEventY = self->m_pointingEventY;
     }
 
-    self->m_target->webView()->timer()->requestAnimationFrame(
-        self->m_target->window(), onAnimationFrameHandler, self);
+    Window* window = self->m_target->executionContext()->document()->window();
+    window->browsingContext()->webView()->timer()->requestAnimationFrame(
+        window, onAnimationFrameHandler, self);
 }
 
 void Scrolling::onGlobalPointingEvent(float x, float y,
@@ -352,12 +354,11 @@ void Scrolling::stopScrolling()
     m_inVerticalScrolling = false;
     m_isScrollTarget = false;
     m_gotPointingDownEvent = false;
-    m_target->document()
-        ->browsingContext()
-        ->webView()
-        ->removeGlobalPointingEventInterceptListener(m_target);
 
-    m_target->webView()->activeScrollingSet().erase(this);
+    WebView* webView =
+        m_target->executionContext()->document()->browsingContext()->webView();
+    webView->removeGlobalPointingEventInterceptListener(m_target);
+    webView->activeScrollingSet().erase(this);
 }
 
 void Scrolling::stopFling()

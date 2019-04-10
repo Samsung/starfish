@@ -34,7 +34,7 @@ class String;
 
 class ServiceWorkerRegistration : public EventTarget {
 public:
-    ServiceWorkerRegistration(Document* document);
+    ServiceWorkerRegistration(ExecutionContext* executionContext);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -54,6 +54,7 @@ public:
     DEFINE_GETTER_SETTER(ServiceWorkerRegistrationData*, data, Data);
 
 private:
+    ExecutionContext* m_executionContext;
     ServiceWorker* m_installingWorker;
     ServiceWorker* m_waitingWorker;
     ServiceWorker* m_activeWorker;

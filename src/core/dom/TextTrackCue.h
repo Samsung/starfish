@@ -30,10 +30,11 @@ class Document;
 class DocumentFragment;
 class TextTrack;
 
-class TextTrackCue : public EventTarget {
+class TextTrackCue : public EventTarget, public DocumentHoldable {
 public:
     TextTrackCue(Document* document, double start, double end, String* payload)
-        : EventTarget(document)
+        : EventTarget()
+        , DocumentHoldable(document)
         , m_textTrack(nullptr)
         , m_id(String::emptyString)
         , m_timeRange(TimeRange(start, end))
