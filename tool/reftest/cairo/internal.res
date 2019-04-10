@@ -349,6 +349,7 @@ test/cairo/internal-test/canvas/arcTo.html
 test/cairo/internal-test/canvas/bezierCurveTo.html
 test/cairo/internal-test/canvas/ellipse.html
 test/cairo/internal-test/canvas/quadraticCurveTo.html
+test/cairo/internal-test/canvas/isPointInStroke.html
 test/cairo/internal-test/css/overflow/overflow-pseudo-element.html
 test/cairo/internal-test/iframe/iframe-hittest.html
 test/cairo/internal-test/canvas/transform.html

@@ -143,6 +143,10 @@ section are supported.
 |  | method | void stroke(Path2D path) | Strokes (outlines) the given path with the current stroke style. |
 |  | method | void clip(optional CanvasFillRule fillRule = "nonzero") |  Turns the current path into the current clipping region |
 |  | method | void clip(Path2D path, optional CanvasFillRule fillRule = "nonzero") | Turns the given path into the current clipping region |
+|  | method | boolean isPointInPath(unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero") | Reports whether or not the specified point is contained in the current path. |
+|  | method | boolean isPointInPath(Path2D path, unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero") | Reports whether or not the specified point is contained in the current path. |
+|  | method | boolean isPointInStroke(unrestricted double x, unrestricted double y) | Reports whether or not the specified point is inside the area contained by the stroking of a path. |
+|  | method | boolean isPointInStroke(Path2D path, unrestricted double x, unrestricted double y) | Reports whether or not the specified point is inside the area contained by the stroking of a path. |
 | [CanvasLineCap](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinecap) | enum | CanvasLineCap | "butt", "round", "square" |
 | [CanvasLineJoin](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinejoin) | enum | CanvasLineJoin | "round", "bevel", "miter" |
 | [CanvasPath ](https://html.spec.whatwg.org/multipage/canvas.html#canvaspath) | interface mixin | CanvasPath |  |

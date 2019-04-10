@@ -50,6 +50,7 @@
 
 #include "core/modules/canvas/Path.h"
 #include "platform/canvas/PathCairo.h"
+#include "platform/canvas/CanvasCairoUtils.h"
 
 #if defined(STARFISH_ANDROID) || defined(STARFISH_WINDOWS) || \
     defined(STARFISH_TIZEN)
@@ -993,64 +994,26 @@ public:
     virtual CanvasLineCap lineCap()
     {
         auto cap = cairo_get_line_cap(m_canvas);
-        if (cap == CAIRO_LINE_CAP_BUTT) {
-            return CanvasLineCap::Butt;
-        } else if (cap == CAIRO_LINE_CAP_ROUND) {
-            return CanvasLineCap::Round;
-        } else if (cap == CAIRO_LINE_CAP_SQUARE) {
-            return CanvasLineCap::Square;
-        }
-
-        STARFISH_ASSERT_NOT_REACHED();
-        return CanvasLineCap::Butt;
+        return CanvasCairoUtils::cairoLineCapToCavansLineCap(cap);
     }
 
     virtual void setLineCap(CanvasLineCap lineCap)
     {
-        cairo_line_cap_t cap;
-
-        if (lineCap == CanvasLineCap::Butt) {
-            cap = CAIRO_LINE_CAP_BUTT;
-        } else if (lineCap == CanvasLineCap::Round) {
-            cap = CAIRO_LINE_CAP_ROUND;
-        } else if (lineCap == CanvasLineCap::Square) {
-            cap = CAIRO_LINE_CAP_SQUARE;
-        } else {
-            STARFISH_ASSERT_NOT_REACHED();
-            cap = CAIRO_LINE_CAP_BUTT;
-        }
+        cairo_line_cap_t cap =
+            CanvasCairoUtils::cavansLineCapToCairoLineCap(lineCap);
         cairo_set_line_cap(m_canvas, cap);
     }
 
     virtual CanvasLineJoin lineJoine()
     {
         auto join = cairo_get_line_join(m_canvas);
-        if (join == CAIRO_LINE_JOIN_MITER) {
-            return CanvasLineJoin::Miter;
-        } else if (join == CAIRO_LINE_JOIN_ROUND) {
-            return CanvasLineJoin::Round;
-        } else if (join == CAIRO_LINE_JOIN_BEVEL) {
-            return CanvasLineJoin::Bevel;
-        }
-
-        STARFISH_ASSERT_NOT_REACHED();
-        return CanvasLineJoin::Miter;
+        return CanvasCairoUtils::cairoLineJoinToCanvasLineJoin(join);
     }
 
     virtual void setLineJoin(CanvasLineJoin lineJoin)
     {
-        cairo_line_join_t join;
-
-        if (lineJoin == CanvasLineJoin::Miter) {
-            join = CAIRO_LINE_JOIN_MITER;
-        } else if (lineJoin == CanvasLineJoin::Round) {
-            join = CAIRO_LINE_JOIN_ROUND;
-        } else if (lineJoin == CanvasLineJoin::Bevel) {
-            join = CAIRO_LINE_JOIN_BEVEL;
-        } else {
-            STARFISH_ASSERT_NOT_REACHED();
-            join = CAIRO_LINE_JOIN_MITER;
-        }
+        cairo_line_join_t join =
+            CanvasCairoUtils::canvasLineJoinToCairoLineJoin(lineJoin);
         cairo_set_line_join(m_canvas, join);
     }
 

@@ -22,7 +22,8 @@
 
 namespace Starfish {
 
-class NativPath;
+class Canvas;
+enum class CanvasFillRule;
 
 class Path : public gc {
 public:
@@ -37,6 +38,9 @@ public:
     virtual bool isEmpty() = 0;
     virtual void currentPoint(float& x, float& y) = 0;
     virtual void copy(Path* src) = 0;
+    virtual bool isPointInPath(float x, float y, CanvasFillRule fillRule) = 0;
+    virtual bool isPointInStroke(float x, float y) = 0;
+    virtual void applyPathDrawingStyles(Canvas* canvas) = 0;
 
     // For CanvasPath
     virtual void closePath() = 0;

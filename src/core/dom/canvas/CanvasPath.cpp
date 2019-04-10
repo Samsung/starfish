@@ -272,11 +272,11 @@ void CanvasPath::fallbackLineToInEllipseMethodSteps(float radius1, float angle1,
                                                     float radius2, float angle2,
                                                     const SkMatrix& matrix)
 {
-    SkPoint src[1];
-    src[0].set(radius1 * cosf(angle1), radius2 * sinf(angle2));
-    matrix.mapPoints(src, 1);
-    float x = SkScalarToFloat(src[0].x());
-    float y = SkScalarToFloat(src[0].y());
+    SkPoint src;
+    src.set(radius1 * cosf(angle1), radius2 * sinf(angle2));
+    matrix.mapPoints(&src, 1);
+    float x = SkScalarToFloat(src.x());
+    float y = SkScalarToFloat(src.y());
     lineTo(x, y);
 }
 
