@@ -139,8 +139,10 @@ public:
                 Compositor* c =
                     Compositor::create3D(webView(), m_compostiorContext);
                 c->clearColor(Unit::Color(0, 0, 0, 0));
-                c->drawSurface(m_glPaintingSurface,
-                               Unit::Rect(0, 0, width(), height()));
+                if (m_glPaintingSurface != nullptr) {
+                    c->drawSurface(m_glPaintingSurface,
+                                   Unit::Rect(0, 0, width(), height()));
+                }
                 delete c;
                 webView()->mutableScreenInfo().devicePixelRatio = oldDPR;
             }
