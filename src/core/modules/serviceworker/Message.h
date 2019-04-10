@@ -17,46 +17,22 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerTypes__)
-#define __StarfishServiceWorkerTypes__
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishMessage__)
+#define __StarfishMessage__
 
 namespace Starfish {
 
-class GlobalScope;
-class ServiceWorkerJob;
-class ExecutionContext;
+class Message : public gc {
+public:
+    Message(const char* msgname = "");
+    void addParam(MessageParam* param);
+    void archive(Archiver& arch);
+    void archive(Archiver& arch, MessageParam*& param);
 
-enum class ServiceWorkerUpdateViaCache : unsigned {
-    Imports,
-    All,
-    None,
+    std::string name;
+    GCVector<MessageParam*> params;
 };
 
-enum class ServiceWorkerJobType : unsigned {
-    Register,
-    Unregister,
-    Update,
-};
-
-enum class WorkerType : unsigned {
-    Classic,
-    Module,
-};
-
-using ServiceWorkerClient = ExecutionContext;
-using ServiceWorkerRegistrationKey = String*;
-
-using ServiceWorkerJobId = Id<ServiceWorkerJob>;
-using ServiceWorkerContextId = Id<GlobalScope>;
-
-#ifdef SERVICE_WORKER_USE_MULTI_PROCESS
-#define IPC_PROTOCOL "ipc://"
-#define IPC_ADDRESS_PREFIX ".ipc/"
-#else
-#define IPC_PROTOCOL "inproc://"
-#define IPC_ADDRESS_PREFIX "sw"
-#endif
 } // namespace Starfish
 
 #endif

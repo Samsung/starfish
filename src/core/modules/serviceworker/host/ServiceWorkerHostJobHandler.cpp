@@ -23,6 +23,8 @@
 
 #include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/MessageParam.h"
+#include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/serviceworker/JobQueue.h"

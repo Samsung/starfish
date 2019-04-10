@@ -18,45 +18,30 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerTypes__)
-#define __StarfishServiceWorkerTypes__
+    !defined(__StarfishServiceWorkerJobData__)
+#define __StarfishServiceWorkerJobData__
 
 namespace Starfish {
 
-class GlobalScope;
-class ServiceWorkerJob;
-class ExecutionContext;
+class ServiceWorkerJobData : public gc, public MessageParam {
+public:
+    ServiceWorkerJobId id;
+    ServiceWorkerContextId contextId;
+    ServiceWorkerJobType type{ ServiceWorkerJobType::Register };
+    String* scopeURL{ nullptr };
+    String* scriptURL{ nullptr };
+    String* referrerURL{ nullptr };
+    String* origin{ nullptr };
+    WorkerType workerType{ WorkerType::Classic };
+    ServiceWorkerUpdateViaCache updateViaCacheMode{
+        ServiceWorkerUpdateViaCache::None
+    };
 
-enum class ServiceWorkerUpdateViaCache : unsigned {
-    Imports,
-    All,
-    None,
+    // serialize/deserialize
+    const char* paramType() const override;
+    void archive(Archiver& ar) override;
 };
 
-enum class ServiceWorkerJobType : unsigned {
-    Register,
-    Unregister,
-    Update,
-};
-
-enum class WorkerType : unsigned {
-    Classic,
-    Module,
-};
-
-using ServiceWorkerClient = ExecutionContext;
-using ServiceWorkerRegistrationKey = String*;
-
-using ServiceWorkerJobId = Id<ServiceWorkerJob>;
-using ServiceWorkerContextId = Id<GlobalScope>;
-
-#ifdef SERVICE_WORKER_USE_MULTI_PROCESS
-#define IPC_PROTOCOL "ipc://"
-#define IPC_ADDRESS_PREFIX ".ipc/"
-#else
-#define IPC_PROTOCOL "inproc://"
-#define IPC_ADDRESS_PREFIX "sw"
-#endif
 } // namespace Starfish
 
 #endif
