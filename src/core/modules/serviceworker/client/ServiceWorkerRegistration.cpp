@@ -26,8 +26,10 @@
 
 namespace Starfish {
 
-ServiceWorkerRegistration::ServiceWorkerRegistration(Document* document)
-    : EventTarget(document)
+ServiceWorkerRegistration::ServiceWorkerRegistration(
+    ExecutionContext* executionContext)
+    : EventTarget()
+    , m_executionContext(executionContext)
     , m_installingWorker(nullptr)
     , m_waitingWorker(nullptr)
     , m_activeWorker(nullptr)
@@ -37,7 +39,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(Document* document)
 
 ExecutionContext* ServiceWorkerRegistration::executionContext()
 {
-    return document()->executionContext();
+    return m_executionContext;
 }
 
 void ServiceWorkerRegistration::updateRegistrationState(

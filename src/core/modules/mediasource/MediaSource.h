@@ -33,7 +33,7 @@ class SourceBufferList;
 class Starfish;
 class MediaSourceClient;
 
-class MediaSource : public EventTarget {
+class MediaSource : public EventTarget, public DocumentHoldable {
     friend class SourceBuffer;
 
 public:

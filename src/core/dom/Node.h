@@ -124,10 +124,11 @@ private:
     bool m_composed;
 };
 
-class Node : public EventTarget {
+class Node : public EventTarget, public DocumentHoldable {
 protected:
     Node(Document* document)
-        : EventTarget(document)
+        : EventTarget()
+        , DocumentHoldable(document)
         , m_inParsing(false)
         , m_inHTMLConstructionSite(false)
         , m_needsStyleRecalc(true)

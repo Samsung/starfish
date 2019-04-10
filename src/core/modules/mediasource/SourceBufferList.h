@@ -28,7 +28,7 @@ namespace Starfish {
 class MediaSource;
 class SourceBuffer;
 
-class SourceBufferList : public EventTarget {
+class SourceBufferList : public EventTarget, public DocumentHoldable {
 public:
     SourceBufferList(Document* document, MediaSource* sb);
 

@@ -697,7 +697,7 @@ void BrowsingContext::dispose()
     auto& activeScrollingSet = webView()->activeScrollingSet();
     auto iter = activeScrollingSet.begin();
     while (iter != activeScrollingSet.end()) {
-        if ((*iter)->target()->document() == document()) {
+        if ((*iter)->target()->executionContext()->document() == document()) {
             iter = activeScrollingSet.erase(iter);
         } else {
             iter++;

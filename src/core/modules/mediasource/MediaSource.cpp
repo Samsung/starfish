@@ -33,7 +33,8 @@
 namespace Starfish {
 
 MediaSource::MediaSource(Document* document)
-    : EventTarget(document)
+    : EventTarget()
+    , DocumentHoldable(document)
     , m_readyState(Closed)
     , m_isActiveBufferComputed(false)
     , m_attachedMediaElement(nullptr)

@@ -25,10 +25,13 @@
 
 namespace Starfish {
 
-class TextTrackList : public EventTarget, public GCVector<TextTrack*> {
+class TextTrackList : public EventTarget,
+                      public DocumentHoldable,
+                      public GCVector<TextTrack*> {
 public:
     TextTrackList(Document* document)
-        : EventTarget(document)
+        : EventTarget()
+        , DocumentHoldable(document)
     {
     }
 

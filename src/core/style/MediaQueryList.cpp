@@ -30,7 +30,8 @@ namespace Starfish {
 MediaQueryList::MediaQueryList(Document* document,
                                MediaQueryListMatcher* matcher,
                                MediaQuerySet* media)
-    : EventTarget(document)
+    : EventTarget()
+    , DocumentHoldable(document)
     , m_matcher(matcher)
     , m_media(media)
     , m_matches(false)

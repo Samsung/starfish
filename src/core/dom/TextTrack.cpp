@@ -33,7 +33,8 @@ namespace Starfish {
 
 TextTrack::TextTrack(Document* document, Kind kind, String* label,
                      String* language)
-    : EventTarget(document)
+    : EventTarget()
+    , DocumentHoldable(document)
     , m_mode(Mode::Off)
     , m_kind(kind)
     , m_label(label)

@@ -27,8 +27,8 @@ namespace Starfish {
 MessageChannel::MessageChannel(Document* document)
     : ScriptWrappable(this)
     , m_scriptBindingInstance(document->scriptBindingInstance())
-    , m_port1(new MessagePort(document))
-    , m_port2(new MessagePort(document))
+    , m_port1(new MessagePort(document->executionContext()))
+    , m_port2(new MessagePort(document->executionContext()))
 {
     MessagePort::entangle(m_port1, m_port2);
 }

@@ -39,7 +39,7 @@ class ServiceWorkerRegistrationData;
 
 class ServiceWorkerContainer : public EventTarget {
 public:
-    ServiceWorkerContainer(Document* document);
+    ServiceWorkerContainer(ExecutionContext* executionContext);
     virtual ~ServiceWorkerContainer();
 
     virtual void init(ScriptBindingInstance* instance,
@@ -70,6 +70,7 @@ public:
                            ServiceWorkerRegistrationData* registration);
 
 private:
+    ExecutionContext* m_executionContext;
     GCUnorderedMap<Id<ServiceWorkerJob>, ServiceWorkerJob*, IdHash> m_jobMap;
 };
 } // namespace Starfish

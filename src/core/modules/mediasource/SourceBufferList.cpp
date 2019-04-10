@@ -30,7 +30,8 @@
 namespace Starfish {
 
 SourceBufferList::SourceBufferList(Document* document, MediaSource* sb)
-    : EventTarget(document)
+    : EventTarget()
+    , DocumentHoldable(document)
     , m_parentMediaSource(sb)
 {
 }

@@ -63,8 +63,10 @@ ScriptValue createException(ScriptBindingInstance* scriptBindingInstance,
     return exception;
 }
 
-ServiceWorkerContainer::ServiceWorkerContainer(Document* document)
-    : EventTarget(document)
+ServiceWorkerContainer::ServiceWorkerContainer(
+    ExecutionContext* executionContext)
+    : EventTarget()
+    , m_executionContext(executionContext)
 {
 }
 
@@ -74,7 +76,7 @@ ServiceWorkerContainer::~ServiceWorkerContainer()
 
 ExecutionContext* ServiceWorkerContainer::executionContext()
 {
-    return document()->executionContext();
+    return m_executionContext;
 }
 
 Promise* ServiceWorkerContainer::registerServiceWorker(
@@ -215,11 +217,11 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
     auto data = job->data();
 
     data->id = ServiceWorkerJobId::generate();
-    data->contextId = window()->uid();
+    data->contextId = executionContext()->globalScope()->uid();
     data->type = type;
     data->scopeURL = scopeURL;
     data->scriptURL = scriptURL;
-    data->origin = document()->webOrigin()->serialize();
+    data->origin = executionContext()->webOrigin()->serialize();
 
     job->setPromise(promise);
     job->setClient(client);
@@ -241,7 +243,7 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 
             swConnection->scheduleJob(job);
         },
-        job, document()->webOrigin());
+        job, executionContext()->webOrigin());
 
     m_jobMap.insert(std::make_pair(job->data()->id, job));
 }
@@ -301,10 +303,10 @@ void ServiceWorkerContainer::resolveJobPromise(
                     // TODO: 2. If job’s job type is either register or update,
                     // set convertedValue to the ServiceWorkerRegistration
                     // object that represents value, in job’s client's Realm.
-                    auto registeration =
-                        new ServiceWorkerRegistration(container->document());
+                    auto registeration = new ServiceWorkerRegistration(
+                        container->executionContext());
                     auto serviceWorker =
-                        new ServiceWorker(container->document());
+                        new ServiceWorker(container->executionContext());
                     serviceWorker->data()->scriptURL = job->data()->scriptURL;
                     registeration->updateRegistrationState(
                         ServiceWorkerRegistrationState::Installing,

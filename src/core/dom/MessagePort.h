@@ -61,7 +61,7 @@ protected:
 
 class MessagePort : public EventTarget, public Transferable {
 public:
-    MessagePort(Document* document);
+    MessagePort(ExecutionContext* executionContext);
 
     // Interface ScriptWrappable
     virtual void init(ScriptBindingInstance* instance,
@@ -118,6 +118,7 @@ public:
     void dispatchMessageEvent(MessageEvent* event);
 
 protected:
+    ExecutionContext* m_executionContext;
     MessagePort* m_entangledPort;
     bool m_hasBeenShipped;
     PortMessageQueue* m_portMessageQueue;

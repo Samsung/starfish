@@ -81,6 +81,11 @@ public:
         CSSStyleValuePairVectorHolder& cssValues) override;
 
     bool isPotentiallyScrollable();
+
+    Window* window()
+    {
+        return DocumentHoldable::window();
+    }
 };
 }
 

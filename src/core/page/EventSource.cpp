@@ -194,7 +194,8 @@ EventSource::EventSource(::Starfish::Document* document, String* url)
 
 EventSource::EventSource(::Starfish::Document* document, String* url,
                          const EventSourceInit& init)
-    : EventTarget(document)
+    : EventTarget()
+    , DocumentHoldable(document)
     , m_readyState(CONNECTING)
     , m_delay(10)
     , m_reconnectDelay(defaultReconnectDelay)

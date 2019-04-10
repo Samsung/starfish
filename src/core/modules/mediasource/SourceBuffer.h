@@ -105,7 +105,7 @@ struct MediaPacketGroup {
 
 typedef GCVector<uint8_t> SourceBufferDataVector;
 
-class SourceBuffer : public EventTarget {
+class SourceBuffer : public EventTarget, public DocumentHoldable {
 public:
     friend class MediaSource;
     friend class SourceBufferList;
