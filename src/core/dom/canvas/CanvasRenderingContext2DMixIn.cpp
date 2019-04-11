@@ -750,9 +750,8 @@ void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
 
     m_ownerHTMLCanvasElement->setNeedsPainting();
     m_canvas->save();
-    m_canvas->setColor(Unit::Color(0, 0, 0, 0));
-    m_canvas->drawRect(Unit::Rect(x, y, w, h));
-    m_canvas->fill();
+    m_canvas->clip(Unit::Rect(x, y, w, h));
+    m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
     m_canvas->restore();
 }
 
