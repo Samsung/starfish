@@ -35,6 +35,70 @@ class Path;
 enum class CanvasLineCap : int;
 enum class CanvasLineJoin : int;
 
+// https://drafts.fxtf.org/compositing/#compositemode
+
+enum class CanvasCompositeOperator {
+    Clear,
+    Copy,
+    SourceOver,
+    DestinationOver,
+    SourceIn,
+    DestinationIn,
+    SourceOut,
+    DestinationOut,
+    SourceAtop,
+    DestinationAtop,
+    XOR,
+    Lighter,
+    PlusDarker,
+    PlusLighter
+};
+
+// https://drafts.fxtf.org/compositing/#ltblendmodegt
+enum class CanvasBlendMode {
+    Normal,
+    Multiply,
+    Screen,
+    Overlay,
+    Darken,
+    Lighten,
+    ColorDodge,
+    ColorBurn,
+    HardLight,
+    SoftLight,
+    Difference,
+    Exclusion,
+    Hue,
+    Saturation,
+    Color,
+    Luminosity
+};
+
+namespace CanvasCompositing {
+
+    static const char* const canvasCompositeOperatorNames[] = {
+        "clear",       "copy",
+        "source-over", "destination-over",
+        "source-in",   "destination-in",
+        "source-out",  "destination-out",
+        "source-atop", "destination-atop",
+        "xor",         "lighter",
+        "plus-darker", "plus-lighter"
+    };
+
+    static const char* const canvasBlendModeNames[] = {
+        "normal",     "multiply",   "screen",      "overlay",
+        "darken",     "lighten",    "color-dodge", "color-burn",
+        "hard-light", "soft-light", "difference",  "exclusion",
+        "hue",        "saturation", "color",       "luminosity"
+    };
+
+    const int sizeOfCanvasCompositeOperatorNames =
+        sizeof(canvasCompositeOperatorNames) /
+        sizeof(*canvasCompositeOperatorNames);
+    const int sizeOfCanvasBlendModeNames =
+        sizeof(canvasBlendModeNames) / sizeof(*canvasBlendModeNames);
+}
 class CanvasState {
 public:
     Unit::Color m_color;
@@ -44,6 +108,8 @@ public:
     Unit::Color m_strokeColor;
     SkMatrix m_pathTM;
     float m_globalAlpha;
+    CanvasCompositeOperator m_compositeOperator;
+    CanvasBlendMode m_blendMode;
 
     bool m_visible;
     bool m_hasNonInvertableCTM;
@@ -56,6 +122,8 @@ public:
         m_hasNonInvertableCTM = false;
         m_pathTM.reset();
         m_globalAlpha = 1;
+        m_compositeOperator = CanvasCompositeOperator::SourceOver;
+        m_blendMode = CanvasBlendMode::Normal;
     }
 };
 
@@ -234,6 +302,12 @@ public:
     virtual Unit::Color color() = 0;
     virtual Unit::Color strokeColor() = 0;
     virtual float globalAlpha() = 0;
+
+    virtual void setCompositeOperator(CanvasCompositeOperator oper,
+                                      CanvasBlendMode mode) = 0;
+    virtual CanvasCompositeOperator compositeOperator() = 0;
+    virtual CanvasBlendMode blendMode() = 0;
+
     virtual void beginOpacityLayer(float c) = 0;
     virtual void endOpacityLayer() = 0;
     virtual void setFont(Font* font) = 0;

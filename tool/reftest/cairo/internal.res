@@ -356,3 +356,4 @@ test/cairo/internal-test/canvas/transform.html
 test/cairo/internal-test/css/overflow/scroll-test.html
 test/cairo/internal-test/css/overflow/scroll-test-2.html
 test/cairo/internal-test/css/overflow/scroll-test-3.html
+test/cairo/internal-test/canvas/compositing.html

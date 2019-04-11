@@ -247,6 +247,8 @@ public:
             state.m_hasNonInvertableCTM = lastState.m_hasNonInvertableCTM;
             state.m_pathTM = lastState.m_pathTM;
             state.m_globalAlpha = lastState.m_globalAlpha;
+            state.m_compositeOperator = lastState.m_compositeOperator;
+            state.m_blendMode = lastState.m_blendMode;
         }
         m_state.push_back(state);
         m_canvas->save();
@@ -412,6 +414,25 @@ public:
     virtual void setGlobalAlpha(float c)
     {
         lastState().m_globalAlpha = c;
+    }
+
+    virtual void setCompositeOperator(CanvasCompositeOperator oper,
+                                      CanvasBlendMode mode)
+    {
+        lastState().m_compositeOperator = oper;
+        lastState().m_blendMode = mode;
+
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+
+    virtual CanvasCompositeOperator compositeOperator()
+    {
+        return lastState().m_compositeOperator;
+    }
+
+    virtual CanvasBlendMode blendMode()
+    {
+        return lastState().m_blendMode;
     }
 
     virtual Unit::Color color()
