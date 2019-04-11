@@ -272,6 +272,8 @@ public:
             state.m_hasNonInvertableCTM = lastState.m_hasNonInvertableCTM;
             state.m_pathTM = lastState.m_pathTM;
             state.m_globalAlpha = lastState.m_globalAlpha;
+            state.m_compositeOperator = lastState.m_compositeOperator;
+            state.m_blendMode = lastState.m_blendMode;
         }
         m_state.push_back(state);
         cairo_save(m_canvas);
@@ -454,6 +456,131 @@ public:
     virtual float globalAlpha()
     {
         return lastState().m_globalAlpha;
+    }
+
+    virtual void setCompositeOperator(CanvasCompositeOperator oper,
+                                      CanvasBlendMode mode)
+    {
+        lastState().m_compositeOperator = oper;
+        lastState().m_blendMode = mode;
+
+        cairo_operator_t newOperator = CAIRO_OPERATOR_OVER;
+
+        // Source from webkit project:
+        // Source/WebCore/platform/graphics/cairo/CairoUtilities.cpp :
+        // toCairoOperator,toCairoCompositeOperator
+        if (lastState().m_blendMode != CanvasBlendMode::Normal) {
+            switch (lastState().m_blendMode) {
+            case CanvasBlendMode::Multiply:
+                newOperator = CAIRO_OPERATOR_MULTIPLY;
+                break;
+            case CanvasBlendMode::Screen:
+                newOperator = CAIRO_OPERATOR_SCREEN;
+                break;
+            case CanvasBlendMode::Overlay:
+                newOperator = CAIRO_OPERATOR_OVERLAY;
+                break;
+            case CanvasBlendMode::Darken:
+                newOperator = CAIRO_OPERATOR_DARKEN;
+                break;
+            case CanvasBlendMode::Lighten:
+                newOperator = CAIRO_OPERATOR_LIGHTEN;
+                break;
+            case CanvasBlendMode::ColorDodge:
+                newOperator = CAIRO_OPERATOR_COLOR_DODGE;
+                break;
+            case CanvasBlendMode::ColorBurn:
+                newOperator = CAIRO_OPERATOR_COLOR_BURN;
+                break;
+            case CanvasBlendMode::HardLight:
+                newOperator = CAIRO_OPERATOR_HARD_LIGHT;
+                break;
+            case CanvasBlendMode::SoftLight:
+                newOperator = CAIRO_OPERATOR_SOFT_LIGHT;
+                break;
+            case CanvasBlendMode::Difference:
+                newOperator = CAIRO_OPERATOR_DIFFERENCE;
+                break;
+            case CanvasBlendMode::Exclusion:
+                newOperator = CAIRO_OPERATOR_EXCLUSION;
+                break;
+            case CanvasBlendMode::Hue:
+                newOperator = CAIRO_OPERATOR_HSL_HUE;
+                break;
+            case CanvasBlendMode::Saturation:
+                newOperator = CAIRO_OPERATOR_HSL_SATURATION;
+                break;
+            case CanvasBlendMode::Color:
+                newOperator = CAIRO_OPERATOR_HSL_COLOR;
+                break;
+            case CanvasBlendMode::Luminosity:
+                newOperator = CAIRO_OPERATOR_HSL_LUMINOSITY;
+                break;
+            default:
+                newOperator = CAIRO_OPERATOR_OVER;
+            }
+        } else {
+            switch (lastState().m_compositeOperator) {
+            case CanvasCompositeOperator::Clear:
+                newOperator = CAIRO_OPERATOR_CLEAR;
+                break;
+            case CanvasCompositeOperator::Copy:
+                newOperator = CAIRO_OPERATOR_SOURCE;
+                break;
+            case CanvasCompositeOperator::SourceOver:
+                newOperator = CAIRO_OPERATOR_OVER;
+                break;
+            case CanvasCompositeOperator::SourceIn:
+                newOperator = CAIRO_OPERATOR_IN;
+                break;
+            case CanvasCompositeOperator::SourceOut:
+                newOperator = CAIRO_OPERATOR_OUT;
+                break;
+            case CanvasCompositeOperator::SourceAtop:
+                newOperator = CAIRO_OPERATOR_ATOP;
+                break;
+            case CanvasCompositeOperator::DestinationOver:
+                newOperator = CAIRO_OPERATOR_DEST_OVER;
+                break;
+            case CanvasCompositeOperator::DestinationIn:
+                newOperator = CAIRO_OPERATOR_DEST_IN;
+                break;
+            case CanvasCompositeOperator::DestinationOut:
+                newOperator = CAIRO_OPERATOR_DEST_OUT;
+                break;
+            case CanvasCompositeOperator::DestinationAtop:
+                newOperator = CAIRO_OPERATOR_DEST_ATOP;
+                break;
+            case CanvasCompositeOperator::Lighter:
+                newOperator = CAIRO_OPERATOR_DIFFERENCE;
+                break;
+            case CanvasCompositeOperator::XOR:
+                newOperator = CAIRO_OPERATOR_XOR;
+                break;
+            // At this moment, chrome didn't support following spec.
+            // case CanvasCompositeOperator::PlusDarker:
+            //     newOperator = CAIRO_OPERATOR_DARKEN;
+            //     break;
+            // case CanvasCompositeOperator::PlusLighter:
+            //     newOperator = CAIRO_OPERATOR_ADD;
+            //     break;
+            default:
+                newOperator = CAIRO_OPERATOR_SOURCE;
+                break;
+            }
+        }
+
+        cairo_set_operator(m_canvas, newOperator);
+    }
+
+    virtual CanvasCompositeOperator compositeOperator()
+    {
+        return lastState().m_compositeOperator;
+    }
+
+    virtual CanvasBlendMode blendMode()
+    {
+        return lastState().m_blendMode;
     }
 
     virtual void setVisible(bool visible)

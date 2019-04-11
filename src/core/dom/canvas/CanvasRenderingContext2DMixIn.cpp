@@ -358,12 +358,39 @@ void CanvasRenderingContext2DMixIn::setGlobalAlpha(float value)
 
 String* CanvasRenderingContext2DMixIn::globalCompositeOperation()
 {
-    return String::fromUTF8("source-over");
+    STARFISH_ASSERT(m_canvas != nullptr);
+
+    if (m_canvas->blendMode() != CanvasBlendMode::Normal) {
+        return String::fromUTF8(
+            CanvasCompositing::canvasBlendModeNames[static_cast<unsigned>(
+                m_canvas->blendMode())]);
+    }
+    return String::fromUTF8(
+        CanvasCompositing::canvasCompositeOperatorNames[static_cast<unsigned>(
+            m_canvas->compositeOperator())]);
 }
 
 void CanvasRenderingContext2DMixIn::setGlobalCompositeOperation(String* value)
 {
-    STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    CanvasCompositeOperator cco = CanvasCompositeOperator::SourceOver;
+    CanvasBlendMode cbm = CanvasBlendMode::Normal;
+
+    for (int i = 0; i < CanvasCompositing::sizeOfCanvasCompositeOperatorNames;
+         i++) {
+        if (value->equals(CanvasCompositing::canvasCompositeOperatorNames[i])) {
+            cco = static_cast<CanvasCompositeOperator>(i);
+            m_canvas->setCompositeOperator(cco, cbm);
+            return;
+        }
+    }
+    for (int i = 0; i < CanvasCompositing::sizeOfCanvasBlendModeNames; i++) {
+        if (value->equals(CanvasCompositing::canvasBlendModeNames[i])) {
+            cbm = static_cast<CanvasBlendMode>(i);
+            cco = CanvasCompositeOperator::SourceOver;
+            break;
+        }
+    }
+    m_canvas->setCompositeOperator(cco, cbm);
 }
 
 DOMStringOrCanvasGradientOrCanvasPattern
@@ -450,6 +477,8 @@ void CanvasRenderingContext2DMixIn::setFilter(String* value)
 
 void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
 {
+    STARFISH_ASSERT(m_canvas != nullptr);
+
     if (m_canvas->hasNonInvertableCTM()) {
         return;
     }
@@ -464,6 +493,9 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
     }
 
     m_ownerHTMLCanvasElement->setNeedsPainting();
+    if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
+        m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
+    }
     Unit::Color color =
         Unit::Color(m_fillColor.r(), m_fillColor.g(), m_fillColor.b(),
                     m_fillColor.a() * m_globalAlpha);
@@ -740,6 +772,9 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
         } else if (rule == CanvasFillRule::EvenOdd) {
             m_canvas->setFillRule(false);
         }
+        if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
+            m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
+        }
         Unit::Color color =
             Unit::Color(m_fillColor.r(), m_fillColor.g(), m_fillColor.b(),
                         m_fillColor.a() * m_globalAlpha);
@@ -758,6 +793,9 @@ void CanvasRenderingContext2DMixIn::stroke(Path* path)
 
     if (!path->isEmpty()) {
         m_canvas->save();
+        if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
+            m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
+        }
         Unit::Color color =
             Unit::Color(m_strokeColor.r(), m_strokeColor.g(), m_strokeColor.b(),
                         m_strokeColor.a() * m_globalAlpha);

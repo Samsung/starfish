@@ -266,7 +266,7 @@ http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.bi
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.fillStyle.html
 #http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.font.html
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.globalAlpha.html
-#http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.globalCompositeOperation.html
+http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.globalCompositeOperation.html
 #http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.imageSmoothingEnabled.html
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.lineCap.html
 http://web-platform.test:8000/2dcontext/the-canvas-state/2d.state.saverestore.lineJoin.html
