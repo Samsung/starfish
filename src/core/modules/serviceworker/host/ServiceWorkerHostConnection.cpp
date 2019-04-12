@@ -55,6 +55,9 @@ ServiceWorkerHostConnection::ServiceWorkerHostConnection(
 void ServiceWorkerHostConnection::resolveJobPromise(
     ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(registration != nullptr);
+
     // TODO: use socket to communicate with the client.
     auto swpm = ServiceWorkerProcessManager::getInstance();
     auto connection = swpm->getConnection(CSTR(job->data()->origin));
@@ -63,7 +66,7 @@ void ServiceWorkerHostConnection::resolveJobPromise(
 
 void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
 {
-    STARFISH_ASSERT(m_client);
+    STARFISH_ASSERT(m_client != nullptr);
 
     // unmarshalling
     JsonReader reader(data);
@@ -73,6 +76,7 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
     if (msg.name == "scheduleJob") {
         auto jobData = static_cast<ServiceWorkerJobData*>(msg.params[0]);
         auto job = new ServiceWorkerJob(jobData);
+        job->setHostConnection(this);
         m_client->scheduleJob(job);
     }
 }

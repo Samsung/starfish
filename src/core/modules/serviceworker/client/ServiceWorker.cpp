@@ -31,11 +31,15 @@ DEFINE_EVENT_LISTENER(ServiceWorker, statechange);
 
 String* ServiceWorker::scriptURL() const
 {
+    STARFISH_ASSERT(m_data != nullptr);
+
     return m_data->scriptURL;
 }
 
 String* ServiceWorker::state() const
 {
+    STARFISH_ASSERT(m_data != nullptr);
+
     switch (m_data->state) {
     case ServiceWorkerState::Installing:
         return String::createASCIIString("installing");

@@ -55,7 +55,7 @@ using ServiceWorkerContextId = Id<GlobalScope>;
 #define IPC_ADDRESS_PREFIX ".ipc/"
 #else
 #define IPC_PROTOCOL "inproc://"
-#define IPC_ADDRESS_PREFIX "sw"
+#define IPC_ADDRESS_PREFIX "sw/"
 #endif
 } // namespace Starfish
 

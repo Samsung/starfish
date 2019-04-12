@@ -114,6 +114,10 @@ void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
                                            Promise* promise,
                                            ExecutionContext* client)
 {
+    STARFISH_ASSERT(scriptURL != nullptr);
+    STARFISH_ASSERT(promise != nullptr);
+    STARFISH_ASSERT(client != nullptr);
+
     // https://w3c.github.io/ServiceWorker/#start-register
 
     // 1. If scriptURL is failure, reject promise with a TypeError and abort
@@ -129,6 +133,8 @@ void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
 
     // 2. Set scriptURL’s fragment to null.
     auto scriptURLWithNoFragment = scriptURL->urlStringWithoutSearchPart();
+
+    STARFISH_ASSERT(scriptURLWithNoFragment != nullptr);
 
     // 3. If scriptURL’s scheme is not one of "http" and "https", reject promise
     // with a TypeError and abort these steps.
@@ -178,6 +184,9 @@ void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
     // "%2f" or ASCII case-insensitive "%5c", reject promise with a TypeError
     // and abort these steps.
     auto scopeURLWithNoFragment = scopeURL->urlStringWithoutSearchPart();
+
+    STARFISH_ASSERT(scopeURLWithNoFragment != nullptr);
+
     if (scopeURLWithNoFragment->contains("%2f", false) ||
         scopeURLWithNoFragment->contains("%5c", false)) {
         auto exception = createException(
@@ -231,6 +240,8 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
 
 void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
 {
+    STARFISH_ASSERT(job != nullptr);
+
     executionContext()->webBase()->messageLoop()->addIdler(
         executionContext()->globalScope(),
         [](size_t handle, void* data1, void* data2) {
@@ -269,6 +280,8 @@ ServiceWorker* ServiceWorkerContainer::controller()
     // 1. Let client be the context object’s service worker client.
     ExecutionContext* context = executionContext();
 
+    STARFISH_ASSERT(context != nullptr);
+
     // 2. Return the ServiceWorker object that represents client’s active
     // service worker.
     auto client = context->activeServiceWorker();
@@ -278,7 +291,9 @@ ServiceWorker* ServiceWorkerContainer::controller()
 void ServiceWorkerContainer::resolveJobPromise(
     ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
-    // TODO: meet
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(registration != nullptr);
+
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
     // TODO: get matched registration
 
@@ -325,6 +340,7 @@ void ServiceWorkerContainer::resolveJobPromise(
 
 void ServiceWorkerContainer::finishJob(ServiceWorkerJob* job)
 {
+    STARFISH_ASSERT(job != nullptr);
     m_jobMap.erase(job->data()->id);
 }
 

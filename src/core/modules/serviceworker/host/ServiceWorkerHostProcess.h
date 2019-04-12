@@ -39,6 +39,7 @@ class ServiceWorkerHostJobHandler;
 class ServiceWorkerHostConnection;
 class ServiceWorkerRegistrationData;
 class ServiceWorkerClientProcessInterface;
+class ProgramOptions;
 
 class ServiceWorkerHostProcess : public gc,
                                  public ServiceWorkerHostProcessInterface {
@@ -50,9 +51,11 @@ public:
     void operator=(ServiceWorkerHostProcess const&) = delete;
 
     void init(ThreadPool* threadPool);
-    DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
+    void start(ProgramOptions* programOptions);
 
     void scheduleJob(ServiceWorkerJob* job) override;
+
+    DEFINE_GETTER(ServiceWorkerHostConnection*, connection);
 
 private:
     static ServiceWorkerHostProcess* m_instance;
@@ -66,6 +69,7 @@ private:
     IORunnable* m_ioRunnable{ nullptr };
     ServiceWorkerHostJobHandler* m_jobHandler{ nullptr };
     ServiceWorkerHostConnection* m_connection{ nullptr };
+    ProgramOptions* m_po{ nullptr };
 };
 
 } // namespace Starfish

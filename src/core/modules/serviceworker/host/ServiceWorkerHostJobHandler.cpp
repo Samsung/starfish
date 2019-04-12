@@ -45,6 +45,8 @@ ServiceWorkerHostJobHandler::ServiceWorkerHostJobHandler(
 
 void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
 {
+    STARFISH_ASSERT(job != nullptr);
+
     // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
     // 1. Let jobQueue be null.
     JobQueue* jobQueue = nullptr;
@@ -80,6 +82,8 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
 ServiceWorkerRegistrationData* ServiceWorkerHostJobHandler::getRegistration(
     String* queriedScope)
 {
+    STARFISH_ASSERT(queriedScope != nullptr);
+
     // https://w3c.github.io/ServiceWorker/#get-registration-algorithm
     auto it = m_registrationMap.find(queriedScope);
     if (it == m_registrationMap.end()) {
@@ -91,6 +95,8 @@ ServiceWorkerRegistrationData* ServiceWorkerHostJobHandler::getRegistration(
 void ServiceWorkerHostJobHandler::setRegistration(
     String* scope, ServiceWorkerUpdateViaCache updateViaCacheMode)
 {
+    STARFISH_ASSERT(scope != nullptr);
+
     // https://w3c.github.io/ServiceWorker/#set-registration-algorithm
 
     // 3. Let registration be a new service worker registration whose scope url
@@ -105,6 +111,7 @@ void ServiceWorkerHostJobHandler::runJob(JobQueue* jobQueue)
     // https://w3c.github.io/ServiceWorker/#run-job-algorithm
 
     // 1. Assert: jobQueue is not empty.
+    STARFISH_ASSERT(jobQueue != nullptr);
     STARFISH_ASSERT(jobQueue->size() != 0);
 
     // 2. Queue a task to run these steps in parallel.
@@ -152,6 +159,8 @@ void ServiceWorkerHostJobHandler::queueTask(void (*fn)(size_t, void*),
 
 void ServiceWorkerHostJobHandler::registerServiceWorker(ServiceWorkerJob* job)
 {
+    STARFISH_ASSERT(job != nullptr);
+
     // https://w3c.github.io/ServiceWorker/#register-algorithm
 
     // 4. Let registration be the result of running the Get Registration
@@ -172,6 +181,8 @@ void ServiceWorkerHostJobHandler::registerServiceWorker(ServiceWorkerJob* job)
 
 void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
 {
+    STARFISH_ASSERT(job != nullptr);
+
     // https://w3c.github.io/ServiceWorker/#update-algorithm
     // 1. Let registration be the result of running the Get Registration
     // algorithm passing job’s scope url as the argument.
@@ -215,6 +226,7 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
 void ServiceWorkerHostJobHandler::runServiceWorker(
     ServiceWorkerData* serviceWorker)
 {
+    STARFISH_ASSERT(serviceWorker != nullptr);
     // https://w3c.github.io/ServiceWorker/#run-service-worker
 }
 
@@ -222,6 +234,9 @@ void ServiceWorkerHostJobHandler::install(
     ServiceWorkerJob* job, ServiceWorkerData* worker,
     ServiceWorkerRegistrationData* registration)
 {
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(worker != nullptr);
+    STARFISH_ASSERT(registration != nullptr);
     // https://w3c.github.io/ServiceWorker/#install
 
     // 1. Let installFailed be false.
@@ -246,6 +261,8 @@ void ServiceWorkerHostJobHandler::install(
 void ServiceWorkerHostJobHandler::resolveJobPromise(
     ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(registration != nullptr);
     // https://w3c.github.io/ServiceWorker/#resolve-job-promise-algorithm
     job->hostConnection()->resolveJobPromise(job, registration);
 }
@@ -254,6 +271,9 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
     ServiceWorkerRegistrationData* registration, const char* target,
     ServiceWorkerData* source)
 {
+    STARFISH_ASSERT(registration != nullptr);
+    STARFISH_ASSERT(target != nullptr);
+    STARFISH_ASSERT(source != nullptr);
     // https://w3c.github.io/ServiceWorker/#update-registration-state-algorithm
     // TODO: for target, use ServiceWorkerRegistrationState instead of char
 
@@ -276,17 +296,20 @@ void ServiceWorkerHostJobHandler::updateRegistrationState(
 
 void ServiceWorkerHostJobHandler::unregisterServiceWorker(ServiceWorkerJob* job)
 {
+    STARFISH_ASSERT(job != nullptr);
     // TODO: meet https://w3c.github.io/ServiceWorker/#unregister-algorithm
 }
 
 void ServiceWorkerHostJobHandler::finishJob(ServiceWorkerJob* job)
 {
+    STARFISH_ASSERT(job != nullptr);
     // https://w3c.github.io/ServiceWorker/#finish-job-algorithm
 
     // 1. Let jobQueue be job’s containing job queue.
     auto jobQueue = job->containingJobQueue();
 
     // 2. Assert: the first item in jobQueue is job.
+    STARFISH_ASSERT(jobQueue != nullptr);
     STARFISH_ASSERT(jobQueue->firstJob() == job);
 
     // 3. Dequeue from jobQueue.
