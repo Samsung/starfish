@@ -116,7 +116,6 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     , m_canvasPath(nullptr)
     , m_fillColor()
     , m_strokeColor()
-    , m_globalAlpha(1.0)
 {
     initialize();
     GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -146,14 +145,13 @@ void CanvasRenderingContext2DMixIn::initialize()
     m_fillColor = black;                // default black
     m_strokeColor = black;              // default black
     setLineWidth(1.0f);                 // default 1.0
-    m_globalAlpha = 1.0f;               // default 1.0
     setLineCap(CanvasLineCap::Butt);    // default "butt"
     setLineJoin(CanvasLineJoin::Miter); // default "miter"
     setMiterLimit(10.0f);
 
     m_canvas->setColor(m_fillColor);
     m_canvas->setStrokeColor(m_strokeColor);
-    m_canvas->setGlobalAlpha(m_globalAlpha);
+    m_canvas->setGlobalAlpha(1.0f);
 }
 
 void CanvasRenderingContext2DMixIn::finalize()
@@ -257,7 +255,6 @@ void CanvasRenderingContext2DMixIn::restore()
     m_canvas->restore();
     m_fillColor = m_canvas->color();
     m_strokeColor = m_canvas->strokeColor();
-    m_globalAlpha = m_canvas->globalAlpha();
     m_canvasPath->path()->setCTM(m_canvas->pathTransformMatrix());
 }
 
@@ -343,7 +340,7 @@ void CanvasRenderingContext2DMixIn::resetTransform()
 
 float CanvasRenderingContext2DMixIn::globalAlpha()
 {
-    return m_globalAlpha;
+    return m_canvas->globalAlpha();
 }
 
 void CanvasRenderingContext2DMixIn::setGlobalAlpha(float value)
@@ -351,9 +348,7 @@ void CanvasRenderingContext2DMixIn::setGlobalAlpha(float value)
     if (isInfOrNan(value) || value < .0f || value > 1.f) {
         return;
     }
-
-    m_globalAlpha = value;
-    m_canvas->setGlobalAlpha(m_globalAlpha);
+    m_canvas->setGlobalAlpha(value);
 }
 
 String* CanvasRenderingContext2DMixIn::globalCompositeOperation()
@@ -496,9 +491,8 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
     if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
         m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
     }
-    Unit::Color color =
-        Unit::Color(m_fillColor.r(), m_fillColor.g(), m_fillColor.b(),
-                    m_fillColor.a() * m_globalAlpha);
+    Unit::Color color = Unit::Color(m_fillColor.r(), m_fillColor.g(),
+                                    m_fillColor.b(), m_fillColor.a());
     m_canvas->setColor(color);
     m_canvas->drawRect(Unit::Rect(x, y, w, h));
 }
@@ -774,9 +768,8 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
         if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
             m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
         }
-        Unit::Color color =
-            Unit::Color(m_fillColor.r(), m_fillColor.g(), m_fillColor.b(),
-                        m_fillColor.a() * m_globalAlpha);
+        Unit::Color color = Unit::Color(m_fillColor.r(), m_fillColor.g(),
+                                        m_fillColor.b(), m_fillColor.a());
         m_canvas->setColor(color);
         m_canvas->fillPath(path);
         m_canvas->restore();
@@ -795,9 +788,8 @@ void CanvasRenderingContext2DMixIn::stroke(Path* path)
         if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
             m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
         }
-        Unit::Color color =
-            Unit::Color(m_strokeColor.r(), m_strokeColor.g(), m_strokeColor.b(),
-                        m_strokeColor.a() * m_globalAlpha);
+        Unit::Color color = Unit::Color(m_strokeColor.r(), m_strokeColor.g(),
+                                        m_strokeColor.b(), m_strokeColor.a());
         m_canvas->setColor(color);
         m_canvas->strokePath(path);
         m_canvas->restore();

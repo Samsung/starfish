@@ -166,12 +166,22 @@ class CanvasCairo : public Canvas {
 #endif
     }
 
+    void applySourceColorIfNeeds()
+    {
+        if (m_shouldApplyColor) {
+            Unit::Color clr = color();
+            cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(),
+                                  clr.A() * globalAlpha());
+        }
+    }
+
 public:
     CanvasCairo(WebView* webView, void* buffer, int width, int height,
                 int stride)
     {
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
+        m_shouldApplyColor = false;
         m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
@@ -189,6 +199,7 @@ public:
         m_surface = nullptr;
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
+        m_shouldApplyColor = false;
 
         initFromBuffer(data->mapBuffer(), data->bufferWidth(),
                        data->bufferHeight(), data->bufferStride());
@@ -201,6 +212,7 @@ public:
     {
         m_shouldDestroyCairo = true;
         m_shouldDestroySurface = true;
+        m_shouldApplyColor = false;
         m_webView = webView;
         m_canvas = nullptr;
         m_surface = nullptr;
@@ -322,7 +334,8 @@ public:
     {
         INSTALL_PROFILE_TIMER("CanvasImplCairo::beginOpacityLayer");
         save();
-        lastState().m_layerOpacity = c;
+        lastState().m_layerOpacity =
+            std::max<float>(0, std::min<float>(1.0, c));
         cairo_push_group(m_canvas);
     }
 
@@ -429,7 +442,7 @@ public:
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_color = clr;
-        cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(), clr.A());
+        m_shouldApplyColor = true;
     }
 
     virtual void setStrokeColor(const Unit::Color& clr)
@@ -440,7 +453,8 @@ public:
 
     virtual void setGlobalAlpha(float c)
     {
-        lastState().m_globalAlpha = c;
+        lastState().m_globalAlpha = std::max<float>(0, std::min<float>(1.0, c));
+        m_shouldApplyColor = true;
     }
 
     virtual Unit::Color color()
@@ -651,6 +665,8 @@ public:
         if (isHole) {
             cairo_set_source_rgba(m_canvas, 0, 0, 0, 0);
             cairo_set_operator(m_canvas, CAIRO_OPERATOR_SOURCE);
+        } else {
+            applySourceColorIfNeeds();
         }
         cairo_translate(m_canvas, xx, yy);
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
@@ -692,6 +708,7 @@ public:
         cairo_line_to(m_canvas, p4.x(), p4.y());
         cairo_line_to(m_canvas, p1.x(), p1.y());
         cairo_close_path(m_canvas);
+        applySourceColorIfNeeds();
         cairo_fill(m_canvas);
 
         cairo_restore(m_canvas);
@@ -783,12 +800,8 @@ public:
 
         cairo_rectangle(m_canvas, 0, 0, ww, hh);
 
-        if (lastState().m_layerOpacity < 1) {
-            cairo_clip(m_canvas);
-            cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
-        } else {
-            cairo_fill(m_canvas);
-        }
+        cairo_clip(m_canvas);
+        cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
 
         // drawDebugLine(xx,yy,ww,hh);
         cairo_pattern_destroy(resizePattern);
@@ -926,12 +939,8 @@ public:
 
             cairo_rectangle(m_canvas, 0.0, 0.0, ww, hh);
 
-            if (lastState().m_layerOpacity < 1) {
-                cairo_clip(m_canvas);
-                cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
-            } else {
-                cairo_fill(m_canvas);
-            }
+            cairo_clip(m_canvas);
+            cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
 
             cairo_pattern_destroy(pattern);
         }
@@ -997,12 +1006,8 @@ public:
 
             cairo_rectangle(m_canvas, 0, 0, ww, hh);
 
-            if (lastState().m_layerOpacity < 1) {
-                cairo_clip(m_canvas);
-                cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
-            } else {
-                cairo_fill(m_canvas);
-            }
+            cairo_clip(m_canvas);
+            cairo_paint_with_alpha(m_canvas, lastState().m_layerOpacity);
 
             cairo_pattern_destroy(pattern);
         }
@@ -1211,6 +1216,7 @@ public:
             cairo_close_path(m_canvas);
             return;
         }
+        applySourceColorIfNeeds();
         cairo_stroke(m_canvas);
     }
     virtual void strokePreserve()
@@ -1218,6 +1224,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
+        applySourceColorIfNeeds();
         cairo_stroke_preserve(m_canvas);
     }
     virtual void strokePath(Path* path)
@@ -1234,6 +1241,7 @@ public:
             cairo_close_path(m_canvas);
             return;
         }
+        applySourceColorIfNeeds();
         cairo_fill(m_canvas);
     }
     virtual void fillPreserve()
@@ -1241,6 +1249,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
+        applySourceColorIfNeeds();
         cairo_fill_preserve(m_canvas);
     }
     virtual void fillPath(Path* path)
@@ -1344,17 +1353,20 @@ private:
                                 cairo_line_to(canvas, p4.x(), p4.y());
                                 cairo_line_to(canvas, p1.x(), p1.y());
                                 cairo_close_path(canvas);
+                                applySourceColorIfNeeds();
                                 cairo_fill(canvas);
                                 cairo_restore(canvas);
                             } else {
                                 // left, top, w, h
                                 Unit::Rect rt(xx, y, h, h);
                                 cairo_rectangle(canvas, xx, y, h, h);
+                                applySourceColorIfNeeds();
                                 cairo_fill(canvas);
                             }
                         } else {
                             int ph = h * 0.2;
                             cairo_rectangle(canvas, xx, y + h - ph, h, ph);
+                            applySourceColorIfNeeds();
                             cairo_fill(canvas);
                         }
                     }
@@ -1370,6 +1382,7 @@ private:
                     const cairo_matrix_t& identityMatrix, cairo_glyph_t* glyphs,
                     size_t glyphCount)
     {
+        applySourceColorIfNeeds();
         cairo_font_face_t* fontFace =
             cairo_ft_font_face_create_for_ft_face(ftFace, 0);
         cairo_font_options_t* fontOptions = cairo_font_options_create();
@@ -1463,6 +1476,7 @@ private:
                     cairo_new_path(canvas);
                     cairo_rectangle(canvas, xBias, -fontMetrics.m_ascender,
                                     f->spaceWidth(), fontMetrics.m_fontHeight);
+                    applySourceColorIfNeeds();
                     cairo_stroke(canvas);
                     cairo_restore(canvas);
                     xBias += f->spaceWidth() + letterSpacing;
@@ -1488,6 +1502,7 @@ private:
                                             -fontMetrics.m_ascender,
                                             f->spaceWidth(),
                                             fontMetrics.m_fontHeight);
+                            applySourceColorIfNeeds();
                             cairo_stroke(canvas);
                         }
                         cairo_restore(canvas);
@@ -1632,6 +1647,7 @@ protected:
 
     bool m_shouldDestroyCairo;
     bool m_shouldDestroySurface;
+    bool m_shouldApplyColor;
 };
 
 Canvas* Canvas::create(WebView* webView, CanvasSurface* data)
