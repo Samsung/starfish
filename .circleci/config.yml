@@ -1,10 +1,11 @@
 version: 2
 jobs:
-  build:
+  build_android:
     docker:
       - image: circleci/android:api-28-ndk-r17b
     environment:
       JVM_OPTS: -Xmx3200m
+      resource_class: medium+
     steps:
       - add_ssh_keys:
           fingerprints:
@@ -54,3 +55,67 @@ jobs:
           name: Build Release Apk
           working_directory: build/android/build_shell/
           command: ./gradlew :app:assembleRelease
+  build_x64_debug:
+    docker:
+      - image: docker.sec.samsung.net:5000/starfish/starfish:cairo
+    working_directory: ~/starfish-workflows
+    environment:
+        no_proxy: "10.113.164.231,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
+    resource_class: xlarge 
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "b6:c9:79:20:89:ac:5d:2d:8e:6f:3f:12:0d:b3:45:cf"
+      - run: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
+      - run:
+            name: Add hosts
+            command: echo "10.113.164.231	xn--lve-6lad.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	xn--lve-6lad.web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	xn--n8j6ds53lwwkrqhv28a.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	www1.web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	www2.web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	www2.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	www1.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	www.not-web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	www.web-platform.test" >> /etc/hosts |
+              echo "10.113.164.231	xn--n8j6ds53lwwkrqhv28a.web-platform.test" >> /etc/hosts |
+              cat /etc/hosts
+      - run:
+            name: Restart network
+            command: /etc/init.d/networking restart
+      - checkout
+      - run:
+            name : Run build script
+            command: /root/workspace/build.sh x64_glfw_debug
+      - run:
+            name : Install test dep
+            command: ninja install_pixel_test_dep
+      - run:
+            no_output_timeout: 60m
+            name : Run test
+            command: /root/workspace/run_test.sh
+  build_x64_release:
+    docker:
+      - image: docker.sec.samsung.net:5000/starfish/starfish:cairo
+    working_directory: ~/starfish-workflows
+    environment:
+        no_proxy: "10.113.164.231,xn--lve-6lad.not-web-platform.test,xn--lve-6lad.web-platform.test,xn--n8j6ds53lwwkrqhv28a.not-web-platform.testwww1.web-platform.test,www2.web-platform.test,not-web-platform.test,web-platform.test,www2.not-web-platform.test,www1.not-web-platform.test,www.not-web-platform.test,www.web-platform.test,xn--n8j6ds53lwwkrqhv28a.web-platform.test"
+    resource_class: xlarge 
+    steps:
+      - add_ssh_keys:
+          fingerprints:
+            - "b6:c9:79:20:89:ac:5d:2d:8e:6f:3f:12:0d:b3:45:cf"
+      - run: no_proxy=165.213.149.164 curl -sL http://165.213.149.164/scripts/set_proxy_setting.sh | bash -
+      - checkout
+      - run:
+            name : Run build script
+            command: /root/workspace/build.sh x64_glfw_release
+workflows:
+  version: 2
+  build_All:
+    jobs:
+      - build_android
+      - build_x64_debug
+      - build_x64_release
