@@ -391,7 +391,7 @@ http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/scri
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/load-error-events-2.html
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/load-error-events-1.html
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/historical.html
-http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/fetch-src/failure.html
+#http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/fetch-src/failure.html
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/fetch-src/empty-with-base.html
 #http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/fetch-src/empty.html
 http://web-platform.test:8000/html/semantics/scripting-1/the-script-element/fetch-src/alpha/base.html
