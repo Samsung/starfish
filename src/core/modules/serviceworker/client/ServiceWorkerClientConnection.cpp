@@ -60,6 +60,8 @@ ServiceWorkerClientConnection::ServiceWorkerClientConnection()
 
 void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
 {
+    STARFISH_ASSERT(job != nullptr);
+
     job->setClientConnection(this);
 
     // marshalling
@@ -68,10 +70,7 @@ void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
     msg.addParam(job->data());
     msg.archive(writer);
 
-    // TODO:
-    // 3. replace calling the function with real sockets communication
-    auto hostConnection = ServiceWorkerHostProcess::getInstance()->connection();
-    hostConnection->onReceived(nullptr, writer.GetString());
+    m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
 }
 
 void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
@@ -81,6 +80,9 @@ void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
 void ServiceWorkerClientConnection::resolveJobPromise(
     ServiceWorkerJob* job, ServiceWorkerRegistrationData* registration)
 {
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(registration != nullptr);
+
     // find if this job owner context is still active.
     auto swpm = ServiceWorkerProcessManager::getInstance();
     auto globalScope = swpm->find(job->data()->contextId);

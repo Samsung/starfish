@@ -137,6 +137,8 @@ public:
     virtual ~JsonWriter();
 
     const char* GetString() const;
+    size_t GetSize() const;
+
     operator bool() const override
     {
         return true;

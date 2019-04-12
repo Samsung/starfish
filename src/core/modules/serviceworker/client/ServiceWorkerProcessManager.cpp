@@ -46,6 +46,8 @@
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
+#include "core/modules/serviceworker/host/ProgramOptions.h"
+
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
@@ -62,11 +64,17 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::getInstance()
 
 void ServiceWorkerProcessManager::init(WebView* webView)
 {
+    STARFISH_ASSERT(webView != nullptr);
+
     m_threadPool = webView->threadPool();
 
     // start I/O runner
     m_ioRunnable = new IORunnable(m_threadPool->messageLoop());
     m_ioThread = new AdaptedThread(m_threadPool);
+
+    STARFISH_ASSERT(m_ioRunnable != nullptr);
+    STARFISH_ASSERT(m_ioThread != nullptr);
+
     m_ioThread->start(m_ioRunnable);
 
     // create mock instances
@@ -101,31 +109,39 @@ ServiceWorkerProcessManager::~ServiceWorkerProcessManager()
 ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
     std::string origin)
 {
-    STARFISH_ASSERT(m_threadPool);
+    STARFISH_ASSERT(m_threadPool != nullptr);
 
     std::shared_ptr<ProcessData> processData = nullptr;
+
+    std::string encodedOrigin = StringUtils::toBase64(origin);
 
     // check if a process for this origin exists
     auto it = m_mapOriginToProcessData.find(origin);
     if (it == m_mapOriginToProcessData.end()) {
         processData = std::make_shared<ProcessData>();
         m_mapOriginToProcessData.insert(std::make_pair(origin, processData));
+
         // TODO: launch a service worker process
+        auto po = new ProgramOptions;
+        po->set("origin", origin.c_str());
+        m_serviceWorkerHostProcess->start(po);
+
     } else {
         processData = it->second;
     }
 
-    STARFISH_ASSERT(processData);
+    STARFISH_ASSERT(processData != nullptr);
 
     if (processData->connection == nullptr) {
         processData->connection = new ServiceWorkerClientConnection();
 
         std::string address = IPC_PROTOCOL;
         address.append(IPC_ADDRESS_PREFIX);
+        address.append(encodedOrigin);
 
-#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
-        // TODO: change the origin string to fd string
-        address.append(origin);
+#ifndef NDEBUG
+        STARFISH_LOG_WARN("client: connect: %s\n", address.c_str());
+        STARFISH_LOG_WARN("client: origin: %s\n", origin.c_str());
 #endif
         processData->connection->socket()->connect(address.c_str());
         m_ioRunnable->addClient(processData->connection);
@@ -137,6 +153,7 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 void ServiceWorkerProcessManager::registerActiveGlobalScope(
     Id<GlobalScope> id, GlobalScope* globalScope)
 {
+    STARFISH_ASSERT(globalScope != nullptr);
     m_mapIdToActiveGlobalScope.insert(std::make_pair(id, globalScope));
 }
 

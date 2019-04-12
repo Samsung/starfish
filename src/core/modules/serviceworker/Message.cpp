@@ -43,6 +43,7 @@ Message::Message(const char* msgname)
 
 void Message::addParam(MessageParam* param)
 {
+    STARFISH_ASSERT(param != nullptr);
     params.push_back(param);
 }
 

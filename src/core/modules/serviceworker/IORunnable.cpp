@@ -40,7 +40,7 @@ IORunnable::IORunnable(MessageLoop* messageLoop)
     , m_isStopped(false)
     , m_rcvtimeout(RECV_TIMEOUT)
 {
-    STARFISH_ASSERT(messageLoop);
+    STARFISH_ASSERT(messageLoop != nullptr);
     GC_REGISTER_FINALIZER_NO_ORDER(this,
                                    [](void* obj, void* cd) {
                                        IORunnable* self = (IORunnable*)obj;

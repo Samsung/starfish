@@ -326,6 +326,11 @@ const char* JsonWriter::GetString() const
     return STREAM->GetString();
 }
 
+size_t JsonWriter::GetSize() const
+{
+    return STREAM->GetSize();
+}
+
 JsonWriter& JsonWriter::StartObject()
 {
     WRITER->StartObject();

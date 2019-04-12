@@ -43,6 +43,8 @@
 #include "core/modules/serviceworker/Connection.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
+#include "core/modules/serviceworker/host/ProgramOptions.h"
+
 namespace Starfish {
 
 ServiceWorkerHostProcess* ServiceWorkerHostProcess::m_instance = nullptr;
@@ -62,8 +64,6 @@ void ServiceWorkerHostProcess::destroy()
 }
 
 ServiceWorkerHostProcess::ServiceWorkerHostProcess()
-    : m_messageLoop(nullptr)
-    , m_jobHandler(nullptr)
 {
 }
 
@@ -73,6 +73,8 @@ ServiceWorkerHostProcess::~ServiceWorkerHostProcess()
 
 void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
 {
+    STARFISH_ASSERT(threadPool != nullptr);
+
     m_threadPool = threadPool;
     m_messageLoop = m_threadPool->messageLoop();
 
@@ -80,28 +82,43 @@ void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
     m_ioRunnable = new IORunnable(m_messageLoop);
     m_ioThread = new AdaptedThread(m_threadPool);
 
-    // create a connection
-    m_connection = new ServiceWorkerHostConnection(this);
-
-    std::string address = IPC_PROTOCOL;
-    address.append(IPC_ADDRESS_PREFIX);
-#ifndef SERVICE_WORKER_USE_MULTI_PROCESS
-// TODO: make the address with the given argument from the process host
-#endif
-    m_connection->socket()->bind(address.c_str());
-    m_ioRunnable->addClient(m_connection);
+    STARFISH_ASSERT(m_jobHandler != nullptr);
+    STARFISH_ASSERT(m_ioRunnable != nullptr);
+    STARFISH_ASSERT(m_ioThread != nullptr);
 
     // start I/O runner
     m_ioThread->start(m_ioRunnable);
 }
 
+void ServiceWorkerHostProcess::start(ProgramOptions* programOptions)
+{
+    STARFISH_ASSERT(programOptions != nullptr);
+
+    std::string origin = programOptions->get("origin");
+    std::string encodedOrigin = StringUtils::toBase64(origin);
+
+    // create a connection
+    m_connection = new ServiceWorkerHostConnection(this);
+
+    std::string address = IPC_PROTOCOL;
+    address.append(IPC_ADDRESS_PREFIX);
+    address.append(encodedOrigin);
+
+#ifndef NDEBUG
+    STARFISH_LOG_WARN("host: bind: %s\n", address.c_str());
+    STARFISH_LOG_WARN("host: origin: %s\n", origin.c_str());
+#endif
+    STARFISH_ASSERT(m_connection != nullptr);
+    STARFISH_ASSERT(m_ioRunnable != nullptr);
+
+    m_connection->socket()->bind(address.c_str());
+    m_ioRunnable->addClient(m_connection);
+}
+
 void ServiceWorkerHostProcess::scheduleJob(ServiceWorkerJob* job)
 {
-    // https://w3c.github.io/ServiceWorker/#schedule-job-algorithm
-    STARFISH_ASSERT(m_jobHandler);
-
-    // TODO: move this into connection.
-    job->setHostConnection(m_connection);
+    STARFISH_ASSERT(job != nullptr);
+    STARFISH_ASSERT(m_jobHandler != nullptr);
     m_jobHandler->scheduleJob(job);
 }
 

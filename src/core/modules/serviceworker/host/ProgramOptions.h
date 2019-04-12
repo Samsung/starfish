@@ -18,45 +18,48 @@
  */
 
 #if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerTypes__)
-#define __StarfishServiceWorkerTypes__
+    !defined(__StarfishProgramOptions__)
+#define __StarfishProgramOptions__
+
+#include <cstdio>
+#include <cstring>
+#include <functional>
+#include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace Starfish {
 
-class GlobalScope;
-class ServiceWorkerJob;
-class ExecutionContext;
+class ProgramOptions : public gc {
+public:
+    typedef int (*logger_t)(const char*, ...);
+    typedef std::unordered_map<std::string, std::string> map_t;
 
-enum class ServiceWorkerUpdateViaCache : unsigned {
-    Imports,
-    All,
-    None,
+    ProgramOptions();
+
+    bool has(const std::string& key);
+
+    template <typename T = std::string>
+    T get(const std::string& key)
+    {
+        T converted;
+        std::istringstream in(m_map[key]);
+        in >> converted >> std::ws;
+        return converted;
+    }
+
+    template <typename T>
+    void set(const std::string& key, const T& value)
+    {
+        m_map[key] = value;
+    }
+
+private:
+    map_t m_map;
+    logger_t m_logger;
 };
 
-enum class ServiceWorkerJobType : unsigned {
-    Register,
-    Unregister,
-    Update,
-};
-
-enum class WorkerType : unsigned {
-    Classic,
-    Module,
-};
-
-using ServiceWorkerClient = ExecutionContext;
-using ServiceWorkerRegistrationKey = String*;
-
-using ServiceWorkerJobId = Id<ServiceWorkerJob>;
-using ServiceWorkerContextId = Id<GlobalScope>;
-
-#ifdef SERVICE_WORKER_USE_MULTI_PROCESS
-#define IPC_PROTOCOL "ipc://"
-#define IPC_ADDRESS_PREFIX ".ipc/"
-#else
-#define IPC_PROTOCOL "inproc://"
-#define IPC_ADDRESS_PREFIX "sw/"
-#endif
 } // namespace Starfish
 
 #endif

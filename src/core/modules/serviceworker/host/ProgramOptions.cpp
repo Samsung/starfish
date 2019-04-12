@@ -17,46 +17,28 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishServiceWorkerTypes__)
-#define __StarfishServiceWorkerTypes__
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
+
+#include "StarfishConfig.h"
+
+#include "core/modules/serviceworker/host/ProgramOptions.h"
 
 namespace Starfish {
 
-class GlobalScope;
-class ServiceWorkerJob;
-class ExecutionContext;
+ProgramOptions::ProgramOptions()
+{
+    m_logger = nullptr;
+}
 
-enum class ServiceWorkerUpdateViaCache : unsigned {
-    Imports,
-    All,
-    None,
-};
+bool ProgramOptions::has(const std::string& key)
+{
+    auto it = m_map.find(key);
+    if (it != m_map.end()) {
+        return true;
+    }
+    return false;
+}
 
-enum class ServiceWorkerJobType : unsigned {
-    Register,
-    Unregister,
-    Update,
-};
-
-enum class WorkerType : unsigned {
-    Classic,
-    Module,
-};
-
-using ServiceWorkerClient = ExecutionContext;
-using ServiceWorkerRegistrationKey = String*;
-
-using ServiceWorkerJobId = Id<ServiceWorkerJob>;
-using ServiceWorkerContextId = Id<GlobalScope>;
-
-#ifdef SERVICE_WORKER_USE_MULTI_PROCESS
-#define IPC_PROTOCOL "ipc://"
-#define IPC_ADDRESS_PREFIX ".ipc/"
-#else
-#define IPC_PROTOCOL "inproc://"
-#define IPC_ADDRESS_PREFIX "sw/"
-#endif
 } // namespace Starfish
 
 #endif

@@ -68,6 +68,8 @@ String* ServiceWorkerRegistration::scope() const
 
 String* ServiceWorkerRegistration::updateViaCache() const
 {
+    STARFISH_ASSERT(m_data != nullptr);
+
     switch (m_data->updateViaCache) {
     case ServiceWorkerUpdateViaCache::Imports:
         return String::createASCIIString("imports");
