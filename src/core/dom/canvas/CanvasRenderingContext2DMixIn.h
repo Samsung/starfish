@@ -214,7 +214,6 @@ private:
 
     Unit::Color m_fillColor;
     Unit::Color m_strokeColor;
-    float m_globalAlpha;
 };
 }
 #endif
