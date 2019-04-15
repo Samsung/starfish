@@ -30,6 +30,7 @@ python binding_generator/scripts/starfish_code_generator.py src/ src/binding/
 
 rsync -av --delete --delete-excluded --filter="merge tool/release/filter-android.txt" build/android/apk_root/ ../$repo
 rsync -av --delete --delete-excluded --filter="merge tool/release/filter-android.txt" . ../$repo/src/starfish
+cp -f .gitignore ../$repo
 
 hash=`git log | head -1 | cut -f2 -d' ' | cut -c 1-7`
 today=`date +%y%m%d`
