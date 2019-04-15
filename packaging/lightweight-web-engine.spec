@@ -102,6 +102,7 @@ BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
 BuildRequires: pkgconfig(capi-media-sound-manager)
 BuildRequires: pkgconfig(capi-location-manager)
+BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
