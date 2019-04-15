@@ -89,14 +89,16 @@ android {
     }
     buildTypes {
         debug {
-            signingConfig signingConfigs.platform
+            signingConfig signingConfigs.debug
             debuggable = true
             jniDebuggable true
             renderscriptDebuggable true
         }
         release {
-            signingConfig signingConfigs.platform
+            signingConfig signingConfigs.release
             debuggable = false
+            jniDebuggable true
+            renderscriptDebuggable true
             if (apiCodeNum <= 21.1F) {
                 runProguard true
             } else {
