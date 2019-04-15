@@ -104,7 +104,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isTransitionEvent() const;
+    virtual bool isTransitionEvent() const override;
 
     String* propertyName() const
     {

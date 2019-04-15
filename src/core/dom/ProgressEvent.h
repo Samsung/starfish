@@ -92,7 +92,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isProgressEvent() const;
+    virtual bool isProgressEvent() const override;
 
     bool lengthComputable() const
     {

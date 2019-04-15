@@ -120,7 +120,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isErrorEvent() const;
+    virtual bool isErrorEvent() const override;
 
     // Read-only interface
     String* message()

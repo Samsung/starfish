@@ -120,7 +120,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isUIEvent() const;
+    virtual bool isUIEvent() const override;
 
     Window* view() const
     {
