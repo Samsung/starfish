@@ -33,6 +33,10 @@
 #include <Ecore.h>
 #endif
 
+#if defined(TIZEN_DEVICE_API)
+#include <system/system_info.h>
+#endif
+
 #if defined(PORT_WEBVIEW_BRIDGE_ECORE_WAYLAND2)
 #define EFL_BETA_API_SUPPORT
 #include <Ecore_Wl2.h>
@@ -263,10 +267,16 @@ int main(int argc, char* argv[])
     std::string customUserAgentString;
     std::string builtinPolyfillPathString;
     int width = 1280, height = 720;
-#ifdef STARFISH_TIZEN_TV
+#if defined(STARFISH_TIZEN_TV)
     width = 1920;
     height = 1080;
+#elif defined(TIZEN_DEVICE_API)
+    system_info_get_platform_int("http://tizen.org/feature/screen.width",
+                                 &width);
+    system_info_get_platform_int("http://tizen.org/feature/screen.height",
+                                 &height);
 #endif
+
     int x = 0, y = 0;
     float scaleFactor = 1;
     bool enableSecurity = true;
