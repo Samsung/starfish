@@ -2582,13 +2582,17 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 if (border.top().style() ==
                     BorderStyleValue::InsetBorderStyleValue) {
                     canvas->setColor(border.top().color().getDarkerColor());
+                    canvas->setStrokeColor(border.top().color().getDarkerColor());
                 } else if ((border.top().style() ==
                             BorderStyleValue::OutsetBorderStyleValue) &&
                            (border.top().color() == black)) {
                     canvas->setColor(
                         Unit::Color(238, 238, 238, border.top().color().a()));
+                    canvas->setStrokeColor(
+                        Unit::Color(238, 238, 238, border.top().color().a()));
                 } else {
                     canvas->setColor(border.top().color());
+                    canvas->setStrokeColor(border.top().color());
                 }
 
                 if ((border.top().style() ==

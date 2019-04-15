@@ -166,10 +166,13 @@ class CanvasCairo : public Canvas {
 #endif
     }
 
-    void applySourceColorIfNeeds()
+    void applySourceColorIfNeeds(bool useStrokeColor = false)
     {
         if (m_shouldApplyColor) {
             Unit::Color clr = color();
+            if (useStrokeColor) {
+                clr = strokeColor();
+            }
             cairo_set_source_rgba(m_canvas, clr.R(), clr.G(), clr.B(),
                                   clr.A() * globalAlpha());
         }
@@ -297,6 +300,7 @@ public:
         checkError();
         m_state.erase(m_state.end() - 1);
         cairo_restore(m_canvas);
+        m_shouldApplyColor = true;
     }
 
     // transformations (default transform is the identity matrix)
@@ -449,6 +453,7 @@ public:
     {
         STARFISH_ASSERT(m_canvas);
         lastState().m_strokeColor = clr;
+        m_shouldApplyColor = true;
     }
 
     virtual void setGlobalAlpha(float c)
@@ -1216,7 +1221,7 @@ public:
             cairo_close_path(m_canvas);
             return;
         }
-        applySourceColorIfNeeds();
+        applySourceColorIfNeeds(true);
         cairo_stroke(m_canvas);
     }
     virtual void strokePreserve()
@@ -1224,7 +1229,7 @@ public:
         if (!lastState().m_visible) {
             return;
         }
-        applySourceColorIfNeeds();
+        applySourceColorIfNeeds(true);
         cairo_stroke_preserve(m_canvas);
     }
     virtual void strokePath(Path* path)

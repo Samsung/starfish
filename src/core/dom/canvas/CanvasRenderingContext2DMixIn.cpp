@@ -114,8 +114,6 @@ CanvasRenderingContext2DMixIn::CanvasRenderingContext2DMixIn(
     , m_canvasSurface(nullptr)
     , m_canvas(nullptr)
     , m_canvasPath(nullptr)
-    , m_fillColor()
-    , m_strokeColor()
 {
     initialize();
     GC_REGISTER_FINALIZER_NO_ORDER(this,
@@ -142,15 +140,13 @@ void CanvasRenderingContext2DMixIn::initialize()
     m_canvasPath = new CanvasPath(executionContext());
 
     auto black = Unit::Color(0, 0, 0, 255);
-    m_fillColor = black;                // default black
-    m_strokeColor = black;              // default black
     setLineWidth(1.0f);                 // default 1.0
     setLineCap(CanvasLineCap::Butt);    // default "butt"
     setLineJoin(CanvasLineJoin::Miter); // default "miter"
     setMiterLimit(10.0f);
 
-    m_canvas->setColor(m_fillColor);
-    m_canvas->setStrokeColor(m_strokeColor);
+    m_canvas->setColor(black);
+    m_canvas->setStrokeColor(black);
     m_canvas->setGlobalAlpha(1.0f);
 }
 
@@ -253,8 +249,6 @@ void CanvasRenderingContext2DMixIn::save()
 void CanvasRenderingContext2DMixIn::restore()
 {
     m_canvas->restore();
-    m_fillColor = m_canvas->color();
-    m_strokeColor = m_canvas->strokeColor();
     m_canvasPath->path()->setCTM(m_canvas->pathTransformMatrix());
 }
 
@@ -392,7 +386,7 @@ DOMStringOrCanvasGradientOrCanvasPattern
 CanvasRenderingContext2DMixIn::fillStyle()
 {
     return DOMStringOrCanvasGradientOrCanvasPattern::createDOMString(
-        m_fillColor.toHTMLColorCodeString());
+        m_canvas->color().toHTMLColorCodeString());
 }
 
 void CanvasRenderingContext2DMixIn::setFillStyle(
@@ -402,17 +396,17 @@ void CanvasRenderingContext2DMixIn::setFillStyle(
         String* v = value.getDOMStringValue();
         CSSTokenValue token(v->toUTF8NonGCString());
         CSSStyleValuePair pair;
+        Unit::Color fillColor;
         if (pair.updateValueUnitColor(token)) {
             if (pair.valueKind() ==
                 CSSStyleValuePair::ValueKind::ColorValueKind) {
-                m_fillColor = pair.colorValue();
+                fillColor = pair.colorValue();
             } else if (pair.valueKind() ==
                        CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                m_fillColor =
+                fillColor =
                     NamedColor::namedColorToColor(pair.namedColorValue());
             }
-            m_canvas->setColor(Unit::Color(m_fillColor.r(), m_fillColor.g(),
-                                           m_fillColor.b(), m_fillColor.a()));
+            m_canvas->setColor(fillColor);
         }
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -423,7 +417,7 @@ DOMStringOrCanvasGradientOrCanvasPattern
 CanvasRenderingContext2DMixIn::strokeStyle()
 {
     return DOMStringOrCanvasGradientOrCanvasPattern::createDOMString(
-        String::fromUTF8("black"));
+        m_canvas->strokeColor().toHTMLColorCodeString());
 }
 
 void CanvasRenderingContext2DMixIn::setStrokeStyle(
@@ -433,18 +427,17 @@ void CanvasRenderingContext2DMixIn::setStrokeStyle(
         String* v = value.getDOMStringValue();
         CSSTokenValue token(v->toUTF8NonGCString());
         CSSStyleValuePair pair;
+        Unit::Color strokeColor;
         if (pair.updateValueUnitColor(token)) {
             if (pair.valueKind() ==
                 CSSStyleValuePair::ValueKind::ColorValueKind) {
-                m_strokeColor = pair.colorValue();
+                strokeColor = pair.colorValue();
             } else if (pair.valueKind() ==
                        CSSStyleValuePair::ValueKind::NamedColorValueKind) {
-                m_strokeColor =
+                strokeColor =
                     NamedColor::namedColorToColor(pair.namedColorValue());
             }
-            m_canvas->setStrokeColor(
-                Unit::Color(m_strokeColor.r(), m_strokeColor.g(),
-                            m_strokeColor.b(), m_strokeColor.a()));
+            m_canvas->setStrokeColor(strokeColor);
         }
     } else {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
@@ -491,9 +484,6 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
     if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
         m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
     }
-    Unit::Color color = Unit::Color(m_fillColor.r(), m_fillColor.g(),
-                                    m_fillColor.b(), m_fillColor.a());
-    m_canvas->setColor(color);
     m_canvas->drawRect(Unit::Rect(x, y, w, h));
 }
 
@@ -768,9 +758,6 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
         if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
             m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
         }
-        Unit::Color color = Unit::Color(m_fillColor.r(), m_fillColor.g(),
-                                        m_fillColor.b(), m_fillColor.a());
-        m_canvas->setColor(color);
         m_canvas->fillPath(path);
         m_canvas->restore();
     }
@@ -788,9 +775,6 @@ void CanvasRenderingContext2DMixIn::stroke(Path* path)
         if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
             m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
         }
-        Unit::Color color = Unit::Color(m_strokeColor.r(), m_strokeColor.g(),
-                                        m_strokeColor.b(), m_strokeColor.a());
-        m_canvas->setColor(color);
         m_canvas->strokePath(path);
         m_canvas->restore();
     }
