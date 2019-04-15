@@ -211,9 +211,6 @@ private:
     CanvasSurface* m_canvasSurface;
     Canvas* m_canvas;
     CanvasPath* m_canvasPath;
-
-    Unit::Color m_fillColor;
-    Unit::Color m_strokeColor;
 };
 }
 #endif

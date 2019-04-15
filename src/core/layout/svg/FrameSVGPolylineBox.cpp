@@ -57,7 +57,7 @@ void FrameSVGPolylineBox::paintSVG(PaintingContext& ctx)
         FrameBox* cb = layoutParent()->asFrameBox();
         ctx.m_canvas->setLineWidth(
             style()->strokeWidth().specifiedValue(cb->width(), this));
-        ctx.m_canvas->setColor(style()->stroke().color());
+        ctx.m_canvas->setStrokeColor(style()->stroke().color());
         ctx.m_canvas->stroke();
     }
 }
