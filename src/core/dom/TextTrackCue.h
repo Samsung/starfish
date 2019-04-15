@@ -48,7 +48,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isTextTrackCue() const override;
 
-    virtual ExecutionContext* executionContext() override;
+    virtual ExecutionContext* executionContext() const override;
 
     TextTrack* track()
     {

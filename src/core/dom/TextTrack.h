@@ -57,7 +57,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isTextTrack() const override;
 
-    virtual ExecutionContext* executionContext() override;
+    virtual ExecutionContext* executionContext() const override;
 
 #define VIRTUAL
 #define OVERRIDE

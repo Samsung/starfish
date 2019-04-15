@@ -40,7 +40,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isServiceWorkerRegistration() const override;
 
-    virtual ExecutionContext* executionContext() override;
+    virtual ExecutionContext* executionContext() const override;
 
     String* scope() const;             // binding interface
     String* updateViaCache() const;    // binding interface

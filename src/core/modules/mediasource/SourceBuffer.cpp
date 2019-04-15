@@ -428,7 +428,7 @@ SourceBuffer::SourceBuffer(Document* document, String* type)
                                    NULL, NULL, NULL);
 }
 
-ExecutionContext* SourceBuffer::executionContext()
+ExecutionContext* SourceBuffer::executionContext() const
 {
     return document()->executionContext();
 }

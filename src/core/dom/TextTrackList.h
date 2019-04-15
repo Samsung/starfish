@@ -39,7 +39,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isTextTrackList() const override;
 
-    virtual ExecutionContext* executionContext() override;
+    virtual ExecutionContext* executionContext() const override;
 
     // JS Bindings
     uint32_t length()

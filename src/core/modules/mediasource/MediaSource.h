@@ -61,7 +61,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isMediaSource() const override;
 
-    virtual ExecutionContext* executionContext() override;
+    virtual ExecutionContext* executionContext() const override;
 
     SourceBuffer* addSourceBuffer(String* type);
     void removeSourceBuffer(SourceBuffer* sourceBuffer);

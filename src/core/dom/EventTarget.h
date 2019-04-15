@@ -131,7 +131,7 @@ public:
     virtual ScriptBindingInstance* scriptBindingInstance() override;
     virtual bool isEventTarget() const override;
 
-    virtual ExecutionContext* executionContext() = 0;
+    virtual ExecutionContext* executionContext() const = 0;
 
     GCVector<EventListener*>* getEventListeners(const String* eventType);
 

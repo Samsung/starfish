@@ -36,7 +36,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSourceBufferList() const override;
 
-    virtual ExecutionContext* executionContext() override;
+    virtual ExecutionContext* executionContext() const override;
 
     size_t length() const
     {

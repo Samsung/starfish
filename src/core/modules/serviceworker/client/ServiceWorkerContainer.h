@@ -48,7 +48,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isServiceWorkerContainer() const override;
 
-    virtual ExecutionContext* executionContext() override;
+    virtual ExecutionContext* executionContext() const override;
 
     Promise* registerServiceWorker(
         String* scriptURL,

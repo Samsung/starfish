@@ -161,7 +161,7 @@ void Window::dispose()
 #endif
 }
 
-ExecutionContext* Window::executionContext()
+ExecutionContext* Window::executionContext() const
 {
     return document()->executionContext();
 }

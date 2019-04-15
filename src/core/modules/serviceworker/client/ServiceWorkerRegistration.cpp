@@ -37,7 +37,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(
 {
 }
 
-ExecutionContext* ServiceWorkerRegistration::executionContext()
+ExecutionContext* ServiceWorkerRegistration::executionContext() const
 {
     return m_executionContext;
 }

@@ -36,7 +36,7 @@ SourceBufferList::SourceBufferList(Document* document, MediaSource* sb)
 {
 }
 
-ExecutionContext* SourceBufferList::executionContext()
+ExecutionContext* SourceBufferList::executionContext() const
 {
     return document()->executionContext();
 }

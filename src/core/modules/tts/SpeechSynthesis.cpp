@@ -46,7 +46,7 @@ const char* voiceTypeToString(int type)
     return "Auto";
 }
 
-ExecutionContext* SpeechSynthesisUtterance::executionContext()
+ExecutionContext* SpeechSynthesisUtterance::executionContext() const
 {
     return document()->executionContext();
 }
@@ -85,7 +85,7 @@ SpeechSynthesisVoice::SpeechSynthesisVoice(Window* window, String* voiceURI,
 {
 }
 
-ExecutionContext* SpeechSynthesis::executionContext()
+ExecutionContext* SpeechSynthesis::executionContext() const
 {
     return document()->executionContext();
 }
