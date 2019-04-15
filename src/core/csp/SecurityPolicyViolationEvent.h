@@ -84,7 +84,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isSecurityPolicyViolationEvent() const;
+    virtual bool isSecurityPolicyViolationEvent() const override;
 
     void initSecurityPolicyViolationEvent(bool bubbles = true,
                                           bool cancelable = false)

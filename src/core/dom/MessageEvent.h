@@ -131,7 +131,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isMessageEvent() const;
+    virtual bool isMessageEvent() const override;
 
     ScriptValue data() const
     {

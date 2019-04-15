@@ -267,7 +267,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isKeyboardEvent() const;
+    virtual bool isKeyboardEvent() const override;
 
     String* key() const
     {

@@ -67,7 +67,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isCustomEvent() const;
+    virtual bool isCustomEvent() const override;
 
     ScriptValue detail() const
     {

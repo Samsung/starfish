@@ -75,7 +75,7 @@ public:
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
-    virtual bool isMediaQueryListEvent() const;
+    virtual bool isMediaQueryListEvent() const override;
 
     String* media() const
     {

@@ -50,7 +50,7 @@ public:
     }
 
     virtual void onReadyStateChange(ResourceRequest* request,
-                                    bool isExplicitAction)
+                                    bool isExplicitAction) override
     {
         if (request->isError()) {
             struct Param : public gc {
