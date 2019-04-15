@@ -58,7 +58,7 @@ MediaSource::MediaSource(Document* document)
 #endif
 }
 
-ExecutionContext* MediaSource::executionContext()
+ExecutionContext* MediaSource::executionContext() const
 {
     return m_document->executionContext();
 }

@@ -39,7 +39,7 @@ MediaQueryList::MediaQueryList(Document* document,
     m_matcher->addMediaQueryList(this);
 }
 
-ExecutionContext* MediaQueryList::executionContext()
+ExecutionContext* MediaQueryList::executionContext() const
 {
     return document()->executionContext();
 }

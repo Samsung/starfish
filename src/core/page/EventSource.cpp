@@ -236,7 +236,7 @@ EventSource::EventSource(::Starfish::Document* document, String* url,
     executionContext()->addPointerInRootSet(this);
 }
 
-ExecutionContext* EventSource::executionContext()
+ExecutionContext* EventSource::executionContext() const
 {
     return document()->executionContext();
 }

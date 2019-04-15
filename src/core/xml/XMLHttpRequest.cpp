@@ -51,7 +51,7 @@ DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, load);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, timeout);
 DEFINE_EVENT_LISTENER(XMLHttpRequestEventTarget, loadend);
 
-ExecutionContext* XMLHttpRequestEventTarget::executionContext()
+ExecutionContext* XMLHttpRequestEventTarget::executionContext() const
 {
     return document()->executionContext();
 }

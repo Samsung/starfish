@@ -32,7 +32,7 @@
 
 namespace Starfish {
 
-ExecutionContext* TextTrackCue::executionContext()
+ExecutionContext* TextTrackCue::executionContext() const
 {
     return document()->executionContext();
 }

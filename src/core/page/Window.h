@@ -189,12 +189,12 @@ public:
                                        GlobalPointingEventKind kind) override;
     virtual bool handleDefaultEvent(Event* event) override;
 
-    ExecutionContext* executionContext() override;
+    ExecutionContext* executionContext() const override;
 
     void dispose();
 
     // IDL methods
-    Document* document()
+    Document* document() const
     {
 #ifdef STARFISH_TC_COVERAGE
         STARFISH_LOG_INFO("&&&document\n");

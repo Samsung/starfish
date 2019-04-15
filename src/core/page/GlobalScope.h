@@ -35,7 +35,7 @@ public:
     {
     }
 
-    virtual ExecutionContext* executionContext() = 0;
+    virtual ExecutionContext* executionContext() const = 0;
 
     DEFINE_GETTER(WebBase*, webBase);
     DEFINE_GETTER(Id<GlobalScope>, uid);

@@ -795,7 +795,7 @@ public:
         m_inHTMLConstructionSite = value;
     }
 
-    ExecutionContext* executionContext() override;
+    ExecutionContext* executionContext() const override;
 
 private:
     void validateReplace(Node* node, Node* child);

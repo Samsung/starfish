@@ -58,7 +58,7 @@ void MessagePort::transferReceive(TransferedData* transfered)
     entangle(this, holder->remotePort());
 }
 
-ExecutionContext* MessagePort::executionContext()
+ExecutionContext* MessagePort::executionContext() const
 {
     return m_executionContext;
 }

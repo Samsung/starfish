@@ -2358,7 +2358,7 @@ void Node::invalidateNodeListCacheDueToChangeClassNameOfDescendant()
     }
 }
 
-ExecutionContext* Node::executionContext()
+ExecutionContext* Node::executionContext() const
 {
     return document()->executionContext();
 }

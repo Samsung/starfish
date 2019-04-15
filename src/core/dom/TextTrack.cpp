@@ -47,7 +47,7 @@ TextTrack::TextTrack(Document* document, Kind kind, String* label,
 {
 }
 
-ExecutionContext* TextTrack::executionContext()
+ExecutionContext* TextTrack::executionContext() const
 {
     return document()->executionContext();
 }

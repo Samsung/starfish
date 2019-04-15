@@ -133,7 +133,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isSourceBuffer() const override;
 
-    virtual ExecutionContext* executionContext() override;
+    virtual ExecutionContext* executionContext() const override;
 #define VIRTUAL
 #define OVERRIDE
     DECLARE_EVENT_LISTENER(updatestart);

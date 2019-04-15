@@ -25,7 +25,7 @@
 
 namespace Starfish {
 
-ExecutionContext* TextTrackList::executionContext()
+ExecutionContext* TextTrackList::executionContext() const
 {
     return document()->executionContext();
 }

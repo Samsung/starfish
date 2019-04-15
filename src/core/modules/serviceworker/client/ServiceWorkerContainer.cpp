@@ -74,7 +74,7 @@ ServiceWorkerContainer::~ServiceWorkerContainer()
 {
 }
 
-ExecutionContext* ServiceWorkerContainer::executionContext()
+ExecutionContext* ServiceWorkerContainer::executionContext() const
 {
     return m_executionContext;
 }

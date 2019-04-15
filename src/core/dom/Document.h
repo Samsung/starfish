@@ -267,7 +267,7 @@ public:
 
     BrowsingContext* browsingContext() const;
 
-    ExecutionContext* executionContext() const
+    ExecutionContext* executionContext() const override
     {
         return m_executionContext;
     }

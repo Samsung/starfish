@@ -41,7 +41,7 @@ public:
                       void* domObjectPointer) override;
     virtual bool isXMLHttpRequestEventTarget() const override;
 
-    virtual ExecutionContext* executionContext() override;
+    virtual ExecutionContext* executionContext() const override;
 
 #define VIRTUAL
 #define OVERRIDE

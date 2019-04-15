@@ -55,7 +55,7 @@ String* ServiceWorker::state() const
     STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
 }
 
-ExecutionContext* ServiceWorker::executionContext()
+ExecutionContext* ServiceWorker::executionContext() const
 {
     return m_executionContext;
 }
