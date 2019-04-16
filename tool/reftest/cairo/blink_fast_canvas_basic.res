@@ -11,7 +11,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/2d.composite.globalAlpha.fi
 #test/cairo/reftest/vendor/blink_original/fast/canvas/bug503422.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/bug535171.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas_arc_largeangles.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-2d-imageData-create-nonfinite.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-2d-imageData-create-nonfinite.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-after-destroy-iframe.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-after-detachment.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-alphaImageData-behavior.html
@@ -108,12 +108,12 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-fill-rule.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-font-ex-units-crash.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-frameless-document-text.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getContext-invalid.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData-invalid.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData-large-crash.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData-largeNonintegralDimensions.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData-negative-source.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData-rounding.html
+test/cairo/reftest/vendor/blink/fast/canvas/canvas-getImageData.html
+#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData-invalid.html // Failed, equally with major browsers.
+test/cairo/reftest/vendor/blink/fast/canvas/canvas-getImageData-large-crash.html
+test/cairo/reftest/vendor/blink/fast/canvas/canvas-getImageData-largeNonintegralDimensions.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData-negative-source.html
+#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getImageData-rounding.html // Failed, equally with major browsers.
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-gradient-without-path.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-hides-fallback.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-hit-regions-accessibility-test.html
@@ -133,8 +133,8 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-getContext-invalid.h
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageBitmap-close.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageBitmap-structured-clone.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageBitmap-transferable.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageData-behaviour.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageData-constructor.html
+#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageData-behaviour.html // needs to fix a bug related to Uint8ClampedArray
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageData-constructor.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageData-neutered-source.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-ImageData-workers.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-imageSmoothingEnabled.html

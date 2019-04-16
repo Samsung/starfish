@@ -147,6 +147,10 @@ section are supported.
 |  | method | boolean isPointInPath(Path2D path, unrestricted double x, unrestricted double y, optional CanvasFillRule fillRule = "nonzero") | Reports whether or not the specified point is contained in the current path. |
 |  | method | boolean isPointInStroke(unrestricted double x, unrestricted double y) | Reports whether or not the specified point is inside the area contained by the stroking of a path. |
 |  | method | boolean isPointInStroke(Path2D path, unrestricted double x, unrestricted double y) | Reports whether or not the specified point is inside the area contained by the stroking of a path. |
+| [CanvasImageData](https://html.spec.whatwg.org/multipage/canvas.html#canvasimagedata) | interface mixin | CanvasImageData |  |
+|  | method | ImageData createImageData(long sw, long sh) | Creates a new, blank ImageData object with the specified dimensions |
+|  | method | ImageData createImageData(ImageData imagedata) | Creates a new, blank ImageData object with the specified dimensions |
+|  | method | ImageData getImageData(long sx, long sy, long sw, long sh) | Returns an ImageData object representing the underlying pixel data for a specified portion of the canvas. |
 | [CanvasLineCap](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinecap) | enum | CanvasLineCap | "butt", "round", "square" |
 | [CanvasLineJoin](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinejoin) | enum | CanvasLineJoin | "round", "bevel", "miter" |
 | [CanvasPath ](https://html.spec.whatwg.org/multipage/canvas.html#canvaspath) | interface mixin | CanvasPath |  |

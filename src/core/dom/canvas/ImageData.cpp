@@ -20,25 +20,98 @@
 #ifdef STARFISH_ENABLE_CANVAS
 
 #include "StarfishConfig.h"
+#include "EscargotPublic.h"
 #include "core/dom/Document.h"
 #include "core/dom/canvas/ImageData.h"
 #include "core/dom/ExecutionContext.h"
+
+#ifndef CRASH
+#define CRASH STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE
+#endif
+#include "../third_party/escargot/third_party/checked_arithmetic/CheckedArithmetic.h"
 
 namespace Starfish {
 ImageData::ImageData(ExecutionContext* ownerExecutionContext)
     : ScriptWrappable(this)
     , m_executionContext(ownerExecutionContext)
-    , m_data(createEmptyUint8ClampedArray(
-          executionContext()->scriptBindingInstance()))
 {
 }
 
-ImageData::ImageData(ExecutionContext* ownerExecutionContext,
-                     ScriptUint8ClampedArray array)
-    : ScriptWrappable(this)
-    , m_executionContext(ownerExecutionContext)
-    , m_data(array)
+ImageData::ImageData(ExecutionContext* ownerExecutionContext, uint32_t sw,
+                     uint32_t sh)
+    : ImageData(ownerExecutionContext)
 {
+    if (!sw || !sh) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INDEX_SIZE_ERR,
+                               "sw and sh are must not zero");
+    }
+    Checked<int, RecordOverflow> dataSize = 4;
+    dataSize *= sw;
+    dataSize *= sh;
+    if (dataSize.hasOverflowed()) {
+        throw new DOMException(
+            executionContext(), DOMException::Code::INDEX_SIZE_ERR,
+            "The requested image size exceeds the supported range.");
+    }
+
+    initialize(sh, sw);
+}
+
+ImageData::ImageData(ExecutionContext* ownerExecutionContext,
+                     ScriptUint8ClampedArray data, uint32_t sw,
+                     Nullable<uint32_t> sh)
+    : ImageData(ownerExecutionContext)
+{
+    size_t length = data->bytelength();
+    if (!length || length % 4 != 0) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_STATE_ERR);
+    }
+    length = length / 4;
+    if (!sw || length % sw != 0) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INDEX_SIZE_ERR);
+    }
+    size_t height = length / sw;
+    if (sh.hasValue()) {
+        if (height != sh.getValue()) {
+            throw new DOMException(executionContext(),
+                                   DOMException::Code::INDEX_SIZE_ERR);
+        }
+    }
+
+    initialize(height, sw, data);
+}
+
+void ImageData::initialize(int32_t rows, int32_t pixelsPerRow,
+                           ScriptUint8ClampedArray source)
+{
+    // https://html.spec.whatwg.org/multipage/canvas.html#create-an-imagedata-object
+    if (source) {
+        setData(source);
+    } else {
+        size_t destSize = rows * pixelsPerRow * 4;
+        // TODO : If the Canvas Pixel ArrayBuffer cannot be allocated, then
+        // throw the RangeError thrown by JavaScript, and return.
+        auto canvasPixelArrayBuffer = createArrayBuffer(
+            executionContext()->scriptBindingInstance(), destSize);
+        ContextRef* ctx =
+            executionContext()->scriptBindingInstance()->scriptContext();
+        ExecutionStateRef* state = ExecutionStateRef::create(ctx);
+        uint8_t* dest = canvasPixelArrayBuffer->toObject(state)
+                            ->asArrayBufferObject()
+                            ->rawBuffer();
+        auto uint8ClampedArray = createEmptyUint8ClampedArray(
+            executionContext()->scriptBindingInstance());
+
+        uint8ClampedArray->setBuffer(
+            canvasPixelArrayBuffer->toObject(state)->asArrayBufferObject(), 0,
+            destSize, destSize);
+        setData(uint8ClampedArray);
+    }
+    setWidth(pixelsPerRow);
+    setHeight(rows);
 }
 
 ScriptBindingInstance* ImageData::scriptBindingInstance()
@@ -94,4 +167,5 @@ ScriptWrappable* SerializedImageData::createDeserializingInstance(
     return nullptr;
 }
 }
+#undef CRASH
 #endif

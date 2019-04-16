@@ -147,6 +147,8 @@ public:
                    float dx, float dy, float dw, float dh);
 
     // CanvasImageData
+    ImageData* createImageData(int32_t sw, int32_t sh);
+    ImageData* createImageData(ImageData* imagedata);
     ImageData* getImageData(int32_t sx, int32_t sy, int32_t sw, int32_t sh);
 
     // CanvasPathDrawingStyles

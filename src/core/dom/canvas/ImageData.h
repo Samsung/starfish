@@ -28,9 +28,10 @@
 namespace Starfish {
 class ImageData : public ScriptWrappable, public Serializable {
 public:
-    ImageData(ExecutionContext* ownerExecutionContext);
+    ImageData(ExecutionContext* ownerExecutionContext, uint32_t sw,
+              uint32_t sh);
     ImageData(ExecutionContext* ownerExecutionContext,
-              ScriptUint8ClampedArray array);
+              ScriptUint8ClampedArray data, uint32_t sw, Nullable<uint32_t> sh);
 
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
@@ -58,6 +59,11 @@ public:
     }
 
 private:
+    ImageData(ExecutionContext* ownerExecutionContext);
+
+    void initialize(int32_t rows, int32_t pixelsPerRow,
+                    ScriptUint8ClampedArray source = nullptr);
+
     ExecutionContext* m_executionContext;
     ScriptUint8ClampedArray m_data;
     uint32_t m_width;
