@@ -90,7 +90,8 @@ public:
 
 protected:
     Path()
-        : m_needNewSubPath(true)
+        : m_matrix(SkMatrix::I())
+        , m_needNewSubPath(true)
     {
     }
     SkMatrix m_matrix;

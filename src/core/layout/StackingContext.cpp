@@ -2524,6 +2524,7 @@ void StackingContext::paintStackingContext(Canvas* canvas,
 
 void StackingContext::compositeStackingContext(Compositor* compositor)
 {
+    STARFISH_ASSERT(compositor != nullptr);
     STARFISH_ASSERT(needsGraphicsBuffer());
 
     LayoutRect visibleRect = StackingContext::visibleRect();
@@ -2540,6 +2541,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     }
 
     ComputedStyle* ownerStyle = m_owner->style();
+    STARFISH_ASSERT(ownerStyle != nullptr);
+
     FrameBox* parentBox = parent() ? parent()->owner() : nullptr;
 
     CompositorStateRestorer r(compositor, this, parentBox);
@@ -2547,6 +2550,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     if (isIFrameStackingContextOwner()) {
         if (m_childContexts.size()) {
             StackingContext* childCtx = m_childContexts[0]->at(0);
+            STARFISH_ASSERT(childCtx != nullptr);
+
             if (childCtx->needsGraphicsBuffer()) {
                 auto bc = m_owner->node()
                               ->asHTMLIFrameElement()
