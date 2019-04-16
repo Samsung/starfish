@@ -22,7 +22,7 @@
 #include "core/dom/ExecutionContext.h"
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
-#include "core/modules/serviceworker/MessageParam.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
@@ -37,6 +37,7 @@ ServiceWorkerJob::ServiceWorkerJob(ServiceWorkerJobData* data)
         m_data = data;
     } else {
         m_data = new ServiceWorkerJobData();
+        STARFISH_ASSERT(m_data != nullptr);
     }
 }
 

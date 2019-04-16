@@ -32,7 +32,8 @@ enum class ServiceWorkerRegistrationState {
     Active,
 };
 
-struct ServiceWorkerRegistrationData : gc {
+class ServiceWorkerRegistrationData : public Archivable {
+public:
     String* scope{ String::emptyString };
     ServiceWorkerData* installingWorker{ nullptr };
     ServiceWorkerData* waitingWorker{ nullptr };
@@ -40,6 +41,10 @@ struct ServiceWorkerRegistrationData : gc {
     ServiceWorkerUpdateViaCache updateViaCache{
         ServiceWorkerUpdateViaCache::None
     };
+
+    // serialize/deserialize
+    const char* archiveId() const override;
+    void archive(Archiver& ar) override;
 };
 
 } // namespace Starfish

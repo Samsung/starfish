@@ -52,6 +52,8 @@
 
 namespace Starfish {
 
+ArchivableHandler_t Archiver::m_fpArchivableHandler = nullptr;
+
 struct JsonReaderStackItem {
     enum State { BeforeStart, Started, Closed };
 

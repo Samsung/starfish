@@ -25,7 +25,7 @@
 
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
-#include "core/modules/serviceworker/MessageParam.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/Message.h"
 
 #include "core/dom/ExecutionContext.h"
@@ -34,14 +34,18 @@
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+#include "core/modules/serviceworker/ServiceWorkerData.h"
+
 namespace Starfish {
 
 Message::Message(const char* msgname)
 {
+    STARFISH_ASSERT(msgname != nullptr);
     name = msgname;
 }
 
-void Message::addParam(MessageParam* param)
+void Message::addParam(Archivable* param)
 {
     STARFISH_ASSERT(param != nullptr);
     params.push_back(param);
@@ -62,6 +66,7 @@ void Message::archive(Archiver& ar)
 
     ar.Member("name") & name;
 
+    // array
     ar.Member("params");
     {
         size_t nParams = params.size();
@@ -82,19 +87,46 @@ void Message::archive(Archiver& ar)
     ar.EndObject();
 }
 
-void Message::archive(Archiver& ar, MessageParam*& param)
+void Message::init()
 {
-    std::string paramType = ar.IsReader() ? "" : param->paramType();
+    // NOTE: Registering a pair of a key string and a factory
+    // method per an archivable is worth considering.
+    Archiver::setArchivableHandler(Message::archive);
+}
+
+void Message::archive(Archiver& ar, Archivable*& archivable)
+{
+    if (!ar.IsReader() && archivable == nullptr) {
+        // empty object
+        ar.StartObject();
+        ar.EndObject();
+        return;
+    }
+
+    std::string id = ar.IsReader() ? "" : archivable->archiveId();
 
     ar.StartObject();
-    ar.Member("_paramType") & paramType;
 
-    // NOTE: using factory and flyweight here is considerable.
-    if (paramType == "ServiceWorkerJobData") {
+    ar.Member("_archiveId") & id;
+
+    if (id == "ServiceWorkerJobData") {
         if (ar.IsReader()) {
-            param = new ServiceWorkerJobData;
+            archivable = new ServiceWorkerJobData;
+            STARFISH_ASSERT(archivable != nullptr);
         }
-        param->archive(ar);
+        archivable->archive(ar);
+    } else if (id == "ServiceWorkerRegistrationData") {
+        if (ar.IsReader()) {
+            archivable = new ServiceWorkerRegistrationData;
+            STARFISH_ASSERT(archivable != nullptr);
+        }
+        archivable->archive(ar);
+    } else if (id == "ServiceWorkerData") {
+        if (ar.IsReader()) {
+            archivable = new ServiceWorkerData;
+            STARFISH_ASSERT(archivable != nullptr);
+        }
+        archivable->archive(ar);
     }
 
     ar.EndObject();

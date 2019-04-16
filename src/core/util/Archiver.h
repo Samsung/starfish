@@ -44,6 +44,10 @@
 namespace Starfish {
 
 class String;
+class Archiver;
+class Archivable;
+
+typedef void (*ArchivableHandler_t)(Archiver& ar, Archivable*& archivable);
 
 template <typename T>
 constexpr typename std::underlying_type<T>::type toUnderlyingType(T value)
@@ -70,16 +74,17 @@ public:
     virtual Archiver& SetNull() = 0;
     virtual bool IsReader() = 0;
 
-    // archivers for template types
     template <typename T>
     void MemberId(const char* name, Id<T>& id)
     {
+        STARFISH_ASSERT(name != nullptr);
         Member(name) & id.m_id;
     }
 
     template <typename T>
     void MemberEnum(const char* name, T& enumValue)
     {
+        STARFISH_ASSERT(name != nullptr);
         unsigned enumNumber = 0;
         if (IsReader()) {
             Member(name) & enumNumber;
@@ -89,6 +94,22 @@ public:
             Member(name) & enumNumber;
         }
     }
+
+    void MemberArchivable(const char* name, Archivable*& archivable)
+    {
+        STARFISH_ASSERT(name != nullptr);
+        STARFISH_ASSERT(m_fpArchivableHandler != nullptr);
+        Member(name);
+        m_fpArchivableHandler(*this, archivable);
+    }
+
+    static void setArchivableHandler(ArchivableHandler_t fpArchivableHandler)
+    {
+        m_fpArchivableHandler = fpArchivableHandler;
+    }
+
+private:
+    static ArchivableHandler_t m_fpArchivableHandler;
 };
 
 class JsonReader : public Archiver {

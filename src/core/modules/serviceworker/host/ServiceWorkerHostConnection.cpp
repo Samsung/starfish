@@ -33,14 +33,19 @@
 #include "platform/process/base/ProcessType.h"
 #include "core/modules/serviceworker/client/ServiceWorkerProcessManager.h"
 
-#include "core/modules/serviceworker/MessageParam.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/client/ServiceWorkerClientConnection.h"
 
 #include "core/util/Archiver.h"
-#include "core/modules/serviceworker/MessageParam.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/Message.h"
+
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+
+#include "core/modules/serviceworker/ServiceWorkerJobData.h"
+#include "core/modules/serviceworker/ServiceWorkerData.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -58,10 +63,13 @@ void ServiceWorkerHostConnection::resolveJobPromise(
     STARFISH_ASSERT(job != nullptr);
     STARFISH_ASSERT(registration != nullptr);
 
-    // TODO: use socket to communicate with the client.
-    auto swpm = ServiceWorkerProcessManager::getInstance();
-    auto connection = swpm->getConnection(CSTR(job->data()->origin));
-    connection->resolveJobPromise(job, registration);
+    JsonWriter writer;
+    Message msg("resolveJobPromise");
+    msg.addParam(job->data());
+    msg.addParam(registration);
+    msg.archive(writer);
+
+    m_socket->send(writer.GetString(), writer.GetSize(), SCK_DONTWAIT);
 }
 
 void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
@@ -76,6 +84,9 @@ void ServiceWorkerHostConnection::onReceived(Socket* socket, const char* data)
     if (msg.name == "scheduleJob") {
         auto jobData = static_cast<ServiceWorkerJobData*>(msg.params[0]);
         auto job = new ServiceWorkerJob(jobData);
+
+        STARFISH_ASSERT(job != nullptr);
+
         job->setHostConnection(this);
         m_client->scheduleJob(job);
     }

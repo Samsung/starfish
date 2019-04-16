@@ -23,7 +23,7 @@
 
 #include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/MessageParam.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/message_loop/MessageLoop.h"
@@ -60,6 +60,7 @@ void ServiceWorkerHostJobHandler::scheduleJob(ServiceWorkerJob* job)
     auto scope = m_jobQueueMap.find(jobScope);
     if (scope == m_jobQueueMap.end()) {
         jobQueue = new JobQueue();
+        STARFISH_ASSERT(jobQueue != nullptr);
         m_jobQueueMap.insert(std::make_pair(jobScope, jobQueue));
     } else {
         jobQueue = scope->second;
@@ -102,7 +103,7 @@ void ServiceWorkerHostJobHandler::setRegistration(
     // 3. Let registration be a new service worker registration whose scope url
     // is set to scope and update via cache mode is set to updateViaCache.
     auto registration = new ServiceWorkerRegistrationData();
-
+    STARFISH_ASSERT(registration != nullptr);
     m_registrationMap[scope] = registration;
 }
 
@@ -122,6 +123,9 @@ void ServiceWorkerHostJobHandler::runJob(JobQueue* jobQueue)
     };
 
     auto params = new Params();
+
+    STARFISH_ASSERT(params != nullptr);
+
     params->self = this;
 
     // 2.1 Let job be the first item in jobQueue.
@@ -209,6 +213,8 @@ void ServiceWorkerHostJobHandler::update(ServiceWorkerJob* job)
 
     // 11. Let worker be a new service worker.
     auto worker = new ServiceWorkerData();
+
+    STARFISH_ASSERT(worker != nullptr);
 
     // 12. Set worker’s script url to job’s script url,
     // TODO: worker’s script resource to script, and worker’s type to job’s

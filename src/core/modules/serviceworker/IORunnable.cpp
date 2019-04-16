@@ -118,6 +118,8 @@ void IORunnable::run()
                         through doing `m_shouldExecute = true` inside it.
                         */
                         Param* param = new Param();
+                        STARFISH_ASSERT(param != nullptr);
+
                         param->client = m_clients[i];
                         param->socket = socket;
                         param->buffer = buffer;

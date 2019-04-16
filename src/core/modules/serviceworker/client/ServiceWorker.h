@@ -22,6 +22,7 @@
 #define __StarfishServiceWorker__
 
 #include "core/dom/EventTarget.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerData.h"
 
 namespace Starfish {
@@ -33,6 +34,7 @@ public:
         , m_executionContext(executionContext)
         , m_data(new ServiceWorkerData())
     {
+        STARFISH_ASSERT(m_data != nullptr);
     }
 
     virtual void init(ScriptBindingInstance* instance,
