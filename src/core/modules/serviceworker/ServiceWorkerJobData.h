@@ -23,7 +23,7 @@
 
 namespace Starfish {
 
-class ServiceWorkerJobData : public gc, public MessageParam {
+class ServiceWorkerJobData : public Archivable {
 public:
     ServiceWorkerJobId id;
     ServiceWorkerContextId contextId;
@@ -38,7 +38,7 @@ public:
     };
 
     // serialize/deserialize
-    const char* paramType() const override;
+    const char* archiveId() const override;
     void archive(Archiver& ar) override;
 };
 

@@ -52,6 +52,9 @@ ScriptValue createException(ScriptBindingInstance* scriptBindingInstance,
                             Escargot::ErrorObjectRef::Code errorCode,
                             const char* message)
 {
+    STARFISH_ASSERT(scriptBindingInstance != nullptr);
+    STARFISH_ASSERT(message != nullptr);
+
     Escargot::ContextRef* context = scriptBindingInstance->scriptContext();
     Escargot::ExecutionStateRef* state =
         Escargot::ExecutionStateRef::create(context);
@@ -80,12 +83,16 @@ ExecutionContext* ServiceWorkerContainer::executionContext() const
 }
 
 Promise* ServiceWorkerContainer::registerServiceWorker(
-    String* rawScriptURL, RegistrationOptions* options /*= nullptr*/)
+    String* rawScriptURL, RegistrationOptions* options)
 {
+    STARFISH_ASSERT(rawScriptURL != nullptr);
+
     // https://w3c.github.io/ServiceWorker/#navigator-service-worker-register
 
     // 1. Let p be a promise.
     Promise* p = new Promise(scriptBindingInstance());
+
+    STARFISH_ASSERT(p != nullptr);
 
     // 2. Let client be the context object’s service worker client.
     ExecutionContext* client = executionContext();
@@ -94,6 +101,8 @@ Promise* ServiceWorkerContainer::registerServiceWorker(
     // object’s relevant settings object’s API base URL.
     auto scriptURL =
         new ResourceURL(rawScriptURL, client->baseURL()->baseURI());
+
+    STARFISH_ASSERT(scriptURL != nullptr);
 
     // 4. Let scopeURL be null
     ResourceURL* scopeURL = nullptr;
@@ -166,6 +175,7 @@ void ServiceWorkerContainer::startRegister(ResourceURL* scopeURL,
     if (!scopeURL) {
         scopeURL = new ResourceURL(String::createASCIIString("./"),
                                    scriptURL->urlStringWithoutSearchPart());
+        STARFISH_ASSERT(scopeURL != nullptr);
     }
 
     // 8. If scopeURL’s scheme is not one of "http" and "https", reject promise
@@ -223,6 +233,9 @@ ServiceWorkerJob* ServiceWorkerContainer::createJob(ServiceWorkerJobType type,
     // https://w3c.github.io/ServiceWorker/#create-job
 
     auto job = new ServiceWorkerJob();
+
+    STARFISH_ASSERT(job != nullptr);
+
     auto data = job->data();
 
     data->id = ServiceWorkerJobId::generate();
@@ -259,10 +272,11 @@ void ServiceWorkerContainer::scheduleJob(ServiceWorkerJob* job)
     m_jobMap.insert(std::make_pair(job->data()->id, job));
 }
 
-Promise* ServiceWorkerContainer::getRegistration(
-    String* scriptURL /*= nullptr*/)
+Promise* ServiceWorkerContainer::getRegistration(String* scriptURL)
 {
     Promise* promise = new Promise(scriptBindingInstance());
+
+    STARFISH_ASSERT(promise != nullptr);
 
     // TODO: return registraton
     promise->fulfill(Escargot::ValueRef::createUndefined());
@@ -272,6 +286,7 @@ Promise* ServiceWorkerContainer::getRegistration(
 Promise* ServiceWorkerContainer::registerServiceWorker(
     String* url, RegistrationOptions& options)
 {
+    STARFISH_ASSERT(url != nullptr);
     return registerServiceWorker(url, &options);
 }
 
@@ -322,6 +337,10 @@ void ServiceWorkerContainer::resolveJobPromise(
                         container->executionContext());
                     auto serviceWorker =
                         new ServiceWorker(container->executionContext());
+
+                    STARFISH_ASSERT(registeration != nullptr);
+                    STARFISH_ASSERT(serviceWorker != nullptr);
+
                     serviceWorker->data()->scriptURL = job->data()->scriptURL;
                     registeration->updateRegistrationState(
                         ServiceWorkerRegistrationState::Installing,

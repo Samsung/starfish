@@ -24,7 +24,7 @@
 #include "core/dom/EventTarget.h"
 #include "core/util/Id.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/MessageParam.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/client/RegistrationOptions.h"

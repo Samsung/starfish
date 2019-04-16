@@ -32,7 +32,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
-#include "core/modules/serviceworker/MessageParam.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 
@@ -47,8 +47,9 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
 #include "core/util/Archiver.h"
-#include "core/modules/serviceworker/MessageParam.h"
 #include "core/modules/serviceworker/Message.h"
+
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -75,6 +76,24 @@ void ServiceWorkerClientConnection::scheduleJob(ServiceWorkerJob* job)
 
 void ServiceWorkerClientConnection::onReceived(Socket* socket, const char* data)
 {
+    STARFISH_ASSERT(data != nullptr);
+
+    JsonReader reader(data);
+    Message msg;
+    msg.archive(reader);
+
+    if (msg.name == "resolveJobPromise") {
+        auto jobData = static_cast<ServiceWorkerJobData*>(msg.params[0]);
+        auto job = new ServiceWorkerJob(jobData);
+
+        STARFISH_ASSERT(job != nullptr);
+
+        job->setHostConnection(this);
+
+        auto registration =
+            static_cast<ServiceWorkerRegistrationData*>(msg.params[1]);
+        resolveJobPromise(job, registration);
+    }
 }
 
 void ServiceWorkerClientConnection::resolveJobPromise(

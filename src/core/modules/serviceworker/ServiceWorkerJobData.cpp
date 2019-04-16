@@ -21,7 +21,7 @@
 
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
-#include "core/modules/serviceworker/MessageParam.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 
@@ -29,7 +29,7 @@
 
 namespace Starfish {
 
-const char* ServiceWorkerJobData::paramType() const
+const char* ServiceWorkerJobData::archiveId() const
 {
     return "ServiceWorkerJobData";
 }

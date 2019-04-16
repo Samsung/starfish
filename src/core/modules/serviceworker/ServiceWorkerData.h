@@ -31,9 +31,14 @@ enum class ServiceWorkerState {
     Redundant,
 };
 
-struct ServiceWorkerData : gc {
+class ServiceWorkerData : public Archivable {
+public:
     String* scriptURL{ String::emptyString };
     ServiceWorkerState state{ ServiceWorkerState::Installing };
+
+    // serialize/deserialize
+    const char* archiveId() const override;
+    void archive(Archiver& ar) override;
 };
 
 } // namespace Starfish

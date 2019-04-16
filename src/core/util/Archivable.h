@@ -17,20 +17,19 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && \
-    !defined(__StarfishMessageParam__)
-#define __StarfishMessageParam__
+#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishArchivable__)
+#define __StarfishArchivable__
 
 namespace Starfish {
 
 class Archiver;
 
-class MessageParam {
+class Archivable : public gc {
 public:
-    virtual ~MessageParam()
+    virtual ~Archivable()
     {
     }
-    virtual const char* paramType() const = 0;
+    virtual const char* archiveId() const = 0;
     virtual void archive(Archiver& ar) = 0;
 };
 

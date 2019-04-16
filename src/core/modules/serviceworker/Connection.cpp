@@ -40,6 +40,7 @@ namespace Starfish {
 Connection::Connection()
     : m_socket(new SocketNN(AF_SP, NN_PAIR))
 {
+    STARFISH_ASSERT(m_socket != nullptr);
 }
 
 void Connection::onReceived(Socket* socket, const char* data)

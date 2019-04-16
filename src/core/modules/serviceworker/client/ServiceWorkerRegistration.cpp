@@ -35,6 +35,7 @@ ServiceWorkerRegistration::ServiceWorkerRegistration(
     , m_activeWorker(nullptr)
     , m_data(new ServiceWorkerRegistrationData)
 {
+    STARFISH_ASSERT(m_data != nullptr);
 }
 
 ExecutionContext* ServiceWorkerRegistration::executionContext() const

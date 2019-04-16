@@ -27,7 +27,7 @@
 #include "core/modules/serviceworker/ServiceWorkerProcessInterface.h"
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
-#include "core/modules/serviceworker/MessageParam.h"
+#include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
 #include "core/modules/serviceworker/ServiceWorkerJob.h"
 #include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
@@ -44,6 +44,7 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostConnection.h"
 
 #include "core/modules/serviceworker/host/ProgramOptions.h"
+#include "core/modules/serviceworker/Message.h"
 
 namespace Starfish {
 
@@ -53,6 +54,7 @@ ServiceWorkerHostProcess* ServiceWorkerHostProcess::getInstance()
 {
     if (!m_instance) {
         m_instance = new ServiceWorkerHostProcess();
+        STARFISH_ASSERT(m_instance != nullptr);
     }
     return m_instance;
 }
@@ -74,6 +76,8 @@ ServiceWorkerHostProcess::~ServiceWorkerHostProcess()
 void ServiceWorkerHostProcess::init(ThreadPool* threadPool)
 {
     STARFISH_ASSERT(threadPool != nullptr);
+
+    Message::init();
 
     m_threadPool = threadPool;
     m_messageLoop = m_threadPool->messageLoop();

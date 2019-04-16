@@ -17,24 +17,29 @@
  *  USA
  */
 
-#if defined(STARFISH_ENABLE_SERVICE_WORKER) && !defined(__StarfishMessage__)
-#define __StarfishMessage__
+#include "StarfishConfig.h"
+
+#include "core/util/Id.h"
+#include "core/util/Archiver.h"
+#include "core/util/Archivable.h"
+#include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerData.h"
+
+#ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
 
-class Message : public gc {
-public:
-    Message(const char* msgname = "");
-    void addParam(Archivable* param);
-    void archive(Archiver& arch);
+const char* ServiceWorkerData::archiveId() const
+{
+    return "ServiceWorkerData";
+}
 
-    static void init();
-    static void archive(Archiver& arch, Archivable*& param);
-
-    std::string name;
-    GCVector<Archivable*> params;
-};
+void ServiceWorkerData::archive(Archiver& ar)
+{
+    ar.Member("scriptURL") & scriptURL;
+    ar.MemberEnum("state", state);
+}
 
 } // namespace Starfish
 
-#endif
+#endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

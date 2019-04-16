@@ -24,7 +24,7 @@ namespace Starfish {
 
 #define SCK_DONTWAIT 1
 
-class Socket {
+class Socket : public gc {
 public:
     class Exception : public std::exception {
     public:
@@ -55,7 +55,7 @@ public:
     virtual short getEvents() = 0;
 };
 
-class SocketNN : public Socket, public gc {
+class SocketNN : public Socket {
 public:
     SocketNN(int domain, int protocol);
     virtual ~SocketNN();

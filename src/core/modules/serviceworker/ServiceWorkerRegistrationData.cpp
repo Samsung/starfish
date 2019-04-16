@@ -19,34 +19,33 @@
 
 #include "StarfishConfig.h"
 
-#include "core/dom/ExecutionContext.h"
 #include "core/util/Id.h"
 #include "core/util/Archiver.h"
 #include "core/util/Archivable.h"
 #include "core/modules/serviceworker/ServiceWorkerTypes.h"
+#include "core/modules/serviceworker/ServiceWorkerRegistrationData.h"
+
 #include "core/modules/serviceworker/ServiceWorkerJobData.h"
-#include "core/modules/serviceworker/ServiceWorkerJob.h"
+#include "core/modules/serviceworker/ServiceWorkerData.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 namespace Starfish {
 
-ServiceWorkerJob::ServiceWorkerJob(ServiceWorkerJobData* data)
+const char* ServiceWorkerRegistrationData::archiveId() const
 {
-    if (data) {
-        m_data = data;
-    } else {
-        m_data = new ServiceWorkerJobData();
-        STARFISH_ASSERT(m_data != nullptr);
-    }
+    return "ServiceWorkerRegistrationData";
 }
 
-ServiceWorkerRegistrationKey ServiceWorkerJob::registrationKey()
+void ServiceWorkerRegistrationData::archive(Archiver& ar)
 {
-    // TODO: generate an unique key using data attributes
-    auto key = m_data->scopeURL->concat(m_data->scriptURL);
-    return key;
+    ar.Member("scope") & scope;
+    ar.MemberArchivable("installingWorker", (Archivable*&)installingWorker);
+    ar.MemberArchivable("waitingWorker", (Archivable*&)waitingWorker);
+    ar.MemberArchivable("activeWorker", (Archivable*&)activeWorker);
+    ar.MemberEnum("updateViaCache", updateViaCache);
 }
+
 } // namespace Starfish
 
 #endif // #ifdef STARFISH_ENABLE_SERVICE_WORKER

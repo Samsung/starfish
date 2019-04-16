@@ -47,6 +47,8 @@
 #include "core/modules/serviceworker/host/ServiceWorkerHostProcess.h"
 
 #include "core/modules/serviceworker/host/ProgramOptions.h"
+#include "core/util/Archivable.h"
+#include "core/modules/serviceworker/Message.h"
 
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
@@ -58,6 +60,7 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::getInstance()
 {
     if (!m_instance) {
         m_instance = new ServiceWorkerProcessManager();
+        STARFISH_ASSERT(m_instance);
     }
     return m_instance;
 }
@@ -65,6 +68,8 @@ ServiceWorkerProcessManager* ServiceWorkerProcessManager::getInstance()
 void ServiceWorkerProcessManager::init(WebView* webView)
 {
     STARFISH_ASSERT(webView != nullptr);
+
+    Message::init();
 
     m_threadPool = webView->threadPool();
 
@@ -123,6 +128,9 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
         // TODO: launch a service worker process
         auto po = new ProgramOptions;
+
+        STARFISH_ASSERT(po != nullptr);
+
         po->set("origin", origin.c_str());
         m_serviceWorkerHostProcess->start(po);
 
@@ -134,6 +142,8 @@ ServiceWorkerClientConnection* ServiceWorkerProcessManager::getConnection(
 
     if (processData->connection == nullptr) {
         processData->connection = new ServiceWorkerClientConnection();
+
+        STARFISH_ASSERT(processData->connection != nullptr);
 
         std::string address = IPC_PROTOCOL;
         address.append(IPC_ADDRESS_PREFIX);
