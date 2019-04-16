@@ -17,11 +17,7 @@
  *  USA
  */
 
-#include "StarfishBase.h"
-#include <curl/curl.h>
-#include "core/util/String.h"
-#include "core/util/AtomicString.h"
-#include "core/util/QualifiedName.h"
+#include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/modules/profiling/Profiling.h"
 #include "core/modules/threading/ThreadPool.h"

@@ -20,9 +20,39 @@
 #ifndef __StarfishScriptWrappable__
 #define __StarfishScriptWrappable__
 
-#include "binding/ScriptBindingInstance.h"
+#include "binding/Interfaces.h"
+
+namespace Escargot {
+class VMInstanceRef;
+class ContextRef;
+class StringRef;
+class ValueRef;
+class PointerValueRef;
+class ObjectRef;
+class GlobalObjectRef;
+class FunctionObjectRef;
+class ScriptRef;
+class ScriptParserRef;
+class ExecutionStateRef;
+class ArrayBufferObjectRef;
+class ArrayBufferViewRef;
+class Uint8ClampedArrayObjectRef;
+template <typename T> struct NullablePtr;
+typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
+                                                 ValueRef* thisValue,
+                                                 size_t argc, ValueRef** argv,
+                                                 bool isNewExpression);
+}
 
 namespace Starfish {
+
+#if defined(STARFISH_WEBWORKER_HOST)
+#define STARFISH_GLOBAL_BINDING_CLASS ServiceWorkerGlobalScope
+class ServiceWorkerGlobalScope;
+#else
+#define STARFISH_GLOBAL_BINDING_CLASS Window
+class Window;
+#endif /* defined(STARFISH_WEBWORKER_HOST) */
 
 class Document;
 class Element;
@@ -34,6 +64,7 @@ class WebBase;
 class ExecutionContext;
 class EventTarget;
 class WebView;
+class ScriptBindingInstance;
 
 // https://heycam.github.io/webidl/#common-DOMTimeStamp
 typedef uint64_t DOMTimeStamp;
@@ -75,11 +106,14 @@ ExecutionContext* fetchExecutionContext(Escargot::ContextRef* context);
 WebBase* fetchWebBase(Escargot::ContextRef* context);
 ScriptBindingInstance* fetchScriptBindingInstance(
     Escargot::ContextRef* context);
+
+#if !defined(STARFISH_WEBWORKER_HOST)
 WebView* fetchWebView(Escargot::ContextRef* context);
 Window* fetchWindow(Escargot::ContextRef* context);
 Document* fetchDocument(Escargot::ContextRef* context);
 Document* fetchResponsibleDocument(Escargot::ExecutionStateRef* state);
 StaticStrings* fetchStaticStrings(Escargot::ContextRef* context);
+#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 String* toBrowserString(ScriptBindingInstance* instance, Escargot::ValueRef* v,
                         bool* result = nullptr);
@@ -260,6 +294,11 @@ public:
     {
     }
     virtual ScriptBindingInstance* scriptBindingInstance() = 0;
+
+    virtual bool isGlobalScope() const
+    {
+        return false;
+    }
 
     virtual bool isAttributeEventFunction() const
     {

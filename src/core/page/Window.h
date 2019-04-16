@@ -189,6 +189,11 @@ public:
                                        GlobalPointingEventKind kind) override;
     virtual bool handleDefaultEvent(Event* event) override;
 
+    bool isGlobalScope() const override
+    {
+        return true;
+    }
+
     ExecutionContext* executionContext() const override;
 
     void dispose();

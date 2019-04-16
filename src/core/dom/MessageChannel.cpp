@@ -18,17 +18,17 @@
  */
 
 #include "StarfishConfig.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/dom/MessagePort.h"
 #include "core/dom/MessageChannel.h"
 
 namespace Starfish {
 
-MessageChannel::MessageChannel(Document* document)
+MessageChannel::MessageChannel(ExecutionContext* executionContext)
     : ScriptWrappable(this)
-    , m_scriptBindingInstance(document->scriptBindingInstance())
-    , m_port1(new MessagePort(document->executionContext()))
-    , m_port2(new MessagePort(document->executionContext()))
+    , m_scriptBindingInstance(executionContext->scriptBindingInstance())
+    , m_port1(new MessagePort(executionContext))
+    , m_port2(new MessagePort(executionContext))
 {
     MessagePort::entangle(m_port1, m_port2);
 }

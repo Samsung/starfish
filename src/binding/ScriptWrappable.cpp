@@ -20,17 +20,16 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "binding/ScriptWrappable.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/dom/Document.h"
-#include "core/dom/Element.h"
 #include "core/dom/ErrorEvent.h"
-#include "core/layout/Frame.h"
-#include "core/layout/FrameBox.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/page/WebView.h"
 #include "core/page/GlobalScope.h"
+
+#if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/page/Window.h"
-#include "core/style/CSSStyleLookupTrie.h"
+#include "core/page/WebView.h"
+#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 #include <EscargotPublic.h>
 
@@ -251,6 +250,7 @@ ScriptBindingInstance* fetchScriptBindingInstance(ContextRef* ctx)
     return fetchGlobalObject(ctx)->scriptBindingInstance();
 }
 
+#if !defined(STARFISH_WEBWORKER_HOST)
 Window* fetchWindow(ContextRef* ctx)
 {
     Window* window = (Window*)ctx->globalObject()->extraData();
@@ -280,6 +280,7 @@ StaticStrings* fetchStaticStrings(ContextRef* ctx)
 {
     return fetchWebView(ctx)->starfish()->staticStrings();
 }
+#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 class EscargotStringView : public String {
 public:
@@ -443,7 +444,7 @@ ScriptWrappable::ScriptWrappable(void* extraPointerData)
 ScriptObject ScriptWrappable::generateScriptObject()
 {
     void* domObjectPointer;
-    if (isWindow()) {
+    if (isGlobalScope()) {
         domObjectPointer = this;
     } else {
         domObjectPointer = (void*)((size_t)m_object - 1);
@@ -579,7 +580,7 @@ ScriptValue createScriptFunction(ScriptBindingInstance* instance,
             errorInfo.setColno(result.stackTraceData[lastIndex].loc.column);
         }
         errorInfo.setError(errorValue);
-        instance->ownerWindow()->dispatchErrorEvent(errorInfo);
+        instance->dispatchErrorEventToGlobalScope(errorInfo);
 
         loggingJSErrorInfo(instance, result);
         return errorValue;
@@ -633,7 +634,7 @@ ScriptValue callScriptFunction(ScriptBindingInstance* instance, ScriptValue fn,
                     sbresult.stackTraceData[lastIndex].loc.column);
             }
             errorInfo.setError(errorValue);
-            instance->ownerWindow()->dispatchErrorEvent(errorInfo);
+            instance->dispatchErrorEventToGlobalScope(errorInfo);
             loggingJSErrorInfo(instance, sbresult);
         } else {
             result = sbresult.result;
@@ -675,7 +676,7 @@ ScriptValue callScriptFunctionWithError(ScriptBindingInstance* instance,
                     sbresult.stackTraceData[lastIndex].loc.column);
             }
             errorInfo.setError(errorValue);
-            instance->ownerWindow()->dispatchErrorEvent(errorInfo);
+            instance->dispatchErrorEventToGlobalScope(errorInfo);
             loggingJSErrorInfo(instance, sbresult);
             error = true;
             ExecutionStateRef* state = ExecutionStateRef::create(ctx);
@@ -781,7 +782,7 @@ ScriptValue evaluateString(ScriptBindingInstance* instance, String* string,
             errorInfo.setColno(sbresult.stackTraceData[lastIndex].loc.column);
         }
         errorInfo.setError(errorValue);
-        instance->ownerWindow()->dispatchErrorEvent(errorInfo);
+        instance->dispatchErrorEventToGlobalScope(errorInfo);
         loggingJSErrorInfo(instance, sbresult);
         if (result)
             *result = true;

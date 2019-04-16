@@ -20,14 +20,13 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/Document.h"
-#include "core/dom/HTMLFormElement.h"
 #include "platform/loader/Resource.h"
 #include "platform/loader/ResourceLoader.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/page/WebView.h"
-#include "core/page/Window.h"
+#include "core/xml/FormData.h"
 
 namespace Starfish {
 

@@ -26,8 +26,84 @@ using namespace Escargot;
 
 namespace Starfish {
 
-FormData::FormData(ExecutionContext* executionContext,
-                   HTMLFormElement* form /*= nullptr*/)
+FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
+    : m_name(name)
+    , m_value(value)
+    , m_type(type)
+{
+}
+
+void* FormDataSetItem::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(FormDataSetItem));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(FormDataSetItem)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(FormDataSetItem, m_name));
+        GC_set_bit(desc, GC_WORD_OFFSET(FormDataSetItem, m_value));
+        GC_set_bit(desc, GC_WORD_OFFSET(FormDataSetItem, m_type));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FormDataSetItem));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+String* FormDataSetItem::toString()
+{
+    StringBuilder b;
+    b.appendString(m_name);
+    b.appendChar('=');
+    b.appendString(m_value);
+    return b.finalize();
+}
+
+FormSubmitData::FormSubmitData(GCVector<FormDataSetItem*>* formDataSet,
+                               EncodeType enctype, String* method)
+    : m_formDataSet(formDataSet)
+    , m_enctype(enctype)
+    , m_method(method)
+{
+}
+
+void* FormSubmitData::operator new(size_t size)
+{
+    STARFISH_ASSERT(size == sizeof(FormSubmitData));
+    static bool typeInited = false;
+    static GC_descr descr;
+    if (!typeInited) {
+        GC_word desc[GC_BITMAP_SIZE(FormSubmitData)] = { 0 };
+        GC_set_bit(desc, GC_WORD_OFFSET(FormSubmitData, m_formDataSet));
+        GC_set_bit(desc, GC_WORD_OFFSET(FormSubmitData, m_method));
+        descr = GC_make_descriptor(desc, GC_WORD_LEN(FormSubmitData));
+        typeInited = true;
+    }
+    return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
+}
+
+String* FormSubmitData::toString()
+{
+    StringBuilder b;
+    for (size_t i = 0; i < m_formDataSet->size(); i++) {
+        FormDataSetItem* item = (*m_formDataSet)[i];
+        b.appendString(item->toString());
+        if (i < m_formDataSet->size() - 1) {
+            b.appendChar('&');
+        }
+    }
+
+    return b.finalize();
+}
+
+FormData::FormData(ExecutionContext* executionContext)
+    : ScriptWrappable(this)
+    , m_executionContext(executionContext)
+{
+    m_list = new (GC) GCVector<FormDataSetItem*>();
+}
+
+#if !defined(STARFISH_WEBWORKER_HOST)
+FormData::FormData(ExecutionContext* executionContext, HTMLFormElement* form)
     : ScriptWrappable(this)
     , m_executionContext(executionContext)
 {
@@ -37,6 +113,7 @@ FormData::FormData(ExecutionContext* executionContext,
         m_list = new (GC) GCVector<FormDataSetItem*>();
     }
 }
+#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 ScriptBindingInstance* FormData::scriptBindingInstance()
 {

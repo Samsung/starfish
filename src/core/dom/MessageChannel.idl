@@ -1,7 +1,7 @@
 // https://html.spec.whatwg.org/multipage/web-messaging.html#message-channels
 [
     Constructor,
-    ConstructorCallWith=Document,
+    ConstructorCallWith=ExecutionContext,
     Exposed=(Window,Worker)
 ] interface MessageChannel {
     readonly attribute MessagePort port1;

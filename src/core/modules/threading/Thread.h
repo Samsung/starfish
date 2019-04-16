@@ -20,7 +20,6 @@
 #ifndef __StarfishThread__
 #define __StarfishThread__
 
-#include "binding/WebViewHoldable.h"
 namespace Starfish {
 
 class MessageLoop;

@@ -22,6 +22,7 @@
 #include "StarfishConfig.h"
 #include "core/dom/ExecutionContext.h"
 #include "binding/DOMStringOrCanvasGradientOrCanvasPatternUnion.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/style/Style.h"
 #include "core/style/ComputedStyle.h"
 #include "core/dom/Node.h"

@@ -28,10 +28,42 @@ namespace Starfish {
 
 typedef String FormDataEntryValue;
 
+class FormDataSetItem : public gc {
+public:
+    FormDataSetItem(String* name, String* value, String* type);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    String* toString();
+
+    String* m_name;
+    String* m_value;
+    String* m_type;
+};
+
+class FormSubmitData : public gc {
+public:
+    FormSubmitData(GCVector<FormDataSetItem*>* formDataSet, EncodeType enctype,
+                   String* method);
+
+    void* operator new(size_t size);
+    void* operator new[](size_t size) = delete;
+
+    String* toString();
+
+    GCVector<FormDataSetItem*>* m_formDataSet;
+    EncodeType m_enctype;
+    String* m_method;
+};
+
 class FormData : public ScriptWrappable {
 public:
-    FormData(ExecutionContext* executionContext,
-             HTMLFormElement* form = nullptr);
+    FormData(ExecutionContext* executionContext);
+
+#if !defined(STARFISH_WEBWORKER_HOST)
+    FormData(ExecutionContext* executionContext, HTMLFormElement* form);
+#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
     DECLARE_SCRIPT_BINDING_REQUIRED_FUNCTIONS(FormData)
 

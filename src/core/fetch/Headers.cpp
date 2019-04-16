@@ -22,6 +22,7 @@ using namespace Escargot;
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "platform/network/http/HTTPUtil.h"
 #include "core/fetch/Headers.h"

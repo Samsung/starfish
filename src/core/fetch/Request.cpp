@@ -20,6 +20,7 @@
 #include "StarfishConfig.h"
 #include "binding/RequestOrUSVStringUnion.h"
 #include "binding/BlobOrBufferSourceOrUSVStringOrReadableStreamUnion.h"
+#include "binding/ScriptBindingInstance.h"
 #include "platform/loader/ResourceURL.h"
 #include "core/fetch/Request.h"
 #include "core/dom/ExecutionContext.h"

@@ -21,35 +21,13 @@
 #define __StarfishScriptBindingInstance__
 
 namespace Escargot {
-class VMInstanceRef;
 class ContextRef;
-class StringRef;
 class ValueRef;
-class PointerValueRef;
-class ObjectRef;
-class GlobalObjectRef;
 class FunctionObjectRef;
-class ScriptRef;
-class ScriptParserRef;
 class ExecutionStateRef;
-class ArrayBufferObjectRef;
-class ArrayBufferViewRef;
-class Uint8ClampedArrayObjectRef;
-template <typename T> struct NullablePtr;
-typedef ValueRef* (*ScriptNativeFunctionPointer)(ExecutionStateRef* state,
-                                                 ValueRef* thisValue,
-                                                 size_t argc, ValueRef** argv,
-                                                 bool isNewExpression);
 }
 
 #include "binding/Interfaces.h"
-
-#if defined(STARFISH_WEBWORKER_HOST)
-// TODO: Support ServiceWorkerGlobalScope class
-#define STARFISH_GLOBAL_BINDING_CLASS ServiceWorkerGlobalScope
-#else
-#define STARFISH_GLOBAL_BINDING_CLASS Window
-#endif
 
 #ifdef TIZEN_DEVICE_API
 namespace DeviceAPI {
@@ -65,6 +43,7 @@ class Document;
 class ScriptEngineInstance;
 class ScriptBindingInstance;
 class String;
+class ErrorEventInit;
 
 #define FOR_EACH_DECLARE_FN(exportName)               \
     Escargot::FunctionObjectRef* binding##exportName( \
@@ -83,6 +62,8 @@ public:
     void initBinding();
 
     virtual void destroy();
+
+    virtual void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) = 0;
 
     // TODO: Remove ownerDocument and ownerWindow
     virtual Window* ownerWindow() = 0;

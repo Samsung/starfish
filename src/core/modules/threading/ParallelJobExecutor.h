@@ -18,7 +18,7 @@
  */
 
 #include "Starfish.h"
-#include "binding/StarfishHoldable.h"
+#include "binding/WebViewHoldable.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/page/WebView.h"

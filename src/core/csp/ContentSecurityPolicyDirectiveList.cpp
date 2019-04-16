@@ -17,9 +17,13 @@
  *  USA
  */
 
+#include "StarfishConfig.h"
+#include "core/csp/ContentSecurityPolicy.h"
 #include "core/csp/ContentSecurityPolicyDirectiveList.h"
 #include "core/csp/ContentSecurityPolicy.h"
+#include "core/csp/ContentSecurityPolicySourceListDirective.h"
 #include "core/dom/ExecutionContext.h"
+#include "platform/loader/ResourceURL.h"
 
 namespace Starfish {
 ContentSecurityPolicyDirectiveList::ContentSecurityPolicyDirectiveList(

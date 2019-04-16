@@ -17,9 +17,8 @@
  *  USA
  */
 
-#include "StarfishBase.h"
+#include "StarfishConfig.h"
 #include "PlatformIntegrationData.h"
-#include "core/util/String.h"
 #include "core/page/WebBase.h"
 #include "core/fileapi/Blob.h"
 #include "core/modules/message_loop/Timer.h"

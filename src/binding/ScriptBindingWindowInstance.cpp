@@ -293,4 +293,10 @@ Document* ScriptBindingWindowInstance::ownerDocument()
 {
     return m_ownerWindow->document();
 }
+
+void ScriptBindingWindowInstance::dispatchErrorEventToGlobalScope(
+    ErrorEventInit& errorInfo)
+{
+    m_ownerWindow->dispatchErrorEvent(errorInfo);
+}
 }

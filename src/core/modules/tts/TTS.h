@@ -22,7 +22,7 @@
 #define __StarfishTTS__
 
 #include "PlatformIntegrationData.h"
-#include "binding/StarfishHoldable.h"
+#include "binding/WebViewHoldable.h"
 
 #if defined(STARFISH_TIZEN)
 #include <tts.h>

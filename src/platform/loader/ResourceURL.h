@@ -22,7 +22,7 @@
 
 namespace Starfish {
 
-class Document;
+class ExecutionContext;
 class WebOrigin;
 class FormSubmitData;
 class DocumentURL;
@@ -85,8 +85,8 @@ public:
         return new ResourceURL("about:blank");
     }
 
-    static String* mergeDocumentURIWithURIString(Document* document,
-                                                 String* url);
+    static String* mergeDocumentURIWithURIString(
+        ExecutionContext* executionContext, String* url);
     static String* mergeDocumentURIWithURIString(String* documentURI,
                                                  String* url);
     String* baseURI() const;

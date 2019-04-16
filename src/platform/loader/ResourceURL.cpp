@@ -18,8 +18,9 @@
  */
 
 #include "StarfishConfig.h"
-#include "core/dom/Document.h"
-#include "core/dom/HTMLFormElement.h"
+#include "core/dom/ExecutionContext.h"
+#include "platform/loader/ResourceURL.h"
+#include "core/xml/FormData.h"
 
 #define MAX_PORT_DIGITS 5
 #define MAX_PORT_NUMBER 65535
@@ -725,10 +726,10 @@ bool ResourceURL::isValidPort()
     return true;
 }
 
-String* ResourceURL::mergeDocumentURIWithURIString(Document* document,
-                                                   String* url)
+String* ResourceURL::mergeDocumentURIWithURIString(
+    ExecutionContext* executionContext, String* url)
 {
-    ResourceURL u(url, document->baseURL()->baseURI());
+    ResourceURL u(url, executionContext->baseURL()->baseURI());
     String* ret = u.href();
     return ret;
 }
