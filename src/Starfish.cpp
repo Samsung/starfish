@@ -26,14 +26,10 @@
 
 #include "StarfishConfig.h"
 #include "Starfish.h"
-#include "core/dom/Document.h"
-#include "core/page/BrowsingContext.h"
-#include "core/page/WebView.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Thread.h"
 #include "core/modules/threading/ThreadPool.h"
 #include "core/modules/message_loop/MessageLoop.h"
-#include "core/page/Window.h"
 #include "core/modules/message_loop/Timer.h"
 #include "core/modules/canvas/image/NativeImageData.h"
 #include "core/util/LineBreakerIteratorPool.h"
@@ -42,7 +38,6 @@
 #include "platform/network/http/HTTPCache.h"
 #endif
 #include "platform/network/curl/NetworkSharedResourceManager.h"
-#include "platform/window/PlatformWindow.h"
 
 namespace Starfish {
 

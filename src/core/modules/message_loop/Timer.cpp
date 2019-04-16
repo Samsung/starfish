@@ -20,8 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "Timer.h"
-#include "core/page/Window.h"
-#include "core/page/WebView.h"
+#include "core/page/WebBase.h"
 
 namespace Starfish {
 

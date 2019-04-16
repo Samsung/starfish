@@ -263,7 +263,8 @@ static void registerImageURLs(
 {
     if (c->isFrameReplaced() && c->asFrameReplaced()->isFrameReplacedImage()) {
         String* u = ResourceURL::mergeDocumentURIWithURIString(
-            c->node()->document(), c->node()->asHTMLImageElement()->src());
+            c->node()->executionContext(),
+            c->node()->asHTMLImageElement()->src());
         auto utf8Data = u->toUTF8NonGCString();
         currentUsingResourcePaths.insert(utf8Data.data());
     }

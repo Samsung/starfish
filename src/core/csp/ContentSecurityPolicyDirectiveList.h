@@ -20,11 +20,10 @@
 #ifndef __StarfishContentSecurityPolicyDirectiveList__
 #define __StarfishContentSecurityPolicyDirectiveList__
 
-#include "StarfishConfig.h"
-#include "core/csp/ContentSecurityPolicy.h"
-#include "core/csp/ContentSecurityPolicySourceListDirective.h"
-
 namespace Starfish {
+
+class ContentSecurityPolicy;
+class ContentSecurityPolicySourceListDirective;
 
 class ContentSecurityPolicyDirectiveList : public gc {
 public:

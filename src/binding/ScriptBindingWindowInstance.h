@@ -31,6 +31,7 @@ public:
 
     Window* ownerWindow() override;
     Document* ownerDocument() override;
+    void dispatchErrorEventToGlobalScope(ErrorEventInit& errorInfo) override;
 private:
     Window* m_ownerWindow;
 

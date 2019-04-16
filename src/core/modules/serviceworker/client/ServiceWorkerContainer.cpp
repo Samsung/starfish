@@ -20,6 +20,7 @@
 #ifdef STARFISH_ENABLE_SERVICE_WORKER
 
 #include "StarfishConfig.h"
+#include "binding/ScriptBindingInstance.h"
 
 #include "core/modules/serviceworker/client/ServiceWorkerContainer.h"
 #include "core/dom/ExecutionContext.h"

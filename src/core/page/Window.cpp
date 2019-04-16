@@ -21,7 +21,7 @@
 #include "Starfish.h"
 
 #include "core/page/Window.h"
-
+#include "binding/ScriptBindingInstance.h"
 #include "binding/ScriptBindingWindowInstance.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/dom/DOMException.h"

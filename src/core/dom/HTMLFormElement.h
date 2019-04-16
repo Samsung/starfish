@@ -29,37 +29,9 @@ class HTMLFieldSetElement;
 class HTMLSelectElement;
 class HTMLFormControlsCollection;
 class ResourceURL;
+class FormDataSetItem;
 enum class EncodeType;
 enum class MethodType;
-
-class FormDataSetItem : public gc {
-public:
-    FormDataSetItem(String* name, String* value, String* type);
-
-    void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
-
-    String* toString();
-
-    String* m_name;
-    String* m_value;
-    String* m_type;
-};
-
-class FormSubmitData : public gc {
-public:
-    FormSubmitData(GCVector<FormDataSetItem*>* formDataSet, EncodeType enctype,
-                   String* method);
-
-    void* operator new(size_t size);
-    void* operator new[](size_t size) = delete;
-
-    String* toString();
-
-    GCVector<FormDataSetItem*>* m_formDataSet;
-    EncodeType m_enctype;
-    String* m_method;
-};
 
 class HTMLFormControl : public HTMLElement {
 public:

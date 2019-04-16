@@ -46,19 +46,21 @@
 
 #include "StarfishBase.h"
 
-#include <SkMatrix.h>
 #include <curl/curl.h>
-
-#include "core/layout/LayoutUtil.h"
 #include "core/util/String.h"
 #include "core/util/AtomicString.h"
 #include "core/util/QualifiedName.h"
 #include "core/util/Messages.h"
+
+#if !defined(STARFISH_WEBWORKER_HOST)
+#include <SkMatrix.h>
+#include "core/layout/LayoutUtil.h"
 #include "core/style/Length.h"
 #include "core/style/Unit.h"
 #include "core/style/UnitHelper.h"
 #include "core/modules/canvas/font/Font.h"
 #include "core/modules/profiling/Profiling.h"
 #include "platform/loader/ResourceURL.h"
+#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 #endif

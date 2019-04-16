@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/DOMException.h"
 #include "core/fetch/stream/ReadableStream.h"
 #include "core/fetch/stream/ReadableStreamDefaultController.h"

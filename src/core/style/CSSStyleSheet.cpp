@@ -18,6 +18,7 @@
  */
 
 #include "StarfishConfig.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/dom/HTMLLinkElement.h"

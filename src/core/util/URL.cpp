@@ -23,9 +23,7 @@
 #include "core/fileapi/Blob.h"
 #include "core/modules/mediasource/MediaSource.h"
 #include "core/util/URL.h"
-
 #include "core/page/WebBase.h"
-#include "platform/window/PlatformWindow.h"
 
 #if defined(STARFISH_ENABLE_MULTIMEDIA) && !defined(STARFISH_WEBWORKER_HOST)
 #include "core/page/WebView.h"

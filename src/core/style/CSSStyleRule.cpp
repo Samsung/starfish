@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 
 #include "core/style/CSSRule.h"
-
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/dom/DOMException.h"
 #include "core/page/BrowsingContext.h"

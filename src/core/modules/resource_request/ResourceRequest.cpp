@@ -20,7 +20,7 @@
 #include "StarfishConfig.h"
 #include "Starfish.h"
 #include "core/dom/ExecutionContext.h"
-#include "core/dom/HTMLFormElement.h"
+#include "core/xml/FormData.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/modules/resource_request/ResourceRequest.h"
 #include "core/modules/resource_request/ResourceRequestJob.h"

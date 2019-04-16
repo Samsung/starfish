@@ -20,7 +20,7 @@
 #include "StarfishPlatform.h"
 #if defined(PORT_EVENTLOOP_BACKEND_LIBUV)
 
-#include "StarfishBase.h"
+#include "StarfishConfig.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "binding/ScriptBindingInstance.h"
 #include "core/modules/threading/Thread.h"

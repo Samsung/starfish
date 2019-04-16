@@ -18,12 +18,13 @@
  */
 
 #include "StarfishConfig.h"
-#include "core/dom/Document.h"
+#include "core/dom/ExecutionContext.h"
 #include "core/modules/profiling/Profiling.h"
 #include "binding/ScriptWrappable.h"
 #include "NetworkSharedResourceManager.h"
 #include "core/modules/threading/Locker.h"
 #include "core/modules/threading/Mutex.h"
+#include "platform/loader/ResourceURL.h"
 
 #if !(defined(OS_WINDOWS) || defined(STARFISH_ANDROID))
 #include <openssl/crypto.h>
@@ -189,8 +190,8 @@ static void appendMatchingCookie(String* cookie, String* domain, String* path,
     return;
 }
 
-static String* transformetoNetscapeCookieFormat(Document* document,
-                                                ResourceURL* url, String* value)
+static String* transformetoNetscapeCookieFormat(
+    ExecutionContext* executionContext, ResourceURL* url, String* value)
 {
     if (value->isEmpty()) {
         return String::emptyString;
@@ -231,7 +232,7 @@ static String* transformetoNetscapeCookieFormat(Document* document,
             if (key->equals("expires")) {
                 String* value = pair[1].trim();
                 double parsedDate =
-                    parseDate(document->scriptBindingInstance(), value);
+                    parseDate(executionContext->scriptBindingInstance(), value);
                 // RFC6265 say : If the attribute-value failed to parse as a
                 //               cookie date, ignore it
                 if (!std::isnan(parsedDate)) {
@@ -497,8 +498,8 @@ String* NetworkSharedResourceManager::cookeis(ResourceURL* url)
     return cookies;
 }
 
-void NetworkSharedResourceManager::setCookies(Document* document,
-                                              ResourceURL* url, String* value)
+void NetworkSharedResourceManager::setCookies(
+    ExecutionContext* executionContext, ResourceURL* url, String* value)
 {
     CURL* curl = curl_easy_init();
 
@@ -512,7 +513,8 @@ void NetworkSharedResourceManager::setCookies(Document* document,
 #ifdef STARFISH_ENABLE_TEST
 // dumpCookies(curl, "Before setCookie");
 #endif
-    String* cookie = transformetoNetscapeCookieFormat(document, url, value);
+    String* cookie =
+        transformetoNetscapeCookieFormat(executionContext, url, value);
     STARFISH_ASSERT(cookie->containsOnlyASCIIChars());
     STARFISH_ASSERT(cookie->bufferAccessData().isNullTerminated);
     curl_easy_setopt(curl, CURLOPT_COOKIELIST,

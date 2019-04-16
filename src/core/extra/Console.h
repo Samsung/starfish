@@ -22,7 +22,7 @@
 
 namespace Starfish {
 
-class Starfish;
+class WebBase;
 
 #define CONSOLE_APIS(F) \
     F(log)              \
@@ -33,7 +33,7 @@ class Starfish;
 
 class Console : public gc {
 public:
-    Console(WebView* webView);
+    Console(WebBase* webBase);
     void log(String* m);
     void info(String* m);
     void error(String* m);
@@ -41,7 +41,7 @@ public:
     void debug(String* m);
 
 protected:
-    WebView* m_webView;
+    WebBase* m_webBase;
 };
 }
 

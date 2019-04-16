@@ -296,8 +296,8 @@ void Document::setCookie(String* cookie)
             executionContext(), DOMException::Code::SECURITY_ERR,
             "Access is denied for this document, origin is opaque");
     }
-    NetworkSharedResourceManager::getInstance()->setCookies(this, documentURI(),
-                                                            cookie);
+    NetworkSharedResourceManager::getInstance()->setCookies(
+        executionContext(), documentURI(), cookie);
 }
 
 void Document::init(ReferrerURL* referrerURL)

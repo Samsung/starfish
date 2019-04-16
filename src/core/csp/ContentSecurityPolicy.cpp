@@ -20,12 +20,10 @@
 #include <EscargotPublic.h>
 using namespace Escargot;
 
-#include "StarfishBase.h"
-#include "core/util/String.h"
-#include "core/util/AtomicString.h"
-#include "core/util/QualifiedName.h"
+#include "StarfishConfig.h"
 #include "Starfish.h"
 #include "PlatformIntegrationData.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/csp/ContentSecurityPolicy.h"
 #include "core/csp/ContentSecurityPolicyDirectiveList.h"

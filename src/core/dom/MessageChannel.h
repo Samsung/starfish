@@ -28,7 +28,7 @@ class MessagePort;
 
 class MessageChannel : public ScriptWrappable {
 public:
-    MessageChannel(Document* document);
+    MessageChannel(ExecutionContext* executionContext);
     virtual void init(ScriptBindingInstance* instance,
                       void* domObjectPointer) override;
     virtual ScriptBindingInstance* scriptBindingInstance() override;
