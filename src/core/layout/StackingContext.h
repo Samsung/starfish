@@ -158,6 +158,7 @@ public:
         LayoutRect layerClipRect;
         LayoutUnit scrollX, scrollY;
         LayoutUnit layerBaseX, layerBaseY;
+        LayoutUnit layerScrollX, layerScrollY;
         PaintingStackingContextContext(
             bool willCompositing,
             PrevDrawnStackingContextInfoMap& prevDrawnStackingContextInfoMap,
@@ -174,9 +175,11 @@ public:
     };
     void paintStackingContext(Canvas* canvas,
                               PaintingStackingContextContext& ctx);
+    void paintScrollbar(Canvas* canvas);
     bool fillGraphicsBufferContents(PaintingStackingContextContext& globalCtx);
     bool fillGraphicsBufferContentsWithoutClipRect();
     void compositeStackingContext(Compositor* compositor);
+    void compositeScrollbar(Compositor* compositor);
     Frame* hitTestStackingContext(LayoutUnit x, LayoutUnit y,
                                   BrowsingContext* from);
     LayoutLocation relativeLocation(StackingContext* child);

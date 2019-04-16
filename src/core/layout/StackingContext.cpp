@@ -467,7 +467,7 @@ public:
             }
 
             if (!needsRestore) {
-                auto o = self->absolutePointIncludingScroll(owner);
+                auto o = self->absolutePointIncludingScroll(owner, false);
                 canvas->translate(o.x(), o.y());
                 return;
             }
@@ -540,7 +540,8 @@ public:
 
                 if (ctx.willCompositing) {
                     canvas->pixelSnappedClip(ctx.layerClipRect);
-                    canvas->translate(-ctx.layerBaseX, -ctx.layerBaseY);
+                    canvas->translate(-ctx.layerBaseX - ctx.layerScrollX,
+                                      -ctx.layerBaseY - ctx.layerScrollY);
                 }
                 canvas->translate(-minX, -minY);
                 break;
@@ -791,7 +792,7 @@ public:
                     }
                 }
 
-                if (overflowOrScroll.second) {
+                if (overflowOrScroll.second && sCtx->owner() != b) {
                     compositor->translate(-b->asFrameBlockBox()->scrollLeft(),
                                           -b->asFrameBlockBox()->scrollTop());
                 }
@@ -895,7 +896,7 @@ void StackingContext::computeTransformMatrix()
 static void gatherGraphicsBufferOwners(StackingContext* ctx,
                                        GCVector<StackingContext*>& v)
 {
-    if (ctx->needsGraphicsBuffer()) {
+    if (ctx->needsGraphicsBufferReason() || ctx->needsGraphicsBuffer()) {
         v.push_back(ctx);
     }
 
@@ -1575,6 +1576,16 @@ void StackingContext::fillGraphicsBufferContents(
     bool canRejectPainting =
         canvas->canRejectPainting(StackingContext::visibleRect());
 
+    bool needsComputeScroll = !isRootContext() && !isIFrameStackingContext() &&
+                              m_owner->isFrameBlockBox();
+    if (needsComputeScroll) {
+        canvas->save();
+        canvas->translate(-m_owner->asFrameBlockBox()->scrollLeft(),
+                          -m_owner->asFrameBlockBox()->scrollTop());
+        ctx.layerScrollX = m_owner->asFrameBlockBox()->scrollLeft();
+        ctx.layerScrollY = m_owner->asFrameBlockBox()->scrollTop();
+    }
+
     if (!canRejectPainting) {
         m_owner->paintBackgroundAndBorders(canvas);
     }
@@ -1685,31 +1696,11 @@ void StackingContext::fillGraphicsBufferContents(
         }
     }
 
-    if (isIFrameStackingContext()) {
-        HTMLIFrameElement* iframe =
-            m_owner->node()->document()->browsingContext()->sourceElement();
-        if (!iframe->scrolling()->toASCIILower()->equals("no")) {
-            canvas->save();
-            canvas->translate(m_owner->node()
-                                  ->document()
-                                  ->browsingContext()
-                                  ->window()
-                                  ->scrollX(),
-                              m_owner->node()
-                                  ->document()
-                                  ->browsingContext()
-                                  ->window()
-                                  ->scrollY());
-            FrameBlockBox* document =
-                m_owner->layoutParent()->asFrameBlockBox();
-            if (!needsGraphicsBuffer()) {
-                Scrolling::paintScrollbars<Canvas*>(
-                    canvas, document, document->appliedOverflowX(),
-                    document->appliedOverflowY());
-            }
-            canvas->restore();
-        }
+    if (needsComputeScroll) {
+        canvas->restore();
     }
+
+    paintScrollbar(canvas);
 
     canvas->restore();
 }
@@ -2035,7 +2026,9 @@ bool StackingContext::fillGraphicsBufferContentsWithoutClipRect()
 bool StackingContext::fillGraphicsBufferContents(
     PaintingStackingContextContext& globalCtx)
 {
-    STARFISH_ASSERT(needsGraphicsBuffer());
+    if (!needsGraphicsBuffer()) {
+        return false;
+    }
 
     bool drawnSomething = false;
     LayoutRect visibleRect = StackingContext::visibleRect();
@@ -2493,6 +2486,13 @@ void StackingContext::paintStackingContext(Canvas* canvas,
         canvas->endOpacityLayer();
     }
 
+    paintScrollbar(canvas);
+
+    canvas->restore();
+}
+
+void StackingContext::paintScrollbar(Canvas* canvas)
+{
     if (isIFrameStackingContext()) {
         HTMLIFrameElement* iframe =
             m_owner->node()->document()->browsingContext()->sourceElement();
@@ -2512,20 +2512,75 @@ void StackingContext::paintStackingContext(Canvas* canvas,
                 m_owner->layoutParent()->asFrameBlockBox();
             if (!needsGraphicsBuffer()) {
                 Scrolling::paintScrollbars<Canvas*>(
+                    m_owner->node()
+                        ->document()
+                        ->browsingContext()
+                        ->window()
+                        ->scrolling(),
                     canvas, document, document->appliedOverflowX(),
                     document->appliedOverflowY());
             }
             canvas->restore();
         }
+    } else if (!isRootContext()) {
+        if (m_owner->shouldApplyOverflow() && m_owner->node() &&
+            m_owner->node()->isElement() && m_owner->isFrameBlockBox()) {
+            Scrolling::paintScrollbars<Canvas*>(
+                m_owner->node()->asElement()->rareMembers()
+                    ? m_owner->node()->asElement()->rareMembers()->m_scrolling
+                    : nullptr,
+                canvas, m_owner->asFrameBlockBox(), m_owner->appliedOverflowX(),
+                m_owner->appliedOverflowY());
+        }
     }
+}
 
-    canvas->restore();
+void StackingContext::compositeScrollbar(Compositor* compositor)
+{
+    if (isIFrameStackingContextOwner()) {
+        if (m_childContexts.size()) {
+            StackingContext* childCtx = m_childContexts[0]->at(0);
+            if (childCtx->needsGraphicsBuffer()) {
+                auto bc = m_owner->node()
+                              ->asHTMLIFrameElement()
+                              ->contentDocument()
+                              ->browsingContext();
+                {
+                    CompositorStateRestorer r(compositor, this,
+                                              parent()->owner());
+                    compositor->translate(
+                        m_owner->borderLeft() + m_owner->paddingLeft(),
+                        m_owner->borderTop() + m_owner->paddingTop());
+                    FrameBlockBox* mainFrame =
+                        bc->document()->frame()->asFrameBlockBox();
+                    Scrolling::paintScrollbars<Compositor*>(
+                        m_owner->node()
+                            ->document()
+                            ->browsingContext()
+                            ->window()
+                            ->scrolling(),
+                        compositor, mainFrame, mainFrame->appliedOverflowX(),
+                        mainFrame->appliedOverflowY());
+                }
+            }
+        }
+    } else if (!isRootContext()) {
+        if (m_owner->shouldApplyOverflow() && m_owner->node() &&
+            m_owner->node()->isElement() && m_owner->isFrameBlockBox()) {
+            Scrolling::paintScrollbars<Compositor*>(
+                m_owner->node()->asElement()->rareMembers()
+                    ? m_owner->node()->asElement()->rareMembers()->m_scrolling
+                    : nullptr,
+                compositor, m_owner->asFrameBlockBox(),
+                m_owner->appliedOverflowX(), m_owner->appliedOverflowY());
+        }
+    }
 }
 
 void StackingContext::compositeStackingContext(Compositor* compositor)
 {
     STARFISH_ASSERT(compositor != nullptr);
-    STARFISH_ASSERT(needsGraphicsBuffer());
+    STARFISH_ASSERT(needsGraphicsBufferReason());
 
     LayoutRect visibleRect = StackingContext::visibleRect();
     LayoutUnit minX = visibleRect.x();
@@ -2536,9 +2591,8 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
     size_t bufferWidth = (int)(maxX - minX);
     size_t bufferHeight = (int)(maxY - minY);
 
-    if (!bufferWidth || !bufferHeight) {
-        return;
-    }
+    bool thereIsNoBufferBecauseThereIsNoVisibleContent =
+        !bufferWidth || !bufferHeight;
 
     ComputedStyle* ownerStyle = m_owner->style();
     STARFISH_ASSERT(ownerStyle != nullptr);
@@ -2574,187 +2628,175 @@ void StackingContext::compositeStackingContext(Compositor* compositor)
         }
     }
 
-    owner()->willCompsiteStackingContext(compositor);
+    if (!thereIsNoBufferBecauseThereIsNoVisibleContent) {
+        owner()->willCompsiteStackingContext(compositor);
 
-    bool hasFilterEffect = false;
-    if (Compositor::supportsFilterEffect(bufferWidth, bufferHeight) &&
-        m_hasFilterEffect) {
-        hasFilterEffect = true;
-        Length standardDeviation;
-        float maxRadiusOffset = 0;
-        if (ownerStyle->hasAvailableFilter() &&
-            ownerStyle->filter()->getStandardDeviationOfBlurFilter(
-                standardDeviation)) {
-            maxRadiusOffset =
-                std::max(maxRadiusOffset, (standardDeviation.numberData()));
-        }
-
-        for (auto ancestor : ancestorsThatHasFilters()) {
-            auto s = ancestor->owner()->style();
-            if (s->filter()->getStandardDeviationOfBlurFilter(
+        bool hasFilterEffect = false;
+        if (Compositor::supportsFilterEffect(bufferWidth, bufferHeight) &&
+            m_hasFilterEffect) {
+            hasFilterEffect = true;
+            Length standardDeviation;
+            float maxRadiusOffset = 0;
+            if (ownerStyle->hasAvailableFilter() &&
+                ownerStyle->filter()->getStandardDeviationOfBlurFilter(
                     standardDeviation)) {
                 maxRadiusOffset =
                     std::max(maxRadiusOffset, (standardDeviation.numberData()));
             }
+
+            for (auto ancestor : ancestorsThatHasFilters()) {
+                auto s = ancestor->owner()->style();
+                if (s->filter()->getStandardDeviationOfBlurFilter(
+                        standardDeviation)) {
+                    maxRadiusOffset = std::max(
+                        maxRadiusOffset, (standardDeviation.numberData()));
+                }
+            }
+
+            if (maxRadiusOffset) {
+                compositor->save();
+                compositor->enableBlurEffect(maxRadiusOffset);
+            }
         }
 
-        if (maxRadiusOffset) {
-            compositor->save();
-            compositor->enableBlurEffect(maxRadiusOffset);
-        }
-    }
+        if (owner()->hasOwnGraphicsBufferMethod()) {
+            if (m_rareData->m_graphicsBufferHolder) {
+                compositor->save();
+                compositor->translate(minX, minY);
 
-    if (owner()->hasOwnGraphicsBufferMethod()) {
-        if (m_rareData->m_graphicsBufferHolder) {
-            compositor->save();
+                if (owner()->needsToPaintBackgroundOrBorderOrBoxShadow()) {
+                    CanvasSurface* backgroundSurface = CanvasSurface::create(
+                        m_owner->document()->webView()->platformWindow(),
+                        bufferWidth, bufferHeight,
+                        CanvasSurface::CanvasElement);
+                    Canvas* canvas = Canvas::create(m_owner->node()->webView(),
+                                                    backgroundSurface);
+                    canvas->clearColor(Unit::Color(0, 0, 0, 0));
+                    canvas->setTextDecorationData(
+                        m_rareData->m_textDecorationData);
+                    owner()->asFrameBox()->paintBackgroundAndBorders(canvas);
+                    delete canvas;
+                    backgroundSurface->unmapBufferAndNotifyUpdatedRegion(
+                        0, 0, backgroundSurface->bufferWidth(),
+                        backgroundSurface->bufferHeight());
+                    compositor->drawSurface(
+                        backgroundSurface,
+                        Unit::Rect(0, 0, backgroundSurface->bufferWidth(),
+                                   backgroundSurface->bufferHeight()));
+                    backgroundSurface->detachNativeBuffer();
+                }
+
+                auto dx = owner()->borderLeft() + owner()->paddingLeft();
+                auto dy = owner()->borderTop() + owner()->paddingTop();
+                compositor->translate(dx, dy);
+
+                auto surface =
+                    m_rareData->m_graphicsBufferHolder->m_surfaces[0];
+                compositor->drawSurface(
+                    surface, Unit::Rect(0, 0, owner()->contentWidth(),
+                                        owner()->contentHeight()));
+                compositor->restore();
+            }
+        } else if (m_rareData->m_graphicsBufferHolder) {
+            size_t wTileSize =
+                m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
+            size_t hTileSize =
+                m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
+            size_t wTextureCount =
+                m_rareData->m_graphicsBufferHolder->m_horizontalTileCount;
+            size_t hTextureCount =
+                m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
+
+            size_t tileIndex = 0;
+            size_t coveredRowsCount = 0;
+
             compositor->translate(minX, minY);
 
-            if (owner()->needsToPaintBackgroundOrBorderOrBoxShadow()) {
-                CanvasSurface* backgroundSurface = CanvasSurface::create(
-                    m_owner->document()->webView()->platformWindow(),
-                    bufferWidth, bufferHeight, CanvasSurface::CanvasElement);
-                Canvas* canvas = Canvas::create(m_owner->node()->webView(),
-                                                backgroundSurface);
-                canvas->clearColor(Unit::Color(0, 0, 0, 0));
-                canvas->setTextDecorationData(m_rareData->m_textDecorationData);
-                owner()->asFrameBox()->paintBackgroundAndBorders(canvas);
-                delete canvas;
-                backgroundSurface->unmapBufferAndNotifyUpdatedRegion(
-                    0, 0, backgroundSurface->bufferWidth(),
-                    backgroundSurface->bufferHeight());
-                compositor->drawSurface(
-                    backgroundSurface,
-                    Unit::Rect(0, 0, backgroundSurface->bufferWidth(),
-                               backgroundSurface->bufferHeight()));
-                backgroundSurface->detachNativeBuffer();
-            }
+            for (size_t y = 0; y < hTextureCount; y++) {
+                size_t coveredColsCount = 0;
+                for (size_t x = 0; x < wTextureCount; x++) {
+                    size_t tileDataX = coveredColsCount;
+                    size_t tileDataY = coveredRowsCount;
+                    size_t tileDataWidth = std::min(
+                        wTileSize,
+                        m_rareData->m_graphicsBufferHolder->bufferWidth() -
+                            coveredColsCount);
+                    size_t tileDataHeight = std::min(
+                        hTileSize,
+                        m_rareData->m_graphicsBufferHolder->bufferHeight() -
+                            coveredRowsCount);
 
-            auto dx = owner()->borderLeft() + owner()->paddingLeft();
-            auto dy = owner()->borderTop() + owner()->paddingTop();
-            compositor->translate(dx, dy);
-
-            auto surface = m_rareData->m_graphicsBufferHolder->m_surfaces[0];
-            compositor->drawSurface(surface,
-                                    Unit::Rect(0, 0, owner()->contentWidth(),
-                                               owner()->contentHeight()));
-            compositor->restore();
-        }
-    } else if (m_rareData->m_graphicsBufferHolder) {
-        size_t wTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataWidth;
-        size_t hTileSize = m_rareData->m_graphicsBufferHolder->m_tileDataHeight;
-        size_t wTextureCount =
-            m_rareData->m_graphicsBufferHolder->m_horizontalTileCount;
-        size_t hTextureCount =
-            m_rareData->m_graphicsBufferHolder->m_verticalTileCount;
-
-        size_t tileIndex = 0;
-        size_t coveredRowsCount = 0;
-
-        compositor->translate(minX, minY);
-
-        for (size_t y = 0; y < hTextureCount; y++) {
-            size_t coveredColsCount = 0;
-            for (size_t x = 0; x < wTextureCount; x++) {
-                size_t tileDataX = coveredColsCount;
-                size_t tileDataY = coveredRowsCount;
-                size_t tileDataWidth =
-                    std::min(wTileSize,
-                             m_rareData->m_graphicsBufferHolder->bufferWidth() -
-                                 coveredColsCount);
-                size_t tileDataHeight = std::min(
-                    hTileSize,
-                    m_rareData->m_graphicsBufferHolder->bufferHeight() -
-                        coveredRowsCount);
-
-                if (m_rareData->m_graphicsBufferHolder->m_surfaces[tileIndex]) {
-                    compositor->drawSurface(m_rareData->m_graphicsBufferHolder
-                                                ->m_surfaces[tileIndex],
-                                            Unit::Rect(tileDataX, tileDataY,
-                                                       tileDataWidth,
-                                                       tileDataHeight));
+                    if (m_rareData->m_graphicsBufferHolder
+                            ->m_surfaces[tileIndex]) {
+                        compositor->drawSurface(
+                            m_rareData->m_graphicsBufferHolder
+                                ->m_surfaces[tileIndex],
+                            Unit::Rect(tileDataX, tileDataY, tileDataWidth,
+                                       tileDataHeight));
+                    }
+                    tileIndex++;
+                    coveredColsCount += wTileSize;
                 }
-                tileIndex++;
-                coveredColsCount += wTileSize;
+
+                coveredRowsCount += hTileSize;
             }
 
-            coveredRowsCount += hTileSize;
+            compositor->translate(-minX, -minY);
         }
-
-        compositor->translate(-minX, -minY);
-    }
 
 #ifdef STARFISH_ENABLE_TEST
-    if (UNLIKELY(owner()->node()->webView()->startUpFlag() &
-                 StarfishStartUpFlag::enableDebugGraphicsLayer)) {
-        // debug compositing method
-        switch (m_needsGraphicsBufferReason) {
-        case NeedsGraphicsLayerReasonNone:
-            compositor->setColor(Unit::Color(255, 64, 0, 64));
-            break;
-        case NeedsGraphicsLayerReasonBySelf:
-            compositor->setColor(Unit::Color(255, 0, 0, 64));
-            break;
-        case NeedsGraphicsLayerReasonNotCoveredByParent:
-            compositor->setColor(Unit::Color(0, 255, 0, 64));
-            break;
-        case NeedsGraphicsLayerReasonCollapsedWithSiblingLayer:
-            compositor->setColor(Unit::Color(0, 0, 255, 64));
-            break;
-        case NeedsGraphicsLayerReasonSiblingLayerNeedsComposite:
-            compositor->setColor(Unit::Color(0, 255, 255, 64));
-            break;
-        default:
-            STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
-        }
-        compositor->beginOpacityLayer(0.5);
-        compositor->drawRect(Unit::Rect(minX, minY, bufferWidth, bufferHeight));
-        compositor->endOpacityLayer();
-    }
-
-    if (UNLIKELY(owner()->node()->webView()->startUpFlag() &
-                 StarfishStartUpFlag::enableDebugRepaintRegion)) {
-        auto iter = owner()->node()->webView()->repaintRegionInRendering().find(
-            owner()->node());
-
-        if (iter !=
-            owner()->node()->webView()->repaintRegionInRendering().end()) {
+        if (UNLIKELY(owner()->node()->webView()->startUpFlag() &
+                     StarfishStartUpFlag::enableDebugGraphicsLayer)) {
+            // debug compositing method
+            switch (m_needsGraphicsBufferReason) {
+            case NeedsGraphicsLayerReasonNone:
+                compositor->setColor(Unit::Color(255, 64, 0, 64));
+                break;
+            case NeedsGraphicsLayerReasonBySelf:
+                compositor->setColor(Unit::Color(255, 0, 0, 64));
+                break;
+            case NeedsGraphicsLayerReasonNotCoveredByParent:
+                compositor->setColor(Unit::Color(0, 255, 0, 64));
+                break;
+            case NeedsGraphicsLayerReasonCollapsedWithSiblingLayer:
+                compositor->setColor(Unit::Color(0, 0, 255, 64));
+                break;
+            case NeedsGraphicsLayerReasonSiblingLayerNeedsComposite:
+                compositor->setColor(Unit::Color(0, 255, 255, 64));
+                break;
+            default:
+                STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE();
+            }
             compositor->beginOpacityLayer(0.5);
-            compositor->setColor(Unit::Color(0, 255, 0, 64));
-            compositor->drawRect(iter->second);
+            compositor->drawRect(
+                Unit::Rect(minX, minY, bufferWidth, bufferHeight));
             compositor->endOpacityLayer();
         }
-    }
-#endif
 
-    if (hasFilterEffect) {
-        compositor->restore();
-    }
+        if (UNLIKELY(owner()->node()->webView()->startUpFlag() &
+                     StarfishStartUpFlag::enableDebugRepaintRegion)) {
+            auto iter =
+                owner()->node()->webView()->repaintRegionInRendering().find(
+                    owner()->node());
 
-    owner()->didCompsiteStackingContext(compositor);
-
-    if (isIFrameStackingContextOwner()) {
-        if (m_childContexts.size()) {
-            StackingContext* childCtx = m_childContexts[0]->at(0);
-            if (childCtx->needsGraphicsBuffer()) {
-                auto bc = m_owner->node()
-                              ->asHTMLIFrameElement()
-                              ->contentDocument()
-                              ->browsingContext();
-                {
-                    CompositorStateRestorer r(compositor, this,
-                                              parent()->owner());
-                    compositor->translate(
-                        m_owner->borderLeft() + m_owner->paddingLeft(),
-                        m_owner->borderTop() + m_owner->paddingTop());
-                    FrameBlockBox* mainFrame =
-                        bc->document()->frame()->asFrameBlockBox();
-                    Scrolling::paintScrollbars<Compositor*>(
-                        compositor, mainFrame, mainFrame->appliedOverflowX(),
-                        mainFrame->appliedOverflowY());
-                }
+            if (iter !=
+                owner()->node()->webView()->repaintRegionInRendering().end()) {
+                compositor->beginOpacityLayer(0.5);
+                compositor->setColor(Unit::Color(0, 255, 0, 64));
+                compositor->drawRect(iter->second);
+                compositor->endOpacityLayer();
             }
         }
+#endif
+
+        if (hasFilterEffect) {
+            compositor->restore();
+        }
+
+        owner()->didCompsiteStackingContext(compositor);
     }
+
+    compositeScrollbar(compositor);
 }
 
 LayoutLocation StackingContext::relativeLocation(StackingContext* sCtx)

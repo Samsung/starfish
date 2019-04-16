@@ -958,6 +958,14 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
     , overflowXWasApplyed(false)
     , overflowYWasApplyed(false)
 {
+    if (ctx.fragmentBoxStack.size() &&
+        ctx.fragmentBoxStack.back()->isFrameBlockBox()) {
+        ctx.tranformMatrix.preTranslate(
+            -ctx.fragmentBoxStack.back()->asFrameBlockBox()->scrollLeft(),
+            -ctx.fragmentBoxStack.back()->asFrameBlockBox()->scrollTop());
+    }
+    ctx.fragmentBoxStack.push_back(fragmentBox);
+
     if (ctx.ignoreTransformOnce) {
         ctx.ignoreTransformOnce = false;
         return;
@@ -1025,6 +1033,8 @@ Frame::ComputeVisibleRectContextFragment::ComputeVisibleRectContextFragment(
 }
 Frame::ComputeVisibleRectContextFragment::~ComputeVisibleRectContextFragment()
 {
+    ctx.fragmentBoxStack.pop_back();
+
     ctx.tranformMatrix = transformMatrixBefore;
     if (overflowXWasApplyed || overflowYWasApplyed) {
         ctx.boundMaxExtentDueToOverflow.pop_back();

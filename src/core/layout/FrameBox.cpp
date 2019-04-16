@@ -108,7 +108,8 @@ void* FrameBox::operator new(size_t size)
     return GC_MALLOC_EXPLICITLY_TYPED(size, descr);
 }
 
-LayoutLocation FrameBox::absolutePointIncludingScroll(FrameBox* top)
+LayoutLocation FrameBox::absolutePointIncludingScroll(
+    FrameBox* top, bool includesScrollPropertyOfTop)
 {
     LayoutLocation l(0, 0);
     Frame* p = this;
@@ -122,7 +123,7 @@ LayoutLocation FrameBox::absolutePointIncludingScroll(FrameBox* top)
         p = p->layoutParent();
     }
 
-    if (top->isFrameBlockBox()) {
+    if (top->isFrameBlockBox() && includesScrollPropertyOfTop) {
         l.setX(l.x() - top->asFrameBlockBox()->scrollLeft());
         l.setY(l.y() - top->asFrameBlockBox()->scrollTop());
     }
@@ -473,7 +474,7 @@ void FrameBox::paintOutline(Canvas* canvas)
         canvas->save();
         canvas->resetClip();
         auto u = absolutePointIncludingScroll(
-            node()->document()->frame()->asFrameBox());
+            node()->document()->frame()->asFrameBox(), false);
         u.setX(u.x() -
                node()->document()->frame()->asFrameBlockBox()->scrollLeft());
         u.setY(u.y() -
@@ -2582,7 +2583,8 @@ void FrameBox::paintBorders(Canvas* canvas, const LayoutRect& rect)
                 if (border.top().style() ==
                     BorderStyleValue::InsetBorderStyleValue) {
                     canvas->setColor(border.top().color().getDarkerColor());
-                    canvas->setStrokeColor(border.top().color().getDarkerColor());
+                    canvas->setStrokeColor(
+                        border.top().color().getDarkerColor());
                 } else if ((border.top().style() ==
                             BorderStyleValue::OutsetBorderStyleValue) &&
                            (border.top().color() == black)) {
@@ -4037,6 +4039,15 @@ static SkMatrix computeBoxMatrix(FrameBox* self, ComputeMatrixFor forWhat)
             iter++;
         }
     }
+
+    if (forWhat == GraphicsLayer && graphicsLayerHolder) {
+        if (graphicsLayerHolder->isFrameBlockBox()) {
+            m.postTranslate(
+                -graphicsLayerHolder->asFrameBlockBox()->scrollLeft(),
+                -graphicsLayerHolder->asFrameBlockBox()->scrollTop());
+        }
+    }
+
     return m;
 }
 

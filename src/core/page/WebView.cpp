@@ -1206,7 +1206,8 @@ RenderResult WebView::rendering(bool force)
 
                 canvas->translate(scrollX, scrollY);
                 mainBrowsingContext()->window()->scrolling()->paintScrollbars(
-                    canvas, mainFrame, mainFrame->appliedOverflowX(),
+                    mainBrowsingContext()->window()->scrolling(), canvas,
+                    mainFrame, mainFrame->appliedOverflowX(),
                     mainFrame->appliedOverflowY());
 
                 canvas->restore();
@@ -1303,7 +1304,8 @@ RenderResult WebView::rendering(bool force)
             compositor->restore();
 
             mainBrowsingContext()->window()->scrolling()->paintScrollbars(
-                compositor, mainFrame, mainFrame->appliedOverflowX(),
+                mainBrowsingContext()->window()->scrolling(), compositor,
+                mainFrame, mainFrame->appliedOverflowX(),
                 mainFrame->appliedOverflowY());
 
             m_didCompositeBefore = true;

@@ -367,8 +367,9 @@ void Scrolling::stopFling()
 }
 
 template <typename T>
-void Scrolling::paintScrollbars(T canvas, FrameBlockBox* frame,
-                                OverflowValue ox, OverflowValue oy)
+void Scrolling::paintScrollbars(Scrolling* scrolling, T canvas,
+                                FrameBlockBox* frame, OverflowValue ox,
+                                OverflowValue oy)
 {
 #if defined(STARFISH_DISABLE_OVERFLOW_SCROLL)
     return;
@@ -385,6 +386,7 @@ void Scrolling::paintScrollbars(T canvas, FrameBlockBox* frame,
         return;
     }
 #endif
+
     canvas->save();
     bool hasVerticalScroll = frame->hasBiggerContentThanFrameHeight() &&
                              oy >= OverflowValue::AutoOverflow &&
@@ -451,9 +453,11 @@ void Scrolling::paintScrollbars(T canvas, FrameBlockBox* frame,
     canvas->restore();
 }
 
-template void Scrolling::paintScrollbars<Canvas*>(Canvas*, FrameBlockBox*,
-                                                  OverflowValue, OverflowValue);
-template void Scrolling::paintScrollbars<Compositor*>(Compositor*,
+template void Scrolling::paintScrollbars<Canvas*>(Scrolling* scrolling, Canvas*,
+                                                  FrameBlockBox*, OverflowValue,
+                                                  OverflowValue);
+template void Scrolling::paintScrollbars<Compositor*>(Scrolling* scrolling,
+                                                      Compositor*,
                                                       FrameBlockBox*,
                                                       OverflowValue,
                                                       OverflowValue);

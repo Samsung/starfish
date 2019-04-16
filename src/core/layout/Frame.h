@@ -1662,6 +1662,7 @@ public:
         FrameBox* sourceFrameBox;
         SkMatrix& tranformMatrix;
         LayoutRect& result;
+        std::vector<FrameBox*> fragmentBoxStack;
         std::vector<std::tuple<LayoutRect, bool, bool>>
             boundMaxExtentDueToOverflow;
 
