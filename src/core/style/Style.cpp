@@ -196,6 +196,8 @@ static void setComputedStyleBackgroundPositionX(ComputedStyle* style,
                                                 const CSSStyleValuePair& value,
                                                 unsigned int layer = 0)
 {
+    STARFISH_ASSERT(style != nullptr);
+
     if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
         value.valueKind() == CSSStyleValuePair::ValueKind::Unset) {
         style->setBackgroundPositionX(Length(Length::Percent, 0.0f), layer);
@@ -232,6 +234,8 @@ static void setComputedStyleBackgroundPositionY(ComputedStyle* style,
                                                 const CSSStyleValuePair& value,
                                                 unsigned int layer = 0)
 {
+    STARFISH_ASSERT(style != nullptr);
+
     if (value.valueKind() == CSSStyleValuePair::ValueKind::Initial ||
         value.valueKind() == CSSStyleValuePair::ValueKind::Unset) {
         style->setBackgroundPositionY(Length(Length::Percent, 0.0f), layer);
@@ -339,6 +343,8 @@ static bool isValidVariables(const CSSTokenVector& tokens)
 bool CSSStyleValuePair::updateVarValue(const char* str,
                                        const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(str != nullptr);
+
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
     if (isValidVariables(tokens)) {
         m_keyKind = CSSStyleValuePair::KeyKind::VarValue;
@@ -370,6 +376,8 @@ bool CSSStyleValuePair::updateValueCommon(const CSSTokenVector& tokens)
 
 String* CSSStyleValuePair::urlValue(ResourceURL* urlOfStyleSheet) const
 {
+    STARFISH_ASSERT(urlOfStyleSheet != nullptr);
+
     STARFISH_ASSERT(m_valueKind == UrlValueKind);
     return ResourceURL::mergeDocumentURIWithURIString(
         urlOfStyleSheet->baseURI(), m_value.m_stringValue);
@@ -405,8 +413,12 @@ unsigned CSSSelector::specificityForOneSelector() const
 String* CSSSelectorList::selectorText(CSSSelectorList* list, unsigned idx,
                                       String* rightSide)
 {
+    STARFISH_ASSERT(list != nullptr);
+    STARFISH_ASSERT(rightSide != nullptr);
+
     StringBuilder str;
     CSSSelector* cs = list->at(idx);
+    STARFISH_ASSERT(cs != nullptr);
 
     if (cs->type() == CSSSelector::Tag ||
         cs->type() == CSSSelector::Universal) {
@@ -560,6 +572,8 @@ String* CSSSelectorList::selectorText()
 
 bool CSSSelector::isSimple(CSSSelectorList* selectorList)
 {
+    STARFISH_ASSERT(selectorList != nullptr);
+
     if ((isPseudoSelector() &&
          asCSSPseudoSelector()->pseudoSelectorList().size()) ||
         type() == CSSSelector::PseudoElement) {
@@ -605,6 +619,8 @@ bool CSSPseudoSelector::matchNth(int count)
 CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(
     Starfish* starfish, AtomicString pseudoName, bool hasArguments)
 {
+    STARFISH_ASSERT(starfish != nullptr);
+
     if (pseudoName.isEmptyAtomicString() ||
         !pseudoName.string()->containsOnlyASCIIChars()) {
         return CSSSelector::PseudoNone;
@@ -628,6 +644,8 @@ CSSSelector::PseudoType CSSPseudoSelector::parsePseudoType(
 void CSSPseudoSelector::updatePseudoType(Starfish* starfish, AtomicString name,
                                          bool hasArguments)
 {
+    STARFISH_ASSERT(starfish != nullptr);
+
     m_selectorText = name;
     m_pseudotype = parsePseudoType(starfish, name, hasArguments);
 
@@ -1701,6 +1719,9 @@ static bool attributeValueMatches(
     String* attrValue, CSSSelector::Type type, String* selectorValue,
     CSSSelector::AttributeMatchType caseSensitivity)
 {
+    STARFISH_ASSERT(attrValue != nullptr);
+    STARFISH_ASSERT(selectorValue != nullptr);
+
     // For AttributeSet and AttributeExact attribute selectors, the attribute
     // value can be empty string.
     if (type != CSSSelector::AttributeSet &&
@@ -1786,6 +1807,9 @@ bool StyleResolver::anyAttributeMatches(Element* element,
                                         CSSAttributeSelector* selector,
                                         MatchResult& result)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(selector != nullptr);
+
     const QualifiedName& selectorAttr = selector->attribute();
     STARFISH_ASSERT(!(selectorAttr.localName()->equals("*")));
 
@@ -1860,18 +1884,20 @@ StyleResolver::StyleResolver(Document* document)
 {
 }
 
-ComputedStyle* StyleResolver::resolveDocumentStyle(Document* doc)
+ComputedStyle* StyleResolver::resolveDocumentStyle(Document* document)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     ComputedStyle* ret = new ComputedStyle(m_mediumFontSize);
     ret->m_display = DisplayValue::BlockDisplayValue;
-    ret->m_inheritedStyles.m_color = doc->webView()->baseForegroundColor();
+    ret->m_inheritedStyles.m_color = document->webView()->baseForegroundColor();
     ret->m_inheritedStyles.m_fontFamilyDatas =
-        doc->webView()->initialFontFamilyDatas();
+        document->webView()->initialFontFamilyDatas();
     ret->m_inheritedStyles.m_textAlign = TextAlignValue::StartTextAlignValue;
     ret->m_inheritedStyles.m_direction = DirectionValue::LtrDirectionValue;
     ret->m_inheritedStyles.m_whiteSpace =
         WhiteSpaceValue::NormalWhiteSpaceValue;
-    ret->loadResources(doc);
+    ret->loadResources(document);
     return ret;
 }
 
@@ -1888,7 +1914,7 @@ StyleResolveContext::~StyleResolveContext()
 
 void StyleResolveContext::pushIntoComputedStylePool(ComputedStyle* b)
 {
-    STARFISH_ASSERT(b);
+    STARFISH_ASSERT(b != nullptr);
     memset(b, 0, sizeof(ComputedStyle));
     m_computedStylePool.push_back(b);
 #ifndef NDEBUG
@@ -1911,6 +1937,10 @@ void StyleResolver::applyAllProperty(
     GCVector<MutablePropertyValue>& cssCustomValues, ResourceURL* origin,
     ComputedStyle*& style, ComputedStyle* parentStyle, bool isImportant)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(origin != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
     GCAtomicVector<CSSStyleValuePair> cssValues;
     CSSStyleValuePair::KeyKind kind;
 #define ADD_CSS_VALUE_PAIR(Name, name, cssname)            \
@@ -1935,6 +1965,9 @@ ComputedStyle* StyleResolver::resolveStyle(StyleResolveContext& ctx,
                                            Element* element,
                                            ComputedStyle* parent)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(parent != nullptr);
+
     ctx.m_computedElementCount++;
     ComputedStyle* style =
         new (ctx.allocateComputedStyle()) ComputedStyle(parent);
@@ -1949,6 +1982,10 @@ static void applyTransitionProperty(Element* element, ComputedStyle* style,
                                     ComputedStyle* parentStyle,
                                     CSSStyleValuePair& item, size_t layer)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
@@ -1973,6 +2010,10 @@ static void applyTransitionDuration(Element* element, ComputedStyle* style,
                                     ComputedStyle* parentStyle,
                                     CSSStyleValuePair& item, size_t layer)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
@@ -2008,6 +2049,10 @@ static void applyTransitionTimingFunction(Element* element,
                                           ComputedStyle* parentStyle,
                                           CSSStyleValuePair& item, size_t layer)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
@@ -2039,6 +2084,10 @@ static void applyTransitionDelay(Element* element, ComputedStyle* style,
                                  ComputedStyle* parentStyle,
                                  CSSStyleValuePair& item, size_t layer)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
     switch (item.valueKind()) {
     case CSSStyleValuePair::Initial:
     case CSSStyleValuePair::Unset:
@@ -2075,6 +2124,11 @@ void StyleResolver::apply(Element* element,
                           ResourceURL* origin, ComputedStyle* style,
                           ComputedStyle* parentStyle, bool isImportant)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(origin != nullptr);
+    STARFISH_ASSERT(style != nullptr);
+    STARFISH_ASSERT(parentStyle != nullptr);
+
 #ifdef STARFISH_ENABLE_CSS_VARIABLE
     // Get the css-custom-property from 'parentStyle'.
     if (parentStyle) {
@@ -5944,6 +5998,9 @@ void StyleResolver::collectMatchingRulesFromAuthorSheet(
     MatchedStyleRules<32>& authorRules, ComputedStyle* ret,
     PseudoElementType pseudoElementType)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(ret != nullptr);
+
     bool canUseAncestorSelectorFilter =
         ctx.m_ancestorSelectorFilter->canUseAncestorSelectorFilter(element);
 
@@ -6059,6 +6116,10 @@ void StyleResolver::matchAllRules(StyleResolveContext& ctx, Element* element,
                                   ComputedStyle* ret, ComputedStyle* parent,
                                   PseudoElementType pseudoElementType)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(ret != nullptr);
+    STARFISH_ASSERT(parent != nullptr);
+
     AtomicString elementName = element->name().localNameAtomic();
     AtomicString elementId = element->atomicId();
     const GCVector<AtomicString>& elementClasses = element->classNames();
@@ -6186,6 +6247,7 @@ StyleResolver::Match StyleResolver::matchSelector(
     const CSSSelectorList& selectorList, unsigned idx, MatchResult& result,
     bool isQueryingSelector)
 {
+    STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(idx < selectorList.size());
 
     CSSSelector* selector = selectorList[idx];
@@ -6217,9 +6279,11 @@ StyleResolver::Match StyleResolver::matchForRelation(
     const CSSSelectorList& selectorList, CSSSelector::RelationType relation,
     unsigned idx, MatchResult& result)
 {
+    STARFISH_ASSERT(element != nullptr);
     STARFISH_ASSERT(idx < selectorList.size());
 
     CSSSelector* selector = selectorList[idx];
+    STARFISH_ASSERT(selector != nullptr);
     switch (relation) {
     case CSSSelector::RelationType::Descendant: {
         Element* parent = element->parentElement();
@@ -6304,6 +6368,9 @@ bool StyleResolver::checkOne(Element* element, AtomicString elementName,
                              CSSSelector* selector, MatchResult& result,
                              bool isQueryingSelector)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(selector != nullptr);
+
     auto selectorType = selector->type();
     if (selectorType == CSSSelector::Type::Class) {
         result.styleDamageFrom =
@@ -6359,17 +6426,23 @@ bool StyleResolver::checkOne(Element* element, AtomicString elementName,
 
 static bool isFirstChild(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     return element->parentElement() ? !element->previousElementSibling()
                                     : false;
 }
 
 static bool isLastChild(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     return element->parentElement() ? !element->nextElementSibling() : false;
 }
 
 static bool isFirstOfType(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     Node* sibling = element->previousSibling();
     while (sibling) {
         if (sibling->isElement() &&
@@ -6385,6 +6458,8 @@ static bool isFirstOfType(Element* element)
 
 static bool isLastOfType(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     Node* sibling = element->nextSibling();
     while (sibling) {
         if (sibling->isElement() &&
@@ -6400,6 +6475,8 @@ static bool isLastOfType(Element* element)
 
 static bool isEmpty(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     Node* child = element->firstChild();
     while (child) {
         if (child->isElement()) {
@@ -6419,6 +6496,8 @@ static bool isEmpty(Element* element)
 
 static unsigned nthChildIndex(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     unsigned index = 1;
 
     Node* sibling = element->previousSibling();
@@ -6434,6 +6513,8 @@ static unsigned nthChildIndex(Element* element)
 
 static unsigned nthOfTypeIndex(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     unsigned index = 1;
     String* tag = element->tagName();
 
@@ -6451,6 +6532,8 @@ static unsigned nthOfTypeIndex(Element* element)
 
 static unsigned nthLastChildIndex(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     unsigned index = 1;
 
     Node* sibling = element->nextSibling();
@@ -6466,6 +6549,8 @@ static unsigned nthLastChildIndex(Element* element)
 
 static unsigned nthLastOfTypeIndex(Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     int index = 1;
     String* tag = element->tagName();
 
@@ -6485,6 +6570,9 @@ bool StyleResolver::checkPseudoClass(Element* element,
                                      CSSPseudoSelector* selector,
                                      MatchResult& result)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(selector != nullptr);
+
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoHover:
         if (result.seenCombinator) {
@@ -6729,6 +6817,9 @@ bool StyleResolver::checkPseudoElement(Element* element,
                                        CSSPseudoSelector* selector,
                                        MatchResult& result)
 {
+    STARFISH_ASSERT(element != nullptr);
+    STARFISH_ASSERT(selector != nullptr);
+
     switch (selector->pseudoType()) {
     case CSSSelector::PseudoType::PseudoFirstLine:
         result.pseudoType = PseudoElementType::PseudoElementFirstLine;
@@ -6762,6 +6853,8 @@ void computeTransition(Element* element, ComputedStyle* oldStyle,
         element->isRunningTransformAnimation();
 
     AnimationExecutor* executor = element->document()->animationExecutor();
+    STARFISH_ASSERT(executor != nullptr);
+
     auto tick = element->document()->browsingContext()->styleResolveStartTick();
     std::vector<std::pair<CSSStyleValuePair::KeyKind, float>>
         canceledAnimationProgress;
@@ -6903,6 +6996,9 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
                                                ComputedStyle* parentStyle,
                                                bool inheritedStyleChanged)
 {
+    STARFISH_ASSERT(resolver != nullptr);
+    STARFISH_ASSERT(element != nullptr);
+
     ComputedStyleDamage damage = ComputedStyleDamage::ComputedStyleDamageNone;
 
     if (element->needsStyleRecalc() || inheritedStyleChanged) {
@@ -7032,6 +7128,8 @@ static ComputedStyleDamage resolveElementStyle(StyleResolveContext& ctx,
 
 static void clearStyle(StyleResolveContext& ctx, Element* element)
 {
+    STARFISH_ASSERT(element != nullptr);
+
     Node* child = element->firstChild();
     while (child) {
         if (child->isElement()) {
@@ -7054,6 +7152,10 @@ void StyleResolver::resolveChildrenStyle(StyleResolveContext& ctx,
                                          ComputedStyle* parentElementStyle,
                                          bool inheritedStyleChanged)
 {
+    STARFISH_ASSERT(resolver != nullptr);
+    STARFISH_ASSERT(parentElement != nullptr);
+    STARFISH_ASSERT(parentElementStyle != nullptr);
+
     ComputedStyle* childTextNodeStyle = nullptr;
     STARFISH_ASSERT(parentElementStyle->display() != NoneDisplayValue);
     if (parentElement->isElement()) {
@@ -7166,6 +7268,9 @@ void StyleResolver::resolveDOMStyle(Document* document, bool force)
 
 bool StyleResolver::tryAddSheet(Node* node, CSSStyleSheet* sheet)
 {
+    STARFISH_ASSERT(node != nullptr);
+    STARFISH_ASSERT(sheet != nullptr);
+
     if (node->isHTMLElement()) {
         HTMLElement* htmlElement = node->asHTMLElement();
         CSSStyleSheet* nSheet = nullptr;
@@ -7188,6 +7293,9 @@ bool StyleResolver::tryAddSheet(Node* node, CSSStyleSheet* sheet)
 bool StyleResolver::traverseAndTryAddSheet(Node* parent, CSSStyleSheet* sheet,
                                            bool& originFound)
 {
+    STARFISH_ASSERT(parent != nullptr);
+    STARFISH_ASSERT(sheet != nullptr);
+
     Node* child = parent->firstChild();
     while (child) {
         if (!originFound && child == sheet->origin()) {
@@ -7209,6 +7317,8 @@ bool StyleResolver::traverseAndTryAddSheet(Node* parent, CSSStyleSheet* sheet,
 
 void StyleResolver::addSheet(CSSStyleSheet* sheet)
 {
+    STARFISH_ASSERT(sheet != nullptr);
+
     bool originFound = false;
     if (!traverseAndTryAddSheet(m_document, sheet, originFound)) {
         m_sheets.push_back(sheet);
@@ -7226,6 +7336,8 @@ static void extractValuesforSelector(const CSSSelector* selector,
                                      AtomicString& id, AtomicString& className,
                                      AtomicString& tagName)
 {
+    STARFISH_ASSERT(selector != nullptr);
+
     switch (selector->type()) {
     case CSSSelector::Id:
         id = selector->selectorText();
@@ -7365,12 +7477,16 @@ bool CSSStyleValuePair::updateValueColor(Document* document,
 bool CSSStyleValuePair::updateValueBackgroundColor(Document* document,
                                                    const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueColor(document, tokens);
 }
 
 bool CSSStyleValuePair::updateValueCaretColor(Document* document,
                                               const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -7474,30 +7590,40 @@ bool CSSStyleValuePair::updateValueBorderRadius(const CSSTokenVector& tokens)
 bool CSSStyleValuePair::updateValueBorderTopLeftRadius(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueBorderRadius(tokens);
 }
 
 bool CSSStyleValuePair::updateValueBorderTopRightRadius(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueBorderRadius(tokens);
 }
 
 bool CSSStyleValuePair::updateValueBorderBottomLeftRadius(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueBorderRadius(tokens);
 }
 
 bool CSSStyleValuePair::updateValueBorderBottomRightRadius(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueBorderRadius(tokens);
 }
 
 bool CSSStyleValuePair::updateValueDirection(Document* document,
                                              const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -7517,6 +7643,8 @@ bool CSSStyleValuePair::updateValueDirection(Document* document,
 bool CSSStyleValuePair::updateValueWhiteSpace(Document* document,
                                               const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -7542,6 +7670,8 @@ bool CSSStyleValuePair::updateValueWhiteSpace(Document* document,
 bool CSSStyleValuePair::updateValueObjectFit(Document* document,
                                              const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -7743,6 +7873,8 @@ static bool updatePositionValue(const GCVector<CSSStyleValuePair>& values,
 bool CSSStyleValuePair::updateValueObjectPosition(Document* document,
                                                   const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     CSSStyleValuePair xPair;
     CSSStyleValuePair yPair;
 
@@ -7823,6 +7955,8 @@ bool CSSStyleValuePair::updateValueObjectPosition(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueWordSpacing(Document* document,
                                                const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -7852,6 +7986,8 @@ bool CSSStyleValuePair::updateValueUnitCSSImage(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValueLetterSpacing(Document* document,
                                                  const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -7871,6 +8007,8 @@ bool CSSStyleValuePair::updateValueLetterSpacing(Document* document,
 bool CSSStyleValuePair::updateValueDisplay(Document* document,
                                            const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -7932,6 +8070,8 @@ bool CSSStyleValuePair::updateValueDisplay(Document* document,
 bool CSSStyleValuePair::updateValueAll(Document* document,
                                        const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     // initial | inherit | unset | revert
     if (tokens.size() != 1) {
         return false;
@@ -7947,6 +8087,8 @@ bool CSSStyleValuePair::updateValueAll(Document* document,
 bool CSSStyleValuePair::updateValuePointerEvents(Document* document,
                                                  const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -7992,6 +8134,8 @@ bool CSSStyleValuePair::updateValuePointerEvents(Document* document,
 bool CSSStyleValuePair::updateValueFloat(Document* document,
                                          const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -8013,6 +8157,8 @@ bool CSSStyleValuePair::updateValueFloat(Document* document,
 bool CSSStyleValuePair::updateValueClear(Document* document,
                                          const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -8036,6 +8182,8 @@ bool CSSStyleValuePair::updateValueClear(Document* document,
 bool CSSStyleValuePair::updateValueFontStyle(Document* document,
                                              const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -8046,6 +8194,8 @@ bool CSSStyleValuePair::updateValueFontStyle(Document* document,
 bool CSSStyleValuePair::updateValueFontKerning(Document* document,
                                                const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -8389,12 +8539,16 @@ bool CSSStyleValuePair::updateValueBackgroundImage(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueBackgroundImage(Document* document,
                                                    const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueBackgroundImage(tokens, true);
 }
 
 bool CSSStyleValuePair::updateValueCursor(Document* document,
                                           const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     return true;
 }
@@ -8402,6 +8556,8 @@ bool CSSStyleValuePair::updateValueCursor(Document* document,
 static bool parseCounter(Document* document, const CSSTokenValue& s,
                          CSSStyleValuePair* pair)
 {
+    STARFISH_ASSERT(pair != nullptr);
+
     auto ss = s.trim();
     CSSPropertyParser parser((char*)ss.data(), ss.length());
     parser.consumeString(0);
@@ -8452,6 +8608,8 @@ static bool parseCounter(Document* document, const CSSTokenValue& s,
 static bool parseCounters(Document* document, const CSSTokenValue& s,
                           CSSStyleValuePair* pair)
 {
+    STARFISH_ASSERT(pair != nullptr);
+
     auto ss = s.trim();
     CSSPropertyParser parser((char*)ss.data(), ss.length());
     parser.consumeString(0);
@@ -8514,6 +8672,8 @@ static bool parseCounters(Document* document, const CSSTokenValue& s,
 bool CSSStyleValuePair::updateValueContent(Document* document,
                                            const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     ValueList* values = new ValueList(ValueList::SpaceSeparator);
     for (unsigned int i = 0; i < tokens.size(); i++) {
         const CSSTokenValue& value = tokens[i];
@@ -8556,6 +8716,8 @@ bool CSSStyleValuePair::updateValueContent(Document* document,
 bool CSSStyleValuePair::updateValueBorderImageRepeat(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueUnitBorderImageRepeat(tokens);
 }
 
@@ -8594,6 +8756,8 @@ bool CSSStyleValuePair::updateValueUnitBorderImageRepeat(
 bool CSSStyleValuePair::updateValueBorderImageSource(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -8665,6 +8829,8 @@ static bool parseCalc(CSSPropertyParser& parser, CalcData* data,
                       bool isLenParser, bool isAngleParser, bool isTimeParser,
                       bool isLineheightParser, uint8_t parserOption)
 {
+    STARFISH_ASSERT(data != nullptr);
+
     bool isPlus = true;
     while (true) {
         CalcTerm* term = new CalcTerm();
@@ -8988,6 +9154,8 @@ bool CSSStyleValuePair::updateValueAngle(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueBorderImageOutset(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueUnitBorderImageOutset(tokens);
 }
 
@@ -9025,6 +9193,8 @@ bool CSSStyleValuePair::updateValueUnitBorderImageOutset(
 bool CSSStyleValuePair::updateValueBorderImageWidth(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueUnitBorderImageWidth(tokens);
 }
 bool CSSStyleValuePair::updateValueUnitBorderImageWidth(
@@ -9101,6 +9271,8 @@ bool CSSStyleValuePair::updateValueUnitBackgroundPositionY(
 bool CSSStyleValuePair::updateValueBackgroundPositionX(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -9110,6 +9282,8 @@ bool CSSStyleValuePair::updateValueBackgroundPositionX(
 bool CSSStyleValuePair::updateValueBackgroundPositionY(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -9138,6 +9312,8 @@ bool CSSStyleValuePair::updateValueUnitBackgroundAttachment(
 bool CSSStyleValuePair::updateValueBackgroundAttachment(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueBackgroundAttachment(tokens, true);
 }
 
@@ -9194,12 +9370,16 @@ bool CSSStyleValuePair::updateValueUnitBox(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValueBackgroundClip(Document* document,
                                                   const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueBox(tokens, true);
 }
 
 bool CSSStyleValuePair::updateValueBackgroundOrigin(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueBox(tokens, true);
 }
 
@@ -9241,6 +9421,8 @@ bool CSSStyleValuePair::updateValueBox(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueBackgroundSize(Document* document,
                                                   const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueBackgroundSize(tokens, true);
 }
 
@@ -9308,6 +9490,8 @@ bool CSSStyleValuePair::updateValueBackgroundSize(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueBorderImageSlice(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueUnitBorderImageSlice(tokens);
 }
 
@@ -9367,6 +9551,8 @@ bool CSSStyleValuePair::updateValueUnitBorderImageSlice(
 bool CSSStyleValuePair::updateValueFontSize(Document* document,
                                             const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -9407,6 +9593,8 @@ bool CSSStyleValuePair::updateValueUnitFontSize(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValueLineHeight(Document* document,
                                               const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -9502,6 +9690,8 @@ bool CSSStyleValuePair::updateValueUnitWidthHeightKeyword(
 bool CSSStyleValuePair::updateValueWidth(Document* document,
                                          const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueWidthHeightKeyword(tokens) ||
            updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
@@ -9510,6 +9700,8 @@ bool CSSStyleValuePair::updateValueWidth(Document* document,
 bool CSSStyleValuePair::updateValueMaxWidth(Document* document,
                                             const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueWidthHeightKeyword(tokens) ||
            updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowNone);
@@ -9518,6 +9710,8 @@ bool CSSStyleValuePair::updateValueMaxWidth(Document* document,
 bool CSSStyleValuePair::updateValueMinWidth(Document* document,
                                             const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueWidthHeightKeyword(tokens) ||
            updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
@@ -9526,6 +9720,8 @@ bool CSSStyleValuePair::updateValueMinWidth(Document* document,
 bool CSSStyleValuePair::updateValueHeight(Document* document,
                                           const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueWidthHeightKeyword(tokens) ||
            updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
@@ -9534,6 +9730,8 @@ bool CSSStyleValuePair::updateValueHeight(Document* document,
 bool CSSStyleValuePair::updateValueMaxHeight(Document* document,
                                              const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueWidthHeightKeyword(tokens) ||
            updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowNone);
@@ -9542,6 +9740,8 @@ bool CSSStyleValuePair::updateValueMaxHeight(Document* document,
 bool CSSStyleValuePair::updateValueMinHeight(Document* document,
                                              const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueWidthHeightKeyword(tokens) ||
            updateValueLength(tokens, CSSPropertyParser::AllowPercent |
                                          CSSPropertyParser::AllowAuto);
@@ -9550,6 +9750,8 @@ bool CSSStyleValuePair::updateValueMinHeight(Document* document,
 bool CSSStyleValuePair::updateValueVerticalAlign(Document* document,
                                                  const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -9590,6 +9792,8 @@ bool CSSStyleValuePair::updateValueVerticalAlign(Document* document,
 static bool parseRectFunctionPart(const CSSTokenValue& s, size_t* ret,
                                   GCVector<String*>& units)
 {
+    STARFISH_ASSERT(ret != nullptr);
+
     auto ss = s.trim();
     CSSPropertyParser parser((char*)ss.data(), ss.length());
 
@@ -9618,6 +9822,8 @@ static bool parseRectFunctionPart(const CSSTokenValue& s, size_t* ret,
 bool CSSStyleValuePair::updateValueClip(Document* document,
                                         const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     // https://www.w3.org/TR/css-masking-1/#clip-property
     if (tokens.size() != 1)
         return false;
@@ -9741,6 +9947,8 @@ static bool parseMinMax(CSSPropertyParser& parser, GridLength& min,
 static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
                                      GCVector<GridTrackSize>* v)
 {
+    STARFISH_ASSERT(v != nullptr);
+
     for (size_t i = 0; i < tokens.size(); i++) {
         auto ss = tokens[i].trim();
         if (ss == "auto") {
@@ -9808,6 +10016,8 @@ static bool parseGridTemplateColumns(const CSSTokenVector& tokens,
 static bool parseGridTemplateRows(const CSSTokenVector& tokens,
                                   GCVector<GridTrackSize>* v)
 {
+    STARFISH_ASSERT(v != nullptr);
+
     for (size_t i = 0; i < tokens.size(); i++) {
         auto ss = tokens[i].trim();
         CSSPropertyParser parser((char*)ss.data(), ss.length());
@@ -9846,6 +10056,8 @@ static bool parseGridTemplateRows(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueGridTemplateColumns(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size())
         return false;
 
@@ -9869,6 +10081,8 @@ bool CSSStyleValuePair::updateValueGridTemplateColumns(
 bool CSSStyleValuePair::updateValueGridTemplateRows(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size())
         return false;
 
@@ -9952,6 +10166,8 @@ static bool isValidForGridStartEnd(const CSSTokenVector& tokens)
 bool CSSStyleValuePair::updateValueGridRowStart(Document* document,
                                                 const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size()) {
         return false;
     }
@@ -9977,6 +10193,8 @@ bool CSSStyleValuePair::updateValueGridRowStart(Document* document,
 bool CSSStyleValuePair::updateValueGridRowEnd(Document* document,
                                               const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size()) {
         return false;
     }
@@ -10002,6 +10220,8 @@ bool CSSStyleValuePair::updateValueGridRowEnd(Document* document,
 bool CSSStyleValuePair::updateValueGridColumnStart(Document* document,
                                                    const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size()) {
         return false;
     }
@@ -10027,6 +10247,8 @@ bool CSSStyleValuePair::updateValueGridColumnStart(Document* document,
 bool CSSStyleValuePair::updateValueGridColumnEnd(Document* document,
                                                  const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size()) {
         return false;
     }
@@ -10052,6 +10274,8 @@ bool CSSStyleValuePair::updateValueGridColumnEnd(Document* document,
 bool CSSStyleValuePair::updateValueGridArea(Document* document,
                                             const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size()) {
         return false;
     }
@@ -10224,6 +10448,8 @@ bool CSSStyleValuePair::updateValueGridArea(Document* document,
 bool CSSStyleValuePair::updateValueGridGap(Document* document,
                                            const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size()) {
         return false;
     }
@@ -10267,6 +10493,8 @@ bool CSSStyleValuePair::updateValueGridGap(Document* document,
 bool CSSStyleValuePair::updateValueGridRowGap(Document* document,
                                               const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -10298,6 +10526,8 @@ bool CSSStyleValuePair::updateValueGridRowGap(Document* document,
 bool CSSStyleValuePair::updateValueGridColumnGap(Document* document,
                                                  const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -10329,6 +10559,8 @@ bool CSSStyleValuePair::updateValueGridColumnGap(Document* document,
 bool CSSStyleValuePair::updateValueGridRow(Document* document,
                                            const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size()) {
         return false;
     }
@@ -10398,6 +10630,8 @@ bool CSSStyleValuePair::updateValueGridRow(Document* document,
 bool CSSStyleValuePair::updateValueGridColumn(Document* document,
                                               const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (!tokens.size()) {
         return false;
     }
@@ -10467,6 +10701,8 @@ bool CSSStyleValuePair::updateValueGridColumn(Document* document,
 bool CSSStyleValuePair::updateValueGridTemplateAreas(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     struct Area {
         size_t columnStart;
         size_t columnEnd;
@@ -10696,6 +10932,8 @@ bool CSSStyleValuePair::updateValueGridTemplateAreas(
 bool CSSStyleValuePair::updateValueTransformOrigin(Document* document,
                                                    const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     //  [ left | center | right | top | bottom | <percentage> | <length> ] |
     //  [ left | center | right | <percentage> | <length> ]
     //  [ top | center | bottom | <percentage> | <length> ] <length>? |
@@ -10790,18 +11028,24 @@ bool CSSStyleValuePair::updateValueTransformOrigin(Document* document,
 bool CSSStyleValuePair::updateValueTransform(Document* document,
                                              const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueTransform(tokens, false);
 }
 
 bool CSSStyleValuePair::updateValueOpacity(Document* document,
                                            const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueNumber(tokens, CSSPropertyParser::AllowNegative);
 }
 
 bool CSSStyleValuePair::updateValueFontWeight(Document* document,
                                               const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -10909,6 +11153,8 @@ bool CSSStyleValuePair::updateValueUnitWordWrap(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValueWordWrap(Document* document,
                                             const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -10919,6 +11165,8 @@ bool CSSStyleValuePair::updateValueWordWrap(Document* document,
 bool CSSStyleValuePair::updateValueOverflowWrap(Document* document,
                                                 const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -10929,6 +11177,8 @@ bool CSSStyleValuePair::updateValueOverflowWrap(Document* document,
 bool CSSStyleValuePair::updateValueOverflowX(Document* document,
                                              const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -10957,6 +11207,8 @@ bool CSSStyleValuePair::updateValueUnitOverflowX(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValueOverflowY(Document* document,
                                              const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -10985,6 +11237,8 @@ bool CSSStyleValuePair::updateValueUnitOverflowY(const CSSTokenValue& value)
 bool CSSStyleValuePair::updateValuePosition(Document* document,
                                             const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -11134,6 +11388,8 @@ bool CSSStyleValuePair::updateValueShadow(const CSSTokenVector& tokens,
 bool CSSStyleValuePair::updateValueTextShadow(Document* document,
                                               const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     // none | [ <offset-x> <offset-y> <blur-radius>? && <color>? ]#
     // initial : none
     return updateValueShadow(tokens, false);
@@ -11142,6 +11398,8 @@ bool CSSStyleValuePair::updateValueTextShadow(Document* document,
 bool CSSStyleValuePair::updateValueBoxShadow(Document* document,
                                              const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     //  none | [inset? && [ <offset-x> <offset-y> <blur-radius>?
     //  <spread-radius>? <color>? ] ]#
     // initial : none
@@ -12011,6 +12269,8 @@ bool CSSStyleValuePair::updateValueFill(Document* document,
 bool CSSStyleValuePair::updateValueFillOpacity(Document* document,
                                                const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return updateValueOpacity(document, tokens);
 }
 
@@ -12280,6 +12540,8 @@ bool CSSStyleValuePair::updateValueMaskSize(Document* document,
 bool CSSStyleValuePair::updateValueUnitListStyleType(Document* document,
                                                      const CSSTokenValue& value)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     String* parsed = String::emptyString;
     if (STRING_VALUE_IS_NONE()) {
         setValueKind(CSSStyleValuePair::None);
@@ -12327,6 +12589,8 @@ bool CSSStyleValuePair::updateValueUnitListStyleImage(
 bool CSSStyleValuePair::updateValueListStyleType(Document* document,
                                                  const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     if (tokens.size() != 1) {
         return false;
     }
@@ -12355,6 +12619,8 @@ static bool parseCounterPairList(Document* document,
                                  const CSSTokenVector& tokens,
                                  int32_t defaultValue, CSSStyleValuePair* pair)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     size_t size = tokens.size();
     if (size == 1 && tokens[0].equals("none")) {
         pair->setValueKind(CSSStyleValuePair::None);
@@ -12406,12 +12672,16 @@ static bool parseCounterPairList(Document* document,
 bool CSSStyleValuePair::updateValueCounterReset(Document* document,
                                                 const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return parseCounterPairList(document, tokens, 0, this);
 }
 
 bool CSSStyleValuePair::updateValueCounterIncrement(
     Document* document, const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     return parseCounterPairList(document, tokens, 1, this);
 }
 
@@ -12548,6 +12818,8 @@ bool CSSStyleValuePair::updateValueAppearance(Document* document,
 bool CSSStyleValuePair::updateValueWillChange(Document* document,
                                               const CSSTokenVector& tokens)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     size_t size = tokens.size();
     if (size % 2 == 0) {
         // Including comma seperators, size of tokens has to be odd number
@@ -12602,6 +12874,8 @@ bool CSSStyleValuePair::updateValueBoxDecorationBreak(
 static bool parseCubicBezierFunction(const CSSTokenValue& value,
                                      CSSStyleValuePair* result)
 {
+    STARFISH_ASSERT(result != nullptr);
+
     Nullable<CSSTokenValue> mayBezier =
         CSSPropertyParser::parseFunctionBlock(value.data(), "cubic-bezier");
     if (!mayBezier.hasValue()) {
@@ -12639,6 +12913,8 @@ static bool parseCubicBezierFunction(const CSSTokenValue& value,
 static bool parseStepsFunction(const CSSTokenValue& value,
                                CSSStyleValuePair* result)
 {
+    STARFISH_ASSERT(result != nullptr);
+
     Nullable<CSSTokenValue> maySteps =
         CSSPropertyParser::parseFunctionBlock(value.data(), "steps");
     if (!maySteps.hasValue()) {
@@ -12767,6 +13043,8 @@ bool CSSStyleValuePair::updateValueFilter(Document* document,
 #ifdef STARFISH_ENABLE_TEST
 void dump(Node* node, unsigned depth)
 {
+    STARFISH_ASSERT(node != nullptr);
+
     if (node->isElement()) {
         for (unsigned i = 0; i < depth; i++) {
             printf("  ");
@@ -12795,6 +13073,8 @@ void dump(Node* node, unsigned depth)
 
 void StyleResolver::dumpDOMStyle(Document* document)
 {
+    STARFISH_ASSERT(document != nullptr);
+
     dump(document->asNode(), 0);
     printf("\n");
 }
