@@ -1675,6 +1675,12 @@ void InlineBoxLayoutParentBox::paintInlineContent(Canvas* canvas,
                     canvas->restore();
                     if (childBox->node() && childBox->node()->isElement()) {
                         Scrolling::paintScrollbars<Canvas*>(
+                            childBox->node()->asElement()->rareMembers()
+                                ? childBox->node()
+                                      ->asElement()
+                                      ->rareMembers()
+                                      ->m_scrolling
+                                : nullptr,
                             canvas, childBox->asFrameBlockBox(),
                             childBox->appliedOverflowX(),
                             childBox->appliedOverflowY());
@@ -4874,6 +4880,9 @@ void FrameBlockBox::paintContent(PaintingContext& ctx)
     if (overflowApplied && ctx.m_paintingStage == PaintingNormalFlowInline) {
         if (node() && node()->isElement()) {
             Scrolling::paintScrollbars<Canvas*>(
+                node()->asElement()->rareMembers()
+                    ? node()->asElement()->rareMembers()->m_scrolling
+                    : nullptr,
                 ctx.m_canvas, this, appliedOverflowX(), appliedOverflowY());
         }
     }

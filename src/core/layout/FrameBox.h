@@ -772,11 +772,14 @@ public:
         return LayoutRect(absolutePoint(top), frameRect().size());
     }
 
-    LayoutLocation absolutePointIncludingScroll(FrameBox* top);
-    LayoutRect absoluteRectIncludingScroll(FrameBox* top)
+    LayoutLocation absolutePointIncludingScroll(
+        FrameBox* top, bool includesScrollPropertyOfTop = true);
+    LayoutRect absoluteRectIncludingScroll(
+        FrameBox* top, bool includesScrollPropertyOfTop = true)
     {
-        return LayoutRect(absolutePointIncludingScroll(top),
-                          frameRect().size());
+        return LayoutRect(
+            absolutePointIncludingScroll(top, includesScrollPropertyOfTop),
+            frameRect().size());
     }
 
     void computeBorderMarginPadding(LayoutContext& ctx,

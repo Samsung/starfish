@@ -63,8 +63,9 @@ public:
                                EventTarget::GlobalPointingEventKind kind);
 
     template <typename T>
-    static void paintScrollbars(T canvas, FrameBlockBox* frame,
-                                OverflowValue ox, OverflowValue oy);
+    static void paintScrollbars(Scrolling* scrolling, T canvas,
+                                FrameBlockBox* frame, OverflowValue ox,
+                                OverflowValue oy);
 
     static void onAnimationFrameHandler(void* data);
 
