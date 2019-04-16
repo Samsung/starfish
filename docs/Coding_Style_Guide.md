@@ -85,7 +85,7 @@ if (condition1 ||
 ## Classes
 ### Constructors
 Initialization of the member variables should be done in the initializer as much as possible.
-When initialize member variables in a constructor, always split each
+When initializing member variables in a constructor, always split each
 initializer on a separate line, and align the commas with the colon.
 
 ```cpp
@@ -98,7 +98,7 @@ Dog::Dog(String name, Breed breed)
 }
 ```
 
-Calling other constructor inside a constructor should be avoided.
+Calling other constructors inside a constructor should be avoided.
 This is in preparation for an environment where we cannot use c++11 features (such as embedded devices).
 ```cpp
 Dog::Dog()
@@ -188,7 +188,7 @@ returnType functionName(int arg1,
 ```
 
 If the first parameter does not fit in a line, write parameters in the next
-line with 4 space ident.
+line with 4 space indent.
 
 ```cpp
 returnType functionName(
@@ -196,7 +196,7 @@ returnType functionName(
 ```
 
 The opening curly brace should be on its own in the next line.
-Closing curly brace should be on the next line as the opening brace.
+A Closing curly brace should be on the next line as the opening brace.
 
 ```cpp
 returnType functionName()
@@ -227,53 +227,65 @@ Do not use Run Time Type Information.
 Use of C++11 features are encouraged. In addition, use of C++11 compatible
 style formatting is encouraged, e.g., use `A<B<int>>` instead of `A<B<int> >`
 
-### Use of `ASSERT` and `nullptr` check for a pointer
-Before using a pointer, check the validity of a pointer using either `ASSERT`
-or `nullptr` check. `ASSERT` is used to check the precondition of a pointer.
-
-```cpp
-STARFISH_ASSERT(ptr != nullptr);
-ptr->foo();
-```
-
-`nullptr` check is used to handle a known and valid case.
-```cpp
-if (ptr == nullptr) {
-    ptr = new Foo();
-}
-```
-
 ### Use of `try-catch` statements
-Do not use `try-catch` statements for exception handling. One exception is to
-check for memory allocation errors. {+ To verify: Since all memory allocation
-is handled by a GC, there should not really need to use try-catch statements. +}
-
+Do not use try-catch statements except throwing a DOMException.
+## Assertions and nullptr
+### Basic principle
+* When using a pointer type variable, be sure to add the Assertions statement if you do not want to consider the situation where the value is nullptr, if you do not want to add assertions, be sure to write your defense code.
+* In our strategy, Starfish will be terminated along with an error message when a memory allocation attempt fails.
+* When not using GC allocators, write an assertion after memory allocation.
+### Add an assertion in the following situations.
+* If the function argument is a pointer type
 ```cpp
-bool Page::Create(const char *uri)
-{
-    try {
-        m_uri = new char[CCString::Length(uri) + 1];
-    } catch (...) {
-        CCError::Set(CCError::ERROR_NO_MEMORY);
-        return false;
-    }
-
-    CCString::Copy(m_uri, uri);
-    return true;
+void A::functionA(B* arg1, int arg2) {
+    STARFISH_ASSERT(arg1 != nullptr);
 }
 ```
+### Return nullptr explicitly
 
+* Use Nullable Pointer macro
+```cpp
+typedef Object* NullableObjectPtr;
+```
+* Use Nullable template
+```cpp
+Nullable<Object> A::functionA() {
+    if (cnd) {
+        return valueOfObjectClass;
+    } else {
+        // return nullptr;
+        // Instead, return Nullable object
+        return Nullable<Object>();
+    }
+}
+```
+### Be sure to explicitly assign nullptr if you need to release it.
+```cpp
+A::releaseMemeber() {
+    // free(m_pointerMemeber); if you needs
+    m_pointerMemeber = nullptr;
+}
+```
+### Supported assertions macro list in Starfish
+```cpp
+...
+STARFISH_ASSERT()
+STARFISH_ASSERT_NOT_REACHED()
+STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE()
+// ETC, See StarfishBase.h for more information
+...
+```
 ## Comments
 ### Comment Style
 Both `//` and `/* */` style comments can be used, although `//` style is
 much preferred.
-### ADD conmment for newly function
+### Add comment for newly function
 * Having a clear function name and parameters will solve many readability problems.
 * We are not aiming to generate an API doc. We think it is unneeded.
-* We don't need to write comment for every function. We prefer to write comments at place where function definition in cpp file
-* What we want to write is (unusual, important, or pre/post conditions of) function behaviours that are difficult to deliver to readers by code. Some examples include, "This function should be called after finishing xxx, or it will give you yyy."
+* We don't need to write comment for every function. We prefer to write comments at a place where function definition in cpp file
+* What we want to write are (unusual, important, or pre/post conditions of) function behaviors that are difficult to deliver to readers by code. Some examples include, "This function should be called after finishing xxx, or it will give you yyy."
 * Since writing comments is optional, we do not want to have rigid formats. (Also, not updating comments after updating actual code is bad). We are thinking of having simple comments starting with `//` in the header file above the function we want to add comments. (Again this is more like informal comment rule.)
-* Which function to write comment is more like up to developers. Each developer needs to decide what to write comments (or not)
+* Which function to write the comment is more like up to developers. Each developer needs to decide what to write comments (or not)
 
 * @yichoi says
 I do not encourage to add comment
