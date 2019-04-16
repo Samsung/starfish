@@ -43,6 +43,15 @@
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/CanvasRenderingContext2DMixIn.h"
 
+#ifndef CRASH
+#define CRASH STARFISH_RELEASE_ASSERT_SHOULD_NOT_BE_HERE
+#endif
+#include "../third_party/escargot/third_party/checked_arithmetic/CheckedArithmetic.h"
+
+#if defined(PORT_CANVAS_BACKEND_CAIRO) || defined(PORT_CANVAS_BACKEND_SKIA)
+#define NEEDS_UNPREMULTIPLIED
+#endif
+
 namespace Starfish {
 
 static inline CanvasFillRule stringToCanvasFillRule(String* rule)
@@ -636,6 +645,31 @@ void CanvasRenderingContext2DMixIn::drawImage(ScriptValue image, float sx,
     STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
 }
 
+ImageData* CanvasRenderingContext2DMixIn::createImageData(int32_t sw,
+                                                          int32_t sh)
+{
+    if (!sw || !sh) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INDEX_SIZE_ERR,
+                               "sw and sh are must not zero");
+    }
+    return new ImageData(executionContext(), abs(sw), abs(sh));
+}
+
+ImageData* CanvasRenderingContext2DMixIn::createImageData(ImageData* imagedata)
+{
+    STARFISH_ASSERT(imagedata != nullptr);
+    auto pixelsPerRow = imagedata->width();
+    auto rows = imagedata->height();
+
+    if (!imagedata->width() || !imagedata->height()) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INDEX_SIZE_ERR,
+                               "sw and sh are must not zero");
+    }
+    return new ImageData(executionContext(), pixelsPerRow, rows);
+}
+
 ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
                                                        int32_t sw, int32_t sh)
 {
@@ -643,6 +677,25 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
         throw new DOMException(executionContext(),
                                DOMException::Code::INDEX_SIZE_ERR,
                                "sw and sh are must not zero");
+    }
+
+    if (sw < 0) {
+        sx += sw;
+        sw = -sw;
+    }
+    if (sh < 0) {
+        sy += sh;
+        sh = -sh;
+    }
+
+    // FIXME: Remove below codes When createArrayBuffer handles a RangeError
+    Checked<int, RecordOverflow> dataSize = 4;
+    dataSize *= sw;
+    dataSize *= sh;
+    if (dataSize.hasOverflowed()) {
+        throw new DOMException(
+            executionContext(), DOMException::Code::INDEX_SIZE_ERR,
+            "The requested image size exceeds the supported range.");
     }
 
     if (!originCleanFlag()) {
@@ -677,30 +730,40 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
     auto height = m_canvasSurface->bufferHeight();
 
     uint8_t* src = m_canvasSurface->mapBuffer();
-    for (size_t y = 0; y < (size_t)sh && (y + sy) < height; ++y) {
-        for (size_t x = 0; x < (size_t)sw && (x + sx) < width; ++x) {
+    for (int64_t y = 0; y < sh; ++y) {
+        if ((y + sy) < 0 || static_cast<int64_t>(height) <= (y + sy)) {
+            continue;
+        }
+        for (int64_t x = 0; x < sw; ++x) {
+            if ((x + sx) < 0 || static_cast<int64_t>(width) <= (x + sx)) {
+                continue;
+            }
             uint8_t* destPixel = dest + (y * sw * stride) + (x * stride);
             uint8_t* srcPixel =
                 src + ((y + sy) * width * stride) + ((x + sx) * stride);
+            uint8_t r, g, b, a;
 #if defined(PORT_PIXEL_ORDER_RGBA)
-            // R
-            destPixel[0] = srcPixel[0];
-            // G
-            destPixel[1] = srcPixel[1];
-            // B
-            destPixel[2] = srcPixel[2];
-            // A
-            destPixel[3] = srcPixel[3];
+            r = srcPixel[0];
+            g = srcPixel[1];
+            b = srcPixel[2];
+            a = srcPixel[3];
 #else
-            // R
-            destPixel[0] = srcPixel[2];
-            // G
-            destPixel[1] = srcPixel[1];
-            // B
-            destPixel[2] = srcPixel[0];
-            // A
-            destPixel[3] = srcPixel[3];
+            r = srcPixel[2];
+            g = srcPixel[1];
+            b = srcPixel[0];
+            a = srcPixel[3];
 #endif
+#if defined(NEEDS_UNPREMULTIPLIED)
+            if (a && a != 255) {
+                r = r * 255 / a;
+                g = g * 255 / a;
+                b = b * 255 / a;
+            }
+#endif
+            destPixel[0] = r;
+            destPixel[1] = g;
+            destPixel[2] = b;
+            destPixel[3] = a;
         }
     }
     auto uint8ClampedArray = createEmptyUint8ClampedArray(
@@ -710,12 +773,8 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
         canvasPixelArrayBuffer->toObject(state)->asArrayBufferObject(), 0,
         destSize, destSize);
 
-    auto ret = new ImageData(executionContext(), uint8ClampedArray);
-    ret->setWidth(sw);
-    ret->setHeight(sh);
-
+    auto ret = new ImageData(executionContext(), uint8ClampedArray, sw, sh);
     state->destroy();
-
     return ret;
 }
 
@@ -837,5 +896,6 @@ bool CanvasRenderingContext2DMixIn::isPointInStroke(Path* path, float x,
     return path->isPointInStroke(xx, yy);
 }
 }
-
+#undef NEEDS_UNPREMULTIPLIED
+#undef CRASH
 #endif
