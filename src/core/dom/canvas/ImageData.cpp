@@ -21,6 +21,7 @@
 
 #include "StarfishConfig.h"
 #include "EscargotPublic.h"
+#include "binding/ScriptBindingInstance.h"
 #include "core/dom/Document.h"
 #include "core/dom/canvas/ImageData.h"
 #include "core/dom/ExecutionContext.h"
