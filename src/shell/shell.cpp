@@ -33,7 +33,7 @@
 #include <Ecore.h>
 #endif
 
-#if defined(TIZEN_DEVICE_API)
+#if defined(STARFISH_TIZEN_WEARABLE_WIDGET)
 #include <system/system_info.h>
 #endif
 
@@ -270,7 +270,7 @@ int main(int argc, char* argv[])
 #if defined(STARFISH_TIZEN_TV)
     width = 1920;
     height = 1080;
-#elif defined(TIZEN_DEVICE_API)
+#elif defined(STARFISH_TIZEN_WEARABLE_WIDGET)
     system_info_get_platform_int("http://tizen.org/feature/screen.width",
                                  &width);
     system_info_get_platform_int("http://tizen.org/feature/screen.height",
