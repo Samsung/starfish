@@ -111,15 +111,12 @@ BuildRequires: giflib-devel
 BuildRequires: pkgconfig(dali-core)
 BuildRequires: pkgconfig(dali-toolkit)
 BuildRequires: pkgconfig(dali-adaptor)
+BuildRequires: pkgconfig(capi-system-info)
 %endif
 
 %if "%{rpm}" == "prod_tv"
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
-%endif
-
-%if "%{rpm}" == "wearable"
-BuildRequires: pkgconfig(capi-system-info)
 %endif
 
 BuildRequires: pkgconfig(bundle)
