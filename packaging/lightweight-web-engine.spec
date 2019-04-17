@@ -102,7 +102,6 @@ BuildRequires: pkgconfig(capi-network-connection)
 BuildRequires: pkgconfig(capi-media-player)
 BuildRequires: pkgconfig(capi-media-sound-manager)
 BuildRequires: pkgconfig(capi-location-manager)
-BuildRequires: pkgconfig(capi-system-info)
 BuildRequires: pkgconfig(tts)
 BuildRequires: libjpeg-turbo-devel
 BuildRequires: pkgconfig(openssl)
@@ -117,6 +116,10 @@ BuildRequires: pkgconfig(dali-adaptor)
 %if "%{rpm}" == "prod_tv"
 BuildRequires: pkgconfig(vconf)
 BuildRequires: pkgconfig(vconf-internal-keys-tv)
+%endif
+
+%if "%{rpm}" == "wearable"
+BuildRequires: pkgconfig(capi-system-info)
 %endif
 
 BuildRequires: pkgconfig(bundle)
