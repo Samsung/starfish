@@ -21,10 +21,8 @@
 #include "Starfish.h"
 #include "core/dom/ExecutionContext.h"
 #include "core/dom/DOMException.h"
-#include "core/dom/Element.h"
 #include "core/dom/EventTarget.h"
 #include "core/dom/ErrorEvent.h"
-#include "core/page/BrowsingContext.h"
 #include "core/page/WebBase.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/csp/ContentSecurityPolicy.h"
@@ -32,6 +30,8 @@
 #if !defined(STARFISH_WEBWORKER_HOST)
 #include "core/dom/Document.h"
 #include "core/page/Window.h"
+#include "core/page/BrowsingContext.h"
+#include "core/dom/Element.h"
 #endif
 
 namespace Starfish {
@@ -262,17 +262,19 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
     // given, and the object to which event is dispatched otherwise.
     event->setTarget(origin);
 
+    EventTarget* activationTarget = nullptr;
+    GCVector<EventTarget*> eventPath;
+
+#if !defined(STARFISH_WEBWORKER_HOST)
     // https://dom.spec.whatwg.org/#dom-eventtarget-dispatchevent
     // Let isActivationEvent be true, if event is a MouseEvent object and
     // event’s type attribute is "click", and false otherwise.
     bool isActivationEvent =
         event->isUIEvent() && event->type()->equals("click");
-    EventTarget* activationTarget = nullptr;
 
     // 4. If event's target attribute value is participating in a tree, let
     // event path be a static ordered list of all its ancestors in tree order,
     // and let event path be the empty list otherwise.
-    GCVector<EventTarget*> eventPath;
     EventTarget* eventTarget = origin;
     while (eventTarget) {
         if (isActivationEvent && !activationTarget &&
@@ -296,6 +298,9 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
             break;
         }
     }
+#else
+    eventPath.push_back(origin);
+#endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
     // 5. Initialize event's eventPhase attribute to CAPTURING_PHASE.
     // 1) Path : highest ancestor -> origin
@@ -417,7 +422,7 @@ bool EventTarget::dispatchEvent(EventTarget* origin, Event* event)
                 ->setCompositionStartEventDefeaultPrevented(true);
         }
     }
-#endif
+#endif /* !defined(STARFISH_WEBWORKER_HOST) */
     // dispatch default event
     if (!event->defaultPrevented()) {
         for (size_t i = 0; i < eventPath.size(); i++) {
@@ -487,7 +492,7 @@ bool EventTarget::dispatchEventForTarget(EventTarget* origin, Event* event)
 }
 
 void EventTarget::setAttributeEventListener(const QualifiedName& eventTypeName,
-                                            String* str, Element* target)
+                                            String* str, EventTarget* target)
 {
     if (!executionContext()
              ->contentSecurityPolicy()

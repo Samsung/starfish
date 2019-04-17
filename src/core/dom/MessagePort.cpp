@@ -25,7 +25,7 @@
 #include "core/dom/MessagePort.h"
 #include "core/modules/message_loop/MessageLoop.h"
 #include "core/page/Serializer.h"
-#include "core/page/WebView.h"
+#include "core/page/WebBase.h"
 #include "core/dom/ExecutionContext.h"
 
 namespace Starfish {

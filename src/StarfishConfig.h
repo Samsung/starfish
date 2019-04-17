@@ -51,6 +51,8 @@
 #include "core/util/AtomicString.h"
 #include "core/util/QualifiedName.h"
 #include "core/util/Messages.h"
+#include "core/modules/profiling/Profiling.h"
+#include "platform/loader/ResourceURL.h"
 
 #if !defined(STARFISH_WEBWORKER_HOST)
 #include <SkMatrix.h>
@@ -59,8 +61,6 @@
 #include "core/style/Unit.h"
 #include "core/style/UnitHelper.h"
 #include "core/modules/canvas/font/Font.h"
-#include "core/modules/profiling/Profiling.h"
-#include "platform/loader/ResourceURL.h"
 #endif /* !defined(STARFISH_WEBWORKER_HOST) */
 
 #endif

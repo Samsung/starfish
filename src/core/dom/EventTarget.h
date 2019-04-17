@@ -26,18 +26,17 @@ namespace Starfish {
 
 class Event;
 class Node;
-class Element;
 class Window;
 
 struct AttributeStringEventFunctionData : public gc {
 public:
-    AttributeStringEventFunctionData(Element* target,
+    AttributeStringEventFunctionData(EventTarget* target,
                                      String* scriptStringNeedToParse)
         : m_target(target)
         , m_scriptStringNeedToParse(scriptStringNeedToParse)
     {
     }
-    Element* m_target;
+    EventTarget* m_target;
     String* m_scriptStringNeedToParse;
 };
 
@@ -53,7 +52,8 @@ public:
         return new EventListener(fn, isAttribute, useCapture);
     }
 
-    static EventListener* toEventListener(String* scriptString, Element* target,
+    static EventListener* toEventListener(String* scriptString,
+                                          EventTarget* target,
                                           bool isAttribute = false,
                                           bool useCapture = false)
     {
@@ -110,7 +110,7 @@ private:
     {
     }
 
-    EventListener(String* scriptString, Element* target,
+    EventListener(String* scriptString, EventTarget* target,
                   bool isAttribute = false, bool useCapture = false)
         : m_isAttribute(isAttribute)
         , m_capture(useCapture)
@@ -176,7 +176,7 @@ public:
         setAttributeEventListener(eventType, l);
     }
     void setAttributeEventListener(const QualifiedName& eventTypeName,
-                                   String* str, Element* target);
+                                   String* str, EventTarget* target);
     bool setAttributeEventListener(const String* eventType,
                                    EventListener* listener);
     EventListener* getAttributeEventListener(const QualifiedName& eventType)

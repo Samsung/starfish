@@ -19,7 +19,7 @@
 
 #ifdef STARFISH_WEBWORKER_HOST
 
-#include "StarfishBase.h"
+#include "StarfishConfig.h"
 #include "core/modules/serviceworker/host/WebWorker.h"
 #include <functional>
 #include <cstdio>
