@@ -471,7 +471,10 @@ public:
     {
         STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
     }
-
+    virtual void markDirtyRect(const Unit::Rect& rt)
+    {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
     CanvasRenderTargetInfo& renderTargetInfo()
     {
         return m_renderTargetInfo;

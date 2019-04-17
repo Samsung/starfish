@@ -182,7 +182,7 @@ void CanvasRenderingContext2DMixIn::onResize()
     finalize();
     initialize();
 
-    m_ownerHTMLCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 }
 
 float CanvasRenderingContext2DMixIn::lineWidth()
@@ -490,7 +490,7 @@ void CanvasRenderingContext2DMixIn::fillRect(float x, float y, float w, float h)
         return;
     }
 
-    m_ownerHTMLCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsComposite();
     if (m_canvas->compositeOperator() == CanvasCompositeOperator::Copy) {
         m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
     }
@@ -779,6 +779,126 @@ ImageData* CanvasRenderingContext2DMixIn::getImageData(int32_t sx, int32_t sy,
     return ret;
 }
 
+void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
+                                                 int32_t dx, int32_t dy)
+{
+    STARFISH_ASSERT(imagedata);
+    putImageData(imagedata, dx, dy, 0, 0, imagedata->width(),
+                 imagedata->height());
+}
+
+void CanvasRenderingContext2DMixIn::putImageData(ImageData* imagedata,
+                                                 int32_t dx, int32_t dy,
+                                                 int32_t dirtyX, int32_t dirtyY,
+                                                 int32_t dirtyWidth,
+                                                 int32_t dirtyHeight)
+{
+    // https://html.spec.whatwg.org/multipage/canvas.html#dom-context-2d-putimagedata
+
+    STARFISH_ASSERT(imagedata);
+
+    if (isInfOrNan(dx) || isInfOrNan(dy) || isInfOrNan(dirtyX) ||
+        isInfOrNan(dirtyY) || isInfOrNan(dirtyWidth) ||
+        isInfOrNan(dirtyHeight)) {
+        return;
+    }
+
+    if (imagedata->data()->asArrayBufferView()->buffer()->isDetachedBuffer()) {
+        throw new DOMException(executionContext(),
+                               DOMException::Code::INVALID_STATE_ERR,
+                               "ImageData's data has a detached buffer");
+    }
+
+    if (dirtyWidth < 0) {
+        dirtyX += dirtyWidth;
+        dirtyWidth = abs(dirtyWidth);
+    }
+
+    if (dirtyHeight < 0) {
+        dirtyY += dirtyHeight;
+        dirtyHeight = abs(dirtyHeight);
+    }
+
+    if (dirtyX < 0) {
+        dirtyWidth += dirtyX;
+        dirtyX = 0;
+    }
+
+    if (dirtyY < 0) {
+        dirtyHeight += dirtyY;
+        dirtyY = 0;
+    }
+
+    int64_t imagaDataWidth = imagedata->width();
+    if (dirtyX + dirtyWidth > imagaDataWidth) {
+        dirtyWidth = imagaDataWidth - dirtyX;
+    }
+
+    int64_t imagaDataHeight = imagedata->height();
+    if (dirtyY + dirtyHeight > imagaDataHeight) {
+        dirtyHeight = imagaDataHeight - dirtyY;
+    }
+
+    if (dirtyWidth <= 0 || dirtyHeight <= 0) {
+        return;
+    }
+
+    auto src = imagedata->data()->asArrayBufferView()->buffer()->rawBuffer();
+
+    uint8_t* dest = m_canvasSurface->mapBuffer();
+    auto destWidth = m_canvasSurface->bufferWidth();
+    auto destHeight = m_canvasSurface->bufferHeight();
+    if (!destWidth || !destHeight) {
+        return;
+    }
+    size_t destStride = 0;
+    if (destWidth && m_canvasSurface->bufferStride()) {
+        destStride =
+            m_canvasSurface->bufferStride() / m_canvasSurface->bufferWidth();
+    } else {
+        destStride = 4;
+    }
+
+    for (int64_t y = dirtyY; y < dirtyY + dirtyHeight; ++y) {
+        if ((y + dy) < 0 || static_cast<int64_t>(destHeight) <= (y + dy)) {
+            continue;
+        }
+        for (int64_t x = dirtyX; x < dirtyX + dirtyWidth; ++x) {
+            if ((x + dx) < 0 || static_cast<int64_t>(destWidth) <= (x + dx)) {
+                continue;
+            }
+            uint8_t* destPixel = dest + ((dy + y) * destWidth * destStride) +
+                                 ((dx + x) * destStride);
+            uint8_t* srcPixel = src + (y * imagaDataWidth * 4) + (x * 4);
+            uint8_t r, g, b, a;
+            r = srcPixel[0];
+            g = srcPixel[1];
+            b = srcPixel[2];
+            a = srcPixel[3];
+#if defined(NEEDS_UNPREMULTIPLIED)
+            if (a != 255) {
+                r = (r * a + 254) / 255;
+                g = (g * a + 254) / 255;
+                b = (b * a + 254) / 255;
+            }
+#endif
+#if defined(PORT_PIXEL_ORDER_RGBA)
+            destPixel[0] = r;
+            destPixel[1] = g;
+            destPixel[2] = b;
+            destPixel[3] = a;
+#else
+            destPixel[2] = r;
+            destPixel[1] = g;
+            destPixel[0] = b;
+            destPixel[3] = a;
+#endif
+        }
+    }
+    m_canvas->markDirtyRect(Unit::Rect(dx, dy, dirtyWidth, dirtyHeight));
+    m_ownerHTMLCanvasElement->setNeedsComposite();
+}
+
 void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
                                               float h)
 {
@@ -792,7 +912,7 @@ void CanvasRenderingContext2DMixIn::clearRect(float x, float y, float w,
         return;
     }
 
-    m_ownerHTMLCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsComposite();
     m_canvas->save();
     m_canvas->clip(Unit::Rect(x, y, w, h));
     m_canvas->clearColor(Unit::Color(0, 0, 0, 0));
@@ -805,7 +925,7 @@ void CanvasRenderingContext2DMixIn::fill(Path* path, String* fillRule)
         return;
     }
 
-    m_ownerHTMLCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 
     auto rule = stringToCanvasFillRule(fillRule);
     if (!path->isEmpty()) {
@@ -828,7 +948,7 @@ void CanvasRenderingContext2DMixIn::stroke(Path* path)
         return;
     }
 
-    m_ownerHTMLCanvasElement->setNeedsPainting();
+    m_ownerHTMLCanvasElement->setNeedsComposite();
 
     if (!path->isEmpty()) {
         m_canvas->save();

@@ -150,6 +150,10 @@ public:
     ImageData* createImageData(int32_t sw, int32_t sh);
     ImageData* createImageData(ImageData* imagedata);
     ImageData* getImageData(int32_t sx, int32_t sy, int32_t sw, int32_t sh);
+    void putImageData(ImageData* imagedata, int32_t dx, int32_t dy);
+    void putImageData(ImageData* imagedata, int32_t dx, int32_t dy,
+                      int32_t dirtyX, int32_t dirtyY, int32_t dirtyWidth,
+                      int32_t dirtyHeight);
 
     // CanvasPathDrawingStyles
     float lineWidth();
