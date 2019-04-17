@@ -295,6 +295,40 @@ public:
         return SkMatrix::I();
     }
 
+    virtual void setGlobalAlpha(float c)
+    {
+    }
+
+    virtual Unit::Color color()
+    {
+        return Unit::Color();
+    }
+
+    virtual Unit::Color strokeColor()
+    {
+        return Unit::Color();
+    }
+
+    virtual float globalAlpha()
+    {
+        return 0.0;
+    }
+
+    virtual void setCompositeOperator(CanvasCompositeOperator oper,
+                                      CanvasBlendMode mode)
+    {
+    }
+
+    virtual CanvasCompositeOperator compositeOperator()
+    {
+        return CanvasCompositeOperator::Clear;
+    }
+
+    virtual CanvasBlendMode blendMode()
+    {
+        return CanvasBlendMode::Normal;
+    }
+
 protected:
     WebView* m_webView;
 };
