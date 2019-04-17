@@ -22,9 +22,11 @@
 
 #include "binding/ScriptWrappable.h"
 #include "binding/IterationSource.h"
-#include "core/dom/HTMLFormElement.h"
 
 namespace Starfish {
+
+class HTMLFormElement;
+enum class EncodeType;
 
 typedef String FormDataEntryValue;
 

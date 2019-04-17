@@ -24,6 +24,10 @@ using namespace Escargot;
 #include "core/xml/FormData.h"
 #include "core/dom/ExecutionContext.h"
 
+#if !defined(STARFISH_WEBWORKER_HOST)
+#include "core/dom/HTMLFormElement.h"
+#endif
+
 namespace Starfish {
 
 FormDataSetItem::FormDataSetItem(String* name, String* value, String* type)
