@@ -151,6 +151,8 @@ section are supported.
 |  | method | ImageData createImageData(long sw, long sh) | Creates a new, blank ImageData object with the specified dimensions |
 |  | method | ImageData createImageData(ImageData imagedata) | Creates a new, blank ImageData object with the specified dimensions |
 |  | method | ImageData getImageData(long sx, long sy, long sw, long sh) | Returns an ImageData object representing the underlying pixel data for a specified portion of the canvas. |
+|  | method | void putImageData(ImageData imagedata, long dx, long dy) | Paints the data from the given ImageData object onto the bitmap. If a dirty rectangle is provided, only the pixels from that rectangle are painted. |
+|  | method | void putImageData(ImageData imagedata, long dx, long dy, long dirtyX, long dirtyY, long dirtyWidth, long dirtyHeight) | Paints the data from the given ImageData object onto the bitmap. If a dirty rectangle is provided, only the pixels from that rectangle are painted. |
 | [CanvasLineCap](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinecap) | enum | CanvasLineCap | "butt", "round", "square" |
 | [CanvasLineJoin](https://html.spec.whatwg.org/multipage/canvas.html#canvaslinejoin) | enum | CanvasLineJoin | "round", "bevel", "miter" |
 | [CanvasPath ](https://html.spec.whatwg.org/multipage/canvas.html#canvaspath) | interface mixin | CanvasPath |  |

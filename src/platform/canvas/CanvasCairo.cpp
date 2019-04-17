@@ -1644,6 +1644,13 @@ private:
         cairo_path_destroy(p);
     }
 
+    virtual void markDirtyRect(const Unit::Rect& rt)
+    {
+        STARFISH_ASSERT(m_surface);
+        float xx = rt.x(), yy = rt.y(), ww = rt.width(), hh = rt.height();
+        cairo_surface_mark_dirty_rectangle(m_surface, xx, yy, ww, hh);
+    }
+
 protected:
     WebView* m_webView;
     std::vector<CanvasStateCairo> m_state;

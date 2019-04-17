@@ -184,7 +184,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-path-object.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-pattern-modify.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-pattern-set-transform.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-pattern-transform.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-putImageData.html
+#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-putImageData.html // Failed equally with major browsers.
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-quadratic-same-endpoint.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-radial-gradient-spreadMethod.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/CanvasRendering2D-prototype-chain.html
@@ -206,7 +206,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-setTransform.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-shadow.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-shadow-source-in.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-skia-excessive-size.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-state-intact-after-putImageData.html
+test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-state-intact-after-putImageData.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-stroke-empty-fill.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-alpha-shadow.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-cap-join.html
@@ -260,7 +260,7 @@ test/cairo/reftest/vendor/blink_original/fast/canvas/canvas-strokePath-cap-join.
 #test/cairo/reftest/vendor/blink_original/fast/canvas/fill-stroke-clip-reset-path.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/fillText-shadow.html
 test/cairo/reftest/vendor/blink_original/fast/canvas/font-no-zoom.html
-#test/cairo/reftest/vendor/blink_original/fast/canvas/getPutImageDataPairTest.html
+test/cairo/reftest/vendor/blink/fast/canvas/getPutImageDataPairTest.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/gradient-addColorStop-with-invalid-color.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/gradient-addColorStop-with-invalid-offset.html
 #test/cairo/reftest/vendor/blink_original/fast/canvas/gradient-with-clip.html
