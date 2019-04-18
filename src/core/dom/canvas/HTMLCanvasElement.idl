@@ -10,7 +10,7 @@ interface HTMLCanvasElement : HTMLElement
     [RaisesException=Setter, CEReactions] attribute unsigned long width;
     [RaisesException=Setter, CEReactions] attribute unsigned long height;
 
-    [Unimplemented, RaisesException] DOMString toDataURL(optional DOMString type = null, optional any arguments);
+    [RaisesException] DOMString toDataURL(optional DOMString type = "image/png", optional any arguments);
 
     [Unimplemented, MeasureAs=CanvasToBlob, RaisesException] void toBlob(BlobCallback _callback, optional DOMString type = null, optional any arguments);
 

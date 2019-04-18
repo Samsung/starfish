@@ -38,6 +38,8 @@ typedef CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingCon
 
 class HTMLCanvasElement : public HTMLElement {
 public:
+    const double DefaultQuality = 0.92;
+
     enum CanvasContextMode {
         CanvasContextModeNone,
         CanvasContextModePlaceHolder,
@@ -69,6 +71,9 @@ public:
     void setHeight(uint32_t value);
     Nullable<RenderingContextBindindingUnion> getContext(
         String* contextId, GCVector<ScriptValue> arguments);
+
+    String* toDataURL(String* type);
+    String* toDataURL(String* type, ScriptValue quality);
 
     void* operator new(size_t size)
     {

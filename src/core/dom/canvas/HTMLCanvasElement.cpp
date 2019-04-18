@@ -25,6 +25,8 @@
 #include "core/dom/canvas/CanvasRenderingContext.h"
 #include "core/dom/canvas/HTMLCanvasElement.h"
 #include "binding/CanvasRenderingContext2DOrWebGLRenderingContextOrImageBitmapRenderingContextUnion.h"
+#include "core/modules/canvas/Canvas.h"
+#include "platform/canvas/image/ImageUtils.h"
 
 namespace Starfish {
 
@@ -101,6 +103,43 @@ Nullable<RenderingContextBindindingUnion> HTMLCanvasElement::getContext(
         // NOT SUPPORT
     }
     return nullptr;
+}
+
+String* HTMLCanvasElement::toDataURL(String* type)
+{
+    STARFISH_ASSERT(type != nullptr);
+    return toDataURL(type, createScriptValue(DefaultQuality));
+}
+
+String* HTMLCanvasElement::toDataURL(String* type, ScriptValue quality)
+{
+    STARFISH_ASSERT(type != nullptr);
+    if (!m_canvasRenderingContext->originCleanFlag()) {
+        throw new DOMException(executionContext(), DOMException::SECURITY_ERR);
+    }
+
+    if (type->equals("image/png")) {
+        m_canvasRenderingContext->flush();
+        CanvasSurface* canvasSurface = m_canvasRenderingContext->surface();
+        if (canvasSurface != nullptr) {
+            auto width = canvasSurface->bufferWidth();
+            auto height = canvasSurface->bufferHeight();
+            size_t stride = 0;
+            if (width && height) {
+                stride = width / height;
+            } else {
+                stride = 4;
+            }
+            std::string result =
+                "data:image/png;base64," +
+                StringUtils::toBase64(ImageUtils::encodePNG(
+                    canvasSurface->mapBuffer(), width, height, stride));
+            return String::fromUTF8(result.c_str());
+        }
+    } else {
+        STARFISH_RELEASE_ASSERT_UNIMPLEMENTED();
+    }
+    return String::fromUTF8("data:,");
 }
 }
 
